@@ -12,6 +12,9 @@ const BACKEND_URL = (
 // Cookie names (must match the API routes)
 const ACCESS_TOKEN_COOKIE = 'LH_access'
 const REFRESH_TOKEN_COOKIE = 'LH_refresh'
+// An impersonation: while it is open, org pages act
+// as its target and must never fall back to the superadmin's own LH_access.
+const IMPERSONATION_COOKIE = 'LH_imp'
 
 // Types matching the client-side session structure
 export interface Session {
@@ -52,7 +55,8 @@ async function readServerSession(): Promise<Session | null> {
   try {
     const cookieStore = await cookies()
 
-    const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)
+    const impersonation = cookieStore.get(IMPERSONATION_COOKIE)?.value
+    const accessToken = impersonation ? { value: impersonation } : cookieStore.get(ACCESS_TOKEN_COOKIE)
 
     if (accessToken?.value) {
       // Verify the token is valid by fetching session from backend
@@ -74,6 +78,10 @@ async function readServerSession(): Promise<Session | null> {
           },
         }
       }
+      // A spent impersonation: never fall back to the superadmin's own
+      // session. Report it unresolved so pages render without bouncing to
+      // /login; the client sees the end on hydration and returns to the console.
+      if (impersonation) return { user: undefined, roles: [], tokens: undefined, unresolved: true }
     }
 
     // No usable access token. If a refresh cookie is present the user is still
@@ -108,7 +116,7 @@ export const getServerSession = cache(readServerSession)
 export const getServerAccessToken = cache(async (): Promise<string | null> => {
   try {
     const cookieStore = await cookies()
-    return cookieStore.get(ACCESS_TOKEN_COOKIE)?.value || null
+    return cookieStore.get(IMPERSONATION_COOKIE)?.value || cookieStore.get(ACCESS_TOKEN_COOKIE)?.value || null
   } catch (error) {
     console.error('[SERVER_SESSION] Error getting access token:', error)
     return null

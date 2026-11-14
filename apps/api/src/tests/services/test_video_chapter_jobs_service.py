@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+import pytest
 from fastapi import HTTPException
 
 from src.db.courses.activities import Activity, ActivitySubTypeEnum, ActivityTypeEnum
@@ -221,3 +222,9 @@ async def test_generate_lets_cancellation_through(monkeypatch, db, org, course, 
     await _add_video(db, org, course, "chapCancel", meta={"captions": READY_EN})
     with pytest.raises(asyncio.CancelledError):
         await jobs.generate_activity_chapters("chapCancel")
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

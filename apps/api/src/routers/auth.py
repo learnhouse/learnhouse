@@ -24,6 +24,10 @@ from src.security.auth import (
     _mark_refresh_jti_used,
     _store_refresh_grace,
     _get_refresh_grace,
+    _record_refresh_successor,
+    _get_refresh_successor,
+    _mark_refresh_recovered,
+    refresh_token_jti,
     JWT_ACCESS_TOKEN_EXPIRES,
     JWT_REFRESH_TOKEN_EXPIRES,
     JWT_REFRESH_COOKIE_NAME,
@@ -32,6 +36,7 @@ from src.security.auth import (
 from src.services.users.users import security_get_user
 from src.services.auth.utils import signWithGoogle, get_google_user_info
 from src.services.audit.audit import record_audit_event
+from src.core.ee_hooks import audit_event
 from src.db.user_audit_events import UserAuditEventType
 from src.services.dev.dev import isDevModeEnabled
 from src.services.security.rate_limiting import (
@@ -52,6 +57,12 @@ from src.services.users.email_verification import (
     resend_verification_email,
 )
 from src.services.auth.session import issue_session_or_challenge
+from src.security.impersonation import (
+    CODE_DENIED as IMPERSONATION_CODE_DENIED,
+    IMPERSONATION_PURPOSE,
+    end_impersonations_started_by,
+    error_detail as impersonation_error_detail,
+)
 from src.security.session_context import (
     AUTH_METHOD_GOOGLE,
     AUTH_METHOD_PASSWORD,
@@ -352,9 +363,10 @@ def _log_refresh_outcome(
     randomly signed out, there was no way to tell an expired token from a
     revocation from replay detection, and diagnosing it required reading the
     code instead of querying. Outcomes are a closed set:
-    ``ok``, ``grace_reused``, ``rate_limited``, ``cookie_missing``,
-    ``undecodable``, ``no_subject``, ``user_not_found``, ``password_changed``,
-    ``revoked_before``, ``replay_detected``, so they can be counted and alerted
+    ``ok``, ``grace_reused``, ``lost_rotation_recovered``, ``rate_limited``,
+    ``cookie_missing``, ``undecodable``, ``no_subject``, ``user_not_found``,
+    ``password_changed``, ``revoked_before``, ``replay_detected``, so they can
+    be counted and alerted
     on. A rising ``replay_detected`` or ``revoked_before`` rate is the signal
     that sessions are being destroyed rather than expiring.
 
@@ -488,6 +500,7 @@ async def refresh(
     #     theft: every session for the user is revoked.
     jti = payload.get("jti")
     reused_pair = None
+    recovered = False
     if jti:
         first_use = _mark_refresh_jti_used(user.id, jti)
         if not first_use:
@@ -500,6 +513,25 @@ async def refresh(
                     break
                 await _asyncio.sleep(0.1)
             if reused_pair is None:
+                # Past the grace window. If the token that replaced this one was
+                # never presented, the browser simply never received it (closed
+                # tab, sleep, dropped connection): recover instead of revoking.
+                # Claiming the successor is atomic, so two recoveries of the same
+                # token can't both mint; the loser picks up the winner's pair.
+                successor = _get_refresh_successor(user.id, jti)
+                if (
+                    successor
+                    and _mark_refresh_recovered(user.id, jti)
+                    and _mark_refresh_jti_used(user.id, successor)
+                ):
+                    recovered = True
+                elif successor:
+                    for _attempt in range(15):
+                        reused_pair = _get_refresh_grace(user.id, jti)
+                        if reused_pair is not None:
+                            break
+                        await _asyncio.sleep(0.1)
+            if reused_pair is None and not recovered:
                 # No live grace entry → replay outside the window → theft.
                 # This is the single most destructive outcome (it revokes every
                 # session on every device), so it is logged at WARNING with the
@@ -512,6 +544,19 @@ async def refresh(
                     level=logging.WARNING,
                 )
                 revoke_user_sessions_before(user.id)
+                audit_event(
+                    request,
+                    action="auth.session.replay_detected",
+                    org_id=payload.get("sorg"),
+                    actor=user.id,
+                    target_type="user",
+                    target_id=getattr(user, "user_uuid", None),
+                    target_name=getattr(user, "username", None),
+                    outcome="denied",
+                    reason="refresh_token_reused",
+                    details={"sessions_revoked": True, "token_age_seconds": _token_age_seconds(payload)},
+                    require_member=True,
+                )
                 raise credentials_exception
 
     if reused_pair is not None:
@@ -532,6 +577,9 @@ async def refresh(
             _store_refresh_grace(
                 user.id, jti, new_access_token, new_refresh_token
             )
+            new_jti = refresh_token_jti(new_refresh_token)
+            if new_jti:
+                _record_refresh_successor(user.id, jti, new_jti)
 
     cookie_domain = get_cookie_domain_for_request(request)
     is_secure = is_request_secure(request)
@@ -554,7 +602,7 @@ async def refresh(
         max_age=int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
     )
     _log_refresh_outcome(
-        "grace_reused" if reused_pair is not None else "ok",
+        "grace_reused" if reused_pair is not None else "lost_rotation_recovered" if recovered else "ok",
         user_id=user.id,
         token_age_seconds=_token_age_seconds(payload),
     )
@@ -629,11 +677,27 @@ async def login(
         user_record = (await db_session.execute(
             select(User).where(User.email == username)
         )).scalars().first()
+        # Resolved for known and unknown accounts alike (no timing tell).
+        failed_org_id = await _resolve_org_id_from_slug(org_slug, db_session) if org_slug else None
         if user_record:
             await record_failed_login(
                 user_record,
                 db_session,
                 ip_address=get_client_ip(request),
+            )
+            # The org's audit log, when the account is one of its members.
+            audit_event(
+                request,
+                action="auth.login.failed",
+                org_id=failed_org_id,
+                actor=user_record.id,
+                target_type="user",
+                target_id=user_record.user_uuid,
+                target_name=user_record.username,
+                outcome="failed",
+                reason="invalid_credentials",
+                details={"method": "password"},
+                require_member=True,
             )
 
         raise HTTPException(
@@ -651,6 +715,19 @@ async def login(
 
     # Step 4: Check email verification (required for SaaS login only)
     if not user.email_verified and get_deployment_mode() == 'saas':
+        audit_event(
+            request,
+            action="auth.login.failed",
+            org_id=await _resolve_org_id_from_slug(org_slug, db_session) if org_slug else None,
+            actor=user.id,
+            target_type="user",
+            target_id=user.user_uuid,
+            target_name=user.username,
+            outcome="denied",
+            reason="email_not_verified",
+            details={"method": "password"},
+            require_member=True,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -1281,6 +1358,10 @@ async def logout(
     # and not the other silently turned every logout into cookie-clearing only.
     token = extract_jwt_from_request(request)
     payload = decode_jwt(token) if token else None
+    if payload and payload.get("purpose") == IMPERSONATION_PURPOSE:
+        # An impersonation's token never signs the impersonated member out
+        # (the impersonation gate refuses this route for it; defense in depth).
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=impersonation_error_detail(IMPERSONATION_CODE_DENIED))
     if not payload or not payload.get("sub"):
         refresh_token = request.cookies.get(JWT_REFRESH_COOKIE_NAME)
         if refresh_token:
@@ -1303,6 +1384,19 @@ async def logout(
             )
             if user_record is not None and user_record.id is not None:
                 revoke_user_sessions_before(user_record.id)
+                # Signing out also ends every impersonation this user opened.
+                await end_impersonations_started_by(db_session, user_record.id)
+                audit_event(
+                    request,
+                    action="auth.logout",
+                    org_id=payload.get("sorg"),
+                    actor=user_record.id,
+                    target_type="user",
+                    target_id=user_record.user_uuid,
+                    target_name=user_record.username,
+                    details={"sessions_revoked": True},
+                    require_member=True,
+                )
         except Exception:
             # Never block logout on a revocation-store hiccup; cookies are
             # still cleared below so the browser session ends.

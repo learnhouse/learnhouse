@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" role="img" aria-label="Code editor and terminal">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#151a21"/><stop offset="1" stop-color="#0f1318"/></linearGradient>
+<radialGradient id="glow" cx=".8" cy=".1" r=".6"><stop offset="0" stop-color="#c6f432" stop-opacity=".18"/><stop offset="1" stop-color="#c6f432" stop-opacity="0"/></radialGradient></defs>
+<rect width="1200" height="600" fill="url(#g)"/>
+<rect width="1200" height="600" fill="url(#glow)"/>
+<rect width="1200" height="44" fill="#1a1f26"/>
+<circle cx="26" cy="22" r="6" fill="#ff5f57"/><circle cx="46" cy="22" r="6" fill="#febc2e"/><circle cx="66" cy="22" r="6" fill="#28c840"/>
+<rect x="100" y="12" width="150" height="32" rx="8" fill="#0f1318"/><rect x="118" y="24" width="90" height="8" rx="4" fill="#e9edf2" opacity=".8"/>
+<rect x="262" y="12" width="130" height="32" rx="8" fill="#1a1f26"/><rect x="280" y="24" width="70" height="8" rx="4" fill="#8b95a3" opacity=".6"/>
+<rect x="0" y="44" width="2" height="556" fill="#232a33"/>
+<g transform="translate(0,0)"><text x="22" y="101" fill="#3b4552" font-family="monospace" font-size="12"> 1</text>
+<rect x="80" y="92" width="60" height="10" rx="5" fill="#7c5cff" opacity="0.95"/>
+<rect x="150" y="92" width="120" height="10" rx="5" fill="#e9edf2" opacity="0.95"/>
+<rect x="280" y="92" width="40" height="10" rx="5" fill="#8b95a3" opacity="0.6"/>
+<text x="22" y="135" fill="#3b4552" font-family="monospace" font-size="12"> 2</text>
+<rect x="104" y="126" width="90" height="10" rx="5" fill="#c6f432" opacity="0.95"/>
+<rect x="204" y="126" width="160" height="10" rx="5" fill="#e9edf2" opacity="0.95"/>
+<text x="22" y="169" fill="#3b4552" font-family="monospace" font-size="12"> 3</text>
+<rect x="104" y="160" width="70" height="10" rx="5" fill="#ff8f70" opacity="0.95"/>
+<rect x="184" y="160" width="80" height="10" rx="5" fill="#e9edf2" opacity="0.95"/>
+<rect x="274" y="160" width="110" height="10" rx="5" fill="#8b95a3" opacity="0.6"/>
+<text x="22" y="203" fill="#3b4552" font-family="monospace" font-size="12"> 4</text>
+<rect x="128" y="194" width="150" height="10" rx="5" fill="#e9edf2" opacity="0.95"/>
+<rect x="288" y="194" width="60" height="10" rx="5" fill="#7c5cff" opacity="0.95"/>
+<text x="22" y="237" fill="#3b4552" font-family="monospace" font-size="12"> 5</text>
+<rect x="104" y="228" width="40" height="10" rx="5" fill="#8b95a3" opacity="0.6"/>
+<text x="22" y="271" fill="#3b4552" font-family="monospace" font-size="12"> 6</text>
+<rect x="80" y="262" width="52" height="10" rx="5" fill="#7c5cff" opacity="0.95"/>
+<rect x="142" y="262" width="130" height="10" rx="5" fill="#e9edf2" opacity="0.95"/>
+<text x="22" y="305" fill="#3b4552" font-family="monospace" font-size="12"> 7</text>
+<rect x="104" y="296" width="110" height="10" rx="5" fill="#c6f432" opacity="0.95"/>
+<rect x="224" y="296" width="90" height="10" rx="5" fill="#ff8f70" opacity="0.95"/>
+<rect x="324" y="296" width="50" height="10" rx="5" fill="#e9edf2" opacity="0.95"/>
+<text x="22" y="339" fill="#3b4552" font-family="monospace" font-size="12"> 8</text>
+<rect x="128" y="330" width="200" height="10" rx="5" fill="#e9edf2" opacity="0.95"/>
+<text x="22" y="373" fill="#3b4552" font-family="monospace" font-size="12"> 9</text>
+<rect x="104" y="364" width="80" height="10" rx="5" fill="#7c5cff" opacity="0.95"/>
+<rect x="194" y="364" width="70" height="10" rx="5" fill="#e9edf2" opacity="0.95"/>
+<text x="22" y="407" fill="#3b4552" font-family="monospace" font-size="12">10</text>
+<rect x="80" y="398" width="30" height="10" rx="5" fill="#8b95a3" opacity="0.6"/></g>
+<rect x="720" y="76" width="450" height="490" rx="14" fill="#0b0d10" stroke="#232a33"/>
+<text x="744" y="110" fill="#8b95a3" font-family="monospace" font-size="14">~/capstone  npm test</text>
+<g font-family="monospace" font-size="14">
+<text x="744" y="146" fill="#c6f432">✓ renders the dashboard (42ms)</text>
+<text x="744" y="174" fill="#c6f432">✓ saves a draft offline (18ms)</text>
+<text x="744" y="202" fill="#c6f432">✓ syncs when back online (61ms)</text>
+<text x="744" y="230" fill="#c6f432">✓ handles 10k rows (120ms)</text>
+<text x="744" y="270" fill="#e9edf2">Tests  24 passed, 24 total</text>
+<text x="744" y="298" fill="#8b95a3">Time   1.84 s</text>
+<text x="744" y="346" fill="#7c5cff">~/capstone  git push origin main</text>
+<text x="744" y="374" fill="#8b95a3">deploying… done in 22s</text>
+</g>
+<rect x="744" y="400" width="400" height="140" rx="10" fill="#14181e"/>
+<polyline points="760,520 820,500 880,505 940,470 1000,478 1060,440 1124,420" fill="none" stroke="#c6f432" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<g fill="#7c5cff" opacity=".55"><rect x="764" y="500" width="22" height="30" rx="3"/><rect x="824" y="490" width="22" height="40" rx="3"/><rect x="884" y="496" width="22" height="34" rx="3"/><rect x="944" y="470" width="22" height="60" rx="3"/><rect x="1004" y="476" width="22" height="54" rx="3"/><rect x="1064" y="450" width="22" height="80" rx="3"/></g>
+</svg>

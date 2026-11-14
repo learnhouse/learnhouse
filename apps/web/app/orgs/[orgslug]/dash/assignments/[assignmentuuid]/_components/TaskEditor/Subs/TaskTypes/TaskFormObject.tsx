@@ -5,7 +5,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
 import { answerInputClass } from '@components/Objects/Activities/Assignment/assignmentUI'
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
-import { Check, Info, Minus, Plus, PlusCircle, X, Type } from 'lucide-react';
+import { Check, Info, Minus, Plus, PlusCircle, X, TextT } from '@phosphor-icons/react'
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -375,14 +375,15 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
         if (assignmentTaskUUID) {
             const res = await getAssignmentTaskSubmissionsUser(assignmentTaskUUID, user_id, assignment.assignment_object.assignment_uuid, access_token);
             if (res.success) {
-                setUserSubmissions({
+                // A learner who never answered this task has no submissions
+                // array; keep the shape the render code relies on.
+                const hydrated = {
                     ...res.data.task_submission,
+                    submissions: Array.isArray(res.data.task_submission?.submissions) ? res.data.task_submission.submissions : [],
                     assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                });
-                setInitialUserSubmissions({
-                    ...res.data.task_submission,
-                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                });
+                };
+                setUserSubmissions(hydrated);
+                setInitialUserSubmissions(hydrated);
                 setUserSubmissionObject(res.data);
             }
         }
@@ -602,7 +603,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                     <div key={bIndex} className="flex">
                                         <div className="blank-item outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 min-h-[40px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow">
                                             <div className="font-bold text-base flex flex-none items-center justify-center self-stretch w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
-                                                <Type size={14} />
+                                                <TextT size={14} />
                                             </div>
                                             {view === 'teacher' ? (
                                                 <div className="flex flex-col space-y-1 w-full py-2">

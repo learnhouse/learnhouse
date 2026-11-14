@@ -14,10 +14,9 @@ import { cn } from '@/lib/utils'
 import { getOrgPreviewMediaDirectory, getOrgThumbnailMediaDirectory } from '@services/media/media'
 import { updateOrganization, uploadOrganizationPreview, uploadOrganizationThumbnail } from '@services/settings/org'
 import { queryKeys } from '@/lib/query/keys'
-import { Input } from '@components/ui/input'
-import { Button } from '@components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@components/ui/dialog'
-import { BrandingSection, ImageDropzone, SpecList, useAssetUpload } from './BrandingShared'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { Button, INPUT, OptionCard, SectionCard } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { ImageDropzone, SpecList, WhereItAppears, useAssetUpload } from './BrandingShared'
 import { ExploreCardVignette, GalleryVignette, LinkPreviewVignette } from './BrandingVignettes'
 
 const ACCEPT = constructAcceptValue(['png', 'jpg'])
@@ -220,243 +219,235 @@ export default function PreviewsTab() {
       id: 'image',
       title: t('dashboard.organization.images.video_modal.images'),
       description: t('dashboard.organization.images.accepted_files'),
-      icon: <UploadSimple size={26} weight="duotone" className="text-gray-700" />,
+      icon: <UploadSimple size={20} />,
+      iconClass: 'bg-neutral-100 text-neutral-700',
       onClick: () => document.getElementById('previewInput')?.click(),
     },
     {
       id: 'youtube',
       title: t('dashboard.organization.images.video_modal.youtube'),
       description: t('dashboard.organization.images.video_modal.youtube_desc'),
-      icon: <SiYoutube className="h-7 w-7 text-[#FF0000]" />,
+      icon: <SiYoutube className="h-5 w-5 text-[#FF0000]" />,
+      iconClass: 'bg-red-50',
       onClick: () => setSelectedService('youtube'),
     },
     {
       id: 'loom',
       title: t('dashboard.organization.images.video_modal.loom'),
       description: t('dashboard.organization.images.video_modal.loom_desc'),
-      icon: <SiLoom className="h-7 w-7 text-[#625DF5]" />,
+      icon: <SiLoom className="h-5 w-5 text-[#625DF5]" />,
+      iconClass: 'bg-indigo-50',
       onClick: () => setSelectedService('loom'),
     },
   ]
 
-  return (
-    <div>
-      <BrandingSection
-        icon={ImageSquare}
-        title={t('dashboard.organization.branding.previews.thumbnail_title')}
-        description={t('dashboard.organization.branding.previews.thumbnail_desc')}
-        aside={
-          <>
-            <ExploreCardVignette
-              thumbnailUrl={thumbnailUrl}
-              name={org?.name}
-              description={org?.description}
-              label={t('dashboard.organization.branding.vignettes.explore_card')}
-            />
-            <LinkPreviewVignette
-              thumbnailUrl={thumbnailUrl}
-              name={org?.name}
-              host={org?.slug ? `${org.slug}.learnhouse.io` : undefined}
-              label={t('dashboard.organization.branding.vignettes.link_preview')}
-            />
-          </>
-        }
-      >
-        <ImageDropzone
-          id="thumbnailInput"
-          shape="wide"
-          currentUrl={thumbnailUrl}
-          accept={ACCEPT}
-          uploading={thumbnail.uploading}
-          onFile={thumbnail.handleFile}
-          emptyLabel={t('dashboard.organization.branding.previews.thumbnail_add')}
-          replaceLabel={t('dashboard.organization.branding.previews.thumbnail_replace')}
-        />
-        <SpecList
-          items={[
-            t('dashboard.organization.branding.specs.formats'),
-            t('dashboard.organization.branding.specs.thumbnail_size'),
-            t('dashboard.organization.branding.specs.max_size'),
-          ]}
-        />
-      </BrandingSection>
+  const closeDialog = (open: boolean) => {
+    setDialogOpen(open)
+    if (!open) {
+      setSelectedService(null)
+      setVideoUrl('')
+    }
+  }
 
-      <BrandingSection
-        icon={Images}
-        title={t('dashboard.organization.branding.previews.gallery_title')}
-        description={t('dashboard.organization.branding.previews.gallery_desc')}
-        aside={<GalleryVignette items={galleryItems} label={t('dashboard.organization.branding.vignettes.gallery')} />}
-      >
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="previews" direction="horizontal">
-            {(provided) => (
-              <div className="flex flex-wrap gap-3" {...provided.droppableProps} ref={provided.innerRef}>
-                {previews.map((preview, index) => (
-                  <Draggable key={preview.id} draggableId={preview.id} index={index}>
-                    {(dragProvided, snapshot) => (
-                      <div
-                        ref={dragProvided.innerRef}
-                        {...dragProvided.draggableProps}
-                        className={cn('group relative h-[84px] w-[140px] shrink-0', snapshot.isDragging && 'z-drag-overlay')}
-                      >
+  return (
+    <SectionCard
+      icon={<Images size={18} />}
+      title={t('dashboard.organization.branding.tabs.previews')}
+      description={t('dashboard.organization.settings_ui.branding.previews_desc')}
+    >
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+            <ImageSquare size={16} className="text-neutral-400" />
+            {t('dashboard.organization.branding.previews.thumbnail_title')}
+          </div>
+          <p className="mt-1 mb-4 text-xs leading-relaxed text-neutral-500">
+            {t('dashboard.organization.branding.previews.thumbnail_desc')}
+          </p>
+          <ImageDropzone
+            id="thumbnailInput"
+            shape="wide"
+            currentUrl={thumbnailUrl}
+            accept={ACCEPT}
+            uploading={thumbnail.uploading}
+            onFile={thumbnail.handleFile}
+            emptyLabel={t('dashboard.organization.branding.previews.thumbnail_add')}
+            replaceLabel={t('dashboard.organization.branding.previews.thumbnail_replace')}
+          />
+          <SpecList
+            items={[
+              t('dashboard.organization.branding.specs.formats'),
+              t('dashboard.organization.branding.specs.thumbnail_size'),
+              t('dashboard.organization.branding.specs.max_size'),
+            ]}
+          />
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+            <Images size={16} className="text-neutral-400" />
+            {t('dashboard.organization.branding.previews.gallery_title')}
+            <span className="text-xs font-normal text-neutral-400 tabular-nums">
+              {previews.length}/{MAX_PREVIEWS}
+            </span>
+          </div>
+          <p className="mt-1 mb-4 text-xs leading-relaxed text-neutral-500">
+            {t('dashboard.organization.branding.previews.gallery_desc')}
+          </p>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="previews" direction="horizontal">
+              {(provided) => (
+                <div className="flex flex-wrap gap-3" {...provided.droppableProps} ref={provided.innerRef}>
+                  {previews.map((preview, index) => (
+                    <Draggable key={preview.id} draggableId={preview.id} index={index}>
+                      {(dragProvided, snapshot) => (
                         <div
-                          className={cn(
-                            'relative h-full w-full overflow-hidden rounded-lg bg-gray-100 ring-1 ring-inset ring-black/[0.07]',
-                            snapshot.isDragging ? 'shadow-lg' : ''
-                          )}
+                          ref={dragProvided.innerRef}
+                          {...dragProvided.draggableProps}
+                          className={cn('group relative h-[84px] w-[140px] shrink-0', snapshot.isDragging && 'z-drag-overlay')}
                         >
-                          {preview.type === 'image' ? (
-                            <img
-                              src={getOrgPreviewMediaDirectory(org?.org_uuid, preview.id)}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <>
-                              <img src={preview.thumbnailUrl} alt="" className="h-full w-full object-cover" />
-                              <span className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                {preview.type === 'youtube' ? (
-                                  <SiYoutube className="h-6 w-6 text-white" />
-                                ) : (
-                                  <SiLoom className="h-6 w-6 text-white" />
-                                )}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <span
-                          {...dragProvided.dragHandleProps}
-                          className="absolute -start-1.5 -top-1.5 flex h-6 w-6 cursor-grab items-center justify-center rounded-full bg-white text-gray-500 opacity-0 shadow ring-1 ring-black/10 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
-                        >
-                          <DotsSixVertical size={14} weight="duotone" />
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removePreview(preview.id)}
-                          aria-label={t('common.remove', { defaultValue: 'Remove' })}
-                          className="absolute -end-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white text-gray-500 opacity-0 shadow ring-1 ring-black/10 transition-opacity hover:text-red-600 group-hover:opacity-100"
-                        >
-                          <X size={12} weight="duotone" />
-                        </button>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-                {previews.length < MAX_PREVIEWS && (
-                  <Dialog
-                    open={dialogOpen}
-                    onOpenChange={(open) => {
-                      setDialogOpen(open)
-                      if (!open) {
-                        setSelectedService(null)
-                        setVideoUrl('')
-                      }
-                    }}
-                  >
-                    <DialogTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-[84px] w-[140px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-gray-300 bg-gray-50 text-gray-500 transition-colors hover:bg-gray-100"
-                      >
-                        <Plus size={16} weight="duotone" />
-                        <span className="text-[11px] font-medium">{t('dashboard.organization.images.add_preview')}</span>
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[560px]">
-                      <DialogHeader>
-                        <DialogTitle>{t('dashboard.organization.images.video_modal.title')}</DialogTitle>
-                      </DialogHeader>
-                      {!selectedService ? (
-                        <div className="grid grid-cols-3 gap-3 pt-2">
-                          {addOptions.map((option) => (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={option.onClick}
-                              disabled={option.id === 'image' && isPreviewUploading}
-                              className="flex aspect-square flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white transition-colors hover:bg-gray-50 disabled:opacity-50"
-                            >
-                              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                                {option.icon}
-                              </span>
-                              <span className="px-2 text-center">
-                                <span className="block text-sm font-medium text-gray-800">{option.title}</span>
-                                <span className="mt-0.5 block text-[11px] text-gray-500">{option.description}</span>
-                              </span>
-                            </button>
-                          ))}
-                          <input
-                            type="file"
-                            id="previewInput"
-                            accept={ACCEPT}
-                            className="hidden"
-                            onChange={handlePreviewUpload}
-                            multiple
-                          />
-                        </div>
-                      ) : (
-                        <div className="space-y-3 pt-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                                {selectedService === 'youtube' ? (
-                                  <SiYoutube className="h-5 w-5 text-[#FF0000]" />
-                                ) : (
-                                  <SiLoom className="h-5 w-5 text-[#625DF5]" />
-                                )}
-                              </span>
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">
-                                  {selectedService === 'youtube'
-                                    ? t('dashboard.organization.images.video_modal.youtube_desc')
-                                    : t('dashboard.organization.images.video_modal.loom_desc')}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {t('dashboard.organization.images.video_modal.url_placeholder', {
-                                    service: selectedService === 'youtube' ? 'YouTube' : 'Loom',
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedService(null)}
-                              className="text-gray-400 hover:text-gray-700"
-                            >
-                              <X size={18} weight="duotone" />
-                            </button>
-                          </div>
-                          <Input
-                            placeholder={
-                              selectedService === 'youtube' ? 'https://youtube.com/watch?v=...' : 'https://www.loom.com/share/...'
-                            }
-                            value={videoUrl}
-                            onChange={(e) => setVideoUrl(e.target.value)}
-                            autoFocus
-                          />
-                          <Button
-                            type="button"
-                            onClick={() => handleVideoSubmit(selectedService)}
-                            disabled={!videoUrl}
-                            className="w-full bg-black text-white hover:bg-black/90"
+                          <div
+                            className={cn(
+                              'relative h-full w-full overflow-hidden rounded-lg bg-neutral-100 ring-1 ring-inset ring-black/[0.07]',
+                              snapshot.isDragging ? 'shadow-lg' : ''
+                            )}
                           >
-                            {t('dashboard.organization.images.video_modal.add_button')}
-                          </Button>
+                            {preview.type === 'image' ? (
+                              <img
+                                src={getOrgPreviewMediaDirectory(org?.org_uuid, preview.id)}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <>
+                                <img src={preview.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+                                <span className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  {preview.type === 'youtube' ? (
+                                    <SiYoutube className="h-6 w-6 text-white" />
+                                  ) : (
+                                    <SiLoom className="h-6 w-6 text-white" />
+                                  )}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <span
+                            {...dragProvided.dragHandleProps}
+                            aria-label={t('dashboard.organization.images.drag_to_reorder')}
+                            className="absolute -start-1.5 -top-1.5 flex h-6 w-6 cursor-grab items-center justify-center rounded-full bg-white text-neutral-500 opacity-0 shadow ring-1 ring-black/10 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+                          >
+                            <DotsSixVertical size={14} weight="bold" />
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removePreview(preview.id)}
+                            aria-label={t('common.remove', { defaultValue: 'Remove' })}
+                            className="absolute -end-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-500 opacity-0 shadow ring-1 ring-black/10 transition-opacity hover:text-rose-600 group-hover:opacity-100"
+                          >
+                            <X size={12} weight="bold" />
+                          </button>
                         </div>
                       )}
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
-          <Info weight="duotone" size={13} />
-          {t('dashboard.organization.images.drag_to_reorder')}
-        </p>
-      </BrandingSection>
-    </div>
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                  {previews.length < MAX_PREVIEWS && (
+                    <button
+                      type="button"
+                      onClick={() => setDialogOpen(true)}
+                      className="flex h-[84px] w-[140px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-neutral-500 transition-colors hover:bg-neutral-100"
+                    >
+                      <Plus size={16} />
+                      <span className="text-[11px] font-medium">{t('dashboard.organization.images.add_preview')}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-neutral-400">
+            <Info size={13} />
+            {t('dashboard.organization.images.drag_to_reorder')}
+          </p>
+        </div>
+      </div>
+
+      <WhereItAppears>
+        <ExploreCardVignette
+          thumbnailUrl={thumbnailUrl}
+          name={org?.name}
+          description={org?.description}
+          label={t('dashboard.organization.branding.vignettes.explore_card')}
+        />
+        <LinkPreviewVignette
+          thumbnailUrl={thumbnailUrl}
+          name={org?.name}
+          host={org?.slug ? `${org.slug}.learnhouse.io` : undefined}
+          label={t('dashboard.organization.branding.vignettes.link_preview')}
+        />
+        <GalleryVignette items={galleryItems} label={t('dashboard.organization.branding.vignettes.gallery')} />
+      </WhereItAppears>
+
+      <input type="file" id="previewInput" accept={ACCEPT} className="hidden" onChange={handlePreviewUpload} multiple />
+
+      <Modal
+        isDialogOpen={dialogOpen}
+        onOpenChange={closeDialog}
+        size="sm"
+        icon={<Images size={16} />}
+        onBack={selectedService ? () => setSelectedService(null) : undefined}
+        dialogTitle={t('dashboard.organization.images.video_modal.title')}
+        dialogContent={
+          !selectedService ? (
+            <div className="flex flex-col gap-2">
+              {addOptions.map((option) => (
+                <OptionCard
+                  key={option.id}
+                  icon={option.icon}
+                  iconClass={option.iconClass}
+                  title={option.title}
+                  description={option.description}
+                  onClick={option.onClick}
+                  disabled={option.id === 'image' && isPreviewUploading}
+                />
+              ))}
+            </div>
+          ) : (
+            <form
+              className="flex flex-col gap-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (videoUrl) handleVideoSubmit(selectedService)
+              }}
+            >
+              <p className="text-sm text-neutral-600">
+                {t('dashboard.organization.images.video_modal.url_placeholder', {
+                  service: selectedService === 'youtube' ? 'YouTube' : 'Loom',
+                })}
+              </p>
+              <input
+                placeholder={
+                  selectedService === 'youtube' ? 'https://youtube.com/watch?v=...' : 'https://www.loom.com/share/...'
+                }
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                autoFocus
+                className={INPUT}
+              />
+            </form>
+          )
+        }
+        footer={
+          selectedService ? (
+            <>
+              <Button onClick={() => setSelectedService(null)}>{t('common.back')}</Button>
+              <Button variant="primary" onClick={() => handleVideoSubmit(selectedService)} disabled={!videoUrl}>
+                {t('dashboard.organization.images.video_modal.add_button')}
+              </Button>
+            </>
+          ) : undefined
+        }
+      />
+    </SectionCard>
   )
 }

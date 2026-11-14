@@ -561,6 +561,7 @@ async def update_org(
             detail="Organization slug already exists",
         )
 
+    org_before = OrganizationRead.model_validate(org).model_dump(mode="json")
     # Update only the fields that were passed in
     for var, value in vars(org_object).items():
         if value is not None:
@@ -574,6 +575,14 @@ async def update_org(
     await db_session.refresh(org)
 
     org = OrganizationRead.model_validate(org)
+    from src.core.ee_hooks import audit_event
+
+    audit_event(
+        request, action="org.updated", org_id=org.id, actor=current_user,
+        target_type="organization", target_id=org.org_uuid, target_name=org.name,
+        before=org_before, after=org.model_dump(mode="json"),
+        fields=[k for k, v in vars(org_object).items() if v is not None],
+    )
 
     return org
 
@@ -666,6 +675,7 @@ async def update_org_logo(
     db_session.add(org)
     await db_session.commit()
     await db_session.refresh(org)
+    _audit_config_change(request, "org.branding.updated", org.id, current_user, {"logo": None}, {"logo": "updated"})
 
     return {"detail": "Logo updated"}
 
@@ -718,12 +728,14 @@ async def _update_org_general_image(
             updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "favicon_image": "", "square_logo_image": "", "auth_branding": {}}
         updated_config["general"][config_key] = name_in_disk
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.branding.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": detail}
 
@@ -789,6 +801,7 @@ async def update_org_thumbnail(
     db_session.add(org)
     await db_session.commit()
     await db_session.refresh(org)
+    _audit_config_change(request, "org.branding.updated", org.id, current_user, {"thumbnail": None}, {"thumbnail": "updated"})
 
     return {"detail": "Thumbnail updated"}
 
@@ -816,6 +829,23 @@ async def update_org_preview(
     name_in_disk = await upload_org_preview(preview_file, org.org_uuid)
 
     return {"name_in_disk": name_in_disk}
+
+
+async def purge_org(org: Organization, db_session: AsyncSession) -> None:
+    """The deletion itself, once the caller is authorized: drop the cached
+    sessions of its members, then delete the row. Related data (memberships,
+    courses, folders, ...) goes with it through the database CASCADE
+    constraints. Shared by ``delete_org`` and the platform console's guarded
+    cleanup, so both delete exactly the same way."""
+    from src.routers.users import _invalidate_session_cache
+
+    affected_users = (await db_session.execute(
+        select(UserOrganization.user_id).where(UserOrganization.org_id == org.id)
+    )).scalars().all()
+    for uid in affected_users:
+        _invalidate_session_cache(uid)
+    await db_session.delete(org)
+    await db_session.commit()
 
 
 async def delete_org(
@@ -870,22 +900,10 @@ async def delete_org(
         f"org_name={org_name}, deleted_by_user_id={user_id}"
     )
 
-    # Invalidate session cache for all users in this org before deletion
-    from src.routers.users import _invalidate_session_cache
-    affected_users = (await db_session.execute(
-        select(UserOrganization.user_id).where(UserOrganization.org_id == org_id)
-    )).scalars().all()
-    for uid in affected_users:
-        _invalidate_session_cache(uid)
-
     # Capture the acting admin's email before the cascade removes memberships.
     acting_email = getattr(current_user, "email", None)
 
-    # Delete the organization
-    # Related data (UserOrganization, Courses, Folders, etc.) will be
-    # automatically deleted via CASCADE constraints in the database
-    await db_session.delete(org)
-    await db_session.commit()
+    await purge_org(org, db_session)
 
     # Best-effort deletion confirmation to the acting admin.
     if acting_email:
@@ -955,6 +973,13 @@ async def wipe_org_content(
     # Decrement usage AFTER the rows are gone, mirroring delete_course().
     for _ in range(deleted_count):
         await decrease_feature_usage("courses", org_id, db_session)
+    from src.core.ee_hooks import audit_event
+
+    audit_event(
+        request, action="org.content_wiped", org_id=org_id, actor=current_user,
+        target_type="organization", target_id=org.org_uuid, target_name=org.name,
+        details={"deleted_courses": deleted_count},
+    )
 
     return {"detail": "Organization content wiped", "deleted_courses": deleted_count}
 
@@ -1074,6 +1099,33 @@ async def get_orgs_by_user(
 
 
 # Config related
+def _audit_config_change(request, action: str, org_id, current_user, before, after) -> None:
+    """Audit log entry for an org config save: the settings that changed,
+    compared section by section (``customization.color`` ...)."""
+    from src.core.ee_hooks import audit_event
+
+    before, after = before or {}, after or {}
+    changes = {}
+    for section in sorted(set(before) | set(after), key=str):
+        old, new = before.get(section), after.get(section)
+        if old == new or section == "config_version":
+            continue
+        if isinstance(old, dict) and isinstance(new, dict):
+            for key in sorted(set(old) | set(new), key=str):
+                if old.get(key) != new.get(key):
+                    changes[f"{section}.{key}"] = (old.get(key), new.get(key))
+        else:
+            changes[str(section)] = (old, new)
+    if not changes:
+        return
+    audit_event(
+        request, action=action, org_id=org_id, actor=current_user,
+        target_type="organization", target_id=org_id,
+        before={k: v[0] for k, v in changes.items()},
+        after={k: v[1] for k, v in changes.items()},
+    )
+
+
 def _deep_copy_config(org_config: OrganizationConfig) -> dict:
     """Deep copy config dict so SQLAlchemy detects changes."""
     return json.loads(json.dumps(org_config.config or {}))
@@ -1131,12 +1183,14 @@ async def update_org_signup_mechanism(
         })
         updated_config["features"]["members"]["signup_mode"] = signup_mechanism
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.signup.updated", org_config.org_id, current_user, config_before, updated_config)
 
     # Explicit Redis invalidation. The SA after_update hook does this too,
     # but signup method changes must take effect instantly on the public
@@ -1201,12 +1255,14 @@ async def update_org_ai_config(
         if "model" in updated_config["features"]["ai"]:
             del updated_config["features"]["ai"]["model"]
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.ai.updated", org_config.org_id, current_user, config_before, updated_config)
 
     await dispatch_webhooks(
         event_name="org_ai_config_changed",
@@ -1254,12 +1310,14 @@ async def _update_feature_toggle(
             updated_config["features"][feature] = v1_default or {"enabled": True}
         updated_config["features"][feature]["enabled"] = enabled
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.features.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": f"{feature.capitalize()} configuration updated"}
 
@@ -1367,12 +1425,14 @@ async def update_org_folders_sort_config(
     updated_config = _deep_copy_config(org_config)
     updated_config.setdefault("general", {}).setdefault("folders", {})["sort_mode"] = sort_mode
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.settings.updated", org_config.org_id, current_user, config_before, updated_config)
 
     from src.services.orgs.cache import invalidate_org_config_cache
     invalidate_org_config_cache(org.id)
@@ -1439,6 +1499,10 @@ async def update_org_color_config(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ):
+    # Lands in inline CSS on every learner page: hex only.
+    from src.services.orgs.theme import validated_color_param
+
+    color = validated_color_param(color)
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -1462,12 +1526,14 @@ async def update_org_color_config(
         updated_config.setdefault("general", {"enabled": True, "color": "", "watermark": True})
         updated_config["general"]["color"] = color
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.branding.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Color configuration updated"}
 
@@ -1502,12 +1568,14 @@ async def update_org_footer_text_config(
         updated_config.setdefault("general", {"enabled": True, "color": "", "footer_text": "", "watermark": True})
         updated_config["general"]["footer_text"] = footer_text
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.branding.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Footer text configuration updated"}
 
@@ -1574,12 +1642,14 @@ async def update_org_email_sender_name_config(
         updated_config.setdefault("general", {"enabled": True, "color": "", "watermark": True})
         updated_config["general"]["email_sender_name"] = sanitized
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.settings.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Email sender name updated"}
 
@@ -1621,6 +1691,10 @@ async def update_org_font_config(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ):
+    # Lands in inline CSS and a Google Fonts URL: family names only.
+    from src.services.orgs.theme import validated_font_param
+
+    font = validated_font_param(font)
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -1644,12 +1718,14 @@ async def update_org_font_config(
         updated_config.setdefault("general", {"enabled": True, "color": "", "watermark": True})
         updated_config["general"]["font"] = font
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.branding.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Font configuration updated"}
 
@@ -1694,12 +1770,14 @@ async def update_org_default_language_config(
         updated_config.setdefault("general", {"enabled": True, "color": "", "watermark": True})
         updated_config["general"]["default_language"] = default_language
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.settings.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Default language updated"}
 
@@ -1752,12 +1830,14 @@ async def update_org_watermark_config(
         updated_config.setdefault("general", {})
         updated_config["general"]["watermark"] = watermark_enabled
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.branding.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Watermark configuration updated"}
 
@@ -1795,12 +1875,14 @@ async def update_org_menu_config(
         updated_config.setdefault("general", {"enabled": True})
         updated_config["general"]["menu"] = menu_data
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.branding.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Menu configuration updated"}
 
@@ -1851,14 +1933,51 @@ async def update_org_course_end_config(
         updated_config.setdefault("general", {"enabled": True})
         updated_config["general"]["course_end"] = course_end_data
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.settings.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Course end configuration updated"}
+
+
+def _validate_signup_people_fields(fields: list[dict], config: dict, org_id: int) -> None:
+    """Check the "save to people field" mappings of signup fields.
+
+    Mapping needs the people data feature. Each profile column (and the
+    manager) takes at most one field, and only from a field type that fits it.
+    """
+    from src.db.organization_config import SIGNUP_PEOPLE_FIELD_TYPES
+    from src.security.features_utils.resolve import resolve_feature
+
+    mapped = [f for f in fields if f.get("people_field")]
+    if not mapped:
+        return
+    if not resolve_feature("required_training", config, org_id).get("enabled"):
+        raise HTTPException(
+            status_code=403,
+            detail="Saving signup answers to people data needs the people data feature",
+        )
+    used: set[str] = set()
+    for field in mapped:
+        target = field["people_field"]
+        if field.get("type") not in SIGNUP_PEOPLE_FIELD_TYPES[target]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"The field '{field['key']}' can't be saved to {target}: wrong field type",
+            )
+        if target == "attribute":
+            continue
+        if target in used:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Only one signup field can be saved to {target}",
+            )
+        used.add(target)
 
 
 async def update_org_signup_fields_config(
@@ -1906,6 +2025,7 @@ async def update_org_signup_fields_config(
         raise HTTPException(
             status_code=400, detail="Signup field keys may not be empty"
         )
+    _validate_signup_people_fields(fields_data["fields"], org_config.config or {}, org.id)
 
     updated_config = _deep_copy_config(org_config)
     if _is_v2_config(updated_config):
@@ -1915,12 +2035,14 @@ async def update_org_signup_fields_config(
         updated_config.setdefault("general", {"enabled": True})
         updated_config["general"]["signup_fields"] = fields_data
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.signup.updated", org_config.org_id, current_user, config_before, updated_config)
 
     # Explicit Redis invalidation, same reasoning as the signup-mechanism
     # update: the public /signup page renders these fields, so a stale cached
@@ -1963,12 +2085,14 @@ async def update_org_auth_branding_config(
         updated_config.setdefault("general", {"enabled": True, "color": "", "footer_text": "", "watermark": True, "auth_branding": {}})
         updated_config["general"]["auth_branding"] = branding_data
 
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.branding.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "Auth branding configuration updated"}
 
@@ -2075,33 +2199,15 @@ async def update_org_landing(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    # Get org config
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = (await db_session.execute(statement)).scalars().first()
+    # The classic landing editor is gone: landings are builder pages. Old
+    # clients that still send a classic config get it converted and published
+    # as the home page, and receive that page back.
+    from src.services.landing import service as landing_service
 
-    if org_config is None:
-        logging.warning(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
+    page = await landing_service.import_legacy(request, db_session, current_user, org.id, landing_object)
+    _audit_config_change(request, "org.landing.updated", org.id, current_user, None, {"landing_page": page["page_uuid"], "published_version": page["published_version"]})
 
-    updated_config = _deep_copy_config(org_config)
-
-    if _is_v2_config(updated_config):
-        updated_config.setdefault("customization", {})
-        updated_config["customization"]["landing"] = landing_object
-    else:
-        updated_config["landing"] = landing_object
-
-    org_config.config = updated_config
-    org_config.update_date = str(datetime.now())
-
-    db_session.add(org_config)
-    await db_session.commit()
-    await db_session.refresh(org_config)
-
-    return {"detail": "Landing object updated"}
+    return {"detail": "Landing object updated", "page": page}
 
 
 async def upload_org_landing_content_service(
@@ -2172,12 +2278,14 @@ async def update_org_seo_config(
         updated_config["seo"] = seo_data
 
     # Update the database with the new dictionary
+    config_before = org_config.config
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+    _audit_config_change(request, "org.seo.updated", org_config.org_id, current_user, config_before, updated_config)
 
     return {"detail": "SEO configuration updated"}
 

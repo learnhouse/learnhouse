@@ -33,6 +33,9 @@ export interface Community {
   thumbnail_image: string | null
   creation_date: string
   update_date: string
+  /** Human-readable URL key, unique per org. */
+  slug?: string | null
+  seo?: Record<string, any> | null
 }
 
 export interface CommunityCreate {
@@ -199,4 +202,26 @@ export async function updateCommunityThumbnail(
   )
   const res = await getResponseMetadata(result)
   return res
+}
+
+// Public activity counts for the communities the caller can see.
+export interface CommunitySummary {
+  community_uuid: string
+  discussion_count: number
+  unanswered_count: number
+  participant_count: number
+  new_discussions_week: number
+  last_activity_date: string | null
+}
+
+export async function getCommunitiesSummary(
+  org_id: number,
+  access_token?: string
+): Promise<CommunitySummary[]> {
+  const result: any = await fetch(
+    `${getAPIUrl()}communities/org/${org_id}/summary`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return Array.isArray(res) ? res : []
 }

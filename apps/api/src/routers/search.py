@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
@@ -31,6 +31,7 @@ async def api_search_across_org(
     query: str = Query(..., min_length=3, max_length=200, description="Search query"),
     page: int = Query(default=1, ge=1, description="Page number"),
     limit: int = Query(default=10, ge=1, le=50, description="Items per page (max 50)"),
+    lang: Optional[str] = Query(default=None, max_length=200, description="Preferred languages: course titles come back in the first published one."),
     db_session: AsyncSession = Depends(get_db_session),
     current_user: Union[PublicUser, APITokenUser] = Depends(get_current_user),
 ) -> SearchResult:
@@ -67,7 +68,7 @@ async def api_search_across_org(
             headers={"Retry-After": str(retry_after)},
         )
 
-    return await search_across_org(
+    result = await search_across_org(
         request=request,
         current_user=current_user,
         org_slug=org_slug,
@@ -76,3 +77,8 @@ async def api_search_across_org(
         page=page,
         limit=limit
     )
+    if result.courses:
+        from src.services.courses.translations.learner import localize_course_list
+
+        await localize_course_list(db_session, result.courses, lang)
+    return result

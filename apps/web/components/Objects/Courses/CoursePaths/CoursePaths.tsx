@@ -2,11 +2,12 @@
 import React from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, Route } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
+import { Circuitry } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
-import { removePathPrefix } from '@services/paths/paths'
 import { usePathsForCourse } from '@/hooks/queries/usePaths'
+import { resourcePath } from '@/lib/seo/paths'
 
 /** "Part of a path" box on the course page: points learners at the bigger
  * journeys this course belongs to. Renders nothing when there are none. */
@@ -21,14 +22,14 @@ function CoursePaths({ courseUuid, orgslug }: { courseUuid: string; orgslug: str
   return (
     <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4 space-y-3">
       <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-        <Route size={13} />
+        <Circuitry size={13} />
         {t('paths.part_of_paths')}
       </h3>
       <ul className="space-y-1">
         {paths.map((path) => (
           <li key={path.path_uuid}>
             <Link
-              href={getUriWithOrg(orgslug, `/path/${removePathPrefix(path.path_uuid)}`)}
+              href={getUriWithOrg(orgslug, resourcePath('path', path))}
               className="group flex items-center gap-2 -mx-2 px-2 py-1.5 rounded-md hover:bg-gray-50 transition-colors"
             >
               <span className="flex-1 min-w-0">

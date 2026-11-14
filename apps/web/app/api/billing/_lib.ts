@@ -55,7 +55,16 @@ export async function authenticateUser(): Promise<AuthedUser | NextResponse> {
   const unauthorized = () =>
     NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  const cookieStore = await cookies();
+  // Billing is never available inside an impersonation
+  // (impersonation): neither as the member, nor as the superadmin behind it.
+  if (cookieStore.get("LH_imp")?.value) {
+    return NextResponse.json(
+      { error: "Billing is not available while impersonating", code: "IMPERSONATION_DENIED" },
+      { status: 403 },
+    );
+  }
+  const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
   if (!token) return unauthorized();
 
   let session: any;

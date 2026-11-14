@@ -1,13 +1,7 @@
 'use client'
 import React, { useState } from 'react'
-import {
-  Sparkles,
-  LayoutGrid,
-  Loader2,
-  BookCopy,
-  Upload,
-  CheckCircle2,
-} from 'lucide-react'
+import { AIButton } from '@components/Objects/AI/AIBrand'
+import { SquaresFour, CircleNotch, Books, UploadSimple, CheckCircle } from '@phosphor-icons/react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -210,11 +204,11 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
             {
               label: t('courses.courses'),
               href: '/dash/courses',
-              icon: <BookCopy size={14} />,
+              icon: <Books size={14} />,
             },
             {
               label: t('migration.title'),
-              icon: <Upload size={14} />,
+              icon: <UploadSimple size={14} />,
             },
           ]}
         />
@@ -261,7 +255,7 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
                   }`}
                 >
                   {index < currentStepIndex ? (
-                    <CheckCircle2 size={16} />
+                    <CheckCircle size={16} />
                   ) : (
                     index + 1
                   )}
@@ -303,22 +297,13 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
 
                 <div className="flex items-center space-x-3 justify-end pt-2">
                   {canUseAI && (
-                    <button
+                    <AIButton
                       onClick={() => handleUploadAndOrganize(true)}
-                      disabled={!canProceedToUpload || uploading}
-                      className={`rounded-lg bg-black transition-all duration-100 ease-linear antialiased p-2 px-5 text-xs font-bold text-white nice-shadow flex space-x-2 items-center ${
-                        !canProceedToUpload || uploading
-                          ? 'opacity-50 cursor-not-allowed'
-                          : 'hover:scale-105'
-                      }`}
+                      disabled={!canProceedToUpload}
+                      loading={uploading || aiLoading}
                     >
-                      {uploading || aiLoading ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Sparkles size={14} />
-                      )}
-                      <span>{t('migration.organize_with_ai')}</span>
-                    </button>
+                      {t('migration.organize_with_ai')}
+                    </AIButton>
                   )}
                   <button
                     onClick={() => handleUploadAndOrganize(false)}
@@ -330,9 +315,9 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
                     }`}
                   >
                     {uploading && !aiLoading ? (
-                      <Loader2 size={14} className="animate-spin" />
+                      <CircleNotch size={14} className="animate-spin" />
                     ) : (
-                      <LayoutGrid size={14} />
+                      <SquaresFour size={14} />
                     )}
                     <span>{t('migration.organize_manually')}</span>
                   </button>

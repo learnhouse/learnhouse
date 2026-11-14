@@ -251,9 +251,10 @@ async def test_every_showcase_feature_resolves_as_available(db, synced):
         )
     ).scalars().first()
 
-    # Everything the demo must show on any deployment.
+    # Everything the demo must show on any deployment. (Plays and boards are
+    # EE-only, so a community deployment cannot show them.)
     showcase = [
-        "boards", "playgrounds", "communities", "podcasts", "collaboration",
+        "communities", "podcasts", "collaboration",
         "certifications", "roles", "versioning", "webhooks", "usergroups",
         "seo", "analytics", "api",
     ]
@@ -1043,8 +1044,6 @@ _TAMPERINGS = [
     ("usergroup", "src.db.usergroups", "UserGroup", "name", "Renamed cohort"),
     ("folder", "src.db.folders.folders", "Folder", "name", "Renamed section"),
     ("course_update", "src.db.courses.course_updates", "CourseUpdate", "title", "Renamed update"),
-    ("board", "src.db.boards", "Board", "name", "Renamed board"),
-    ("playground", "src.db.playgrounds", "Playground", "name", "Renamed playground"),
     ("community", "src.db.communities.communities", "Community", "name", "Renamed community"),
     ("discussion", "src.db.communities.discussions", "Discussion", "title", "Renamed discussion"),
     ("discussion_locked", "src.db.communities.discussions", "Discussion", "is_locked", True),
@@ -1174,8 +1173,6 @@ _RESTORABLE = [
     ("usergroup", "src.db.usergroups", "UserGroup", "usergroup_uuid"),
     ("folder", "src.db.folders.folders", "Folder", "folder_uuid"),
     ("course_update", "src.db.courses.course_updates", "CourseUpdate", "courseupdate_uuid"),
-    ("board", "src.db.boards", "Board", "board_uuid"),
-    ("playground", "src.db.playgrounds", "Playground", "playground_uuid"),
     ("community", "src.db.communities.communities", "Community", "community_uuid"),
     ("discussion", "src.db.communities.discussions", "Discussion", "discussion_uuid"),
     ("podcast", "src.db.podcasts.podcasts", "Podcast", "podcast_uuid"),
@@ -1220,18 +1217,18 @@ async def test_restoring_does_not_duplicate_anything(db, synced):
     If it did not, the next refresh would treat the restored row as drift and
     delete it, then create another: a demo that churns instead of settling.
     """
-    from src.db.boards import Board
+    from src.db.communities.communities import Community
 
-    before = (await db.execute(select(func.count()).select_from(Board))).scalar_one()
+    before = (await db.execute(select(func.count()).select_from(Community))).scalar_one()
 
-    board = (await db.execute(select(Board).limit(1))).scalars().first()
-    await db.delete(board)
+    community = (await db.execute(select(Community).limit(1))).scalars().first()
+    await db.delete(community)
     await db.commit()
 
     await sync_demo(db, today=EPOCH_DAY)
     stats = await sync_demo(db, today=EPOCH_DAY)
 
-    after = (await db.execute(select(func.count()).select_from(Board))).scalar_one()
+    after = (await db.execute(select(func.count()).select_from(Community))).scalar_one()
     assert after == before
     assert (stats.created, stats.updated, stats.drift_deleted) == (0, 0, 0), (
         "the demo did not settle after a restore"

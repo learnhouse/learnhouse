@@ -1,0 +1,112 @@
+import { Callout } from 'nextra/components'
+
+# CRM integrations (HubSpot and Salesforce)
+
+Connect LearnHouse to HubSpot or Salesforce so your sales and customer success teams see learning next to everything else they know about a customer. Members become CRM contacts, their learning shows up on the contact, companies and orders become accounts and deals, and CRM lists can invite people and fill user groups.
+
+<Callout>
+On LearnHouse Cloud, HubSpot is included from the **Pro** plan and Salesforce from **Enterprise**. Self-hosted, both need an [Enterprise license](/enterprise) and an OAuth app (see [Setting up the OAuth apps](#setting-up-the-oauth-apps)).
+</Callout>
+
+## Connecting
+
+1. Go to **Organization** → **Settings** → **Integrations**.
+2. Click **Connect** on HubSpot or Salesforce. For Salesforce, choose **Production** or **Sandbox**.
+3. Sign in to the CRM and approve access for LearnHouse.
+4. Back in LearnHouse, review **what will be shared**: the mapped member fields, the learning events, what can come back from the CRM, and what is never shared. Tick the box and click **Accept and continue**. Nothing is sent before this step.
+5. On **Overview**, click **Start backfill** to send every member covered by the sync scope. After that, changes sync on their own.
+
+The integration card shows the connected account, the HubSpot portal ID or Salesforce instance, how many contacts are synced, the last sync and a health indicator: **Healthy**, **Needs attention** (failed records or a rate limit), **Connection broken**, **Paused** or **Finish setup**.
+
+## Fields
+
+**Fields** maps LearnHouse fields to CRM properties (HubSpot) or fields (Salesforce). Contacts are matched by email. You can map:
+
+- member fields: first and last name, username, signup date, last active, role, LearnHouse ID;
+- your organization's custom signup fields;
+- people data: department, job title, employee ID, cost center, location, manager email;
+- learning fields: courses enrolled and completed, average progress, certificates earned, at risk, last course activity, company, user groups.
+
+Pick a preset (**Recommended**, **Learning insights**, **Basics only**) or build your own. When recommended fields are missing from the CRM, click **Create fields**: LearnHouse adds them to a **LearnHouse** property group in HubSpot, or as `LearnHouse_*__c` custom fields on Contact in Salesforce, visible to the connected user through a *LearnHouse Integration* permission set.
+
+Each field goes **To CRM** by default. People data and signup fields can instead come **From CRM**, so a job title kept in Salesforce fills the member's people data in LearnHouse. Only mapped fields ever leave LearnHouse.
+
+## Learning activity, companies and deals
+
+**Activity & deals** chooses which events are logged on the contact:
+
+| Event | HubSpot | Salesforce |
+| --- | --- | --- |
+| Enrolled in a course, completed a lesson or a course, earned a certificate, assignment graded, purchase, attended a live session | A note on the contact's timeline | A completed task on the contact |
+
+With **Sync companies** on, LearnHouse companies become HubSpot companies or Salesforce accounts, with their members associated. With **Create deals from orders** on, paid company seat orders and course or offer purchases become closed deals (HubSpot) or opportunities (Salesforce), with the amount, the date they were paid, and the pipeline and stage you pick.
+
+## From the CRM
+
+Rules on **From CRM** turn CRM membership into LearnHouse actions. A rule watches a **HubSpot list** or **Salesforce campaign**, or a **property value** such as a lifecycle stage. When a contact enters it, LearnHouse can:
+
+- invite them to the organization (or create their account) if they aren't a member;
+- add them to a user group (shown with a **CRM** reason, so removing them later never touches a membership someone added by hand);
+- enroll them in a course.
+
+When they leave the list or the value changes, LearnHouse can take them out of the group again.
+
+- **HubSpot**: property changes arrive within seconds through HubSpot webhooks. HubSpot has no webhook for list membership, so lists are checked every 10 minutes and when you click **Sync now**.
+- **Salesforce**: create an **outbound message** on Contact or Campaign Member that posts to the **Inbound URL** shown under **Settings**, and add it to a flow or workflow rule. Salesforce retries outbound messages for 24 hours until LearnHouse acknowledges them. Campaigns and fields are also checked every 10 minutes.
+
+## Sync log, errors and health
+
+Changes are queued and sent in batches within a minute, within each CRM's rate limits. **Sync log** shows failed records with the CRM's own error and a **Retry** button (or **Retry all**), every synced record with a link to it in the CRM, and the history of backfills, syncs and retries. **Pause** stops sending (changes keep queuing and go out on **Resume**).
+
+If the connection breaks (access revoked, refresh refused), the organization's admins get a notification and an email, at most once a day, and nothing is sent until someone reconnects.
+
+## Privacy and safety
+
+- Nothing syncs before an admin accepts the consent screen. Consent can be withdrawn under **Settings**.
+- **Who syncs** limits the integration to everyone, chosen user groups, or chosen roles.
+- **When a member leaves**: keep the CRM contact, anonymize it (name and email cleared, history kept), or delete it. This also applies when someone deletes their account.
+- Connecting, consent, field and setting changes, rules, created fields, backfills and retries are recorded in the [audit log](/enterprise/audit-logs).
+- CRM tokens are encrypted at rest and never returned by the API. OAuth uses a single-use state tied to the browser and the admin who started it, plus PKCE with Salesforce.
+- Salesforce instance URLs are only accepted on `*.my.salesforce.com`, `*.sandbox.my.salesforce.com` and `*.salesforce.com`.
+
+## API, MCP and Atlas
+
+API tokens with the **CRM integrations** scope (read, update) can read integrations, health, errors, history, records and the field mapping, change the mapping, start a sync or backfill, retry failures and pause or resume. The endpoints are listed under `crm` in your organization's API documentation. Connecting, consent, settings and rules need an admin in the dashboard.
+
+Atlas and MCP clients get the opt-in **integrations** toolset: `get_crm_status`, `list_crm_sync_errors`, `get_crm_mapping`, `get_member_crm_record`, and `update_crm_mapping`, `sync_crm`, `retry_crm_errors`, which need a person's approval.
+
+## Setting up the OAuth apps
+
+LearnHouse Cloud already has both apps. Self-hosted installs set a platform app through environment variables, or an organization admin registers the organization's own app from the integration card (**Add your app**).
+
+| Variable | Description |
+| --- | --- |
+| `LEARNHOUSE_HUBSPOT_CLIENT_ID`, `LEARNHOUSE_HUBSPOT_CLIENT_SECRET` | The HubSpot public app |
+| `LEARNHOUSE_SALESFORCE_CLIENT_ID`, `LEARNHOUSE_SALESFORCE_CLIENT_SECRET` | The Salesforce connected app (consumer key and secret) |
+| `LEARNHOUSE_CRM_REDIRECT_BASE_URL` | Optional. Public base URL of the API, e.g. `https://api.example.com`, when it sits behind a proxy |
+| `LEARNHOUSE_CRM_WORKER` | Set to `0` to turn the sync worker off |
+
+The redirect URL to register in both CRMs is `https://<your API>/api/v1/crm/oauth/callback`.
+
+### HubSpot public app
+
+1. In your HubSpot developer account, create a **public app** (Apps → Create app).
+2. Under **Auth**, add the redirect URL `https://<your API>/api/v1/crm/oauth/callback`.
+3. Add these scopes: `oauth`, `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.objects.companies.read`, `crm.objects.companies.write`, `crm.objects.deals.read`, `crm.objects.deals.write`, `crm.schemas.contacts.read`, `crm.schemas.contacts.write`, `crm.schemas.companies.read`, `crm.schemas.companies.write`, `crm.schemas.deals.read`, `crm.schemas.deals.write`, `crm.lists.read`.
+4. Under **Webhooks**, set the target URL to `https://<your API>/api/v1/crm/webhooks/hubspot` and subscribe to **Contact** → **Property change** for `lifecyclestage` and any property you map **From CRM**, plus **Contact deletion**. LearnHouse checks HubSpot's v3 request signature with the app's client secret.
+5. Copy the **client ID** and **client secret** into the variables above (or **Add your app**).
+
+### Salesforce connected app
+
+1. In Salesforce Setup, open **App Manager** → **New Connected App** (or an External Client App).
+2. Turn on **Enable OAuth Settings** and set the **Callback URL** to `https://<your API>/api/v1/crm/oauth/callback`.
+3. Add the OAuth scopes **Manage user data via APIs (api)**, **Perform requests at any time (refresh_token, offline_access)** and **Access the identity URL service (id)**.
+4. Keep **Require Secret for Web Server Flow** on, and turn on **Require Proof Key for Code Exchange (PKCE)**.
+5. Under **Manage** → **OAuth Policies**, set **Refresh Token Policy** to *Refresh token is valid until revoked*.
+6. Copy the **consumer key** and **consumer secret** into the variables above (or **Add your app**).
+
+To use a sandbox, pick **Sandbox** when connecting; LearnHouse then signs in through `test.salesforce.com`. The connected user needs API access and permission to create contacts, tasks, accounts and opportunities, and **Customize Application** to create the recommended fields.
+
+## Testing against real sandboxes
+
+You need a **HubSpot developer test account** (free, from a HubSpot developer account) with the public app above installed, and a **Salesforce Developer Edition** org (free) or a sandbox with the connected app above. Connect each from **Integrations**, then run a backfill, complete a lesson as a learner, and check the contact's timeline (HubSpot) or activity (Salesforce).

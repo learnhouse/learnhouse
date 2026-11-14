@@ -120,4 +120,6 @@ def configure_cors(app: FastAPI) -> None:
         allow_methods=["*"],
         allow_credentials=True,
         allow_headers=["*"],
+        # Credits an AI request charged ("Used 7 credits"), see ai_credits middleware.
+        expose_headers=["X-AI-Credits-Used"],
     )

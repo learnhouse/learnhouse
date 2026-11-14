@@ -35,7 +35,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.ai.generations import AIGeneration
 from src.db.api_tokens import APIToken
-from src.db.boards import Board
 from src.db.communities.communities import Community
 from src.db.communities.discussion_comment_votes import DiscussionCommentVote
 from src.db.communities.discussion_comments import DiscussionComment
@@ -65,8 +64,6 @@ from src.db.organization_config import OrganizationConfig
 from src.db.media.media import Media
 from src.db.media.media_share_token import MediaShareToken
 from src.db.organizations import Organization
-from src.db.playground_reactions import PlaygroundReaction
-from src.db.playgrounds import Playground
 from src.db.roles import Role
 from src.db.podcasts.episodes import PodcastEpisode
 from src.db.podcasts.podcasts import Podcast
@@ -1647,13 +1644,17 @@ async def _sync_engagement(
             db_session, engagement.community, org, registry, epoch, users, stats
         )
 
-    for board_spec in engagement.boards:
-        await _sync_board(db_session, board_spec, org, registry, epoch, users, stats)
+    # Boards are an EE feature too: a community install seeds none.
+    if _board_models() is not None:
+        for board_spec in engagement.boards:
+            await _sync_board(db_session, board_spec, org, registry, epoch, users, stats)
 
-    for playground_spec in engagement.playgrounds:
-        await _sync_playground(
-            db_session, playground_spec, org, registry, epoch, users, stats
-        )
+    # Plays are an EE feature: a community install seeds none.
+    if _playground_models() is not None:
+        for playground_spec in engagement.playgrounds:
+            await _sync_playground(
+                db_session, playground_spec, org, registry, epoch, users, stats
+            )
 
     for podcast_spec in engagement.podcasts:
         await _sync_podcast(db_session, bundle, podcast_spec, org, registry, epoch, stats)
@@ -2003,14 +2004,15 @@ async def _sync_board(
     users: dict[str, User],
     stats: SyncStats,
 ) -> None:
-    from src.db.boards import Board, BoardMember
+    models = _board_models()
+    Board, BoardMember = models.Board, models.BoardMember  # type: ignore[union-attr]
 
     owner = users.get(spec.owner)
     if owner is None:
         return
 
     entry = registry.get(DemoEntityKind.BOARD, spec.slug)
-    board: Optional[Board] = None
+    board: Any = None
     if entry is not None:
         board = (
             await db_session.execute(select(Board).where(Board.id == entry.entity_id))
@@ -2094,6 +2096,20 @@ async def _sync_board(
         stats.drift_deleted += len(stale)
 
 
+def _board_models():
+    """The EE boards models module, or None on a community install."""
+    from src.core.ee_hooks import get_ee_module
+
+    return get_ee_module("ee.db.boards")
+
+
+def _playground_models():
+    """The EE Plays models module, or None on a community install."""
+    from src.core.ee_hooks import get_ee_module
+
+    return get_ee_module("ee.db.playgrounds")
+
+
 async def _sync_playground(
     db_session: AsyncSession,
     spec: Any,
@@ -2103,11 +2119,11 @@ async def _sync_playground(
     users: dict[str, User],
     stats: SyncStats,
 ) -> None:
-    from src.db.playgrounds import Playground
+    Playground = _playground_models().Playground  # type: ignore[union-attr]
 
     owner = users.get(spec.owner)
     entry = registry.get(DemoEntityKind.PLAYGROUND, spec.slug)
-    playground: Optional[Playground] = None
+    playground: Any = None
     if entry is not None:
         playground = (
             await db_session.execute(
@@ -2543,8 +2559,6 @@ async def _delete_drift(
             AssignmentTask.assignment_task_uuid,
             DemoEntityKind.ASSIGNMENT_TASK,
         ),
-        _Sweep(Board, Board.board_uuid, DemoEntityKind.BOARD),
-        _Sweep(Playground, Playground.playground_uuid, DemoEntityKind.PLAYGROUND),
         _Sweep(Community, Community.community_uuid, DemoEntityKind.COMMUNITY),
         _Sweep(Discussion, Discussion.discussion_uuid, DemoEntityKind.DISCUSSION),
         _Sweep(Podcast, Podcast.podcast_uuid, DemoEntityKind.PODCAST),
@@ -2564,6 +2578,14 @@ async def _delete_drift(
         _Sweep(Media, Media.media_uuid, DemoEntityKind.MEDIA),
         _Sweep(Block, Block.block_uuid, DemoEntityKind.BLOCK),
     ]
+    board_models = _board_models()
+    if board_models is not None:
+        Board = board_models.Board
+        removals.append(_Sweep(Board, Board.board_uuid, DemoEntityKind.BOARD))
+    playground_models = _playground_models()
+    if playground_models is not None:
+        Playground = playground_models.Playground
+        removals.append(_Sweep(Playground, Playground.playground_uuid, DemoEntityKind.PLAYGROUND))
 
     for sweep in removals:
         model, uuid_column, kind = sweep.model, sweep.uuid_column, sweep.kind
@@ -2817,8 +2839,6 @@ async def _delete_reaction_drift(
     org_comments = select(DiscussionComment.id).where(
         DiscussionComment.discussion_id.in_(org_discussions)  # type: ignore[attr-defined]
     )
-    org_playgrounds = select(Playground.id).where(Playground.org_id == org.id)
-
     sweeps = [
         (DiscussionVote, DiscussionVote.discussion_id.in_(org_discussions), "discussion vote"),
         (
@@ -2831,12 +2851,21 @@ async def _delete_reaction_drift(
             DiscussionCommentVote.comment_id.in_(org_comments),  # type: ignore[attr-defined]
             "comment vote",
         ),
-        (
+    ]
+    # Plays (and their reactions) only exist with EE.
+    from src.core.ee_hooks import get_ee_module
+
+    playground_models = _playground_models()
+    reaction_models = get_ee_module("ee.db.playground_reactions")
+    if playground_models is not None and reaction_models is not None:
+        Playground = playground_models.Playground
+        PlaygroundReaction = reaction_models.PlaygroundReaction
+        org_playgrounds = select(Playground.id).where(Playground.org_id == org.id)
+        sweeps.append((
             PlaygroundReaction,
             PlaygroundReaction.playground_id.in_(org_playgrounds),  # type: ignore[attr-defined]
             "playground reaction",
-        ),
-    ]
+        ))
 
     for model, in_org, label in sweeps:
         stale = (

@@ -9,8 +9,10 @@ export async function searchOrgContent(
   limit: number = 10,
   next: any,
   access_token?: any,
+  // Learner content language list: localized course names when published.
+  lang?: string,
 ) {
-  const url = `${getAPIUrl()}search/org_slug/${org_slug}?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`
+  const url = `${getAPIUrl()}search/org_slug/${org_slug}?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}${lang ? `&lang=${encodeURIComponent(lang)}` : ''}`
   const result: any = await fetch(
     url,
     RequestBodyWithAuthHeader('GET', null, next, access_token),

@@ -8,7 +8,6 @@ import { AlertTriangle, BadgeInfo, NotebookTabs, Maximize2, Minimize2, PanelRigh
 import { motion, AnimatePresence } from 'motion/react'
 import { FlaskConical, MessageCircle, X } from 'lucide-react'
 import Image from 'next/image'
-import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import learnhouseAI_logo_black from 'public/learnhouse_ai_black_logo.png'
 import React, { useEffect, useRef } from 'react'
 import {
@@ -22,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import AIMarkdownRenderer from './AIMarkdownRenderer'
 import AIFollowUpSuggestions from './AIFollowUpSuggestions'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { AIButton, AIMark } from '@components/Objects/AI/AIBrand'
 
 // Phones (<768px, the shell's breakpoint) can't spare a 380px column for the
 // side panel, so it floats above the bottom bar instead.
@@ -71,25 +71,9 @@ function AIActivityAsk(props: AIActivityAskProps) {
       {isButtonAvailable && (
         <div>
           <ActivityChatMessageBox activity={props.activity} />
-          <div
-            onClick={handleOpenAI}
-            style={{
-              background:
-                'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
-            }}
-            className="rounded-full px-5 drop-shadow-md flex  items-center space-x-1.5 p-2.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105"
-          >
-            {' '}
-            <i>
-              <Image
-                className="outline outline-1 outline-neutral-200/20 rounded-md"
-                width={20}
-                src={learnhouseAI_icon}
-                alt=""
-              />
-            </i>{' '}
-            <i className="not-italic text-xs font-bold">{t('ai.ask_ai')}</i>
-          </div>
+          {/* The Ask AI pill from the shared AI kit: one soft violet ramp,
+              the bare AI mark, a 1px inner ring and a soft shadow. */}
+          <AIButton onClick={handleOpenAI}>{t('ai.ask_ai')}</AIButton>
         </div>
       )}
     </>
@@ -115,9 +99,8 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
   const { mode, setMode } = useAIPanelMode()
 
   const isInputDisabled = aiChatBotState.isWaitingForResponse || aiChatBotState.isStreaming
-  const inputClass = isInputDisabled
-    ? 'ring-1 ring-inset ring-white/10 bg-gray-950/40 w-full rounded-lg outline-hidden px-4 py-2 text-white text-sm placeholder:text-white/30 opacity-30 '
-    : 'ring-1 ring-inset ring-white/10 bg-gray-950/40 w-full rounded-lg outline-hidden px-4 py-2 text-white text-sm placeholder:text-white/30'
+  // Composer field: a soft pill on the dark panel, violet focus ring.
+  const inputClass = `w-full h-10 rounded-full bg-white/[0.06] ring-1 ring-inset ring-white/10 ps-4 pe-12 text-sm text-white placeholder:text-white/35 outline-hidden transition-shadow focus:ring-violet-400/50 focus:bg-white/[0.08] ${isInputDisabled ? 'opacity-40' : ''}`
 
   useEffect(() => {
     if (aiChatBotState.isModalOpen) {
@@ -314,22 +297,25 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                   : 'h-[350px]'
               }`}
             >
-              <div className="flex flex-row-reverse pb-3 justify-between items-center">
-                <div className="flex space-x-2 items-center">
+              <div className="flex flex-row-reverse pb-3 mb-3 border-b border-white/[0.06] justify-between items-center">
+                <div className="flex gap-1 items-center">
                   <button
+                    type="button"
                     onClick={() => {
                       setMode('side')
                       dispatchAIChatBot({ type: 'switchToSideMode' })
                     }}
-                    className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                     title={t('ai.switch_to_side_mode')}
+                    aria-label={t('ai.switch_to_side_mode')}
                   >
                     <PanelRightOpen size={18} />
                   </button>
                   <button
                     onClick={toggleFullscreen}
-                    className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                     title={aiChatBotState.isFullscreen ? t('ai.exit_fullscreen') : t('ai.fullscreen')}
+                    aria-label={aiChatBotState.isFullscreen ? t('ai.exit_fullscreen') : t('ai.fullscreen')}
                   >
                     {aiChatBotState.isFullscreen ? (
                       <Minimize2 size={18} />
@@ -337,39 +323,27 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                       <Maximize2 size={18} />
                     )}
                   </button>
-                  <X
-                    size={20}
-                    className="text-white/50 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center"
+                  <button
+                    type="button"
                     onClick={closeModal}
-                  />
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                    aria-label={t('common.close')}
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
                 <div
                   className={`flex space-x-2 items-center -ms-[100px] ${isInputDisabled ? 'animate-pulse' : ''
                     }`}
                 >
-                  <Image
-                    className={`outline outline-1 outline-neutral-200/20 rounded-lg ${isInputDisabled ? 'animate-pulse' : ''
-                      }`}
-                    width={24}
-                    src={learnhouseAI_icon}
-                    alt=""
-                  />
-                  <span className="text-sm font-semibold text-white/70">
-                    {' '}
-                    AI
-                  </span>
+                  <AIMark size={24} alt="" pulse={isInputDisabled} />
+                  <span className="text-sm font-semibold text-white/85">{t('ai.ask_ai')}</span>
                 </div>
-                <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center">
-                  <FlaskConical size={14} />
-                  <span className="text-xs font-semibold antialiased ">
-                    {t('ai.experimental')}
-                  </span>
-                </div>
+                <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full bg-violet-400/10 text-violet-200/70 text-[10px] font-semibold uppercase tracking-wide">
+                  <FlaskConical size={11} />
+                  {t('ai.experimental')}
+                </span>
               </div>
-              <div
-                className={`w-100 h-0.5 bg-white/5 rounded-full mx-auto mb-3 ${isInputDisabled ? 'animate-pulse' : ''
-                  }`}
-              ></div>
               {aiChatBotState.messages.length > 0 &&
                 !aiChatBotState.error.isError ? (
                 <div
@@ -536,36 +510,23 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                   </div>
                 </div>
               )}
-              <div className="flex space-x-2 items-center">
-                <div className="">
-                  <UserAvatar
-                    rounded="rounded-lg"
-                    border="border-2"
-                    width={35}
-                    shadow="shadow-none"
-                  />
-                </div>
-                <div className="w-full">
-                  <input
-                    onKeyDown={handleKeyDown}
-                    onChange={handleChange}
-                    disabled={isInputDisabled}
-                    value={aiChatBotState.chatInputValue}
-                    aria-label={t('ai.ask_ai_placeholder')}
-                    placeholder={t('ai.ask_ai_placeholder')}
-                    type="text"
-                    className={inputClass}
-                    name=""
-                    id=""
-                  />
-                </div>
-                <div className="">
-                  <MessageCircle
-                    size={20}
-                    className={`text-white/50 ${isInputDisabled ? 'opacity-30 cursor-not-allowed' : 'hover:cursor-pointer hover:text-white/70'}`}
-                    onClick={() => !isInputDisabled && sendMessage(aiChatBotState.chatInputValue)}
-                  />
-                </div>
+              {/* Composer */}
+              <div className="relative">
+                <input
+                  onKeyDown={handleKeyDown}
+                  onChange={handleChange}
+                  disabled={isInputDisabled}
+                  value={aiChatBotState.chatInputValue}
+                  aria-label={t('ai.ask_ai_placeholder')}
+                  placeholder={t('ai.ask_ai_placeholder')}
+                  type="text"
+                  className={inputClass}
+                />
+                <SendButton
+                  disabled={isInputDisabled || !aiChatBotState.chatInputValue?.trim()}
+                  onClick={() => sendMessage(aiChatBotState.chatInputValue)}
+                  label={t('ai.ask_ai')}
+                />
               </div>
             </div>
           </motion.div>
@@ -582,36 +543,24 @@ type AIMessageComponentProps = {
 }
 
 function AIMessageComponent({ message, isAI, isStreaming = false }: AIMessageComponentProps) {
+  // The learner's messages sit on the end side in a violet bubble; the AI
+  // answers in the open, next to its mark.
+  if (!isAI) {
+    return (
+      <div className="flex justify-end w-full antialiased">
+        <div className="max-w-[85%] rounded-2xl rounded-se-md bg-gradient-to-b from-violet-500/25 to-violet-600/20 ring-1 ring-inset ring-violet-300/15 px-3.5 py-2">
+          <p className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap break-words">{message.message}</p>
+        </div>
+      </div>
+    )
+  }
   return (
-    <div className={`flex space-x-3 w-full antialiased ${isAI ? 'items-start' : 'items-start'}`}>
+    <div className="flex gap-2.5 w-full antialiased items-start">
       <div className="shrink-0 pt-0.5">
-        {isAI ? (
-          <UserAvatar
-            rounded="rounded-lg"
-            border="border-2"
-            predefined_avatar="ai"
-            width={32}
-            shadow="shadow-none"
-          />
-        ) : (
-          <UserAvatar rounded="rounded-lg" border="border-2" width={32} shadow="shadow-none" />
-        )}
+        <AIMark size={24} alt="" />
       </div>
       <div className="flex-1 min-w-0">
-        {isAI ? (
-          <div className="w-full">
-            <AIMarkdownRenderer
-              content={message.message}
-              isStreaming={isStreaming}
-            />
-          </div>
-        ) : (
-          <div className="inline-block bg-white/5 rounded-xl rounded-ss-sm px-3 py-2 max-w-[85%]">
-            <p className="text-white/90 text-sm leading-relaxed">
-              {message.message}
-            </p>
-          </div>
-        )}
+        <AIMarkdownRenderer content={message.message} isStreaming={isStreaming} />
       </div>
     </div>
   )
@@ -707,15 +656,31 @@ const AIChatPredefinedQuestion = (props: {
   }
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => props.sendMessage(getQuestion(props.label))}
-      className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
+      className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-white/[0.06] ring-1 ring-inset ring-white/10 text-xs font-semibold text-white/60 hover:text-white hover:bg-violet-400/15 hover:ring-violet-300/30 transition-colors"
     >
-      {props.label === 'about' && <BadgeInfo size={15} />}
-      {props.label === 'flashcards' && <NotebookTabs size={15} />}
-      {props.label === 'examples' && <div className="text-white/50">Ex</div>}
+      {props.label === 'about' && <BadgeInfo size={14} className="text-violet-300/80" />}
+      {props.label === 'flashcards' && <NotebookTabs size={14} className="text-violet-300/80" />}
+      {props.label === 'examples' && <span className="text-[11px] font-bold text-violet-300/80">Ex</span>}
       <span>{getQuestion(props.label)}</span>
-    </div>
+    </button>
+  )
+}
+
+// Round gradient send button inside the composer pill.
+function SendButton({ disabled, onClick, label }: { disabled: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className="absolute end-1 bottom-1 h-8 w-8 inline-flex items-center justify-center rounded-full text-white bg-gradient-to-b from-violet-500 to-purple-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_2px_8px_-2px_rgba(139,92,246,0.6)] transition-[opacity,transform] hover:brightness-110 active:scale-95 disabled:opacity-30 disabled:shadow-none"
+    >
+      <MessageCircle size={15} />
+    </button>
   )
 }
 
@@ -929,50 +894,42 @@ function AISidePanelInline(props: AISidePanelProps) {
       className={`${
         isPhone
           ? 'fixed inset-x-2 bottom-[calc(var(--lh-mobile-nav-h)+8px)] z-[9998] rounded-2xl'
-          : 'sticky w-[380px] shrink-0 rounded-xl'
-      } nice-shadow ring-1 ring-inset ring-white/10 text-white p-4 backdrop-blur-md flex flex-col transition-all duration-300`}
+          : 'sticky w-[380px] shrink-0 rounded-2xl'
+      } shadow-[0_12px_40px_-12px_rgba(46,16,101,0.45)] ring-1 ring-inset ring-white/10 text-white p-4 backdrop-blur-md flex flex-col transition-all duration-300`}
     >
-          {/* Header */}
-          <div className="flex flex-row-reverse pb-3 justify-between items-center">
-            <div className="flex space-x-2 items-center">
+          {/* Header: the AI mark, an experimental chip, mode + close. */}
+          <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-white/[0.06]">
+            <div className={`flex items-center gap-2 ${isInputDisabled ? 'animate-pulse' : ''}`}>
+              <AIMark size={24} alt="" />
+              <span className="text-sm font-semibold text-white/85">{t('ai.ask_ai')}</span>
+              <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full bg-violet-400/10 text-violet-200/70 text-[10px] font-semibold uppercase tracking-wide">
+                <FlaskConical size={11} />
+                {t('ai.experimental')}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
               <button
+                type="button"
                 onClick={() => {
                   setMode('hover')
                   dispatchAIChatBot({ type: 'switchToHoverMode' })
                 }}
-                className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                 title={t('ai.switch_to_hover_mode')}
+                aria-label={t('ai.switch_to_hover_mode')}
               >
-                <PanelTop size={18} />
+                <PanelTop size={15} />
               </button>
-              <X
-                size={20}
-                className="text-white/50 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center"
+              <button
+                type="button"
                 onClick={closeSidePanel}
-              />
-            </div>
-            <div
-              className={`flex space-x-2 items-center ${isInputDisabled ? 'animate-pulse' : ''}`}
-            >
-              <Image
-                className={`outline outline-1 outline-neutral-200/20 rounded-lg ${isInputDisabled ? 'animate-pulse' : ''}`}
-                width={24}
-                src={learnhouseAI_icon}
-                alt=""
-              />
-              <span className="text-sm font-semibold text-white/70">AI</span>
-            </div>
-            <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center">
-              <FlaskConical size={14} />
-              <span className="text-xs font-semibold antialiased">
-                {t('ai.experimental')}
-              </span>
+                className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label={t('common.close')}
+              >
+                <X size={16} />
+              </button>
             </div>
           </div>
-
-          <div
-            className={`w-full h-0.5 bg-white/5 rounded-full mx-auto mb-3 ${isInputDisabled ? 'animate-pulse' : ''}`}
-          ></div>
 
           {/* Messages Area */}
           {aiChatBotState.messages.length > 0 && !aiChatBotState.error.isError ? (
@@ -1122,7 +1079,7 @@ function AISidePanelInline(props: AISidePanelProps) {
           {/* Error state */}
           {aiChatBotState.error.isError && (
             <div className="flex items-center justify-center flex-1">
-              <div className="flex flex-col mx-auto w-full space-y-2 p-4 rounded-lg bg-red-500/20 outline outline-1 outline-red-500">
+              <div className="flex flex-col mx-auto w-full space-y-2 p-4 rounded-2xl bg-rose-500/10 ring-1 ring-inset ring-rose-400/30">
                 <AlertTriangle size={20} className="text-red-500" />
                 <div className="flex flex-col">
                   <h3 className="font-semibold text-red-200">
@@ -1136,35 +1093,23 @@ function AISidePanelInline(props: AISidePanelProps) {
             </div>
           )}
 
-          {/* Input Area */}
-          <div className="flex space-x-2 items-center pt-3">
-            <div className="shrink-0">
-              <UserAvatar
-                rounded="rounded-lg"
-                border="border-2"
-                width={35}
-                shadow="shadow-none"
-              />
-            </div>
-            <div className="w-full">
-              <input
-                onKeyDown={handleKeyDown}
-                onChange={handleChange}
-                disabled={isInputDisabled}
-                value={aiChatBotState.chatInputValue}
-                aria-label={t('ai.ask_ai_placeholder')}
-                placeholder={t('ai.ask_ai_placeholder')}
-                type="text"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <MessageCircle
-                size={20}
-                className={`text-white/50 ${isInputDisabled ? 'opacity-30 cursor-not-allowed' : 'hover:cursor-pointer hover:text-white/70'}`}
-                onClick={() => !isInputDisabled && sendMessage(aiChatBotState.chatInputValue)}
-              />
-            </div>
+          {/* Composer */}
+          <div className="relative pt-3">
+            <input
+              onKeyDown={handleKeyDown}
+              onChange={handleChange}
+              disabled={isInputDisabled}
+              value={aiChatBotState.chatInputValue}
+              aria-label={t('ai.ask_ai_placeholder')}
+              placeholder={t('ai.ask_ai_placeholder')}
+              type="text"
+              className={inputClass}
+            />
+            <SendButton
+              disabled={isInputDisabled || !aiChatBotState.chatInputValue?.trim()}
+              onClick={() => sendMessage(aiChatBotState.chatInputValue)}
+              label={t('ai.ask_ai')}
+            />
           </div>
         </motion.div>
   )
@@ -1200,7 +1145,7 @@ const AISidePanelPlaceholder = (props: {
               src={learnhouseAI_logo_black}
               alt=""
             />
-            <p className="pt-3 text-lg font-semibold text-white/70 flex flex-col justify-center items-center">
+            <p className="pt-4 text-lg font-semibold text-white/80 flex flex-col justify-center items-center gap-0.5">
               <span className="flex items-center space-x-2">
                 <span>{t('common.hello')}</span>
                 <UserAvatar rounded="rounded-lg" border="border-2" width={28} shadow="shadow-none" />
@@ -1220,7 +1165,7 @@ const AISidePanelPlaceholder = (props: {
               velocity: 2,
               delay: 0.27,
             }}
-            className="questions flex flex-col space-y-2 mx-auto pt-4"
+            className="questions flex flex-col items-center gap-2 mx-auto pt-5"
           >
             <AIChatPredefinedQuestion
               sendMessage={props.sendMessage}

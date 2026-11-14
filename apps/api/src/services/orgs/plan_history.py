@@ -55,6 +55,13 @@ async def record_plan_change(
         # Flushed with the caller's transaction: the history row and the config
         # write land together or not at all.
         await db_session.flush()
+        from src.core.ee_hooks import audit_event
+
+        audit_event(
+            None, action="billing.plan.changed", org_id=org_id,
+            target_type="organization", target_id=org_id,
+            changes={"plan": {"from": old_plan, "to": new_plan}},
+        )
         return True
     except Exception:
         logger.warning(

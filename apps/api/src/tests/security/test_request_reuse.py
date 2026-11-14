@@ -48,10 +48,13 @@ class TestLoadedInSession:
     def test_unknown_resource_type(self):
         assert _resource_model("nope") is None
         for kind in (
-            "podcasts", "communities", "folders", "media", "boards", "playgrounds",
+            "podcasts", "communities", "folders", "media",
             "coursechapters", "activities", "episodes", "discussions",
         ):
             assert _resource_model(kind) is not None
+        # Plays and boards are EE-only (ee/tests cover them with EE).
+        assert _resource_model("playgrounds") is None
+        assert _resource_model("boards") is None
 
 
 class TestAccessCheckerReuse:

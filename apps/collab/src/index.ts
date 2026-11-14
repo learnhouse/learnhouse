@@ -1,33 +1,14 @@
 import 'dotenv/config'
-import { Server } from '@hocuspocus/server'
-import type {
-  onRequestPayload,
-  onUpgradePayload,
-  onAuthenticatePayload,
-  beforeHandleMessagePayload,
-  beforeHandleAwarenessPayload,
-  onChangePayload,
-  afterLoadDocumentPayload,
-  afterUnloadDocumentPayload,
-} from '@hocuspocus/server'
-import { Database } from '@hocuspocus/extension-database'
-import jwt from 'jsonwebtoken'
 import Redis from 'ioredis'
-import {
-  CONNECTION_ID_HEADER,
-  clientIp,
-  createConnectionGuard,
-  createRateLimiter,
-} from './connectionGuard.js'
-import { createDocSizeGuard } from './docLimits.js'
-import { sanitizeAwareness, seatRefusal } from './boardPresence.js'
-import {
-  type ConnectionAuth,
-  type TokenState,
-  createAccessChecker,
-  dropConnection,
-  recheckConnections,
-} from './accessRecheck.js'
+import { createActivityKind } from './activityKind.js'
+import { createLiveNotesRoom } from './liveNotesRoom.js'
+import { MAX_YDOC_BYTES, createCollabServer } from './server.js'
+import { type CollabPluginDeps, loadEePlugin } from './plugins.js'
+
+// Multi-instance note: rooms live in this process's memory. Running more than
+// one replica requires sticky routing by document name (every socket of a
+// room must reach the same replica), e.g. a consistent-hash on the room in
+// the ingress. Without it two replicas would each persist their own copy.
 
 const PORT = parseInt(process.env.COLLAB_PORT || '4000', 10)
 const API_URL = process.env.LEARNHOUSE_API_URL || 'http://localhost:8000'
@@ -41,19 +22,15 @@ const TRUST_PROXY = process.env.COLLAB_TRUST_PROXY === 'true'
 
 // Timeout for all outbound HTTP requests (ms)
 const FETCH_TIMEOUT_MS = 10_000
-
-// Debounce interval before flushing ydoc state to the database (ms)
-const DB_FLUSH_DELAY = 5000
 // Redis TTL for cached ydoc state (seconds): 1 hour
 const REDIS_YDOC_TTL = 3600
-// Largest Yjs state we persist (bytes): 5 MB
-const MAX_YDOC_BYTES = 5 * 1024 * 1024
-// Largest single incoming WebSocket message (bytes): 2 MB
-const MAX_MESSAGE_BYTES = 2 * 1024 * 1024
-// How often open connections re-check their access to the board (ms)
+// How often open connections re-check their access to their room (ms)
 const ACCESS_RECHECK_MS = 60_000
-// Longest a connection stays open without a successful re-check (ms)
-const MAX_UNVERIFIED_MS = 10 * 60_000
+// Hocuspocus store debounce: activity content is saved after 2 s without an
+// edit, and at least every 10 s while edits keep coming (plugin room kinds may
+// add their own database debounce on top).
+const STORE_DEBOUNCE_MS = 2000
+const STORE_MAX_DEBOUNCE_MS = 10_000
 
 // ── Startup validation ──────────────────────────────────────────────────────
 
@@ -101,76 +78,6 @@ function fetchWithTimeout(
   )
 }
 
-// ── Rate limiting ───────────────────────────────────────────────────────────
-// Plain HTTP requests (health checks, probes) per IP
-const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
-const RATE_LIMIT_MAX = 30 // max requests per IP per window
-const requestLimiter = createRateLimiter(RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX)
-
-// WebSocket upgrades never reach onRequest, so they are limited separately
-const connectionGuard = createConnectionGuard({
-  trustProxy: TRUST_PROXY,
-  rateLimitWindowMs: RATE_LIMIT_WINDOW_MS,
-  // Sized for a whole classroom behind one NAT reconnecting at once
-  rateLimitMax: 300, // new sockets per IP per window (reconnects included)
-  maxConnectionsPerIp: 200, // open sockets per IP (shared NAT, many tabs)
-  // Last-resort memory bound; per-socket limits below keep each one cheap,
-  // so this only bites under a flood
-  maxPendingConnections: 2000, // unauthenticated sockets across all IPs
-  authDeadlineMs: 10_000,
-  preAuthMaxBytes: 256 * 1024, // auth plus the first sync step is a few KB
-  // Room for a few full-size messages in flight; anything else is queued for
-  // a document the socket never authenticated
-  maxUnhandledBytes: 4 * MAX_MESSAGE_BYTES,
-  maxHandledBytesPerWindow: 16 * 1024 * 1024,
-})
-
-// Stops accepting updates for a document once it outgrows what we persist
-const docSizes = createDocSizeGuard({
-  maxDocBytes: MAX_YDOC_BYTES,
-  remeasureEveryBytes: 256 * 1024,
-})
-const DOC_TOO_LARGE = { code: 4413, reason: 'Board is too large' }
-
-// Clean up stale entries every 5 minutes
-const rateLimitCleanupInterval = setInterval(() => {
-  requestLimiter.sweep()
-  connectionGuard.sweep()
-}, 5 * 60_000)
-
-function extractBoardUuid(documentName: string): string | null {
-  // Room naming: board:{board_uuid}. The uuid goes straight into API paths
-  // and Redis keys, so only the exact shape the API mints is accepted.
-  const match = documentName.match(/^board:(board_[0-9a-f-]{36})$/)
-  return match ? match[1] : null
-}
-
-function fetchMembership(boardUuid: string, token: string): Promise<Response> {
-  return fetchWithTimeout(`${API_URL}/api/v1/boards/${boardUuid}/membership`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-}
-
-// Tokens this close to expiry are treated as expired by the re-check, so a
-// clock skew with the API can't turn "about to lapse" into a revoke.
-const TOKEN_EXPIRY_MARGIN_MS = 30_000
-
-function tokenState(token: string): TokenState {
-  try {
-    const payload = jwt.verify(token, SECRET_KEY, { algorithms: ['HS256'] })
-    const exp = typeof payload === 'object' ? payload.exp : undefined
-    if (typeof exp === 'number' && exp * 1000 - Date.now() < TOKEN_EXPIRY_MARGIN_MS) {
-      return 'expired'
-    }
-    return 'valid'
-  } catch (err) {
-    return err instanceof Error && err.name === 'TokenExpiredError' ? 'expired' : 'invalid'
-  }
-}
-
-/** Current access of a token to a board, for re-checking open connections. */
-const checkAccess = createAccessChecker({ tokenState, fetchMembership })
-
 // ── Redis connection ────────────────────────────────────────────────────────
 
 let redis: Redis | null = null
@@ -191,394 +98,59 @@ function getRedis(): Redis {
   return redis
 }
 
-function redisYdocKey(boardUuid: string): string {
-  return `collab:ydoc:${boardUuid}`
-}
-
-// ── Debounced DB persistence ────────────────────────────────────────────────
-
-// Store both the timer and latest state so shutdown can flush without Redis
-const pendingFlushes = new Map<
-  string,
-  { timer: NodeJS.Timeout; state: Uint8Array }
->()
-
-function scheduleDbFlush(boardUuid: string, state: Uint8Array) {
-  // Cancel any existing pending flush for this board
-  const existing = pendingFlushes.get(boardUuid)
-  if (existing) clearTimeout(existing.timer)
-
-  // Copy the state so it survives even if the original buffer is reused
-  const stateCopy = new Uint8Array(state)
-
-  const timer = setTimeout(async () => {
-    pendingFlushes.delete(boardUuid)
-    try {
-      const url = `${API_URL}/api/v1/boards/${boardUuid}/ydoc`
-      const response = await fetchWithTimeout(url, {
-        method: 'PUT',
-        headers: {
-          'X-Internal-Key': INTERNAL_KEY,
-          'Content-Type': 'application/octet-stream',
-        },
-        body: stateCopy.buffer.slice(
-          stateCopy.byteOffset,
-          stateCopy.byteOffset + stateCopy.byteLength,
-        ) as ArrayBuffer,
-      })
-      if (!response.ok) {
-        console.error(
-          `[collab] DB flush failed for ${boardUuid}: ${response.status}`,
-        )
-      }
-    } catch (err) {
-      console.error(`[collab] DB flush error for ${boardUuid}:`, err)
-    }
-  }, DB_FLUSH_DELAY)
-
-  pendingFlushes.set(boardUuid, { timer, state: stateCopy })
-}
-
 // ── Server ──────────────────────────────────────────────────────────────────
 
-// Awareness client id -> owning connection, per loaded document
-const awarenessClaims = new WeakMap<object, Map<number, any>>()
+const deps: CollabPluginDeps = {
+  apiUrl: API_URL,
+  internalKey: INTERNAL_KEY,
+  fetchWithTimeout,
+  getRedis,
+  maxYdocBytes: MAX_YDOC_BYTES,
+  redisTtlSeconds: REDIS_YDOC_TTL,
+}
+const activities = createActivityKind(deps)
 
-const server = new Server({
-  port: PORT,
-  // ws drops oversized frames before they are buffered into a document
-  websocketOptions: { maxPayload: MAX_MESSAGE_BYTES },
-
-  async beforeHandleMessage({
-    update,
-    documentName,
-    connection,
-    requestHeaders,
-  }: beforeHandleMessagePayload) {
-    // Backstop for the ws cap: throwing closes the connection
-    if (update.byteLength > MAX_MESSAGE_BYTES) {
-      console.warn(
-        `[collab] Rejecting ${update.byteLength}-byte message for ${documentName}`,
-      )
-      throw new Error('Message too large')
-    }
-    if (!connectionGuard.markHandled(requestHeaders.get(CONNECTION_ID_HEADER), update.byteLength)) {
-      throw new Error('Too much traffic')
-    }
-    if (docSizes.isOversized(documentName)) {
-      dropConnection(connection, DOC_TOO_LARGE)
-      throw new Error('Board is too large')
-    }
-  },
-
-  async beforeHandleAwareness({
-    connection,
-    document,
-    states,
-    removedClients,
-  }: beforeHandleAwarenessPayload) {
-    // Server-internal writes have no connection and are trusted
-    if (!connection) return
-    let claims = awarenessClaims.get(document)
-    if (!claims) {
-      claims = new Map()
-      awarenessClaims.set(document, claims)
-    }
-    sanitizeAwareness(connection, states, removedClients, claims, document.getConnections())
-  },
-
-  async afterLoadDocument({ documentName, document }: afterLoadDocumentPayload) {
-    docSizes.measure(documentName, document)
-  },
-
-  async onChange({ documentName, document, update }: onChangePayload) {
-    if (docSizes.isOversized(documentName)) return
-    if (docSizes.recordUpdate(documentName, document, update.byteLength)) {
-      // Everyone leaves so the document unloads; store() refuses the oversized
-      // state, so it reloads from the last state that fit.
-      console.warn(`[collab] ${documentName} passed the size cap; closing its connections`)
-      for (const connection of document.getConnections()) {
-        dropConnection(connection, DOC_TOO_LARGE)
-      }
-    }
-  },
-
-  async afterUnloadDocument({ documentName }: afterUnloadDocumentPayload) {
-    docSizes.forget(documentName)
-  },
-
-  async onRequest({ request, response }: onRequestPayload) {
-    // Health check endpoint. Handles both "/" (k8s probe) and "/health"
-    if (request.url === '/' || request.url === '/health') {
-      response.writeHead(200, { 'Content-Type': 'application/json' })
-      response.end(JSON.stringify({ status: 'ok' }))
-      // Throw falsy value to stop the hook chain without crashing.
-      // Hocuspocus re-throws truthy errors from onRequest which would
-      // crash the process; falsy values are silently swallowed.
-      // eslint-disable-next-line no-throw-literal
-      throw null
-    }
-
-    if (requestLimiter.isLimited(clientIp(request, TRUST_PROXY))) {
-      response.writeHead(429, { 'Content-Type': 'application/json' })
-      response.end(JSON.stringify({ error: 'Too many connection attempts' }))
-      // eslint-disable-next-line no-throw-literal
-      throw null
-    }
-  },
-
-  async onUpgrade({ request, socket }: onUpgradePayload) {
-    if (!connectionGuard.admit(request, socket)) {
-      // Falsy throw stops the upgrade without crashing (see onRequest)
-      // eslint-disable-next-line no-throw-literal
-      throw null
-    }
-  },
-
-  async onAuthenticate({
-    token,
-    documentName,
-    connectionConfig,
-    requestHeaders,
-    instance,
-    socketId,
-  }: onAuthenticatePayload) {
-    if (!token) {
-      throw new Error('Authentication required')
-    }
-
-    // Verify JWT using same secret + algorithm as backend
-    let payload: any
-    try {
-      payload = jwt.verify(token, SECRET_KEY, { algorithms: ['HS256'] })
-    } catch {
-      throw new Error('Invalid token')
-    }
-
-    const boardUuid = extractBoardUuid(documentName)
-    if (!boardUuid) {
-      throw new Error('Invalid document name')
-    }
-
-    // Verify board membership via backend API (with timeout)
-    let response: Response
-    try {
-      response = await fetchMembership(boardUuid, token)
-    } catch (err) {
-      console.error(
-        `[collab] Membership check failed for ${boardUuid}:`,
-        err,
-      )
-      throw new Error('Authentication service unavailable')
-    }
-
-    if (!response.ok) {
-      throw new Error('Not authorized for this board')
-    }
-
-    const membership = await response.json()
-
-    // The API answers "viewer" for anyone who may only read the board (public
-    // boards, org admins without membership). Their socket must not write.
-    connectionConfig.readOnly = membership.role === 'viewer'
-
-    // Seats are checked here, once the role is known: viewers and editors
-    // have separate seats so viewers can't crowd editors out.
-    const existing = instance.documents.get(documentName)?.getConnections() ?? []
-    const refusal = seatRefusal(existing, { readOnly: connectionConfig.readOnly, socketId })
-    if (refusal) {
-      throw new Error(refusal)
-    }
-
-    connectionGuard.markAuthenticated(requestHeaders.get(CONNECTION_ID_HEADER))
-
-    return {
-      user: {
-        id: payload.sub,
-        name: membership.username || 'Unknown',
-        role: membership.role,
-      },
-      // Kept for the periodic access re-check
-      auth: { token, boardUuid, verifiedAt: Date.now() } satisfies ConnectionAuth,
-    }
-  },
-
-  extensions: [
-    new Database({
-      async fetch({ documentName }) {
-        const boardUuid = extractBoardUuid(documentName)
-        if (!boardUuid) return null
-
-        // 1. Try Redis first
-        try {
-          const r = getRedis()
-          const cached = await r.getBuffer(redisYdocKey(boardUuid))
-          if (cached && cached.byteLength > 0) {
-            console.log(
-              `[collab] Redis hit for ${boardUuid}: ${cached.byteLength} bytes`,
-            )
-            return new Uint8Array(cached)
-          }
-        } catch (err) {
-          console.error(
-            `[collab] Redis fetch error for ${boardUuid}:`,
-            err,
-          )
-        }
-
-        // 2. Fall back to database (with timeout)
-        try {
-          const url = `${API_URL}/api/v1/boards/${boardUuid}/ydoc`
-          console.log(`[collab] Fetching ydoc from DB for ${boardUuid}`)
-          const response = await fetchWithTimeout(url, {
-            headers: {
-              'X-Internal-Key': INTERNAL_KEY,
-            },
-          })
-
-          if (!response.ok) {
-            console.error(
-              `[collab] Failed to fetch ydoc for ${boardUuid}: ${response.status} ${response.statusText}`,
-            )
-            return null
-          }
-
-          const buffer = await response.arrayBuffer()
-          if (buffer.byteLength === 0) return null
-
-          const state = new Uint8Array(buffer)
-          console.log(
-            `[collab] Fetched ydoc from DB for ${boardUuid}: ${buffer.byteLength} bytes`,
-          )
-
-          // Warm the Redis cache
-          try {
-            const r = getRedis()
-            await r.setex(
-              redisYdocKey(boardUuid),
-              REDIS_YDOC_TTL,
-              Buffer.from(state),
-            )
-          } catch (err) {
-            console.error(
-              `[collab] Redis warm error for ${boardUuid}:`,
-              err,
-            )
-          }
-
-          return state
-        } catch (err) {
-          console.error(
-            `[collab] Error fetching ydoc for ${boardUuid}:`,
-            err,
-          )
-          return null
-        }
-      },
-
-      async store({ documentName, state }) {
-        const boardUuid = extractBoardUuid(documentName)
-        if (!boardUuid) return
-        if (state.byteLength > MAX_YDOC_BYTES) {
-          console.warn(
-            `[collab] Refusing to persist ${boardUuid}: ${state.byteLength} bytes exceeds the cap`,
-          )
-          return
-        }
-
-        // 1. Write to Redis immediately (fast)
-        try {
-          const r = getRedis()
-          await r.setex(
-            redisYdocKey(boardUuid),
-            REDIS_YDOC_TTL,
-            Buffer.from(state),
-          )
-        } catch (err) {
-          console.error(
-            `[collab] Redis store error for ${boardUuid}:`,
-            err,
-          )
-        }
-
-        // 2. Debounced write to database (slow, batched)
-        scheduleDbFlush(boardUuid, state)
-      },
-    }),
-  ],
+// Live session notes (Enterprise): the API answers 404 without it, so the
+// room simply refuses to open.
+const liveNotes = createLiveNotesRoom({
+  apiUrl: API_URL,
+  internalKey: INTERNAL_KEY,
+  fetchWithTimeout,
+  maxYdocBytes: MAX_YDOC_BYTES,
 })
 
-// ── Access re-check ──────────────────────────────────────────────────────
+// Enterprise plugin (boards and more), when ee/ is present
+const plugin = await loadEePlugin(deps)
 
-let recheckRunning = false
-const accessRecheckInterval = setInterval(async () => {
-  if (recheckRunning) return
-  recheckRunning = true
-  try {
-    // One document at a time keeps the burst of API calls to one board's users
-    for (const document of [...server.hocuspocus.documents.values()]) {
-      const closed = await recheckConnections(document.getConnections(), checkAccess, {
-        maxUnverifiedMs: MAX_UNVERIFIED_MS,
-      })
-      if (closed > 0) {
-        console.log(`[collab] Closed ${closed} connection(s) on ${document.name} after the access re-check`)
-      }
-    }
-  } catch (err) {
-    console.error('[collab] Access re-check failed:', err)
-  } finally {
-    recheckRunning = false
-  }
-}, ACCESS_RECHECK_MS)
+const collab = createCollabServer({
+  port: PORT,
+  secretKey: SECRET_KEY,
+  internalKey: INTERNAL_KEY,
+  trustProxy: TRUST_PROXY,
+  kinds: [activities.kind, liveNotes, ...(plugin?.kinds ?? [])],
+  internalRoutes: plugin?.internalRoutes,
+  activityRooms: activities.rooms,
+  debounceMs: STORE_DEBOUNCE_MS,
+  maxDebounceMs: STORE_MAX_DEBOUNCE_MS,
+  accessRecheckMs: ACCESS_RECHECK_MS,
+})
 
 // ── Graceful shutdown ─────────────────────────────────────────────────────
 
+let shuttingDown = false
 async function gracefulShutdown() {
+  if (shuttingDown) return
+  shuttingDown = true
   console.log('[collab] Shutting down, flushing pending writes...')
 
-  // Stop accepting new connections
-  clearInterval(rateLimitCleanupInterval)
-  clearInterval(accessRecheckInterval)
-  await server.destroy()
-
-  // Flush all pending writes directly from the captured state (no Redis dependency)
-  const flushPromises: Promise<void>[] = []
-
-  for (const [boardUuid, { timer, state }] of pendingFlushes) {
-    clearTimeout(timer)
-
-    const flush = async () => {
-      try {
-        const url = `${API_URL}/api/v1/boards/${boardUuid}/ydoc`
-        await fetchWithTimeout(
-          url,
-          {
-            method: 'PUT',
-            headers: {
-              'X-Internal-Key': INTERNAL_KEY,
-              'Content-Type': 'application/octet-stream',
-            },
-            body: state.buffer.slice(
-              state.byteOffset,
-              state.byteOffset + state.byteLength,
-            ) as ArrayBuffer,
-          },
-          15_000, // longer timeout for shutdown flushes
-        )
-        console.log(`[collab] Flushed ${boardUuid} to DB on shutdown`)
-      } catch (err) {
-        console.error(
-          `[collab] Shutdown flush error for ${boardUuid}:`,
-          err,
-        )
-      }
-    }
-
-    flushPromises.push(flush())
+  // Closes every connection and saves every room (activities included)
+  await collab.destroy()
+  // Plugins' own pending writes (e.g. a debounced database flush)
+  try {
+    await plugin?.shutdown?.()
+  } catch (err) {
+    console.error('[collab] Plugin shutdown failed:', err)
   }
-
-  await Promise.allSettled(flushPromises)
-  pendingFlushes.clear()
 
   if (redis) {
     await redis.quit()
@@ -590,6 +162,6 @@ async function gracefulShutdown() {
 process.on('SIGINT', gracefulShutdown)
 process.on('SIGTERM', gracefulShutdown)
 
-server.listen().then(() => {
+collab.server.listen().then(() => {
   console.log(`Hocuspocus collab server running on port ${PORT}`)
 })

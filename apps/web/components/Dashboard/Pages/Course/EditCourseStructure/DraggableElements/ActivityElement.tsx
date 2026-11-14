@@ -1,4 +1,3 @@
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import EditVideoActivityModal from '@components/Objects/Modals/Activities/Edit/EditVideoActivityModal'
@@ -14,30 +13,11 @@ import {
 } from '@services/courses/activities'
 import { revalidateTags } from '@services/utils/ts/requests'
 import LockPopover, { LockType } from './LockPopover'
-import {
-  Backpack,
-  Check,
-  Eye,
-  EyeOff,
-  File,
-  FilePenLine,
-  Globe,
-  GripVertical,
-  Loader2,
-  MoreVertical,
-  Package,
-  Pencil,
-  Puzzle,
-  Radio,
-  Save,
-  Sparkles,
-  Trash2,
-  Video,
-} from 'lucide-react'
-import { MarkdownLogo, Globe as GlobePhosphor, Cube } from '@phosphor-icons/react'
+import { MarkdownLogo, Globe as GlobePhosphor, Cube, Backpack, Eye, EyeSlash, File, PencilSimpleLine, Globe, DotsSixVertical, CircleNotch, DotsThreeVertical, Lightning, Package, PencilSimple, PuzzlePiece, Radio, Browsers, Trash, VideoCamera } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { prefetchActivityEditor } from '@components/Objects/Editor/editorPrefetch'
 import React, { useEffect, useState } from 'react'
 import { Draggable } from '@hello-pangea/dnd'
 import { useQueryClient } from '@tanstack/react-query'
@@ -56,7 +36,16 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
 import { ActivityPreviewHoverCard } from '@components/Objects/Activities/ActivityPreview/ActivityPreview'
-import AtlasAttachButton from '@ee/components/Atlas/AtlasAttachButton'
+import { AtlasItemMenu } from '@ee/components/Atlas/CourseAtlas'
+import { SelectBox } from '../../courseEditorUi'
+import { ConfirmDialog } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { useRenameDraft } from '../useRenameDraft'
+import { InlineNameEditor } from './InlineNameEditor'
+import { useModalFormHost } from '@components/Objects/Modals/Activities/activityFormKit'
+import dynamic from 'next/dynamic'
+
+// Play activities link an EE play (`@ee` is a stub in open-source builds).
+const PlayActivityEditModal = dynamic(() => import('@ee/components/Plays/course/PlayActivityEditModal'), { ssr: false })
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -70,28 +59,21 @@ type ActivitiyElementProps = {
   selectionMode?: boolean
 }
 
-interface ModifiedActivityInterface {
-  activityId: string
-  activityName: string
-}
-
 function ActivityElement(props: ActivitiyElementProps) {
   const { t } = useTranslation()
-  const router = useRouter()
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-  const [modifiedActivity, setModifiedActivity] = React.useState<
-    ModifiedActivityInterface | undefined
-  >(undefined)
-  const [selectedActivity, setSelectedActivity] = React.useState<
-    string | undefined
-  >(undefined)
-  const [isUpdatingName, setIsUpdatingName] = React.useState<boolean>(false)
+  const [isRenaming, setIsRenaming] = React.useState(false)
+  const renames = useRenameDraft()
+  // One host is enough: only one edit modal can be open at a time.
+  const editHost = useModalFormHost()
+  const activityName = renames.activityName(props.activity.activity_uuid, props.activity.name)
   const [isPublishing, setIsPublishing] = React.useState<boolean>(false)
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false)
   const [editVideoModalOpen, setEditVideoModalOpen] = React.useState(false)
   const [editDocumentModalOpen, setEditDocumentModalOpen] = React.useState(false)
   const [editScormModalOpen, setEditScormModalOpen] = React.useState(false)
+  const [editPlayModalOpen, setEditPlayModalOpen] = React.useState(false)
   const activityUUID = props.activity.activity_uuid
   const isMobile = useMediaQuery('(max-width: 767px)')
   const org = useOrg() as any;
@@ -126,8 +108,8 @@ function ActivityElement(props: ActivitiyElementProps) {
         activities: ch.activities.filter((a: any) => a.activity_uuid !== props.activity.activity_uuid),
       })),
     }
-    dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
-    dispatchCourse({ type: 'setIsSaved' })
+    // Server-confirmed: patch without touching other unsaved edits.
+    dispatchCourse({ type: 'patchStructure', payload: { chapters: updatedStructure.chapters } })
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.delete_success'))
@@ -150,8 +132,7 @@ function ActivityElement(props: ActivitiyElementProps) {
           ),
         })),
       }
-      dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
-      dispatchCourse({ type: 'setIsSaved' })
+      dispatchCourse({ type: 'patchStructure', payload: { chapters: updatedStructure.chapters } })
       toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
       await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       revalidateTags(['courses'], props.orgslug)
@@ -194,8 +175,7 @@ function ActivityElement(props: ActivitiyElementProps) {
             ),
           })),
         }
-        dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
-        dispatchCourse({ type: 'setIsSaved' })
+        dispatchCourse({ type: 'patchStructure', payload: { chapters: updatedStructure.chapters } })
         toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
         await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
         revalidateTags(['courses'], props.orgslug)
@@ -207,30 +187,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     }
   }
 
-  async function updateActivityName(activityId: string) {
-    if (
-      modifiedActivity?.activityId === activityId &&
-      selectedActivity !== undefined
-    ) {
-      setIsUpdatingName(true)
-      try {
-        await updateActivity({ name: modifiedActivity.activityName }, activityUUID, access_token)
-        await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
-        await revalidateTags(['courses'], props.orgslug)
-        toast.success(t('dashboard.courses.structure.activity.toasts.name_update_success'))
-        router.refresh()
-      } catch (error) {
-        toast.error(t('dashboard.courses.structure.activity.toasts.name_update_error'))
-        console.error('Error updating activity name:', error)
-      } finally {
-        setIsUpdatingName(false)
-        setSelectedActivity(undefined)
-      }
-    } else {
-      setSelectedActivity(undefined)
-    }
-  }
-
+  const router = useRouter()
   const editHref = props.activity.activity_type === 'TYPE_DYNAMIC'
     ? getUriWithOrg(org?.slug || props.orgslug, '') +
       `/course/${course?.courseStructure.course_uuid.replace('course_', '')}/activity/${props.activity.activity_uuid.replace('activity_', '')}/edit`
@@ -252,12 +209,12 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className={`flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1.5 py-2.5 px-3 my-2 w-full rounded-lg text-gray-500
+          className={`group flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1.5 py-2 px-3 mb-1.5 w-full rounded-xl text-neutral-500 transition-colors
             ${snapshot.isDragging
-              ? 'nice-shadow bg-white ring-2 ring-blue-500/20 z-drag-overlay rotate-1 scale-[1.02]'
+              ? 'bg-white shadow-xl ring-2 ring-neutral-900/10 z-drag-overlay rotate-1 scale-[1.02]'
               : props.isSelected
-              ? 'nice-shadow bg-blue-50 ring-1 ring-blue-200'
-              : 'nice-shadow bg-white hover:bg-gray-50'
+              ? 'bg-neutral-50 ring-1 ring-inset ring-neutral-900/20'
+              : 'bg-white ring-1 ring-inset ring-neutral-200/70 hover:ring-neutral-300 hover:bg-neutral-50/60'
             }`}
           key={props.activity.id}
           {...provided.draggableProps}
@@ -265,23 +222,17 @@ function ActivityElement(props: ActivitiyElementProps) {
           style={{ ...provided.draggableProps.style }}
         >
           {/* Selection checkbox */}
-          <button
+          <SelectBox
+            checked={!!props.isSelected}
             onClick={(e) => { e.stopPropagation(); props.onToggleSelect?.() }}
-            className={`flex-shrink-0 h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
-              props.isSelected
-                ? 'bg-blue-600 border-blue-600 text-white'
-                : 'border-gray-300 bg-white hover:border-blue-400'
-            }`}
-          >
-            {props.isSelected && <Check size={12} strokeWidth={3} />}
-          </button>
+          />
 
           {/* Drag Handle */}
           <div
             {...provided.dragHandleProps}
-            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 transition-colors p-1.5 -m-1.5 sm:p-0 sm:m-0 touch-none"
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-neutral-300 hover:text-neutral-500 transition-colors p-1.5 -m-1.5 sm:p-0 sm:m-0 touch-none"
           >
-            <GripVertical size={18} />
+            <DotsSixVertical size={18} />
           </div>
 
           {/* Activity Type Icon */}
@@ -289,58 +240,35 @@ function ActivityElement(props: ActivitiyElementProps) {
 
           {/* Activity Name */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
-            {selectedActivity === props.activity.id ? (
-              <div className="flex items-center gap-2 bg-gray-100 py-1 px-3 rounded-md">
-                <input
-                  type="text"
-                  className="bg-transparent outline-none text-sm text-gray-600 min-w-0"
-                  placeholder={t('dashboard.courses.structure.activity.name_placeholder')}
-                  value={
-                    modifiedActivity
-                      ? modifiedActivity?.activityName
-                      : props.activity.name
-                  }
-                  onChange={(e) =>
-                    setModifiedActivity({
-                      activityId: props.activity.id,
-                      activityName: e.target.value,
-                    })
-                  }
-                  disabled={isUpdatingName}
-                />
-                <ToolTip content={t('dashboard.courses.structure.actions.save_name', { defaultValue: 'Save name' })} side="top">
-                  <button
-                    onClick={() => updateActivityName(props.activity.id)}
-                    className="text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isUpdatingName}
-                  >
-                    {isUpdatingName ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Save size={14} />
-                    )}
-                  </button>
-                </ToolTip>
-              </div>
-            ) : (
-              <ActivityPreviewHoverCard activity={props.activity}>
-                <p className="text-sm text-gray-600 truncate cursor-default">
-                  {props.activity.name}
-                </p>
-              </ActivityPreviewHoverCard>
-            )}
-            {!props.selectionMode && (
-              <AtlasAttachButton
-                reference={{
-                  type: 'activity',
-                  uuid: props.activity.activity_uuid,
-                  name: props.activity.name,
-                  parent_course_uuid: props.course_uuid,
-                  parent_chapter_id: props.chapter_id,
-                  parent_chapter_name: props.chapter_name,
-                  activity_type: props.activity.activity_type,
+            {isRenaming ? (
+              <InlineNameEditor
+                initial={activityName}
+                placeholder={t('dashboard.courses.structure.activity.name_placeholder')}
+                onCommit={(name) => {
+                  renames.renameActivity(props.activity.activity_uuid, name, props.activity.name)
+                  setIsRenaming(false)
                 }}
+                onCancel={() => setIsRenaming(false)}
+                className="text-sm font-medium flex-1"
               />
+            ) : (
+              <>
+                <ActivityPreviewHoverCard activity={props.activity}>
+                  <p
+                    className="text-sm font-medium text-neutral-800 truncate cursor-default"
+                    onDoubleClick={() => setIsRenaming(true)}
+                  >
+                    {activityName}
+                  </p>
+                </ActivityPreviewHoverCard>
+                {renames.isActivityRenamed(props.activity.activity_uuid) && (
+                  <span
+                    className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"
+                    title={t('dashboard.courses.save.unsaved')}
+                    aria-label={t('dashboard.courses.save.unsaved')}
+                  />
+                )}
+              </>
             )}
           </div>
 
@@ -353,22 +281,22 @@ function ActivityElement(props: ActivitiyElementProps) {
                 title={props.activity.published
                   ? t('dashboard.courses.structure.actions.unpublish')
                   : t('dashboard.courses.structure.actions.publish')}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium w-[90px] justify-center transition-colors ${
+                className={`flex items-center gap-1 h-6 px-2.5 rounded-full text-[11px] font-semibold min-w-[84px] justify-center transition-colors ${
                   isPublishing
                     ? 'opacity-50 cursor-not-allowed'
                     : 'cursor-pointer'
                 } ${
                   props.activity.published
-                    ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300'
-                    : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200 hover:border-gray-300 hover:text-gray-700'
+                    ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                    : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700'
                 }`}
               >
                 {isPublishing ? (
-                  <Loader2 size={10} className="animate-spin" />
+                  <CircleNotch size={10} className="animate-spin" />
                 ) : props.activity.published ? (
                   <Globe size={10} />
                 ) : (
-                  <EyeOff size={10} />
+                  <EyeSlash size={10} />
                 )}
                 <span>
                   {props.activity.published
@@ -376,30 +304,40 @@ function ActivityElement(props: ActivitiyElementProps) {
                     : t('dashboard.courses.structure.activity.status.draft')}
                 </span>
               </button>
-              <div className="hidden sm:block w-px h-5 bg-gray-200/80 mx-1" />
+              <div className="hidden sm:block w-px h-5 bg-neutral-200 mx-0.5" />
               <div className="flex items-center gap-1">
+              <AtlasItemMenu
+                activity={{
+                  uuid: props.activity.activity_uuid,
+                  name: activityName,
+                  type: props.activity.activity_type,
+                  chapter: props.chapter_name ? { name: props.chapter_name, id: props.chapter_id } : undefined,
+                }}
+              />
               {props.activity.activity_type === 'TYPE_VIDEO' ? (
                 <Modal
                   isDialogOpen={editVideoModalOpen}
                   onOpenChange={() => setEditVideoModalOpen(!editVideoModalOpen)}
-                  minHeight="no-min"
-                  minWidth="md"
+                  size="lg"
+                  icon={<VideoCamera size={16} />}
                   dialogTitle={t('dashboard.courses.structure.activity.edit_modals.video_title')}
                   dialogDescription={t('dashboard.courses.structure.activity.edit_modals.video_description')}
-                  dialogContent={
+                  preventClose={editHost.submitting}
+                  footer={editHost.footer(() => setEditVideoModalOpen(false), t('common.cancel'))}
+                  dialogContent={editHost.wrap(
                     <EditVideoActivityModal
                       activity={props.activity}
                       courseUuid={props.course_uuid}
                       orgSlug={props.orgslug}
                       onClose={() => setEditVideoModalOpen(false)}
                     />
-                  }
+                  )}
                   dialogTrigger={
                     <button
-                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
                       title={t('dashboard.courses.structure.activity.edit_modals.video_button')}
                     >
-                      <FilePenLine size={15} />
+                      <PencilSimpleLine size={15} />
                     </button>
                   }
                 />
@@ -407,24 +345,26 @@ function ActivityElement(props: ActivitiyElementProps) {
                 <Modal
                   isDialogOpen={editDocumentModalOpen}
                   onOpenChange={() => setEditDocumentModalOpen(!editDocumentModalOpen)}
-                  minHeight="no-min"
-                  minWidth="md"
+                  size="md"
+                  icon={<File size={16} />}
                   dialogTitle={t('dashboard.courses.structure.activity.edit_modals.document_title')}
                   dialogDescription={t('dashboard.courses.structure.activity.edit_modals.document_description')}
-                  dialogContent={
+                  preventClose={editHost.submitting}
+                  footer={editHost.footer(() => setEditDocumentModalOpen(false), t('common.cancel'))}
+                  dialogContent={editHost.wrap(
                     <EditDocumentActivityModal
                       activity={props.activity}
                       courseUuid={props.course_uuid}
                       orgSlug={props.orgslug}
                       onClose={() => setEditDocumentModalOpen(false)}
                     />
-                  }
+                  )}
                   dialogTrigger={
                     <button
-                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
                       title={t('dashboard.courses.structure.activity.edit_modals.document_button')}
                     >
-                      <FilePenLine size={15} />
+                      <PencilSimpleLine size={15} />
                     </button>
                   }
                 />
@@ -432,24 +372,53 @@ function ActivityElement(props: ActivitiyElementProps) {
                 <Modal
                   isDialogOpen={editScormModalOpen}
                   onOpenChange={() => setEditScormModalOpen(!editScormModalOpen)}
-                  minHeight="no-min"
-                  minWidth="md"
+                  size="md"
+                  icon={<Package size={16} />}
                   dialogTitle={t('dashboard.courses.structure.activity.edit_modals.scorm_title')}
                   dialogDescription={t('dashboard.courses.structure.activity.edit_modals.scorm_description')}
-                  dialogContent={
+                  preventClose={editHost.submitting}
+                  footer={editHost.footer(() => setEditScormModalOpen(false), t('common.cancel'))}
+                  dialogContent={editHost.wrap(
                     <EditScormActivityModal
                       activity={props.activity}
                       courseUuid={props.course_uuid}
                       orgSlug={props.orgslug}
                       onClose={() => setEditScormModalOpen(false)}
                     />
-                  }
+                  )}
                   dialogTrigger={
                     <button
-                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
                       title={t('dashboard.courses.structure.activity.edit_modals.scorm_button')}
                     >
-                      <FilePenLine size={15} />
+                      <PencilSimpleLine size={15} />
+                    </button>
+                  }
+                />
+              ) : props.activity.activity_type === 'TYPE_PLAY' ? (
+                <Modal
+                  isDialogOpen={editPlayModalOpen}
+                  onOpenChange={() => setEditPlayModalOpen(!editPlayModalOpen)}
+                  size="lg"
+                  icon={<Lightning size={16} />}
+                  dialogTitle={t('play_activity.edit_title', 'Play activity')}
+                  dialogDescription={t('play_activity.edit_description', 'The play learners run in this lesson. Passing it completes the activity.')}
+                  preventClose={editHost.submitting}
+                  footer={editHost.footer(() => setEditPlayModalOpen(false), t('common.cancel'))}
+                  dialogContent={editHost.wrap(
+                    <PlayActivityEditModal
+                      activity={props.activity}
+                      courseUuid={props.course_uuid}
+                      orgSlug={props.orgslug}
+                      onClose={() => setEditPlayModalOpen(false)}
+                    />
+                  )}
+                  dialogTrigger={
+                    <button
+                      className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+                      title={t('play_activity.edit_button', 'Edit play activity')}
+                    >
+                      <PencilSimpleLine size={15} />
                     </button>
                   }
                 />
@@ -464,19 +433,21 @@ function ActivityElement(props: ActivitiyElementProps) {
                 >
                   <Link
                     href={editHref}
+                    onMouseEnter={() => props.activity.activity_type === 'TYPE_DYNAMIC' && prefetchActivityEditor(router, editHref)}
+                    onFocus={() => props.activity.activity_type === 'TYPE_DYNAMIC' && prefetchActivityEditor(router, editHref)}
                     target="_blank"
-                    className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
                   >
-                    <FilePenLine size={15} />
+                    <PencilSimpleLine size={15} />
                   </Link>
                 </ToolTip>
               ) : (
-                <div className="h-9 w-9 sm:h-7 sm:w-7" />
+                <div className="h-9 w-9 sm:h-8 sm:w-8" />
               )}
               <ToolTip content={t('dashboard.courses.structure.actions.preview_activity')} side="top">
                 <Link
                   href={previewHref}
-                  className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
                 >
                   <Eye size={15} />
                 </Link>
@@ -492,18 +463,18 @@ function ActivityElement(props: ActivitiyElementProps) {
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-                    <MoreVertical size={16} />
+                  <button className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors">
+                    <DotsThreeVertical size={16} />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => setSelectedActivity(props.activity.id)}>
-                    <Pencil size={14} />
+                  <DropdownMenuItem onClick={() => setIsRenaming(true)}>
+                    <PencilSimple size={14} />
                     <span>{t('dashboard.courses.structure.actions.rename')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={changePublicStatus} disabled={isPublishing}>
-                    {props.activity.published ? <EyeOff size={14} /> : <Globe size={14} />}
+                    {props.activity.published ? <EyeSlash size={14} /> : <Globe size={14} />}
                     <span>
                       {props.activity.published
                         ? t('dashboard.courses.structure.actions.unpublish')
@@ -516,9 +487,9 @@ function ActivityElement(props: ActivitiyElementProps) {
                       e.preventDefault()
                       setDeleteModalOpen(true)
                     }}
-                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                    className="text-rose-600 focus:text-rose-600 focus:bg-rose-50"
                   >
-                    <Trash2 size={14} />
+                    <Trash size={14} />
                     <span>{t('dashboard.courses.structure.bulk_actions.delete')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -527,16 +498,14 @@ function ActivityElement(props: ActivitiyElementProps) {
             </div>
           )}
 
-          {/* Delete confirmation modal - hidden trigger clicked from dropdown */}
-          <ConfirmationModal
-            confirmationMessage={t('dashboard.courses.structure.modals.delete_activity.message')}
-            confirmationButtonText={t('dashboard.courses.structure.modals.delete_activity.button')}
-            dialogTitle={t('dashboard.courses.structure.modals.delete_activity.title', { name: props.activity.name })}
-            functionToExecute={() => deleteActivityUI()}
-            status="warning"
-            dialogTrigger={
-              <button ref={(el) => { if (deleteModalOpen && el) { el.click(); setDeleteModalOpen(false) } }} className="hidden" />
-            }
+          {/* Controlled: the dropdown item unmounts with the menu. */}
+          <ConfirmDialog
+            open={deleteModalOpen}
+            onOpenChange={setDeleteModalOpen}
+            title={t('dashboard.courses.structure.modals.delete_activity.title', { name: activityName })}
+            message={t('dashboard.courses.structure.modals.delete_activity.message')}
+            confirmLabel={t('dashboard.courses.structure.modals.delete_activity.button')}
+            onConfirm={deleteActivityUI}
           />
         </div>
       )}
@@ -547,7 +516,7 @@ function ActivityElement(props: ActivitiyElementProps) {
 const ACTIVITIES = {
   'TYPE_VIDEO': {
     displayNameKey: 'video',
-    Icon: Video
+    Icon: VideoCamera
   },
   'TYPE_DOCUMENT': {
     displayNameKey: 'document',
@@ -559,7 +528,7 @@ const ACTIVITIES = {
   },
   'TYPE_DYNAMIC': {
     displayNameKey: 'dynamic',
-    Icon: Sparkles
+    Icon: Browsers
   },
   'TYPE_SCORM': {
     displayNameKey: 'scorm',
@@ -569,33 +538,38 @@ const ACTIVITIES = {
     displayNameKey: 'livesession',
     Icon: Radio
   },
+  'TYPE_PLAY': {
+    displayNameKey: 'play',
+    Icon: Lightning,
+    fallback: 'Play'
+  },
   'TYPE_CUSTOM': {
     displayNameKey: 'custom',
-    Icon: Puzzle
+    Icon: PuzzlePiece
   }
 }
 
-const UNKNOWN_ACTIVITY = { displayNameKey: 'dynamic', Icon: Sparkles }
+const UNKNOWN_ACTIVITY = { displayNameKey: 'dynamic', Icon: Browsers }
 
 const ActivityTypeIndicator = ({activityType, activitySubType, isMobile} : { activityType: keyof typeof ACTIVITIES, activitySubType?: string, isMobile: boolean}) => {
   const { t } = useTranslation()
   const isMarkdown = activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN'
   const isEmbed = activitySubType === 'SUBTYPE_DYNAMIC_EMBED'
   const isResource = activitySubType === 'SUBTYPE_DYNAMIC_RESOURCE'
-  const {displayNameKey, Icon} = isMarkdown
+  const {displayNameKey, Icon, fallback} = (isMarkdown
     ? { displayNameKey: 'markdown', Icon: MarkdownLogo }
     : isEmbed
     ? { displayNameKey: 'embed', Icon: GlobePhosphor }
     : isResource
     ? { displayNameKey: 'resource', Icon: Cube }
-    : ACTIVITIES[activityType] ?? UNKNOWN_ACTIVITY
+    : ACTIVITIES[activityType] ?? UNKNOWN_ACTIVITY) as { displayNameKey: string; Icon: React.ElementType; fallback?: string }
 
   return (
     <div className="flex items-center gap-1.5 flex-shrink-0">
-      <Icon className="size-4 text-gray-400" />
+      <Icon className="size-4 text-neutral-400" />
       {!isMobile && (
-        <span className="text-xs text-gray-400 font-medium">
-          {t(`dashboard.courses.structure.activity.types.${displayNameKey}`)}
+        <span className="text-xs text-neutral-400 font-medium">
+          {fallback ? t(`dashboard.courses.structure.activity.types.${displayNameKey}`, fallback) : t(`dashboard.courses.structure.activity.types.${displayNameKey}`)}
         </span>
       )}
     </div>

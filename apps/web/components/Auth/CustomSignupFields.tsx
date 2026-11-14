@@ -1,16 +1,12 @@
 'use client'
 import React from 'react'
 import * as Form from '@radix-ui/react-form'
-import { Info } from 'lucide-react'
-import { FormField } from '@components/Objects/StyledElements/Form/Form'
+import { AUTH_INPUT, AUTH_TEXTAREA, AuthLabel } from '@components/Auth/AuthUI'
 import { useTranslation } from 'react-i18next'
 import type { SignupFieldItem } from '@services/settings/org'
 
-const INPUT_CLASS =
-  'box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm'
-
-const TEXTAREA_CLASS =
-  'box-border w-full bg-neutral-50 text-black rounded-lg px-4 py-3 border border-neutral-200 appearance-none focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm resize-none min-h-[80px]'
+const INPUT_CLASS = AUTH_INPUT
+const TEXTAREA_CLASS = AUTH_TEXTAREA
 
 /** Formik field name for a custom field's answer. */
 export function customFieldName(key: string): string {
@@ -120,19 +116,11 @@ export default function CustomSignupFields({
         const label = field.label || field.key
 
         return (
-          <FormField key={field.key} name={name}>
+          <Form.Field key={field.key} name={name} className="grid">
             {field.type !== 'checkbox' && (
-              <div className="flex items-center space-x-2 mb-1.5">
-                <Form.Label className="grow text-[13px] font-semibold text-black/70">
-                  {field.required ? label : `${label} (${t('common.optional')})`}
-                </Form.Label>
-                {error && (
-                  <span className="text-red-500 text-xs flex items-center space-x-1">
-                    <Info size={11} />
-                    <span>{error}</span>
-                  </span>
-                )}
-              </div>
+              <AuthLabel error={error}>
+                {field.required ? label : `${label} (${t('common.optional')})`}
+              </AuthLabel>
             )}
 
             {field.type === 'textarea' && (
@@ -179,13 +167,13 @@ export default function CustomSignupFields({
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     checked={!!value}
-                    className="mt-0.5 h-4 w-4 rounded border-neutral-300 accent-black"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-neutral-300 accent-neutral-900"
                   />
                 </Form.Control>
-                <span className="text-[13px] text-black/70 leading-snug">
+                <span className="text-[13px] text-neutral-700 leading-snug">
                   {label}
                   {error && (
-                    <span className="ms-2 text-red-500 text-xs">{error}</span>
+                    <span className="ms-2 text-rose-600 text-xs font-medium" aria-live="polite">{error}</span>
                   )}
                 </span>
               </label>
@@ -195,7 +183,9 @@ export default function CustomSignupFields({
               <Form.Control asChild>
                 <input
                   name={name}
-                  type={field.type === 'text' ? 'text' : field.type}
+                  type={
+                    field.type !== 'text' ? field.type : field.people_field === 'manager_email' ? 'email' : 'text'
+                  }
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={value ?? ''}
@@ -209,9 +199,9 @@ export default function CustomSignupFields({
             )}
 
             {field.help_text && (
-              <p className="mt-1 text-[11px] text-black/35">{field.help_text}</p>
+              <p className="mt-1.5 text-xs text-neutral-400">{field.help_text}</p>
             )}
-          </FormField>
+          </Form.Field>
         )
       })}
     </>

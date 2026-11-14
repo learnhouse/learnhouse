@@ -1,21 +1,22 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
+import EditorBlockFrame from '../../Blocks/ui/EditorBlockFrame'
 import React from 'react'
 import toast from 'react-hot-toast'
 import {
-  ArrowLeftRight,
-  BookCopy,
-  Download,
-  ExternalLink,
-  Expand,
-  Gamepad2,
-  LayoutGrid,
-  Library,
-  Loader2,
-  Podcast,
-  Trash2,
-  Upload,
-  Users,
-} from 'lucide-react'
+  ArrowSquareOut,
+  ArrowsLeftRight,
+  ArrowsOut,
+  BookOpen,
+  Books,
+  ChalkboardSimple,
+  CircleNotch,
+  DownloadSimple,
+  Garage,
+  Headphones,
+  Lightning,
+  Trash,
+  UploadSimple,
+} from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -33,11 +34,11 @@ const UPLOAD_ACCEPT =
   'image/*,video/*,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip'
 
 const RESOURCE_ICONS: Partial<Record<ResourceKind, any>> = {
-  course: BookCopy,
-  podcast: Podcast,
-  community: Users,
-  board: LayoutGrid,
-  playground: Gamepad2,
+  course: BookOpen,
+  podcast: Headphones,
+  community: Garage,
+  board: ChalkboardSimple,
+  playground: Lightning,
 }
 
 /** The subset of a Media row the block caches so it can paint before refetching. */
@@ -164,7 +165,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
       return (
         <NodeViewWrapper className="my-4">
           <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
-            <Library className="text-slate-300" size={32} />
+            <Books className="text-slate-300" size={32} />
             <p className="text-slate-500">{t('library.no_resource_selected')}</p>
           </div>
         </NodeViewWrapper>
@@ -172,22 +173,23 @@ function LibraryBlockComponent(props: NodeViewProps) {
     }
     return (
       <NodeViewWrapper className="my-4">
+      <EditorBlockFrame editable={true} node={props.node} editor={props.editor} getPos={props.getPos} selected={props.selected} tone="document">
         <div
           className="flex flex-col items-center justify-center gap-4 py-8 bg-white rounded-lg text-slate-700 px-4 border-2 border-dashed border-slate-200 text-sm"
           contentEditable={false}
         >
           {uploading ? (
-            <Loader2 className="animate-spin text-slate-400" size={32} />
+            <CircleNotch className="animate-spin text-slate-400" size={32} />
           ) : (
             <>
-              <Library className="text-slate-300" size={40} />
+              <Books className="text-slate-300" size={40} />
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setPickerOpen(true)}
                   className="p-2 px-4 bg-slate-700 hover:bg-slate-800 rounded-lg text-white transition-colors gap-2 items-center flex text-sm font-medium"
                 >
-                  <Library size={16} />
+                  <Books size={16} />
                   <span>{t('library.choose_from_library')}</span>
                 </button>
                 <button
@@ -195,7 +197,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
                   onClick={() => fileInputRef.current?.click()}
                   className="p-2 px-4 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 transition-colors gap-2 items-center flex text-sm font-medium"
                 >
-                  <Upload size={16} />
+                  <UploadSimple size={16} />
                   <span>{t('library.upload_to_library')}</span>
                 </button>
               </div>
@@ -211,6 +213,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
           />
         </div>
         {picker}
+      </EditorBlockFrame>
       </NodeViewWrapper>
     )
   }
@@ -231,7 +234,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
           title={t('library.preview')}
           className="p-1.5 rounded-md bg-white/90 backdrop-blur-sm hover:bg-white nice-shadow text-slate-600"
         >
-          <Expand size={14} />
+          <ArrowsOut size={14} />
         </button>
       )}
       {downloadUrl && (
@@ -240,7 +243,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
           title={t('media.download')}
           className="p-1.5 rounded-md bg-white/90 backdrop-blur-sm hover:bg-white nice-shadow text-slate-600"
         >
-          <Download size={14} />
+          <DownloadSimple size={14} />
         </a>
       )}
       {isEditable && (
@@ -251,7 +254,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
             title={t('library.replace_resource')}
             className="p-1.5 rounded-md bg-white/90 backdrop-blur-sm hover:bg-white nice-shadow text-slate-600"
           >
-            <ArrowLeftRight size={14} />
+            <ArrowsLeftRight size={14} />
           </button>
           <button
             type="button"
@@ -259,7 +262,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
             title={t('library.remove_resource')}
             className="p-1.5 rounded-md bg-white/90 backdrop-blur-sm hover:bg-white nice-shadow text-rose-600"
           >
-            <Trash2 size={14} />
+            <Trash size={14} />
           </button>
         </>
       )}
@@ -269,6 +272,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
   if (isMedia) {
     return (
       <NodeViewWrapper className="my-4">
+      <EditorBlockFrame editable={isEditable} node={props.node} editor={props.editor} getPos={props.getPos} selected={props.selected} tone="document">
         <div className="group relative" contentEditable={false}>
           <div className="absolute top-2 end-2 z-10">{toolbar}</div>
           <MediaViewer
@@ -284,17 +288,19 @@ function LibraryBlockComponent(props: NodeViewProps) {
           onOpenChange={setLightboxOpen}
         />
         {picker}
+      </EditorBlockFrame>
       </NodeViewWrapper>
     )
   }
 
   // Other library resources (course, podcast, community, board, playground).
   const kind = (resourceType || 'course') as ResourceKind
-  const Icon = RESOURCE_ICONS[kind] || Library
+  const Icon = RESOURCE_ICONS[kind] || Books
   const baseUrl = org?.slug ? buildResourceUrl(kind, resourceUuid, org.slug) : null
 
   return (
     <NodeViewWrapper className="my-4">
+    <EditorBlockFrame editable={isEditable} node={props.node} editor={props.editor} getPos={props.getPos} selected={props.selected} tone="document">
       <div className="group relative" contentEditable={false}>
         <div className="absolute top-2 end-2 z-10">{toolbar}</div>
 
@@ -313,7 +319,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
             <Icon size={22} className="text-slate-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <p className="text-[11px] font-semibold text-gray-500">
                 {t(`library.tabs.${kind}s`)}
               </p>
             </div>
@@ -324,7 +330,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors"
               >
-                <ExternalLink size={14} /> {t('library.open')}
+                <ArrowSquareOut size={14} /> {t('library.open')}
               </a>
             )}
           </div>
@@ -343,6 +349,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
         )}
       </div>
       {picker}
+    </EditorBlockFrame>
     </NodeViewWrapper>
   )
 }

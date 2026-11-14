@@ -1,58 +1,50 @@
 'use client'
-import FolderThumbnail from '@components/Objects/Thumbnails/FolderThumbnail'
-import LibraryItemCard from '@components/Dashboard/Library/LibraryItemCard'
-import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getUriWithOrg } from '@services/config/config'
-import { FolderSimple } from '@phosphor-icons/react'
-import { FolderMinus, GripVertical } from 'lucide-react'
-import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
+import { DotsSixVertical } from '@phosphor-icons/react'
+import { DragDropContext, Droppable, Draggable, type DropResult, type DraggableProvidedDragHandleProps } from '@hello-pangea/dnd'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { FolderCard, FolderRow, ItemCard, ItemRow, LIB_ROW_GRID, LIB_TABLE_GRID } from '@components/Dashboard/Library/libraryItems'
+import type { ViewMode } from '@components/Dashboard/Shared/DashKit/DashKit'
 
 type Props = {
   folders: any[]
   items: any[]
   orgslug: string
   org_id: number
+  view: ViewMode
   onChanged: () => void
-  onRemoveItem: (_resourceUuid: string) => void
-  emptyTitle?: string
-  emptyDescription?: string
-  emptyAction?: React.ReactNode
-  /** When true (manual sort mode + admin), folders/items can be drag-reordered. */
+  onRemoveItem: (_item: any) => void | Promise<void>
+  onDeleteFolder: (_folder: any) => void | Promise<void>
+  /** When true (manual sort mode + admin), folders/items can be drag-reordered in grid view. */
   isManual?: boolean
   /** Persist the reordered folder list (already in the new order). */
   onReorderFolders?: (_folders: any[]) => void
   /** Persist the reordered content items (already in the new order). */
   onReorderItems?: (_items: any[]) => void
+  /** Extra line under each card/row, e.g. the folder path in search results. */
+  contextFor?: (_entry: any) => React.ReactNode
 }
 
-function CourseItem({ item, orgslug, onRemove }: { item: any; orgslug: string; onRemove: () => void }) {
+const FOLDER_GRID = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
+const ITEM_GRID = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start'
+
+function reorder<T>(list: T[], from: number, to: number) {
+  const next = Array.from(list)
+  const [moved] = next.splice(from, 1)
+  next.splice(to, 0, moved)
+  return next
+}
+
+function DragHandle({ props, className }: { props: DraggableProvidedDragHandleProps | null | undefined; className: string }) {
   const { t } = useTranslation()
-  const resource = item.resource || {}
   return (
-    <div className="relative group">
-      <CourseThumbnail
-        course={resource}
-        orgslug={orgslug}
-        isDashboard={true}
-        customLink={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(resource.course_uuid || item.resource_uuid)}/general`)}
-      />
-      <div className="absolute top-2 start-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
-        <ConfirmationModal
-          confirmationButtonText={t('library.remove_from_folder')}
-          confirmationMessage={t('library.remove_from_folder_confirm')}
-          dialogTitle={t('library.remove_from_folder')}
-          dialogTrigger={
-            <button title={t('library.remove_from_folder')} className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-rose-50 hover:text-rose-600 text-gray-600 transition-all shadow-md">
-              <FolderMinus className="w-4 h-4" />
-            </button>
-          }
-          functionToExecute={onRemove}
-          status="warning"
-        />
-      </div>
+    <div
+      {...props}
+      title={t('library.sort.drag_to_reorder')}
+      aria-label={t('library.sort.drag_to_reorder')}
+      className={`cursor-grab active:cursor-grabbing text-neutral-300 hover:text-neutral-600 transition-colors ${className}`}
+    >
+      <DotsSixVertical size={16} weight="bold" />
     </div>
   )
 }
@@ -62,177 +54,139 @@ export default function LibraryGrid({
   items,
   orgslug,
   org_id,
+  view,
   onChanged,
   onRemoveItem,
-  emptyTitle,
-  emptyDescription,
-  emptyAction,
+  onDeleteFolder,
   isManual = false,
   onReorderFolders,
   onReorderItems,
+  contextFor,
 }: Props) {
   const { t } = useTranslation()
-  const isEmpty = folders.length === 0 && items.length === 0
-  const dragEnabled = isManual && !!onReorderFolders
-  const itemsDragEnabled = isManual && !!onReorderItems
+  const foldersDrag = view === 'grid' && isManual && !!onReorderFolders
+  const itemsDrag = view === 'grid' && isManual && !!onReorderItems
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination || !onReorderFolders) return
-    if (result.destination.index === result.source.index) return
-    const reordered = Array.from(folders)
-    const [moved] = reordered.splice(result.source.index, 1)
-    reordered.splice(result.destination.index, 0, moved)
-    onReorderFolders(reordered)
-  }
+  const folderProps = (folder: any) => ({
+    folder,
+    orgslug,
+    org_id,
+    onChanged,
+    onDelete: onDeleteFolder,
+    context: contextFor?.(folder),
+  })
+  const itemProps = (item: any) => ({ item, orgslug, org_id, onRemove: onRemoveItem, context: contextFor?.(item) })
+  const itemKey = (item: any) =>
+    `${item.resource_uuid}-${(item.path || []).map((p: any) => p.folder_uuid).join('-')}`
 
-  const handleItemsDragEnd = (result: DropResult) => {
-    if (!result.destination || !onReorderItems) return
-    if (result.destination.index === result.source.index) return
-    const reordered = Array.from(items)
-    const [moved] = reordered.splice(result.source.index, 1)
-    reordered.splice(result.destination.index, 0, moved)
-    onReorderItems(reordered)
-  }
-
-  const itemKey = (item: any) => item.resource_uuid
-
-  if (isEmpty) {
+  if (view === 'list') {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-        <div className="bg-gray-100 rounded-2xl p-4 text-gray-400">
-          <FolderSimple size={28} weight="duotone" />
+      <div className={`bg-white rounded-2xl nice-shadow overflow-hidden ${LIB_TABLE_GRID}`}>
+        <div className={`hidden ${LIB_ROW_GRID} px-5 py-3 border-b border-neutral-100 text-xs font-medium text-neutral-500`}>
+          <span>{t('library.dash.columns.name')}</span>
+          <span>{t('library.dash.columns.type')}</span>
+          <span>{t('library.visibility')}</span>
+          <span>{t('library.dash.columns.details')}</span>
+          <span className="sr-only">{t('library.item_actions')}</span>
         </div>
-        <p className="text-sm font-semibold text-gray-500">{emptyTitle || t('library.empty_folder')}</p>
-        {emptyDescription && <p className="text-xs text-gray-400 -mt-1 max-w-xs">{emptyDescription}</p>}
-        {emptyAction && <div className="mt-2">{emptyAction}</div>}
+        <ul className={`divide-y divide-neutral-100 ${LIB_ROW_GRID}`}>
+          {folders.map((folder) => (
+            <FolderRow key={folder.folder_uuid} {...folderProps(folder)} />
+          ))}
+          {items.map((item) => (
+            <ItemRow key={itemKey(item)} {...itemProps(item)} />
+          ))}
+        </ul>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-7">
-      {/* Folders: always on top, in their own compact grid (Drive-like) */}
-      {folders.length > 0 && (
-        <section>
-          {dragEnabled ? (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="folders" direction="horizontal">
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
-                  >
-                    {folders.map((folder: any, i: number) => (
-                      <Draggable key={folder.folder_uuid} draggableId={folder.folder_uuid} index={i}>
-                        {(dragProvided, snapshot) => (
-                          <div
-                            ref={dragProvided.innerRef}
-                            {...dragProvided.draggableProps}
-                            style={{ ...dragProvided.draggableProps.style }}
-                            className={`relative ${snapshot.isDragging ? 'z-drag-overlay rotate-1 scale-[1.02]' : ''}`}
-                          >
-                            <div
-                              {...dragProvided.dragHandleProps}
-                              className="absolute top-2 start-2 z-30 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors"
-                              title={t('library.sort.drag_to_reorder', { defaultValue: 'Drag to reorder' })}
-                            >
-                              <GripVertical size={16} />
-                            </div>
-                            <FolderThumbnail
-                              folder={folder}
-                              orgslug={orgslug}
-                              org_id={org_id}
-                              isDashboard={true}
-                              onChanged={onChanged}
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {folders.map((folder: any) => (
-                <FolderThumbnail
-                  key={folder.folder_uuid}
-                  folder={folder}
-                  orgslug={orgslug}
-                  org_id={org_id}
-                  isDashboard={true}
-                  onChanged={onChanged}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Resources: a separate grid of full-size cards below */}
-      {items.length > 0 && (
-        <section>
-          {itemsDragEnabled ? (
-            <DragDropContext onDragEnd={handleItemsDragEnd}>
-              <Droppable droppableId="items" direction="horizontal">
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-start"
-                  >
-                    {items.map((item: any, i: number) => (
-                      <Draggable key={itemKey(item)} draggableId={String(itemKey(item))} index={i}>
-                        {(dragProvided, snapshot) => (
-                          <div
-                            ref={dragProvided.innerRef}
-                            {...dragProvided.draggableProps}
-                            style={{ ...dragProvided.draggableProps.style }}
-                            className={`relative ${snapshot.isDragging ? 'z-drag-overlay rotate-1 scale-[1.02]' : ''}`}
-                          >
-                            <div
-                              {...dragProvided.dragHandleProps}
-                              className="absolute top-2 end-2 z-30 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors bg-white/90 backdrop-blur-sm rounded-full p-1 shadow-md"
-                              title={t('library.sort.drag_to_reorder', { defaultValue: 'Drag to reorder' })}
-                            >
-                              <GripVertical size={16} />
-                            </div>
-                            {item.resource_type === 'courses' ? (
-                              <CourseItem item={item} orgslug={orgslug} onRemove={() => onRemoveItem(item.resource_uuid)} />
-                            ) : (
-                              <LibraryItemCard item={item} orgslug={orgslug} org_id={org_id} onRemove={() => onRemoveItem(item.resource_uuid)} />
-                            )}
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-start">
-              {items.map((item: any) =>
-                item.resource_type === 'courses' ? (
-                  <CourseItem key={item.resource_uuid} item={item} orgslug={orgslug} onRemove={() => onRemoveItem(item.resource_uuid)} />
-                ) : (
-                  <LibraryItemCard
-                    key={item.resource_uuid}
-                    item={item}
-                    orgslug={orgslug}
-                    org_id={org_id}
-                    onRemove={() => onRemoveItem(item.resource_uuid)}
-                  />
-                )
+    <div className="flex flex-col gap-6">
+      {folders.length > 0 &&
+        (foldersDrag ? (
+          <DragDropContext
+            onDragEnd={(r: DropResult) => {
+              if (!r.destination || r.destination.index === r.source.index) return
+              onReorderFolders!(reorder(folders, r.source.index, r.destination.index))
+            }}
+          >
+            <Droppable droppableId="folders" direction="horizontal">
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps} className={FOLDER_GRID}>
+                  {folders.map((folder, i) => (
+                    <Draggable key={folder.folder_uuid} draggableId={folder.folder_uuid} index={i}>
+                      {(drag, snapshot) => (
+                        <div
+                          ref={drag.innerRef}
+                          {...drag.draggableProps}
+                          className={snapshot.isDragging ? 'z-drag-overlay rotate-1 scale-[1.02]' : ''}
+                        >
+                          <FolderCard
+                            {...folderProps(folder)}
+                            dragHandle={<DragHandle props={drag.dragHandleProps} className="-ms-1 -me-1.5" />}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
               )}
-            </div>
-          )}
-        </section>
-      )}
+            </Droppable>
+          </DragDropContext>
+        ) : (
+          <div className={FOLDER_GRID}>
+            {folders.map((folder) => (
+              <FolderCard key={folder.folder_uuid} {...folderProps(folder)} />
+            ))}
+          </div>
+        ))}
+
+      {items.length > 0 &&
+        (itemsDrag ? (
+          <DragDropContext
+            onDragEnd={(r: DropResult) => {
+              if (!r.destination || r.destination.index === r.source.index) return
+              onReorderItems!(reorder(items, r.source.index, r.destination.index))
+            }}
+          >
+            <Droppable droppableId="items" direction="horizontal">
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps} className={ITEM_GRID}>
+                  {items.map((item, i) => (
+                    <Draggable key={item.resource_uuid} draggableId={String(item.resource_uuid)} index={i}>
+                      {(drag, snapshot) => (
+                        <div
+                          ref={drag.innerRef}
+                          {...drag.draggableProps}
+                          className={snapshot.isDragging ? 'z-drag-overlay rotate-1 scale-[1.02]' : ''}
+                        >
+                          <ItemCard
+                            {...itemProps(item)}
+                            dragHandle={
+                              <DragHandle
+                                props={drag.dragHandleProps}
+                                className="absolute top-2 start-2 z-10 w-7 h-7 rounded-md bg-white/95 backdrop-blur shadow-sm flex items-center justify-center !text-neutral-500 hover:!text-neutral-900"
+                              />
+                            }
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        ) : (
+          <div className={ITEM_GRID}>
+            {items.map((item) => (
+              <ItemCard key={itemKey(item)} {...itemProps(item)} />
+            ))}
+          </div>
+        ))}
     </div>
   )
 }

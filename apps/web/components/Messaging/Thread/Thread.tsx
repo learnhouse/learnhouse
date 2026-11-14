@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
+import { useMediaQuery } from 'usehooks-ts'
 import {
   ArrowDown,
   ArrowLeft,
@@ -13,22 +14,32 @@ import {
   BellSimple,
   BellSlash,
   BookOpen,
-  DotsThreeVertical,
+  DotsThree,
+  Info,
   Minus,
   NotePencil,
   PencilSimple,
   PushPin,
   SignOut,
-  SpinnerGap,
   UserPlus,
   WarningCircle,
   X,
 } from '@phosphor-icons/react'
+import { Button, buttonClass, useStoredState } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { MessagesPage, messageOrder, messagingKeys, useMessaging } from '@components/Messaging/MessagingProvider'
 import { useAgents, useConversations } from '@components/Messaging/hooks'
-import { AvatarStack, ConversationAvatar, PersonAvatar } from '@components/Messaging/ui/Avatars'
-import AgentAvatar from '@components/Messaging/Agents/AgentAvatar'
+import { AvatarStack, ConversationAvatar } from '@components/Messaging/ui/Avatars'
+import { IconButton } from '@components/Messaging/ui/kit'
 import MessageItem, { LocalMessage } from '@components/Messaging/Thread/MessageItem'
+import {
+  AgentIntro,
+  DaySeparator,
+  DetailsPanel,
+  MessagesSkeleton,
+  ThreadSkeleton,
+  TypingIndicator,
+  UnreadDivider,
+} from '@components/Messaging/Thread/ThreadParts'
 import Composer, { ComposerSend } from '@components/Messaging/Thread/Composer'
 import NewConversationDialog from '@components/Messaging/Dialogs/NewConversationDialog'
 import {
@@ -38,7 +49,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
-import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
 import {
   Agent,
   ChatMessage,
@@ -62,81 +72,9 @@ import {
 } from '@services/messaging/messaging'
 import { getUriWithOrg } from '@services/config/config'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
-import { dayLabel, isGrouped, presenceLine, sameDay } from '@components/Messaging/utils'
+import { isGrouped, presenceLine, sameDay } from '@components/Messaging/utils'
 
 const NEAR_BOTTOM_PX = 140
-
-function TypingBar({ uuid }: { uuid: string }) {
-  const { typing } = useMessaging()
-  const names = (typing[uuid] || []).map((x) => x.user.first_name || x.user.username)
-  return (
-    <div className="h-6 px-5 flex items-center">
-      <AnimatePresence>
-        {names.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            className="flex items-center gap-2 text-xs text-gray-500"
-          >
-            <span className="flex gap-0.5">
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-gray-400"
-                  animate={{ y: [0, -3, 0], opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
-                />
-              ))}
-            </span>
-            {names.length === 1
-              ? `${names[0]} is typing…`
-              : names.length === 2
-                ? `${names[0]} and ${names[1]} are typing…`
-                : `${names.length} people are typing…`}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-function AgentIntro({ agent, onPick, compact = false }: { agent: Agent | null; onPick: (text: string) => void; compact?: boolean }) {
-  if (!agent) return null
-  return (
-    <div className={`flex flex-col items-center text-center ${compact ? 'pt-6 pb-4 px-2' : 'pt-10 pb-6 px-6'}`}>
-      <AgentAvatar agent={agent} size={compact ? 44 : 56} />
-      <h2 className="mt-3 text-lg font-bold text-gray-900">{agent.name}</h2>
-      {agent.description && <p className="mt-1 max-w-md text-sm text-gray-500">{agent.description}</p>}
-      <div className="mt-2 flex flex-wrap justify-center gap-1.5 text-xs text-gray-500">
-        <span className="rounded-md bg-gray-100 px-2 py-0.5 capitalize">{agent.tone}</span>
-        <span className="rounded-md bg-gray-100 px-2 py-0.5">
-          {agent.knowledge_mode === 'general' ? 'Courses + general knowledge' : 'Answers from courses'}
-        </span>
-        {agent.is_default ? (
-          <span className="rounded-md bg-gray-100 px-2 py-0.5">All courses</span>
-        ) : (
-          agent.course_uuids.length > 0 && (
-            <span className="rounded-md bg-gray-100 px-2 py-0.5">{agent.course_uuids.length} course{agent.course_uuids.length > 1 ? 's' : ''}</span>
-          )
-        )}
-      </div>
-      {agent.starters.length > 0 && (
-        <div className={`mt-6 grid gap-2 w-full max-w-xl ${compact ? '' : 'sm:grid-cols-2'}`}>
-          {agent.starters.map((s) => (
-            <button
-              key={s}
-              onClick={() => onPick(s)}
-              className="rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-start text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 export default function Thread({
   uuid,
@@ -235,6 +173,19 @@ export default function Thread({
   const [newBelow, setNewBelow] = useState(0)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
+  const [atBottom, setAtBottom] = useState(true)
+
+  // Details panel: beside the thread on wide screens (remembered), floating
+  // over it on narrower ones (per visit). Never in the dock.
+  const wide = useMediaQuery('(min-width: 1280px)', { initializeWithValue: false })
+  const [detailsPref, setDetailsPref] = useStoredState<'open' | 'closed'>('lh-msg-details', 'closed', ['open', 'closed'])
+  const [overlayDetails, setOverlayDetails] = useState(false)
+  const detailsOpen = !dock && (wide ? detailsPref === 'open' : overlayDetails)
+  const toggleDetails = () => {
+    if (dock) return
+    if (wide) setDetailsPref(detailsPref === 'open' ? 'closed' : 'open')
+    else setOverlayDetails((v) => !v)
+  }
   const scroller = useRef<HTMLDivElement>(null)
   const restore = useRef<{ height: number; top: number } | null>(null)
   const nearBottom = useRef(true)
@@ -329,6 +280,7 @@ export default function Thread({
     const el = scroller.current
     if (!el) return
     nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX
+    if (nearBottom.current !== atBottom) setAtBottom(nearBottom.current)
     if (nearBottom.current && newBelow) setNewBelow(0)
     if (el.scrollTop < 200) loadOlder()
   }
@@ -487,8 +439,11 @@ export default function Thread({
 
   const members = useMemo(() => conversation?.members || [], [conversation])
   const nameOf = useCallback(
-    (id: number) => (id === userId ? 'You' : displayName(members.find((m) => m.id === id) as any) || 'Someone'),
-    [members, userId]
+    (id: number) =>
+      id === userId
+        ? t('messaging.you', { defaultValue: 'You' })
+        : displayName(members.find((m) => m.id === id) as any) || t('messaging.someone', { defaultValue: 'Someone' }),
+    [members, userId, t]
   )
 
   // Read receipts sit under your latest message.
@@ -510,13 +465,18 @@ export default function Thread({
     others[0]?.last_read_message_id !== null &&
     (others[0]?.last_read_message_id || 0) >= myLast.id
 
-  if (!conversation) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <SpinnerGap className="animate-spin text-gray-300" size={22} />
-      </div>
-    )
-  }
+  // One section per day so each sticky day pill only sticks over its own day.
+  const days = useMemo(() => {
+    const out: { key: string; iso: string; idx: number[] }[] = []
+    messages.forEach((m, i) => {
+      const prev = messages[i - 1]
+      if (!prev || !sameDay(prev.creation_date, m.creation_date)) out.push({ key: new Date(m.creation_date).toDateString(), iso: m.creation_date, idx: [] })
+      out[out.length - 1].idx.push(i)
+    })
+    return out
+  }, [messages])
+
+  if (!conversation) return <ThreadSkeleton compact={dock} />
 
   const title = conversationTitle(conversation, userId)
   const other = otherMember(conversation, userId)
@@ -527,17 +487,22 @@ export default function Thread({
       : null
 
   let subtitle: React.ReactNode = null
-  if (conversation.kind === 'dm' && other) subtitle = presenceLine(presence[other.id]) || 'Offline'
-  else if (conversation.kind === 'group') subtitle = `${conversation.member_count} members`
+  if (conversation.kind === 'dm' && other) subtitle = presenceLine(presence[other.id]) || t('messaging.offline', { defaultValue: 'Offline' })
+  else if (conversation.kind === 'group') subtitle = t('messaging.members_count', { defaultValue: '{{count}} members', count: conversation.member_count })
   else if (conversation.kind === 'broadcast')
     subtitle = conversation.course ? (
-      <Link href={getUriWithOrg(orgslug, `/course/${conversation.course.course_uuid.replace('course_', '')}`)} className="inline-flex items-center gap-1 hover:underline">
-        <BookOpen size={12} /> {conversation.course.name} · {conversation.member_count} people
+      <Link
+        href={getUriWithOrg(orgslug, `/course/${conversation.course.course_uuid.replace('course_', '')}`)}
+        className="inline-flex items-center gap-1 hover:text-neutral-800 hover:underline"
+      >
+        <BookOpen size={12} /> {conversation.course.name} · {t('messaging.people_count', { defaultValue: '{{count}} people', count: conversation.member_count })}
       </Link>
     ) : (
-      `Organization announcements · ${conversation.member_count} people`
+      t('messaging.org_announcements_count', { defaultValue: 'Organization announcements · {{count}} people', count: conversation.member_count })
     )
-  else if (conversation.kind === 'agent') subtitle = conversation.agent?.description || 'AI agent'
+  else if (conversation.kind === 'agent') subtitle = conversation.agent?.description || t('messaging.ai_agent', { defaultValue: 'AI agent' })
+
+  const online = conversation.kind === 'dm' && other && presence[other.id]?.state === 'online'
 
   const placeholder =
     conversation.kind === 'agent'
@@ -546,261 +511,311 @@ export default function Thread({
 
   const showIntro = conversation.kind === 'agent' && !isLoading && messages.filter((m) => m.sender?.type === 'user').length === 0
 
-  return (
-    <div className="flex flex-col h-full min-w-0">
-      <style>{`@keyframes lhflash{0%{background:rgba(250,204,21,.28)}100%{background:transparent}}.lh-msg-flash{animation:lhflash 1.8s ease-out;border-radius:16px}`}</style>
-      {/* Header */}
-      <div
-        className={
-          dock
-            ? 'flex items-center gap-2 h-12 ps-2 pe-1 border-b border-gray-100 flex-shrink-0'
-            : 'flex items-center gap-3 h-[60px] px-3 md:px-5 border-b border-gray-100 flex-shrink-0'
-        }
-      >
+  const scrollToBottom = () => {
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' })
+    setNewBelow(0)
+  }
+
+  const optionsMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <IconButton label={t('messaging.conversation_options', { defaultValue: 'Conversation options' })} size={dock ? 'sm' : 'md'}>
+          <DotsThree size={dock ? 16 : 18} weight="bold" />
+        </IconButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem onClick={() => patchMine({ pinned: !conversation.pinned })}>
+          <PushPin size={14} className="me-2" />{' '}
+          {conversation.pinned ? t('messaging.unpin', { defaultValue: 'Unpin' }) : t('messaging.pin', { defaultValue: 'Pin' })}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => patchMine({ muted: !conversation.muted })}>
+          {conversation.muted ? <BellSimple size={14} className="me-2" /> : <BellSlash size={14} className="me-2" />}
+          {conversation.muted ? t('messaging.unmute', { defaultValue: 'Unmute' }) : t('messaging.mute', { defaultValue: 'Mute' })}
+        </DropdownMenuItem>
+        {conversation.kind === 'group' && (
+          <DropdownMenuItem onClick={() => setAddOpen(true)}>
+            <UserPlus size={14} className="me-2" /> {t('messaging.add_people', { defaultValue: 'Add people' })}
+          </DropdownMenuItem>
+        )}
+        {conversation.kind === 'agent' && agent?.can_edit && (
+          <DropdownMenuItem onClick={() => onEditAgent(agent)}>
+            <PencilSimple size={14} className="me-2" /> {t('messaging.edit_agent', { defaultValue: 'Edit agent' })}
+          </DropdownMenuItem>
+        )}
+        {conversation.kind === 'agent' && agentUuid && (
+          <DropdownMenuItem onClick={() => onNewAgentChat(agentUuid)}>
+            <NotePencil size={14} className="me-2" /> {t('messaging.new_chat', { defaultValue: 'New chat' })}
+          </DropdownMenuItem>
+        )}
         {!dock && (
-          <button onClick={onBack} className="md:hidden flex h-10 w-10 items-center justify-center -ms-2 rounded-lg text-gray-600 hover:bg-gray-100" aria-label="Back">
-            <ArrowLeft size={20} />
-          </button>
+          <DropdownMenuItem onClick={toggleDetails}>
+            <Info size={14} className="me-2" />{' '}
+            {detailsOpen ? t('messaging.hide_details', { defaultValue: 'Hide details' }) : t('messaging.show_details', { defaultValue: 'Show details' })}
+          </DropdownMenuItem>
         )}
-        {dock ? (
-          <button onClick={onMinimize} className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-1 text-start hover:bg-gray-50">
-            <ConversationAvatar conversation={conversation} viewerId={userId} size={30} />
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-semibold leading-tight text-gray-900">{title}</span>
-              <span className="block truncate text-[11px] text-gray-500">{subtitle}</span>
-            </span>
-          </button>
+        <DropdownMenuSeparator />
+        {conversation.kind === 'dm' || conversation.kind === 'agent' ? (
+          <DropdownMenuItem onClick={leave}>
+            <Archive size={14} className="me-2" /> {t('messaging.archive', { defaultValue: 'Archive' })}
+          </DropdownMenuItem>
         ) : (
-          <>
-            <ConversationAvatar conversation={conversation} viewerId={userId} size={36} />
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-base text-gray-900 truncate leading-tight">{title}</p>
-              <p className="text-xs text-gray-500 truncate">{subtitle}</p>
-            </div>
-          </>
-        )}
-
-        {!dock && conversation.kind === 'group' && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="hidden sm:flex items-center gap-1.5 rounded-lg px-2 py-1 hover:bg-gray-100">
-                <AvatarStack users={members} size={24} max={4} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-72 p-1.5 rounded-lg">
-              <p className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{conversation.member_count} members</p>
-              <div className="max-h-72 overflow-y-auto">
-                {members.map((m) => (
-                  <div key={m.id} className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
-                    <PersonAvatar user={m} size={30} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
-                        {displayName(m)} {m.id === userId && <span className="text-gray-400 font-normal">(you)</span>}
-                      </p>
-                      <p className="text-[11px] text-gray-500 truncate">{presenceLine(presence[m.id]) || 'Offline'}</p>
-                    </div>
-                    {m.role === 'owner' && <span className="text-[10px] text-gray-400">Owner</span>}
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => setAddOpen(true)} className="mt-1 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                <UserPlus size={15} /> Add people
-              </button>
-            </PopoverContent>
-          </Popover>
-        )}
-
-        {!dock && conversation.kind === 'agent' && agentUuid && (
-          <button
-            onClick={() => onNewAgentChat(agentUuid)}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-          >
-            <NotePencil size={14} /> New chat
-          </button>
-        )}
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={`${dock ? 'p-1.5' : 'p-2'} rounded-lg text-gray-500 hover:bg-gray-100`} aria-label="Conversation options">
-              <DotsThreeVertical size={dock ? 16 : 18} weight="bold" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuItem onClick={() => patchMine({ pinned: !conversation.pinned })}>
-              <PushPin size={14} className="me-2" /> {conversation.pinned ? 'Unpin' : 'Pin'}
+          conversation.kind === 'group' && (
+            <DropdownMenuItem onClick={leave} className="text-rose-600">
+              <SignOut size={14} className="me-2" /> {t('messaging.leave_group', { defaultValue: 'Leave group' })}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => patchMine({ muted: !conversation.muted })}>
-              {conversation.muted ? <BellSimple size={14} className="me-2" /> : <BellSlash size={14} className="me-2" />}
-              {conversation.muted ? 'Unmute' : 'Mute'}
-            </DropdownMenuItem>
-            {conversation.kind === 'group' && (
-              <DropdownMenuItem onClick={() => setAddOpen(true)}>
-                <UserPlus size={14} className="me-2" /> Add people
-              </DropdownMenuItem>
-            )}
-            {conversation.kind === 'agent' && agent?.can_edit && (
-              <DropdownMenuItem onClick={() => onEditAgent(agent)}>
-                <PencilSimple size={14} className="me-2" /> Edit agent
-              </DropdownMenuItem>
-            )}
-            {conversation.kind === 'agent' && agentUuid && (
-              <DropdownMenuItem onClick={() => onNewAgentChat(agentUuid)}>
-                <NotePencil size={14} className="me-2" /> New chat
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            {conversation.kind === 'dm' || conversation.kind === 'agent' ? (
-              <DropdownMenuItem onClick={leave}>
-                <Archive size={14} className="me-2" /> Archive
-              </DropdownMenuItem>
-            ) : (
-              conversation.kind === 'group' && (
-                <DropdownMenuItem onClick={leave} className="text-red-600">
-                  <SignOut size={14} className="me-2" /> Leave group
-                </DropdownMenuItem>
-              )
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {dock && (
-          <>
-            <button onClick={onMinimize} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100" aria-label="Minimize" title="Minimize">
-              <Minus size={16} weight="bold" />
-            </button>
-            <button onClick={onExpand} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100" aria-label="Open in Messages" title="Open in Messages">
-              <ArrowsOutSimple size={16} weight="bold" />
-            </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100" aria-label="Close chat" title="Close">
-              <X size={16} weight="bold" />
-            </button>
-          </>
+          )
         )}
-      </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 
-      {/* Messages */}
-      <div className="relative flex-1 min-h-0">
-        <div ref={scroller} onScroll={onScroll} className={`h-full overflow-y-auto pb-2 ${dock ? 'px-2.5' : 'px-3 md:px-6'}`}>
-          {page?.has_more && (
-            <div className="flex justify-center py-3">
-              {loadingOlder ? (
-                <SpinnerGap className="animate-spin text-gray-300" />
-              ) : (
-                <button onClick={loadOlder} className="text-xs text-gray-400 hover:text-gray-700">
-                  Load earlier messages
-                </button>
-              )}
-            </div>
-          )}
-          {isLoading && (
-            <div className="space-y-4 pt-6">
-              {[48, 72, 36, 60].map((w, i) => (
-                <div key={i} className={`flex gap-3 animate-pulse ${i % 2 ? 'flex-row-reverse' : ''}`}>
-                  <div className="h-9 w-9 rounded-full bg-gray-100" />
-                  <div className="h-10 rounded-xl bg-gray-100" style={{ width: `${w}%` }} />
-                </div>
-              ))}
-            </div>
-          )}
-          {showIntro && <AgentIntro agent={agent || null} compact={dock} onPick={(s) => doSend({ content: s, agent_uuids: [] })} />}
-
-          {messages.map((m, i) => {
-            const prev = messages[i - 1]
-            const newDay = !prev || !sameDay(prev.creation_date, m.creation_date)
-            const showUnread = unreadFrom !== null && unreadFrom > 0 && m.id === unreadFrom
-            const mine = m.sender?.type === 'user' && m.sender.id === userId
-            return (
-              <React.Fragment key={m.id}>
-                {newDay && (
-                  <div className="flex items-center gap-3 py-3">
-                    <span className="h-px flex-1 bg-gray-100" />
-                    <span className="text-[11px] font-medium text-gray-400">{dayLabel(m.creation_date)}</span>
-                    <span className="h-px flex-1 bg-gray-100" />
-                  </div>
-                )}
-                {showUnread && (
-                  <div data-unread-divider className="flex items-center gap-3 py-2">
-                    <span className="h-px flex-1 bg-red-200" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-red-500">New</span>
-                    <span className="h-px flex-1 bg-red-200" />
-                  </div>
-                )}
-                <MessageItem
-                  message={m}
-                  grouped={!newDay && !showUnread && isGrouped(prev, m)}
-                  mine={mine}
-                  viewerId={userId}
-                  orgslug={orgslug}
-                  progress={agentProgress[m.id]}
-                  highlighted={highlight === m.message_uuid}
-                  canModerate={isOwner && conversation.kind !== 'dm'}
-                  readers={m.id === myLast?.id ? readers : []}
-                  showSeen={m.id === myLast?.id && dmSeen}
-                  nameOf={nameOf}
-                  onReact={react}
-                  onReply={setReplyTo}
-                  onEdit={setEditing}
-                  onDelete={remove}
-                  onJumpTo={jumpTo}
-                  onFollowUp={(text) => doSend({ content: text, agent_uuids: [] })}
-                  onRetry={retry}
-                />
-              </React.Fragment>
-            )
-          })}
-          <div className="h-2" />
-        </div>
-
-        <AnimatePresence>
-          {newBelow > 0 && (
-            <motion.button
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              onClick={() => {
-                scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' })
-                setNewBelow(0)
-              }}
-              className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-3 py-1.5 text-xs font-medium text-white shadow-lg"
+  return (
+    <div className="relative flex h-full min-w-0">
+      <div className="flex h-full min-w-0 flex-1 flex-col">
+        <style>{`@keyframes lhflash{0%{background:rgba(250,204,21,.22)}100%{background:transparent}}.lh-msg-flash{animation:lhflash 1.8s ease-out;border-radius:16px}`}</style>
+        {/* Header */}
+        <div
+          className={
+            dock
+              ? 'flex h-12 shrink-0 items-center gap-1 border-b border-neutral-100 ps-1.5 pe-1'
+              : 'flex h-14 shrink-0 items-center gap-2 border-b border-neutral-100 ps-2 pe-3 md:ps-5 md:pe-4'
+          }
+        >
+          {!dock && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="md:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100"
+              aria-label={t('common.back', { defaultValue: 'Back' })}
             >
-              <ArrowDown size={12} weight="bold" /> {newBelow} new message{newBelow > 1 ? 's' : ''}
-            </motion.button>
+              <ArrowLeft size={20} className="rtl:rotate-180" />
+            </button>
           )}
-        </AnimatePresence>
+          {dock ? (
+            <button
+              type="button"
+              onClick={onMinimize}
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-1 text-start hover:bg-neutral-50"
+            >
+              <ConversationAvatar conversation={conversation} viewerId={userId} size={30} />
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold leading-tight text-neutral-900">{title}</span>
+                <span className={`block truncate text-[11px] ${online ? 'text-emerald-600' : 'text-neutral-500'}`}>{subtitle}</span>
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={toggleDetails}
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl py-1 pe-2 text-start md:-ms-1.5 md:ps-1.5 md:hover:bg-neutral-50"
+              aria-label={t('messaging.show_details', { defaultValue: 'Show details' })}
+            >
+              <ConversationAvatar conversation={conversation} viewerId={userId} size={36} />
+              <span className="min-w-0">
+                <span className="flex items-center gap-1.5">
+                  <span className="truncate text-[15px] font-semibold leading-tight text-neutral-900">{title}</span>
+                  {conversation.muted && <BellSlash size={12} className="shrink-0 text-neutral-300" />}
+                </span>
+                <span className={`block truncate text-xs ${online ? 'text-emerald-600' : 'text-neutral-500'}`}>{subtitle}</span>
+              </span>
+            </button>
+          )}
+
+          {!dock && conversation.kind === 'group' && (
+            <button
+              type="button"
+              onClick={toggleDetails}
+              className="hidden sm:flex items-center rounded-lg px-1.5 py-1 hover:bg-neutral-100"
+              aria-label={t('messaging.members', { defaultValue: 'Members' })}
+            >
+              <AvatarStack users={members} size={24} max={4} />
+            </button>
+          )}
+
+          {!dock && conversation.kind === 'agent' && agentUuid && (
+            <Button
+              size="sm"
+              className="hidden sm:inline-flex"
+              icon={<NotePencil size={13} />}
+              onClick={() => onNewAgentChat(agentUuid)}
+            >
+              {t('messaging.new_chat', { defaultValue: 'New chat' })}
+            </Button>
+          )}
+
+          {!dock && (
+            <IconButton
+              label={detailsOpen ? t('messaging.hide_details', { defaultValue: 'Hide details' }) : t('messaging.show_details', { defaultValue: 'Show details' })}
+              active={detailsOpen}
+              onClick={toggleDetails}
+            >
+              <Info size={18} weight={detailsOpen ? 'fill' : 'regular'} />
+            </IconButton>
+          )}
+          {optionsMenu}
+          {dock && (
+            <>
+              <IconButton size="sm" label={t('messaging.minimize', { defaultValue: 'Minimize' })} onClick={onMinimize}>
+                <Minus size={15} weight="bold" />
+              </IconButton>
+              <IconButton size="sm" label={t('messaging.open_in_messages', { defaultValue: 'Open in Messages' })} onClick={onExpand}>
+                <ArrowsOutSimple size={15} weight="bold" />
+              </IconButton>
+              <IconButton size="sm" label={t('messaging.close_chat', { defaultValue: 'Close chat' })} onClick={onClose}>
+                <X size={15} weight="bold" />
+              </IconButton>
+            </>
+          )}
+        </div>
+
+        {/* Messages */}
+        <div className="relative min-h-0 flex-1">
+          <div
+            ref={scroller}
+            onScroll={onScroll}
+            className={`h-full overflow-y-auto overscroll-contain pb-2 ${dock ? 'px-3' : 'px-3 md:px-6'}`}
+          >
+            {page?.has_more && (
+              <div className="flex justify-center py-3">
+                {loadingOlder ? (
+                  <div className="w-full">
+                    <MessagesSkeleton compact={dock} />
+                  </div>
+                ) : (
+                  <button type="button" onClick={loadOlder} className={buttonClass('ghost', 'sm', 'text-neutral-500')}>
+                    {t('messaging.load_earlier', { defaultValue: 'Load earlier messages' })}
+                  </button>
+                )}
+              </div>
+            )}
+            {isLoading && <MessagesSkeleton compact={dock} />}
+            {showIntro && <AgentIntro agent={agent || null} compact={dock} onPick={(s) => doSend({ content: s, agent_uuids: [] })} />}
+
+            {days.map((day) => (
+              <section key={day.key}>
+                <DaySeparator iso={day.iso} />
+                {day.idx.map((i) => {
+                  const m = messages[i]
+                  const prev = messages[i - 1]
+                  const next = messages[i + 1]
+                  const first = day.idx[0] === i
+                  const showUnread = unreadFrom !== null && unreadFrom > 0 && m.id === unreadFrom
+                  const nextBreaks =
+                    !next || !sameDay(m.creation_date, next.creation_date) || (unreadFrom !== null && unreadFrom > 0 && next.id === unreadFrom)
+                  const mine = m.sender?.type === 'user' && m.sender.id === userId
+                  return (
+                    <React.Fragment key={m.id}>
+                      {showUnread && <UnreadDivider />}
+                      <MessageItem
+                        message={m}
+                        grouped={!first && !showUnread && isGrouped(prev, m)}
+                        groupedNext={!nextBreaks && isGrouped(m, next)}
+                        mine={mine}
+                        viewerId={userId}
+                        orgslug={orgslug}
+                        progress={agentProgress[m.id]}
+                        highlighted={highlight === m.message_uuid}
+                        canModerate={isOwner && conversation.kind !== 'dm'}
+                        readers={m.id === myLast?.id ? readers : []}
+                        showSeen={m.id === myLast?.id && dmSeen}
+                        nameOf={nameOf}
+                        compact={dock}
+                        onReact={react}
+                        onReply={setReplyTo}
+                        onEdit={setEditing}
+                        onDelete={remove}
+                        onJumpTo={jumpTo}
+                        onFollowUp={(text) => doSend({ content: text, agent_uuids: [] })}
+                        onRetry={retry}
+                      />
+                    </React.Fragment>
+                  )
+                })}
+              </section>
+            ))}
+            <div className="h-2" />
+          </div>
+
+          <AnimatePresence>
+            {(newBelow > 0 || !atBottom) && messages.length > 0 && (
+              <motion.button
+                type="button"
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ duration: 0.15 }}
+                onClick={scrollToBottom}
+                aria-label={t('messaging.jump_latest', { defaultValue: 'Jump to latest' })}
+                className={
+                  newBelow > 0
+                    ? 'absolute bottom-3 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white shadow-lg ring-1 ring-black/10'
+                    : 'absolute bottom-3 end-4 flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-600 shadow-md ring-1 ring-neutral-200 hover:text-neutral-900'
+                }
+              >
+                <ArrowDown size={newBelow > 0 ? 12 : 15} weight="bold" />
+                {newBelow > 0 && t('messaging.new_below', { defaultValue: '{{count}} new messages', count: newBelow })}
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {notice && (
+          <div
+            className={`${dock ? 'mx-2' : 'mx-3 md:mx-4'} mb-1 flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-inset ring-amber-600/15`}
+          >
+            <WarningCircle size={14} className="shrink-0" />
+            <span className="flex-1">{notice}</span>
+            <button type="button" onClick={() => setNotice(null)} aria-label={t('common.close', { defaultValue: 'Close' })} className="rounded p-0.5 hover:bg-amber-100">
+              <X size={12} />
+            </button>
+          </div>
+        )}
+
+        <TypingIndicator uuid={uuid} compact={dock} />
+        <Composer
+          orgslug={orgslug}
+          placeholder={placeholder}
+          disabledReason={disabledReason}
+          agents={agents}
+          members={others}
+          replyTo={replyTo}
+          editing={editing}
+          initialCourse={initialCourse}
+          draftKey={uuid}
+          onCancelReply={() => setReplyTo(null)}
+          onCancelEdit={() => setEditing(null)}
+          onSend={(p) => doSend(p)}
+          onSubmitEdit={submitEdit}
+          onEditLast={editLast}
+          onTyping={onTyping}
+          compact={dock}
+        />
       </div>
 
-      {notice && (
-        <div className="mx-4 mb-1 flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
-          <WarningCircle size={14} />
-          <span className="flex-1">{notice}</span>
-          <button onClick={() => setNotice(null)}>
-            <X size={12} />
-          </button>
-        </div>
-      )}
-
-      <TypingBar uuid={uuid} />
-      <Composer
-        orgslug={orgslug}
-        placeholder={placeholder}
-        disabledReason={disabledReason}
-        agents={agents}
-        members={others}
-        replyTo={replyTo}
-        editing={editing}
-        initialCourse={initialCourse}
-        onCancelReply={() => setReplyTo(null)}
-        onCancelEdit={() => setEditing(null)}
-        onSend={(p) => doSend(p)}
-        onSubmitEdit={submitEdit}
-        onEditLast={editLast}
-        onTyping={onTyping}
-        compact={dock}
-      />
+      <AnimatePresence initial={false}>
+        {detailsOpen && (
+          <DetailsPanel
+            key="details"
+            conversation={conversation}
+            agent={agent}
+            members={members}
+            messages={messages}
+            orgslug={orgslug}
+            overlay={!wide}
+            onClose={toggleDetails}
+            onPatch={patchMine}
+            onAddPeople={() => setAddOpen(true)}
+            onEditAgent={onEditAgent}
+            onNewAgentChat={onNewAgentChat}
+            onLeave={leave}
+          />
+        )}
+      </AnimatePresence>
 
       <NewConversationDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        title="Add people"
+        title={t('messaging.add_people', { defaultValue: 'Add people' })}
         excludeUserIds={members.map((m) => m.id)}
         onPickPeople={async (people) => {
           if (!token) return

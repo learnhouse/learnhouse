@@ -6,18 +6,23 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg } from '@services/config/config'
 import { getOffersByResource } from '@ee/services/payments/offers'
 import { getResourcePaywall } from '@ee/services/payments/access'
-import { UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus } from 'lucide-react'
+import { ArrowRight, BookOpen, CheckCircle, Hourglass, Medal, PencilSimpleLine, Play, SignOut, UserPlus } from '@phosphor-icons/react'
+import { Button, buttonClass, Chip } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { useCourseCertification } from '@components/Hooks/useCourseCertification'
 import { OfferCard } from '@ee/components/Payments/OfferCard'
+import CourseTeamOffer, { useTeamSeatOffers } from '@ee/components/Companies/CourseTeamOffer'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
 import { applyForContributor } from '@services/courses/courses'
 import toast from 'react-hot-toast'
 import { useContributorStatus } from '../../../../hooks/useContributorStatus'
 import CourseProgress from '../CourseProgress/CourseProgress'
-import UserAvatar from '@components/Objects/UserAvatar'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
+import { prefetchRouteFull } from '@/lib/navigation/prefetchRoute'
+import { activityQueryOptions } from '@/hooks/queries/useActivity'
+import { useContentLanguage } from '@/hooks/useContentLanguage'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
@@ -47,6 +52,8 @@ interface Course {
   open_to_contributors?: boolean
 }
 
+const CARD = 'lh-t-card bg-white rounded-2xl nice-shadow p-5'
+
 interface CourseActionsProps {
   courseuuid: string
   orgslug: string
@@ -68,6 +75,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   const { isUserPartOfTheOrg } = useOrgMembership()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('learner')
+  const { isEnabled: showCertificate } = useCourseCertification(course?.course_uuid)
   // Phones: the start / continue button docks to the bottom edge once the
   // actions box has scrolled away, so the next step is always under the thumb.
   const boxRef = useRef<HTMLDivElement | null>(null)
@@ -105,6 +113,25 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
         `/course/${cleanCourseUuid}/activity/${target.activity_uuid.replace('activity_', '')}`,
     )
   }
+  // The start / continue button leads to one lesson: warm that page and its
+  // data while the learner reads the course page, so the click is instant.
+  const warmTarget: string | undefined = (() => {
+    if (!session.data?.user || !isUserPartOfTheOrg) return undefined
+    const doneIds = new Set<number>(
+      ((isStarted || null)?.steps ?? []).filter((step: any) => step.complete).map((step: any) => step.activity_id),
+    )
+    const flat: any[] = (course.chapters ?? []).flatMap((chapter: any) => chapter.activities ?? [])
+    const target = flat.find((activity: any) => !doneIds.has(activity.id)) ?? flat[0]
+    return target?.activity_uuid?.replace('activity_', '')
+  })()
+  const warmToken = session.data?.tokens?.access_token
+  const { lang: contentLang, ready: contentLangReady } = useContentLanguage()
+  useEffect(() => {
+    if (!warmTarget || !cleanCourseUuid || !contentLangReady) return
+    prefetchRouteFull(router, getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/${warmTarget}`)
+    queryClient.prefetchQuery(activityQueryOptions(warmTarget, warmToken, contentLang || undefined))
+  }, [warmTarget, cleanCourseUuid, orgslug, warmToken, router, queryClient, contentLang, contentLangReady])
+
   useShortcut(
     {
       id: 'course.start',
@@ -127,6 +154,10 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     staleTime: 60_000,
   });
   const linkedOffers: any[] = asArray(offersResult);
+  // Team plans (EE company seats) that sell this course: a course sold only to
+  // teams has no listed offer but is still paid.
+  const teamOffers = useTeamSeatOffers(org?.id, resourceUuid ?? undefined)
+  const isSold = linkedOffers.length > 0 || teamOffers.length > 0
 
   // Whether this viewer already has paid access (bought it, was granted it, or
   // manages it). Starting the course is a separate step from buying it.
@@ -134,7 +165,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   const { data: paywallResult } = useQuery({
     queryKey: ['payments', org?.id, 'paywall', resourceUuid, !!accessToken],
     queryFn: () => getResourcePaywall(org.id, resourceUuid!, accessToken),
-    enabled: !!org && !!resourceUuid && !!accessToken && linkedOffers.length > 0,
+    enabled: !!org && !!resourceUuid && !!accessToken && isSold,
     staleTime: 30_000,
   });
   const hasPaidAccess = !!paywallResult?.success && paywallResult.data?.locked === false;
@@ -228,271 +259,162 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     }
   }
 
-  const renderActionButton = (action: 'start' | 'leave') => {
+  const totalActivities = course.chapters?.reduce((acc: number, chapter: any) => acc + (chapter.activities?.length ?? 0), 0) || 0
+  const chapterCount = course.chapters?.length ?? 0
+  const run = isStarted || null
+  const completedActivities = (run?.steps ?? []).filter((step: any) => step.complete).length
+  const progressPercentage = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 0
+  const isCourseCompleted = totalActivities > 0 && completedActivities >= totalActivities
+
+  const openProgress = () => {
+    track(AnalyticsEvent.CourseProgressViewed, {
+      course_uuid: cleanCourseUuid,
+      completed_activities: completedActivities,
+      total_activities: totalActivities,
+      progress_percentage: progressPercentage,
+    })
+    setIsProgressOpen(true)
+  }
+
+  // Contributor status as a small chip, or a quiet "apply" button.
+  const renderContributor = () => {
+    if (contributorStatus === 'INACTIVE' || course.open_to_contributors !== true) return null
     if (!session.data?.user) {
       return (
-        <>
-          <UserAvatar width={24} predefined_avatar="empty" rounded="rounded-full" border="border-2" borderColor="border-white" />
-          <span>{action === 'start' ? t('courses.start_course') : t('courses.leave_course')}</span>
-          <ArrowRight className="w-5 h-5" />
-        </>
-      );
-    }
-
-    return (
-      <>
-        <UserAvatar
-          width={24}
-          use_with_session={true}
-          rounded="rounded-full"
-          border="border-2"
-          borderColor="border-white"
-        />
-        <span>{action === 'start' ? t('courses.start_course') : t('courses.leave_course')}</span>
-        {action === 'start' ? <Keys keys="s" tone="onDark" className="hidden sm:inline-flex" /> : null}
-        <ArrowRight className="w-5 h-5" />
-      </>
-    );
-  };
-
-  const renderContributorButton = () => {
-    if (contributorStatus === 'INACTIVE' || course.open_to_contributors !== true) {
-      return null;
-    }
-
-    if (!session.data?.user) {
-      return (
-        <button
+        <Button
+          size="sm"
+          variant="ghost"
+          icon={<PencilSimpleLine size={13} />}
           onClick={() => router.push(getUriWithOrg(orgslug, '/signup'))}
           aria-label={t('auth.sign_up_to_contribute')}
-          className="w-full bg-white text-neutral-700 border border-neutral-200 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer"
         >
-          <UserPen className="w-5 h-5" />
           {t('auth.authenticate_to_contribute')}
-        </button>
-      );
+        </Button>
+      )
     }
-
     if (contributorStatus === 'ACTIVE') {
-      return (
-        <div className="w-full bg-green-50 text-green-700 border border-green-200 py-3 rounded-lg nice-shadow font-semibold flex items-center justify-center gap-2 mt-3">
-          <UserPen className="w-5 h-5" />
-          {t('courses.you_are_contributor')}
-        </div>
-      );
+      return <Chip tone="emerald" icon={<PencilSimpleLine size={12} />}>{t('courses.you_are_contributor')}</Chip>
     }
-
     if (contributorStatus === 'PENDING') {
-      return (
-        <div className="w-full bg-amber-50 text-amber-700 border border-amber-200 py-3 rounded-lg nice-shadow font-semibold flex items-center justify-center gap-2 mt-3">
-          <ClockIcon className="w-5 h-5" />
-          {t('courses.contributor_application_pending')}
-        </div>
-      );
+      return <Chip tone="amber" icon={<Hourglass size={12} />}>{t('courses.contributor_application_pending')}</Chip>
     }
-
     return (
-      <button
+      <Button
+        size="sm"
+        variant="ghost"
+        icon={<PencilSimpleLine size={13} />}
+        loading={isContributeLoading}
         onClick={handleApplyToContribute}
-        disabled={isContributeLoading}
         aria-label={t('courses.apply_to_contribute')}
-        className="w-full bg-white text-neutral-700 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:cursor-not-allowed"
       >
-        {isContributeLoading ? (
-          <div className="w-5 h-5 border-2 border-neutral-700 border-t-transparent rounded-full animate-spin" />
-        ) : (
-          <>
-            <UserPen className="w-5 h-5" />
-            {t('courses.apply_to_contribute')}
-          </>
-        )}
-      </button>
-    );
-  };
+        {t('courses.apply_to_contribute')}
+      </Button>
+    )
+  }
 
-  const renderProgressSection = () => {
-    const totalActivities = course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0;
-
-    // Find the correct run using the cleaned UUID
-    const run = trailData?.runs?.find(
-      (run: any) => {
-        const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
-        return cleanRunCourseUuid === cleanCourseUuid;
-      }
-    );
-
-    const completedActivities = run?.steps?.filter((step: any) => step.complete)?.length || 0;
-    const progressPercentage = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 0;
-
-    if (!isStarted) {
-      return (
-        <div className="relative bg-white nice-shadow rounded-lg overflow-hidden">
-          <div
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage: 'radial-gradient(circle at center, #101010 1px, transparent 1px)',
-              backgroundSize: '12px 12px'
-            }}
-          />
-          <div className="relative p-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r="28"
-                        stroke="#e5e7eb"
-                        strokeWidth="6"
-                        fill="none"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-neutral-400" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">{t('courses.ready_to_begin')}</div>
-                    <div className="text-sm text-gray-500">
-                      {t('courses.start_learning_journey', { count: totalActivities })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+  // Progress, or what the course holds before starting.
+  const renderProgress = () =>
+    isStarted ? (
+      <button
+        type="button"
+        onClick={openProgress}
+        aria-label={t('courses.view_course_progress', { completed: completedActivities, total: totalActivities })}
+        className="w-full text-start rounded-xl -m-1 p-1 hover:bg-neutral-50 transition-colors"
+      >
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-sm font-semibold text-neutral-900">{t('courses.course_progress')}</span>
+          <span className="text-sm font-semibold tabular-nums text-neutral-900">{progressPercentage}%</span>
         </div>
-      );
-    }
-
-    return (
-        <div className="relative bg-white nice-shadow rounded-lg overflow-hidden">
-          <div
-          className="absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage: 'radial-gradient(circle at center, #000 1px, transparent 1px)',
-            backgroundSize: '24px 24px'
-          }}
-        />
-        <div className="relative p-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-4">
-                <div className="relative w-16 h-16">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      stroke="#e5e7eb"
-                      strokeWidth="6"
-                      fill="none"
-                    />
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      stroke="#10b981"
-                      strokeWidth="6"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeDasharray={2 * Math.PI * 28}
-                      strokeDashoffset={2 * Math.PI * 28 * (1 - (totalActivities > 0 ? completedActivities / totalActivities : 0))}
-                      className="transition-all duration-500 ease-out"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-lg font-bold text-gray-800">
-                      {progressPercentage}%
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    track(AnalyticsEvent.CourseProgressViewed, {
-                      course_uuid: cleanCourseUuid,
-                      completed_activities: completedActivities,
-                      total_activities: totalActivities,
-                      progress_percentage: progressPercentage,
-                    })
-                    setIsProgressOpen(true)
-                  }}
-                  aria-label={t('courses.view_course_progress', { completed: completedActivities, total: totalActivities })}
-                  className="flex-1 text-start hover:bg-neutral-50/50 p-2 rounded-lg transition-colors"
-                >
-                  <div className="text-sm font-medium text-gray-900">{t('courses.course_progress')}</div>
-                  <div className="text-sm text-gray-500">
-                    {t('courses.completed_of', { completed: completedActivities, total: totalActivities })}
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
+        <div className="mt-2 h-2 rounded-full bg-neutral-100 overflow-hidden">
+          <div className="lh-t-progress h-full rounded-full bg-teal-500 transition-[width] duration-500" style={{ width: `${progressPercentage}%` }} />
+        </div>
+        <p className="mt-1.5 text-xs text-neutral-500 tabular-nums">
+          {t('courses.completed_of', { completed: completedActivities, total: totalActivities })}
+        </p>
+      </button>
+    ) : (
+      <div className="flex items-start gap-3">
+        <span className="w-9 h-9 shrink-0 rounded-xl bg-neutral-100 text-neutral-500 flex items-center justify-center">
+          <BookOpen size={18} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-neutral-900">{t('courses.ready_to_begin')}</p>
+          <p className="text-xs text-neutral-500">
+            {t('learner.course.contents', {
+              defaultValue: '{{chapters}} chapters · {{activities}} activities',
+              chapters: chapterCount,
+              activities: totalActivities,
+            })}
+          </p>
         </div>
       </div>
-    );
-  };
+    )
+
+  const certificateHint = showCertificate ? (
+    <div className="flex items-center gap-2 text-xs text-neutral-500">
+      <Medal size={15} className={isCourseCompleted ? 'text-amber-500' : 'text-neutral-400'} />
+      {isCourseCompleted
+        ? t('courses.course_completed_exclamation')
+        : t('learner.course.certificate_hint', 'Finish every activity to earn a certificate.')}
+    </div>
+  ) : null
+
+  const leaveButton = (
+    <Button
+      size="sm"
+      variant="danger-ghost"
+      icon={<SignOut size={13} className="rtl:rotate-180" />}
+      onClick={handleCourseAction}
+      loading={isActionLoading}
+      aria-label={t('courses.leave_course')}
+    >
+      {t('courses.leave_course')}
+    </Button>
+  )
 
   if (isLoading) {
-    return <div className="animate-pulse h-20 bg-gray-100 rounded-lg nice-shadow" />
+    return <div className="animate-pulse h-40 bg-white rounded-2xl nice-shadow" />
   }
 
   // Show join organization prompt for authenticated users who are not part of the org
   if (session.data?.user && !isUserPartOfTheOrg) {
     return (
-      <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
-        <div className="space-y-4">
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg nice-shadow">
-            <div className="flex items-center gap-3">
-              <UserPlus className="w-5 h-5 text-amber-800" />
-              <h3 className="text-amber-800 font-semibold">{t('courses.join_org_required')}</h3>
-            </div>
-            <p className="text-amber-700 text-sm mt-1">
-              {t('courses.join_org_required_description')}
-            </p>
+      <div className={CARD}>
+        <div className="flex items-start gap-3">
+          <span className="w-9 h-9 shrink-0 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <UserPlus size={18} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-neutral-900">{t('courses.join_org_required')}</p>
+            <p className="mt-0.5 text-xs text-neutral-500">{t('courses.join_org_required_description')}</p>
           </div>
-          <a
-            href={getUriWithOrg(orgslug, '/signup')}
-            className="w-full bg-neutral-900 text-white py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
-          >
-            <UserPlus className="w-5 h-5" />
-            {t('courses.join_organization')}
-          </a>
         </div>
+        <a href={getUriWithOrg(orgslug, '/signup')} className={buttonClass('primary', 'lg', 'w-full mt-4')}>
+          <UserPlus size={15} />
+          {t('courses.join_organization')}
+        </a>
       </div>
     )
   }
 
-  if (linkedOffers.length > 0 && !(hasPaidAccess && !isStarted)) {
-    // User already enrolled / started: show "you own this" notice + leave button
-    if (isStarted) {
+  if (isSold && !(hasPaidAccess && !isStarted)) {
+    // User already enrolled / started: show "you own this" notice + continue
+    // (not for someone who started it before it was sold and has no access).
+    if (isStarted && (hasPaidAccess || !accessToken || !paywallResult?.success)) {
       return (
-        <div className="bg-white nice-shadow rounded-lg overflow-hidden p-4">
-          <div className="space-y-4">
-            <div className="p-4 bg-green-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <h3 className="text-green-800 font-semibold">{t('courses.you_own_this_course')}</h3>
-              </div>
-              <p className="text-green-700 text-sm mt-1">
-                {t('courses.you_own_this_course_description')}
-              </p>
-            </div>
-            <button
-              onClick={handleCourseAction}
-              disabled={isActionLoading}
-              aria-label={t('courses.leave_course')}
-              className="w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400"
-            >
-              {isActionLoading
-                ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                : renderActionButton('leave')
-              }
-            </button>
-            {renderContributorButton()}
+        <div className={CARD}>
+          <Chip tone="emerald" icon={<CheckCircle size={12} weight="fill" />}>{t('courses.you_own_this_course')}</Chip>
+          <p className="mt-2 text-xs text-neutral-500">{t('courses.you_own_this_course_description')}</p>
+          <div className="mt-4">{renderProgress()}</div>
+          <Button variant="primary" size="lg" className="w-full mt-4" onClick={resumeCourse} icon={<Play size={14} weight="fill" />}>
+            {t('shortcuts.continue_course')}
+            <Keys keys="s" tone="onDark" className="max-sm:hidden ms-1" />
+          </Button>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            {renderContributor()}
+            {leaveButton}
           </div>
+          <CourseProgress course={course} orgslug={orgslug} isOpen={isProgressOpen} onClose={() => setIsProgressOpen(false)} trailData={trailData} />
         </div>
       )
     }
@@ -501,22 +423,21 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     return (
       <div className="space-y-3">
         {linkedOffers.length > 1 && (
-          <p className="text-xs text-gray-400 font-medium px-1">
-            {linkedOffers.length} options available
+          <p className="text-xs text-neutral-400 font-medium px-1">
+            {t('learner.course.offer_count', { defaultValue: '{{count}} options available', count: linkedOffers.length })}
           </p>
         )}
         {linkedOffers.map((offer: any) => (
           <OfferCard key={offer.offer_id} offer={offer} orgslug={orgslug} />
         ))}
-        {renderContributorButton()}
+        {resourceUuid && <CourseTeamOffer orgId={org.id} orgslug={orgslug} resourceUuid={resourceUuid} alone={linkedOffers.length === 0} />}
+        <div className="flex flex-wrap gap-2">{renderContributor()}</div>
       </div>
     )
   }
 
-  const totalActivities = course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0
-
   return (
-    <div ref={boxRef} className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
+    <div ref={boxRef} className={CARD}>
       {totalActivities > 0 && (
         <div
           aria-hidden={boxVisible}
@@ -530,47 +451,55 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
             tabIndex={boxVisible ? -1 : 0}
             onClick={() => (isStarted ? resumeCourse() : handleCourseAction())}
             disabled={isActionLoading}
-            className="lh-press flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 text-[15px] font-semibold text-white shadow-lg shadow-black/15"
+            className="lh-t-btn lh-press flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 text-[15px] font-semibold text-white shadow-lg shadow-black/15"
           >
             {isStarted ? t('shortcuts.continue_course') : t('courses.start_course')}
-            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
+            <ArrowRight size={18} className="rtl:rotate-180" />
           </button>
         </div>
       )}
-      <div className="space-y-4">
-        {/* Progress Section */}
-        {renderProgressSection()}
 
-        {/* Start/Leave Course Button */}
-        <button
+      {renderProgress()}
+
+      {/* Start, or continue where the learner left off. Leaving is secondary. */}
+      {isStarted ? (
+        <Button variant="primary" size="lg" className="w-full mt-4" onClick={resumeCourse} icon={<Play size={14} weight="fill" />}>
+          {t('shortcuts.continue_course')}
+          <Keys keys="s" tone="onDark" className="max-sm:hidden ms-1" />
+        </Button>
+      ) : (
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full mt-4"
           onClick={handleCourseAction}
-          disabled={isActionLoading}
-          aria-label={isStarted ? t('courses.leave_course') : t('courses.start_course')}
-          className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
-            isStarted
-              ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
-              : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-700'
-          }`}
+          loading={isActionLoading}
+          aria-label={t('courses.start_course')}
+          icon={!isActionLoading ? <Play size={14} weight="fill" /> : undefined}
         >
-          {isActionLoading ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            renderActionButton(isStarted ? 'leave' : 'start')
-          )}
-        </button>
+          {t('courses.start_course')}
+          <Keys keys="s" tone="onDark" className="max-sm:hidden ms-1" />
+        </Button>
+      )}
 
-        {/* Contributor Button */}
-        {renderContributorButton()}
+      {(certificateHint || isStarted || course.open_to_contributors) && (
+        <div className="mt-4 pt-4 border-t border-neutral-100 space-y-3">
+          {certificateHint}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {renderContributor()}
+            {isStarted && leaveButton}
+          </div>
+        </div>
+      )}
 
-        {/* Course Progress Modal */}
-        <CourseProgress
-          course={course}
-          orgslug={orgslug}
-          isOpen={isProgressOpen}
-          onClose={() => setIsProgressOpen(false)}
-          trailData={trailData}
-        />
-      </div>
+      {/* Course Progress Modal */}
+      <CourseProgress
+        course={course}
+        orgslug={orgslug}
+        isOpen={isProgressOpen}
+        onClose={() => setIsProgressOpen(false)}
+        trailData={trailData}
+      />
     </div>
   )
 }

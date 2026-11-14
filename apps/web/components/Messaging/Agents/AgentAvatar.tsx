@@ -2,6 +2,7 @@
 
 import React from 'react'
 import type { AgentSummary } from '@services/messaging/messaging'
+import { AIMark } from '@components/Objects/AI/AIBrand'
 
 export type AgentAvatarProps = {
   agent: Pick<AgentSummary, 'emoji' | 'color' | 'secondary_color' | 'name'> & { is_default?: boolean }
@@ -17,17 +18,9 @@ export default function AgentAvatar({ agent, size = 36, className = '' }: AgentA
   const radius = Math.max(6, Math.round(size * 0.25))
   if (agent.is_default) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={COPILOT_LOGO}
-        alt={agent.name}
-        title={agent.name}
-        width={size}
-        height={size}
-        className={`shrink-0 select-none ${className}`}
-        style={{ width: size, height: size }}
-        draggable={false}
-      />
+      <span title={agent.name} className="inline-flex shrink-0">
+        <AIMark size={size} alt={agent.name} className={className} />
+      </span>
     )
   }
   return (

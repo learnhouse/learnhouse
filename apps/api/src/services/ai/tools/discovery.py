@@ -88,6 +88,34 @@ async def _counts(ctx: ToolContext, staff: bool) -> dict:
     return out
 
 
+def _credit_count(value: Any) -> int | None:
+    return value if isinstance(value, int) else None  # "unlimited" -> None
+
+
+async def _ai_credits(ctx: ToolContext) -> dict | None:
+    """The organization's AI credit balance, or None when it cannot be read.
+    Best effort: get_context never fails because of it."""
+    try:
+        from src.security.features_utils.usage import get_ai_credits_summary
+
+        summary = await get_ai_credits_summary(ctx.org.id, ctx.db_session)
+    except Exception:
+        logger.warning("agent-tools: could not read AI credits of org %s", ctx.org.id, exc_info=True)
+        return None
+    if not isinstance(summary, dict) or "error" in summary:
+        return None
+    unlimited = summary.get("total_credits") == "unlimited"
+    return {
+        "used": _credit_count(summary.get("used_credits")),
+        "limit": None if unlimited else _credit_count(summary.get("total_credits")),
+        "remaining": None if unlimited else _credit_count(summary.get("remaining_credits")),
+        "unlimited": unlimited,
+        "purchased": _credit_count(summary.get("purchased_credits")),
+        # Usage resets with the billing period; there is no fixed date to show.
+        "resets_at": None,
+    }
+
+
 async def _get_context(ctx: ToolContext, _p: GetContextParams):
     config = await _org_config(ctx)
     features = resolve_all_features(config, ctx.org.id)
@@ -145,6 +173,7 @@ async def _get_context(ctx: ToolContext, _p: GetContextParams):
             if name not in ("members",)
         },
         "counts": await _counts(ctx, staff),
+        "ai_credits": await _ai_credits(ctx),
         "model": (
             "An organization holds courses. A course has ordered chapters; a chapter has "
             "ordered activities: pages (made of blocks: text, quizzes, callouts, media), "
@@ -456,7 +485,7 @@ async def _path_items(ctx: ToolContext, p: SearchParams, wanted: set[str]) -> li
 async def _passages(ctx: ToolContext, p: SearchParams) -> tuple[list[dict] | None, str | None]:
     """Ranked content passages, or (None, why) when there is no usable index."""
     from src.routers.ai.rag import _open_rag  # noqa: PLC0415 (heavy import, lazy)
-    from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
+    from src.services.ai import metering
     from src.services.ai.rag.query_service import search_course_content, source_from_row
 
     try:
@@ -467,13 +496,10 @@ async def _passages(ctx: ToolContext, p: SearchParams) -> tuple[list[dict] | Non
         raise
     if not scope.course_ids:
         return [], None
-    # One embedding call for the query, charged like the copilot search.
-    await reserve_ai_credit(org_id, ctx.db_session, amount=1)
-    try:
+    # One embedding call for the query, charged like the copilot search
+    # (refunded if the search fails).
+    async with metering.charge("mcp_tools", org_id=org_id, db=ctx.db_session):
         rows = await search_course_content(p.query, org_id, ctx.db_session, scope, top_k=min(p.limit, 8))
-    except Exception:
-        refund_ai_credit(org_id, 1)
-        raise
     passages = []
     for row in rows:
         src = source_from_row(row).to_dict()
@@ -638,7 +664,8 @@ SPECS: list[ToolSpec] = [
         description=(
             "Start here. Returns the organization (name, plan, web address), who you act "
             "as and their role, what this connection may do (read, write or admin), which "
-            "features are on, how much the organization holds, and how content is organized."
+            "features are on, how much the organization holds, its AI credits (used, limit, "
+            "remaining; null when unknown or unlimited), and how content is organized."
         ),
         params_model=GetContextParams,
         tier=ActionTier.READ,

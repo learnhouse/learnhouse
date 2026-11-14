@@ -1,19 +1,8 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
+import { AIMark, AI_DARK_SURFACE } from '@components/Objects/AI/AIBrand'
 import { motion, AnimatePresence } from 'motion/react'
-import Image from 'next/image'
-import {
-  AlertTriangle,
-  BetweenHorizontalStart,
-  FastForward,
-  Feather,
-  FileStack,
-  HelpCircle,
-  Languages,
-  MoreVertical,
-  X,
-} from 'lucide-react'
+import { Warning, RowsPlusBottom, FastForward, Feather, Files, Question, Translate, DotsThreeVertical, X } from '@phosphor-icons/react'
 import { Editor } from '@tiptap/react'
 import {
   AIEditorStateTypes,
@@ -85,27 +74,21 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
                   <div
                     style={{
                       pointerEvents: 'auto',
-                      background:
-                        'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)',
+                      background: AI_DARK_SURFACE,
                     }}
                     className="rounded-2xl max-w-(--breakpoint-2xl) w-fit shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md"
                   >
                     <div className="flex space-x-2">
                       <div className="pe-1">
                         <div className="flex w-full space-x-2 font-bold text-white/80 items-center">
-                          <Image
-                            className="outline outline-1 outline-neutral-200/20 rounded-lg"
-                            width={24}
-                            src={learnhouseAI_icon}
-                            alt=""
-                          />
+                          <AIMark size={24} alt="" />
                           <div className="flex items-center">
                             {t('editor.ai_editor')}{' '}
                             <span className="text-[10px] px-2 py-1 rounded-3xl ms-3 bg-white/10 uppercase">
                               {t('editor.ai_toolkit.pre_alpha')}
                             </span>
                           </div>
-                          <MoreVertical className="text-white/50" size={12} />
+                          <DotsThreeVertical className="text-white/50" size={12} />
                         </div>
                       </div>
                       <div className="tools flex space-x-2">
@@ -453,12 +436,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
         className="backdrop-blur-md	z-modal rounded-2xl max-w-(--breakpoint-2xl) my-10 mx-auto w-[500px] h-[200px] fixed bottom-16 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse"
       >
         <div className="flex space-x-2 justify-center">
-          <Image
-            className="outline outline-1 outline-neutral-200/20 rounded-lg"
-            width={24}
-            src={learnhouseAI_icon}
-            alt=""
-          />
+          <AIMark size={24} alt="" />
         </div>
         <div className="flex h-[115px] justify-center mx-auto antialiased">
           <div className="flex items-center justify-center ">
@@ -483,7 +461,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
               }
               className="bg-white/10 px-3  rounded-md outline outline-1 outline-neutral-200/20 py-2 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
             >
-              <BetweenHorizontalStart
+              <RowsPlusBottom
                 size={20}
                 className="text-white/50 hover:cursor-pointer"
               />
@@ -541,9 +519,9 @@ const AiEditorToolButton = (props: any) => {
     >
       {props.label === 'Writer' && <Feather size={14} />}
       {props.label === 'ContinueWriting' && <FastForward size={14} />}
-      {props.label === 'MakeLonger' && <FileStack size={14} />}
-      {props.label === 'GenerateQuiz' && <HelpCircle size={14} />}
-      {props.label === 'Translate' && <Languages size={14} />}
+      {props.label === 'MakeLonger' && <Files size={14} />}
+      {props.label === 'GenerateQuiz' && <Question size={14} />}
+      {props.label === 'Translate' && <Translate size={14} />}
       <span>{t(`editor.ai_toolkit.tool_${props.label}`)}</span>
     </button>
   )
@@ -610,7 +588,7 @@ const AiEditorActionScreen = ({
               }}
               className="flex cursor-pointer space-x-1.5 p-4 mt-4 items-center bg-white/10  rounded-md outline outline-1 outline-neutral-200/20 text-2xl font-semibold text-white/70 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
             >
-              <FileStack size={24} />
+              <Files size={24} />
             </div>
           </div>
         )}
@@ -636,7 +614,7 @@ const AiEditorActionScreen = ({
               }}
               className="flex cursor-pointer space-x-1.5 p-4 mt-4 items-center bg-white/10  rounded-md outline outline-1 outline-neutral-200/20 text-2xl font-semibold text-white/70 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
             >
-              <Languages size={24} />
+              <Translate size={24} />
             </div>
           </div>
         )}
@@ -669,7 +647,7 @@ const AiEditorActionScreen = ({
       {aiEditorState.error.isError && (
         <div className="flex items-center h-auto pt-7">
           <div className="flex flex-col mx-auto w-full space-y-2 p-5 rounded-lg bg-red-500/20 outline outline-1 outline-red-500">
-            <AlertTriangle size={20} className="text-red-500" />
+            <Warning size={20} className="text-red-500" />
             <div className="flex flex-col">
               <h3 className="font-semibold text-red-200">
                 {t('editor.ai_toolkit.error')}

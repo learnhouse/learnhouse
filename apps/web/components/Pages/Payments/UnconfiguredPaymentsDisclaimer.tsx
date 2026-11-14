@@ -1,8 +1,11 @@
 'use client'
-import { CreditCard, Settings, ShoppingBag, Users } from 'lucide-react'
+import { CreditCard, Gear, ShoppingBag, Users } from '@phosphor-icons/react'
 import React from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { getUriWithOrg } from '@services/config/config'
 
 const STEPS = [
   {
@@ -24,47 +27,35 @@ const STEPS = [
 
 function UnconfiguredPaymentsDisclaimer() {
   const { t } = useTranslation()
+  const org = useOrg() as any
+  const settingsHref = org?.slug ? getUriWithOrg(org.slug, '/dash/payments/settings') : './settings'
   return (
-    <div className="ms-10 me-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
-      {/* Empty state */}
+    <div className="bg-white rounded-2xl nice-shadow">
       <div className="flex flex-col items-center py-12 px-6 text-center">
-        {/* Icon cluster */}
-        <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-5">
-          <CreditCard className="text-gray-400" size={26} />
+        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-400 mb-4">
+          <CreditCard size={22} />
         </div>
 
-        <h3 className="font-semibold text-gray-800 text-base mb-1">
-          {t('payments.unconfigured.title')}
-        </h3>
-        <p className="text-sm text-gray-500 max-w-xs mb-8">
-          {t('payments.unconfigured.description')}
-        </p>
+        <h3 className="text-base font-semibold text-neutral-900">{t('payments.unconfigured.title')}</h3>
+        <p className="text-sm text-neutral-500 max-w-sm mt-1 mb-6">{t('payments.unconfigured.description')}</p>
 
-        {/* Steps */}
-        <div className="w-full max-w-md space-y-2 mb-8 text-start">
+        <ol className="w-full max-w-md divide-y divide-neutral-100 rounded-xl ring-1 ring-inset ring-neutral-200 mb-6 text-start">
           {STEPS.map(({ icon: Icon, titleKey, descriptionKey }, i) => (
-            <div
-              key={i}
-              className="flex items-start space-x-3 border border-gray-100 rounded-xl px-4 py-3 bg-gray-50"
-            >
-              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 shrink-0 mt-0.5">
-                <Icon size={14} className="text-gray-500" />
-              </div>
+            <li key={i} className="flex items-start gap-3 px-4 py-3">
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-neutral-100 text-neutral-600 shrink-0 mt-0.5">
+                <Icon size={14} />
+              </span>
               <div>
-                <p className="text-sm font-medium text-gray-700">{t(titleKey)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{t(descriptionKey)}</p>
+                <p className="text-sm font-semibold text-neutral-800">{t(titleKey)}</p>
+                <p className="text-xs text-neutral-500 mt-0.5">{t(descriptionKey)}</p>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ol>
 
-        {/* CTA */}
-        <Link
-          href="./configuration"
-          className="inline-flex items-center space-x-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors duration-150"
-        >
-          <Settings size={13} />
-          <span>{t('payments.unconfigured.cta')}</span>
+        <Link href={settingsHref} className={buttonClass('primary', 'md')}>
+          <Gear size={14} />
+          {t('payments.unconfigured.cta')}
         </Link>
       </div>
     </div>

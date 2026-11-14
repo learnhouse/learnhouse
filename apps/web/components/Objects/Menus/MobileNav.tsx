@@ -1,5 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import { useDashNavPrefetch } from '@components/Dashboard/Shared/useDashNavPrefetch'
+import { isClientRenderedLearnerRoute } from '@/lib/query/learnerQueries'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -7,20 +9,22 @@ import {
   House,
   Books,
   MagnifyingGlass,
-  Signpost,
+  HouseSimple,
   DotsNine,
   SignIn,
   CalendarDots,
-  ChalkboardSimple,
   ChatsCircle,
   User,
   ShoppingBag,
   Globe,
+  Moon,
+  Sun,
   Book,
   SignOut,
   CaretRight,
   Check,
   SquaresFour,
+  UsersThree,
 } from '@phosphor-icons/react'
 import { Dialog, DialogContent, DialogTitle } from '@components/ui/dialog'
 import UserAvatar from '@components/Objects/UserAvatar'
@@ -33,8 +37,10 @@ import { useSiteCommandPalette } from '@components/Objects/Search/SiteCommandPal
 import { getUriWithOrg } from '@services/config/config'
 import { isFeatureAvailable } from '@services/plans/plans'
 import { changeLanguage } from '@/lib/i18n'
+import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import { DASHBOARD_MENU_ITEMS, DashboardMenuItem } from '@/lib/dashboard-menu-items'
+import { useMenuGroups } from '@components/Pages/Groups/GroupMenuItems'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useOrgMenuItems } from './OrgMenuLinks'
 
@@ -79,6 +85,8 @@ export function MobileTabBar({ orgslug, primaryColor = '' }: { orgslug: string; 
   const { setOpen: openSearch } = useSiteCommandPalette()
   const menuItems = useOrgMenuItems(orgslug)
   const [moreOpen, setMoreOpen] = useState(false)
+  // A touch on a tab warms its page (and the data it reads first).
+  const navPrefetch = useDashNavPrefetch('learner')
   const path = pagePath(pathname)
   const hidden = hidesTabBar(pathname)
   const isAuthenticated = session?.status === 'authenticated'
@@ -113,7 +121,8 @@ export function MobileTabBar({ orgslug, primaryColor = '' }: { orgslug: string; 
   // The header avatar can still open the sheet where the bar steps aside.
   if (hidden) return sheet
 
-  const accent = primaryColor || '#0a0a0a'
+  // --lhd-ink only exists in dark mode (styles/dark.css).
+  const accent = primaryColor || 'var(--lhd-ink, #0a0a0a)'
 
   const tabs: { key: string; label: string; Icon: any; href?: string; onClick?: () => void; active: boolean }[] = [
     { key: 'home', label: t('common.home'), Icon: House, href: getUriWithOrg(orgslug, '/'), active: path === '/' },
@@ -122,7 +131,7 @@ export function MobileTabBar({ orgslug, primaryColor = '' }: { orgslug: string; 
       : []),
     { key: 'search', label: t('common.search'), Icon: MagnifyingGlass, onClick: () => openSearch(true), active: path.startsWith('/search') },
     isAuthenticated
-      ? { key: 'trail', label: t('courses.progress'), Icon: Signpost, href: getUriWithOrg(orgslug, '/trail'), active: path.startsWith('/trail') }
+      ? { key: 'trail', label: t('courses.progress'), Icon: HouseSimple, href: getUriWithOrg(orgslug, '/trail'), active: path.startsWith('/trail') }
       : { key: 'login', label: t('auth.login'), Icon: SignIn, href: getUriWithOrg(orgslug, '/login'), active: path.startsWith('/login') },
     { key: 'more', label: t('common.more'), Icon: DotsNine, onClick: () => setMoreOpen(true), active: moreOpen },
   ]
@@ -130,6 +139,7 @@ export function MobileTabBar({ orgslug, primaryColor = '' }: { orgslug: string; 
   return (
     <>
       <nav
+        {...navPrefetch}
         aria-label={t('mobile_nav.tabs', { defaultValue: 'Main' })}
         className="lh-bottom-bleed lg:hidden fixed inset-x-0 bottom-0 border-t border-black/[0.06] bg-white/85 backdrop-blur-xl backdrop-saturate-150"
         style={{ zIndex: 'var(--z-nav)', paddingBottom: 'var(--lh-safe-bottom)' }}
@@ -149,7 +159,7 @@ export function MobileTabBar({ orgslug, primaryColor = '' }: { orgslug: string; 
             return (
               <li key={key} className="flex flex-1 min-w-0">
                 {href ? (
-                  <Link href={href} className={cls} style={style} aria-current={active ? 'page' : undefined}>
+                  <Link href={href} prefetch={isClientRenderedLearnerRoute(href) ? true : undefined} className={cls} style={style} aria-current={active ? 'page' : undefined}>
                     {inner}
                   </Link>
                 ) : (
@@ -246,6 +256,8 @@ function MobileMoreSheet({
   skipKey?: string
 }) {
   const { t, i18n } = useTranslation()
+  const { colorScheme, toggleColorScheme } = useColorScheme()
+  const menuGroups = useMenuGroups()
   const session = useLHSession() as any
   const org = useOrg() as any
   const { rights } = useAdminStatus()
@@ -332,9 +344,7 @@ function MobileMoreSheet({
                 />
               )}
               <SheetRow href={getUriWithOrg(orgslug, '/calendar')} Icon={CalendarDots} label={t('calendar.title')} />
-              {rf?.boards?.enabled && (
-                <SheetRow href={getUriWithOrg(orgslug, '/boards')} Icon={ChalkboardSimple} label={t('common.boards')} />
-              )}
+              {menuGroups.any && <SheetRow href={getUriWithOrg(orgslug, '/groups')} Icon={UsersThree} label={t('groups.menu.title')} />}
               <SheetRow href={getUriWithOrg(orgslug, '/account/purchases')} Icon={ShoppingBag} label={t('account.purchases')} />
               <SheetRow href={getUriWithOrg(orgslug, '/account/general')} Icon={User} label={t('user.user_settings')} />
             </SheetGroup>
@@ -355,6 +365,11 @@ function MobileMoreSheet({
           )}
 
           <SheetGroup>
+            <SheetRow
+              onClick={toggleColorScheme}
+              Icon={colorScheme === 'dark' ? Sun : Moon}
+              label={colorScheme === 'dark' ? t('common.switch_to_light') : t('common.switch_to_dark')}
+            />
             <SheetRow
               onClick={() => setShowLanguages((v) => !v)}
               Icon={Globe}

@@ -13,18 +13,14 @@ from sqlalchemy.dialects import postgresql
 from src.db.courses.courses import Course
 from src.db.folders.folder_content import FolderContent
 from src.db.organizations import Organization
-from src.db.playgrounds import Playground
 from src.db.podcasts.podcasts import PodcastUpdate
 from src.db.users import AnonymousUser
-from src.services.boards import boards_playground as bp
-from src.services.boards.schemas.boards_playground import BoardsPlaygroundContext
 from src.services.communities.moderation import extract_youtube_video_id
 from src.services.email.safe_text import header_safe
 from src.services.email.utils import get_org_square_logo_url
 from src.services.explore.explore import _get_sort_expression, search_orgs_for_explore
 from src.services.folders import folders as folders_service
 from src.services.media import media_serve
-from src.services.playgrounds import playgrounds as playgrounds_service
 from src.services.podcasts.podcasts import update_podcast
 from src.services.search.search import _ilike_terms
 from src.services.webhooks import dispatch
@@ -83,37 +79,6 @@ async def test_prune_delivery_logs_swallows_database_errors():
     warn.assert_called_once()
 
 
-# ─── boards playground sessions ──────────────────────────────────────────────
-
-
-def test_board_session_owner_unknown_without_redis():
-    with patch.object(bp, "get_redis_connection", return_value=None):
-        assert bp.get_boards_playground_session_owner("pg_1") is None
-
-
-def test_board_session_owner_unknown_when_not_recorded():
-    redis = Mock()
-    redis.get.return_value = None
-    with patch.object(bp, "get_redis_connection", return_value=redis):
-        assert bp.get_boards_playground_session_owner("pg_1") is None
-
-
-def test_board_session_owner_unknown_on_redis_error():
-    with patch.object(bp, "get_redis_connection", return_value=_BrokenRedis()):
-        assert bp.get_boards_playground_session_owner("pg_1") is None
-
-
-def test_board_session_created_even_when_owner_cannot_be_saved():
-    redis = Mock()
-    redis.setex.side_effect = ConnectionError("redis down")
-    context = BoardsPlaygroundContext(board_name="b", board_description="d")
-    with patch.object(bp, "get_redis_connection", return_value=redis), \
-         patch.object(bp, "save_boards_playground_session", return_value=True) as save:
-        session = bp.create_boards_playground_session("block_1", "board_1", context, user_id=3)
-    assert session.session_uuid.startswith("pg_")
-    save.assert_called_once_with(session)
-
-
 # ─── playgrounds.py ──────────────────────────────────────────────────────────
 
 
@@ -124,32 +89,6 @@ def _session_returning(*rows):
         result.scalars.return_value.first.return_value = row
         results.append(result)
     return SimpleNamespace(execute=AsyncMock(side_effect=results))
-
-
-@pytest.mark.parametrize(
-    "role, expected",
-    [
-        (None, {}),
-        (SimpleNamespace(rights={}), {}),
-        (SimpleNamespace(rights=SimpleNamespace(model_dump=lambda: {"playgrounds": {"action_read": True}})), {"playgrounds": {"action_read": True}}),
-        (SimpleNamespace(rights=object()), {}),
-    ],
-)
-async def test_member_rights_from_missing_or_model_roles(role, expected):
-    session = _session_returning(SimpleNamespace(role_id=4), role)
-    with patch.object(playgrounds_service, "is_user_superadmin", new=AsyncMock(return_value=False)), \
-         patch("src.security.org_auth.enforce_org_mfa", new_callable=AsyncMock):
-        assert await playgrounds_service._get_user_rights(2, 1, session) == expected
-
-
-async def test_thumbnail_update_needs_the_org(db, org, admin_user, mock_request):
-    db.add(Playground(name="P", org_id=999, playground_uuid="playground_orphan", created_by=admin_user.id))
-    await db.commit()
-    with patch.object(playgrounds_service, "_get_user_rights", new=AsyncMock(return_value={"playgrounds": {"action_update": True}})):
-        with pytest.raises(HTTPException) as exc:
-            await playgrounds_service.update_playground_thumbnail(mock_request, "playground_orphan", admin_user, db, None)
-    assert exc.value.status_code == 404
-    assert exc.value.detail == "Organization not found"
 
 
 # ─── explore.py ──────────────────────────────────────────────────────────────

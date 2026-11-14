@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { ArrowLeftRight, FileArchive, GraduationCap } from 'lucide-react'
+import { ArrowsLeftRight, FileArchive, GraduationCap } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
@@ -71,7 +71,7 @@ function ImportTypeSelector({ onSelectType, currentPlan }: ImportTypeSelectorPro
           className="group flex flex-col items-center p-6 rounded-xl border-2 border-gray-200 bg-white hover:border-black hover:shadow-lg transition-all duration-200"
         >
           <div className="w-14 h-14 rounded-full bg-violet-50 flex items-center justify-center mb-4 group-hover:bg-violet-100 transition-colors">
-            <ArrowLeftRight size={28} className="text-violet-600" />
+            <ArrowsLeftRight size={28} className="text-violet-600" />
           </div>
           <h3 className="font-semibold text-gray-900 mb-1">
             {t('courses.import.lms_courses')}

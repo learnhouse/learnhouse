@@ -70,16 +70,32 @@ export function OrgProvider({
   // Pass the real SWR error so it's classified into a meaningful message
   // (offline / server / not-found …) with the right recovery actions. An
   // explicit errorMessage prop still overrides the classification.
-  if (orgError) return <ErrorUI error={orgError} message={errorMessage} submessage={errorSubmessage} />
+  // These replace the whole org app, so they take the whole viewport rather
+  // than inheriting whatever height and sidebar gutter the page around had.
+  if (orgError) return (
+    <FullPageError>
+      <ErrorUI error={orgError} message={errorMessage} submessage={errorSubmessage} />
+    </FullPageError>
+  )
   if (!isLoading && org && !isOrgActive) return (
-    <ErrorUI
-      message={inactiveMessage ?? t('org.inactive')}
-      submessage="The workspace has been deactivated. If you believe this is a mistake, contact the organization's owner or our support team."
-      resolutions={['home', 'signout', 'contact_support']}
-    />
+    <FullPageError>
+      <ErrorUI
+        message={inactiveMessage ?? t('org.inactive')}
+        submessage="The workspace has been deactivated. If you believe this is a mistake, contact the organization's owner or our support team."
+        resolutions={['home', 'signout', 'contact_support']}
+      />
+    </FullPageError>
   )
 
   return <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
+}
+
+function FullPageError({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#f8f8f8] flex items-center justify-center">
+      {children}
+    </div>
+  )
 }
 
 // Backward compatible hook - returns just the org object

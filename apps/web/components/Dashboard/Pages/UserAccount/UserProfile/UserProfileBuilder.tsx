@@ -1,334 +1,299 @@
+'use client'
 import React from 'react'
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
-import { Plus, Trash2, GripVertical, ImageIcon, Link as LinkIcon, Award, Edit, TextIcon, Briefcase, GraduationCap, MapPin, BookOpen } from 'lucide-react'
-import { Input } from "@components/ui/input"
-import { Textarea } from "@components/ui/textarea"
-import { Label } from "@components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
-import { Button } from "@components/ui/button"
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'react-hot-toast'
+import {
+  ArrowDown,
+  ArrowSquareOut,
+  ArrowUp,
+  Briefcase,
+  CaretDown,
+  DotsSixVertical,
+  Eye,
+  EyeSlash,
+  GraduationCap,
+  IdentificationCard,
+  Plus,
+  SquaresFour,
+  Trash,
+  WarningCircle,
+  X,
+} from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { updateProfile } from '@services/settings/profile'
 import { getUser } from '@services/users/users'
-import { toast } from 'react-hot-toast'
+import { getUriWithOrg } from '@services/config/config'
+import { Button, EmptyState, SectionCard, Skeleton, StatusPill, StickySaveBar, buttonClass } from '@/design'
+import { AccountInput, AccountLabel } from '@components/Objects/Account/AccountSection'
+import ProfileView, { type ProfileUser } from '@components/Objects/Profile/ProfileView'
+import { SECTION_META } from '@components/Objects/Profile/profileIcons'
+import { useSectionTitle } from '@components/Objects/Profile/ProfileSections'
+import { useAuthoredCourses, useOwnCertificates } from '@components/Objects/Profile/useProfileData'
+import { useUserBadges } from '@ee/components/Plays/UserBadges'
+import {
+  LIMITS,
+  SECTION_TYPES,
+  SINGLE_SECTIONS,
+  applyDetailTemplate,
+  detailsToRecord,
+  newSectionId,
+  normalizeDetails,
+  normalizeProfile,
+  profileErrors,
+  serializeProfile,
+  type DetailItem,
+  type DetailTemplate,
+  type ProfileDoc,
+  type ProfileSection,
+  type SectionType,
+} from '@/lib/profile/profile'
+import {
+  AffiliationEditor,
+  DetailsEditor,
+  EducationEditor,
+  ExperienceEditor,
+  FeaturedEditor,
+  GalleryEditor,
+  LinksEditor,
+  RichTextField,
+  SkillsEditor,
+  TextEditor,
+  type FeaturedOption,
+} from './ProfileSectionEditors'
 
-import { useTranslation } from 'react-i18next'
+// The public profile builder: header fields, the ordered sections (details
+// included, merged in from the old "Additional details"), and a live preview
+// rendered by the same component as the public page.
 
-// Define section types and their configurations
-const SECTION_TYPES = {
-  'image-gallery': {
-    icon: ImageIcon,
-    labelKey: 'user.settings.profile_builder.section_types.image_gallery.label',
-    descriptionKey: 'user.settings.profile_builder.section_types.image_gallery.description'
-  },
-  'text': {
-    icon: TextIcon,
-    labelKey: 'user.settings.profile_builder.section_types.text.label',
-    descriptionKey: 'user.settings.profile_builder.section_types.text.description'
-  },
-  'links': {
-    icon: LinkIcon,
-    labelKey: 'user.settings.profile_builder.section_types.links.label',
-    descriptionKey: 'user.settings.profile_builder.section_types.links.description'
-  },
-  'skills': {
-    icon: Award,
-    labelKey: 'user.settings.profile_builder.section_types.skills.label',
-    descriptionKey: 'user.settings.profile_builder.section_types.skills.description'
-  },
-  'experience': {
-    icon: Briefcase,
-    labelKey: 'user.settings.profile_builder.section_types.experience.label',
-    descriptionKey: 'user.settings.profile_builder.section_types.experience.description'
-  },
-  'education': {
-    icon: GraduationCap,
-    labelKey: 'user.settings.profile_builder.section_types.education.label',
-    descriptionKey: 'user.settings.profile_builder.section_types.education.description'
-  },
-  'affiliation': {
-    icon: MapPin,
-    labelKey: 'user.settings.profile_builder.section_types.affiliation.label',
-    descriptionKey: 'user.settings.profile_builder.section_types.affiliation.description'
-  },
-  'courses': {
-    icon: BookOpen,
-    labelKey: 'user.settings.profile_builder.section_types.courses.label',
-    descriptionKey: 'user.settings.profile_builder.section_types.courses.description'
+type Draft = { doc: ProfileDoc; details: DetailItem[] }
+
+const emptySection = (type: SectionType): ProfileSection => {
+  const base: ProfileSection = { id: type === 'details' ? 'details' : newSectionId(type), type, title: '' }
+  switch (type) {
+    case 'text':
+      return { ...base, content: '' }
+    case 'links':
+      return { ...base, links: [{ title: '', url: '' }] }
+    case 'skills':
+      return { ...base, skills: [] }
+    case 'experience':
+      return { ...base, experiences: [{ title: '', organization: '', startDate: '', endDate: '', current: false, description: '' }] }
+    case 'education':
+      return { ...base, education: [{ institution: '', degree: '', field: '', startDate: '', endDate: '', current: false, description: '' }] }
+    case 'affiliation':
+      return { ...base, affiliations: [{ name: '', description: '', logoUrl: '' }] }
+    case 'image-gallery':
+      return { ...base, images: [{ url: '', caption: '' }] }
+    case 'featured':
+      return { ...base, items: [] }
+    default:
+      return base
   }
-} as const
-
-// Type definitions
-interface ProfileImage {
-  url: string;
-  caption?: string;
 }
 
-interface ProfileLink {
-  title: string;
-  url: string;
-  icon?: string;
+const TEMPLATES: { key: DetailTemplate; icon: React.ReactNode; adds: SectionType[] }[] = [
+  { key: 'general', icon: <IdentificationCard size={15} />, adds: ['links'] },
+  { key: 'academic', icon: <GraduationCap size={15} />, adds: ['education'] },
+  { key: 'professional', icon: <Briefcase size={15} />, adds: ['experience', 'skills'] },
+]
+
+function itemCount(s: ProfileSection, details: DetailItem[]): number | null {
+  switch (s.type) {
+    case 'details':
+      return details.filter((d) => d.text.trim()).length
+    case 'links':
+      return s.links?.length ?? 0
+    case 'skills':
+      return s.skills?.length ?? 0
+    case 'experience':
+      return s.experiences?.length ?? 0
+    case 'education':
+      return s.education?.length ?? 0
+    case 'affiliation':
+      return s.affiliations?.length ?? 0
+    case 'image-gallery':
+      return s.images?.length ?? 0
+    case 'featured':
+      return s.items?.length ?? 0
+    default:
+      return null
+  }
 }
 
-interface ProfileSkill {
-  name: string;
-  level?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-  category?: string;
-}
-
-interface ProfileExperience {
-  title: string;
-  organization: string;
-  startDate: string;
-  endDate?: string;
-  current: boolean;
-  description: string;
-}
-
-interface ProfileEducation {
-  institution: string;
-  degree: string;
-  field: string;
-  startDate: string;
-  endDate?: string;
-  current: boolean;
-  description?: string;
-}
-
-interface ProfileAffiliation {
-  name: string;
-  description: string;
-  logoUrl: string;
-}
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail?: string;
-  status: string;
-}
-
-interface BaseSection {
-  id: string;
-  type: keyof typeof SECTION_TYPES;
-  title: string;
-}
-
-interface ImageGallerySection extends BaseSection {
-  type: 'image-gallery';
-  images: ProfileImage[];
-}
-
-interface TextSection extends BaseSection {
-  type: 'text';
-  content: string;
-}
-
-interface LinksSection extends BaseSection {
-  type: 'links';
-  links: ProfileLink[];
-}
-
-interface SkillsSection extends BaseSection {
-  type: 'skills';
-  skills: ProfileSkill[];
-}
-
-interface ExperienceSection extends BaseSection {
-  type: 'experience';
-  experiences: ProfileExperience[];
-}
-
-interface EducationSection extends BaseSection {
-  type: 'education';
-  education: ProfileEducation[];
-}
-
-interface AffiliationSection extends BaseSection {
-  type: 'affiliation';
-  affiliations: ProfileAffiliation[];
-}
-
-interface CoursesSection extends BaseSection {
-  type: 'courses';
-  // No need to store courses as they will be fetched from API
-}
-
-type ProfileSection = 
-  | ImageGallerySection 
-  | TextSection 
-  | LinksSection 
-  | SkillsSection 
-  | ExperienceSection 
-  | EducationSection
-  | AffiliationSection
-  | CoursesSection;
-
-interface ProfileData {
-  sections: ProfileSection[];
-}
-
-const UserProfileBuilder = () => {
+const UserProfileBuilder = ({ onDirtyChange }: { onDirtyChange?: (_dirty: boolean) => void } = {}) => {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [profileData, setProfileData] = React.useState<ProfileData>({
-    sections: []
-  })
-  const [selectedSection, setSelectedSection] = React.useState<number | null>(null)
+  const userId = session?.data?.user?.id
+  const params = useParams() as any
+  const orgslug = params?.orgslug as string
+  const sectionTitle = useSectionTitle()
+
+  const [user, setUser] = React.useState<(ProfileUser & Record<string, any>) | null>(null)
+  const [draft, setDraft] = React.useState<Draft | null>(null)
+  const [snapshot, setSnapshot] = React.useState('')
+  const [loadFailed, setLoadFailed] = React.useState(false)
+  const [open, setOpen] = React.useState<string | null>(null)
+  const [adding, setAdding] = React.useState(false)
   const [isSaving, setIsSaving] = React.useState(false)
-  const [isLoading, setIsLoading] = React.useState(true)
-  const { t } = useTranslation()
+  const [showErrors, setShowErrors] = React.useState(false)
 
-  // Initialize profile data from user data
+  const load = React.useCallback(async () => {
+    if (!userId || !access_token) return
+    try {
+      const data = await getUser(userId, access_token)
+      const next: Draft = { doc: normalizeProfile(data.profile, data.details), details: normalizeDetails(data.details) }
+      setUser(data)
+      setDraft(next)
+      setSnapshot(JSON.stringify(next))
+      setLoadFailed(false)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      setLoadFailed(true)
+      toast.error(t('user.settings.profile_builder.toasts.loading_error'))
+    }
+  }, [userId, access_token, t])
+
   React.useEffect(() => {
-    const fetchUserData = async () => {
-      if (session?.data?.user?.id && access_token) {
-        try {
-          setIsLoading(true)
-          const userData = await getUser(session.data.user.id, access_token)
-          
-          if (userData.profile) {
-            try {
-              const profileSections = typeof userData.profile === 'string'
-                ? JSON.parse(userData.profile).sections
-                : userData.profile.sections;
+    load()
+  }, [load])
 
-              setProfileData({
-                sections: profileSections || []
-              });
-            } catch (error) {
-              console.error('Error parsing profile data:', error);
-              setProfileData({ sections: [] });
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          toast.error(t('user.settings.profile_builder.toasts.loading_error'));
-        } finally {
-          setIsLoading(false)
-        }
-      }
-    };
+  const isDirty = !!draft && snapshot !== '' && JSON.stringify(draft) !== snapshot
+  React.useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+  React.useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
 
-    fetchUserData();
-  }, [session?.data?.user?.id, access_token, t])
+  // Picks for the Featured section: only things the user actually has.
+  const org = useOrg() as any
+  const hasFeatured = !!draft?.doc.sections.some((s) => s.type === 'featured')
+  const myCourses = useAuthoredCourses(userId, access_token, hasFeatured)
+  const myCertificates = useOwnCertificates(org?.id, access_token, hasFeatured)
+  const { data: myBadgesData, isLoading: badgesLoading } = useUserBadges(hasFeatured ? userId : undefined, access_token, org?.id)
+  const featuredOptions: FeaturedOption[] = React.useMemo(() => {
+    const badges: any[] = Array.isArray(myBadgesData) ? myBadgesData : []
+    return [
+      ...(myCourses.data ?? []).map((c: any) => ({ kind: 'course' as const, id: c.course_uuid, label: c.name, meta: c.published ? undefined : t('user.profile.builder.unpublished', { defaultValue: 'Unpublished: only you will see it' }) })),
+      ...(myCertificates.data ?? []).map((c: any) => ({
+        kind: 'certificate' as const,
+        id: c.certificate_user.user_certification_uuid,
+        label: c.certification?.config?.certification_name || c.course?.name,
+        meta: c.course?.name,
+      })),
+      ...badges.map((b: any) => ({
+        kind: 'badge' as const,
+        id: b.playground_uuid,
+        label: b.name,
+        meta: b.play_name,
+        thumb: (
+          <span className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-sm" style={{ background: `color-mix(in srgb, ${/^#[0-9a-f]{3,8}$/i.test(b.color) ? b.color : '#a3a3a3'} 18%, white)` }} aria-hidden="true">
+            {b.emoji}
+          </span>
+        ),
+      })),
+    ]
+  }, [myCourses.data, myCertificates.data, myBadgesData, t])
 
-  const createEmptySection = (type: keyof typeof SECTION_TYPES): ProfileSection => {
-    const baseSection = {
-      id: `section-${Date.now()}`,
-      type,
-      title: `${t(SECTION_TYPES[type].labelKey)} Section`
-    }
-
-    switch (type) {
-      case 'image-gallery':
-        return {
-          ...baseSection,
-          type: 'image-gallery',
-          images: []
-        }
-      case 'text':
-        return {
-          ...baseSection,
-          type: 'text',
-          content: ''
-        }
-      case 'links':
-        return {
-          ...baseSection,
-          type: 'links',
-          links: []
-        }
-      case 'skills':
-        return {
-          ...baseSection,
-          type: 'skills',
-          skills: []
-        }
-      case 'experience':
-        return {
-          ...baseSection,
-          type: 'experience',
-          experiences: []
-        }
-      case 'education':
-        return {
-          ...baseSection,
-          type: 'education',
-          education: []
-        }
-      case 'affiliation':
-        return {
-          ...baseSection,
-          type: 'affiliation',
-          affiliations: []
-        }
-      case 'courses':
-        return {
-          ...baseSection,
-          type: 'courses'
-        }
-    }
+  if (loadFailed) {
+    return (
+      <div className="bg-white rounded-2xl nice-shadow">
+        <EmptyState
+          icon={<WarningCircle size={22} />}
+          title={t('user.settings.profile_builder.toasts.loading_error')}
+          action={<Button onClick={load}>{t('user.settings.security.mfa.retry', { defaultValue: 'Retry' })}</Button>}
+        />
+      </div>
+    )
   }
 
-  const addSection = (type: keyof typeof SECTION_TYPES) => {
-    const newSection = createEmptySection(type)
-    setProfileData(prev => ({
-      ...prev,
-      sections: [...prev.sections, newSection]
-    }))
-    setSelectedSection(profileData.sections.length)
+  if (!draft || !user) {
+    return (
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] gap-5" aria-busy="true">
+        <div className="flex flex-col gap-5">
+          <div className="bg-white rounded-2xl nice-shadow p-5 space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-9" />
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-9" />
+              <Skeleton className="h-9" />
+            </div>
+            <Skeleton className="h-28" />
+          </div>
+          <div className="bg-white rounded-2xl nice-shadow p-5 space-y-2">
+            <Skeleton className="h-4 w-24" />
+            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-12" />)}
+          </div>
+        </div>
+        <Skeleton className="h-96 !rounded-2xl" />
+      </div>
+    )
   }
 
-  const updateSection = (index: number, updatedSection: ProfileSection) => {
-    const newSections = [...profileData.sections]
-    newSections[index] = updatedSection
-    setProfileData(prev => ({
-      ...prev,
-      sections: newSections
-    }))
+  const { doc, details } = draft
+  const setDoc = (patch: Partial<ProfileDoc>) => setDraft((d) => (d ? { ...d, doc: { ...d.doc, ...patch } } : d))
+  const setSections = (sections: ProfileSection[]) => setDoc({ sections })
+  const setDetails = (next: DetailItem[]) => setDraft((d) => (d ? { ...d, details: next } : d))
+  const updateSection = (s: ProfileSection) => setSections(doc.sections.map((x) => (x.id === s.id ? s : x)))
+  const move = (index: number, to: number) => {
+    if (to < 0 || to >= doc.sections.length) return
+    const next = [...doc.sections]
+    const [item] = next.splice(index, 1)
+    next.splice(to, 0, item)
+    setSections(next)
+  }
+  const onDragEnd = (result: DropResult) => {
+    if (result.destination) move(result.source.index, result.destination.index)
+  }
+  const present = new Set(doc.sections.map((s) => s.type))
+  const addSection = (type: SectionType) => {
+    if (SINGLE_SECTIONS.has(type) && present.has(type)) return
+    const section = emptySection(type)
+    setSections([...doc.sections, section].slice(0, LIMITS.sections))
+    setOpen(section.id)
+    setAdding(false)
+  }
+  const applyTemplate = (key: DetailTemplate, adds: SectionType[]) => {
+    const label = (id: string, fallback: string) => t(`user.settings.general.labels.${id.replace('-', '_')}`, { defaultValue: fallback })
+    let sections = doc.sections
+    if (!sections.some((s) => s.type === 'details')) sections = [emptySection('details'), ...sections]
+    for (const type of adds) if (!sections.some((s) => s.type === type)) sections = [...sections, emptySection(type)]
+    setDraft({ doc: { ...doc, sections }, details: applyDetailTemplate(details, key, label) })
+    setOpen('details')
+    setAdding(false)
   }
 
-  const deleteSection = (index: number) => {
-    setProfileData(prev => ({
-      ...prev,
-      sections: prev.sections.filter((_, i) => i !== index)
-    }))
-    setSelectedSection(null)
-  }
-
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return
-
-    const items = Array.from(profileData.sections)
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
-
-    setProfileData(prev => ({
-      ...prev,
-      sections: items
-    }))
-    setSelectedSection(result.destination.index)
-  }
+  const errors = profileErrors(doc)
+  const errorSections = new Set(errors.map((e) => e.sectionId))
 
   const handleSave = async () => {
+    if (errors.length) {
+      setShowErrors(true)
+      setOpen(errors[0].sectionId)
+      toast.error(t('user.profile.builder.fix_errors', { defaultValue: 'Some addresses are not valid. Fix them before saving.' }))
+      return
+    }
     setIsSaving(true)
     const loadingToast = toast.loading(t('user.settings.profile_builder.saving'))
-
     try {
-      // Get fresh user data before update
-      const userData = await getUser(session.data.user.id, access_token)
-      
-      // Update only the profile field
-      userData.profile = profileData
-
-      const res = await updateProfile(userData, userData.id, access_token)
-
-      if (res.status === 200) {
-        toast.success(t('user.settings.profile_builder.toasts.save_success'), { id: loadingToast })
-      } else {
-        throw new Error('Failed to update profile')
-      }
+      // Fresh copy so a stale form never overwrites other fields. The read
+      // omits the email (PII) but the update requires it: use the session's.
+      const fresh = await getUser(String(user.id), access_token)
+      const profile = serializeProfile(doc)
+      const detailRecord = detailsToRecord(details)
+      const payload = { ...fresh, profile, details: detailRecord }
+      if (!payload.email && session?.data?.user?.email) payload.email = session.data.user.email
+      const res = await updateProfile(payload, user.id, access_token)
+      if (!res.success) throw new Error('Failed to update profile')
+      const saved: Draft = { doc: normalizeProfile(profile, detailRecord), details: normalizeDetails(detailRecord) }
+      setDraft(saved)
+      setSnapshot(JSON.stringify(saved))
+      setUser({ ...fresh, profile, details: detailRecord })
+      setShowErrors(false)
+      toast.success(t('user.settings.profile_builder.toasts.save_success'), { id: loadingToast })
     } catch (error) {
       console.error('Error updating profile:', error)
       toast.error(t('user.settings.profile_builder.toasts.save_error'), { id: loadingToast })
@@ -337,1026 +302,321 @@ const UserProfileBuilder = () => {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-xl nice-shadow p-6">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-      </div>
-    )
+  const publicHref = getUriWithOrg(orgslug, `/user/${user.username}`)
+
+  const renderEditor = (s: ProfileSection) => {
+    switch (s.type) {
+      case 'details':
+        return <DetailsEditor details={details} onChange={setDetails} />
+      case 'text':
+        return <TextEditor section={s} onChange={updateSection} />
+      case 'links':
+        return <LinksEditor section={s} onChange={updateSection} />
+      case 'skills':
+        return <SkillsEditor section={s} onChange={updateSection} />
+      case 'experience':
+        return <ExperienceEditor section={s} onChange={updateSection} />
+      case 'education':
+        return <EducationEditor section={s} onChange={updateSection} />
+      case 'affiliation':
+        return <AffiliationEditor section={s} onChange={updateSection} />
+      case 'image-gallery':
+        return <GalleryEditor section={s} onChange={updateSection} />
+      case 'featured':
+        return (
+          <FeaturedEditor
+            section={s}
+            onChange={updateSection}
+            options={featuredOptions}
+            loading={myCourses.isLoading || myCertificates.isLoading || (badgesLoading && !!org?.id)}
+          />
+        )
+      case 'courses':
+        return <p className="text-sm text-neutral-500">{t('user.settings.profile_builder.editors.courses.info')}</p>
+    }
   }
 
   return (
-    <div className="bg-white rounded-xl nice-shadow">
-      <div className="flex flex-col gap-0">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 px-4 sm:px-5 py-3 mx-3 my-3 rounded-md">
-          <div className="flex flex-col -space-y-1">
-            <h1 className="font-bold text-xl text-gray-800 flex items-center">
-              {t('user.settings.profile_builder.title')}
-              <span className="text-xs ms-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full">{t('user.settings.profile_builder.beta')}</span>
-            </h1>
-            <h2 className="text-gray-500 text-md">{t('user.settings.profile_builder.subtitle')}</h2>
-          </div>
-          <Button
-            variant="default"
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-black hover:bg-black/90"
+    <>
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] gap-5 items-start">
+        <div className="flex flex-col gap-5 min-w-0">
+          {/* Header fields */}
+          <SectionCard
+            icon={<IdentificationCard size={18} weight="duotone" />}
+            title={t('user.profile.builder.header', { defaultValue: 'Profile header' })}
+            description={t('user.profile.builder.header_hint', { defaultValue: 'Shown under your name. Name, photo and bio live in Personal info.' })}
+            actions={
+              <Link href={publicHref} target="_blank" className={buttonClass('secondary', 'sm')}>
+                <ArrowSquareOut size={13} />
+                {t('user.profile.builder.view_public', { defaultValue: 'View public profile' })}
+              </Link>
+            }
           >
-            {isSaving ? t('user.settings.profile_builder.saving') : t('user.settings.profile_builder.save_changes')}
-          </Button>
-        </div>
-
-        <div className="mx-5 mb-5 space-y-6">
-
-        {/* Main Content */}
-        <div className="grid grid-cols-4 gap-6">
-          {/* Sections Panel */}
-          <div className="col-span-1 border-e pe-4">
-            <h3 className="font-medium mb-4">{t('user.settings.profile_builder.sections')}</h3>
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="sections">
-                {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="space-y-2"
-                  >
-                    {profileData.sections.map((section, index) => (
-                      <Draggable
-                        key={section.id}
-                        draggableId={section.id}
-                        index={index}
-                      >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            onClick={() => setSelectedSection(index)}
-                            className={`p-4 bg-white/80 backdrop-blur-xs rounded-lg cursor-pointer border ${
-                              selectedSection === index 
-                                ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 shadow-xs' 
-                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50 hover:shadow-xs'
-                            } ${snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-500/20 rotate-2' : ''}`}
-                          >
-                            <div className="flex items-center justify-between group">
-                              <div className="flex items-center space-x-3">
-                                <div {...provided.dragHandleProps} 
-                                  className={`p-1.5 rounded-md transition-colors duration-200 ${
-                                    selectedSection === index 
-                                      ? 'text-blue-500 bg-blue-100/50' 
-                                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                                  }`}>
-                                  <GripVertical size={16} />
-                                </div>
-                                <div className={`p-1.5 rounded-md ${
-                                  selectedSection === index 
-                                    ? 'text-blue-600 bg-blue-100/50' 
-                                    : 'text-gray-600 bg-gray-100/50'
-                                }`}>
-                                  {React.createElement(SECTION_TYPES[section.type].icon, {
-                                    size: 16
-                                  })}
-                                </div>
-                                <span className={`text-sm font-medium truncate ${
-                                  selectedSection === index 
-                                    ? 'text-blue-700' 
-                                    : 'text-gray-700'
-                                }`}>
-                                  {section.title}
-                                </span>
-                              </div>
-                              <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setSelectedSection(index)
-                                  }}
-                                  className={`p-1.5 rounded-md transition-colors duration-200 ${
-                                    selectedSection === index
-                                      ? 'text-blue-500 hover:bg-blue-100'
-                                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                                  }`}
-                                >
-                                  <Edit size={14} />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    deleteSection(index)
-                                  }}
-                                  className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors duration-200"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-
-            <div className="pt-4">
-              <Select
-                onValueChange={(value: keyof typeof SECTION_TYPES) => {
-                  if (value) {
-                    addSection(value)
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full p-0 border-0 bg-black">
-                  <div className="w-full">
-                    <Button variant="default" className="w-full bg-black hover:bg-black/90 text-white">
-                      <Plus className="h-4 w-4 me-2" />
-                      {t('user.settings.profile_builder.add_section')}
-                    </Button>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(SECTION_TYPES).map(([type, { icon: Icon, labelKey, descriptionKey }]) => (
-                    <SelectItem key={type} value={type}>
-                      <div className="flex items-center space-x-3 py-1">
-                        <div className="p-1.5 bg-gray-50 rounded-md">
-                          <Icon size={16} className="text-gray-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-sm text-gray-700">{t(labelKey)}</div>
-                          <div className="text-xs text-gray-500">{t(descriptionKey)}</div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2 min-w-0">
+                <AccountLabel htmlFor="profile-headline" hint={`${LIMITS.headline - doc.headline.length}`}>
+                  {t('user.profile.builder.headline', { defaultValue: 'Headline' })}
+                </AccountLabel>
+                <AccountInput
+                  id="profile-headline"
+                  value={doc.headline}
+                  maxLength={LIMITS.headline}
+                  onChange={(e) => setDoc({ headline: e.target.value })}
+                  placeholder={t('user.profile.builder.headline_placeholder', { defaultValue: 'e.g. Design lead teaching interface design' })}
+                  dir="auto"
+                />
+              </div>
+              <div className="min-w-0">
+                <AccountLabel htmlFor="profile-location">{t('user.settings.general.labels.location', { defaultValue: 'Location' })}</AccountLabel>
+                <AccountInput
+                  id="profile-location"
+                  value={doc.location}
+                  maxLength={LIMITS.location}
+                  onChange={(e) => setDoc({ location: e.target.value })}
+                  placeholder={t('user.profile.builder.location_placeholder', { defaultValue: 'City, country' })}
+                  dir="auto"
+                />
+              </div>
+              <div className="min-w-0">
+                <AccountLabel htmlFor="profile-pronouns">{t('user.profile.builder.pronouns', { defaultValue: 'Pronouns' })}</AccountLabel>
+                <AccountInput
+                  id="profile-pronouns"
+                  value={doc.pronouns}
+                  maxLength={LIMITS.pronouns}
+                  onChange={(e) => setDoc({ pronouns: e.target.value })}
+                  placeholder={t('user.profile.builder.pronouns_placeholder', { defaultValue: 'e.g. she/her' })}
+                  dir="auto"
+                />
+              </div>
+              <div className="sm:col-span-2 min-w-0">
+                <AccountLabel htmlFor="profile-about" hint={t('user.profile.builder.about_hint', { defaultValue: 'Replaces your short bio on the profile page' })}>
+                  {t('common.about')}
+                </AccountLabel>
+                <RichTextField
+                  id="profile-about"
+                  value={doc.about}
+                  onChange={(about) => setDoc({ about })}
+                  max={LIMITS.about}
+                  placeholder={t('user.profile.builder.about_placeholder', { defaultValue: 'A few lines about you, what you teach or what you are learning.' })}
+                />
+              </div>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Editor Panel */}
-          <div className="col-span-3">
-            {selectedSection !== null ? (
-              <SectionEditor
-                section={profileData.sections[selectedSection]}
-                onChange={(updatedSection) => updateSection(selectedSection, updatedSection as ProfileSection)}
-              />
+          {/* Sections */}
+          <SectionCard
+            icon={<SquaresFour size={18} weight="duotone" />}
+            title={t('user.settings.profile_builder.sections')}
+            description={t('user.profile.builder.sections_hint', { defaultValue: 'Drag to reorder (or focus the handle and use Space and the arrow keys). Hidden sections stay saved but are not shown.' })}
+          >
+            {doc.sections.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-neutral-200 px-5 py-8 text-center">
+                <p className="text-sm font-semibold text-neutral-800">{t('user.profile.builder.no_sections', { defaultValue: 'No sections yet' })}</p>
+                <p className="mt-1 text-sm text-neutral-500">{t('user.profile.builder.no_sections_hint', { defaultValue: 'Start from a template or add sections one by one.' })}</p>
+              </div>
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">
-                {t('user.settings.profile_builder.select_section')}
-              </div>
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="profile-sections">
+                  {(provided) => (
+                    <ul {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+                      {doc.sections.map((s, index) => {
+                        const meta = SECTION_META[s.type]
+                        const Icon = meta.icon
+                        const isOpen = open === s.id
+                        const count = itemCount(s, details)
+                        const hasError = showErrors && errorSections.has(s.id)
+                        return (
+                          <Draggable key={s.id} draggableId={s.id} index={index}>
+                            {(drag, snap) => (
+                              <li
+                                ref={drag.innerRef}
+                                {...drag.draggableProps}
+                                className={`rounded-xl bg-white transition-shadow ${
+                                  hasError ? 'ring-2 ring-rose-300' : isOpen ? 'ring-2 ring-neutral-900' : 'ring-1 ring-inset ring-neutral-200'
+                                } ${snap.isDragging ? 'shadow-lg' : ''}`}
+                              >
+                                <div className="flex items-center gap-1.5 ps-1 pe-1.5 h-12">
+                                  <span
+                                    {...drag.dragHandleProps}
+                                    aria-label={t('user.profile.builder.drag', { defaultValue: 'Drag to reorder {{name}}', name: sectionTitle(s) })}
+                                    className="p-1.5 rounded-lg text-neutral-300 hover:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20 shrink-0 cursor-grab"
+                                  >
+                                    <DotsSixVertical size={16} weight="bold" />
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpen(isOpen ? null : s.id)}
+                                    aria-expanded={isOpen}
+                                    className="flex-1 min-w-0 flex items-center gap-2.5 h-full text-start focus-visible:outline-none"
+                                  >
+                                    <span className={`shrink-0 ${s.hidden ? 'text-neutral-300' : 'text-neutral-500'}`}>
+                                      <Icon size={17} weight="duotone" />
+                                    </span>
+                                    <span className={`min-w-0 truncate text-sm font-medium ${s.hidden ? 'text-neutral-400' : 'text-neutral-800'}`} dir="auto">
+                                      {sectionTitle(s)}
+                                    </span>
+                                    {count !== null && <span className="shrink-0 text-xs tabular-nums text-neutral-400">{count}</span>}
+                                    {s.hidden && <StatusPill className="shrink-0">{t('user.profile.builder.hidden', { defaultValue: 'Hidden' })}</StatusPill>}
+                                    {hasError && <WarningCircle size={15} weight="fill" className="shrink-0 text-rose-500" />}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateSection({ ...s, hidden: !s.hidden })}
+                                    aria-pressed={!!s.hidden}
+                                    aria-label={s.hidden ? t('user.profile.builder.show', { defaultValue: 'Show on profile' }) : t('user.profile.builder.hide', { defaultValue: 'Hide from profile' })}
+                                    title={s.hidden ? t('user.profile.builder.show', { defaultValue: 'Show on profile' }) : t('user.profile.builder.hide', { defaultValue: 'Hide from profile' })}
+                                    className="w-8 h-8 rounded-lg text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 flex items-center justify-center shrink-0"
+                                  >
+                                    {s.hidden ? <EyeSlash size={16} /> : <Eye size={16} />}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpen(isOpen ? null : s.id)}
+                                    aria-label={isOpen ? t('common.close') : t('user.profile.builder.edit_section', { defaultValue: 'Edit section' })}
+                                    className="w-8 h-8 rounded-lg text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 flex items-center justify-center shrink-0"
+                                  >
+                                    <CaretDown size={14} weight="bold" className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                  </button>
+                                </div>
+                                {isOpen && (
+                                  <div className="border-t border-neutral-100 px-3 sm:px-4 py-4 space-y-4">
+                                      <div className="max-w-sm">
+                                        <AccountLabel htmlFor={`${s.id}-title`}>{t('user.settings.profile_builder.editors.section_title')}</AccountLabel>
+                                        <AccountInput
+                                          id={`${s.id}-title`}
+                                          value={s.title}
+                                          maxLength={LIMITS.title}
+                                          onChange={(e) => updateSection({ ...s, title: e.target.value })}
+                                          placeholder={t(meta.labelKey, { defaultValue: meta.label })}
+                                          dir="auto"
+                                        />
+                                      </div>
+                                    {renderEditor(s)}
+                                    <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-neutral-100">
+                                      <Button size="sm" variant="ghost" icon={<ArrowUp size={13} />} disabled={index === 0} onClick={() => move(index, index - 1)}>
+                                        {t('common.move_up')}
+                                      </Button>
+                                      <Button size="sm" variant="ghost" icon={<ArrowDown size={13} />} disabled={index === doc.sections.length - 1} onClick={() => move(index, index + 1)}>
+                                        {t('common.move_down')}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="danger-ghost"
+                                        className="ms-auto"
+                                        icon={<Trash size={13} />}
+                                        onClick={() => {
+                                          setSections(doc.sections.filter((x) => x.id !== s.id))
+                                          setOpen(null)
+                                        }}
+                                      >
+                                        {t('user.profile.builder.remove_section', { defaultValue: 'Remove section' })}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </li>
+                            )}
+                          </Draggable>
+                        )
+                      })}
+                      {provided.placeholder}
+                    </ul>
+                  )}
+                </Droppable>
+              </DragDropContext>
             )}
-          </div>
-        </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
-interface SectionEditorProps {
-  section: ProfileSection;
-  onChange: (section: ProfileSection) => void;
-}
-
-const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  switch (section.type) {
-    case 'image-gallery':
-      return <ImageGalleryEditor section={section} onChange={onChange} />
-    case 'text':
-      return <TextEditor section={section} onChange={onChange} />
-    case 'links':
-      return <LinksEditor section={section} onChange={onChange} />
-    case 'skills':
-      return <SkillsEditor section={section} onChange={onChange} />
-    case 'experience':
-      return <ExperienceEditor section={section} onChange={onChange} />
-    case 'education':
-      return <EducationEditor section={section} onChange={onChange} />
-    case 'affiliation':
-      return <AffiliationEditor section={section} onChange={onChange} />
-    case 'courses':
-      return <CoursesEditor section={section} onChange={onChange} />
-    default:
-      return <div>{t('user.settings.profile_builder.unknown_section')}</div>
-  }
-}
-
-const ImageGalleryEditor: React.FC<{
-  section: ImageGallerySection;
-  onChange: (section: ImageGallerySection) => void;
-}> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
-      <div className="flex items-center space-x-2">
-        <ImageIcon className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.image_gallery.title')}</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Title */}
-        <div>
-          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
-          <Input
-            id="title"
-            value={section.title}
-            onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
-          />
-        </div>
-
-        {/* Images */}
-        <div>
-          <Label>{t('user.settings.profile_builder.editors.image_gallery.images')}</Label>
-          <div className="space-y-3 mt-2">
-            {section.images.map((image, index) => (
-              <div key={index} className="grid grid-cols-[2fr_1fr_auto] gap-4 p-4 border rounded-lg">
-                <div>
-                  <Label>{t('user.settings.profile_builder.editors.image_gallery.image_url')}</Label>
-                  <Input
-                    value={image.url}
-                    onChange={(e) => {
-                      const newImages = [...section.images]
-                      newImages[index] = { ...image, url: e.target.value }
-                      onChange({ ...section, images: newImages })
-                    }}
-                    placeholder={t('user.settings.profile_builder.editors.image_gallery.enter_image_url')}
-                  />
-                </div>
-                <div>
-                  <Label>{t('user.settings.profile_builder.editors.image_gallery.caption')}</Label>
-                  <Input
-                    value={image.caption || ''}
-                    onChange={(e) => {
-                      const newImages = [...section.images]
-                      newImages[index] = { ...image, caption: e.target.value }
-                      onChange({ ...section, images: newImages })
-                    }}
-                    placeholder={t('user.settings.profile_builder.editors.image_gallery.image_caption')}
-                  />
-                </div>
-                <div className="flex flex-col justify-between">
-                  <Label>&nbsp;</Label>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      const newImages = section.images.filter((_, i) => i !== index)
-                      onChange({ ...section, images: newImages })
-                    }}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                {image.url && (
-                  <div className="col-span-3">
-                    <img
-                      src={image.url}
-                      alt={image.caption || ''}
-                      className="mt-2 max-h-32 rounded-lg object-cover"
-                    />
+            {/* Add a section / start from a template */}
+            <div className="mt-4">
+              {adding ? (
+                <div className="rounded-xl bg-neutral-50 p-3 sm:p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-neutral-900">{t('user.settings.profile_builder.add_section')}</p>
+                    <Button variant="ghost" size="icon" onClick={() => setAdding(false)} aria-label={t('common.close')} icon={<X size={14} />} />
                   </div>
-                )}
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newImage: ProfileImage = {
-                  url: '',
-                  caption: ''
-                }
-                onChange({
-                  ...section,
-                  images: [...section.images, newImage]
-                })
-              }}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 me-2" />
-              {t('user.settings.profile_builder.editors.image_gallery.add_image')}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const TextEditor: React.FC<{
-  section: TextSection;
-  onChange: (section: TextSection) => void;
-}> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
-      <div className="flex items-center space-x-2">
-        <TextIcon className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.text.title')}</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Title */}
-        <div>
-          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
-          <Input
-            id="title"
-            value={section.title}
-            onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
-          />
-        </div>
-
-        {/* Content */}
-        <div>
-          <Label htmlFor="content">{t('user.settings.profile_builder.editors.text.content')}</Label>
-          <Textarea
-            id="content"
-            value={section.content}
-            onChange={(e) => onChange({ ...section, content: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.text.enter_content')}
-            className="min-h-[200px]"
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const LinksEditor: React.FC<{
-  section: LinksSection;
-  onChange: (section: LinksSection) => void;
-}> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
-      <div className="flex items-center space-x-2">
-        <LinkIcon className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.links.title')}</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Title */}
-        <div>
-          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
-          <Input
-            id="title"
-            value={section.title}
-            onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
-          />
-        </div>
-
-        {/* Links */}
-        <div>
-          <Label>{t('user.settings.profile_builder.editors.links.links')}</Label>
-          <div className="space-y-3 mt-2">
-            {section.links.map((link, index) => (
-              <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2 p-4 border rounded-lg">
-                <Input
-                  value={link.title}
-                  onChange={(e) => {
-                    const newLinks = [...section.links]
-                    newLinks[index] = { ...link, title: e.target.value }
-                    onChange({ ...section, links: newLinks })
-                  }}
-                  placeholder={t('user.settings.profile_builder.editors.links.link_title')}
-                />
-                <Input
-                  value={link.url}
-                  onChange={(e) => {
-                    const newLinks = [...section.links]
-                    newLinks[index] = { ...link, url: e.target.value }
-                    onChange({ ...section, links: newLinks })
-                  }}
-                  placeholder={t('user.settings.profile_builder.editors.links.url')}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    const newLinks = section.links.filter((_, i) => i !== index)
-                    onChange({ ...section, links: newLinks })
-                  }}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newLink: ProfileLink = {
-                  title: '',
-                  url: ''
-                }
-                onChange({
-                  ...section,
-                  links: [...section.links, newLink]
-                })
-              }}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 me-2" />
-              {t('user.settings.profile_builder.editors.links.add_link')}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const SkillsEditor: React.FC<{
-  section: SkillsSection;
-  onChange: (section: SkillsSection) => void;
-}> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
-      <div className="flex items-center space-x-2">
-        <Award className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.skills.title')}</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Title */}
-        <div>
-          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
-          <Input
-            id="title"
-            value={section.title}
-            onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
-          />
-        </div>
-
-        {/* Skills */}
-        <div>
-          <Label>{t('user.settings.profile_builder.editors.skills.skills')}</Label>
-          <div className="space-y-3 mt-2">
-            {section.skills.map((skill, index) => (
-              <div key={index} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 p-4 border rounded-lg">
-                <Input
-                  value={skill.name}
-                  onChange={(e) => {
-                    const newSkills = [...section.skills]
-                    newSkills[index] = { ...skill, name: e.target.value }
-                    onChange({ ...section, skills: newSkills })
-                  }}
-                  placeholder={t('user.settings.profile_builder.editors.skills.skill_name')}
-                />
-                <Select
-                  value={skill.level || 'intermediate'}
-                  onValueChange={(value) => {
-                    const newSkills = [...section.skills]
-                    newSkills[index] = { ...skill, level: value as ProfileSkill['level'] }
-                    onChange({ ...section, skills: newSkills })
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('user.settings.profile_builder.editors.skills.select_level')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="beginner">{t('user.settings.profile_builder.editors.skills.levels.beginner')}</SelectItem>
-                    <SelectItem value="intermediate">{t('user.settings.profile_builder.editors.skills.levels.intermediate')}</SelectItem>
-                    <SelectItem value="advanced">{t('user.settings.profile_builder.editors.skills.levels.advanced')}</SelectItem>
-                    <SelectItem value="expert">{t('user.settings.profile_builder.editors.skills.levels.expert')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  value={skill.category || ''}
-                  onChange={(e) => {
-                    const newSkills = [...section.skills]
-                    newSkills[index] = { ...skill, category: e.target.value }
-                    onChange({ ...section, skills: newSkills })
-                  }}
-                  placeholder={t('user.settings.profile_builder.editors.skills.category')}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    const newSkills = section.skills.filter((_, i) => i !== index)
-                    onChange({ ...section, skills: newSkills })
-                  }}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newSkill: ProfileSkill = {
-                  name: '',
-                  level: 'intermediate'
-                }
-                onChange({
-                  ...section,
-                  skills: [...section.skills, newSkill]
-                })
-              }}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 me-2" />
-              {t('user.settings.profile_builder.editors.skills.add_skill')}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const ExperienceEditor: React.FC<{
-  section: ExperienceSection;
-  onChange: (section: ExperienceSection) => void;
-}> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
-      <div className="flex items-center space-x-2">
-        <Briefcase className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.experience.title')}</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Title */}
-        <div>
-          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
-          <Input
-            id="title"
-            value={section.title}
-            onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
-          />
-        </div>
-
-        {/* Experiences */}
-        <div>
-          <Label>{t('user.settings.profile_builder.editors.experience.items')}</Label>
-          <div className="space-y-4 mt-2">
-            {section.experiences.map((experience, index) => (
-              <div key={index} className="space-y-4 p-4 border rounded-lg">
-                <div className="grid grid-cols-2 gap-4">
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {SECTION_TYPES.map((type) => {
+                      const meta = SECTION_META[type]
+                      const Icon = meta.icon
+                      const taken = SINGLE_SECTIONS.has(type) && present.has(type)
+                      return (
+                        <li key={type}>
+                          <button
+                            type="button"
+                            disabled={taken}
+                            onClick={() => addSection(type)}
+                            className="w-full h-full flex items-start gap-3 rounded-xl bg-white p-3 text-start nice-shadow hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <span className="w-8 h-8 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
+                              <Icon size={17} weight="duotone" />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block text-sm font-semibold text-neutral-800">{t(meta.labelKey, { defaultValue: meta.label })}</span>
+                              <span className="block text-xs text-neutral-500">
+                                {taken ? t('user.profile.builder.already_added', { defaultValue: 'Already on your profile' }) : t(meta.descriptionKey, { defaultValue: meta.description })}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
                   <div>
-                    <Label>{t('user.settings.profile_builder.editors.experience.role_title')}</Label>
-                    <Input
-                      value={experience.title}
-                      onChange={(e) => {
-                        const newExperiences = [...section.experiences]
-                        newExperiences[index] = { ...experience, title: e.target.value }
-                        onChange({ ...section, experiences: newExperiences })
-                      }}
-                      placeholder={t('user.settings.profile_builder.editors.experience.role_placeholder')}
-                    />
-                  </div>
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.experience.organization')}</Label>
-                    <Input
-                      value={experience.organization}
-                      onChange={(e) => {
-                        const newExperiences = [...section.experiences]
-                        newExperiences[index] = { ...experience, organization: e.target.value }
-                        onChange({ ...section, experiences: newExperiences })
-                      }}
-                      placeholder={t('user.settings.profile_builder.editors.experience.organization_placeholder')}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-[1fr_1fr_auto] gap-4">
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.experience.start_date')}</Label>
-                    <Input
-                      type="date"
-                      value={experience.startDate}
-                      onChange={(e) => {
-                        const newExperiences = [...section.experiences]
-                        newExperiences[index] = { ...experience, startDate: e.target.value }
-                        onChange({ ...section, experiences: newExperiences })
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.experience.end_date')}</Label>
-                    <Input
-                      type="date"
-                      value={experience.endDate || ''}
-                      onChange={(e) => {
-                        const newExperiences = [...section.experiences]
-                        newExperiences[index] = { ...experience, endDate: e.target.value }
-                        onChange({ ...section, experiences: newExperiences })
-                      }}
-                      disabled={experience.current}
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={`current-${index}`}
-                        checked={experience.current}
-                        onChange={(e) => {
-                          const newExperiences = [...section.experiences]
-                          newExperiences[index] = { 
-                            ...experience, 
-                            current: e.target.checked,
-                            endDate: e.target.checked ? undefined : experience.endDate 
-                          }
-                          onChange({ ...section, experiences: newExperiences })
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                      <Label htmlFor={`current-${index}`}>{t('user.settings.profile_builder.editors.experience.current')}</Label>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-2">
+                      {t('user.profile.builder.templates', { defaultValue: 'Start from a template' })}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {TEMPLATES.map((tpl) => (
+                        <Button key={tpl.key} size="sm" icon={tpl.icon} onClick={() => applyTemplate(tpl.key, tpl.adds)}>
+                          {t(`user.profile.builder.template_${tpl.key}`, { defaultValue: tpl.key === 'general' ? 'General' : tpl.key === 'academic' ? 'Academic' : 'Professional' })}
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 </div>
-
-                <div>
-                  <Label>{t('user.settings.profile_builder.editors.experience.description')}</Label>
-                  <Textarea
-                    value={experience.description}
-                    onChange={(e) => {
-                      const newExperiences = [...section.experiences]
-                      newExperiences[index] = { ...experience, description: e.target.value }
-                      onChange({ ...section, experiences: newExperiences })
-                    }}
-                    placeholder={t('user.settings.profile_builder.editors.experience.description_placeholder')}
-                    className="min-h-[100px]"
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const newExperiences = section.experiences.filter((_, i) => i !== index)
-                      onChange({ ...section, experiences: newExperiences })
-                    }}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4 me-2" />
-                    {t('user.settings.general.remove')}
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  <Button icon={<Plus size={13} weight="bold" />} onClick={() => setAdding(true)} disabled={doc.sections.length >= LIMITS.sections}>
+                    {t('user.settings.profile_builder.add_section')}
                   </Button>
+                  {doc.sections.length === 0 &&
+                    TEMPLATES.map((tpl) => (
+                      <Button key={tpl.key} variant="ghost" icon={tpl.icon} onClick={() => applyTemplate(tpl.key, tpl.adds)}>
+                        {t(`user.profile.builder.template_${tpl.key}`, { defaultValue: tpl.key === 'general' ? 'General' : tpl.key === 'academic' ? 'Academic' : 'Professional' })}
+                      </Button>
+                    ))}
                 </div>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newExperience: ProfileExperience = {
-                  title: '',
-                  organization: '',
-                  startDate: new Date().toISOString().split('T')[0],
-                  current: false,
-                  description: ''
-                }
-                onChange({
-                  ...section,
-                  experiences: [...section.experiences, newExperience]
-                })
-              }}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 me-2" />
-              {t('user.settings.profile_builder.editors.experience.add_experience')}
-            </Button>
+              )}
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* Live preview: beside the editor on wide screens, below it otherwise. */}
+        <aside className="min-w-0 xl:sticky xl:top-24" aria-label={t('user.profile.builder.preview', { defaultValue: 'Preview' })}>
+          <div className="flex items-center justify-between gap-3 mb-2 px-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{t('user.profile.builder.preview', { defaultValue: 'Preview' })}</p>
+            <Link href={publicHref} target="_blank" className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 hover:text-neutral-900">
+              {t('user.profile.builder.view_public', { defaultValue: 'View public profile' })}
+              <ArrowSquareOut size={12} />
+            </Link>
           </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const EducationEditor: React.FC<{
-  section: EducationSection;
-  onChange: (section: EducationSection) => void;
-}> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
-      <div className="flex items-center space-x-2">
-        <GraduationCap className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.education.title')}</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Title */}
-        <div>
-          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
-          <Input
-            id="title"
-            value={section.title}
-            onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
-          />
-        </div>
-
-        {/* Education Items */}
-        <div>
-          <Label>{t('user.settings.profile_builder.editors.education.items')}</Label>
-          <div className="space-y-4 mt-2">
-            {section.education.map((edu, index) => (
-              <div key={index} className="space-y-4 p-4 border rounded-lg">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.education.institution')}</Label>
-                    <Input
-                      value={edu.institution}
-                      onChange={(e) => {
-                        const newEducation = [...section.education]
-                        newEducation[index] = { ...edu, institution: e.target.value }
-                        onChange({ ...section, education: newEducation })
-                      }}
-                      placeholder={t('user.settings.profile_builder.editors.education.institution_placeholder')}
-                    />
-                  </div>
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.education.degree')}</Label>
-                    <Input
-                      value={edu.degree}
-                      onChange={(e) => {
-                        const newEducation = [...section.education]
-                        newEducation[index] = { ...edu, degree: e.target.value }
-                        onChange({ ...section, education: newEducation })
-                      }}
-                      placeholder={t('user.settings.profile_builder.editors.education.degree_placeholder')}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>{t('user.settings.profile_builder.editors.education.field')}</Label>
-                  <Input
-                    value={edu.field}
-                    onChange={(e) => {
-                      const newEducation = [...section.education]
-                      newEducation[index] = { ...edu, field: e.target.value }
-                      onChange({ ...section, education: newEducation })
-                    }}
-                    placeholder={t('user.settings.profile_builder.editors.education.field_placeholder')}
-                  />
-                </div>
-
-                <div className="grid grid-cols-[1fr_1fr_auto] gap-4">
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.education.start_date')}</Label>
-                    <Input
-                      type="date"
-                      value={edu.startDate}
-                      onChange={(e) => {
-                        const newEducation = [...section.education]
-                        newEducation[index] = { ...edu, startDate: e.target.value }
-                        onChange({ ...section, education: newEducation })
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.education.end_date')}</Label>
-                    <Input
-                      type="date"
-                      value={edu.endDate || ''}
-                      onChange={(e) => {
-                        const newEducation = [...section.education]
-                        newEducation[index] = { ...edu, endDate: e.target.value }
-                        onChange({ ...section, education: newEducation })
-                      }}
-                      disabled={edu.current}
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={`current-edu-${index}`}
-                        checked={edu.current}
-                        onChange={(e) => {
-                          const newEducation = [...section.education]
-                          newEducation[index] = { 
-                            ...edu, 
-                            current: e.target.checked,
-                            endDate: e.target.checked ? undefined : edu.endDate 
-                          }
-                          onChange({ ...section, education: newEducation })
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                      <Label htmlFor={`current-edu-${index}`}>{t('user.settings.profile_builder.editors.education.current')}</Label>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>{t('user.settings.profile_builder.editors.education.description')}</Label>
-                  <Textarea
-                    value={edu.description || ''}
-                    onChange={(e) => {
-                      const newEducation = [...section.education]
-                      newEducation[index] = { ...edu, description: e.target.value }
-                      onChange({ ...section, education: newEducation })
-                    }}
-                    placeholder={t('user.settings.profile_builder.editors.education.description_placeholder')}
-                    className="min-h-[150px]"
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const newEducation = section.education.filter((_, i) => i !== index)
-                      onChange({ ...section, education: newEducation })
-                    }}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4 me-2" />
-                    {t('user.settings.general.remove')}
-                  </Button>
-                </div>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newEducation: ProfileEducation = {
-                  institution: '',
-                  degree: '',
-                  field: '',
-                  startDate: new Date().toISOString().split('T')[0],
-                  current: false,
-                  description: ''
-                }
-                onChange({
-                  ...section,
-                  education: [...section.education, newEducation]
-                })
-              }}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 me-2" />
-              {t('user.settings.profile_builder.editors.education.add_education')}
-            </Button>
+          <div className="rounded-2xl bg-neutral-100/80 ring-1 ring-inset ring-neutral-200/70 p-2.5 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto">
+            <ProfileView user={user} doc={doc} details={details} isSelf orgslug={orgslug} mode="preview" />
           </div>
-        </div>
+        </aside>
       </div>
-    </div>
+      <StickySaveBar
+        visible={isDirty}
+        saving={isSaving}
+        onSave={handleSave}
+        onDiscard={() => {
+          setDraft(JSON.parse(snapshot))
+          setOpen(null)
+          setShowErrors(false)
+        }}
+      />
+    </>
   )
 }
 
-const AffiliationEditor: React.FC<{
-  section: AffiliationSection;
-  onChange: (section: AffiliationSection) => void;
-}> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
-      <div className="flex items-center space-x-2">
-        <MapPin className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.affiliation.title')}</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Title */}
-        <div>
-          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
-          <Input
-            id="title"
-            value={section.title}
-            onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
-          />
-        </div>
-
-        {/* Affiliations */}
-        <div>
-          <Label>{t('user.settings.profile_builder.editors.affiliation.affiliations')}</Label>
-          <div className="space-y-3 mt-2">
-            {section.affiliations.map((affiliation, index) => (
-              <div key={index} className="space-y-4 p-4 border rounded-lg">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.affiliation.name')}</Label>
-                    <Input
-                      value={affiliation.name}
-                      onChange={(e) => {
-                        const newAffiliations = [...section.affiliations]
-                        newAffiliations[index] = { ...affiliation, name: e.target.value }
-                        onChange({ ...section, affiliations: newAffiliations })
-                      }}
-                      placeholder={t('user.settings.profile_builder.editors.affiliation.name_placeholder')}
-                    />
-                  </div>
-                  <div>
-                    <Label>{t('user.settings.profile_builder.editors.affiliation.logo_url')}</Label>
-                    <Input
-                      value={affiliation.logoUrl}
-                      onChange={(e) => {
-                        const newAffiliations = [...section.affiliations]
-                        newAffiliations[index] = { ...affiliation, logoUrl: e.target.value }
-                        onChange({ ...section, affiliations: newAffiliations })
-                      }}
-                      placeholder={t('user.settings.profile_builder.editors.affiliation.logo_url_placeholder')}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>{t('user.settings.profile_builder.editors.affiliation.description')}</Label>
-                  <Textarea
-                    value={affiliation.description}
-                    onChange={(e) => {
-                      const newAffiliations = [...section.affiliations]
-                      newAffiliations[index] = { ...affiliation, description: e.target.value }
-                      onChange({ ...section, affiliations: newAffiliations })
-                    }}
-                    placeholder={t('user.settings.profile_builder.editors.affiliation.description_placeholder')}
-                    className="min-h-[100px]"
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      const newAffiliations = section.affiliations.filter((_, i) => i !== index)
-                      onChange({ ...section, affiliations: newAffiliations })
-                    }}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4 me-2" />
-                    {t('user.settings.general.remove')}
-                  </Button>
-                </div>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newAffiliation: ProfileAffiliation = {
-                  name: '',
-                  description: '',
-                  logoUrl: ''
-                }
-                onChange({
-                  ...section,
-                  affiliations: [...section.affiliations, newAffiliation]
-                })
-              }}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 me-2" />
-              {t('user.settings.profile_builder.editors.affiliation.add_affiliation')}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const CoursesEditor: React.FC<{
-  section: CoursesSection;
-  onChange: (section: CoursesSection) => void;
-}> = ({ section, onChange }) => {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
-      <div className="flex items-center space-x-2">
-        <BookOpen className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.courses.title')}</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Title */}
-        <div>
-          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
-          <Input
-            id="title"
-            value={section.title}
-            onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
-          />
-        </div>
-
-        <div className="text-sm text-gray-500 italic">
-          {t('user.settings.profile_builder.editors.courses.info')}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default UserProfileBuilder 
+export default UserProfileBuilder

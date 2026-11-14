@@ -6,10 +6,11 @@ import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import NewAssignment from '@components/Objects/Modals/Activities/Create/NewActivityModal/AssignmentActivityModal'
-import { getCourse } from '@services/courses/courses'
+import { getCourseMetadata } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getUriWithOrg } from '@services/config/config'
-import { ArrowLeft, BookOpen, Layers, FolderPlus, ChevronRight, PlusCircle, Backpack } from 'lucide-react'
+import { BookOpen, Stack, FolderPlus, CaretRight, PlusCircle, Backpack } from '@phosphor-icons/react'
+import { Button, buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 const cleanCourseUuid = (u: string) => u?.replace(/^course_/, '') ?? u
@@ -39,7 +40,9 @@ export default function NewAssignmentModal({
 
   const { data: courseDetail, isLoading: courseLoading } = useQuery({
     queryKey: ['assignment-course-structure', selectedCourseUuid],
-    queryFn: () => getCourse(selectedCourseUuid as string, null, access_token),
+    // The plain course read carries no chapters, so every course looked
+    // empty here; the meta read is the one with the structure.
+    queryFn: () => getCourseMetadata(cleanCourseUuid(selectedCourseUuid as string), null, access_token, { withUnpublishedActivities: true }),
     enabled: !!selectedCourseUuid && !!access_token && open,
     staleTime: 30_000,
   })
@@ -64,7 +67,7 @@ export default function NewAssignmentModal({
     : null
 
   const rowBtn =
-    'w-full flex items-center gap-3 rounded-xl border border-neutral-100 bg-white px-4 py-3 text-start hover:border-neutral-200 hover:bg-neutral-50 transition-colors'
+    'group w-full flex items-center gap-3 rounded-xl bg-white px-3.5 py-2.5 text-start ring-1 ring-inset ring-neutral-200/80 hover:ring-neutral-300 hover:bg-neutral-50/60 transition-colors'
 
   const content = (
     <div className="space-y-4">
@@ -72,7 +75,7 @@ export default function NewAssignmentModal({
       {step === 'course' && (
         <>
           <StepHint
-            icon={<BookOpen size={15} className="text-gray-400" />}
+            icon={<BookOpen size={15} className="text-neutral-400" />}
             text={t('dashboard.assignments.create_flow.pick_course', {
               defaultValue: 'Choose the course this assignment belongs to.',
             })}
@@ -83,7 +86,7 @@ export default function NewAssignmentModal({
                 <button
                   key={c.course_uuid}
                   onClick={() => {
-                    setSelectedCourseUuid(cleanCourseUuid(c.course_uuid))
+                    setSelectedCourseUuid(c.course_uuid)
                     setStep('chapter')
                   }}
                   className={rowBtn}
@@ -94,17 +97,17 @@ export default function NewAssignmentModal({
                       className="w-[52px] h-[30px] rounded-md ring-1 ring-black/10 flex-none"
                     />
                   ) : (
-                    <div className="w-[52px] h-[30px] rounded-md ring-1 ring-inset ring-black/10 bg-gray-100 flex-none" />
+                    <div className="w-[52px] h-[30px] rounded-md ring-1 ring-inset ring-black/10 bg-neutral-100 flex-none" />
                   )}
-                  <span className="flex-1 min-w-0 truncate font-semibold text-gray-800">{c.name}</span>
-                  <ChevronRight size={16} className="text-gray-300 flex-none" />
+                  <span className="flex-1 min-w-0 truncate text-sm font-semibold text-neutral-800">{c.name}</span>
+                  <CaretRight size={14} className="text-neutral-300 group-hover:text-neutral-500 flex-none rtl:rotate-180 transition-colors" />
                 </button>
               ))}
             </div>
           ) : (
             // No courses → invite to create one first.
             <EmptyCta
-              icon={<FolderPlus size={26} />}
+              icon={<FolderPlus size={24} />}
               title={t('dashboard.assignments.create_flow.no_courses_title', {
                 defaultValue: 'Create a course first',
               })}
@@ -122,9 +125,8 @@ export default function NewAssignmentModal({
       {/* ---- Step 2: choose a chapter ---- */}
       {step === 'chapter' && (
         <>
-          <BackRow onClick={() => setStep('course')} label={courseDetail?.name} />
           <StepHint
-            icon={<Layers size={15} className="text-gray-400" />}
+            icon={<Stack size={15} className="text-neutral-400" />}
             text={t('dashboard.assignments.create_flow.pick_chapter', {
               defaultValue: 'Choose the chapter to place this assignment in.',
             })}
@@ -132,7 +134,7 @@ export default function NewAssignmentModal({
           {courseLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 rounded-xl bg-gray-100 animate-pulse" />
+                <div key={i} className="h-11 rounded-xl bg-neutral-100 animate-pulse" />
               ))}
             </div>
           ) : chapters.length > 0 ? (
@@ -149,17 +151,17 @@ export default function NewAssignmentModal({
                   <span className="w-7 h-7 rounded-lg bg-neutral-100 text-neutral-600 text-xs font-bold flex items-center justify-center flex-none tabular-nums">
                     {i + 1}
                   </span>
-                  <span className="flex-1 min-w-0 truncate font-semibold text-gray-800">
+                  <span className="flex-1 min-w-0 truncate text-sm font-semibold text-neutral-800">
                     {ch.name || t('dashboard.assignments.create_flow.untitled_chapter', { defaultValue: 'Untitled chapter' })}
                   </span>
-                  <ChevronRight size={16} className="text-gray-300 flex-none" />
+                  <CaretRight size={14} className="text-neutral-300 group-hover:text-neutral-500 flex-none rtl:rotate-180 transition-colors" />
                 </button>
               ))}
             </div>
           ) : (
             // Course has no chapters → send them to the editor to add one.
             <EmptyCta
-              icon={<Layers size={26} />}
+              icon={<Stack size={24} />}
               title={t('dashboard.assignments.create_flow.no_chapters_title', {
                 defaultValue: 'This course has no chapters yet',
               })}
@@ -177,7 +179,6 @@ export default function NewAssignmentModal({
       {/* ---- Step 3: the assignment form (reused from the course editor) ---- */}
       {step === 'form' && courseWrapper && selectedChapterId != null && (
         <>
-          <BackRow onClick={() => setStep('chapter')} label={courseDetail?.name} />
           <NewAssignment
             course={courseWrapper}
             chapterId={selectedChapterId}
@@ -189,41 +190,40 @@ export default function NewAssignmentModal({
     </div>
   )
 
+  const stepDescription =
+    step === 'course'
+      ? t('dashboard.assignments.create_flow.step_course', { defaultValue: 'Step 1 of 3 · Course' })
+      : step === 'chapter'
+        ? t('dashboard.assignments.create_flow.step_chapter', { defaultValue: 'Step 2 of 3 · Chapter' }) + (courseDetail?.name ? ` · ${courseDetail.name}` : '')
+        : t('dashboard.assignments.create_flow.step_details', { defaultValue: 'Step 3 of 3 · Details' }) + (courseDetail?.name ? ` · ${courseDetail.name}` : '')
+
   return (
     <Modal
       isDialogOpen={open}
       onOpenChange={(o) => { if (!o) handleClose() }}
-      minWidth="sm"
-      dialogTitle={
-        <span className="flex items-center gap-2">
-          <Backpack size={20} className="text-amber-500" />
-          {t('dashboard.assignments.create_flow.title', { defaultValue: 'New Assignment' })}
-        </span>
-      }
+      size="md"
+      icon={<Backpack size={16} />}
+      // Back steps through the flow instead of a link inside the body.
+      onBack={step === 'chapter' ? () => setStep('course') : step === 'form' ? () => setStep('chapter') : undefined}
+      dialogTitle={t('dashboard.assignments.create_flow.title', { defaultValue: 'New Assignment' })}
+      dialogDescription={stepDescription}
       dialogContent={content}
+      // The form step brings its own submit; the picking steps only need a way out.
+      footer={
+        step !== 'form' ? (
+          <Button onClick={handleClose}>{t('common.cancel')}</Button>
+        ) : undefined
+      }
     />
   )
 }
 
 function StepHint({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-500">
+    <div className="flex items-center gap-2 text-sm text-neutral-500">
       {icon}
       <span>{text}</span>
     </div>
-  )
-}
-
-function BackRow({ onClick, label }: { onClick: () => void; label?: string }) {
-  const { t } = useTranslation()
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors"
-    >
-      <ArrowLeft size={14} />
-      <span className="truncate max-w-[220px]">{label || t('common.back')}</span>
-    </button>
   )
 }
 
@@ -244,15 +244,11 @@ function EmptyCta({
 }) {
   return (
     <div className="flex flex-col items-center text-center py-8 px-4 gap-3">
-      <div className="bg-gray-100 text-gray-400 rounded-2xl p-4">{icon}</div>
-      <p className="font-bold text-gray-800">{title}</p>
-      <p className="text-sm text-gray-500 max-w-sm">{desc}</p>
-      <Link
-        href={href}
-        onClick={onNavigate}
-        className="mt-1 inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 transition-colors"
-      >
-        <PlusCircle size={15} />
+      <div className="w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-400 flex items-center justify-center">{icon}</div>
+      <p className="text-base font-semibold text-neutral-900">{title}</p>
+      <p className="text-sm text-neutral-500 max-w-sm">{desc}</p>
+      <Link href={href} onClick={onNavigate} className={buttonClass('primary', 'md', 'mt-1')}>
+        <PlusCircle size={14} />
         {cta}
       </Link>
     </div>

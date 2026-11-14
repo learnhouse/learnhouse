@@ -90,6 +90,8 @@ class OrganizationUser(BaseModel):
     # Active-user billing (current UTC month): distinct days seen + active flag.
     visit_days: int = 0
     is_active: bool = False
+    # People data (manager, department, title) when the org keeps it.
+    profile: Optional[dict] = None
 
 
 # Rebuild models to resolve forward references after all classes are defined

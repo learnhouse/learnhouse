@@ -1,13 +1,12 @@
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunity } from '@services/communities/communities'
 import { getDiscussions, DiscussionWithAuthor } from '@services/communities/discussions'
-import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
-import { JsonLd } from '@components/SEO/JsonLd'
+import { getCommunityThumbnailMediaDirectory } from '@services/media/media'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { resolveForPage } from '@/lib/seo/resolve.server'
+import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
 import CommunityClient from './community'
 
 type MetadataProps = {
@@ -17,79 +16,37 @@ type MetadataProps = {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
-  const communityUuid = `community_${params.communityuuid}`
-  const [org, community] = await Promise.all([
-    getOrganizationContextInfo(params.orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
-    // Community might not exist or user doesn't have access
-    getCommunity(communityUuid, { revalidate: 120, tags: ['communities'] }).catch(() => null),
+  const { uuid, resolved } = await resolveForPage(params.orgslug, 'community', params.communityuuid, (k) => `/community/${k}`)
+  const session = await getServerSession()
+  const [ctx, community] = await Promise.all([
+    getSeoContext(params.orgslug),
+    getCommunity(`community_${uuid}`, { revalidate: 120, tags: ['communities'] }, session?.tokens?.access_token).catch(() => null),
   ])
-
-  const seoConfig = getOrgSeoConfig(org)
-
-  const title = buildPageTitle(community ? community.name : 'Community', org.name, seoConfig)
-  const description = community?.description || seoConfig.default_meta_description || `Community discussions from ${org.name}`
-
-  const ogImageUrl = seoConfig.default_og_image
-    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
-    : null
-  const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = await getServerCanonicalUrl(params.orgslug, `/community/${params.communityuuid}`)
-
-  return {
-    title,
-    description,
-    robots: {
-      index: !seoConfig.noindex_communities,
-      follow: true,
-      nocache: true,
-      googleBot: {
-        index: !seoConfig.noindex_communities,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      images: [
-        {
-          url: imageUrl,
-          width: 800,
-          height: 600,
-          alt: org.name,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [imageUrl],
-      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
-    },
-  }
+  if (!community) return noindexMetadata(ctx.org?.name || 'Community')
+  const key = community.slug || uuid
+  return buildResourceMetadata({
+    ctx,
+    name: community.name,
+    description: community.description || `Community discussions from ${ctx.org?.name}`,
+    canonical: await ctx.url(`/community/${key}`),
+    seo: community.seo,
+    thumbnail: community.thumbnail_image
+      ? getCommunityThumbnailMediaDirectory(ctx.org?.org_uuid, community.community_uuid, community.thumbnail_image)
+      : undefined,
+    generatedImage: await ctx.url(`/og/community/${key}`),
+    indexable: !!community.public && !ctx.seo.noindex_communities && !resolved?.restricted,
+    modifiedTime: community.update_date,
+  })
 }
 
-const CommunityPage = async (params: any) => {
-  const { orgslug, communityuuid } = await params.params
-  const communityUuid = `community_${communityuuid}`
+const CommunityPage = async (props: MetadataProps) => {
+  const { orgslug, communityuuid } = await props.params
+  const { uuid } = await resolveForPage(orgslug, 'community', communityuuid, (k) => `/community/${k}`)
+  const communityUuid = `community_${uuid}`
 
-  const [session, org] = await Promise.all([
-    getServerSession(),
-    getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
-  ])
+  const [session, ctx] = await Promise.all([getServerSession(), getSeoContext(orgslug)])
   const access_token = session?.tokens?.access_token
-  const org_id = org.id
+  const org_id = ctx.org.id
 
   let communityError: { status?: number } | null = null
   let discussionsError: unknown = null
@@ -97,26 +54,19 @@ const CommunityPage = async (params: any) => {
   // The discussions only need the uuid and token, so fetch them alongside the
   // community instead of after it; they're only used if the community loads.
   const [community, fetchedDiscussions] = await Promise.all([
-    getCommunity(
-      communityUuid,
-      { revalidate: 120, tags: ['communities'] },
-      access_token ? access_token : undefined
-    ).catch((error: any) => {
-      communityError = { status: error?.status }
-      console.error('Failed to fetch community:', error)
-      return null
-    }),
-    getDiscussions(
-      communityUuid,
-      'recent',
-      1,
-      10,
-      { revalidate: 120, tags: ['discussions'] },
-      access_token ? access_token : undefined
-    ).catch((error) => {
-      discussionsError = error
-      return [] as DiscussionWithAuthor[]
-    }),
+    getCommunity(communityUuid, { revalidate: 120, tags: ['communities'] }, access_token ? access_token : undefined).catch(
+      (error: any) => {
+        communityError = { status: error?.status }
+        console.error('Failed to fetch community:', error)
+        return null
+      },
+    ),
+    getDiscussions(communityUuid, 'recent', 1, 10, { revalidate: 120, tags: ['discussions'] }, access_token ? access_token : undefined).catch(
+      (error) => {
+        discussionsError = error
+        return [] as DiscussionWithAuthor[]
+      },
+    ),
   ])
 
   let discussions: DiscussionWithAuthor[] = []
@@ -143,36 +93,7 @@ const CommunityPage = async (params: any) => {
     )
   }
 
-  const communityJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'DiscussionForumPosting',
-    headline: community.name,
-    description: community.description,
-    author: {
-      '@type': 'Organization',
-      name: org.name,
-    },
-    url: await getServerCanonicalUrl(orgslug, `/community/${communityuuid}`),
-  }
-
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
-    { name: 'Communities', url: await getServerCanonicalUrl(orgslug, '/communities') },
-    { name: community.name || 'Community', url: await getServerCanonicalUrl(orgslug, `/community/${communityuuid}`) },
-  ])
-
-  return (
-    <>
-      <JsonLd data={breadcrumbJsonLd} />
-      <JsonLd data={communityJsonLd} />
-      <CommunityClient
-        community={community}
-        initialDiscussions={discussions || []}
-        orgslug={orgslug}
-        org_id={org_id}
-      />
-    </>
-  )
+  return <CommunityClient community={community} initialDiscussions={discussions || []} orgslug={orgslug} org_id={org_id} />
 }
 
 export default CommunityPage

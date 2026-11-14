@@ -636,7 +636,7 @@ async def _update_discussion(ctx: ToolContext, p: UpdateDiscussionParams):
     if edits and row.author_id != acting_user_id:
         # A moderator rewriting someone else's post: it still shows under
         # their name, so a person has to agree to it.
-        require_approval(ctx, "Editing a post written by someone else needs the user's approval.")
+        require_approval(ctx, "Editing a post written by someone else needs the user's approval.", person=True)
     if p.pinned is not None or p.locked is not None:
         if not await _can_moderate(
             ctx.request, ctx.user, acting_user_id, AccessAction.UPDATE, community, ctx.db_session

@@ -4,7 +4,7 @@ import logging
 import math
 import re
 from datetime import datetime, timedelta
-from typing import Sequence
+from typing import Optional, Sequence
 from uuid import uuid4
 
 try:
@@ -41,6 +41,7 @@ from src.db.courses.assignments import (
     AssignmentUserSubmissionCreate,
     AssignmentUserSubmissionRead,
     AssignmentUserSubmissionStatus,
+    AIGradingModeEnum,
     GradingTypeEnum,
     SolutionRevealEnum,
 )
@@ -446,6 +447,31 @@ def _apply_solution_visibility(
     if not unlocked:
         result.solution = None
         result.solution_file = None
+    return result
+
+
+async def _hide_ai_rubric(
+    request: Request,
+    db_session: AsyncSession,
+    current_user,
+    course_uuid: str,
+    assignment: Assignment,
+    result: AssignmentRead,
+    is_instructor: bool | None = None,
+) -> AssignmentRead:
+    """Blank the AI grading rubric for anyone who cannot grade.
+
+    The rubric says what earns points (and often quotes the expected answer),
+    so a learner reading it before submitting would know exactly what to
+    write. Skips the role lookup when there is no rubric to hide.
+    """
+    if not (assignment.ai_grading_instructions or assignment.ai_grading_task_instructions):
+        return result
+    if is_instructor is None:
+        is_instructor = await _is_assignment_instructor(request, current_user, course_uuid, db_session)
+    if not is_instructor:
+        result.ai_grading_instructions = None
+        result.ai_grading_task_instructions = None
     return result
 
 
@@ -1186,6 +1212,7 @@ async def read_assignment(
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
+    lang: Optional[str] = None,
 ):
     statement = (
         select(Assignment, Course.course_uuid, Activity.activity_uuid)
@@ -1211,12 +1238,25 @@ async def read_assignment(
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
     result.activity_uuid = activity_uuid
+    await _localize_assignment(db_session, assignment, result, lang)
     # The model answer is reveal-gated: an instructor always sees it, a learner
     # only once their own submission has unlocked it.
     unlocked = await _resolve_solution_visibility(
         request, db_session, current_user, course_uuid, assignment
     )
-    return _apply_solution_visibility(result, assignment, unlocked=unlocked)
+    result = _apply_solution_visibility(result, assignment, unlocked=unlocked)
+    return await _hide_ai_rubric(request, db_session, current_user, course_uuid, assignment, result)
+
+
+async def _localize_assignment(db_session: AsyncSession, assignment: Assignment, result: AssignmentRead, lang: Optional[str]) -> None:
+    """Translated title/description (multilingual courses, published only)."""
+    if not lang:
+        return
+    from src.services.courses.translations.assignments import apply_to_assignment, published_assignment_extra
+
+    course = await db_session.get(Course, assignment.course_id)
+    extra = await published_assignment_extra(db_session, activity_id=assignment.activity_id, course=course, lang=lang)
+    apply_to_assignment(result, extra)
 
 
 async def read_assignment_from_activity_uuid(
@@ -1224,6 +1264,7 @@ async def read_assignment_from_activity_uuid(
     activity_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
+    lang: Optional[str] = None,
 ):
     statement = (
         select(Assignment, Course.course_uuid, Activity.activity_uuid)
@@ -1249,12 +1290,14 @@ async def read_assignment_from_activity_uuid(
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
     result.activity_uuid = activity_uuid_val
+    await _localize_assignment(db_session, assignment, result, lang)
     # Same reveal gate as read_assignment: this is the endpoint the learner's
     # activity page actually calls, so skipping it here would leak the corrige.
     unlocked = await _resolve_solution_visibility(
         request, db_session, current_user, course_uuid, assignment
     )
-    return _apply_solution_visibility(result, assignment, unlocked=unlocked)
+    result = _apply_solution_visibility(result, assignment, unlocked=unlocked)
+    return await _hide_ai_rubric(request, db_session, current_user, course_uuid, assignment, result)
 
 
 async def update_assignment(
@@ -1632,6 +1675,7 @@ async def read_assignment_tasks(
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
+    lang: Optional[str] = None,
 ):
     # Find assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
@@ -1677,9 +1721,17 @@ async def read_assignment_tasks(
         and await _student_may_see_answer_key(current_user, assignment, db_session)
     )
 
+    extra = None
+    if lang:
+        from src.services.courses.translations.assignments import apply_to_task, published_assignment_extra
+
+        extra = await published_assignment_extra(db_session, activity_id=assignment.activity_id, course=course, lang=lang)
+
     result = []
     for assignment_task in (await db_session.execute(statement)).scalars().all():
         read = AssignmentTaskRead.model_validate(assignment_task)
+        if extra:
+            apply_to_task(read, extra)
         if not is_instructor:
             read.contents = _strip_answer_key(
                 read.contents, keep_answer_keys=reveal_to_student
@@ -3262,6 +3314,30 @@ async def create_assignment_submission(
             db_session.add(trailstep)
             await db_session.commit()
 
+    # AI grading in AUTO mode: grade the hand-in in the background (a model
+    # call, a transcription for media) so the learner's submit returns now. It
+    # reserves the org's AI credits itself and leaves the submission SUBMITTED
+    # for a teacher when it cannot run. Skipped when the deterministic
+    # auto-grader above already finalized it.
+    if (
+        not assignment.ungraded
+        and assignment.ai_grading_mode == AIGradingModeEnum.AUTO
+        and assignment_user_submission.submission_status != AssignmentUserSubmissionStatus.GRADED
+    ):
+        from src.services.courses.activities.assignment_ai_grading import schedule_auto_ai_grading
+
+        schedule_auto_ai_grading(int(assignment.id), int(submitter.id))  # type: ignore[arg-type]
+    elif (
+        not assignment.ungraded
+        and assignment_user_submission.submission_status != AssignmentUserSubmissionStatus.GRADED
+    ):
+        # Waiting for a teacher: tell the course's graders.
+        from src.services.feature_notifications import notify_submission_to_grade
+
+        await notify_submission_to_grade(
+            db_session, assignment=assignment, course=course, activity=activity, learner_id=int(submitter.id)
+        )
+
     # Check if all activities in the course are completed and create certificate
     # if so. Wrapped defensively: the submission is already committed above, so a
     # certificate hiccup (race on a duplicate cert, transient DB error) must not
@@ -3408,9 +3484,28 @@ async def read_assignment_submissions(
         for ts in task_sub_rows:
             submissions_by_user_task.setdefault(ts.user_id, {})[ts.assignment_task_id] = ts
 
+    # Graders see where each learner's AI grade stands (draft waiting for
+    # review, applied, failed) in the list. Learners never get this field.
+    ai_status_by_user: dict = {}
+    if is_instructor and user_ids:
+        from src.db.courses.assignment_ai_grades import AssignmentAIGrade
+
+        for ai_row in (await db_session.execute(
+            select(AssignmentAIGrade).where(
+                AssignmentAIGrade.assignment_id == assignment.id,
+                AssignmentAIGrade.user_id.in_(user_ids),  # type: ignore[attr-defined]
+            )
+        )).scalars().all():
+            ai_status_by_user[ai_row.user_id] = (ai_row.status, int(ai_row.attempt_number or 1))
+
     results = []
     for sub in submissions:
         row = AssignmentUserSubmissionRead.model_validate(sub).model_dump()
+        if is_instructor:
+            ai_status = ai_status_by_user.get(sub.user_id)
+            row["ai_grade_status"] = (
+                ai_status[0] if ai_status and ai_status[1] == int(sub.attempt_number or 1) else None
+            )
         if sub.submission_status == AssignmentUserSubmissionStatus.GRADED:
             grade_display = compute_assignment_grade(
                 int(sub.grade or 0),
@@ -3647,6 +3742,8 @@ async def delete_assignment_submission(
 
     # Delete Assignment User Submission (so the student can create a new one)
     await db_session.delete(assignment_user_submission)
+    # An AI draft (or record) belongs to the attempt that was just rejected.
+    await _drop_ai_grade(db_session, assignment.id, user_id)
     await db_session.commit()
 
     # If a course certificate was already issued to this user (the activity was
@@ -3800,6 +3897,8 @@ async def retry_assignment_submission(
         )).scalars().all()
         for ts in existing_submissions:
             await db_session.delete(ts)
+    # The AI draft/record graded the attempt that is being wiped.
+    await _drop_ai_grade(db_session, assignment.id, int(current_user.id))
 
     # Mark the activity incomplete again so the student's progress bar
     # reflects the in-flight retry rather than the (now stale) previous
@@ -3857,6 +3956,20 @@ async def retry_assignment_submission(
 ## > Assignments Submissions Grading
 
 
+async def _drop_ai_grade(db_session: AsyncSession, assignment_id, user_id) -> None:
+    """Delete a learner's AI grading row for an assignment (no commit)."""
+    from sqlalchemy import delete as sa_delete
+
+    from src.db.courses.assignment_ai_grades import AssignmentAIGrade
+
+    await db_session.execute(
+        sa_delete(AssignmentAIGrade).where(
+            AssignmentAIGrade.assignment_id == assignment_id,  # type: ignore[arg-type]
+            AssignmentAIGrade.user_id == user_id,  # type: ignore[arg-type]
+        )
+    )
+
+
 async def _apply_grade_and_finalize(
     assignment: Assignment,
     course: Course,
@@ -3867,6 +3980,8 @@ async def _apply_grade_and_finalize(
     auto_graded: bool = False,
     dispatch_webhook: bool = True,
     assignment_tasks: Sequence[AssignmentTask] | None = None,
+    notify_learner: bool | None = None,
+    grader_id: int | None = None,
 ) -> dict:
     """
     Core grading logic shared by manual and auto-grade flows. Computes the
@@ -4002,11 +4117,29 @@ async def _apply_grade_and_finalize(
     )
 
     # Persist the clamped raw grade + flip status to GRADED in a single commit
+    previous_grade = assignment_user_submission.grade
+    previous_status = getattr(assignment_user_submission.submission_status, "value", assignment_user_submission.submission_status)
     assignment_user_submission.grade = computed["grade"]
     assignment_user_submission.submission_status = AssignmentUserSubmissionStatus.GRADED
     db_session.add(assignment_user_submission)
     await db_session.commit()
     await db_session.refresh(assignment_user_submission)
+    from src.core.ee_hooks import audit_event
+
+    audit_event(
+        None, action="assignment.graded", org_id=course.org_id,
+        target_type="assignment", target_id=assignment.assignment_uuid, target_name=assignment.title,
+        changes={"grade": {
+            "from": previous_grade if previous_status == "GRADED" else None,
+            "to": computed["display_grade"] if computed.get("display_grade") is not None else computed["grade"],
+        }},
+        details={
+            "learner_id": user_id, "course_uuid": course.course_uuid, "course_name": course.name,
+            "passed": computed["passed"], "auto_graded": auto_graded,
+            "attempt_number": int(assignment_user_submission.attempt_number or 1),
+        },
+        via="system" if auto_graded else None,
+    )
 
     # Durable audit row for the grade the STUDENT received. This is the single
     # grading choke point (both manual and auto paths), and retries reset the
@@ -4081,6 +4214,12 @@ async def _apply_grade_and_finalize(
                 "auto_graded": auto_graded,
             },
         )
+        # Inbox + push for the learner. An instant auto-grade on submit is
+        # shown on screen already, so by default only teacher grades notify.
+        if notify_learner if notify_learner is not None else not auto_graded:
+            from src.services.notifications.events import notify_assignment_graded
+
+            await notify_assignment_graded(db_session, user_id, assignment.id, computed, grader_id=grader_id)
 
     return computed
 
@@ -4154,6 +4293,7 @@ async def grade_assignment_submission(
         db_session=db_session,
         overall_feedback=overall_feedback,
         auto_graded=False,
+        grader_id=current_user.id if isinstance(current_user, PublicUser) else None,
     )
 
     # Grading this submission may have made the course fully passed (e.g. the
@@ -4278,6 +4418,17 @@ async def get_grade_assignment_submission(
         assignment_tasks,
         task_submissions_by_task_id,
         grade_obj["passing_threshold"],
+    )
+    # Whether this grade came from AI grading (auto-applied or accepted by a
+    # teacher), so both the teacher and the learner see it marked as such.
+    from src.services.courses.activities.assignment_ai_grading import applied_ai_grade
+
+    applied = await applied_ai_grade(db_session, assignment.id, user_id, assignment_user_submission)
+    grade_obj["ai_graded"] = applied is not None
+    grade_obj["ai_scored_task_uuids"] = (
+        [t.get("assignment_task_uuid") for t in applied.tasks or [] if t.get("scored_by") == "ai"]
+        if applied is not None
+        else []
     )
     return grade_obj
 
@@ -4420,6 +4571,38 @@ async def get_assignments_from_course(
             readable.append(assignment)
         assignments = readable
 
+    # Instructors get a per-status submission tally on each row, from ONE
+    # grouped query for the whole course, so the dashboard list can show what
+    # needs grading without fetching every assignment's submissions (N+1).
+    counts_by_assignment: dict[int, dict[str, int]] = {}
+    # Parent activity uuids in one query, so list consumers can act on a row
+    # (e.g. publish the activity with the assignment) without a detail read.
+    activity_uuids: dict[int, str] = {}
+    if assignments:
+        activity_uuids = {
+            row[0]: row[1] for row in (await db_session.execute(
+                select(Activity.id, Activity.activity_uuid).where(
+                    Activity.id.in_({a.activity_id for a in assignments})  # type: ignore[attr-defined]
+                )
+            )).all()
+        }
+    if is_instructor and assignments:
+        rows = (await db_session.execute(
+            select(
+                AssignmentUserSubmission.assignment_id,
+                AssignmentUserSubmission.submission_status,
+                func.count(),
+            )
+            .where(AssignmentUserSubmission.assignment_id.in_([a.id for a in assignments]))  # type: ignore[attr-defined]
+            .group_by(
+                AssignmentUserSubmission.assignment_id,
+                AssignmentUserSubmission.submission_status,
+            )
+        )).all()
+        for assignment_id, status, count in rows:
+            key = status.value if hasattr(status, "value") else str(status)
+            counts_by_assignment.setdefault(assignment_id, {})[key] = int(count)
+
     # The model answer is reveal-gated here exactly as on the single read: this
     # list is reachable with plain course READ, so returning the raw rows would
     # hand every learner the corrige of every assignment in the course.
@@ -4432,9 +4615,23 @@ async def get_assignments_from_course(
             is_instructor
             or await _student_may_see_solution(current_user, assignment, db_session)
         )
-        results.append(
-            _apply_solution_visibility(
-                AssignmentRead.model_validate(assignment), assignment, unlocked=unlocked
-            )
+        result = _apply_solution_visibility(
+            AssignmentRead.model_validate(assignment), assignment, unlocked=unlocked
         )
+        result.course_uuid = course.course_uuid
+        result.activity_uuid = activity_uuids.get(assignment.activity_id)
+        if not is_instructor:
+            result.ai_grading_instructions = None
+            result.ai_grading_task_instructions = None
+        if is_instructor:
+            by_status = counts_by_assignment.get(assignment.id, {})
+            result.submission_counts = {
+                "total": sum(by_status.values()),
+                "to_grade": by_status.get("SUBMITTED", 0) + by_status.get("LATE", 0),
+                "graded": by_status.get("GRADED", 0),
+                "late": by_status.get("LATE", 0),
+                "pending": by_status.get("PENDING", 0),
+                "not_submitted": by_status.get("NOT_SUBMITTED", 0),
+            }
+        results.append(result)
     return results

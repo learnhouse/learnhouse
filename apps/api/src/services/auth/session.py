@@ -170,6 +170,19 @@ async def track_login(user_id: Optional[int], amr: Optional[str], org_id: Option
     """
     if not org_id or not user_id:
         return
+    from src.core.ee_hooks import audit_event
+
+    audit_event(
+        None,
+        action="auth.login.succeeded",
+        org_id=org_id,
+        actor=user_id,
+        target_type="user",
+        target_id=user_id,
+        details={"method": amr or "unknown"},
+        via="ui",
+        require_member=True,
+    )
     await track(
         event_name=analytics_events.USER_LOGGED_IN,
         org_id=org_id,

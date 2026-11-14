@@ -4,5 +4,7 @@
   "lti": "LTI 1.3",
   "audit-logs": "Audit Logs",
   "scorm": "SCORM",
-  "live-sessions": "Live Sessions"
+  "live-sessions": "Live Sessions",
+  "crm": "CRM Integrations",
+  "demo-instances": "Demo Instances"
 }

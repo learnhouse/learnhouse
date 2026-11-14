@@ -1,7 +1,8 @@
 'use client'
 import React from 'react'
 import BarLoader from 'react-spinners/BarLoader'
-import { ListBullets, Plus, Sparkle, X } from '@phosphor-icons/react'
+import { ListBullets, Plus, X } from '@phosphor-icons/react'
+import { AIButton } from '@components/Objects/AI/AIBrand'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { generateVideoChapters, getActivity, saveVideoChapters } from '@services/courses/activities'
@@ -161,20 +162,13 @@ export default function ChaptersSettings({
           <Plus size={12} /> {t('activities.chapters.add')}
         </button>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <AIButton
             onClick={generate}
             disabled={!hasCaptions || busy !== null}
-            className="inline-flex items-center gap-1.5 h-8 px-4 text-xs font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50"
+            loading={busy === 'generate'}
           >
-            {busy === 'generate' ? (
-              <BarLoader cssOverride={{ borderRadius: 60 }} width={40} color="#ffffff" />
-            ) : (
-              <>
-                <Sparkle size={14} weight="duotone" /> {rows.length ? t('activities.chapters.regenerate') : t('activities.chapters.generate')}
-              </>
-            )}
-          </button>
+            {rows.length ? t('activities.chapters.regenerate') : t('activities.chapters.generate')}
+          </AIButton>
           <button
             type="button"
             onClick={save}

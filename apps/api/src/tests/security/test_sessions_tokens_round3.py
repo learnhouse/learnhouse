@@ -2,7 +2,6 @@
 
 - AI refine/editor sessions are bound to their creator and checked before
   any credit is reserved; a session with history but no owner fails closed.
-- Boards playground sessions are bound to their creator.
 - API tokens cannot upload media into, or edit discussions of, another org.
 - Zapier subscription list/delete take the same admin gate as subscribe.
 - API tokens stop authenticating once the org's plan drops below API access.
@@ -19,7 +18,6 @@ from src.db.users import APITokenUser
 from src.routers.ai import assignment_gen as ag_router
 from src.routers.ai import quiz as quiz_router
 from src.routers.ai import scenario as scenario_router
-from src.routers.boards import boards_playground as pg_router
 from src.routers.integrations import zapier
 from src.services.ai import base
 from src.services.ai import editor as editor_service
@@ -28,11 +26,6 @@ from src.services.ai.schemas.editor import SendEditorAIChatMessage
 from src.services.ai.schemas.quiz import GenerateQuizRequest
 from src.services.ai.schemas.scenario import GenerateScenarioRequest
 from src.services.api_tokens import api_tokens as api_tokens_service
-from src.services.boards import boards_playground as pg_service
-from src.services.boards.schemas.boards_playground import (
-    BoardsPlaygroundContext,
-    SendBoardsPlaygroundMessage,
-)
 from src.services.communities import discussions
 from src.services.media import media as media_service
 
@@ -137,7 +130,7 @@ class TestGenerationRoutersCheckOwnership:
         with patch.object(quiz_router, "is_org_member", new=AsyncMock(return_value=True)), \
              patch.object(quiz_router, "enforce_org_mfa", new=AsyncMock()), \
              patch.object(quiz_router, "require_org_create_permission", new=AsyncMock()), \
-             patch.object(quiz_router, "reserve_ai_credit", new=reserve):
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve):
             with pytest.raises(HTTPException) as exc:
                 await quiz_router.api_generate_quiz(
                     body, MagicMock(), SimpleNamespace(id=1), _db_returning(SimpleNamespace(id=5))
@@ -152,7 +145,7 @@ class TestGenerationRoutersCheckOwnership:
         with patch.object(quiz_router, "is_org_member", new=AsyncMock(return_value=True)), \
              patch.object(quiz_router, "enforce_org_mfa", new=AsyncMock()), \
              patch.object(quiz_router, "require_org_create_permission", new=AsyncMock()), \
-             patch.object(quiz_router, "reserve_ai_credit", new=reserve):
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve):
             with pytest.raises(HTTPException) as exc:
                 await quiz_router.api_generate_quiz(
                     body, MagicMock(), SimpleNamespace(id=1), _db_returning(SimpleNamespace(id=5))
@@ -168,7 +161,7 @@ class TestGenerationRoutersCheckOwnership:
              patch.object(quiz_router, "enforce_org_mfa", new=AsyncMock()), \
              patch.object(quiz_router, "require_org_create_permission", new=AsyncMock()), \
              patch.object(quiz_router, "enforce_ai_rate_limit"), \
-             patch.object(quiz_router, "reserve_ai_credit", new=AsyncMock()), \
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
              patch.object(quiz_router, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
              patch.object(quiz_router, "generate_quiz", new=gen), \
              patch.object(quiz_router, "record_generation",
@@ -185,7 +178,7 @@ class TestGenerationRoutersCheckOwnership:
         with patch.object(scenario_router, "is_org_member", new=AsyncMock(return_value=True)), \
              patch.object(scenario_router, "enforce_org_mfa", new=AsyncMock()), \
              patch.object(scenario_router, "require_org_create_permission", new=AsyncMock()), \
-             patch.object(scenario_router, "reserve_ai_credit", new=reserve):
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve):
             with pytest.raises(HTTPException) as exc:
                 await scenario_router.api_generate_scenario(
                     MagicMock(), body, SimpleNamespace(id=1), _db_returning(SimpleNamespace(id=5))
@@ -203,7 +196,7 @@ class TestGenerationRoutersCheckOwnership:
         with patch.object(ag_router, "is_org_member", new=AsyncMock(return_value=True)), \
              patch.object(ag_router, "enforce_org_mfa", new=AsyncMock()), \
              patch.object(ag_router, "check_resource_access", new=AsyncMock()), \
-             patch.object(ag_router, "reserve_ai_credit", new=reserve):
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve):
             with pytest.raises(HTTPException) as exc:
                 await ag_router.api_generate_assignment(
                     body, MagicMock(), SimpleNamespace(id=1),
@@ -222,8 +215,7 @@ class TestGenerationRoutersCheckOwnership:
             message="rewrite this",
             current_content={"type": "doc", "content": []},
         )
-        with patch.object(
-            editor_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch(RATE_LIMIT_PATH), patch.object(
             editor_service, "check_resource_access", new_callable=AsyncMock
         ):
@@ -250,80 +242,6 @@ class TestGenerationRoutersCheckOwnership:
                 pass
         assert save.call_args.kwargs["user_id"] == 42
         assert save.call_args.kwargs["org_id"] == 3
-
-
-# ---------------------------------------------------------------------------
-# 2. Boards playground sessions
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture
-def pg_redis(monkeypatch):
-    r = FakeRedis()
-    monkeypatch.setattr(pg_service, "get_redis_connection", lambda: r)
-    return r
-
-
-def _pg_session():
-    return pg_service.create_boards_playground_session(
-        block_uuid="block_1",
-        board_uuid="board_1",
-        context=BoardsPlaygroundContext(board_name="b", board_description="d"),
-        user_id=1,
-    )
-
-
-class TestBoardsPlaygroundOwnership:
-    def test_creator_recorded(self, pg_redis):
-        session = _pg_session()
-        assert pg_service.get_boards_playground_session_owner(session.session_uuid) == 1
-
-    async def test_iterate_by_other_user_404_before_credit(self, pg_redis):
-        session = _pg_session()
-        reserve = AsyncMock()
-        msg = SendBoardsPlaygroundMessage(
-            session_uuid=session.session_uuid,
-            board_uuid="board_1",
-            block_uuid="block_1",
-            message="hi",
-        )
-        with patch.object(pg_router, "reserve_ai_credit", new=reserve):
-            with pytest.raises(HTTPException) as exc:
-                await pg_router.iterate_boards_playground_session(
-                    MagicMock(), msg, SimpleNamespace(id=2), AsyncMock()
-                )
-        assert exc.value.status_code == 404
-        reserve.assert_not_called()
-
-    async def test_session_read_by_non_owner_needs_board_update(self, pg_redis):
-        session = _pg_session()
-        board = SimpleNamespace(board_uuid="board_1", org_id=5)
-        org = SimpleNamespace(id=5)
-        denied = AsyncMock(side_effect=HTTPException(status_code=403, detail="no"))
-        with patch.object(pg_router, "is_org_member", new=AsyncMock(return_value=True)), \
-             patch.object(pg_router, "enforce_org_mfa", new=AsyncMock()), \
-             patch.object(pg_router, "check_resource_access", new=denied):
-            with pytest.raises(HTTPException) as exc:
-                await pg_router.get_session_state(
-                    MagicMock(), session.session_uuid, SimpleNamespace(id=2),
-                    _db_returning(board, org),
-                )
-        assert exc.value.status_code == 403
-
-    async def test_session_read_by_owner_skips_board_check(self, pg_redis):
-        session = _pg_session()
-        board = SimpleNamespace(board_uuid="board_1", org_id=5)
-        org = SimpleNamespace(id=5)
-        rbac = AsyncMock()
-        with patch.object(pg_router, "is_org_member", new=AsyncMock(return_value=True)), \
-             patch.object(pg_router, "enforce_org_mfa", new=AsyncMock()), \
-             patch.object(pg_router, "check_resource_access", new=rbac):
-            resp = await pg_router.get_session_state(
-                MagicMock(), session.session_uuid, SimpleNamespace(id=1),
-                _db_returning(board, org),
-            )
-        assert resp.session_uuid == session.session_uuid
-        rbac.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
@@ -487,3 +405,9 @@ async def test_token_plan_check_bypassed_self_hosted():
             "lh_abcdefghijklmnop", _token_db(row)
         )
     assert result is row
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

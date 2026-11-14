@@ -1,6 +1,19 @@
 'use client'
-import { useState, useCallback, useEffect } from 'react'
-import { applySignals, pendingCelebrations, summarize, type OnboardingProgress } from '@/lib/onboarding'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { summarize } from '@/lib/onboarding'
+import {
+  getOnboardingState,
+  onboardingKeys,
+  patchOnboardingState,
+  recordOnboardingEvent,
+  type OnboardingEvent,
+  type OnboardingGoal,
+  type OnboardingPatch,
+  type OnboardingState,
+} from '@services/onboarding/onboarding'
 
 export type OnboardingStep = {
   id: string
@@ -17,263 +30,244 @@ export type OnboardingStep = {
   video: string
   minutes: number
   completed: boolean
-  requiredPlan?: string
   skipped?: boolean
 }
 
-// What the admin told us they are building. Tailors the copy, never the steps.
-export type OnboardingIntent = 'customers' | 'team' | 'sell' | 'school'
+// What the admin told us they are building. It orders the steps and picks
+// the starter template; it never hides a feature.
+export type OnboardingIntent = OnboardingGoal
 
-type OnboardingState = OnboardingProgress & {
-  minimized: boolean
-  expanded: boolean
-  showAllSteps: boolean
-  dismissed: boolean
-  welcomeSeen: boolean
-  intent: OnboardingIntent | null
+// Client-side presentation of each setup step: where its action goes and its
+// walkthrough. Which steps an org gets, in which order, and whether each is
+// done all come from the server (GET /onboarding/orgs/{id}).
+const STEP_DEFS: Record<string, Omit<OnboardingStep, 'completed' | 'minutes'>> = {
+  create_course: { id: 'create_course', title: '', description: '', action: '', href: '/dash/courses?new=true', video: 'ob2' },
+  add_content: { id: 'add_content', title: '', description: '', action: '', href: '/dash/courses', video: 'ob3' },
+  publish_course: { id: 'publish_course', title: '', description: '', action: '', href: '/dash/courses', video: 'ob2' },
+  brand_school: { id: 'brand_school', title: '', description: '', action: '', href: '/dash/org/settings/branding', video: 'ob4' },
+  // Done once the homepage is published (the template starter does it).
+  share_grow: { id: 'share_grow', title: '', description: '', action: '', href: '/dash/website', video: 'ob5' },
+  invite_learners: { id: 'invite_learners', title: '', description: '', action: '', href: '/dash/users/settings/add', video: 'ob6' },
+  build_community: { id: 'build_community', title: '', description: '', action: '', href: '/dash/communities', video: 'ob7' },
+  create_group: { id: 'create_group', title: '', description: '', action: '', href: '/dash/users/settings/usergroups', video: 'ob6' },
+  setup_payments: { id: 'setup_payments', title: '', description: '', action: '', href: '/dash/payments/settings', completeOnClick: true, video: 'ob5' },
 }
 
+export const ONBOARDING_STEP_DEFS = Object.values(STEP_DEFS)
+
+// Per-browser view preferences only. The legacy `dismissed` / `welcomeSeen`
+// flags from when the whole plan lived here still count as "put away" for
+// this browser, so nobody who closed it before gets it back.
 const STORAGE_KEY = 'lh_onboarding'
+type LocalPrefs = { minimized: boolean; expanded: boolean; showAllSteps: boolean; dismissed: boolean; welcomeSeen: boolean }
+const EMPTY_PREFS: LocalPrefs = { minimized: false, expanded: false, showAllSteps: false, dismissed: false, welcomeSeen: false }
 
-// Outcome-framed onboarding: 6 milestones that ladder toward the north-star,
-// your first enrolled learner, then retention. Each title is the WIN; the
-// action is just the means. Every step delivers value on the free plan.
-// Completion comes from the org's real data (useOnboardingSignals), so a step
-// is done when the thing exists, not when its page was visited.
-const DEFAULT_STEPS: Omit<OnboardingStep, 'completed'>[] = [
-  {
-    id: 'create_course',
-    title: 'Your first course is live',
-    description: 'Publish a course so there’s something real for learners to enroll in.',
-    action: 'Create a course',
-    href: '/dash/courses?new=true',
-    video: 'ob2',
-    minutes: 2,
-  },
-  {
-    id: 'add_content',
-    title: 'A lesson worth showing up for',
-    description: 'Add a video, page or quiz to give learners a real reason to enroll.',
-    action: 'Add content',
-    href: '/dash/courses',
-    video: 'ob3',
-    minutes: 5,
-  },
-  {
-    id: 'brand_school',
-    title: 'A school learners trust',
-    description: 'Add your logo and colors so it looks like a credible, professional school.',
-    action: 'Brand it',
-    href: '/dash/org/settings/branding',
-    video: 'ob4',
-    minutes: 2,
-  },
-  {
-    id: 'share_grow',
-    title: 'Your school’s front door',
-    description: 'Go live and grab your shareable link, the place you’ll send every learner.',
-    action: 'Open my school',
-    href: '/',
-    hrefType: 'root',
-    completeOnClick: true,
-    video: 'ob5',
-    minutes: 1,
-  },
-  {
-    id: 'invite_learners',
-    title: 'Welcome your first learner',
-    description: 'Share your join link or invite people to get that first learner through the door.',
-    action: 'Invite learners',
-    href: '/dash/users/settings/add',
-    video: 'ob6',
-    minutes: 2,
-  },
-  {
-    id: 'build_community',
-    title: 'Keep learners coming back',
-    description: 'Open a community space so your learners stay active and bring their friends.',
-    action: 'Open community',
-    href: '/dash/communities',
-    video: 'ob7',
-    minutes: 2,
-  },
-]
-
-export const ONBOARDING_STEP_DEFS = DEFAULT_STEPS
-
-const EMPTY: OnboardingState = {
-  completedSteps: [],
-  skippedSteps: [],
-  minimized: false,
-  expanded: false,
-  showAllSteps: false,
-  dismissed: false,
-  welcomeSeen: false,
-  intent: null,
-  celebrated: [],
-  seeded: false,
-}
-
-function loadState(): OnboardingState {
-  if (typeof window === 'undefined') return EMPTY
+function loadPrefs(): LocalPrefs {
+  if (typeof window === 'undefined') return EMPTY_PREFS
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      return {
-        completedSteps: parsed.completedSteps || [],
-        skippedSteps: parsed.skippedSteps || [],
-        minimized: parsed.minimized || false,
-        expanded: parsed.expanded || false,
-        showAllSteps: parsed.showAllSteps || false,
-        dismissed: parsed.dismissed || false,
-        welcomeSeen: parsed.welcomeSeen || false,
-        intent: parsed.intent || null,
-        celebrated: parsed.celebrated || [],
-        seeded: parsed.seeded || false,
-      }
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    return {
+      minimized: !!parsed.minimized,
+      expanded: !!parsed.expanded,
+      showAllSteps: !!parsed.showAllSteps,
+      dismissed: !!parsed.dismissed,
+      welcomeSeen: !!parsed.welcomeSeen,
     }
   } catch {
-    /* ignore */
+    return EMPTY_PREFS
   }
-  return EMPTY
 }
 
-function saveState(state: OnboardingState) {
+function savePrefs(prefs: LocalPrefs) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    // Called from inside a state updater, which React may run while rendering:
-    // tell the other instances after this render, not during it.
+    const prev = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...prev, ...prefs }))
     queueMicrotask(() => window.dispatchEvent(new Event('lh_onboarding_change')))
   } catch {
     /* ignore */
   }
 }
 
+export function useOnboardingQuery() {
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const token = session?.data?.tokens?.access_token
+  const orgId: number | undefined = org?.id
+  const query = useQuery({
+    queryKey: onboardingKeys.state(orgId),
+    queryFn: () => getOnboardingState(token, orgId as number),
+    enabled: !!token && !!orgId && !org?.is_demo,
+    // Short: a step finished in another tab ticks off when the admin comes back.
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    // A non-admin gets 403: no checklist for them, and no retry storm.
+    retry: false,
+  })
+  return { query, token, orgId }
+}
+
 export function useOnboarding() {
-  const [state, setState] = useState<OnboardingState>(loadState)
+  const { query, token, orgId } = useOnboardingQuery()
+  const queryClient = useQueryClient()
+  const [prefs, setPrefs] = useState<LocalPrefs>(loadPrefs)
+  const data: OnboardingState | undefined = query.data
 
-  const applyLocalChange = useCallback(
-    (updater: (_prev: OnboardingState) => OnboardingState) => {
-      setState((prev) => {
-        const next = updater(prev)
-        if (next !== prev) {
-          saveState(next)
-        }
-        return next
-      })
-    },
-    []
-  )
-
-  // Listen for changes from other instances of this hook
   useEffect(() => {
-    const handler = () => {
-      setState((prev) => {
-        const loaded = loadState()
-        if (JSON.stringify(loaded) === JSON.stringify(prev)) return prev
-        return loaded
-      })
-    }
+    const handler = () => setPrefs(loadPrefs())
     window.addEventListener('lh_onboarding_change', handler)
     return () => window.removeEventListener('lh_onboarding_change', handler)
   }, [])
 
-  const steps: OnboardingStep[] = DEFAULT_STEPS.map((s) => ({
-    ...s,
-    completed: state.completedSteps.includes(s.id) || state.skippedSteps.includes(s.id),
-    skipped: state.skippedSteps.includes(s.id),
-  }))
+  const updatePrefs = useCallback((change: Partial<LocalPrefs>) => {
+    setPrefs((prev) => {
+      const next = { ...prev, ...change }
+      savePrefs(next)
+      return next
+    })
+  }, [])
+
+  const key = onboardingKeys.state(orgId)
+
+  // Optimistic: the change shows at once, the server's answer replaces it.
+  const patch = useCallback(
+    async (body: OnboardingPatch, optimistic?: (_s: OnboardingState) => OnboardingState) => {
+      if (!orgId) return
+      if (optimistic) queryClient.setQueryData<OnboardingState>(key, (s) => (s ? optimistic(s) : s))
+      try {
+        const next = await patchOnboardingState(token, orgId, body)
+        queryClient.setQueryData(key, next)
+      } catch {
+        queryClient.invalidateQueries({ queryKey: key })
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orgId, token, queryClient],
+  )
+
+  const record = useCallback(
+    async (event: OnboardingEvent) => {
+      if (!orgId) return
+      try {
+        await recordOnboardingEvent(token, orgId, event)
+      } finally {
+        queryClient.invalidateQueries({ queryKey: key })
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orgId, token, queryClient],
+  )
+
+  const steps: OnboardingStep[] = useMemo(
+    () =>
+      (data?.steps ?? []).map((s) => ({
+        ...(STEP_DEFS[s.id] ?? { id: s.id, title: '', description: '', action: '', href: '/dash', video: 'ob1' }),
+        minutes: s.minutes,
+        completed: s.done || s.skipped,
+        skipped: s.skipped,
+      })),
+    [data?.steps],
+  )
 
   const { currentStepIndex, allCompleted, progress, minutesLeft } = summarize(steps)
-  const currentStep = currentStepIndex >= 0 ? steps[currentStepIndex] : null
-  const uncelebrated = pendingCelebrations(state)
+  const currentStep = steps.find((s) => s.id === data?.next_step) ?? (currentStepIndex >= 0 ? steps[currentStepIndex] : null)
+  const loaded = !!data
 
-  const completeStep = useCallback((stepId: string) => {
-    applyLocalChange((prev) => {
-      if (prev.completedSteps.includes(stepId)) return prev
-      return { ...prev, completedSteps: [...prev.completedSteps, stepId] }
-    })
-  }, [applyLocalChange])
+  // Until the server answers, treat the plan as put away so nothing flashes.
+  const dismissed = !loaded || data.dismissed || prefs.dismissed
+  const welcomeSeen = !loaded || data.welcome_seen || prefs.welcomeSeen
 
-  // Batch completion from data signals. The first read seeds: whatever the org
-  // already had (courses made before onboarding existed) completes silently,
-  // and only later completions get a celebration.
-  const completeSteps = useCallback((stepIds: string[]) => {
-    applyLocalChange((prev) => applySignals(prev, stepIds))
-  }, [applyLocalChange])
+  const completeStep = useCallback(
+    (stepId: string) => {
+      if (STEP_DEFS[stepId]?.completeOnClick) record(stepId as OnboardingEvent)
+    },
+    [record],
+  )
 
-  const markCelebrated = useCallback((stepIds: string[]) => {
-    applyLocalChange((prev) => {
-      const fresh = stepIds.filter((id) => !prev.celebrated.includes(id))
-      if (!fresh.length) return prev
-      return { ...prev, celebrated: [...prev.celebrated, ...fresh] }
-    })
-  }, [applyLocalChange])
+  // Completion comes from the server's view of the org's data: just refresh.
+  const completeSteps = useCallback(
+    (_ids: string[]) => {
+      queryClient.invalidateQueries({ queryKey: key })
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [queryClient, orgId],
+  )
 
-  const toggleMinimized = useCallback(() => {
-    applyLocalChange((prev) => ({ ...prev, minimized: !prev.minimized }))
-  }, [applyLocalChange])
-
-  const toggleExpanded = useCallback(() => {
-    applyLocalChange((prev) => ({ ...prev, expanded: !prev.expanded }))
-  }, [applyLocalChange])
-
-  const toggleShowAllSteps = useCallback(() => {
-    applyLocalChange((prev) => ({ ...prev, showAllSteps: !prev.showAllSteps }))
-  }, [applyLocalChange])
+  const markCelebrated = useCallback(
+    (ids: string[]) => {
+      if (!ids.length) return
+      patch({ celebrated: ids }, (s) => ({ ...s, celebrate: s.celebrate.filter((id) => !ids.includes(id)) }))
+    },
+    [patch],
+  )
 
   const dismiss = useCallback(() => {
-    applyLocalChange((prev) => (prev.dismissed ? prev : { ...prev, dismissed: true }))
-  }, [applyLocalChange])
+    patch({ dismissed: true }, (s) => ({ ...s, dismissed: true }))
+  }, [patch])
 
   const resume = useCallback(() => {
-    applyLocalChange((prev) => (prev.dismissed ? { ...prev, dismissed: false } : prev))
-  }, [applyLocalChange])
+    updatePrefs({ dismissed: false })
+    patch({ dismissed: false }, (s) => ({ ...s, dismissed: false }))
+  }, [patch, updatePrefs])
 
   const markWelcomeSeen = useCallback(() => {
-    applyLocalChange((prev) => (prev.welcomeSeen ? prev : { ...prev, welcomeSeen: true }))
-  }, [applyLocalChange])
+    updatePrefs({ welcomeSeen: true })
+    patch({ welcome_seen: true }, (s) => ({ ...s, welcome_seen: true }))
+  }, [patch, updatePrefs])
 
-  const setIntent = useCallback((intent: OnboardingIntent) => {
-    applyLocalChange((prev) => (prev.intent === intent ? prev : { ...prev, intent }))
-  }, [applyLocalChange])
+  const setIntent = useCallback(
+    (intent: OnboardingIntent) => {
+      patch({ goal: intent }, (s) => ({ ...s, goal: intent }))
+    },
+    [patch],
+  )
 
-  const skipStep = useCallback((stepId: string) => {
-    applyLocalChange((prev) => {
-      if (prev.skippedSteps.includes(stepId)) return prev
-      return { ...prev, skippedSteps: [...prev.skippedSteps, stepId] }
-    })
-  }, [applyLocalChange])
+  const skipStep = useCallback(
+    (stepId: string) => {
+      patch({ skip: stepId }, (s) => ({ ...s, steps: s.steps.map((x) => (x.id === stepId ? { ...x, skipped: true } : x)) }))
+    },
+    [patch],
+  )
 
-  const unskipStep = useCallback((stepId: string) => {
-    applyLocalChange((prev) => {
-      if (!prev.skippedSteps.includes(stepId)) return prev
-      return { ...prev, skippedSteps: prev.skippedSteps.filter((id) => id !== stepId) }
-    })
-  }, [applyLocalChange])
+  const unskipStep = useCallback(
+    (stepId: string) => {
+      patch({ unskip: stepId }, (s) => ({ ...s, steps: s.steps.map((x) => (x.id === stepId ? { ...x, skipped: false } : x)) }))
+    },
+    [patch],
+  )
+
+  const toggleMinimized = useCallback(() => updatePrefs({ minimized: !prefs.minimized }), [prefs.minimized, updatePrefs])
+  const toggleExpanded = useCallback(() => updatePrefs({ expanded: !prefs.expanded }), [prefs.expanded, updatePrefs])
+  const toggleShowAllSteps = useCallback(() => updatePrefs({ showAllSteps: !prefs.showAllSteps }), [prefs.showAllSteps, updatePrefs])
 
   const reset = useCallback(() => {
-    applyLocalChange(() => EMPTY)
-  }, [applyLocalChange])
+    updatePrefs(EMPTY_PREFS)
+    patch({ dismissed: false, welcome_seen: false })
+  }, [patch, updatePrefs])
 
   return {
+    loaded,
+    state: data,
     steps,
     currentStep,
     currentStepIndex,
-    allCompleted,
+    allCompleted: loaded && allCompleted,
     progress,
     minutesLeft,
-    uncelebrated,
-    intent: state.intent,
-    minimized: state.minimized,
-    expanded: state.expanded,
-    showAllSteps: state.showAllSteps,
-    dismissed: state.dismissed,
-    welcomeSeen: state.welcomeSeen,
+    uncelebrated: data?.celebrate ?? [],
+    intent: (data?.goal ?? null) as OnboardingIntent | null,
+    plan: data?.plan ?? null,
+    mode: data?.mode ?? null,
+    recommendedPlan: data?.recommended_plan ?? null,
+    invitesGate: data?.invites ?? { gated: false, unlocks_at: null },
+    minimized: prefs.minimized,
+    expanded: prefs.expanded,
+    showAllSteps: prefs.showAllSteps,
+    dismissed,
+    welcomeSeen,
     completeStep,
     completeSteps,
     markCelebrated,
+    recordEvent: record,
     dismiss,
     resume,
     markWelcomeSeen,

@@ -2,30 +2,112 @@
 
 import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Route, Search, X } from 'lucide-react'
+import {
+  ArrowRight,
+  CheckCircle,
+  Circuitry,
+  MagnifyingGlass,
+  Medal,
+  Signpost,
+} from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
-import PathThumbnail from '@components/Objects/Thumbnails/PathThumbnail'
+import PathThumbnail, {
+  PathCardSkeleton,
+  PathContinueCard,
+} from '@components/Objects/Thumbnails/PathThumbnail'
+import { PathsIntro } from '@components/Objects/Paths/PathTrack'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import {
+  BTN_SECONDARY_SM,
+  SearchInput,
+  SegmentedControl,
+  ToolbarSelect,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
 import { getUriWithOrg } from '@services/config/config'
+import { Path, PathLevel } from '@services/paths/paths'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { usePaths } from '@/hooks/queries/usePaths'
 
-export default function PathsClient({ orgslug, org_id }: { orgslug: string; org_id: number }) {
+type Status = 'all' | 'following' | 'completed' | 'new'
+const LEVELS: PathLevel[] = ['beginner', 'intermediate', 'advanced']
+
+const following = (p: Path) => !!p.progress?.enrolled && !p.progress.completed
+const completed = (p: Path) => !!p.progress?.enrolled && !!p.progress.completed
+
+function SectionTitle({
+  icon,
+  title,
+  count,
+}: {
+  icon: React.ReactNode
+  title: string
+  count?: number
+}) {
+  return (
+    <h2 className="flex items-center gap-2 text-sm font-bold text-neutral-900 mb-3">
+      <span className="w-6 h-6 rounded-lg bg-white nice-shadow text-neutral-600 flex items-center justify-center">
+        {icon}
+      </span>
+      {title}
+      {count !== undefined && (
+        <span className="text-xs font-semibold tabular-nums text-neutral-500 bg-neutral-100 rounded-full px-2 py-0.5">
+          {count}
+        </span>
+      )}
+    </h2>
+  )
+}
+
+export default function PathsClient({
+  orgslug,
+  org_id,
+}: {
+  orgslug: string
+  org_id: number
+}) {
   const { t } = useTranslation()
   const { data, isLoading } = usePaths(org_id)
   const [searchQuery, setSearchQuery] = useState('')
+  const [level, setLevel] = useState<'all' | PathLevel>('all')
+  const [status, setStatus] = useState<Status>('all')
 
   // The learner catalog only lists published paths, even for authors.
   const paths = useMemo(() => (data || []).filter((p) => p.published), [data])
-  const filtered = useMemo(
-    () => (searchQuery.trim() ? paths.filter((p) => searchMatchesAny([p.name, p.description], searchQuery)) : paths),
-    [paths, searchQuery]
+  const counts = useMemo(
+    () => ({
+      following: paths.filter(following).length,
+      completed: paths.filter(completed).length,
+      certificates: paths.filter(
+        (p) => completed(p) && p.progress?.certificate_uuid
+      ).length,
+    }),
+    [paths]
   )
-  const following = filtered.filter((p) => p.progress?.enrolled && !p.progress.completed)
-  const others = filtered.filter((p) => !(p.progress?.enrolled && !p.progress.completed))
+  const hasJourneys = counts.following + counts.completed > 0
+  const hasLevels = paths.some((p) => p.level)
+
+  const filtered = useMemo(
+    () =>
+      paths.filter((p) => {
+        if (level !== 'all' && p.level !== level) return false
+        if (status === 'following' && !following(p)) return false
+        if (status === 'completed' && !completed(p)) return false
+        if (status === 'new' && p.progress?.enrolled) return false
+        return (
+          !searchQuery.trim() ||
+          searchMatchesAny([p.name, p.description], searchQuery)
+        )
+      }),
+    [paths, level, status, searchQuery]
+  )
+  // Paths in progress get their own wide row at the top of the default view.
+  const splitOut = status === 'all'
+  const continuing = splitOut ? filtered.filter(following) : []
+  const rest = splitOut ? filtered.filter((p) => !following(p)) : filtered
+  const hasFilters = !!searchQuery.trim() || level !== 'all' || status !== 'all'
 
   return (
     <FeatureGate feature="paths" orgslug={orgslug} context="public">
@@ -33,81 +115,188 @@ export default function PathsClient({ orgslug, org_id }: { orgslug: string; org_
         <GeneralWrapperStyled>
           <div className="flex items-center justify-between">
             <TypeOfContentTitle title={t('paths.title')} type="path" />
-            <AuthenticatedClientElement checkMethod="roles" action="create" ressourceType="courses" orgId={org_id}>
+            <AuthenticatedClientElement
+              checkMethod="roles"
+              action="create"
+              ressourceType="courses"
+              orgId={org_id}
+            >
               <Link
                 href={getUriWithOrg(orgslug, '/dash/paths')}
-                className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 hover:text-neutral-900 transition-colors"
               >
-                {t('paths.manage_paths')} &rarr;
+                {t('paths.manage_paths')}
+                <ArrowRight
+                  size={12}
+                  weight="bold"
+                  className="rtl:rotate-180"
+                />
               </Link>
             </AuthenticatedClientElement>
           </div>
-          <p className="text-sm text-gray-500 -mt-2 mb-4 max-w-2xl">{t('paths.catalog_subtitle')}</p>
+          <div className="-mt-2 mb-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="text-sm text-neutral-500 max-w-2xl">
+              {t('paths.catalog_subtitle')}
+            </p>
+            {hasJourneys && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {counts.following > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white nice-shadow px-2.5 h-7 text-xs font-semibold text-neutral-700 tabular-nums">
+                    <Signpost size={13} className="text-sky-600" />
+                    {t('paths.catalog.following_count', {
+                      count: counts.following,
+                    })}
+                  </span>
+                )}
+                {counts.completed > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white nice-shadow px-2.5 h-7 text-xs font-semibold text-neutral-700 tabular-nums">
+                    <CheckCircle size={13} className="text-emerald-600" />
+                    {t('paths.catalog.completed_count', {
+                      count: counts.completed,
+                    })}
+                  </span>
+                )}
+                {counts.certificates > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white nice-shadow px-2.5 h-7 text-xs font-semibold text-neutral-700 tabular-nums">
+                    <Medal size={13} className="text-amber-500" />
+                    {t('paths.catalog.certificates_count', {
+                      count: counts.certificates,
+                    })}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
 
           {paths.length > 0 && (
-            <div className="relative w-full sm:w-80 mb-6">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6">
+              <SearchInput
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label={t('paths.search_placeholder')}
+                onChange={setSearchQuery}
                 placeholder={t('paths.search_placeholder')}
-                className="w-full ps-10 pe-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
+                className="sm:max-w-xs"
               />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  aria-label={t('paths.clear_search')}
-                  className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+              <div className="flex flex-wrap items-center gap-2 sm:ms-auto">
+                {hasJourneys && (
+                  <div className="max-w-full overflow-x-auto">
+                    <SegmentedControl<Status>
+                      value={status}
+                      onChange={setStatus}
+                      ariaLabel={t('paths.catalog.status_filter')}
+                      options={[
+                        { key: 'all', label: t('paths.dashboard.filters.all') },
+                        {
+                          key: 'following',
+                          label: t('paths.in_progress'),
+                          count: counts.following,
+                        },
+                        {
+                          key: 'completed',
+                          label: t('paths.completed'),
+                          count: counts.completed,
+                        },
+                        { key: 'new', label: t('paths.catalog.not_started') },
+                      ]}
+                    />
+                  </div>
+                )}
+                {hasLevels && (
+                  <ToolbarSelect
+                    value={level}
+                    onChange={(v) => setLevel(v as 'all' | PathLevel)}
+                    ariaLabel={t('paths.form.level')}
+                    options={[
+                      { value: 'all', label: t('paths.levels.all') },
+                      ...LEVELS.map((l) => ({
+                        value: l,
+                        label: t(`paths.levels.${l}`),
+                      })),
+                    ]}
+                  />
+                )}
+              </div>
             </div>
           )}
 
-          {following.length > 0 && (
+          {continuing.length > 0 && (
             <section className="mb-8">
-              <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">{t('paths.continue_learning')}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {following.map((path) => (
-                  <PathThumbnail key={path.path_uuid} path={path} orgslug={orgslug} />
+              <SectionTitle
+                icon={<Signpost size={14} />}
+                title={t('paths.catalog.continue_journey')}
+                count={continuing.length}
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {continuing.map((path) => (
+                  <PathContinueCard
+                    key={path.path_uuid}
+                    path={path}
+                    orgslug={orgslug}
+                  />
                 ))}
               </div>
             </section>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {isLoading &&
-              [1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-xl nice-shadow overflow-hidden animate-pulse">
-                  <div className="aspect-video bg-gray-100" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-4 w-2/3 bg-gray-200 rounded" />
-                    <div className="h-3 w-full bg-gray-100 rounded" />
-                  </div>
-                </div>
-              ))}
-            {others.map((path) => (
-              <PathThumbnail key={path.path_uuid} path={path} orgslug={orgslug} />
-            ))}
-            {!isLoading && paths.length === 0 && (
-              <div className="col-span-full flex flex-col justify-center items-center py-12 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
-                <div className="p-4 bg-white rounded-full nice-shadow mb-4">
-                  <Route className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
-                </div>
-                <h1 className="text-xl font-bold text-gray-600 mb-2">{t('paths.no_public_paths')}</h1>
-                <p className="text-md text-gray-400 text-center max-w-xs">{t('paths.no_public_paths_description')}</p>
+          {(isLoading || rest.length > 0) && (
+            <section>
+              {continuing.length > 0 && (
+                <SectionTitle
+                  icon={<Circuitry size={14} />}
+                  title={t('paths.catalog.explore')}
+                  count={rest.length}
+                />
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+                {isLoading
+                  ? [1, 2, 3].map((i) => <PathCardSkeleton key={i} />)
+                  : rest.map((path) => (
+                      <PathThumbnail
+                        key={path.path_uuid}
+                        path={path}
+                        orgslug={orgslug}
+                      />
+                    ))}
               </div>
-            )}
-            {!isLoading && paths.length > 0 && filtered.length === 0 && (
-              <div className="col-span-full flex flex-col justify-center items-center py-12 px-4">
-                <Search className="w-12 h-12 text-gray-300 mb-4" />
-                <h2 className="text-xl font-semibold text-gray-600">{t('paths.no_search_results')}</h2>
+            </section>
+          )}
+
+          {!isLoading && paths.length === 0 && (
+            <div className="bg-white rounded-2xl nice-shadow">
+              <PathsIntro
+                title={t('paths.no_public_paths')}
+                description={t('paths.catalog.intro_description')}
+                points={[
+                  t('paths.intro.ordered'),
+                  t('paths.intro.electives'),
+                  t('paths.intro.certificate'),
+                ]}
+              />
+            </div>
+          )}
+
+          {!isLoading && paths.length > 0 && filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center text-center py-14 px-6 gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-400 flex items-center justify-center">
+                <MagnifyingGlass size={22} />
               </div>
-            )}
-          </div>
+              <p className="text-base font-semibold text-neutral-900">
+                {t('paths.no_search_results')}
+              </p>
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('')
+                    setLevel('all')
+                    setStatus('all')
+                  }}
+                  className={BTN_SECONDARY_SM}
+                >
+                  {t('paths.dashboard.clear_filters')}
+                </button>
+              )}
+            </div>
+          )}
         </GeneralWrapperStyled>
       </div>
     </FeatureGate>

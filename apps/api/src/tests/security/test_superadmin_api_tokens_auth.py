@@ -50,6 +50,15 @@ def _enterprise_mode(monkeypatch):
     monkeypatch.setattr(deployment_mode, "get_deployment_mode", lambda: "ee")
 
 
+@pytest.fixture
+def _creator_is_superadmin():
+    """The token path re-checks that its minter is still a superadmin
+    (src/security/auth.py::validate_superadmin_api_token). These tests use a
+    bare Mock session, so answer that check here."""
+    with patch("src.security.superadmin.is_user_superadmin", new=AsyncMock(return_value=True)) as m:
+        yield m
+
+
 def _mock_request(auth_header: str = ""):
     request = Mock(spec=Request)
     request.headers = Mock()
@@ -69,6 +78,7 @@ def _sa_token_record(token_id=42, name="agency-test", created_by=7):
     )
 
 
+@pytest.mark.usefixtures("_creator_is_superadmin")
 class TestAuthDispatch:
     """get_current_user must route lh_sa_ to the superadmin branch BEFORE the lh_ branch."""
 
@@ -147,6 +157,7 @@ class TestAuthDispatch:
         assert result.org_id == 5
 
 
+@pytest.mark.usefixtures("_creator_is_superadmin")
 class TestValidateSuperadminApiToken:
     async def test_returns_principal_when_record_valid(self):
         db = Mock(spec=Session)
@@ -164,6 +175,15 @@ class TestValidateSuperadminApiToken:
         with patch(
             "src.services.api_tokens.superadmin_api_tokens.validate_superadmin_token_for_auth",
             new=AsyncMock(return_value=None),
+        ):
+            assert await validate_superadmin_api_token("lh_sa_x", db) is None
+
+    async def test_returns_none_when_creator_demoted(self, _creator_is_superadmin):
+        _creator_is_superadmin.return_value = False
+        db = Mock(spec=Session)
+        with patch(
+            "src.services.api_tokens.superadmin_api_tokens.validate_superadmin_token_for_auth",
+            new=AsyncMock(return_value=_sa_token_record(created_by=12)),
         ):
             assert await validate_superadmin_api_token("lh_sa_x", db) is None
 

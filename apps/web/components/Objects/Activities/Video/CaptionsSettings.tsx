@@ -2,6 +2,7 @@
 import React from 'react'
 import { ClosedCaptioning, Plus, X } from '@phosphor-icons/react'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
+import { AIChip } from '@components/Objects/AI/AIBrand'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
@@ -55,6 +56,7 @@ export default function CaptionsSettings({
         <h3 className="flex items-center gap-2 text-sm font-medium text-gray-700">
           <ClosedCaptioning size={18} weight="duotone" className="text-violet-400" />
           {t('activities.captions.title')}
+          <AIChip tone="soft" />
         </h3>
         <label className="flex items-center gap-2 cursor-pointer">
           <input

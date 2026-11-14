@@ -20,7 +20,7 @@ export function PresenceDot({ presence, size = 10, className = '' }: { presence?
   if (!state || state === 'offline') return null
   return (
     <span
-      className={`absolute bottom-0 end-0 rounded-full ring-2 ring-white dark:ring-gray-900 ${PRESENCE_DOT[state]} ${className}`}
+      className={`absolute bottom-0 end-0 rounded-full ring-2 ring-white ${PRESENCE_DOT[state]} ${className}`}
       style={{ width: size, height: size }}
       aria-label={state}
     />
@@ -45,7 +45,7 @@ export function PersonAvatar({
     <span className="relative inline-flex flex-shrink-0" style={{ width: size, height: size }}>
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={name} className={`${rounded} object-cover w-full h-full bg-gray-100`} />
+        <img src={url} alt={name} className={`${rounded} object-cover w-full h-full bg-neutral-100`} />
       ) : (
         <span
           className={`${rounded} w-full h-full flex items-center justify-center font-semibold select-none`}
@@ -64,13 +64,13 @@ export function AvatarStack({ users, size = 22, max = 3 }: { users: UserSummary[
   return (
     <span className="inline-flex items-center -space-x-1.5">
       {shown.map((u) => (
-        <span key={u.id} className="rounded-full ring-2 ring-white dark:ring-gray-900">
+        <span key={u.id} className="rounded-full ring-2 ring-white">
           <PersonAvatar user={u} size={size} showPresence={false} />
         </span>
       ))}
       {users.length > max && (
         <span
-          className="rounded-full ring-2 ring-white bg-gray-100 text-gray-500 font-semibold flex items-center justify-center"
+          className="rounded-full ring-2 ring-white bg-neutral-100 text-neutral-500 font-semibold flex items-center justify-center"
           style={{ width: size, height: size, fontSize: size * 0.4 }}
         >
           +{users.length - max}
@@ -96,14 +96,14 @@ export function CourseThumb({
       <img
         src={getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image)}
         alt={course.name}
-        className={`rounded-lg object-cover flex-shrink-0 bg-gray-100 ${className}`}
+        className={`rounded-lg object-cover flex-shrink-0 bg-neutral-100 ${className}`}
         style={{ width: size, height: size }}
       />
     )
   }
   return (
     <span
-      className={`rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100 text-gray-500 ${className}`}
+      className={`rounded-lg flex items-center justify-center flex-shrink-0 bg-neutral-100 text-neutral-500 ${className}`}
       style={{ width: size, height: size }}
     >
       <Megaphone size={size * 0.5} weight="fill" />
@@ -135,7 +135,7 @@ export function ConversationAvatar({
   if (conversation.emoji) {
     return (
       <span
-        className="rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800"
+        className="rounded-lg flex items-center justify-center flex-shrink-0 bg-neutral-100"
         style={{ width: size, height: size, fontSize: size * 0.5 }}
       >
         {conversation.emoji}
@@ -152,7 +152,7 @@ export function ConversationAvatar({
       <span className="absolute top-0 start-0">
         <PersonAvatar user={others[0]} size={inner} showPresence={false} />
       </span>
-      <span className="absolute bottom-0 end-0 rounded-full ring-2 ring-white dark:ring-gray-900">
+      <span className="absolute bottom-0 end-0 rounded-full ring-2 ring-white">
         <PersonAvatar user={others[1]} size={inner} showPresence={false} />
       </span>
     </span>

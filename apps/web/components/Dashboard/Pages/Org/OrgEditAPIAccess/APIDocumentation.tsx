@@ -2,29 +2,21 @@
 import React, { useState, useEffect } from 'react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { toast } from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@components/ui/button'
-import { Input } from '@components/ui/input'
-import { Textarea } from '@components/ui/textarea'
-import { Label } from '@components/ui/label'
-import { Badge } from '@components/ui/badge'
-
-
 import {
-  ChevronDown,
-  ChevronRight,
-  Play,
-  Copy,
-  Check,
-  RefreshCw,
-  Search,
+  ArrowsClockwise,
+  CaretDown,
+  CaretRight,
   Code,
-  BookOpen,
-  Monitor,
-} from 'lucide-react'
+  Desktop,
+  Key,
+  PaperPlaneTilt,
+  Warning,
+} from '@phosphor-icons/react'
 import { getAPIUrl } from '@services/config/config'
 import { fetchOpenAPISpec } from '@services/api_tokens/api_tokens'
+import { Button, Chip, EmptyState, INPUT, SearchInput, TEXTAREA } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { CodeBlock, Kbd, MethodBadge, StatusCode } from '@components/Dashboard/Pages/Org/Developers/devKit'
 
 interface OpenAPIPath {
   [method: string]: {
@@ -84,14 +76,6 @@ interface EndpointGroup {
   }>
 }
 
-const METHOD_COLORS: Record<string, string> = {
-  get: 'bg-blue-100 text-blue-800',
-  post: 'bg-green-100 text-green-800',
-  put: 'bg-yellow-100 text-yellow-800',
-  patch: 'bg-orange-100 text-orange-800',
-  delete: 'bg-red-100 text-red-800',
-}
-
 // Tags with custom labels shown next to the group name
 const TAG_LABELS: Record<string, string> = {
   admin: 'dashboard.organization.api_access.docs.tag_headless',
@@ -116,6 +100,13 @@ const ALLOWED_API_TAGS = [
   'user-groups',
   'payments',
   'search',
+  // Plays authoring API (EE, Pro and up); absent from the spec without EE.
+  'plays',
+  // Newsletter API (EE, Standard and up): lists, subscribers, segments,
+  // campaigns, automations. Absent from the spec without EE.
+  'newsletter',
+  // CRM integrations (EE): status, mapping, syncs. Absent without EE.
+  'crm',
 ]
 
 const APIDocumentation: React.FC = () => {
@@ -145,7 +136,6 @@ const APIDocumentation: React.FC = () => {
     time: number
   } | null>(null)
   const [isExecuting, setIsExecuting] = useState(false)
-  const [copiedCurl, setCopiedCurl] = useState(false)
   const [showExpectedResponses, setShowExpectedResponses] = useState(false)
 
   useEffect(() => {
@@ -289,6 +279,8 @@ const APIDocumentation: React.FC = () => {
 
     // Helper to check if a tag is allowed for API tokens
     const isAllowedTag = (tag: string): boolean => {
+      // Tool endpoints (POST /api/v1/tools/{name}) are tagged "tools/<toolset>".
+      if (tag === 'tools' || tag.startsWith('tools/')) return true
       const normalizedTag = tag.toLowerCase().replace(/[^a-z]/g, '')
       return ALLOWED_API_TAGS.some(
         (allowed) => normalizedTag === allowed.toLowerCase().replace(/[^a-z]/g, '')
@@ -442,13 +434,6 @@ const APIDocumentation: React.FC = () => {
     return curl
   }
 
-  const copyCurl = async () => {
-    await navigator.clipboard.writeText(generateCurl())
-    setCopiedCurl(true)
-    toast.success(t('dashboard.organization.api_access.docs.curl_copied'))
-    setTimeout(() => setCopiedCurl(false), 2000)
-  }
-
   const executeRequest = async () => {
     if (!selectedEndpoint) return
 
@@ -511,10 +496,23 @@ const APIDocumentation: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="pb-4">
-        <div className="flex justify-center items-center py-12">
-          <RefreshCw className="animate-spin text-gray-400 me-2" size={24} />
-          <span className="text-gray-500">{t('dashboard.organization.api_access.docs.loading')}</span>
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-4 animate-pulse" aria-busy>
+        <div className="bg-white rounded-2xl nice-shadow p-4 space-y-3">
+          <div className="h-9 bg-neutral-100 rounded-lg" />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="h-5 w-12 bg-neutral-100 rounded-md" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 bg-neutral-100 rounded w-2/3" />
+                <div className="h-2.5 bg-neutral-100 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="bg-white rounded-2xl nice-shadow p-5 space-y-3">
+          <div className="h-5 bg-neutral-100 rounded w-1/2" />
+          <div className="h-3 bg-neutral-100 rounded w-3/4" />
+          <div className="h-32 bg-neutral-100 rounded-xl" />
         </div>
       </div>
     )
@@ -522,14 +520,17 @@ const APIDocumentation: React.FC = () => {
 
   if (error) {
     return (
-      <div className="pb-4">
-        <div className="text-center py-12">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={loadSpec} variant="outline">
-            <RefreshCw size={16} className="me-2" />
-            {t('common.retry')}
-          </Button>
-        </div>
+      <div className="bg-white rounded-2xl nice-shadow">
+        <EmptyState
+          icon={<Warning size={22} />}
+          title={t('dashboard.organization.api_access.docs.load_failed')}
+          description={error}
+          action={
+            <Button onClick={loadSpec} icon={<ArrowsClockwise size={14} />}>
+              {t('common.retry')}
+            </Button>
+          }
+        />
       </div>
     )
   }
@@ -537,384 +538,350 @@ const APIDocumentation: React.FC = () => {
   if (!spec) return null
 
   const groups = filterEndpoints(getEndpointGroups(spec))
+  const bodySchemaRaw = selectedEndpoint?.details.requestBody?.content?.['application/json']?.schema
+  const bodySchema = bodySchemaRaw ? resolveRef(bodySchemaRaw) : null
+  const params: any[] = Array.isArray(selectedEndpoint?.details.parameters) ? selectedEndpoint!.details.parameters : []
+  const responseText = response
+    ? typeof response.data === 'object'
+      ? JSON.stringify(response.data, null, 2)
+      : String(response.data)
+    : ''
 
   return (
-    <div className="pb-4">
-        {/* API Token Input */}
-        <div className="mb-6">
-          <Label htmlFor="apiToken" className="flex items-center gap-2 mb-2">
-            <Code size={16} />
-            {t('dashboard.organization.api_access.docs.token_label')}
-          </Label>
-          <Input
-            id="apiToken"
-            type="password"
-            value={apiToken}
-            onChange={(e) => setApiToken(e.target.value)}
-            placeholder={t('dashboard.organization.api_access.docs.token_placeholder')}
-            className="font-mono"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            {t('dashboard.organization.api_access.docs.token_hint')}
-          </p>
+    <div className="flex flex-col gap-4">
+      {/* Test token */}
+      <div className="bg-white rounded-2xl nice-shadow px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 sm:w-80 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
+            <Key size={17} />
+          </div>
+          <div className="min-w-0">
+            <label htmlFor="apiToken" className="block text-sm font-semibold text-neutral-900">
+              {t('dashboard.organization.api_access.docs.token_label')}
+            </label>
+            <p className="text-xs text-neutral-500 truncate">{t('dashboard.organization.api_access.docs.token_hint')}</p>
+          </div>
         </div>
+        <input
+          id="apiToken"
+          type="password"
+          autoComplete="off"
+          spellCheck={false}
+          value={apiToken}
+          onChange={(e) => setApiToken(e.target.value)}
+          placeholder={t('dashboard.organization.api_access.docs.token_placeholder')}
+          className={`${INPUT} font-mono text-[13px] flex-1`}
+        />
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Endpoints List */}
-          <div className="border rounded-lg">
-            <div className="p-4 border-b">
-              <div className="relative">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <Input
-                  placeholder={t('dashboard.organization.api_access.docs.search_placeholder')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="ps-10"
-                />
-              </div>
-            </div>
-
-            <div className="max-h-[600px] overflow-y-auto">
-              {groups.map((group) => (
-                <div key={group.tag} className="border-b last:border-b-0">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-4 items-start">
+        {/* Endpoints */}
+        <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
+          <div className="p-3 border-b border-neutral-100">
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder={t('dashboard.organization.api_access.docs.search_placeholder')}
+            />
+          </div>
+          <div className="max-h-[680px] overflow-y-auto">
+            {groups.length === 0 && (
+              <p className="px-4 py-10 text-center text-sm text-neutral-400">{t('dashboard.developers.api.no_endpoints')}</p>
+            )}
+            {groups.map((group) => {
+              const open = expandedGroups.has(group.tag) || !!searchQuery.trim()
+              return (
+                <div key={group.tag} className="border-b border-neutral-100 last:border-b-0">
                   <button
+                    type="button"
                     onClick={() => toggleGroup(group.tag)}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    aria-expanded={open}
+                    className="w-full px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-neutral-50/70 transition-colors"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium capitalize">{group.tag}</span>
-                      {TAG_LABELS[group.tag.toLowerCase()] && (
-                        <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-                          <Monitor size={10} className="me-1" />
-                          {t(TAG_LABELS[group.tag.toLowerCase()])}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{group.endpoints.length}</Badge>
-                      {expandedGroups.has(group.tag) ? (
-                        <ChevronDown size={16} />
+                    <span className="flex items-center gap-2 min-w-0">
+                      {open ? (
+                        <CaretDown size={13} className="text-neutral-400 shrink-0" />
                       ) : (
-                        <ChevronRight size={16} />
+                        <CaretRight size={13} className="text-neutral-400 shrink-0 rtl:rotate-180" />
                       )}
-                    </div>
+                      <span className="text-sm font-semibold text-neutral-800 capitalize truncate">{group.tag}</span>
+                      {TAG_LABELS[group.tag.toLowerCase()] && (
+                        <Chip tone="violet" icon={<Desktop size={11} />}>
+                          {t(TAG_LABELS[group.tag.toLowerCase()])}
+                        </Chip>
+                      )}
+                    </span>
+                    <span className="text-xs font-semibold text-neutral-400 tabular-nums">{group.endpoints.length}</span>
                   </button>
 
-                  {expandedGroups.has(group.tag) && (
-                    <div className="bg-gray-50">
-                      {group.endpoints.map((endpoint, idx) => (
-                        <button
-                          key={`${endpoint.method}-${endpoint.path}-${idx}`}
-                          onClick={() =>
-                            selectEndpoint(
-                              endpoint.path,
-                              endpoint.method,
-                              spec.paths[endpoint.path][endpoint.method.toLowerCase()]
-                            )
-                          }
-                          className={`w-full px-4 py-2 flex items-center gap-3 text-start hover:bg-gray-100 transition-colors ${
-                            selectedEndpoint?.path === endpoint.path &&
-                            selectedEndpoint?.method === endpoint.method
-                              ? 'bg-blue-50 border-s-2 border-blue-500'
-                              : ''
-                          }`}
-                        >
-                          <Badge
-                            className={`${
-                              METHOD_COLORS[endpoint.method.toLowerCase()] || 'bg-gray-100'
-                            } text-xs font-mono min-w-[60px] justify-center`}
-                          >
-                            {endpoint.method}
-                          </Badge>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{endpoint.summary}</p>
-                            <p className="text-xs text-gray-500 font-mono truncate">
-                              {endpoint.path}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Endpoint Details & Playground */}
-          <div className="border rounded-lg">
-            {selectedEndpoint ? (
-              <div className="flex flex-col">
-                {/* Endpoint Header */}
-                <div className="p-4 border-b bg-gray-50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge
-                      className={`${
-                        METHOD_COLORS[selectedEndpoint.method.toLowerCase()] || 'bg-gray-100'
-                      } font-mono`}
-                    >
-                      {selectedEndpoint.method}
-                    </Badge>
-                    <code className="text-sm">{selectedEndpoint.path}</code>
-                  </div>
-                  {selectedEndpoint.details.summary && (
-                    <p className="text-sm font-medium">{selectedEndpoint.details.summary}</p>
-                  )}
-                  {selectedEndpoint.details.description && (
-                    <p className="text-xs text-gray-600 mt-1">
-                      {selectedEndpoint.details.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* Parameters */}
-                {selectedEndpoint.details.parameters &&
-                  selectedEndpoint.details.parameters.length > 0 && (
-                    <div className="p-4 border-b">
-                      <Label className="mb-2 block">{t('dashboard.organization.api_access.docs.parameters')}</Label>
-                      <div className="space-y-2">
-                        {selectedEndpoint.details.parameters.map((param: any) => (
-                          <div key={param.name}>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium">{param.name}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {param.in}
-                              </Badge>
-                              {param.required && (
-                                <Badge variant="destructive" className="text-xs">
-                                  {t('dashboard.organization.api_access.docs.required')}
-                                </Badge>
-                              )}
-                              {param.schema?.type && (
-                                <span className="text-xs text-gray-400">{param.schema.type}</span>
-                              )}
-                            </div>
-                            {param.description && (
-                              <p className="text-xs text-gray-500 mb-1">{param.description}</p>
-                            )}
-                            <Input
-                              value={requestParams[param.name] || ''}
-                              onChange={(e) =>
-                                setRequestParams({
-                                  ...requestParams,
-                                  [param.name]: e.target.value,
-                                })
-                              }
-                              placeholder={param.description || param.name}
-                              className="text-sm"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Request Body */}
-                {selectedEndpoint.method !== 'GET' && (
-                  <div className="p-4 border-b">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="block">{t('dashboard.organization.api_access.docs.request_body')}</Label>
-                      {selectedEndpoint.details.requestBody?.content?.['application/json']?.schema && (
-                        <span className="text-xs text-gray-400 font-mono">
-                          {getSchemaTypeLabel(selectedEndpoint.details.requestBody.content['application/json'].schema)}
-                        </span>
-                      )}
-                    </div>
-                    {/* Show expected body schema */}
-                    {selectedEndpoint.details.requestBody?.content?.['application/json']?.schema && (() => {
-                      const bodySchema = resolveRef(selectedEndpoint.details.requestBody.content['application/json'].schema)
-                      if (bodySchema?.properties) {
+                  {open && (
+                    <div className="pb-1.5">
+                      {group.endpoints.map((endpoint, idx) => {
+                        const active =
+                          selectedEndpoint?.path === endpoint.path && selectedEndpoint?.method === endpoint.method
                         return (
-                          <div className="mb-2 bg-gray-50 rounded-md p-2 text-xs space-y-0.5">
-                            {Object.entries(bodySchema.properties).map(([key, prop]: [string, any]) => {
-                              const resolvedProp = resolveRef(prop)
-                              const isRequired = bodySchema.required?.includes(key)
-                              return (
-                                <div key={key} className="flex items-center gap-2">
-                                  <code className="text-gray-700">{key}</code>
-                                  <span className="text-gray-400">{resolvedProp?.type || 'any'}</span>
-                                  {isRequired && <span className="text-red-400">*</span>}
-                                  {resolvedProp?.description && (
-                                    <span className="text-gray-400 truncate">- {resolvedProp.description}</span>
-                                  )}
-                                </div>
+                          <button
+                            type="button"
+                            key={`${endpoint.method}-${endpoint.path}-${idx}`}
+                            onClick={() =>
+                              selectEndpoint(
+                                endpoint.path,
+                                endpoint.method,
+                                spec.paths[endpoint.path][endpoint.method.toLowerCase()]
                               )
-                            })}
-                          </div>
-                        )
-                      }
-                      return null
-                    })()}
-                    <Textarea
-                      value={requestBody}
-                      onChange={(e) => setRequestBody(e.target.value)}
-                      placeholder="{}"
-                      className="font-mono text-sm min-h-[120px]"
-                    />
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="p-4 border-b flex gap-2">
-                  <Button
-                    onClick={executeRequest}
-                    disabled={isExecuting}
-                    className="flex-1"
-                  >
-                    {isExecuting ? (
-                      <>
-                        <RefreshCw size={16} className="me-2 animate-spin" />
-                        {t('dashboard.organization.api_access.docs.executing')}
-                      </>
-                    ) : (
-                      <>
-                        <Play size={16} className="me-2" />
-                        {t('dashboard.organization.api_access.docs.send_request')}
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={copyCurl}>
-                    {copiedCurl ? (
-                      <Check size={16} className="text-green-600" />
-                    ) : (
-                      <Copy size={16} />
-                    )}
-                  </Button>
-                </div>
-
-                {/* Response */}
-                <div className="p-4 border-b">
-                  <Label className="mb-2 block">{t('dashboard.organization.api_access.docs.response')}</Label>
-                  {response ? (
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge
-                          className={
-                            response.status >= 200 && response.status < 300
-                              ? 'bg-green-100 text-green-800'
-                              : response.status >= 400
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }
-                        >
-                          {response.status} {response.statusText}
-                        </Badge>
-                        <span className="text-xs text-gray-500">{response.time}ms</span>
-                      </div>
-                      <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs overflow-auto max-h-[300px]">
-                        {typeof response.data === 'object'
-                          ? JSON.stringify(response.data, null, 2)
-                          : response.data}
-                      </pre>
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-gray-400">
-                      <BookOpen size={24} className="mx-auto mb-1 opacity-50" />
-                      <p className="text-sm">{t('dashboard.organization.api_access.docs.no_response')}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Expected Responses (collapsible) */}
-                {selectedEndpoint.details.responses && (
-                  <div className="border-b">
-                    <button
-                      onClick={() => setShowExpectedResponses(!showExpectedResponses)}
-                      className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                    >
-                      <Label className="cursor-pointer text-gray-500">{t('dashboard.organization.api_access.docs.expected_responses')}</Label>
-                      <div className="flex items-center gap-1.5">
-                        {Object.keys(selectedEndpoint.details.responses).map((code) => (
-                          <Badge
-                            key={code}
-                            variant="outline"
-                            className={`text-xs ${
-                              code.startsWith('2')
-                                ? 'border-green-200 text-green-600'
-                                : code.startsWith('4')
-                                ? 'border-red-200 text-red-600'
-                                : 'border-gray-200 text-gray-500'
+                            }
+                            className={`w-full ps-4 pe-3 py-2 flex items-center gap-3 text-start transition-colors border-s-2 ${
+                              active
+                                ? 'bg-neutral-100/80 border-neutral-900'
+                                : 'border-transparent hover:bg-neutral-50'
                             }`}
                           >
-                            {code}
-                          </Badge>
-                        ))}
-                        {showExpectedResponses ? (
-                          <ChevronDown size={14} className="text-gray-400 ms-1" />
-                        ) : (
-                          <ChevronRight size={14} className="text-gray-400 ms-1" />
-                        )}
-                      </div>
-                    </button>
+                            <MethodBadge method={endpoint.method} />
+                            <span className="flex-1 min-w-0">
+                              <span className={`block text-[13px] truncate ${active ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-700'}`}>
+                                {endpoint.summary}
+                              </span>
+                              <code dir="ltr" className="block text-[11px] text-neutral-400 font-mono truncate">
+                                {endpoint.path}
+                              </code>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
 
-                    {showExpectedResponses && (
-                      <div className="px-4 pb-4 space-y-2">
-                        {Object.entries(selectedEndpoint.details.responses).map(([code, res]: [string, any]) => {
-                          const responseSchema = res?.content?.['application/json']?.schema
-                          const resolvedSchema = responseSchema ? resolveRef(responseSchema) : null
-                          const example = resolvedSchema ? schemaToExample(resolvedSchema) : null
+        {/* Endpoint details & playground */}
+        <div className="bg-white rounded-2xl nice-shadow overflow-hidden xl:sticky xl:top-0">
+          {selectedEndpoint ? (
+            <div className="flex flex-col divide-y divide-neutral-100">
+              <div className="px-5 py-4">
+                <div className="flex items-center gap-2 min-w-0">
+                  <MethodBadge method={selectedEndpoint.method} />
+                  <code dir="ltr" className="text-[13px] font-mono font-medium text-neutral-800 truncate">
+                    {selectedEndpoint.path}
+                  </code>
+                </div>
+                {selectedEndpoint.details.summary && (
+                  <p className="mt-2 text-sm font-semibold text-neutral-900">{selectedEndpoint.details.summary}</p>
+                )}
+                {selectedEndpoint.details.description && (
+                  <p className="mt-1 text-xs text-neutral-500 whitespace-pre-line">{selectedEndpoint.details.description}</p>
+                )}
+              </div>
 
-                          return (
-                            <div key={code} className="border rounded-md overflow-hidden">
-                              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50">
-                                <Badge
-                                  className={`text-xs ${
-                                    code.startsWith('2')
-                                      ? 'bg-green-100 text-green-800'
-                                      : code.startsWith('4')
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-gray-100 text-gray-800'
-                                  }`}
-                                >
-                                  {code}
-                                </Badge>
-                                <span className="text-xs text-gray-600">{res.description || ''}</span>
-                                {responseSchema && (
-                                  <span className="text-xs text-gray-400 font-mono ms-auto">
-                                    {getSchemaTypeLabel(responseSchema)}
-                                  </span>
-                                )}
-                              </div>
-                              {example && (
-                                <pre className="bg-gray-900 text-gray-100 p-3 text-xs overflow-auto max-h-[150px]">
-                                  {JSON.stringify(example, null, 2)}
-                                </pre>
-                              )}
-                              {!example && resolvedSchema?.properties && (
-                                <div className="px-3 py-2 text-xs space-y-0.5">
-                                  {Object.entries(resolvedSchema.properties).map(([key, prop]: [string, any]) => {
-                                    const resolvedProp = resolveRef(prop)
-                                    return (
-                                      <div key={key} className="flex items-center gap-2">
-                                        <code className="text-gray-700">{key}</code>
-                                        <span className="text-gray-400">{resolvedProp?.type || 'any'}</span>
-                                        {resolvedProp?.description && (
-                                          <span className="text-gray-400 truncate">- {resolvedProp.description}</span>
-                                        )}
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
+              {params.length > 0 && (
+                <div className="px-5 py-4">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
+                    {t('dashboard.organization.api_access.docs.parameters')}
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {params.map((param: any) => (
+                      <label key={`${param.in}-${param.name}`} className="block min-w-0">
+                        <span className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                          <code className="text-[12.5px] font-mono font-semibold text-neutral-800 truncate">{param.name}</code>
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">{param.in}</span>
+                          {param.schema?.type && (
+                            <span className="text-[11px] font-mono text-neutral-400">{param.schema.type}</span>
+                          )}
+                          {param.required && (
+                            <span className="text-[10px] font-semibold text-rose-500">
+                              {t('dashboard.organization.api_access.docs.required')}
+                            </span>
+                          )}
+                        </span>
+                        <input
+                          value={requestParams[param.name] || ''}
+                          onChange={(e) =>
+                            setRequestParams({
+                              ...requestParams,
+                              [param.name]: e.target.value,
+                            })
+                          }
+                          placeholder={param.description || param.name}
+                          className={`${INPUT} font-mono text-[13px]`}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedEndpoint.method !== 'GET' && (
+                <div className="px-5 py-4">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                      {t('dashboard.organization.api_access.docs.request_body')}
+                    </h4>
+                    {bodySchemaRaw && (
+                      <span className="text-[11px] text-neutral-400 font-mono">{getSchemaTypeLabel(bodySchemaRaw)}</span>
                     )}
+                  </div>
+                  {bodySchema?.properties && (
+                    <div className="mb-2 rounded-lg bg-neutral-50 ring-1 ring-inset ring-neutral-200/70 px-3 py-2 text-xs space-y-1">
+                      {Object.entries(bodySchema.properties).map(([key, prop]: [string, any]) => {
+                        const resolvedProp = resolveRef(prop)
+                        const isRequired = bodySchema.required?.includes(key)
+                        return (
+                          <div key={key} className="flex items-center gap-2 min-w-0">
+                            <code className="font-mono text-neutral-800">{key}</code>
+                            <span className="font-mono text-neutral-400">{resolvedProp?.type || 'any'}</span>
+                            {isRequired && <span className="text-rose-500">*</span>}
+                            {resolvedProp?.description && (
+                              <span className="text-neutral-400 truncate">{resolvedProp.description}</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                  <textarea
+                    value={requestBody}
+                    onChange={(e) => setRequestBody(e.target.value)}
+                    placeholder="{}"
+                    spellCheck={false}
+                    dir="ltr"
+                    className={`${TEXTAREA} font-mono text-[12.5px] min-h-[140px] resize-y`}
+                  />
+                </div>
+              )}
+
+              <div className="px-5 py-4 flex flex-col gap-3">
+                <CodeBlock title="cURL" tabs={[{ key: 'curl', label: 'request.sh', code: generateCurl(), lang: 'bash' }]} maxHeight="max-h-[180px]" />
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="primary"
+                    onClick={executeRequest}
+                    loading={isExecuting}
+                    icon={<PaperPlaneTilt size={14} />}
+                  >
+                    {isExecuting
+                      ? t('dashboard.organization.api_access.docs.executing')
+                      : t('dashboard.organization.api_access.docs.send_request')}
+                  </Button>
+                  {!apiToken.trim() && (
+                    <span className="text-xs text-amber-700">{t('dashboard.developers.api.no_token_warning')}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                    {t('dashboard.organization.api_access.docs.response')}
+                  </h4>
+                  {response && (
+                    <span className="flex items-center gap-2">
+                      <StatusCode code={response.status}>{response.statusText}</StatusCode>
+                      <span className="text-[11px] font-mono text-neutral-400 tabular-nums">{response.time}ms</span>
+                    </span>
+                  )}
+                </div>
+                {response ? (
+                  <CodeBlock
+                    title="response.json"
+                    tabs={[{ key: 'res', label: 'response.json', code: responseText, lang: typeof response.data === 'object' ? 'json' : 'text' }]}
+                    maxHeight="max-h-[340px]"
+                  />
+                ) : (
+                  <div className="rounded-xl border border-dashed border-neutral-200 py-8 text-center">
+                    <p className="text-sm text-neutral-400">{t('dashboard.organization.api_access.docs.no_response')}</p>
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-full py-12 text-gray-400">
-                <div className="text-center">
-                  <Code size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>{t('dashboard.organization.api_access.docs.select_endpoint')}</p>
-                  <p className="text-sm">{t('dashboard.organization.api_access.docs.select_endpoint_hint')}</p>
+
+              {selectedEndpoint.details.responses && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowExpectedResponses(!showExpectedResponses)}
+                    aria-expanded={showExpectedResponses}
+                    className="w-full px-5 py-3 flex items-center justify-between gap-3 hover:bg-neutral-50/70 transition-colors"
+                  >
+                    <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                      {t('dashboard.organization.api_access.docs.expected_responses')}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      {Object.keys(selectedEndpoint.details.responses).map((code) => (
+                        <StatusCode key={code} code={code} />
+                      ))}
+                      {showExpectedResponses ? (
+                        <CaretDown size={13} className="text-neutral-400 ms-1" />
+                      ) : (
+                        <CaretRight size={13} className="text-neutral-400 ms-1 rtl:rotate-180" />
+                      )}
+                    </span>
+                  </button>
+
+                  {showExpectedResponses && (
+                    <div className="px-5 pb-4 space-y-3">
+                      {Object.entries(selectedEndpoint.details.responses).map(([code, res]: [string, any]) => {
+                        const responseSchema = res?.content?.['application/json']?.schema
+                        const resolvedSchema = responseSchema ? resolveRef(responseSchema) : null
+                        const example = resolvedSchema ? schemaToExample(resolvedSchema) : null
+
+                        return (
+                          <div key={code} className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <StatusCode code={code} />
+                              <span className="text-xs text-neutral-600 truncate">{res?.description || ''}</span>
+                              {responseSchema && (
+                                <span className="text-[11px] text-neutral-400 font-mono ms-auto shrink-0">
+                                  {getSchemaTypeLabel(responseSchema)}
+                                </span>
+                              )}
+                            </div>
+                            {example && (
+                              <CodeBlock
+                                title={`${code}.json`}
+                                tabs={[{ key: code, label: `${code}.json`, code: JSON.stringify(example, null, 2), lang: 'json' }]}
+                                maxHeight="max-h-[180px]"
+                              />
+                            )}
+                            {!example && resolvedSchema?.properties && (
+                              <div className="rounded-lg bg-neutral-50 ring-1 ring-inset ring-neutral-200/70 px-3 py-2 text-xs space-y-1">
+                                {Object.entries(resolvedSchema.properties).map(([key, prop]: [string, any]) => {
+                                  const resolvedProp = resolveRef(prop)
+                                  return (
+                                    <div key={key} className="flex items-center gap-2 min-w-0">
+                                      <code className="font-mono text-neutral-800">{key}</code>
+                                      <span className="font-mono text-neutral-400">{resolvedProp?.type || 'any'}</span>
+                                      {resolvedProp?.description && (
+                                        <span className="text-neutral-400 truncate">{resolvedProp.description}</span>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Code size={22} />}
+              title={t('dashboard.organization.api_access.docs.select_endpoint')}
+              description={t('dashboard.developers.api.select_endpoint_hint')}
+              action={
+                <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                  <Kbd>/</Kbd>
+                  {t('dashboard.developers.api.search_hint')}
+                </span>
+              }
+            />
+          )}
         </div>
+      </div>
     </div>
   )
 }

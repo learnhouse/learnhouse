@@ -23,6 +23,7 @@ from src.db.editor_templates import (
 )
 from src.db.users import PublicUser
 from src.security.org_auth import require_org_role_permission
+from src.services.courses.activities.comment_marks import strip_comment_marks
 
 MAX_TEMPLATE_BYTES = 1024 * 1024
 MAX_TEMPLATES_PER_ORG = 500
@@ -113,7 +114,8 @@ async def create_editor_template(
         name=template_object.name.strip(),
         description=template_object.description.strip(),
         kind=template_object.kind,
-        content=template_object.content,
+        # Templates are reused in other activities, where these threads do not exist.
+        content=strip_comment_marks(template_object.content),
         org_id=template_object.org_id,
         creator_id=user.id,
         template_uuid=f"template_{uuid4()}",
@@ -143,7 +145,7 @@ async def update_editor_template(
         template.description = template_object.description.strip()
     if template_object.content is not None:
         _validate_content(template_object.content)
-        template.content = template_object.content
+        template.content = strip_comment_marks(template_object.content)
     template.update_date = str(datetime.now())
 
     db_session.add(template)

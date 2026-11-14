@@ -14,7 +14,6 @@ from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.communities.communities import Community, CommunityRead
 from src.db.communities.discussions import Discussion, DiscussionRead
-from src.db.playgrounds import Playground, PlaygroundRead, PlaygroundAccessType
 from src.db.podcasts.podcasts import Podcast, PodcastRead
 from src.services.courses.courses import accessible_courses_filter, search_courses
 from src.services.search.normalization import (
@@ -82,7 +81,8 @@ class SearchResult(BaseModel):
     users: List[UserReadPublic]
     communities: List[CommunityRead]
     discussions: List[SearchDiscussionRead]
-    playgrounds: List[PlaygroundRead]
+    # Plays (EE): PlaygroundRead objects, empty without EE.
+    playgrounds: List[Any]
     podcasts: List[PodcastRead]
 
     total_courses: int = 0
@@ -411,30 +411,6 @@ async def search_across_org(
         db_session, discussions_q, page, limit
     )
 
-    # ── Playgrounds (published only; restricted are usergroup-gated elsewhere) ─
-    playgrounds_q = (
-        select(Playground)
-        .where(Playground.org_id == org.id)
-        .where(Playground.published == sa_true())
-        .where(_ilike_terms([Playground.name, Playground.description], patterns))
-    )
-    if only_public or (
-        is_token and not token_has_right(current_user, "playgrounds", "action_read")
-    ):
-        playgrounds_q = playgrounds_q.where(
-            Playground.access_type == PlaygroundAccessType.PUBLIC
-        )
-    else:
-        playgrounds_q = playgrounds_q.where(
-            Playground.access_type.in_([  # type: ignore[attr-defined]
-                PlaygroundAccessType.PUBLIC,
-                PlaygroundAccessType.AUTHENTICATED,
-            ])
-        )
-    playgrounds, total_playgrounds = await _paginate_and_count(
-        db_session, playgrounds_q, page, limit
-    )
-
     # ── Podcasts ─────────────────────────────────────────────────────────────
     podcasts_q = (
         select(Podcast)
@@ -495,15 +471,24 @@ async def search_across_org(
         if not (community_uuid and await _locked(community_uuid))
     ]
 
-    playground_reads: list[PlaygroundRead] = []
-    for pg in playgrounds:
-        read = PlaygroundRead.model_validate(pg)
-        read.org_uuid = org.org_uuid
-        read.org_slug = org.slug
-        sold_as = pg.playground_uuid if pg.playground_uuid.startswith("playground_") else f"playground_{pg.playground_uuid}"
-        if await _locked(sold_as):
-            read.html_content = None
-        playground_reads.append(read)
+    # Plays are an EE feature; without EE there are none to search.
+    from src.core.ee_hooks import get_ee_module
+
+    playground_search = get_ee_module("ee.services.playgrounds.search")
+    playground_reads: list = []
+    total_playgrounds = 0
+    if playground_search is not None:
+        playground_reads, total_playgrounds = await playground_search.search_playgrounds(
+            db_session,
+            org,
+            patterns,
+            current_user=current_user,
+            only_public=only_public,
+            is_token=is_token,
+            page=page,
+            limit=limit,
+            is_locked=_locked,
+        )
 
     podcast_reads = [PodcastRead(**p.model_dump(), authors=[]) for p in podcasts]
 

@@ -1,6 +1,6 @@
 'use client'
 import { default as React, type JSX } from 'react';
-import Editor from './Editor'
+import Editor, { type LegacyEditorHandle } from './Editor'
 import { updateActivity, getActivityState, getActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
@@ -9,6 +9,14 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { preloadComponentsForContent } from './editorPreload'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useAuth } from '@components/Contexts/AuthContext'
+import { useActivityCollab } from './Collab/useActivityCollab'
+import { useCollabSnapshot } from './Collab/CollabContext'
+import { type LiveEditingMode, activityLiveEditingMode, orgLiveEditing, resolveLiveEditing } from './Collab/liveEditing'
+import { getAPIUrl } from '@services/config/config'
+import { getActivityTranslation, updateActivityTranslation } from '@services/courses/translations'
+import { useEditorLocale } from './Translation/EditorLocaleContext'
+import { withLocaleQuery } from './Translation/translationEditorModel'
 
 /**
  * Transforms ProseMirror JSON content to fix mark type names.
@@ -49,6 +57,11 @@ function normalizeMarkTypes(content: any): any {
   return normalized;
 }
 
+// How long the editor stays read-only while live editing connects
+const GRACE_MS = 1500
+// Longest wait for the room to reflect an autosave before switching to it
+const HANDOVER_WAIT_MS = 3000
+
 export interface ConflictInfo {
   hasConflict: boolean
   remoteVersion: number
@@ -70,6 +83,116 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   const { track } = useLHAnalytics('editor')
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
+  const { getAccessToken } = useAuth()
+  // Editing a translation (`?lang=`): its own room, saves and version
+  const locale = useEditorLocale()?.locale ?? null
+
+  // The editor opens at once on the stored content. Live editing joins in
+  // the background: if the room syncs within GRACE_MS the editor switches to
+  // it before anyone could type; after that the page is editable in autosave
+  // mode and switches over as soon as it has nothing left to save.
+  // Live editing (collaboration + autosave) unless an admin turned it off for
+  // the org or this activity: then the editor saves manually.
+  const [liveMode, setLiveMode] = React.useState<LiveEditingMode>(() => activityLiveEditingMode(props.activity.details))
+  const [orgDefault, setOrgDefault] = React.useState<boolean>(() => orgLiveEditing(props.org?.config?.config))
+  // Turned off by an admin during this session (we don't know at which level)
+  const [forcedOff, setForcedOff] = React.useState(false)
+  const liveEditing = resolveLiveEditing(liveMode, orgDefault) && !forcedOff
+  const collab = useActivityCollab({
+    activityUuid: props.activity.activity_uuid,
+    locale,
+    enabled: props.activity.activity_sub_type === 'SUBTYPE_DYNAMIC_PAGE' && liveEditing,
+    getToken: getAccessToken,
+  })
+  // The server is the judge (the org default may have changed since load)
+  const manualSave = !liveEditing || collab.phase === 'disabled'
+  const [contentOverride, setContentOverride] = React.useState<any>(null)
+  const [graceOver, setGraceOver] = React.useState(false)
+  React.useEffect(() => {
+    const id = setTimeout(() => setGraceOver(true), GRACE_MS)
+    return () => clearTimeout(id)
+  }, [])
+  const legacyHandle = React.useRef<LegacyEditorHandle | null>(null)
+  const onLegacyHandle = React.useCallback((handle: LegacyEditorHandle | null) => {
+    legacyHandle.current = handle
+  }, [])
+  const [live, setLive] = React.useState(false)
+  const [handoverSelection, setHandoverSelection] = React.useState<{ from: number; to: number; focused: boolean } | null>(null)
+  React.useEffect(() => {
+    if (collab.phase !== 'live' || live) return
+    const session = collab.session
+    const ready = () => {
+      const handle = legacyHandle.current
+      // Still read-only (nobody could type yet), or nothing to carry over
+      if (!graceOver || !handle) return true
+      if (!handle.isClean()) return false
+      const savedAt = handle.lastSavedAt()
+      // Edited in autosave mode: wait until the room shows that save (the
+      // API notifies it), or give it a few seconds
+      return !savedAt || handle.matches(session.contentJSON()) || Date.now() - savedAt > HANDOVER_WAIT_MS
+    }
+    const goLive = () => {
+      const handle = legacyHandle.current
+      if (graceOver && handle) setHandoverSelection(handle.selection())
+      setLive(true)
+    }
+    const id = setInterval(() => {
+      if (ready()) goLive()
+    }, 250)
+    if (ready()) queueMicrotask(goLive)
+    return () => clearInterval(id)
+  }, [collab, graceOver, live])
+  const liveSession = live && collab.phase === 'live' && liveEditing ? collab.session : null
+
+  // Live editing turned off while in the room: the server saved it and closed
+  // the room. Continue on the same content, saving manually.
+  const liveSnapshot = useCollabSnapshot(liveSession)
+  const switchToManual = React.useCallback(async (session: NonNullable<typeof liveSession>, fromAdmin: boolean) => {
+    setContentOverride(session.contentJSON())
+    try {
+      const state = locale
+        ? { current_version: (await getActivityTranslation(props.activity.activity_uuid, locale, access_token)).version }
+        : await getActivityState(props.activity.activity_uuid, access_token)
+      if (state?.current_version) setLocalVersion(state.current_version)
+    } catch {
+      // the next save's version check catches up
+    }
+    if (fromAdmin) {
+      toast(t('editor.live_editing.turned_off_toast', 'Live editing was turned off by an admin; changes are now saved manually'), { icon: '✋', id: 'live-editing-off' })
+    }
+    setLive(false)
+    if (fromAdmin) setForcedOff(true)
+  }, [props.activity.activity_uuid, access_token, t, locale])
+  React.useEffect(() => {
+    if (liveSession && liveSnapshot.terminal === 'disabled') void switchToManual(liveSession, true)
+  }, [liveSession, liveSnapshot.terminal, switchToManual])
+
+  /** "Live editing" in the editor's History menu: default / on / off for this activity. */
+  const setActivityLiveMode = React.useCallback(async (mode: LiveEditingMode) => {
+    const handle = legacyHandle.current
+    if (!liveEditing && resolveLiveEditing(mode, orgDefault) && handle?.hasUnsavedChanges()) {
+      toast.error(t('editor.live_editing.save_first', 'Save your changes before turning live editing on.'))
+      return true
+    }
+    const token = await getAccessToken()
+    const res = await fetch(`${getAPIUrl()}activities/${props.activity.activity_uuid}/live-editing`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ mode }),
+    })
+    if (!res.ok) return false
+    const body = await res.json()
+    if (liveSession && body.effective === false) await switchToManual(liveSession, false)
+    else if (!liveSession && body.effective === true && handle) {
+      // Going live: keep showing what's on screen (saved) until the room syncs
+      setContentOverride(handle.getJSON())
+    }
+    setOrgDefault(body.org_default)
+    setLiveMode(body.mode)
+    setForcedOff(false)
+    return true
+  }, [getAccessToken, props.activity.activity_uuid, liveSession, switchToManual, liveEditing, orgDefault, t])
 
   // Track the current version we loaded with
   const [localVersion, setLocalVersion] = React.useState<number>(
@@ -108,7 +231,13 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     if (!access_token) return null;
 
     try {
-      const remoteState = await getActivityState(
+      const remoteState = locale
+        ? await getActivityTranslation(props.activity.activity_uuid, locale, access_token).then((tr) => ({
+            current_version: tr.version,
+            last_modified_by_username: tr.updated_by,
+            update_date: tr.updated_at,
+          }))
+        : await getActivityState(
         props.activity.activity_uuid,
         access_token
       );
@@ -127,13 +256,14 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
       console.error('Error checking for conflicts:', error);
       return null;
     }
-  }, [props.activity.activity_uuid, access_token, localVersion]);
+  }, [props.activity.activity_uuid, access_token, localVersion, locale]);
 
   // Fetch remote content for merging
   const fetchRemoteContent = React.useCallback(async () => {
     if (!access_token) return null;
 
     try {
+      if (locale) return (await getActivityTranslation(props.activity.activity_uuid, locale, access_token)).content
       const remoteActivity = await getActivity(
         props.activity.activity_uuid,
         null,
@@ -144,15 +274,48 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
       console.error('Error fetching remote content:', error);
       return null;
     }
-  }, [props.activity.activity_uuid, access_token]);
+  }, [props.activity.activity_uuid, access_token, locale]);
 
-  async function setContent(content: any, forceOverwrite: boolean = false) {
+  // `quiet`: autosave, whose status shows in the header instead of toasts
+  async function setContent(content: any, forceOverwrite: boolean = false, options: { quiet?: boolean } = {}) {
+    // Autosave: one request, the API checks the version atomically (409 =
+    // someone else saved first) and keeps one history entry per few minutes
+    if (options.quiet && !forceOverwrite) {
+      try {
+        const res = await fetch(withLocaleQuery(`${getAPIUrl()}activities/${props.activity.activity_uuid}/content/autosave`, locale), {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ content, base_version: localVersion }),
+        })
+        if (res.status === 409) {
+          const detail = (await res.json().catch(() => null))?.detail ?? {}
+          const conflictInfo: ConflictInfo = {
+            hasConflict: true,
+            remoteVersion: detail.current_version ?? localVersion + 1,
+            localVersion,
+            lastModifiedBy: detail.last_modified_by ?? null,
+            lastModifiedAt: detail.update_date ?? null,
+          }
+          return { hasConflict: true, conflictInfo }
+        }
+        if (!res.ok) return { hasConflict: false, result: null }
+        const data = await res.json()
+        setLocalVersion(data.current_version)
+        setLocalUpdateDate(data.update_date)
+        track(AnalyticsEvent.ActivityContentSaved, { new_version: data.current_version, had_conflict: false, autosave: true })
+        return { hasConflict: false, result: { success: true, data } }
+      } catch {
+        return { hasConflict: false, result: null }
+      }
+    }
+
     // Check for conflicts before saving (unless force overwrite)
     if (!forceOverwrite) {
       const conflictInfo = await checkForConflicts();
       if (conflictInfo?.hasConflict) {
         // Don't save if there's a conflict - the UI will handle this
-        toast.error(
+        if (!options.quiet) toast.error(
           t('editor.versioning.conflict.detected', {
             author: conflictInfo.lastModifiedBy || t('editor.versioning.conflict.another_teacher')
           })
@@ -162,8 +325,14 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     }
 
     try {
+      // A translation saves to its own row (version checked unless overwriting)
+      const save = locale
+        ? updateActivityTranslation(props.activity.activity_uuid, locale, { content, ...(forceOverwrite ? {} : { base_version: localVersion }) }, access_token)
+            .then((tr) => ({ success: true, data: { current_version: tr.version, update_date: tr.updated_at } }))
+            .catch((err: any) => ({ success: false, data: { detail: err?.message } }))
+        : updateActivity({ content }, props.activity.activity_uuid, access_token)
       const result = await toast.promise(
-        updateActivity({ content }, props.activity.activity_uuid, access_token).then(res => {
+        save.then((res: any) => {
           if (!res.success) {
             throw res;
           }
@@ -200,10 +369,18 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
       <OrgProvider orgslug={props.org.slug}>
         {!session.isLoading && (
           <Editor
+            key={liveSession ? 'live' : manualSave ? 'manual' : 'autosave'}
+            collab={liveSession}
+            saveMode={manualSave ? 'manual' : 'auto'}
+            liveEditing={{ mode: liveMode, orgDefault, onChange: setActivityLiveMode }}
+            readOnly={!manualSave && !liveSession && collab.phase === 'connecting' && !graceOver}
+            connecting={!manualSave && !liveSession && collab.phase === 'connecting'}
+            onLegacyHandle={onLegacyHandle}
+            handoverSelection={handoverSelection}
             org={props.org}
             course={props.course}
             activity={props.activity}
-            content={normalizedContent}
+            content={contentOverride ?? normalizedContent}
             setContent={setContent}
             session={session}
             checkForConflicts={checkForConflicts}

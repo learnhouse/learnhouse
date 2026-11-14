@@ -92,6 +92,15 @@ function applyMarks(text: React.ReactNode, marks?: any[]): React.ReactNode {
           </a>
         )
       }
+      // Marks from the editor's selection menu; colors and effects stay plain here.
+      case 'superscript':
+        return <sup>{acc}</sup>
+      case 'subscript':
+        return <sub>{acc}</sub>
+      case 'kbd':
+        return <kbd className="px-1 rounded bg-gray-100 text-[11px] font-mono">{acc}</kbd>
+      case 'spoiler':
+        return <span className="rounded bg-gray-200 text-transparent select-none">{acc}</span>
       default:
         return acc
     }
@@ -480,6 +489,10 @@ function PreviewBody({ activity }: { activity: any }) {
 
   if (type === 'TYPE_SCORM') {
     return <EmptyState text={t('activities.preview.scorm_unavailable')} />
+  }
+
+  if (type === 'TYPE_PLAY') {
+    return <EmptyState text={t('play_activity.preview', 'Step-by-step play (open to play it)')} />
   }
 
   if (type === 'TYPE_LIVE_SESSION') {

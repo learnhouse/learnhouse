@@ -1,8 +1,7 @@
 'use client'
-import React, { useState, useMemo, useRef, useEffect } from 'react'
+import React, { useState, useMemo, useRef, useEffect, useId } from 'react'
 import { Check, CaretUpDown, X } from '@phosphor-icons/react'
-import { Input } from '@components/ui/input'
-import { Button } from '@components/ui/button'
+import { Button, INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
 import { CURATED_FONTS, DEFAULT_FONT, getGoogleFontPreviewUrl } from '@/lib/fonts'
 import allGoogleFonts from '@/lib/google-fonts-catalog.json'
@@ -12,6 +11,12 @@ import { useTranslation } from 'react-i18next'
 interface FontSelectorProps {
   value: string
   onChange: (_font: string) => void
+  /** Shown when no font is picked (defaults to the platform font). */
+  emptyLabel?: string
+  /** Hide the sample box under the picker. */
+  hideSample?: boolean
+  /** Accessible name of the picker button. */
+  ariaLabel?: string
 }
 
 function ensureFontLoaded(font: string) {
@@ -25,11 +30,12 @@ function ensureFontLoaded(font: string) {
   document.head.appendChild(link)
 }
 
-export default function FontSelector({ value, onChange }: FontSelectorProps) {
+export default function FontSelector({ value, onChange, emptyLabel, hideSample = false, ariaLabel }: FontSelectorProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
+  const listId = `font-selector-list-${useId().replace(/:/g, '')}`
 
   const filteredFonts = useMemo(() => {
     if (!search.trim()) return CURATED_FONTS
@@ -56,43 +62,45 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
     setSearch('')
   }
 
-  const displayValue = value || `${DEFAULT_FONT} (${t('dashboard.organization.branding.theme.default')})`
+  const displayValue = value || emptyLabel || `${DEFAULT_FONT} (${t('dashboard.organization.branding.theme.default')})`
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button
-              variant="outline"
+            <button
+              type="button"
               role="combobox"
               aria-expanded={open}
-              className="h-10 w-72 justify-between bg-white font-normal"
+              aria-label={ariaLabel}
+              aria-controls={listId}
+              className={`${INPUT} !w-72 max-w-full flex items-center justify-between text-start cursor-pointer`}
             >
               <span className="truncate" style={value ? { fontFamily: `'${value}', sans-serif` } : undefined}>
                 {displayValue}
               </span>
-              <CaretUpDown weight="duotone" size={14} className="ms-2 shrink-0 opacity-50" />
-            </Button>
+              <CaretUpDown size={14} className="ms-2 shrink-0 text-neutral-400" />
+            </button>
           </PopoverTrigger>
           <PopoverContent className="w-72 p-0" align="start">
             <div className="border-b p-2">
-              <Input
+              <input
                 placeholder={t('dashboard.organization.branding.theme.search_fonts')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 text-sm"
+                className={`${INPUT} !h-8`}
                 autoFocus
               />
             </div>
             {showingFullCatalog && filteredFonts.length > 0 && (
-              <div className="bg-gray-50/50 px-3 py-1.5 text-[11px] text-gray-400">
+              <div className="bg-neutral-50/50 px-3 py-1.5 text-[11px] text-neutral-400">
                 {t('dashboard.organization.branding.theme.all_fonts')}
               </div>
             )}
-            <div ref={listRef} className="max-h-60 overflow-y-auto p-1">
+            <div ref={listRef} id={listId} className="max-h-60 overflow-y-auto p-1">
               {filteredFonts.length === 0 ? (
-                <div className="py-6 text-center text-sm text-gray-500">
+                <div className="py-6 text-center text-sm text-neutral-500">
                   {t('dashboard.organization.branding.theme.no_fonts')}
                 </div>
               ) : (
@@ -102,14 +110,14 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
                     type="button"
                     onClick={() => handleSelect(font)}
                     className={cn(
-                      'flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm hover:bg-gray-100',
-                      value === font && 'bg-gray-100'
+                      'flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm hover:bg-neutral-100',
+                      value === font && 'bg-neutral-100'
                     )}
                   >
-                    <Check size={14} weight="duotone" className={cn('shrink-0', value === font ? 'opacity-100' : 'opacity-0')} />
+                    <Check size={14} className={cn('shrink-0', value === font ? 'opacity-100' : 'opacity-0')} />
                     <span style={{ fontFamily: `'${font}', sans-serif` }}>{font}</span>
                     {font === DEFAULT_FONT && (
-                      <span className="ms-auto text-[10px] text-gray-400">
+                      <span className="ms-auto text-[10px] text-neutral-400">
                         {t('dashboard.organization.branding.theme.default')}
                       </span>
                     )}
@@ -122,24 +130,25 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
 
         {value && (
           <Button
-            type="button"
             variant="ghost"
-            size="sm"
+            size="icon"
+            aria-label={t('dashboard.organization.branding.theme.clear')}
+            title={t('dashboard.organization.branding.theme.clear')}
             onClick={() => {
               onChange('')
               setSearch('')
             }}
-            className="h-10 px-2 text-gray-400 hover:text-gray-700"
-          >
-            <X size={14} weight="duotone" />
-          </Button>
+            icon={<X size={14} />}
+          />
         )}
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4" style={{ fontFamily: `'${value || DEFAULT_FONT}', sans-serif` }}>
-        <p className="mb-1 text-2xl font-bold text-gray-900">{t('dashboard.organization.branding.font_sample')}</p>
-        <p className="text-sm text-gray-600">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789</p>
-      </div>
+      {!hideSample && (
+        <div className="rounded-xl ring-1 ring-inset ring-neutral-200 bg-white p-4" style={{ fontFamily: `'${value || DEFAULT_FONT}', sans-serif` }}>
+          <p className="mb-1 text-2xl font-bold text-neutral-900">{t('dashboard.organization.branding.font_sample')}</p>
+          <p className="text-sm text-neutral-600">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789</p>
+        </div>
+      )}
     </div>
   )
 }

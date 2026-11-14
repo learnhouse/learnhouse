@@ -15,9 +15,22 @@ from jwt.exceptions import PyJWTError
 from datetime import datetime, timedelta, timezone
 from src.services.users.users import security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY, security_hash_password
+from src.security.impersonation import (
+    CODE_DENIED as IMPERSONATION_CODE_DENIED,
+    CODE_ENDED as IMPERSONATION_CODE_ENDED,
+    CODE_WRONG_ORG as IMPERSONATION_CODE_WRONG_ORG,
+    context_from_claims,
+    error_detail as impersonation_error_detail,
+    report_denied as report_impersonation_denied,
+    report_misplaced as report_misplaced_impersonation,
+    request_policy as impersonation_request_policy,
+    resolve_credential as resolve_impersonation_credential,
+    set_impersonation,
+)
 from src.security.session_context import (
     AMR_CLAIM,
     AUTH_METHOD_API_TOKEN,
+    AUTH_METHOD_IMPERSONATION,
     CUSTOM_DOMAIN_CLAIM,
     LEGACY_GRACE_CLAIM,
     SORG_CLAIM,
@@ -454,6 +467,86 @@ def _get_refresh_grace(user_id: int, jti: str) -> Optional[dict]:
         return None
 
 
+# Lost-rotation recovery. The grace window only covers replays that arrive
+# within minutes. The common case it misses: the refresh response that
+# carried the rotated cookie never reached the browser (the tab was closed or
+# navigated mid-request, the laptop slept, the connection dropped). The
+# browser keeps the consumed token and presents it again hours or days later,
+# which used to be classified as theft and revoked every session the user had
+# on every device. Production logs showed exactly that: replays of tokens
+# 30-50+ hours old.
+#
+# So each rotation also records which token replaced the consumed one. When a
+# consumed token comes back after the grace window:
+#   - if its successor was never presented, the rotation was lost in transit
+#     and the session is recovered with a fresh pair, once per token;
+#   - if its successor was already used, someone else holds the chain, which
+#     is still treated as theft.
+# The successor claimed by a recovery is dead: if it is ever presented it is a
+# replay with no successor, so it revokes. Together with the once-per-token
+# cap this keeps two holders of a chain from recovering each other's tokens
+# back and forth. Only jti strings are stored, never tokens.
+
+
+def _record_refresh_successor(user_id: int, jti: str, successor_jti: str) -> None:
+    """Remember that ``successor_jti`` replaced the consumed ``jti``, for as
+    long as either token could still be presented."""
+    r = _get_revocation_redis_client()
+    if r is None:
+        return
+    try:
+        r.setex(
+            f"refresh_successor:{user_id}:{jti}",
+            int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
+            successor_jti,
+        )
+    except Exception:
+        return
+
+
+def _get_refresh_successor(user_id: int, jti: str) -> Optional[str]:
+    """The jti that replaced ``jti`` at rotation, or ``None`` if unknown."""
+    r = _get_revocation_redis_client()
+    if r is None:
+        return None
+    try:
+        raw = r.get(f"refresh_successor:{user_id}:{jti}")
+        if raw is None:
+            return None
+        return raw.decode("utf-8") if isinstance(raw, bytes) else str(raw)
+    except Exception:
+        return None
+
+
+def _mark_refresh_recovered(user_id: int, jti: str) -> bool:
+    """Atomically allow ONE lost-rotation recovery per consumed ``jti``.
+
+    Without this cap a thief holding an old token and the real user could keep
+    recovering each other's chains forever without ever tripping replay
+    detection. A second recovery of the same token is treated as theft."""
+    r = _get_revocation_redis_client()
+    if r is None:
+        return False
+    try:
+        return bool(
+            r.set(
+                f"refresh_recovered:{user_id}:{jti}",
+                "1",
+                nx=True,
+                ex=int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
+            )
+        )
+    except Exception:
+        return False
+
+
+def refresh_token_jti(token: str) -> Optional[str]:
+    """The ``jti`` of a refresh token this server just minted."""
+    payload = decode_refresh_token(token)
+    jti = payload.get("jti") if payload else None
+    return jti if isinstance(jti, str) else None
+
+
 async def _verify_api_token_org_boundary(
     request: Request,
     api_token_user: APITokenUser,
@@ -630,8 +723,23 @@ async def _resolve_current_user(
         raise credentials_exception
 
     # Step 2: Fall back to JWT logic using PyJWT
-    token = extract_jwt_from_request(request)
+    # One resolver, shared with the impersonation gate middleware, so the two
+    # always agree on what this request is (src.security.impersonation).
+    credential = resolve_impersonation_credential(request.headers, request.cookies)
+    token = credential.token
     username = None
+
+    # An impersonation resolves to its target user, confirmed against
+    # the server-side record. A spent, forged or misplaced one is a 401, never a
+    # fall-through to another credential the browser holds.
+    if credential.status == "ok":
+        return await _resolve_impersonated_user(request, db_session, credential.payload)
+    if credential.refused:
+        if credential.status == "misplaced":
+            report_misplaced_impersonation(
+                credential, request.scope.get("method") or "GET", request.scope.get("path") or ""
+            )
+        raise _impersonation_ended_exception()
 
     if token:
         payload = decode_jwt(token)
@@ -712,6 +820,15 @@ async def _resolve_current_user(
             superadmin_memo = {}
             db_session._superadmin_cache = superadmin_memo
         superadmin_memo[user.id] = bool(getattr(user, "is_superadmin", False))
+        if superadmin_memo[user.id]:
+            # Outside the platform console a superadmin's own session is an
+            # ordinary user's; org access is an impersonation (see
+            # src.security.superadmin).
+            from src.security.superadmin import block_superadmin_org_bypass
+
+            scope = getattr(request, "scope", None)
+            scope = scope if isinstance(scope, dict) else {}
+            block_superadmin_org_bypass(user.id, scope.get("path") or "")
         request.state.user = public_user
         request.state.is_api_token = False
         # Publish this session's provenance (how the user authenticated, which
@@ -726,6 +843,85 @@ async def _resolve_current_user(
         return public_user
     else:
         return AnonymousUser()
+
+
+def _impersonation_ended_exception() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=impersonation_error_detail(IMPERSONATION_CODE_ENDED),
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+async def _request_org_id(request: Request, db_session: AsyncSession) -> Optional[int]:
+    """The org a request is scoped to by its path or query, when it names one."""
+    org_id, org_slug, org_uuid = _org_ref_from_request(request)
+    if org_id is not None:
+        return org_id
+    if not (org_slug or org_uuid):
+        return None
+    from src.db.organizations import Organization
+
+    column = Organization.slug if org_slug else Organization.org_uuid
+    value = org_slug or org_uuid
+    return (await db_session.execute(select(Organization.id).where(column == value))).scalars().first()
+
+
+async def _resolve_impersonated_user(
+    request: Request, db_session: AsyncSession, payload: dict
+) -> PublicUser:
+    """Resolve an impersonation token to the target user.
+
+    The EE hook confirms the server-side record (live, not revoked, token
+    fingerprint, impersonator still allowed, target still a non-staff member
+    holding the role the session allows) and returns the target's row. The
+    target's own memberships and roles then decide everything, exactly as if
+    they had signed in, with no superadmin bypass and no activity tracking.
+    """
+    ctx = context_from_claims(payload)
+    if ctx is None:
+        raise _impersonation_ended_exception()
+    # The gate middleware already refused what this session may not do; apply
+    # the same policy here too, so the resolved principal decides even where
+    # the gate did not run.
+    method = request.scope.get("method") or "GET"
+    path = request.scope.get("path") or ""
+    decision = impersonation_request_policy(method, path, ctx)
+    if decision is not None:
+        code = IMPERSONATION_CODE_DENIED if decision == "swallow" else decision
+        report_impersonation_denied(ctx, method, path, code)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=impersonation_error_detail(code))
+    from src.core.ee_hooks import get_ee_hooks
+
+    hooks = get_ee_hooks()
+    confirm = getattr(hooks, "confirm_impersonation", None) if hooks else None
+    if confirm is None:
+        raise _impersonation_ended_exception()
+    user = await confirm(db_session, ctx)
+    if user is None:
+        raise _impersonation_ended_exception()
+
+    scoped_org = await _request_org_id(request, db_session)
+    if scoped_org is not None and scoped_org != ctx.org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=impersonation_error_detail(IMPERSONATION_CODE_WRONG_ORG),
+        )
+
+    label = " ".join(p for p in (user.first_name, user.last_name) if p).strip() or user.username
+    confirmed = ctx.confirmed(label)
+    public_user = PublicUser(**user.model_dump())
+    superadmin_memo = getattr(db_session, "_superadmin_cache", None)
+    if not isinstance(superadmin_memo, dict):
+        superadmin_memo = {}
+        db_session._superadmin_cache = superadmin_memo
+    superadmin_memo[user.id] = False
+    request.state.user = public_user
+    request.state.is_api_token = False
+    request.state.impersonation = confirmed
+    set_impersonation(confirmed)
+    _publish_session_provenance(AUTH_METHOD_IMPERSONATION, ctx.org_id)
+    return public_user
 
 
 async def non_public_endpoint(current_user: UserRead | AnonymousUser):

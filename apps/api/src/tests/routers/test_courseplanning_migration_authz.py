@@ -291,7 +291,7 @@ class TestGenerateActivityContentIsTenantScoped:
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "generate_activity_content_stream", new=stream), \
              patch.object(cp, "get_org_ai_model", new=AsyncMock(return_value="m")), \
-             patch.object(cp, "reserve_ai_credit", new=reserve), \
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve), \
              patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
             for _ in range(2):
                 with pytest.raises(HTTPException) as exc:
@@ -320,7 +320,7 @@ class TestGenerateActivityContentIsTenantScoped:
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "generate_activity_content_stream", new=stream), \
              patch.object(cp, "get_org_ai_model", new=AsyncMock(return_value="m")), \
-             patch.object(cp, "reserve_ai_credit", new=reserve), \
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve), \
              patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
             with pytest.raises(HTTPException) as exc:
                 await cp.generate_activity_content(
@@ -346,7 +346,7 @@ class TestGenerateActivityContentIsTenantScoped:
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "generate_activity_content_stream", new=stream), \
              patch.object(cp, "get_org_ai_model", new=AsyncMock(return_value="m")), \
-             patch.object(cp, "reserve_ai_credit", new=AsyncMock()), \
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
              patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
             first = await cp.generate_activity_content(
                 mock_request,
@@ -610,7 +610,7 @@ class TestSuggestStructureIsGated:
         no_redis, mock_request,
     ):
         with patch.object(mig, "enforce_ai_rate_limit") as rate, \
-             patch.object(mig, "reserve_ai_credit", new=AsyncMock()):
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()):
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
@@ -628,7 +628,7 @@ class TestSuggestStructureIsGated:
         """Metered like the /ai routers so it is not a free model-spend path."""
         reserve = AsyncMock()
         with patch.object(mig, "enforce_ai_rate_limit"), \
-             patch.object(mig, "reserve_ai_credit", new=reserve):
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve):
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
@@ -641,8 +641,8 @@ class TestSuggestStructureIsGated:
     ):
         refund = MagicMock()
         with patch.object(mig, "enforce_ai_rate_limit"), \
-             patch.object(mig, "reserve_ai_credit", new=AsyncMock()), \
-             patch.object(mig, "refund_ai_credit", new=refund):
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
+             patch("src.security.features_utils.usage.refund_ai_credit", new=refund):
             with pytest.raises(HTTPException):
                 await mig.api_suggest_structure(
                     mock_request, org.id,
@@ -650,7 +650,7 @@ class TestSuggestStructureIsGated:
                     admin_user, db,
                 )
 
-        refund.assert_called_once_with(org.id)
+        refund.assert_called_once_with(org.id, 1)
 
 
 class TestUploadAndCreateAreGated:
@@ -795,3 +795,9 @@ class TestMigrationPackageOwnership:
 
         assert exc.value.status_code == 404
         create.assert_not_awaited()
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

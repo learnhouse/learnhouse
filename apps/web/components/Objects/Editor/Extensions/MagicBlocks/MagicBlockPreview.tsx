@@ -1,110 +1,50 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { CircleNotch } from '@phosphor-icons/react'
-import { extractHtmlDocument } from './extractHtml'
+import { buildMagicDocument } from './magicModel'
+import { useDocumentTheme } from '@components/Objects/Activities/BlockTheme/BlockThemeScope'
+import { injectDocumentTheme } from '@components/Objects/Activities/BlockTheme/blockTheme'
 
 interface MagicBlockPreviewProps {
   htmlContent: string | null
-  isLoading?: boolean
-  streamingContent?: string
+  /** Streaming in: skip the loading shimmer, the document changes every chunk. */
+  streaming?: boolean
 }
 
 /**
- * Sandboxed iframe preview for MagicBlock HTML content.
+ * Sandboxed iframe for Magic block HTML.
  *
  * The document goes in through srcDoc rather than a blob: URL, because a blob
  * document inherits the creating page's origin, whereas a srcDoc frame without
  * allow-same-origin lands on an opaque one.
  */
-function MagicBlockPreview({
-  htmlContent,
-  isLoading = false,
-  streamingContent = '',
-}: MagicBlockPreviewProps) {
+function MagicBlockPreview({ htmlContent, streaming = false }: MagicBlockPreviewProps) {
   const { t } = useTranslation()
-  const iframeRef = React.useRef<HTMLIFrameElement>(null)
-  const [previewHtml, setPreviewHtml] = React.useState<string | null>(null)
+  const boxRef = React.useRef<HTMLDivElement>(null)
+  // The lesson's block theme goes into the document (data-lh-theme + --lh-*
+  // variables) so generated content can follow dark mode; see blockTheme.ts.
+  const theme = useDocumentTheme(boxRef)
+  const doc = React.useMemo(() => {
+    const built = buildMagicDocument(htmlContent)
+    return built ? injectDocumentTheme(built, theme) : built
+  }, [htmlContent, theme])
+  const [loadedDoc, setLoadedDoc] = React.useState<string | null>(null)
+  const loading = !streaming && !!doc && loadedDoc !== doc
 
-  // Content to render (prioritize streaming content, then saved content)
-  const contentToRender = streamingContent || htmlContent
-
-  // Build the document handed to the sandboxed iframe
-  React.useEffect(() => {
-    if (!contentToRender) {
-      setPreviewHtml(null)
-      return
-    }
-
-    let html = extractHtmlDocument(contentToRender) || contentToRender
-
-    // Wrap content with security headers if it's not a complete document
-    let wrappedHtml = html
-    if (!html.trim().toLowerCase().startsWith('<!doctype')) {
-      wrappedHtml = `<!DOCTYPE html>
-<html style="height: 100%; width: 100%;">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://d3js.org https://unpkg.com https://cdn.plot.ly https://cdn.babylonjs.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://unpkg.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https:; media-src 'self' https: data: blob:;">
-  <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-  </style>
-</head>
-<body>
-${html}
-</body>
-</html>`
-    }
-
-    setPreviewHtml(wrappedHtml)
-  }, [contentToRender])
-
-  // Show loading state
-  if (isLoading && !streamingContent) {
-    return (
-      <div className="flex items-center justify-center w-full h-full bg-black/30" style={{ minHeight: '100%' }}>
-        <div className="text-center space-y-3">
-          <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-purple-400" />
-          <p className="text-sm text-white/50">{t('editor.blocks.magic_block_content.generating_interactive')}</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Show empty state
-  if (!previewHtml && !isLoading) {
-    return (
-      <div className="flex items-center justify-center w-full h-full bg-black/30 border-2 border-dashed border-white/10" style={{ minHeight: '100%' }}>
-        <div className="text-center space-y-2 px-4">
-          <div className="text-4xl">✨</div>
-          <p className="text-sm text-white/50">
-            {t('editor.blocks.magic_block_content.empty_hint')}
-          </p>
-        </div>
-      </div>
-    )
-  }
-
+  if (!doc) return <div ref={boxRef} className="h-full w-full bg-neutral-50" />
   return (
-    <div className="relative w-full h-full" style={{ minHeight: 0 }}>
-      {isLoading && streamingContent && (
-        <div className="absolute top-4 end-4 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm ring-1 ring-inset ring-white/10">
-          <CircleNotch weight="bold" className="w-4 h-4 animate-spin text-purple-400" />
-          <span className="text-xs text-white/70">{t('editor.blocks.magic_block_content.generating')}</span>
+    <div ref={boxRef} className="relative h-full w-full">
+      {loading && (
+        <div className="absolute inset-0 flex flex-col gap-3 bg-white p-6" aria-hidden>
+          <div className="h-5 w-1/3 animate-pulse rounded-md bg-neutral-100" />
+          <div className="h-3 w-2/3 animate-pulse rounded-md bg-neutral-100" />
+          <div className="mt-2 flex-1 animate-pulse rounded-xl bg-neutral-100/80" />
         </div>
       )}
       <iframe
-        ref={iframeRef}
-        srcDoc={previewHtml || undefined}
-        className="w-full h-full bg-white block"
-        style={{ border: 'none', minHeight: '100%' }}
+        srcDoc={doc}
+        onLoad={() => setLoadedDoc(doc)}
+        className="block h-full w-full bg-white"
+        style={{ border: 'none' }}
         sandbox="allow-scripts"
         title={t('editor.blocks.magic_block_content.preview_title')}
       />

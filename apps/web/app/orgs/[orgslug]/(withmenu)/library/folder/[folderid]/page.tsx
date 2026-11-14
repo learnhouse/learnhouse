@@ -1,13 +1,14 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
-import FolderClient from './FolderClient'
 import { Metadata } from 'next'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import FolderClient from './FolderClient'
 import { getFolderById } from '@services/folders/folders'
-import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+import { getFolderThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { resolveForPage } from '@/lib/seo/resolve.server'
+import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
+import { buildPageTitle } from '@/lib/seo/utils'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; folderid: string }>
@@ -20,77 +21,51 @@ async function fetchFolderForViewer(folderid: string) {
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
   try {
-    const folder = await getFolderById(
-      `folder_${folderid}`,
-      access_token ?? undefined,
-      { revalidate: 0, tags: ['folders'] }
-    )
+    const folder = await getFolderById(`folder_${folderid}`, access_token ?? undefined, { revalidate: 0, tags: ['folders'] })
     return folder && folder.folder_uuid ? folder : null
   } catch {
     return null
   }
 }
 
-export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
-  const params = await props.params
-  const [org, folder] = await Promise.all([
-    getOrganizationContextInfo(params.orgslug, { revalidate: 120, tags: ['organizations'] }),
-    fetchFolderForViewer(params.folderid),
-  ])
-
-  const seoConfig = getOrgSeoConfig(org)
-
-  // Private / inaccessible folder: never index, never leak the folder name.
-  if (!folder) {
-    return {
-      title: buildPageTitle('Library', org.name, seoConfig),
-      robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
-    }
-  }
-
-  const ogImageUrl = seoConfig.default_og_image
-    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
-    : null
-  const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = await getServerCanonicalUrl(params.orgslug, `/library/folder/${params.folderid}`)
-  const title = buildPageTitle(folder.name || 'Library', org.name, seoConfig)
-  const description = folder.description || org.description || seoConfig.default_meta_description || ''
-
-  return {
-    title,
-    description,
-    robots: {
-      index: true,
-      follow: true,
-      nocache: true,
-      googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
-    },
-    alternates: { canonical },
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      images: [{ url: imageUrl, width: 800, height: 600, alt: org.name }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [imageUrl],
-      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
-    },
-  }
+function resolveFolder(orgslug: string, folderid: string) {
+  return resolveForPage(orgslug, 'folder', folderid, (k) => `/library/folder/${k}`)
 }
 
-const FolderPage = async (props: any) => {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
+  const { uuid } = await resolveFolder(params.orgslug, params.folderid)
+  const [ctx, folder] = await Promise.all([getSeoContext(params.orgslug), fetchFolderForViewer(uuid)])
+
+  // Private / inaccessible folder: never index, never leak the folder name.
+  if (!folder) return noindexMetadata(buildPageTitle('Library', ctx.org?.name || '', ctx.seo))
+
+  const key = folder.slug || uuid
+  return buildResourceMetadata({
+    ctx,
+    name: folder.name || 'Library',
+    description: folder.description || ctx.org?.description,
+    canonical: await ctx.url(`/library/folder/${key}`),
+    seo: folder.seo,
+    thumbnail: folder.thumbnail_image
+      ? getFolderThumbnailMediaDirectory(ctx.org?.org_uuid, folder.folder_uuid, folder.thumbnail_image)
+      : undefined,
+    generatedImage: await ctx.url(`/og/folder/${key}`),
+    indexable: folder.public !== false,
+    modifiedTime: folder.update_date,
+  })
+}
+
+const FolderPage = async (props: MetadataProps) => {
+  const params = await props.params
+  const { uuid } = await resolveFolder(params.orgslug, params.folderid)
   // Server-side access gate: a private folder (or one the viewer lacks rights
   // to) returns a real 404; no folder name/contents are rendered or indexed.
-  const folder = await fetchFolderForViewer(params.folderid)
+  const folder = await fetchFolderForViewer(uuid)
   if (!folder) {
     notFound()
   }
-  return <FolderClient orgslug={params.orgslug} folderid={params.folderid} />
+  return <FolderClient orgslug={params.orgslug} folderid={uuid} />
 }
 
 export default FolderPage

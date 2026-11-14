@@ -5,6 +5,8 @@ import logging
 import redis
 import string
 from fastapi import HTTPException, Request
+from src.core.ee_hooks import audit_event
+from src.services.audit.org_log import audit_account_event
 from pydantic import EmailStr
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -238,6 +240,16 @@ async def send_reset_password_code(
         )
 
     logging.info(f"Password reset code sent to user: {user.user_uuid}")
+    audit_event(
+        request,
+        action="security.password_reset.requested",
+        org_id=org.id,
+        actor=user.id,
+        target_type="user",
+        target_id=user.user_uuid,
+        target_name=user.username,
+        require_member=True,
+    )
     return "If an account with that email exists, a reset code has been sent"
 
 
@@ -347,6 +359,17 @@ async def change_password_with_reset_code(
     _invalidate_reset_codes(r, user.user_uuid)
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")
+    audit_event(
+        request,
+        action="security.password_reset.completed",
+        org_id=org.id,
+        actor=user.id,
+        target_type="user",
+        target_id=user.user_uuid,
+        target_name=user.username,
+        details={"sessions_revoked": True},
+        require_member=True,
+    )
     return "Password changed"
 
 
@@ -415,6 +438,7 @@ async def send_reset_password_code_platform(
         )
 
     logging.info(f"Password reset code sent to user: {user.user_uuid}")
+    audit_account_event(request, "security.password_reset.requested", user, actor=user.id)
     return "If an account with that email exists, a reset code has been sent"
 
 
@@ -487,4 +511,5 @@ async def change_password_with_reset_code_platform(
     _invalidate_reset_codes(r, user.user_uuid)
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")
+    audit_account_event(request, "security.password_reset.completed", user, actor=user.id, details={"sessions_revoked": True})
     return "Password changed"

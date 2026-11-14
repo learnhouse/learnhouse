@@ -1,194 +1,90 @@
-import { getOrgCourses, getCourseMetadata } from '@services/courses/courses'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgFolders } from '@services/folders/folders'
-import { getOrgPodcasts } from '@services/podcasts/podcasts'
-import { getCommunities } from '@services/communities/communities'
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  getCommunityThumbnailMediaDirectory,
+  getCourseThumbnailMediaDirectory,
+  getFolderThumbnailMediaDirectory,
+  getPathThumbnailMediaDirectory,
+  getPodcastThumbnailMediaDirectory,
+} from '@services/media/media'
+import { getServerAPIUrl } from '@services/config/config'
+import {
+  SITEMAP_TYPES,
+  buildSitemapIndex,
+  buildUrlset,
+  sitemapIndexEntries,
+  sitemapUrls,
+  type SitemapData,
+  type SitemapEntry,
+  type SitemapType,
+} from '@/lib/seo/sitemap'
 
-// Every fetch below is anonymous, so the output is public and the same for
-// every visitor of a host. Caching it keeps crawlers (and anyone looping on
-// ?type=activities, one API call per course) off the API.
+// Everything here is anonymous, so the output is public and the same for
+// every visitor of a host: cache it at the edge and keep crawlers off the API.
 const SITEMAP_HEADERS = {
-  'Content-Type': 'application/xml',
+  'Content-Type': 'application/xml; charset=utf-8',
   'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
   Vary: 'Host, X-Sitemap-Orgslug',
+  'X-Robots-Tag': 'noindex',
 }
 
 function getBaseUrlFromRequest(request: NextRequest): string {
   const host = request.headers.get('host') || 'localhost'
   const proto = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https')
-  return `${proto}://${host}/`
+  return `${proto}://${host}`
+}
+
+async function fetchSitemapData(orgSlug: string): Promise<SitemapData | null> {
+  try {
+    const res = await fetch(`${getServerAPIUrl()}seo/sitemap/${encodeURIComponent(orgSlug)}`, {
+      next: { revalidate: 300, tags: ['seo-sitemap', 'courses', 'podcasts', 'communities', 'folders'] },
+      signal: AbortSignal.timeout(15000),
+    })
+    return res.ok ? ((await res.json()) as SitemapData) : null
+  } catch {
+    return null
+  }
+}
+
+function imageUrl(orgUuid: string) {
+  return (type: 'course' | 'path' | 'podcast' | 'community' | 'folder', e: SitemapEntry): string => {
+    if (!e.image || e.image.includes('/')) return ''
+    switch (type) {
+      case 'course':
+        return getCourseThumbnailMediaDirectory(orgUuid, e.uuid, e.image)
+      case 'path':
+        return getPathThumbnailMediaDirectory(orgUuid, e.uuid, e.image)
+      case 'podcast':
+        return getPodcastThumbnailMediaDirectory(orgUuid, e.uuid, e.image)
+      case 'community':
+        return getCommunityThumbnailMediaDirectory(orgUuid, e.uuid, e.image)
+      case 'folder':
+        return getFolderThumbnailMediaDirectory(orgUuid, e.uuid, e.image)
+    }
+  }
 }
 
 export async function GET(request: NextRequest) {
   const orgSlug = request.headers.get('X-Sitemap-Orgslug')
-  const sitemapType = request.nextUrl.searchParams.get('type')
-
   if (!orgSlug) {
-    return NextResponse.json(
-      { error: 'Missing X-Sitemap-Orgslug header' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'Missing X-Sitemap-Orgslug header' }, { status: 400 })
+  }
+  const sitemapType = request.nextUrl.searchParams.get('type')
+  if (sitemapType && !(SITEMAP_TYPES as readonly string[]).includes(sitemapType)) {
+    return NextResponse.json({ error: 'Invalid sitemap type' }, { status: 404 })
   }
 
-  const baseUrl = getBaseUrlFromRequest(request)
+  const base = getBaseUrlFromRequest(request)
+  const data = await fetchSitemapData(orgSlug)
+  if (!data) {
+    // Don't cache an outage as an empty sitemap.
+    return new NextResponse('Sitemap temporarily unavailable', { status: 503, headers: { 'Retry-After': '300' } })
+  }
 
-  // If no type specified, return sitemap index
+  // The index lists only non-empty child sitemaps, with their latest lastmod.
   if (!sitemapType) {
-    const sitemapIndex = generateSitemapIndex(baseUrl)
-    return new NextResponse(sitemapIndex, {
-      headers: SITEMAP_HEADERS,
-    })
+    return new NextResponse(buildSitemapIndex(sitemapIndexEntries(data, base)), { headers: SITEMAP_HEADERS })
   }
 
-  const orgInfo = await getOrganizationContextInfo(orgSlug, null)
-
-  let sitemapUrls: SitemapUrl[] = []
-
-  switch (sitemapType) {
-    case 'pages': {
-      sitemapUrls = [
-        { loc: baseUrl, priority: 1.0, changefreq: 'daily' },
-        { loc: `${baseUrl}courses`, priority: 0.9, changefreq: 'weekly' },
-        { loc: `${baseUrl}library`, priority: 0.9, changefreq: 'weekly' },
-        { loc: `${baseUrl}podcasts`, priority: 0.9, changefreq: 'weekly' },
-        { loc: `${baseUrl}communities`, priority: 0.9, changefreq: 'weekly' },
-      ]
-      break
-    }
-    case 'courses': {
-      const courses = await getOrgCourses(orgSlug, null).catch(() => [])
-      for (const course of courses) {
-        sitemapUrls.push({
-          loc: `${baseUrl}course/${course.course_uuid.replace('course_', '')}`,
-          priority: 0.7,
-          changefreq: 'weekly',
-          lastmod: course.update_date,
-        })
-      }
-      break
-    }
-    case 'activities': {
-      const courses = await getOrgCourses(orgSlug, null).catch(() => [])
-      for (const course of courses) {
-        try {
-          const meta = await getCourseMetadata(
-            course.course_uuid.replace('course_', ''),
-            null,
-            null,
-            { slim: true }
-          )
-          if (meta?.chapters) {
-            for (const chapter of meta.chapters) {
-              if (chapter.activities) {
-                for (const activity of chapter.activities) {
-                  const activityId = (activity.activity_uuid || '').replace('activity_', '')
-                  if (activityId) {
-                    sitemapUrls.push({
-                      loc: `${baseUrl}course/${course.course_uuid.replace('course_', '')}/activity/${activityId}`,
-                      priority: 0.6,
-                      changefreq: 'weekly',
-                      lastmod: activity.update_date,
-                    })
-                  }
-                }
-              }
-            }
-          }
-        } catch {
-          // Skip activities for this course if metadata fetch fails
-        }
-      }
-      break
-    }
-    case 'folders': {
-      const folders = await getOrgFolders(orgInfo.id).catch(() => [])
-      for (const folder of folders) {
-        sitemapUrls.push({
-          loc: `${baseUrl}library/folder/${folder.folder_uuid.replace('folder_', '')}`,
-          priority: 0.6,
-          changefreq: 'weekly',
-          lastmod: folder.update_date,
-        })
-      }
-      break
-    }
-    case 'podcasts': {
-      const podcasts = await getOrgPodcasts(orgSlug, null).catch(() => [])
-      for (const podcast of podcasts) {
-        sitemapUrls.push({
-          loc: `${baseUrl}podcast/${podcast.podcast_uuid.replace('podcast_', '')}`,
-          priority: 0.7,
-          changefreq: 'weekly',
-          lastmod: podcast.update_date,
-        })
-      }
-      break
-    }
-    case 'communities': {
-      const communities = await getCommunities(orgInfo.id, 1, 1000, null).catch(() => [])
-      for (const community of communities) {
-        sitemapUrls.push({
-          loc: `${baseUrl}community/${community.community_uuid.replace('community_', '')}`,
-          priority: 0.6,
-          changefreq: 'weekly',
-          lastmod: community.update_date,
-        })
-      }
-      break
-    }
-    default: {
-      return NextResponse.json({ error: 'Invalid sitemap type' }, { status: 400 })
-    }
-  }
-
-  const sitemap = generateSitemap(sitemapUrls)
-  return new NextResponse(sitemap, {
-    headers: SITEMAP_HEADERS,
-  })
-}
-
-interface SitemapUrl {
-  loc: string
-  priority: number
-  changefreq: string
-  lastmod?: string
-}
-
-const SITEMAP_TYPES = ['pages', 'courses', 'activities', 'folders', 'podcasts', 'communities']
-
-function generateSitemapIndex(baseUrl: string): string {
-  const sitemaps = SITEMAP_TYPES.map(type => `
-  <sitemap>
-    <loc>${baseUrl}sitemap.xml?type=${type}</loc>
-  </sitemap>`).join('')
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemaps}
-</sitemapindex>`
-}
-
-function generateSitemap(urls: SitemapUrl[]): string {
-  const urlEntries = urls
-    .map(({ loc, priority, changefreq, lastmod }) => {
-      let entry = `
-    <url>
-      <loc>${loc}</loc>
-      <priority>${priority.toFixed(1)}</priority>
-      <changefreq>${changefreq}</changefreq>`
-      if (lastmod) {
-        entry += `
-      <lastmod>${lastmod.split('T')[0]}</lastmod>`
-      }
-      entry += `
-    </url>`
-      return entry
-    })
-    .join('')
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urlEntries}
-</urlset>`
+  const urls = sitemapUrls(sitemapType as SitemapType, data, { base, imageUrl: imageUrl(data.org.org_uuid) })
+  return new NextResponse(buildUrlset(urls), { headers: SITEMAP_HEADERS })
 }

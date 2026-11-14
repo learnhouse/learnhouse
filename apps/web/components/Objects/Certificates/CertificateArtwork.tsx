@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import OrgSquareLogo, { hasOrgLogo } from '@components/Objects/Org/OrgSquareLogo'
 import { formatDate } from '@/lib/format'
+import { orgThemeColors } from '@/lib/theme/orgTheme'
 
 /** The artwork is laid out once, at A4 landscape in CSS pixels, and scaled to
  * whatever box shows it (see CertificatePreview). Every size below is a real
@@ -24,6 +25,8 @@ export interface CertificateStyle {
  * accent colour and a frame. The keys are kept so existing certificates keep
  * their look. */
 export const CERTIFICATE_STYLES: Record<string, CertificateStyle> = {
+  // Follows the organization theme: the accent comes from the org at render time.
+  theme: { accent: '#111827', frame: 'double' },
   professional: { accent: '#111827', frame: 'double' },
   minimal: { accent: '#111827', frame: 'hairline' },
   modern: { accent: '#2563eb', frame: 'bar' },
@@ -38,8 +41,10 @@ export const CERTIFICATE_STYLES: Record<string, CertificateStyle> = {
 
 export const CERTIFICATE_PATTERN_KEYS = Object.keys(CERTIFICATE_STYLES)
 
-export function getCertificateStyle(pattern?: string): CertificateStyle {
-  return CERTIFICATE_STYLES[pattern || ''] || CERTIFICATE_STYLES.professional
+/** `orgAccent` (the org theme's accent) colors the "theme" style. */
+export function getCertificateStyle(pattern?: string, orgAccent?: string): CertificateStyle {
+  const style = CERTIFICATE_STYLES[pattern || ''] || CERTIFICATE_STYLES.professional
+  return pattern === 'theme' && orgAccent ? { ...style, accent: orgAccent } : style
 }
 
 export interface CertificateArtworkProps {
@@ -142,7 +147,7 @@ function CertificateArtwork({
 }: CertificateArtworkProps) {
   const { t, i18n } = useTranslation()
   const org = useOrg() as any
-  const style = getCertificateStyle(certificatePattern)
+  const style = getCertificateStyle(certificatePattern, orgThemeColors(org).accent)
   const qr = useQrCode(qrCodeLink || certificateId)
   const typeKey = certificationType || 'completion'
   const date = awardedDate || formatDate(new Date(), i18n.language, { dateStyle: 'long' })
@@ -159,6 +164,8 @@ function CertificateArtwork({
   return (
     <div
       dir="ltr"
+      // The certificate is a printed document: always its own white paper.
+      data-lh-user-content=""
       style={{ width: CERTIFICATE_WIDTH, height: CERTIFICATE_HEIGHT, position: 'relative', background: '#ffffff', color: '#111827', overflow: 'hidden' }}
     >
       <FrameArt {...style} />

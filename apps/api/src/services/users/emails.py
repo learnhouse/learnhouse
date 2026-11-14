@@ -153,15 +153,19 @@ def _button_style(brand_color: str | None) -> str:
     ``services.email.branding.normalize_brand_color``; anything else keeps the
     default black button rather than risk an unbalanced ``style`` attribute.
     """
-    from src.services.email.branding import contrasting_text_color, normalize_brand_color
+    from src.services.email.branding import contrasting_text_color, is_near_white, normalize_brand_color
 
     color = normalize_brand_color(brand_color)
-    if not color:
+    # A white (or near-white) brand would make the button vanish on the white
+    # card, so those orgs keep the default black button.
+    if not color or is_near_white(color):
         return STYLES["button"]
-    return (
-        STYLES["button"]
-        .replace("background-color: #000000;", f"background-color: {color};")
-        .replace("color: #ffffff;", f"color: {contrasting_text_color(color)};")
+    # One replacement for both colors: replacing ``color: #ffffff;`` on its own
+    # also matched inside ``background-color: #ffffff;`` and painted a white
+    # brand's button black-on-black.
+    return STYLES["button"].replace(
+        "background-color: #000000; color: #ffffff;",
+        f"background-color: {color}; color: {contrasting_text_color(color)};",
     )
 
 

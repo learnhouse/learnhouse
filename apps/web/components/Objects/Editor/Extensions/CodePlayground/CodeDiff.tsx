@@ -46,16 +46,16 @@ export default function CodeDiff({ studentCode, solutionCode }: Props) {
   return (
     <div className="rounded-lg border border-neutral-200 overflow-hidden nice-shadow">
       <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-50 border-b border-neutral-200">
-        <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">{t('editor.blocks.code_playground.code_vs_solution')}</span>
+        <span className="text-[12px] font-semibold text-neutral-500">{t('editor.blocks.code_playground.code_vs_solution')}</span>
       </div>
-      <pre className="text-[11px] font-mono leading-relaxed overflow-x-auto">
+      <div className="text-[11px] font-mono leading-relaxed overflow-x-auto whitespace-pre">
         {lines.map((line, i) => (
           <div key={i} className={`px-3 py-0.5 ${bgMap[line.type]}`}>
             <span className="inline-block w-4 text-neutral-400 select-none">{prefixMap[line.type]}</span>
             {line.text || ' '}
           </div>
         ))}
-      </pre>
+      </div>
     </div>
   )
 }

@@ -15,7 +15,7 @@ import json
 from typing import Annotated, Any, Literal, Union
 
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from sqlmodel import select
 
 from src.db.organization_config import (
@@ -49,7 +49,6 @@ from src.services.orgs.orgs import (
     update_org_folders_sort_config,
     update_org_font_config,
     update_org_footer_text_config,
-    update_org_landing,
     update_org_menu_config,
     update_org_playgrounds_config,
     update_org_podcasts_config,
@@ -90,13 +89,6 @@ _TOGGLE_SERVICES = {
     "playgrounds": update_org_playgrounds_config,
 }
 _MENU_TYPES = ("courses", "library", "podcasts", "communities", "playgrounds", "store", "custom")
-_LANDING_TYPES = frozenset({
-    "hero", "text-and-image", "logos", "people", "featured-courses", "video",
-    "rich-text", "features", "stats", "testimonials", "faq", "cta", "gallery",
-    "spacer", "pricing", "steps", "columns", "image", "embed", "banner", "countdown",
-})
-_UNSAFE_SCHEMES = ("javascript:", "vbscript:", "data:", "file:")
-_MAX_LANDING_CHARS = 100_000
 _SETTINGS_PAGE = "/dash/org/settings/general"
 
 
@@ -138,10 +130,10 @@ def _general(cfg: dict) -> dict:
 
 def _custom(cfg: dict, key: str) -> Any:
     """A customization section: v2 keeps them under customization, v1 under
-    general (menu, auth_branding, course_end) or at the top (seo, landing)."""
+    general (menu, auth_branding, course_end) or at the top (seo)."""
     if _is_v2(cfg):
         return _obj(cfg.get("customization")).get(key)
-    if key in ("seo", "landing"):
+    if key == "seo":
         return cfg.get(key)
     return _obj(cfg.get("general")).get(key)
 
@@ -205,16 +197,17 @@ def _ai_state(cfg: dict) -> dict:
     }
 
 
-def _landing_summary(landing: Any) -> dict:
-    landing = _obj(landing)
-    sections = [s for s in landing.get("sections") or [] if isinstance(s, dict)]
+async def _landing_summary(ctx: ToolContext) -> dict:
+    """The builder home page at a glance; the landing tools edit it."""
+    from src.services.landing import service as landing_service
+
+    pages = await landing_service._pages(ctx.db_session, ctx.org.id)
+    home = next((p for p in pages if p.slug == ""), None)
     return {
-        "enabled": bool(landing.get("enabled", False)),
-        "sections": [
-            {"index": i, "type": s.get("type"), "title": clip(s.get("title") or s.get("heading") or "", 80) or None}
-            for i, s in enumerate(sections[:40])
-        ],
-        "section_count": len(sections),
+        "home_published": bool(home and home.published is not None),
+        "home_sections": len((home.published or home.draft or {}).get("root") or []) if home else 0,
+        "extra_pages": [p.slug for p in pages if p.slug],
+        "edit_with": "get_landing_page and the other landing page tools",
     }
 
 
@@ -279,7 +272,7 @@ async def _get_org_settings(ctx: ToolContext, _p: GetOrgSettingsParams):
             if k in seo
         },
         "menu": {"items": _obj(_custom(cfg, "menu")).get("items") or []},
-        "landing": _landing_summary(_custom(cfg, "landing")),
+        "landing": await _landing_summary(ctx),
         "course_end": {
             k: course_end.get(k) or "" for k in ("message", "button_text", "button_link")
         },
@@ -452,52 +445,6 @@ class MenuSettings(_Strict):
     items: list[MenuItem] = Field(..., max_length=20)
 
 
-def _unsafe_strings(value: Any) -> bool:
-    if isinstance(value, str):
-        # Browsers drop control characters and whitespace inside a scheme, so
-        # "java\tscript:" and "\x01javascript:" are javascript: links too.
-        squeezed = "".join(ch for ch in value if ord(ch) > 0x20 and ord(ch) != 0x7F)
-        return squeezed.lower().startswith(_UNSAFE_SCHEMES)
-    if isinstance(value, dict):
-        return any(_unsafe_strings(v) for v in value.values())
-    if isinstance(value, list):
-        return any(_unsafe_strings(v) for v in value)
-    return False
-
-
-class LandingSettings(_Strict):
-    section: Literal["landing"]
-    mode: Literal["merge", "replace"] = Field(
-        "merge",
-        description="merge: only the fields you send change. replace: the landing page becomes exactly this.",
-    )
-    enabled: bool | None = Field(None, description="Show the custom landing page instead of the default home.")
-    sections: list[dict[str, Any]] | None = Field(
-        None,
-        max_length=40,
-        description=(
-            "The full ordered list of sections (replaces the current list). Each has a "
-            "'type' (hero, rich-text, features, cta, faq, ...) and that type's fields. "
-            "Read the current page in the dashboard editor before rewriting it."
-        ),
-    )
-    settings: dict[str, Any] | None = Field(None, description="Page-wide settings: background, width, gap.")
-
-    @model_validator(mode="after")
-    def _check(self):
-        for i, section in enumerate(self.sections or []):
-            if section.get("type") not in _LANDING_TYPES:
-                raise ValueError(
-                    f"sections[{i}].type must be one of: {', '.join(sorted(_LANDING_TYPES))}"
-                )
-        payload = {"sections": self.sections, "settings": self.settings}
-        if _unsafe_strings(payload):
-            raise ValueError("links must be internal paths or http(s) URLs")
-        if len(json.dumps(payload, default=str)) > _MAX_LANDING_CHARS:
-            raise ValueError(f"the landing page is limited to {_MAX_LANDING_CHARS} characters of JSON")
-        return self
-
-
 class CourseEndSettings(_Strict):
     section: Literal["course_end"]
     message: str | None = Field(None, max_length=500, description="Shown when a learner completes a course.")
@@ -520,7 +467,6 @@ SettingsSection = Annotated[
         AuthBrandingSettings,
         SeoSettings,
         MenuSettings,
-        LandingSettings,
         CourseEndSettings,
     ],
     Field(discriminator="section"),
@@ -532,7 +478,7 @@ class UpdateOrgSettingsParams(BaseModel):
         ...,
         description=(
             "One section, picked by its 'section' field: signup, ai, features, "
-            "library_sort, branding, auth_branding, seo, menu, landing, course_end. "
+            "library_sort, branding, auth_branding, seo, menu, course_end. "
             "Fields you omit keep their value."
         ),
     )
@@ -575,7 +521,7 @@ async def _apply_settings(ctx: ToolContext, s: BaseModel) -> list[str]:
         mechanism = "inviteOnly" if s.mode == "invite_only" else "open"
         await update_org_signup_mechanism(req, mechanism, org_id, user, db)
         return ["mode"]
-    if not fields and not isinstance(s, (MenuSettings, LandingSettings)):
+    if not fields and not isinstance(s, MenuSettings):
         raise HTTPException(status_code=400, detail="Nothing to change: pass at least one field of the section.")
 
     if isinstance(s, AiSettings):
@@ -611,19 +557,6 @@ async def _apply_settings(ctx: ToolContext, s: BaseModel) -> list[str]:
     elif isinstance(s, MenuSettings):
         await _apply_menu(ctx, await _config(ctx), s)
         return ["items"]
-    elif isinstance(s, LandingSettings):
-        current = _obj(_custom(await _config(ctx), "landing"))
-        if s.mode == "replace":
-            enabled = s.enabled if s.enabled is not None else bool(current.get("enabled", False))
-            landing: dict = {"sections": s.sections or [], "enabled": enabled}
-            if s.settings is not None:
-                landing["settings"] = s.settings
-        else:
-            if not fields:
-                raise HTTPException(status_code=400, detail="Nothing to change: pass enabled, sections or settings.")
-            landing = {**current, **fields}
-            landing.setdefault("sections", [])
-        await update_org_landing(req, landing, org_id, user, db)
     elif isinstance(s, CourseEndSettings):
         current = _obj(_custom(await _config(ctx), "course_end"))
         merged = CourseEndConfig(**{**current, **fields}).model_dump()
@@ -662,7 +595,7 @@ def _summarize_settings(p: UpdateOrgSettingsParams) -> str:
     s = p.settings
     if isinstance(s, SignupSettings):
         return "Let anyone sign up" if s.mode == "open" else "Make signup invitation only"
-    if isinstance(s, (MenuSettings, LandingSettings)):
+    if isinstance(s, MenuSettings):
         return f"{'Replace' if s.mode == 'replace' else 'Update'} the organization's {s.section} settings"
     values = ", ".join(f"{k}={v}" for k, v in _fields(s).items())
     return f"Change the organization's {s.section.replace('_', ' ')} settings: {clip(values, 200)}"
@@ -676,7 +609,7 @@ SPECS: list[ToolSpec] = [
         description=(
             "The organization's profile (name, description, contact, socials, links) and "
             "editable settings: signup mode, AI, feature switches, branding, sign-in page, "
-            "SEO, menu, landing page outline, course completion screen."
+            "SEO, menu, home page status, course completion screen."
         ),
         params_model=GetOrgSettingsParams,
         tier=ActionTier.READ,
@@ -712,8 +645,8 @@ SPECS: list[ToolSpec] = [
         name="update_org_settings",
         description=(
             "Change one settings section (org admins only): signup mode, AI, feature "
-            "switches, library sort, branding, sign-in page, SEO, menu or landing page "
-            "(merge or replace), course completion screen. Unknown fields are refused. "
+            "switches, library sort, branding, sign-in page, SEO, menu, course completion "
+            "screen. Landing pages are built with the landing page tools. Unknown fields are refused. "
             "Payments, domains, sign-in methods and AI app connections are not here."
         ),
         params_model=UpdateOrgSettingsParams,

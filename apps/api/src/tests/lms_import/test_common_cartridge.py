@@ -853,7 +853,7 @@ def test_convert_end_to_end(tmp_path):
     course_dir = out / manifest["courses"][0]["path"]
     course_json = _load(course_dir / "course.json")
     assert course_json["name"] == "Intro to Psychology"
-    assert course_json["tags"] == "psychology,intro"
+    assert course_json["tags"] == "psychology|intro"
 
     chapters = {}
     for chapter in sorted((course_dir / "chapters").iterdir()):

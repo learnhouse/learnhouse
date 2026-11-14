@@ -31,6 +31,8 @@ from src.db.users import (
     UserSession,
     UserUpdate,
     UserUpdatePassword,
+    UserPreferences,
+    UserPreferencesUpdate,
 )
 from src.services.users.users import (
     authorize_user_action,
@@ -47,6 +49,7 @@ from src.services.users.users import (
     update_user_password,
 )
 from src.services.courses.courses import get_user_courses
+from src.services.users.preferences import get_user_preferences, update_user_preferences
 
 _get_redis_client = _get_redis_pool_client
 
@@ -143,6 +146,19 @@ async def api_get_current_user_session(
     """
     Get current user session (cached for 10 minutes).
     """
+    from src.security.impersonation import current_impersonation
+
+    impersonation = current_impersonation()
+    if impersonation is not None and impersonation.verified:
+        # Never cached: the same user's own session must not pick this up, and
+        # the org scope of an impersonation already narrows the roles here.
+        session = await get_user_session(request, db_session, current_user)
+        from src.core.ee_hooks import get_ee_hooks
+
+        describe = getattr(get_ee_hooks(), "describe_impersonation", None)
+        session.impersonation = await describe(db_session, impersonation) if describe else None
+        return session
+
     if not isinstance(current_user, AnonymousUser):
         cached = _get_session_cache(current_user.id)
         if cached:
@@ -393,6 +409,56 @@ async def api_get_user_by_username(
     Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_username(request, db_session, current_user, username)
+
+
+def _require_person(current_user) -> None:
+    """Preferences belong to a person: API tokens have no account to keep them on."""
+    if not isinstance(current_user, PublicUser):
+        raise HTTPException(status_code=403, detail="Preferences need a signed-in user")
+
+
+@router.get(
+    "/me/preferences",
+    response_model=UserPreferences,
+    tags=["users"],
+    summary="Get my interface preferences",
+    description="Return the signed-in user's interface preferences (for now, the color theme). Unset fields are null.",
+    responses={
+        200: {"description": "The current user's preferences.", "model": UserPreferences},
+        401: {"description": "Not signed in"},
+    },
+)
+async def api_get_my_preferences(
+    *,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_authenticated_user),
+) -> UserPreferences:
+    _require_person(current_user)
+    return await get_user_preferences(db_session, current_user)
+
+
+@router.put(
+    "/me/preferences",
+    response_model=UserPreferences,
+    tags=["users"],
+    summary="Update my interface preferences",
+    description="Change the signed-in user's interface preferences. Only the fields sent are changed. Invalidates the cached session so the next session read carries the new values.",
+    responses={
+        200: {"description": "The preferences after the update.", "model": UserPreferences},
+        401: {"description": "Not signed in"},
+        422: {"description": "Unknown theme value"},
+    },
+)
+async def api_update_my_preferences(
+    *,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_authenticated_user),
+    preferences: UserPreferencesUpdate,
+) -> UserPreferences:
+    _require_person(current_user)
+    result = await update_user_preferences(db_session, current_user, preferences)
+    _invalidate_session_cache(current_user.id)
+    return result
 
 
 @router.put(

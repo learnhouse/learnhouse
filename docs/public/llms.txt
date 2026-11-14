@@ -64,7 +64,7 @@ LearnHouse is an open-source platform for creating and delivering modern educati
     - [Emails](https://docs.learnhouse.app/platform/users/emails): LearnHouse sends email for account and membership events
   - [Organizations](https://docs.learnhouse.app/platform/organizations): An organization is the top-level tenant in LearnHouse
     - [Settings](https://docs.learnhouse.app/platform/organizations/settings): Organization settings live under Organization in the dashboard (/dash/org/settings)
-    - [Landing Page](https://docs.learnhouse.app/platform/organizations/landing-page): By default, your organization's home page lists your courses and other content
+    - [Landing Page](https://docs.learnhouse.app/platform/organizations/landing-page): Your organization's home page is a page you design in the page builder: you stack sections, edit text in place, and style everything for desktop, tablet and phone
     - [Custom Domains](https://docs.learnhouse.app/platform/organizations/custom-domains): Serve your organization from your own domain, such as learn.mycompany.com, instead of the default LearnHouse address
     - [SEO](https://docs.learnhouse.app/platform/organizations/seo): LearnHouse generates a sitemap and a robots.txt for your organization, and adds titles, descriptions and social sharing tags to your public 
     - [Plans & Limits](https://docs.learnhouse.app/platform/organizations/plans): On LearnHouse Cloud, each organization is on a plan that decides which features it can use and how much

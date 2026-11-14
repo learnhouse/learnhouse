@@ -10,7 +10,6 @@ import pytest
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 
-from src.db.boards import Board
 from src.db.communities.communities import Community
 from src.db.communities.discussion_comments import DiscussionComment
 from src.db.communities.discussions import Discussion
@@ -26,7 +25,6 @@ from src.db.courses.courses import Course
 from src.db.folders.folders import Folder
 from src.db.media.media import Media
 from src.db.organization_config import OrganizationConfig
-from src.db.playgrounds import Playground
 from src.db.roles import Role, RoleTypeEnum
 from src.db.paths import Path
 from src.db.user_organizations import UserOrganization
@@ -271,20 +269,18 @@ async def gardening(db, org, other_org, admin_user, user_role):
     await add(db, Discussion(title="Gardening tips too", content="", community_id=theirs.id, org_id=other_org.id, author_id=admin_user.id, discussion_uuid="discussion_garden_f", creation_date=NOW, update_date=NOW))
     await add(db, Folder(name="Gardening shelf", description="", public=True, org_id=org.id, folder_uuid="folder_garden", creation_date=NOW, update_date=NOW))
     await add(db, Folder(name="Gardening shelf", description="", public=True, org_id=other_org.id, folder_uuid="folder_garden_f", creation_date=NOW, update_date=NOW))
-    await add(db, Playground(name="Gardening sim", published=True, org_id=org.id, playground_uuid="playground_garden", creation_date=NOW, update_date=NOW))
-    await add(db, Playground(name="Gardening sim", published=True, org_id=other_org.id, playground_uuid="playground_garden_f", creation_date=NOW, update_date=NOW))
     await _member(db, org, user_role, "user_gardener", "gardener", "Gardening", "Fan", id=50)
     foreign_role = await add(db, Role(name="User", org_id=other_org.id, role_type=RoleTypeEnum.TYPE_ORGANIZATION, role_uuid="role_their_user", rights={}, creation_date=NOW, update_date=NOW))
     await _member(db, other_org, foreign_role, "user_gardener_f", "gardener_f", "Gardening", "Elsewhere", id=51)
 
 
-GARDEN_FOREIGN = {"community_garden_f", "discussion_garden_f", "folder_garden_f", "playground_garden_f", "user_gardener_f"}
+GARDEN_FOREIGN = {"community_garden_f", "discussion_garden_f", "folder_garden_f", "user_gardener_f"}
 
 
 async def test_search_maps_every_org_search_kind(db, org, admin_user, registry, gardening):
     out = await search(registry, ctx_for(db, org, admin_user), query="Gardening", limit=25)
     by_uuid = {m["uuid"]: m for m in out["matches"]}
-    assert {"community_garden", "discussion_garden", "folder_garden", "playground_garden", "user_gardener"} <= set(by_uuid)
+    assert {"community_garden", "discussion_garden", "folder_garden", "user_gardener"} <= set(by_uuid)
     assert not set(by_uuid) & GARDEN_FOREIGN
     member = by_uuid["user_gardener"]
     assert member["kind"] == "member" and member["name"] == "Gardening Fan" and member["username"] == "gardener"
@@ -400,20 +396,9 @@ async def test_fetch_comment_opens_its_discussion_marked_untrusted(db, org, admi
 
 async def test_fetch_refuses_children_of_other_orgs(db, org, other_org, admin_user, admin_role, fetch_registry, foreign_rows):
     await add(db, UserOrganization(user_id=admin_user.id, org_id=other_org.id, role_id=admin_role.id, creation_date=NOW, update_date=NOW))
-    for kind in ("chapter", "assignment_task", "comment", "playground", "user", "assignment", "discussion"):
+    for kind in ("chapter", "assignment_task", "comment", "user", "assignment", "discussion"):
         out = await run_tool(fetch_registry, "fetch", {"id": foreign_rows[kind]}, ctx_for(db, org, admin_user))
         assert out.denied_code == "http_404", (kind, out.denied_code, out.reason)
-
-
-async def test_fetch_legacy_playground_and_cut_long_text(db, org, admin_user, fetch_registry):
-    bare = "0b0e1a52-1111-4c3e-9a55-000000000001"
-    await add(db, Playground(name="Physics sim", description="x" * 500, published=True, org_id=org.id, playground_uuid=bare, created_by=admin_user.id, creation_date=NOW, update_date=NOW))
-    with patch.object(fetch, "TEXT_BUDGET", 100):
-        out = ok(await run_tool(fetch_registry, "fetch", {"id": bare}, ctx_for(db, org, admin_user)))
-    assert out["metadata"]["kind"] == "playground" and out["metadata"]["truncated"] is True
-    assert out["text"].endswith("[cut here: read the rest with get_playground]")
-    other = await run_tool(fetch_registry, "fetch", {"id": "0b0e1a52-9999-4c3e-9a55-000000000009"}, ctx_for(db, org, admin_user))
-    assert other.status == "denied"
 
 
 async def test_fetch_passes_on_the_readers_own_code(db, org, regular_user, fetch_registry):
@@ -455,13 +440,15 @@ async def foreign_rows(db, other_org):
     await add(db, DiscussionComment(content="theirs", discussion_id=thread.id, author_id=user.id, comment_uuid="comment_f", creation_date=NOW, update_date=NOW))
     await add(db, Folder(name="Theirs", description="", public=True, org_id=o, folder_uuid="folder_f", creation_date=NOW, update_date=NOW))
     await add(db, Media(name="Theirs", org_id=o, media_uuid="media_f", creation_date=NOW, update_date=NOW))
-    await add(db, Board(name="Theirs", public=True, org_id=o, board_uuid="board_f", creation_date=NOW, update_date=NOW))
-    await add(db, Playground(name="Theirs", published=True, org_id=o, playground_uuid="playground_f", creation_date=NOW, update_date=NOW))
     await add(db, Path(name="Theirs", published=True, org_id=o, path_uuid="path_f", creation_date=NOW, update_date=NOW))
     return {kind: f"{refs.KINDS[kind].prefix}f" for kind in refs.KINDS}
 
 
-@pytest.mark.parametrize("kind", sorted(refs.KINDS))
+# Kinds whose model is in core (Plays and boards live in EE: ee/tests).
+CORE_KINDS = sorted(k for k, spec in refs.KINDS.items() if not spec.model.startswith("ee."))
+
+
+@pytest.mark.parametrize("kind", CORE_KINDS)
 async def test_load_404s_foreign_ids_of_every_kind(db, org, other_org, admin_user, admin_role, foreign_rows, kind):
     # Even a caller who belongs to both organizations.
     await add(db, UserOrganization(user_id=admin_user.id, org_id=other_org.id, role_id=admin_role.id, creation_date=NOW, update_date=NOW))
@@ -515,10 +502,10 @@ async def test_web_base_falls_back_to_configured_host(db, org, admin_user):
 
 
 async def test_targets_for_unprefixed_and_unknown_args(db, org, admin_user):
+    # Plays are EE-only: without EE a playground target carries no name.
     bare = "0b0e1a52-1111-4c3e-9a55-000000000001"
-    await add(db, Playground(name="Physics sim", published=True, org_id=org.id, playground_uuid=bare, creation_date=NOW, update_date=NOW))
     assert await describe_target("update_playground", {"playground_uuid": bare}, "playground_uuid", org.id, db) == {
-        "kind": "playground", "uuid": bare, "name": "Physics sim",
+        "kind": "playground", "uuid": bare,
     }
     assert await describe_target("poke_widget", {"widget_uuid": "w1", "name": "W"}, "widget_uuid", org.id, db) == {
         "kind": "widget", "name": "W",
@@ -659,3 +646,9 @@ def test_negative_cursor_is_refused():
     with pytest.raises(HTTPException) as e:
         results.offset_of(results.cursor_for(-1))
     assert e.value.status_code == 400
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

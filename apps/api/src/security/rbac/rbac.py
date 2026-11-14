@@ -16,7 +16,7 @@ from src.security.rbac.utils import (
     check_course_permissions_with_own,
     get_element_organization_id,
 )
-from src.security.superadmin import is_user_superadmin
+from src.security.superadmin import is_user_superadmin, superadmin_org_bypass_blocked
 
 logger = logging.getLogger(__name__)
 
@@ -92,11 +92,26 @@ async def check_usergroup_access(
     usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
     logger.debug("[USERGROUP_ACCESS] UserGroup IDs linked to resource: %s", usergroup_ids)
 
-    membership_stmt = select(UserGroupUser).where(
-        UserGroupUser.usergroup_id.in_(usergroup_ids),
-        UserGroupUser.user_id == user_id
-    )
-    membership = (await db_session.execute(membership_stmt)).scalars().first()
+    # Every link keeps the resource restricted; only links whose access window
+    # is open grant access, and only to memberships that have not expired.
+    from datetime import datetime, timezone
+
+    from src.security.rbac.resource_access import _window_open
+    from src.services.usergroups.windows import ugu_current
+
+    now = datetime.now(timezone.utc)
+    granting_ids = {
+        ugr.usergroup_id for ugr in usergroup_resources
+        if _window_open(getattr(ugr, "starts_at", None), getattr(ugr, "expires_at", None), now)
+    }
+    membership = None
+    if granting_ids:
+        membership_stmt = select(UserGroupUser).where(
+            UserGroupUser.usergroup_id.in_(granting_ids),
+            UserGroupUser.user_id == user_id,
+            ugu_current(now),
+        )
+        membership = (await db_session.execute(membership_stmt)).scalars().first()
 
     if membership:
         logger.debug("[USERGROUP_ACCESS] User %s IS a member of UserGroup %s, granting access", user_id, membership.usergroup_id)
@@ -351,7 +366,7 @@ async def authorization_verify_based_on_roles(
     db_session: AsyncSession,
 ):
     # Superadmin bypass - full access to all resources
-    if await is_user_superadmin(user_id, db_session):
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
         return True
 
     element_type = await check_element_type(element_uuid)
@@ -441,7 +456,7 @@ async def authorization_verify_based_on_org_admin_status(
         bool: True if user is admin in the target organization, False otherwise
     """
     # Superadmin bypass - full access to all organizations
-    if await is_user_superadmin(user_id, db_session):
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
         return True
 
     # Get the target organization's ID from the element UUID
@@ -469,7 +484,7 @@ async def authorization_verify_based_on_roles_and_authorship(
     logger.debug("[RBAC] authorization_verify_based_on_roles_and_authorship: user_id=%s, action=%s, element_uuid=%s", user_id, action, element_uuid)
 
     # Superadmin bypass - full access to all resources
-    if await is_user_superadmin(user_id, db_session):
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
         logger.debug("[RBAC] Superadmin bypass for user_id=%s", user_id)
         return True
 
@@ -662,7 +677,7 @@ async def authorization_verify_based_on_roles_and_authorship_or_api_token(
         )
 
     # Superadmin bypass - full access to all resources
-    if await is_user_superadmin(current_user.id, db_session):
+    if (await is_user_superadmin(current_user.id, db_session) and not superadmin_org_bypass_blocked(current_user.id)):
         return True
 
     # Regular user path: use existing logic

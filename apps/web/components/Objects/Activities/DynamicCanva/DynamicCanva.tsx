@@ -27,6 +27,7 @@ function normalizeMarkTypes(content: any): any {
 // Custom Extensions
 import Callout from '@components/Objects/Editor/Extensions/Callout/Callout'
 import { normalizeCalloutContent } from '@components/Objects/Editor/Extensions/Callout/calloutContent'
+import { stripCommentMarks } from '@components/Objects/Editor/Comments/commentContent'
 import InfoCallout from '@components/Objects/Editor/Extensions/Callout/Info/InfoCallout'
 import WarningCallout from '@components/Objects/Editor/Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from '@components/Objects/Editor/Extensions/Image/ImageBlock'
@@ -41,7 +42,7 @@ import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicB
 
 // Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from '@components/Objects/Editor/editorLowlight'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { LHCodeBlock as CodeBlockLowlight, ToggleBlock, DividerStyle, TEXT_MARKS } from '@components/Objects/Editor/Blocks/extensions'
 import { NoTextInput } from '@components/Objects/Editor/Extensions/NoTextInput/NoTextInput'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import EmbedObjects from '@components/Objects/Editor/Extensions/EmbedObjects/EmbedObjects'
@@ -64,6 +65,7 @@ import ConditionalBlock from '@components/Objects/Editor/Extensions/Dynamic/Cond
 import DynamicVariable from '@components/Objects/Editor/Extensions/Dynamic/DynamicVariable'
 import { CommunityTag } from '@components/Objects/Communities/Tags/CommunityTag'
 import AICanvaToolkit from './AI/AICanvaToolkit'
+import BlockThemeScope, { type BlockThemeRequest } from '@components/Objects/Activities/BlockTheme/BlockThemeScope'
 
 interface Editor {
   content: string
@@ -73,6 +75,9 @@ interface Editor {
   // stream URLs even where the Org/Course React contexts aren't populated.
   courseUuid?: string
   orgUuid?: string
+  /** Block theme: 'auto' (default) adapts to the background behind the lesson;
+   *  'light' / 'dark' force one (see BlockTheme/blockTheme.ts). */
+  theme?: BlockThemeRequest
 }
 
 
@@ -93,7 +98,9 @@ function Canva(props: Editor) {
       const parsed = typeof props.content === 'string'
         ? JSON.parse(props.content)
         : props.content;
-      return normalizeCalloutContent(normalizeMarkTypes(parsed));
+      // Editor comment marks are never shown to readers (and would make
+      // TipTap drop the whole document: this schema doesn't have them).
+      return normalizeCalloutContent(normalizeMarkTypes(stripCommentMarks(parsed)));
     } catch {
       return props.content;
     }
@@ -231,6 +238,9 @@ function Canva(props: Editor) {
       TableRow,
       TableHeader,
       TableCell,
+      ToggleBlock,
+      DividerStyle,
+      ...TEXT_MARKS,
     ],
 
     content: normalizedContent,
@@ -238,13 +248,13 @@ function Canva(props: Editor) {
 
   return (
     <EditorOptionsProvider options={{ isEditable: false }}>
-      <div className="w-full mx-auto">
+      <BlockThemeScope theme={props.theme} className="w-full mx-auto">
         <AICanvaToolkit activity={props.activity} editor={editor} />
-        <div className="canva-content-wrapper">
+        <div className="canva-content-wrapper" data-lesson-content="">
           {!props.hideTableOfContents && <TableOfContents editor={editor} />}
           <EditorContent editor={editor} />
         </div>
-      </div>
+      </BlockThemeScope>
     </EditorOptionsProvider>
   )
 }

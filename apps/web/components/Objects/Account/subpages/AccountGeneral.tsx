@@ -1,83 +1,27 @@
 'use client';
 import { updateProfile } from '@services/settings/profile'
 import { getUser } from '@services/users/users'
-import React, { useEffect, useState, useCallback } from 'react'
-import { Formik, Form } from 'formik'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import { Formik, Form, type FormikProps } from 'formik'
+import Link from 'next/link'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import {
-  ArrowBigUpDash,
-  Check,
-  FileWarning,
-  Info,
-  UploadCloud,
-  AlertTriangle,
-  Briefcase,
-  GraduationCap,
-  MapPin,
-  Building2,
-  Globe,
-  Laptop2,
-  Award,
-  BookOpen,
-  Link,
-  Users,
-  Calendar,
-  Lightbulb
-} from 'lucide-react'
+import { ArrowRight, CheckCircle, UploadSimple, Warning, WarningCircle } from '@phosphor-icons/react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import { updateUserAvatar } from '@services/users/users'
 import { constructAcceptValue } from '@/lib/constants'
 import * as Yup from 'yup'
-import { Input } from "@components/ui/input"
-import { Textarea } from "@components/ui/textarea"
-import { Button } from "@components/ui/button"
-import { Label } from "@components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@components/ui/select"
 import { toast } from 'react-hot-toast'
 import { signOut } from '@components/Contexts/AuthContext'
 import { getUriWithoutOrg } from '@services/config/config';
-import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 import { getErrorMessage } from '@services/utils/ts/errorMessage';
+import { Button, EmptyState, SectionCard, Skeleton, StickySaveBar, buttonClass } from '@/design'
+import { AccountInput, AccountLabel, AccountNotice, AccountTextarea } from '@components/Objects/Account/AccountSection'
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
-
-const AVAILABLE_ICONS = [
-  { name: 'briefcase', labelKey: 'user.settings.general.icons.briefcase', component: Briefcase },
-  { name: 'graduation-cap', labelKey: 'user.settings.general.icons.education', component: GraduationCap },
-  { name: 'map-pin', labelKey: 'user.settings.general.icons.location', component: MapPin },
-  { name: 'building-2', labelKey: 'user.settings.general.icons.organization', component: Building2 },
-  { name: 'speciality', labelKey: 'user.settings.general.icons.speciality', component: Lightbulb },
-  { name: 'globe', labelKey: 'user.settings.general.icons.website', component: Globe },
-  { name: 'laptop-2', labelKey: 'user.settings.general.icons.tech', component: Laptop2 },
-  { name: 'award', labelKey: 'user.settings.general.icons.achievement', component: Award },
-  { name: 'book-open', labelKey: 'user.settings.general.icons.book', component: BookOpen },
-  { name: 'link', labelKey: 'user.settings.general.icons.link', component: Link },
-  { name: 'users', labelKey: 'user.settings.general.icons.community', component: Users },
-  { name: 'calendar', labelKey: 'user.settings.general.icons.calendar', component: Calendar },
-] as const;
-
-const IconComponent = ({ iconName }: { iconName: string }) => {
-  const iconConfig = AVAILABLE_ICONS.find(i => i.name === iconName);
-  if (!iconConfig) return null;
-  const IconElement = iconConfig.component;
-  return <IconElement className="w-4 h-4" />;
-};
-
-interface DetailItem {
-  id: string;
-  label: string;
-  icon: string;
-  text: string;
-}
+const BIO_MAX = 400
 
 interface FormValues {
   username: string;
@@ -85,536 +29,293 @@ interface FormValues {
   last_name: string;
   email: string;
   bio: string;
-  details: {
-    [key: string]: DetailItem;
-  };
   // Re-authentication for an email change; never stored.
   current_password: string;
   mfa_code: string;
 }
-
-const DETAIL_TEMPLATES = {
-  general: [
-    { id: 'title', label: 'Title', icon: 'briefcase', text: '' },
-    { id: 'affiliation', label: 'Affiliation', icon: 'building-2', text: '' },
-    { id: 'location', label: 'Location', icon: 'map-pin', text: '' },
-    { id: 'website', label: 'Website', icon: 'globe', text: '' },
-    { id: 'linkedin', label: 'LinkedIn', icon: 'link', text: '' }
-  ],
-  academic: [
-    { id: 'institution', label: 'Institution', icon: 'building-2', text: '' },
-    { id: 'department', label: 'Department', icon: 'graduation-cap', text: '' },
-    { id: 'research', label: 'Research Area', icon: 'book-open', text: '' },
-    { id: 'academic-title', label: 'Academic Title', icon: 'award', text: '' }
-  ],
-  professional: [
-    { id: 'company', label: 'Company', icon: 'building-2', text: '' },
-    { id: 'industry', label: 'Industry', icon: 'briefcase', text: '' },
-    { id: 'expertise', label: 'Expertise', icon: 'laptop-2', text: '' },
-    { id: 'community', label: 'Community', icon: 'users', text: '' }
-  ]
-} as const;
 
 const buildValidationSchema = (t: (_key: string) => string) => Yup.object().shape({
   email: Yup.string().email(t('user.settings.general.validation.invalid_email')).required(t('user.settings.general.validation.email_required')),
   username: Yup.string().required(t('user.settings.general.validation.username_required')),
   first_name: Yup.string().required(t('user.settings.general.validation.first_name_required')),
   last_name: Yup.string().required(t('user.settings.general.validation.last_name_required')),
-  bio: Yup.string().max(400, t('user.settings.general.validation.bio_max_length')),
-  details: Yup.object().shape({})
+  bio: Yup.string().max(BIO_MAX, t('user.settings.general.validation.bio_max_length')),
 });
 
-// Memoized detail card component for better performance
-const DetailCard = React.memo(({
-  id,
-  detail,
-  onUpdate,
-  onRemove,
-  onLabelChange
-}: {
-  id: string;
-  detail: DetailItem;
-  onUpdate: (_id: string, _field: keyof DetailItem, _value: string) => void;
-  onRemove: (_id: string) => void;
-  onLabelChange: (_id: string, _newLabel: string) => void;
-}) => {
+type AvatarState = {
+  error: string | undefined;
+  success: string;
+  isLoading: boolean;
+  localAvatar: File | null;
+  handleFileChange: (_event: any) => Promise<void>;
+  handleAISelect: (_imageUrl: string) => Promise<void>;
+  handleAIImageFile: (_file: File) => Promise<void>;
+}
+
+function AvatarCard({ avatar }: { avatar: AvatarState }) {
   const { t } = useTranslation();
-  const [localLabel, setLocalLabel] = useState(detail.label);
-
-  const debouncedLabelChange = useDebounce((newLabel: string) => {
-    if (newLabel !== detail.label) {
-      onLabelChange(id, newLabel);
-    }
-  }, 500);
-
-  const handleLabelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newLabel = e.target.value;
-    setLocalLabel(newLabel);
-    debouncedLabelChange(newLabel);
-  }, [debouncedLabelChange]);
-
-  const handleIconChange = useCallback((value: string) => {
-    onUpdate(id, 'icon', value);
-  }, [id, onUpdate]);
-
-  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate(id, 'text', e.target.value);
-  }, [id, onUpdate]);
-
-  const handleRemove = useCallback(() => {
-    onRemove(id);
-  }, [id, onRemove]);
-
-  useEffect(() => {
-    setLocalLabel(detail.label);
-  }, [detail.label]);
-
-  return (
-    <div className="space-y-2 p-4 border rounded-lg bg-white shadow-sm">
-      <div className="flex justify-between items-center mb-3">
-        <Input
-          value={localLabel}
-          onChange={handleLabelChange}
-          placeholder={t('user.settings.general.detail_label_placeholder')}
-          className="max-w-[200px]"
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="text-red-500 hover:text-red-700"
-          onClick={handleRemove}
-        >
-          {t('user.settings.general.remove')}
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label>{t('user.settings.general.icon')}</Label>
-          <Select
-            value={detail.icon}
-            onValueChange={handleIconChange}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={t('user.settings.general.select_icon')}>
-                {detail.icon && (
-                  <div className="flex items-center gap-2">
-                    <IconComponent iconName={detail.icon} />
-                    <span>
-                      {t(AVAILABLE_ICONS.find(i => i.name === detail.icon)?.labelKey || '')}
-                    </span>
-                  </div>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {AVAILABLE_ICONS.map((icon) => (
-                <SelectItem key={icon.name} value={icon.name}>
-                  <div className="flex items-center gap-2">
-                    <icon.component className="w-4 h-4" />
-                    <span>{t(icon.labelKey)}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>{t('user.settings.general.text')}</Label>
-          <Input
-            value={detail.text}
-            onChange={handleTextChange}
-            placeholder={t('user.settings.general.text_placeholder')}
-          />
-        </div>
-      </div>
-    </div>
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const previewUrl = useMemo(
+    () => (avatar.localAvatar ? URL.createObjectURL(avatar.localAvatar) : null),
+    [avatar.localAvatar]
   );
-});
-
-DetailCard.displayName = 'DetailCard';
-
-// Form component to handle the details section
-const UserEditForm = ({
-  values,
-  initialValues,
-  setFieldValue,
-  handleChange,
-  errors,
-  touched,
-  isSubmitting,
-  profilePicture,
-  reauthWithMfa
-}: {
-  values: FormValues;
-  initialValues: FormValues;
-  reauthWithMfa: boolean;
-  setFieldValue: (_field: string, _value: any) => void;
-  handleChange: (_e: React.ChangeEvent<any>) => void;
-  errors: any;
-  touched: any;
-  isSubmitting: boolean;
-  profilePicture: {
-    error: string | undefined;
-    success: string;
-    isLoading: boolean;
-    localAvatar: File | null;
-    handleFileChange: (_event: any) => Promise<void>;
-    handleAISelect: (_imageUrl: string) => Promise<void>;
-    handleAIImageFile: (_file: File) => Promise<void>;
-  };
-}) => {
-  const { t } = useTranslation();
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl) }, [previewUrl]);
 
   return (
-    <Form>
-      <div className="flex flex-col gap-0">
-        <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-          <h1 className="font-bold text-xl text-gray-800">
-            {t('user.settings.general.title')}
-          </h1>
-          <h2 className="text-gray-500 text-md">
-            {t('user.settings.general.subtitle')}
-          </h2>
+    <SectionCard title={t('user.settings.general.profile_picture')} description={t('user.settings.general.recommended_size')}>
+      <div className="flex items-center gap-4">
+        <div className="shrink-0">
+          {previewUrl ? (
+            <UserAvatar border="border-4" rounded="rounded-full" width={72} avatar_url={previewUrl} />
+          ) : (
+            <UserAvatar border="border-4" rounded="rounded-full" width={72} />
+          )}
         </div>
-
-        <div className="flex flex-col lg:flex-row mt-0 mx-5 my-5 gap-8">
-          {/* Profile Information Section */}
-          <div className="flex-1 min-w-0 space-y-4">
-            <div>
-              <Label htmlFor="email">{t('user.settings.general.email')}</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={values.email}
-                onChange={handleChange}
-                placeholder={t('user.settings.general.email_placeholder')}
+        <div className="flex flex-col gap-2 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={inputRef}
+              type="file"
+              accept={SUPPORTED_FILES}
+              className="hidden"
+              onChange={avatar.handleFileChange}
+            />
+            <Button
+              onClick={() => inputRef.current?.click()}
+              loading={avatar.isLoading}
+              icon={<UploadSimple size={14} weight="bold" />}
+            >
+              {avatar.isLoading ? t('user.settings.general.uploading') : t('user.settings.general.change_avatar')}
+            </Button>
+            {!avatar.isLoading && (
+              <AIImageButton
+                onSelect={avatar.handleAISelect}
+                onSelectFile={avatar.handleAIImageFile}
+                className={buttonClass('secondary', 'md')}
               />
-              {touched.email && errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
-              {values.email !== initialValues.email && (
-                <>
-                  <div className="flex items-center space-x-2 mt-2 text-amber-600 bg-amber-50 p-2 rounded-md">
-                    <AlertTriangle size={16} />
-                    <span className="text-sm">{t('user.settings.general.logout_warning')}</span>
-                  </div>
-                  <div className="mt-3">
-                    {reauthWithMfa ? (
-                      <>
-                        <Label htmlFor="mfa_code">{t('user.settings.general.mfa_code')}</Label>
-                        <Input
-                          id="mfa_code"
-                          name="mfa_code"
-                          inputMode="numeric"
-                          autoComplete="one-time-code"
-                          value={values.mfa_code}
-                          onChange={handleChange}
-                        />
-                        <p className="text-gray-500 text-xs mt-1">{t('user.settings.general.mfa_code_hint')}</p>
-                      </>
-                    ) : (
-                      <>
-                        <Label htmlFor="current_password">{t('user.settings.general.current_password')}</Label>
-                        <Input
-                          id="current_password"
-                          name="current_password"
-                          type="password"
-                          autoComplete="current-password"
-                          value={values.current_password}
-                          onChange={handleChange}
-                        />
-                        <p className="text-gray-500 text-xs mt-1">{t('user.settings.general.current_password_hint')}</p>
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="username">{t('user.settings.general.username')}</Label>
-              <Input
-                id="username"
-                name="username"
-                value={values.username}
-                onChange={handleChange}
-                placeholder={t('user.settings.general.username_placeholder')}
-              />
-              {touched.username && errors.username && (
-                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="first_name">{t('user.settings.general.first_name')}</Label>
-              <Input
-                id="first_name"
-                name="first_name"
-                value={values.first_name}
-                onChange={handleChange}
-                placeholder={t('user.settings.general.first_name_placeholder')}
-              />
-              {touched.first_name && errors.first_name && (
-                <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="last_name">{t('user.settings.general.last_name')}</Label>
-              <Input
-                id="last_name"
-                name="last_name"
-                value={values.last_name}
-                onChange={handleChange}
-                placeholder={t('user.settings.general.last_name_placeholder')}
-              />
-              {touched.last_name && errors.last_name && (
-                <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="bio">
-                {t('user.settings.general.bio')}
-                <span className="text-gray-500 text-sm ms-2">
-                  ({t('user.settings.general.characters_left', { count: 400 - (values.bio?.length || 0) })})
-                </span>
-              </Label>
-              <Textarea
-                id="bio"
-                name="bio"
-                value={values.bio}
-                onChange={handleChange}
-                placeholder={t('user.settings.general.bio_placeholder')}
-                className="min-h-[150px]"
-                maxLength={400}
-              />
-              {touched.bio && errors.bio && (
-                <p className="text-red-500 text-sm mt-1">{errors.bio}</p>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-between items-center">
-                  <Label>{t('user.settings.general.additional_details')}</Label>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => {
-                        setFieldValue('details', {});
-                      }}
-                    >
-                      {t('user.settings.general.clear_all')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const newDetails = { ...values.details };
-                        const id = `detail-${Date.now()}`;
-                        newDetails[id] = {
-                          id,
-                          label: 'New Detail',
-                          icon: '',
-                          text: ''
-                        };
-                        setFieldValue('details', newDetails);
-                      }}
-                    >
-                      {t('user.settings.general.add_detail')}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(DETAIL_TEMPLATES).map(([key, template]) => (
-                    <Button
-                      key={key}
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="flex items-center gap-2"
-                      onClick={() => {
-                        const currentIds = new Set(Object.keys(values.details));
-                        const newDetails = { ...values.details };
-
-                        template.forEach((item) => {
-                          if (!currentIds.has(item.id)) {
-                            newDetails[item.id] = {
-                              ...item,
-                              label: t(`user.settings.general.labels.${item.id.replace('-', '_')}`, { defaultValue: item.label })
-                            };
-                          }
-                        });
-
-                        setFieldValue('details', newDetails);
-                      }}
-                    >
-                      {key === 'general' && <Briefcase className="w-4 h-4" />}
-                      {key === 'academic' && <GraduationCap className="w-4 h-4" />}
-                      {key === 'professional' && <Building2 className="w-4 h-4" />}
-                      {t(`user.settings.general.add_${key}`)}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {Object.entries(values.details).map(([id, detail]) => (
-                  <DetailCard
-                    key={id}
-                    id={id}
-                    detail={detail}
-                    onUpdate={(id, field, value) => {
-                      const newDetails = { ...values.details };
-                      newDetails[id] = { ...newDetails[id], [field]: value };
-                      setFieldValue('details', newDetails);
-                    }}
-                    onRemove={(id) => {
-                      const newDetails = { ...values.details };
-                      delete newDetails[id];
-                      setFieldValue('details', newDetails);
-                    }}
-                    onLabelChange={(id, newLabel) => {
-                      const newDetails = { ...values.details };
-                      newDetails[id] = { ...newDetails[id], label: newLabel };
-                      setFieldValue('details', newDetails);
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
           </div>
-
-          {/* Profile Picture Section */}
-          <div className="lg:w-80 w-full">
-            <div className="bg-gray-50/50 p-6 rounded-lg nice-shadow h-full">
-              <div className="flex flex-col items-center space-y-6">
-                <Label className="font-bold">{t('user.settings.general.profile_picture')}</Label>
-                {profilePicture.error && (
-                  <div className="flex items-center bg-red-200 rounded-md text-red-950 px-4 py-2 text-sm">
-                    <FileWarning size={16} className="me-2" />
-                    <span className="font-semibold first-letter:uppercase">{profilePicture.error}</span>
-                  </div>
-                )}
-                {profilePicture.success && (
-                  <div className="flex items-center bg-green-200 rounded-md text-green-950 px-4 py-2 text-sm">
-                    <Check size={16} className="me-2" />
-                    <span className="font-semibold first-letter:uppercase">{profilePicture.success}</span>
-                  </div>
-                )}
-                {profilePicture.localAvatar ? (
-                  <UserAvatar
-                    border="border-8"
-                    width={120}
-                    avatar_url={URL.createObjectURL(profilePicture.localAvatar)}
-                  />
-                ) : (
-                  <UserAvatar border="border-8" width={120} />
-                )}
-                {profilePicture.isLoading ? (
-                  <div className="font-bold animate-pulse antialiased bg-green-200 text-gray text-sm rounded-md px-4 py-2 flex items-center">
-                    <ArrowBigUpDash size={16} className="me-2" />
-                    <span>{t('user.settings.general.uploading')}</span>
-                  </div>
-                ) : (
-                  <>
-                    <input
-                      type="file"
-                      id="fileInput"
-                      accept={SUPPORTED_FILES}
-                      className="hidden"
-                      onChange={profilePicture.handleFileChange}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('fileInput')?.click()}
-                      className="w-full"
-                    >
-                      <UploadCloud size={16} className="me-2" />
-                      {t('user.settings.general.change_avatar')}
-                    </Button>
-                    <AIImageButton
-                      onSelect={profilePicture.handleAISelect}
-                      onSelectFile={profilePicture.handleAIImageFile}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors"
-                    />
-                  </>
-                )}
-                <div className="flex items-center text-xs text-gray-500">
-                  <span className="flex items-center">
-                    <Info size={13} className="me-2" />
-                    <p>{t('user.settings.general.recommended_size')}</p>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-row-reverse mt-0 mx-5 mb-5">
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-black text-white hover:bg-black/90"
-          >
-            {isSubmitting ? t('user.settings.general.saving') : t('user.settings.general.save_changes')}
-          </Button>
+          {avatar.error ? (
+            <p role="alert" className="flex items-center gap-1.5 text-xs font-medium text-rose-600">
+              <WarningCircle size={14} weight="fill" className="shrink-0" />
+              <span className="first-letter:uppercase">{avatar.error}</span>
+            </p>
+          ) : avatar.success ? (
+            <p role="status" className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+              <CheckCircle size={14} weight="fill" className="shrink-0" />
+              <span className="first-letter:uppercase">{avatar.success}</span>
+            </p>
+          ) : null}
         </div>
       </div>
+    </SectionCard>
+  );
+}
+
+const fieldError = (formik: FormikProps<FormValues>, name: keyof FormValues) =>
+  formik.touched[name] && typeof formik.errors[name] === 'string' ? (formik.errors[name] as string) : undefined
+
+// The form body: photo, about you, sign-in email. Details (title, location,
+// links) moved into the public profile builder.
+const UserEditForm = ({
+  formik,
+  initialEmail,
+  reauthWithMfa,
+  avatar,
+}: {
+  formik: FormikProps<FormValues>;
+  initialEmail: string;
+  reauthWithMfa: boolean;
+  avatar: AvatarState;
+}) => {
+  const { t } = useTranslation();
+  const { values, handleChange, handleBlur } = formik;
+  const emailChanged = values.email !== initialEmail;
+  return (
+    <Form className="flex flex-col gap-5" noValidate>
+      <AvatarCard avatar={avatar} />
+
+      <SectionCard title={t('account.about_you', { defaultValue: 'About you' })}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="min-w-0">
+            <AccountLabel htmlFor="first_name" error={fieldError(formik, 'first_name')}>
+              {t('user.settings.general.first_name')}
+            </AccountLabel>
+            <AccountInput
+              id="first_name"
+              name="first_name"
+              autoComplete="given-name"
+              value={values.first_name}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={t('user.settings.general.first_name_placeholder')}
+            />
+          </div>
+          <div className="min-w-0">
+            <AccountLabel htmlFor="last_name" error={fieldError(formik, 'last_name')}>
+              {t('user.settings.general.last_name')}
+            </AccountLabel>
+            <AccountInput
+              id="last_name"
+              name="last_name"
+              autoComplete="family-name"
+              value={values.last_name}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={t('user.settings.general.last_name_placeholder')}
+            />
+          </div>
+          <div className="sm:col-span-2 min-w-0">
+            <AccountLabel htmlFor="username" error={fieldError(formik, 'username')}>
+              {t('user.settings.general.username')}
+            </AccountLabel>
+            <AccountInput
+              id="username"
+              name="username"
+              autoComplete="username"
+              value={values.username}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={t('user.settings.general.username_placeholder')}
+            />
+          </div>
+          <div className="sm:col-span-2 min-w-0">
+            <AccountLabel
+              htmlFor="bio"
+              error={fieldError(formik, 'bio')}
+              hint={t('user.settings.general.characters_left', { count: BIO_MAX - (values.bio?.length || 0) })}
+            >
+              {t('user.settings.general.bio')}
+            </AccountLabel>
+            <AccountTextarea
+              id="bio"
+              name="bio"
+              value={values.bio}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={t('user.settings.general.bio_placeholder')}
+              rows={4}
+              maxLength={BIO_MAX}
+            />
+          </div>
+        </div>
+        <Link
+          href="?section=public"
+          className="mt-4 flex items-center gap-2 rounded-xl bg-neutral-50 px-3 py-2.5 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors"
+        >
+          <span className="flex-1 min-w-0">
+            {t('account.details_moved', { defaultValue: 'Your headline, details, links and sections are edited in Public profile.' })}
+          </span>
+          <ArrowRight size={14} className="shrink-0 rtl:rotate-180" />
+        </Link>
+      </SectionCard>
+
+      <SectionCard title={t('user.settings.general.email')}>
+        <div className="flex flex-col gap-4 max-w-md">
+          <div>
+            <AccountInput
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              aria-label={t('user.settings.general.email')}
+              aria-invalid={!!fieldError(formik, 'email') || undefined}
+              value={values.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={t('user.settings.general.email_placeholder')}
+            />
+            {fieldError(formik, 'email') && (
+              <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldError(formik, 'email')}</p>
+            )}
+          </div>
+          {emailChanged && (
+            <>
+              <AccountNotice tone="warning" icon={<Warning size={15} weight="fill" />}>
+                {t('user.settings.general.logout_warning')}
+              </AccountNotice>
+              {reauthWithMfa ? (
+                <div>
+                  <AccountLabel htmlFor="mfa_code" hint={t('user.settings.general.mfa_code_hint')}>
+                    {t('user.settings.general.mfa_code')}
+                  </AccountLabel>
+                  <AccountInput
+                    id="mfa_code"
+                    name="mfa_code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={values.mfa_code}
+                    onChange={handleChange}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <AccountLabel htmlFor="current_password">{t('user.settings.general.current_password')}</AccountLabel>
+                  <AccountInput
+                    id="current_password"
+                    name="current_password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={values.current_password}
+                    onChange={handleChange}
+                  />
+                  <p className="text-xs text-neutral-500 mt-1.5">{t('user.settings.general.current_password_hint')}</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </SectionCard>
     </Form>
   );
 };
 
-function AccountGeneral() {
+function AccountGeneral({ onDirtyChange }: { onDirtyChange?: (_dirty: boolean) => void } = {}) {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-  const [localAvatar, setLocalAvatar] = React.useState(null) as any
-  const [isLoading, setIsLoading] = React.useState(false) as any
-  const [error, setError] = React.useState() as any
-  const [success, setSuccess] = React.useState('') as any
+  const [localAvatar, setLocalAvatar] = React.useState<File | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | undefined>()
+  const [success, setSuccess] = React.useState('')
   const [userData, setUserData] = useState<any>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [reauthWithMfa, setReauthWithMfa] = useState(false);
   const { t } = useTranslation();
   const { track } = useLHAnalytics('learner');
 
+  const userId = session?.data?.user?.id
+  const fetchUserData = useCallback(async () => {
+    if (!userId) return
+    try {
+      const data = await getUser(userId, access_token);
+      setUserData(data);
+      setLoadFailed(false)
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setLoadFailed(true)
+    }
+  }, [userId, access_token]);
+
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (session?.data?.user?.id) {
-        try {
-          const data = await getUser(session.data.user.id, access_token);
-          setUserData(data);
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          setError(t('user.settings.general.load_failed'));
-        }
-      }
-    };
-
     fetchUserData();
-  }, [session?.data?.user?.id, access_token]);
+  }, [fetchUserData]);
 
-  const handleFileChange = async (event: any) => {
+  // The user read no longer returns the email (it is PII); the session has it.
+  const initialEmail: string = userData?.email ?? session?.data?.user?.email ?? ''
+
+  const uploadAvatar = async (file: File) => {
     const userId = session?.data?.user?.id
     if (!userId) {
       setError(t('user.settings.general.signin_again', { defaultValue: 'Please sign in again' }))
       return
     }
-    const file = event.target.files[0]
     setLocalAvatar(file)
     setIsLoading(true)
+    setSuccess('')
     const res = await updateUserAvatar(userId, file, access_token)
     if (res.success === false) {
       setError(res.HTTPmessage)
+      setIsLoading(false)
     } else {
       // Force refresh session to pick up the new avatar filename
       await session.update(true)
@@ -624,28 +325,20 @@ function AccountGeneral() {
     }
   }
 
+  const handleFileChange = async (event: any) => {
+    const file = event.target.files?.[0]
+    // Clear the input so picking the same file again still fires a change.
+    if (event.target) event.target.value = ''
+    if (!file) return
+    await uploadAvatar(file)
+  }
+
   const handleAISelect = async (imageUrl: string) => {
-    const userId = session?.data?.user?.id
-    if (!userId) {
-      setError(t('user.settings.general.signin_again', { defaultValue: 'Please sign in again' }))
-      return
-    }
     try {
       const response = await fetch(imageUrl)
       const blob = await response.blob()
       const file = new File([blob], `ai_avatar_${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
-      setLocalAvatar(file)
-      setIsLoading(true)
-      const res = await updateUserAvatar(userId, file, access_token)
-      if (res.success === false) {
-        setError(res.HTTPmessage)
-      } else {
-        // Force refresh session to pick up the new avatar filename
-        await session.update(true)
-        setIsLoading(false)
-        setError('')
-        setSuccess(t('user.settings.general.avatar_updated'))
-      }
+      await uploadAvatar(file)
     } catch (_error) {
       setError(t('user.settings.general.ai_image_failed'))
       setIsLoading(false)
@@ -653,24 +346,8 @@ function AccountGeneral() {
   }
 
   const handleAIImageFile = async (file: File) => {
-    const userId = session?.data?.user?.id
-    if (!userId) {
-      setError(t('user.settings.general.signin_again', { defaultValue: 'Please sign in again' }))
-      return
-    }
     try {
-      setLocalAvatar(file)
-      setIsLoading(true)
-      const res = await updateUserAvatar(userId, file, access_token)
-      if (res.success === false) {
-        setError(res.HTTPmessage)
-      } else {
-        // Force refresh session to pick up the new avatar filename
-        await session.update(true)
-        setIsLoading(false)
-        setError('')
-        setSuccess(t('user.settings.general.avatar_updated'))
-      }
+      await uploadAvatar(file)
     } catch {
       setError(t('user.settings.general.ai_image_failed'))
       setIsLoading(false)
@@ -693,73 +370,108 @@ function AccountGeneral() {
     signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/') })
   }
 
-  if (!userData) {
+  const initialValues = useMemo<FormValues | null>(() => userData ? ({
+    username: userData.username ?? '',
+    first_name: userData.first_name ?? '',
+    last_name: userData.last_name ?? '',
+    email: initialEmail,
+    bio: userData.bio || '',
+    current_password: '',
+    mfa_code: '',
+  }) : null, [userData, initialEmail]);
+
+  const validationSchema = useMemo(() => buildValidationSchema(t), [t]);
+
+  // Leaving the section with unsaved edits clears the tab's dirty dot.
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+
+  if (loadFailed) {
     return (
-      <div className="bg-white rounded-xl nice-shadow p-8">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="bg-white rounded-2xl nice-shadow">
+        <EmptyState
+          icon={<WarningCircle size={22} />}
+          title={t('user.settings.general.load_failed')}
+          action={<Button onClick={fetchUserData}>{t('user.settings.security.mfa.retry', { defaultValue: 'Retry' })}</Button>}
+        />
+      </div>
+    );
+  }
+
+  if (!initialValues) {
+    return (
+      <div className="flex flex-col gap-5" aria-busy="true">
+        <div className="bg-white rounded-2xl nice-shadow p-5 flex items-center gap-4">
+          <Skeleton className="w-[72px] h-[72px] !rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-8 w-56" />
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl nice-shadow p-5 space-y-4">
+          <Skeleton className="h-4 w-24" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Skeleton className="h-9" />
+            <Skeleton className="h-9" />
+          </div>
+          <Skeleton className="h-9" />
+          <Skeleton className="h-24" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl nice-shadow">
-      <Formik<FormValues>
-        enableReinitialize
-        initialValues={{
-          username: userData.username,
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          email: userData.email,
-          bio: userData.bio || '',
-          details: userData.details || {},
-          current_password: '',
-          mfa_code: '',
-        }}
-        validationSchema={buildValidationSchema(t)}
-        onSubmit={async (values, { setSubmitting }) => {
-          const isEmailChanged = values.email !== userData.email
-          const loadingToast = toast.loading(t('user.settings.general.saving'))
+    <Formik<FormValues>
+      enableReinitialize
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={async (values, { setSubmitting }) => {
+        const isEmailChanged = values.email !== initialEmail
+        const loadingToast = toast.loading(t('user.settings.general.saving'))
 
-          try {
-            const { current_password, mfa_code, ...profile } = values
-            const res = await updateProfile(
-              isEmailChanged ? { ...profile, current_password, mfa_code } : profile,
-              userData.id,
-              access_token
-            )
-            if (!res.success) {
-              const detail = res.data?.detail
-              // Accounts without a password confirm with their two-factor code.
-              if (detail?.code === 'INVALID_MFA_CODE') setReauthWithMfa(true)
-              toast.error(getErrorMessage(detail, t('user.settings.general.update_failed')), { id: loadingToast })
-              return
-            }
-            toast.dismiss(loadingToast)
-            track(AnalyticsEvent.AccountProfileUpdated, {
-              email_changed: isEmailChanged,
-              has_bio: !!values.bio?.trim(),
-            })
-            if (isEmailChanged) {
-              handleEmailChange(values.email)
-            } else {
-              toast.success(t('user.settings.general.profile_updated'))
-            }
-            const refreshedUser = await getUser(userData.id, access_token)
-            setUserData(refreshedUser)
-          } catch {
-            toast.error(t('user.settings.general.update_failed'), { id: loadingToast })
-          } finally {
-            setSubmitting(false)
+        try {
+          const { current_password, mfa_code, ...profile } = values
+          const res = await updateProfile(
+            isEmailChanged ? { ...profile, current_password, mfa_code } : profile,
+            userData.id,
+            access_token
+          )
+          if (!res.success) {
+            const detail = res.data?.detail
+            // Accounts without a password confirm with their two-factor code.
+            if (detail?.code === 'INVALID_MFA_CODE') setReauthWithMfa(true)
+            toast.error(getErrorMessage(detail, t('user.settings.general.update_failed')), { id: loadingToast })
+            return
           }
-        }}
-      >
-        {(formikProps) => (
+          toast.dismiss(loadingToast)
+          track(AnalyticsEvent.AccountProfileUpdated, {
+            email_changed: isEmailChanged,
+            has_bio: !!values.bio?.trim(),
+          })
+          if (isEmailChanged) {
+            handleEmailChange(values.email)
+          } else {
+            toast.success(t('user.settings.general.profile_updated'))
+            // Keep the header avatar menu and nav name in sync.
+            session.update?.(true)
+          }
+          const refreshedUser = await getUser(userData.id, access_token)
+          setUserData(refreshedUser)
+        } catch {
+          toast.error(t('user.settings.general.update_failed'), { id: loadingToast })
+        } finally {
+          setSubmitting(false)
+        }
+      }}
+    >
+      {(formik) => (
+        <>
+          <DirtyReporter dirty={formik.dirty} onDirtyChange={onDirtyChange} />
           <UserEditForm
-            {...formikProps}
+            formik={formik}
+            initialEmail={initialEmail}
             reauthWithMfa={reauthWithMfa}
-            profilePicture={{
+            avatar={{
               error,
               success,
               isLoading,
@@ -769,10 +481,32 @@ function AccountGeneral() {
               handleAIImageFile
             }}
           />
-        )}
-      </Formik>
-    </div>
+          <StickySaveBar
+            visible={formik.dirty}
+            saving={formik.isSubmitting}
+            onDiscard={() => formik.resetForm()}
+            onSave={async () => {
+              const errors = await formik.validateForm()
+              const first = Object.values(errors).find((e) => typeof e === 'string') as string | undefined
+              if (first) {
+                formik.setTouched({ email: true, username: true, first_name: true, last_name: true, bio: true }, false)
+                toast.error(first)
+                return
+              }
+              formik.submitForm()
+            }}
+          />
+        </>
+      )}
+    </Formik>
   );
+}
+
+function DirtyReporter({ dirty, onDirtyChange }: { dirty: boolean; onDirtyChange?: (_dirty: boolean) => void }) {
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+  }, [dirty, onDirtyChange])
+  return null
 }
 
 export default AccountGeneral

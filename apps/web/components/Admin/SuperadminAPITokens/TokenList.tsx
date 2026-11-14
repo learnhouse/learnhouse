@@ -1,29 +1,20 @@
 'use client'
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query/keys'
-import { getAPIUrl } from '@services/config/config'
-import { apiFetch } from '@services/utils/ts/requests'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { Key, Plus, Trash, CircleNotch } from '@phosphor-icons/react'
-import CreateTokenModal from '@components/Admin/SuperadminAPITokens/CreateTokenModal'
-import TokenCreatedDialog, { CreatedToken } from '@components/Admin/SuperadminAPITokens/TokenCreatedDialog'
-import RevokeTokenConfirm from '@components/Admin/SuperadminAPITokens/RevokeTokenConfirm'
 import { useTranslation } from 'react-i18next'
+import { Key, Plus, Trash } from '@phosphor-icons/react'
+import { Button, Chip, EmptyState, Panel, StatusPill, recipes, formatRelative } from '@/design'
+import { listTokens } from '@services/ee/platform/api'
+import { platformKeys } from '@services/ee/platform/keys'
+import type { SuperadminToken } from '@services/ee/platform/types'
+import { useAccessToken, shouldRetry } from '@components/Admin/hooks'
+import { ListSkeleton, QueryError, RoleBadge, formatDate } from '@components/Admin/Shared/AdminKit'
+import CreateTokenModal from '@components/Admin/SuperadminAPITokens/CreateTokenModal'
+import TokenCreatedDialog from '@components/Admin/SuperadminAPITokens/TokenCreatedDialog'
+import RevokeTokenConfirm from '@components/Admin/SuperadminAPITokens/RevokeTokenConfirm'
+import type { CreatedToken } from '@services/ee/platform/types'
 
-export interface SuperadminToken {
-  id: number
-  token_uuid: string
-  name: string
-  description: string | null
-  token_prefix: string
-  created_by_user_id: number
-  creation_date: string
-  update_date: string
-  last_used_at: string | null
-  expires_at: string | null
-  is_active: boolean
-}
+export type { SuperadminToken }
 
 function tokenStatus(t: SuperadminToken): 'active' | 'revoked' | 'expired' {
   if (!t.is_active) return 'revoked'
@@ -34,120 +25,124 @@ function tokenStatus(t: SuperadminToken): 'active' | 'revoked' | 'expired' {
   return 'active'
 }
 
-function fmtDate(s: string | null | undefined, na: string): string {
-  if (!s) return na
-  const d = new Date(s)
-  if (Number.isNaN(d.getTime())) return s
-  return d.toLocaleString()
-}
+const GRID = 'grid grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.4fr)_6rem_7rem_7rem_6rem] gap-x-4'
 
 export default function TokenList() {
-  const { t } = useTranslation()
-  const session = useLHSession() as any
-  const accessToken = session?.data?.tokens?.access_token
+  const { t, i18n } = useTranslation()
+  const accessToken = useAccessToken()
 
   const [createOpen, setCreateOpen] = useState(false)
   const [createdToken, setCreatedToken] = useState<CreatedToken | null>(null)
   const [revoking, setRevoking] = useState<SuperadminToken | null>(null)
 
-  const { data, isLoading, isError } = useQuery<SuperadminToken[]>({
-    queryKey: queryKeys.superadmin.apiTokens(),
-    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/tokens/`, accessToken),
+  const q = useQuery({
+    queryKey: platformKeys.tokens(),
+    queryFn: () => listTokens(accessToken),
     enabled: !!accessToken,
+    retry: shouldRetry,
   })
-
-  const tokens = data ?? []
+  const all = Array.isArray(q.data) ? q.data : []
+  // Revoked and expired tokens pile up; keep them out of the way by default.
+  const [showInactive, setShowInactive] = React.useState(false)
+  const inactiveCount = all.filter((tok) => tokenStatus(tok) !== 'active').length
+  const tokens = showInactive ? all : all.filter((tok) => tokenStatus(tok) === 'active')
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-white/50">
-          {tokens.length === 0 ? t('admin.tokens.none_yet') : t('admin.tokens.count', { count: tokens.length })}
-        </div>
-        <button
-          onClick={() => setCreateOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors"
-        >
-          <Plus size={14} weight="bold" />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-neutral-500">
+          {q.isLoading ? t('admin.tokens.loading') : tokens.length === 0 ? t('admin.tokens.none_yet') : t('admin.tokens.count', { count: tokens.length })}
+          {inactiveCount > 0 && (
+            <button type="button" onClick={() => setShowInactive((v) => !v)} className="ms-2 text-xs font-semibold text-neutral-500 hover:text-neutral-900 underline-offset-2 hover:underline">
+              {showInactive ? t('admin.tokens.hide_inactive') : t('admin.tokens.show_inactive', { count: inactiveCount })}
+            </button>
+          )}
+        </p>
+        <Button variant="primary" icon={<Plus size={14} weight="bold" />} onClick={() => setCreateOpen(true)}>
           {t('admin.tokens.create_token')}
-        </button>
+        </Button>
       </div>
 
-      {isLoading && (
-        <div className="flex items-center gap-2 text-white/40 text-sm py-12 justify-center">
-          <CircleNotch size={16} className="animate-spin" />
-          {t('admin.tokens.loading')}
-        </div>
-      )}
-
-      {isError && (
-        <div className="text-sm text-red-400 py-8 text-center">
-          {t('admin.tokens.failed_load')}
-        </div>
-      )}
-
-      {!isLoading && !isError && tokens.length === 0 && (
-        <div className="border border-dashed border-white/10 rounded-2xl py-16 text-center">
-          <Key size={28} weight="fill" className="text-white/30 mx-auto mb-3" />
-          <p className="text-white/60 text-sm">{t('admin.tokens.empty_title')}</p>
-          <p className="text-white/30 text-xs mt-1">
-            {t('admin.tokens.empty_desc')}
-          </p>
-        </div>
-      )}
-
-      {!isLoading && !isError && tokens.length > 0 && (
-        <div className="overflow-hidden border border-white/[0.08] rounded-2xl bg-[#111112]">
-          <table className="w-full text-sm">
-            <thead className="bg-white/[0.03] text-white/40 text-xs uppercase tracking-wider">
-              <tr>
-                <th className="text-start px-4 py-3 font-medium">{t('admin.tokens.col_name')}</th>
-                <th className="text-start px-4 py-3 font-medium">{t('admin.tokens.col_prefix')}</th>
-                <th className="text-start px-4 py-3 font-medium">{t('common.status')}</th>
-                <th className="text-start px-4 py-3 font-medium">{t('admin.tokens.col_created')}</th>
-                <th className="text-start px-4 py-3 font-medium">{t('admin.tokens.col_expires')}</th>
-                <th className="text-start px-4 py-3 font-medium">{t('admin.tokens.col_last_used')}</th>
-                <th className="text-end px-4 py-3 font-medium">{t('admin.tokens.col_actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.06]">
-              {tokens.map((tok) => {
-                const status = tokenStatus(tok)
-                return (
-                  <tr key={tok.token_uuid} className="text-white/80">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-white">{tok.name}</div>
-                      {tok.description && (
-                        <div className="text-xs text-white/40 mt-0.5">{tok.description}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-white/60">{tok.token_prefix}…</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={status} />
-                    </td>
-                    <td className="px-4 py-3 text-xs text-white/50">{fmtDate(tok.creation_date, t('admin.tokens.na'))}</td>
-                    <td className="px-4 py-3 text-xs text-white/50">
-                      {tok.expires_at ? fmtDate(tok.expires_at, t('admin.tokens.na')) : t('admin.tokens.never')}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-white/50">{fmtDate(tok.last_used_at, t('admin.tokens.na'))}</td>
-                    <td className="px-4 py-3 text-end">
-                      {status === 'active' && (
-                        <button
-                          onClick={() => setRevoking(tok)}
-                          className="text-red-400/80 hover:text-red-400 inline-flex items-center gap-1 text-xs"
-                          title={t('admin.tokens.revoke_token')}
-                        >
-                          <Trash size={14} weight="fill" />
-                          {t('admin.tokens.revoke')}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+      {q.isLoading ? (
+        <ListSkeleton rows={3} avatar={false} />
+      ) : q.error ? (
+        <QueryError error={q.error} onRetry={() => q.refetch()} />
+      ) : tokens.length === 0 ? (
+        <Panel>
+          <EmptyState
+            icon={<Key size={22} />}
+            title={t('admin.tokens.empty_title')}
+            description={t('admin.tokens.empty_desc')}
+            action={
+              <Button size="sm" variant="primary" icon={<Plus size={13} weight="bold" />} onClick={() => setCreateOpen(true)}>
+                {t('admin.tokens.create_token')}
+              </Button>
+            }
+          />
+        </Panel>
+      ) : (
+        <Panel divided>
+          <div className={`${recipes.tableHead} hidden md:grid ${GRID}`}>
+            <span>{t('admin.tokens.col_name')}</span>
+            <span>{t('admin.tokens.col_access')}</span>
+            <span>{t('common.status')}</span>
+            <span>{t('admin.tokens.col_expires')}</span>
+            <span>{t('admin.tokens.col_last_used')}</span>
+            <span className="text-end">{t('admin.tokens.col_actions')}</span>
+          </div>
+          {tokens.map((tok) => {
+            const status = tokenStatus(tok)
+            const scopes = Array.isArray(tok.scopes) && tok.scopes.length ? tok.scopes : ['api']
+            return (
+              <div key={tok.token_uuid} className={`${GRID} items-center gap-y-2 px-5 py-3.5 hover:bg-neutral-50/70`}>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-neutral-900 truncate">{tok.name}</p>
+                  <p className="text-xs text-neutral-500 truncate">
+                    <code className="font-mono" dir="ltr">
+                      {tok.token_prefix}…
+                    </code>
+                    {tok.description ? ` · ${tok.description}` : ''}
+                  </p>
+                  <p className="text-[11px] text-neutral-400">{t('admin.tokens.created_on', { date: formatDate(tok.creation_date, i18n.language) })}</p>
+                </div>
+                <div className="hidden md:flex flex-wrap items-center gap-1 min-w-0">
+                  {tok.role && <RoleBadge role={tok.role} />}
+                  {scopes.map((s) => (
+                    <Chip key={s} className="!font-mono !text-[11px]">
+                      {s}
+                    </Chip>
+                  ))}
+                </div>
+                <div className="flex justify-end md:justify-start">
+                  <StatusPill status={status === 'active' ? 'success' : status === 'expired' ? 'warning' : 'neutral'} dot>
+                    {t(`admin.tokens.status_${status}`)}
+                  </StatusPill>
+                </div>
+                <span className="hidden md:block text-xs text-neutral-500">
+                  {tok.expires_at ? formatDate(tok.expires_at, i18n.language) : t('admin.tokens.never')}
+                </span>
+                <span className="hidden md:block text-xs text-neutral-500" title={formatDate(tok.last_used_at, i18n.language, true)}>
+                  {formatRelative(tok.last_used_at, i18n.language) ?? t('admin.tokens.never')}
+                </span>
+                <div className="col-span-2 md:col-span-1 flex items-center justify-between md:justify-end gap-2">
+                  <div className="flex md:hidden flex-wrap items-center gap-1">
+                    {tok.role && <RoleBadge role={tok.role} />}
+                    {scopes.map((s) => (
+                      <Chip key={s} className="!font-mono !text-[11px]">
+                        {s}
+                      </Chip>
+                    ))}
+                  </div>
+                  {status === 'active' && (
+                    <Button variant="danger-ghost" size="sm" icon={<Trash size={13} />} onClick={() => setRevoking(tok)}>
+                      {t('admin.tokens.revoke')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </Panel>
       )}
 
       <CreateTokenModal
@@ -158,30 +153,8 @@ export default function TokenList() {
           setCreatedToken(created)
         }}
       />
-
-      <TokenCreatedDialog
-        token={createdToken}
-        onClose={() => setCreatedToken(null)}
-      />
-
-      <RevokeTokenConfirm
-        token={revoking}
-        onClose={() => setRevoking(null)}
-      />
+      <TokenCreatedDialog token={createdToken} onClose={() => setCreatedToken(null)} />
+      <RevokeTokenConfirm token={revoking} onClose={() => setRevoking(null)} />
     </div>
-  )
-}
-
-function StatusBadge({ status }: { status: 'active' | 'revoked' | 'expired' }) {
-  const { t } = useTranslation()
-  const cfg = {
-    active: { label: t('admin.tokens.status_active'), cls: 'bg-emerald-400/10 text-emerald-300 border-emerald-400/20' },
-    revoked: { label: t('admin.tokens.status_revoked'), cls: 'bg-white/[0.04] text-white/40 border-white/10' },
-    expired: { label: t('admin.tokens.status_expired'), cls: 'bg-amber-400/10 text-amber-300 border-amber-400/20' },
-  }[status]
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider border ${cfg.cls}`}>
-      {cfg.label}
-    </span>
   )
 }

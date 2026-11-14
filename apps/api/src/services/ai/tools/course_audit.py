@@ -6,8 +6,14 @@ only) and reports figures (pages, words, reading time, practice blocks) plus
 issues ranked high, medium or low: empty or placeholder pages, quiz
 questions without a right answer, media without a file, empty links, pages
 with no practice or no headings, empty chapters, assignments without tasks
-or a due date, and what learners of a live course cannot see. The checks are
-plain rules over the stored content; nothing is judged by a model.
+or a due date, a missing or broken cover, and what learners of a live course
+cannot see. The checks are plain rules over the stored content; nothing is
+judged by a model. With check_links, external links are also visited
+(link_check.py) and dead ones reported.
+
+`audit_courses` runs the same checks over many courses at once and returns
+only what matters per course, so "find broken links in my courses" or
+"which drafts are ready" is one call.
 """
 
 from __future__ import annotations
@@ -27,7 +33,9 @@ from src.services.ai.tools import doc_ops as d
 from src.services.ai.tools import refs
 from src.services.ai.tools.base import ActionTier, ToolContext, ToolSpec
 from src.services.ai.tools.chapters import activity_ref, course_ref, current_order
+from src.services.ai.tools.link_check import check_links as check_links_of
 from src.services.ai.tools.results import clip
+from src.services.courses.thumbnails import thumbnail_status
 
 MAX_ISSUES = 150
 WORDS_PER_MINUTE = 200
@@ -41,6 +49,12 @@ _PLACEHOLDER = re.compile(r"lorem ipsum|\bTODO\b|\bTBD\b|\[insert[^\]]*\]|\bxxx\
 _WORD = re.compile(r"\w+")
 
 
+_CHECK_LINKS = Field(
+    False,
+    description="Also visit every external link (text links and buttons) and report dead ones as broken_link. Slower.",
+)
+
+
 class AuditCourseParams(BaseModel):
     course_uuid: str = Field(..., min_length=1, max_length=100, description="The course (course_...).")
     chapter_uuids: list[str] | None = Field(
@@ -49,6 +63,28 @@ class AuditCourseParams(BaseModel):
     min_severity: Literal["high", "medium", "low"] = Field(
         "low", description="Leave out issues below this level."
     )
+    check_links: bool = _CHECK_LINKS
+
+
+MAX_AUDITED = 100
+MAX_ISSUES_PER_COURSE = 25
+
+
+class AuditCoursesParams(BaseModel):
+    course_uuids: list[str] | None = Field(
+        None, min_length=1, max_length=MAX_AUDITED, description="Only these courses; omit for every course you can edit."
+    )
+    published: bool | None = Field(None, description="true: only published courses; false: only drafts.")
+    codes: list[str] | None = Field(
+        None,
+        max_length=30,
+        description=(
+            "Only these issue codes, e.g. empty_link, broken_link, broken_thumbnail, no_thumbnail, empty_page, "
+            "empty_chapter, quiz_no_correct, media_missing, assignment_no_due_date, hidden_from_learners."
+        ),
+    )
+    min_severity: Literal["high", "medium", "low"] = Field("low", description="Leave out issues below this level.")
+    check_links: bool = _CHECK_LINKS
 
 
 class _Issues:
@@ -73,7 +109,7 @@ def _links(node: dict):
                 yield (mark.get("attrs") or {}).get("href")
 
 
-def _check_page(doc: dict, where: dict, issues: _Issues, stats: Counter) -> None:
+def _check_page(doc: dict, where: dict, issues: _Issues, stats: Counter, links: list | None = None) -> None:
     text = d.block_text(doc)
     words = len(_WORD.findall(text))
     stats["words"] += words
@@ -106,10 +142,14 @@ def _check_page(doc: dict, where: dict, issues: _Issues, stats: Counter) -> None
                 issues.add("high", "media_missing", f"The {label} block has no file.", where, path=spot)
         elif t == "button" and not str(a.get("link") or "").strip():
             issues.add("medium", "empty_link", "Button has no link.", where, path=spot)
+        elif t == "button" and links is not None:
+            links.append((str(a.get("link")).strip(), where, spot))
         if t in d.TEXT_HOLDERS:
             for href in _links(node):
                 if not str(href or "").strip() or str(href).strip() == "#":
                     issues.add("medium", "empty_link", "A link has no address.", where, path=spot)
+                elif links is not None:
+                    links.append((str(href).strip(), where, spot))
     practice = sum(blocks[t] for t in PRACTICE)
     media = sum(blocks[t] for t in d.MEDIA_TYPES) + blocks["blockEmbed"]
     stats["practice_blocks"] += practice
@@ -133,10 +173,16 @@ def _check_page(doc: dict, where: dict, issues: _Issues, stats: Counter) -> None
 async def _audit_course(ctx: ToolContext, p: AuditCourseParams):
     course = await refs.load(ctx, "course", p.course_uuid)
     await check_resource_access(ctx.request, ctx.db_session, ctx.user, course.course_uuid, AccessAction.UPDATE)
+    return await _audit(ctx, course, p.chapter_uuids, p.min_severity, p.check_links)
+
+
+async def _audit(
+    ctx: ToolContext, course: Any, chapter_uuids: list[str] | None, min_severity: str, check_links: bool
+) -> dict[str, Any]:
     order, chapter_ids, _ = await current_order(ctx, course)
-    if p.chapter_uuids:
+    if chapter_uuids:
         wanted = set()
-        for uuid in p.chapter_uuids:
+        for uuid in chapter_uuids:
             if uuid not in chapter_ids:
                 raise refs.not_found("chapter", uuid)
             wanted.add(chapter_ids[uuid])
@@ -175,13 +221,22 @@ async def _audit_course(ctx: ToolContext, p: AuditCourseParams):
     here = await course_ref(ctx, course)
     live = bool(course.published)
 
-    if not p.chapter_uuids:
+    links: list | None = [] if check_links else None
+    if not chapter_uuids:
         if not (course.description or "").strip():
             issues.add("medium", "no_description", "The course has no description.", here)
         if not (course.learnings or "").strip():
             issues.add("low", "no_learnings", "The course lists no learning outcomes.", here)
-        if not (course.thumbnail_image or "").strip() and not (course.thumbnail_video or "").strip():
+        cover = await thumbnail_status(ctx.org.org_uuid, course)
+        if cover == "missing":
             issues.add("low", "no_thumbnail", "The course has no cover image.", here)
+        elif cover == "broken":
+            issues.add(
+                "medium",
+                "broken_thumbnail",
+                "The course's cover image file is missing from storage, so a placeholder shows.",
+                here,
+            )
 
     published_activities = 0
     for chapter_id, acts in order:
@@ -204,7 +259,7 @@ async def _audit_course(ctx: ToolContext, p: AuditCourseParams):
             elif live:
                 issues.add("medium", "hidden_from_learners", "Draft in a live course: learners cannot see it.", where)
             if kind == ActivityTypeEnum.TYPE_DYNAMIC.value:
-                _check_page(d.normalize_legacy(d.ensure_doc(activity.content)), where, issues, stats)
+                _check_page(d.normalize_legacy(d.ensure_doc(activity.content)), where, issues, stats, links)
             elif kind == ActivityTypeEnum.TYPE_ASSIGNMENT.value:
                 assignment = assignments.get(activity.id)
                 if assignment is None:
@@ -216,10 +271,22 @@ async def _audit_course(ctx: ToolContext, p: AuditCourseParams):
                 if live and activity.published and not assignment.published:
                     issues.add("medium", "hidden_from_learners", "The assignment itself is unpublished.", where)
 
-    if live and not p.chapter_uuids and not published_activities:
+    if live and not chapter_uuids and not published_activities:
         issues.add("high", "nothing_published", "The course is live but has no published activities.", here)
 
-    cutoff = SEVERITY[p.min_severity]
+    if links:
+        # Shared links are visited once: link_check keeps recent answers.
+        results = await check_links_of([u for u, _w, _s in links])
+        for url, where, spot in links:
+            verdict = results.get(url) or {}
+            if verdict.get("state") == "broken":
+                issues.add(
+                    "medium", "broken_link", f"Link to {clip(url, 120)} is broken: {verdict.get('reason')}.",
+                    where, path=spot, url=url,
+                )
+        stats["links_checked"] = len({u for u, _w, _s in links})
+
+    cutoff = SEVERITY[min_severity]
     ranked = [issue for sev, _n, issue in sorted(issues.items, key=lambda x: x[:2]) if sev <= cutoff]
     counts = Counter(issue["severity"] for _s, _n, issue in issues.items)
     words = stats["words"]
@@ -233,6 +300,7 @@ async def _audit_course(ctx: ToolContext, p: AuditCourseParams):
             "reading_minutes": round(words / WORDS_PER_MINUTE),
             "practice_blocks": {t: stats[f"practice:{t}"] for t in PRACTICE if stats[f"practice:{t}"]},
             "media_blocks": stats["media_blocks"],
+            **({"links_checked": stats["links_checked"]} if check_links else {}),
         },
         "issue_counts": {s: counts.get(s, 0) for s in SEVERITY},
         "issues": ranked[:MAX_ISSUES],
@@ -243,6 +311,61 @@ async def _audit_course(ctx: ToolContext, p: AuditCourseParams):
         f"'{course.name}': {counts.get('high', 0)} high, {counts.get('medium', 0)} medium and "
         f"{counts.get('low', 0)} low issues." if issues.items else f"'{course.name}': no issues found."
     )
+    return out
+
+
+async def _audit_courses(ctx: ToolContext, p: AuditCoursesParams):
+    from src.db.courses.courses import Course
+
+    if p.course_uuids:
+        courses = [await refs.load(ctx, "course", u) for u in p.course_uuids]
+        if p.published is not None:
+            courses = [c for c in courses if bool(c.published) == p.published]
+    else:
+        stmt = select(Course).where(Course.org_id == ctx.org.id)
+        if p.published is not None:
+            stmt = stmt.where(Course.published.is_(p.published))
+        stmt = stmt.order_by(Course.creation_date.desc()).limit(MAX_AUDITED)
+        courses = list((await ctx.db_session.execute(stmt)).scalars())
+    editable, skipped = [], []
+    for course in courses:
+        decision = await check_resource_access(
+            ctx.request, ctx.db_session, ctx.user, course.course_uuid, AccessAction.UPDATE, raise_on_deny=False
+        )
+        (editable if decision.allowed else skipped).append(course)
+
+    wanted = set(p.codes or [])
+    totals: Counter = Counter()
+    found = []
+    links = 0
+    for course in editable:
+        report = await _audit(ctx, course, None, p.min_severity, p.check_links)
+        links += report["figures"].get("links_checked", 0)
+        issues = [i for i in report["issues"] if not wanted or i["code"] in wanted]
+        totals.update(i["code"] for i in issues)
+        if not issues:
+            continue
+        entry: dict[str, Any] = {
+            "course": report["course"],
+            "live": report["live"],
+            "issue_counts": dict(Counter(i["severity"] for i in issues)),
+            "issues": issues[:MAX_ISSUES_PER_COURSE],
+        }
+        if len(issues) > MAX_ISSUES_PER_COURSE:
+            entry["issues_not_shown"] = len(issues) - MAX_ISSUES_PER_COURSE
+        found.append(entry)
+    out: dict[str, Any] = {
+        "courses_checked": len(editable),
+        "courses_with_issues": len(found),
+        "issue_totals": dict(totals),
+        "courses": found,
+    }
+    if p.check_links:
+        out["links_checked"] = links
+    if skipped:
+        out["skipped"] = [{"course": refs.ref("course", c.course_uuid, c.name), "reason": "no edit access"} for c in skipped]
+    what = ", ".join(sorted(wanted)) if wanted else "issue"
+    out["summary"] = f"Checked {len(editable)} course(s): {sum(totals.values())} {what} found in {len(found)} course(s)."
     return out
 
 
@@ -265,6 +388,23 @@ SPECS: list[ToolSpec] = [
         execute=_audit_course,
         target_param="course_uuid",
         target_kind="course",
+        idempotent=True,
+    ),
+    ToolSpec(
+        name="audit_courses",
+        title="Audit many courses",
+        description=(
+            "Run audit_course's checks over every course you can edit (or the ones given) in ONE call "
+            "and get, per course, only the issues that matter: filter with codes (e.g. ['empty_link', "
+            "'broken_link'] for broken links, ['broken_thumbnail','no_thumbnail'] for covers) and "
+            "min_severity; check_links visits external links to find dead ones. Use it for questions "
+            "about all courses instead of auditing them one by one."
+        ),
+        params_model=AuditCoursesParams,
+        tier=ActionTier.READ,
+        rights_bucket="courses",
+        access_action=AccessAction.READ,
+        execute=_audit_courses,
         idempotent=True,
     ),
 ]

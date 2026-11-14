@@ -83,6 +83,11 @@ async def test_web_url(db, org, admin_user):
     assert await refs.web_url(ctx, "course", course="course_a") == "https://school.test/course/a"
     assert await refs.web_url(ctx, "course", course=None) is None
     assert await refs.web_url(ctx, "nope") is None
+    # Scheduled agents keep their full id (the Scheduled tab reads ?agent=).
+    assert await refs.web_url(ctx, "scheduled_agent", agent="schedagent_x") == \
+        "https://school.test/dash/atlas?tab=scheduled&agent=schedagent_x"
+    assert await refs.web_url(ctx, "scheduled_agents") == "https://school.test/dash/atlas?tab=scheduled"
+    assert refs.kind_of("schedagent_x") == "scheduled_agent"
 
 
 # ─── results ─────────────────────────────────────────────────────────────────

@@ -50,6 +50,13 @@ const turbopackRoot =
 
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
+  // Shown at the bottom of the dashboard sidebar (lib/version.ts). Inlined at
+  // build time: the release version from package.json and the commit CI builds
+  // from (BUILD_ID, also used for generateBuildId below).
+  env: {
+    NEXT_PUBLIC_LEARNHOUSE_VERSION: require('./package.json').version,
+    NEXT_PUBLIC_LEARNHOUSE_BUILD: process.env.BUILD_ID || '',
+  },
   // Required by PostHog's reverse-proxy rewrites below so the trailing-slash
   // handling on /lhrel/* doesn't 308-redirect ingestion requests.
   skipTrailingSlashRedirect: true,

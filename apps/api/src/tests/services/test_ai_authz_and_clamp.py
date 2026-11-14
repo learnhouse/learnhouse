@@ -96,8 +96,7 @@ class TestActivityChatAuthorization:
             activity_uuid="activity_test", message="dump the course content"
         )
 
-        with patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
@@ -123,8 +122,7 @@ class TestActivityChatAuthorization:
             aichat_uuid="chat_1", activity_uuid="activity_test", message="hi"
         )
 
-        with patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
@@ -143,8 +141,7 @@ class TestActivityChatAuthorization:
     async def test_outsider_blocked_on_streaming_path(
         self, db, org, course, activity, org_config, mock_request, outsider_user
     ):
-        with patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
@@ -162,8 +159,7 @@ class TestActivityChatAuthorization:
         self, db, org, course, activity, org_config, mock_request, regular_user
     ):
         """RBAC denial must land before the credit reservation."""
-        with patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             ai_service,
             "can_read_activity",
@@ -225,8 +221,7 @@ class TestActivityChatAuthorization:
             ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
-        ) as rate_limit, patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ) as rate_limit, patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             ai_service, "structure_activity_content_by_type", return_value=[]
         ), patch.object(
@@ -269,8 +264,7 @@ class TestActivityChatAuthorization:
             ai_service, "chat_session_belongs_to_user", return_value=True
         ), patch(
             RATE_LIMIT_PATH
-        ), patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             ai_service, "structure_activity_content_by_type", return_value=[]
         ), patch.object(
@@ -323,10 +317,8 @@ class TestActivityChatAuthorization:
             ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
-        ), patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
-        ), patch.object(
-            ai_service, "refund_ai_credit"
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
+        ), patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund, patch.object(
             ai_service, "structure_activity_content_by_type", return_value=[]
         ), patch.object(
@@ -369,8 +361,7 @@ class TestEditorAIAuthorization:
             current_content={"type": "doc", "content": []},
         )
 
-        with patch.object(
-            editor_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch(
             RATE_LIMIT_PATH
         ) as rate_limit, patch.object(
@@ -395,8 +386,7 @@ class TestEditorAIAuthorization:
             current_content={"type": "doc", "content": []},
         )
 
-        with patch.object(
-            editor_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch(
             RATE_LIMIT_PATH
         ), patch.object(
@@ -428,8 +418,7 @@ class TestEditorAIAuthorization:
             },
         )
 
-        with patch.object(
-            editor_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch(
             RATE_LIMIT_PATH
         ), patch.object(
@@ -464,8 +453,7 @@ class TestEditorAIAuthorization:
             selected_text="some selection",
         )
 
-        with patch.object(
-            editor_service, "reserve_ai_credit", new_callable=AsyncMock
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch(
             RATE_LIMIT_PATH
         ), patch.object(
@@ -611,3 +599,9 @@ class TestRagHeadingClamp:
         assert "> quoted" in out
         assert "- item" in out
         assert "deep" in out
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

@@ -18,7 +18,10 @@ export default function NotFound() {
 
       <header className="relative z-10 flex items-center px-6 py-5 sm:px-10">
         <a href="/" aria-label="Home" className="opacity-80 transition-opacity hover:opacity-100">
-          <img src="/lrn-text.svg" alt="LearnHouse" width={120} height={18} className="h-[18px] w-auto" />
+          {/* Lazy: this page is part of every route's payload (the not-found
+              boundary), and an eager <img> here made React preload the logo
+              on every page, competing with the app's own scripts. */}
+          <img src="/lrn-text.svg" alt="LearnHouse" width={120} height={18} loading="lazy" className="h-[18px] w-auto" />
         </a>
       </header>
 

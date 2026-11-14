@@ -2,15 +2,12 @@
 import React, { useState } from 'react'
 import { Eye, EyeSlash, CodeSimple } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
+import { INPUT, Panel } from '@/design'
 import { ENDPOINTS } from '@components/Admin/Developers/catalog'
 import EndpointList from '@components/Admin/Developers/playground/EndpointList'
 import EndpointDetail from '@components/Admin/Developers/playground/EndpointDetail'
 
-export default function DocsPlaygroundTab({
-  onGoToTokens,
-}: {
-  onGoToTokens: () => void
-}) {
+export default function DocsPlaygroundTab({ onGoToTokens }: { onGoToTokens: () => void }) {
   const { t } = useTranslation()
   const [token, setToken] = useState('')
   const [reveal, setReveal] = useState(false)
@@ -19,12 +16,12 @@ export default function DocsPlaygroundTab({
   const selected = ENDPOINTS.find((e) => e.id === selectedId) ?? ENDPOINTS[0]
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {/* Token bar */}
-      <div className="rounded-xl border border-white/[0.08] bg-[#111112] p-4">
+      <Panel padded>
         <div className="flex items-center gap-2 mb-2">
-          <CodeSimple size={14} weight="bold" className="text-white/60" />
-          <h2 className="text-sm font-semibold text-white">{t('admin.developers.playground.token_title')}</h2>
+          <CodeSimple size={15} weight="bold" className="text-neutral-500" />
+          <h2 className="text-sm font-semibold text-neutral-900">{t('admin.developers.playground.token_title')}</h2>
         </div>
         <div className="flex items-stretch gap-2">
           <input
@@ -32,36 +29,35 @@ export default function DocsPlaygroundTab({
             value={token}
             onChange={(e) => setToken(e.target.value)}
             placeholder={t('admin.developers.playground.token_placeholder')}
-            className="flex-1 bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 font-mono"
+            className={`${INPUT} font-mono`}
+            dir="ltr"
           />
           <button
+            type="button"
             onClick={() => setReveal((v) => !v)}
             title={reveal ? t('admin.developers.playground.hide') : t('admin.developers.playground.reveal')}
-            className="px-3 rounded-lg border border-white/[0.1] text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors"
+            aria-label={reveal ? t('admin.developers.playground.hide') : t('admin.developers.playground.reveal')}
+            className="w-9 shrink-0 inline-flex items-center justify-center rounded-xl ring-1 ring-inset ring-neutral-200 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50"
           >
-            {reveal ? <EyeSlash size={16} weight="fill" /> : <Eye size={16} weight="fill" />}
+            {reveal ? <EyeSlash size={16} /> : <Eye size={16} />}
           </button>
         </div>
-        <p className="text-[11px] text-white/40 mt-1.5">
+        <p className="text-xs text-neutral-500 mt-2">
           {t('admin.developers.playground.token_hint')}{' '}
-          <button
-            onClick={onGoToTokens}
-            className="text-sky-300 hover:text-sky-200 underline underline-offset-2"
-          >
+          <button type="button" onClick={onGoToTokens} className="font-medium text-neutral-900 underline underline-offset-2">
             {t('admin.developers.playground.mint_token')}
           </button>
         </p>
-      </div>
+      </Panel>
 
       {/* Two-column explorer */}
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 min-h-[600px]">
-        <aside className="rounded-xl border border-white/[0.08] bg-[#0d0d0e] overflow-hidden lg:sticky lg:top-20 lg:max-h-[calc(100vh-8rem)]">
+      <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] gap-4 lg:min-h-[600px]">
+        <aside className="bg-white rounded-2xl nice-shadow overflow-hidden max-h-[420px] lg:max-h-[calc(100vh-8rem)] lg:sticky lg:top-6 flex flex-col">
           <EndpointList selectedId={selectedId} onSelect={setSelectedId} />
         </aside>
-
-        <main className="rounded-xl border border-white/[0.08] bg-[#111112] p-5">
+        <Panel padded className="min-w-0">
           {selected && <EndpointDetail key={selected.id} endpoint={selected} token={token} />}
-        </main>
+        </Panel>
       </div>
     </div>
   )

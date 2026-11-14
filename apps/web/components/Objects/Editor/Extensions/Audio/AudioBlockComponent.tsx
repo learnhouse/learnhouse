@@ -1,27 +1,40 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
+import { CreditCost } from '@components/Objects/AI/CreditCost'
+import { useAICreditPrices, useRefreshAICredits } from '@components/Hooks/useAICredits'
+import { minutesFromText } from '@services/ai/credits'
 import {
-  CircleNotch, Headphones, UploadSimple, X, ArrowsLeftRight,
-  CheckCircle, WarningCircle, Play, Pause, MusicNote, Radio, List,
-  SkipBack, SkipForward, Clock, Sparkle, Users
+  CircleNotch, Headphones, UploadSimple, WarningCircle, Play, Pause, MusicNote, Radio, List,
+  SkipBack, SkipForward, Clock, Users
 } from '@phosphor-icons/react'
+import { AIButton, AIMark } from '@components/Objects/AI/AIBrand'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
-import { uploadNewAudioFile, generateAudioBlock, generateScript, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
+import { generateAudioBlock, generateScript, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
 import { getAudioBlockStreamUrl, getPodcastAudioStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { constructAcceptValue } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { getOrgPodcasts, getPodcastMeta, type Podcast, type PodcastEpisode, type PodcastMeta } from '@services/podcasts/podcasts'
 import { safePlay } from '@/lib/media/safePlay'
 import InlineAudioPlayer, { formatTime } from '@components/Objects/Media/InlineAudioPlayer'
+import { BlockChrome, BlockPopover, BlockToolbarButton, BlockToolbarDivider, CommitInput, Segmented, SettingsField } from '../../Blocks/ui/BlockChrome'
+import BlockCaption from '../../Blocks/ui/BlockCaption'
+import MediaSourcePicker from '../../Blocks/ui/MediaSourcePicker'
+import { useBlockUpload } from '../../Blocks/media/useBlockUpload'
+import { fetchRemoteFile, UrlImportError } from '../../Blocks/media/urlImport'
+import { normalizeUserUrl } from '../../Blocks/embeds/embedProviders'
+import { libraryMediaNodeAttrs } from '../../Blocks/media/librarySnapshot'
+import { uploadErrorText } from '../../Blocks/media/uploadMessages'
+import { deleteBlock, replaceBlock } from '../../Blocks/nodeViewUtils'
+import { ArrowsHorizontal, Article, Trash, ArrowCounterClockwise } from '@phosphor-icons/react'
 
-const SUPPORTED_FILES = constructAcceptValue(['mp3', 'wav', 'ogg', 'm4a'])
+// The AI tab/mode icon: the brand mark sized like the Phosphor icons around it.
+const AITabIcon = ({ size = 14 }: { size?: number }) => <AIMark size={size} alt="" />
 
 const AUDIO_SIZES = {
   small: { maxWidth: 400, labelKey: 'editor.blocks.common.small' },
@@ -37,8 +50,6 @@ type TabType = 'upload' | 'generate' | 'episode' | 'podcast'
 // AI audio generation (Gemini TTS). Curated subset of the prebuilt voices, and a
 // list of well-supported languages. Language is otherwise auto-detected from the
 // text; picking one just nudges the model.
-const AI_CREDIT_COST = 3
-const SCRIPT_CREDIT_COST = 1
 const TTS_VOICES = [
   { name: 'Kore', descKey: 'editor.blocks.audio_block.voice_firm' },
   { name: 'Puck', descKey: 'editor.blocks.audio_block.voice_upbeat' },
@@ -323,20 +334,25 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
   const editorState = useEditorProvider() as EditorState
   const session = useLHSession() as Session
 
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const uploadZoneRef = React.useRef<HTMLDivElement>(null)
-
-  const [blockObject, setBlockObject] = React.useState<AudioBlockObject | null>(
-    node.attrs.blockObject || null
-  )
-  const [selectedSize, setSelectedSize] = React.useState<AudioSize>(
-    node.attrs.blockObject?.size || 'medium'
-  )
+  // The block reads its source from the node attrs (the shared document), so
+  // undo and collaborators' changes show; writes go through updateAttributes.
+  const blockObject: AudioBlockObject | null = node.attrs.blockObject || null
+  const setBlockObject = (_next: AudioBlockObject | null) => {}
+  const [pendingSize, setPendingSize] = React.useState<AudioSize>('medium')
+  const selectedSize: AudioSize = blockObject?.size || pendingSize
+  const setSelectedSize = (size: AudioSize) => {
+    if (blockObject) updateAttributes({ blockObject: { ...blockObject, size } })
+    else setPendingSize(size)
+  }
+  const caption: string = node.attrs.caption || ''
+  const transcript: string = node.attrs.transcript || ''
+  // ai-credits: prices before, what the last generation used after.
+  const { estimate: estimateCredits } = useAICreditPrices()
+  const refreshCredits = useRefreshAICredits()
+  const [creditsUsed, setCreditsUsed] = React.useState<number | null>(null)
+  const [popover, setPopover] = React.useState<null | 'size' | 'transcript'>(null)
   const [activeTab, setActiveTab] = React.useState<TabType>('upload')
-  const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const [isDragging, setIsDragging] = React.useState(false)
-  const [uploadProgress, setUploadProgress] = React.useState(0)
 
   // AI generation state
   const [genMode, setGenMode] = React.useState<GenMode>('tts')
@@ -364,15 +380,6 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
 
   const isEditable = editorState?.isEditable
   const access_token = session?.data?.tokens?.access_token
-
-  // Update block object when size changes
-  React.useEffect(() => {
-    if (blockObject && blockObject.size !== selectedSize) {
-      const newBlockObject = { ...blockObject, size: selectedSize }
-      setBlockObject(newBlockObject)
-      updateAttributes({ blockObject: newBlockObject })
-    }
-  }, [selectedSize])
 
   // Fetch podcasts when episode or podcast tab is active
   React.useEffect(() => {
@@ -456,66 +463,28 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
     updateAttributes({ blockObject: newBlockObject })
   }
 
-  const handleAudioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setError(null)
-      handleUpload(file)
-    }
-  }
+  const upload = useBlockUpload({
+    kind: 'audio',
+    activityUuid: extension.options.activity?.activity_uuid,
+    accessToken: access_token,
+    onUploaded: (object) => {
+      updateAttributes({ blockObject: { ...object, source_type: 'upload', size: selectedSize } })
+    },
+  })
 
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.currentTarget === uploadZoneRef.current) setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    const ext = file?.name.split('.').pop()?.toLowerCase()
-    if (file && ext && ['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) {
-      setError(null)
-      handleUpload(file)
-    } else {
-      setError(t('editor.blocks.audio_block.unsupported_format'))
-    }
-  }
-
-  const handleUpload = async (file: File) => {
-    if (!access_token) return
+  const importFromUrl = async (input: string): Promise<string | void> => {
+    const url = normalizeUserUrl(input)
+    if (!url) return uploadErrorText(t, { code: 'url' })
     try {
-      setIsLoading(true)
-      setError(null)
-      setUploadProgress(0)
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90))
-      }, 200)
-      const object = await uploadNewAudioFile(file, extension.options.activity.activity_uuid, access_token)
-      clearInterval(progressInterval)
-      setUploadProgress(100)
-      const newBlockObject: AudioBlockObject = { ...object, source_type: 'upload', size: selectedSize }
-      setBlockObject(newBlockObject)
-      updateAttributes({ blockObject: newBlockObject })
-      setTimeout(() => setUploadProgress(0), 1000)
-    } catch (err: any) {
-      const errorMessage = err?.message || t('editor.blocks.audio_block.upload_failed')
-      setError(errorMessage)
-      toast.error(errorMessage)
-    } finally {
-      setIsLoading(false)
+      upload.start(await fetchRemoteFile(url, 'audio'))
+    } catch (err) {
+      if (err instanceof UrlImportError) return uploadErrorText(t, { code: err.code, kind: 'audio', error: err.message })
+      return uploadErrorText(t, { code: 'server', error: (err as any)?.message })
     }
   }
 
   const handleGenerate = async () => {
+    setCreditsUsed(null)
     if (!access_token) return
     if (!genText.trim()) {
       setError(t('editor.blocks.audio_block.text_required'))
@@ -535,8 +504,10 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
           style: genStyle.trim() || undefined,
           language: genLanguage === 'Auto-detect' ? undefined : genLanguage,
         },
-        access_token
+        access_token,
+        setCreditsUsed
       )
+      refreshCredits()
       // Generated audio is stored like an upload, so treat it identically.
       const newBlockObject: AudioBlockObject = { ...object, source_type: 'upload', size: selectedSize }
       setBlockObject(newBlockObject)
@@ -570,8 +541,10 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
           language: genLanguage === 'Auto-detect' ? undefined : genLanguage,
           minutes: genMinutes,
         },
-        access_token
+        access_token,
+        setCreditsUsed
       )
+      refreshCredits()
       if (res?.transcript) {
         setGenText(res.transcript)
         toast.success(t('editor.blocks.audio_block.script_ready'))
@@ -586,10 +559,8 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
   }
 
   const handleRemove = () => {
-    setBlockObject(null)
     updateAttributes({ blockObject: null })
     setError(null)
-    setUploadProgress(0)
     setSelectedPodcast(null)
     setEpisodes([])
     setPlaylistMeta(null)
@@ -654,6 +625,15 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 </div>
               )
             )}
+            <BlockCaption value={caption} editable={false} />
+            {transcript.trim() && (
+              <details className="group mt-2 rounded-xl bg-neutral-50 px-4 py-2.5 text-sm text-neutral-700 ring-1 ring-inset ring-black/[0.05]">
+                <summary className="cursor-pointer select-none text-[13px] font-medium text-neutral-600 marker:text-neutral-400">
+                  {t('editor.blocks_v2.transcript', 'Transcript')}
+                </summary>
+                <div className="mt-2 whitespace-pre-line leading-relaxed">{transcript}</div>
+              </details>
+            )}
           </div>
         </div>
       </NodeViewWrapper>
@@ -663,19 +643,65 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
   // ===== EDIT MODE =====
   return (
     <NodeViewWrapper className="block-audio w-full">
-      <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Headphones weight="duotone" className="text-neutral-400" size={16} />
-            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">{t('editor.blocks.audio')}</span>
-          </div>
-          {blockObject && (
-            <button onClick={handleRemove} className="text-neutral-400 hover:text-red-500 transition-colors">
-              <X weight="duotone" size={16} />
-            </button>
-          )}
-        </div>
+      <BlockChrome tone="media"
+        selected={props.selected}
+        forceToolbar={!!popover}
+        label={<><Headphones size={11} weight="bold" />{t('editor.blocks.audio')}</>}
+        toolbar={
+          <>
+            {blockObject && (
+              <>
+                <BlockPopover
+                  open={popover === 'size'}
+                  onOpenChange={(o) => setPopover(o ? 'size' : null)}
+                  title={t('editor.blocks.common.size', 'Size')}
+                  width={300}
+                  trigger={<BlockToolbarButton label={t('editor.blocks.common.size', 'Size')}><ArrowsHorizontal size={14} /></BlockToolbarButton>}
+                >
+                  <Segmented
+                    ariaLabel={t('editor.blocks.common.size', 'Size')}
+                    value={selectedSize}
+                    onChange={(size) => setSelectedSize(size)}
+                    options={(Object.keys(AUDIO_SIZES) as AudioSize[]).map((size) => ({ value: size, label: t(AUDIO_SIZES[size].labelKey) }))}
+                  />
+                </BlockPopover>
+                <BlockPopover
+                  open={popover === 'transcript'}
+                  onOpenChange={(o) => setPopover(o ? 'transcript' : null)}
+                  title={t('editor.blocks_v2.transcript', 'Transcript')}
+                  width={380}
+                  trigger={
+                    <BlockToolbarButton label={t('editor.blocks_v2.transcript', 'Transcript')} active={!!transcript.trim()}>
+                      <Article size={14} />
+                    </BlockToolbarButton>
+                  }
+                >
+                  <SettingsField
+                    label={t('editor.blocks_v2.transcript_label', 'What is said in this recording')}
+                    hint={t('editor.blocks_v2.transcript_hint', 'Learners can open it under the player. Helps deaf and hard-of-hearing learners and anyone who prefers reading.')}
+                  >
+                    <CommitInput
+                      multiline
+                      value={transcript}
+                      onCommit={(v) => updateAttributes({ transcript: v.slice(0, 50000) })}
+                      placeholder={t('editor.blocks_v2.transcript_placeholder', 'Paste or type the transcript…')}
+                      aria-label={t('editor.blocks_v2.transcript', 'Transcript')}
+                    />
+                  </SettingsField>
+                </BlockPopover>
+                <BlockToolbarDivider />
+                <BlockToolbarButton label={t('editor.blocks_v2.change_source', 'Change source')} onClick={handleRemove}>
+                  <ArrowCounterClockwise size={14} />
+                </BlockToolbarButton>
+              </>
+            )}
+            <BlockToolbarButton label={t('common.delete', 'Delete')} tone="danger" onClick={() => deleteBlock(props as any)}>
+              <Trash size={14} />
+            </BlockToolbarButton>
+          </>
+        }
+      >
+      <div className="rounded-xl bg-white p-3 shadow-[0_0_0_1px_var(--lhb-border,rgba(0,0,0,0.07))] sm:p-4">
 
         {/* Selection UI (no block object yet) */}
         {!blockObject && (
@@ -684,7 +710,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
             <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
               {([
                 { key: 'upload' as TabType, icon: UploadSimple, label: t('editor.blocks.common.upload') },
-                { key: 'generate' as TabType, icon: Sparkle, label: t('editor.blocks.audio_block.tab_generate') },
+                { key: 'generate' as TabType, icon: AITabIcon, label: t('editor.blocks.audio_block.tab_generate') },
                 { key: 'episode' as TabType, icon: MusicNote, label: t('editor.blocks.audio_block.tab_episode') },
                 { key: 'podcast' as TabType, icon: List, label: t('editor.blocks.audio_block.tab_playlist') },
               ]).map((tab) => (
@@ -706,39 +732,20 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
 
             {/* Upload Tab */}
             {activeTab === 'upload' && (
-              <div className="space-y-3">
-                <input ref={fileInputRef} type="file" onChange={handleAudioChange} accept={SUPPORTED_FILES} className="hidden" />
-                <div
-                  ref={uploadZoneRef}
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragEnter={handleDragEnter}
-                  onDragOver={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  className={cn(
-                    'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all',
-                    isDragging ? 'border-blue-400 bg-blue-50' : 'border-neutral-200 bg-white hover:border-blue-400 hover:bg-blue-50/50'
-                  )}
-                >
-                  {isLoading ? (
-                    <div className="space-y-3">
-                      <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                      <p className="text-sm text-neutral-600">{t('editor.blocks.audio_block.uploading_progress', { progress: uploadProgress })}</p>
-                      <div className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <UploadSimple weight="duotone" className="w-8 h-8 mx-auto text-neutral-400" />
-                      <div>
-                        <p className="text-sm font-medium text-neutral-700">{t('editor.blocks.audio_block.drop_or_browse')}</p>
-                        <p className="text-xs text-neutral-500 mt-1">{t('editor.blocks.audio_block.supported_formats')}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <MediaSourcePicker
+                kind="audio"
+                icon={<Headphones size={20} weight="duotone" />}
+                title={t('editor.blocks_v2.audio_title', 'Add an audio file')}
+                onFile={(f) => upload.start(f)}
+                onUrl={importFromUrl}
+                urlPlaceholder={t('editor.blocks_v2.audio_link_placeholder', 'Paste a link to an MP3, WAV, OGG or M4A file…')}
+                onLibrarySelect={(r) => replaceBlock(props as any, { type: 'blockLibrary', attrs: libraryMediaNodeAttrs(r) })}
+                task={upload.task}
+                rejection={upload.rejection}
+                onCancel={upload.cancel}
+                onRetry={upload.retry}
+                onDismiss={upload.dismiss}
+              />
             )}
 
             {/* Generate Tab (AI / Gemini TTS) */}
@@ -747,7 +754,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 {/* Mode toggle */}
                 <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
                   {([
-                    { key: 'tts' as const, icon: Sparkle, label: t('editor.blocks.audio_block.mode_tts') },
+                    { key: 'tts' as const, icon: AITabIcon, label: t('editor.blocks.audio_block.mode_tts') },
                     { key: 'podcast' as const, icon: Users, label: t('editor.blocks.audio_block.mode_podcast') },
                     { key: 'speak' as const, icon: Radio, label: t('editor.blocks.audio_block.mode_speak') },
                   ]).map((m) => (
@@ -883,33 +890,38 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     {isGeneratingScript ? (
                       <><CircleNotch size={15} className="animate-spin" /> {genMode === 'podcast' ? t('editor.blocks.audio_block.writing_discussion') : t('editor.blocks.audio_block.writing_talk')}</>
                     ) : (
-                      <><Sparkle size={15} /> {genMode === 'podcast' ? t('editor.blocks.audio_block.generate_discussion_script') : t('editor.blocks.audio_block.generate_talk_script')}</>
+                      <><AIMark size={16} alt="" /> {genMode === 'podcast' ? t('editor.blocks.audio_block.generate_discussion_script') : t('editor.blocks.audio_block.generate_talk_script')}</>
                     )}
                   </button>
                 )}
 
                 {/* Generate audio button */}
-                <button
+                <AIButton
+                  size="lg"
                   onClick={handleGenerate}
-                  disabled={isGenerating || isGeneratingScript || !genText.trim()}
-                  className={cn(
-                    'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors',
-                    isGenerating || isGeneratingScript || !genText.trim()
-                      ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                      : 'bg-black text-white hover:bg-neutral-800'
-                  )}
+                  disabled={isGeneratingScript || !genText.trim()}
+                  loading={isGenerating}
+                  className="w-full"
                 >
-                  {isGenerating ? (
-                    <><CircleNotch size={15} className="animate-spin" /> {t('editor.blocks.audio_block.generating')}</>
-                  ) : (
-                    <><Sparkle size={15} /> {t('editor.blocks.audio_block.generate_audio')}</>
+                  {isGenerating ? t('editor.blocks.audio_block.generating') : t('editor.blocks.audio_block.generate_audio')}
+                </AIButton>
+                <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-center text-neutral-400">
+                  {genMode !== 'tts' && (
+                    <span>
+                      {t('ai_credits.audio.script', { count: estimateCredits('podcast_script') ?? 1, defaultValue: 'Script: about {{count}} credits' })}
+                    </span>
                   )}
-                </button>
-                <p className="text-[11px] text-center text-neutral-400">
-                  {genMode !== 'tts'
-                    ? t('editor.blocks.audio_block.credits_with_script', { scriptCost: SCRIPT_CREDIT_COST, audioCost: AI_CREDIT_COST })
-                    : t('editor.blocks.audio_block.credits_audio_only', { cost: AI_CREDIT_COST })}
+                  <CreditCost
+                    credits={estimateCredits('podcast_audio', minutesFromText(genText))}
+                    className="!text-[11px] !text-neutral-400"
+                  />
+                  <span className="text-neutral-300">
+                    {t('ai_credits.audio.per_minute', { count: estimateCredits('podcast_audio') ?? 0, defaultValue: '{{count}} credits per minute of audio' })}
+                  </span>
                 </p>
+                {creditsUsed != null && !isGenerating && (
+                  <p className="text-center"><CreditCost kind="used" credits={creditsUsed} /></p>
+                )}
               </div>
             )}
 
@@ -1016,29 +1028,6 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
         {/* Block exists: preview + controls */}
         {blockObject && (
           <div className="space-y-4">
-            {/* Size Controls */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
-                <ArrowsLeftRight weight="duotone" size={14} />
-                {t('editor.blocks.common.size')}:
-              </div>
-              {(Object.keys(AUDIO_SIZES) as AudioSize[]).map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors outline-none',
-                    selectedSize === size
-                      ? 'bg-neutral-700 text-white'
-                      : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
-                  )}
-                >
-                  {size === selectedSize && <CheckCircle weight="duotone" size={14} />}
-                  {t(AUDIO_SIZES[size].labelKey)}
-                </button>
-              ))}
-            </div>
-
             {/* Audio Preview */}
             <div className="flex justify-center">
               <div style={{ maxWidth: getMaxWidth(selectedSize), width: '100%' }}>
@@ -1073,6 +1062,10 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
           </div>
         )}
       </div>
+      {blockObject && (
+        <BlockCaption value={caption} editable selected={props.selected} onCommit={(value) => updateAttributes({ caption: value })} />
+      )}
+      </BlockChrome>
     </NodeViewWrapper>
   )
 }

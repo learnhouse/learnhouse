@@ -21,6 +21,7 @@ from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity, ActivityTypeEnum, ActivitySubTypeEnum
+from src.services.courses.activities.comment_marks import strip_comment_marks
 from src.db.courses.assignments import (
     Assignment,
     AssignmentTask,
@@ -713,6 +714,12 @@ async def import_courses(
     )
 
 
+def _imported_locale(value) -> Optional[str]:
+    from src.services.courses.translations.locales import normalize_locale
+
+    return normalize_locale(value) if value else None
+
+
 async def _import_single_course(
     course_path: str,
     organization: Organization,
@@ -765,6 +772,7 @@ async def _import_single_course(
         course_uuid=new_course_uuid,
         seo=course_data.get("seo"),
         extra_metadata=course_data.get("extra_metadata"),
+        default_locale=_imported_locale(course_data.get("default_locale")),
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
@@ -829,6 +837,7 @@ async def _import_single_course(
                                             written=library_dirs)
 
     # Import chapters
+    uuid_map: dict = {}
     chapters_dir = os.path.join(course_path, "chapters")
     if os.path.exists(chapters_dir):
         # Get chapter order from JSON files
@@ -845,7 +854,7 @@ async def _import_single_course(
         chapter_items.sort(key=lambda x: x[1].get("order", 0))
 
         for original_chapter_uuid, chapter_data in chapter_items:
-            await _import_chapter(
+            new_chapter = await _import_chapter(
                 chapter_path=os.path.join(chapters_dir, original_chapter_uuid),
                 chapter_data=chapter_data,
                 new_course=new_course,
@@ -853,7 +862,15 @@ async def _import_single_course(
                 organization=organization,
                 db_session=db_session,
                 media_map=media_map,
+                uuid_map=uuid_map,
             )
+            uuid_map[str(chapter_data.get("chapter_uuid") or original_chapter_uuid)] = new_chapter
+
+    # Language versions travel in course.json (multilingual courses)
+    if course_data.get("translations"):
+        from src.services.courses.translations.transfer import import_translations
+
+        await import_translations(db_session, new_course, course_data["translations"], uuid_map)
 
     return new_course
 
@@ -973,6 +990,7 @@ async def _import_chapter(
     organization: Organization,
     db_session: AsyncSession,
     media_map: Optional[dict[str, tuple[str, dict]]] = None,
+    uuid_map: Optional[dict] = None,
 ) -> Chapter:
     """
     Import a chapter and its activities.
@@ -1022,7 +1040,7 @@ async def _import_chapter(
         activity_items.sort(key=lambda x: x[1].get("order", 0))
 
         for original_activity_uuid, activity_data in activity_items:
-            await _import_activity(
+            new_activity = await _import_activity(
                 activity_path=os.path.join(activities_dir, original_activity_uuid),
                 activity_data=activity_data,
                 new_course=new_course,
@@ -1032,6 +1050,8 @@ async def _import_chapter(
                 db_session=db_session,
                 media_map=media_map,
             )
+            if uuid_map is not None and new_activity is not None:
+                uuid_map[str(activity_data.get("activity_uuid") or original_activity_uuid)] = new_activity
 
     return new_chapter
 
@@ -1068,7 +1088,7 @@ async def _import_activity(
             pass
 
     # Clone content (will update block references)
-    new_content = dict(activity_data.get("content", {})) if activity_data.get("content") else {}
+    new_content = dict(strip_comment_marks(activity_data["content"])) if activity_data.get("content") else {}
     _drop_foreign_file_refs(new_content, new_course_path)
     # Code blocks keep their SQLite database's full storage key; the package's
     # files land under the new activity, so re-root keys under the old one.

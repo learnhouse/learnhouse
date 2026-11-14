@@ -6,7 +6,9 @@ from src.routers import health
 from src.routers import demo as demo_router_module
 from src.routers import instance
 from src.routers import plans
+from src.routers import onboarding as onboarding_router_module
 from src.routers import usergroups
+from src.routers import usergroups_manage
 from src.routers import editor_templates as editor_templates_router_module
 from src.routers import editor_variables as editor_variables_router_module
 from src.routers import dev, trail, users, auth, orgs, roles, search
@@ -14,17 +16,21 @@ from src.routers import mfa as mfa_router_module
 from src.routers import monitoring
 from src.routers import nudges as nudges_router_module
 from src.routers import stream
+from src.routers import seo as seo_router_module
+from src.routers import landing as landing_router_module
 from src.routers import api_tokens
 from src.routers import mcp_oauth
 from src.routers import calendar as calendar_router_module
+from src.routers import notifications as notifications_router_module
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
 from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario, audio
-from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
 from src.routers.orgs import packs
 from src.routers.orgs import org_plan
+from src.routers.orgs import member_panel as member_panel_router
+from src.routers.orgs import plan_overview as plan_overview_router
 from src.routers.courses import chapters, courses, assignments, certifications
 from src.routers.folders import folders as folders_router_module
 from src.routers.paths import paths as paths_router_module
@@ -34,11 +40,12 @@ from src.routers.courses import migration as migration_router_module
 from src.routers.communities import communities as communities_router_module
 from src.routers.communities import discussions as discussions_router_module
 from src.routers.courses.activities import activities, blocks
+from src.routers.courses.activities import collab as activity_collab_router_module
+from src.routers.courses.activities import comments as activity_comments_router_module
+from src.routers import learner_notes as learner_notes_router_module
+from src.routers.courses import translations as course_translations_router_module
 from src.routers.podcasts import podcasts as podcasts_router_module
 from src.routers.podcasts import episodes as episodes_router_module
-from src.routers.boards import boards as boards_router_module
-from src.routers.playgrounds import playgrounds as playgrounds_router_module
-from src.routers.playgrounds import playgrounds_generator as playgrounds_generator_router
 from src.core.ee_hooks import register_ee_routers
 from src.core.deployment_mode import get_deployment_mode
 from src.services.dev.dev import isDevModeEnabledOrRaise
@@ -49,7 +56,7 @@ from src.security.api_token_utils import (
     require_authenticated_user_or_api_token,
     require_non_api_token_user,
 )
-from src.security.features_utils.plan_check import require_plan, require_plan_for_boards, require_plan_for_certifications, require_plan_for_community, require_plan_for_usergroups, require_plan_for_playgrounds, require_plan_for_paths
+from src.security.features_utils.plan_check import require_plan, require_plan_for_certifications, require_plan_for_community, require_plan_for_usergroups, require_plan_for_paths
 
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -75,6 +82,18 @@ v1_router.include_router(
     tags=["users"],
     dependencies=[Depends(get_non_api_token_user)]
 )
+# User groups v2 (rules, nesting, managers, codes, progress...). Same
+# dependencies as the CRUD routes below; mounted first so its literal paths
+# (/join, /org/{id}/...) never fall into the /{usergroup_id} routes.
+v1_router.include_router(
+    usergroups_manage.router,
+    prefix="/usergroups",
+    tags=["usergroups"],
+    dependencies=[
+        Depends(require_authenticated_user_or_api_token),
+        Depends(require_plan_for_usergroups("standard", "User Groups")),
+    ],
+)
 v1_router.include_router(
     usergroups.router,
     prefix="/usergroups",
@@ -95,8 +114,19 @@ v1_router.include_router(
 v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 # Two-factor: enrollment/management plus the /auth/login/mfa challenge.
 v1_router.include_router(mfa_router_module.router, prefix="/auth", tags=["auth"])
+# The open impersonation's own controls (status / end).
+from src.routers import impersonation as impersonation_router_module  # noqa: E402
+
+v1_router.include_router(impersonation_router_module.router, prefix="/auth/impersonation", tags=["auth"])
 v1_router.include_router(
     orgs.router,
+    prefix="/orgs",
+    tags=["orgs"],
+    dependencies=[Depends(get_non_api_token_user)]
+)
+# The member side panel on the dashboard Users page (session users only).
+v1_router.include_router(
+    member_panel_router.router,
     prefix="/orgs",
     tags=["orgs"],
     dependencies=[Depends(get_non_api_token_user)]
@@ -105,6 +135,13 @@ v1_router.include_router(
     ai_credits.router,
     prefix="/orgs",
     tags=["ai-credits"],
+    dependencies=[Depends(require_authenticated_user)]
+)
+# Settings → Plan & usage (admins and maintainers, session users only).
+v1_router.include_router(
+    plan_overview_router.router,
+    prefix="/orgs",
+    tags=["orgs"],
     dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
@@ -212,6 +249,8 @@ v1_router.include_router(
     dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(search.router, prefix="/search", tags=["search"])
+v1_router.include_router(seo_router_module.router, prefix="/seo", tags=["seo"])
+v1_router.include_router(landing_router_module.router, prefix="/landing", tags=["landing"])
 v1_router.include_router(
     assignments.router,
     prefix="/assignments",
@@ -224,6 +263,33 @@ v1_router.include_router(
 )
 v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
+v1_router.include_router(
+    activity_collab_router_module.router,
+    prefix="/activities",
+    tags=["activities"],
+    dependencies=[Depends(get_non_api_token_user)],
+)
+v1_router.include_router(
+    activity_collab_router_module.internal_router,
+    prefix="/activities",
+    tags=["activities-internal"],
+)
+v1_router.include_router(
+    activity_collab_router_module.org_router,
+    prefix="/orgs",
+    tags=["orgs"],
+    dependencies=[Depends(get_non_api_token_user)],
+)
+v1_router.include_router(activity_comments_router_module.router, prefix="/activities", tags=["activity-comments"])
+# Private learner notes: session users only, every handler scoped to the caller.
+v1_router.include_router(
+    learner_notes_router_module.router,
+    prefix="/notes",
+    tags=["learner-notes"],
+    dependencies=[Depends(require_authenticated_user)],
+)
+v1_router.include_router(course_translations_router_module.course_router, prefix="/courses", tags=["course-translations"])
+v1_router.include_router(course_translations_router_module.activity_router, prefix="/activities", tags=["course-translations"])
 v1_router.include_router(
     editor_templates_router_module.router,
     prefix="/editor-templates",
@@ -258,6 +324,11 @@ v1_router.include_router(
 v1_router.include_router(
     messaging_router_module.router, prefix="/messaging", tags=["messaging"]
 )
+# The signed-in user's notification inbox, push devices and push preferences.
+# Personal data only: every route needs a real session.
+v1_router.include_router(
+    notifications_router_module.router, prefix="/notifications", tags=["notifications"]
+)
 v1_router.include_router(
     communities_router_module.router,
     prefix="/communities",
@@ -284,17 +355,6 @@ v1_router.include_router(
     prefix="/certifications",
     tags=["certifications"],
     dependencies=[Depends(require_plan_for_certifications("pro", "Certifications"))]
-)
-v1_router.include_router(
-    boards_router_module.router,
-    prefix="/boards",
-    tags=["boards"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan_for_boards("personal", "Boards"))]
-)
-v1_router.include_router(
-    boards_router_module.internal_router,
-    prefix="/boards",
-    tags=["boards-internal"],
 )
 v1_router.include_router(
     calendar_router_module.router,
@@ -364,27 +424,8 @@ v1_router.include_router(
     tags=["ai", "scenario"],
     dependencies=[Depends(require_authenticated_user)]
 )
-v1_router.include_router(
-    boards_playground.router,
-    prefix="/boards",
-    tags=["boards", "boards-playground"],
-    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_boards("personal", "Boards"))]
-)
-v1_router.include_router(
-    playgrounds_router_module.router,
-    prefix="/playgrounds",
-    tags=["playgrounds"],
-    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
-)
-v1_router.include_router(
-    playgrounds_generator_router.router,
-    prefix="/playgrounds",
-    tags=["playgrounds", "playgrounds-generator"],
-    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
-)
-
 # Org analytics (dashboards, the browser beacon, settings, the per-student
-# audit) is mounted by EE.
+# audit), Plays and boards are mounted by EE.
 
 v1_router.include_router(
     code_execution.router,
@@ -418,8 +459,23 @@ v1_router.include_router(
 # Plan limits (public, no auth; used by frontend pricing pages)
 v1_router.include_router(plans.router, prefix="/plans", tags=["plans"])
 
+# Onboarding: one-step org creation, the setup checklist, the plan picker, the
+# organizations hub and pending invitations (session users only).
+v1_router.include_router(
+    onboarding_router_module.router,
+    prefix="/onboarding",
+    tags=["onboarding"],
+    dependencies=[Depends(require_authenticated_user)],
+)
+
 # Register EE Routers if available
 register_ee_routers(v1_router)
+
+# Tools API: every token-callable agent tool (EE ones included, so after the
+# EE routers) as POST /api/v1/tools/{name}, in the API token OpenAPI spec.
+from src.routers.tools_api import register_tool_routes  # noqa: E402
+
+register_tool_routes(v1_router)
 
 v1_router.include_router(
     health.router,

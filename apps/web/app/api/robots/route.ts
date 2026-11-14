@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAPIUrl } from '@services/config/config'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgSeoConfig } from '@/lib/seo/utils'
+import { buildRobotsTxt } from '@/lib/seo/robots'
+import type { OrgSeoConfig } from '@/lib/seo/meta'
 
 /**
  * Whether `slug` is the shared demo organization, according to the API.
@@ -55,19 +59,16 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const robotsTxt = `User-agent: *
-Allow: /
-Disallow: /dash/
-Disallow: /api/
-Disallow: /auth/
-Disallow: /editor/
-Disallow: /admin/
-Sitemap: ${baseUrl}sitemap.xml
-`
+  const org = await getOrganizationContextInfo(orgSlug, { revalidate: 300, tags: ['organizations'] }).catch(() => null)
+  const robotsTxt = buildRobotsTxt({
+    sitemapUrl: `${baseUrl}sitemap.xml`,
+    seo: getOrgSeoConfig(org) as OrgSeoConfig,
+  })
 
   return new NextResponse(robotsTxt, {
     headers: {
-      'Content-Type': 'text/plain',
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
     },
   })
 }

@@ -69,6 +69,10 @@ AUTH_METHOD_API_TOKEN = "api_token"
 # admin-selectable method: the org opts in by registering the platform, and
 # the session is only exempt from the method policy inside that org.
 AUTH_METHOD_LTI = "lti"
+# An impersonation acting as one member of one org (see
+# src.security.impersonation). Never admin-selectable, never refreshable, and
+# held to the org it was started for.
+AUTH_METHOD_IMPERSONATION = "impersonation"
 
 # The methods an org admin can allow/disallow (api_token is never in this set).
 POLICY_AUTH_METHODS = (
@@ -156,6 +160,12 @@ def refuse_lms_session() -> None:
     from fastapi import HTTPException
 
     provenance = get_session_provenance()
+    if provenance is not None and provenance.amr == AUTH_METHOD_IMPERSONATION:
+        # Impersonations never touch the account itself (defense in depth:
+        # the impersonation gate already refuses these routes).
+        from src.security.impersonation import CODE_DENIED, error_detail
+
+        raise HTTPException(status_code=403, detail=error_detail(CODE_DENIED))
     if provenance is not None and provenance.amr == AUTH_METHOD_LTI:
         raise HTTPException(
             status_code=403,
@@ -177,7 +187,7 @@ def held_org_id() -> Optional[int]:
     provenance = get_session_provenance()
     if provenance is None or provenance.org_id is None:
         return None
-    if provenance.amr == AUTH_METHOD_LTI or provenance.custom_domain:
+    if provenance.amr in (AUTH_METHOD_LTI, AUTH_METHOD_IMPERSONATION) or provenance.custom_domain:
         return provenance.org_id
     return None
 

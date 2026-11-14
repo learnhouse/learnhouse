@@ -120,3 +120,31 @@ async def test_event_stream_teardown_errors_are_swallowed():
             2, 5, {"type": "hello"}, _no_presence, _noop, _disconnect_after(0)
         ))
     assert json.loads(chunks[0][6:])["type"] == "hello"
+
+
+async def test_offline_write_survives_a_cancelled_teardown():
+    """A closed tab cancels the stream while it is marking the user offline.
+    The DB write used to be interrupted mid-query (Sentry: the pool logged
+    "Exception terminating connection"); it now finishes in its own task."""
+    fake = FakeAsyncRedis([])
+    started, release, finished = asyncio.Event(), asyncio.Event(), asyncio.Event()
+
+    async def on_offline():
+        started.set()
+        await release.wait()
+        finished.set()
+
+    async def consume():
+        with patch("src.services.messaging.realtime.get_async_redis", return_value=fake), \
+             patch("src.services.messaging.realtime.online_user_ids", return_value=set()):
+            await _collect(realtime.event_stream(
+                2, 5, {"type": "hello"}, _no_presence, on_offline, _disconnect_after(0)
+            ))
+
+    consumer = asyncio.create_task(consume())
+    await asyncio.wait_for(started.wait(), 2)
+    consumer.cancel()
+    await asyncio.gather(consumer, return_exceptions=True)
+    assert not finished.is_set()
+    release.set()
+    await asyncio.wait_for(finished.wait(), 2)

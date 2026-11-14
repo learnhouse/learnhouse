@@ -208,6 +208,13 @@ async def run_tool(
     except ValidationError as e:
         return ToolOutcome.denied("invalid_args", _validation_summary(e))
 
+    # 1b. Tiers the caller was limited to (scheduled agents never delete).
+    if ctx.allowed_tiers is not None and spec.tier.value not in ctx.allowed_tiers:
+        return ToolOutcome.denied(
+            "tier_not_allowed",
+            f"This agent is not allowed to run {spec.tier.value} actions.",
+        )
+
     # 2. Org AI kill switch (the in-app agent spends org AI credits; an MCP
     #    client brings its own model), plan feature, read-only scope.
     if ctx.surface == "agent" and not await _ai_enabled_for_org(ctx):
@@ -384,7 +391,10 @@ async def _gate_and_execute(
                 "This change needs the user's approval before it runs.",
             )
 
-    # 6. Execute.
+    # 6. Execute. The in-app agent (Atlas) writes as itself in live rooms.
+    from src.services.courses.activities.collab_notify import writing_agent
+
+    agent_token = writing_agent.set("Atlas") if ctx.surface == "agent" else None
     try:
         result = await spec.execute(ctx, params)
     except ToolDenied as e:
@@ -413,6 +423,9 @@ async def _gate_and_execute(
         if e.status_code == 403 and "usage limit" in detail.lower():
             return ToolOutcome.denied("plan_limit", detail)
         return ToolOutcome.denied(f"http_{e.status_code}", detail)
+    finally:
+        if agent_token is not None:
+            writing_agent.reset(agent_token)
     return ToolOutcome.executed(result)
 
 

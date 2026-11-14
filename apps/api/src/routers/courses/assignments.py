@@ -12,10 +12,22 @@ from src.db.courses.assignments import (
     AssignmentUpdate,
     AssignmentUserSubmissionCreate,
 )
+from src.db.courses.assignment_ai_grades import AssignmentAIGradeAccept, AssignmentAIGradeRead
 from src.db.users import PublicUser
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
 from src.services.security.rate_limiting import check_rate_limit
+from src.services.courses.activities.my_assignments import MyAssignmentItem, get_my_assignments
+from src.services.courses.activities.assignment_ai_grading import (
+    BULK_BATCH_SIZE,
+    MAX_BULK_BATCH_SIZE,
+    accept_ai_grade,
+    bulk_ai_grade,
+    discard_ai_grade,
+    estimate_ai_grading,
+    get_ai_grade,
+    run_ai_grading,
+)
 from src.services.courses.activities.assignments import (
     create_assignment,
     create_assignment_submission,
@@ -92,6 +104,33 @@ async def api_create_assignments(
 
 
 @router.get(
+    "/me",
+    response_model=list[MyAssignmentItem],
+    summary="List my assignments",
+    description=(
+        "The current learner's assignments across the courses they are enrolled in within an org, "
+        "with their submission status, due date and grade. Only published assignments in published "
+        "courses the learner can open are listed. Open work comes first (overdue, then due soonest, "
+        "then undated, then handed in), graded work last, most recent first. Registered before "
+        "`/{assignment_uuid}` so the literal path isn't shadowed."
+    ),
+    responses={
+        200: {"description": "The learner's assignments."},
+        401: {"description": "Authentication required"},
+        403: {"description": "API tokens cannot read learner assignments"},
+    },
+)
+async def api_read_my_assignments(
+    request: Request,
+    org_id: int = Query(..., description="Organization to list assignments for."),
+    graded_limit: int = Query(10, ge=0, le=50, description="Most recent graded assignments to include."),
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> list[MyAssignmentItem]:
+    return await get_my_assignments(current_user, org_id, db_session, graded_limit=graded_limit)
+
+
+@router.get(
     "/{assignment_uuid}",
     response_model=AssignmentRead,
     summary="Get assignment",
@@ -106,13 +145,14 @@ async def api_create_assignments(
 async def api_read_assignment(
     request: Request,
     assignment_uuid: str,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages (multilingual courses)."),
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> AssignmentRead:
     """
     Read an assignment
     """
-    return await read_assignment(request, assignment_uuid, current_user, db_session)
+    return await read_assignment(request, assignment_uuid, current_user, db_session, lang=lang)
 
 
 @router.get(
@@ -130,6 +170,7 @@ async def api_read_assignment(
 async def api_read_assignment_from_activity(
     request: Request,
     activity_uuid: str,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages (multilingual courses)."),
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> AssignmentRead:
@@ -137,7 +178,7 @@ async def api_read_assignment_from_activity(
     Read an assignment
     """
     return await read_assignment_from_activity_uuid(
-        request, activity_uuid, current_user, db_session
+        request, activity_uuid, current_user, db_session, lang=lang
     )
 
 
@@ -317,6 +358,7 @@ async def api_create_assignment_tasks(
 async def api_read_assignment_tasks(
     request: Request,
     assignment_uuid: str,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages (multilingual courses)."),
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
@@ -324,7 +366,7 @@ async def api_read_assignment_tasks(
     Read tasks for an assignment
     """
     return await read_assignment_tasks(
-        request, assignment_uuid, current_user, db_session
+        request, assignment_uuid, current_user, db_session, lang=lang
     )
 
 
@@ -899,6 +941,137 @@ async def api_final_grade_submission(
         db_session,
         overall_feedback=body.overall_feedback if body else None,
     )
+
+
+## AI GRADING ##
+
+_AI_GRADING_ERRORS = {
+    401: {"description": "Authentication required"},
+    403: {"description": "Not a grader of this course, API token, AI disabled, or out of AI credits"},
+    404: {"description": "Assignment or submission not found"},
+}
+
+
+@router.get(
+    "/{assignment_uuid}/ai-grading/estimate",
+    summary="Estimate AI grading credits",
+    description=(
+        "AI credits an AI grading run would cost, read from the actual files: one learner "
+        "(`user_id`) or every handed-in submission without an AI grade yet (the bulk run). "
+        "Calls no model and spends nothing. Graders only."
+    ),
+    responses={200: {"description": "Credit estimate."}, **_AI_GRADING_ERRORS},
+)
+async def api_estimate_ai_grading(
+    request: Request,
+    assignment_uuid: str,
+    user_id: Optional[int] = Query(None, description="Estimate a single learner's submission."),
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await estimate_ai_grading(request, assignment_uuid, current_user, db_session, user_id=user_id)
+
+
+@router.post(
+    "/{assignment_uuid}/ai-grading/bulk",
+    summary="AI-grade the next batch of submissions",
+    description=(
+        "Grades up to `limit` handed-in submissions that have no AI grade yet. Each one reserves "
+        "its own AI credits; the batch stops cleanly (`stopped`) when credits run out or the AI "
+        "rate limit is hit. Call again while `remaining` > 0. In SUGGEST mode results are drafts; "
+        "in AUTO mode they are applied as grades."
+    ),
+    responses={200: {"description": "Batch summary."}, 400: {"description": "AI grading off or formative assignment"}, **_AI_GRADING_ERRORS},
+)
+async def api_bulk_ai_grade(
+    request: Request,
+    assignment_uuid: str,
+    limit: int = Query(BULK_BATCH_SIZE, ge=1, le=MAX_BULK_BATCH_SIZE),
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await bulk_ai_grade(request, assignment_uuid, current_user, db_session, limit=limit)
+
+
+@router.post(
+    "/{assignment_uuid}/submissions/{user_id}/ai-grade",
+    response_model=AssignmentAIGradeRead,
+    summary="Grade a submission with AI",
+    description=(
+        "Runs AI grading on one learner's submission using the assignment's AI grading "
+        "instructions. Reserves AI credits first (more for audio/video and long documents) and "
+        "refunds them if grading fails. SUGGEST mode stores a draft for the teacher; AUTO mode "
+        "applies the grade unless the submission is already graded."
+    ),
+    responses={
+        200: {"description": "The AI grade (draft or applied)."},
+        400: {"description": "AI grading off, formative assignment, or nothing handed in"},
+        429: {"description": "AI rate limit"},
+        502: {"description": "The model failed; nothing was charged"},
+        **_AI_GRADING_ERRORS,
+    },
+)
+async def api_run_ai_grade(
+    request: Request,
+    assignment_uuid: str,
+    user_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await run_ai_grading(request, assignment_uuid, user_id, current_user, db_session)
+
+
+@router.get(
+    "/{assignment_uuid}/submissions/{user_id}/ai-grade",
+    response_model=Optional[AssignmentAIGradeRead],
+    summary="Read a submission's AI grade",
+    description="The AI draft or applied AI grade for the learner's current attempt, or null. Graders only.",
+    responses={200: {"description": "The AI grade, or null."}, **_AI_GRADING_ERRORS},
+)
+async def api_read_ai_grade(
+    request: Request,
+    assignment_uuid: str,
+    user_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await get_ai_grade(request, assignment_uuid, user_id, current_user, db_session)
+
+
+@router.post(
+    "/{assignment_uuid}/submissions/{user_id}/ai-grade/accept",
+    summary="Accept an AI draft grade",
+    description=(
+        "Applies the AI draft as the submission's grade, with optional edits (per-task score and "
+        "feedback, overall feedback). The learner is notified like for a manual grade."
+    ),
+    responses={200: {"description": "Grade applied."}, 400: {"description": "Formative assignment"}, **_AI_GRADING_ERRORS},
+)
+async def api_accept_ai_grade(
+    request: Request,
+    assignment_uuid: str,
+    user_id: int,
+    body: Optional[AssignmentAIGradeAccept] = None,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await accept_ai_grade(request, assignment_uuid, user_id, body, current_user, db_session)
+
+
+@router.delete(
+    "/{assignment_uuid}/submissions/{user_id}/ai-grade",
+    summary="Discard an AI draft grade",
+    description="Throws away the AI draft. The submission keeps whatever grade it had.",
+    responses={200: {"description": "Draft discarded."}, **_AI_GRADING_ERRORS},
+)
+async def api_discard_ai_grade(
+    request: Request,
+    assignment_uuid: str,
+    user_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await discard_ai_grade(request, assignment_uuid, user_id, current_user, db_session)
 
 
 @router.post(

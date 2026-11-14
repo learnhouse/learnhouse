@@ -3,8 +3,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, MagnifyingGlass, SpinnerGap, UsersThree, X } from '@phosphor-icons/react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@components/ui/dialog'
+import { Check, MagnifyingGlass, NotePencil, PaperPlaneTilt, UserPlus, UsersThree, X } from '@phosphor-icons/react'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { Button, INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { messagingKeys, useMessaging } from '@components/Messaging/MessagingProvider'
 import { useDirectory } from '@components/Messaging/hooks'
 import { PersonAvatar, CourseThumb } from '@components/Messaging/ui/Avatars'
@@ -122,138 +123,176 @@ export default function NewConversationDialog({
         ? t('messaging.create_group', { defaultValue: 'Create group' })
         : t('messaging.start_chat', { defaultValue: 'Start chat' })
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
-        <DialogHeader className="px-5 py-4 border-b border-gray-100 space-y-0">
-          <DialogTitle className="text-xl font-semibold text-gray-900">
-            {title ||
-              (shareCourse
-                ? t('messaging.share_course_title', { defaultValue: 'Share course' })
-                : t('messaging.new_message', { defaultValue: 'New message' }))}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
-            {shareCourse
-              ? t('messaging.share_course_desc', { defaultValue: 'Pick who to send it to.' })
-              : t('messaging.new_message_desc', { defaultValue: 'Message one person, or pick several to start a group.' })}
-          </DialogDescription>
-        </DialogHeader>
-
-        {shareCourse && (
-          <div className="mx-5 mt-4 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2.5">
-            <CourseThumb course={shareCourse} size={40} />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold truncate">{shareCourse.name}</p>
-              <p className="text-xs text-gray-500 truncate">{shareCourse.description}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="px-5 pt-4">
-          <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-2 focus-within:ring-2 focus-within:ring-gray-200">
-            <MagnifyingGlass size={15} className="text-gray-400" />
-            {picked.map((p) => (
-              <span key={p.id} className="inline-flex items-center gap-1 rounded-md bg-gray-100 text-gray-800 ps-1 pe-1.5 py-0.5 text-xs font-medium">
-                <PersonAvatar user={p} size={16} showPresence={false} />
-                {displayName(p)}
-                <button onClick={() => toggle(p)} className="opacity-70 hover:opacity-100" aria-label="Remove">
-                  <X size={11} weight="bold" />
-                </button>
-              </span>
-            ))}
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={picked.length ? '' : t('messaging.search_people', { defaultValue: 'Search people' })}
-              className="flex-1 min-w-[120px] text-sm outline-none bg-transparent py-0.5"
-            />
-            {isFetching && <SpinnerGap size={14} className="animate-spin text-gray-400" />}
+  const body = (
+    <div className="flex flex-col gap-3">
+      {shareCourse && (
+        <div className="flex items-center gap-3 rounded-xl bg-neutral-50 p-2.5 ring-1 ring-inset ring-neutral-200/70">
+          <CourseThumb course={shareCourse} size={40} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-neutral-900">{shareCourse.name}</p>
+            <p className="truncate text-xs text-neutral-500">{shareCourse.description}</p>
           </div>
         </div>
+      )}
 
-        <div className="mt-2 max-h-[320px] overflow-y-auto px-2 pb-2">
-          {visible.length === 0 && !isFetching && (
-            <p className="text-center text-xs text-gray-400 py-8">
-              {t('messaging.no_people', { defaultValue: 'No one found' })}
-            </p>
-          )}
-          {visible.map((p) => {
-            const selected = picked.some((x) => x.id === p.id)
-            const live = presence[p.id] || p.presence
-            return (
-              <button
-                key={p.id}
-                onClick={() => toggle(p)}
-                className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-start transition-colors ${
-                  selected ? 'bg-gray-100' : 'hover:bg-gray-50'
+      <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-xl bg-white px-3 py-1.5 ring-1 ring-inset ring-neutral-200 transition-shadow focus-within:ring-2 focus-within:ring-neutral-900/15">
+        <MagnifyingGlass size={15} className="shrink-0 text-neutral-400" />
+        {picked.map((p) => (
+          <span key={p.id} className="inline-flex items-center gap-1 rounded-full bg-neutral-100 py-0.5 ps-0.5 pe-1.5 text-xs font-medium text-neutral-800">
+            <PersonAvatar user={p} size={18} showPresence={false} />
+            {displayName(p)}
+            <button
+              type="button"
+              onClick={() => toggle(p)}
+              className="rounded-full p-0.5 opacity-60 hover:bg-neutral-200 hover:opacity-100"
+              aria-label={t('messaging.remove_person', { defaultValue: 'Remove {{name}}', name: displayName(p) })}
+            >
+              <X size={10} weight="bold" />
+            </button>
+          </span>
+        ))}
+        <input
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            // Backspace on an empty field drops the last pick, like any token input.
+            if (e.key === 'Backspace' && !query && picked.length) setPicked((cur) => cur.slice(0, -1))
+            if (e.key === 'Enter' && visible.length && query) {
+              e.preventDefault()
+              toggle(visible[0])
+              setQuery('')
+            }
+          }}
+          placeholder={picked.length ? '' : t('messaging.search_people', { defaultValue: 'Search people' })}
+          className="min-w-[120px] flex-1 bg-transparent py-0.5 text-base outline-none placeholder:text-neutral-400 sm:text-sm"
+        />
+      </div>
+
+      <div className="-mx-2 max-h-[320px] min-h-[160px] overflow-y-auto">
+        {isFetching && visible.length === 0 &&
+          [0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 px-3 py-2" aria-hidden>
+              <div className="h-9 w-9 animate-pulse rounded-full bg-neutral-100" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 w-1/3 animate-pulse rounded bg-neutral-100" />
+                <div className="h-2.5 w-1/4 animate-pulse rounded bg-neutral-100/70" />
+              </div>
+            </div>
+          ))}
+        {visible.length === 0 && !isFetching && (
+          <div className="flex flex-col items-center py-10 text-center">
+            <span className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
+              <MagnifyingGlass size={16} />
+            </span>
+            <p className="text-sm font-medium text-neutral-700">{t('messaging.no_people', { defaultValue: 'No one found' })}</p>
+            {query && <p className="mt-0.5 text-xs text-neutral-500">{t('messaging.no_people_desc', { defaultValue: 'Try a first name, last name or username.' })}</p>}
+          </div>
+        )}
+        {visible.map((p) => {
+          const selected = picked.some((x) => x.id === p.id)
+          const live = presence[p.id] || p.presence
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => toggle(p)}
+              aria-pressed={selected}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-start transition-colors ${selected ? 'bg-neutral-100' : 'hover:bg-neutral-50'}`}
+            >
+              <PersonAvatar user={p} size={36} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-neutral-900">
+                  {displayName(p)} <span className="font-normal text-neutral-400">@{p.username}</span>
+                </p>
+                <p className="truncate text-xs text-neutral-500">{presenceLine(live)}</p>
+              </div>
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
+                  selected ? 'bg-neutral-900 text-white' : 'ring-1 ring-inset ring-neutral-300'
                 }`}
               >
-                <PersonAvatar user={p} size={36} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">
-                    {displayName(p)} <span className="text-gray-400 font-normal">@{p.username}</span>
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">{presenceLine(live)}</p>
-                </div>
-                <span
-                  className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
-                    selected ? 'bg-gray-900 border-gray-900 text-white' : 'border-gray-300'
-                  }`}
-                >
-                  {selected && <Check size={11} weight="bold" />}
-                </span>
-              </button>
-            )
-          })}
+                {selected && <Check size={11} weight="bold" />}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {isGroup && (
+        <div className="flex items-center gap-2">
+          <EmojiPickerPopover onPick={setGroupEmoji} side="top" align="start">
+            <button
+              type="button"
+              aria-label={t('messaging.group_emoji', { defaultValue: 'Group emoji' })}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg ring-1 ring-inset ring-neutral-200 hover:bg-neutral-50"
+            >
+              {groupEmoji || <UsersThree size={17} className="text-neutral-400" />}
+            </button>
+          </EmojiPickerPopover>
+          <input
+            value={groupTitle}
+            onChange={(e) => setGroupTitle(e.target.value)}
+            maxLength={120}
+            placeholder={t('messaging.group_name', { defaultValue: 'Group name (optional)' })}
+            className={INPUT}
+          />
         </div>
+      )}
 
-        {isGroup && (
-          <div className="px-5 pb-3 flex items-center gap-2">
-            <EmojiPickerPopover onPick={setGroupEmoji} side="top" align="start">
-              <button className="h-10 w-10 rounded-lg border border-gray-200 flex items-center justify-center text-lg hover:bg-gray-50">
-                {groupEmoji || <UsersThree size={18} className="text-gray-400" />}
-              </button>
-            </EmojiPickerPopover>
-            <input
-              value={groupTitle}
-              onChange={(e) => setGroupTitle(e.target.value)}
-              maxLength={120}
-              placeholder={t('messaging.group_name', { defaultValue: 'Group name (optional)' })}
-              className="flex-1 h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-gray-200"
-            />
-          </div>
-        )}
+      {shareCourse && (
+        <input
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder={t('messaging.add_note', { defaultValue: 'Add a note (optional)' })}
+          className={INPUT}
+        />
+      )}
 
-        {shareCourse && (
-          <div className="px-5 pb-3">
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={t('messaging.add_note', { defaultValue: 'Add a note (optional)' })}
-              className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-gray-200"
-            />
-          </div>
-        )}
+      {error && <p className="text-xs font-medium text-rose-600">{error}</p>}
+    </div>
+  )
 
-        {error && <p className="px-5 pb-2 text-xs text-red-600">{error}</p>}
+  const footer = (
+    <>
+      <span className="me-auto text-xs text-neutral-500">
+        {picked.length
+          ? isGroup
+            ? t('messaging.group_of', { defaultValue: 'Group of {{count}}', count: picked.length + 1 })
+            : t('messaging.selected', { defaultValue: '{{count}} selected', count: picked.length })
+          : ''}
+      </span>
+      <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>
+        {t('common.cancel', { defaultValue: 'Cancel' })}
+      </Button>
+      <Button variant="primary" disabled={!picked.length} loading={busy} onClick={submit}>
+        {cta}
+      </Button>
+    </>
+  )
 
-        <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-5 py-3">
-          <span className="text-xs text-gray-500">
-            {picked.length
-              ? t('messaging.selected', { defaultValue: '{{count}} selected', count: picked.length })
-              : ''}
-          </span>
-          <button
-            disabled={!picked.length || busy}
-            onClick={submit}
-            className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40 hover:bg-gray-800 transition-colors"
-          >
-            {busy && <SpinnerGap size={14} className="animate-spin" />}
-            {cta}
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
+  return (
+    <Modal
+      isDialogOpen={open}
+      onOpenChange={onOpenChange}
+      size="sm"
+      preventClose={busy}
+      icon={onPickPeople ? <UserPlus size={16} weight="bold" /> : shareCourse ? <PaperPlaneTilt size={16} weight="bold" /> : <NotePencil size={16} weight="bold" />}
+      dialogTitle={
+        title ||
+        (shareCourse
+          ? t('messaging.share_course_title', { defaultValue: 'Share course' })
+          : t('messaging.new_message', { defaultValue: 'New message' }))
+      }
+      dialogDescription={
+        onPickPeople
+          ? t('messaging.add_people_desc', { defaultValue: 'They will see the conversation from now on.' })
+          : shareCourse
+            ? t('messaging.share_course_desc', { defaultValue: 'Pick who to send it to.' })
+            : t('messaging.new_message_desc', { defaultValue: 'Message one person, or pick several to start a group.' })
+      }
+      dialogContent={body}
+      footer={footer}
+    />
   )
 }

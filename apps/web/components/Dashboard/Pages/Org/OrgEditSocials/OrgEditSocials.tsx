@@ -1,239 +1,137 @@
 'use client'
 import React from 'react'
-import { Form, Formik } from 'formik'
-import { updateOrganization } from '@services/settings/org'
-import { revalidateTags } from '@services/utils/ts/requests'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { toast } from 'react-hot-toast'
-import { Input } from "@components/ui/input"
-import { Button } from "@components/ui/button"
-import { Label } from "@components/ui/label"
-import { 
-  SiX, 
-  SiFacebook, 
-  SiInstagram, 
-  SiYoutube 
-} from '@icons-pack/react-simple-icons'
-import { Plus, X as XIcon } from "lucide-react"
-import { useRouter } from 'next/navigation'
-import { useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { LinkSimple, Plus, X } from '@phosphor-icons/react'
+import { SiFacebook, SiInstagram, SiX, SiYoutube } from '@icons-pack/react-simple-icons'
+import { Button, FieldLabel, INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
 
-interface OrganizationValues {
-  socials: {
-    twitter?: string
-    facebook?: string
-    instagram?: string
-    linkedin?: string
-    youtube?: string
-  }
-  links: {
-    [key: string]: string
-  }
+export interface OrgSocials {
+  twitter?: string
+  facebook?: string
+  instagram?: string
+  linkedin?: string
+  youtube?: string
 }
 
-export default function OrgEditSocials() {
+const SOCIALS: { key: keyof OrgSocials; Icon: React.ElementType; color: string }[] = [
+  { key: 'twitter', Icon: SiX, color: '#111111' },
+  { key: 'facebook', Icon: SiFacebook, color: '#1877F2' },
+  { key: 'instagram', Icon: SiInstagram, color: '#E4405F' },
+  { key: 'youtube', Icon: SiYoutube, color: '#FF0000' },
+]
+
+export const MAX_CUSTOM_LINKS = 3
+
+/**
+ * Social profiles and up to three custom footer links. Controlled: the
+ * General tab owns the values and saves them with the rest of the profile.
+ */
+export default function OrgEditSocials({
+  socials,
+  links,
+  onChange,
+  disabled,
+}: {
+  socials: OrgSocials
+  links: Record<string, string>
+  onChange: (_next: { socials?: OrgSocials; links?: Record<string, string> }) => void
+  disabled?: boolean
+}) {
   const { t } = useTranslation()
-  const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
-  const org = useOrg() as any
-  const queryClient = useQueryClient()
-  const router = useRouter()
-  const initialValues: OrganizationValues = {
-    socials: org?.socials || {},
-    links: org?.links || {}
-  }
-
-  const updateOrg = async (values: OrganizationValues) => {
-    const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
-    try {
-      await updateOrganization(org.id, values, access_token)
-      await revalidateTags(['organizations'], org.slug)
-
-      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
-      toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
-    } catch (err) {
-      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
-    }
-  }
+  const entries = Object.entries(links ?? {})
 
   return (
-    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
-      <Formik
-        enableReinitialize
-        initialValues={initialValues}
-        onSubmit={(values, { setSubmitting }) => {
-          setTimeout(() => {
-            setSubmitting(false)
-            updateOrg(values)
-          }, 400)
-        }}
-      >
-        {({ isSubmitting, values, handleChange, setFieldValue }) => (
-          <Form>
-            <div className="flex flex-col gap-0">
-              <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-                <h1 className="font-bold text-xl text-gray-800">
-                  {t('dashboard.organization.socials.title')}
-                </h1>
-                <h2 className="text-gray-500 text-md">
-                  {t('dashboard.organization.socials.subtitle')}
-                </h2>
-              </div>
-
-              <div className="flex flex-col lg:flex-row lg:space-x-8 mt-0 mx-5 my-5">
-                <div className="w-full space-y-6">
-                  <div>
-                    <Label className="text-lg font-semibold">{t('dashboard.organization.socials.labels.social_links')}</Label>
-                    <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg nice-shadow mt-2">
-                      <div className="grid gap-3">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-[#1DA1F2]/10 rounded-md">
-                            <SiX size={16} color="#1DA1F2"/>
-                          </div>
-                          <Input
-                            id="socials.twitter"
-                            name="socials.twitter"
-                            value={values.socials.twitter || ''}
-                            onChange={handleChange}
-                            placeholder={t('dashboard.organization.socials.placeholders.twitter')}
-                            className="h-9 bg-white"
-                          />
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-[#1877F2]/10 rounded-md">
-                            <SiFacebook size={16} color="#1877F2"/>
-                          </div>
-                          <Input
-                            id="socials.facebook"
-                            name="socials.facebook"
-                            value={values.socials.facebook || ''}
-                            onChange={handleChange}
-                            placeholder={t('dashboard.organization.socials.placeholders.facebook')}
-                            className="h-9 bg-white"
-                          />
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-[#E4405F]/10 rounded-md">
-                            <SiInstagram size={16} color="#E4405F"/>
-                          </div>
-                          <Input
-                            id="socials.instagram"
-                            name="socials.instagram"
-                            value={values.socials.instagram || ''}
-                            onChange={handleChange}
-                            placeholder={t('dashboard.organization.socials.placeholders.instagram')}
-                            className="h-9 bg-white"
-                          />
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-[#FF0000]/10 rounded-md">
-                            <SiYoutube size={16} color="#FF0000"/>
-                          </div>
-                          <Input
-                            id="socials.youtube"
-                            name="socials.youtube"
-                            value={values.socials.youtube || ''}
-                            onChange={handleChange}
-                            placeholder={t('dashboard.organization.socials.placeholders.youtube')}
-                            className="h-9 bg-white"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="w-full space-y-6">
-                  <div>
-                    <Label className="text-lg font-semibold">{t('dashboard.organization.socials.labels.custom_links')}</Label>
-                    <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg nice-shadow mt-2">
-                      {Object.entries(values.links).map(([linkKey, linkValue], index) => (
-                        <div key={index} className="flex gap-3 items-center">
-                          <div className="w-8 h-8 flex items-center justify-center bg-gray-200/50 rounded-md text-xs font-medium text-gray-600">
-                            {index + 1}
-                          </div>
-                          <div className="flex-1 flex gap-2">
-                            <Input
-                              placeholder={t('dashboard.organization.socials.placeholders.label')}
-                              value={linkKey}
-                              className="h-9 w-1/3 bg-white"
-                              onChange={(e) => {
-                                const newLinks = { ...values.links };
-                                delete newLinks[linkKey];
-                                newLinks[e.target.value] = linkValue;
-                                setFieldValue('links', newLinks);
-                              }}
-                            />
-                            <Input
-                              placeholder={t('dashboard.organization.socials.placeholders.url')}
-                              value={linkValue}
-                              className="h-9 flex-1 bg-white"
-                              onChange={(e) => {
-                                const newLinks = { ...values.links };
-                                newLinks[linkKey] = e.target.value;
-                                setFieldValue('links', newLinks);
-                              }}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                const newLinks = { ...values.links };
-                                delete newLinks[linkKey];
-                                setFieldValue('links', newLinks);
-                              }}
-                            >
-                              <XIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {Object.keys(values.links).length < 3 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                          onClick={() => {
-                            const newLinks = { ...values.links };
-                            newLinks[`Link ${Object.keys(newLinks).length + 1}`] = '';
-                            setFieldValue('links', newLinks);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 me-2" />
-                          {t('dashboard.organization.socials.add_link')}
-                        </Button>
-                      )}
-                      
-                      <p className="text-xs text-gray-500 mt-2">
-                        {t('dashboard.organization.socials.custom_links_desc')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-row-reverse mt-3 mx-5 mb-5">
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="bg-black text-white hover:bg-black/90"
-                >
-                  {isSubmitting ? t('dashboard.organization.settings.saving') : t('dashboard.organization.settings.save_changes')}
-                </Button>
-              </div>
+    <div className="grid gap-6 lg:grid-cols-2">
+      <div>
+        <FieldLabel>{t('dashboard.organization.socials.labels.social_links')}</FieldLabel>
+        <div className="grid gap-2">
+          {SOCIALS.map(({ key, Icon, color }) => (
+            <div key={key} className="flex items-center gap-2.5">
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                style={{ backgroundColor: `${color}14` }}
+              >
+                <Icon size={15} color={color} />
+              </span>
+              <input
+                id={`socials.${key}`}
+                value={socials?.[key] || ''}
+                onChange={(e) => onChange({ socials: { ...socials, [key]: e.target.value } })}
+                placeholder={t(`dashboard.organization.socials.placeholders.${key}`)}
+                disabled={disabled}
+                className={INPUT}
+              />
             </div>
-          </Form>
-        )}
-      </Formik>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <FieldLabel hint={`${entries.length}/${MAX_CUSTOM_LINKS}`}>
+          {t('dashboard.organization.socials.labels.custom_links')}
+        </FieldLabel>
+        <div className="grid gap-2">
+          {entries.map(([linkKey, linkValue], index) => (
+            <div key={index} className="flex items-center gap-2">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
+                <LinkSimple size={15} />
+              </span>
+              <input
+                placeholder={t('dashboard.organization.socials.placeholders.label')}
+                value={linkKey}
+                disabled={disabled}
+                className={`${INPUT} !w-1/3`}
+                onChange={(e) => {
+                  const next: Record<string, string> = {}
+                  // Rebuild in order so renaming a key keeps its position.
+                  entries.forEach(([k, v]) => {
+                    next[k === linkKey ? e.target.value : k] = v
+                  })
+                  onChange({ links: next })
+                }}
+              />
+              <input
+                placeholder={t('dashboard.organization.socials.placeholders.url')}
+                value={linkValue}
+                disabled={disabled}
+                className={`${INPUT} flex-1`}
+                onChange={(e) => onChange({ links: { ...links, [linkKey]: e.target.value } })}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('common.remove', { defaultValue: 'Remove' })}
+                title={t('common.remove', { defaultValue: 'Remove' })}
+                disabled={disabled}
+                onClick={() => {
+                  const next = { ...links }
+                  delete next[linkKey]
+                  onChange({ links: next })
+                }}
+                icon={<X size={14} />}
+              />
+            </div>
+          ))}
+
+          {entries.length < MAX_CUSTOM_LINKS && (
+            <div>
+              <Button
+                size="sm"
+                disabled={disabled}
+                icon={<Plus size={13} />}
+                onClick={() => {
+                  const next = { ...links }
+                  next[`Link ${entries.length + 1}`] = ''
+                  onChange({ links: next })
+                }}
+              >
+                {t('dashboard.organization.socials.add_link')}
+              </Button>
+            </div>
+          )}
+          <p className="text-xs text-neutral-500">{t('dashboard.organization.socials.custom_links_desc')}</p>
+        </div>
+      </div>
     </div>
   )
 }

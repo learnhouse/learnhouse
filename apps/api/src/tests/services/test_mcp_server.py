@@ -219,12 +219,19 @@ def test_compact_schema_inlines_and_simplifies():
 
 
 def test_requested_toolsets():
-    assert srv.requested_toolsets(None) is None
-    assert srv.requested_toolsets(SimpleNamespace(query_params={})) is None
-    assert srv.requested_toolsets(SimpleNamespace(query_params={"toolsets": "courses, bogus"})) == {"courses", "core"}
-    assert srv.requested_toolsets(SimpleNamespace(query_params=None)) is None
-    assert srv.requested_toolsets(SimpleNamespace(query_params={"toolsets": "Essentials,boards"})) == {
-        "core", "courses", "content", "teaching", "boards",
+    known = ("core", "courses", "content", "build", "people")
+    default = {"core", "courses", "content", "build"}
+    # Without the parameter: the course-building default, not everything.
+    assert srv.requested_toolsets(None, known) == default
+    assert srv.requested_toolsets(SimpleNamespace(query_params={}), known) == default
+    assert srv.requested_toolsets(SimpleNamespace(query_params=None), known) == default
+    assert srv.requested_toolsets(SimpleNamespace(query_params={}), ("core", "people")) == {"core"}
+    assert srv.requested_toolsets(SimpleNamespace(query_params={"toolsets": "courses, bogus"}), known) == {"courses", "core"}
+    assert srv.requested_toolsets(SimpleNamespace(query_params={"toolsets": "all"}), known) is None
+    assert srv.requested_toolsets(SimpleNamespace(query_params={"toolsets": "admin,default"}), known) == default | {"people"}
+    assert srv.requested_toolsets(SimpleNamespace(query_params={"toolsets": "courses"})) == {"courses", "core"}
+    assert srv.requested_toolsets(SimpleNamespace(query_params={"toolsets": "Essentials,paths"})) == {
+        "core", "courses", "content", "teaching", "paths",
     }
 
 
@@ -311,7 +318,11 @@ async def test_list_tools(db, org, admin_user, regular_user, sessions):
     learner = {t.name for t in (await handlers.list_tools(ctx_for(member(regular_user, org)), None)).tools}
     assert "create_course" not in learner and "list_courses" in learner
     narrowed = {t.name for t in (await handlers.list_tools(ctx_for(member(admin_user, org), query={"toolsets": "content"}), None)).tools}
-    assert narrowed == {"get_context", "get_activity_content", "fetch_url"}
+    assert narrowed == {"search_tools", "invoke_tool", "get_context", "get_activity_content", "fetch_url"}
+    # The default listing leaves other toolsets to search_tools; all lists them.
+    assert "list_boards" not in names
+    everything = {t.name for t in (await handlers.list_tools(ctx_for(member(admin_user, org), query={"toolsets": "all"}), None)).tools}
+    assert names <= everything
 
 
 async def test_list_tools_org_switched_off(db, org, admin_user, sessions):
@@ -382,9 +393,13 @@ async def test_resources(db, org, admin_user, sessions):
     handlers = h.Handlers(_registry())
     assert (await handlers.list_resources(ctx_for(None), None)).resources == []
     listed = await handlers.list_resources(ctx_for(member(admin_user, org)), None)
-    assert [str(r.uri) for r in listed.resources] == ["learnhouse://org", "learnhouse://course/course_1"]
+    uris = [str(r.uri) for r in listed.resources]
+    assert [u for u in uris if u.startswith(("learnhouse://org", "learnhouse://course"))] == ["learnhouse://org", "learnhouse://course/course_1"]
+    assert {"learnhouse://blocks", "learnhouse://branding", "learnhouse://guide/pedagogy", "learnhouse://block/quiz"} <= set(uris)
     templates = await handlers.list_resource_templates(ctx_for(None), None)
-    assert {t.name for t in templates.resource_templates} == {"course", "activity", "assignment", "path", "community"}
+    assert {t.name for t in templates.resource_templates} == {
+        "course", "activity", "assignment", "path", "community", "activity_markdown", "block", "guide",
+    }
 
     for uri in ("learnhouse://org", "learnhouse://course/course_1", "learnhouse://activity/activity_1"):
         res = await handlers.read_resource(ctx_for(member(admin_user, org)), types.ReadResourceRequestParams(uri=uri))
@@ -404,7 +419,8 @@ async def test_resource_read_denied_paths(db, org, admin_user, sessions):
     with patch("src.security.org_auth.enforce_org_mfa", new_callable=AsyncMock, side_effect=HTTPException(status_code=403, detail="no")):
         with pytest.raises(MCPError):
             await handlers.read_resource(ctx_for(reader), types.ReadResourceRequestParams(uri="learnhouse://org"))
-        assert len((await handlers.list_resources(ctx_for(reader), None)).resources) == 1
+        listed = [str(r.uri) for r in (await handlers.list_resources(ctx_for(reader), None)).resources]
+        assert "learnhouse://org" in listed and not any(u.startswith("learnhouse://course/") for u in listed)
     with patch.object(h, "run_tool", new_callable=AsyncMock, return_value=SimpleNamespace(status="denied", reason="no")):
         with pytest.raises(MCPError):
             await handlers.read_resource(ctx_for(reader), types.ReadResourceRequestParams(uri="learnhouse://org"))

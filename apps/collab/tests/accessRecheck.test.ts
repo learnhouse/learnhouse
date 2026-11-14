@@ -2,6 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   ACCESS_REVOKED,
+  LIVE_EDITING_DISABLED,
   REAUTH_REQUIRED,
   type AccessVerdict,
   type ConnectionAuth,
@@ -19,7 +20,7 @@ const options = { maxUnverifiedMs: MAX_UNVERIFIED_MS, now: () => NOW }
 function fakeConnection(token: string | null, readOnly = false, verifiedAt = NOW - 60_000) {
   const conn = {
     readOnly,
-    context: token ? { auth: { token, boardUuid: 'board_x', verifiedAt } } : {},
+    context: token ? { auth: { token, room: 'board', resourceId: 'board_x', verifiedAt } } : {},
     closedWith: null as { code: number; reason: string } | null,
     socketClosedWith: null as number | null,
     close(event?: { code: number; reason: string }) {
@@ -65,7 +66,14 @@ describe('access re-check', () => {
     // A failed check leaves the connection as it was
     assert.equal(flaky.readOnly, true)
     assert.equal(flaky.closedWith, null)
-    assert.deepEqual(seen.map((a) => a.boardUuid), ['board_x', 'board_x', 'board_x', 'board_x'])
+    assert.deepEqual(seen.map((a) => a.resourceId), ['board_x', 'board_x', 'board_x', 'board_x'])
+  })
+
+  it('closes rooms whose live editing was turned off with their own code', async () => {
+    const conn = fakeConnection('t')
+    const closed = await recheckConnections([conn], async () => 'disabled', options)
+    assert.equal(closed, 1)
+    assert.deepEqual(conn.closedWith, LIVE_EDITING_DISABLED)
   })
 
   it('closes a connection with no recorded credentials', async () => {
@@ -105,13 +113,13 @@ function response(status: number, body: unknown = {}): MembershipResponse {
 }
 
 describe('access checker', () => {
-  const auth = { token: 't', boardUuid: 'board_x', verifiedAt: NOW }
+  const auth = { token: 't', room: 'board', resourceId: 'board_x', verifiedAt: NOW }
 
   function checker(states: TokenState[], reply: () => Promise<MembershipResponse>) {
     let calls = 0
     const check = createAccessChecker({
       tokenState: () => states[Math.min(calls++, states.length - 1)],
-      fetchMembership: reply,
+      fetchAccess: reply,
     })
     return check
   }
@@ -139,6 +147,13 @@ describe('access checker', () => {
     for (const status of [401, 403, 404]) {
       assert.equal(await checker(['valid'], async () => response(status))(auth), 'denied')
     }
+  })
+
+  it('tells a turned-off room from a lost permission', async () => {
+    assert.equal(await checker(['valid'], async () => response(403, { detail: 'collab_disabled' }))(auth), 'disabled')
+    assert.equal(await checker(['valid'], async () => response(403, { detail: 'nope' }))(auth), 'denied')
+    const noBody: MembershipResponse = { ok: false, status: 403, json: async () => { throw new Error('empty') } }
+    assert.equal(await checker(['valid'], async () => noBody)(auth), 'denied')
   })
 
   it('denies a token that no longer verifies', async () => {

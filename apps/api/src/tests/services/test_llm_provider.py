@@ -44,7 +44,7 @@ def _patch_ai_config(monkeypatch, **overrides):
 def test_build_model_per_provider(monkeypatch, provider, model_name, expected_cls):
     _patch_ai_config(monkeypatch, provider=provider, api_key="test-key")
     model = build_model(model_name)
-    assert type(model).__name__ == expected_cls
+    assert type(model.wrapped).__name__ == expected_cls
 
 
 def test_build_model_openrouter(monkeypatch):
@@ -52,7 +52,7 @@ def test_build_model_openrouter(monkeypatch):
     # user only supplies an api_key + a model slug. It resolves to an OpenAIChatModel.
     _patch_ai_config(monkeypatch, provider="openrouter", api_key="sk-or-test")
     model = build_model("anthropic/claude-sonnet-4-5")
-    assert type(model).__name__ == "OpenAIChatModel"
+    assert type(model.wrapped).__name__ == "OpenAIChatModel"
 
 
 def test_build_model_openrouter_requires_key(monkeypatch):
@@ -65,7 +65,7 @@ def test_build_model_ollama_needs_no_key(monkeypatch):
     # Ollama speaks the OpenAI API and requires no real credentials.
     _patch_ai_config(monkeypatch, provider="ollama", base_url="http://localhost:11434/v1")
     model = build_model("llama3.2")
-    assert type(model).__name__ == "OpenAIChatModel"
+    assert type(model.wrapped).__name__ == "OpenAIChatModel"
 
 
 def test_build_model_bedrock_needs_no_api_key(monkeypatch):
@@ -73,18 +73,18 @@ def test_build_model_bedrock_needs_no_api_key(monkeypatch):
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
     _patch_ai_config(monkeypatch, provider="bedrock", api_key=None)
     model = build_model("anthropic.claude-sonnet-4-5-20250929-v1:0")
-    assert type(model).__name__ == "BedrockConverseModel"
+    assert type(model.wrapped).__name__ == "BedrockConverseModel"
 
 
 def test_build_model_defaults_to_google(monkeypatch):
     _patch_ai_config(monkeypatch, provider=None, api_key="test-key")
-    assert type(build_model("gemini-2.5-flash")).__name__ == "GoogleModel"
+    assert type(build_model("gemini-2.5-flash").wrapped).__name__ == "GoogleModel"
 
 
 def test_build_model_google_falls_back_to_gemini_key(monkeypatch):
     # Legacy deployments only set gemini_api_key; the google provider should still work.
     _patch_ai_config(monkeypatch, provider="google", api_key=None, gemini_api_key="legacy-key")
-    assert type(build_model("gemini-2.5-flash")).__name__ == "GoogleModel"
+    assert type(build_model("gemini-2.5-flash").wrapped).__name__ == "GoogleModel"
 
 
 def test_build_model_missing_key_raises(monkeypatch):
@@ -222,3 +222,15 @@ def test_history_keeps_system_prompt_on_follow_up_turns():
     assert out[0].parts[0].content == "be grounded"
     assert len(out) == 3
     assert len(_history_with_system([{"role": "user", "content": "hi"}], None)) == 1
+
+
+async def test_planning_uses_flash_on_every_plan():
+    """Pro plans no longer upgrade planning to the Pro model (cost ~3x, user decision)."""
+    from unittest.mock import AsyncMock, patch
+
+    from src.services.ai.llm import tiers
+
+    for plan in ("free", "standard", "pro", "enterprise"):
+        with patch.object(tiers, "get_org_plan", AsyncMock(return_value=plan)):
+            model = await tiers.resolve_model_for_org(1, None, purpose="planning")
+        assert model == tiers.model_for_tier("standard"), plan

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from src.services.audit.org_log import audit_account_event
 from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
@@ -49,6 +50,7 @@ from src.services.security.profile_validation import validate_profile_fields
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.core.ee_hooks import notify_ee_user_changed, notify_ee_user_deleting
 
 
 def _session_epoch_now() -> datetime:
@@ -306,6 +308,12 @@ async def create_user(
 
     await increase_feature_usage("members", org_id, db_session)
 
+    # Brand-new signups skip notify_user_joined_org (they get the welcome
+    # email instead), so tell the org's admins here.
+    from src.services.feature_notifications import notify_member_joined
+
+    await notify_member_joined(db_session, org_id, user)
+
     # Track user signup
     await track(
         event_name=analytics_events.USER_SIGNED_UP,
@@ -354,6 +362,14 @@ async def create_user(
         # Import here to avoid circular imports
         from src.services.users.email_verification import send_verification_email
         await send_verification_email(request, db_session, user, org_id)
+
+    # Answers the org maps to people data (department, manager...) land on
+    # the member's profile too (EE; never fails the signup). Last, so nothing
+    # after it reads the user row.
+    if user_read.extra_metadata:
+        from src.core.ee_hooks import sync_ee_signup_answers
+
+        await sync_ee_signup_answers(org_id, user_read.id, db_session, actor=user_read, request=request)
 
     return user_read
 
@@ -660,6 +676,15 @@ async def update_user(
 
     if email_changed:
         await _after_email_change(request, db_session, user, previous_email)
+        audit_account_event(
+            request, "security.email.changed", user,
+            actor=current_user,
+            changes={"email": {"from": previous_email, "to": user.email}},
+            details={"sessions_revoked": True},
+        )
+
+    # Connected CRMs (EE) update the member's contact.
+    notify_ee_user_changed(user.id)
 
     user = UserRead.model_validate(user)
 
@@ -868,6 +893,7 @@ async def update_user_password(
     # instead of an answer. There is no old password to prove here, so refuse it
     # the same way a wrong one is refused.
     if not user.password or not security_verify_password(form.old_password, user.password):
+        audit_account_event(request, "security.password.change_failed", user, outcome="failed", reason="wrong_password")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password"
         )
@@ -897,6 +923,7 @@ async def update_user_password(
             revoke_user_sessions_before(user.id)
         except Exception:
             pass
+        audit_account_event(request, "security.password.changed", user, details={"sessions_revoked": True})
 
     user = UserRead.model_validate(user)
 
@@ -1197,6 +1224,10 @@ async def delete_user_by_id(
 
         for member_id in member_ids:
             _invalidate_session_cache(member_id)
+
+    # Connected CRMs (EE) capture the member's contacts to remove or
+    # anonymize, while the memberships still say which orgs they were in.
+    await notify_ee_user_deleting(user_id, db_session)
 
     # Remove any remaining org memberships (no CASCADE on this FK). Memberships
     # of orgs deleted above are already gone via the org-level CASCADE.

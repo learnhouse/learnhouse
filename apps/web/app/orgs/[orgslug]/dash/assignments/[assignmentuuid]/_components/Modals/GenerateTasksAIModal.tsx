@@ -1,10 +1,12 @@
 'use client'
 
 import React from 'react'
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, CircleNotch, Clock, ClockCounterClockwise, FileArrowUp, Hash, ListChecks, PencilSimple, Plus, Sparkle, TextT, Trash, X, type Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { Check, CircleNotch, Clock, ClockCounterClockwise, FileArrowUp, Hash, ListChecks, PencilSimple, Plus, TextT, Trash, X, type Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { AIButton, AIMark, AIShimmer, AIThinking, aiSurface } from '@components/Objects/AI/AIBrand'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { queryKeys } from '@/lib/query/keys'
@@ -24,8 +26,8 @@ import { QUIZ_RESPONSE_SINGLE, resolveQuizResponseType } from '@/lib/quiz/modes'
 // the teacher preview + edit them, then saves each one to the current
 // assignment via the existing `createAssignmentTask` client.
 //
-// Everything mirrors the surrounding LearnHouse design language (neutral palette, nice-shadow, rounded-lg,
-// lucide icons, no AI-gradient styling).
+// Neutral dashboard styling, with the shared AI brand kit (mark, gradient
+// button, thinking state) on the AI-specific controls.
 // ---------------------------------------------------------------------------
 
 type AssignmentTypeValue =
@@ -315,7 +317,7 @@ function GenerateTasksAIModal({
             tab === 'generate' ? 'bg-white text-gray-900 nice-shadow' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          <Sparkle weight="duotone" size={13} />
+          <AIMark size={14} alt="" />
           {t('dashboard.assignments.editor.generate_ai_modal.generate')}
         </button>
         <button
@@ -340,7 +342,7 @@ function GenerateTasksAIModal({
       ) : (
         <div className="flex flex-col gap-4">
           {/* Prompt panel */}
-          <div className="flex flex-col gap-3 p-4 rounded-lg border border-gray-100 nice-shadow bg-white">
+          <div className={`flex flex-col gap-3 p-4 ${aiSurface.tint}`}>
             <div>
               <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
                 {t('dashboard.assignments.editor.generate_ai_modal.what_cover')}
@@ -350,7 +352,7 @@ function GenerateTasksAIModal({
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={3}
                 placeholder={t('dashboard.assignments.editor.generate_ai_modal.prompt_placeholder')}
-                className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300"
+                className="w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300"
               />
               <p className="mt-1 text-[11px] text-gray-400">
                 {t('dashboard.assignments.editor.generate_ai_modal.grounded_hint')}
@@ -370,7 +372,7 @@ function GenerateTasksAIModal({
                   onChange={(e) =>
                     setNumTasks(Math.min(10, Math.max(1, parseInt(e.target.value || '1', 10))))
                   }
-                  className="w-20 px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  className="w-20 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                 />
               </div>
               <div className="flex-1 min-w-[240px]">
@@ -403,21 +405,15 @@ function GenerateTasksAIModal({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => runGenerate(false)}
-                disabled={isGenerating}
-                className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-black transition-colors disabled:opacity-50"
-              >
-                {isGenerating ? <CircleNotch weight="duotone" size={14} className="animate-spin" /> : <Sparkle weight="duotone" size={14} />}
+              <AIButton onClick={() => runGenerate(false)} loading={isGenerating}>
                 {plan ? t('dashboard.assignments.editor.generate_ai_modal.regenerate') : t('dashboard.assignments.editor.generate_ai_modal.generate')}
-              </button>
+              </AIButton>
               {plan && (
                 <button
                   type="button"
                   onClick={() => runGenerate(true)}
                   disabled={isGenerating}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-700 text-xs font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
+                  className={buttonClass('secondary', 'md')}
                   title={t('dashboard.assignments.editor.generate_ai_modal.refine_title')}
                 >
                   {t('dashboard.assignments.editor.generate_ai_modal.refine')}
@@ -428,9 +424,9 @@ function GenerateTasksAIModal({
 
           {/* Preview */}
           {isGenerating && !plan && (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-400">
-              <CircleNotch weight="duotone" size={16} className="animate-spin" />
-              {t('dashboard.assignments.editor.generate_ai_modal.generating')}
+            <div className="flex flex-col gap-3 p-4 rounded-xl bg-white nice-shadow">
+              <AIThinking label={t('dashboard.assignments.editor.generate_ai_modal.generating')} />
+              <AIShimmer lines={3} />
             </div>
           )}
 
@@ -471,7 +467,7 @@ function GenerateTasksAIModal({
                 <button
                   type="button"
                   onClick={() => closeModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  className={buttonClass('ghost', 'md')}
                 >
                   {t('common.cancel')}
                 </button>
@@ -479,7 +475,7 @@ function GenerateTasksAIModal({
                   type="button"
                   onClick={saveAll}
                   disabled={isSaving || tasks.length === 0}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-black transition-colors disabled:opacity-50"
+                  className={buttonClass('primary', 'md')}
                 >
                   {isSaving ? <CircleNotch weight="duotone" size={14} className="animate-spin" /> : <Plus weight="duotone" size={14} />}
                   {t('dashboard.assignments.editor.generate_ai_modal.add_to_assignment')}

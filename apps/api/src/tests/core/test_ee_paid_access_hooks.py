@@ -54,19 +54,6 @@ async def test_locked_is_a_402_and_other_errors_propagate():
 
 
 @pytest.mark.asyncio
-async def test_boards_open_for_buyers_and_stay_listed():
-    from src.services.boards.boards import _passes_board_paywall
-
-    board = SimpleNamespace(board_uuid="board_1")
-    with patch("src.core.ee_hooks.get_ee_hooks", return_value=_hooks(HTTPException(status_code=402))):
-        with pytest.raises(HTTPException):
-            await _passes_board_paywall(None, board, USER, None, True)
-        assert await _passes_board_paywall(None, board, USER, None, False) is True
-    with patch("src.core.ee_hooks.get_ee_hooks", return_value=_hooks()):
-        assert await _passes_board_paywall(None, board, USER, None, True) is True
-
-
-@pytest.mark.asyncio
 async def test_locked_podcast_lists_episodes_without_audio(db, org, admin_user, mock_request):
     from src.services.podcasts.episodes import get_episodes_by_podcast
     from src.tests.services.test_podcasts_service import _make_episode, _make_podcast
@@ -84,43 +71,12 @@ async def test_locked_podcast_lists_episodes_without_audio(db, org, admin_user, 
 
 
 @pytest.mark.asyncio
-async def test_sold_playgrounds_list_without_content_and_cannot_be_copied(db, org, admin_user, regular_user, mock_request):
-    from src.db.playgrounds import PlaygroundAccessType
-    from src.services.playgrounds.playgrounds import duplicate_playground, list_org_playgrounds
-    from src.tests.services.test_playgrounds_service import _make_playground
-
-    await _make_playground(
-        db, org, admin_user, id=71, playground_uuid="9f-bare", published=True,
-        access_type=PlaygroundAccessType.AUTHENTICATED, html_content="<p>paid</p>",
-    )
-    calls: list[str] = []
-
-    async def locked(_request, _db, _user, resource_uuid):
-        calls.append(resource_uuid)
-        return True
-
-    with patch("src.core.ee_hooks.is_ee_resource_locked", new=locked):
-        learner_view = await list_org_playgrounds(mock_request, org.id, regular_user, db)
-        admin_view = await list_org_playgrounds(mock_request, org.id, admin_user, db)
-    assert [p.html_content for p in learner_view] == [None]
-    assert [p.html_content for p in admin_view] == ["<p>paid</p>"]
-    assert calls == ["playground_9f-bare"]
-
-    with patch("src.core.ee_hooks.get_ee_hooks", return_value=_hooks(HTTPException(status_code=402))):
-        with pytest.raises(HTTPException) as e:
-            await duplicate_playground(mock_request, "9f-bare", admin_user, db)
-    assert e.value.status_code == 402
-
-
-@pytest.mark.asyncio
-async def test_search_hides_sold_discussions_and_playground_content(db, org, admin_user, regular_user, mock_request):
+async def test_search_hides_sold_discussions(db, org, admin_user, regular_user, mock_request):
     from datetime import datetime
 
     from src.db.communities.communities import Community
     from src.db.communities.discussions import Discussion
-    from src.db.playgrounds import PlaygroundAccessType
     from src.services.search.search import search_across_org
-    from src.tests.services.test_playgrounds_service import _make_playground
 
     now = str(datetime.now())
     for i, uuid in ((1, "community_sold"), (2, "community_free")):
@@ -132,13 +88,9 @@ async def test_search_hides_sold_discussions_and_playground_content(db, org, adm
                           community_id=cid, org_id=org.id, author_id=admin_user.id,
                           discussion_uuid=f"discussion_{i}", creation_date=now, update_date=now))
     await db.commit()
-    await _make_playground(
-        db, org, admin_user, id=72, playground_uuid="playground_zebra", name="Zebra lab", published=True,
-        access_type=PlaygroundAccessType.AUTHENTICATED, html_content="<p>zebra</p>",
-    )
 
     async def locked(_request, _db, _user, resource_uuid):
-        return resource_uuid in ("community_sold", "playground_zebra")
+        return resource_uuid == "community_sold"
 
     with patch("src.core.ee_hooks.is_ee_resource_locked", new=locked):
         result = await search_across_org(
@@ -146,7 +98,8 @@ async def test_search_hides_sold_discussions_and_playground_content(db, org, adm
             search_query="zebra", db_session=db, page=1, limit=20,
         )
     assert [d.community_uuid for d in result.discussions] == ["community_free"]
-    assert [p.html_content for p in result.playgrounds] == [None]
+    # Plays (and their sold HTML) are EE: ee/tests/test_plays_core.py.
+    assert result.playgrounds == []
 
 
 @pytest.mark.asyncio

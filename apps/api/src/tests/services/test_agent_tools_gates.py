@@ -56,6 +56,13 @@ async def test_read_only_blocks_writes(db, org, admin_user, registry):
     assert (await run_tool(registry, "read", {}, ctx(db, org, admin_user, read_only=True, surface="mcp"))).status == "executed"
 
 
+async def test_allowed_tiers_refuse_other_tiers(db, org, admin_user, registry):
+    c = ctx(db, org, admin_user, surface="mcp", allowed_tiers=frozenset({"read"}))
+    out = await run_tool(registry, "write", {}, c)
+    assert out.denied_code == "tier_not_allowed" and "edit" in out.reason
+    assert (await run_tool(registry, "read", {}, c)).status == "executed"
+
+
 async def test_mcp_surface_ignores_the_ai_switch(db, org, admin_user, registry):
     await _config(db, org, {"config_version": "2.0", "admin_toggles": {"ai": {"disabled": True}}})
     with patch.object(reg, "resolve_feature", return_value={"enabled": False}):

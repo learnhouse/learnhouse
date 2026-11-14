@@ -371,6 +371,9 @@ async def generate_speech(
             logger.error("Audio generation call failed: %s", type(e).__name__)
             raise RuntimeError("Audio generation failed") from e
 
+    from src.services.ai.metering import record_usage, usage_from_genai_response
+
+    record_usage(usage_from_genai_response(model, response))
     pcm = _extract_pcm(response)
     if not pcm:
         logger.warning("Audio generation returned no audio")

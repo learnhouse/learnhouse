@@ -15,6 +15,7 @@ a manual re-index retries it.
 from __future__ import annotations
 
 import asyncio
+import math
 import logging
 import os
 import tempfile
@@ -124,12 +125,9 @@ async def transcribe(media: Media) -> bool:
     """Transcribe one media file and store the transcript. Never raises for
     expected failures; the outcome is recorded on the owner instead."""
     from src.core.events.database import _async_session_factory
-    from src.security.features_utils.usage import (
-        check_feature_enabled,
-        refund_ai_credit,
-        reserve_ai_credit,
-    )
+    from src.security.features_utils.usage import check_feature_enabled
     from src.services.ai import captions as cap
+    from src.services.ai import metering
     from src.services.ai.llm import model_for_tier
     from src.services.utils.hls_jobs import _fetch_source
 
@@ -141,7 +139,7 @@ async def transcribe(media: Media) -> bool:
             return False
 
     await _set_status(media, TranscriptStatus.PROCESSING)
-    reserved = 0
+    meter = None
     try:
         with tempfile.TemporaryDirectory() as td:
             local = os.path.join(td, media.file_name)
@@ -155,28 +153,32 @@ async def transcribe(media: Media) -> bool:
                 await _set_status(media, TranscriptStatus.FAILED, error="no_audio")
                 return False
 
-            cost = cap.estimate_credits(await cap.probe_duration(local), 0)
+            # Charged per started minute of media, settled on real usage.
+            minutes = max(1, math.ceil((await cap.probe_duration(local) or 0) / 60))
             async with _async_session_factory() as db:
                 try:
-                    await reserve_ai_credit(media.org_id, db, amount=cost)
+                    meter = await metering.start("media_indexing", org_id=media.org_id, db=db, units=minutes)
                 except HTTPException:
                     await _set_status(media, TranscriptStatus.NO_CREDITS)
                     return False
-            reserved = cost
 
-            vtt = await cap.transcribe_to_vtt(chunks, model_for_tier("standard"))
+            with metering.use_meter(meter):
+                vtt = await cap.transcribe_to_vtt(chunks, model_for_tier("standard"))
 
         if not await asyncio.to_thread(write_file_content, media.transcript_key, vtt.encode("utf-8")):
             raise RuntimeError("transcript upload failed")
+        await meter.settle()
         await _set_status(media, TranscriptStatus.DONE)
         return True
     except asyncio.CancelledError:
+        if meter is not None and not meter.settled:
+            await meter.settle(failed=True)
         raise
     except Exception as e:
         logger.error("RAG: transcription failed for %s: %s", media.source_key, e)
         await _set_status(media, TranscriptStatus.FAILED, error="exception")
-        if reserved:
-            refund_ai_credit(media.org_id, amount=reserved)
+        if meter is not None and not meter.settled:
+            await meter.settle(failed=True)
         return False
 
 

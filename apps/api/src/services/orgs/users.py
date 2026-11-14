@@ -14,6 +14,8 @@ from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config.config import get_learnhouse_config
+from src.core.ee_hooks import audit_event
+from src.services.audit.org_log import role_name, user_label
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead, OrganizationUser
 from src.db.roles import Role, RoleRead
@@ -199,8 +201,8 @@ async def _revoke_org_grants(
         return
     from sqlalchemy import delete, update, union_all
 
+    from src.core.ee_hooks import get_ee_module
     from src.db.api_tokens import APIToken
-    from src.db.boards import Board, BoardMember
     from src.db.courses.courses import Course
     from src.db.folders.folders import Folder
     from src.db.media.media import Media
@@ -208,10 +210,12 @@ async def _revoke_org_grants(
     from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipStatusEnum
 
     now = str(datetime.now())
+    # Boards are EE-only: without EE there are no boards or board members.
+    boards = get_ee_module("ee.db.boards")
     org_resource_uuids = union_all(
         select(Course.course_uuid).where(Course.org_id == org.id),
         select(Podcast.podcast_uuid).where(Podcast.org_id == org.id),
-        select(Board.board_uuid).where(Board.org_id == org.id),
+        *([select(boards.Board.board_uuid).where(boards.Board.org_id == org.id)] if boards is not None else []),
         select(Folder.folder_uuid).where(Folder.org_id == org.id),
         select(Media.media_uuid).where(Media.org_id == org.id),
     )
@@ -235,12 +239,14 @@ async def _revoke_org_grants(
             ),
         )
     )
-    await db_session.execute(
-        delete(BoardMember).where(
-            BoardMember.user_id.in_(user_ids),
-            BoardMember.board_id.in_(select(Board.id).where(Board.org_id == org.id)),
+    if boards is not None:
+        Board, BoardMember = boards.Board, boards.BoardMember
+        await db_session.execute(
+            delete(BoardMember).where(
+                BoardMember.user_id.in_(user_ids),
+                BoardMember.board_id.in_(select(Board.id).where(Board.org_id == org.id)),
+            )
         )
-    )
     await db_session.execute(
         update(APIToken)
         .where(
@@ -255,6 +261,10 @@ async def _revoke_org_grants(
 
     for user_id in user_ids:
         await revoke_member_grants(db_session, user_id, org.id)
+    # Private notes live as long as the membership does.
+    from src.services.courses.activities.learner_notes import purge_member_notes
+
+    await purge_member_notes(db_session, org.id, user_ids)
 
 
 async def _drop_accepted_invites(
@@ -297,6 +307,11 @@ async def get_organization_users(
     sort_order: str = "desc",
     role_id: int | None = None,
     status: str | None = None,
+    department: str | None = None,
+    manager_id: int | None = None,
+    no_manager: bool = False,
+    my_reports: bool = False,
+    attributes: dict[str, str] | None = None,
 ):
     """
     Get paginated list of users in an organization.
@@ -379,6 +394,15 @@ async def get_organization_users(
         base_statement = base_statement.where(User.email_verified == True)  # noqa: E712
     elif status == "unverified":
         base_statement = base_statement.where(User.email_verified == False)  # noqa: E712
+
+    # People data filters (department, manager's team, no manager, attributes).
+    from src.services.orgs.member_profiles import apply_profile_filters, profiles_for
+
+    base_statement = await apply_profile_filters(
+        base_statement, db_session, org_id, department=department,
+        manager_id=acting_user_id if my_reports else manager_id, no_manager=no_manager,
+        attributes=attributes,
+    )
 
     # Compute group membership counts when usergroup_id is provided (before applying filter)
     in_group_total = None
@@ -500,6 +524,12 @@ async def get_organization_users(
 
         from src.services.orgs.signup_fields import get_org_signup_fields
         member_meta_keys: set[str] | None = None  # loaded on first listed row
+        # People data columns: display-only, like visit days above.
+        profile_map: dict[int, dict] = {}
+        try:
+            profile_map = await profiles_for(db_session, org_id, user_ids)
+        except Exception:
+            logging.debug("profile enrichment unavailable", exc_info=True)
 
         for user in users:
             user_org = user_org_map.get(user.id)
@@ -533,6 +563,7 @@ async def get_organization_users(
                 joined_at=user_org.creation_date,
                 visit_days=_days,
                 is_active=_days >= ACTIVE_DAYS_THRESHOLD,
+                profile=profile_map.get(user.id),
             )
 
             org_users_list.append(org_user)
@@ -742,6 +773,17 @@ async def export_organization_users_csv(
             ] + custom_values)
 
     output.seek(0)
+    audit_event(
+        request, action="data.exported", org_id=org_id, actor=current_user,
+        target_type="users", target_name="Members",
+        details={
+            "export": "members", "format": "csv",
+            "filters": {k: v for k, v in {
+                "search": search, "usergroup_id": usergroup_id, "usergroup_filter": usergroup_filter,
+                "role_id": role_id, "status": status,
+            }.items() if v not in (None, "")} or None,
+        },
+    )
     return StreamingResponse(
         output,
         media_type="text/csv",
@@ -803,11 +845,18 @@ async def remove_user_from_org(
             detail="You can't remove the last admin of the organization",
         )
 
+    removed_role = await role_name(db_session, user_org.role_id)
     await db_session.delete(user_org)
     await _revoke_org_grants(db_session, org, [user_id])
     await _disconnect_ai_apps(db_session, user_id, org.id)
     await db_session.commit()
     await _drop_accepted_invites(db_session, org, [user_id])
+    target_uuid, target_name = await user_label(db_session, user_id)
+    audit_event(
+        request, action="members.removed", org_id=org_id, actor=current_user,
+        target_type="user", target_id=target_uuid or user_id, target_name=target_name,
+        details={"role": removed_role},
+    )
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_id)
@@ -870,6 +919,10 @@ async def leave_org(
     await _disconnect_ai_apps(db_session, user_id, org.id)
     await db_session.commit()
     await _drop_accepted_invites(db_session, org, [user_id])
+    audit_event(
+        request, action="members.left", org_id=org_id, actor=current_user,
+        target_type="user", target_id=current_user.user_uuid, target_name=current_user.username,
+    )
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_id)
@@ -950,10 +1003,13 @@ async def remove_batch_users_from_org(
     for user_org in user_orgs_to_remove:
         await db_session.delete(user_org)
     await _revoke_org_grants(db_session, org, removed_user_ids)
-
     await db_session.commit()
     await _drop_accepted_invites(db_session, org, removed_user_ids)
-
+    audit_event(
+        request, action="members.removed", org_id=org_id, actor=current_user,
+        target_type="organization", target_id=org.org_uuid, target_name=org.name,
+        details={"count": removed_count, "user_ids": removed_user_ids[:100]},
+    )
     from src.routers.users import _invalidate_session_cache
     for uid in user_ids:
         _invalidate_session_cache(uid)
@@ -1013,10 +1069,13 @@ async def remove_all_users_from_org(
     for user_org in user_orgs_to_remove:
         await db_session.delete(user_org)
     await _revoke_org_grants(db_session, org, removed_user_ids)
-
     await db_session.commit()
     await _drop_accepted_invites(db_session, org, removed_user_ids)
-
+    audit_event(
+        request, action="members.removed", org_id=org_id, actor=current_user,
+        target_type="organization", target_id=org.org_uuid, target_name=org.name,
+        details={"count": len(removed_user_ids), "all_members": True},
+    )
     from src.routers.users import _invalidate_session_cache
     for uid in removed_user_ids:
         _invalidate_session_cache(uid)
@@ -1146,12 +1205,19 @@ async def update_user_role(
     # swaps are never blocked (see the helper).
     await enforce_admin_seat_limit_for_role_change(org.id, user_id, role, db_session)
 
+    previous_role_id = user_org.role_id
     if role_id is not None:
         user_org.role_id = role_id
 
     db_session.add(user_org)
     await db_session.commit()
     await db_session.refresh(user_org)
+    target_uuid, target_name = await user_label(db_session, user_id)
+    audit_event(
+        request, action="members.role_changed", org_id=org.id, actor=current_user,
+        target_type="user", target_id=target_uuid or user_id, target_name=target_name,
+        changes={"role": {"from": await role_name(db_session, previous_role_id), "to": role.name}},
+    )
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_org.user_id)
@@ -1418,6 +1484,15 @@ async def invite_batch_users(
             user_id=acting_user_id,
             properties={"invite_method": "email", "count": sent + failed},
         )
+        audit_event(
+            request, action="members.invited", org_id=org_id, actor=current_user,
+            target_type="organization", target_id=org_id,
+            details={
+                "count": sent + failed,
+                "emails": [r["email"] for r in results if r["status"] in ("sent", "email_failed", "invited")][:50],
+                "email_failures": failed,
+            },
+        )
 
     await dispatch_webhooks(
         event_name="user_invited_to_org",
@@ -1573,5 +1648,9 @@ async def remove_invited_user(
         )
 
     r.delete(f"invited_user:{email}:org:{org.org_uuid}")
+    audit_event(
+        request, action="members.invite.cancelled", org_id=org_id, actor=current_user,
+        target_type="invite", target_name=email,
+    )
 
     return {"detail": "User removed"}

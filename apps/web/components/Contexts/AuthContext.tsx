@@ -19,11 +19,20 @@ import { safeRedirectUrl } from '@services/auth/redirects'
 import i18n from '@/lib/i18n'
 import { safeExternalUrl } from '@services/security/url'
 import { AUTH_EXPIRED_EVENT, AUTH_REFRESHED_EVENT } from '@/lib/auth/events'
+import {
+  activeImpersonation,
+  authRefreshUrl,
+  dispatchImpersonationEnded,
+  setActiveImpersonation,
+  type ImpersonationSession,
+} from '@/lib/auth/impersonation'
 
 // Types matching NextAuth's session structure
 export interface Session {
   user: any | undefined
   roles?: string[] | undefined
+  // Set while an impersonation acts as this user (see lib/auth/impersonation).
+  impersonation?: ImpersonationSession | null
   tokens?: {
     access_token?: string | undefined
     refresh_token?: string | undefined
@@ -324,9 +333,11 @@ export function SessionProvider({
     }
 
     const data = await response.json()
+    setActiveImpersonation(data.impersonation)
     return {
       user: data.user,
       roles: data.roles,
+      impersonation: data.impersonation ?? null,
       tokens: {
         access_token: token,
         refresh_token: undefined, // Stored in httpOnly cookie
@@ -361,10 +372,17 @@ export function SessionProvider({
     refreshPromiseRef.current = (async () => {
       try {
         // Use Next.js API route to ensure cookies are set correctly
-        const response = await fetch('/api/auth/refresh', {
+        const response = await fetch(authRefreshUrl(), {
           method: 'GET',
           credentials: 'include',
         })
+
+        if (response.status === 410) {
+          // The impersonation this tab ran on is over; the superadmin's own
+          // session is untouched. The banner takes the tab back to the console.
+          dispatchImpersonationEnded('ended')
+          return { status: 'transient' } as const
+        }
 
         if (!response.ok) {
           // 401/403 are the only statuses that mean the refresh cookie itself
@@ -1035,6 +1053,12 @@ export function SessionProvider({
   // Sign out function
   const handleSignOut = useCallback(async (options: SignOutOptions = {}) => {
     const { callbackUrl = '/', redirect = true } = options
+    // "Sign out" inside an impersonation ends the session (back to the
+    // console); the superadmin behind it stays signed in.
+    if (activeImpersonation()) {
+      dispatchImpersonationEnded('ended')
+      return
+    }
 
     let logoutSuccess = false
     try {
@@ -1319,6 +1343,10 @@ export async function signIn(
 // signOut function - matches NextAuth's API
 export async function signOut(options?: SignOutOptions): Promise<void> {
   const { callbackUrl = '/', redirect = true } = options || {}
+  if (activeImpersonation()) {
+    dispatchImpersonationEnded('ended')
+    return
+  }
 
   try {
     // Use Next.js API route to ensure cookies are cleared correctly

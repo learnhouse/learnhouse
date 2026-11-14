@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -25,7 +26,7 @@ export function ShareCourseInMessagesButton({ orgslug, courseUuid }: { orgslug: 
   return (
     <Link
       href={getUriWithOrg(orgslug, `/messages?share=${encodeURIComponent(courseUuid)}`)}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+      className={buttonClass('secondary', 'md')}
     >
       <PaperPlaneTilt size={15} />
       {t('messaging.share_in_messages', { defaultValue: 'Share in Messages' })}
@@ -60,7 +61,7 @@ export function MessageUserButton({ orgslug: slug, userUuid, userId }: { orgslug
     <Link
       onClick={openHere}
       href={getUriWithOrg(orgslug, `/messages?to=${encodeURIComponent(userUuid)}`)}
-      className="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-3.5 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+      className={buttonClass('primary', 'md')}
     >
       <ChatCircleText size={16} weight="fill" />
       {t('messaging.message', { defaultValue: 'Message' })}

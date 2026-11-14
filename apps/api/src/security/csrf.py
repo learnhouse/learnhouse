@@ -29,6 +29,7 @@ from src.core.middleware.cors import (
     effective_allowed_regexp,
 )
 from src.security.auth import JWT_COOKIE_NAME, JWT_REFRESH_COOKIE_NAME
+from src.security.impersonation import IMPERSONATION_COOKIE
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ _CUSTOM_DOMAIN_CACHE_MAX = 2048
 
 # Cookies that authenticate a browser session. Only requests carrying one of
 # these can be forged cross-site with the victim's credentials.
-AUTH_COOKIE_NAMES = (JWT_COOKIE_NAME, JWT_REFRESH_COOKIE_NAME)
+AUTH_COOKIE_NAMES = (JWT_COOKIE_NAME, JWT_REFRESH_COOKIE_NAME, IMPERSONATION_COOKIE)
 
 
 def _cors_origin_regex(config) -> str | None:
@@ -119,6 +120,15 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                     "Regex-based origin matching is DISABLED.",
                     self.allowed_regexp, e,
                 )
+
+    async def __call__(self, scope, receive, send) -> None:
+        # Reads (GET/HEAD/OPTIONS) and websockets are never checked, so they
+        # skip BaseHTTPMiddleware's per-request task and body streams and go
+        # straight to the app. dispatch() would only have passed them through.
+        if scope["type"] != "http" or scope.get("method") not in STATE_CHANGING_METHODS:
+            await self.app(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
 
     def _extract_origin_from_url(self, url: str) -> str | None:
         """Extract origin (scheme + host) from a URL."""

@@ -17,6 +17,11 @@ export default Node.create({
       user_id: {
         default: '',
       },
+      // 'card' (the original full card) or 'compact' (one line). Old blocks
+      // have no value and keep the card.
+      layout: {
+        default: 'card',
+      },
     }
   },
 

@@ -19,7 +19,6 @@ from sqlalchemy import JSON, Boolean, DateTime, Float, Integer, String, select
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from src.db.boards import Board, BoardMember
 from src.db.communities.discussion_comments import DiscussionComment
 from src.db.communities.discussions import Discussion
 from src.db.courses.activities import Activity, ActivityTypeEnum
@@ -37,6 +36,9 @@ from src.db.trail_steps import TrailStep
 from src.db.trails import Trail
 from src.db.usergroup_user import UserGroupUser
 from src.services.demo import sync as sync_module
+from src.tests.core.board_standins import BOARDS
+from src.tests.core.board_standins import StandInBoard as Board
+from src.tests.core.board_standins import StandInBoardMember as BoardMember
 from src.services.demo.bundle_loader import (
     ActivitySpec,
     BoardSpec,
@@ -521,7 +523,9 @@ def test_a_board_without_a_shipped_canvas_has_none():
     assert sync_module._board_canvas("b-no-such-board-anywhere") is None
 
 
-async def test_a_board_whose_owner_is_missing_is_not_created(db, org):
+async def test_a_board_whose_owner_is_missing_is_not_created(db, org, monkeypatch):
+    # Boards are EE: these run against stand-ins of its models.
+    monkeypatch.setattr(sync_module, "_board_models", lambda: BOARDS)
     spec = BoardSpec(slug="b-one", name="Board", owner="student-gone")
 
     await sync_module._sync_board(
@@ -533,6 +537,7 @@ async def test_a_board_whose_owner_is_missing_is_not_created(db, org):
 
 async def test_a_drawn_on_board_and_its_extra_members_are_reset(db, org, monkeypatch):
     monkeypatch.setattr(sync_module, "_board_canvas", lambda slug: b"bundle-canvas")
+    monkeypatch.setattr(sync_module, "_board_models", lambda: BOARDS)
     registry = Registry(org.id, [])
     users = await _students(db, org, registry, [_plan(1), _plan(2)])
     spec = BoardSpec(slug="b-one", name="Board", owner="student-1")

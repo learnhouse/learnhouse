@@ -1,12 +1,13 @@
 'use client'
 import React, { useRef, useState, useCallback, useEffect } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Link, { type LinkProps } from 'next/link'
+import { CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { PlanLevel } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { usePlan } from '@components/Hooks/usePlan'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { useTranslation } from 'react-i18next'
+import { TabIcon } from '../tabIcon'
 
 export interface DashTabItem {
   key: string
@@ -18,27 +19,40 @@ export interface DashTabItem {
   disabled?: boolean
   disabledTooltip?: React.ReactNode
   requiresPlan?: PlanLevel
+  // Shows a small amber dot: the tab holds unsaved edits.
+  dirty?: boolean
 }
 
 interface DashTabBarProps {
   tabs: DashTabItem[]
+  className?: string
+  // Passed to the tab links. Full prefetch by default: every tab body is a
+  // client page that loads its own data, so its payload is tiny, and with it
+  // a tab switch needs no server round trip (and shows no loading flash).
+  prefetch?: LinkProps['prefetch']
 }
 
-export function DashTabBar({ tabs }: DashTabBarProps) {
+// Underline tabs, as in the assignment editor. The row scrolls sideways when
+// it overflows (phones, long tab lists); the edges fade out instead of using a
+// gradient overlay, so the bar works on any header background.
+export function DashTabBar({ tabs, className = '', prefetch = true }: DashTabBarProps) {
   const { t } = useTranslation()
   const currentPlan = usePlan()
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
+  const [canScrollStart, setCanScrollStart] = useState(false)
+  const [canScrollEnd, setCanScrollEnd] = useState(false)
+  const [isRtl, setIsRtl] = useState(false)
 
+  // scrollLeft runs negative in RTL, so compare magnitudes.
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current
     if (!el) return
-    setCanScrollLeft(el.scrollLeft > 4)
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+    const offset = Math.abs(el.scrollLeft)
+    setCanScrollStart(offset > 4)
+    setCanScrollEnd(offset + el.clientWidth < el.scrollWidth - 4)
+    setIsRtl(getComputedStyle(el).direction === 'rtl')
   }, [])
 
-  // Track scroll state and react to resize
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
@@ -52,70 +66,73 @@ export function DashTabBar({ tabs }: DashTabBarProps) {
     }
   }, [updateScrollState])
 
-  // Scroll active tab into view whenever the active key changes.
-  // Next.js reuses the component across subpage navigations, so scroll state
-  // can persist, so we need to bring the new active tab back into view.
-  const activeKey = tabs.find((t) => t.active)?.key
+  // Next.js reuses the component across subpage navigations, so bring the
+  // newly active tab back into view whenever it changes.
+  const activeKey = tabs.find((tab) => tab.active)?.key
+  // Measured with client rects so it works the same in LTR and RTL.
   useEffect(() => {
     const container = scrollRef.current
-    if (!container) return
-    const activeEl = container.querySelector('[data-tab-active]') as HTMLElement | null
-    if (!activeEl) return
-    const left = activeEl.offsetLeft
-    const right = left + activeEl.offsetWidth
-    const cLeft = container.scrollLeft
-    const cRight = cLeft + container.clientWidth
-    if (left < cLeft) {
-      container.scrollTo({ left: Math.max(0, left - 8) })
-    } else if (right > cRight) {
-      container.scrollTo({ left: right - container.clientWidth + 8 })
-    }
+    const activeEl = container?.querySelector('[data-tab-active]') as HTMLElement | null
+    if (!container || !activeEl) return
+    const c = container.getBoundingClientRect()
+    const a = activeEl.getBoundingClientRect()
+    if (a.left < c.left) container.scrollBy({ left: a.left - c.left - 8 })
+    else if (a.right > c.right) container.scrollBy({ left: a.right - c.right + 8 })
   }, [activeKey])
 
-  const scroll = useCallback((dir: 'left' | 'right') => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollBy({ left: dir === 'left' ? -140 : 140, behavior: 'smooth' })
-  }, [])
+  const scroll = useCallback(
+    (towards: 'start' | 'end') => {
+      const el = scrollRef.current
+      if (!el) return
+      const step = towards === 'end' ? 160 : -160
+      el.scrollBy({ left: isRtl ? -step : step, behavior: 'smooth' })
+    },
+    [isRtl]
+  )
+
+  const fadeDir = isRtl ? 'to left' : 'to right'
+  const maskImage =
+    canScrollStart || canScrollEnd
+      ? `linear-gradient(${fadeDir}, ${canScrollStart ? 'transparent' : '#000'} 0, #000 40px, #000 calc(100% - 40px), ${canScrollEnd ? 'transparent' : '#000'} 100%)`
+      : undefined
+
+  const edgeButton =
+    'pointer-events-auto flex items-center justify-center w-6 h-6 rounded-full bg-white nice-shadow text-neutral-500 hover:text-neutral-900 transition-colors'
 
   return (
-    // overflow-hidden prevents tabs from blowing out the page layout
-    <div className="relative min-w-0 overflow-hidden">
-      {/* Left gradient + button */}
-      <div
-        className={`absolute start-0 inset-y-0 w-12 bg-gradient-to-r from-[#fcfbfc] to-transparent z-10 flex items-center pointer-events-none transition-opacity duration-200 ${
-          canScrollLeft ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <button
-          onClick={() => scroll('left')}
-          aria-label={t('dashboard.tab_bar.scroll_left')}
-          className="pointer-events-auto flex items-center justify-center w-6 h-6 rounded-full bg-white nice-shadow text-gray-500 hover:text-gray-900 transition-colors duration-150"
-        >
-          <ChevronLeft size={13} strokeWidth={2.5} />
-        </button>
-      </div>
-
+    <div className={`relative min-w-0 ${className}`}>
       <div
         ref={scrollRef}
-        className="flex space-x-1 font-black text-sm overflow-x-auto scrollbar-hide"
+        role="tablist"
+        className="flex gap-1 sm:gap-5 overflow-x-auto scrollbar-hide"
+        style={maskImage ? { maskImage, WebkitMaskImage: maskImage } : undefined}
       >
         {tabs.map((tab) => {
           const inner = (
-            <div className="flex items-center space-x-2.5 mx-2.5">
-              {tab.icon}
-              <div className="flex items-center whitespace-nowrap">
+            <>
+              <span className="shrink-0 [&>svg]:size-4"><TabIcon icon={tab.icon} /></span>
+              <span className="flex items-center whitespace-nowrap">
                 {tab.label}
-                {tab.requiresPlan && (
-                  <PlanBadge currentPlan={currentPlan} requiredPlan={tab.requiresPlan} />
-                )}
-              </div>
-            </div>
+                {tab.requiresPlan && <PlanBadge currentPlan={currentPlan} requiredPlan={tab.requiresPlan} />}
+              </span>
+              {tab.dirty && (
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"
+                  aria-label={t('dashboard.courses.save.unsaved')}
+                  title={t('dashboard.courses.save.unsaved')}
+                />
+              )}
+            </>
           )
+          const base =
+            'flex items-center gap-2 px-2 sm:px-0.5 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap'
 
           if (tab.disabled) {
             const el = (
-              <div className="py-2 w-fit text-center border-black transition-all ease-linear opacity-30 cursor-not-allowed">
+              <div
+                className={`${base} border-transparent text-neutral-400 opacity-60 cursor-not-allowed`}
+                aria-disabled="true"
+              >
                 {inner}
               </div>
             )
@@ -128,26 +145,41 @@ export function DashTabBar({ tabs }: DashTabBarProps) {
             )
           }
 
-          const tabClass = `py-2 w-fit text-center border-black transition-all ease-linear cursor-pointer ${
-            tab.active ? 'border-b-4' : 'opacity-50 hover:opacity-75'
+          const tabClass = `${base} ${
+            tab.active
+              ? 'border-neutral-900 text-neutral-900'
+              : 'border-transparent text-neutral-500 hover:text-neutral-800'
           }`
+          const activeProps = tab.active ? { 'data-tab-active': '' } : {}
 
           if (tab.href) {
             return (
-              <Link key={tab.key} href={tab.href} prefetch={false}>
-                <div className={tabClass} {...(tab.active ? { 'data-tab-active': '' } : {})}>
-                  {inner}
-                </div>
+              <Link
+                key={tab.key}
+                href={tab.href}
+                prefetch={prefetch}
+                role="tab"
+                aria-selected={tab.active}
+                className={tabClass}
+                {...activeProps}
+              >
+                {inner}
               </Link>
             )
           }
 
           if (tab.onClick) {
             return (
-              <button key={tab.key} onClick={tab.onClick}>
-                <div className={tabClass} {...(tab.active ? { 'data-tab-active': '' } : {})}>
-                  {inner}
-                </div>
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={tab.active}
+                onClick={tab.onClick}
+                className={tabClass}
+                {...activeProps}
+              >
+                {inner}
               </button>
             )
           }
@@ -156,18 +188,34 @@ export function DashTabBar({ tabs }: DashTabBarProps) {
         })}
       </div>
 
-      {/* Right gradient + button */}
       <div
-        className={`absolute end-0 inset-y-0 w-12 bg-gradient-to-l from-[#fcfbfc] to-transparent z-10 flex items-center justify-end pointer-events-none transition-opacity duration-200 ${
-          canScrollRight ? 'opacity-100' : 'opacity-0'
+        className={`absolute start-0 inset-y-0 flex items-center pointer-events-none transition-opacity duration-200 ${
+          canScrollStart ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <button
-          onClick={() => scroll('right')}
-          aria-label={t('dashboard.tab_bar.scroll_right')}
-          className="pointer-events-auto flex items-center justify-center w-6 h-6 rounded-full bg-white nice-shadow text-gray-500 hover:text-gray-900 transition-colors duration-150"
+          type="button"
+          onClick={() => scroll('start')}
+          aria-label={t('dashboard.tab_bar.scroll_left')}
+          tabIndex={canScrollStart ? 0 : -1}
+          className={`${edgeButton} ${canScrollStart ? '' : 'invisible'}`}
         >
-          <ChevronRight size={13} strokeWidth={2.5} />
+          <CaretLeft size={13} weight="bold" className="rtl:rotate-180" />
+        </button>
+      </div>
+      <div
+        className={`absolute end-0 inset-y-0 flex items-center justify-end pointer-events-none transition-opacity duration-200 ${
+          canScrollEnd ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => scroll('end')}
+          aria-label={t('dashboard.tab_bar.scroll_right')}
+          tabIndex={canScrollEnd ? 0 : -1}
+          className={`${edgeButton} ${canScrollEnd ? '' : 'invisible'}`}
+        >
+          <CaretRight size={13} weight="bold" className="rtl:rotate-180" />
         </button>
       </div>
     </div>

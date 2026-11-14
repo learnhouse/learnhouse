@@ -1,22 +1,30 @@
 'use client'
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
-import { MessageCircle, Plus, Loader2, Search, X, Trash2, CheckSquare, Square } from 'lucide-react'
-import { DiscussionCard } from './DiscussionCard'
-import { SortDropdown } from './SortDropdown'
-import { LabelFilter } from './LabelFilter'
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ChatCenteredText, PencilSimpleLine, Tray } from '@phosphor-icons/react'
+import { DiscussionCard, DiscussionCardSkeleton } from './DiscussionCard'
 import {
-  deleteDiscussion,
-  getCommentCount,
+  DISCUSSION_LABELS,
   DiscussionSortBy,
   DiscussionWithAuthor,
+  getDiscussion,
+  getDiscussions,
+  getDiscussionsActivity,
 } from '@services/communities/discussions'
-import toast from 'react-hot-toast'
+import { threadHref } from './communityUi'
+
+// The editor (tiptap) behind it only loads when someone edits inline.
+const EditDiscussionModal = dynamic(
+  () => import('@components/Objects/Modals/Communities/EditDiscussionModal').then((m) => m.EditDiscussionModal),
+  { ssr: false }
+)
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
-import { useDiscussions, useMutateDiscussions } from '@components/Hooks/useDiscussions'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import { Button, EmptyState, SearchInput, SegmentedControl } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
@@ -25,6 +33,27 @@ interface DiscussionListProps {
   orgslug: string
   onCreateClick?: () => void
   initialDiscussions?: DiscussionWithAuthor[]
+  allowRichContent?: boolean
+}
+
+type FeedSort = 'latest' | 'top' | 'hot' | 'unanswered'
+const API_SORT: Record<FeedSort, DiscussionSortBy> = { latest: 'recent', top: 'upvotes', hot: 'hot', unanswered: 'recent' }
+const PAGE_SIZE = 20
+
+// Feed keys live under ['community', uuid, 'discussions'] so every existing
+// "discussions changed" invalidation refreshes them too.
+export const discussionActivityKey = (communityUuid: string) => ['community', communityUuid, 'discussions', 'activity']
+
+export function useDiscussionActivity(communityUuid: string) {
+  const session = useLHSession() as any
+  const accessToken = session?.data?.tokens?.access_token
+  return useQuery({
+    queryKey: discussionActivityKey(communityUuid),
+    queryFn: () => getDiscussionsActivity(communityUuid, accessToken),
+    enabled: !!communityUuid && session?.status !== 'loading',
+    staleTime: 30_000,
+    retry: false,
+  })
 }
 
 export function DiscussionList({
@@ -32,336 +61,319 @@ export function DiscussionList({
   orgslug,
   onCreateClick,
   initialDiscussions = [],
+  allowRichContent = false,
 }: DiscussionListProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
+  const accessToken = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
   const { isUserPartOfTheOrg } = useOrgMembership()
   const { canCreateDiscussion: hasCreatePermission, canManageCommunity } = useCommunityRights(communityUuid)
   const canCreateDiscussion = hasCreatePermission && isUserPartOfTheOrg
-  const accessToken = session?.data?.tokens?.access_token
-  const mutateDiscussions = useMutateDiscussions()
   const { track } = useLHAnalytics('learner')
 
-  const [sortBy, setSortBy] = useState<DiscussionSortBy>('recent')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({})
-  const [selectedLabel, setSelectedLabel] = useState<string | null>(null)
+  const [sort, setSort] = useState<FeedSort>('latest')
+  const [label, setLabel] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
 
-  // Selection state
-  const [isSelectMode, setIsSelectMode] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  // Use SWR for fetching discussions
-  const { discussions: swrDiscussions, isLoading, mutate } = useDiscussions({
-    communityUuid,
-    sortBy,
-    page: 1,
-    limit: 50, // Fetch more initially since we're not paginating for now
-    label: selectedLabel,
+  const feedKey = ['community', communityUuid, 'discussions', 'feed', API_SORT[sort], label ?? null]
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: feedKey,
+    queryFn: ({ pageParam }) =>
+      getDiscussions(communityUuid, API_SORT[sort], pageParam, PAGE_SIZE, null, accessToken, label ?? undefined),
+    initialPageParam: 1,
+    getNextPageParam: (last, pages) => (Array.isArray(last) && last.length >= PAGE_SIZE ? pages.length + 1 : undefined),
+    enabled: !!communityUuid && session?.status !== 'loading',
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   })
 
-  // Use SWR data, fall back to initial data if SWR hasn't loaded yet
-  const discussions = swrDiscussions.length > 0 ? swrDiscussions : initialDiscussions
+  const { data: activity } = useDiscussionActivity(communityUuid)
+  const activityMap = useMemo(() => new Map((activity ?? []).map((a) => [a.discussion_uuid, a])), [activity])
 
-  const fetchCommentCounts = async (discussionList: DiscussionWithAuthor[]) => {
-    if (!discussionList.length) return
-    try {
-      const counts = await Promise.all(
-        discussionList.map(async (d) => {
-          try {
-            const count = await getCommentCount(d.discussion_uuid, null, accessToken)
-            return { uuid: d.discussion_uuid, count }
-          } catch {
-            return { uuid: d.discussion_uuid, count: 0 }
-          }
-        })
-      )
-      setCommentCounts(prev => {
-        const newCounts = { ...prev }
-        counts.forEach(({ uuid, count }) => {
-          newCounts[uuid] = count
-        })
-        return newCounts
-      })
-    } catch (_error) {
-      // silent; counts fall back to 0
+  // Server-rendered first page shows until the client feed arrives.
+  const loaded: DiscussionWithAuthor[] = useMemo(() => {
+    const seen = new Set<string>()
+    const list = data ? data.pages.flat() : sort === 'latest' && !label ? initialDiscussions : []
+    return (Array.isArray(list) ? list : []).filter((d) => {
+      if (!d || seen.has(d.discussion_uuid)) return false
+      seen.add(d.discussion_uuid)
+      return true
+    })
+  }, [data, sort, label, initialDiscussions])
+
+  const visible = useMemo(() => {
+    let list = loaded
+    if (sort === 'unanswered') {
+      list = list.filter((d) => !d.answer_comment_id && (activityMap.get(d.discussion_uuid)?.comment_count ?? 0) === 0)
     }
+    if (deferredSearch.trim()) {
+      list = list.filter((d) =>
+        searchMatchesAny([d.title, d.author?.username, d.author?.first_name, d.author?.last_name], deferredSearch)
+      )
+    }
+    // Pinned threads always lead, as the API orders them on page one.
+    return [...list].sort((a, b) => Number(b.is_pinned) - Number(a.is_pinned))
+  }, [loaded, sort, activityMap, deferredSearch])
+
+  const patchFeed = (fn: (_list: DiscussionWithAuthor[]) => DiscussionWithAuthor[]) => {
+    queryClient.setQueryData<{ pages: DiscussionWithAuthor[][]; pageParams: unknown[] }>(feedKey, (old) =>
+      old ? { ...old, pages: old.pages.map((p) => fn(Array.isArray(p) ? p : [])) } : old
+    )
+  }
+  const handleUpdate = (updated: DiscussionWithAuthor) => {
+    patchFeed((list) => list.map((d) => (d.discussion_uuid === updated.discussion_uuid ? { ...d, ...updated } : d)))
+    // Pinning moves a thread, so let the other sorts refetch.
+    queryClient.invalidateQueries({ queryKey: ['community', communityUuid, 'discussions'], refetchType: 'none' })
+  }
+  const handleDelete = (uuid: string) => {
+    patchFeed((list) => list.filter((d) => d.discussion_uuid !== uuid))
+    queryClient.invalidateQueries({ queryKey: discussionActivityKey(communityUuid) })
   }
 
-  // Fetch comment counts when discussions change
-  useEffect(() => {
-    if (discussions.length > 0) {
-      // Only fetch counts for discussions we don't have counts for
-      const newDiscussions = discussions.filter(d => !(d.discussion_uuid in commentCounts))
-      if (newDiscussions.length > 0) {
-        fetchCommentCounts(newDiscussions)
-      }
-    }
-  }, [discussions])
-
   const handleCreateClick = (source: 'header' | 'empty_state') => {
-    track(AnalyticsEvent.CreateDiscussionModalOpened, {
-      source,
-      feed_is_empty: filteredDiscussions.length === 0,
-    })
+    track(AnalyticsEvent.CreateDiscussionModalOpened, { source, feed_is_empty: visible.length === 0 })
     onCreateClick?.()
   }
 
-  const handleSortChange = (newSort: DiscussionSortBy) => {
-    setSortBy(newSort)
-  }
+  // ---- inline reading, one thread open at a time (like a mail client) ----
+  const router = useRouter()
+  const [openUuid, setOpenUuid] = useState<string | null>(null)
+  const [instantClose, setInstantClose] = useState<string | null>(null)
+  const [editing, setEditing] = useState<DiscussionWithAuthor | null>(null)
+  const cardRefs = useRef(new Map<string, HTMLDivElement>())
+  // Where the newly opened card's top sat before the previous one collapsed.
+  const anchor = useRef<{ uuid: string; top: number } | null>(null)
 
-  const handleLabelChange = (label: string | null) => {
-    setSelectedLabel(label)
-  }
-
-  // Filter discussions based on search query
-  const filteredDiscussions = useMemo(() => {
-    if (!searchQuery.trim()) return discussions
-    return discussions.filter(d =>
-      searchMatchesAny(
-        [d.title, d.author?.username, d.author?.first_name, d.author?.last_name],
-        searchQuery,
-      )
-    )
-  }, [discussions, searchQuery])
-
-  // Selection handlers
-  const toggleSelectMode = () => {
-    setIsSelectMode(!isSelectMode)
-    setSelectedIds(new Set())
-  }
-
-  const toggleSelection = (discussionUuid: string) => {
-    const newSelected = new Set(selectedIds)
-    if (newSelected.has(discussionUuid)) {
-      newSelected.delete(discussionUuid)
-    } else {
-      newSelected.add(discussionUuid)
+  // ?thread=<uuid> reopens a thread on load (phones go to the full page).
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get('thread')
+    if (!param) return
+    const uuid = param.startsWith('discussion_') ? param : `discussion_${param}`
+    if (window.matchMedia('(max-width: 639px)').matches) {
+      router.replace(threadHref(orgslug, communityUuid, uuid))
+      return
     }
-    setSelectedIds(newSelected)
-  }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpenUuid(uuid)
+  }, [router, orgslug, communityUuid])
 
-  const selectAll = () => {
-    if (selectedIds.size === filteredDiscussions.length) {
-      setSelectedIds(new Set())
-    } else {
-      setSelectedIds(new Set(filteredDiscussions.map(d => d.discussion_uuid)))
+  // Keep the URL in step without navigating, so refresh and shared links work.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const current = url.searchParams.get('thread')
+    const next = openUuid ? openUuid.replace('discussion_', '') : null
+    if ((current ?? null) === next) return
+    if (next) url.searchParams.set('thread', next)
+    else url.searchParams.delete('thread')
+    window.history.replaceState(window.history.state, '', url.toString())
+  }, [openUuid])
+
+  const toggleThread = useCallback(
+    (uuid: string) => {
+      if (openUuid === uuid) {
+        setInstantClose(null)
+        setOpenUuid(null)
+        return
+      }
+      // Switching threads: remember where the target sits so the card above
+      // collapsing does not yank it up the page.
+      const el = cardRefs.current.get(uuid)
+      anchor.current = el ? { uuid, top: el.getBoundingClientRect().top } : null
+      setInstantClose(openUuid)
+      setOpenUuid(uuid)
+    },
+    [openUuid]
+  )
+
+  useLayoutEffect(() => {
+    const a = anchor.current
+    if (!a || a.uuid !== openUuid) return
+    anchor.current = null
+    const el = cardRefs.current.get(a.uuid)
+    if (!el) return
+    const delta = el.getBoundingClientRect().top - a.top
+    if (Math.abs(delta) > 1) window.scrollBy(0, delta)
+  }, [openUuid])
+
+  // Esc closes the open thread (not while typing), focus returns to its title.
+  useEffect(() => {
+    if (!openUuid) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      const target = e.target instanceof Element ? e.target : null
+      if (target?.closest('input,textarea,select,[contenteditable="true"],[role="dialog"],[role="menu"]')) return
+      const el = cardRefs.current.get(openUuid)
+      setInstantClose(null)
+      setOpenUuid(null)
+      el?.querySelector<HTMLElement>('a[href]')?.focus({ preventScroll: true })
     }
-  }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [openUuid])
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.size === 0 || !accessToken) return
+  // A thread opened from a link may be older than the loaded pages: fetch it.
+  const openMissing = !!openUuid && !loaded.some((d) => d.discussion_uuid === openUuid)
+  const { data: linkedThread } = useQuery({
+    queryKey: ['discussion', openUuid ?? '', 'inline'],
+    queryFn: () => getDiscussion(openUuid!, null, accessToken),
+    enabled: openMissing && session?.status !== 'loading',
+    retry: false,
+  })
+  const listed = useMemo(
+    () => (openMissing && linkedThread ? [linkedThread, ...visible] : visible),
+    [openMissing, linkedThread, visible]
+  )
 
-    setIsDeleting(true)
-    try {
-      // Delete discussions one by one
-      const deletePromises = Array.from(selectedIds).map(uuid =>
-        deleteDiscussion(uuid, accessToken)
-      )
-      await Promise.all(deletePromises)
-
-      // Revalidate SWR cache
-      mutateDiscussions(communityUuid)
-      setSelectedIds(new Set())
-      setIsSelectMode(false)
-    } catch (err: any) {
-      const message =
-        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
-        (typeof err?.detail === 'string' && err.detail) ||
-        err?.message ||
-        t('communities.discussion_list.delete_failed')
-      toast.error(message)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-
-  const handleDiscussionUpdate = (updated: DiscussionWithAuthor) => {
-    mutate(
-      (current) => current?.map(d =>
-        d.discussion_uuid === updated.discussion_uuid ? updated : d
-      ),
-    )
-  }
-
-  const handleDiscussionDelete = (discussionUuid: string) => {
-    mutate(
-      (current) => current?.filter(d => d.discussion_uuid !== discussionUuid),
-    )
-  }
-
-  const allSelected = filteredDiscussions.length > 0 && selectedIds.size === filteredDiscussions.length
+  const showSkeleton = isLoading && loaded.length === 0
+  const filtering = !!search || sort === 'unanswered' || !!label
 
   return (
-    <div>
-      {/* Header with Search and Filters */}
-      <div className="p-3 sm:p-4 border-b border-gray-100 space-y-3">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input dir="auto"
-            type="text"
-            placeholder={t('communities.discussion_list.search_placeholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full ps-9 pe-9 py-2.5 sm:py-2 text-base sm:text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+    <div className="flex flex-col gap-3">
+      {/* Toolbar: search, sort, then label chips */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+        <SearchInput value={search} onChange={setSearch} placeholder={t('communities.discussion_list.search_placeholder')} />
+        <div className="overflow-x-auto scrollbar-hide shrink-0">
+          <SegmentedControl<FeedSort>
+            value={sort}
+            onChange={setSort}
+            ariaLabel={t('communities.learner.sort.label')}
+            options={[
+              { key: 'latest', label: t('communities.learner.feed.latest') },
+              { key: 'top', label: t('communities.discussion_list.top') },
+              { key: 'hot', label: t('communities.discussion_list.hot') },
+              { key: 'unanswered', label: t('communities.learner.feed.unanswered') },
+            ]}
           />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute end-1 sm:end-3 top-1/2 -translate-y-1/2 p-2 sm:p-0 text-gray-400 hover:text-gray-600"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-
-        {/* Filters and Actions Row */}
-        <div className="flex items-center justify-between gap-2">
-          {/* One swipeable chip row on phones */}
-          <div className="flex items-center gap-2 min-w-0 overflow-x-auto scrollbar-hide -ms-3 ps-3 sm:ms-0 sm:ps-0 sm:overflow-visible sm:flex-wrap [&>*]:shrink-0">
-            <LabelFilter value={selectedLabel} onChange={handleLabelChange} />
-            <SortDropdown value={sortBy} onChange={handleSortChange} />
-            <span className="text-xs text-gray-400 whitespace-nowrap">
-              {filteredDiscussions.length} {filteredDiscussions.length === 1 ? t('communities.discussion') : t('communities.discussions')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Select Mode Toggle for Admins */}
-            {canManageCommunity && filteredDiscussions.length > 0 && (
-              <button
-                onClick={toggleSelectMode}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors h-9 sm:h-8 ${
-                  isSelectMode
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <CheckSquare size={14} />
-                {isSelectMode ? t('communities.discussion_list.cancel') : t('communities.discussion_list.select')}
-              </button>
-            )}
-
-            {/* Desktop create button */}
-            {canCreateDiscussion && onCreateClick && !isSelectMode && (
-              <button
-                onClick={() => handleCreateClick('header')}
-                className="hidden md:flex items-center gap-2 px-3 py-2 h-8 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md transition-colors text-xs font-medium"
-              >
-                <Plus size={14} />
-                {t('communities.discussion_list.new_discussion')}
-              </button>
-            )}
-          </div>
         </div>
       </div>
-
-      {/* Selection Action Bar */}
-      {isSelectMode && selectedIds.size > 0 && (
-        <div className="px-4 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-0.5" role="tablist" aria-label={t('communities.learner.labels_label')}>
+        {[{ id: null as string | null, color: '', name: '' }, ...DISCUSSION_LABELS].map((l) => {
+          const active = label === l.id
+          return (
             <button
-              onClick={selectAll}
-              className="flex items-center gap-1.5 text-xs text-indigo-700 hover:text-indigo-800"
+              key={l.id ?? 'all'}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setLabel(l.id)}
+              className={`shrink-0 inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-xs font-semibold transition-colors ${
+                active
+                  ? 'bg-neutral-900 text-white'
+                  : 'bg-white text-neutral-600 ring-1 ring-inset ring-neutral-900/10 hover:text-neutral-900 hover:ring-neutral-900/20'
+              }`}
             >
-              {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
-              {allSelected ? t('communities.discussion_list.deselect_all') : t('communities.discussion_list.select_all')}
+              {l.id && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: l.color }} />}
+              {l.id ? t(`communities.labels.${l.id}`, { defaultValue: l.name }) : t('communities.learner.all_labels')}
             </button>
-            <span className="text-xs text-indigo-600 font-medium">
-              {selectedIds.size} {t('communities.discussion_list.selected')}
-            </span>
+          )
+        })}
+      </div>
+
+      {/* No overflow clipping: the open thread's reply box sticks to the viewport. */}
+      <div className="bg-white rounded-2xl nice-shadow">
+        {showSkeleton ? (
+          <div className="divide-y divide-neutral-100">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <DiscussionCardSkeleton key={i} />
+            ))}
           </div>
-
-          <ConfirmationModal
-            confirmationMessage={t('communities.discussion_list.delete_discussions_confirm', { count: selectedIds.size })}
-            confirmationButtonText={t('communities.discussion_list.delete')}
-            dialogTitle={t('communities.discussion_list.delete_discussions_title', { count: selectedIds.size })}
-            dialogTrigger={
-              <button
-                disabled={isDeleting}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs font-medium transition-colors disabled:opacity-50"
-              >
-                {isDeleting ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Trash2 size={14} />
-                )}
-                {t('communities.discussion_list.delete')}
-              </button>
-            }
-            functionToExecute={handleBulkDelete}
-            status="warning"
-          />
-        </div>
-      )}
-
-      {/* Discussion List */}
-      <div>
-        {filteredDiscussions.length === 0 && !isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4">
-            <div className="p-4 bg-gray-50 rounded-full mb-4">
-              <MessageCircle size={28} className="text-gray-300" />
-            </div>
-            {searchQuery ? (
-              <>
-                <h3 className="text-base font-semibold text-gray-600 mb-1">{t('communities.discussion_list.no_results')}</h3>
-                <p className="text-sm text-gray-400 text-center max-w-xs mb-4">
-                  {t('communities.discussion_list.no_results_description')}
-                </p>
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+        ) : listed.length === 0 ? (
+          filtering ? (
+            <EmptyState
+              icon={<Tray size={22} />}
+              title={t('communities.discussion_list.no_results')}
+              description={
+                sort === 'unanswered' && !search
+                  ? t('communities.learner.no_unanswered')
+                  : t('communities.discussion_list.no_results_description')
+              }
+              action={
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setSearch('')
+                    setLabel(null)
+                    setSort('latest')
+                  }}
                 >
-                  {t('communities.discussion_list.clear_search')}
-                </button>
-              </>
-            ) : (
-              <>
-                <h3 className="text-base font-semibold text-gray-600 mb-1">{t('communities.discussion_list.no_discussions')}</h3>
-                <p className="text-sm text-gray-400 text-center max-w-xs mb-4">
-                  {t('communities.discussion_list.no_discussions_description')}
-                </p>
-                {canCreateDiscussion && onCreateClick && (
-                  <button
-                    onClick={() => handleCreateClick('empty_state')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition-colors text-sm font-medium"
-                  >
-                    <Plus size={16} />
+                  {t('communities.learner.clear_filters')}
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={<ChatCenteredText size={22} />}
+              title={t('communities.learner.empty_title')}
+              description={t('communities.learner.empty_description')}
+              action={
+                canCreateDiscussion && onCreateClick ? (
+                  <Button variant="primary" icon={<PencilSimpleLine size={14} />} onClick={() => handleCreateClick('empty_state')}>
                     {t('communities.discussion_list.start_discussion')}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
+                  </Button>
+                ) : undefined
+              }
+            />
+          )
         ) : (
-          <>
-            {isLoading && discussions.length === 0 ? (
-              <div className="flex justify-center py-8">
-                <Loader2 size={24} className="animate-spin text-gray-400" />
-              </div>
-            ) : (
-              filteredDiscussions.map((discussion) => (
+          <div className="divide-y divide-neutral-100">
+            {listed.map((discussion) => {
+              const a = activityMap.get(discussion.discussion_uuid)
+              const uuid = discussion.discussion_uuid
+              return (
+                <div
+                  key={uuid}
+                  className="first:*:rounded-t-2xl last:*:rounded-b-2xl"
+                  ref={(el) => {
+                    if (el) cardRefs.current.set(uuid, el)
+                    else cardRefs.current.delete(uuid)
+                  }}
+                >
                 <DiscussionCard
-                  key={discussion.discussion_uuid}
                   discussion={discussion}
                   orgslug={orgslug}
                   communityUuid={communityUuid}
-                  commentCount={commentCounts[discussion.discussion_uuid] || 0}
-                  isSelectMode={isSelectMode}
-                  isSelected={selectedIds.has(discussion.discussion_uuid)}
-                  onToggleSelect={() => toggleSelection(discussion.discussion_uuid)}
+                  commentCount={activity ? (a?.comment_count ?? 0) : undefined}
+                  lastActivity={a?.last_comment_date}
                   canManage={canManageCommunity}
-                  onDiscussionUpdate={handleDiscussionUpdate}
-                  onDiscussionDelete={handleDiscussionDelete}
+                  onDiscussionUpdate={handleUpdate}
+                  onDiscussionDelete={(id) => {
+                    if (id === openUuid) setOpenUuid(null)
+                    handleDelete(id)
+                  }}
+                  expanded={openUuid === uuid}
+                  collapseInstantly={instantClose === uuid}
+                  onToggle={() => toggleThread(uuid)}
+                  onEdit={() => setEditing(discussion)}
+                  allowRichContent={allowRichContent}
                 />
-              ))
-            )}
-          </>
+                </div>
+              )
+            })}
+          </div>
+        )}
+        {hasNextPage && !showSkeleton && (
+          <div className="border-t border-neutral-100 p-3 flex justify-center">
+            <Button onClick={() => fetchNextPage()} loading={isFetchingNextPage}>
+              {t('communities.learner.load_more')}
+            </Button>
+          </div>
         )}
       </div>
+
+      {editing && (
+        <EditDiscussionModal
+          isOpen={!!editing}
+          onClose={() => setEditing(null)}
+          discussion={editing}
+          allowRichContent={allowRichContent}
+          onUpdated={(updated) => {
+            handleUpdate(updated)
+            setEditing(null)
+          }}
+        />
+      )}
     </div>
   )
 }

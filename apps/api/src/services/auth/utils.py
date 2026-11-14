@@ -262,7 +262,8 @@ async def signWithGoogle(
         needs_update = True
 
     # For existing users, ensure email is verified (Google already verified it)
-    if not user.email_verified:
+    newly_verified = not user.email_verified
+    if newly_verified:
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
         needs_update = True
@@ -276,6 +277,12 @@ async def signWithGoogle(
         db_session.add(user)
         await db_session.commit()
         await db_session.refresh(user)
+
+    if newly_verified and user.id is not None:
+        # Grants held for this address until it was proven (EE: CRM rules).
+        from src.core.ee_hooks import notify_ee_email_verified
+
+        notify_ee_email_verified(user.id)
 
     if untrusted_password and user.id is not None:
         from src.security.auth import revoke_user_sessions_before

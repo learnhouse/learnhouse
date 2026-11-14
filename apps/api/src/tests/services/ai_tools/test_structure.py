@@ -1,5 +1,5 @@
 """Edge cases and refusals across the structure, people, settings, library,
-playground, board, community and media-from-URL tools.
+playground, community and media-from-URL tools (boards: ee/tests).
 
 Everything runs through `run_tool` (validation, scope, rights pre-flight,
 approval gate, execute) unless a helper is only reachable directly. The
@@ -21,7 +21,6 @@ import pytest
 from fastapi import HTTPException
 from sqlmodel import select
 
-from src.db.boards import Board, BoardMember
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
 from src.db.courses.chapter_activities import ChapterActivity
@@ -32,7 +31,6 @@ from src.db.folders.folder_content import FolderContent
 from src.db.folders.folders import Folder
 from src.db.media.media import Media
 from src.db.organization_config import OrganizationConfig
-from src.db.playgrounds import Playground
 from src.db.podcasts.podcasts import Podcast
 from src.db.roles import Role, RoleTypeEnum
 from src.db.user_organizations import UserOrganization
@@ -47,14 +45,12 @@ from src.services.ai.tools import (
     run_tool,
 )
 from src.services.ai.tools import activities as activity_tools
-from src.services.ai.tools import boards as board_tools
 from src.services.ai.tools import chapters as chapter_tools
 from src.services.ai.tools import communities as community_tools
 from src.services.ai.tools import content_assets
 from src.services.ai.tools import courses as course_tools
 from src.services.ai.tools import library as library_tools
 from src.services.ai.tools import org as org_tools
-from src.services.ai.tools import playgrounds as playground_tools
 from src.services.ai.tools import roles as role_tools
 from src.services.ai.tools import usergroups as group_tools
 from src.services.ai.tools import users as user_tools
@@ -104,8 +100,6 @@ def environment(fake_redis):
         "src.services.communities.discussions.track": AsyncMock(),
         "src.services.communities.comments.dispatch_webhooks": AsyncMock(),
         "src.services.folders.folders.dispatch_webhooks": AsyncMock(),
-        "src.services.boards.boards.dispatch_webhooks": AsyncMock(),
-        "src.services.playgrounds.playgrounds.dispatch_webhooks": AsyncMock(),
     }
     patches = [patch(target, new) for target, new in targets.items()]
     for p in patches:
@@ -120,7 +114,7 @@ def registry():
     r = ToolRegistry()
     for module in (
         course_tools, chapter_tools, activity_tools, group_tools, role_tools, org_tools, user_tools,
-        library_tools, playground_tools, board_tools, community_tools, content_assets,
+        library_tools, community_tools, content_assets,
     ):
         r.register_all(module.SPECS)
     return r
@@ -632,7 +626,7 @@ async def test_org_settings_v1_layout(registry, db, org, admin_user, people):
     assert out["branding"]["color"] == "#222222"
     assert out["seo"] == {"twitter_handle": "@acme"}
     assert out["menu"]["items"][0]["type"] == "courses"
-    assert out["landing"]["sections"][0]["title"] == "Hi"
+    assert out["landing"]["home_published"] is False and out["landing"]["home_sections"] == 0
     assert out["course_end"]["message"] == "Done"
     assert out["features"]["courses"]["switched_on"] is True and out["features"]["boards"]["switched_on"] is False
 
@@ -651,7 +645,7 @@ async def test_org_profile_email_and_links(registry, db, org, admin_user, people
     denied(await call(registry, "update_org", {"links": [{"label": "Blog", "url": "ftp://x.example"}]}, ctx), "invalid_args")
 
 
-async def test_org_menu_landing_and_branding_edges(registry, db, org, admin_user, people):
+async def test_org_menu_and_branding_edges(registry, db, org, admin_user, people):
     ctx = _ctx(db, org, admin_user, approved=True)
 
     async def apply(section):
@@ -659,13 +653,8 @@ async def test_org_menu_landing_and_branding_edges(registry, db, org, admin_user
 
     assert "need a url to match" in denied(await apply({"section": "menu", "items": [{"type": "custom", "url": ""}]}), "http_400")
     assert "need a url" in denied(await apply({"section": "menu", "mode": "replace", "items": [{"type": "custom", "label": "x"}]}), "http_400")
-    big = [{"type": "rich-text", "content": "x" * 100_001}]
-    assert "100000 characters" in denied(await apply({"section": "landing", "sections": big}), "invalid_args")
-    assert "Nothing to change" in denied(await apply({"section": "landing"}), "http_400")
-
-    ok(await apply({"section": "landing", "mode": "replace", "sections": [], "settings": {"width": "wide"}}))
-    landing = (await _org_config(db, org))["customization"]["landing"]
-    assert landing == {"sections": [], "enabled": False, "settings": {"width": "wide"}}
+    # Landing pages are edited with the landing page tools, not here.
+    assert "does not match" in denied(await apply({"section": "landing", "enabled": True}), "invalid_args")
 
     out = ok(await apply({"section": "branding", "watermark": True, "email_sender_name": "Acme", "footer_text": " Hi "}))
     assert set(out["fields"]) == {"watermark", "email_sender_name", "footer_text"}
@@ -680,7 +669,7 @@ def test_org_settings_summaries():
     assert summary({"section": "signup", "mode": "open"}) == "Let anyone sign up"
     assert summary({"section": "signup", "mode": "invite_only"}) == "Make signup invitation only"
     assert summary({"section": "menu", "mode": "replace", "items": []}) == "Replace the organization's menu settings"
-    assert summary({"section": "landing", "enabled": True}) == "Update the organization's landing settings"
+    assert summary({"section": "menu", "items": []}) == "Update the organization's menu settings"
     assert summary({"section": "auth_branding", "text_color": "dark"}) == (
         "Change the organization's auth branding settings: text_color=dark"
     )
@@ -766,8 +755,6 @@ async def shelf(db, org, other_org, folder):
                 creation_date=NOW, update_date=NOW),
         Community(id=9, name="Their community", public=True, org_id=other_org.id,
                   community_uuid="community_theirs", creation_date=NOW, update_date=NOW),
-        Board(id=9, name="Their board", public=True, org_id=other_org.id, board_uuid="board_theirs",
-              creation_date=NOW, update_date=NOW),
     ])
     await db.commit()
     return two
@@ -786,7 +773,6 @@ async def test_place_in_library_refuses_foreign_resources_and_folders(registry, 
         {"resource_uuid": "podcast_theirs"},
         {"resource_uuid": "media_theirs"},
         {"resource_uuid": "community_theirs"},
-        {"resource_uuid": "board_theirs"},
         {"resource_uuid": "course_second", "folder_uuid": "folder_theirs"},
         {"resource_uuid": "course_test", "folder_uuid": "folder_two", "from_folder_uuid": "folder_theirs"},
         {"resource_uuid": "course_test", "folder_uuid": "folder_theirs", "remove": True},
@@ -850,120 +836,6 @@ async def test_list_media_pages_through_the_service(registry, db, org, admin_use
     monkeypatch.setattr(library_tools, "_MEDIA_PAGE", 2)
     out = ok(await call(registry, "list_media", {"limit": 3, "cursor": None}, _ctx(db, org, admin_user)))
     assert len(out["items"]) == 3 and out["has_more"]
-
-
-# ─── playgrounds ─────────────────────────────────────────────────────────────
-
-
-@pytest.fixture
-async def playground(db, org, admin_user):
-    return await add(db, Playground(
-        id=1, name="Sim", description="", html_content="<p>x</p>", published=True, org_id=org.id,
-        playground_uuid="0b0e1a52-1111-4c3e-9a55-000000000001", created_by=admin_user.id,
-        creation_date=NOW, update_date=NOW,
-    ))
-
-
-@pytest.fixture
-async def cohort(db, org):
-    return await add(db, UserGroup(id=1, name="Cohort A", description="", org_id=org.id, usergroup_uuid="usergroup_a",
-                                   creation_date=NOW, update_date=NOW))
-
-
-async def test_playground_access_changes_are_guarded(
-    registry, db, org, other_org, admin_user, regular_user, course, playground, cohort
-):
-    uuid = playground.playground_uuid
-    await add(db, _course(9, "course_other", other_org.id))
-    # Opening it to everyone needs a person's approval; a learner may not at all.
-    denied(await call(registry, "update_playground", {"playground_uuid": uuid, "access_type": "public"}, _ctx(db, org, admin_user)), "approval_required")
-    denied(await call(registry, "update_playground", {"playground_uuid": uuid, "access_type": "public"}, _ctx(db, org, regular_user, approved=True)), "http_403")
-    grant = {"playground_uuid": uuid, "usergroup_uuid": "usergroup_a", "grant": True}
-    denied(await call(registry, "set_playground_access", grant, _ctx(db, org, regular_user, approved=True)), "http_403")
-    # A course of another organization cannot be linked.
-    denied(await call(registry, "update_playground", {"playground_uuid": uuid, "course_uuid": "course_other"}, _ctx(db, org, admin_user)), "http_404")
-    await db.refresh(playground)
-    assert playground.course_id is None and str(getattr(playground.access_type, "value", playground.access_type)).lower() != "public"
-    out = ok(await call(registry, "update_playground", {"playground_uuid": uuid, "access_type": "restricted"}, _ctx(db, org, admin_user, approved=True)))
-    assert out["playground"]["access"] == "restricted"
-    granted = ok(await call(registry, "set_playground_access", grant, _ctx(db, org, admin_user, approved=True)))
-    assert "note" not in granted
-
-
-async def test_playground_course_link_and_unlink(registry, db, org, other_org, admin_user, course, playground):
-    uuid = playground.playground_uuid
-    ctx = _ctx(db, org, admin_user)
-    ok(await call(registry, "update_playground", {"playground_uuid": uuid, "course_uuid": "course_test"}, ctx))
-    out = ok(await call(registry, "get_playground", {"playground_uuid": uuid}, ctx))
-    assert out["course"]["uuid"] == "course_test"
-    out = ok(await call(registry, "update_playground", {"playground_uuid": uuid, "course_uuid": "None"}, ctx))
-    assert "course" in out["summary"]
-    await db.refresh(playground)
-    assert playground.course_id is None
-    denied(await call(registry, "update_playground", {"playground_uuid": uuid}, ctx), "http_400")
-    # A link pointing outside the organization is not shown.
-    foreign = await add(db, _course(9, "course_other", other_org.id, name="Hidden name"))
-    playground.course_id = foreign.id
-    await add(db, playground)
-    out = ok(await call(registry, "get_playground", {"playground_uuid": uuid}, ctx))
-    assert out["course"] is None and "Hidden name" not in json.dumps(out)
-
-
-async def test_playground_revoke_error_passes_through(registry, db, org, admin_user, playground, cohort):
-    args = {"playground_uuid": playground.playground_uuid, "usergroup_uuid": "usergroup_a", "grant": False}
-    with patch.object(playground_tools, "remove_usergroup_from_playground", AsyncMock(side_effect=HTTPException(status_code=403, detail="no"))):
-        denied(await call(registry, "set_playground_access", args, _ctx(db, org, admin_user, approved=True)), "http_403")
-
-
-# ─── boards ──────────────────────────────────────────────────────────────────
-
-
-@pytest.fixture
-async def board(db, org, admin_user):
-    b = await add(db, Board(
-        id=1, name="Planning", description="Roadmap", public=False, org_id=org.id,
-        board_uuid="board_plan", created_by=admin_user.id, creation_date=NOW, update_date=NOW,
-    ))
-    await add(db, BoardMember(board_id=b.id, user_id=admin_user.id, role="owner", creation_date=NOW))
-    return b
-
-
-async def _board_members(db, board_id):
-    return sorted((await db.execute(select(BoardMember.user_id).where(BoardMember.board_id == board_id))).scalars().all())
-
-
-async def test_board_members_stay_inside_the_org(registry, db, org, admin_user, regular_user, board, people):
-    ctx = _ctx(db, org, admin_user, approved=True)
-    for who in ("outsider", "out@other.com", "user_outsider"):
-        denied(await call(registry, "manage_board_members", {"board_uuid": "board_plan", "add": [{"member": who}]}, ctx), "http_404")
-    # A learner who is not on the board cannot add anyone.
-    denied(await call(registry, "manage_board_members", {"board_uuid": "board_plan", "add": [{"member": "regular"}]},
-                      _ctx(db, org, regular_user, approved=True)))
-    assert await _board_members(db, board.id) == [admin_user.id]
-
-
-async def test_board_member_outcomes(registry, db, org, admin_user, regular_user, board):
-    ctx = _ctx(db, org, admin_user, approved=True)
-    out = ok(await call(registry, "manage_board_members", {"board_uuid": "board_plan", "remove": ["regular"]}, ctx))
-    assert out["members"][0]["result"] == "not_a_member"
-    full = HTTPException(status_code=403, detail="Board member limit reached (max 10)")
-    with patch.object(board_tools, "add_board_member", AsyncMock(side_effect=full)):
-        out = ok(await call(registry, "manage_board_members", {"board_uuid": "board_plan", "add": [{"member": "regular"}]}, ctx))
-    assert out["members"][0]["result"] == "not_added" and "limit" in out["members"][0]["error"]
-    refusal = HTTPException(status_code=403, detail="Only owners")
-    with patch.object(board_tools, "add_board_member", AsyncMock(side_effect=refusal)):
-        denied(await call(registry, "manage_board_members", {"board_uuid": "board_plan", "add": [{"member": "regular"}]}, ctx), "http_403")
-    with patch.object(board_tools, "remove_board_member", AsyncMock(side_effect=refusal)):
-        denied(await call(registry, "manage_board_members", {"board_uuid": "board_plan", "remove": ["admin"]}, ctx), "http_403")
-
-
-async def test_board_create_and_update_edges(registry, db, org, admin_user, board):
-    ctx = _ctx(db, org, admin_user)
-    denied(await call(registry, "create_board", {}, ctx), "invalid_args")
-    out = ok(await call(registry, "create_board", {"copy_from_board_uuid": "board_plan", "name": "Copy", "description": "Mine"}, ctx))
-    row = (await db.execute(select(Board).where(Board.board_uuid == out["board"]["uuid"]))).scalars().one()
-    assert (row.name, row.description, row.public) == ("Copy", "Mine", False)
-    denied(await call(registry, "update_board", {"board_uuid": "board_plan"}, ctx), "http_400")
 
 
 # ─── communities ─────────────────────────────────────────────────────────────

@@ -1,19 +1,6 @@
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
-import {
-  CalendarClock,
-  Check,
-  Globe,
-  Hexagon,
-  Loader2,
-  Lock,
-  MoreHorizontal,
-  MoreVertical,
-  Pencil,
-  Save,
-  Trash2,
-} from 'lucide-react'
-import AtlasAttachButton from '@ee/components/Atlas/AtlasAttachButton'
+import { CalendarCheck, Globe, CircleNotch, Lock, PencilSimple, Trash } from '@phosphor-icons/react'
+import { AtlasItemMenu } from '@ee/components/Atlas/CourseAtlas'
 import React from 'react'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import ActivityElement from './ActivityElement'
@@ -39,6 +26,12 @@ import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { normalizeRule } from '@/lib/drip'
+import { SelectBox } from '../../courseEditorUi'
+import { ConfirmDialog } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { useRenameDraft } from '../useRenameDraft'
+import { InlineNameEditor } from './InlineNameEditor'
+import { ChapterEmojiButton } from './ChapterEmojiButton'
+import { getChapterEmoji } from '@components/Objects/Courses/ChapterEmoji/ChapterEmoji'
 
 type ChapterElementProps = {
   chapter: any
@@ -50,22 +43,18 @@ type ChapterElementProps = {
   autoOpenNewActivity?: boolean
 }
 
-interface ModifiedChapterInterface {
-  chapterId: string
-  chapterName: string
-}
-
 function ChapterElement(props: ChapterElementProps) {
   const { t, i18n } = useTranslation()
   const activities = props.chapter.activities || []
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-  const [modifiedChapter, setModifiedChapter] = React.useState<
-    ModifiedChapterInterface | undefined
-  >(undefined)
-  const [selectedChapter, setSelectedChapter] = React.useState<
-    string | undefined
-  >(undefined)
+  const [isRenaming, setIsRenaming] = React.useState(false)
+  const [confirmDelete, setConfirmDelete] = React.useState(false)
+  const [confirmBulkDelete, setConfirmBulkDelete] = React.useState(false)
+  const renames = useRenameDraft()
+  const chapterName = renames.chapterName(props.chapter.id, props.chapter.name)
+  const savedEmoji = getChapterEmoji(props.chapter)
+  const chapterEmoji = renames.chapterEmoji(props.chapter.id, savedEmoji)
   const course = useCourse() as any;
   const dispatchCourse = useCourseDispatch() as any;
   const _withUnpublishedActivities = course ? course.withUnpublishedActivities : false
@@ -107,8 +96,8 @@ function ChapterElement(props: ChapterElementProps) {
         activities: ch.activities.map(updater).filter(Boolean),
       })),
     }
-    dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
-    dispatchCourse({ type: 'setIsSaved' })
+    // Server-confirmed: patch without touching other unsaved edits.
+    dispatchCourse({ type: 'patchStructure', payload: { chapters: updatedStructure.chapters } })
   }
 
   const bulkUpdatePublished = async (published: boolean) => {
@@ -180,19 +169,6 @@ function ChapterElement(props: ChapterElementProps) {
     router.refresh()
   }
 
-  async function updateChapterName(chapterId: string) {
-    if (modifiedChapter?.chapterId === chapterId) {
-      let modifiedChapterCopy = {
-        name: modifiedChapter.chapterName,
-      }
-      await updateChapter(chapterId, modifiedChapterCopy, access_token)
-      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
-      await revalidateTags(['courses'], props.orgslug)
-      router.refresh()
-    }
-    setSelectedChapter(undefined)
-  }
-
   // Short label for this chapter's drip rule when the course drips content.
   const dripRule = normalizeRule(props.chapter.drip_rule)
   const dripSummary = course?.courseStructure?.drip_settings?.enabled
@@ -212,8 +188,7 @@ function ChapterElement(props: ChapterElementProps) {
           ch.chapter_uuid === props.chapter.chapter_uuid ? { ...ch, lock_type: next } : ch
         ),
       }
-      dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
-      dispatchCourse({ type: 'setIsSaved' })
+      dispatchCourse({ type: 'patchStructure', payload: { chapters: updatedStructure.chapters } })
       toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
       await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       revalidateTags(['courses'], props.orgslug)
@@ -235,6 +210,9 @@ function ChapterElement(props: ChapterElementProps) {
     await removeUserGroupFromChapter(props.chapter.chapter_uuid, usergroup_uuid, access_token)
   }
 
+  const bulkBtn =
+    'h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap'
+
   return (
     <Draggable
       key={props.chapter.chapter_uuid}
@@ -243,86 +221,75 @@ function ChapterElement(props: ChapterElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className={`mx-2 sm:mx-4 md:mx-6 lg:mx-10 bg-white rounded-xl nice-shadow px-3 sm:px-4 md:px-6 pt-4 sm:pt-6 ${
-            snapshot.isDragging ? 'shadow-xl ring-2 ring-blue-500/20 rotate-1' : ''
+          className={`bg-white rounded-2xl nice-shadow ${
+            snapshot.isDragging ? 'shadow-xl ring-2 ring-neutral-900/10' : ''
           }`}
           key={props.chapter.chapter_uuid}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           ref={provided.innerRef}
         >
-          <div className="flex flex-wrap items-center justify-between pb-3">
-            <div className="flex grow items-center space-x-2 mb-2 sm:mb-0">
-              <div className="bg-neutral-100 rounded-md p-2">
-                <Hexagon
-                  strokeWidth={3}
-                  size={16}
-                  className="text-neutral-600"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                {selectedChapter === props.chapter.id ? (
-                  <div className="chapter-modification-zone bg-neutral-100 py-1 px-2 sm:px-4 rounded-lg flex items-center space-x-2">
-                    <input
-                      type="text"
-                      className="bg-transparent outline-hidden text-sm text-neutral-700 w-full max-w-[150px] sm:max-w-none"
-                      placeholder={t('dashboard.courses.structure.chapter_element.chapter_name_placeholder')}
-                      value={
-                        modifiedChapter
-                          ? modifiedChapter?.chapterName
-                          : props.chapter.name
-                      }
-                      onChange={(e) =>
-                        setModifiedChapter({
-                          chapterId: props.chapter.id,
-                          chapterName: e.target.value,
-                        })
-                      }
-                    />
-                    <ToolTip content={t('dashboard.courses.structure.actions.save_name', { defaultValue: 'Save name' })} side="top">
+          <div className="group flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 pt-4 sm:pt-5 pb-3">
+            <div className="flex grow items-center gap-3 min-w-0">
+              {/* Staged like a rename: the header Save sends it. */}
+              <ChapterEmojiButton
+                emoji={chapterEmoji}
+                onChange={(emoji) => renames.setChapterEmoji(props.chapter.id, emoji, savedEmoji)}
+              />
+              <div className="min-w-0 grow">
+                {isRenaming ? (
+                  <InlineNameEditor
+                    initial={chapterName}
+                    placeholder={t('dashboard.courses.structure.chapter_element.chapter_name_placeholder')}
+                    onCommit={(name) => {
+                      renames.renameChapter(props.chapter.id, name, props.chapter.name)
+                      setIsRenaming(false)
+                    }}
+                    onCancel={() => setIsRenaming(false)}
+                    className="max-w-md text-base font-semibold"
+                  />
+                ) : (
+                  <div className="flex items-center gap-1 min-w-0">
+                    <h3
+                      className="text-base font-semibold text-neutral-900 truncate cursor-text"
+                      onDoubleClick={() => setIsRenaming(true)}
+                    >
+                      {chapterName}
+                    </h3>
+                    {renames.isChapterRenamed(props.chapter.id) && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"
+                        title={t('dashboard.courses.save.unsaved')}
+                        aria-label={t('dashboard.courses.save.unsaved')}
+                      />
+                    )}
+                    <ToolTip content={t('dashboard.courses.structure.actions.rename_chapter', { defaultValue: 'Rename chapter' })} side="top">
                       <button
-                        onClick={() => updateChapterName(props.chapter.id)}
-                        className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900"
+                        type="button"
+                        onClick={() => setIsRenaming(true)}
+                        aria-label={t('dashboard.courses.structure.actions.rename_chapter', { defaultValue: 'Rename chapter' })}
+                        className="h-7 w-7 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 shrink-0"
                       >
-                        <Save size={15} />
+                        <PencilSimple size={14} />
                       </button>
                     </ToolTip>
                   </div>
-                ) : (
-                  <p className="text-neutral-700 text-sm sm:text-base">
-                    {props.chapter.name}
-                  </p>
                 )}
-                <ToolTip content={t('dashboard.courses.structure.actions.rename_chapter', { defaultValue: 'Rename chapter' })} side="top">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedChapter(props.chapter.id)}
-                    className="text-neutral-600 hover:cursor-pointer"
-                  >
-                    <Pencil size={15} />
-                  </button>
-                </ToolTip>
-                <AtlasAttachButton
-                  reference={{
-                    type: 'chapter',
-                    uuid: props.chapter.chapter_uuid,
-                    name: props.chapter.name,
-                    parent_course_uuid: props.course_uuid,
-                    parent_chapter_id: props.chapter.id,
-                    parent_chapter_name: props.chapter.name,
-                  }}
-                />
+                <p className="text-xs text-neutral-400 tabular-nums">
+                  {t('dashboard.courses.editor.content.activity_count', { count: activities.length })}
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-1.5">
+              <AtlasItemMenu chapter={{ uuid: props.chapter.chapter_uuid, name: chapterName, id: props.chapter.id }} />
               {dripSummary && (
                 <ToolTip content={t('dashboard.courses.structure.chapter_element.drip_tooltip', 'Release schedule: edit it in the Schedule tab')} side="top">
                   <Link
                     href={getUriWithOrg(props.orgslug, '') + `/dash/courses/course/${cleanCourseUuid(props.course_uuid)}/schedule`}
                     data-testid="chapter-drip-chip"
-                    className="flex items-center gap-1 h-7 px-2 rounded-md bg-amber-50 text-amber-700 ring-1 ring-amber-200 text-xs font-semibold hover:bg-amber-100"
+                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 transition-colors"
                   >
-                    <CalendarClock size={13} />
+                    <CalendarCheck size={12} />
                     {dripSummary}
                   </Link>
                 </ToolTip>
@@ -336,81 +303,71 @@ function ChapterElement(props: ChapterElementProps) {
                 resourceNoun="chapter"
                 paid={{ courseUuid: props.course_uuid, resourceUuid: props.chapter.chapter_uuid, resourceName: props.chapter.name }}
               />
-              <MoreVertical size={15} className="text-gray-300" />
-              <ConfirmationModal
-                confirmationButtonText={t('dashboard.courses.structure.modals.delete_chapter.button')}
-                confirmationMessage={t('dashboard.courses.structure.modals.delete_chapter.message')}
-                dialogTitle={t('dashboard.courses.structure.modals.delete_chapter.title', { name: props.chapter.name })}
-                dialogTrigger={
-                  <button
-                    className="hover:cursor-pointer p-1 px-2 sm:px-3 bg-red-600 rounded-md shadow-sm flex items-center text-rose-100 text-sm"
-                    rel="noopener noreferrer"
-                  >
-                    <Trash2 size={15} className="text-rose-200" />
-                  </button>
-                }
-                functionToExecute={() => deleteChapterUI()}
-                status="warning"
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                aria-label={t('dashboard.courses.structure.modals.delete_chapter.button')}
+                title={t('dashboard.courses.structure.modals.delete_chapter.button')}
+                className="h-8 w-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              >
+                <Trash size={15} />
+              </button>
+              <ConfirmDialog
+                open={confirmDelete}
+                onOpenChange={setConfirmDelete}
+                title={t('dashboard.courses.structure.modals.delete_chapter.title', { name: chapterName })}
+                message={t('dashboard.courses.structure.modals.delete_chapter.message')}
+                confirmLabel={t('dashboard.courses.structure.modals.delete_chapter.button')}
+                onConfirm={deleteChapterUI}
               />
             </div>
           </div>
 
           {/* Bulk action bar */}
           {hasSelection && (
-            <div className="flex items-center gap-2 px-3 py-2 mb-2 bg-blue-50 rounded-lg border border-blue-200 animate-in fade-in duration-150">
-              <button
-                onClick={toggleSelectAll}
-                className={`h-5 w-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                  allSelected
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'border-blue-400 bg-white hover:border-blue-500'
-                }`}
-              >
-                {allSelected && <Check size={12} strokeWidth={3} />}
-              </button>
-              <span className="text-xs font-medium text-blue-700">
+            <div className="mx-3 sm:mx-4 mb-2 flex flex-wrap items-center gap-2 rounded-xl bg-neutral-900 text-white ps-3 pe-1.5 py-1.5 animate-in fade-in duration-150">
+              <SelectBox inverse checked={allSelected} onClick={toggleSelectAll} />
+              <span className="text-xs font-semibold tabular-nums">
                 {t('dashboard.courses.structure.bulk_actions.selected', { count: selectedActivities.size })}
               </span>
               <div className="flex-1" />
               {isBulkLoading ? (
-                <Loader2 size={16} className="animate-spin text-blue-500" />
+                <CircleNotch size={16} className="animate-spin text-white/70 me-2" />
               ) : (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-0.5">
                   <ToolTip content={t('dashboard.courses.structure.bulk_actions.publish_tooltip', { defaultValue: 'Publish selected' })} side="top">
                     <button
+                      type="button"
                       onClick={() => bulkUpdatePublished(true)}
-                      className="h-7 px-2.5 rounded-md text-xs font-bold flex items-center gap-1 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors"
+                      className={`${bulkBtn} text-white/80 hover:text-white hover:bg-white/10`}
                     >
-                      <Globe size={12} />
+                      <Globe size={13} />
                       <span className="hidden sm:inline">{t('dashboard.courses.structure.actions.publish')}</span>
                     </button>
                   </ToolTip>
                   <ToolTip content={t('dashboard.courses.structure.bulk_actions.unpublish_tooltip', { defaultValue: 'Unpublish selected' })} side="top">
                     <button
+                      type="button"
                       onClick={() => bulkUpdatePublished(false)}
-                      className="h-7 px-2.5 rounded-md text-xs font-bold flex items-center gap-1 bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
+                      className={`${bulkBtn} text-white/80 hover:text-white hover:bg-white/10`}
                     >
-                      <Lock size={12} />
+                      <Lock size={13} />
                       <span className="hidden sm:inline">{t('dashboard.courses.structure.actions.unpublish')}</span>
                     </button>
                   </ToolTip>
-                  <ConfirmationModal
-                    confirmationMessage={t('dashboard.courses.structure.bulk_actions.delete_confirm', { count: selectedActivities.size })}
-                    confirmationButtonText={t('dashboard.courses.structure.bulk_actions.delete_button')}
-                    dialogTitle={t('dashboard.courses.structure.bulk_actions.delete_title')}
-                    dialogTrigger={
-                      <button className="h-7 px-2.5 rounded-md text-xs font-bold flex items-center gap-1 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors">
-                        <Trash2 size={12} />
-                        <span className="hidden sm:inline">{t('dashboard.courses.structure.bulk_actions.delete')}</span>
-                      </button>
-                    }
-                    functionToExecute={bulkDelete}
-                    status="warning"
-                  />
-                  <div className="w-px h-5 bg-blue-200 mx-0.5" />
                   <button
+                    type="button"
+                    onClick={() => setConfirmBulkDelete(true)}
+                    className={`${bulkBtn} text-rose-300 hover:text-white hover:bg-rose-500/80`}
+                  >
+                    <Trash size={13} />
+                    <span className="hidden sm:inline">{t('dashboard.courses.structure.bulk_actions.delete')}</span>
+                  </button>
+                  <span className="w-px h-5 bg-white/15 mx-1" />
+                  <button
+                    type="button"
                     onClick={clearSelection}
-                    className="h-7 px-2 rounded-md text-xs text-blue-600 hover:bg-blue-100 transition-colors"
+                    className={`${bulkBtn} text-white/60 hover:text-white hover:bg-white/10`}
                   >
                     {t('dashboard.courses.structure.bulk_actions.clear')}
                   </button>
@@ -418,6 +375,15 @@ function ChapterElement(props: ChapterElementProps) {
               )}
             </div>
           )}
+
+          <ConfirmDialog
+            open={confirmBulkDelete}
+            onOpenChange={setConfirmBulkDelete}
+            title={t('dashboard.courses.structure.bulk_actions.delete_title')}
+            message={t('dashboard.courses.structure.bulk_actions.delete_confirm', { count: selectedActivities.size })}
+            confirmLabel={t('dashboard.courses.structure.bulk_actions.delete_button')}
+            onConfirm={bulkDelete}
+          />
 
           <Droppable
             key={props.chapter.chapter_uuid}
@@ -428,8 +394,8 @@ function ChapterElement(props: ChapterElementProps) {
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className={`min-h-[60px] rounded-lg transition-colors duration-75 ${
-                  snapshot.isDraggingOver ? 'bg-blue-50/50' : ''
+                className={`mx-3 sm:mx-4 min-h-[48px] rounded-xl transition-colors duration-75 ${
+                  snapshot.isDraggingOver ? 'bg-neutral-100/70' : ''
                 }`}
               >
                 {activities.map((activity: any, index: any) => (
@@ -438,7 +404,7 @@ function ChapterElement(props: ChapterElementProps) {
                     orgslug={props.orgslug}
                     course_uuid={props.course_uuid}
                     chapter_id={props.chapter.id}
-                    chapter_name={props.chapter.name}
+                    chapter_name={chapterName}
                     activityIndex={index}
                     activity={activity}
                     isSelected={selectedActivities.has(activity.activity_uuid)}
@@ -450,15 +416,12 @@ function ChapterElement(props: ChapterElementProps) {
               </div>
             )}
           </Droppable>
-          <NewActivityButton
-            orgslug={props.orgslug}
-            chapterId={props.chapter.id}
-            autoOpen={props.autoOpenNewActivity}
-          />
-          <div className="h-6">
-            <div className="flex items-center">
-              <MoreHorizontal size={19} className="text-gray-300 mx-auto" />
-            </div>
+          <div className="px-3 sm:px-4 pt-1 pb-4">
+            <NewActivityButton
+              orgslug={props.orgslug}
+              chapterId={props.chapter.id}
+              autoOpen={props.autoOpenNewActivity}
+            />
           </div>
         </div>
       )}
