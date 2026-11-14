@@ -63,3 +63,7 @@ React and React DOM come with this package (about 67 KB gzipped) and load lazily
 - One LearnHouse instance per page, as with `@learnhouse/react`: media URLs follow the most recently mounted `base-url`.
 
 Docs: https://docs.learnhouse.app/developers/vue
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
