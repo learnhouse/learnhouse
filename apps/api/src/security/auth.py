@@ -15,6 +15,7 @@ from jwt.exceptions import PyJWTError
 from datetime import datetime, timedelta, timezone
 from src.services.users.users import security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY, security_hash_password
+from src.security.embed_session import enforce_embed_scope
 from src.security.impersonation import (
     CODE_DENIED as IMPERSONATION_CODE_DENIED,
     CODE_ENDED as IMPERSONATION_CODE_ENDED,
@@ -30,6 +31,7 @@ from src.security.impersonation import (
 from src.security.session_context import (
     AMR_CLAIM,
     AUTH_METHOD_API_TOKEN,
+    AUTH_METHOD_EMBED,
     AUTH_METHOD_IMPERSONATION,
     CUSTOM_DOMAIN_CLAIM,
     LEGACY_GRACE_CLAIM,
@@ -777,6 +779,12 @@ async def _resolve_current_user(
             token_type = payload.get("type")
             if token_type is not None and token_type != "access":
                 raise credentials_exception
+
+            # An embed session (minted by a host app for the embed components)
+            # only reaches the embed routes, inside its own org. Checked before
+            # anything else so a refused request never touches the database.
+            if payload.get(AMR_CLAIM) == AUTH_METHOD_EMBED:
+                enforce_embed_scope(request, payload.get(SORG_CLAIM))
 
             username = payload.get("sub")
 

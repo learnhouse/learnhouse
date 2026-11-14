@@ -1,7 +1,20 @@
 {
   "index": "Overview",
+  "-- Build": {
+    "type": "separator",
+    "title": "Build on LearnHouse"
+  },
+  "embed": "Embed",
+  "react": "React Component",
+  "vue": "Vue Component",
+  "sdk": "JavaScript SDK",
+  "api": "REST API",
+  "versioning": "Versions & Releases",
+  "-- Internals": {
+    "type": "separator",
+    "title": "Inside LearnHouse"
+  },
   "architecture": "Architecture",
   "contributing": "Contributing",
-  "api": "API Reference",
   "migration": "Migration"
 }

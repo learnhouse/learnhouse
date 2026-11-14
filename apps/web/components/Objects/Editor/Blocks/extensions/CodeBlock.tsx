@@ -8,7 +8,8 @@
  when the author set one.
 */
 import React from 'react'
-import { NodeViewContent, NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
+import { NodeViewContent, NodeViewProps, NodeViewWrapper } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { Check, Copy, FileCode } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
@@ -136,7 +137,7 @@ export const LHCodeBlock = CodeBlockLowlight.extend({
     }
   },
   addNodeView() {
-    return ReactNodeViewRenderer(CodeBlockView)
+    return lhNodeView(CodeBlockView)
   },
 })
 

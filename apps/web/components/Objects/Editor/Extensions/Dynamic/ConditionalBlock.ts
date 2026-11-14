@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import ConditionalBlockComponent from './ConditionalBlockComponent'
 import { DEFAULT_RULES, RuleGroup, negateRules } from './dynamicRules'
 
@@ -116,6 +116,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ConditionalBlockComponent)
+    return lhNodeView(ConditionalBlockComponent)
   },
 })

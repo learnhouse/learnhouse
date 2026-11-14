@@ -1,11 +1,10 @@
 'use client'
 
-import React, { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'next/navigation'
 import { getLEARNHOUSE_DOMAIN_VAL, getLEARNHOUSE_HTTP_PROTOCOL_VAL } from '@services/config/config'
 import Image from 'next/image'
-import { CourseContext, CourseDispatchContext } from '@components/Contexts/CourseContext'
 import { useActivity } from '@/hooks/queries/useActivity'
 import { useCourseMeta } from '@/hooks/queries/useCourses'
 import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
@@ -13,46 +12,16 @@ import { useContentLanguage } from '@/hooks/useContentLanguage'
 import { TranslationFallbackNotice, contentLangProps } from '@components/Objects/Courses/ContentLanguage/ContentLanguage'
 import { servedLocale, showsTranslationFallback } from '@/lib/contentLanguage'
 import { normalizeRequest } from '@components/Objects/Activities/BlockTheme/blockTheme'
-
-const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
-const VideoActivity = lazy(() => import('@components/Objects/Activities/Video/Video'))
-const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/DocumentPdf/DocumentPdf'))
-const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
-const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
-
-// Minimal course context for embed: courseStructure must be populated
-// so that block components (Image, Video, Audio, PDF) can resolve media URLs.
-function EmbedCourseProvider({ children, course }: { children: React.ReactNode; course: any }) {
-  const minimalState = {
-    courseStructure: course,
-    courseOrder: null,
-    pendingChanges: {},
-    unsyncedChanges: {},
-    isSaved: true,
-    isLoading: false,
-    isSaving: false,
-    saveError: null,
-    withUnpublishedActivities: false,
-    lastSyncedAt: null,
-  }
-
-  return (
-    <CourseContext.Provider value={minimalState}>
-      <CourseDispatchContext.Provider value={() => {}}>
-        {children}
-      </CourseDispatchContext.Provider>
-    </CourseContext.Provider>
-  )
-}
+import ActivityRenderer, { RENDERABLE_ACTIVITY_TYPES } from '@components/Objects/Activities/ActivityRenderer/ActivityRenderer'
+import { parseEmbedOptions } from '@/lib/embed/protocol'
+import { SUPPORTED_LANGUAGES } from '@/lib/i18n'
+import { useEmbedBridge, useEmbedUnavailable } from './useEmbedBridge'
 
 interface EmbedActivityClientProps {
   activityId: string
   courseuuid: string
   orgslug: string
-  bgcolor: string | null
 }
-
-const EMBEDDABLE_TYPES = ['TYPE_DYNAMIC', 'TYPE_VIDEO', 'TYPE_DOCUMENT']
 
 // Returns a selector for the DOM element that signals content is ready.
 function getReadySelector(activityType: string, activitySubType?: string): string {
@@ -123,12 +92,13 @@ function useContentReady(activityType: string, activitySubType?: string) {
   return { ready, containerRef }
 }
 
-function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: EmbedActivityClientProps) {
+function EmbedActivityClient({ activityId, courseuuid, orgslug }: EmbedActivityClientProps) {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
+  const options = parseEmbedOptions(searchParams, SUPPORTED_LANGUAGES)
   const showBranding = useShowLearnHouseBranding()
-  const showLearnHouseLogo = showBranding && searchParams.get('showlearnhouselogo') !== 'false'
-  const textColor = searchParams.get('textcolor')
+  const showLearnHouseLogo = showBranding && options.showLogo
+  const endRef = useRef<HTMLDivElement>(null)
   // ?theme=light|dark forces the block theme; anything else follows bgcolor.
   const blockTheme = normalizeRequest(searchParams.get('theme'))
 
@@ -144,6 +114,17 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
     activity?.activity_type ?? '',
     activity?.activity_sub_type,
   )
+  useEmbedBridge({ activityId, ready, containerRef, endRef })
+
+  const unavailable =
+    !isLoading &&
+    (!activity ||
+      activity.detail === 'Not Found' ||
+      !course ||
+      course.detail === 'Not Found' ||
+      !activity.published ||
+      !RENDERABLE_ACTIVITY_TYPES.includes(activity.activity_type))
+  useEmbedUnavailable(activityId, unavailable)
 
   const getActivityUrl = () => {
     const cleanCourseUuid = (course?.course_uuid ?? courseuuid).replace('course_', '')
@@ -172,7 +153,7 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
     return null
   }
 
-  const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
+  const isEmbeddable = RENDERABLE_ACTIVITY_TYPES.includes(activity.activity_type)
 
   if (!isEmbeddable) {
     return (
@@ -212,55 +193,14 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
   const defaultBg = activity.activity_type === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
 
   const customStyles: React.CSSProperties = {
-    backgroundColor: bgcolor ?? defaultBg,
+    backgroundColor: options.bgcolor ?? defaultBg,
     // Prevent browser auto-dark-mode from inverting text inside the embed container
     colorScheme: 'light',
-    ...(textColor
-      ? { color: `#${textColor}` }
+    ...(options.textcolor
+      ? { color: options.textcolor }
       : activity.activity_type === 'TYPE_DYNAMIC'
         ? { color: '#000000' }
         : {}),
-  }
-
-  const renderActivityContent = () => {
-    switch (activity.activity_type) {
-      case 'TYPE_DYNAMIC':
-        if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_MARKDOWN') {
-          return (
-            <Suspense fallback={null}>
-              <MarkdownActivity activity={activity} style={customStyles} />
-            </Suspense>
-          )
-        }
-        if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_EMBED') {
-          return (
-            <Suspense fallback={null}>
-              <EmbedActivity activity={activity} style={customStyles} />
-            </Suspense>
-          )
-        }
-        return (
-          <EmbedCourseProvider course={course}>
-            <Suspense fallback={null}>
-              <Canva content={activity.content} activity={activity} hideTableOfContents courseUuid={course?.course_uuid} orgUuid={course?.org_uuid} theme={blockTheme} />
-            </Suspense>
-          </EmbedCourseProvider>
-        )
-      case 'TYPE_VIDEO':
-        return (
-          <Suspense fallback={null}>
-            <VideoActivity activity={activity} course={course} />
-          </Suspense>
-        )
-      case 'TYPE_DOCUMENT':
-        return (
-          <Suspense fallback={null}>
-            <DocumentPdfActivity activity={activity} course={course} />
-          </Suspense>
-        )
-      default:
-        return null
-    }
   }
 
   return (
@@ -276,7 +216,9 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
         {showsTranslationFallback(activity, course) && (
           <TranslationFallbackNotice locale={servedLocale(course)} className="m-3" />
         )}
-        {renderActivityContent()}
+        <ActivityRenderer activity={activity} course={course} style={customStyles} theme={blockTheme} />
+        {/* Reaching this marks the activity complete for the host page. */}
+        <div ref={endRef} aria-hidden style={{ height: 1 }} />
       </div>
       {showLearnHouseLogo && ready && <PoweredByBadge activityUrl={getActivityUrl()} />}
     </div>

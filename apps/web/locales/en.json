@@ -3652,7 +3652,8 @@
     "your_score": "Your score",
     "awaiting_grade_body": "Your work is with your teacher. Your score will show here once it's graded.",
     "tasks_count_one": "{{count}} task",
-    "tasks_count_other": "{{count}} tasks"
+    "tasks_count_other": "{{count}} tasks",
+    "not_available": "This assignment is not available."
   },
   "certificate": {
     "certificate": "Certificate",

@@ -224,9 +224,16 @@ class TestCommunitiesRouter:
             response = await client.get("/api/v1/discussions/d1/reactions")
         assert response.status_code == 200
 
-        with patch("src.routers.communities.discussions.toggle_reaction", new_callable=AsyncMock, return_value={"toggled": True}):
+        with patch("src.routers.communities.discussions.toggle_reaction", new_callable=AsyncMock, return_value={"toggled": True}) as toggle:
             response = await client.post("/api/v1/discussions/d1/reactions", json={"emoji": "👍"})
         assert response.status_code == 200
+        assert toggle.await_args.kwargs == {"active": None}
+
+        with patch("src.routers.communities.discussions.toggle_reaction", new_callable=AsyncMock, return_value={"action": "added", "emoji": "👍"}) as toggle:
+            response = await client.post("/api/v1/discussions/d1/reactions", json={"emoji": "👍", "active": True})
+        assert response.status_code == 200
+        assert toggle.await_args.args[2] == "👍"
+        assert toggle.await_args.kwargs == {"active": True}
 
     async def test_activity_summary_and_answer_endpoints(self, client):
         activity = [{"community_uuid": "community_test", "discussion_count": 2, "unanswered_count": 1, "last_activity_date": "2024-01-02"}]

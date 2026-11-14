@@ -3657,7 +3657,8 @@
     "tasks_count_one": "{{count}} कार्य",
     "tasks_count_other": "{{count}} कार्य",
     "ai_graded_badge": "AI से ग्रेड किया गया",
-    "ai_graded_hint": "आपके शिक्षक के AI सहायक ने उनके निर्देशों के आधार पर इस काम को ग्रेड किया है।"
+    "ai_graded_hint": "आपके शिक्षक के AI सहायक ने उनके निर्देशों के आधार पर इस काम को ग्रेड किया है।",
+    "not_available": "यह असाइनमेंट उपलब्ध नहीं है।"
   },
   "certificate": {
     "certificate": "प्रमाणपत्र",

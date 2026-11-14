@@ -3657,7 +3657,8 @@
     "tasks_count_one": "{{count}} taak",
     "tasks_count_other": "{{count}} taken",
     "ai_graded_badge": "Beoordeeld met AI",
-    "ai_graded_hint": "De AI-assistent van je docent heeft dit werk beoordeeld op basis van diens instructies."
+    "ai_graded_hint": "De AI-assistent van je docent heeft dit werk beoordeeld op basis van diens instructies.",
+    "not_available": "Deze opdracht is niet beschikbaar."
   },
   "certificate": {
     "certificate": "Certificaat",

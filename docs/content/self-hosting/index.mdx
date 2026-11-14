@@ -1,4 +1,8 @@
-import { Callout } from 'nextra/components'
+---
+description: Self-host LearnHouse on your own server with the LearnHouse CLI. Install it with one command, then configure, update, back up and monitor it.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Self-Hosting LearnHouse
 
@@ -6,7 +10,7 @@ LearnHouse can be self-hosted on your own infrastructure using the **LearnHouse 
 
 ## Quick Start
 
-Make sure you have **Docker** with the Compose v2 plugin and **Node.js 22+** installed, then run:
+Make sure you have **Docker** with the Compose v2 plugin and **Node.js 22+** installed (see [Requirements](/self-hosting/installation/requirements)), then run:
 
 ```bash
 npx learnhouse@latest setup
@@ -18,7 +22,7 @@ The interactive setup wizard walks you through domain configuration, database se
 npx learnhouse start
 ```
 
-LearnHouse is available at **http://localhost** (or your configured domain). Log in with the admin credentials you provided during setup.
+LearnHouse is available at **http://localhost** (or your configured domain). Log in with the admin credentials you provided during setup. [Quick Install](/self-hosting/installation/quick-install) covers the one-line installers, non-interactive setup and checks.
 
 <Callout type="info">
 The CLI generates `docker-compose.yml`, `.env`, and reverse proxy configuration for you. You do not need to write or maintain these files manually.
@@ -46,7 +50,7 @@ npx learnhouse doctor     # Diagnose issues
 
 ### [Installation](/self-hosting/installation)
 
-System requirements, quick install steps, and the full CLI command reference.
+System requirements and quick install steps. Every CLI command and flag is in the [CLI reference](/cli/commands).
 
 ### [Configuration](/self-hosting/configuration)
 

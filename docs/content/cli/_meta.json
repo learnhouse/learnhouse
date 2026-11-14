@@ -3,5 +3,5 @@
   "commands": "Commands",
   "setup-wizard": "Setup Wizard",
   "dev-mode": "Dev Mode",
-  "environment-variables": "Environment Variables"
+  "environment-variables": "CLI Environment Variables"
 }

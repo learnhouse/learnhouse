@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["vitest/globals"],
+    "paths": {
+      "@learnhouse/sdk": ["../sdk/src/index.ts"],
+      "@components/*": ["../../apps/web/components/*"],
+      "@services/*": ["../../apps/web/services/*"],
+      "@lib/*": ["../../apps/web/lib/*"],
+      "@/*": ["../../apps/web/*"]
+    }
+  },
+  "include": ["src", "tests"]
+}

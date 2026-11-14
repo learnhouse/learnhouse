@@ -1,4 +1,9 @@
-import { Callout } from 'nextra/components'
+---
+title: Live Sessions
+description: Schedule LearnHouse live sessions in LearnHouse Meet, Google Meet, Zoom or any link, with chat, Q&A, polls, attendance, recordings and self-hosted setup.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Live Sessions
 
@@ -8,6 +13,7 @@ Live sessions let you schedule classes, office hours and events with chat, Q&A, 
 
 <Callout>
 Live sessions are included from the Pro plan on LearnHouse Cloud. Self-hosted, they need an [Enterprise license](/enterprise). An admin also has to turn them on under **Live sessions** → **Settings**.
+<PlanCta plan="Pro" />
 </Callout>
 
 ## Where to find them
@@ -43,9 +49,9 @@ Organization admins can schedule a session from either page. People who can edit
 
 Admins set the default under **Live sessions** → **Settings** → **Defaults**. Leave **Capacity** empty for no limit. When it is set, the session page shows how many spots are taken.
 
-### In the room
+### Room options
 
-These switches decide what the room offers. Each one can be changed per session.
+The **In the room** switches decide what the room offers. Each one can be changed per session.
 
 | Setting | What it does |
 | --- | --- |
@@ -178,10 +184,10 @@ On LearnHouse Cloud, everything below is already set up. The rest of this page i
 
 ### LearnHouse Meet
 
-LearnHouse Meet is the built-in video room. Its media server ships with the Enterprise package as `apps/meet`, a [LiveKit](https://livekit.io) server you run once for the whole instance. Organizations never see or configure it.
+LearnHouse Meet is the built-in video room. Its media server ships with the Enterprise package: a [LiveKit](https://livekit.io) server, with its own Docker Compose file and `.env.example`, that you run once for the whole instance. Organizations never see or configure it.
 
 ```bash
-cd apps/meet
+# In the Meet folder of the Enterprise package
 cp .env.example .env    # API key/secret, TURN domain, optional recording storage
 docker compose up -d                      # video
 docker compose --profile recording up -d  # video + recording
@@ -192,7 +198,7 @@ Put TLS in front of port 7880 and open TCP 7881, UDP 3478, TCP 5349 and UDP 5000
 | Variable | Description |
 | --- | --- |
 | `LEARNHOUSE_MEET_URL` | Public websocket URL of the media server, for example `wss://meet.example.com`. |
-| `LEARNHOUSE_MEET_API_KEY` | API key from `apps/meet/.env`. |
+| `LEARNHOUSE_MEET_API_KEY` | API key from the Meet server's `.env`. |
 | `LEARNHOUSE_MEET_API_SECRET` | Matching secret. Signs room tokens and checks the media server's webhooks. |
 | `LEARNHOUSE_MEET_INTERNAL_URL` | Optional. How the API reaches the media server on a private network, for example `http://meet:7880`. |
 | `LEARNHOUSE_MEET_RECORDING` | `true` when the recorder runs. Gives hosts a record button. |

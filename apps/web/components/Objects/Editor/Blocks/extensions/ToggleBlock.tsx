@@ -11,7 +11,8 @@
 */
 import React from 'react'
 import { Node, mergeAttributes } from '@tiptap/core'
-import { NodeViewContent, NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
+import { NodeViewContent, NodeViewProps, NodeViewWrapper } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import { CaretRight, Trash } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -161,7 +162,7 @@ export const ToggleBlock = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ToggleBlockView)
+    return lhNodeView(ToggleBlockView)
   },
 })
 

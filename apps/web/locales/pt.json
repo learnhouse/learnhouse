@@ -3720,7 +3720,8 @@
     "tasks_count_many": "{{count}} tarefas",
     "tasks_count_other": "{{count}} tarefas",
     "ai_graded_badge": "Avaliado com IA",
-    "ai_graded_hint": "O assistente de IA do seu professor avaliou este trabalho com base nas instruções dele."
+    "ai_graded_hint": "O assistente de IA do seu professor avaliou este trabalho com base nas instruções dele.",
+    "not_available": "Esta tarefa não está disponível."
   },
   "certificate": {
     "certificate": "Certificado",

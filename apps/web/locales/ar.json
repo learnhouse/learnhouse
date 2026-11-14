@@ -3941,7 +3941,8 @@
     "tasks_count_many": "{{count}} مهمة",
     "tasks_count_other": "{{count}} مهمة",
     "ai_graded_badge": "تم التقييم بالذكاء الاصطناعي",
-    "ai_graded_hint": "قام مساعد المعلّم الذكي بتقييم هذا العمل وفق تعليماته."
+    "ai_graded_hint": "قام مساعد المعلّم الذكي بتقييم هذا العمل وفق تعليماته.",
+    "not_available": "هذا الواجب غير متاح."
   },
   "certificate": {
     "certificate": "الشهادة",

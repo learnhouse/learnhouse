@@ -3799,7 +3799,8 @@
     "tasks_count_many": "{{count}} úlohy",
     "tasks_count_other": "{{count}} úloh",
     "ai_graded_badge": "Hodnotené pomocou AI",
-    "ai_graded_hint": "Asistent AI vášho učiteľa ohodnotil túto prácu podľa jeho pokynov."
+    "ai_graded_hint": "Asistent AI vášho učiteľa ohodnotil túto prácu podľa jeho pokynov.",
+    "not_available": "Toto zadanie nie je dostupné."
   },
   "certificate": {
     "certificate": "Certifikát",

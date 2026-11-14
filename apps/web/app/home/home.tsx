@@ -9,7 +9,7 @@ import { getAPIUrl, getUriWithOrg, getLEARNHOUSE_PLATFORM_URL_VAL } from '@servi
 import { apiFetch } from '@services/utils/ts/requests'
 import { signOut } from '@components/Contexts/AuthContext'
 import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
-import { deleteOrganizationFromBackend, leaveOrg } from '@services/organizations/orgs'
+import { deleteOrganization, leaveOrg } from '@services/organizations/orgs'
 import { ChevronRight, Languages, Check, LogOut, Settings, LogIn, Plus, MoreVertical, CreditCard, Trash2, AlertTriangle, LayoutDashboard, UserPlus } from 'lucide-react'
 import PendingInvites from '@components/Onboarding/PendingInvites'
 import { daysUntil } from '@/lib/onboarding'
@@ -349,7 +349,7 @@ function OrgRow({ org, access_token, info }: { org: any; access_token: string; i
     setError(null)
     track(AnalyticsEvent.OrgDeleteInitiated, { slug: org.slug })
     try {
-      await deleteOrganizationFromBackend(org.id, access_token)
+      await deleteOrganization(org.id, access_token)
       track(AnalyticsEvent.OrgDeleted, { slug: org.slug })
       await queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
       setConfirmOpen(false)

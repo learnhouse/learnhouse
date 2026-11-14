@@ -15,6 +15,7 @@ from src.db.trails import TrailRead
 from src.db.users import OrgMemberUserRead, UserRead
 from src.security.auth import get_current_user
 from src.services.admin.admin import (
+    issue_embed_session,
     _require_api_token,
     _resolve_org_slug,
     add_course_to_usergroup,
@@ -68,6 +69,26 @@ class TokenResponse(BaseModel):
     token_type: str = Field(default="bearer", description="Token type (always 'bearer')")
     user_id: int = Field(description="ID of the user the token was issued for")
     user_uuid: str = Field(description="UUID of the user")
+
+
+class EmbedSessionRequest(BaseModel):
+    """Request body for minting an embed session."""
+    user_id: int = Field(description="ID of the learner the session is for")
+    ttl_seconds: Optional[int] = Field(
+        default=None,
+        description="Lifetime in seconds, 60 to 3600. Defaults to 900 (15 minutes).",
+    )
+
+
+class EmbedSessionResponse(BaseModel):
+    """A short-lived learner session for the embed components."""
+    access_token: str = Field(description="Embed session token. Hand it to the browser; never the API token.")
+    token_type: str = Field(default="bearer", description="Token type (always 'bearer')")
+    expires_in: int = Field(description="Seconds until the session expires")
+    expires_at: int = Field(description="Unix time (seconds) the session expires at")
+    user_id: int = Field(description="ID of the learner")
+    user_uuid: str = Field(description="UUID of the learner")
+    org_id: int = Field(description="ID of the organization the session is held to")
 
 
 class CourseAccessResponse(BaseModel):
@@ -404,6 +425,38 @@ async def api_admin_issue_token(
     await _resolve_org_slug(org_slug, token_user, db_session)
     result = await issue_user_token(token_user, body.user_id, db_session)
     return TokenResponse(**result)
+
+
+@router.post(
+    "/{org_slug}/auth/embed-session",
+    response_model=EmbedSessionResponse,
+    summary="Mint an embed session",
+    description=(
+        "Mint a short-lived session for a learner, for the LearnHouse embed components "
+        "(@learnhouse/react, @learnhouse/vue) to act as that learner in a browser. "
+        "The session lasts 15 minutes by default (1 hour at most) and has no refresh token: "
+        "mint a new one when it expires. It only works inside this organization, only on the "
+        "routes the embed components use, and never on account settings. "
+        "Requires `users.action_update` permission. Privileged targets (org Admin/Maintainer, "
+        "platform superadmin) and accounts that belong to other organizations are refused."
+    ),
+    responses={
+        200: {"description": "Embed session minted for the learner.", "model": EmbedSessionResponse},
+        403: {"description": "API token lacks permission, target is privileged or shared, user not in org, or org_slug mismatch"},
+        404: {"description": "User or organization not found"},
+        422: {"description": "ttl_seconds out of range"},
+    },
+)
+async def api_admin_issue_embed_session(
+    org_slug: str,
+    body: EmbedSessionRequest,
+    current_user=Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> EmbedSessionResponse:
+    token_user = _require_api_token(current_user)
+    await _resolve_org_slug(org_slug, token_user, db_session)
+    result = await issue_embed_session(token_user, body.user_id, db_session, body.ttl_seconds)
+    return EmbedSessionResponse(**result)
 
 
 # ── Course access ────────────────────────────────────────────────────────────

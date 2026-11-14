@@ -1,16 +1,20 @@
-import { Callout } from 'nextra/components'
+---
+description: "Learn how LearnHouse analytics collects and stores learner activity, who can see it, and how to set retention and privacy for your organization."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Analytics
 
 LearnHouse records what learners do (page views, enrollments, completions, submissions and more) and turns it into dashboards for admins. There are three views:
 
-- **[Analytics dashboard](/platform/analytics/dashboard)**: organization-wide numbers under **Analytics** in the dashboard, with an **Overview** tab and an **Advanced** tab.
+- **[Analytics dashboard](/platform/analytics/dashboard)**: organization-wide numbers under **Analytics** in the dashboard, with **Overview**, **Features** and **Advanced** tabs.
 - **[Course analytics](/platform/analytics/course-analytics)**: the **Analytics** tab of a single course.
 - **[Learner analytics](/platform/users/learner-analytics)**: one learner's full record, opened from the **Users** list.
 
 ## Availability
 
-| Deployment | Overview tab | Course analytics | Learner analytics | Advanced tab |
+| Deployment | Overview and Features tabs | Course analytics | Learner analytics | Advanced tab |
 | --- | --- | --- | --- | --- |
 | LearnHouse Cloud | Standard plan and above | Pro plan and above | Pro plan and above | Enterprise plan |
 | Self-hosted, open source | No | No | No | No |
@@ -22,7 +26,7 @@ Analytics is part of the [Enterprise Edition](/enterprise). Open source instance
 
 Analytics runs inside the LearnHouse API and stores events in the main PostgreSQL database. Nothing is sent to a third-party analytics service.
 
-1. The web app sends browsing events (page, course and activity views, searches, podcast plays and more) in small batches to `POST /api/v1/signals/batch`. The path is neutral on purpose, so ad blockers don't drop learners from your numbers. Visitors who aren't signed in are counted for public events only; time spent, video progress and AI assistant use are only recorded for signed-in members. Only known event names and properties are accepted, and bots are ignored.
+1. The web app sends browsing events (page, course and activity views, searches, podcast plays and more) in small batches to `POST /api/v1/signals/batch`. The path is neutral on purpose, so ad blockers don't drop learners from your numbers. Visitors who aren't signed in are counted for public events only. Time spent, video progress and AI assistant use are only recorded for signed-in members. Only known event names and properties are accepted, and bots are ignored.
 2. The API records server-side events itself when something happens: enrollments, completions, assignment and quiz submissions, grading, sign-ups, logins, certificates, discussions, payments, live sessions, messages and more.
 3. A background job in the API refreshes daily summaries every 5 minutes and deletes events past the organization's retention period once a day.
 
@@ -38,16 +42,16 @@ Query results are cached in Redis to keep the dashboards fast: 1 minute for over
 
 ## Settings
 
-Admins can change how their organization's analytics are collected and kept, from the organization settings or through `GET`/`PUT /api/v1/analytics/settings`:
+Admins can change how their organization's analytics are collected and kept under **Organization** → **Analytics** (`/dash/org/settings/analytics`). The analytics dashboard header also shows how long data is kept, with a link to this tab. The same settings are available through `GET` and `PUT /api/v1/analytics/settings`.
 
 | Setting | What it does |
 | --- | --- |
-| **Retention** | How long events are kept: 90 days, 180 days or 1 year (the default). On the Enterprise plan: 2, 3, 5 or 7 years. Shortening it deletes older data at the next nightly cleanup. |
-| **Anonymous visitors** | Count visitors who aren't signed in. On by default. |
-| **Location** | Record the visitor's country. On by default. |
-| **Exclude staff** | Leave out browsing by people who can manage the organization. Off by default. |
+| **Data retention** | How long events are kept: 90 days, 6 months or 1 year (the default). On the Enterprise plan: 2, 3, 5 or 7 years. Shortening it deletes older data at the next nightly cleanup. |
+| **Count visitors who aren't signed in** | Count page and course views from people without an account. On by default. |
+| **Store visitor country** | Record the country a visit comes from. On by default. |
+| **Leave admins and maintainers out of stats** | Leave out browsing by people who manage the organization, so your own testing doesn't skew the numbers. Off by default. |
 
-On the Enterprise plan, admins can also download every stored event as CSV with `GET /api/v1/analytics/export/events`.
+On the Enterprise plan, admins can also download every stored event as CSV with **Download raw events (CSV)** on the same tab, or with `GET /api/v1/analytics/export/events`.
 
 ## Setting up analytics on a self-hosted instance
 

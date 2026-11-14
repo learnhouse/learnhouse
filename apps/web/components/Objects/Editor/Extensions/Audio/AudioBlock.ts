@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
 import { AUDIO_EXTRA_ATTRS } from '../../Blocks/schema/blockAttrs'
 
@@ -36,6 +36,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(AudioBlockComponent as any)
+    return lhNodeView(AudioBlockComponent as any)
   },
 })

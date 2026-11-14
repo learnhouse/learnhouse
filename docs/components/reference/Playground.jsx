@@ -1,13 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Play, CaretRight } from '@phosphor-icons/react/dist/ssr'
+import { Play, X } from '@phosphor-icons/react/dist/ssr'
 import { useApiToken } from './TokenContext'
+import { pushHistory } from './history'
 
 const PARAM_STORAGE_KEY = 'lh:ref-param-values'
-const HISTORY_STORAGE_KEY = 'lh:ref-history'
-const HISTORY_LIMIT = 12
-export const HISTORY_EVENT = 'lh-ref-history'
 
 function loadStoredParams() {
   try {
@@ -25,15 +23,6 @@ function saveParams(values) {
       if (v.value?.trim()) stored[v.name] = v.value.trim()
     }
     localStorage.setItem(PARAM_STORAGE_KEY, JSON.stringify(stored))
-  } catch {}
-}
-
-function pushHistory(entry) {
-  try {
-    const history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]')
-    history.unshift(entry)
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, HISTORY_LIMIT)))
-    window.dispatchEvent(new CustomEvent(HISTORY_EVENT))
   } catch {}
 }
 
@@ -56,11 +45,11 @@ function buildPath(pathTemplate, pathValues, queryValues) {
 function ParamInputs({ values, onChange }) {
   if (!values.length) return null
   return (
-    <div className="lh-ref-play-params">
+    <div className="lhr-play-fields">
       {values.map((p, i) => (
-        <label key={p.name} className="lh-ref-play-param">
-          <span>
-            <code>{p.name}</code>{' '}
+        <label key={`${p.kind}-${p.name}`} className="lhr-play-field">
+          <span className="lhr-play-field-label">
+            <code>{p.name}</code>
             <em>
               {p.kind}
               {p.required ? ' · required' : ''}
@@ -79,14 +68,13 @@ function ParamInputs({ values, onChange }) {
 }
 
 /**
- * Live "Try it" panel. Requests are sent through the docs-site proxy
+ * Live "Try it" panel, loaded on demand by PlaygroundLauncher. Requests are sent through the docs-site proxy
  * (/api/reference-proxy) because the API's CORS policy is pinned to tenant
  * domains; the proxy forwards only the Authorization header, never cookies.
  * Multipart endpoints send FormData with method/path carried as query params.
  */
-export default function Playground({ method, path, playground, auth, opId }) {
+export default function Playground({ method, path, playground, auth, access, opId, onClose }) {
   const { token } = useApiToken()
-  const [open, setOpen] = useState(false)
   const [pathValues, setPathValues] = useState(() =>
     playground.pathParams.map((p) => ({ ...p, kind: 'path', value: '' }))
   )
@@ -109,14 +97,12 @@ export default function Playground({ method, path, playground, auth, opId }) {
 
   // Prefill from previously used values (org_slug etc. follow the visitor).
   useEffect(() => {
-    if (!open) return
     const stored = loadStoredParams()
     const prefill = (list) =>
       list.map((p) => (p.value || !stored[p.name] ? p : { ...p, value: stored[p.name] }))
     setPathValues((prev) => prefill(prev))
     setQueryValues((prev) => prefill(prev))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  }, [])
 
   const send = async () => {
     setResult(null)
@@ -200,10 +186,10 @@ export default function Playground({ method, path, playground, auth, opId }) {
 
   const statusClass = result?.status
     ? result.status < 300
-      ? 'lh-ref-play-status-ok'
+      ? 'lhr-play-status-ok'
       : result.status < 500
-        ? 'lh-ref-play-status-warn'
-        : 'lh-ref-play-status-err'
+        ? 'lhr-play-status-warn'
+        : 'lhr-play-status-err'
     : ''
 
   const updateAt = (setter) => (i, value) =>
@@ -213,83 +199,87 @@ export default function Playground({ method, path, playground, auth, opId }) {
       return next
     })
 
+  const sessionOnly = access === 'session' || access === 'public'
+  const looksLikeApiToken = /^lh_/.test(token || '')
+
   return (
-    <div className="lh-ref-play">
-      <button className="lh-ref-play-toggle" onClick={() => setOpen((v) => !v)}>
-        <CaretRight
-          size={11}
-          weight="bold"
-          className={`lh-ref-nav-caret ${open ? 'lh-ref-nav-caret-open' : ''}`}
-        />
-        Try it
-      </button>
+    <div className="lhr-play">
+      <div className="lhr-play-head">
+        <span className="lhr-label">Try it</span>
+        <button type="button" className="lhr-iconbtn" onClick={onClose} aria-label="Close playground">
+          <X size={14} />
+        </button>
+      </div>
 
-      {open && (
-        <div className="lh-ref-play-body">
-          <ParamInputs values={pathValues} onChange={updateAt(setPathValues)} />
-          <ParamInputs values={queryValues} onChange={updateAt(setQueryValues)} />
+      <div className="lhr-play-body">
+        <ParamInputs values={pathValues} onChange={updateAt(setPathValues)} />
+        <ParamInputs values={queryValues} onChange={updateAt(setQueryValues)} />
 
-          {isMultipart && (
-            <>
-              <ParamInputs values={formValues} onChange={updateAt(setFormValues)} />
-              {binaryFields.map((f) => (
-                <label key={f.name} className="lh-ref-play-param">
-                  <span>
-                    <code>{f.name}</code> <em>file{f.required ? ' · required' : ''}</em>
-                  </span>
-                  <input
-                    type="file"
-                    className="lh-ref-play-file"
-                    onChange={(e) =>
-                      setFiles((prev) => ({ ...prev, [f.name]: e.target.files?.[0] || null }))
-                    }
-                  />
-                </label>
-              ))}
-            </>
-          )}
+        {isMultipart && (
+          <>
+            <ParamInputs values={formValues} onChange={updateAt(setFormValues)} />
+            {binaryFields.map((f) => (
+              <label key={f.name} className="lhr-play-field">
+                <span className="lhr-play-field-label">
+                  <code>{f.name}</code>
+                  <em>file{f.required ? ' · required' : ''}</em>
+                </span>
+                <input
+                  type="file"
+                  className="lhr-play-file"
+                  onChange={(e) =>
+                    setFiles((prev) => ({ ...prev, [f.name]: e.target.files?.[0] || null }))
+                  }
+                />
+              </label>
+            ))}
+          </>
+        )}
 
-          {!isMultipart && playground.bodyTemplate && (
-            <label className="lh-ref-play-bodyfield">
-              <span>
-                Body{' '}
-                <em>
-                  {playground.contentType === 'application/x-www-form-urlencoded'
-                    ? 'form fields as JSON'
-                    : 'JSON'}
-                </em>
-              </span>
-              <textarea
-                value={body}
-                rows={Math.min(14, (playground.bodyTemplate.match(/\n/g)?.length ?? 0) + 2)}
-                spellCheck={false}
-                onChange={(e) => setBody(e.target.value)}
-              />
-            </label>
-          )}
+        {!isMultipart && playground.bodyTemplate && (
+          <label className="lhr-play-field">
+            <span className="lhr-play-field-label">
+              <code>body</code>
+              <em>
+                {playground.contentType === 'application/x-www-form-urlencoded'
+                  ? 'form fields as JSON'
+                  : 'JSON'}
+              </em>
+            </span>
+            <textarea
+              value={body}
+              rows={Math.min(14, (playground.bodyTemplate.match(/\n/g)?.length ?? 0) + 2)}
+              spellCheck={false}
+              onChange={(e) => setBody(e.target.value)}
+            />
+          </label>
+        )}
 
-          <div className="lh-ref-play-actions">
-            <button className="lh-ref-play-send" onClick={send} disabled={sending || needsToken}>
-              <Play size={12} weight="fill" />
-              {sending ? 'Sending…' : 'Send request'}
-            </button>
-            {needsToken && (
-              <span className="lh-ref-play-note">Paste your API token above to send requests.</span>
-            )}
-          </div>
+        {auth && sessionOnly && looksLikeApiToken && (
+          <p className="lhr-play-note">
+            This endpoint refuses API tokens. Paste a user session JWT in the token box to call it.
+          </p>
+        )}
 
-          {result?.error && <p className="lh-ref-play-error">{result.error}</p>}
-          {result?.status !== undefined && (
-            <div className="lh-ref-play-result">
-              <div className="lh-ref-play-result-head">
-                <span className={`lh-ref-play-status ${statusClass}`}>{result.status}</span>
-                <span className="lh-ref-play-latency">{result.latency} ms</span>
-              </div>
-              <pre className="lh-ref-play-response">{result.body || '(empty response)'}</pre>
-            </div>
-          )}
+        <div className="lhr-play-actions">
+          <button type="button" className="lhr-btn lhr-btn-primary" onClick={send} disabled={sending || needsToken}>
+            <Play size={12} weight="fill" />
+            {sending ? 'Sending…' : 'Send request'}
+          </button>
+          {needsToken && <span className="lhr-play-note">Add a token first (left column or overview).</span>}
         </div>
-      )}
+
+        {result?.error && <p className="lhr-play-error">{result.error}</p>}
+        {result?.status !== undefined && (
+          <div className="lhr-play-result">
+            <div className="lhr-play-result-head">
+              <span className={`lhr-play-status ${statusClass}`}>{result.status}</span>
+              <span className="lhr-play-latency">{result.latency} ms</span>
+            </div>
+            <pre className="lhr-play-response">{result.body || '(empty response)'}</pre>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -4,6 +4,8 @@ import Link from 'next/link'
 
 const links = [
   { label: 'Documentation', href: '/' },
+  { label: 'API Reference', href: '/reference' },
+  { label: 'Releases', href: '/releases' },
   { label: 'GitHub', href: 'https://github.com/learnhouse/learnhouse' },
   { label: 'Discord', href: 'https://discord.gg/CMyZjjYZ6x' },
   { label: 'Twitter', href: 'https://twitter.com/learnhouseapp' },
@@ -11,7 +13,7 @@ const links = [
 
 export default function Footer() {
   return (
-    <footer className="lh-footer">
+    <footer className="lh-footer" data-pagefind-ignore="all">
       <div className="lh-footer-container">
         <p className="lh-footer-copyright">
           &copy; {new Date().getFullYear()} LearnHouse

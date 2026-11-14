@@ -1,0 +1,139 @@
+---
+title: Signed-in Learners
+description: Let embedded LearnHouse activities act as one of your learners. Mint a short-lived embed session on your server and pass it to the provider, so progress, code runs and assignments are saved for them.
+---
+
+import { Callout, Steps } from '@/components/mdx'
+
+# Signed-in learners
+
+Without a session, `LearnHouseActivity` is read-only and anonymous: it shows public courses and saves nothing. Give it
+an **embed session** and it acts as one of your learners:
+
+- a **Mark as complete** toggle, saved to their LearnHouse progress (and shown as done when they come back),
+- code playground runs and saved submissions,
+- **assignments**: answering tasks, uploading files, submitting, retrying and seeing their grade,
+- private courses they are enrolled in, and blocks that show who they are.
+
+An embed session is a token your server mints for one learner with your org's API token. It is short-lived, has no
+refresh token, and works only for what the components do. Your API token never leaves your server.
+
+<Steps>
+
+### Mint a session on your server
+
+Create an API token under **Developers → API Access** with the **Users: update** permission, then add a route that
+returns a session for the signed-in user of *your* app:
+
+```ts
+// app/api/learnhouse-session/route.ts (Next.js), or any server route
+import { createClient } from '@learnhouse/sdk'
+
+const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL!, token: process.env.LEARNHOUSE_TOKEN! })
+
+export async function POST() {
+  const me = await getCurrentUser() // your own auth
+  if (!me) return new Response(null, { status: 401 })
+
+  const session = await lh.embed.createSession({
+    orgSlug: 'your-school',
+    userId: me.learnhouseUserId, // the LearnHouse user id you stored for them
+  })
+  return Response.json({ access_token: session.access_token, expires_at: session.expires_at })
+}
+```
+
+`createSession` refuses to run in a browser. It calls `POST /api/v1/admin/{org_slug}/auth/embed-session`, so any
+backend language works: send `{ "user_id": 42 }` with `Authorization: Bearer lh_…`.
+
+### Hand it to the provider
+
+```tsx
+<LearnHouseProvider
+  baseUrl="https://learn.your-school.com"
+  getSession={() => fetch('/api/learnhouse-session', { method: 'POST' }).then((r) => r.json())}
+>
+  <LearnHouseActivity activityId="activity_…" courseId="course_…" />
+</LearnHouseProvider>
+```
+
+`getSession` runs when the provider mounts, about a minute before each session expires, and once more if the API
+answers 401. Every activity under the provider shares the one session.
+
+</Steps>
+
+If you already have a session (rendered on the server, say), pass it as `session` instead, alone or alongside
+`getSession`. Both take the object `createSession` returns or just its `access_token`.
+
+## What learners can do
+
+| | Without a session | With a session |
+| --- | --- | --- |
+| Public activities | Yes | Yes |
+| Private courses | No | Those the learner can open in LearnHouse |
+| Completion | `complete` event only | Saved to their progress |
+| Code playground | Shown, can't run code | Runs code and saves their submissions |
+| Assignments | Not shown | Full learner view: answer, upload, submit, retry, grade |
+| User and dynamic blocks | Generic | Personalised |
+
+Enrol learners first, from your server: `POST /api/v1/admin/{org_slug}/enrollments/{user_id}/{course_uuid}`. A session
+does not enrol anyone on its own.
+
+### Completion
+
+With a session, a **Mark as complete** toggle appears below each activity. Change it with `completion`:
+
+| `completion` | |
+| --- | --- |
+| `button` | The toggle (default) |
+| `scroll` | Marked complete when the end of the activity scrolls into view |
+| `none` | Nothing; call `useLearnHouseClient().trail.completeActivity(id)` yourself |
+
+Assignments have no toggle: they are complete when submitted. Every change fires a `progress` event:
+
+```tsx
+<LearnHouseActivity
+  activityId="activity_…"
+  onEvent={(e) => e.type === 'progress' && refreshMyCourseSidebar(e.activityId, e.completed)}
+/>
+```
+
+### Who is signed in
+
+`useLearnHouseSession()` returns the provider's session: `status` (`loading`, `authenticated`, `unauthenticated`) and
+`data.user`, read from LearnHouse once per learner.
+
+### When a session can't be renewed
+
+If `getSession` fails or returns nothing, the components keep working signed out and fire `session_expired`. Listen
+for it to send the learner back through your own sign-in.
+
+## Security
+
+<Callout type="warning">
+  Never send an `lh_` API token to a browser. The components throw if you pass one as a session.
+</Callout>
+
+An embed session is deliberately narrower than a LearnHouse sign-in:
+
+- **Short-lived.** 15 minutes by default; pass `ttlSeconds` (60 to 3600) to `createSession` to change it. There is no
+  refresh token: when it runs out, your server decides whether to mint another.
+- **Only the embed's routes.** It reads courses, activities and the learner's own progress, submissions and grade, and
+  writes only completion, assignment answers and code runs. Every other API route answers `403`, whatever the learner
+  could do signed in to LearnHouse.
+- **One organization.** It works only in the organization that minted it.
+- **Never the account.** It can't change the learner's email, password or second factor, or delete the account.
+- **Learners only.** Minting is refused for admins, maintainers, accounts with more rights than the API token, and
+  accounts that belong to other organizations.
+
+Signing out of LearnHouse, or changing the password, ends every embed session of that learner too.
+
+Your server vouches for the learner, the way an LMS does for an LTI launch. So inside your organization, embed sessions
+are not held to its allowed sign-in methods or its two-factor requirement: protect the route that mints them with your
+own sign-in.
+
+### Cross-origin requests
+
+LearnHouse answers browser requests from any origin when they carry a bearer token and no cookies, so the components
+work on your own domain. A visitor's LearnHouse cookie session stays unreadable from other sites, as before.
+Self-hosters can turn this off with `LEARNHOUSE_BEARER_CORS=false`; the API then only answers its own domains.

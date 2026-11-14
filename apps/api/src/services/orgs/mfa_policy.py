@@ -25,7 +25,7 @@ from src.services.orgs.org_config_lookup import get_session_org_config
 from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.services.auth.mfa import is_mfa_active
-from src.security.session_context import AUTH_METHOD_LTI, POLICY_AUTH_METHODS, get_session_provenance
+from src.security.session_context import ORG_HELD_AUTH_METHODS, POLICY_AUTH_METHODS, get_session_provenance
 
 logger = logging.getLogger(__name__)
 
@@ -116,9 +116,9 @@ def _signed_in_externally(user: User, org_id: int) -> bool:
     """
     provenance = get_session_provenance()
     method = provenance.amr if provenance is not None else None
-    if method == AUTH_METHOD_LTI:
-        # An LMS launch only vouches for the user inside the org that
-        # registered that LMS. Anywhere else it is a session like any other,
+    if method in ORG_HELD_AUTH_METHODS:
+        # An LMS launch (or a host app's embed session) only vouches for the
+        # user inside the org that registered that LMS (minted that session). Anywhere else it is a session like any other,
         # and an account created by a launch never earns the exemption on its
         # own.
         return provenance.org_id == org_id

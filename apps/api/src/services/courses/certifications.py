@@ -930,6 +930,7 @@ async def _course_card(db_session: AsyncSession, course: Course, lang: Optional[
         "name": course.name,
         "description": course.description,
         "thumbnail_image": course.thumbnail_image,
+        "org_id": course.org_id,
     }
     if lang:
         from src.services.courses.translations.learner import localize_course_list
@@ -947,9 +948,14 @@ async def get_all_user_certificates(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
     lang: Optional[str] = None,
+    org_id: int | None = None,
 ) -> List[dict]:
-    """Get all certificates for the current user with complete linked information"""
-    
+    """Get all certificates for the current user with complete linked information.
+
+    With ``org_id``, only certificates whose course belongs to that org are
+    returned; without it, every org's certificates are listed.
+    """
+
     # Get all certificate users for this user
     # A session held to one org (LMS launch, custom domain) lists that org's certificates only.
     from src.security.session_context import held_org_id
@@ -991,6 +997,8 @@ async def get_all_user_certificates(
 
         course = course_map.get(certification.course_id)
         if not course or (held is not None and course.org_id != held):
+            continue
+        if org_id is not None and course.org_id != org_id:
             continue
 
         user = user_map.get(cert_user.user_id)

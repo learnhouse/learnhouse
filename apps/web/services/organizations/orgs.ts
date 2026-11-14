@@ -34,6 +34,25 @@ export async function deleteOrganizationFromBackend(
   return res
 }
 
+// Delete an organization from the UI. On SaaS this goes through the billing
+// route, which also cancels the org's Stripe subscriptions so a deleted org
+// stops being charged. Deployments without SaaS billing don't serve that route
+// (404), so the backend is called directly there.
+export async function deleteOrganization(org_id: number | string, access_token: string) {
+  const result = await fetch('/api/billing/delete-org', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${access_token}`,
+    },
+    body: JSON.stringify({ orgId: org_id }),
+  })
+  if (result.status === 404) {
+    return deleteOrganizationFromBackend(org_id, access_token)
+  }
+  return errorHandling(result)
+}
+
 // One org lookup per server request. The layout's metadata, the page's
 // metadata and the page body each ask for the org, and every call is no-store,
 // so a single page view used to hit /orgs/slug three or four times in a row.

@@ -25,6 +25,7 @@ from src.core.version import get_learnhouse_version
 from src.core.ee_hooks import register_ee_middlewares
 from src.core.events.events import shutdown_app, startup_app
 from src.core.middleware.body_size import RequestBodySizeLimitMiddleware
+from src.core.middleware.bearer_cors import BearerCORSMiddleware, bearer_cors_enabled
 from src.core.middleware.cors import configure_cors
 from src.core.routing_perf import install_router_prefix_short_circuit
 from src.security.csrf import CSRFProtectionMiddleware
@@ -187,6 +188,10 @@ from src.security.impersonation import ImpersonationGateMiddleware, install_orm_
 app.add_middleware(ImpersonationGateMiddleware)
 install_orm_scope()
 configure_cors(app)
+# Wraps the API's CORS: origins it doesn't trust get credential-less CORS, so
+# apps on other domains can call the API with a bearer token (embed sessions).
+if bearer_cors_enabled():
+    app.add_middleware(BearerCORSMiddleware)
 # compresslevel 9 costs several times the CPU of 6 for a couple of percent on
 # JSON; 6 is gzip's own default.
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000, compresslevel=6)

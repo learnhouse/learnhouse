@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
 import { PDF_EXTRA_ATTRS } from '../../Blocks/schema/blockAttrs'
 
@@ -40,6 +40,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(PDFBlockComponent as any)
+    return lhNodeView(PDFBlockComponent as any)
   },
 })

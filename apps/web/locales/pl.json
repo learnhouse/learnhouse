@@ -3799,7 +3799,8 @@
     "tasks_count_many": "{{count}} zadań",
     "tasks_count_other": "{{count}} zadania",
     "ai_graded_badge": "Ocenione przez AI",
-    "ai_graded_hint": "Asystent AI Twojego nauczyciela ocenił tę pracę na podstawie jego wytycznych."
+    "ai_graded_hint": "Asystent AI Twojego nauczyciela ocenił tę pracę na podstawie jego wytycznych.",
+    "not_available": "To zadanie jest niedostępne."
   },
   "certificate": {
     "certificate": "Certyfikat",

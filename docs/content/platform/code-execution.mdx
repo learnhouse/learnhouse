@@ -1,4 +1,8 @@
-import { Callout } from 'nextra/components'
+---
+description: Set up Code Playground challenges that run learner code in 30 languages with test cases, hints, locked lines and solutions, plus the execution limits.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Code Execution
 
@@ -65,8 +69,8 @@ Code Playground results are for practice. They are not graded. For graded code, 
 | Test cases per run | 50 |
 | Single runs per learner | 60 per minute |
 | Test case batches per learner | 20 per minute |
-| Source code size | 64 KB |
-| Input size per test case | 64 KB |
-| Additional files | 20 files, 128 KB each |
+| Source code size | 65,536 characters |
+| Input size per test case | 65,536 characters |
+| Additional files | 20 files, 131,072 characters each |
 
 API tokens cannot run code. Execution only works for signed-in users with access to the activity.
