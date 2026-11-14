@@ -60,6 +60,24 @@ def _session_epoch_now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
 
 
+# Self-hosted signups are marked verified without an email round trip. An
+# empty ``email_verified_at`` records that nothing has proven the signer
+# controls the inbox yet: the first Google or magic-link sign-in, or a password
+# reset, stamps it and drops any password set before then. Older rows hold NULL
+# or a timestamp, never an empty string, so they are unaffected.
+_INBOX_UNPROVEN = ""
+
+
+def inbox_unproven(user) -> bool:
+    return user.email_verified_at == _INBOX_UNPROVEN
+
+
+def clear_inbox_unproven(user) -> None:
+    """Record that something (Google, an emailed link or reset code) proved the inbox."""
+    if inbox_unproven(user):
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+
+
 def _reject_urls_in_profile_fields(**fields) -> None:
     """Reject display-name fields containing URLs/links (S: phishing relay).
 
@@ -215,10 +233,13 @@ async def create_user(
     user.user_uuid = f"user_{uuid4()}"
     user.password = security_hash_password(user_object.password) if user_object.password else ""
 
-    # OAuth users and OSS mode get auto-verified email
+    # OAuth users and OSS mode get auto-verified email. A self-hosted email
+    # signup never proved the inbox, so it is marked unproven until it does.
     if is_oauth or get_deployment_mode() != 'saas':
         user.email_verified = True
-        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+        user.email_verified_at = (
+            datetime.now(timezone.utc).isoformat() if is_oauth else _INBOX_UNPROVEN
+        )
         user.signup_method = signup_provider if is_oauth else "email"
     else:
         user.email_verified = False
@@ -471,10 +492,13 @@ async def create_user_without_org(
     user.user_uuid = f"user_{uuid4()}"
     user.password = security_hash_password(user_object.password) if user_object.password else ""
 
-    # OAuth users and OSS mode get auto-verified email
+    # OAuth users and OSS mode get auto-verified email. A self-hosted email
+    # signup never proved the inbox, so it is marked unproven until it does.
     if is_oauth or get_deployment_mode() != 'saas':
         user.email_verified = True
-        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+        user.email_verified_at = (
+            datetime.now(timezone.utc).isoformat() if is_oauth else _INBOX_UNPROVEN
+        )
         user.signup_method = signup_provider if is_oauth else "email"
     else:
         user.email_verified = False
