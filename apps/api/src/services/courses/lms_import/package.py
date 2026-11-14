@@ -44,6 +44,7 @@ from src.security.file_validation import (
     validate_image_content,
     validate_video_content,
 )
+from src.services.utils.video_processing import SAFE_INPUT_FORMATS
 
 from . import ir
 from .archive import ArchiveError, ExtractLimits, extract_archive, find_file
@@ -101,7 +102,6 @@ TRANSCODE_MAX_OUTPUT = "4G"
 SCORM_TOTAL_BYTES = 20 * 1024 ** 3
 SCORM_PACKAGE_BYTES = 4 * 1024 ** 3
 
-_FFMPEG_INPUT_FORMATS = "mov,mp4,m4a,3gp,3g2,mj2,matroska,webm,avi,asf,flv,mpeg,mpegts,ogg,wav,flac,aac,aiff,mp3"
 _PILLOW_INPUT_FORMATS = ("BMP", "TIFF", "ICO", "DIB")
 
 # Reference files allowed on assignment tasks (tasks_ref_files.py accepts
@@ -945,7 +945,7 @@ class PackageWriter:
         # media containers and plain file access.
         args = [ffmpeg, "-nostdin", "-loglevel", "error", "-y",
                 "-protocol_whitelist", "file",
-                "-format_whitelist", _FFMPEG_INPUT_FORMATS,
+                "-format_whitelist", SAFE_INPUT_FORMATS,
                 "-threads", "2",
                 "-i", asset.path,
                 "-threads", "2", "-fs", TRANSCODE_MAX_OUTPUT]
