@@ -24,6 +24,7 @@ from pydantic_ai.messages import (
     UserPromptPart,
     VideoUrl,
 )
+from pydantic_ai.models import Model
 from pydantic_ai.settings import ModelSettings
 
 from src.services.ai.llm.provider import build_model
@@ -116,20 +117,30 @@ def _history_with_system(history: Any, system_prompt: Optional[str]) -> Optional
     return messages
 
 
+# Providers whose API rejects sampling parameters for every model. The Anthropic
+# SDK sends API version 2026-10-21 since 2.0, and on that version a Messages
+# request carrying `temperature`, `top_p` or `top_k` returns HTTP 400, even at
+# the default value. Pydantic AI only strips them for the newest Claude models,
+# so the documented `claude-sonnet-4-5` / `claude-haiku-4-5` setups broke.
+# Callers pass `temperature` as a hint; dropping it here keeps every feature
+# working on these providers with the model's default sampling.
+_PROVIDERS_WITHOUT_SAMPLING = frozenset({"anthropic"})
+
+
 def _settings(
-    max_tokens: Optional[int], temperature: Optional[float], timeout: float
+    model: Model, max_tokens: Optional[int], temperature: Optional[float], timeout: float
 ) -> ModelSettings:
     settings: dict = {"timeout": timeout}
     if max_tokens is not None:
         settings["max_tokens"] = max_tokens
-    if temperature is not None:
+    if temperature is not None and model.system not in _PROVIDERS_WITHOUT_SAMPLING:
         settings["temperature"] = temperature
     return ModelSettings(**settings)
 
 
-def _agent(model_name: str, system_prompt: Optional[str], output_type: Any) -> Agent:
+def _agent(model: Model, system_prompt: Optional[str], output_type: Any) -> Agent:
     return Agent(
-        build_model(model_name),
+        model,
         output_type=output_type,
         system_prompt=system_prompt or (),
     )
@@ -151,11 +162,12 @@ async def generate(
     Returns plain text when ``output_type`` is ``str``, or a validated instance of
     ``output_type`` (a Pydantic model) for structured output.
     """
-    agent = _agent(model_name, system_prompt, output_type)
+    model = build_model(model_name)
+    agent = _agent(model, system_prompt, output_type)
     result = await agent.run(
         user_prompt,
         message_history=_history_with_system(history, system_prompt),
-        model_settings=_settings(max_tokens, temperature, timeout),
+        model_settings=_settings(model, max_tokens, temperature, timeout),
     )
     return result.output
 
@@ -171,11 +183,12 @@ async def generate_stream(
     timeout: float = STREAM_TIMEOUT,
 ) -> AsyncGenerator[str, None]:
     """Stream text deltas for a single generation, yielding chunks as they arrive."""
-    agent = _agent(model_name, system_prompt, str)
+    model = build_model(model_name)
+    agent = _agent(model, system_prompt, str)
     async with agent.run_stream(
         user_prompt,
         message_history=_history_with_system(history, system_prompt),
-        model_settings=_settings(max_tokens, temperature, timeout),
+        model_settings=_settings(model, max_tokens, temperature, timeout),
     ) as result:
         async for chunk in result.stream_text(delta=True):
             yield chunk

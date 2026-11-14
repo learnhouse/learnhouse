@@ -105,7 +105,7 @@ ai_config:
   # Media generation (Google-only, uses the Google GenAI SDK regardless of `provider`,
   # resolving its key from `api_key` when provider=google, else `gemini_api_key`).
   image_model: ""       # AI image generation           (default: gemini-2.5-flash-image)
-  tts_model: ""         # AI audio / podcast generation  (default: gemini-2.5-flash-preview-tts)
+  tts_model: ""         # AI audio / podcast generation  (default: gemini-3.8-flash-tts)
 
 tinybird_config:
   # Legacy: only read by the Enterprise one-time import of old Tinybird analytics data
