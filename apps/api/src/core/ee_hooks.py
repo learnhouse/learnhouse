@@ -54,6 +54,16 @@ def register_ee_routers(v1_router):
     if hooks and hasattr(hooks, "register_routers"):
         hooks.register_routers(v1_router)
 
+def register_ee_cli(cli):
+    """Let EE add its own commands to ``cli.py``. Without EE the CLI has only
+    the core commands."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "register_cli"):
+        try:
+            hooks.register_cli(cli)
+        except Exception as e:
+            logger.error(f"Failed to register EE CLI commands: {e}")
+
 def run_ee_startup(app):
     """Call EE to run its startup tasks."""
     hooks = get_ee_hooks()

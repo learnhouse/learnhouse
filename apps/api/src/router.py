@@ -3,7 +3,6 @@ from src.routers import admin as admin_router_module
 from src.routers import code_execution
 from src.routers import code_submissions
 from src.routers import health
-from src.routers import demo as demo_router_module
 from src.routers import instance
 from src.routers import plans
 from src.routers import usergroups
@@ -402,9 +401,6 @@ v1_router.include_router(
 
 # Instance info (public, no auth)
 v1_router.include_router(instance.router, prefix="/instance", tags=["instance"])
-# Demo: /demo/status is public (the onboarding page calls it before the
-# visitor has done anything); /demo/enter resolves the user itself.
-v1_router.include_router(demo_router_module.router, prefix="/demo", tags=["demo"])
 
 # Sentry feedback relay (rejects API tokens; works for both anonymous and
 # authenticated callers so the in-app feedback modal keeps working everywhere)
