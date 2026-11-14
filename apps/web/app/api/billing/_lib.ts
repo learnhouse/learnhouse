@@ -57,10 +57,19 @@ export async function authenticateUser(
   const unauthorized = () =>
     NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const cookieStore = await cookies();
+  const impersonating = () =>
+    NextResponse.json(
+      { error: "Billing is not available while impersonating", code: "IMPERSONATION_DENIED" },
+      { status: 403 },
+    );
+  // Billing is never available inside an impersonation: neither as the
+  // member, nor as the superadmin behind it.
+  if (cookieStore.get("LH_imp")?.value) return impersonating();
   // The cookie wins; a bearer token is only a fallback for pages where the
   // cookie isn't sent (custom domains). Either way it is checked against the
   // backend session below, and a header can't be forged cross-site.
-  const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value || bearerToken;
+  const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value || bearerToken;
   if (!token) return unauthorized();
 
   let session: any;
@@ -74,6 +83,10 @@ export async function authenticateUser(
   } catch {
     return unauthorized();
   }
+
+  // An impersonation token sent as the bearer fallback: the backend reports
+  // the verified impersonation on the session, and billing stays closed.
+  if (session?.impersonation) return impersonating();
 
   const email = session?.user?.email;
   if (!email) return unauthorized();

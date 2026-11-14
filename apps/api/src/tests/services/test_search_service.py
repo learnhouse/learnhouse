@@ -15,7 +15,6 @@ from fastapi import HTTPException
 from src.db.folders.folders import Folder
 from src.db.users import APITokenUser
 from src.db.courses.courses import Course
-from src.db.playgrounds import Playground, PlaygroundAccessType
 from src.services.search.search import SearchResult, _escape_like_wildcards, search_across_org
 from src.services.search.normalization import (
     build_like_pattern,
@@ -286,23 +285,10 @@ class TestSearchAcrossOrg:
         assert getattr(exc_info.value, "status_code", None) == 403
 
     @pytest.mark.asyncio
-    async def test_search_finds_playgrounds_by_name(
+    async def test_search_has_no_playgrounds_without_ee(
         self, db, org, anonymous_user, mock_request
     ):
-        pg = Playground(
-            id=80,
-            name="Searchable Playground",
-            description="A public playground",
-            access_type=PlaygroundAccessType.PUBLIC,
-            published=True,
-            org_id=org.id,
-            playground_uuid="pg_searchable",
-            creation_date=str(datetime.now()),
-            update_date=str(datetime.now()),
-        )
-        db.add(pg)
-        await db.commit()
-
+        # Plays are an EE feature (searched by ee/services/playgrounds/search.py).
         with patch(
             "src.services.search.search.search_courses",
             new_callable=AsyncMock,
@@ -312,8 +298,7 @@ class TestSearchAcrossOrg:
                 mock_request, anonymous_user, "test-org", "Searchable Playground", db
             )
 
-        playground_names = [p.name for p in result.playgrounds]
-        assert "Searchable Playground" in playground_names
+        assert result.playgrounds == [] and result.total_playgrounds == 0
 
 class TestUnicodeNormalization:
     """Helper-level tests for normalize_search_term / build_like_pattern.

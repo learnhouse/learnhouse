@@ -10,6 +10,7 @@
  */
 
 import {
+  Buildings,
   BookOpen,
   ChalkboardSimple,
   ChartBar,
@@ -27,10 +28,13 @@ import {
   VideoCamera,
   LockKey,
   Microphone,
+  Newspaper,
   Path,
   PlugsConnected,
   Robot,
   ShieldCheck,
+  SealCheck,
+  ArrowsClockwise,
   Steps,
   UsersThree,
 } from '@phosphor-icons/react'
@@ -63,6 +67,10 @@ export type FeatureKey =
   | 'scorm'
   | 'seo'
   | 'drip'
+  | 'company_seats'
+  | 'scim'
+  | 'required_training'
+  | 'newsletter'
   // Features that are never plan-gated but can be admin-toggled off. Listed
   // here so FeatureGate can render the disabled card with the right icon.
   | 'courses'
@@ -95,8 +103,9 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
   playgrounds: {
     titleKey: 'common.plans.feature_restricted.playgrounds.title',
     descriptionKey: 'common.plans.feature_restricted.playgrounds.description',
-    Icon: Cube,
-    upsellPlan: 'standard',
+    Icon: Lightning,
+    // Plays are EE and need Pro (FEATURE_PLAN_REQUIREMENTS in the API).
+    upsellPlan: 'pro',
   },
   communities: {
     titleKey: 'common.plans.feature_restricted.communities.title',
@@ -109,6 +118,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     descriptionKey: 'common.plans.feature_restricted.podcasts.description',
     Icon: Microphone,
     upsellPlan: 'standard',
+  },
+  company_seats: {
+    titleKey: 'common.plans.feature_restricted.company_seats.title',
+    descriptionKey: 'common.plans.feature_restricted.company_seats.description',
+    Icon: Buildings,
+    upsellPlan: 'pro',
   },
   live_sessions: {
     titleKey: 'common.plans.feature_restricted.live_sessions.title',
@@ -193,6 +208,24 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     descriptionKey: 'common.plans.feature_restricted.audit_logs.description',
     Icon: ListChecks,
     upsellPlan: 'enterprise',
+  },
+  scim: {
+    titleKey: 'common.plans.feature_restricted.scim.title',
+    descriptionKey: 'common.plans.feature_restricted.scim.description',
+    Icon: ArrowsClockwise,
+    upsellPlan: 'enterprise',
+  },
+  required_training: {
+    titleKey: 'common.plans.feature_restricted.required_training.title',
+    descriptionKey: 'common.plans.feature_restricted.required_training.description',
+    Icon: SealCheck,
+    upsellPlan: 'pro',
+  },
+  newsletter: {
+    titleKey: 'common.plans.feature_restricted.newsletter.title',
+    descriptionKey: 'common.plans.feature_restricted.newsletter.description',
+    Icon: Newspaper,
+    upsellPlan: 'standard',
   },
   sso: {
     titleKey: 'common.plans.feature_restricted.sso.title',

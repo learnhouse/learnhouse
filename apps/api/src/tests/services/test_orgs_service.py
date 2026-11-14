@@ -362,10 +362,11 @@ class TestOrgConfigUpdates:
         )).scalars().first()
         assert signup == {"detail": "Signup mechanism updated"}
         assert ai == {"detail": "AI configuration updated"}
-        assert landing == {"detail": "Landing object updated"}
+        assert landing["detail"] == "Landing object updated" and landing["page"]["published"]
         assert seo == {"detail": "SEO configuration updated"}
         assert join_mechanism == "inviteOnly"
-        assert stored.config["customization"]["landing"] == {"hero": "Hello"}
+        # Classic landing objects become the published builder home page.
+        assert "landing" not in stored.config["customization"]
         assert (
             stored.config["customization"]["seo"]["default_meta_description"]
             == "SEO desc"

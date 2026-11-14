@@ -1,8 +1,21 @@
 import { Metadata } from 'next'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { buildListMetadata } from '@/lib/seo/pageMetadata'
+import { verificationMetadata } from '@/lib/seo/meta'
+import { getServerAPIUrl } from '@services/config/config'
+
+// The home page's own search and sharing settings (page builder → Page),
+// cached like the extra pages' metadata. Never the page itself: it renders on the client.
+async function homeSettings(orgslug: string): Promise<{ title?: string; description?: string; image?: string; noindex?: boolean } | null> {
+  try {
+    const res = await fetch(`${getServerAPIUrl()}landing/public/${encodeURIComponent(orgslug)}?slug=`, { next: { revalidate: 300, tags: ['landing-pages'] } })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data?.mode === 'published' ? data?.doc?.page || null : null
+  } catch {
+    return null
+  }
+}
 import HomeClient from './home-client'
 
 type MetadataProps = {
@@ -10,68 +23,14 @@ type MetadataProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
+// Home: org defaults, robots switch and search engine verification tags.
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
-  const params = await props.params;
-  // Get Org context information
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
-
-  const seoConfig = getOrgSeoConfig(org)
-  const ogImageUrl = seoConfig.default_og_image
-    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
-    : null
-  const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = await getServerCanonicalUrl(params.orgslug, '/')
-  const title = buildPageTitle('Home', org.name, seoConfig)
-  const description = org.description || seoConfig.default_meta_description || ''
-
-  // SEO
-  return {
-    title,
-    description,
-    robots: {
-      index: true,
-      follow: true,
-      nocache: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
-    alternates: {
-      canonical,
-    },
-    ...(seoConfig.google_site_verification
-      ? {
-          verification: {
-            google: seoConfig.google_site_verification,
-          },
-        }
-      : {}),
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      images: [
-        {
-          url: imageUrl,
-          width: 800,
-          height: 600,
-          alt: org.name,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [imageUrl],
-      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
-    },
-  }
+  const { orgslug } = await props.params
+  const ctx = await getSeoContext(orgslug)
+  const own = await homeSettings(orgslug)
+  const metadata = await buildListMetadata({ ctx, name: own?.title || 'Home', path: '/', description: own?.description, image: own?.image, noindex: !!own?.noindex })
+  const verification = verificationMetadata(ctx.seo)
+  return verification ? { ...metadata, verification } : metadata
 }
 
 const OrgHomePage = async (params: any) => {

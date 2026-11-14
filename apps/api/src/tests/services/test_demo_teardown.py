@@ -63,9 +63,18 @@ def _foreign_keys_to(table_name: str):
 # one is a nullable back-reference where losing the row would destroy
 # independent history, so SET NULL is the correct behaviour.
 _SET_NULL_ALLOWED = {
+    # Support-session records are platform audit history: they outlive the
+    # staff member and the member they acted as.
+    ("platform_impersonation_session", "impersonator_user_id"),
+    ("platform_impersonation_session", "target_user_id"),
+    ("platform_impersonation_session", "ended_by_user_id"),
     ("auditlog", "org_id"),
     ("auditlog", "user_id"),
+    # Who last changed the audit log retention; the setting outlives them.
+    ("auditlogsetting", "updated_by"),
     ("board", "created_by"),
+    # A saved board version stays with the board when its author leaves.
+    ("board_snapshot", "created_by"),
     ("playground", "created_by"),
     ("activity", "last_modified_by_id"),
     ("activityversion", "created_by_id"),
@@ -87,6 +96,74 @@ _SET_NULL_ALLOWED = {
     # everyone else, shown as from a removed user.
     ("conversation", "created_by"),
     ("message", "sender_user_id"),
+    # A notification stays in the recipient's inbox when the person who
+    # caused it (the replier, the grader) is deleted.
+    ("notification", "actor_id"),
+    # Editor comments on activities: the conversation stays for the other
+    # editors, shown as from a former member.
+    ("activity_comment_thread", "created_by"),
+    ("activity_comment_thread", "resolved_by"),
+    ("activity_comment", "author_id"),
+    # Course translations: a translator leaving keeps the translation.
+    ("course_translation", "updated_by_id"),
+    ("activity_translation", "updated_by_id"),
+    # People data: a manager's account going away leaves their reports
+    # without a manager, not without their own profile.
+    ("org_member_profile", "manager_user_id"),
+    # Required training and SCIM (EE): who created a rule or token, or
+    # exempted someone, outlives the person.
+    ("training_rule", "created_by_user_id"),
+    ("training_assignment", "exempted_by_user_id"),
+    ("scim_token", "created_by_user_id"),
+    # Landing pages: who saved, published or versioned a page; the page and
+    # its history stay with the org when that person leaves.
+    ("landing_page", "draft_updated_by"),
+    ("landing_page", "published_by"),
+    ("landing_page_version", "created_by"),
+    ("landing_saved_section", "created_by"),
+    # Live sessions (EE) collaboration: reactions, shared resources and the
+    # shared notes stay with the session when their author is deleted.
+    ("live_session_reaction", "user_id"),
+    ("live_session_resource", "shared_by"),
+    ("live_session_note", "updated_by"),
+    # Companies (EE): the company, its seats, orders and history belong to the
+    # org. A deleted person frees their seat and leaves the record anonymous.
+    ("company_account", "account_owner_user_id"),
+    ("company_account", "created_by_user_id"),
+    ("company_admin", "added_by_user_id"),
+    ("company_announcement", "author_user_id"),
+    ("company_event", "actor_user_id"),
+    ("company_seat", "assigned_by_user_id"),
+    ("company_seat", "user_id"),
+    ("company_seat_order", "buyer_user_id"),
+    # Newsletter (EE): lists, campaigns and send logs belong to the org; a
+    # subscriber row keeps its email when the linked account is deleted, so
+    # unsubscribes and suppressions keep being honoured.
+    ("newsletter", "created_by"),
+    ("newsletter", "sender_user_id"),
+    ("newsletter_campaign", "created_by"),
+    ("newsletter_send", "user_id"),
+    ("newsletter_subscriber", "user_id"),
+    # Superadmin console (EE): platform records outlive the staff member who
+    # created, approved or was assigned them.
+    ("platform_automation", "created_by_user_id"),
+    ("platform_automation", "enabled_by_user_id"),
+    ("platform_email_campaign", "approved_by_user_id"),
+    ("platform_email_campaign", "created_by_user_id"),
+    ("platform_email_template", "created_by_user_id"),
+    ("platform_notification_channel", "created_by_user_id"),
+    ("platform_notification_rule", "created_by_user_id"),
+    ("platform_org_note", "author_user_id"),
+    ("platform_org_profile", "account_owner_user_id"),
+    ("platform_task", "assignee_user_id"),
+    ("platform_task", "created_by_user_id"),
+    ("platform_team_member", "granted_by_user_id"),
+    # CRM integrations (EE): the connection and the org's own OAuth app belong
+    # to the org; the admin who connected, consented or registered it leaving
+    # must not disconnect the CRM.
+    ("crm_connection", "connected_by"),
+    ("crm_connection", "consent_by"),
+    ("crm_oauth_app", "created_by"),
 }
 
 

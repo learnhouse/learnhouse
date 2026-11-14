@@ -1,5 +1,6 @@
+from datetime import datetime
 from typing import Optional
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import Column, DateTime, ForeignKey, Integer
 from sqlmodel import Field, SQLModel
 
 
@@ -14,3 +15,12 @@ class UserGroupResource(SQLModel, table=True):
     )
     creation_date: str = ""
     update_date: str = ""
+    # Access window for this group. The link restricts the resource from the
+    # moment it exists; it grants the group's members access only between
+    # starts_at and expires_at (both optional).
+    starts_at: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
+    expires_at: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )

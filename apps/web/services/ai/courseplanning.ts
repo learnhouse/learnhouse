@@ -79,6 +79,8 @@ interface StreamChunk {
   content?: string
   session_uuid?: string
   message?: string
+  // Credits the generation charged (done event; ai-credits).
+  credits?: number | null
 }
 
 /**
@@ -133,7 +135,7 @@ export async function startCoursePlanningSession(
   prompt: string,
   accessToken: string,
   onChunk: (_chunk: string) => void,
-  onComplete: (_sessionUuid: string) => void,
+  onComplete: (_sessionUuid: string, _credits?: number | null) => void,
   onError: (_error: string) => void,
   language: string = 'en',
   attachments?: Attachment[]
@@ -183,7 +185,7 @@ export async function iterateCoursePlanning(
   message: string,
   accessToken: string,
   onChunk: (_chunk: string) => void,
-  onComplete: (_sessionUuid: string) => void,
+  onComplete: (_sessionUuid: string, _credits?: number | null) => void,
   onError: (_error: string) => void,
   currentPlan?: CoursePlan | null,
   attachments?: Attachment[]
@@ -277,7 +279,7 @@ export async function generateActivityContent(
   courseDescription: string,
   accessToken: string,
   onChunk: (_chunk: string) => void,
-  onComplete: (_sessionUuid: string) => void,
+  onComplete: (_sessionUuid: string, _credits?: number | null) => void,
   onError: (_error: string) => void,
   prompt?: string
 ): Promise<void> {
@@ -397,7 +399,7 @@ export async function getCoursePlanningSession(
 async function processStream(
   response: Response,
   onChunk: (_chunk: string) => void,
-  onComplete: (_sessionUuid: string) => void | Promise<void>,
+  onComplete: (_sessionUuid: string, _credits?: number | null) => void | Promise<void>,
   onError: (_error: string) => void
 ): Promise<void> {
   const reader = response.body?.getReader()
@@ -431,7 +433,7 @@ async function processStream(
             if (event.type === 'chunk' && event.content) {
               onChunk(event.content)
             } else if (event.type === 'done' && event.session_uuid) {
-              await onComplete(event.session_uuid)
+              await onComplete(event.session_uuid, event.credits ?? null)
             } else if (event.type === 'error' && event.message) {
               onError(event.message)
             }

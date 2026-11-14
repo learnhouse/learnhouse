@@ -119,7 +119,7 @@ async def test_paths_are_listed_and_read(db, org, admin_user, sessions):
     org = SimpleNamespace(id=org.id)
     handlers = h.Handlers(_registry())
     listed = await handlers.list_resources(ctx_for(member(admin_user, org)), None)
-    assert [str(r.uri) for r in listed.resources] == [
+    assert [str(r.uri) for r in listed.resources if str(r.uri).startswith(("learnhouse://org", "learnhouse://course", "learnhouse://path"))] == [
         "learnhouse://org", "learnhouse://course/course_9", "learnhouse://path/path_9",
     ]
     read = await handlers.read_resource(

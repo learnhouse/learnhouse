@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { EditorView } from '@tiptap/pm/view'
 import i18n from '@/lib/i18n'
-import { NodeSelection } from '@tiptap/pm/state'
+import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import { Slice, Fragment, Node as PMNode } from '@tiptap/pm/model'
 
 const DRAG_HANDLE_KEY = new PluginKey('dragHandle')
@@ -52,6 +52,9 @@ function createDragHandlePlugin() {
     dragHandle = document.createElement('div')
     dragHandle.className = 'editor-drag-handle nice-shadow'
     dragHandle.innerHTML = `
+      <button class="lh-add-btn" data-action="add" aria-label="${i18n.t('editor.blocks_v2.add_block', 'Add a block below')}" title="${i18n.t('editor.blocks_v2.add_block_hint', 'Click to add a block below')}">
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg>
+      </button>
       <div class="drag-grip" draggable="true">
         <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
           <path d="M104,60A12,12,0,1,1,92,48,12,12,0,0,1,104,60Zm60,12a12,12,0,1,0-12-12A12,12,0,0,0,164,72ZM92,116a12,12,0,1,0,12,12A12,12,0,0,0,92,116Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,116ZM92,184a12,12,0,1,0,12,12A12,12,0,0,0,92,184Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,184Z"/>
@@ -173,7 +176,25 @@ function createDragHandlePlugin() {
       const node = view.state.doc.nodeAt(nodePos)
       if (!node) return
 
-      if (action === 'delete') {
+      if (action === 'add') {
+        // Block inserter: open the slash menu on a fresh line below the block
+        // (or on the block itself when it is already an empty line).
+        const paragraph = view.state.schema.nodes.paragraph
+        let tr = view.state.tr
+        let textPos: number
+        if (node.type.name === 'paragraph' && node.content.size === 0) {
+          textPos = nodePos + 1
+        } else {
+          const after = nodePos + node.nodeSize
+          tr = tr.insert(after, paragraph.create())
+          textPos = after + 1
+        }
+        tr = tr.setSelection(TextSelection.create(tr.doc, textPos)).insertText('/').scrollIntoView()
+        view.dispatch(tr)
+        view.focus()
+        hideHandle()
+        return
+      } else if (action === 'delete') {
         const tr = view.state.tr.delete(nodePos, nodePos + node.nodeSize)
         view.dispatch(tr)
       } else if (action === 'duplicate') {
@@ -416,7 +437,8 @@ function createDragHandlePlugin() {
     function positionHandle(block: HTMLElement) {
       if (!dragHandle) return
       const rect = block.getBoundingClientRect()
-      dragHandle.style.left = `${rect.left - 28}px`
+      // Room for the "+" inserter and the grip, both at the block's start edge.
+      dragHandle.style.left = `${rect.left - 50}px`
       dragHandle.style.top = `${rect.top + 4}px`
     }
 

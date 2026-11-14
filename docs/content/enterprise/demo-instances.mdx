@@ -1,0 +1,137 @@
+---
+title: Demo Instances
+description: "Run a full LearnHouse deployment for one prospect: passwordless sign-in links, the Demo API for branding and content, and a report of what they tried."
+---
+
+import { Callout } from '@/components/mdx'
+
+# Demo instances
+
+A demo instance is a whole LearnHouse deployment run for one prospect. They get a link that signs them straight in, no password, into their own platform with every feature on, for a few days. You shape it through the **Demo API** (branding, courses, sample learners), close or extend it at any time, and see exactly what they did: sessions, time per area, the features they tried and the ones they never opened.
+
+<Callout type="info">
+Demo instances are an Enterprise Edition feature. Without the Enterprise Edition none of the routes, pages or tracking exist, and the demo settings below are ignored. Each instance needs an Enterprise license key.
+</Callout>
+
+## How it fits together
+
+| Piece | Where | What it does |
+| --- | --- | --- |
+| Demo-instance mode | inside each instance (`LEARNHOUSE_DEMO_INSTANCE=true`) | sign-in links, lifecycle (expiry, close), banner, usage tracking |
+| Demo API | each instance, `/api/v1/demo-control/*`, control key | status, extend, close, reopen, links, org, content, analytics |
+| Console **Admin → Demos** | the platform (superadmin) | register demos, issue links, push branding and content, the analytics breakdown |
+| Superadmin API + platform MCP | the platform | the same controls for scripts and `automation-tools` |
+| Demo images | `ghcr.io/learnhouse/demo-{backend,frontend,collab}:demo-<version>` | Enterprise images with demo defaults |
+| Helm chart | `infra/k8s/charts/learnhouse-demo` | one namespace per demo, `https://<slug>.getlearnhouse.com` |
+| Orchestrator | `automation-tools/apps/demo-orchestrator` | create → seed → link → refresh analytics → tear down |
+
+## Environment (inside the instance)
+
+| Variable | Default | |
+| --- | --- | --- |
+| `LEARNHOUSE_DEMO_INSTANCE` | off | `true` turns the mode on |
+| `LEARNHOUSE_DEMO_CONTROL_KEY` | required | secret for the Demo API, at least 32 characters; without it the mode stays off |
+| `LEARNHOUSE_DEMO_SIGNING_SECRET` | derived from the control key | key for sign-in links (set it separately so rotating one does not touch the other) |
+| `LEARNHOUSE_DEMO_INSTANCE_ID` | derived from the control key | bound into every link: a link from one instance is useless on another |
+| `LEARNHOUSE_DEMO_EXPIRES_AT` | | ISO date-time the demo ends (first boot only; later changes go through the Demo API) |
+| `LEARNHOUSE_DEMO_DURATION_DAYS` | `4` | otherwise, days from first boot (max 90) |
+| `LEARNHOUSE_DEMO_LINK_MAX_USES` | `5` | default uses per link (laptop and phone) |
+| `LEARNHOUSE_DEMO_LINK_MAX_DAYS` | `30` | hard ceiling of a link token's life |
+| `LEARNHOUSE_DEMO_EXPIRING_SOON_HOURS` | `24` | when the banner turns amber |
+| `LEARNHOUSE_DEMO_COMPANY`, `_PROSPECT_NAME`, `_PROSPECT_EMAIL` | | who the demo is for |
+| `LEARNHOUSE_DEMO_OWNER_NAME`, `_OWNER_EMAIL` | | your contact, shown on the ended page |
+| `LEARNHOUSE_DEMO_CTA_URL` | `https://www.learnhouse.app/contact` | the "Talk to us" button |
+| `LEARNHOUSE_DEMO_BASE_DOMAIN` | `getlearnhouse.com` | parent domain: each demo is `https://<slug>.getlearnhouse.com` |
+| `LEARNHOUSE_DEMO_PUBLIC_URL` | `https://<frontend domain>` | base URL links point at |
+| `LEARNHOUSE_DEMO_TRACKING` | `true` | `false` stops usage tracking |
+
+On the platform (control side): `LEARNHOUSE_DEMO_ALLOW_PRIVATE_URLS=true` lets the console reach an instance on `http://` or a private address, and only in development mode. In production it is ignored.
+
+## The sign-in link
+
+`https://acme.getlearnhouse.com/demo-access#t=lhd1.<payload>.<signature>`
+
+1. The token rides in the URL fragment, which browsers never send to a server: it stays out of access logs, proxies and `Referer` headers. The page wipes it from the address bar on load.
+2. Opening the page spends nothing. It previews the link (who it is for, the end date), and only the **Enter your demo** click signs in, through the web app's same-origin auth relay. Mail scanners and link prefetchers cannot use up a link.
+3. The first use creates the person's account (email verified, no usable password) with the link's role, **admin** or **learner**, and starts a normal session.
+
+## Lifecycle
+
+**Active** → **Ending soon** (amber banner, days or hours left) → **Expired** or **Closed** → optionally **Reopened**.
+
+- Expiry needs no scheduler: it is computed from the end date on every request.
+- **Close** is instant: every API request carrying a session answers `410 DEMO_ENDED` (`401` for the token refresh, so the browser drops its cookies), the "This demo has ended" page takes over, and every user's tokens issued before that moment are revoked.
+- **Reopen** never revives the old sessions: people open their link again (still valid unless turned off).
+- **Extend** pushes the end back; links without their own end follow the demo.
+
+## Demo API
+
+All routes: `https://<slug>.getlearnhouse.com/api/v1/demo-control/...` with `X-Demo-Control-Key: <key>`. Without demo-instance mode every route answers 404.
+
+| Method and path | |
+| --- | --- |
+| `GET /status` | state, end date, links, counts |
+| `PUT /settings` | prospect, company, owner, CTA, `expires_at` |
+| `POST /extend` `{days \| expires_at}` | push back the end |
+| `POST /close` `{reason}` | end now (links refused, sessions ended) |
+| `POST /reopen` `{days?}` | open again |
+| `GET /links` · `POST /links` · `DELETE /links/{uuid}` · `GET /links/{uuid}/uses` | sign-in links: `{email, name, role, max_uses, expires_at}`; the token and URL are returned once |
+| `PUT /org` | `{name, description, about, email, slug, color, logo (data:image/png\|jpeg\|webp;base64), unlock_all}` |
+| `POST /content/courses` | a `build_course` spec (chapters, pages, typed blocks, assignments) |
+| `POST /content/pack` | `{pack: riverbend \| riverbend_compact \| customer_education \| higher_ed, learners, community}` |
+| `POST /content/learners` | `{count, course_uuids?}` sample learners with progress |
+| `GET /tools` · `POST /tools/{name}` | any agent tool (the MCP set) run as the instance's admin, pre-approved |
+| `GET /analytics/summary` | the breakdown below |
+| `GET /analytics/events?after_id=&limit=&kind=` | raw events, oldest first |
+| `POST /reset` `{analytics, links}` | wipe usage data and/or links |
+
+```bash
+curl -X POST https://acme.getlearnhouse.com/api/v1/demo-control/links \
+  -H "X-Demo-Control-Key: $DEMO_CONTROL_KEY" -H "Content-Type: application/json" \
+  -d '{"email": "dana@acme-corp.com", "name": "Dana Reyes", "role": "admin"}'
+```
+
+Every change is written to the instance's event log as a `control` event (never counted as prospect activity).
+
+## What is tracked
+
+Inside the instance only, and only through the Demo API does it leave:
+
+- **Feature actions**: every successful API change is matched against a catalog (course created, lessons edited, assignments, AI and Atlas, communities, boards, Plays, live sessions, newsletter, payments, members and groups, branding, settings, integrations, API and MCP, learner progress, analytics opened…). Stored: path, feature, status code, device class. No request bodies.
+- **Pages and time**: the demo banner reports page views and a heartbeat every 30 seconds while the tab is visible, which gives sessions, time per area and devices.
+- **Sign-ins**: every link use, allowed or refused, with IP and user agent.
+
+The summary has totals (sessions, active time, page views, actions, people, active days), features used and not used, time per area, top actions, people, the session timeline, daily activity, devices, milestones (signed in, explored three areas, created content, invited the team, tried AI, tried Enterprise features, came back another day), an engagement score (0–100) and alerts (never signed in, active today, ending soon, quiet for two days).
+
+## Console
+
+**Admin → Demos** (permission `platform.read` to read, `pocs.manage` to change):
+
+- The list: live demos, ending within a day, never signed in, active today; engagement and features used per demo.
+- **Register a demo**: company, prospect, subdomain (`<slug>.getlearnhouse.com`), instance URL, control key (stored encrypted, never shown again), duration.
+- A demo: overview (score, active time, milestones, features tried vs not, time per area, daily activity, top actions), people, sessions, sign-in links (issue, copy once, turn off), content and branding (push name, color, logo, unlock every feature; sample packs; a course spec), settings (extend, close, reopen, edit, rotate the key, unregister).
+
+The same through the superadmin API (`/api/v1/ee/superadmin/demos*`) and the platform MCP (`list_demos`, `get_demo`, `sync_demo_analytics`, `issue_demo_link`, `extend_demo`; closing stays in the console and the REST API).
+
+## Images and Kubernetes
+
+- `infra/.github/workflows/build-demo.yaml` builds the demo images on top of the Enterprise ones after each Enterprise build (or by hand with an Enterprise tag): `demo-backend`, `demo-frontend` (thin layers with the demo defaults) and `demo-collab` (a retag).
+- `infra/k8s/charts/learnhouse-demo`: API, web, collab, Postgres (or an external database), Redis, a Gateway API `HTTPRoute` (or an `Ingress`) for `<slug>.getlearnhouse.com` and `<slug>-collab.getlearnhouse.com`, a NetworkPolicy that isolates the namespace, and a Secret generated once (or `secrets.existingSecret`).
+
+```bash
+helm upgrade --install demo-acme infra/k8s/charts/learnhouse-demo -n demo-acme \
+  --set demo.slug=acme --set demo.company="Acme Corp" \
+  --set-string demo.expiresAt=2026-11-17T18:00:00Z \
+  --set secrets.existingSecret=demo-acme-secrets --set image.tag=demo-1.4.0
+```
+
+DNS `*.getlearnhouse.com` points at the gateway, with a wildcard certificate for `*.getlearnhouse.com`. Session cookies stay host-only (no `LEARNHOUSE_COOKIE_DOMAIN`), so one demo can never read another demo's cookies.
+
+## Security model
+
+- **Links**: HMAC-SHA256 tokens with a key bound to the instance id, compared in constant time before anything in them is read; a hard expiry ceiling; the link row decides (turned off, own end, use cap taken atomically so two clicks cannot share the last use, the demo's state). Preview and sign-in are rate-limited per IP and every attempt is logged.
+- **Sessions**: one org, normal LearnHouse sessions; closing revokes them and refuses any token issued before the close, refresh included.
+- **Demo API**: the control key in a header, compared in constant time (SHA-256 digests), 20 failures per IP in 10 minutes lock the IP out; never logged, echoed or returned; 404 when the mode is off.
+- **Console**: control keys encrypted at rest; instance URLs must be https and resolve to public addresses; each call re-resolves the host, refuses any private, loopback, link-local, reserved, multicast or IPv4-mapped answer (or a failed lookup) and connects to the checked IP, so DNS rebinding cannot redirect it; redirects are never followed.
+- **Isolation**: one namespace, database, Redis, JWT secret and signing secret per demo; a NetworkPolicy blocks traffic to other namespaces and private ranges.
+- **Data**: usage data stays in the instance and is deleted with it; the console keeps the last snapshot.

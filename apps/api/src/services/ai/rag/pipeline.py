@@ -21,6 +21,7 @@ from sqlmodel import select
 from src.db.course_embeddings import CourseEmbedding
 from src.db.courses.activities import Activity
 from src.db.courses.courses import Course
+from src.services.ai import metering
 from src.services.ai.rag import media as media_stage
 from src.services.ai.rag import store
 from src.services.ai.rag.embedding_service import chunk_text, generate_embeddings
@@ -111,8 +112,12 @@ async def _store(extraction: Extraction, db) -> int:
         return len(chunks)
 
     # Embed before touching the table, so a provider failure leaves the
-    # previous rows searchable.
-    vectors = await generate_embeddings([text for text, _, _ in chunks]) if chunks else []
+    # previous rows searchable. Keeping the index fresh is platform work: its
+    # cost is metered for the reports but not charged ("rag_indexing").
+    vectors: list = []
+    if chunks:
+        async with metering.charge("rag_indexing", org_id=extraction.org_id, db=db, units=len(chunks)):
+            vectors = await generate_embeddings([text for text, _, _ in chunks])
     now = str(datetime.now())
     rows = [
         CourseEmbedding(

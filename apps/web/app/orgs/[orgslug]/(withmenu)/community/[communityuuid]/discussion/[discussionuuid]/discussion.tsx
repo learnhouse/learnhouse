@@ -3,14 +3,16 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
+import { Garage } from '@phosphor-icons/react'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { DiscussionDetail } from '@components/Objects/Communities/DiscussionDetail'
 import { DiscussionSidebar } from '@components/Objects/Communities/DiscussionSidebar'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { Community } from '@services/communities/communities'
 import { isRichContentAllowed } from '@components/Objects/Communities/richContent'
+import { communityHref } from '@components/Objects/Communities/communityUi'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
-import { MessageCircle } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
@@ -27,11 +29,8 @@ interface DiscussionPageClientProps {
   orgslug: string
 }
 
-const DiscussionPageClient = ({
-  discussion: initialDiscussion,
-  community,
-  orgslug,
-}: DiscussionPageClientProps) => {
+const DiscussionPageClient = ({ discussion: initialDiscussion, community, orgslug }: DiscussionPageClientProps) => {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
   const [discussion, setDiscussion] = useState(initialDiscussion)
@@ -48,47 +47,36 @@ const DiscussionPageClient = ({
   })
 
   const handleDiscussionUpdated = (updated: DiscussionWithAuthor) => {
-    setDiscussion(updated)
+    setDiscussion((current) => ({ ...current, ...updated }))
     router.refresh()
   }
 
   return (
     <GeneralWrapperStyled>
-      {/* Breadcrumbs */}
-      <div className="pb-4">
-        <Breadcrumbs items={[
-          { label: 'Communities', href: getUriWithOrg(orgslug, '/communities'), icon: <MessageCircle size={14} /> },
-          { label: community.name, href: getUriWithOrg(orgslug, `/community/${community.community_uuid.replace('community_', '')}`) },
-          { label: discussion.title }
-        ]} />
+      <div className="pb-5">
+        <Breadcrumbs
+          items={[
+            { label: t('communities.title'), href: getUriWithOrg(orgslug, '/communities'), icon: <Garage size={14} /> },
+            { label: community.name, href: communityHref(orgslug, community.community_uuid) },
+            { label: discussion.title },
+          ]}
+        />
       </div>
 
-      {/* Layout - Sidebar Left, Content Right */}
-      <div className="flex flex-col md:flex-row gap-6 pt-2">
-        {/* Left Sidebar - Discussion Info (Desktop only) */}
-        <div className="hidden md:block w-full md:w-72 lg:w-80 flex-shrink-0">
-          <div className="sticky top-24">
-            <DiscussionSidebar
-              discussion={discussion}
-              community={community}
-              orgslug={orgslug}
-            />
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
-          <DiscussionDetail
-            discussion={discussion}
-            communityUuid={community.community_uuid}
-            orgslug={orgslug}
-            onEdit={() => setIsEditModalOpen(true)}
-            allowRichContent={allowRichContent}
-          />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 items-start">
+        <DiscussionDetail
+          discussion={discussion}
+          communityUuid={community.community_uuid}
+          orgslug={orgslug}
+          onEdit={() => setIsEditModalOpen(true)}
+          allowRichContent={allowRichContent}
+          onUpdated={(updated) => setDiscussion((current) => ({ ...current, ...updated }))}
+        />
+        <aside className="lg:sticky lg:top-[calc(6rem+var(--lh-company-bar-h,0px))]">
+          <DiscussionSidebar discussion={discussion} community={community} orgslug={orgslug} />
+        </aside>
       </div>
 
-      {/* Edit Modal */}
       {editModalMounted && (
         <EditDiscussionModal
           isOpen={isEditModalOpen}

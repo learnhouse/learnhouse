@@ -222,3 +222,13 @@ async def test_sources_respect_the_feature_toggle(db, org, course, chapter, regu
 
 def test_all_built_in_sources_are_registered():
     assert {"assignments", "drip", "course_updates", "certificates", "podcasts"} <= set(calendar_sources.registered_sources())
+
+
+async def test_user_course_ids_is_read_once_per_request(db, org, course, regular_user, mock_request):
+    # Every course-based source asks which courses the user is in; the trail
+    # lookup used to run once per source (Sentry N+1 on the calendar).
+    await _enroll(db, org, course, regular_user)
+    with patch.object(db, "execute", wraps=db.execute) as spy:
+        await _events(mock_request, org, regular_user, db)
+    trail_queries = [c for c in spy.call_args_list if "trailrun.course_id" in str(c.args[0]).lower() and "trailrun.org_id" in str(c.args[0]).lower()]
+    assert len(trail_queries) == 1

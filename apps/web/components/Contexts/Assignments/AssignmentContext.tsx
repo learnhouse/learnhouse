@@ -8,20 +8,24 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 export const AssignmentContext = createContext({})
 
-export function AssignmentProvider({ children, assignment_uuid }: { children: React.ReactNode, assignment_uuid: string }) {
+// `lang` (learner view only): the content language list, so the assignment
+// and task texts come in the published translation. Uuids are the same in
+// every language, so submissions and grading don't change.
+export function AssignmentProvider({ children, assignment_uuid, lang }: { children: React.ReactNode, assignment_uuid: string, lang?: string }) {
     const session = useLHSession() as any
     const accessToken = session?.data?.tokens?.access_token
+    const langQs = lang ? `?lang=${encodeURIComponent(lang)}` : ''
 
     const { data: assignment, error: assignmentError } = useQuery({
-        queryKey: queryKeys.assignments.detail(assignment_uuid),
-        queryFn: () => apiFetch(`${getAPIUrl()}assignments/${assignment_uuid}`, accessToken),
+        queryKey: queryKeys.assignments.detail(assignment_uuid, lang || undefined),
+        queryFn: () => apiFetch(`${getAPIUrl()}assignments/${assignment_uuid}${langQs}`, accessToken),
         enabled: !!(assignment_uuid && accessToken),
         staleTime: 60_000,
     })
 
     const { data: assignment_tasks, error: assignmentTasksError } = useQuery({
-        queryKey: queryKeys.assignments.tasks(assignment_uuid),
-        queryFn: () => apiFetch(`${getAPIUrl()}assignments/${assignment_uuid}/tasks`, accessToken),
+        queryKey: queryKeys.assignments.tasks(assignment_uuid, lang || undefined),
+        queryFn: () => apiFetch(`${getAPIUrl()}assignments/${assignment_uuid}/tasks${langQs}`, accessToken),
         enabled: !!(assignment_uuid && accessToken),
         staleTime: 60_000,
     })

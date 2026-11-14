@@ -1,14 +1,9 @@
 'use client'
 import React from 'react'
-import {
-  Loader2, BookOpen, FileText, ChevronRight, ChevronDown,
-  Plus, Trash2, Check, Sparkles, Play, RotateCcw, ArrowUpRight,
-  LayoutList, Wand2,
-} from 'lucide-react'
+import { CircleNotch, BookOpen, FileText, CaretRight, CaretDown, Plus, Trash, Check, Play, ArrowCounterClockwise, ArrowUpRight, ListBullets } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import Image from 'next/image'
-import lrnaiIcon from 'public/lrnai_icon.png'
+import { AIMark, AIThinking, AI_GRADIENT } from '@components/Objects/AI/AIBrand'
 import toast from 'react-hot-toast'
 import type { CoursePlan, ChapterPlan, ActivityPlan, CreatedChapter } from '@services/ai/courseplanning'
 import {
@@ -162,7 +157,7 @@ function AICoursePreview({
               : "text-white/40 hover:text-white/60 hover:bg-white/[0.02]"
           )}
         >
-          <LayoutList className="w-3.5 h-3.5" />
+          <ListBullets className="w-3.5 h-3.5" />
           {t('courses.create.ai.tab_plan')}
         </button>
         {ENABLE_ACTIVITY_CONTENT_GENERATION && (
@@ -175,7 +170,7 @@ function AICoursePreview({
                 : "text-white/40 hover:text-white/60 hover:bg-white/[0.02]"
             )}
           >
-            <Wand2 className="w-3.5 h-3.5" />
+            <AIMark size={14} alt="" />
             {t('courses.create.ai.tab_content')}
             {totalActivities > 0 && (
               <span className={cn(
@@ -252,13 +247,8 @@ function PlanTabContent({
   if (isLoading && !plan) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div
-          style={{ background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)' }}
-          className="p-4 rounded-full drop-shadow-md animate-pulse"
-        >
-          <Image src={lrnaiIcon} alt="AI" width={32} height={32} />
-        </div>
-        <p className="text-white/50 mt-4 text-sm">{t('courses.create.ai.generating_plan')}</p>
+        <AIMark size={64} pulse className="drop-shadow-md" />
+        <AIThinking tone="dark" label={t('courses.create.ai.generating_plan')} className="mt-4" />
         {streamingContent && (
           <div className="mt-4 max-w-2xl max-h-[300px] overflow-hidden">
             <pre className="text-xs text-white/30 font-mono whitespace-pre-wrap break-words">
@@ -274,12 +264,7 @@ function PlanTabContent({
   if (!plan) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div
-          style={{ background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)' }}
-          className="p-4 rounded-full drop-shadow-md"
-        >
-          <Image src={lrnaiIcon} alt="AI" width={32} height={32} />
-        </div>
+        <AIMark size={64} className="drop-shadow-md" />
         <h3 className="text-white/80 font-semibold mt-4">{t('courses.create.ai.describe_course')}</h3>
         <p className="text-white/50 text-sm mt-2 text-center max-w-md">{t('courses.create.ai.describe_course_hint')}</p>
       </div>
@@ -329,7 +314,7 @@ function PlanTabContent({
               )}
             >
               {isCreatingCourse ? (
-                <><Loader2 className="w-4 h-4 animate-spin" />{t('courses.create.ai.creating_structure')}</>
+                <><CircleNotch className="w-4 h-4 animate-spin" />{t('courses.create.ai.creating_structure')}</>
               ) : (
                 t('courses.create.ai.create_course')
               )}
@@ -399,9 +384,7 @@ function ContentTabContent({
   if (!plan || chapters.length === 0) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
-        <div className="p-4 rounded-full bg-white/5 mb-4">
-          <Wand2 className="w-7 h-7 text-white/30" />
-        </div>
+        <AIMark size={56} className="mb-4 opacity-60" alt="" />
         <p className="text-white/40 text-sm text-center max-w-sm">
           {t('courses.create.ai.content_empty_hint')}
         </p>
@@ -434,7 +417,7 @@ function ContentTabContent({
                   : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 outline outline-1 outline-purple-500/30"
               )}
             >
-              {isAnyGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              {isAnyGenerating ? <CircleNotch className="w-3 h-3 animate-spin" /> : <AIMark size={14} alt="" />}
               {t('courses.create.ai.generate_all')}
             </button>
           </div>
@@ -454,7 +437,7 @@ function ContentTabContent({
                   className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
                   onClick={() => toggleChapter(ci)}
                 >
-                  {expandedChapters.has(ci) ? <ChevronDown className="w-4 h-4 text-white/50" /> : <ChevronRight className="w-4 h-4 text-white/50" />}
+                  {expandedChapters.has(ci) ? <CaretDown className="w-4 h-4 text-white/50" /> : <CaretRight className="w-4 h-4 text-white/50" />}
                   <BookOpen className="w-4 h-4 text-purple-400" />
                   <span className="flex-1 text-sm font-medium text-white">{chapter.name}</span>
                   <span className="text-xs text-white/40 tabular-nums">
@@ -509,13 +492,13 @@ function ContentTabContent({
                               <span className="text-xs">{t('courses.create.ai.done')}</span>
                             </div>
                           ) : isGenerating ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400 flex-shrink-0" />
+                            <CircleNotch className="w-3.5 h-3.5 animate-spin text-purple-400 flex-shrink-0" />
                           ) : hasError ? (
                             <button
                               onClick={() => createdActivity && onGenerateContent(createdActivity.activity_uuid, activity.name, activity.description, chapter.name)}
                               className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-red-300 hover:bg-red-500/20 transition-colors flex-shrink-0"
                             >
-                              <RotateCcw className="w-3 h-3" />
+                              <ArrowCounterClockwise className="w-3 h-3" />
                               {t('courses.create.ai.retry')}
                             </button>
                           ) : (
@@ -586,7 +569,7 @@ function CoursePlanHeader({ plan, onUpdatePlan }: { plan: CoursePlan; onUpdatePl
     <div className="bg-white/5 rounded-xl p-5 ring-1 ring-inset ring-white/10">
       <div className="flex items-start gap-4">
         <div
-          style={{ background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)' }}
+          style={{ background: AI_GRADIENT }}
           className="p-3 rounded-xl drop-shadow-md flex-shrink-0"
         >
           <BookOpen className="w-6 h-6 text-white" />
@@ -654,7 +637,7 @@ function PlanChapterCard({ chapter, chapterIndex, plan, onUpdatePlan }: {
   return (
     <div className="bg-white/5 rounded-xl ring-1 ring-inset ring-white/10 overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setExpanded(!expanded)}>
-        {expanded ? <ChevronDown className="w-4 h-4 text-white/50" /> : <ChevronRight className="w-4 h-4 text-white/50" />}
+        {expanded ? <CaretDown className="w-4 h-4 text-white/50" /> : <CaretRight className="w-4 h-4 text-white/50" />}
         <BookOpen className="w-4 h-4 text-purple-400" />
         <div className="flex-1 min-w-0">
           {editingName ? (
@@ -672,7 +655,7 @@ function PlanChapterCard({ chapter, chapterIndex, plan, onUpdatePlan }: {
         <span className="text-xs text-white/40">{chapter.activities.length} {t('courses.create.ai.activities')}</span>
         <button onClick={(e) => { e.stopPropagation(); onUpdatePlan({ ...plan, chapters: plan.chapters.filter((_, i) => i !== chapterIndex) }) }}
           className="p-1 hover:bg-red-500/20 rounded transition-colors">
-          <Trash2 className="w-3 h-3 text-red-400" />
+          <Trash className="w-3 h-3 text-red-400" />
         </button>
       </div>
 
@@ -746,7 +729,7 @@ function PlanActivityItem({ activity, activityIndex, chapterIndex, plan, onUpdat
         {activity.description && <p className="text-xs text-white/40 mt-0.5 line-clamp-1">{activity.description}</p>}
       </div>
       <button onClick={remove} className="p-1 hover:bg-red-500/20 rounded transition-colors flex-shrink-0">
-        <Trash2 className="w-3 h-3 text-red-400" />
+        <Trash className="w-3 h-3 text-red-400" />
       </button>
     </div>
   )

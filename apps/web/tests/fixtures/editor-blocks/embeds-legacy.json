@@ -1,0 +1,19 @@
+{
+  "_comment": "User card, Web preview, H5P and Code playground nodes in the shapes older code wrote: the old editor UI, the AI fences (apps/api fences.py) and the LMS importer (lms_import/package.py). No local database had any of these blocks besides test content, so these are written from those writers.",
+  "type": "doc",
+  "content": [
+    { "type": "blockUser", "attrs": { "user_id": "" } },
+    { "type": "blockUser", "attrs": { "user_id": 79 } },
+    { "type": "blockUser", "attrs": { "user_id": "12" } },
+    { "type": "blockUser", "attrs": { "user_id": null } },
+    { "type": "blockWebPreview", "attrs": { "url": "https://www.learnhouse.app", "title": "LearnHouse", "description": "The open source learning platform", "og_image": "https://www.learnhouse.app/og.png", "favicon": "https://www.learnhouse.app/favicon.ico", "og_type": "website", "og_url": "https://www.learnhouse.app", "alignment": "center", "buttonLabel": "Visit Site", "showButton": true, "openInPopup": true } },
+    { "type": "blockWebPreview", "attrs": { "url": "https://developer.mozilla.org/en-US/docs/Web/HTML", "title": "https://developer.mozilla.org/en-US/docs/Web/HTML", "description": null, "og_image": null, "favicon": null, "og_type": null, "og_url": null, "alignment": "left", "buttonLabel": "Open link", "showButton": true, "openInPopup": false } },
+    { "type": "blockWebPreview", "attrs": { "url": "https://example.com/article", "title": null, "description": null, "alignment": "right", "buttonLabel": "Read it", "showButton": true } },
+    { "type": "blockWebPreview" },
+    { "type": "blockH5P", "attrs": { "h5pUrl": "https://h5p.org/h5p/embed/712", "title": "Drag the words", "height": 400 } },
+    { "type": "blockH5P", "attrs": { "h5pUrl": "https://team.h5p.com/content/1291/embed", "title": "", "height": 612, "sizeMode": "widescreen" } },
+    { "type": "blockH5P", "attrs": { "h5pUrl": "", "height": 400, "title": "" } },
+    { "type": "blockCode", "attrs": { "mode": "advanced", "languageId": 71, "languageName": "Python 3", "starterCode": "# Write your code here\n", "testCases": [] } },
+    { "type": "blockCode", "attrs": { "mode": "advanced", "languageId": 63, "languageName": "JavaScript (Node)", "starterCode": "const n = require('fs').readFileSync(0, 'utf8')\n", "testCases": [ { "id": "test_a1b2", "label": "Doubles 2", "stdin": "2", "expectedStdout": "4" }, { "id": "test_c3d4", "label": "Test 2", "stdin": "", "expectedStdout": "0" } ], "description": "Print **twice** the number.", "hints": ["Read stdin", "Multiply"], "difficulty": "hard", "solutionCode": "console.log(2 * Number(require('fs').readFileSync(0, 'utf8')))\n", "maxAttemptsBeforeReveal": 0, "timeComplexity": "O(1)", "spaceComplexity": "", "timeLimitMs": 60000, "sqliteDbPath": "", "sqliteDbName": "", "timedMode": true, "timedDurationMs": 600000, "additionalFiles": [ { "name": "data.txt", "content": "1 2 3\n" } ] } }
+  ]
+}

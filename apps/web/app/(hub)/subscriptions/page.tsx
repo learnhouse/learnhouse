@@ -184,7 +184,7 @@ function SubscriptionsClient() {
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
-      <Toaster />
+      <Toaster toastOptions={{ className: 'lh-toast' }} />
       <div className="relative min-h-screen">
         {/* Blueprint grid, fades in from bottom */}
         <div

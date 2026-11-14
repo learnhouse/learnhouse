@@ -5,17 +5,18 @@ import { getAPIUrl } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
 import { addFolderContent, addOrgRootContent } from '@services/folders/folders'
 import {
-  BookCopy,
-  Podcast,
-  Users,
-  LayoutGrid,
-  Gamepad2,
-  Search,
+  Books,
+  MicrophoneStage,
+  SquaresFour,
+  Lightning,
+  MagnifyingGlass,
   Check,
   Plus,
-  Loader2,
+  Tray,
   File as FileIcon,
-} from 'lucide-react'
+  Garage,
+} from '@phosphor-icons/react'
+import { Button, Chip, INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
 import MediaPreview from '@components/Dashboard/Library/MediaPreview'
 import React from 'react'
 import toast from 'react-hot-toast'
@@ -33,12 +34,12 @@ export const TAB_META: Record<
   TabKey,
   { feature: string; icon: any; uuidKey: string; kind: ResourceKind }
 > = {
-  courses: { feature: 'courses', icon: BookCopy, uuidKey: 'course_uuid', kind: 'course' },
+  courses: { feature: 'courses', icon: Books, uuidKey: 'course_uuid', kind: 'course' },
   media: { feature: 'library', icon: FileIcon, uuidKey: 'media_uuid', kind: 'media' },
-  podcasts: { feature: 'podcasts', icon: Podcast, uuidKey: 'podcast_uuid', kind: 'podcast' },
-  communities: { feature: 'communities', icon: Users, uuidKey: 'community_uuid', kind: 'community' },
-  boards: { feature: 'boards', icon: LayoutGrid, uuidKey: 'board_uuid', kind: 'board' },
-  playgrounds: { feature: 'playgrounds', icon: Gamepad2, uuidKey: 'playground_uuid', kind: 'playground' },
+  podcasts: { feature: 'podcasts', icon: MicrophoneStage, uuidKey: 'podcast_uuid', kind: 'podcast' },
+  communities: { feature: 'communities', icon: Garage, uuidKey: 'community_uuid', kind: 'community' },
+  boards: { feature: 'boards', icon: SquaresFour, uuidKey: 'board_uuid', kind: 'board' },
+  playgrounds: { feature: 'playgrounds', icon: Lightning, uuidKey: 'playground_uuid', kind: 'playground' },
 }
 
 export function endpointFor(tab: TabKey, orgslug: string, org_id: any): string {
@@ -141,27 +142,38 @@ function ResourceList({
   }
 
   return (
-    <div>
-      <div className="relative mb-3">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+    <div className="flex flex-col gap-3">
+      <div className="relative">
+        <MagnifyingGlass size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('library.search')}
-          className="w-full ps-10 pe-3 py-2 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10 border-0"
+          placeholder={t('library.dash.search_resources', { type: t(`library.tabs.${tab}`).toLowerCase() })}
+          className={`${INPUT} ps-9`}
         />
       </div>
 
       {isLoading ? (
-        <div className="py-10 flex justify-center text-gray-400">
-          <Loader2 className="w-6 h-6 animate-spin" />
+        <div className="rounded-xl ring-1 ring-inset ring-neutral-200 divide-y divide-neutral-100 animate-pulse">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-3.5 py-3">
+              <div className="w-7 h-7 rounded-lg bg-neutral-100" />
+              <div className="h-3.5 flex-1 max-w-[50%] rounded bg-neutral-100" />
+              <div className="h-7 w-14 rounded-md bg-neutral-100" />
+            </div>
+          ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-10 text-center text-sm text-gray-400">{t('library.no_resources')}</div>
+        <div className="flex flex-col items-center gap-2 py-10 text-center rounded-xl ring-1 ring-inset ring-neutral-200">
+          <span className="w-10 h-10 rounded-xl bg-neutral-100 text-neutral-400 flex items-center justify-center">
+            <Tray size={18} />
+          </span>
+          <p className="text-sm text-neutral-500">{query.trim() ? t('library.no_results') : t('library.no_resources')}</p>
+        </div>
       ) : tab === 'media' ? (
         // Files need to be recognisable, so media gets thumbnails instead of rows.
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pe-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto p-0.5 pe-1">
           {filtered.map((item) => {
             const uuid = item[uuidKey]
             const isAdded = added.has(uuid)
@@ -172,78 +184,70 @@ function ResourceList({
                 type="button"
                 onClick={() => (mode === 'add' ? handleAdd(uuid) : handleSelect(item))}
                 disabled={pending === uuid}
-                className={`group text-start rounded-xl overflow-hidden border transition-colors disabled:opacity-50 ${
-                  isSelected || isAdded ? 'border-black' : 'border-gray-100 hover:border-gray-300'
+                aria-pressed={isSelected || isAdded}
+                className={`group text-start rounded-xl overflow-hidden bg-white transition-shadow disabled:opacity-50 ${
+                  isSelected || isAdded ? 'ring-2 ring-neutral-900' : 'ring-1 ring-neutral-200 hover:ring-neutral-300'
                 }`}
               >
                 <MediaPreview resource={item} resourceUuid={uuid} />
                 <div className="p-2 flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-gray-800 truncate">{item.name}</span>
+                  <span className="text-xs font-medium text-neutral-800 truncate">{item.name}</span>
                   {isAdded || isSelected ? (
-                    <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                    <Check size={14} weight="bold" className="text-emerald-600 shrink-0" />
                   ) : (
-                    <Plus className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <Plus size={14} className="text-neutral-400 shrink-0" />
                   )}
                 </div>
                 {item.public === false && (
-                  <p className="px-2 pb-2 text-[10px] text-amber-600 leading-tight">
-                    {t('library.private_media_warning')}
-                  </p>
+                  <p className="px-2 pb-2 text-[10px] text-amber-600 leading-tight">{t('library.private_media_warning')}</p>
                 )}
               </button>
             )
           })}
         </div>
       ) : (
-        <div className="flex flex-col gap-1.5 max-h-[400px] overflow-y-auto">
+        <ul className="rounded-xl ring-1 ring-inset ring-neutral-200 divide-y divide-neutral-100 max-h-[400px] overflow-y-auto">
           {filtered.map((item) => {
             const uuid = item[uuidKey]
             const isAdded = added.has(uuid)
             const isSelected = mode === 'select' && selectedUuid === uuid
+            const Icon = TAB_META[tab].icon
             return (
-              <div
+              <li
                 key={uuid}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg border transition-colors ${
-                  isSelected ? 'border-black bg-gray-50' : 'border-gray-100 hover:bg-gray-50'
-                }`}
+                className={`flex items-center gap-3 px-3.5 py-2.5 transition-colors ${isSelected ? 'bg-neutral-50' : 'hover:bg-neutral-50/70'}`}
               >
-                <span className="text-sm font-medium text-gray-800 truncate pe-3">{item.name}</span>
+                <span className="w-7 h-7 rounded-lg bg-neutral-100 text-neutral-500 flex items-center justify-center shrink-0">
+                  <Icon size={15} />
+                </span>
+                <span className="text-sm font-medium text-neutral-800 truncate flex-1 min-w-0" dir="auto">
+                  {item.name}
+                </span>
                 {mode === 'add' ? (
                   isAdded ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600">
-                      <Check className="w-4 h-4" /> {t('library.added')}
-                    </span>
+                    <Chip tone="emerald" icon={<Check size={12} weight="bold" />}>{t('library.added')}</Chip>
                   ) : (
-                    <button
+                    <Button
+                      size="sm"
+                      variant="secondary"
                       onClick={() => handleAdd(uuid)}
-                      disabled={pending === uuid}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white nice-shadow hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                      loading={pending === uuid}
+                      icon={<Plus size={12} />}
                     >
-                      {pending === uuid ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Plus className="w-3.5 h-3.5" />
-                      )}
                       {t('library.add')}
-                    </button>
+                    </Button>
                   )
+                ) : isSelected ? (
+                  <Chip tone="emerald" icon={<Check size={12} weight="bold" />}>{t('library.added')}</Chip>
                 ) : (
-                  <button
-                    onClick={() => handleSelect(item)}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold nice-shadow transition-colors ${
-                      isSelected
-                        ? 'bg-green-600 text-white'
-                        : 'bg-black text-white hover:bg-neutral-800'
-                    }`}
-                  >
-                    {isSelected ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                    {isSelected ? t('library.added') : t('library.add')}
-                  </button>
+                  <Button size="sm" variant="secondary" onClick={() => handleSelect(item)} icon={<Plus size={12} />}>
+                    {t('library.add')}
+                  </Button>
                 )}
-              </div>
+              </li>
             )
           })}
-        </div>
+        </ul>
       )}
     </div>
   )
@@ -278,18 +282,20 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+      role="tab"
+      aria-selected={active}
+      className={`flex items-center gap-1.5 px-1 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px whitespace-nowrap ${
         active
-          ? 'border-black text-gray-900'
-          : 'border-transparent text-gray-400 hover:text-gray-600'
+          ? 'border-neutral-900 text-neutral-900'
+          : 'border-transparent text-neutral-500 hover:text-neutral-800'
       }`}
     >
-      <Icon className="w-4 h-4" />
+      <Icon size={15} />
       {t(`library.tabs.${tab}`)}
       {count !== undefined && (
         <span
-          className={`ms-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-semibold ${
-            active ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'
+          className={`ms-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-semibold tabular-nums ${
+            active ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500'
           }`}
         >
           {count}
@@ -337,7 +343,7 @@ function ResourcePicker({
 
   return (
     <div>
-      <div className="flex gap-1 mb-4 border-b border-gray-100 overflow-x-auto">
+      <div role="tablist" className="flex gap-4 mb-4 border-b border-neutral-100 overflow-x-auto scrollbar-hide">
         {enabledTabs.map((tab) => (
           <TabButton
             key={tab}

@@ -21,11 +21,13 @@ from starlette.middleware.gzip import GZipMiddleware, GZipResponder, IdentityRes
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from config.config import LearnHouseConfig, get_learnhouse_config
+from src.core.version import get_learnhouse_version
 from src.core.ee_hooks import register_ee_middlewares
 from src.core.events.events import shutdown_app, startup_app
 from src.core.middleware.body_size import RequestBodySizeLimitMiddleware
 from src.core.middleware.bearer_cors import BearerCORSMiddleware, bearer_cors_enabled
 from src.core.middleware.cors import configure_cors
+from src.core.routing_perf import install_router_prefix_short_circuit
 from src.security.csrf import CSRFProtectionMiddleware
 from src.router import v1_router
 from src.services.ai.llm.errors import is_quota_error
@@ -34,6 +36,9 @@ from src.routers.local_content import router as local_content_router
 
 
 learnhouse_config: LearnHouseConfig = get_learnhouse_config()
+
+# Route matching skips whole routers whose prefix can't match (see module).
+install_router_prefix_short_circuit()
 
 # Health probes fail loudly on purpose: a 503 from /health is how Kubernetes
 # learns to take the pod out of rotation. It is not a second, separate incident
@@ -158,7 +163,7 @@ app = FastAPI(
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
     # The schema lists every internal route; publish it only where the docs are.
     openapi_url="/openapi.json" if learnhouse_config.general_config.development_mode else None,
-    version="1.4.4",
+    version=get_learnhouse_version(),
     lifespan=lifespan,
 )
 
@@ -172,6 +177,16 @@ app.add_middleware(
     max_body_bytes=learnhouse_config.hosting_config.max_request_body_mb * 1024 * 1024,
 )
 app.add_middleware(CSRFProtectionMiddleware)
+# Inside CORS: adds X-AI-Credits-Used to AI responses (credits that request charged).
+from src.core.middleware.ai_credits import AICreditsHeaderMiddleware  # noqa: E402
+
+app.add_middleware(AICreditsHeaderMiddleware)
+# Platform support sessions (impersonation): refuses what an impersonated
+# request may never do before any route runs, inside CORS so the 403 is readable.
+from src.security.impersonation import ImpersonationGateMiddleware, install_orm_scope  # noqa: E402
+
+app.add_middleware(ImpersonationGateMiddleware)
+install_orm_scope()
 configure_cors(app)
 # Wraps the API's CORS: origins it doesn't trust get credential-less CORS, so
 # apps on other domains can call the API with a bearer token (embed sessions).
@@ -200,6 +215,10 @@ if learnhouse_config.mcp_config.enabled:
     app.add_route("/mcp", _mcp_app, methods=["GET", "POST", "DELETE", "OPTIONS"])
     app.add_route("/mcp/", _mcp_app, methods=["GET", "POST", "DELETE", "OPTIONS"])
     app.include_router(mcp_oauth_public_router)
+    # The platform (superadmin) MCP server at /mcp/platform, EE only.
+    from src.core.ee_hooks import register_ee_platform_mcp
+
+    register_ee_platform_mcp(app)
     # Outermost: answers CORS for these public paths before the API's own CORS.
     app.add_middleware(PublicCORSMiddleware)
 

@@ -131,6 +131,7 @@ def _course_card(course: Course) -> dict:
     return {
         "id": course.id,
         "course_uuid": course.course_uuid,
+        "slug": course.slug,
         "org_id": course.org_id,
         "name": course.name,
         "description": course.description,
@@ -919,6 +920,9 @@ async def check_path_completion(
         )
     except Exception as e:
         logger.warning("path_completed webhook failed (non-critical): %s", e)
+    from src.services.feature_notifications import notify_path_completed
+
+    await notify_path_completed(db_session, path, user_id)
     return True
 
 

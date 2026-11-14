@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 
 // Folder color presets: key is stored on folder.color; maps to a soft icon
 // tile and a solid swatch for the picker. Keep these in sync with the picker.
@@ -17,51 +17,6 @@ export const DEFAULT_FOLDER_COLOR = 'violet'
 export const folderTone = (color?: string) =>
   FOLDER_COLORS[color || DEFAULT_FOLDER_COLOR]?.tile || FOLDER_COLORS[DEFAULT_FOLDER_COLOR].tile
 
-export const PRIMARY_BTN =
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-black px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-semibold text-white nice-shadow hover:bg-neutral-800 transition-colors'
-export const SECONDARY_BTN =
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-white px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 nice-shadow hover:bg-gray-50 transition-colors'
-
-export function StatPill({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: number
-}) {
-  return (
-    <div className="flex items-center gap-2 bg-white nice-shadow rounded-xl px-3.5 py-2">
-      {icon}
-      <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">{label}</span>
-      <span className="text-sm font-bold text-gray-900">{value}</span>
-    </div>
-  )
-}
-
-export function FilterPill({
-  icon,
-  label,
-  active,
-  activeClass,
-  onClick,
-}: {
-  icon?: React.ReactNode
-  label: string
-  active: boolean
-  activeClass: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full transition-colors whitespace-nowrap ${
-        active ? activeClass : 'bg-white nice-shadow text-gray-600 hover:bg-gray-50'
-      }`}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  )
-}
+// Kept for older call sites; new code uses DashKit's <Button>.
+export const PRIMARY_BTN = buttonClass('primary', 'md')
+export const SECONDARY_BTN = buttonClass('secondary', 'md')

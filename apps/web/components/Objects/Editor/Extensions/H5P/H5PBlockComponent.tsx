@@ -1,16 +1,20 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import EditorBlockFrame from '../../Blocks/ui/EditorBlockFrame'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
   PuzzlePiece,
   Link as LinkIcon,
   PencilSimple,
-  X,
   WarningCircle,
   ArrowsOutLineVertical,
+  ArrowSquareOut,
   CheckCircle,
+  Info,
+  X,
 } from '@phosphor-icons/react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import { normalizeH5PUrl, type H5PUrlErrorReason } from '@/lib/media/h5pUrl'
 import {
   clampHeight,
@@ -27,6 +31,21 @@ import {
   SIZE_MODES,
   type H5PSizeMode,
 } from '@/lib/media/h5pProtocol'
+import { BlockToolbarButton } from '../../Blocks/ui/BlockChrome'
+import { frameProblemFor, looksLikeH5PEmbed, openableH5PUrl, type H5PFrameProblem } from './h5pChecks'
+
+const PROBLEM_KEYS: Record<Exclude<H5PFrameProblem, null>, string> = {
+  mixed_content: 'editor.blocks_v2.h5p.blocked_mixed',
+  same_site: 'editor.blocks_v2.h5p.blocked_same_site',
+}
+
+// The page origin never changes after hydration; nothing to subscribe to.
+const subscribeNothing = () => () => {}
+
+// How long a loaded frame may stay silent before we suggest it may be blocked.
+const SILENCE_HINT_MS = 10000
+// The live preview waits for the author to stop typing.
+const PREVIEW_DEBOUNCE_MS = 500
 
 const ERROR_KEYS: Record<H5PUrlErrorReason, string> = {
   empty: 'editor.blocks.h5p_block.errors.empty',
@@ -73,6 +92,12 @@ function H5PBlockComponent(props: any) {
   const [urlDraft, setUrlDraft] = useState<string>(props.node.attrs.h5pUrl || '')
   const [titleDraft, setTitleDraft] = useState<string>(props.node.attrs.title || '')
   const [error, setError] = useState<string | null>(null)
+  // Whether the content has spoken the H5P protocol yet, and whether the frame
+  // finished loading: together they tell a blank frame from a slow one.
+  const [heardFromFrame, setHeardFromFrame] = useState(false)
+  const [frameLoaded, setFrameLoaded] = useState(false)
+  const [silent, setSilent] = useState(false)
+  const pageOrigin = useSyncExternalStore(subscribeNothing, () => window.location.origin, () => null)
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -162,6 +187,7 @@ function H5PBlockComponent(props: any) {
 
       const message = parseH5PMessage(event.data)
       if (!message) return
+      setHeardFromFrame(true)
 
       switch (message.kind) {
         case 'hello':
@@ -207,6 +233,7 @@ function H5PBlockComponent(props: any) {
   // listener existed, in which case its `hello` is already gone. `ready` makes
   // it start the handshake over.
   const handleFrameLoad = useCallback(() => {
+    setFrameLoaded(true)
     if (!isAuto) return
     const frame = iframeRef.current
     frame?.contentWindow?.postMessage({ context: 'h5p', action: 'ready' }, '*')
@@ -314,8 +341,14 @@ function H5PBlockComponent(props: any) {
       setError(null)
       setUrlDraft(result.url)
       setIsEditing(false)
+      const problem = frameProblemFor(result.url, pageOrigin)
+      if (problem) {
+        setError(t(PROBLEM_KEYS[problem]))
+        setIsEditing(true)
+        return
+      }
       if (result.url === h5pUrl) {
-        props.updateAttributes({ title: nextTitle })
+        if (nextTitle !== title) props.updateAttributes({ title: nextTitle })
         return
       }
       // Different content: its height is anyone's guess until it reports one,
@@ -325,20 +358,8 @@ function H5PBlockComponent(props: any) {
       persistedHeightRef.current = DEFAULT_HEIGHT
       props.updateAttributes({ h5pUrl: result.url, title: nextTitle, height: DEFAULT_HEIGHT })
     },
-    [urlDraft, titleDraft, h5pUrl, props, t]
+    [urlDraft, titleDraft, h5pUrl, title, pageOrigin, props, t]
   )
-
-  const handleRemove = useCallback(() => {
-    setUrlDraft('')
-    setTitleDraft('')
-    setFrameHeight(DEFAULT_HEIGHT)
-    persistedHeightRef.current = DEFAULT_HEIGHT
-    setError(null)
-    setIsEditing(false)
-    // Clear the title too: it is what the RAG indexer reads, so leaving it
-    // behind keeps search citing content the activity no longer contains.
-    props.updateAttributes({ h5pUrl: '', title: '', height: DEFAULT_HEIGHT, sizeMode: 'auto' })
-  }, [props])
 
   const handleStartEditing = useCallback(() => {
     setUrlDraft(h5pUrl)
@@ -346,6 +367,53 @@ function H5PBlockComponent(props: any) {
     setError(null)
     setIsEditing(true)
   }, [h5pUrl, title])
+
+  // A new URL (or a new frame after a size switch) starts the silence clock over.
+  useEffect(() => {
+    setHeardFromFrame(false)
+    setFrameLoaded(false)
+    setSilent(false)
+  }, [frameSrc, isAuto])
+  useEffect(() => {
+    if (!isEditable || !isAuto || !frameLoaded || heardFromFrame) return
+    const timer = setTimeout(() => setSilent(true), SILENCE_HINT_MS)
+    return () => clearTimeout(timer)
+  }, [isEditable, isAuto, frameLoaded, heardFromFrame])
+
+  // ─── Live preview while editing: validated, debounced, never written ───
+  const [previewSrc, setPreviewSrc] = useState('')
+  const [draftIssue, setDraftIssue] = useState<string | null>(null)
+  const [draftHint, setDraftHint] = useState<string | null>(null)
+  const showForm = isEditable && (!h5pUrl || isEditing)
+  useEffect(() => {
+    if (!showForm) return
+    const timer = setTimeout(() => {
+      if (!urlDraft.trim()) {
+        setPreviewSrc('')
+        setDraftIssue(null)
+        setDraftHint(null)
+        return
+      }
+      const result = normalizeH5PUrl(urlDraft)
+      if (!result.ok) {
+        setPreviewSrc('')
+        setDraftIssue(t(ERROR_KEYS[result.reason]))
+        setDraftHint(null)
+        return
+      }
+      const problem = frameProblemFor(result.url, pageOrigin)
+      setDraftIssue(problem ? t(PROBLEM_KEYS[problem]) : null)
+      setPreviewSrc(problem ? '' : result.url)
+      setDraftHint(
+        !problem && !looksLikeH5PEmbed(result.url)
+          ? t('editor.blocks_v2.h5p.not_embed_hint', 'This looks like a page rather than an embed link. On your H5P host, use the “Embed” button and paste the link or code it gives you.')
+          : null
+      )
+    }, PREVIEW_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [urlDraft, showForm, pageOrigin, t])
+
+  const frameProblem = frameSrc ? frameProblemFor(frameSrc, pageOrigin) : null
 
   const frame = (
     <iframe
@@ -356,7 +424,7 @@ function H5PBlockComponent(props: any) {
       ref={iframeRef}
       src={frameSrc || undefined}
       title={frameTitle}
-      className="w-full block border-0 rounded-lg bg-white"
+      className="block w-full border-0 bg-white"
       style={{ height: `${displayHeight}px` }}
       onLoad={handleFrameLoad}
       /*
@@ -374,6 +442,21 @@ function H5PBlockComponent(props: any) {
     />
   )
 
+  // A frame the browser will refuse: say so instead of showing a blank box.
+  const blockedNotice = (compact?: boolean) => (
+    <div className={cn('flex items-start gap-3 bg-amber-50/70 text-[13px] text-neutral-700', compact ? 'p-4' : 'p-5')}>
+      <WarningCircle size={18} weight="fill" className="mt-0.5 shrink-0 text-amber-500" />
+      <div className="min-w-0 flex-1">
+        <p>{frameProblem ? t(PROBLEM_KEYS[frameProblem]) : null}</p>
+        {frameSrc && (
+          <a href={openableH5PUrl(frameSrc)} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-[13px] font-medium text-neutral-800 underline underline-offset-2">
+            {t('editor.blocks_v2.h5p.open_new_tab', 'Open the activity in a new tab')} <ArrowSquareOut size={12} />
+          </a>
+        )}
+      </div>
+    </div>
+  )
+
   // Read-only with nothing configured: stay quiet rather than render a broken
   // frame at a learner.
   if (!isEditable && !h5pUrl) {
@@ -383,167 +466,241 @@ function H5PBlockComponent(props: any) {
   if (!isEditable) {
     return (
       <NodeViewWrapper className="block-h5p w-full">
-        <div ref={containerRef} className="w-full rounded-xl overflow-hidden nice-shadow bg-white">
-          {frame}
+        <div ref={containerRef} className="w-full overflow-hidden rounded-xl bg-white nice-shadow">
+          {frameProblem ? blockedNotice() : frame}
         </div>
       </NodeViewWrapper>
     )
   }
 
+  const handleRemove = () => {
+    setUrlDraft('')
+    setTitleDraft('')
+    setFrameHeight(DEFAULT_HEIGHT)
+    persistedHeightRef.current = DEFAULT_HEIGHT
+    setError(null)
+    setIsEditing(false)
+    // Clear the title too: it is what the RAG indexer reads, so leaving it
+    // behind keeps search citing content the activity no longer contains.
+    props.updateAttributes({ h5pUrl: '', title: '', height: DEFAULT_HEIGHT, sizeMode: 'auto' })
+  }
+
+  const tools = h5pUrl && !isEditing ? (
+    <BlockToolbarButton label={t('editor.blocks_v2.open_original', 'Open original')} onClick={() => window.open(openableH5PUrl(h5pUrl), '_blank', 'noopener,noreferrer')}>
+      <ArrowSquareOut size={14} />
+    </BlockToolbarButton>
+  ) : undefined
+
+  const inputCls = 'w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none transition-all focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400'
+
+  const form = (
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape' && h5pUrl) {
+          setIsEditing(false)
+          setError(null)
+        }
+      }}
+      className="rounded-lg bg-white p-4 nice-shadow"
+    >
+      <p className="mb-1 text-sm text-neutral-600">{t('editor.blocks.h5p_block.description')}</p>
+      <p className="mb-4 text-xs text-neutral-500">{t('editor.blocks.h5p_block.hosted_hint')}</p>
+
+      <div className="relative mb-3">
+        <div className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-500">
+          <LinkIcon weight="duotone" size={16} />
+        </div>
+        <input
+          type="text"
+          autoFocus={isEditing}
+          value={urlDraft}
+          onChange={(event) => { setUrlDraft(event.target.value); setError(null) }}
+          placeholder={t('editor.blocks.h5p_block.url_placeholder')}
+          aria-label={t('editor.blocks.h5p_block.url_label')}
+          aria-invalid={!!(error || draftIssue) || undefined}
+          className={cn(inputCls, 'ps-10', (error || draftIssue) && 'border-red-300')}
+          dir="ltr"
+        />
+      </div>
+      <input
+        type="text"
+        value={titleDraft}
+        onChange={(event) => setTitleDraft(event.target.value)}
+        placeholder={t('editor.blocks.h5p_block.title_placeholder')}
+        aria-label={t('editor.blocks.h5p_block.title_label')}
+        className={cn(inputCls, 'mb-3')}
+      />
+
+      {(error || draftIssue) && (
+        <div role="alert" className="mb-3 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-500">
+          <WarningCircle weight="duotone" size={16} className="shrink-0" />
+          {error || draftIssue}
+        </div>
+      )}
+      {!error && !draftIssue && draftHint && (
+        <div className="mb-3 flex items-center gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+          <Info weight="duotone" size={16} className="shrink-0" />
+          {draftHint}
+        </div>
+      )}
+      {!error && !draftIssue && previewSrc && (
+        <div className="mb-3">
+          <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-green-700">
+            <CheckCircle weight="duotone" size={14} />
+            {t('editor.blocks_v2.h5p.preview_ready', 'Preview below. Apply when it shows the right activity.')}
+          </div>
+          <div className="overflow-hidden rounded-lg bg-white nice-shadow">
+            <iframe
+              key={previewSrc}
+              src={previewSrc}
+              title={t('editor.blocks_v2.h5p.preview', 'Preview')}
+              className="block w-full border-0 bg-white"
+              style={{ height: 320 }}
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2">
+        {h5pUrl && (
+          <button
+            type="button"
+            onClick={() => { setIsEditing(false); setError(null) }}
+            className="rounded-lg px-4 py-2 text-sm text-neutral-600 transition-colors hover:text-neutral-800"
+          >
+            {t('editor.blocks.common.cancel')}
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={!urlDraft.trim() || !!draftIssue}
+          className="rounded-lg bg-neutral-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
+        >
+          {t('editor.blocks.common.apply')}
+        </button>
+      </div>
+    </form>
+  )
+
   return (
     <NodeViewWrapper className="block-h5p w-full">
-      <div className="bg-neutral-50 rounded-xl px-5 py-4 transition-all ease-linear">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2">
-            <PuzzlePiece weight="duotone" className="text-neutral-400" size={16} />
-            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              {t('editor.blocks.h5p')}
-            </span>
+      <EditorBlockFrame
+        editable
+        node={props.node}
+        editor={props.editor}
+        getPos={props.getPos}
+        selected={props.selected}
+        tone="interactive"
+        tools={tools}
+      >
+        <div data-lhb-panel="" className="rounded-xl bg-neutral-50 px-5 py-4 transition-all ease-linear">
+          {/* Header */}
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <PuzzlePiece weight="duotone" className="shrink-0 text-neutral-400" size={16} />
+              <span className="text-[12px] font-semibold text-neutral-500">{t('editor.blocks.h5p')}</span>
+              {title && h5pUrl && !isEditing && <span className="truncate text-xs text-neutral-400">· {title}</span>}
+            </div>
+            {h5pUrl && !isEditing && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handleStartEditing}
+                  className="rounded-md p-1.5 text-neutral-600 transition-colors hover:bg-neutral-200"
+                  title={t('editor.blocks.h5p_block.edit_content')}
+                  aria-label={t('editor.blocks.h5p_block.edit_content')}
+                >
+                  <PencilSimple weight="duotone" size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemove}
+                  className="rounded-md p-1.5 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-red-500"
+                  title={t('editor.blocks.h5p_block.remove_content')}
+                  aria-label={t('editor.blocks.h5p_block.remove_content')}
+                >
+                  <X weight="duotone" size={16} />
+                </button>
+              </div>
+            )}
           </div>
-          {h5pUrl && !isEditing && (
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handleStartEditing}
-                className="p-1.5 rounded-md hover:bg-neutral-200 text-neutral-600 transition-colors"
-                title={t('editor.blocks.h5p_block.edit_content')}
-              >
-                <PencilSimple weight="duotone" size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={handleRemove}
-                className="p-1.5 rounded-md hover:bg-neutral-200 text-neutral-600 hover:text-red-500 transition-colors"
-                title={t('editor.blocks.h5p_block.remove_content')}
-              >
-                <X weight="duotone" size={16} />
-              </button>
+
+          {showForm ? (
+            form
+          ) : (
+            <div className="space-y-3">
+              {/* Size controls */}
+              <div role="radiogroup" aria-label={t('editor.blocks_v2.h5p.height', 'Frame height')} className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1 text-sm font-medium text-neutral-500">
+                  <ArrowsOutLineVertical weight="duotone" size={14} />
+                  {t('editor.blocks.h5p_block.size_label')}:
+                </div>
+                {SIZE_MODES.map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={sizeMode === mode}
+                    onClick={() => handleSizeModeChange(mode)}
+                    title={t(`editor.blocks.h5p_block.sizes.${mode}_hint`)}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-neutral-400 ${
+                      sizeMode === mode ? 'bg-neutral-700 text-white' : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+                    }`}
+                  >
+                    {sizeMode === mode && <CheckCircle weight="duotone" size={14} />}
+                    {t(`editor.blocks.h5p_block.sizes.${mode}`)}
+                  </button>
+                ))}
+                {sizeMode === 'custom' && (
+                  <span className="flex items-center gap-1.5 rounded-lg bg-neutral-700 px-3 py-1.5 text-sm text-white">
+                    <CheckCircle weight="duotone" size={14} />
+                    {t('editor.blocks.h5p_block.sizes.custom', { height: displayHeight })}
+                  </span>
+                )}
+              </div>
+
+              <div ref={containerRef} className="w-full overflow-hidden rounded-lg bg-white nice-shadow">
+                {frameProblem ? blockedNotice(true) : frame}
+                {/* Drag the bottom edge for a height none of the presets give. */}
+                <div
+                  role="separator"
+                  aria-orientation="horizontal"
+                  aria-label={t('editor.blocks.h5p_block.resize_handle')}
+                  // A focusable separator is a splitter widget, and its value
+                  // defaults to a 0-100 range, so a bare pixel height would be
+                  // announced as a percentage of nothing.
+                  aria-valuenow={displayHeight}
+                  aria-valuemin={MIN_HEIGHT}
+                  aria-valuemax={MAX_HEIGHT}
+                  aria-valuetext={`${displayHeight}px`}
+                  tabIndex={0}
+                  onPointerDown={handleResizePointerDown}
+                  onPointerMove={handleResizePointerMove}
+                  onPointerUp={handleResizePointerUp}
+                  onPointerCancel={handleResizePointerCancel}
+                  onKeyDown={handleResizeKeyDown}
+                  className="group flex h-3 cursor-ns-resize touch-none items-center justify-center bg-neutral-50 outline-none hover:bg-neutral-100 focus:bg-neutral-100"
+                >
+                  <span className="h-0.5 w-10 rounded-full bg-neutral-300 group-hover:bg-neutral-400 group-focus:bg-neutral-400" />
+                </div>
+              </div>
+              {dragHeight !== null && <p className="text-center text-[11px] tabular-nums text-neutral-500">{dragHeight}px</p>}
+              {silent && !frameProblem && (
+                <p className="flex items-start gap-1.5 text-xs leading-snug text-amber-700">
+                  <Info weight="duotone" size={14} className="mt-px shrink-0" />
+                  {t('editor.blocks_v2.h5p.silent_hint', 'No answer from the activity yet. If the frame stays blank, the host may not allow embedding, or the link isn’t an embed link. Pick a fixed height if the content loads but sits in the wrong size.')}
+                </p>
+              )}
             </div>
           )}
         </div>
-
-        {h5pUrl && !isEditing ? (
-          <div className="space-y-3">
-            {/* Size controls */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
-                <ArrowsOutLineVertical weight="duotone" size={14} />
-                {t('editor.blocks.h5p_block.size_label')}:
-              </div>
-              {SIZE_MODES.map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => handleSizeModeChange(mode)}
-                  title={t(`editor.blocks.h5p_block.sizes.${mode}_hint`)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors outline-none ${
-                    sizeMode === mode
-                      ? 'bg-neutral-700 text-white'
-                      : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
-                  }`}
-                >
-                  {sizeMode === mode && <CheckCircle weight="duotone" size={14} />}
-                  {t(`editor.blocks.h5p_block.sizes.${mode}`)}
-                </button>
-              ))}
-              {sizeMode === 'custom' && (
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm bg-neutral-700 text-white">
-                  <CheckCircle weight="duotone" size={14} />
-                  {t('editor.blocks.h5p_block.sizes.custom', { height: displayHeight })}
-                </span>
-              )}
-            </div>
-
-            <div ref={containerRef} className="w-full rounded-lg overflow-hidden nice-shadow bg-white">
-              {frame}
-              {/* Drag the bottom edge for a height none of the presets give. */}
-              <div
-                role="separator"
-                aria-orientation="horizontal"
-                aria-label={t('editor.blocks.h5p_block.resize_handle')}
-                // A focusable separator is a splitter widget, and its value
-                // defaults to a 0-100 range, so a bare pixel height would be
-                // announced as a percentage of nothing.
-                aria-valuenow={displayHeight}
-                aria-valuemin={MIN_HEIGHT}
-                aria-valuemax={MAX_HEIGHT}
-                aria-valuetext={`${displayHeight}px`}
-                tabIndex={0}
-                onPointerDown={handleResizePointerDown}
-                onPointerMove={handleResizePointerMove}
-                onPointerUp={handleResizePointerUp}
-                onPointerCancel={handleResizePointerCancel}
-                onKeyDown={handleResizeKeyDown}
-                className="group flex items-center justify-center h-3 cursor-ns-resize touch-none bg-neutral-50 hover:bg-neutral-100 focus:bg-neutral-100 outline-none"
-              >
-                <span className="h-0.5 w-10 rounded-full bg-neutral-300 group-hover:bg-neutral-400 group-focus:bg-neutral-400" />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg nice-shadow p-4">
-            <p className="text-sm text-neutral-600 mb-1">
-              {t('editor.blocks.h5p_block.description')}
-            </p>
-            <p className="text-xs text-neutral-500 mb-4">
-              {t('editor.blocks.h5p_block.hosted_hint')}
-            </p>
-
-            <div className="relative mb-3">
-              <div className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-500">
-                <LinkIcon weight="duotone" size={16} />
-              </div>
-              <input
-                type="text"
-                value={urlDraft}
-                onChange={(event) => setUrlDraft(event.target.value)}
-                placeholder={t('editor.blocks.h5p_block.url_placeholder')}
-                aria-label={t('editor.blocks.h5p_block.url_label')}
-                className="w-full ps-10 pe-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 outline-none transition-all text-sm"
-              />
-            </div>
-
-            <input
-              type="text"
-              value={titleDraft}
-              onChange={(event) => setTitleDraft(event.target.value)}
-              placeholder={t('editor.blocks.h5p_block.title_placeholder')}
-              aria-label={t('editor.blocks.h5p_block.title_label')}
-              className="w-full px-4 py-2.5 mb-3 bg-neutral-50 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 outline-none transition-all text-sm"
-            />
-
-            {error && (
-              <div className="mb-3 flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-                <WarningCircle weight="duotone" size={16} />
-                {error}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-              {h5pUrl && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditing(false)
-                    setError(null)
-                  }}
-                  className="px-4 py-2 text-sm text-neutral-600 hover:text-neutral-800 rounded-lg transition-colors"
-                >
-                  {t('editor.blocks.common.cancel')}
-                </button>
-              )}
-              <button
-                type="submit"
-                disabled={!urlDraft.trim()}
-                className="px-4 py-2 bg-neutral-700 hover:bg-neutral-800 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                {t('editor.blocks.common.apply')}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+      </EditorBlockFrame>
     </NodeViewWrapper>
   )
 }

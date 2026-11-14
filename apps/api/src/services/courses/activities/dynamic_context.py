@@ -368,8 +368,17 @@ async def render_for_reader(
 ) -> Any:
     """``content`` as ``current_user`` should receive it. Course editors get
     the raw document: they edit and merge it, and preview through
-    ``/dynamic-preview`` instead. Pass ``is_editor`` when already known."""
-    if not isinstance(content, dict) or not has_dynamic_content(content):
+    ``/dynamic-preview`` instead. Pass ``is_editor`` when already known.
+    Editor comment marks never reach anyone else (see ``comment_marks``)."""
+    from src.services.courses.activities.comment_marks import (
+        has_comment_marks,
+        strip_comment_marks,
+    )
+
+    if not isinstance(content, dict):
+        return content
+    dynamic = has_dynamic_content(content)
+    if not dynamic and not has_comment_marks(content):
         return content
     if is_editor is None:
         from src.services.courses.activities.access import can_edit_course
@@ -378,6 +387,9 @@ async def render_for_reader(
             request, course.course_uuid, current_user, db_session
         )
     if is_editor:
+        return content
+    content = strip_comment_marks(content)
+    if not dynamic:
         return content
     ctx = context or await build_render_context(
         request, current_user, course, db_session, activity_name=activity_name, activity_uuid=activity_uuid

@@ -1,10 +1,7 @@
 'use client'
 import React from 'react'
-import FormLayout, {
-    FormField,
-} from '@components/Objects/StyledElements/Form/Form'
+import FormLayout from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { AlertTriangle, CheckCircle, Info, X } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useFormik } from 'formik'
@@ -13,6 +10,7 @@ import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { removeQueryParamsFromAddressBar } from '@services/utils/ts/scrubUrl'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
+import { AUTH_INPUT, AUTH_LINK, AuthButton, AuthFootnote, AuthHeading, AuthLabel, AuthNotice } from '@components/Auth/AuthUI'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
 import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
@@ -121,157 +119,96 @@ function ResetPasswordClient({ org }: ResetPasswordClientProps) {
             defaultValue: 'Create a strong password to keep your account secure.',
           })}
         >
-                {/* Message Top Bar */}
-                {showMessage && (error || message) && (
-                    <div className={`
-                        mx-6 md:mx-12 lg:mx-20 mt-6 rounded-xl border px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200
-                        ${error ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}
-                    `}>
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                            {error ? <AlertTriangle size={18} className="shrink-0" /> : <CheckCircle size={18} className="shrink-0" />}
-                            <div className="flex-1 min-w-0">
-                                <span className="text-sm font-medium">{error || message}</span>
-                                {message && (
-                                    <span className="text-sm ms-2">
-                                        · <Link href="/login" className="underline hover:no-underline">{t('auth.proceed_to_login')}</Link>
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => setShowMessage(false)}
-                            className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0 opacity-60 hover:opacity-100"
-                        >
-                            <X size={18} />
-                        </button>
-                    </div>
-                )}
-
-                <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-                    <div className="w-full max-w-[420px] py-10">
-                        {/* Header */}
-                        <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.reset_password_title')}</h1>
-                        <p className="mt-2 text-black/45 text-[15px] font-medium">{t('auth.reset_password_description')}</p>
-
-                        {/* Form */}
-                        <div className="mt-8">
-                            <FormLayout onSubmit={formik.handleSubmit}>
-                                <FormField name="email">
-                                    <div className="flex items-center space-x-2 mb-1.5">
-                                        <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.email')}</Form.Label>
-                                        {formik.errors.email && (
-                                            <div className="text-red-500 text-xs flex items-center space-x-1">
-                                                <Info size={11} />
-                                                <span>{formik.errors.email}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <Form.Control asChild>
-                                        <input
-                                            onChange={formik.handleChange}
-                                            value={formik.values.email}
-                                            type="email"
-                                            className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-                                        />
-                                    </Form.Control>
-                                </FormField>
-
-                                <FormField name="reset_code">
-                                    <div className="flex items-center space-x-2 mb-1.5">
-                                        <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.reset_code')}</Form.Label>
-                                        {formik.errors.reset_code && (
-                                            <div className="text-red-500 text-xs flex items-center space-x-1">
-                                                <Info size={11} />
-                                                <span>{formik.errors.reset_code}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <Form.Control asChild>
-                                        <input
-                                            onChange={formik.handleChange}
-                                            value={formik.values.reset_code}
-                                            type="text"
-                                            className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-                                        />
-                                    </Form.Control>
-                                </FormField>
-
-                                <FormField name="new_password">
-                                    <div className="flex items-center space-x-2 mb-1.5">
-                                        <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.new_password')}</Form.Label>
-                                        {formik.errors.new_password && (
-                                            <div className="text-red-500 text-xs flex items-center space-x-1">
-                                                <Info size={11} />
-                                                <span>{formik.errors.new_password}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <Form.Control asChild>
-                                        <input
-                                            onChange={formik.handleChange}
-                                            value={formik.values.new_password}
-                                            type="password"
-                                            autoComplete="new-password"
-                                            className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-                                        />
-                                    </Form.Control>
-                                    <PasswordStrengthIndicator password={formik.values.new_password} />
-                                </FormField>
-
-                                <FormField name="confirm_password">
-                                    <div className="flex items-center space-x-2 mb-1.5">
-                                        <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.confirm_password')}</Form.Label>
-                                        {formik.errors.confirm_password && (
-                                            <div className="text-red-500 text-xs flex items-center space-x-1">
-                                                <Info size={11} />
-                                                <span>{formik.errors.confirm_password}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <Form.Control asChild>
-                                        <input
-                                            onChange={formik.handleChange}
-                                            value={formik.values.confirm_password}
-                                            type="password"
-                                            autoComplete="new-password"
-                                            className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-                                        />
-                                    </Form.Control>
-                                </FormField>
-
-                                <TurnstileWidget
-                                    ref={turnstileRef}
-                                    onToken={setTurnstileToken}
-                                    className="mt-2 flex justify-center"
-                                />
-
-                                <Form.Submit asChild>
-                                    <button
-                                        disabled={isSubmitting || (turnstileRequired && !turnstileToken)}
-                                        className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-2 transition-all disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? (
-                                            <span className="flex items-center space-x-2">
-                                                <span className="w-4 h-4 border-t-2 border-white rounded-full animate-spin" />
-                                                <span>{t('common.loading')}</span>
-                                            </span>
-                                        ) : (
-                                            t('auth.change_password')
-                                        )}
-                                    </button>
-                                </Form.Submit>
-                            </FormLayout>
-                        </div>
-
-                        {/* Back to Login */}
-                        <p className="text-center text-sm text-black/35 mt-6">
-                            {t('auth.remember_password')}{' '}
-                            <Link href="/login" className="text-black font-semibold hover:underline">
-                                {t('auth.login')}
+            {showMessage && (error || message) && (
+                <AuthNotice tone={error ? 'danger' : 'success'} onDismiss={() => setShowMessage(false)} className="mb-6">
+                    {error || message}
+                    {message && (
+                        <>
+                            {' · '}
+                            <Link href="/login" className="font-semibold underline underline-offset-2 hover:no-underline">
+                                {t('auth.proceed_to_login')}
                             </Link>
-                        </p>
-                    </div>
-                </div>
+                        </>
+                    )}
+                </AuthNotice>
+            )}
+
+            <AuthHeading title={t('auth.reset_password_title')} description={t('auth.reset_password_description')} />
+
+            <FormLayout onSubmit={formik.handleSubmit} className="mt-7 flex flex-col gap-4">
+                <Form.Field name="email" className="grid">
+                    <AuthLabel error={formik.errors.email}>{t('auth.email')}</AuthLabel>
+                    <Form.Control asChild>
+                        <input
+                            onChange={formik.handleChange}
+                            value={formik.values.email}
+                            type="email"
+                            autoComplete="email"
+                            aria-invalid={formik.errors.email ? true : undefined}
+                            className={AUTH_INPUT}
+                        />
+                    </Form.Control>
+                </Form.Field>
+
+                <Form.Field name="reset_code" className="grid">
+                    <AuthLabel error={formik.errors.reset_code}>{t('auth.reset_code')}</AuthLabel>
+                    <Form.Control asChild>
+                        <input
+                            onChange={formik.handleChange}
+                            value={formik.values.reset_code}
+                            type="text"
+                            autoComplete="one-time-code"
+                            spellCheck={false}
+                            aria-invalid={formik.errors.reset_code ? true : undefined}
+                            className={AUTH_INPUT}
+                        />
+                    </Form.Control>
+                </Form.Field>
+
+                <Form.Field name="new_password" className="grid">
+                    <AuthLabel error={formik.errors.new_password}>{t('auth.new_password')}</AuthLabel>
+                    <Form.Control asChild>
+                        <input
+                            onChange={formik.handleChange}
+                            value={formik.values.new_password}
+                            type="password"
+                            autoComplete="new-password"
+                            aria-invalid={formik.errors.new_password ? true : undefined}
+                            className={AUTH_INPUT}
+                        />
+                    </Form.Control>
+                    <PasswordStrengthIndicator password={formik.values.new_password} />
+                </Form.Field>
+
+                <Form.Field name="confirm_password" className="grid">
+                    <AuthLabel error={formik.errors.confirm_password}>{t('auth.confirm_password')}</AuthLabel>
+                    <Form.Control asChild>
+                        <input
+                            onChange={formik.handleChange}
+                            value={formik.values.confirm_password}
+                            type="password"
+                            autoComplete="new-password"
+                            aria-invalid={formik.errors.confirm_password ? true : undefined}
+                            className={AUTH_INPUT}
+                        />
+                    </Form.Control>
+                </Form.Field>
+
+                <TurnstileWidget ref={turnstileRef} onToken={setTurnstileToken} className="flex justify-center empty:hidden" />
+
+                <Form.Submit asChild>
+                    <AuthButton loading={isSubmitting} disabled={turnstileRequired && !turnstileToken} className="mt-1">
+                        {t('auth.change_password')}
+                    </AuthButton>
+                </Form.Submit>
+            </FormLayout>
+
+            <AuthFootnote>
+                {t('auth.remember_password')}{' '}
+                <Link href="/login" className={AUTH_LINK}>
+                    {t('auth.login')}
+                </Link>
+            </AuthFootnote>
         </AuthLayout>
     )
 }

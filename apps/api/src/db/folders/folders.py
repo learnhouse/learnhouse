@@ -1,6 +1,7 @@
 from typing import Optional, List
 from pydantic import BaseModel
 from sqlalchemy import Column, ForeignKey, Integer, BigInteger
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
 
@@ -20,6 +21,8 @@ class Folder(FolderBase, table=True):
         )
     )
     folder_uuid: str = Field(default="", index=True)
+    slug: Optional[str] = Field(default=None, max_length=100)
+    seo: Optional[dict] = Field(default=None, sa_column=Column(JSONB, nullable=True))
     # Self-referential parent for nesting. NULL = root folder.
     parent_folder_id: Optional[int] = Field(
         default=None,
@@ -66,6 +69,8 @@ class FolderRead(FolderBase):
     id: int
     org_id: int
     folder_uuid: str
+    slug: Optional[str] = None
+    seo: Optional[dict] = None
     parent_folder_id: Optional[int] = None
     order: int = 0
     creation_date: str

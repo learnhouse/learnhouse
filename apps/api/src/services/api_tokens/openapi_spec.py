@@ -29,14 +29,55 @@ API_TOKEN_TAGS = {
     "usergroups",
     "payments",
     "search",
+    # Plays authoring API (EE: ee/routers/playgrounds/plays_api.py; absent
+    # without EE). The learner and session-only play routes lead with the
+    # "playgrounds" tag and stay out.
+    "plays",
+    # The tools API (src/routers/tools_api.py): every token-callable agent
+    # tool as POST /tools/{name}, tagged "tools/<toolset>"; plus its listing.
+    "tools",
+    # CRM integrations (EE: ee/routers/crm.py; absent without EE). Routes
+    # that need a signed-in admin lead with "crm-admin" and stay out.
+    "crm",
 }
+# Tag prefix of the tools API routes (normalized "tools/courses" -> "toolscourses").
+TOOLS_TAG_PREFIX = "tools"
 
 HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
+
+# Scope documentation shown in the API Access playground: what a token's
+# rights on a resource bucket let it do.
+TAG_DOCS = {
+    "usergroups": (
+        "Scope `usergroups` (token rights: read, create, update, delete). "
+        "**read**: list groups and their overview, members, access, progress, history, join codes. "
+        "**create**: create groups, join codes and announcements; add members and resources. "
+        "**update**: change a group's type, smart rules, parent, settings and access windows; "
+        "schedule or expire memberships; import CSVs; bulk add/move; managers; run a sync. "
+        "**delete**: delete groups, remove members and resources, revoke codes. "
+        "A token is bound to one organization; ids from another organization are refused. "
+        "Smart rules, nesting, managers, group spaces and messaging need the Pro plan; "
+        "emailing a group also needs newsletter rights and follows the newsletter's sending rules."
+    ),
+    "crm": (
+        "Scope `crm` (token rights: read, update). "
+        "**read**: CRM integrations and their health, sync errors, history, synced records, a member's CRM record, "
+        "the field mapping, CRM properties, pipelines, lists and inbound rules. "
+        "**update**: change the field mapping, start a sync or backfill, retry failed records, pause or resume. "
+        "Connecting a CRM, consent, settings, inbound rules and creating CRM properties need an org admin in the dashboard. "
+        "Access tokens of the CRM are never returned. HubSpot needs the Pro plan, Salesforce Enterprise."
+    ),
+}
 SCHEMA_REF_PREFIX = "#/components/schemas/"
 
 
 def _normalize_tag(tag: str) -> str:
     return re.sub(r"[^a-z]", "", tag.lower())
+
+
+def _token_tag(tag: str) -> bool:
+    normalized = _normalize_tag(tag)
+    return normalized in API_TOKEN_TAGS or tag.lower().startswith(f"{TOOLS_TAG_PREFIX}/")
 
 
 def _collect_schema_refs(node: Any, refs: set[str]) -> None:
@@ -59,7 +100,7 @@ def build_api_token_openapi_spec(full_spec: dict) -> dict:
             method: operation
             for method, operation in operations.items()
             if method in HTTP_METHODS
-            and _normalize_tag((operation.get("tags") or ["other"])[0]) in API_TOKEN_TAGS
+            and _token_tag((operation.get("tags") or ["other"])[0])
         }
         if kept:
             paths[path] = kept
@@ -77,10 +118,21 @@ def build_api_token_openapi_spec(full_spec: dict) -> dict:
 
     spec = {key: value for key, value in full_spec.items() if key not in ("paths", "components")}
     spec["paths"] = paths
+    used = {_normalize_tag((op.get("tags") or ["other"])[0]) for ops in paths.values() for op in ops.values()}
+    known = {t.get("name") for t in spec.get("tags") or [] if isinstance(t, dict)}
+    spec["tags"] = [*(spec.get("tags") or []), *(
+        {"name": name, "description": text} for name, text in TAG_DOCS.items() if name in used and name not in known
+    )]
     spec["components"] = {
         "schemas": {name: all_schemas[name] for name in sorted(needed) if name in all_schemas}
     }
-    return copy.deepcopy(spec)
+    spec = copy.deepcopy(spec)
+    for ops in spec["paths"].values():
+        for method, op in ops.items():
+            tag = _normalize_tag((op.get("tags") or ["other"])[0])
+            if tag in ("usergroups", "crm"):
+                op["x-learnhouse-scope"] = f"{tag}." + ("read" if method == "get" else "delete" if method == "delete" else "update")
+    return spec
 
 
 _cached_spec: dict | None = None

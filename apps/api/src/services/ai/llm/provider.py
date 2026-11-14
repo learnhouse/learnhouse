@@ -31,6 +31,21 @@ class AINotConfiguredError(Exception):
 
 
 def build_model(model_name: str) -> Model:
+    """Build a Pydantic AI ``Model`` for ``model_name``, metered for AI credits.
+
+    Every request the model makes records its provider usage on the active AI
+    charge (see ``src.services.ai.metering``).
+    """
+    from src.services.ai.metering import MeteredModel
+
+    raw = _build_raw_model(model_name)
+    provider_id = (getattr(get_learnhouse_config().ai_config, "provider", None) or "").strip().lower()
+    # Local models cost nothing per token.
+    price_name = f"ollama:{model_name}" if provider_id == "ollama" else model_name
+    return MeteredModel(raw, price_name=price_name)
+
+
+def _build_raw_model(model_name: str) -> Model:
     """Build a Pydantic AI ``Model`` for ``model_name`` using the global AI config.
 
     Provider SDKs are imported lazily so an unused/uninstalled provider never breaks import.

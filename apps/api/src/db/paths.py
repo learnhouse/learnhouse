@@ -1,5 +1,6 @@
 from typing import List, Optional
 from sqlalchemy import JSON, BigInteger, Column, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
 
@@ -34,6 +35,8 @@ class Path(PathBase, table=True):
         )
     )
     path_uuid: str = Field(default="", index=True)
+    slug: Optional[str] = Field(default=None, max_length=100)
+    seo: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
     # Same shape as a course certification config (certification_name,
     # certification_description, certification_type, certificate_pattern,
     # certificate_instructor, ...), so the existing certificate renderer can
@@ -163,6 +166,8 @@ class PathRead(PathBase):
     id: int
     org_id: int
     path_uuid: str
+    slug: Optional[str] = None
+    seo: Optional[dict] = None
     certificate_config: dict = {}
     creation_date: str
     update_date: str

@@ -1,6 +1,6 @@
 import logging
 import secrets
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
 from sqlmodel import select, func
@@ -427,6 +427,9 @@ async def create_certificate_user(
                     },
                 },
             )
+            from src.services.notifications.events import notify_certificate
+
+            await notify_certificate(db_session, user_id, course, certificate_user.user_certification_uuid)
     except Exception as e:
         logger.warning("Certificate tracking failed (non-critical): %s", e)
 
@@ -860,6 +863,7 @@ async def get_certificate_by_user_certification_uuid(
     user_certification_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
+    lang: Optional[str] = None,
 ) -> dict:
     """Get a certificate by user_certification_uuid with certification details"""
     
@@ -907,13 +911,7 @@ async def get_certificate_by_user_certification_uuid(
     return {
         "certificate_user": CertificateUserRead(**certificate_user.model_dump()),
         "certification": CertificationRead(**certification.model_dump()),
-        "course": {
-            "id": course.id,
-            "course_uuid": course.course_uuid,
-            "name": course.name,
-            "description": course.description,
-            "thumbnail_image": course.thumbnail_image,
-        },
+        "course": await _course_card(db_session, course, lang),
         "user": {
             "user_uuid": getattr(holder, "user_uuid", None),
             "username": getattr(holder, "username", None),
@@ -923,10 +921,33 @@ async def get_certificate_by_user_certification_uuid(
     }
 
 
+async def _course_card(db_session: AsyncSession, course: Course, lang: Optional[str]) -> dict:
+    """The course on a certificate; its name and description in the
+    learner's language when that language version is published."""
+    card = {
+        "id": course.id,
+        "course_uuid": course.course_uuid,
+        "name": course.name,
+        "description": course.description,
+        "thumbnail_image": course.thumbnail_image,
+        "org_id": course.org_id,
+    }
+    if lang:
+        from src.services.courses.translations.learner import localize_course_list
+
+        localized = {**card, "default_locale": course.default_locale}
+        await localize_course_list(db_session, [localized], lang)
+        card["name"] = localized.get("name") or course.name
+        card["description"] = localized.get("description")
+        card["locale"] = localized.get("locale")
+    return card
+
+
 async def get_all_user_certificates(
     request: Request,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
+    lang: Optional[str] = None,
     org_id: int | None = None,
 ) -> List[dict]:
     """Get all certificates for the current user with complete linked information.
@@ -985,14 +1006,7 @@ async def get_all_user_certificates(
         result.append({
             "certificate_user": CertificateUserRead(**cert_user.model_dump()),
             "certification": CertificationRead(**certification.model_dump()),
-            "course": {
-                "id": course.id,
-                "course_uuid": course.course_uuid,
-                "name": course.name,
-                "description": course.description,
-                "thumbnail_image": course.thumbnail_image,
-                "org_id": course.org_id,
-            },
+            "course": await _course_card(db_session, course, lang),
             "user": {
                 "id": user.id if user else None,
                 "user_uuid": user.user_uuid if user else None,

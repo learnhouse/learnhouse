@@ -9,10 +9,13 @@ interface HoverMenuProps {
   content: React.ReactNode
   contentClassName?: string
   align?: "start" | "center" | "end"
+  /** Element whose inline-end edge the flyout opens from, instead of the
+   *  trigger's. Lets small triggers inside a sidebar open past its edge. */
+  anchorRef?: React.RefObject<HTMLElement | null>
 }
 
 const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
-  ({ children, content, contentClassName, align = "start" }, ref) => {
+  ({ children, content, contentClassName, align = "start", anchorRef }, ref) => {
     const triggerRef = React.useRef<HTMLDivElement>(null)
     const [isHovered, setIsHovered] = React.useState(false)
     // Anchored on `left` in LTR and on `right` in RTL. Anchoring from the edge
@@ -40,14 +43,15 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
         // this only runs on hover, so it is always client-side and always sees
         // the direction the user is actually looking at.
         const isRTL = document.documentElement.dir === 'rtl'
+        const edge = anchorRef?.current?.getBoundingClientRect() ?? rect
 
         setPosition(
           isRTL
-            ? { top, right: window.innerWidth - rect.left + 8 } // 8px gap
-            : { top, left: rect.right + 8 }
+            ? { top, right: window.innerWidth - edge.left + 8 } // 8px gap
+            : { top, left: edge.right + 8 }
         )
       }
-    }, [align])
+    }, [align, anchorRef])
 
     const handleMouseEnter = React.useCallback(() => {
       if (leaveTimeoutRef.current) {

@@ -3,849 +3,818 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
-  BookCopy,
-  BookOpen,
-  Folder,
-  Users as UsersIcon,
-  Search as SearchIcon,
-  MessagesSquare,
-  MessageCircle,
-  Mic,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react'
-import { Cube } from '@phosphor-icons/react'
+  ArrowClockwise,
+  ArrowRight,
+  CaretRight,
+  ClockCounterClockwise,
+  MagnifyingGlass,
+  Warning,
+  X,
+} from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 
 import { searchOrgContent } from '@services/search/search'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
-import {
-  getCourseThumbnailMediaDirectory,
-  getUserAvatarMediaDirectory,
-  getCommunityThumbnailMediaDirectory,
-  getPlaygroundThumbnailMediaDirectory,
-  getPodcastThumbnailMediaDirectory,
-} from '@services/media/media'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
+import CourseCard, { type CourseCardCourse } from '@components/Objects/Thumbnails/CourseCard'
+import { Button, Chip, EmptyState, SegmentedControl, formatRelative } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { getUriWithOrg } from '@services/config/config'
-import { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
-import UserAvatar from '@components/Objects/UserAvatar'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
-import { extractPreviewText } from '@/lib/site-search/preview'
+import { useSitePages } from '@/lib/site-search/useSitePages'
+import { useRecentSearches } from '@/lib/site-search/recent'
+import { coursePath } from '@/lib/seo/paths'
+import { useContentLanguage } from '@/hooks/useContentLanguage'
+import {
+  MIN_QUERY,
+  SITE_RESULT_ORDER,
+  emptyTotals,
+  normalizeSiteResults,
+  type SiteResult,
+  type SiteResultType,
+  type SiteSearchData,
+} from '@/lib/site-search/useSiteSearch'
+import {
+  Highlight,
+  PLURAL_TO_TYPE,
+  ResultThumb,
+  SkeletonRows,
+  TYPE_ICON,
+  TYPE_PLURAL,
+  activityKind,
+  typeGroupKey,
+} from '@components/Objects/Search/searchUi'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types mirror the backend SearchResult shape, kept flexible on purpose so
-// the backend stays the source of truth.
-// ─────────────────────────────────────────────────────────────────────────────
+// The full search page: every type the org search returns, with counts per
+// type, a short section per type on "All" and a longer, paged list once a
+// type is picked. The query and type live in the URL (?q=…&type=…) so a
+// search can be shared and survives back/forward.
 
-interface ApiUser {
-  username: string
-  first_name: string
-  last_name: string
-  avatar_image?: string
-  bio?: string
-  details?: Record<string, any>
-  id: number
-  user_uuid: string
+type Scope = 'all' | SiteResultType
+
+interface PageData {
+  courses: CourseCardCourse[]
+  normalized: SiteSearchData
 }
 
-interface ApiAuthor { user: ApiUser }
+/** Per type on "All": up to two rows of course cards, a short list for the rest. */
+const PER_TYPE_ALL = 8
+/** Per page once a type is picked ("Show more" fetches the next page). */
+const PER_PAGE_SCOPED = 18
+/** Rows shown per list section on "All". */
+const ROWS_ALL = 5
 
-interface ApiCourse {
-  name: string
-  description?: string
-  thumbnail_image?: string
-  course_uuid: string
-  authors?: ApiAuthor[]
-}
-
-interface ApiActivity {
-  activity_uuid: string
-  name: string
-  activity_type: string
-  activity_sub_type: string
-  course_uuid: string
-  course_name: string
-  course_thumbnail_image?: string | null
-  chapter_uuid?: string
-  chapter_name?: string
-}
-
-interface ApiFolder {
-  name: string
-  description?: string
-  folder_uuid: string
-}
-
-interface ApiCommunity {
-  name: string
-  description?: string
-  thumbnail_image?: string
-  community_uuid: string
-  public?: boolean
-}
-
-interface ApiDiscussion {
-  title: string
-  content?: string
-  discussion_uuid: string
-  community_id: number
-  community_uuid?: string
-  label?: string
-  emoji?: string
-}
-
-interface ApiPlayground {
-  name: string
-  description?: string
-  thumbnail_image?: string
-  playground_uuid: string
-  org_uuid?: string
-}
-
-interface ApiPodcast {
-  name: string
-  description?: string
-  thumbnail_image?: string
-  podcast_uuid: string
-}
-
-interface SearchResults {
-  courses: ApiCourse[]
-  activities: ApiActivity[]
-  folders: ApiFolder[]
-  users: ApiUser[]
-  communities: ApiCommunity[]
-  discussions: ApiDiscussion[]
-  playgrounds: ApiPlayground[]
-  podcasts: ApiPodcast[]
-  total_courses: number
-  total_activities: number
-  total_folders: number
-  total_users: number
-  total_communities: number
-  total_discussions: number
-  total_playgrounds: number
-  total_podcasts: number
-}
-
-const EMPTY_RESULTS: SearchResults = {
-  courses: [],
-  activities: [],
-  folders: [],
-  users: [],
-  communities: [],
-  discussions: [],
-  playgrounds: [],
-  podcasts: [],
-  total_courses: 0,
-  total_activities: 0,
-  total_folders: 0,
-  total_users: 0,
-  total_communities: 0,
-  total_discussions: 0,
-  total_playgrounds: 0,
-  total_podcasts: 0,
-}
-
-type ResourceKey =
-  | 'courses'
-  | 'activities'
-  | 'folders'
-  | 'users'
-  | 'communities'
-  | 'discussions'
-  | 'playgrounds'
-  | 'podcasts'
-
-type TabKey = 'all' | ResourceKey
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Section registry: each resource type provides its own card renderer and
-// metadata. Adding a new type means one entry here, not scattered JSX.
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface SectionDescriptor<T> {
-  key: ResourceKey
-  icon: React.ComponentType<any>
-  items: (_results: SearchResults) => T[]
-  total: (_results: SearchResults) => number
-  renderCard: (_item: T, _ctx: RenderContext) => React.ReactNode
-  itemKey: (_item: T) => string
-}
-
-interface RenderContext {
-  orgSlug: string
-  orgUuid: string
-  t: (_k: string, _o?: any) => string
-}
-
-const sections: SectionDescriptor<any>[] = [
-  {
-    key: 'courses',
-    icon: BookCopy,
-    items: (r) => r.courses,
-    total: (r) => r.total_courses,
-    itemKey: (c: ApiCourse) => c.course_uuid,
-    renderCard: (course: ApiCourse, ctx) => (
-      <ResourceCard
-        href={getUriWithOrg(ctx.orgSlug, `/course/${removeCoursePrefix(course.course_uuid)}`)}
-        imageUrl={course.thumbnail_image
-          ? getCourseThumbnailMediaDirectory(ctx.orgUuid, course.course_uuid, course.thumbnail_image)
-          : undefined}
-        fallbackIcon={BookCopy}
-        title={course.name}
-        subtitle={course.description}
-        footer={
-          course.authors && course.authors.length > 0 ? (
-            <div className="flex items-center gap-2 pt-2">
-              <UserAvatar
-                width={20}
-                avatar_url={course.authors[0].user.avatar_image
-                  ? getUserAvatarMediaDirectory(course.authors[0].user.user_uuid, course.authors[0].user.avatar_image)
-                  : ''}
-                predefined_avatar={course.authors[0].user.avatar_image ? undefined : 'empty'}
-                userId={course.authors[0].user.id.toString()}
-                showProfilePopup={false}
-                rounded="rounded-full"
-                backgroundColor="bg-gray-100"
-              />
-              <span className="text-xs text-black/50">
-                {course.authors[0].user.first_name} {course.authors[0].user.last_name}
-              </span>
-            </div>
-          ) : null
-        }
-      />
-    ),
-  },
-  {
-    key: 'activities',
-    icon: BookOpen,
-    items: (r) => r.activities,
-    total: (r) => r.total_activities,
-    itemKey: (a: ApiActivity) => a.activity_uuid,
-    renderCard: (activity: ApiActivity, ctx) => (
-      <InlineCard
-        href={getUriWithOrg(
-          ctx.orgSlug,
-          `/course/${removeCoursePrefix(activity.course_uuid)}/activity/${activity.activity_uuid.replace('activity_', '')}`,
-        )}
-        icon={BookOpen}
-        imageUrl={activity.course_thumbnail_image
-          ? getCourseThumbnailMediaDirectory(ctx.orgUuid, activity.course_uuid, activity.course_thumbnail_image)
-          : undefined}
-        title={activity.name}
-        subtitle={activity.chapter_name
-          ? ctx.t('search.lesson_location', { course: activity.course_name, chapter: activity.chapter_name })
-          : activity.course_name}
-      />
-    ),
-  },
-  {
-    key: 'folders',
-    icon: Folder,
-    items: (r) => r.folders,
-    total: (r) => r.total_folders,
-    itemKey: (f: ApiFolder) => f.folder_uuid,
-    renderCard: (folder: ApiFolder, ctx) => (
-      <InlineCard
-        href={getUriWithOrg(
-          ctx.orgSlug,
-          `/library/folder/${folder.folder_uuid.replace('folder_', '')}`,
-        )}
-        icon={Folder}
-        title={folder.name}
-        subtitle={folder.description}
-      />
-    ),
-  },
-  {
-    key: 'communities',
-    icon: MessagesSquare,
-    items: (r) => r.communities,
-    total: (r) => r.total_communities,
-    itemKey: (c: ApiCommunity) => c.community_uuid,
-    renderCard: (community: ApiCommunity, ctx) => (
-      <ResourceCard
-        href={getUriWithOrg(ctx.orgSlug, `/community/${community.community_uuid.replace('community_', '')}`)}
-        imageUrl={community.thumbnail_image
-          ? getCommunityThumbnailMediaDirectory(ctx.orgUuid, community.community_uuid, community.thumbnail_image)
-          : undefined}
-        fallbackIcon={MessagesSquare}
-        title={community.name}
-        subtitle={community.description}
-      />
-    ),
-  },
-  {
-    key: 'discussions',
-    icon: MessageCircle,
-    items: (r) => r.discussions,
-    total: (r) => r.total_discussions,
-    itemKey: (d: ApiDiscussion) => d.discussion_uuid,
-    renderCard: (discussion: ApiDiscussion, ctx) => {
-      const communityUuid = (discussion.community_uuid ?? '').replace('community_', '')
-      const discussionUuid = discussion.discussion_uuid.replace('discussion_', '')
-      const href = communityUuid
-        ? getUriWithOrg(
-            ctx.orgSlug,
-            `/community/${communityUuid}/discussion/${discussionUuid}`,
-          )
-        : getUriWithOrg(ctx.orgSlug, `/discussion/${discussionUuid}`)
-      return (
-        <InlineCard
-          href={href}
-          icon={MessageCircle}
-          emoji={discussion.emoji}
-          title={discussion.title}
-          subtitle={extractPreviewText(discussion.content)}
-        />
-      )
-    },
-  },
-  {
-    key: 'playgrounds',
-    icon: Cube,
-    items: (r) => r.playgrounds,
-    total: (r) => r.total_playgrounds,
-    itemKey: (p: ApiPlayground) => p.playground_uuid,
-    renderCard: (playground: ApiPlayground, ctx) => (
-      <ResourceCard
-        href={getUriWithOrg(ctx.orgSlug, `/playground/${playground.playground_uuid}`)}
-        imageUrl={playground.thumbnail_image && playground.org_uuid
-          ? getPlaygroundThumbnailMediaDirectory(
-              playground.org_uuid,
-              playground.playground_uuid,
-              playground.thumbnail_image,
-            )
-          : undefined}
-        fallbackIcon={Cube}
-        title={playground.name}
-        subtitle={playground.description}
-      />
-    ),
-  },
-  {
-    key: 'podcasts',
-    icon: Mic,
-    items: (r) => r.podcasts,
-    total: (r) => r.total_podcasts,
-    itemKey: (p: ApiPodcast) => p.podcast_uuid,
-    renderCard: (podcast: ApiPodcast, ctx) => (
-      <ResourceCard
-        href={getUriWithOrg(ctx.orgSlug, `/podcast/${podcast.podcast_uuid.replace('podcast_', '')}`)}
-        imageUrl={podcast.thumbnail_image
-          ? getPodcastThumbnailMediaDirectory(ctx.orgUuid, podcast.podcast_uuid, podcast.thumbnail_image)
-          : undefined}
-        fallbackIcon={Mic}
-        title={podcast.name}
-        subtitle={podcast.description}
-      />
-    ),
-  },
-  {
-    key: 'users',
-    icon: UsersIcon,
-    items: (r) => r.users,
-    total: (r) => r.total_users,
-    itemKey: (u: ApiUser) => u.user_uuid,
-    renderCard: (user: ApiUser, ctx) => (
-      <Link
-        href={getUriWithOrg(ctx.orgSlug, `/user/${user.username}`)}
-        className="flex items-center gap-4 p-3 bg-white rounded-lg border border-black/5 hover:border-black/15 transition-colors"
-      >
-        <UserAvatar
-          width={40}
-          avatar_url={user.avatar_image ? getUserAvatarMediaDirectory(user.user_uuid, user.avatar_image) : ''}
-          predefined_avatar={user.avatar_image ? undefined : 'empty'}
-          userId={user.id.toString()}
-          showProfilePopup
-          rounded="rounded-full"
-          backgroundColor="bg-gray-100"
-        />
-        <div className="min-w-0">
-          <h3 className="text-sm font-medium text-black/80 truncate">
-            {user.first_name} {user.last_name}
-          </h3>
-          <p className="text-xs text-black/50 truncate">@{user.username}</p>
-        </div>
-      </Link>
-    ),
-  },
-]
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Page
-// ─────────────────────────────────────────────────────────────────────────────
-
-const PER_PAGE = 9
-
-function SearchPage() {
+function useSearchFetcher() {
   const { t } = useTranslation()
-  const router = useRouter()
-  const searchParams = useSearchParams()
   const session = useLHSession() as any
   const org = useOrg() as any
-  const { track } = useLHAnalytics('learner')
+  const orgslug: string = org?.slug ?? ''
+  const orgUuid: string = org?.org_uuid ?? ''
+  const accessToken = session?.data?.tokens?.access_token ?? null
+  // Course names in the learner's content language (published translations).
+  const { lang } = useContentLanguage()
 
-  const urlQuery = searchParams.get('q') ?? ''
-  const urlPage = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1)
-  const urlType = (searchParams.get('type') as TabKey) || 'all'
-
-  const [inputValue, setInputValue] = useState(urlQuery)
-  const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS)
-  const [isLoading, setIsLoading] = useState(false)
-  // Last query reported to org analytics, so paging through results or
-  // re-rendering doesn't count the same search again.
-  const reportedQuery = useRef<string | null>(null)
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => setInputValue(urlQuery), [urlQuery])
-
-  const updateParams = useCallback(
-    (updates: Record<string, string | number | null>) => {
-      const next = new URLSearchParams(Array.from(searchParams.entries()))
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === '' || value === undefined) {
-          next.delete(key)
-        } else {
-          next.set(key, String(value))
-        }
+  const fetchPage = useCallback(
+    async (query: string, page: number, limit: number): Promise<PageData> => {
+      const res = await searchOrgContent(orgslug, query, page, limit, null, accessToken, lang || undefined)
+      if (!res?.success) {
+        const detail = typeof res?.data?.detail === 'string' ? res.data.detail : ''
+        throw new Error(detail || t('search.v2.error'))
       }
-      router.push(`?${next.toString()}`)
+      const lessonLocation = (course: string, chapter: string) => t('search.lesson_location', { course, chapter })
+      return {
+        courses: Array.isArray(res.data?.courses) ? res.data.courses : [],
+        normalized: normalizeSiteResults(res.data, orgslug, orgUuid, lessonLocation),
+      }
+    },
+    [orgslug, orgUuid, accessToken, t, lang],
+  )
+  return { fetchPage, orgslug, orgUuid, accessToken, lang }
+}
+
+function SearchPage() {
+  const { t, i18n } = useTranslation()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { track } = useLHAnalytics('learner')
+  const { fetchPage, orgslug, orgUuid, accessToken, lang } = useSearchFetcher()
+  const recentSearches = useRecentSearches(orgslug)
+  const pages = useSitePages()
+
+  const urlQuery = (searchParams.get('q') ?? '').trim()
+  const typeParam = searchParams.get('type') ?? ''
+  const scope: Scope = (PLURAL_TO_TYPE[typeParam] as SiteResultType | undefined) ?? 'all'
+  const validQuery = urlQuery.length >= MIN_QUERY
+
+  // ── Input ⇄ URL ────────────────────────────────────────────────────────
+  const [inputValue, setInputValue] = useState(urlQuery)
+  const lastPushed = useRef(urlQuery)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Back/forward (or a link from the palette) changes the URL under us.
+  useEffect(() => {
+    if (urlQuery !== lastPushed.current) {
+      lastPushed.current = urlQuery
+      setInputValue(urlQuery)
+    }
+  }, [urlQuery])
+
+  const replaceParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const next = new URLSearchParams(Array.from(searchParams.entries()))
+      next.delete('page') // the old paginated page used it; "Show more" replaced it
+      for (const [key, value] of Object.entries(updates)) {
+        if (!value) next.delete(key)
+        else next.set(key, value)
+      }
+      const qs = next.toString()
+      router.replace(qs ? `?${qs}` : '?', { scroll: false })
     },
     [router, searchParams],
   )
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmed = inputValue.trim()
-    if (!trimmed) return
-    track(AnalyticsEvent.SearchExecuted, { query_length: trimmed.length, source: 'search_page' })
-    updateParams({ q: trimmed, page: 1 })
-  }
-
-  useEffect(() => {
-    if (!urlQuery.trim() || !org?.slug) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setResults(EMPTY_RESULTS)
-      return
-    }
-
-    let cancelled = false
-    setIsLoading(true)
-    searchOrgContent(
-      org.slug,
-      urlQuery,
-      urlPage,
-      PER_PAGE,
-      null,
-      session?.data?.tokens?.access_token,
-    )
-      .then((response) => {
-        if (cancelled) return
-        const data = response?.data ?? {}
-        const merged = { ...EMPTY_RESULTS, ...data }
-        setResults(merged)
-        const query = urlQuery.trim()
-        if (reportedQuery.current !== query) {
-          reportedQuery.current = query
-          track(AnalyticsEvent.SearchQuery, {
-            query,
-            results_count: sections.reduce((sum, s) => sum + s.total(merged), 0),
-            surface: 'search_page',
-          })
-        }
-      })
-      .catch((err) => {
-        console.error('Search failed:', err)
-        if (!cancelled) setResults(EMPTY_RESULTS)
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [urlQuery, urlPage, org?.slug, session?.data?.tokens?.access_token, track])
-
-  const totalResults = useMemo(
-    () => sections.reduce((sum, s) => sum + s.total(results), 0),
-    [results],
+  const commitQuery = useCallback(
+    (raw: string, source: 'typing' | 'submit') => {
+      const q = raw.trim()
+      if (q === lastPushed.current && source === 'typing') return
+      lastPushed.current = q
+      if (q.length >= MIN_QUERY) {
+        track(AnalyticsEvent.SearchExecuted, { query_length: q.length, source: 'search_page' })
+      }
+      replaceParams({ q: q || null })
+    },
+    [replaceParams, track],
   )
 
-  const activeSections = useMemo(() => {
-    const shown = urlType === 'all'
-      ? sections
-      : sections.filter((s) => s.key === urlType)
-    return shown.filter((s) => s.items(results).length > 0)
-  }, [urlType, results])
+  // Search as you type, once the typing pauses.
+  useEffect(() => {
+    const id = window.setTimeout(() => commitQuery(inputValue, 'typing'), 350)
+    return () => window.clearTimeout(id)
+  }, [inputValue, commitQuery])
 
-  const activeTotal = urlType === 'all'
-    ? totalResults
-    : sections.find((s) => s.key === urlType)?.total(results) ?? 0
+  // "/" focuses the field, like the list filters across the app.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
+      const target = e.target as HTMLElement | null
+      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return
+      e.preventDefault()
+      inputRef.current?.focus()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
-  const totalPages = Math.max(1, Math.ceil(activeTotal / PER_PAGE))
-  const renderContext: RenderContext = {
-    orgSlug: org?.slug ?? '',
-    orgUuid: org?.org_uuid ?? '',
-    t,
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = inputValue.trim()
+    if (!q) return
+    if (q.length >= MIN_QUERY) recentSearches.add(q)
+    commitQuery(q, 'submit')
   }
 
-  return (
-    <div className="min-h-screen">
-      <ListShortcuts />
-      <div className="container mx-auto px-4 pt-10 pb-4 max-w-5xl">
-        <h1 className="text-2xl font-semibold text-black/80 mb-1">
-          {t('common.search')}
-        </h1>
-        <p className="text-sm text-black/50 mb-6">{t('search.start_subtitle')}</p>
+  const setScope = (next: Scope) => replaceParams({ type: next === 'all' ? null : TYPE_PLURAL[next] })
 
-        <form onSubmit={handleSubmit} className="relative group">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            aria-label={t('search.search_placeholder')}
-            placeholder={t('search.search_placeholder')}
-            className="w-full h-12 ps-12 pe-24 rounded-xl bg-white nice-shadow
-                       focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-1
-                       text-sm placeholder:text-black/40 transition-all"
-          />
-          <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
-            <SearchIcon
-              className="text-black/40 group-focus-within:text-black/70 transition-colors"
-              size={18}
-            />
-          </div>
-          <button
-            type="submit"
-            className="absolute inset-y-2 end-2 px-4 rounded-lg bg-black text-white text-xs font-semibold hover:bg-black/85 transition-colors"
+  // ── Data ───────────────────────────────────────────────────────────────
+  // "All" always runs: it carries the per-type counts for the scope bar.
+  const allQuery = useQuery({
+    queryKey: ['site-search-page', orgslug, urlQuery, 'all', accessToken, lang],
+    queryFn: () => fetchPage(urlQuery, 1, PER_TYPE_ALL),
+    enabled: validQuery && !!orgslug,
+    placeholderData: (prev) => prev,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
+    retry: false,
+  })
+
+  const scopedQuery = useInfiniteQuery({
+    queryKey: ['site-search-page', 'scoped', orgslug, urlQuery, scope, accessToken, lang],
+    queryFn: ({ pageParam }) => fetchPage(urlQuery, pageParam, PER_PAGE_SCOPED),
+    initialPageParam: 1,
+    getNextPageParam: (last, all) => {
+      if (scope === 'all') return undefined
+      const loaded = all.reduce((n, p) => n + p.normalized.results.filter((r) => r.type === scope).length, 0)
+      const returned = last.normalized.results.filter((r) => r.type === scope).length
+      return returned > 0 && loaded < last.normalized.totals[scope] ? all.length + 1 : undefined
+    },
+    enabled: validQuery && !!orgslug && scope !== 'all',
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
+    retry: false,
+  })
+
+  const allData = allQuery.data?.normalized
+  const totals = allData?.totals ?? emptyTotals()
+  const grandTotal = allData?.total ?? 0
+  // Placeholder data from the previous query still shows while typing; only
+  // trust its counts once it belongs to this query.
+  const settled = !!allQuery.data && !allQuery.isPlaceholderData
+
+  // Report each search to org analytics once its results are in. The ref keeps
+  // paging, scope changes and re-renders from counting the same search again.
+  const reportedQuery = useRef<string | null>(null)
+  useEffect(() => {
+    if (!validQuery || !settled || reportedQuery.current === urlQuery) return
+    reportedQuery.current = urlQuery
+    track(AnalyticsEvent.SearchQuery, { query: urlQuery, results_count: grandTotal, surface: 'search_page' })
+  }, [validQuery, settled, urlQuery, grandTotal, track])
+
+  const scopedResults = useMemo(() => {
+    if (scope === 'all') return [] as SiteResult[]
+    const seen = new Set<string>()
+    const out: SiteResult[] = []
+    for (const p of scopedQuery.data?.pages ?? []) {
+      for (const r of p.normalized.results) {
+        if (r.type !== scope || seen.has(r.id)) continue
+        seen.add(r.id)
+        out.push(r)
+      }
+    }
+    return out
+  }, [scope, scopedQuery.data])
+
+  const scopedCourses = useMemo(() => {
+    if (scope !== 'course') return [] as CourseCardCourse[]
+    const seen = new Set<string>()
+    return (scopedQuery.data?.pages ?? []).flatMap((p) => p.courses).filter((c) => {
+      if (!c?.course_uuid || seen.has(c.course_uuid)) return false
+      seen.add(c.course_uuid)
+      return true
+    })
+  }, [scope, scopedQuery.data])
+
+  const loadingFirst =
+    validQuery && (scope === 'all' ? !settled && !allQuery.isError : scopedQuery.isPending && !scopedQuery.isError)
+  const error = scope === 'all' ? allQuery.error : scopedQuery.error
+  const activeTotal = scope === 'all' ? grandTotal : totals[scope]
+  const typing = inputValue.trim() !== urlQuery
+
+  const onResultClick = (type: string, position: number) => {
+    track(AnalyticsEvent.SearchResultClicked, { result_type: type, position })
+    recentSearches.add(urlQuery)
+  }
+
+  const scopeOptions = useMemo(() => {
+    const opts: { key: Scope; label: React.ReactNode; count?: number }[] = [
+      { key: 'all', label: t('search.types.all'), count: settled ? grandTotal : undefined },
+    ]
+    for (const type of SITE_RESULT_ORDER) {
+      if (!settled || totals[type] > 0 || type === scope) {
+        const Icon = TYPE_ICON[type]
+        // Before the counts arrive, list nothing but the active scope.
+        if (!settled && type !== scope) continue
+        opts.push({
+          key: type,
+          label: (
+            <>
+              <Icon size={13} weight={type === scope ? 'fill' : 'regular'} />
+              {t(typeGroupKey(type))}
+            </>
+          ),
+          count: settled ? totals[type] : undefined,
+        })
+      }
+    }
+    return opts
+  }, [settled, grandTotal, totals, scope, t])
+
+  const courseHref = (c: CourseCardCourse) => getUriWithOrg(orgslug, coursePath(c as { slug?: string | null; course_uuid: string }))
+  const browsePages = pages.filter((p) => p.id !== 'site.search' && p.id !== 'site.home' && !p.requiresAuth).slice(0, 6)
+
+  // ── Render ─────────────────────────────────────────────────────────────
+  let body: React.ReactNode
+  if (!urlQuery) {
+    body = (
+      <StartState
+        recent={recentSearches.recent}
+        onPick={(q) => {
+          setInputValue(q)
+          commitQuery(q, 'submit')
+        }}
+        onRemove={recentSearches.remove}
+        onClear={recentSearches.clear}
+        pages={browsePages}
+        orgslug={orgslug}
+      />
+    )
+  } else if (!validQuery) {
+    body = (
+      <EmptyState
+        icon={<MagnifyingGlass size={22} />}
+        title={t('search.v2.keep_typing')}
+        description={t('search.v2.min_chars', { count: MIN_QUERY })}
+      />
+    )
+  } else if (error) {
+    body = (
+      <EmptyState
+        icon={<Warning size={22} />}
+        title={t('search.v2.error_title')}
+        description={(error as Error).message}
+        action={
+          <Button
+            variant="secondary"
+            icon={<ArrowClockwise size={14} />}
+            onClick={() => (scope === 'all' ? allQuery.refetch() : scopedQuery.refetch())}
           >
-            {t('common.search')}
-          </button>
-        </form>
-
-        {urlQuery && (
-          <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-            <TabButton
-              label={t('search.types.all')}
-              icon={SearchIcon}
-              count={totalResults}
-              active={urlType === 'all'}
-              onClick={() => updateParams({ type: '', page: 1 })}
-            />
-            {sections.map((s) => (
-              <TabButton
-                key={s.key}
-                label={t(`search.types.${s.key}`)}
-                icon={s.icon}
-                count={s.total(results)}
-                active={urlType === s.key}
-                onClick={() => updateParams({ type: s.key, page: 1 })}
+            {t('search.v2.retry')}
+          </Button>
+        }
+      />
+    )
+  } else if (loadingFirst) {
+    body = <LoadingState scope={scope} />
+  } else if (activeTotal === 0) {
+    body = (
+      <NoResults
+        query={urlQuery}
+        scoped={scope !== 'all'}
+        anyResults={grandTotal > 0}
+        onSearchAll={() => setScope('all')}
+        pages={browsePages}
+        orgslug={orgslug}
+      />
+    )
+  } else if (scope === 'all') {
+    const results = allData?.results ?? []
+    const courses = allQuery.data?.courses ?? []
+    const listTypes = SITE_RESULT_ORDER.filter((type) => type !== 'course' && results.some((r) => r.type === type))
+    body = (
+      <div className="flex flex-col gap-10">
+        {courses.length > 0 && (
+          <Section
+            type="course"
+            total={totals.course}
+            shown={courses.length}
+            onSeeAll={() => setScope('course')}
+          >
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {courses.map((course, i) => (
+                <CourseCard
+                  key={course.course_uuid}
+                  course={course}
+                  orgUuid={orgUuid}
+                  href={courseHref(course)}
+                  onOpen={() => onResultClick('courses', i + 1)}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+        {listTypes.length > 0 && (
+          <div className="grid grid-cols-1 gap-x-6 gap-y-10 xl:grid-cols-2">
+            {listTypes.map((type) => {
+              const items = results.filter((r) => r.type === type).slice(0, ROWS_ALL)
+              return (
+                <Section
+                  key={type}
+                  type={type}
+                  total={totals[type]}
+                  shown={items.length}
+                  onSeeAll={() => setScope(type)}
+                >
+                  <ResultList
+                    items={items}
+                    query={urlQuery}
+                    locale={i18n.language}
+                    onClick={(r, i) => onResultClick(TYPE_PLURAL[r.type], i + 1)}
+                  />
+                </Section>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  } else {
+    const shown = scope === 'course' ? scopedCourses.length : scopedResults.length
+    body = (
+      <div className="flex flex-col gap-6">
+        {scope === 'course' ? (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {scopedCourses.map((course, i) => (
+              <CourseCard
+                key={course.course_uuid}
+                course={course}
+                orgUuid={orgUuid}
+                href={courseHref(course)}
+                onOpen={() => onResultClick('courses', i + 1)}
               />
             ))}
           </div>
-        )}
-      </div>
-
-      <div className="container mx-auto px-4 pb-12 max-w-5xl">
-        {!urlQuery.trim() ? (
-          <StartState label={t('search.start_heading')} />
-        ) : isLoading ? (
-          <LoadingGrid />
-        ) : totalResults === 0 ? (
-          <EmptyState query={urlQuery} t={t} />
+        ) : scope === 'user' ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {scopedResults.map((r, i) => (
+              <Link
+                key={r.id}
+                data-kbd-item=""
+                href={r.href}
+                prefetch={false}
+                onClick={() => onResultClick('users', i + 1)}
+                className="flex items-center gap-3 rounded-2xl bg-white p-3.5 nice-shadow transition-shadow hover:ring-1 hover:ring-neutral-200"
+              >
+                <ResultThumb result={r} size="md" />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold text-neutral-900">
+                    <Highlight text={r.title} query={urlQuery} />
+                  </span>
+                  {r.subtitle && (
+                    <span className="block truncate text-xs text-neutral-500">
+                      <Highlight text={r.subtitle} query={urlQuery} />
+                    </span>
+                  )}
+                </span>
+              </Link>
+            ))}
+          </div>
         ) : (
-          <>
-            <p className="text-xs text-black/50 mb-5">
-              {t('search.found_results', { count: activeTotal, query: urlQuery })}
-            </p>
-
-            <div className="space-y-8">
-              {activeSections.length === 0 && (
-                <EmptyState query={urlQuery} t={t} />
-              )}
-
-              {activeSections.map((section) => {
-                const items = section.items(results)
-                return (
-                  <section key={section.key}>
-                    <h2 className="text-[11px] font-semibold uppercase tracking-wider text-black/50 mb-3 flex items-center gap-2">
-                      <section.icon size={13} />
-                      {t(`search.types.${section.key}`)}
-                      <span className="text-black/30 font-normal normal-case tracking-normal">
-                        ({section.total(results)})
-                      </span>
-                    </h2>
-                    <div className={gridClass(section.key)}>
-                      {items.map((item, index) => (
-                        <span
-                          key={section.itemKey(item)}
-                          className="contents"
-                          onClick={() =>
-                            track(AnalyticsEvent.SearchResultClicked, {
-                              result_type: section.key,
-                              position: index + 1,
-                            })
-                          }
-                        >
-                          {section.renderCard(item, renderContext)}
-                        </span>
-                      ))}
-                    </div>
-                  </section>
-                )
-              })}
-            </div>
-
-            {totalPages > 1 && (
-              <Pagination
-                page={urlPage}
-                totalPages={totalPages}
-                onChange={(p) => updateParams({ page: p })}
-                t={t}
-              />
-            )}
-          </>
+          <ResultList
+            items={scopedResults}
+            query={urlQuery}
+            locale={i18n.language}
+            detailed
+            onClick={(r, i) => onResultClick(TYPE_PLURAL[r.type], i + 1)}
+          />
+        )}
+        {scopedQuery.hasNextPage && (
+          <div className="flex flex-col items-center gap-2">
+            <Button
+              variant="secondary"
+              loading={scopedQuery.isFetchingNextPage}
+              onClick={() => scopedQuery.fetchNextPage()}
+            >
+              {t('search.v2.show_more')}
+            </Button>
+            <span className="text-xs tabular-nums text-neutral-400">
+              {t('search.v2.showing', { shown, total: totals[scope] || shown })}
+            </span>
+          </div>
         )}
       </div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      <GeneralWrapperStyled>
+        <ListShortcuts />
+        <div className="flex flex-col gap-5 pb-10">
+          {/* ── Header ──────────────────────────────────────────────── */}
+          <div className="flex flex-col gap-1 pt-2">
+            <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">{t('common.search')}</h1>
+            <p className="text-sm text-neutral-500">{t('search.start_subtitle')}</p>
+          </div>
+
+          <form onSubmit={handleSubmit} role="search" className="relative">
+            <MagnifyingGlass
+              size={18}
+              className="pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-neutral-400"
+            />
+            <input
+              ref={inputRef}
+              type="search"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape' && inputValue) {
+                  e.preventDefault()
+                  setInputValue('')
+                }
+              }}
+              aria-label={t('search.search_placeholder')}
+              placeholder={t('search.palette.placeholder')}
+              autoComplete="off"
+              spellCheck={false}
+              enterKeyHint="search"
+              className="h-12 w-full rounded-2xl bg-white ps-11 pe-14 text-[15px] text-neutral-900 nice-shadow placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 [&::-webkit-search-cancel-button]:hidden"
+            />
+            <div className="absolute end-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
+              {inputValue ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInputValue('')
+                    inputRef.current?.focus()
+                  }}
+                  aria-label={t('search.v2.clear_query')}
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-800"
+                >
+                  <X size={11} weight="bold" />
+                </button>
+              ) : (
+                <kbd className="pointer-events-none hidden h-6 min-w-6 items-center justify-center rounded-md bg-neutral-100 px-1.5 text-[11px] font-semibold text-neutral-400 sm:flex">
+                  /
+                </kbd>
+              )}
+            </div>
+            {/* Typing or loading: a quiet line along the field's bottom edge. */}
+            <span
+              aria-hidden
+              className={`pointer-events-none absolute inset-x-4 bottom-0 h-px rounded-full transition-opacity ${
+                validQuery && (typing || allQuery.isFetching || scopedQuery.isFetching)
+                  ? 'animate-pulse bg-neutral-400 opacity-100'
+                  : 'opacity-0'
+              }`}
+            />
+          </form>
+
+          {validQuery && (
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <div className="-mx-1 max-w-full overflow-x-auto px-1 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <SegmentedControl<Scope>
+                  value={scope}
+                  options={scopeOptions}
+                  onChange={setScope}
+                  ariaLabel={t('search.filter_heading')}
+                />
+              </div>
+              {settled && activeTotal > 0 && !error && (
+                <p className="text-xs text-neutral-500" aria-live="polite">
+                  {t('search.found_results', { count: activeTotal, query: urlQuery })}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div>{body}</div>
+        </div>
+      </GeneralWrapperStyled>
     </div>
   )
 }
 
-// ─── subcomponents ──────────────────────────────────────────────────────────
+// ─── Sections & rows ────────────────────────────────────────────────────
 
-function TabButton({
-  label,
-  icon: Icon,
-  count,
-  active,
+function Section({
+  type,
+  total,
+  shown,
+  onSeeAll,
+  children,
+}: {
+  type: SiteResultType
+  total: number
+  shown: number
+  onSeeAll: () => void
+  children: React.ReactNode
+}) {
+  const { t } = useTranslation()
+  const Icon = TYPE_ICON[type]
+  return (
+    <section className="flex min-w-0 flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-neutral-600 shadow-[0_1px_1px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.07)]">
+            <Icon size={15} weight="fill" />
+          </span>
+          {t(typeGroupKey(type))}
+          <span className="font-normal tabular-nums text-neutral-400">{total}</span>
+        </h2>
+        {total > shown && (
+          <Button variant="ghost" size="sm" onClick={onSeeAll}>
+            {t('search.v2.see_all', { count: total })}
+            <ArrowRight size={12} className="rtl:rotate-180" />
+          </Button>
+        )}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function ResultList({
+  items,
+  query,
+  locale,
+  detailed = false,
   onClick,
 }: {
-  label: string
-  icon: React.ComponentType<any>
-  count: number
-  active: boolean
-  onClick: () => void
+  items: SiteResult[]
+  query: string
+  locale: string
+  detailed?: boolean
+  onClick: (_r: SiteResult, _index: number) => void
 }) {
+  const { t } = useTranslation()
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-        active
-          ? 'bg-black text-white'
-          : 'bg-black/5 text-black/70 hover:bg-black/10'
-      }`}
-    >
-      <Icon size={14} />
-      {label}
-      <span className={active ? 'text-white/70' : 'text-black/40'}>{count}</span>
-    </button>
+    <ul className="divide-y divide-neutral-100 overflow-hidden rounded-2xl bg-white nice-shadow">
+      {items.map((r, i) => {
+        const kind = r.type === 'activity' ? activityKind(r.activityType, r.activitySubType) : null
+        const updated = r.type === 'discussion' || r.type === 'community' ? formatRelative(r.updatedAt, locale) : null
+        return (
+          <li key={`${r.type}-${r.id}`}>
+            <Link
+              data-kbd-item=""
+              href={r.href}
+              prefetch={false}
+              onClick={() => onClick(r, i)}
+              className="group flex items-center gap-3.5 px-4 py-3 transition-colors hover:bg-neutral-50 focus-visible:bg-neutral-50 focus-visible:outline-none data-[kbd-active]:bg-neutral-50"
+            >
+              <ResultThumb result={r} size="md" />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-sm font-semibold text-neutral-900">
+                  <Highlight text={r.title} query={query} />
+                </span>
+                {r.subtitle && (
+                  <span className={`text-xs text-neutral-500 ${detailed ? 'line-clamp-2' : 'truncate'}`}>
+                    <Highlight text={r.subtitle} query={query} />
+                  </span>
+                )}
+              </span>
+              {kind && (
+                <span className="hidden shrink-0 sm:inline-flex">
+                  <Chip icon={<kind.icon size={12} weight="fill" />}>{t(kind.key)}</Chip>
+                </span>
+              )}
+              {updated && <span className="hidden shrink-0 text-xs text-neutral-400 sm:inline">{updated}</span>}
+              <CaretRight
+                size={14}
+                className="shrink-0 text-neutral-300 transition-colors group-hover:text-neutral-500 rtl:rotate-180"
+              />
+            </Link>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
-function ResourceCard({
-  href,
-  imageUrl,
-  fallbackIcon: FallbackIcon,
-  title,
-  subtitle,
-  footer,
-}: {
-  href: string
-  imageUrl?: string
-  fallbackIcon: React.ComponentType<any>
-  title: string
-  subtitle?: string
-  footer?: React.ReactNode
-}) {
-  return (
-    <Link
-      data-kbd-item=""
-      href={href}
-      className="bg-white rounded-lg border border-black/5 hover:border-black/15 transition-colors overflow-hidden group flex flex-col"
-    >
-      <div className="relative aspect-video bg-black/5 flex items-center justify-center">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover"
-            // A course whose thumbnail file is gone would otherwise show its
-            // alt text in a grey box.
-            onError={(e) => {
-              if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'
-            }}
-          />
-        ) : (
-          <FallbackIcon size={28} className="text-black/30" />
-        )}
-      </div>
-      <div className="p-3 flex-1 flex flex-col">
-        <h3 className="text-sm font-medium text-black/80 line-clamp-1">{title}</h3>
-        {subtitle && (
-          <p className="text-xs text-black/50 line-clamp-2 mt-1">{subtitle}</p>
-        )}
-        {footer}
-      </div>
-    </Link>
-  )
-}
+// ─── States ─────────────────────────────────────────────────────────────
 
-function InlineCard({
-  href,
-  icon: Icon,
-  emoji,
-  imageUrl,
-  title,
-  subtitle,
-}: {
-  href: string
-  icon: React.ComponentType<any>
-  emoji?: string
-  imageUrl?: string
-  title: string
-  subtitle?: string
-}) {
+function LoadingState({ scope }: { scope: Scope }) {
+  const cards = scope === 'all' || scope === 'course'
   return (
-    <Link
-      data-kbd-item=""
-      href={href}
-      className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/5 hover:border-black/15 transition-colors"
-    >
-      <div className="w-9 h-9 bg-black/5 rounded-md flex items-center justify-center flex-shrink-0 text-base overflow-hidden">
-        {imageUrl ? (
-          <img src={imageUrl} alt="" className="w-full h-full object-cover" />
-        ) : emoji ? (
-          <span>{emoji}</span>
-        ) : (
-          <Icon size={18} className="text-black/50" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <h3 className="text-sm font-medium text-black/80 line-clamp-1">{title}</h3>
-        {subtitle && (
-          <p className="text-xs text-black/50 line-clamp-2 mt-0.5">{subtitle}</p>
-        )}
-      </div>
-    </Link>
-  )
-}
-
-function LoadingGrid() {
-  return (
-    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="bg-white rounded-lg border border-black/5 p-3 animate-pulse"
-        >
-          <div className="w-full aspect-video bg-black/5 rounded mb-3" />
-          <div className="w-3/4 h-3 bg-black/5 rounded mb-1.5" />
-          <div className="w-1/2 h-3 bg-black/5 rounded" />
+    <div className="flex flex-col gap-10" aria-busy="true">
+      {cards && (
+        <div className="flex flex-col gap-3">
+          <div className="h-7 w-32 rounded-lg bg-neutral-100 animate-pulse" />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="overflow-hidden rounded-2xl bg-white nice-shadow">
+                <div className="aspect-video bg-neutral-100 animate-pulse" />
+                <div className="flex flex-col gap-2 p-4">
+                  <div className="h-3.5 w-3/4 rounded bg-neutral-100 animate-pulse" />
+                  <div className="h-3 w-1/2 rounded bg-neutral-100 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
+      )}
+      {scope !== 'course' && (
+        <div className="grid grid-cols-1 gap-x-6 gap-y-10 xl:grid-cols-2">
+          {Array.from({ length: scope === 'all' ? 2 : 1 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-3">
+              <div className="h-7 w-28 rounded-lg bg-neutral-100 animate-pulse" />
+              <div className="rounded-2xl bg-white p-2 nice-shadow">
+                <SkeletonRows count={scope === 'all' ? 4 : 6} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
-function EmptyState({ query, t }: { query: string; t: (_k: string, _o?: any) => string }) {
+function BrowseLinks({ pages, orgslug }: { pages: ReturnType<typeof useSitePages>; orgslug: string }) {
+  const { t } = useTranslation()
+  if (pages.length === 0) return null
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 p-4 bg-black/5 rounded-full">
-        <SearchIcon className="w-8 h-8 text-black/40" />
-      </div>
-      <h3 className="text-lg font-medium text-black/80 mb-2">
-        {t('search.no_results_found')}
-      </h3>
-      <p className="text-sm text-black/50 max-w-md">
-        {t('search.no_results_description', { query })}
-      </p>
-    </div>
-  )
-}
-
-function StartState({ label }: { label: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="mb-4 p-4 bg-black/5 rounded-full">
-        <SearchIcon className="w-8 h-8 text-black/40" />
-      </div>
-      <h3 className="text-lg font-medium text-black/70">{label}</h3>
-    </div>
-  )
-}
-
-function Pagination({
-  page,
-  totalPages,
-  onChange,
-  t,
-}: {
-  page: number
-  totalPages: number
-  onChange: (_p: number) => void
-  t: (_k: string) => string
-}) {
-  const windowSize = 5
-  const half = Math.floor(windowSize / 2)
-  const start = Math.max(1, Math.min(page - half, totalPages - windowSize + 1))
-  const end = Math.min(totalPages, start + windowSize - 1)
-  const pages = Array.from({ length: end - start + 1 }, (_, i) => start + i)
-
-  const baseBtn =
-    'flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors'
-  return (
-    <nav className="flex justify-center items-center gap-1.5 mt-8">
-      <button
-        onClick={() => onChange(page - 1)}
-        disabled={page <= 1}
-        className={`${baseBtn} text-black/60 hover:bg-black/5 disabled:opacity-40 disabled:cursor-not-allowed`}
-        aria-label={t('search.previous')}
-      >
-        <ChevronLeft size={14} />
-        <span className="hidden sm:inline">{t('search.previous')}</span>
-      </button>
-      <div className="flex items-center gap-1">
-        {pages.map((p) => (
-          <button
-            key={p}
-            onClick={() => onChange(p)}
-            className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${
-              p === page
-                ? 'bg-black text-white'
-                : 'text-black/60 hover:bg-black/5'
-            }`}
-            aria-current={p === page ? 'page' : undefined}
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {pages.map((page) => {
+        const Icon = page.icon
+        return (
+          <Link
+            key={page.id}
+            data-kbd-item=""
+            href={getUriWithOrg(orgslug, page.href)}
+            className="group flex items-center gap-3 rounded-2xl bg-white p-3.5 nice-shadow transition-shadow hover:ring-1 hover:ring-neutral-200"
           >
-            {p}
-          </button>
-        ))}
-      </div>
-      <button
-        onClick={() => onChange(page + 1)}
-        disabled={page >= totalPages}
-        className={`${baseBtn} text-black/60 hover:bg-black/5 disabled:opacity-40 disabled:cursor-not-allowed`}
-        aria-label={t('search.next')}
-      >
-        <span className="hidden sm:inline">{t('search.next')}</span>
-        <ChevronRight size={14} />
-      </button>
-    </nav>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
+              <Icon size={18} weight="fill" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-neutral-900">{t(page.titleKey)}</span>
+              {page.descriptionKey && (
+                <span className="block truncate text-xs text-neutral-500">{t(page.descriptionKey)}</span>
+              )}
+            </span>
+            <CaretRight size={14} className="shrink-0 text-neutral-300 group-hover:text-neutral-500 rtl:rotate-180" />
+          </Link>
+        )
+      })}
+    </div>
   )
 }
 
-function gridClass(key: ResourceKey): string {
-  // Dense list for inline types (folders/discussions), card grid for rich types.
-  if (key === 'activities' || key === 'folders' || key === 'discussions' || key === 'users') {
-    return 'grid gap-3 md:grid-cols-2 lg:grid-cols-3'
-  }
-  return 'grid gap-4 md:grid-cols-2 lg:grid-cols-3'
+function StartState({
+  recent,
+  onPick,
+  onRemove,
+  onClear,
+  pages,
+  orgslug,
+}: {
+  recent: string[]
+  onPick: (_q: string) => void
+  onRemove: (_q: string) => void
+  onClear: () => void
+  pages: ReturnType<typeof useSitePages>
+  orgslug: string
+}) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-col gap-10 pt-2">
+      {recent.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+              <ClockCounterClockwise size={16} className="text-neutral-400" />
+              {t('search.v2.recent')}
+            </h2>
+            <Button variant="ghost" size="sm" onClick={onClear}>
+              {t('search.v2.clear_recent')}
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {recent.map((q) => (
+              <span
+                key={q}
+                className="inline-flex h-8 items-center rounded-xl bg-white text-[13px] text-neutral-700 shadow-[0_1px_1px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.07)]"
+              >
+                <button type="button" onClick={() => onPick(q)} className="h-full ps-3 pe-1.5 hover:text-neutral-900" dir="auto">
+                  {q}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRemove(q)}
+                  aria-label={t('search.v2.remove_recent', { query: q })}
+                  className="me-1 flex h-6 w-6 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+                >
+                  <X size={11} weight="bold" />
+                </button>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+      {pages.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-neutral-900">{t('search.v2.browse')}</h2>
+          <BrowseLinks pages={pages} orgslug={orgslug} />
+        </section>
+      )}
+      {recent.length === 0 && pages.length === 0 && (
+        <EmptyState icon={<MagnifyingGlass size={22} />} title={t('search.start_heading')} />
+      )}
+    </div>
+  )
+}
+
+function NoResults({
+  query,
+  scoped,
+  anyResults,
+  onSearchAll,
+  pages,
+  orgslug,
+}: {
+  query: string
+  scoped: boolean
+  anyResults: boolean
+  onSearchAll: () => void
+  pages: ReturnType<typeof useSitePages>
+  orgslug: string
+}) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="rounded-2xl bg-white nice-shadow">
+        <EmptyState
+          icon={<MagnifyingGlass size={22} />}
+          title={t('search.palette.no_results', { query })}
+          description={t('search.v2.no_results_tip')}
+          action={
+            scoped && anyResults ? (
+              <Button variant="secondary" onClick={onSearchAll}>
+                {t('search.v2.search_all_types')}
+              </Button>
+            ) : undefined
+          }
+        />
+      </div>
+      {pages.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-neutral-900">{t('search.v2.browse_instead')}</h2>
+          <BrowseLinks pages={pages} orgslug={orgslug} />
+        </section>
+      )}
+    </div>
+  )
 }
 
 export default SearchPage

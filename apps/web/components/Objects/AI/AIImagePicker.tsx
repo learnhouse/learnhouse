@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowUpRight, CircleNotch, ClockCounterClockwise, Image, ImageBroken, MagicWand, Sparkle, Trash, X } from '@phosphor-icons/react'
+import { CreditCost, OutOfCreditsNotice } from '@components/Objects/AI/CreditCost'
+import { useAICreditPrices, useRefreshAICredits } from '@components/Hooks/useAICredits'
+import { isOutOfCreditsError } from '@services/ai/credits'
+import { ArrowUpRight, CircleNotch, ClockCounterClockwise, Image, ImageBroken, Trash, X } from '@phosphor-icons/react'
+import { AIAccentLine, AIButton, AIMark, AIThinking, aiSurface } from './AIBrand'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -54,6 +58,11 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
   const [sessionUuid, setSessionUuid] = useState<string | undefined>(undefined)
   const [refineFrom, setRefineFrom] = useState<GeneratedItem | null>(null)
   const [usingKey, setUsingKey] = useState<string | null>(null)
+  // ai-credits: the price before, what the last image used after.
+  const { estimate } = useAICreditPrices()
+  const refreshCredits = useRefreshAICredits()
+  const [lastCredits, setLastCredits] = useState<number | null>(null)
+  const [outOfCredits, setOutOfCredits] = useState(false)
   const promptRef = React.useRef<HTMLTextAreaElement>(null)
 
   const stageRefine = (item: GeneratedItem) => {
@@ -81,6 +90,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
     if (!prompt.trim() || generating || !org?.id) return
     setGenerating(true)
     setError(null)
+    setOutOfCredits(false)
     try {
       const res = await generateAIImage(
         {
@@ -97,9 +107,12 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
       const detail = res.data?.detail
       const message = typeof detail === 'string' ? detail : t('ai.image_picker.generation_failed')
       if (!res.success || !res.data?.file_id || !res.data?.ai_generation_uuid) {
-        setError(message)
+        if (isOutOfCreditsError(detail, res.status)) setOutOfCredits(true)
+        else setError(message)
         return
       }
+      setLastCredits(res.credits ?? null)
+      refreshCredits()
       const url = aiImageUrl(org.org_uuid, res.data.file_id)
       setItems((prev) => [
         { ai_generation_uuid: res.data.ai_generation_uuid, file_id: res.data.file_id, url, prompt: prompt.trim() },
@@ -174,9 +187,10 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
 
   const modalContent = (
     <div className="flex flex-col h-full bg-white">
+      <AIAccentLine />
       {/* Tabs */}
-      <div className="flex items-center gap-1.5 px-5 pt-4 pb-3 border-b border-neutral-100">
-        {tabBtn('generate', <MagicWand weight="duotone" size={15} />, t('ai.image_picker.tab_generate'))}
+      <div className={`flex items-center gap-1.5 px-5 pt-4 pb-3 border-b border-neutral-100 ${aiSurface.header}`}>
+        {tabBtn('generate', <AIMark size={16} alt="" />, t('ai.image_picker.tab_generate'))}
         {tabBtn('history', <ClockCounterClockwise weight="duotone" size={15} />, t('ai.image_picker.tab_history'))}
       </div>
 
@@ -193,7 +207,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                 </button>
               </div>
             )}
-            <div className="rounded-2xl border border-neutral-200 focus-within:border-neutral-300 focus-within:ring-4 focus-within:ring-neutral-900/5 transition-all bg-neutral-50/50">
+            <div className={aiSurface.prompt}>
               <textarea
                 ref={promptRef}
                 value={prompt}
@@ -210,14 +224,15 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
               />
               <div className="flex items-center justify-between px-3 pb-3">
                 <span className="text-[11px] text-neutral-400 hidden sm:block">{t('ai.image_picker.shortcut_hint')}</span>
-                <button
+                <CreditCost credits={estimate('image_generation')} className="ms-auto me-3" />
+                <AIButton
                   onClick={handleGenerate}
-                  disabled={generating || !prompt.trim()}
-                  className="ms-auto px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-medium flex items-center gap-2 nice-shadow disabled:opacity-40 transition-opacity hover:bg-neutral-800"
+                  disabled={!prompt.trim()}
+                  loading={generating}
+                  className="ms-auto"
                 >
-                  {generating ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <Sparkle weight="duotone" size={15} />}
                   {generating ? t('ai.image_picker.generating') : refineFrom ? t('ai.image_picker.refine') : t('ai.image_picker.generate')}
-                </button>
+                </AIButton>
               </div>
             </div>
             {error && (
@@ -225,16 +240,18 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                 {error}
               </div>
             )}
+            {outOfCredits && <OutOfCreditsNotice />}
+            {!generating && lastCredits != null && <CreditCost kind="used" credits={lastCredits} />}
           </div>
 
           {/* Results / empty / loading */}
           <div className="flex-1 overflow-y-auto px-5 pb-5">
             {generating && (
-              <div className="relative w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden mb-4">
-                <div className="absolute inset-0 animate-pulse" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-neutral-500">
-                  <Sparkle weight="duotone" size={22} className="animate-pulse" />
-                  <span className="text-sm font-medium">{t('ai.image_picker.creating')}</span>
+              <div className="relative w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-violet-50 to-neutral-100 overflow-hidden mb-4 ring-1 ring-inset ring-violet-600/10">
+                <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <AIMark size={36} pulse alt="" />
+                  <AIThinking label={t('ai.image_picker.creating')} />
                 </div>
               </div>
             )}
@@ -291,7 +308,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
                             onClick={() => stageRefine(item)}
                             className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-sm font-medium flex items-center gap-1.5 nice-shadow"
                           >
-                            <MagicWand weight="duotone" size={15} /> {t('ai.image_picker.refine')}
+                            <AIMark size={15} alt="" /> {t('ai.image_picker.refine')}
                           </button>
                         </div>
                       )}
@@ -348,6 +365,7 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
   return (
     <Modal
       dialogTitle={t('ai.image_picker.dialog_title')}
+      icon={<AIMark size={32} alt="" />}
       dialogContent={modalContent}
       onOpenChange={onClose}
       isDialogOpen={isOpen}

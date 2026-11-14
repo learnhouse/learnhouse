@@ -13,6 +13,8 @@ class ActivityTypeEnum(str, Enum):
     TYPE_CUSTOM = "TYPE_CUSTOM"
     TYPE_SCORM = "TYPE_SCORM"
     TYPE_LIVE_SESSION = "TYPE_LIVE_SESSION"
+    # A step-by-step Play (Enterprise) linked by content.playground_uuid.
+    TYPE_PLAY = "TYPE_PLAY"
 
 
 class ActivitySubTypeEnum(str, Enum):
@@ -36,6 +38,8 @@ class ActivitySubTypeEnum(str, Enum):
     SUBTYPE_SCORM_2004 = "SUBTYPE_SCORM_2004"
     # Live session
     SUBTYPE_LIVE_SESSION = "SUBTYPE_LIVE_SESSION"
+    # Play
+    SUBTYPE_PLAY = "SUBTYPE_PLAY"
 
 
 class ActivityLockType(str, Enum):
@@ -114,3 +118,13 @@ class ActivityRead(ActivityBase):
     # services/courses/drip.py): when the parent chapter opens and why it waits.
     drip_unlock_at: Optional[str] = None
     drip_reason: Optional[str] = None
+    # Play activities only: False when the linked play can't be run (Plays
+    # unavailable for the org, or the play is gone), so the learner may mark
+    # the activity complete themselves instead of being stuck on it.
+    play_available: Optional[bool] = None
+    # Reads with ?lang= (multilingual courses): the language the name and
+    # content are in, and whether the requested one wasn't available.
+    locale: Optional[str] = None
+    translation_fallback: bool = False
+    default_locale: Optional[str] = None
+    available_locales: Optional[list[str]] = None

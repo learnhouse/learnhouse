@@ -6,6 +6,7 @@ const WebPreviewComponent = dynamic(() => import('./WebPreviewComponent'), {
   ssr: false,
 })
 
+// Node schema for the Web preview block (attrs are read by WebPreviewComponent).
 const WebPreview = Node.create({
   name: 'blockWebPreview',
   group: 'block',
@@ -25,6 +26,12 @@ const WebPreview = Node.create({
       buttonLabel: { default: 'Visit Site' },
       showButton: { default: false },
       openInPopup: { default: false },
+      // Added with the redesign; older cards have none and render as before.
+      // 'large' (image on top, the original card) or 'compact' (thumbnail at the side).
+      layout: { default: 'large' },
+      // Author overrides; Refresh rewrites the fetched fields above, never these.
+      customTitle: { default: null },
+      customDescription: { default: null },
     }
   },
 

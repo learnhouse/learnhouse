@@ -77,6 +77,8 @@ class CalendarContext:
     _features: Optional[dict[str, bool]] = None
     _course_read: dict[str, bool] = field(default_factory=dict)
     _course_edit: dict[str, bool] = field(default_factory=dict)
+    # The user's course ids, shared by every course-based source.
+    _user_course_ids: Optional[set[int]] = None
 
     def overlaps(self, starts_at: datetime, ends_at: Optional[datetime] = None) -> bool:
         starts_at = as_utc(starts_at)

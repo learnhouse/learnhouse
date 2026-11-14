@@ -8,6 +8,10 @@ import Image from 'next/image'
 import { useActivity } from '@/hooks/queries/useActivity'
 import { useCourseMeta } from '@/hooks/queries/useCourses'
 import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
+import { useContentLanguage } from '@/hooks/useContentLanguage'
+import { TranslationFallbackNotice, contentLangProps } from '@components/Objects/Courses/ContentLanguage/ContentLanguage'
+import { servedLocale, showsTranslationFallback } from '@/lib/contentLanguage'
+import { normalizeRequest } from '@components/Objects/Activities/BlockTheme/blockTheme'
 import ActivityRenderer, { RENDERABLE_ACTIVITY_TYPES } from '@components/Objects/Activities/ActivityRenderer/ActivityRenderer'
 import { parseEmbedOptions } from '@/lib/embed/protocol'
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n'
@@ -95,11 +99,17 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug }: EmbedActivityC
   const showBranding = useShowLearnHouseBranding()
   const showLearnHouseLogo = showBranding && options.showLogo
   const endRef = useRef<HTMLDivElement>(null)
+  // ?theme=light|dark forces the block theme; anything else follows bgcolor.
+  const blockTheme = normalizeRequest(searchParams.get('theme'))
 
-  const { data: activity, isLoading: activityLoading } = useActivity(activityId)
-  const { data: course, isLoading: courseLoading } = useCourseMeta(courseuuid)
+  // Same content language resolution as the course pages (`?lang=` on the
+  // embed URL, remembered choice, UI language, browser).
+  const contentLang = useContentLanguage()
+  const langOpts = { lang: contentLang.lang || undefined, enabled: contentLang.ready }
+  const { data: activity, isLoading: activityLoading } = useActivity(activityId, langOpts)
+  const { data: course, isLoading: courseLoading } = useCourseMeta(courseuuid, langOpts)
 
-  const isLoading = activityLoading || courseLoading
+  const isLoading = activityLoading || courseLoading || (!contentLang.ready && !activity)
   const { ready, containerRef } = useContentReady(
     activity?.activity_type ?? '',
     activity?.activity_sub_type,
@@ -197,12 +207,16 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug }: EmbedActivityC
     <div className="min-h-screen relative" style={customStyles}>
       <div
         ref={containerRef}
+        {...(activity.locale ? contentLangProps(activity.locale) : {})}
         style={{
           opacity: ready ? 1 : 0,
           transition: 'opacity 0.15s ease-in',
         }}
       >
-        <ActivityRenderer activity={activity} course={course} style={customStyles} />
+        {showsTranslationFallback(activity, course) && (
+          <TranslationFallbackNotice locale={servedLocale(course)} className="m-3" />
+        )}
+        <ActivityRenderer activity={activity} course={course} style={customStyles} theme={blockTheme} />
         {/* Reaching this marks the activity complete for the host page. */}
         <div ref={endRef} aria-hidden style={{ height: 1 }} />
       </div>

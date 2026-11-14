@@ -1,4 +1,4 @@
-import { ChatsCircle } from '@phosphor-icons/react'
+import { Garage } from '@phosphor-icons/react'
 import type { SitePageMeta } from '@/lib/site-search/types'
 
 export const sitePage: SitePageMeta = {
@@ -6,7 +6,7 @@ export const sitePage: SitePageMeta = {
   titleKey: 'communities.title',
   descriptionKey: 'search.palette.entries.communities.description',
   keywordsKey: 'search.palette.entries.communities.keywords',
-  icon: ChatsCircle,
+  icon: Garage,
   href: '/communities',
   shortcut: 'g m',
   featureKey: 'communities',

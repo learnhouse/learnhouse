@@ -18,6 +18,7 @@ The field definitions live in the org config JSON, which is served publicly by
 ``GET /orgs/slug/{slug}``, so labels and options are public strings.
 """
 
+import re
 from typing import Any, Optional
 
 from fastapi import HTTPException
@@ -115,6 +116,19 @@ def _coerce_text(field: SignupFieldItem, value: Any) -> str:
     return text
 
 
+_EMAIL_RE = re.compile(r"^[^@\s/:]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$")
+
+
+def _coerce_email(field: SignupFieldItem, value: Any) -> str:
+    """A field saved as the member's manager holds an email address. It has a
+    domain, which the text rule would take for a link, so it gets a strict
+    address check instead (no scheme, path or spaces)."""
+    text = str(value).strip()
+    if len(text) > 254 or not _EMAIL_RE.match(text):
+        raise _field_error(field, f"{field.label or field.key} must be an email address")
+    return text
+
+
 def _coerce_number(field: SignupFieldItem, value: Any) -> float | int:
     try:
         number = float(value)
@@ -206,6 +220,8 @@ def validate_signup_field_values(
             cleaned[field.key] = _coerce_number(field, raw)
         elif field.type == "date":
             cleaned[field.key] = _coerce_date(field, raw)
+        elif field.people_field == "manager_email":
+            cleaned[field.key] = _coerce_email(field, raw)
         else:  # text, textarea
             cleaned[field.key] = _coerce_text(field, raw)
 
@@ -282,5 +298,10 @@ async def complete_signup_fields_for_user(
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
+
+    # Mapped answers also go to the member's people data (EE).
+    from src.core.ee_hooks import sync_ee_signup_answers
+
+    await sync_ee_signup_answers(org_id, user_id, db_session, actor=user)
 
     return merged

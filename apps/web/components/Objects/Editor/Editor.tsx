@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useBlockTheme } from '@components/Objects/Activities/BlockTheme/BlockThemeScope'
 import dynamic from 'next/dynamic'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -11,8 +12,8 @@ const ToolbarButtons = dynamic(
 )
 import { motion } from 'motion/react'
 import Image from 'next/image'
-import { DividerVerticalIcon, SlashIcon } from '@radix-ui/react-icons'
-import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
+import { SlashIcon } from '@radix-ui/react-icons'
+import { AIButton, AIMark } from '@components/Objects/AI/AIBrand'
 import {
   AIEditorStateTypes,
   useAIEditor,
@@ -30,8 +31,7 @@ import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
 import AudioBlock from './Extensions/Audio/AudioBlock'
-import { Eye, History, AlertTriangle, RefreshCw, Loader2, LayoutTemplate, UserRoundSearch } from 'lucide-react'
-import EditorActionMenu from './Toolbar/EditorActionMenu'
+import { Eye, Warning, CircleNotch } from '@phosphor-icons/react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import H5PBlock from './Extensions/H5P/H5PBlock'
@@ -41,7 +41,6 @@ import { Table } from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import Link from 'next/link'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getLinkExtension } from './EditorConf'
@@ -49,14 +48,17 @@ import WebPreview from './Extensions/WebPreview/WebPreview'
 
 // Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from './editorLowlight'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { LHCodeBlock as CodeBlockLowlight, ToggleBlock, DividerStyle, TableControls, TEXT_MARKS } from './Blocks/extensions'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 const AIEditorToolkit = dynamic(() => import('./AI/AIEditorToolkit'), { ssr: false, loading: () => null })
 const AIEditorSidePanel = dynamic(() => import('./AI/AIEditorSidePanel'), { ssr: false, loading: () => null })
+const ActivityComments = dynamic(() => import('./Comments/ActivityComments'), { ssr: false, loading: () => null })
+const SelectionBubble = dynamic(() => import('./Blocks/bubble/SelectionBubble'), { ssr: false, loading: () => null })
 import AIStreamingMark from './Extensions/AIStreaming/AIStreamingMark'
 import AISelectionHighlight from './Extensions/AISelectionHighlight/AISelectionHighlight'
+import CommentMark from './Comments/CommentMark'
 import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
-import { getUriWithOrg } from '@services/config/config'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
@@ -79,6 +81,19 @@ import { EDITOR_EVENTS } from './Templates/templateContent'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
+import './editorShell.css'
+import type { CollabSession } from './Collab/collabRuntime'
+import { CollabContext } from './Collab/CollabContext'
+import { hasUnsyncedEdits } from './Collab/collabStatus'
+const CollabHeaderControls = dynamic(() => import('./Collab/CollabHeaderControls'), { ssr: false, loading: () => null })
+import EditorHeaderControls from './Header/EditorHeaderControls'
+import { useEditorLocale } from './Translation/EditorLocaleContext'
+import { isRtlLocale } from '@services/courses/translations'
+const TranslationSourcePane = dynamic(() => import('./Translation/TranslationPanes').then((m) => m.TranslationSourcePane), { ssr: false, loading: () => null })
+const TranslationBar = dynamic(() => import('./Translation/TranslationPanes').then((m) => m.TranslationBar), { ssr: false, loading: () => null })
+const EditorLanguageSwitcher = dynamic(() => import('./Translation/EditorLanguageSwitcher'), { ssr: false, loading: () => null })
+import { useAutosave, type SaveOutcome } from './Autosave/useAutosave'
+import { autosaveIndicatorStatus } from './Autosave/autosaveTiming'
 const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
 const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
 const ActivitySwitcher = dynamic(() => import('./ActivitySwitcher'), { ssr: false, loading: () => null })
@@ -109,14 +124,51 @@ interface EditorProps {
   course: any
   org: any
   session: any
-  setContent: (_content: any, _forceOverwrite?: boolean) => Promise<any>
+  setContent: (_content: any, _forceOverwrite?: boolean, _options?: { quiet?: boolean }) => Promise<any>
   checkForConflicts: () => Promise<ConflictInfo | null>
   fetchRemoteContent: () => Promise<any>
   localVersion: number
   onReady?: () => void
+  /** Collaborative mode (see Collab/useActivityCollab); null = autosave mode. */
+  collab?: CollabSession | null
+  /** Shown but not editable yet (the first moments while live editing connects). */
+  readOnly?: boolean
+  /** Live editing is still connecting (the save status says so). */
+  connecting?: boolean
+  /** Lets the wrapper know when autosave mode can hand over to live editing. */
+  onLegacyHandle?: (_handle: LegacyEditorHandle | null) => void
+  /** Caret to restore once live editing took over from autosave mode. */
+  handoverSelection?: { from: number; to: number; focused: boolean } | null
+  /** 'manual' when live editing is turned off (org or activity): Save button, unsaved guard. */
+  saveMode?: 'auto' | 'manual'
+  /** The activity's live editing override, shown in the History menu. */
+  liveEditing?: LiveEditingControl
+}
+
+export interface LiveEditingControl {
+  mode: 'default' | 'on' | 'off'
+  orgDefault: boolean
+  onChange: (_mode: 'default' | 'on' | 'off') => Promise<boolean>
+}
+
+export interface LegacyEditorHandle {
+  /** No unsaved edit and no save in flight. */
+  isClean: () => boolean
+  /** Whether a ProseMirror JSON document equals what the editor shows. */
+  matches: (_json: unknown) => boolean
+  lastSavedAt: () => number | null
+  /** Where the caret is, to put it back after switching to live editing. */
+  selection: () => { from: number; to: number; focused: boolean }
+  /** The document as ProseMirror JSON. */
+  getJSON: () => unknown
+  /** Manual mode: edits not saved yet. */
+  hasUnsavedChanges: () => boolean
 }
 
 function Editor(props: EditorProps) {
+  // Block theme for the editing surface (dark mode); see the content div below.
+  const contentThemeRef = React.useRef<HTMLDivElement>(null)
+  const contentTheme = useBlockTheme(contentThemeRef, 'auto')
   const { t } = useTranslation()
   const { track } = useLHAnalytics('editor')
   const dispatchAIEditor = useAIEditorDispatch() as any
@@ -124,11 +176,17 @@ function Editor(props: EditorProps) {
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [editorReady, setEditorReady] = React.useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
+  const hasUnsavedChangesRef = React.useRef(false)
+  React.useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges
+  }, [hasUnsavedChanges])
+  const manualSave = props.saveMode === 'manual' && !props.collab
+  // Autosave (defined once the editor exists) for callbacks declared before it
+  const autosaveRef = React.useRef<ReturnType<typeof useAutosave> | null>(null)
   const savedContentSnapshotRef = React.useRef(getEditorContentSnapshot(props.content))
 
   // Conflict detection state
   const [conflictInfo, setConflictInfo] = React.useState<ConflictInfo | null>(null)
-  const [isCheckingConflict, setIsCheckingConflict] = React.useState(false)
   const [showConflictModal, setShowConflictModal] = React.useState(false)
   const [showVersionHistory, setShowVersionHistory] = React.useState(false)
 
@@ -158,6 +216,8 @@ function Editor(props: EditorProps) {
 
   // Get feature flags from resolved_features (API is source of truth)
   const orgContext = useOrg() as any
+  // Editing a translation (`?lang=`): source pane, no version history
+  const editorLocale = useEditorLocale()
   const currentPlan = usePlan()
   const rf = orgContext?.config?.config?.resolved_features
   const canUseAI = rf?.ai?.enabled === true
@@ -197,6 +257,8 @@ function Editor(props: EditorProps) {
         link: false,
         bulletList: { HTMLAttributes: { class: 'bullet-list' } },
         orderedList: { HTMLAttributes: { class: 'ordered-list' } },
+        // Collaboration brings its own undo, scoped to this user's changes
+        ...(props.collab ? { undoRedo: false as const } : {}),
       }),
       Callout,
       InfoCallout.configure({ editable: true }),
@@ -226,6 +288,7 @@ function Editor(props: EditorProps) {
       Scenarios.configure({ editable: true, activity: stableActivity }),
       CodePlayground.configure({ editable: true, activity: stableActivity }),
       DragHandle,
+      ToggleBlock, DividerStyle, TableControls, ...TEXT_MARKS,
       SlashCommands.configure({ currentPlan }),
       PasteFileHandler.configure({
         activity: stableActivity,
@@ -239,83 +302,16 @@ function Editor(props: EditorProps) {
       CommunityTagSuggestion,
       AIStreamingMark,
       AISelectionHighlight,
+      CommentMark,
+      ...(props.collab?.extensions ?? []),
     ],
-    [stableActivity, currentPlan, getAccessToken]
+    [stableActivity, currentPlan, getAccessToken, props.collab]
   )
 
   React.useEffect(() => {
     savedContentSnapshotRef.current = getEditorContentSnapshot(normalizeCalloutContent(props.content))
     setHasUnsavedChanges(false)
   }, [props.activity.activity_uuid, props.content])
-
-  React.useEffect(() => {
-    if (!hasUnsavedChanges) {
-      return
-    }
-
-    const handler = createBeforeUnloadHandler(() => true)
-    window.addEventListener('beforeunload', handler)
-
-    return () => {
-      window.removeEventListener('beforeunload', handler)
-    }
-  }, [hasUnsavedChanges])
-
-  // `beforeunload` doesn't fire for Next.js App Router client-side navigation
-  // (e.g. clicking the editor's logo/home link). Intercept same-tab in-app
-  // anchor clicks while there are unsaved edits and confirm before leaving.
-  React.useEffect(() => {
-    if (!hasUnsavedChanges) {
-      return
-    }
-
-    const handleNavigationClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement | null
-      const anchor = target?.closest?.('a') as HTMLAnchorElement | null
-      const shouldGuard = shouldGuardNavigationClick(
-        {
-          defaultPrevented: event.defaultPrevented,
-          button: event.button,
-          metaKey: event.metaKey,
-          ctrlKey: event.ctrlKey,
-          shiftKey: event.shiftKey,
-          altKey: event.altKey,
-        },
-        anchor
-          ? {
-              href: anchor.href,
-              target: anchor.target,
-              origin: anchor.origin,
-              hasDownload: anchor.hasAttribute('download'),
-            }
-          : null,
-        window.location.origin
-      )
-
-      if (!shouldGuard) {
-        return
-      }
-
-      const confirmed = window.confirm(
-        t(
-          'editor.unsaved_changes_warning',
-          'You have unsaved changes. Leave without saving?'
-        )
-      )
-
-      if (!confirmed) {
-        event.preventDefault()
-        event.stopPropagation()
-      }
-    }
-
-    // Capture phase so we run before Next.js Link's own click handler.
-    document.addEventListener('click', handleNavigationClick, true)
-
-    return () => {
-      document.removeEventListener('click', handleNavigationClick, true)
-    }
-  }, [hasUnsavedChanges, t])
 
   const markEditorContentSaved = React.useCallback((content: unknown) => {
     savedContentSnapshotRef.current = getEditorContentSnapshot(content)
@@ -329,9 +325,10 @@ function Editor(props: EditorProps) {
   )
 
   const editor: any = useEditor({
-    editable: true,
+    editable: !props.readOnly && !props.collab?.getSnapshot().readOnly,
     extensions,
-    content: editorContent,
+    // In collaborative mode the content comes from the room
+    content: props.collab ? undefined : editorContent,
     immediatelyRender: false,
     onCreate: ({ editor }) => {
       // Re-baseline against the editor's own normalized doc. The initial
@@ -348,26 +345,14 @@ function Editor(props: EditorProps) {
       }, 0)
     },
     onUpdate: ({ editor }) => {
+      // Only manual saving needs the unsaved diff (a full getJSON per change)
+      if (props.collab || props.saveMode !== 'manual') return
       setHasUnsavedChanges(
         hasEditorContentChanged(savedContentSnapshotRef.current, editor.getJSON())
       )
     },
   })
 
-  // Handler to check for conflicts on save button hover
-  const handleSaveButtonHover = React.useCallback(async () => {
-    if (isCheckingConflict) return
-    setIsCheckingConflict(true)
-    try {
-      const info = await props.checkForConflicts()
-      setConflictInfo(info)
-      if (info?.hasConflict) {
-        setShowConflictModal(true)
-      }
-    } finally {
-      setIsCheckingConflict(false)
-    }
-  }, [props.checkForConflicts, isCheckingConflict])
 
   // Handler for save with conflict awareness
   const handleSave = React.useCallback(async (forceOverwrite: boolean = false) => {
@@ -389,20 +374,156 @@ function Editor(props: EditorProps) {
     }
     if (result?.result && !result.hasConflict) {
       markEditorContentSaved(currentContent)
+      autosaveRef.current?.markSaved()
     }
   }, [editor, conflictInfo, props.setContent, markEditorContentSaved])
+
+  // Autosave mode (no live editing): saves itself, keeps the version check,
+  // and opens the conflict prompt instead of overwriting someone's work.
+  const autosaveSave = React.useCallback(async (): Promise<SaveOutcome> => {
+    if (!editor) return 'failed'
+    const content = editor.getJSON()
+    const result = await props.setContent(content, false, { quiet: true })
+    if (result?.hasConflict) {
+      setConflictInfo(result.conflictInfo ?? null)
+      setShowConflictModal(true)
+      return 'conflict'
+    }
+    if (result?.result) {
+      markEditorContentSaved(content)
+      return 'saved'
+    }
+    return 'failed'
+  }, [editor, props.setContent, markEditorContentSaved])
+  const autosave = useAutosave({ editor, enabled: !props.collab && !props.readOnly && !manualSave, save: autosaveSave })
+  React.useEffect(() => {
+    autosaveRef.current = autosave
+  })
+
+  React.useEffect(() => {
+    // emitUpdate=false: not an edit, so autosave must not see it as one
+    if (editor && !editor.isDestroyed) editor.setEditable(!props.readOnly && !props.collab?.getSnapshot().readOnly, false)
+  }, [editor, props.readOnly, props.collab])
+
+  const { onLegacyHandle } = props
+  React.useEffect(() => {
+    if (!onLegacyHandle || props.collab || !editor) return
+    onLegacyHandle({
+      isClean: () => autosaveRef.current?.isClean() ?? true,
+      lastSavedAt: () => autosaveRef.current?.lastSavedAt ?? null,
+      selection: () => ({ from: editor.state.selection.from, to: editor.state.selection.to, focused: editor.isFocused }),
+      getJSON: () => editor.getJSON(),
+      hasUnsavedChanges: () => hasUnsavedChangesRef.current,
+      matches: (json: unknown) => {
+        try {
+          return editor.schema.nodeFromJSON(json).eq(editor.state.doc)
+        } catch {
+          return false
+        }
+      },
+    })
+    return () => onLegacyHandle(null)
+  }, [onLegacyHandle, props.collab, editor])
+
+  // Back where the caret was before live editing took over
+  const { handoverSelection } = props
+  React.useEffect(() => {
+    if (!editor || !props.collab || !handoverSelection) return
+    const id = setTimeout(() => {
+      if (editor.isDestroyed) return
+      const size = editor.state.doc.content.size
+      const from = Math.min(handoverSelection.from, size)
+      const to = Math.min(handoverSelection.to, size)
+      try {
+        editor.commands.setTextSelection({ from, to })
+        if (handoverSelection.focused) editor.commands.focus()
+      } catch {
+        // the content moved under it; leave the caret where it is
+      }
+    }, 60)
+    return () => clearTimeout(id)
+  }, [editor, props.collab, handoverSelection])
+
+  // Naming a version in autosave mode: save first, then name it
+  const nameVersionLegacy = React.useCallback(async (label: string) => {
+    autosaveRef.current?.flush()
+    for (let i = 0; i < 50 && !(autosaveRef.current?.isClean() ?? true); i++) {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    if (!(autosaveRef.current?.isClean() ?? true)) return false
+    try {
+      const res = await fetch(`${getAPIUrl()}activities/${props.activity.activity_uuid}/versions/named`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getAccessToken()}`, 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ label }),
+      })
+      return res.ok
+    } catch {
+      return false
+    }
+  }, [props.activity.activity_uuid, getAccessToken])
+
+  // Leaving while a save failed or is in conflict: confirm (otherwise the
+  // autosave already saved, or saves on the way out)
+  const mustConfirmLeave = manualSave
+    ? hasUnsavedChanges
+    : !props.collab && (autosave.status === 'failed' || autosave.status === 'conflict' || autosave.status === 'offline')
+  React.useEffect(() => {
+    if (!manualSave || !hasUnsavedChanges) return
+    const handler = createBeforeUnloadHandler(() => true)
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [manualSave, hasUnsavedChanges])
+  React.useEffect(() => {
+    if (!mustConfirmLeave) return
+    const handleNavigationClick = (event: MouseEvent) => {
+      const anchor = (event.target as HTMLElement | null)?.closest?.('a') as HTMLAnchorElement | null
+      const shouldGuard = shouldGuardNavigationClick(
+        {
+          defaultPrevented: event.defaultPrevented,
+          button: event.button,
+          metaKey: event.metaKey,
+          ctrlKey: event.ctrlKey,
+          shiftKey: event.shiftKey,
+          altKey: event.altKey,
+        },
+        anchor ? { href: anchor.href, target: anchor.target, origin: anchor.origin, hasDownload: anchor.hasAttribute('download') } : null,
+        window.location.origin
+      )
+      if (shouldGuard && !window.confirm(t('editor.unsaved_changes_warning', 'You have unsaved changes. Leave without saving?'))) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+    document.addEventListener('click', handleNavigationClick, true)
+    return () => document.removeEventListener('click', handleNavigationClick, true)
+  }, [mustConfirmLeave, t])
 
   // Cmd+S / Ctrl+S → save. The save handler shows its own toast.
   React.useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
         e.preventDefault()
-        handleSave(false)
+        // Manual mode saves; autosave mode saves right away; live mode has nothing to do
+        if (props.collab) return
+        if (props.saveMode === 'manual') handleSave(false)
+        else autosaveRef.current?.flush()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [handleSave])
+  }, [props.collab, props.saveMode, handleSave])
+
+  // Collaborative mode: only edits not yet on the server (offline, in
+  // flight) are at risk when leaving; checked at unload, no re-render.
+  React.useEffect(() => {
+    const collab = props.collab
+    if (!collab) return
+    const handler = createBeforeUnloadHandler(() => hasUnsyncedEdits(collab.getSnapshot()))
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [props.collab])
 
   // Handler to reload with remote changes
   const handleReloadRemote = React.useCallback(() => {
@@ -448,14 +569,22 @@ function Editor(props: EditorProps) {
       // basis) rather than the raw merged object, so the editor isn't flagged
       // dirty again immediately after a successful merge-save.
       markEditorContentSaved(editor.getJSON())
+      autosaveRef.current?.markSaved()
     }
   }, [editor, props.setContent, markEditorContentSaved])
+
+  const versioningControls = {
+    enabled: canUseVersioning,
+    badge: canUseVersioning ? undefined : (
+      <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.versioning?.required_plan || 'pro') as PlanLevel} size="sm" />
+    ),
+  }
 
   return (
     <div className="activity-editor-page">
       {/* Version History Panel: only mount when first opened so the chunk
           + the versions list fetch don't run on every editor load. */}
-      {canUseVersioning && showVersionHistory && (
+      {canUseVersioning && showVersionHistory && !editorLocale && (
         <VersionHistoryPanel
           isOpen={showVersionHistory}
           onClose={() => setShowVersionHistory(false)}
@@ -482,6 +611,7 @@ function Editor(props: EditorProps) {
         />
       )}
 
+      <CollabContext.Provider value={props.collab ?? null}>
       <CourseProvider courseuuid={props.course.course_uuid} initialCourseStructure={props.course}>
       <DynamicActivityContext.Provider value={props.activity.activity_uuid}>
           {editor && showViewAs && (
@@ -503,8 +633,8 @@ function Editor(props: EditorProps) {
             <ActivitySwitcher
               course={props.course}
               activity={props.activity}
-              isDirty={hasUnsavedChanges}
-              onSave={() => handleSave(false)}
+              isDirty={mustConfirmLeave}
+              onSave={() => (manualSave ? handleSave(false) : autosaveRef.current?.flush())}
             />
             <div className="activity-editor-doc-section">
               <div className="activity-editor-info-wrapper">
@@ -537,13 +667,15 @@ function Editor(props: EditorProps) {
                 <ToolbarButtons editor={editor} />
               </div>
             </div>
-            <div className="activity-editor-users-section space-x-2">
+            <div className="activity-editor-users-section gap-1.5">
               {/* Writing helpers */}
               <div className="flex items-center gap-2">
                 <div>
                   <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer">
                     {isButtonAvailable && canUseAI && (
-                      <div
+                      <AIButton
+                        size="md"
+                        aria-pressed={aiEditorState.isSidePanelOpen}
                         onClick={() => {
                           if (!aiEditorState.isSidePanelOpen) {
                             track(AnalyticsEvent.AiEditorPanelOpened)
@@ -555,132 +687,67 @@ function Editor(props: EditorProps) {
                               : 'setSidePanelOpen',
                           })
                         }}
-                        style={{
-                          background:
-                            'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
-                        }}
-                        className="rounded-md px-3 py-2 drop-shadow-md flex  items-center space-x-1.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105"
                       >
-                        {' '}
-                        <i>
-                          <Image
-                            className=""
-                            width={20}
-                            src={learnhouseAI_icon}
-                            alt=""
-                          />
-                        </i>{' '}
-                        <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
-                      </div>
+                        {t('editor.ai_editor')}
+                      </AIButton>
                     )}
                     {isButtonAvailable && !canUseAI && (
                       <div
-                        className="rounded-md px-3 py-2 drop-shadow-md flex items-center space-x-1.5 text-sm text-gray-400 bg-gray-200 cursor-not-allowed opacity-70"
+                        className="h-9 ps-2 pe-3 rounded-lg flex items-center gap-2 text-sm font-semibold text-neutral-400 bg-neutral-100 ring-1 ring-inset ring-neutral-200 cursor-not-allowed"
                       >
-                        <i>
-                          <Image
-                            className="opacity-50 grayscale"
-                            width={20}
-                            src={learnhouseAI_icon}
-                            alt=""
-                          />
-                        </i>
-                        <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
+                        <AIMark size={20} alt="" className="opacity-50 grayscale" />
+                        <span>{t('editor.ai_editor')}</span>
                         <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.ai?.required_plan || 'standard') as PlanLevel} size="sm" />
                       </div>
                     )}
                   </div>
                 </div>
-                <ToolTip content={t('editor.templates.title', 'Templates')}>
-                  <div
-                    className="flex bg-neutral-100 hover:bg-neutral-200 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-neutral-600 rounded-lg hover:cursor-pointer"
-                    role="button"
-                    aria-label={t('editor.templates.title', 'Templates')}
-                    onClick={() => setTemplatesMode('insert')}
-                  >
-                    <LayoutTemplate size={15} />
-                  </div>
-                </ToolTip>
               </div>
-              <DividerVerticalIcon
-                style={{
-                  marginTop: 'auto',
-                  marginBottom: 'auto',
-                  color: 'grey',
-                  opacity: '0.5',
-                }}
-              />
               <div className="activity-editor-left-options gap-2">
-                {/* Preview opens the learner view; its caret holds "View as" */}
-                <div className="flex rounded-lg shadow-sm">
-                  <ToolTip content={t('editor.preview')}>
-                    <Link
-                      target="_blank"
-                      href={`/course/${course_uuid}/activity/${activity_uuid}`}
-                    >
-                      <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm text-neutral-100 rounded-s-lg hover:cursor-pointer">
-                        <Eye className="mx-auto items-center" size={15} />
-                      </div>
-                    </Link>
-                  </ToolTip>
-                  <EditorActionMenu
-                    label={t('editor.more_preview_options', 'More preview options')}
-                    className="bg-neutral-600 hover:bg-neutral-700 text-neutral-100 border-s border-neutral-500"
-                    items={[
-                      {
-                        key: 'view_as',
-                        label: t('editor.dynamic.view_as', 'View as'),
-                        icon: <UserRoundSearch size={14} />,
-                        onSelect: () => setShowViewAs(true),
-                      },
-                    ]}
+                <EditorLanguageSwitcher courseUuid={props.course.course_uuid} />
+                {/* Page controls: presence, save status, preview, history. Saving
+                    is always automatic (live editing or autosave). */}
+                {props.collab ? (
+                  <CollabHeaderControls
+                    session={props.collab}
+                    activityUuid={props.activity.activity_uuid}
+                    previewHref={`/course/${course_uuid}/activity/${activity_uuid}`}
+                    onViewAs={() => setShowViewAs(true)}
+                    versioning={versioningControls}
+                    onOpenHistory={() => setShowVersionHistory(true)}
+                    liveEditing={editorLocale ? undefined : props.liveEditing}
+                    hideHistory={!!editorLocale}
                   />
-                </div>
-
-                {/* Save with conflict detection; its caret holds version history */}
-                <div className="relative flex rounded-lg shadow-sm">
-                  <div
-                    className={`${
-                      conflictInfo?.hasConflict
-                        ? 'bg-amber-500 hover:bg-amber-600'
-                        : 'bg-sky-600 hover:bg-sky-700'
-                    } transition-all ease-linear h-9 px-3 py-2 font-black text-sm text-white rounded-s-lg hover:cursor-pointer flex items-center gap-1.5`}
-                    onClick={() => handleSave(false)}
-                    onMouseEnter={handleSaveButtonHover}
-                  >
-                    {isCheckingConflict && (
-                      <RefreshCw size={14} className="animate-spin" />
-                    )}
-                    {conflictInfo?.hasConflict && !isCheckingConflict && (
-                      <AlertTriangle size={14} />
-                    )}
-                    {t('editor.save')}
-                  </div>
-                  <EditorActionMenu
-                    label={t('editor.more_save_options', 'More save options')}
-                    className={`${
-                      conflictInfo?.hasConflict
-                        ? 'bg-amber-500 hover:bg-amber-600 border-amber-400'
-                        : 'bg-sky-600 hover:bg-sky-700 border-sky-500'
-                    } text-white border-s`}
-                    items={[
-                      {
-                        key: 'version_history',
-                        label: t('editor.versioning.version_history'),
-                        icon: <History size={14} />,
-                        disabled: !canUseVersioning,
-                        badge: canUseVersioning ? undefined : (
-                          <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.versioning?.required_plan || 'pro') as PlanLevel} size="sm" />
-                        ),
-                        onSelect: () => setShowVersionHistory(true),
-                      },
-                    ]}
-                  />
-                  {/* Conflict Modal */}
-                  {showConflictModal && conflictInfo?.hasConflict && (
+                ) : (
+                  <EditorHeaderControls
+                    activityUuid={props.activity.activity_uuid}
+                    liveEditing={editorLocale ? undefined : props.liveEditing}
+                    hideHistory={!!editorLocale}
+                    manualSave={manualSave ? { dirty: hasUnsavedChanges, onSave: () => handleSave(false), conflict: !!conflictInfo?.hasConflict } : undefined}
+                    save={manualSave ? {
+                      status: hasUnsavedChanges ? 'unsaved' : 'saved',
+                      lastSavedAt: null,
+                    } : {
+                      status: autosaveIndicatorStatus(autosave.status, {
+                        connecting: !!props.connecting,
+                        readOnly: !!props.readOnly,
+                        dirty: autosave.dirty,
+                        savedOnce: autosave.lastSavedAt !== null,
+                      }),
+                      lastSavedAt: autosave.lastSavedAt,
+                      onRetry: autosave.status === 'conflict' ? () => setShowConflictModal(true) : autosave.flush,
+                    }}
+                    previewHref={`/course/${course_uuid}/activity/${activity_uuid}`}
+                    onViewAs={() => setShowViewAs(true)}
+                    canName={!props.readOnly}
+                    versioning={versioningControls}
+                    onNameVersion={nameVersionLegacy}
+                    onOpenHistory={() => setShowVersionHistory(true)}
+                    conflict={
+                      showConflictModal && conflictInfo?.hasConflict && (
                     <div className="absolute top-full end-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
                       <div className="flex items-start gap-2 mb-3">
-                        <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
+                        <Warning className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
                         <div>
                           <h4 className="font-semibold text-gray-900 text-sm">{t('editor.versioning.conflict.title')}</h4>
                           <p className="text-xs text-gray-600 mt-1">
@@ -707,7 +774,7 @@ function Editor(props: EditorProps) {
                           disabled={isLoadingRemote}
                         >
                           {isLoadingRemote ? (
-                            <Loader2 size={12} className="animate-spin" />
+                            <CircleNotch size={12} className="animate-spin" />
                           ) : (
                             <Eye size={12} />
                           )}
@@ -715,25 +782,20 @@ function Editor(props: EditorProps) {
                         </button>
                       </div>
                     </div>
-                  )}
-                </div>
+                  )
+                    }
+                  />
+                )}
               </div>
-              <DividerVerticalIcon
-                style={{
-                  marginTop: 'auto',
-                  marginBottom: 'auto',
-                  color: 'grey',
-                  opacity: '0.5',
-                }}
-              />
-
               <div className="activity-editor-user-profile">
-                <UserAvatar border="border-4" use_with_session={true} width={45} />
+                <UserAvatar border="border-2" rounded="rounded-lg" use_with_session={true} width={28} />
               </div>
             </div>
           </div>
         <motion.div
-          initial={{ opacity: 0 }}
+          // Content shows at once: no entrance fade (switching to live editing
+          // also remounts the editor on the same content)
+          initial={false}
           animate={{ opacity: 1 }}
           transition={{
             type: 'spring',
@@ -744,15 +806,36 @@ function Editor(props: EditorProps) {
           exit={{ opacity: 0 }}
           // Phone layout (sticky top bar, edge-to-edge page) lives in
           // styles/mobile-dashboard.css under .activity-editor-body.
-          className="activity-editor-body flex gap-5"
+          className={`activity-editor-body flex gap-5${editorLocale ? ' lh-translation-mode' : ''}`}
           style={{ position: 'relative', margin: '0 40px' }}
         >
+          {editorLocale && <TranslationSourcePane activity={props.activity} />}
           <div className="activity-editor-content-wrapper" style={{ flex: 1, margin: 0, marginTop: '97px' }}>
+            {editorLocale && <TranslationBar activity={props.activity} course={props.course} />}
             <AIEditorToolkit activity={props.activity} editor={editor} />
             <DynamicReachProvider editor={editor} activityUuid={props.activity.activity_uuid}>
-              <EditorContent editor={editor} />
+              {/* Blocks follow the page behind them like in the lesson view
+                  (BlockThemeScope): in dark mode the content gets the block
+                  theme's dark variant. In light the hook finds a light host
+                  and adds nothing, so the markup is unchanged. */}
+              <div
+                ref={contentThemeRef}
+                dir={editorLocale && isRtlLocale(editorLocale.locale) ? 'rtl' : undefined}
+                lang={editorLocale?.locale}
+                className={contentTheme.tone ? 'lh-bt' : undefined}
+                data-lh-bt={contentTheme.tone ? contentTheme.mode : undefined}
+                data-lh-bt-tone={contentTheme.tone ?? undefined}
+                data-lh-bt-ink={contentTheme.tone ? contentTheme.ink : undefined}
+                data-lh-bt-size={contentTheme.tone ? contentTheme.size : undefined}
+                style={contentTheme.tone ? (contentTheme.vars as React.CSSProperties) : undefined}
+              >
+                <EditorContent editor={editor} />
+              </div>
+              {editorReady && editor && <SelectionBubble editor={editor} activity={props.activity} course={props.course} />}
             </DynamicReachProvider>
           </div>
+
+          {editorReady && <ActivityComments editor={editor} activity={props.activity} />}
 
           {/* AI Editor Side Panel */}
           {editorReady && canUseAI && (
@@ -760,11 +843,14 @@ function Editor(props: EditorProps) {
               editor={editor}
               activity={props.activity}
               course={props.course}
+              nameVersion={props.collab || editorLocale ? undefined : nameVersionLegacy}
+              onOpenHistory={canUseVersioning && !editorLocale ? () => setShowVersionHistory(true) : undefined}
             />
           )}
         </motion.div>
       </DynamicActivityContext.Provider>
       </CourseProvider>
+      </CollabContext.Provider>
     </div>
   )
 }

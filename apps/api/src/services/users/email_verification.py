@@ -282,6 +282,11 @@ async def verify_email_token(
     # Delete used token
     r.delete(redis_key)
 
+    # Grants held for this address until it was proven (EE: CRM rules).
+    from src.core.ee_hooks import notify_ee_email_verified
+
+    notify_ee_email_verified(user.id)
+
     # Dispatch webhook; resolve org_id from org_uuid
     if org_uuid != NO_ORG_UUID:
         org_statement = select(Organization).where(Organization.org_uuid == org_uuid)

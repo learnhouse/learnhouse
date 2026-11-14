@@ -1,6 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
+import { EMBED_EXTRA_ATTRS } from '../../Blocks/schema/blockAttrs'
 
 const EmbedObjectsComponent = dynamic(() => import('./EmbedObjectsComponent'), {
   ssr: false,
@@ -36,6 +37,8 @@ export default Node.create({
       alignment: {
         default: 'left',
       },
+      // Added by the blocks redesign; optional, defaults keep old content as-is.
+      ...EMBED_EXTRA_ATTRS,
     }
   },
 

@@ -22,6 +22,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import type { CourseCard } from '@services/messaging/messaging'
 import type { CourseBlockData, FlashcardsData, QuizData, RichBlockKind, StepsData } from './parse'
+import { coursePath } from '@/lib/seo/paths'
 
 const shell = 'not-prose my-2.5 rounded-xl border border-gray-200 bg-white overflow-hidden text-gray-900'
 
@@ -312,7 +313,7 @@ export function CourseBlock({
   // Only courses the backend resolved for this reader render; anything else
   // was made up or out of reach.
   if (!course) return null
-  const href = getUriWithOrg(orgslug, `/course/${course.course_uuid.replace(/^course_/, '')}`)
+  const href = getUriWithOrg(orgslug, coursePath(course))
   const thumb =
     course.thumbnail_image && org?.org_uuid
       ? getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image)

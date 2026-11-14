@@ -23,6 +23,7 @@ import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import dayjs from 'dayjs'
 import { SafeImage } from '@components/Objects/SafeImage'
+import { coursePath } from '@/lib/seo/paths'
 
 interface CommunitySidebarProps {
   community: Community
@@ -134,7 +135,7 @@ export function CommunitySidebar({
               {t('communities.linked_course')}
             </div>
             <Link
-              href={getUriWithOrg(orgslug, `/course/${linkedCourse.course_uuid.replace('course_', '')}`)}
+              href={getUriWithOrg(orgslug, coursePath(linkedCourse))}
               className="group block"
             >
               <div className="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">

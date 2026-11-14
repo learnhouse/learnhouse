@@ -21,6 +21,8 @@ Every page below is plain Markdown at its URL. The complete text of all pages is
 
 - [Enterprise Edition](https://docs.learnhouse.app/enterprise.md): Learn what the LearnHouse Enterprise Edition adds, which Cloud plans include each feature, and how to activate a license on a self-hosted instance.
 - [Audit Logs](https://docs.learnhouse.app/enterprise/audit-logs.md): Review who changed what in your LearnHouse organization with audit logs: what is recorded, how payloads are redacted, filters, CSV export and the API.
+- [CRM Integrations](https://docs.learnhouse.app/enterprise/crm.md): Connect LearnHouse to HubSpot or Salesforce: sync members as contacts, push learning activity, map companies and orders, and invite people from CRM lists.
+- [Demo Instances](https://docs.learnhouse.app/enterprise/demo-instances.md): Run a full LearnHouse deployment for one prospect: passwordless sign-in links, the Demo API for branding and content, and a report of what they tried.
 - [Live Sessions](https://docs.learnhouse.app/enterprise/live-sessions.md): Schedule LearnHouse live sessions in LearnHouse Meet, Google Meet, Zoom or any link, with chat, Q&A, polls, attendance, recordings and self-hosted setup.
 - [LTI 1.3](https://docs.learnhouse.app/enterprise/lti.md): Add LearnHouse courses and content to Moodle, Canvas, Open edX and other LMSs with LTI 1.3, including deep linking, grade sync and class lists.
 - [LMS setup guides](https://docs.learnhouse.app/enterprise/lti/lms-setup.md): Connect LearnHouse to Moodle, Canvas, Open edX, Sakai, ILIAS, Chamilo or OpenOLAT over LTI 1.3 with step-by-step setup for each LMS.

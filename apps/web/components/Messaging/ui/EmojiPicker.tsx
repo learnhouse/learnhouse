@@ -2,6 +2,7 @@
 
 import React, { Suspense, lazy } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
+import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
 
 const Picker = lazy(() => import('@emoji-mart/react'))
 
@@ -9,11 +10,12 @@ const Picker = lazy(() => import('@emoji-mart/react'))
 const loadData = async () => (await import('@emoji-mart/data')).default
 
 export function EmojiPickerPanel({ onPick }: { onPick: (emoji: string) => void }) {
+  const { colorScheme } = useColorScheme()
   return (
-    <Suspense fallback={<div className="w-[352px] h-[435px] animate-pulse bg-gray-50 rounded-xl" />}>
+    <Suspense fallback={<div className="w-[352px] h-[435px] animate-pulse bg-neutral-50 rounded-xl" />}>
       <Picker
         data={loadData}
-        theme="light"
+        theme={colorScheme}
         previewPosition="none"
         skinTonePosition="search"
         maxFrequentRows={2}
@@ -43,7 +45,7 @@ export default function EmojiPickerPopover({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent side={side} align={align} className="w-auto p-0 border-0 bg-transparent shadow-none">
-        <div className="rounded-lg overflow-hidden nice-shadow">
+        <div className="rounded-xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-neutral-900/[0.06]">
           <EmojiPickerPanel onPick={onPick} />
         </div>
       </PopoverContent>

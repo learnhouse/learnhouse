@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from fastapi import HTTPException
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -51,7 +52,10 @@ async def _lookup(kind: str, value: Any, org_id: int, db: AsyncSession) -> str |
     spec = KINDS.get(kind)
     if spec is None or not isinstance(value, str) or not value:
         return None
-    model = _model(spec.model)
+    try:
+        model = _model(spec.model)
+    except HTTPException:
+        return None  # an EE-only kind (playground) on an install without EE
     try:
         if kind == "user":
             from src.db.user_organizations import UserOrganization

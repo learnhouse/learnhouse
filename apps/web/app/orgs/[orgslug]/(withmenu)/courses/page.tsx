@@ -1,70 +1,18 @@
 import React from 'react'
 import Courses from './courses'
 import { Metadata } from 'next'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { buildListMetadata } from '@/lib/seo/pageMetadata'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
-  const params = await props.params;
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
-
-  const seoConfig = getOrgSeoConfig(org)
-  const ogImageUrl = seoConfig.default_og_image
-    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
-    : null
-  const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = await getServerCanonicalUrl(params.orgslug, '/courses')
-  const title = buildPageTitle('Courses', org.name, seoConfig)
-  const description = org.description || seoConfig.default_meta_description || ''
-
-  return {
-    title,
-    description,
-    keywords: `${org.name}, ${org.description}, courses, learning, education, online learning, edu, online courses, ${org.name} courses`,
-    robots: {
-      index: true,
-      follow: true,
-      nocache: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      images: [
-        {
-          url: imageUrl,
-          width: 800,
-          height: 600,
-          alt: org.name,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [imageUrl],
-      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
-    },
-  }
+export async function generateMetadata(props: { params: Promise<{ orgslug: string }> }): Promise<Metadata> {
+  const { orgslug } = await props.params
+  const ctx = await getSeoContext(orgslug)
+  return buildListMetadata({ ctx, name: 'Courses', path: '/courses', description: undefined, keywords: `${ctx.org?.name}, courses, online courses, learning` })
 }
 
 const CoursesPage = async (params: any) => {

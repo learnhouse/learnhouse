@@ -37,6 +37,15 @@ class Kind:
 
 def _model(path: str):
     module, _, attr = path.rpartition(".")
+    if module.startswith("ee."):
+        # EE-owned kinds (playgrounds, boards) do not exist without EE: an id of one
+        # is simply not in this organization.
+        from src.core.ee_hooks import get_ee_module
+
+        loaded = get_ee_module(module)
+        if loaded is None:
+            raise HTTPException(status_code=404, detail="That feature is not available on this installation.")
+        return getattr(loaded, attr)
     return getattr(__import__(module, fromlist=[attr]), attr)
 
 
@@ -68,9 +77,11 @@ KINDS: dict[str, Kind] = {
         ),
         Kind("folder", "folder_", "src.db.folders.folders.Folder", "folder_uuid", "name"),
         Kind("media", "media_", "src.db.media.media.Media", "media_uuid", "name"),
-        Kind("board", "board_", "src.db.boards.Board", "board_uuid", "name"),
-        Kind("playground", "playground_", "src.db.playgrounds.Playground", "playground_uuid", "name"),
+        Kind("board", "board_", "ee.db.boards.Board", "board_uuid", "name"),
+        Kind("playground", "playground_", "ee.db.playgrounds.Playground", "playground_uuid", "name"),
         Kind("path", "path_", "src.db.paths.Path", "path_uuid", "name"),
+        Kind("live_session", "livesession_", "ee.db.live_sessions.LiveSession", "live_session_uuid", "title"),
+        Kind("scheduled_agent", "schedagent_", "ee.db.atlas_scheduled.AtlasScheduledAgent", "agent_uuid", "name"),
         Kind("user", "user_", "src.db.users.User", "user_uuid", "username", org_scoped=False),
     )
 }
@@ -273,6 +284,10 @@ _PATHS = {
     "user": "/user/{username}",
     "usergroup": "/dash/users/settings/usergroups",
     "role": "/dash/users/settings/roles",
+    "live_session": "/dash/live-sessions/session/{live_session}/general",
+    # The full id: the Scheduled tab opens the agent from ?agent=.
+    "scheduled_agent": "/dash/atlas?tab=scheduled&agent={agent}",
+    "scheduled_agents": "/dash/atlas?tab=scheduled",
 }
 
 

@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { SiX, SiFacebook, SiWhatsapp, SiReddit } from '@icons-pack/react-simple-icons'
-import { Link2, Check, Share2 } from 'lucide-react'
+import { LinkSimple as Link2, Check, ShareNetwork as Share2 } from '@phosphor-icons/react'
 
 const LinkedinIcon = ({ size = 24 }: { size?: number }) => (
   <svg role="img" viewBox="0 0 24 24" width={size} height={size} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -123,7 +124,7 @@ function CourseShare({ courseUuid, courseName, courseUrl }: CourseShareProps) {
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true"
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white nice-shadow text-neutral-600 hover:text-neutral-800 transition-colors text-sm font-medium"
+        className={buttonClass('secondary', 'md')}
       >
         <Share2 size={14} />
         <span>{t('courses.share_course')}</span>

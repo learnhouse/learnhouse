@@ -1,72 +1,111 @@
 'use client'
 import React from 'react'
 import dynamic from 'next/dynamic'
+import { useSearchParams } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
+import { ArrowClockwise, CloudSlash, PaintBrushBroad } from '@phosphor-icons/react'
+import Link from 'next/link'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useCourses } from '@/hooks/queries/useCourses'
-import LandingClassic from '@components/Landings/LandingClassic'
-import { JsonLd } from '@components/SEO/JsonLd'
-import { getUriWithOrg } from '@services/config/config'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
-import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
+import RequiredTrainingSection from '@ee/components/HR/Training/RequiredTrainingSection'
+import { usePublicLandingPage } from '@components/LandingPages/public/publicQuery'
+import { LandingSkeleton } from '@components/LandingPages/public/LandingSkeleton'
+import { useQueryClient } from '@tanstack/react-query'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { landingCoursesQuery, lazyBlockGroups } from '@components/LandingPages/render/blockQueries'
 
-// Only orgs with a custom landing need it (and its markdown/payments code).
-// Still server-rendered, so the HTML is unchanged.
-const LandingCustom = dynamic(() => import('@components/Landings/LandingCustom'))
+// The org home is a page builder page. Before an org publishes its own, the
+// API serves its converted classic landing or the default template.
+const BuilderLanding = dynamic(() => import('@components/LandingPages/public/BuilderLanding'), {
+  loading: () => <LandingSkeleton />,
+})
+const loadBuilderLanding = () => import('@components/LandingPages/public/BuilderLanding')
+
+function HomeUnavailable({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 px-4 py-24 text-center">
+      <CloudSlash size={32} className="text-neutral-300" />
+      <h1 className="text-lg font-semibold text-neutral-700">{t('landingBuilder.public.unavailable_title')}</h1>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+      >
+        <ArrowClockwise size={15} weight="bold" />
+        {t('landingBuilder.public.unavailable_retry')}
+      </button>
+    </div>
+  )
+}
+
+/** Admins on a home page nobody designed yet: a quiet way into the Website area. */
+function DesignHomePill() {
+  const { t } = useTranslation()
+  return (
+    <Link
+      href="/dash/website"
+      className="fixed bottom-[calc(var(--lh-mobile-nav-h,0px)+1rem)] end-4 z-30 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5"
+      data-testid="design-home-pill"
+    >
+      <PaintBrushBroad size={15} weight="duotone" />
+      {t('website.design_home')}
+    </Link>
+  )
+}
 
 export default function HomeClient({ orgslug }: { orgslug: string }) {
   const org = useOrg() as any
-  const { data: courses, isLoading: coursesLoading } = useCourses(orgslug)
+  // A preview link (?landing_preview=<token>) opened from the builder shows the draft.
+  const preview = useSearchParams()?.get('landing_preview') || null
+  // Start fetching the page now, while the renderer's chunk downloads.
+  const page = usePublicLandingPage(orgslug, '', preview)
+  // A stale preview link falls back to the live home page.
+  const stalePreview = !!preview && page.isError
+  const live = usePublicLandingPage(orgslug, '', null, stalePreview)
+  const current = stalePreview ? live : page
 
-  const landingConfig = org?.config?.config?.customization?.landing || org?.config?.config?.landing
-  const hasCustomLanding = landingConfig?.enabled
+  // The page document names its blocks: start the course list and the lazy
+  // block chunks now, alongside the renderer's download, rather than one after
+  // the other once each piece has rendered.
+  // The renderer is only mounted once the org and the page are in, but its
+  // chunk can download meanwhile.
+  React.useEffect(() => {
+    loadBuilderLanding().catch(() => {})
+  }, [])
+  const queryClient = useQueryClient()
+  const session = useLHSession() as any
+  const sessionStatus: string | undefined = session?.status
+  const accessToken: string | undefined = session?.data?.tokens?.access_token
+  const doc = current.data?.doc
+  const { isAdmin } = useAdminStatus() as any
+  React.useEffect(() => {
+    if (!doc || sessionStatus === 'loading') return
+    const groups = lazyBlockGroups(doc)
+    if (groups.data) import('@components/LandingPages/render/dataBlocks').catch(() => {})
+    if (groups.forms) import('@components/LandingPages/render/formBlocks').catch(() => {})
+    if (groups.rich) import('@components/LandingPages/render/richBlocks').catch(() => {})
+    if (groups.courses) queryClient.prefetchQuery(landingCoursesQuery(orgslug, accessToken))
+  }, [doc, sessionStatus, accessToken, orgslug, queryClient])
 
-  const orgJsonLd = org
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: org.name,
-        description: org.description,
-        url: getUriWithOrg(orgslug, '/'),
-        ...(org.logo_image && {
-          logo: getOrgLogoMediaDirectory(org.org_uuid, org.logo_image),
-        }),
-      }
-    : null
-
-  if (!org || (!hasCustomLanding && coursesLoading)) {
-    return (
-      <GeneralWrapperStyled>
-        <div className="animate-pulse space-y-6 pt-6">
-          <div className="h-6 bg-gray-200 rounded w-40" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                <div className="h-[131px] bg-gray-200" />
-                <div className="p-3 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </GeneralWrapperStyled>
-    )
-  }
-
+  // Organization/WebSite structured data comes from the server `@seo` slot.
   return (
     <div className="w-full">
       <ListShortcuts />
-      {orgJsonLd && <JsonLd data={orgJsonLd} />}
-      {hasCustomLanding ? (
-        <LandingCustom landing={landingConfig} orgslug={orgslug} />
+      {/* The member's required training (EE; renders nothing otherwise). */}
+      <RequiredTrainingSection orgslug={orgslug} />
+      {!org ? (
+        <LandingSkeleton />
+      ) : current.isError ? (
+        <HomeUnavailable onRetry={() => current.refetch()} />
+      ) : current.data ? (
+        <>
+          <BuilderLanding orgslug={orgslug} preview={stalePreview ? null : preview} initial={current.data} />
+          {isAdmin && current.data.mode === 'fallback' && <DesignHomePill />}
+        </>
       ) : (
-        <LandingClassic
-          courses={courses || []}
-          orgslug={orgslug}
-          org_id={org.id}
-        />
+        <LandingSkeleton />
       )}
     </div>
   )

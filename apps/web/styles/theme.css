@@ -1,0 +1,270 @@
+/* Organization theme (lib/theme/orgTheme.ts → themeRootProps).
+
+   The org layout root carries `.lh-theme`, the --lh-* tokens and a data
+   attribute for every NON-default choice. Components opt in with a marker
+   class; a marker does nothing until its attribute is present, so:
+     - the default theme renders exactly the pre-theme look;
+     - the dashboard, which has no theme root, stays neutral;
+     - portals (dialogs, popovers) outside the root keep the neutral look.
+
+   Markers:
+     lh-t-btn        primary action (solid / soft / outline, accent, radius)
+     lh-t-progress   progress fill
+     lh-t-progress-soft  finished step next to the current one (lighter accent)
+     lh-t-accent     accent-colored text or icon
+     lh-t-link       inline link
+     lh-t-chip       small accent badge
+     lh-t-tile       icon tile tinted with the accent
+     lh-t-solid      small solid accent shape (step number, done badge)
+     lh-t-card       content card (shadow / border / flat, radius, density)
+     lh-t-card-body  padded body of a card (density)
+     lh-t-grid       card grid (density)
+     lh-t-radius     any other box that should follow the corner radius
+     lh-t-heading    non-heading element that should use the heading font
+
+   These rules are unlayered on purpose: unlayered CSS beats Tailwind's
+   utilities layer, so a marker can restyle `bg-neutral-900` or
+   `hover:shadow-lg` without !important. */
+
+/* ---------- accent ---------- */
+.lh-theme[data-lh-accent] .lh-t-btn {
+  background-color: var(--lh-accent);
+  background-image: none;
+  color: var(--lh-accent-contrast);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    0 1px 2px rgb(0 0 0 / 0.12),
+    0 0 0 1px var(--lh-accent-active);
+}
+.lh-theme[data-lh-accent] .lh-t-btn:hover {
+  background-color: var(--lh-accent-hover);
+}
+.lh-theme[data-lh-accent]:not([data-lh-btn]) .lh-t-btn:active {
+  background-color: var(--lh-accent-active);
+}
+.lh-theme[data-lh-accent] .lh-t-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--lh-ring);
+}
+/* A light accent turns button text dark: children that hard-code white
+   (labels, icons) follow the button's text color instead. */
+.lh-theme[data-lh-accent='light'] .lh-t-btn [class*='text-white'] {
+  color: inherit;
+}
+
+.lh-theme[data-lh-accent] .lh-t-progress {
+  background-color: var(--lh-accent);
+  background-image: none;
+}
+.lh-theme[data-lh-accent] .lh-t-progress-soft {
+  background-color: color-mix(in srgb, var(--lh-accent) 55%, #fff);
+}
+.lh-theme[data-lh-accent] .lh-t-progress-soft:hover,
+.lh-theme[data-lh-accent] a:hover > .lh-t-progress-soft {
+  background-color: var(--lh-accent);
+}
+.lh-theme[data-lh-accent] .lh-t-solid {
+  background-color: var(--lh-accent);
+  background-image: none;
+  color: var(--lh-accent-contrast);
+}
+.lh-theme[data-lh-accent] .lh-t-accent,
+.lh-theme[data-lh-accent] .lh-t-link {
+  color: var(--lh-accent-ink);
+}
+.lh-theme[data-lh-accent] .lh-t-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.lh-theme[data-lh-accent] .lh-t-chip,
+.lh-theme[data-lh-accent] .lh-t-tile {
+  background-color: var(--lh-accent-soft);
+  color: var(--lh-accent-ink);
+  --tw-ring-color: color-mix(in srgb, var(--lh-accent) 22%, transparent);
+}
+
+/* ---------- button style (works with the neutral accent too) ---------- */
+.lh-theme[data-lh-btn='soft'] .lh-t-btn {
+  background-color: var(--lh-accent-soft);
+  background-image: none;
+  color: var(--lh-accent-ink);
+  box-shadow: none;
+}
+.lh-theme[data-lh-btn='soft'] .lh-t-btn:hover {
+  background-color: var(--lh-accent-soft-hover);
+}
+.lh-theme[data-lh-btn='outline'] .lh-t-btn {
+  background-color: transparent;
+  background-image: none;
+  color: var(--lh-accent-ink);
+  box-shadow: inset 0 0 0 1.5px var(--lh-accent);
+}
+.lh-theme[data-lh-btn='outline'] .lh-t-btn:hover {
+  background-color: var(--lh-accent-soft);
+}
+.lh-theme[data-lh-btn] .lh-t-btn [class*='text-white'] {
+  color: inherit;
+}
+
+/* ---------- corner radius ---------- */
+.lh-theme[data-lh-radius] .lh-t-card,
+.lh-theme[data-lh-radius] .lh-t-radius {
+  border-radius: var(--lh-radius-card);
+}
+.lh-theme[data-lh-radius] .lh-t-btn {
+  border-radius: var(--lh-radius-btn);
+}
+
+/* ---------- card style ---------- */
+.lh-theme[data-lh-card='border'] .lh-t-card {
+  box-shadow: none;
+  border: 1px solid rgb(0 0 0 / 0.09);
+}
+.lh-theme[data-lh-card='border'] .lh-t-card:hover {
+  border-color: rgb(0 0 0 / 0.18);
+}
+.lh-theme[data-lh-card='flat'] .lh-t-card {
+  box-shadow: none;
+  border: 0;
+  background-color: rgb(0 0 0 / 0.035);
+}
+.lh-theme[data-lh-card='flat'] .lh-t-card:hover {
+  background-color: rgb(0 0 0 / 0.055);
+}
+
+/* ---------- density ---------- */
+.lh-theme[data-lh-density='compact'] .lh-t-card-body {
+  padding: 0.75rem;
+}
+.lh-theme[data-lh-density='compact'] .lh-t-grid {
+  gap: 0.75rem;
+}
+
+/* ---------- heading font ---------- */
+.lh-theme[data-lh-heading] :is(h1, h2, h3, .lh-t-heading) {
+  font-family: var(--lh-font-heading);
+}
+/* Arabic is set in Tajawal everywhere (globals.css); headings follow it. */
+[dir='rtl'] .lh-theme[data-lh-heading] :is(h1, h2, h3, .lh-t-heading),
+:lang(ar) .lh-theme[data-lh-heading] :is(h1, h2, h3, .lh-t-heading) {
+  font-family: inherit;
+}
+
+/* ---------- theme studio options ----------
+   Each attribute is only present for a non-default choice (themeRootProps),
+   so a theme saved before these existed renders exactly as before. */
+
+/* button shape (independent of the corner radius) */
+.lh-theme[data-lh-btn-shape] .lh-t-btn {
+  border-radius: var(--lh-radius-btn);
+}
+
+/* elevation: flat cards trade the shadow for a hairline; lifted ones float */
+.lh-theme[data-lh-elevation='flat'] .lh-t-card {
+  box-shadow: none;
+  border: 1px solid var(--lh-hairline, rgb(0 0 0 / 0.09));
+}
+.lh-theme[data-lh-elevation='flat'] .lh-t-card:hover {
+  box-shadow: none;
+  transform: none;
+}
+.lh-theme[data-lh-elevation='lifted'] .lh-t-card {
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05), 0 18px 40px -18px rgb(15 23 42 / 0.28);
+}
+.lh-theme[data-lh-elevation='lifted'] .lh-t-card:hover {
+  box-shadow: 0 2px 4px rgb(15 23 42 / 0.06), 0 26px 50px -20px rgb(15 23 42 / 0.36);
+}
+
+/* warm / cool neutrals: hairlines and quiet text take the tone */
+.lh-theme[data-lh-neutral][data-lh-card='border'] .lh-t-card {
+  border-color: var(--lh-hairline);
+}
+
+/* links */
+.lh-theme[data-lh-link='underline'] .lh-t-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.lh-theme[data-lh-link='subtle'] .lh-t-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
+  text-underline-offset: 3px;
+}
+.lh-theme[data-lh-link='subtle'] .lh-t-link:hover {
+  text-decoration-color: var(--lh-accent);
+}
+
+/* type scale and heading weight */
+.lh-theme[data-lh-type='large'] :is(h1, h2, .lh-t-heading) {
+  zoom: 1.12;
+}
+.lh-theme[data-lh-type='compact'] :is(h1, h2, .lh-t-heading) {
+  zoom: 0.92;
+}
+.lh-theme[data-lh-heading-weight] :is(h1, h2, h3, .lh-t-heading) {
+  font-weight: var(--lh-heading-weight);
+}
+
+/* header layouts (components/Objects/Menus/OrgMenu.tsx: .lh-header-inner) */
+.lh-theme[data-lh-header='centered'] .lh-header-inner {
+  max-width: 72rem;
+}
+.lh-theme[data-lh-header='minimal'] .lh-header-search {
+  display: none;
+}
+.lh-theme[data-lh-header='minimal'] nav:has(> .lh-header-inner) {
+  box-shadow: none;
+  border-bottom: 1px solid var(--lh-hairline, rgb(0 0 0 / 0.06));
+}
+
+/* pictures in cards (course thumbnails: .lh-t-thumb) */
+.lh-theme[data-lh-img='rounded'] .lh-t-card .lh-t-thumb {
+  margin: 8px 8px 0;
+  border-radius: calc(var(--lh-radius-card, 16px) - 6px);
+}
+.lh-theme[data-lh-img='framed'] .lh-t-card .lh-t-thumb {
+  margin: 10px 10px 0;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+.lh-theme[data-lh-img='muted'] .lh-t-card .lh-t-thumb img {
+  filter: saturate(0.6) contrast(0.96);
+  transition: filter 0.3s ease, transform 0.5s ease;
+}
+.lh-theme[data-lh-img='muted'] .lh-t-card:hover .lh-t-thumb img {
+  filter: none;
+}
+
+/* public footer styles (app/orgs/[orgslug]/(withmenu)/layout.tsx) */
+.lh-theme[data-lh-footer='bar'] .lh-org-footer {
+  margin-top: 4rem;
+  border-top: 1px solid var(--lh-hairline, rgb(0 0 0 / 0.08));
+}
+.lh-theme[data-lh-footer='bar'] .lh-org-footer > div {
+  flex-direction: row;
+  justify-content: space-between;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+.lh-theme[data-lh-footer='bar'] .lh-org-footer > div > * {
+  margin-top: 0 !important;
+}
+.lh-theme[data-lh-footer='centered'] .lh-org-footer {
+  padding-block: 3.5rem;
+}
+.lh-theme[data-lh-footer='centered'] .lh-org-footer .lh-org-footer-name {
+  display: block;
+}
+
+/* dark mode accent chosen by the org (styles/dark.css lifts it otherwise) */
+html[data-theme='dark'] .lh-theme[data-lh-dark-accent]:not([data-lh-scheme='light']) > * {
+  --lh-accent: var(--lh-dark-accent);
+  --lh-accent-hover: color-mix(in oklab, var(--lh-dark-accent) 88%, white);
+  --lh-accent-active: color-mix(in oklab, var(--lh-dark-accent) 78%, white);
+  --lh-accent-contrast: var(--lh-dark-accent-contrast);
+  --lh-accent-ink: color-mix(in oklab, var(--lh-dark-accent) 75%, white);
+  --lh-accent-soft: color-mix(in srgb, var(--lh-dark-accent) 18%, transparent);
+}

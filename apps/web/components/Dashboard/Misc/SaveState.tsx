@@ -8,38 +8,44 @@ import {
 } from '@components/Contexts/CourseContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { Check, SaveAllIcon, Loader2, AlertCircle } from 'lucide-react'
+import { Check, FloppyDisk, WarningCircle } from '@phosphor-icons/react'
 import { useRouter } from 'next/navigation'
-import React, { useCallback, useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { updateCourse } from '@services/courses/courses'
-import { updateCertification } from '@services/courses/certifications'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { useOrg } from '@components/Contexts/OrgContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { Button } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { useEditorDrafts, type SectionFailure } from '@components/Dashboard/Pages/Course/courseEditorSave'
 
-interface SaveResult {
-  success: boolean
-  operation: string
-  error?: Error
-}
-
+// The one Save button of the course editor. It persists, in order:
+// 1. the chapter/activity order and the course fields held in the course
+//    context (general, SEO, access, contributors setting);
+// 2. every section draft registered with the editor save store (schedule,
+//    certificate, contributor roles, renamed chapters and activities).
+// Failures are reported per section; whatever saved stays saved.
 function SaveState(props: { orgslug: string }) {
   const { t } = useTranslation()
   const { track } = useLHAnalytics('dashboard')
   const queryClient = useQueryClient()
   const course = useCourse() as any
   const session = useLHSession() as any
-  const org = useOrg() as any
   const router = useRouter()
   const dispatchCourse = useCourseDispatch() as any
   const debounceManager = useDebounceManager()
+  const { hasDrafts, draftCount, dirtyLabels, saveDrafts } = useEditorDrafts()
   const saveInProgressRef = useRef(false)
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
+  const [failures, setFailures] = useState<SectionFailure[]>([])
 
   const saved = course?.isSaved ?? true
   const isSaving = course?.isSaving ?? false
   const courseStructure = course?.courseStructure
+  const metaDirty = !saved
+  const dirty = metaDirty || hasDrafts
+  const courseLabel = t('dashboard.courses.editor.save.course_settings')
+
   // Ref so saveCourseState always reads the latest unsynced changes without stale closure
   const unsyncedChangesRef = useRef<Partial<any>>({})
   useEffect(() => {
@@ -47,179 +53,128 @@ function SaveState(props: { orgslug: string }) {
   }, [course?.unsyncedChanges])
 
   const saveCourseState = useCallback(async () => {
-    if (saved || isSaving || saveInProgressRef.current || !courseStructure?.course_uuid) {
+    if (!dirty || isSaving || saveInProgressRef.current || !courseStructure?.course_uuid) {
       return
     }
-
-    // Prevent double-save
     saveInProgressRef.current = true
 
-    // Cancel all pending debounces to ensure we save the current state
+    // Cancel pending debounces; their values are merged from unsyncedChanges below.
     debounceManager.cancelAll()
-
-    // Mark as saving
     dispatchCourse({ type: 'setSaving', payload: true })
     dispatchCourse({ type: 'setSaveError', payload: null })
 
-    // Store the state before saving for potential rollback
-    const _stateBeforeSave = { ...courseStructure }
-
-    const results: SaveResult[] = []
+    const total = (metaDirty ? 1 : 0) + draftCount
+    let done = 0
+    setProgress({ done, total })
+    const failed: SectionFailure[] = []
+    let anySaved = false
 
     try {
-      // 1. Save course order (if changed)
-      if (course.courseOrder && Object.keys(course.courseOrder).length > 0) {
+      if (metaDirty) {
         try {
-          await updateCourseOrderStructure(
-            courseStructure.course_uuid,
-            course.courseOrder,
-            session.data?.tokens?.access_token
-          )
-          results.push({ success: true, operation: 'order' })
-        } catch (error) {
-          results.push({ success: false, operation: 'order', error: error as Error })
-          throw error // Stop on order save failure
+          if (course.courseOrder && Object.keys(course.courseOrder).length > 0) {
+            await updateCourseOrderStructure(
+              courseStructure.course_uuid,
+              course.courseOrder,
+              session.data?.tokens?.access_token
+            )
+          }
+          // Merge unsynced changes (made before the debounce fired) so saving
+          // right after typing keeps the latest values.
+          const dataToSave = { ...courseStructure, ...unsyncedChangesRef.current }
+          delete dataToSave._certificationData
+          const res = await updateCourse(courseStructure.course_uuid, dataToSave, session.data?.tokens?.access_token)
+          if (res && res.success === false) {
+            throw new Error(typeof res.data?.detail === 'string' ? res.data.detail : t('dashboard.courses.save.error'))
+          }
+          dispatchCourse({ type: 'setIsSaved' })
+          dispatchCourse({ type: 'commitChanges' })
+          anySaved = true
+        } catch (error: any) {
+          failed.push({ id: 'course', label: courseLabel, message: error?.message || t('dashboard.courses.save.error') })
         }
+        done += 1
+        setProgress({ done, total })
       }
 
-      // 2. Save course metadata
-      try {
-        // Merge unsynced changes (changes made before debounce fired) so clicking Save
-        // immediately after editing doesn't lose the latest values
-        const dataToSave = { ...courseStructure, ...unsyncedChangesRef.current }
-        delete dataToSave._certificationData // Don't send certification temp data to course endpoint
-
-        await updateCourse(
-          courseStructure.course_uuid,
-          dataToSave,
-          session.data?.tokens?.access_token
-        )
-        results.push({ success: true, operation: 'metadata' })
-      } catch (error) {
-        results.push({ success: false, operation: 'metadata', error: error as Error })
-        throw error // Stop on metadata save failure
+      if (hasDrafts) {
+        const before = done
+        const draftFailures = await saveDrafts((d) => setProgress({ done: before + d, total }))
+        failed.push(...draftFailures)
+        if (draftFailures.length < draftCount) anySaved = true
       }
 
-      // 3. Save certification data (if present) - this is optional and won't fail the whole save
-      if (courseStructure._certificationData) {
-        try {
-          const certData = courseStructure._certificationData
-          await updateCertification(
-            certData.certification_uuid,
-            certData.config,
-            org?.id,
-            session.data?.tokens?.access_token
-          )
-          results.push({ success: true, operation: 'certification' })
-
-          // Clear certification temp data after successful save
-          dispatchCourse({
-            type: 'mergePendingChanges',
-            payload: { _certificationData: undefined }
-          })
-        } catch (error) {
-          // Log but don't fail the entire save for certification errors
-          console.error('Failed to save certification data:', error)
-          results.push({ success: false, operation: 'certification', error: error as Error })
-          toast.error(t('dashboard.courses.save.certification_error') || 'Failed to save certification settings')
-        }
-      }
-
-      // Invalidate course meta cache after save
-      if (courseStructure?.course_uuid) {
-        const cleanUuid = courseStructure.course_uuid.startsWith('course_')
-          ? courseStructure.course_uuid.slice('course_'.length)
-          : courseStructure.course_uuid
-        queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanUuid) })
+      if (anySaved) {
+        const cleanUuid = courseStructure.course_uuid.replace(/^course_/, '')
+        queryClient.invalidateQueries({ queryKey: ['course', cleanUuid, 'meta'] })
         queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(props.orgslug) })
+        await revalidateTags(['courses'], props.orgslug)
+        router.refresh()
       }
-
-      // Revalidate server-side cache
-      await revalidateTags(['courses'], props.orgslug)
-
-      // Mark as saved
-      dispatchCourse({ type: 'setIsSaved' })
-      dispatchCourse({ type: 'commitChanges' })
-
-      // Refresh router to update any server components
-      router.refresh()
-
-      // Show success feedback
-      const allSucceeded = results.every(r => r.success)
 
       track(AnalyticsEvent.CourseChangesSaved, {
-        order_changed: results.some(r => r.operation === 'order'),
-        metadata_changed: results.some(r => r.operation === 'metadata'),
-        save_succeeded: allSucceeded,
+        order_changed: metaDirty,
+        metadata_changed: metaDirty,
+        save_succeeded: failed.length === 0,
       })
-      if (allSucceeded) {
-        toast.success(t('dashboard.courses.save.success') || 'Changes saved successfully')
+
+      setFailures(failed)
+      if (failed.length === 0) {
+        toast.success(t('dashboard.courses.save.success'))
       } else {
-        const failedOps = results.filter(r => !r.success).map(r => r.operation)
-        toast.success(
-          t('dashboard.courses.save.partial_success', { failed: failedOps.join(', ') }) ||
-          `Saved with some issues: ${failedOps.join(', ')}`
-        )
-      }
-
-    } catch (error) {
-      console.error('Save failed:', error)
-
-      // Determine which operations failed
-      const failedOps = results.filter(r => !r.success).map(r => r.operation)
-      const successOps = results.filter(r => r.success).map(r => r.operation)
-
-      // Set error state
-      dispatchCourse({
-        type: 'setSaveError',
-        payload: `Failed to save: ${failedOps.join(', ')}`
-      })
-
-      // Show error feedback
-      if (successOps.length > 0) {
+        dispatchCourse({ type: 'setSaveError', payload: failed.map((f) => f.label).join(', ') })
         toast.error(
-          t('dashboard.courses.save.partial_error', {
-            success: successOps.join(', '),
-            failed: failedOps.join(', ')
-          }) ||
-          `Partially saved (${successOps.join(', ')}), but failed: ${failedOps.join(', ')}`
+          <div className="text-sm">
+            <p className="font-semibold">
+              {anySaved
+                ? t('dashboard.courses.editor.save.partial_title')
+                : t('dashboard.courses.save.error')}
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {failed.map((f) => (
+                <li key={f.id}>
+                  <span className="font-medium">{f.label}</span>: {f.message}
+                </li>
+              ))}
+            </ul>
+          </div>,
+          { duration: 6000 }
         )
-      } else {
-        toast.error(t('dashboard.courses.save.error') || 'Failed to save changes')
       }
-
-      // Don't rollback completely - keep the local state so user can retry
-      // But mark as not saved so they know to try again
-      dispatchCourse({ type: 'setIsNotSaved' })
-
     } finally {
       dispatchCourse({ type: 'setSaving', payload: false })
+      setProgress(null)
       saveInProgressRef.current = false
     }
   }, [
-    saved,
+    dirty,
+    metaDirty,
+    hasDrafts,
+    draftCount,
     isSaving,
     courseStructure,
     course.courseOrder,
+    courseLabel,
     queryClient,
     session.data?.tokens?.access_token,
     debounceManager,
     dispatchCourse,
+    saveDrafts,
     router,
     props.orgslug,
     track,
-    t
+    t,
   ])
 
   // Calculate the course order from structure
   const handleCourseOrder = useCallback((structure: any) => {
-    if (!structure?.chapters) return
+    if (!Array.isArray(structure?.chapters)) return
 
     const chapter_order_by_ids = structure.chapters.map((chapter: any) => ({
       chapter_id: chapter.id,
-      activities_order_by_ids: chapter.activities?.map((activity: any) => ({
+      activities_order_by_ids: (chapter.activities ?? []).map((activity: any) => ({
         activity_id: activity.id,
-      })) || [],
+      })),
     }))
 
     dispatchCourse({
@@ -229,59 +184,91 @@ function SaveState(props: { orgslug: string }) {
   }, [dispatchCourse])
 
   // Initialize order on mount and when structure changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (courseStructure?.chapters && saved) {
       handleCourseOrder(courseStructure)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseStructure?.chapters?.length, saved, handleCourseOrder])
 
   // Update order when structure changes and not saved
-  React.useEffect(() => {
+  useEffect(() => {
     if (courseStructure?.chapters && !saved) {
       handleCourseOrder(courseStructure)
     }
   }, [courseStructure, saved, handleCourseOrder])
 
+  // Cmd/Ctrl+S saves from anywhere in the editor.
+  const saveRef = useRef(saveCourseState)
+  useEffect(() => {
+    saveRef.current = saveCourseState
+  }, [saveCourseState])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        saveRef.current()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const saveError = course?.saveError
+  const pendingLabels = [...(metaDirty ? [courseLabel] : []), ...dirtyLabels]
+
+  if (isSaving) {
+    return (
+      <Button variant="primary" loading>
+        {progress && progress.total > 1
+          ? t('dashboard.courses.editor.save.saving_progress', { done: progress.done, total: progress.total })
+          : t('dashboard.courses.save.saving')}
+      </Button>
+    )
+  }
+
+  if (!dirty && !saveError) {
+    return (
+      <span className="inline-flex items-center gap-1.5 h-8 px-2 text-[13px] font-medium text-neutral-400 whitespace-nowrap select-none">
+        <Check size={15} />
+        {t('dashboard.courses.save.saved')}
+      </span>
+    )
+  }
+
+  if (saveError && failures.length > 0) {
+    return (
+      <Button
+        variant="danger"
+       
+        icon={<WarningCircle size={15} />}
+        onClick={saveCourseState}
+        title={failures.map((f) => `${f.label}: ${f.message}`).join('\n')}
+       
+      >
+        {t('dashboard.courses.save.retry_button')}
+      </Button>
+    )
+  }
 
   return (
-    <button
-      className={
-        `px-3.5 py-2 text-sm font-semibold flex items-center space-x-2 transition-colors ` +
-        (saved && !saveError
-          ? 'text-neutral-500 cursor-default'
-          : saveError
-            ? 'bg-red-600 text-white hover:bg-red-700 cursor-pointer'
-            : 'bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer') +
-        (isSaving ? ' opacity-50 cursor-not-allowed' : '')
-      }
+    <Button
+      variant="primary"
+     
+      icon={<FloppyDisk size={15} />}
       onClick={saveCourseState}
-      disabled={isSaving}
+      title={`${t('dashboard.courses.save.unsaved')}: ${pendingLabels.join(', ')}`}
+     
     >
-      {isSaving ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : saved && !saveError ? (
-        <Check className="w-4 h-4" />
-      ) : saveError ? (
-        <AlertCircle className="w-4 h-4" />
-      ) : (
-        <SaveAllIcon className="w-4 h-4" />
-      )}
-      <span>
-        {isSaving
-          ? t('dashboard.courses.save.saving')
-          : saved && !saveError
-            ? t('dashboard.courses.save.saved')
-            : saveError
-              ? t('dashboard.courses.save.retry_button')
-              : t('dashboard.courses.save.save')}
-      </span>
-      {!saved && !saveError && !isSaving && (
-        <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-white/20 text-white rounded whitespace-nowrap">
-          {t('dashboard.courses.save.unsaved')}
+      {t('dashboard.courses.save.save')}
+      {pendingLabels.length > 1 ? (
+        <span className="ms-0.5 min-w-5 h-5 px-1.5 rounded-full bg-amber-400 text-[11px] font-bold text-amber-950 inline-flex items-center justify-center tabular-nums">
+          {pendingLabels.length}
         </span>
+      ) : (
+        <span className="ms-0.5 w-2 h-2 rounded-full bg-amber-400" aria-label={t('dashboard.courses.save.unsaved')} />
       )}
-    </button>
+    </Button>
   )
 }
 

@@ -189,6 +189,7 @@ async def api_get_user_certificates_for_course(
 async def api_get_certificate_by_user_certification_uuid(
     request: Request,
     user_certification_uuid: str,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages: the course name comes back in the first published one."),
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
@@ -196,7 +197,7 @@ async def api_get_certificate_by_user_certification_uuid(
     Get a certificate by user_certification_uuid with certification and course details
     """
     return await get_certificate_by_user_certification_uuid(
-        request, user_certification_uuid, current_user, db_session
+        request, user_certification_uuid, current_user, db_session, lang=lang
     )
 
 
@@ -213,6 +214,7 @@ async def api_get_certificate_by_user_certification_uuid(
 )
 async def api_get_all_user_certificates(
     request: Request,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages: the course name comes back in the first published one."),
     org_id: Optional[int] = Query(
         None, description="Only return certificates for courses in this organization."
     ),
@@ -223,5 +225,5 @@ async def api_get_all_user_certificates(
     Get all certificates obtained by the current user with complete linked information
     """
     return await get_all_user_certificates(
-        request, current_user, db_session, org_id=org_id
+        request, current_user, db_session, lang=lang, org_id=org_id
     ) 

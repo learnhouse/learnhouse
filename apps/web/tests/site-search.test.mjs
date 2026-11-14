@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { normalizeForMatch, queryTerms, rankPages, scorePage } from '../lib/site-search/match.ts'
+import { highlightParts, normalizeForMatch, queryTerms, rankPages, scorePage } from '../lib/site-search/match.ts'
 import { extractPreviewText } from '../lib/site-search/preview.ts'
 
 const webRoot = path.resolve(import.meta.dirname, '..')
@@ -70,6 +70,27 @@ describe('discussion preview', () => {
   test('passes plain strings through', () => {
     expect(extractPreviewText('  plain  ')).toBe('plain')
     expect(extractPreviewText(null)).toBe('')
+  })
+})
+
+describe('highlightParts', () => {
+  const marked = (parts) => parts.filter((p) => p.match).map((p) => p.text)
+
+  test('marks every term, case-insensitively, and keeps the text intact', () => {
+    const parts = highlightParts('Payments Pro: payouts', 'pay')
+    expect(parts.map((p) => p.text).join('')).toBe('Payments Pro: payouts')
+    expect(marked(parts)).toEqual(['Pay', 'pay'])
+  })
+
+  test('merges overlapping hits from several terms', () => {
+    expect(marked(highlightParts('payouts', 'pay payo'))).toEqual(['payo'])
+  })
+
+  test('returns the text unmarked without a query or a match', () => {
+    expect(highlightParts('Store', '')).toEqual([{ text: 'Store', match: false }])
+    expect(highlightParts('Store', 'zzz')).toEqual([{ text: 'Store', match: false }])
+    expect(highlightParts('', 'pay')).toEqual([])
+    expect(highlightParts(null, 'pay')).toEqual([])
   })
 })
 

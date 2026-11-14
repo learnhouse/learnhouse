@@ -41,8 +41,7 @@ class TestStartStreamRefund:
             "_get_activity_and_course_info",
             new_callable=AsyncMock,
             return_value=_activity_course_org(org_id=10),
-        ), patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ), patch.object(
             ai_service, "resolve_acting_user_id", return_value=1
         ), patch(
@@ -51,15 +50,14 @@ class TestStartStreamRefund:
             ai_service,
             "get_chat_session_history",
             side_effect=RuntimeError("session store down"),
-        ), patch.object(
-            ai_service, "refund_ai_credit"
+        ), patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund:
             with pytest.raises(RuntimeError, match="session store down"):
                 await ai_service.ai_start_activity_chat_session_stream(
                     MagicMock(), chat_obj, current_user, db_session
                 )
 
-        refund.assert_called_once_with(10)
+        refund.assert_called_once_with(10, 1)
 
     async def test_no_refund_on_success(self):
         chat_obj = StartActivityAIChatSession(activity_uuid="act_1", message="hi")
@@ -68,8 +66,7 @@ class TestStartStreamRefund:
             "_get_activity_and_course_info",
             new_callable=AsyncMock,
             return_value=_activity_course_org(org_id=10),
-        ), patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ), patch.object(
             ai_service, "resolve_acting_user_id", return_value=1
         ), patch(
@@ -78,8 +75,7 @@ class TestStartStreamRefund:
             ai_service,
             "get_chat_session_history",
             return_value={"aichat_uuid": "c1", "message_history": []},
-        ), patch.object(
-            ai_service, "refund_ai_credit"
+        ), patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund:
             context = await ai_service.ai_start_activity_chat_session_stream(
                 MagicMock(), chat_obj, MagicMock(), AsyncMock()
@@ -105,8 +101,7 @@ class TestSendStreamRefund:
             "_get_activity_and_course_info",
             new_callable=AsyncMock,
             return_value=_activity_course_org(org_id=20),
-        ), patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ), patch.object(
             ai_service, "resolve_acting_user_id", return_value=1
         ), patch(
@@ -115,15 +110,14 @@ class TestSendStreamRefund:
             ai_service,
             "get_chat_session_history",
             side_effect=RuntimeError("session store down"),
-        ), patch.object(
-            ai_service, "refund_ai_credit"
+        ), patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund:
             with pytest.raises(RuntimeError, match="session store down"):
                 await ai_service.ai_send_activity_chat_message_stream(
                     MagicMock(), chat_obj, MagicMock(), AsyncMock()
                 )
 
-        refund.assert_called_once_with(20)
+        refund.assert_called_once_with(20, 1)
 
     async def test_no_refund_on_success(self):
         chat_obj = SendActivityAIChatMessage(
@@ -134,8 +128,7 @@ class TestSendStreamRefund:
             "_get_activity_and_course_info",
             new_callable=AsyncMock,
             return_value=_activity_course_org(org_id=20),
-        ), patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ), patch.object(
             ai_service, "resolve_acting_user_id", return_value=1
         ), patch(
@@ -144,8 +137,7 @@ class TestSendStreamRefund:
             ai_service,
             "get_chat_session_history",
             return_value={"aichat_uuid": "c1", "message_history": []},
-        ), patch.object(
-            ai_service, "refund_ai_credit"
+        ), patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund:
             context = await ai_service.ai_send_activity_chat_message_stream(
                 MagicMock(), chat_obj, MagicMock(), AsyncMock()
@@ -153,3 +145,9 @@ class TestSendStreamRefund:
 
         refund.assert_not_called()
         assert context["chat_session"]["aichat_uuid"] == "c1"
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

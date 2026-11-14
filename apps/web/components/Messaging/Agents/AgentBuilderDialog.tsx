@@ -21,7 +21,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { messagingKeys } from '@components/Messaging/MessagingProvider'
-import { getOrgCourses } from '@services/courses/courses'
+import { getAllOrgCourses } from '@services/courses/courses'
 import { queryKeys } from '@/lib/query/keys'
 import {
   type Agent,
@@ -32,6 +32,7 @@ import {
   updateAgent,
 } from '@services/messaging/messaging'
 import AgentAvatar from './AgentAvatar'
+import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
 
 const EmojiPicker = lazy(() => import('@emoji-mart/react'))
 const loadEmojiData = async () => (await import('@emoji-mart/data')).default
@@ -195,6 +196,7 @@ function ChatPreview({ draft, isDefault = false }: { draft: Draft; isDefault?: b
 }
 
 export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug, onSaved }: AgentBuilderDialogProps) {
+  const { colorScheme } = useColorScheme()
   const org = useOrg() as any
   const session = useLHSession() as any
   const token: string | undefined = session?.data?.tokens?.access_token
@@ -225,14 +227,11 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
 
   const { data: coursesData } = useQuery({
     queryKey: queryKeys.courses.list(orgslug),
-    queryFn: () => getOrgCourses(orgslug, null, token),
+    queryFn: () => getAllOrgCourses(orgslug, token, false),
     enabled: open && Boolean(token && orgslug),
     staleTime: 60_000,
   })
-  const courses: any[] = useMemo(() => {
-    const list = coursesData?.data || coursesData || []
-    return Array.isArray(list) ? list : []
-  }, [coursesData])
+  const courses: any[] = useMemo(() => (Array.isArray(coursesData) ? coursesData : []), [coursesData])
   const filteredCourses = useMemo(() => {
     const q = courseQuery.trim().toLowerCase()
     return q ? courses.filter((c) => c.name?.toLowerCase().includes(q)) : courses
@@ -327,7 +326,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                     <Suspense fallback={<div className="w-[352px] h-[435px] flex items-center justify-center"><SpinnerGap className="animate-spin" /></div>}>
                       <EmojiPicker
                         data={loadEmojiData}
-                        theme="light"
+                        theme={colorScheme}
                         previewPosition="none"
                         onEmojiSelect={(e: any) => {
                           set('emoji', e.native)

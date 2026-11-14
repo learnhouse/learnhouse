@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Check, Square, ArrowRight, Folder, FileText, Video, Layers, BookOpenCheck, Package, Puzzle, Globe, Radio } from 'lucide-react'
+import { Check, Square, ArrowRight, Folder, FileText, Video, Layers, BookOpenCheck, Package, Puzzle, Globe, Radio, Zap } from 'lucide-react'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { ChapterEmoji } from '@components/Objects/Courses/ChapterEmoji/ChapterEmoji'
 
 interface CourseProgressProps {
   course: any
@@ -66,6 +67,8 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
         return <Package size={16} className="text-gray-400" />
       case 'TYPE_LIVE_SESSION':
         return <Radio size={16} className="text-gray-400" />
+      case 'TYPE_PLAY':
+        return <Zap size={16} className="text-gray-400" />
       case 'TYPE_CUSTOM':
         return <Puzzle size={16} className="text-gray-400" />
       default:
@@ -79,7 +82,7 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
         <div key={chapter.chapter_uuid} className="bg-gray-50 rounded-lg overflow-hidden">
           <div className="px-4 py-3 bg-gray-100 font-semibold text-gray-700 flex items-center space-x-2">
             <Folder size={16} className="text-gray-400" />
-            <span>{chapter.name}</span>
+            <span><ChapterEmoji chapter={chapter} />{chapter.name}</span>
           </div>
           <div className="divide-y divide-gray-100">
             {(chapter.activities ?? []).map((activity: any) => {

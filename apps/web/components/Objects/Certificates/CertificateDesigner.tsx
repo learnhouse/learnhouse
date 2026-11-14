@@ -13,6 +13,8 @@ import {
 } from '@components/Dashboard/Pages/Course/EditCourseGeneral/CustomSelect'
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview'
 import { CERTIFICATE_PATTERN_KEYS, getCertificateStyle } from '@components/Objects/Certificates/CertificateArtwork'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { orgThemeColors } from '@/lib/theme/orgTheme'
 
 export const CERTIFICATE_TYPES = [
   'completion', 'achievement', 'assessment', 'participation', 'mastery',
@@ -29,7 +31,8 @@ export interface CertificateDesignValues {
 
 /** A miniature of a style's frame, for the picker. */
 function StyleSwatch({ pattern }: { pattern: string }) {
-  const { accent, frame } = getCertificateStyle(pattern)
+  const org = useOrg() as any
+  const { accent, frame } = getCertificateStyle(pattern, orgThemeColors(org).accent)
   const ring = frame === 'hairline' || frame === 'bar' || frame === 'brackets' ? '#e5e7eb' : accent
   return (
     <div className="relative w-full aspect-[1123/794] bg-white rounded-[3px] shadow-sm ring-1 ring-black/5">
@@ -142,13 +145,13 @@ function CertificateDesigner({
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  aria-label={t(`dashboard.courses.certification.patterns.${pattern}.name`)}
+                  aria-label={t(`dashboard.courses.certification.patterns.${pattern}.name`, { defaultValue: pattern === 'theme' ? 'Org theme' : pattern })}
                   onClick={() => onChange('certificate_pattern', pattern)}
                   className={`group relative rounded-md p-1.5 transition-colors ${selected ? 'bg-gray-100 ring-2 ring-black' : 'bg-gray-50 hover:bg-gray-100'}`}
                 >
                   <StyleSwatch pattern={pattern} />
                   <span className="block mt-1.5 text-[11px] font-medium text-gray-600 truncate">
-                    {t(`dashboard.courses.certification.patterns.${pattern}.name`)}
+                    {t(`dashboard.courses.certification.patterns.${pattern}.name`, { defaultValue: pattern === 'theme' ? 'Org theme' : pattern })}
                   </span>
                   {selected && (
                     <span className="absolute -top-1.5 -end-1.5 w-4 h-4 rounded-full bg-black text-white flex items-center justify-center">

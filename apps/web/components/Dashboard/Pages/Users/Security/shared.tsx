@@ -2,7 +2,8 @@
 import React from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, ShieldAlert } from 'lucide-react'
+import { ArrowSquareOut, ShieldWarning, Warning } from '@phosphor-icons/react'
+import { Chip, ChipTone, EmptyState, buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
@@ -341,12 +342,13 @@ export function useOrgSecurityPolicy() {
 // ---------------------------------------------------------------------------
 
 const TILE_TONES: Record<string, string> = {
-  green: 'bg-green-50 text-green-700 border-green-100',
-  blue: 'bg-blue-50 text-blue-700 border-blue-100',
-  red: 'bg-red-50 text-red-700 border-red-100',
-  gray: 'bg-gray-50 text-gray-600 border-gray-100',
+  green: 'bg-emerald-50 text-emerald-600',
+  blue: 'bg-sky-50 text-sky-600',
+  red: 'bg-rose-50 text-rose-600',
+  gray: 'bg-neutral-100 text-neutral-500',
 }
 
+// Same shape as the kit's StatCard, but flat inside a section card.
 export function StatTile({
   tone,
   icon,
@@ -359,20 +361,20 @@ export function StatTile({
   label: string
 }) {
   return (
-    <div className={`rounded-xl border px-4 py-3 ${TILE_TONES[tone]}`}>
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className="text-xl font-bold tracking-tight">{value}</span>
+    <div className="flex items-center gap-3 rounded-xl ring-1 ring-inset ring-neutral-200 px-4 py-3">
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${TILE_TONES[tone]}`}>{icon}</div>
+      <div className="min-w-0">
+        <p className="text-xs text-neutral-500 truncate">{label}</p>
+        <p className="text-xl font-bold text-neutral-900 tabular-nums leading-tight">{value}</p>
       </div>
-      <div className="text-xs mt-0.5 opacity-80">{label}</div>
     </div>
   )
 }
 
-const BADGE_TONES: Record<string, string> = {
-  green: 'bg-green-50 text-green-700',
-  blue: 'bg-blue-50 text-blue-700',
-  red: 'bg-red-50 text-red-700',
+const BADGE_TONES: Record<string, ChipTone> = {
+  green: 'emerald',
+  blue: 'sky',
+  red: 'rose',
 }
 
 export function Badge({
@@ -385,12 +387,32 @@ export function Badge({
   children: React.ReactNode
 }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium ${BADGE_TONES[tone]}`}
-    >
-      {icon}
+    <Chip tone={BADGE_TONES[tone]} icon={icon}>
       {children}
-    </span>
+    </Chip>
+  )
+}
+
+// Inline notice used for warnings and errors inside the security cards.
+export function Notice({
+  tone,
+  icon,
+  children,
+}: {
+  tone: 'amber' | 'rose' | 'neutral'
+  icon?: React.ReactNode
+  children: React.ReactNode
+}) {
+  const tones = {
+    amber: 'bg-amber-50 text-amber-800 ring-amber-200',
+    rose: 'bg-rose-50 text-rose-700 ring-rose-200',
+    neutral: 'bg-neutral-50 text-neutral-600 ring-neutral-200',
+  }
+  return (
+    <div className={`flex items-start gap-2 rounded-xl ring-1 ring-inset px-3.5 py-2.5 text-sm ${tones[tone]}`}>
+      {icon ?? <Warning size={16} className="shrink-0 mt-0.5" />}
+      <div className="min-w-0">{children}</div>
+    </div>
   )
 }
 
@@ -399,8 +421,8 @@ export function Badge({
 export function AdminMfaCallout({ href, message }: { href: string; message?: string | null }) {
   const { t } = useTranslation()
   return (
-    <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200/80 px-4 py-3">
-      <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+    <div className="flex items-start gap-3 rounded-xl bg-amber-50 ring-1 ring-inset ring-amber-200 px-4 py-3">
+      <ShieldWarning size={16} className="text-amber-600 shrink-0 mt-0.5" />
       <div className="space-y-2">
         <p className="text-sm text-amber-900">
           {message ||
@@ -415,14 +437,11 @@ export function AdminMfaCallout({ href, message }: { href: string; message?: str
               'Otherwise the policy would lock you out of your own organization the moment it saves, and no admin would be left to turn it back off.',
           })}
         </p>
-        <Link
-          href={href}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-900 underline underline-offset-2 hover:text-amber-950"
-        >
+        <Link href={href} className={buttonClass('secondary', 'sm')}>
           {t('dashboard.organization.security.admin_mfa_first_cta', {
             defaultValue: 'Set up two-factor on your account',
           })}
-          <ExternalLink className="w-3.5 h-3.5" />
+          <ArrowSquareOut size={12} />
         </Link>
       </div>
     </div>
@@ -433,17 +452,21 @@ export function AdminMfaCallout({ href, message }: { href: string; message?: str
 
 export function SecuritySkeleton() {
   return (
-    <div className="sm:mx-10 mx-0 space-y-4">
-      <div className="bg-white rounded-xl nice-shadow p-6 animate-pulse space-y-4">
-        <div className="h-4 w-48 bg-gray-200 rounded" />
-        <div className="h-2 w-full bg-gray-100 rounded-full" />
-        <div className="h-3 w-64 bg-gray-100 rounded" />
-      </div>
-      <div className="bg-white rounded-xl nice-shadow p-6 animate-pulse space-y-3">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-10 bg-gray-50 rounded-lg" />
-        ))}
-      </div>
+    <div className="space-y-5 animate-pulse">
+      {[3, 4].map((rows, i) => (
+        <div key={i} className="bg-white rounded-2xl nice-shadow p-5 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-neutral-100" />
+            <div className="space-y-2 flex-1">
+              <div className="h-4 w-48 bg-neutral-200 rounded" />
+              <div className="h-3 w-72 max-w-full bg-neutral-100 rounded" />
+            </div>
+          </div>
+          {Array.from({ length: rows }).map((_, j) => (
+            <div key={j} className="h-9 bg-neutral-50 rounded-lg" />
+          ))}
+        </div>
+      ))}
     </div>
   )
 }
@@ -451,23 +474,16 @@ export function SecuritySkeleton() {
 export function NotAdminNotice() {
   const { t } = useTranslation()
   return (
-    <div className="sm:mx-10 mx-0">
-      <div className="bg-white rounded-xl nice-shadow p-6 flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-        <div>
-          <h2 className="font-semibold text-gray-800">
-            {t('dashboard.organization.security.not_admin_title', {
-              defaultValue: 'You don’t have access to this setting',
-            })}
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            {t('dashboard.organization.security.not_admin_body', {
-              defaultValue:
-                'Only organization admins can view or change the two-factor requirement.',
-            })}
-          </p>
-        </div>
-      </div>
+    <div className="bg-white rounded-2xl nice-shadow">
+      <EmptyState
+        icon={<ShieldWarning size={22} />}
+        title={t('dashboard.organization.security.not_admin_title', {
+          defaultValue: 'You don’t have access to this setting',
+        })}
+        description={t('dashboard.organization.security.not_admin_body', {
+          defaultValue: 'Only organization admins can view or change the two-factor requirement.',
+        })}
+      />
     </div>
   )
 }
@@ -475,14 +491,11 @@ export function NotAdminNotice() {
 export function ReadOnlyNotice() {
   const { t } = useTranslation()
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200/80">
-      <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-      <p className="text-sm text-amber-800">
-        {t('dashboard.organization.security.read_only', {
-          defaultValue:
-            'You can review this page, but only an organization admin can change the policy.',
-        })}
-      </p>
-    </div>
+    <Notice tone="amber" icon={<ShieldWarning size={16} className="shrink-0 mt-0.5" />}>
+      {t('dashboard.organization.security.read_only', {
+        defaultValue:
+          'You can review this page, but only an organization admin can change the policy.',
+      })}
+    </Notice>
   )
 }

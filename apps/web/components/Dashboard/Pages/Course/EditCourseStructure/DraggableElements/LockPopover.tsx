@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
-import { Globe, Lock, LockOpen, Shield, Users, Plus, X, Loader2, Check, Gem, Eye } from 'lucide-react'
+import { Globe, Lock, LockOpen, ShieldCheck, Users, Plus, X, CircleNotch, Check, Diamond, Eye } from '@phosphor-icons/react'
 import PaidAccessSection, { PaidTarget, usePaidAccess } from '@ee/components/Payments/PaidAccessSection'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -40,7 +40,7 @@ type LockOption = { value: LockType; Icon: any; tone: string }
 
 const LOCK_OPTIONS: LockOption[] = [
   { value: 'public', Icon: Globe, tone: 'text-emerald-600' },
-  { value: 'authenticated', Icon: Shield, tone: 'text-sky-600' },
+  { value: 'authenticated', Icon: ShieldCheck, tone: 'text-sky-600' },
   { value: 'restricted', Icon: Users, tone: 'text-rose-600' },
 ]
 
@@ -50,21 +50,21 @@ function lockTriggerAppearance(lockType: LockType) {
       return {
         titleKey: 'course.lock.trigger_authenticated_title',
         titleFallback: 'Access: signed-in users only',
-        className: 'bg-sky-50 text-sky-600 ring-1 ring-sky-200 hover:bg-sky-100',
+        className: 'bg-sky-50 text-sky-600 hover:bg-sky-100',
         Icon: Lock,
       }
     case 'restricted':
       return {
         titleKey: 'course.lock.trigger_restricted_title',
         titleFallback: 'Access: specific user groups only',
-        className: 'bg-rose-50 text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100',
+        className: 'bg-rose-50 text-rose-600 hover:bg-rose-100',
         Icon: Lock,
       }
     default:
       return {
         titleKey: 'course.lock.trigger_public_title',
         titleFallback: 'Access: open to everyone',
-        className: 'text-gray-300 hover:text-gray-500 hover:bg-gray-100',
+        className: 'text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100',
         Icon: LockOpen,
       }
   }
@@ -155,9 +155,9 @@ export default function LockPopover({
   let trigger = lockTriggerAppearance(lockType)
   // Who can see it comes first; when it is open to them, the button shows purchase instead.
   if (lockType === 'public' && paidAccess?.state === 'paid') {
-    trigger = { titleKey: 'course.lock.trigger_paid_title', titleFallback: 'Access: buyers only', className: 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200 hover:bg-indigo-100', Icon: Gem }
+    trigger = { titleKey: 'course.lock.trigger_paid_title', titleFallback: 'Access: buyers only', className: 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100', Icon: Diamond }
   } else if (lockType === 'public' && paidAccess?.state === 'free_preview') {
-    trigger = { titleKey: 'course.lock.trigger_free_preview_title', titleFallback: 'Access: free preview', className: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200 hover:bg-emerald-100', Icon: Eye }
+    trigger = { titleKey: 'course.lock.trigger_free_preview_title', titleFallback: 'Access: free preview', className: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100', Icon: Eye }
   }
   const TriggerIcon = trigger.Icon
 
@@ -169,21 +169,23 @@ export default function LockPopover({
           disabled={disabled}
           title={t(trigger.titleKey, trigger.titleFallback)}
           aria-label={paid ? `Access for ${paid.resourceName}` : t(trigger.titleKey, trigger.titleFallback)}
-          className={`h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md transition-colors ${trigger.className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg transition-colors ${trigger.className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <TriggerIcon size={14} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={6} className="w-[300px] max-w-[calc(100vw-24px)] p-0 shadow-md shadow-gray-300/25 ring-1 ring-neutral-200/70 rounded-xl overflow-hidden border-0 bg-white">
-        <div className="px-4 py-3 border-b border-gray-100">
-          <div className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+      <PopoverContent align="end" sideOffset={6} className="w-[300px] max-w-[calc(100vw-24px)] p-0 shadow-md shadow-neutral-300/25 ring-1 ring-neutral-200/70 rounded-xl overflow-hidden border-0 bg-white">
+        <div className="px-4 py-3 border-b border-neutral-100">
+          <div className="text-[11px] uppercase tracking-wide text-neutral-400 font-semibold">
             {t('course.lock.header_access', 'Access')}
           </div>
-          <div className="text-sm font-semibold text-gray-900">
+          <div className="text-sm font-semibold text-neutral-900">
             {resourceNoun === 'chapter'
               ? t('course.lock.title_chapter', 'Lock this chapter')
               : t('course.lock.title_activity', 'Lock this activity')}
           </div>
+          {/* Access changes are actions, not drafts: say so, since the rest of the editor waits for Save. */}
+          <p className="mt-0.5 text-xs text-neutral-400">{t('dashboard.courses.editor.lock.applies_now')}</p>
         </div>
 
         <div className="p-2">
@@ -196,19 +198,21 @@ export default function LockPopover({
                 type="button"
                 disabled={saving}
                 onClick={() => handleSelect(opt.value)}
+                role="radio"
+                aria-checked={selected}
                 className={`w-full flex items-start gap-3 p-2.5 rounded-lg text-start transition-colors ${
-                  selected ? 'bg-gray-50' : 'hover:bg-gray-50'
+                  selected ? 'bg-neutral-50 ring-1 ring-inset ring-neutral-200' : 'hover:bg-neutral-50'
                 } ${saving ? 'opacity-50' : ''}`}
               >
                 <div className={`flex-shrink-0 mt-0.5 ${opt.tone}`}>
                   <Icon size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800 flex items-center gap-1.5">
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-1.5">
                     {t(`course.lock.option_${opt.value}_label`, opt.value === 'public' ? 'Public' : opt.value === 'authenticated' ? 'Signed-in only' : 'User groups only')}
-                    {selected && <Check size={13} className="text-gray-500" />}
+                    {selected && (saving ? <CircleNotch size={13} className="animate-spin text-neutral-400" /> : <Check size={13} className="text-neutral-500" />)}
                   </div>
-                  <div className="text-[11px] text-gray-500 leading-snug">
+                  <div className="text-[11px] text-neutral-500 leading-snug">
                     {t(`course.lock.option_${opt.value}_description`, opt.value === 'public' ? 'Anyone can open this, even without signing in.' : opt.value === 'authenticated' ? 'Only logged-in users can open this.' : 'Only members of the user groups you pick below.')}
                   </div>
                 </div>
@@ -218,12 +222,12 @@ export default function LockPopover({
         </div>
 
         {lockType === 'restricted' && (
-          <div className="border-t border-gray-100 p-3 space-y-2 bg-gray-50/60">
-            <div className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+          <div className="border-t border-neutral-100 p-3 space-y-2 bg-neutral-50/60">
+            <div className="text-[11px] uppercase tracking-wide text-neutral-400 font-semibold">
               {t('course.lock.usergroups_header', 'User groups')}
             </div>
             {assignedGroups.length === 0 ? (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-neutral-500">
                 {t('course.lock.usergroups_none_assigned', 'No groups assigned. Nobody but admins can open this.')}
               </div>
             ) : (
@@ -231,13 +235,14 @@ export default function LockPopover({
                 {assignedGroups.map((g) => (
                   <div
                     key={g.usergroup_uuid}
-                    className="flex items-center justify-between gap-2 px-2 py-1.5 bg-white rounded-md border border-gray-200/70"
+                    className="flex items-center justify-between gap-2 px-2 py-1.5 bg-white rounded-md border border-neutral-200/70"
                   >
-                    <span className="text-xs text-gray-700 truncate">{g.name}</span>
+                    <span className="text-xs text-neutral-700 truncate">{g.name}</span>
                     <button
                       type="button"
                       onClick={() => handleRemove(g.usergroup_uuid)}
-                      className="text-gray-400 hover:text-red-600 transition-colors"
+                      aria-label={t('course.lock.usergroups_remove_title', 'Remove')}
+                      className="text-neutral-400 hover:text-rose-600 transition-colors"
                       title={t('course.lock.usergroups_remove_title', 'Remove')}
                     >
                       <X size={13} />
@@ -249,18 +254,18 @@ export default function LockPopover({
 
             <div className="pt-1">
               {loadingGroups ? (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Loader2 size={12} className="animate-spin" /> {t('course.lock.usergroups_loading', 'Loading groups…')}
+                <div className="flex items-center gap-2 text-xs text-neutral-500">
+                  <CircleNotch size={12} className="animate-spin" /> {t('course.lock.usergroups_loading', 'Loading groups…')}
                 </div>
               ) : available.length === 0 ? (
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-neutral-400">
                   {(!allGroups || allGroups.length === 0)
                     ? t('course.lock.usergroups_none_in_org', 'No user groups exist yet in this org.')
                     : t('course.lock.usergroups_all_assigned', 'All groups are already assigned.')}
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <div className="text-[11px] text-gray-500">
+                  <div className="text-[11px] text-neutral-500">
                     {t('course.lock.usergroups_add_a_group', 'Add a group')}
                   </div>
                   <div className="max-h-32 overflow-y-auto space-y-1 pe-0.5">
@@ -269,10 +274,10 @@ export default function LockPopover({
                         key={g.usergroup_uuid}
                         type="button"
                         onClick={() => handleAdd(g.usergroup_uuid)}
-                        className="w-full flex items-center justify-between gap-2 px-2 py-1.5 bg-white hover:bg-blue-50 rounded-md border border-gray-200/70 transition-colors"
+                        className="w-full flex items-center justify-between gap-2 px-2 py-1.5 bg-white hover:bg-neutral-50 rounded-md border border-neutral-200/70 transition-colors"
                       >
-                        <span className="text-xs text-gray-700 truncate">{g.name}</span>
-                        <Plus size={13} className="text-gray-400" />
+                        <span className="text-xs text-neutral-700 truncate">{g.name}</span>
+                        <Plus size={13} className="text-neutral-400" />
                       </button>
                     ))}
                   </div>

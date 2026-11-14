@@ -2,18 +2,20 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'motion/react'
 import Link from 'next/link'
-import toast from 'react-hot-toast'
 import {
   BookOpen,
   Browsers,
   Palette,
   ShareNetwork,
   UserPlus,
-  ChatsCircle,
   Check,
   ArrowRight,
   ArrowUpRight,
   Clock,
+  Garage,
+  RocketLaunch,
+  UsersThree,
+  CurrencyCircleDollar,
 } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { useOnboarding, OnboardingStep } from '@components/Hooks/useOnboarding'
@@ -24,6 +26,7 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import OnboardingVideo from './OnboardingVideo'
 import LaunchFinale from './LaunchFinale'
 import { whyKey } from './onboardingCopy'
+import { openInviteDialog } from '@components/Onboarding/onboardingEvents'
 
 export const STEP_ICON: Record<string, React.ElementType> = {
   create_course: BookOpen,
@@ -31,7 +34,10 @@ export const STEP_ICON: Record<string, React.ElementType> = {
   brand_school: Palette,
   share_grow: ShareNetwork,
   invite_learners: UserPlus,
-  build_community: ChatsCircle,
+  build_community: Garage,
+  publish_course: RocketLaunch,
+  create_group: UsersThree,
+  setup_payments: CurrencyCircleDollar,
 }
 
 /**
@@ -40,28 +46,18 @@ export const STEP_ICON: Record<string, React.ElementType> = {
  * data; each one finished gets a toast, the last one opens the finale.
  */
 export default function LaunchPlan() {
-  const { steps, currentStep, allCompleted, intent, uncelebrated, markCelebrated } = useOnboarding()
+  const { steps, currentStep, allCompleted, intent, uncelebrated } = useOnboarding()
   const { latestCourseUuid } = useOnboardingSignals(!allCompleted)
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const selected = steps.find((s) => s.id === selectedId) ?? currentStep ?? steps[steps.length - 1]
 
-  // Tell the admin about each step finished since we last looked, then move
-  // the panel on to what's next.
+  // A step just finished (the tracker celebrates it): move the panel on to
+  // what's next.
   const pending = uncelebrated.join(',')
   useEffect(() => {
-    if (!pending) return
-    const ids = pending.split(',')
-    toast.success(
-      t('onboarding.step_completed_toast', {
-        steps: ids.map((id) => t(`onboarding.steps.${id}.title`)).join(', '),
-      }),
-      { id: 'onboarding-done' }
-    )
-    markCelebrated(ids)
-    setSelectedId(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (pending) setSelectedId(null)
   }, [pending])
 
   if (allCompleted) return <LaunchFinale />
@@ -75,7 +71,7 @@ export default function LaunchPlan() {
           step={selected}
           index={steps.findIndex((s) => s.id === selected.id)}
           total={steps.length}
-          why={intent ? t(whyKey(intent, selected.id)) : undefined}
+          why={intent && i18n.exists(whyKey(intent, selected.id)) ? t(whyKey(intent, selected.id)) : undefined}
           latestCourseUuid={latestCourseUuid}
           onNext={() => {
             const i = steps.findIndex((s) => s.id === selected.id)
@@ -204,8 +200,13 @@ function StepPanel({
   const title = t(`onboarding.steps.${step.id}.title`)
   const action = t(`onboarding.steps.${step.id}.action`)
 
-  const onAction = () => {
+  const onAction = (e: React.MouseEvent) => {
     track(AnalyticsEvent.OnboardingStepActionClicked, { step_id: step.id })
+    if (step.id === 'invite_learners') {
+      e.preventDefault()
+      openInviteDialog('link')
+      return
+    }
     if (step.completeOnClick) completeStep(step.id)
   }
 
@@ -272,15 +273,6 @@ function StepPanel({
           ) : (
             <>
               {cta}
-              {!step.completeOnClick && (
-                <button
-                  type="button"
-                  onClick={() => completeStep(step.id)}
-                  className="text-xs font-medium text-gray-500 hover:text-gray-900"
-                >
-                  {t('onboarding.mark_done')}
-                </button>
-              )}
               <button
                 type="button"
                 onClick={() => {

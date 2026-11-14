@@ -7,6 +7,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
+from src.core.ee_hooks import audit_event
 from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserReadAuthor
 from src.security.auth import resolve_acting_user_id
@@ -249,6 +250,10 @@ async def create_discussion(
         },
     )
 
+    from src.services.feature_notifications import notify_discussion_posted
+
+    await notify_discussion_posted(db_session, community=community, discussion=discussion, author_id=author_id)
+
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
         author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
@@ -371,10 +376,23 @@ async def get_discussions_by_community(
         non_pinned_query = non_pinned_query.order_by(Discussion.upvote_count.desc())  # type: ignore
     # For HOT sorting, we'll fetch all and sort in Python
 
-    # Calculate adjusted offset and limit for non-pinned discussions
-    pinned_count = len(pinned_discussions) if page == 1 else 0
-    adjusted_offset = max(0, offset - pinned_count) if page > 1 else 0
-    adjusted_limit = limit - pinned_count if page == 1 else limit
+    # Calculate adjusted offset and limit for non-pinned discussions. Page one
+    # spends some of its slots on pinned threads, so later pages start that
+    # many non-pinned threads earlier; otherwise "load more" skips threads.
+    if page == 1:
+        pinned_count = len(pinned_discussions)
+        adjusted_offset = 0
+        adjusted_limit = limit - pinned_count
+    else:
+        pinned_total_query = select(func.count()).select_from(Discussion).where(
+            Discussion.community_id == community.id,
+            Discussion.is_pinned == True,
+        )
+        if label:
+            pinned_total_query = pinned_total_query.where(Discussion.label == label)
+        pinned_total = (await db_session.execute(pinned_total_query)).scalar() or 0
+        adjusted_offset = max(0, offset - min(pinned_total, limit))
+        adjusted_limit = limit
 
     if adjusted_limit > 0:
         non_pinned_query = non_pinned_query.offset(adjusted_offset).limit(adjusted_limit)
@@ -582,10 +600,15 @@ async def pin_discussion(
 
     discussion.is_pinned = is_pinned
     discussion.update_date = str(datetime.now())
-
     db_session.add(discussion)
     await db_session.commit()
     await db_session.refresh(discussion)
+    audit_event(
+        request, action="discussion.pinned" if is_pinned else "discussion.unpinned",
+        org_id=community.org_id, actor=current_user,
+        target_type="discussion", target_id=discussion.discussion_uuid, target_name=discussion.title,
+        details={"community_uuid": community.community_uuid, "community_name": community.name},
+    )
 
     await dispatch_webhooks(
         event_name="discussion_pinned",
@@ -653,10 +676,15 @@ async def lock_discussion(
 
     discussion.is_locked = is_locked
     discussion.update_date = str(datetime.now())
-
     db_session.add(discussion)
     await db_session.commit()
     await db_session.refresh(discussion)
+    audit_event(
+        request, action="discussion.locked" if is_locked else "discussion.unlocked",
+        org_id=community.org_id, actor=current_user,
+        target_type="discussion", target_id=discussion.discussion_uuid, target_name=discussion.title,
+        details={"community_uuid": community.community_uuid, "community_name": community.name},
+    )
 
     await dispatch_webhooks(
         event_name="discussion_locked",
@@ -727,7 +755,90 @@ async def delete_discussion(
     if not is_author and not is_admin:
         raise HTTPException(status_code=403, detail="You don't have permission to delete this discussion")
 
+    deleted_discussion = (discussion.discussion_uuid, discussion.title)
     await db_session.delete(discussion)
     await db_session.commit()
+    audit_event(
+        request, action="discussion.deleted", org_id=community.org_id, actor=current_user,
+        target_type="discussion", target_id=deleted_discussion[0], target_name=deleted_discussion[1],
+        details={"community_uuid": community.community_uuid, "community_name": community.name,
+                 "moderated": not is_author},
+    )
 
     return {"detail": "Discussion deleted"}
+
+
+async def set_discussion_answer(
+    request: Request,
+    discussion_uuid: str,
+    comment_uuid: Optional[str],
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    db_session: AsyncSession,
+) -> DiscussionReadWithVoteStatus:
+    """
+    Mark one reply as the answer to a discussion, or clear it (comment_uuid None).
+
+    Allowed for the discussion author (while they may still post in the
+    thread) and for community moderators. The reply must belong to this
+    discussion.
+    """
+    acting_user_id = resolve_acting_user_id(current_user)
+    await authorization_verify_if_user_is_anon(acting_user_id)
+
+    statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
+    discussion = (await db_session.execute(statement)).scalars().first()
+    if not discussion:
+        raise HTTPException(status_code=404, detail="Discussion not found")
+
+    community_statement = select(Community).where(Community.id == discussion.community_id)
+    community = (await db_session.execute(community_statement)).scalars().first()
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    require_token_in_community_org(current_user, community)
+
+    is_author = _is_author(current_user, acting_user_id, discussion)
+    is_admin = await _can_moderate(
+        request, current_user, acting_user_id, AccessAction.UPDATE, community, db_session
+    )
+    if not is_author and not is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the discussion author or a moderator can choose the answer",
+        )
+    if not is_admin:
+        await require_author_may_still_post(
+            request, current_user, community, discussion, db_session
+        )
+
+    answer_id: Optional[int] = None
+    if comment_uuid:
+        comment_statement = select(DiscussionComment).where(
+            DiscussionComment.comment_uuid == comment_uuid
+        )
+        comment = (await db_session.execute(comment_statement)).scalars().first()
+        # A reply from another thread is treated as missing, so uuids of
+        # other discussions cannot be probed through this endpoint.
+        if not comment or comment.discussion_id != discussion.id:
+            raise HTTPException(status_code=404, detail="Comment not found in this discussion")
+        answer_id = comment.id
+
+    # Not an edit of the post itself: update_date and edit_count stay put.
+    discussion.answer_comment_id = answer_id
+    db_session.add(discussion)
+    await db_session.commit()
+    await db_session.refresh(discussion)
+
+    author_statement = select(User).where(User.id == discussion.author_id)
+    author = (await db_session.execute(author_statement)).scalars().first()
+    vote_statement = select(DiscussionVote).where(
+        DiscussionVote.discussion_id == discussion.id,
+        DiscussionVote.user_id == acting_user_id,
+    )
+    vote = (await db_session.execute(vote_statement)).scalars().first()
+
+    return DiscussionReadWithVoteStatus(
+        **discussion.model_dump(),
+        author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
+        has_voted=vote is not None,
+    )

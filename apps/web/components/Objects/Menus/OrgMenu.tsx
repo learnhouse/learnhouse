@@ -1,8 +1,8 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { useMessaging, useMessagingEnabled } from '@components/Messaging/MessagingProvider'
 import Image from 'next/image'
+import { useDashNavPrefetch } from '@components/Dashboard/Shared/useDashNavPrefetch'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
@@ -23,9 +23,7 @@ import {
   Globe,
   ChatCircleDots,
   SquaresFour,
-  ChalkboardSimple,
-  Signpost,
-  ChatsCircle,
+  HouseSimple,
   CalendarDots,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
@@ -40,6 +38,8 @@ import {
 import { DASHBOARD_MENU_ITEMS, DashboardMenuItem } from '@/lib/dashboard-menu-items'
 import { isFeatureAvailable } from '@services/plans/plans'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
+import { ensureContrast, resolveAccent, resolveHeader } from '@/lib/theme/orgTheme'
+import { useOrgTheme } from '@/lib/theme/useOrgTheme'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { useJoinBannerVisible, JOIN_BANNER_HEIGHT } from '@components/Objects/Banners/OrgJoinBanner'
 import {
@@ -51,6 +51,10 @@ import {
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
 import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
+import { useFocusPref } from '@components/Pages/Activity/focusModePref'
+
+// The notification bell (signed-in only); its dropdown loads on first open.
+const NotificationBell = dynamic(() => import('@components/Notifications/NotificationBell'), { ssr: false })
 
 // Only shows on demand (feedback button), so keep it out of every page's
 // initial bundle.
@@ -64,27 +68,35 @@ export const OrgMenu = (props: any) => {
   const session = useLHSession() as any;
   const _access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
-  const [isFocusMode, setIsFocusMode] = useState(false)
   const isPhone = useMediaQuery('(max-width: 767px)')
+  // One bell at a time: the header's below lg is the phone bar.
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+  const isFocusMode = useFocusPref(isPhone)
   const pathname = usePathname()
   const { t } = useTranslation()
   const { rights } = useAdminStatus()
+  const [logoBroken, setLogoBroken] = useState(false)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   // Mounted on first open and kept, so the close animation and draft survive.
   const [feedbackModalMounted, setFeedbackModalMounted] = useState(false)
   const { isVisible: isJoinBannerVisible } = useJoinBannerVisible()
   const { track } = useLHAnalytics()
 
-  const messagingEnabled = useMessagingEnabled()
-  const { unreadTotal } = useMessaging()
 
 
   const topOffset = isJoinBannerVisible ? JOIN_BANNER_HEIGHT : 0
 
-  // Get primary color from org config (v2: customization.general.color, v1: general.color)
   const config = org?.config?.config
-  const primaryColor = config?.customization?.general?.color || config?.general?.color || ''
+  // Header background from the org theme: the brand color, white, dark or
+  // glass. '' is the default white bar; every header control derives its
+  // colors from this one value.
+  const theme = useOrgTheme()
+  const header = resolveHeader(theme)
+  const primaryColor = header.color
   const colors = getMenuColorClasses(primaryColor)
+  // The phone tab bar is white: a pale accent is darkened until it reads.
+  const tabAccentRaw = resolveAccent(theme) || theme.color
+  const tabAccent = tabAccentRaw ? ensureContrast(tabAccentRaw, '#ffffff', 3) : ''
   const showBranding = useShowLearnHouseBranding()
 
   // Filter dashboard menu items by resolved_features from API
@@ -96,42 +108,12 @@ export const OrgMenu = (props: any) => {
     return isFeatureAvailable(item.featureKey)
   })
 
-  useEffect(() => {
-    // Only check focus mode if we're in an activity page
-    if (typeof window !== 'undefined' && pathname?.includes('/activity/')) {
-      const saved = localStorage.getItem('globalFocusMode');
-      setIsFocusMode(saved === 'true');
-    } else {
-      setIsFocusMode(false);
-    }
+  // Hover/focus on a header link warms its page (and the data it reads first).
+  const navPrefetch = useDashNavPrefetch('learner')
 
-    // Add storage event listener for cross-window changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'globalFocusMode' && pathname?.includes('/activity/')) {
-        setIsFocusMode(e.newValue === 'true');
-      }
-    };
-
-    // Add custom event listener for same-window changes
-    const handleFocusModeChange = (e: CustomEvent) => {
-      if (pathname?.includes('/activity/')) {
-        setIsFocusMode(e.detail.isFocusMode);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focusModeChange', handleFocusModeChange as EventListener);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focusModeChange', handleFocusModeChange as EventListener);
-    };
-  }, [pathname]);
-
-  // Only hide menu if we're in an activity page and focus mode is enabled.
-  // Phones never enter focus mode (see activity.tsx).
-  if (pathname?.includes('/activity/') && isFocusMode && !isPhone) {
+  // Focus mode takes the whole screen on an activity page (not the course-end
+  // screen, which has no focus layout), so the header steps aside.
+  if (pathname?.includes('/activity/') && !pathname.endsWith('/activity/end') && isFocusMode) {
     return null;
   }
 
@@ -139,23 +121,28 @@ export const OrgMenu = (props: any) => {
     <>
       <div className="backdrop-blur-lg h-[60px] blur-3xl" style={{ zIndex: 'var(--z-behind)', marginTop: topOffset }}></div>
       <nav
+        {...navPrefetch}
         aria-label={t('dashboard.nav.top_navigation')}
-        className={`backdrop-blur-lg fixed start-0 end-0 h-[60px] ${!primaryColor ? 'bg-white/90 nice-shadow' : ''}`}
+        className={`backdrop-blur-lg fixed start-0 end-0 h-[60px] ${!primaryColor ? (header.glass ? 'bg-white/55 border-b border-black/5' : 'bg-white/90 nice-shadow') : ''}`}
         style={{
           zIndex: 'var(--z-nav)',
           backgroundColor: primaryColor || undefined,
           top: topOffset
         }}
       >
-        <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="lh-header-inner flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center space-x-5 max-lg:min-w-0">
             <div className="logo flex shrink-0">
-              <Link href={getUriWithOrg(orgslug, '/')} className="shrink-0">
+              <Link href={getUriWithOrg(orgslug, '/')} prefetch className="shrink-0">
                 <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center">
-                  {org?.logo_image ? (
+                  {org?.logo_image && !logoBroken ? (
                     <img
                       src={`${getOrgLogoMediaDirectory(org.org_uuid, org?.logo_image)}`}
                       alt={org?.name || 'Logo'}
+                      // A logo file that fails to load falls back to the
+                      // LearnHouse logo, not the generic image placeholder.
+                      data-no-image-fallback=""
+                      onError={() => setLogoBroken(true)}
                       className="h-full w-auto max-w-[150px] lg:max-w-[180px] shrink-0 object-contain rounded-md"
                     />
                   ) : showBranding ? (
@@ -173,9 +160,10 @@ export const OrgMenu = (props: any) => {
 
           {/* Search Section */}
           {/* The header never fit a full search next to labelled links and
-              the profile name inside 1536px: below 1780px the search gives
-              way (icon-only from 1280 to 1535) so nothing is pushed off-screen. */}
-          <div className="lh-header-search hidden lg:flex flex-1 min-w-0 min-[1780px]:min-w-auto justify-center max-w-lg px-4">
+              the profile name: the slot takes what is left and the trigger
+              adapts to it (icon, short label, full field), but never goes
+              below the icon so search can't vanish from the header. */}
+          <div className="lh-header-search hidden lg:flex flex-1 min-w-12 justify-center max-w-lg px-1.5 min-[1536px]:min-w-[4.25rem] 2xl:px-4 min-[1780px]:min-w-60">
             <SearchTrigger className="w-full" primaryColor={primaryColor} />
           </div>
 
@@ -188,10 +176,11 @@ export const OrgMenu = (props: any) => {
                     <TooltipTrigger asChild>
                       <Link
                         href={getUriWithOrg(orgslug, '/trail')}
+                        prefetch
                         className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
                         aria-label={t('courses.progress')}
                       >
-                        <Signpost size={20} weight="fill" />
+                        <HouseSimple size={20} weight="fill" />
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
@@ -224,57 +213,21 @@ export const OrgMenu = (props: any) => {
                 </TooltipProvider>
               </div>
             </AuthenticatedClientElement>
-            {/* Boards */}
-            {rf?.boards?.enabled && (
-              <AuthenticatedClientElement checkMethod="authentication">
-                <div className="hidden lg:flex">
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={getUriWithOrg(orgslug, '/boards')}
-                          className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
-                          aria-label={t('common.boards')}
-                        >
-                          <ChalkboardSimple size={20} weight="fill" />
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
-                        {t('common.boards')}
-                        <Keys keys="g b" />
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </AuthenticatedClientElement>
-            )}
-            {/* Messages */}
-            {messagingEnabled && (
-              <AuthenticatedClientElement checkMethod="authentication">
-                <div className="hidden lg:flex">
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={getUriWithOrg(orgslug, '/messages')}
-                          className={`relative p-2 rounded-lg transition-colors ${colors.iconBtn}`}
-                          aria-label={unreadTotal ? `Messages, ${unreadTotal} unread` : 'Messages'}
-                        >
-                          <ChatsCircle size={20} weight="fill" />
-                          {unreadTotal > 0 && (
-                            <span className="absolute top-0.5 end-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-4 text-center ring-2 ring-white tabular-nums">
-                              {unreadTotal > 99 ? '99+' : unreadTotal}
-                            </span>
-                          )}
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="text-xs">
-                        Messages
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </AuthenticatedClientElement>
+            {/* Inbox: notifications and messages behind one button, one badge */}
+            <AuthenticatedClientElement checkMethod="authentication">
+              <div className="hidden lg:flex">
+                {isDesktop && (
+                  <NotificationBell
+                    audience="personal"
+                    withMessages
+                    className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                  />
+                )}
+              </div>
+            </AuthenticatedClientElement>
+            {/* Admin tools sit in their own group, apart from the learner's pages */}
+            {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
+              <span aria-hidden className={`hidden lg:block w-px h-5 mx-1.5 bg-current opacity-15 ${colors.text}`} />
             )}
             {/* Dashboard Dropdown - Only visible to admins */}
             {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
@@ -399,6 +352,9 @@ export const OrgMenu = (props: any) => {
               </div>
             )}
 
+            {session?.status === 'authenticated' && (
+              <span aria-hidden className={`hidden lg:block w-px h-5 mx-1.5 bg-current opacity-15 ${colors.text}`} />
+            )}
             <div className="hidden lg:flex">
               <HeaderProfileBox primaryColor={primaryColor} />
             </div>
@@ -408,19 +364,14 @@ export const OrgMenu = (props: any) => {
             <div className="flex lg:hidden items-center gap-1">
               {session?.status === 'authenticated' ? (
                 <>
-                  {messagingEnabled && (
-                    <Link
-                      href={getUriWithOrg(orgslug, '/messages')}
-                      className={`lh-press relative flex h-10 w-10 items-center justify-center rounded-full ${colors.iconBtn}`}
-                      aria-label={unreadTotal ? `Messages, ${unreadTotal} unread` : 'Messages'}
-                    >
-                      <ChatsCircle size={24} weight="fill" />
-                      {unreadTotal > 0 && (
-                        <span className="absolute top-1 end-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-4 text-center ring-2 ring-white tabular-nums">
-                          {unreadTotal > 99 ? '99+' : unreadTotal}
-                        </span>
-                      )}
-                    </Link>
+                  {!isDesktop && (
+                    <NotificationBell
+                      audience="personal"
+                      withMessages
+                      iconSize={24}
+                      badgeClass="top-1 end-1"
+                      className={`lh-press flex h-10 w-10 items-center justify-center rounded-full ${colors.iconBtn}`}
+                    />
                   )}
                   <button
                     type="button"
@@ -443,7 +394,7 @@ export const OrgMenu = (props: any) => {
           </div>
         </div>
       </nav>
-      <MobileTabBar orgslug={orgslug} primaryColor={primaryColor} />
+      <MobileTabBar orgslug={orgslug} primaryColor={tabAccent} />
 
       {/* Feedback Modal */}
       {feedbackModalMounted && (

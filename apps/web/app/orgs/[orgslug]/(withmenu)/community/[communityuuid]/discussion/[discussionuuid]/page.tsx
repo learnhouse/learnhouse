@@ -4,7 +4,9 @@ import { notFound } from 'next/navigation'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunity } from '@services/communities/communities'
 import { getDiscussion } from '@services/communities/discussions'
-import { getOrgThumbnailMediaDirectory } from '@services/media/media'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { resolveForPage } from '@/lib/seo/resolve.server'
+import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
 import DiscussionPageClient from './discussion'
 import ResourcePaywall from '@ee/components/Payments/ResourcePaywall'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -43,52 +45,42 @@ type MetadataProps = {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
-  const discussionUuid = `discussion_${params.discussionuuid}`
-  const [org, discussion] = await Promise.all([
-    getOrganizationContextInfo(params.orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
+  const { uuid: communityKey, resolved } = await resolveCommunity(params.orgslug, params.communityuuid, params.discussionuuid)
+  const session = await getServerSession()
+  const token = session?.tokens?.access_token
+  const [ctx, community, discussion] = await Promise.all([
+    getSeoContext(params.orgslug),
+    getCommunity(`community_${communityKey}`, { revalidate: 120, tags: ['communities'] }, token).catch(() => null),
     // Discussion might not exist or user doesn't have access
-    getDiscussion(discussionUuid, { revalidate: 120, tags: ['discussions'] }).catch(() => null),
+    getDiscussion(`discussion_${params.discussionuuid}`, { revalidate: 120, tags: ['discussions'] }, token).catch(() => null),
   ])
+  if (!discussion || !community) return noindexMetadata(`Discussion | ${ctx.org?.name || ''}`)
 
-  const title = discussion ? `${discussion.title} | ${org.name}` : `Discussion | ${org.name}`
-  const contentText = discussion ? getContentDescription(discussion.content) : ''
-  const description = contentText ? contentText.substring(0, 160) : `Discussion from ${org.name}`
+  const key = community.slug || communityKey
+  const contentText = getContentDescription(discussion.content)
+  return buildResourceMetadata({
+    ctx,
+    name: discussion.title,
+    description: contentText || `Discussion in ${community.name} from ${ctx.org?.name}`,
+    canonical: await ctx.url(`/community/${key}/discussion/${params.discussionuuid}`),
+    seo: { robots_noindex: community.seo?.robots_noindex, robots_nofollow: community.seo?.robots_nofollow },
+    generatedImage: await ctx.url(`/og/community/${key}`),
+    ogType: 'article',
+    indexable: !!community.public && !ctx.seo.noindex_communities && !resolved?.restricted,
+    publishedTime: discussion.creation_date,
+    modifiedTime: discussion.update_date,
+  })
+}
 
-  return {
-    title,
-    description,
-    robots: {
-      index: true,
-      follow: true,
-      nocache: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
-    openGraph: {
-      title,
-      description,
-      type: 'article',
-      images: [
-        {
-          url: getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image),
-          width: 800,
-          height: 600,
-          alt: org.name,
-        },
-      ],
-    },
-  }
+/** Community key → uuid; an old community slug redirects to the current one. */
+async function resolveCommunity(orgslug: string, communityKey: string, discussionuuid: string) {
+  return resolveForPage(orgslug, 'community', communityKey, (k) => `/community/${k}/discussion/${discussionuuid}`)
 }
 
 const DiscussionPage = async (params: any) => {
   const { orgslug, communityuuid, discussionuuid } = await params.params
-  const communityUuid = `community_${communityuuid}`
+  const { uuid: communityKey } = await resolveCommunity(orgslug, communityuuid, discussionuuid)
+  const communityUuid = `community_${communityKey}`
   const discussionUuid = `discussion_${discussionuuid}`
 
   const [session, org] = await Promise.all([

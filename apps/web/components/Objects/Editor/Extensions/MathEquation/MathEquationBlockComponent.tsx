@@ -1,4 +1,5 @@
 import { NodeViewWrapper } from '@tiptap/react'
+import EditorBlockFrame from '../../Blocks/ui/EditorBlockFrame'
 import React, { lazy, Suspense } from 'react'
 const BlockMath = lazy(() => {
   // Load katex CSS when the component is first used
@@ -165,7 +166,7 @@ function MathEquationBlockComponent(props: any) {
     // Math notation is left-to-right by specification, in every language.
     return (
       <NodeViewWrapper className="block-math-equation" dir="ltr">
-        <div className="bg-neutral-50 rounded-xl px-3 py-1 sm:p-5 nice-shadow">
+        <div data-lhb-panel="" className="bg-neutral-50 rounded-xl px-3 py-1 sm:p-5 nice-shadow">
           {/* A long equation scrolls inside its own box instead of widening the page. */}
           <div className="lh-hscroll">
             <Suspense fallback={<div className="text-gray-400 text-sm p-2">{t('editor.blocks.math_block.loading')}</div>}><BlockMath>{equation}</BlockMath></Suspense>
@@ -179,11 +180,12 @@ function MathEquationBlockComponent(props: any) {
   // equation below is locked to LTR.
   return (
     <NodeViewWrapper className="block-math-equation">
-      <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
+    <EditorBlockFrame editable={true} node={props.node} editor={props.editor} getPos={props.getPos} selected={props.selected} tone="math">
+      <div data-lhb-panel="" className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">
           <Sigma weight="duotone" className="text-neutral-400" size={16} />
-          <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
+          <span className="text-[12px] font-semibold text-neutral-500">
             {t('editor.blocks.math')}
           </span>
         </div>
@@ -347,6 +349,7 @@ function MathEquationBlockComponent(props: any) {
           </div>
         )}
       </div>
+    </EditorBlockFrame>
     </NodeViewWrapper>
   )
 }

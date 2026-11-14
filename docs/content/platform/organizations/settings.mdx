@@ -6,7 +6,7 @@ import { Callout } from '@/components/mdx'
 
 # Organization Settings
 
-Organization settings live under **Organization** in the dashboard (`/dash/org/settings`). The page has these tabs: **General**, **Features**, **Branding**, **Menu**, **Landing Page**, **Course completion**, **AI**, **Analytics**, **Usage**, **Other** and **Danger Zone**. The **Analytics** tab only appears when [analytics](/platform/analytics) is available (Enterprise Edition or LearnHouse Cloud).
+Organization settings live under **Organization** in the dashboard (`/dash/org/settings`). It opens on **Overview**. The tabs are **Overview**, **General**, **Branding**, **Menu**, **AI**, **Other** and **Danger Zone**, plus **Analytics** when [analytics](/platform/analytics) is available (Enterprise Edition or LearnHouse Cloud) and **Integrations** on the Enterprise Edition.
 
 <YouTube video="guide-10" />
 
@@ -16,27 +16,57 @@ Changing settings needs a role that can update the organization (the Admin role 
 Some settings moved. Sign-in methods and two-factor are under **Users** (see [Authentication](/platform/users/authentication)). API access, automations, domains, SEO and SSO are under **Developers** (see [Custom Domains](/platform/organizations/custom-domains) and [SEO](/platform/organizations/seo)). Old links redirect to the new pages.
 </Callout>
 
+## Overview
+
+**Overview** is the first tab, and where `/dash/org/settings` opens. It shows your organization at a glance:
+
+- Your logo, name, public address and creation date, with links to the other tabs.
+- **Your plan**: the plan name and its status (Active, Free, Trial, Proof of concept, Payment due, Suspended), how it is paid (renewal date and price, or "Billed by contract"), and members and admin seats against their limits. **Manage billing** and **Upgrade** appear on LearnHouse Cloud for people who manage billing.
+- **Proof of concept**: during a POC, the days left, the features it unlocks, what happens when it ends and your LearnHouse contact.
+- **Usage**: members, admin seats, courses, active members this month, AI credits and newsletter emails against your plan's limits. Bars turn amber near a limit and red at it.
+- **Features**: every feature, grouped by area, marked **Included**, **POC**, **Add-on** or **Needs** with the plan that has it.
+- **AI credits**: the balance, where the credits went and what each AI feature costs.
+
+Self-hosted instances show the community or Enterprise Edition license instead of a plan. Old links to **Usage** redirect here.
+
 ## General
+
+General is one page with five sections. On a computer, a list on the side jumps between them; on a phone, use the **Jump to section** menu. One **Save** bar saves every section at once, and fields with a problem are highlighted before anything is saved.
+
+### Organization
 
 | Field | Limit | Notes |
 | --- | --- | --- |
 | **Organization Name** | 60 characters, required | |
-| **Short Description** | 100 characters, required | |
 | **Organization Label** | required | A category such as Education, Tech or Business. |
+| **Short Description** | 100 characters, required | |
 | **About Organization** | 400 characters | |
-| **Footer Text** | 100 characters | Custom text displayed at the bottom of your organization pages. |
-| **Email Sender Name** | 64 characters | The display name on emails sent for your organization: sign-in links, password resets, invitations, verification and welcome emails. Only the name changes; the sending address stays the platform's. Leave it empty to use the default ("LearnHouse"). Links and URLs are not allowed. |
-| **Default Language** | | The language new visitors see and the language of emails sent for your organization. Members can still pick their own interface language. |
 
-Click **Save Changes** to apply.
+Your logo is shown with a link to **Branding**, where you change it.
+
+### Contact & links
+
+- **Contact email**: shown to learners who need to reach you. Leave it empty to hide it.
+- **Social profiles** (X, Facebook, Instagram, YouTube) and up to 3 **custom links**, shown in your footer.
+
+### Language & email
+
+| Field | Limit | Notes |
+| --- | --- | --- |
+| **Default Language** | | The language new visitors see and the language of emails sent for your organization. Members can still pick their own interface language. |
+| **Email Sender Name** | 64 characters | The display name on emails sent for your organization: sign-in links, password resets, invitations, verification and welcome emails. Only the name changes; the sending address stays the platform's. Leave it empty to use the default ("LearnHouse"). Links and URLs are not allowed. |
+
+### Features
+
+Switch optional features on or off, grouped by area: **Content** (Paths, Library, Podcasts, Boards, Plays), **Engagement** (Communities, Live sessions, Newsletter) and **Selling** (Payments). **Editor** holds **Live collaboration & autosave**, the default for every activity (each activity can override it). A feature that is off disappears from the navigation. Features your plan does not include show **Needs** and the plan, with a link to **Overview** → **Features**. Old links to the **Features** tab open this section. A feature turned off by the platform administrator shows "Turned off by the platform administrator" and its switch is locked. Only organization admins can change these switches.
+
+### Footer
+
+| Field | Limit | Notes |
+| --- | --- | --- |
+| **Footer Text** | 100 characters | Custom text displayed at the bottom of your organization pages, shown in a preview with your links. |
 
 <img src="/img/pages/organizations/org-settings-general.webp" alt="The General tab of Organization settings with name, short description, label and about fields" width={1600} height={900} style={{ borderRadius: 10 }} />
-
-## Features
-
-**Features** has one switch per optional feature: **Paths**, **Library**, **Communities**, **Podcasts**, **Live sessions**, **Boards**, **Playgrounds** and **Payments**. Turn a feature off to hide it from your organization's navigation. Turn it back on at any time.
-
-Features your plan does not include are listed under **Not in your plan**, with the plan that unlocks them and an **Upgrade** link. A feature turned off by the platform administrator shows "Turned off by the platform administrator" and its switch is locked. Only organization admins can change these switches.
 
 ## Branding
 
@@ -56,8 +86,14 @@ Logos accept PNG or JPG.
 
 ### Theme
 
-- **Primary color**: tints the public header and the page background behind it. Pick a preset, use the color picker or type a hex value. Leave it empty for the plain white header. Emails use it for buttons.
-- **Font**: used on every public page. Choose from the suggested list or search all Google Fonts.
+The theme studio puts every option beside a live preview of a learner page. Switch the preview between desktop and phone, and between the light look and what a visitor in dark mode sees.
+
+- **Presets**: sixteen complete looks (colors, fonts, shapes and layout) in one click. **Reset to default** brings back the original look.
+- **Colors**: brand color (header and page tint, email buttons), a secondary color, the accent for buttons and links (neutral, brand or your own), and a warm, cool or neutral tone for the greys. **Import from logo** takes the colors from your logo. Contrast checks (WCAG AA) warn when text would be hard to read.
+- **Typography**: font pairings, or any heading and body font from Google Fonts, plus heading size and weight.
+- **Shape & depth**: corners, button shape and style, card style, elevation and density.
+- **Layout**: header color and layout (standard, centered, minimal), page background (tint, plain, dots, grid, glow), footer style, how pictures sit in cards, and link style.
+- **Dark mode**: **Follow the visitor** (the default) shows your public pages in dark mode to visitors who chose it, with your accent adjusted or the dark accent you pick; pages you designed in the page builder keep their own colors unless they have a dark palette. **Always light** shows your light look to everyone.
 
 Changes apply to your public pages after you save.
 
@@ -91,7 +127,7 @@ A link only appears when its feature is on your plan and enabled. The editor mar
 
 ## Landing Page
 
-Replace the default home page with a page you build from sections. See [Landing Page](/platform/organizations/landing-page).
+Your home page and extra pages, designed in the page builder. See [Landing Page](/platform/organizations/landing-page).
 
 ## Course completion
 
@@ -114,16 +150,6 @@ On LearnHouse Cloud, the AI tab is shown from the Standard plan up.
 ## Analytics
 
 **Analytics** sets how long your organization's analytics data is kept and what is collected: **Data retention**, counting visitors who aren't signed in, storing the visitor's country and leaving admins and maintainers out of stats. On the Enterprise plan you can also download every stored event as CSV. See [Analytics settings](/platform/analytics#settings).
-
-## Usage
-
-**Usage** shows your plan and how much of it you use:
-
-- **Plan & Resource Usage**: **Courses**, **Members** and **Admin Seats**, each as used out of the limit. Self-hosted instances show **Unlimited**.
-- **AI Credits**: **Base Credits**, **Purchased**, **Used** and **Remaining**.
-- **Active Packs**: any add-on packs on the organization.
-
-On LearnHouse Cloud you can compare plans and buy more AI credits from here. See [Plans & Limits](/platform/organizations/plans).
 
 ## Other
 

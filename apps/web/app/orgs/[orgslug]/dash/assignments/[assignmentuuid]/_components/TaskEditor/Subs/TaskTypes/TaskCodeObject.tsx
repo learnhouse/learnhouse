@@ -21,21 +21,7 @@ import {
   PLAYGROUND_LANGUAGES,
   getLanguageById,
 } from '@components/Objects/Editor/Extensions/CodePlayground/languages'
-import {
-  Plus,
-  Minus,
-  Play,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  Eye,
-  EyeOff,
-  ChevronDown,
-  ChevronRight,
-  ShieldCheck,
-  Lock,
-  Settings2,
-} from 'lucide-react'
+import { Plus, Minus, Play, CircleNotch, CheckCircle, XCircle, Eye, EyeSlash, CaretDown, CaretRight, ShieldCheck, Lock, GearSix } from '@phosphor-icons/react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { v4 as uuidv4 } from 'uuid'
@@ -781,7 +767,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                 onClick={() => setShowSolution(!showSolution)}
                 className="flex items-center space-x-1 text-xs font-semibold text-slate-500 hover:text-slate-700"
               >
-                {showSolution ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                {showSolution ? <CaretDown size={14} /> : <CaretRight size={14} className="rtl:rotate-180" />}
                 <span>{t('dashboard.assignments.editor.task_editor.code_object.solution_code')}</span>
               </button>
               {showSolution && (
@@ -835,7 +821,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                         }`}
                         title={tc.hidden ? t('dashboard.assignments.editor.task_editor.code_object.hidden_from_students') : t('dashboard.assignments.editor.task_editor.code_object.visible_to_students')}
                       >
-                        {tc.hidden ? <EyeOff size={12} /> : <Eye size={12} />}
+                        {tc.hidden ? <EyeSlash size={12} /> : <Eye size={12} />}
                         <span>{tc.hidden ? 'Hidden' : 'Visible'}</span>
                       </button>
                       {contents.grading_mode === 'custom_weights' && (
@@ -885,7 +871,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
             {/* Student behavior options */}
             <div className="flex flex-col space-y-2">
               <div className="flex items-center space-x-1.5 text-slate-500">
-                <Settings2 size={13} />
+                <GearSix size={13} />
                 <p className="text-xs font-semibold">{t('dashboard.assignments.editor.task_editor.code.student_behavior_label')}</p>
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -904,7 +890,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                   onChange={(v) => setContents((prev) => ({ ...prev, show_test_details_on_fail: v }))}
                 />
                 <CodeOptionToggle
-                  icon={<EyeOff size={13} />}
+                  icon={<EyeSlash size={13} />}
                   label={t('dashboard.assignments.editor.task_editor.code.show_hidden_count_label')}
                   description={t('dashboard.assignments.editor.task_editor.code.show_hidden_count_description')}
                   checked={contents.show_hidden_test_count !== false}
@@ -935,7 +921,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                 disabled={isRunning}
                 className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-semibold bg-slate-700 text-white rounded-md hover:bg-slate-800 disabled:opacity-50"
               >
-                {isRunning ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                {isRunning ? <CircleNotch size={14} className="animate-spin" /> : <Play size={14} />}
                 <span>{isRunning ? 'Running...' : 'Run Tests'}</span>
               </button>
             </div>
@@ -1014,7 +1000,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                   disabled={isRunning}
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50"
                 >
-                  {isRunning ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                  {isRunning ? <CircleNotch size={14} className="animate-spin" /> : <Play size={14} />}
                   <span>{isRunning ? 'Running...' : 'Run Tests'}</span>
                 </button>
               </div>
@@ -1090,7 +1076,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                   onClick={() => setShowSolution(!showSolution)}
                   className="flex items-center space-x-1 text-xs font-semibold text-slate-500 hover:text-slate-700"
                 >
-                  {showSolution ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  {showSolution ? <CaretDown size={14} /> : <CaretRight size={14} className="rtl:rotate-180" />}
                   <span>{t('dashboard.assignments.editor.task_editor.code_object.reference_solution')}</span>
                 </button>
                 {showSolution && (
@@ -1115,7 +1101,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
             {/* Run & Grade */}
             {isRunning && (
               <div className="flex items-center space-x-2 text-sm text-slate-500">
-                <Loader2 size={14} className="animate-spin" />
+                <CircleNotch size={14} className="animate-spin" />
                 <span>{t('dashboard.assignments.editor.task_editor.code_object.running_tests')}</span>
               </div>
             )}
@@ -1188,7 +1174,7 @@ function TestResultsPanel({
             >
               <div className="flex items-center space-x-2">
                 {result.passed ? (
-                  <CheckCircle2 size={14} className="text-emerald-600 flex-none" />
+                  <CheckCircle size={14} className="text-emerald-600 flex-none" />
                 ) : (
                   <XCircle size={14} className="text-red-600 flex-none" />
                 )}
@@ -1242,7 +1228,7 @@ function TestResultsPanel({
             className="flex flex-col p-2 rounded-md text-sm bg-slate-100 border border-slate-200"
           >
             <div className="flex items-center space-x-2">
-              <EyeOff size={14} className="text-slate-400 flex-none" />
+              <EyeSlash size={14} className="text-slate-400 flex-none" />
               <span className="font-medium text-slate-500">{tc.label}</span>
             </div>
             <div className="mt-1 ps-6 text-xs text-slate-400 italic">

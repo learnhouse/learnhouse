@@ -86,8 +86,7 @@ class TestEditorChatEventGeneratorRefund:
                 yield ""  # pragma: no cover - make this an async generator
             raise RuntimeError("model exploded")
 
-        with patch.object(
-            ai_router, "refund_ai_credit"
+        with patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund, patch.object(
             ai_router, "save_message_to_history"
         ), patch.object(
@@ -105,6 +104,7 @@ class TestEditorChatEventGeneratorRefund:
                     ai_friendly_text="ctx",
                     ai_model="gemini-2.5-flash",
                     org_id=42,
+                    meter=_meter(42),
                 )
             )
 
@@ -121,8 +121,7 @@ class TestEditorChatEventGeneratorRefund:
                 yield ""  # pragma: no cover
             return
 
-        with patch.object(
-            ai_router, "refund_ai_credit"
+        with patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund, patch.object(
             ai_router, "save_message_to_history"
         ), patch.object(
@@ -140,6 +139,7 @@ class TestEditorChatEventGeneratorRefund:
                     ai_friendly_text="ctx",
                     ai_model="gemini-2.5-flash",
                     org_id=7,
+                    meter=_meter(7),
                 )
             )
 
@@ -152,8 +152,7 @@ class TestEditorChatEventGeneratorRefund:
             yield "Hello "
             yield "world"
 
-        with patch.object(
-            ai_router, "refund_ai_credit"
+        with patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund, patch.object(
             ai_router, "save_message_to_history"
         ), patch.object(
@@ -171,6 +170,7 @@ class TestEditorChatEventGeneratorRefund:
                     ai_friendly_text="ctx",
                     ai_model="gemini-2.5-flash",
                     org_id=99,
+                    meter=_meter(99),
                 )
             )
 
@@ -186,8 +186,7 @@ class TestEditorChatEventGeneratorRefund:
                 yield ""  # pragma: no cover
             raise asyncio.CancelledError()
 
-        with patch.object(
-            ai_router, "refund_ai_credit"
+        with patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund, patch.object(
             ai_router, "save_message_to_history"
         ), patch.object(
@@ -206,6 +205,7 @@ class TestEditorChatEventGeneratorRefund:
                         ai_friendly_text="ctx",
                         ai_model="gemini-2.5-flash",
                         org_id=5,
+                        meter=_meter(5),
                     )
                 )
 
@@ -219,8 +219,7 @@ class TestEditorChatEventGeneratorRefund:
                 yield ""  # pragma: no cover
             raise RuntimeError("boom")
 
-        with patch.object(
-            ai_router, "refund_ai_credit"
+        with patch("src.security.features_utils.usage.refund_ai_credit"
         ) as refund, patch.object(
             ai_router, "save_message_to_history"
         ), patch.object(
@@ -251,9 +250,7 @@ class TestEditorChatEventGeneratorRefund:
                 yield ""  # pragma: no cover
             raise RuntimeError("boom")
 
-        with patch.object(
-            ai_router,
-            "refund_ai_credit",
+        with patch("src.security.features_utils.usage.refund_ai_credit",
             side_effect=RuntimeError("refund down"),
         ), patch.object(
             ai_router, "save_message_to_history"
@@ -273,7 +270,21 @@ class TestEditorChatEventGeneratorRefund:
                     ai_friendly_text="ctx",
                     ai_model="gemini-2.5-flash",
                     org_id=11,
+                    meter=_meter(11),
                 )
             )
 
         assert any('"type": "error"' in e for e in events)
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy
+
+
+def _meter(org_id: int, feature: str = "editor_ai"):
+    """An open AI charge that reserved one credit (what the stream settles)."""
+    from src.services.ai.metering import Meter
+
+    return Meter(feature=feature, org_id=org_id, reserved=1)

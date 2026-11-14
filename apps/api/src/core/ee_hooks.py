@@ -39,12 +39,31 @@ def get_ee_hooks():
         logger.error(f"Unexpected error loading EE hooks: {e}")
         return None
 
+def get_ee_module(name: str):
+    """Import an EE module by dotted path (e.g. ``"ee.db.playgrounds"``), or
+    None when EE is absent or disabled.
+
+    For core code that touches an EE-owned feature (Plays, boards) in passing: search,
+    folders, RBAC uuid lookups. Callers treat None as "the feature does not
+    exist on this install" and carry on without it.
+    """
+    if not is_ee_available():
+        return None
+    try:
+        return importlib.import_module(name)
+    except ImportError as e:
+        logger.error(f"Failed to import EE module {name}: {e}")
+        return None
+
+
 def register_ee_middlewares(app):
     """Call EE to register its middlewares."""
     from config.config import get_learnhouse_config
-    if get_learnhouse_config().general_config.saas_mode:
-        return
     hooks = get_ee_hooks()
+    if get_learnhouse_config().general_config.saas_mode:
+        if hooks and hasattr(hooks, "register_saas_middlewares"):
+            hooks.register_saas_middlewares(app)
+        return
     if hooks and hasattr(hooks, "register_middlewares"):
         hooks.register_middlewares(app)
 
@@ -53,6 +72,16 @@ def register_ee_routers(v1_router):
     hooks = get_ee_hooks()
     if hooks and hasattr(hooks, "register_routers"):
         hooks.register_routers(v1_router)
+
+def register_ee_platform_mcp(app):
+    """Let EE mount the platform (superadmin) MCP server at /mcp/platform.
+    Called only when MCP is enabled; nothing is mounted without EE."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "register_platform_mcp"):
+        try:
+            hooks.register_platform_mcp(app)
+        except Exception as e:
+            logger.error(f"Failed to mount the platform MCP server: {e}")
 
 def run_ee_startup(app):
     """Call EE to run its startup tasks."""
@@ -98,16 +127,16 @@ def is_multi_org_allowed() -> bool:
     return mode in ('ee', 'saas')
 
 
-async def check_ee_live_board_access(board_id, user_id, db_session) -> bool:
-    """True when EE lets the user edit a board because they are in the room of
-    a live session that uses it. Always False without EE."""
+async def get_ee_member_risk_reasons(org_id, user_id, db_session) -> list:
+    """Extra at-risk reasons for the Users page member panel (EE: overdue
+    required training), as `{code, params}` dicts. Empty without EE."""
     hooks = get_ee_hooks()
-    if hooks and hasattr(hooks, "has_live_board_access"):
+    if hooks and hasattr(hooks, "member_risk_reasons"):
         try:
-            return await hooks.has_live_board_access(board_id, user_id, db_session)
+            return list(await hooks.member_risk_reasons(org_id, user_id, db_session))
         except Exception as e:
-            logger.error(f"EE live board access check failed: {e}")
-    return False
+            logger.error(f"EE member risk reasons failed: {e}")
+    return []
 
 
 async def check_ee_activity_paid_access(request, activity_id, user, db_session) -> bool:
@@ -179,12 +208,35 @@ def notify_ee_learner_progress(user_id: int, course_id: int) -> None:
     """Tell EE a learner's progress in a course changed (e.g. so LTI can push
     the new score to the LMS gradebook). Fire-and-forget: EE schedules its own
     background work and failures never reach the caller."""
+    # Progress can move someone in or out of a smart user group (enrolled,
+    # completed, progress rules): queue a debounced sync of its org.
+    from src.services.usergroups.sync import on_course_progress
+
+    on_course_progress(course_id)
     hooks = get_ee_hooks()
     if hooks and hasattr(hooks, "on_learner_progress"):
         try:
             hooks.on_learner_progress(user_id, course_id)
         except Exception:
             logger.exception("EE learner-progress hook failed")
+
+
+async def sync_ee_signup_answers(
+    org_id: int, user_id: int, db_session, *, actor=None, request=None
+) -> dict | None:
+    """Copy a member's signup answers to their people data, for the fields the
+    org mapped to it (department, title, manager...). People data is an EE
+    feature: without EE, or when it is off, this does nothing. Never raises:
+    a profile that can't be written must not fail a signup."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "on_signup_answers", None) if hooks else None
+    if hook is None:
+        return None
+    try:
+        return await hook(org_id, user_id, db_session, actor=actor, request=request)
+    except Exception:
+        logger.exception("EE signup-answers hook failed (org %s, user %s)", org_id, user_id)
+        return None
 
 
 async def track_ee_analytics_event(**event) -> None:
@@ -206,3 +258,137 @@ async def get_ee_user_behavior(user_id: int, org_id: int, days: int) -> dict:
     if hook is None:
         return {}
     return await hook(user_id, org_id, days)
+
+
+def audit_event(request=None, *, action: str, org_id, **event) -> None:
+    """Record a typed entry in the organization's audit log (an Enterprise
+    feature): who did what to which target, the outcome, and for updates a
+    field-level diff of ``before``/``after``.
+
+    ``action`` is a dotted verb (``course.updated``, ``auth.login.failed``).
+    Optional: ``actor`` (user, API token user or user id; defaults to the
+    request's principal), ``target_type``/``target_id``/``target_name``,
+    ``outcome`` (success, denied, failed), ``reason``, ``before``/``after``
+    (dict snapshots), ``fields``, ``details``.
+
+    Fire-and-forget: never raises, never waits, a no-op without EE. EE
+    decides whether the org keeps a log and strips credentials.
+    """
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "record_audit_event", None) if hooks else None
+    if hook is None:
+        return
+    try:
+        hook(request, action=action, org_id=org_id, **event)
+    except Exception:
+        logger.exception("EE audit hook failed for %s", action)
+
+
+def audit_agent_action(**event) -> None:
+    """Hand the record of one executed MCP tool call to the audit log, which
+    merges it with the typed events the tool's services recorded. A no-op
+    without EE."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "record_agent_audit", None) if hooks else None
+    if hook is None:
+        return
+    try:
+        hook(**event)
+    except Exception:
+        logger.exception("EE agent audit hook failed")
+
+
+async def send_ee_usergroup_email(db_session, org_id: int, actor, user_ids: list, subject: str, text: str) -> dict | None:
+    """Email a user group's members through the newsletter's individual-email
+    path (EE: deliverability rules, suppression, sending limits). None
+    without EE."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "send_usergroup_email", None) if hooks else None
+    if hook is None:
+        return None
+    return await hook(db_session, org_id, actor, user_ids, subject, text)
+
+
+async def send_ee_usergroup_digest(db_session, group) -> dict | None:
+    """Email one group's progress digest to its managers who opted in (EE).
+    None without EE."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "send_usergroup_digest", None) if hooks else None
+    if hook is None:
+        return None
+    return await hook(db_session, group)
+
+
+async def run_ee_usergroup_digests(db_session, now) -> int:
+    """The weekly manager digests for every group (EE). Never raises; 0
+    without EE."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "run_usergroup_digests", None) if hooks else None
+    if hook is None:
+        return 0
+    try:
+        return int(await hook(db_session, now) or 0)
+    except Exception:
+        logger.exception("EE user group digests failed")
+        return 0
+
+
+def _impersonating() -> bool:
+    from src.security.impersonation import is_impersonating
+
+    return is_impersonating()
+
+
+def notify_ee_event(event_name: str, org_id: int, data: dict) -> None:
+    """Hand a webhook-catalog event to EE (CRM integrations sync it to the
+    org's CRM). Fire-and-forget: never raises, a no-op without EE. Skipped
+    for an impersonation: it is not the member's engagement."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "on_event", None) if hooks else None
+    if hook is None or _impersonating():
+        return
+    try:
+        hook(event_name, org_id, data)
+    except Exception:
+        logger.exception("EE event hook failed for %s", event_name)
+
+
+def notify_ee_user_changed(user_id: int) -> None:
+    """Tell EE a member's account fields changed (name, email, username), so
+    connected CRMs update the contact. Fire-and-forget, a no-op without EE."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "on_user_changed", None) if hooks else None
+    if hook is None or _impersonating():
+        return
+    try:
+        hook(user_id)
+    except Exception:
+        logger.exception("EE user-changed hook failed")
+
+
+async def notify_ee_user_deleting(user_id: int, db_session) -> None:
+    """Tell EE an account is about to be deleted, in the caller's session and
+    before the delete (connected CRMs capture the contact to remove or
+    anonymize). Never raises: a deletion must not fail over an integration."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "on_user_deleting", None) if hooks else None
+    if hook is None:
+        return
+    try:
+        await hook(user_id, db_session)
+    except Exception:
+        logger.exception("EE user-deleting hook failed")
+
+
+def notify_ee_email_verified(user_id: int) -> None:
+    """Tell EE a member just proved their email address (verification link,
+    Google sign-in), so grants held for that address (CRM rules) apply.
+    Fire-and-forget: never raises, a no-op without EE."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "on_email_verified", None) if hooks else None
+    if hook is None:
+        return
+    try:
+        hook(user_id)
+    except Exception:
+        logger.exception("EE email-verified hook failed")

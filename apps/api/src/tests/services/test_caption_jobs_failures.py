@@ -68,7 +68,6 @@ def engine_mocks(monkeypatch):
     monkeypatch.setattr(cj.cap, "probe_duration", _dur)
     monkeypatch.setattr(cj.cap, "transcribe_to_vtt", _tvtt)
     monkeypatch.setattr(cj.cap, "translate_vtt", _trans)
-    monkeypatch.setattr(cj.cap, "estimate_credits", lambda duration, n: 3)
     monkeypatch.setattr(cj, "read_transcript", _no_transcript)
     monkeypatch.setattr(cj, "_fetch_source", lambda key, path: True)
     monkeypatch.setattr(cj, "is_s3_enabled", lambda: True)
@@ -202,7 +201,9 @@ async def test_generate_one_language_failing_gives_partial(bound, org, course, e
     assert cap["status"] == "partial"
     assert {lang["code"]: lang["status"] for lang in cap["languages"]} == {"fr": "ready", "de": "failed"}
     assert engine_mocks["uploads"][0][0] == ["fr.vtt"]
-    assert engine_mocks["refunds"] == []
+    # Reserved 1 minute + 2 languages; settled at the 1-minute price, the rest back.
+    assert engine_mocks["reserved"] == [3]
+    assert engine_mocks["refunds"] == [2]
 
 
 async def test_generate_source_language_track_reuses_transcript(bound, org, course, engine_mocks, monkeypatch):
@@ -239,7 +240,7 @@ async def test_generate_upload_failure_refunds(bound, org, course, engine_mocks,
     await _add(bound, org, course, "upfail", captions=_enabled("fr"))
     assert await cj.generate_activity_captions("upfail") is False
     assert (await _captions(bound, "upfail"))["error"] == "upload_failed"
-    assert engine_mocks["refunds"] == [3]
+    assert engine_mocks["refunds"] == [2]
 
 
 async def test_generate_filesystem_mode_copies_vtts(bound, org, course, engine_mocks, monkeypatch, tmp_path):
@@ -279,7 +280,7 @@ async def test_generate_crash_after_reserve_refunds(bound, org, course, engine_m
     await _add(bound, org, course, "crash", captions=_enabled("fr"))
     assert await cj.generate_activity_captions("crash") is False
     assert (await _captions(bound, "crash"))["error"] == "exception"
-    assert engine_mocks["refunds"] == [3]
+    assert engine_mocks["refunds"] == [2]
 
 
 async def test_generate_crash_before_reserve_does_not_refund(bound, org, course, engine_mocks, monkeypatch):
@@ -462,3 +463,9 @@ async def test_stop_consumer_tolerates_rpush_error_and_awaits_children(monkeypat
     await cj.stop_consumer()
     assert finished == [True]
     assert child.done()
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

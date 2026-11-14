@@ -75,7 +75,7 @@ def _happy_patches():
     return [
         patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)),
         patch.object(aud, "enforce_ai_rate_limit"),
-        patch.object(aud, "reserve_ai_credit", new=AsyncMock()),
+        patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()),
     ]
 
 
@@ -93,7 +93,7 @@ async def test_activity_not_found_404():
 
 async def test_non_member_403_no_spend():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=False)), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()) as reserve:
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()) as reserve:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_audio(MagicMock(), _body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 403
@@ -104,7 +104,7 @@ async def test_happy_path_tts():
     block = SimpleNamespace(block_uuid="block_1")
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_speech", new=AsyncMock(return_value=b"RIFFxxxxWAVE")) as gs, \
          patch.object(aud, "create_audio_block", new=AsyncMock(return_value=block)) as cab:
         resp = await aud.api_generate_audio(MagicMock(), _body(voice="Puck"), _user(), _db_returning(_activity()))
@@ -126,7 +126,7 @@ async def test_happy_path_podcast_builds_speakers():
     )
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_speech", new=AsyncMock(return_value=b"RIFFxxxxWAVE")) as gs, \
          patch.object(aud, "create_audio_block", new=AsyncMock(return_value=block)):
         await aud.api_generate_audio(MagicMock(), body, _user(), _db_returning(_activity()))
@@ -138,9 +138,9 @@ async def test_happy_path_podcast_builds_speakers():
 async def test_not_configured_refunds_and_403():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_speech", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
-         patch.object(aud, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_audio(MagicMock(), _body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 403
@@ -150,9 +150,9 @@ async def test_not_configured_refunds_and_403():
 async def test_value_error_refunds_and_400():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_speech", new=AsyncMock(side_effect=ValueError("too long"))), \
-         patch.object(aud, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_audio(MagicMock(), _body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 400
@@ -162,9 +162,9 @@ async def test_value_error_refunds_and_400():
 async def test_generation_failure_refunds_and_502():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_speech", new=AsyncMock(side_effect=RuntimeError("boom"))), \
-         patch.object(aud, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_audio(MagicMock(), _body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 502
@@ -174,10 +174,10 @@ async def test_generation_failure_refunds_and_502():
 async def test_store_http_error_refunds_and_reraises():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_speech", new=AsyncMock(return_value=b"RIFFxxxxWAVE")), \
          patch.object(aud, "create_audio_block", new=AsyncMock(side_effect=HTTPException(status_code=403, detail="rbac"))), \
-         patch.object(aud, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_audio(MagicMock(), _body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 403
@@ -187,10 +187,10 @@ async def test_store_http_error_refunds_and_reraises():
 async def test_store_generic_error_refunds_and_500():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_speech", new=AsyncMock(return_value=b"RIFFxxxxWAVE")), \
          patch.object(aud, "create_audio_block", new=AsyncMock(side_effect=RuntimeError("disk"))), \
-         patch.object(aud, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_audio(MagicMock(), _body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 500
@@ -213,7 +213,7 @@ async def test_script_activity_not_found_404():
 
 async def test_script_non_member_403_no_spend():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=False)), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()) as reserve:
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()) as reserve:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 403
@@ -223,7 +223,7 @@ async def test_script_non_member_403_no_spend():
 async def test_script_happy_path_podcast():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_spoken_script", new=AsyncMock(return_value="Host: hi\nGuest: hey")) as gps:
         resp = await aud.api_generate_script(MagicMock(),
             _script_body(mode="podcast", minutes=5, speakers=[
@@ -241,7 +241,7 @@ async def test_script_happy_path_podcast():
 async def test_script_happy_path_speak_monologue():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_spoken_script", new=AsyncMock(return_value="Photosynthesis is...")) as gps:
         resp = await aud.api_generate_script(MagicMock(),
             _script_body(mode="speak", minutes=3), _user(), _db_returning(_activity())
@@ -254,9 +254,9 @@ async def test_script_happy_path_speak_monologue():
 async def test_script_not_configured_refunds_and_403():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_spoken_script", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
-         patch.object(aud, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 403
@@ -266,9 +266,9 @@ async def test_script_not_configured_refunds_and_403():
 async def test_script_value_error_refunds_and_400():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_spoken_script", new=AsyncMock(side_effect=ValueError("empty"))), \
-         patch.object(aud, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 400
@@ -278,10 +278,16 @@ async def test_script_value_error_refunds_and_400():
 async def test_script_generation_failure_refunds_and_502():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(aud, "enforce_ai_rate_limit"), \
-         patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_spoken_script", new=AsyncMock(side_effect=RuntimeError("boom"))), \
-         patch.object(aud, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
             await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 502
     refund.assert_called_once()
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

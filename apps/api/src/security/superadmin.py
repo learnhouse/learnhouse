@@ -1,4 +1,7 @@
+import contextvars
 import logging
+from typing import Optional
+
 from fastapi import Depends, HTTPException, Request, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -42,8 +45,43 @@ def ensure_ee_superadmin_surface() -> None:
         )
 
 
+# The superadmin's own browser session used to pass every org gate: the old
+# "enter any org" path. Staff now get org access only through an impersonation
+# (src.security.impersonation, started from the console or the "not a member"
+# interstitial), which is bounded, attributed and audited. On every request of
+# a superadmin's own session outside the platform console, get_current_user
+# switches their superadmin status off (block_superadmin_org_bypass), so every
+# superadmin shortcut in core and EE code (RBAC, membership gates, feature
+# checks) falls back to what their real memberships grant. The console's own
+# routes, superadmin API tokens and background jobs are untouched.
+_org_bypass_blocked_for: contextvars.ContextVar[Optional[int]] = contextvars.ContextVar(
+    "lh_superadmin_org_bypass_blocked", default=None
+)
+
+#: The platform console: the only paths where a superadmin session is one.
+SUPERADMIN_CONSOLE_PREFIX = "/api/v1/ee/superadmin"
+
+
+def block_superadmin_org_bypass(user_id: int, path: str) -> None:
+    """Treat this superadmin session request as an ordinary user's, unless it
+    is a platform console request."""
+    if path == SUPERADMIN_CONSOLE_PREFIX or path.startswith(SUPERADMIN_CONSOLE_PREFIX + "/"):
+        return
+    _org_bypass_blocked_for.set(user_id)
+
+
+def superadmin_org_bypass_blocked(user_id: Optional[int]) -> bool:
+    return user_id is not None and _org_bypass_blocked_for.get() == user_id
+
+
 async def is_user_superadmin(user_id: int, db_session: AsyncSession) -> bool:
-    """Check if a user is a superadmin by querying the database directly."""
+    """Check if a user is a superadmin by querying the database directly.
+
+    False for the superadmin whose own session is making a non-console request
+    (see block_superadmin_org_bypass): outside the console they are a user.
+    """
+    if superadmin_org_bypass_blocked(user_id):
+        return False
     _cache = getattr(db_session, '_superadmin_cache', None)
     if _cache is None:
         db_session._superadmin_cache = {}

@@ -1,0 +1,338 @@
+/*
+ * Themes for the platform console (/admin): Light and Dark (near-black with hairlines).
+ *
+ * The console follows the app-wide Light / Dark choice (lib/theme/
+ * colorScheme.ts). AdminTheme wraps it in `data-adm-theme`; dark rules key off
+ * `html[data-theme='dark']:has([data-adm-theme])`: the attribute is set before
+ * the first paint by theme-init.js, `:has` covers portals (dialogs, popovers,
+ * drawers, ⌘K) and switches off by itself when leaving /admin. The app-wide
+ * dark layer (styles/dark.css) leaves element styling inside the console to
+ * this file.
+ *
+ * 1. Console tokens (`--adm-*`): the frame and anything the console draws
+ *    itself (top bar, menus, ⌘K, inbox, charts, toasts) uses these through
+ *    arbitrary classes like `bg-[var(--adm-bar)]`.
+ * 2. Kit remap (dark only): pages are built from the shared V2 kit, which is
+ *    written for light. In dark, Tailwind's palette variables are remapped so
+ *    the same classes read right:
+ *      white        → the card surface
+ *      neutral/gray → inverted: 900 titles (90%), 500–700 body (65%),
+ *                     400 meta (45%), 50–200 faint fills and hairlines
+ *      hue tints    → 15% washes with -400 ink
+ *    Values are opaque equivalents on the card because several double as
+ *    backgrounds (bg-neutral-900 on primary buttons, for instance).
+ * Light needs no remap: it *is* the V2 light language.
+ */
+
+/* ── 1. console tokens ─────────────────────────────────────────────────── */
+
+html:has([data-adm-theme]) {
+  --adm-canvas: #f8f8f8;
+  --adm-surface: #ffffff;
+  --adm-raised: #ffffff;
+  --adm-bar: #ffffff;
+  --adm-bar-line: rgb(0 0 0 / 0.07);
+  --adm-line: rgb(0 0 0 / 0.08);
+  --adm-fg: #171717;
+  --adm-fg-2: #525252;
+  --adm-fg-3: #8a8a8a;
+  --adm-hover: rgb(0 0 0 / 0.04);
+  --adm-active: rgb(0 0 0 / 0.06);
+  --adm-field: rgb(0 0 0 / 0.04);
+  --adm-overlay: rgb(0 0 0 / 0.4);
+  --adm-shadow: 0 16px 48px -12px rgb(0 0 0 / 0.18), 0 0 0 1px rgb(0 0 0 / 0.06);
+
+  /* chart-1..8 from the design tokens */
+  --adm-chart-1: #2a78d6;
+  --adm-chart-2: #1baf7a;
+  --adm-chart-3: #6250d6;
+  --adm-chart-4: #eda100;
+  --adm-chart-5: #e87ba4;
+  --adm-chart-6: #0891b2;
+  --adm-chart-7: #eb6834;
+  --adm-chart-8: #e34948;
+  /* plans, matching the plan chips */
+  --adm-plan-free: #a3a3a3;
+  --adm-plan-standard: #0ea5e9;
+  --adm-plan-pro: #7c3aed;
+  --adm-plan-enterprise: #f59e0b;
+
+  background-color: var(--adm-canvas);
+}
+
+html[data-theme='dark']:has([data-adm-theme]) {
+  color-scheme: dark;
+  --adm-canvas: #0b0b0c;
+  --adm-surface: #121214;
+  --adm-raised: #18181b;
+  --adm-bar: #0b0b0c;
+  --adm-bar-line: rgb(255 255 255 / 0.07);
+  --adm-line: rgb(255 255 255 / 0.05);
+  --adm-fg: #ededef;
+  --adm-fg-2: #a1a1aa;
+  --adm-fg-3: #8b8b94;
+  --adm-hover: rgb(255 255 255 / 0.05);
+  --adm-active: rgb(255 255 255 / 0.09);
+  --adm-field: rgb(255 255 255 / 0.05);
+  --adm-overlay: rgb(0 0 0 / 0.5);
+  --adm-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 40px -12px rgb(0 0 0 / 0.75);
+
+  --adm-chart-1: #60a5fa;
+  --adm-chart-2: #34d399;
+  --adm-chart-3: #a78bfa;
+  --adm-chart-4: #fbbf24;
+  --adm-chart-5: #f472b6;
+  --adm-chart-6: #22d3ee;
+  --adm-chart-7: #fb923c;
+  --adm-chart-8: #f87171;
+  --adm-plan-free: #a1a1aa;
+  --adm-plan-standard: #38bdf8;
+  --adm-plan-pro: #a78bfa;
+  --adm-plan-enterprise: #fbbf24;
+}
+
+html:has([data-adm-theme]),
+html:has([data-adm-theme]) body {
+  background-color: var(--adm-canvas);
+}
+
+/* ── 2. kit remap (dark) ───────────────────────────────────────────────── */
+
+html[data-theme='dark']:has([data-adm-theme]) {
+  --color-white: #121214;
+  --color-black: #000;
+
+  --color-neutral-50: #161618;
+  --color-neutral-100: #1b1b1e;
+  --color-neutral-200: #222225;
+  --color-neutral-300: #34343a;
+  --color-neutral-400: #8b8b94;
+  --color-neutral-500: #a1a1aa;
+  --color-neutral-600: #b4b4bc;
+  --color-neutral-700: #c9c9d0;
+  --color-neutral-800: #dcdce0;
+  --color-neutral-900: #ededef;
+  --color-neutral-950: #f6f6f7;
+
+  --color-gray-50: #161618;
+  --color-gray-100: #1b1b1e;
+  --color-gray-200: #222225;
+  --color-gray-300: #34343a;
+  --color-gray-400: #8b8b94;
+  --color-gray-500: #a1a1aa;
+  --color-gray-600: #b4b4bc;
+  --color-gray-700: #c9c9d0;
+  --color-gray-800: #dcdce0;
+  --color-gray-900: #ededef;
+
+  /* Hue washes (…-50/100), accents (…-600) and ink (…-700/800/900). */
+  --color-emerald-50: rgb(52 211 153 / 0.15);
+  --color-emerald-100: rgb(52 211 153 / 0.2);
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #6ee7b7;
+  --color-emerald-900: #a7f3d0;
+
+  --color-amber-50: rgb(251 191 36 / 0.15);
+  --color-amber-100: rgb(251 191 36 / 0.2);
+  --color-amber-600: #fbbf24;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fcd34d;
+  --color-amber-900: #fde68a;
+
+  --color-rose-50: rgb(251 113 133 / 0.15);
+  --color-rose-100: rgb(251 113 133 / 0.2);
+  --color-rose-600: #fb7185;
+  --color-rose-700: #fda4af;
+  --color-rose-800: #fda4af;
+  --color-rose-900: #fecdd3;
+
+  --color-sky-50: rgb(56 189 248 / 0.15);
+  --color-sky-100: rgb(56 189 248 / 0.2);
+  --color-sky-600: #38bdf8;
+  --color-sky-700: #7dd3fc;
+  --color-sky-800: #7dd3fc;
+  --color-sky-900: #bae6fd;
+
+  --color-violet-50: rgb(167 139 250 / 0.15);
+  --color-violet-100: rgb(167 139 250 / 0.2);
+  --color-violet-600: #a78bfa;
+  --color-violet-700: #c4b5fd;
+  --color-violet-800: #c4b5fd;
+  --color-violet-900: #ddd6fe;
+
+  --color-blue-50: rgb(96 165 250 / 0.15);
+  --color-blue-600: #60a5fa;
+  --color-blue-700: #93c5fd;
+  --color-blue-800: #93c5fd;
+  --color-blue-900: #bfdbfe;
+  --color-red-50: rgb(248 113 113 / 0.15);
+  --color-red-600: #f87171;
+}
+
+html[data-theme='dark']:has([data-adm-theme]) ::selection {
+  background: rgb(255 255 255 / 0.18);
+}
+
+/* Cards: a hairline instead of the light drop shadow. */
+html[data-theme='dark']:has([data-adm-theme]) .nice-shadow {
+  box-shadow: none;
+  outline: 1px solid var(--adm-line);
+  outline-offset: -1px;
+}
+
+/* Rows inside cards: faint dividers. */
+html[data-theme='dark']:has([data-adm-theme]) .divide-neutral-100 > :not(:last-child),
+html[data-theme='dark']:has([data-adm-theme]) .border-neutral-100 {
+  border-color: var(--adm-line);
+}
+
+/* Card header icon tiles: a faint fill (colored stat tiles keep their hue). */
+html[data-theme='dark']:has([data-adm-theme]) .w-9.h-9.rounded-xl.bg-neutral-100 {
+  background-color: rgb(255 255 255 / 0.06);
+  color: var(--adm-fg-2);
+}
+
+/* Floating menus and dialogs: the raised surface with depth. */
+html[data-theme='dark']:has([data-adm-theme]) [role='dialog'],
+html[data-theme='dark']:has([data-adm-theme]) [data-radix-popper-content-wrapper] > * {
+  background-color: var(--adm-raised);
+  box-shadow: var(--adm-shadow);
+}
+
+/* "Inverse" pieces (filter chips, selected presets, bulk and save bars,
+   "new events" pill) would turn into white blocks under the remap; keep them
+   a soft raised pill with white ink. Redefining the variables on the element
+   re-themes its children too. */
+html[data-theme='dark']:has([data-adm-theme]) .bg-neutral-900.rounded-full,
+html[data-theme='dark']:has([data-adm-theme]) .bg-neutral-900.rounded-2xl {
+  --color-white: #fff;
+  --color-neutral-900: #2a2a2f;
+  --color-neutral-100: #3a3a40;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+html[data-theme='dark']:has([data-adm-theme]) .bg-neutral-900.rounded-2xl {
+  --color-neutral-900: #1c1c20;
+  box-shadow: var(--adm-shadow);
+}
+html[data-theme='dark']:has([data-adm-theme]) .bg-neutral-900.rounded-2xl .bg-white {
+  background-color: #fff;
+  color: #000;
+}
+
+/* Primary: solid white, black text. */
+html[data-theme='dark']:has([data-adm-theme]) .lh-t-btn.bg-neutral-900 {
+  background-color: #fff;
+  color: #000;
+  box-shadow: none;
+}
+html[data-theme='dark']:has([data-adm-theme]) .lh-t-btn.bg-neutral-900:hover {
+  background-color: #e6e6e6;
+}
+
+/* Secondary buttons and toolbar triggers: a faint fill. */
+html[data-theme='dark']:has([data-adm-theme]) button.bg-white:not(.rounded-2xl),
+html[data-theme='dark']:has([data-adm-theme]) a.bg-white:not(.rounded-2xl) {
+  background-color: rgb(255 255 255 / 0.07);
+  box-shadow: none;
+  outline: none;
+}
+html[data-theme='dark']:has([data-adm-theme]) button.bg-white:not(.rounded-2xl):hover,
+html[data-theme='dark']:has([data-adm-theme]) a.bg-white:not(.rounded-2xl):hover {
+  background-color: rgb(255 255 255 / 0.11);
+}
+/* Clickable cards (stat tiles) keep the card surface. */
+html[data-theme='dark']:has([data-adm-theme]) button.bg-white.rounded-2xl:hover,
+html[data-theme='dark']:has([data-adm-theme]) a.bg-white.rounded-2xl:hover {
+  background-color: #161618;
+  --tw-ring-color: transparent;
+}
+
+/* Segmented controls and sub-tabs. */
+html[data-theme='dark']:has([data-adm-theme]) .bg-neutral-200\/60 {
+  background-color: rgb(255 255 255 / 0.05);
+}
+html[data-theme='dark']:has([data-adm-theme]) button[aria-selected='true'].bg-white,
+html[data-theme='dark']:has([data-adm-theme]) button[aria-pressed='true'].bg-white {
+  background-color: rgb(255 255 255 / 0.11);
+  color: var(--adm-fg);
+  box-shadow: none;
+}
+
+/* Fields and selects: no border until hover or focus. */
+html[data-theme='dark']:has([data-adm-theme]) input:not([type='checkbox']):not([type='radio']):not([type='range']),
+html[data-theme='dark']:has([data-adm-theme]) select,
+html[data-theme='dark']:has([data-adm-theme]) textarea {
+  color-scheme: dark;
+  background-color: var(--adm-field) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: box-shadow 150ms;
+}
+html[data-theme='dark']:has([data-adm-theme]) input:not([type='checkbox']):not([type='radio']):not([type='range']):hover,
+html[data-theme='dark']:has([data-adm-theme]) select:hover,
+html[data-theme='dark']:has([data-adm-theme]) textarea:hover {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1) !important;
+}
+html[data-theme='dark']:has([data-adm-theme]) input:not([type='checkbox']):not([type='radio']):not([type='range']):focus,
+html[data-theme='dark']:has([data-adm-theme]) select:focus,
+html[data-theme='dark']:has([data-adm-theme]) textarea:focus {
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.22) !important;
+}
+html[data-theme='dark']:has([data-adm-theme]) select option {
+  background-color: var(--adm-raised);
+  color: var(--adm-fg);
+}
+
+/* Fields the console draws itself (⌘K) stay bare in both themes. */
+html:has([data-adm-theme]) .adm-bare-input,
+html:has([data-adm-theme]) .adm-bare-input:hover,
+html:has([data-adm-theme]) .adm-bare-input:focus {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ── 3. the top bar: always dark ───────────────────────────────────────── */
+
+/* The bar and its menus (avatar menu, mobile sheet, tooltips) stay dark in
+   both themes. `adm-bar` re-points the console tokens to the dark bar set
+   and gives kit pieces inside it (avatar fallback, role chip) the dark remap.
+   CSS variables cascade, so this works in portals that carry the class. */
+html:has([data-adm-theme]) .adm-bar {
+  color-scheme: dark;
+  --adm-bar: #0c0c0e;
+  --adm-bar-line: rgb(255 255 255 / 0.06);
+  --adm-raised: #1c1c1f;
+  --adm-line: rgb(255 255 255 / 0.08);
+  --adm-divider: rgb(255 255 255 / 0.1);
+  --adm-fg: #ffffff;
+  --adm-fg-2: rgb(255 255 255 / 0.55);
+  --adm-fg-3: rgb(255 255 255 / 0.45);
+  --adm-hover: rgb(255 255 255 / 0.06);
+  --adm-active: rgb(255 255 255 / 0.08);
+  --adm-shadow: 0 20px 50px -14px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.08);
+
+  --color-white: #ffffff;
+  --color-neutral-50: #1f1f22;
+  --color-neutral-100: #26262a;
+  --color-neutral-200: #303035;
+  --color-neutral-600: #b2b2b4;
+  --color-neutral-700: #c9c9cb;
+  --color-neutral-900: #e9e9ea;
+  --color-amber-50: rgb(251 191 36 / 0.15);
+  --color-amber-800: #fcd34d;
+  --color-violet-50: rgb(167 139 250 / 0.15);
+  --color-violet-800: #c4b5fd;
+  --color-sky-50: rgb(56 189 248 / 0.15);
+  --color-sky-800: #7dd3fc;
+  --color-emerald-50: rgb(52 211 153 / 0.15);
+  --color-emerald-800: #6ee7b7;
+  --color-rose-50: rgb(251 113 133 / 0.15);
+  --color-rose-600: #fb7185;
+  --color-amber-700: #fcd34d;
+}
+/* Dark-theme dialog rule must not repaint bar menus with the page surface. */
+html:has([data-adm-theme]) [data-radix-popper-content-wrapper] > .adm-bar {
+  background-color: var(--adm-raised);
+  box-shadow: var(--adm-shadow);
+}

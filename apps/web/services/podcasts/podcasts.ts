@@ -35,7 +35,9 @@ export interface Podcast {
   creation_date: string
   update_date: string
   authors: PodcastAuthor[]
-  seo?: Record<string, unknown>
+  seo?: Record<string, any>
+  /** Human-readable URL key, unique per org. */
+  slug?: string | null
 }
 
 export interface PodcastWithEpisodeCount extends Podcast {

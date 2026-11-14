@@ -4,6 +4,9 @@ import { getConfig } from '@services/config/config'
 
 export const ACCESS_TOKEN_COOKIE = 'LH_access'
 export const REFRESH_TOKEN_COOKIE = 'LH_refresh'
+// An impersonation token, next to (never instead of)
+// the superadmin's own LH_access / LH_refresh. See app/api/auth/impersonation.
+export const IMPERSONATION_COOKIE = 'LH_imp'
 export const ACCESS_TOKEN_MAX_AGE = 8 * 60 * 60 // 8 hours
 export const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 // 30 days
 

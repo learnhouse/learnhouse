@@ -166,6 +166,14 @@ export function getBoardThumbnailMediaDirectory(
   return uri
 }
 
+export function getBoardMediaDirectory(
+  orgUUID: string,
+  boardUUID: string,
+  fileId: string
+) {
+  return `${getMediaUrl()}content/orgs/${orgUUID}/boards/${boardUUID}/media/${fileId}`
+}
+
 export function getPlaygroundThumbnailMediaDirectory(
   orgUUID: string,
   playgroundUUID: string,

@@ -201,7 +201,44 @@ async def fetch(url: str, kind: str) -> Fetched:
         raise HTTPException(status_code=400, detail=f"Could not fetch the URL ({type(e).__name__}).")
 
 
-async def _fetch(url: str, kind: str, media: MediaKind) -> Fetched:
+PAGE_CAP = 3 * MB
+
+
+async def fetch_page(url: str) -> tuple[str, str, bool]:
+    """(text, final URL, is_markdown) of a public web page or plain-text /
+    Markdown file, through the same guarded
+    fetcher as files (public addresses only, checked redirects, size cap)."""
+    page = MediaKind("page", PAGE_CAP, "text/html,application/xhtml+xml", None)
+    try:
+        with anyio.fail_after(DEADLINE_SECONDS):
+            return await _fetch(url, "page", page, read=_read_page)
+    except TimeoutError:
+        raise HTTPException(status_code=400, detail=f"Fetching took longer than {DEADLINE_SECONDS} seconds.")
+    except SSRFBlockedError:
+        raise HTTPException(
+            status_code=400,
+            detail="That address is not allowed: it resolves to a private, local or reserved network.",
+        )
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=400, detail=f"Could not fetch the URL ({type(e).__name__}).")
+
+
+async def _read_page(response: httpx.Response, url: str) -> tuple[str, str, bool]:
+    declared = response.headers.get("content-type", "").split(";")[0].strip().lower()
+    if declared not in ("text/html", "application/xhtml+xml", "text/plain", "text/markdown", ""):
+        raise HTTPException(status_code=400, detail=f"That URL is not a web page ({declared}).")
+    body = bytearray()
+    async for chunk in response.aiter_bytes(64 * 1024):
+        body += chunk
+        if len(body) > PAGE_CAP:
+            raise HTTPException(status_code=400, detail=f"The page is over the {PAGE_CAP // MB} MB limit.")
+    encoding = response.encoding or "utf-8"
+    text = bytes(body).decode(encoding, errors="replace")
+    markdown = declared in ("text/plain", "text/markdown") or url.lower().endswith((".md", ".markdown", ".txt"))
+    return text, url, markdown
+
+
+async def _fetch(url: str, kind: str, media: MediaKind, read=None) -> Any:
     current = url
     async with httpx.AsyncClient(
         transport=_transport(), follow_redirects=False, timeout=httpx.Timeout(20.0), trust_env=False
@@ -232,6 +269,8 @@ async def _fetch(url: str, kind: str, media: MediaKind) -> Fetched:
                     raise HTTPException(
                         status_code=400, detail=f"The server answered {response.status_code} for that URL."
                     )
+                if read is not None:
+                    return await read(response, current)
                 return await _read_body(response, kind, media, current)
             finally:
                 await response.aclose()

@@ -15,6 +15,8 @@ import {
   chapterIndexAt,
   formatClock,
   parseClock,
+  youTubeThumbnailUrl,
+  urlOrigin,
 } from "../components/Objects/Activities/Video/videoSource.ts";
 
 describe("resolveActivityCaptions", () => {
@@ -307,5 +309,30 @@ describe("chapters", () => {
     expect(Number.isNaN(parseClock("1:xx"))).toBe(true);
     expect(Number.isNaN(parseClock(""))).toBe(true);
     expect(Number.isNaN(parseClock("1:2:3:4"))).toBe(true);
+  });
+});
+
+describe("youTubeThumbnailUrl", () => {
+  test("builds maxres by default and hq on request", () => {
+    expect(youTubeThumbnailUrl("abc123")).toBe("https://i.ytimg.com/vi/abc123/maxresdefault.jpg");
+    expect(youTubeThumbnailUrl("abc123", "hq")).toBe("https://i.ytimg.com/vi/abc123/hqdefault.jpg");
+  });
+
+  test("encodes the id so it can't escape the path", () => {
+    expect(youTubeThumbnailUrl("a/b?c")).toBe("https://i.ytimg.com/vi/a%2Fb%3Fc/maxresdefault.jpg");
+  });
+});
+
+describe("urlOrigin", () => {
+  test("returns the origin of absolute URLs", () => {
+    expect(urlOrigin("http://localhost:1377/api/v1/stream/video/x.mp4")).toBe("http://localhost:1377");
+    expect(urlOrigin("https://media.example.com/content/a.jpg")).toBe("https://media.example.com");
+  });
+
+  test("null for empty, relative or malformed input", () => {
+    expect(urlOrigin("")).toBe(null);
+    expect(urlOrigin(null)).toBe(null);
+    expect(urlOrigin("/relative/path")).toBe(null);
+    expect(urlOrigin("not a url")).toBe(null);
   });
 });

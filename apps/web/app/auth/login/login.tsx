@@ -1,11 +1,9 @@
 'use client'
-import FormLayout, {
-  FormField,
-} from '@components/Objects/StyledElements/Form/Form'
+import FormLayout from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
 import React, { useState, useEffect } from 'react'
-import { AlertTriangle, Info, Lock, Mail, Shield, X, Clock, Send, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, CircleNotch, Clock, EnvelopeSimple, EnvelopeSimpleOpen, LockSimple, PaperPlaneTilt, ShieldCheck } from '@phosphor-icons/react'
 import { checkSSOEnabled, redirectToSSOLogin } from '@services/auth/sso'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -17,6 +15,21 @@ import { useTranslation } from 'react-i18next'
 import { resendVerificationEmail } from '@services/auth/auth'
 import { defaultPostAuthPath } from '@services/auth/redirects'
 import AuthLayout from '@components/Auth/AuthLayout'
+import {
+  AUTH_INPUT,
+  AUTH_LINK,
+  AUTH_TEXT_BUTTON,
+  AuthButton,
+  AuthDivider,
+  AuthFieldError,
+  AuthFootnote,
+  AuthHeading,
+  AuthLabel,
+  AuthNotice,
+  AuthProviderButton,
+  AuthStatus,
+  GoogleMark,
+} from '@components/Auth/AuthUI'
 import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getAllowedAuthMethods } from '@services/auth/authMethods'
@@ -449,6 +462,14 @@ const LoginClient = (props: LoginClientProps) => {
     },
   })
 
+  const retryMinutes = retryAfter ? Math.max(1, Math.ceil(retryAfter / 60)) : null
+  const isGenericError =
+    !!error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED'
+  const dismissError = () => {
+    setShowErrorModal(false)
+    if (verificationResent) setVerificationResent(false)
+  }
+
   return (
     <AuthLayout
       org={props.org}
@@ -458,332 +479,253 @@ const LoginClient = (props: LoginClientProps) => {
         defaultValue: 'Pick up where you left off. Your courses, students, and tools are waiting.',
       })}
     >
-        {/* Error Top Bar */}
-        {showErrorModal && (
-          <div className={`
-            mx-6 md:mx-12 lg:mx-20 mt-6 rounded-xl border px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200
-            ${errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent ? 'bg-amber-50 text-amber-700 border-amber-100' : ''}
-            ${verificationResent ? 'bg-green-50 text-green-700 border-green-100' : ''}
-            ${errorType === 'ACCOUNT_LOCKED' ? 'bg-red-50 text-red-700 border-red-100' : ''}
-            ${errorType === 'RATE_LIMITED' ? 'bg-orange-50 text-orange-700 border-orange-100' : ''}
-            ${error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED' ? 'bg-red-50 text-red-700 border-red-100' : ''}
-          `}>
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              {errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && <Mail size={18} className="shrink-0" />}
-              {verificationResent && <Mail size={18} className="shrink-0" />}
-              {errorType === 'ACCOUNT_LOCKED' && <Lock size={18} className="shrink-0" />}
-              {errorType === 'RATE_LIMITED' && <Clock size={18} className="shrink-0" />}
-              {error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED' && <AlertTriangle size={18} className="shrink-0" />}
+      {showErrorModal && (
+        <div className="mb-6">
+          {verificationResent ? (
+            <AuthNotice tone="success" icon={<EnvelopeSimple size={16} weight="fill" />} onDismiss={dismissError}>
+              {t('auth.verification_email_resent')} - {t('auth.check_inbox_message')}
+            </AuthNotice>
+          ) : errorType === 'EMAIL_NOT_VERIFIED' ? (
+            <AuthNotice tone="warning" icon={<EnvelopeSimple size={16} weight="fill" />} onDismiss={dismissError}>
+              <span>{t('auth.email_not_verified_message')}</span>{' '}
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isResendingVerification}
+                className="font-semibold underline underline-offset-2 hover:no-underline disabled:opacity-50"
+              >
+                {isResendingVerification ? t('common.loading') : t('auth.resend_verification_email')}
+              </button>
+            </AuthNotice>
+          ) : errorType === 'ACCOUNT_LOCKED' ? (
+            <AuthNotice tone="danger" icon={<LockSimple size={16} weight="fill" />} onDismiss={dismissError}>
+              {t('auth.account_locked')}
+              {retryMinutes ? ` · ${t('auth.try_again_in', { minutes: retryMinutes })}` : ''}
+            </AuthNotice>
+          ) : errorType === 'RATE_LIMITED' ? (
+            <AuthNotice tone="warning" icon={<Clock size={16} weight="fill" />} onDismiss={dismissError}>
+              {t('auth.rate_limited')}
+              {retryMinutes ? ` · ${t('auth.try_again_in', { minutes: retryMinutes })}` : ''}
+            </AuthNotice>
+          ) : isGenericError ? (
+            <AuthNotice tone="danger" onDismiss={dismissError}>
+              {error}
+            </AuthNotice>
+          ) : null}
+        </div>
+      )}
 
-              <div className="flex-1 min-w-0">
-                {errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium">{t('auth.email_not_verified_message')}</span>
-                    <button
-                      type="button"
-                      onClick={handleResendVerification}
-                      disabled={isResendingVerification}
-                      className="text-sm underline hover:no-underline disabled:opacity-50"
-                    >
-                      {isResendingVerification ? t('common.loading') : t('auth.resend_verification_email')}
-                    </button>
-                  </div>
-                )}
-                {verificationResent && (
-                  <span className="text-sm font-medium">{t('auth.verification_email_resent')} - {t('auth.check_inbox_message')}</span>
-                )}
-                {errorType === 'ACCOUNT_LOCKED' && (
-                  <span className="text-sm font-medium">
-                    {t('auth.account_locked')}
-                    {retryAfter ? ` · ${t('auth.try_again_in', { minutes: Math.max(1, Math.ceil(retryAfter / 60)) })}` : ''}
-                  </span>
-                )}
-                {errorType === 'RATE_LIMITED' && (
-                  <span className="text-sm font-medium">
-                    {t('auth.rate_limited')}
-                    {retryAfter ? ` · ${t('auth.try_again_in', { minutes: Math.max(1, Math.ceil(retryAfter / 60)) })}` : ''}
-                  </span>
-                )}
-                {error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED' && (
-                  <span className="text-sm font-medium">{error}</span>
-                )}
-              </div>
+      {mfaToken ? (
+        <>
+          {/* Second-factor challenge */}
+          <AuthHeading
+            title={t('auth.mfa_title', { defaultValue: 'Two-step verification' })}
+            description={
+              useBackupCode
+                ? t('auth.mfa_subtitle_backup', { defaultValue: 'Enter one of the backup codes you saved.' })
+                : t('auth.mfa_subtitle', { defaultValue: 'Enter the 6-digit code from your authenticator app.' })
+            }
+          />
+
+          <form onSubmit={handleMfaSubmit} className="mt-7">
+            <label htmlFor="mfa-code" className="block text-[13px] font-medium text-neutral-700 mb-1.5">
+              {useBackupCode
+                ? t('auth.mfa_backup_code', { defaultValue: 'Backup code' })
+                : t('auth.mfa_code', { defaultValue: 'Verification code' })}
+            </label>
+            <input
+              id="mfa-code"
+              type="text"
+              value={mfaCode}
+              onChange={(e) => {
+                setMfaCode(
+                  useBackupCode
+                    ? e.target.value.toUpperCase()
+                    : e.target.value.replace(/\D/g, '').slice(0, 6)
+                )
+                if (mfaError) setMfaError('')
+              }}
+              autoFocus
+              autoComplete="one-time-code"
+              inputMode={useBackupCode ? 'text' : 'numeric'}
+              placeholder={useBackupCode ? 'XXXXX-XXXXX' : '000000'}
+              disabled={mfaSubmitting}
+              aria-invalid={mfaError ? true : undefined}
+              aria-describedby={mfaError ? 'mfa-code-error' : undefined}
+              dir="ltr"
+              className={`${AUTH_INPUT} h-12 text-center ${
+                useBackupCode ? 'text-sm tracking-wider' : 'text-xl font-semibold tracking-[0.5em] tabular-nums'
+              }`}
+            />
+            <div id="mfa-code-error">
+              <AuthFieldError>{mfaError}</AuthFieldError>
             </div>
 
-            <button
-              onClick={() => {
-                setShowErrorModal(false)
-                if (verificationResent) setVerificationResent(false)
-              }}
-              className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0 opacity-60 hover:opacity-100"
+            <AuthButton
+              loading={mfaSubmitting}
+              disabled={!mfaCode.trim()}
+              className="mt-4"
             >
-              <X size={18} />
+              {t('auth.mfa_verify', { defaultValue: 'Verify' })}
+            </AuthButton>
+          </form>
+
+          <div className="mt-6 flex flex-col items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                setUseBackupCode(!useBackupCode)
+                setMfaCode('')
+                setMfaError('')
+              }}
+              disabled={mfaSubmitting}
+              className={`${AUTH_TEXT_BUTTON} text-neutral-900`}
+            >
+              {useBackupCode
+                ? t('auth.mfa_use_authenticator', { defaultValue: 'Use your authenticator app instead' })
+                : t('auth.mfa_use_backup', { defaultValue: 'Use a backup code instead' })}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMfaToken(null)
+                setMfaCode('')
+                setMfaError('')
+                setUseBackupCode(false)
+                turnstileRef.current?.reset()
+              }}
+              disabled={mfaSubmitting}
+              className={AUTH_TEXT_BUTTON}
+            >
+              <ArrowLeft size={14} className="rtl:rotate-180" aria-hidden="true" />
+              {t('auth.mfa_back_to_login', { defaultValue: 'Back to sign in' })}
             </button>
           </div>
-        )}
+        </>
+      ) : magicMode ? (
+        magicSent ? (
+          <AuthStatus
+            tone="success"
+            icon={<EnvelopeSimpleOpen size={22} weight="duotone" />}
+            title={t('auth.magic_sent_title', { defaultValue: 'Check your email' })}
+            description={t('auth.magic_sent_body', {
+              defaultValue:
+                'If an account exists for {{email}}, we just sent it a secure link to sign in. It expires shortly, so use it soon.',
+              email: magicEmail.trim(),
+            })}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setMagicMode(false)
+                setMagicSent(false)
+                setMagicError('')
+              }}
+              className={`${AUTH_TEXT_BUTTON} self-center`}
+            >
+              <ArrowLeft size={14} className="rtl:rotate-180" aria-hidden="true" />
+              {t('auth.magic_back_to_login', { defaultValue: 'Back to sign in' })}
+            </button>
+          </AuthStatus>
+        ) : (
+          <>
+            {/* Passwordless "email me a link" step */}
+            <AuthHeading
+              title={t('auth.magic_title', { defaultValue: 'Sign in with a link' })}
+              description={t('auth.magic_subtitle', {
+                defaultValue: 'Enter your email and we’ll send you a link that signs you in, no password needed.',
+              })}
+            />
+            <form onSubmit={handleMagicLinkRequest} className="mt-7">
+              <label htmlFor="magic-email" className="block text-[13px] font-medium text-neutral-700 mb-1.5">
+                {t('auth.email')}
+              </label>
+              <input
+                id="magic-email"
+                type="email"
+                value={magicEmail}
+                onChange={(e) => {
+                  setMagicEmail(e.target.value)
+                  if (magicError) setMagicError('')
+                }}
+                autoFocus
+                autoComplete="email"
+                placeholder="you@example.com"
+                disabled={magicSubmitting}
+                aria-invalid={magicError ? true : undefined}
+                aria-describedby={magicError ? 'magic-email-error' : undefined}
+                className={AUTH_INPUT}
+              />
+              <div id="magic-email-error">
+                <AuthFieldError>{magicError}</AuthFieldError>
+              </div>
 
-        <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-          <div className="w-full max-w-[420px] py-10">
-            {mfaToken ? (
-              <>
-                {/* Second-factor challenge */}
-                <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">
-                  {t('auth.mfa_title', { defaultValue: 'Two-step verification' })}
-                </h1>
-                <p className="mt-2 text-black/45 text-[15px] font-medium">
-                  {useBackupCode
-                    ? t('auth.mfa_subtitle_backup', { defaultValue: 'Enter one of the backup codes you saved.' })
-                    : t('auth.mfa_subtitle', { defaultValue: 'Enter the 6-digit code from your authenticator app.' })}
-                </p>
+              <AuthButton
+                loading={magicSubmitting}
+                disabled={!magicEmail.trim()}
+                icon={<PaperPlaneTilt size={16} />}
+                className="mt-4"
+              >
+                {t('auth.magic_send', { defaultValue: 'Email me a login link' })}
+              </AuthButton>
+            </form>
 
-                <form onSubmit={handleMfaSubmit} className="mt-8">
-                  <label className="block text-[13px] font-semibold text-black/70 mb-1.5">
-                    {useBackupCode
-                      ? t('auth.mfa_backup_code', { defaultValue: 'Backup code' })
-                      : t('auth.mfa_code', { defaultValue: 'Verification code' })}
-                  </label>
-                  <input
-                    type="text"
-                    value={mfaCode}
-                    onChange={(e) => {
-                      setMfaCode(
-                        useBackupCode
-                          ? e.target.value.toUpperCase()
-                          : e.target.value.replace(/\D/g, '').slice(0, 6)
-                      )
-                      if (mfaError) setMfaError('')
-                    }}
-                    autoFocus
-                    autoComplete="one-time-code"
-                    inputMode={useBackupCode ? 'text' : 'numeric'}
-                    placeholder={useBackupCode ? 'XXXXX-XXXXX' : '000000'}
-                    disabled={mfaSubmitting}
-                    className={`box-border w-full bg-neutral-50 text-black rounded-lg px-4 border inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/25 disabled:opacity-50 ${
-                      useBackupCode
-                        ? 'text-sm tracking-normal'
-                        : 'text-lg tracking-[0.4em] font-semibold'
-                    } ${mfaError ? 'border-red-300 focus:border-red-400' : 'border-neutral-200 focus:border-neutral-400'}`}
-                  />
-
-                  {mfaError && (
-                    <p className="mt-2 text-red-600 text-xs flex items-start gap-1.5">
-                      <Info size={12} className="shrink-0 mt-0.5" />
-                      <span>{mfaError}</span>
-                    </p>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={mfaSubmitting || !mfaCode.trim()}
-                    className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-4 transition-all disabled:opacity-50"
-                  >
-                    {mfaSubmitting ? (
-                      <span className="flex items-center space-x-2">
-                        <span className="w-4 h-4 border-t-2 border-white rounded-full animate-spin" />
-                        <span>{t('common.loading')}</span>
-                      </span>
-                    ) : (
-                      t('auth.mfa_verify', { defaultValue: 'Verify' })
-                    )}
-                  </button>
-                </form>
-
-                <div className="mt-6 space-y-2 text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUseBackupCode(!useBackupCode)
-                      setMfaCode('')
-                      setMfaError('')
-                    }}
-                    disabled={mfaSubmitting}
-                    className="text-sm text-black font-semibold hover:underline disabled:opacity-50"
-                  >
-                    {useBackupCode
-                      ? t('auth.mfa_use_authenticator', { defaultValue: 'Use your authenticator app instead' })
-                      : t('auth.mfa_use_backup', { defaultValue: 'Use a backup code instead' })}
-                  </button>
-                  <p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMfaToken(null)
-                        setMfaCode('')
-                        setMfaError('')
-                        setUseBackupCode(false)
-                        turnstileRef.current?.reset()
-                      }}
-                      disabled={mfaSubmitting}
-                      className="text-sm text-black/35 hover:text-black/60 disabled:opacity-50"
-                    >
-                      {t('auth.mfa_back_to_login', { defaultValue: 'Back to sign in' })}
-                    </button>
-                  </p>
-                </div>
-              </>
-            ) : magicMode ? (
-              <>
-                {/* Passwordless "email me a link" step */}
-                <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">
-                  {t('auth.magic_title', { defaultValue: 'Sign in with a link' })}
-                </h1>
-                {magicSent ? (
-                  <>
-                    <div className="mt-8 flex flex-col items-center text-center">
-                      <div className="p-3 rounded-2xl bg-green-50 text-green-600">
-                        <CheckCircle2 size={28} />
-                      </div>
-                      <h2 className="mt-4 text-lg font-bold text-black">
-                        {t('auth.magic_sent_title', { defaultValue: 'Check your email' })}
-                      </h2>
-                      <p className="mt-2 text-black/45 text-[15px] font-medium max-w-sm">
-                        {t('auth.magic_sent_body', {
-                          defaultValue:
-                            'If an account exists for {{email}}, we just sent it a secure link to sign in. It expires shortly, so use it soon.',
-                          email: magicEmail.trim(),
-                        })}
-                      </p>
-                    </div>
-                    <div className="mt-8 text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMagicMode(false)
-                          setMagicSent(false)
-                          setMagicError('')
-                        }}
-                        className="text-sm text-black/35 hover:text-black/60"
-                      >
-                        {t('auth.magic_back_to_login', { defaultValue: 'Back to sign in' })}
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="mt-2 text-black/45 text-[15px] font-medium">
-                      {t('auth.magic_subtitle', {
-                        defaultValue:
-                          'Enter your email and we’ll send you a link that signs you in, no password needed.',
-                      })}
-                    </p>
-                    <form onSubmit={handleMagicLinkRequest} className="mt-8">
-                      <label className="block text-[13px] font-semibold text-black/70 mb-1.5">
-                        {t('auth.email')}
-                      </label>
-                      <input
-                        type="email"
-                        value={magicEmail}
-                        onChange={(e) => {
-                          setMagicEmail(e.target.value)
-                          if (magicError) setMagicError('')
-                        }}
-                        autoFocus
-                        autoComplete="email"
-                        placeholder="you@example.com"
-                        disabled={magicSubmitting}
-                        className={`box-border w-full bg-neutral-50 text-black rounded-lg px-4 border inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/25 text-sm disabled:opacity-50 ${
-                          magicError
-                            ? 'border-red-300 focus:border-red-400'
-                            : 'border-neutral-200 focus:border-neutral-400'
-                        }`}
-                      />
-
-                      {magicError && (
-                        <p className="mt-2 text-red-600 text-xs flex items-start gap-1.5">
-                          <Info size={12} className="shrink-0 mt-0.5" />
-                          <span>{magicError}</span>
-                        </p>
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={magicSubmitting || !magicEmail.trim()}
-                        className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-4 transition-all disabled:opacity-50"
-                      >
-                        {magicSubmitting ? (
-                          <span className="flex items-center space-x-2">
-                            <span className="w-4 h-4 border-t-2 border-white rounded-full animate-spin" />
-                            <span>{t('common.loading')}</span>
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <Send size={15} />
-                            {t('auth.magic_send', { defaultValue: 'Email me a login link' })}
-                          </span>
-                        )}
-                      </button>
-                    </form>
-
-                    <div className="mt-6 text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMagicMode(false)
-                          setMagicError('')
-                        }}
-                        disabled={magicSubmitting}
-                        className="text-sm text-black/35 hover:text-black/60 disabled:opacity-50"
-                      >
-                        {t('auth.magic_use_password', {
-                          defaultValue: 'Sign in with a password instead',
-                        })}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-            {/* Header */}
-            <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.welcome_back')}</h1>
-            <p className="mt-2 text-black/45 text-[15px] font-medium">
-              {passwordAllowed
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setMagicMode(false)
+                  setMagicError('')
+                }}
+                disabled={magicSubmitting}
+                className={AUTH_TEXT_BUTTON}
+              >
+                <ArrowLeft size={14} className="rtl:rotate-180" aria-hidden="true" />
+                {t('auth.magic_use_password', { defaultValue: 'Sign in with a password instead' })}
+              </button>
+            </div>
+          </>
+        )
+      ) : (
+        <>
+          <AuthHeading
+            title={t('auth.welcome_back')}
+            description={
+              passwordAllowed
                 ? t('auth.enter_credentials')
-                : t('auth.choose_sign_in_method', {
-                    defaultValue: 'Choose how you’d like to sign in.',
-                  })}
-            </p>
+                : t('auth.choose_sign_in_method', { defaultValue: 'Choose how you’d like to sign in.' })
+            }
+          />
 
-            <div className="mt-8">
-              {passwordAllowed && (
-              <FormLayout onSubmit={formik.handleSubmit}>
-                <FormField name="email">
-                  <div className="flex items-center space-x-2 mb-1.5">
-                    <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.email')}</Form.Label>
-                    {formik.touched.email && formik.errors.email && (
-                      <span className="text-red-500 text-xs flex items-center space-x-1">
-                        <Info size={11} />
-                        <span>{formik.errors.email}</span>
-                      </span>
-                    )}
-                  </div>
+          <div className="mt-7">
+            {passwordAllowed && (
+              <FormLayout onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
+                <Form.Field name="email" className="grid">
+                  <AuthLabel error={formik.touched.email && formik.errors.email}>{t('auth.email')}</AuthLabel>
                   <Form.Control asChild>
                     <input
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       value={formik.values.email}
                       type="email"
-                      className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
+                      autoComplete="email"
+                      aria-invalid={formik.touched.email && formik.errors.email ? true : undefined}
+                      className={AUTH_INPUT}
                     />
                   </Form.Control>
-                </FormField>
+                </Form.Field>
 
-                <FormField name="password">
-                  <div className="flex items-center space-x-2 mb-1.5">
-                    <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.password')}</Form.Label>
-                    {formik.touched.password && formik.errors.password && (
-                      <span className="text-red-500 text-xs flex items-center space-x-1">
-                        <Info size={11} />
-                        <span>{formik.errors.password}</span>
-                      </span>
-                    )}
-                    <Link
-                      href="/forgot"
-                      className="text-xs text-black/60 hover:text-black font-semibold transition-colors"
-                    >
-                      {t('auth.forgot_password')}
-                    </Link>
-                  </div>
+                <Form.Field name="password" className="grid">
+                  <AuthLabel
+                    error={formik.touched.password && formik.errors.password}
+                    end={
+                      <Link href="/forgot" className="shrink-0 text-xs font-medium text-neutral-500 hover:text-neutral-900 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20">
+                        {t('auth.forgot_password')}
+                      </Link>
+                    }
+                  >
+                    {t('auth.password')}
+                  </AuthLabel>
                   <Form.Control asChild>
                     <input
                       onChange={formik.handleChange}
@@ -791,110 +733,77 @@ const LoginClient = (props: LoginClientProps) => {
                       value={formik.values.password}
                       type="password"
                       autoComplete="current-password"
-                      className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
+                      aria-invalid={formik.touched.password && formik.errors.password ? true : undefined}
+                      className={AUTH_INPUT}
                     />
                   </Form.Control>
-                </FormField>
+                </Form.Field>
 
-                <TurnstileWidget
-                  ref={turnstileRef}
-                  onToken={setTurnstileToken}
-                  className="mt-2 flex justify-center"
-                />
+                <TurnstileWidget ref={turnstileRef} onToken={setTurnstileToken} className="flex justify-center empty:hidden" />
 
                 <Form.Submit asChild>
-                  <button
-                    disabled={isSubmitting || (turnstileRequired && !turnstileToken)}
-                    className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-2 transition-all disabled:opacity-50"
+                  <AuthButton
+                    loading={isSubmitting}
+                    disabled={turnstileRequired && !turnstileToken}
+                    className="mt-1"
                   >
-                    {isSubmitting ? (
-                      <span className="flex items-center space-x-2">
-                        <span className="w-4 h-4 border-t-2 border-white rounded-full animate-spin" />
-                        <span>{t('common.loading')}</span>
-                      </span>
-                    ) : (
-                      t('auth.login')
-                    )}
-                  </button>
+                    {t('auth.login')}
+                  </AuthButton>
                 </Form.Submit>
               </FormLayout>
-              )}
+            )}
 
-              {/* Divider: only earns its place between two sets of options. */}
-              {passwordAllowed && hasAlternativeMethods && (
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-neutral-200" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-3 text-black/30 bg-white text-xs font-medium">{t('common.or')}</span>
-                  </div>
-                </div>
-              )}
+            {/* Divider: only earns its place between two sets of options. */}
+            {passwordAllowed && hasAlternativeMethods && <AuthDivider />}
 
-              {/* Social & SSO Buttons */}
-              <div className="space-y-2.5">
+            {/* Social & SSO Buttons */}
+            {hasAlternativeMethods && (
+              <div className="flex flex-col gap-2.5">
                 {googleAllowed && (
-                <button
-                  onClick={handleGoogleSignIn}
-                  disabled={isSubmitting}
-                  className="flex justify-center items-center w-full bg-white hover:bg-neutral-50 text-black space-x-3 font-medium p-3 rounded-lg border border-neutral-200 transition-all text-sm disabled:opacity-50"
-                >
-                  <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
-                  <span>{t('auth.sign_in_with_google')}</span>
-                </button>
+                  <AuthProviderButton onClick={handleGoogleSignIn} disabled={isSubmitting} icon={<GoogleMark />}>
+                    {t('auth.sign_in_with_google')}
+                  </AuthProviderButton>
                 )}
 
                 {ssoEnabled && (
-                  <button
+                  <AuthProviderButton
                     onClick={handleSSOLogin}
                     disabled={ssoLoading}
-                    className="flex justify-center items-center w-full bg-white hover:bg-neutral-50 text-black space-x-3 font-medium p-3 rounded-lg border border-neutral-200 transition-all text-sm disabled:opacity-50"
+                    aria-busy={ssoLoading || undefined}
+                    icon={ssoLoading ? <CircleNotch size={16} className="animate-spin" /> : <ShieldCheck size={16} weight="duotone" />}
                   >
-                    <Shield size={16} />
-                    <span>{ssoLoading ? t('common.loading') : t('auth.sign_in_with_sso')}</span>
-                  </button>
+                    {ssoLoading ? t('common.loading') : t('auth.sign_in_with_sso')}
+                  </AuthProviderButton>
                 )}
 
                 {magicLoginAllowed && (
-                <button
-                  type="button"
-                  onClick={openMagicMode}
-                  disabled={isSubmitting}
-                  className="flex justify-center items-center w-full bg-white hover:bg-neutral-50 text-black space-x-3 font-medium p-3 rounded-lg border border-neutral-200 transition-all text-sm disabled:opacity-50"
-                >
-                  <Mail size={16} />
-                  <span>{t('auth.magic_send', { defaultValue: 'Email me a login link' })}</span>
-                </button>
+                  <AuthProviderButton onClick={openMagicMode} disabled={isSubmitting} icon={<EnvelopeSimple size={16} weight="duotone" />}>
+                    {t('auth.magic_send', { defaultValue: 'Email me a login link' })}
+                  </AuthProviderButton>
                 )}
               </div>
-
-              {/* Every method is off, or the only allowed one (SSO) is not set
-                  up yet. Say so instead of rendering an empty page. */}
-              {!passwordAllowed && !hasAlternativeMethods && (
-                <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 flex items-start gap-3">
-                  <Info size={16} className="shrink-0 mt-0.5 text-black/40" />
-                  <p className="text-sm text-black/60">
-                    {t('auth.no_sign_in_method_available', {
-                      defaultValue:
-                        'This organization has restricted how members sign in, and none of the allowed methods are available here. Contact an administrator.',
-                    })}
-                  </p>
-                </div>
-              )}
-
-              {/* Sign Up Link */}
-              <p className="text-center text-sm text-black/35 mt-6">
-                {t('auth.no_account')}{' '}
-                <Link href="/signup" className="text-black font-semibold hover:underline">
-                  {t('auth.sign_up')}
-                </Link>
-              </p>
-            </div>
-              </>
             )}
+
+            {/* Every method is off, or the only allowed one (SSO) is not set
+                up yet. Say so instead of rendering an empty page. */}
+            {!passwordAllowed && !hasAlternativeMethods && (
+              <AuthNotice tone="info">
+                {t('auth.no_sign_in_method_available', {
+                  defaultValue:
+                    'This organization has restricted how members sign in, and none of the allowed methods are available here. Contact an administrator.',
+                })}
+              </AuthNotice>
+            )}
+
+            <AuthFootnote>
+              {t('auth.no_account')}{' '}
+              <Link href="/signup" className={AUTH_LINK}>
+                {t('auth.sign_up')}
+              </Link>
+            </AuthFootnote>
           </div>
-        </div>
+        </>
+      )}
     </AuthLayout>
   )
 }

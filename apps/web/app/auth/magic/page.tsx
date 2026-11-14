@@ -3,7 +3,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useTranslation, Trans } from 'react-i18next'
-import { Loader2, AlertTriangle, RefreshCw, UserRound } from 'lucide-react'
+import { ArrowClockwise, LinkBreak, UserSwitch } from '@phosphor-icons/react'
+import { AuthButton, AuthStatus, AuthStatusScreen, authButtonClass } from '@components/Auth/AuthUI'
 import { useAuth } from '@components/Contexts/AuthContext'
 import { removeQueryParamsFromAddressBar } from '@services/utils/ts/scrubUrl'
 
@@ -170,121 +171,77 @@ export default function MagicLinkConsumePage() {
   if (state === 'confirm') {
     const target = targetEmail
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-gray-100 rounded-full">
-              <UserRound className="w-12 h-12 text-gray-700" />
-            </div>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">{t('auth.magic.switch_account')}</h1>
-          <p className="text-gray-600 mb-6">
+      <AuthStatusScreen>
+        <AuthStatus
+          icon={<UserSwitch size={22} weight="duotone" />}
+          title={t('auth.magic.switch_account')}
+          description={
             <Trans
               i18nKey="auth.magic.switch_account_desc"
               values={{ current: session?.user?.email, target }}
-              components={{ b: <span className="font-medium" /> }}
+              components={{ b: <span className="font-medium text-neutral-800" /> }}
             />
-          </p>
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={continueAsLinkUser}
-              className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-            >
-              {t('auth.magic.continue_as', { email: target })}
-            </button>
-            <Link
-              href="/home"
-              className="block w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              {t('auth.magic.stay_signed_in_as', { email: session?.user?.email })}
-            </Link>
-          </div>
-        </div>
-      </div>
+          }
+        >
+          <AuthButton type="button" onClick={continueAsLinkUser}>
+            <span className="min-w-0 truncate">{t('auth.magic.continue_as', { email: target })}</span>
+          </AuthButton>
+          <Link href="/home" className={authButtonClass('secondary')}>
+            <span className="min-w-0 truncate">{t('auth.magic.stay_signed_in_as', { email: session?.user?.email })}</span>
+          </Link>
+        </AuthStatus>
+      </AuthStatusScreen>
     )
   }
 
   if (state === 'retry') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-amber-100 rounded-full">
-              <RefreshCw className="w-12 h-12 text-amber-600" />
-            </div>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">{t('auth.magic.retry_title')}</h1>
-          <p className="text-gray-600 mb-6">
-            {t('auth.magic.retry_desc', { error })}
-          </p>
-          <button
-            type="button"
-            onClick={redeem}
-            className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-          >
+      <AuthStatusScreen>
+        <AuthStatus
+          tone="warning"
+          icon={<ArrowClockwise size={22} weight="bold" />}
+          title={t('auth.magic.retry_title')}
+          description={t('auth.magic.retry_desc', { error })}
+        >
+          <AuthButton type="button" onClick={redeem}>
             {t('auth.magic.try_again')}
-          </button>
-        </div>
-      </div>
+          </AuthButton>
+        </AuthStatus>
+      </AuthStatusScreen>
     )
   }
 
   if (state === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-amber-100 rounded-full">
-              <AlertTriangle className="w-12 h-12 text-amber-600" />
-            </div>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">
-            {t('auth.magic.invalid_title')}
-          </h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <div className="space-y-3">
-            <Link
-              href="/login"
-              className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-            >
-              {t('auth.magic.request_new_link')}
-            </Link>
-            <Link
-              href="/"
-              className="block w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              {t('auth.magic.go_home')}
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AuthStatusScreen>
+        <AuthStatus
+          tone="warning"
+          icon={<LinkBreak size={22} weight="duotone" />}
+          title={t('auth.magic.invalid_title')}
+          description={error}
+        >
+          <Link href="/login" className={authButtonClass('primary')}>
+            {t('auth.magic.request_new_link')}
+          </Link>
+          <Link href="/" className={authButtonClass('secondary')}>
+            {t('auth.magic.go_home')}
+          </Link>
+        </AuthStatus>
+      </AuthStatusScreen>
     )
   }
 
   if (state === 'success') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <Loader2 className="w-12 h-12 text-green-600 animate-spin" />
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">{t('auth.magic.success')}</h1>
-          <p className="text-gray-500">{t('auth.magic.redirecting')}</p>
-        </div>
-      </div>
+      <AuthStatusScreen>
+        <AuthStatus tone="success" loading title={t('auth.magic.success')} description={t('auth.magic.redirecting')} />
+      </AuthStatusScreen>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <Loader2 className="w-12 h-12 text-gray-600 animate-spin" />
-        </div>
-        <h1 className="text-xl font-semibold text-gray-800 mb-2">{t('auth.magic.signing_in')}</h1>
-        <p className="text-gray-500">{t('auth.magic.verifying')}</p>
-      </div>
-    </div>
+    <AuthStatusScreen>
+      <AuthStatus loading title={t('auth.magic.signing_in')} description={t('auth.magic.verifying')} />
+    </AuthStatusScreen>
   )
 }

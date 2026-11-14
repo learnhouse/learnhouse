@@ -26,6 +26,7 @@ from src.core.ee_hooks import notify_ee_learner_progress
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.org_auth import require_org_membership
 from src.services.courses.activities.access import verify_activity_reader_access
+from src.services.courses.activities.play_link import play_is_available
 
 
 async def _build_trail_read(
@@ -226,6 +227,8 @@ async def add_activity_to_trail(
     user: PublicUser | AnonymousUser,
     activity_uuid: str,
     db_session: AsyncSession,
+    *,
+    completed_by_play: bool = False,
 ) -> TrailRead:
     if isinstance(user, AnonymousUser):
         raise HTTPException(
@@ -257,6 +260,19 @@ async def add_activity_to_trail(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Assignments are completed by submitting them",
+        )
+    # Likewise a play activity: passing the play completes it (EE calls this
+    # with completed_by_play), the learner can't skip it by self-marking. When
+    # the play can't be run (Plays unavailable, play gone) it can't block the
+    # course either, so self-marking is allowed then.
+    if (
+        activity.activity_type == ActivityTypeEnum.TYPE_PLAY
+        and not completed_by_play
+        and await play_is_available(activity, db_session)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Plays are completed by passing them",
         )
 
     if not course:

@@ -81,3 +81,24 @@ describe('stepsDoneFromData', () => {
     expect(stepsDoneFromData({ ...none, inviteCount: 1 })).toEqual(['invite_learners'])
   })
 })
+
+describe('extractEmails', () => {
+  test('finds every address once, lower-cased, in order', async () => {
+    const { extractEmails } = await import('../lib/onboarding.ts')
+    const csv = 'name,email\nAda,Ada@Example.com\nBob,bob@example.org\n"Ada again",ada@example.com\nnot-an-email,x'
+    expect(extractEmails(csv)).toEqual(['ada@example.com', 'bob@example.org'])
+    expect(extractEmails('a@b.co, c@d.io\ne@f.dev')).toEqual(['a@b.co', 'c@d.io', 'e@f.dev'])
+    expect(extractEmails('')).toEqual([])
+  })
+})
+
+describe('daysUntil', () => {
+  test('rounds up, never below zero, null when unknown', async () => {
+    const { daysUntil } = await import('../lib/onboarding.ts')
+    const now = Date.parse('2026-11-14T00:00:00Z')
+    expect(daysUntil('2026-11-16T12:00:00Z', now)).toBe(3)
+    expect(daysUntil('2026-11-01T00:00:00Z', now)).toBe(0)
+    expect(daysUntil(null, now)).toBe(null)
+    expect(daysUntil('nope', now)).toBe(null)
+  })
+})

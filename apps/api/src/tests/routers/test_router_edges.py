@@ -13,7 +13,6 @@ from starlette.datastructures import Headers
 from src.routers import local_content, monitoring
 from src.routers.integrations.zapier import _require_token_right
 from src.routers.orgs.custom_domains import api_check_domain
-from src.routers.playgrounds.playgrounds_generator import _get_course_context
 
 
 # ─── custom domains ──────────────────────────────────────────────────────────
@@ -31,18 +30,6 @@ async def test_domain_check_denies_unknown_domains(db, mock_request):
             await api_check_domain(mock_request, "nope.example.com", db)
     assert exc.value.status_code == 404
     assert exc.value.detail == "not allowed"
-
-
-# ─── playground generator ────────────────────────────────────────────────────
-
-
-async def test_course_context_skipped_when_the_editor_cannot_read_the_course(db, org, course, admin_user, mock_request):
-    """A linked course the caller cannot read is not an error: generate without it."""
-    with patch("src.services.ai.rag.access.build_rag_access_scope", new=AsyncMock(side_effect=HTTPException(status_code=403))), \
-         patch("src.services.ai.rag.query_service.query_course_rag", new_callable=AsyncMock) as rag:
-        context, course_id = await _get_course_context(mock_request, admin_user, course.course_uuid, org.id, db, "make a quiz")
-    assert (context, course_id) == (None, course.id)
-    rag.assert_not_awaited()
 
 
 # ─── monitoring feedback relay ───────────────────────────────────────────────

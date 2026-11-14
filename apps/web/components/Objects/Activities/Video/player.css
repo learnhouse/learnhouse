@@ -44,3 +44,12 @@
     border-radius: 0;
   }
 }
+
+/* Captions on dark: a soft black plate, the page font, readable weight. */
+.learnhouse-player video::cue {
+  background: rgb(0 0 0 / 0.68);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.35;
+}

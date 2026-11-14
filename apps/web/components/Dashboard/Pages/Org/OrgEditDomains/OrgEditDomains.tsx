@@ -4,44 +4,24 @@ import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
-import { Button } from '@components/ui/button'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@components/ui/dialog'
-import { Input } from '@components/ui/input'
-import { Label } from '@components/ui/label'
-import { Badge } from '@components/ui/badge'
-import {
-  Globe,
-  Plus,
-  Copy,
-  Trash2,
-  RefreshCw,
+  ArrowSquareOut,
+  ArrowsClockwise,
   Check,
-  AlertTriangle,
-  ExternalLink,
-  CheckCircle2,
+  CheckCircle,
+  CircleNotch,
   Clock,
-  XCircle,
-  ShieldCheck,
-  ShieldAlert,
+  Globe,
+  Info,
+  ListBullets,
+  Plus,
   Shield,
-  Loader2,
-} from 'lucide-react'
+  ShieldCheck,
+  ShieldWarning,
+  Trash,
+  XCircle,
+} from '@phosphor-icons/react'
 import {
   CustomDomain,
   addCustomDomain,
@@ -53,16 +33,32 @@ import {
   CustomDomainVerificationInfo,
   CustomDomainSSLStatus,
 } from '@services/custom_domains/custom_domains'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import {
+  Button,
+  Chip,
+  ConfirmDialog,
+  EmptyState,
+  FieldLabel,
+  INPUT,
+  formatRelative,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
+import { CopyButton } from '@components/Dashboard/Pages/Org/Developers/devKit'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 
+// Desktop table: header and rows are subgrids of the card grid.
+const TABLE_GRID =
+  'lg:grid lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_auto] lg:gap-x-4'
+const ROW_GRID = 'lg:col-span-full lg:grid lg:grid-cols-subgrid lg:items-center lg:gap-x-4'
+
 const OrgEditDomains: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('dashboard')
   const { handlePlanLimit } = useUpgradeModal()
@@ -72,7 +68,6 @@ const OrgEditDomains: React.FC = () => {
   const [selectedDomain, setSelectedDomain] = useState<CustomDomain | null>(null)
   const [verificationInfo, setVerificationInfo] = useState<CustomDomainVerificationInfo | null>(null)
   const [newDomain, setNewDomain] = useState('')
-  const [copiedField, setCopiedField] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
   const [sslStatuses, setSslStatuses] = useState<Record<string, CustomDomainSSLStatus>>({})
   const [sslLoading, setSslLoading] = useState<Record<string, boolean>>({})
@@ -174,13 +169,6 @@ const OrgEditDomains: React.FC = () => {
     }
   }
 
-  const copyToClipboard = async (text: string, field: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopiedField(field)
-    toast.success(t('dashboard.organization.domains.copied_to_clipboard'))
-    setTimeout(() => setCopiedField(null), 2000)
-  }
-
   const handleCheckSSL = useCallback(async (domain: CustomDomain) => {
     setSslLoading((prev) => ({ ...prev, [domain.domain_uuid]: true }))
     try {
@@ -224,65 +212,67 @@ const OrgEditDomains: React.FC = () => {
     }
   }, [domains, access_token, org?.id, handleCheckSSL])
 
+  const [adding, setAdding] = useState(false)
+  const [opening, setOpening] = useState<string | null>(null)
+
+  const openRecords = async (domain: CustomDomain) => {
+    setOpening(domain.domain_uuid)
+    setSelectedDomain(domain)
+    await loadVerificationInfo(domain.domain_uuid)
+    setOpening(null)
+    setIsVerifyDialogOpen(true)
+  }
+
+  const closeVerify = () => {
+    setIsVerifyDialogOpen(false)
+    setSelectedDomain(null)
+    setVerificationInfo(null)
+  }
+
   const getSSLBadge = (domain: CustomDomain) => {
     if (domain.status !== 'verified') {
-      return (
-        <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-500">
-          <Shield size={12} className="me-1" />
-          {t('dashboard.organization.domains.not_available')}
-        </Badge>
-      )
+      return <Chip icon={<Shield size={12} />}>{t('dashboard.organization.domains.not_available')}</Chip>
     }
 
     const sslStatus = sslStatuses[domain.domain_uuid]
     const loading = sslLoading[domain.domain_uuid]
 
-    if (loading && !sslStatus) {
-      return (
-        <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-600">
-          <Loader2 size={12} className="me-1 animate-spin" />
-          {t('dashboard.organization.domains.checking')}
-        </Badge>
-      )
-    }
-
     if (!sslStatus) {
       return (
-        <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-500">
-          <Shield size={12} className="me-1" />
+        <Chip icon={loading ? <CircleNotch size={12} className="animate-spin" /> : <Shield size={12} />}>
           {t('dashboard.organization.domains.checking')}
-        </Badge>
+        </Chip>
       )
     }
 
     switch (sslStatus.status) {
       case 'active':
         return (
-          <Badge variant="outline" className="border-transparent bg-green-100 text-green-800" title={`${t('dashboard.organization.domains.issuer')}: ${sslStatus.issuer || t('common.unknown')}\n${t('dashboard.organization.domains.expires')}: ${sslStatus.expires || t('common.unknown')}`}>
-            <ShieldCheck size={12} className="me-1" />
+          <Chip
+            tone="emerald"
+            icon={<ShieldCheck size={12} weight="fill" />}
+            title={`${t('dashboard.organization.domains.issuer')}: ${sslStatus.issuer || t('common.unknown')}\n${t('dashboard.organization.domains.expires')}: ${sslStatus.expires || t('common.unknown')}`}
+          >
             {t('dashboard.organization.domains.ssl_active')}
-          </Badge>
+          </Chip>
         )
       case 'provisioning':
         return (
-          <Badge variant="outline" className="border-transparent bg-yellow-100 text-yellow-800" title={sslStatus.message}>
-            <Loader2 size={12} className="me-1 animate-spin" />
+          <Chip tone="amber" icon={<CircleNotch size={12} className="animate-spin" />} title={sslStatus.message}>
             {t('dashboard.organization.domains.provisioning')}
-          </Badge>
+          </Chip>
         )
       case 'invalid':
         return (
-          <Badge variant="outline" className="border-transparent bg-red-100 text-red-800" title={sslStatus.message}>
-            <ShieldAlert size={12} className="me-1" />
+          <Chip tone="rose" icon={<ShieldWarning size={12} weight="fill" />} title={sslStatus.message}>
             {t('dashboard.organization.domains.invalid')}
-          </Badge>
+          </Chip>
         )
       default:
         return (
-          <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-600" title={sslStatus.message}>
-            <ShieldAlert size={12} className="me-1" />
+          <Chip icon={<ShieldWarning size={12} />} title={sslStatus.message}>
             {t('common.unknown')}
-          </Badge>
+          </Chip>
         )
     }
   }
@@ -290,445 +280,396 @@ const OrgEditDomains: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'verified':
+      case 'active':
         return (
-          <Badge variant="outline" className="border-transparent bg-green-100 text-green-800">
-            <CheckCircle2 size={12} className="me-1" />
+          <Chip tone="emerald" icon={<CheckCircle size={12} weight="fill" />}>
             {t('dashboard.organization.domains.verified')}
-          </Badge>
+          </Chip>
         )
       case 'pending':
         return (
-          <Badge variant="outline" className="border-transparent bg-yellow-100 text-yellow-800">
-            <Clock size={12} className="me-1" />
+          <Chip tone="amber" icon={<Clock size={12} weight="bold" />}>
             {t('dashboard.organization.domains.pending')}
-          </Badge>
+          </Chip>
         )
       case 'failed':
         return (
-          <Badge variant="outline" className="border-transparent bg-red-100 text-red-800">
-            <XCircle size={12} className="me-1" />
+          <Chip tone="rose" icon={<XCircle size={12} weight="fill" />}>
             {t('dashboard.organization.domains.failed')}
-          </Badge>
+          </Chip>
         )
       default:
-        return (
-          <Badge variant="secondary">
-            {status}
-          </Badge>
-        )
+        return <Chip>{status}</Chip>
     }
   }
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return t('dashboard.organization.domains.never')
-    try {
-      return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    } catch {
-      return dateStr
-    }
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(d)
   }
+
+  const domainList = Array.isArray(domains) ? domains : []
+  const selectedSsl = selectedDomain ? sslStatuses[selectedDomain.domain_uuid] : undefined
 
   return (
     <FeatureGate feature="custom_domains">
-      <>
-        <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
-          <div className="flex flex-col gap-0">
-            <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mb-3 rounded-md">
-              <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.domains.title')}</h1>
-              <h2 className="text-gray-500 text-md">
-                {t('dashboard.organization.domains.subtitle')}
-              </h2>
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-white nice-shadow text-neutral-600 flex items-center justify-center shrink-0">
+              <Globe size={18} />
             </div>
-
-            <div className="px-5 pb-4">
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-sm text-gray-600">
-                  {t('dashboard.organization.domains.empty_description')}
-                </p>
-                <Button
-                  onClick={() => setIsAddDialogOpen(true)}
-                  className="bg-black text-white hover:bg-black/90"
-                >
-                  <Plus size={16} className="me-2" />
-                  {t('dashboard.organization.domains.add_domain')}
-                </Button>
-              </div>
-
-              {isLoading ? (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-9 bg-gray-100 rounded w-full" />
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex gap-4 px-4 py-3 border-b border-gray-100">
-                      <div className="h-4 bg-gray-100 rounded w-40" />
-                      <div className="h-4 bg-gray-100 rounded w-20" />
-                      <div className="h-4 bg-gray-100 rounded w-20" />
-                      <div className="h-4 bg-gray-100 rounded w-28" />
-                      <div className="h-4 bg-gray-100 rounded w-28" />
-                      <div className="h-4 bg-gray-100 rounded w-24" />
-                    </div>
-                  ))}
-                </div>
-              ) : domains && domains.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('dashboard.organization.domains.table_domain')}</TableHead>
-                      <TableHead>{t('dashboard.organization.domains.table_status')}</TableHead>
-                      <TableHead>{t('dashboard.organization.domains.table_ssl')}</TableHead>
-                      <TableHead>{t('dashboard.organization.domains.table_added')}</TableHead>
-                      <TableHead>{t('dashboard.organization.domains.table_verified')}</TableHead>
-                      <TableHead>{t('dashboard.organization.domains.table_actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {domains.map((domain) => (
-                      <TableRow key={domain.domain_uuid}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Globe size={16} className="text-gray-400" />
-                            <span className="font-medium">{domain.domain}</span>
-                            {domain.status === 'verified' && (
-                              <a
-                                href={`https://${domain.domain}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-gray-600"
-                              >
-                                <ExternalLink size={14} />
-                              </a>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(domain.status)}</TableCell>
-                        <TableCell>{getSSLBadge(domain)}</TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {formatDate(domain.creation_date)}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {domain.verified_at ? formatDate(domain.verified_at) : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {domain.status === 'pending' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={async () => {
-                                  setSelectedDomain(domain)
-                                  await loadVerificationInfo(domain.domain_uuid)
-                                  setIsVerifyDialogOpen(true)
-                                }}
-                              >
-                                <RefreshCw size={14} className="me-1" />
-                                {t('dashboard.organization.domains.verify')}
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => {
-                                setSelectedDomain(domain)
-                                setIsDeleteDialogOpen(true)
-                              }}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Globe size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>{t('dashboard.organization.domains.no_domains_yet')}</p>
-                  <p className="text-sm">{t('dashboard.organization.domains.add_first_domain')}</p>
-                </div>
-              )}
-            </div>
+            <p className="min-w-0 text-sm text-neutral-500">{t('dashboard.organization.domains.empty_description')}</p>
           </div>
+          <Button variant="primary" icon={<Plus size={14} weight="bold" />} onClick={() => setIsAddDialogOpen(true)}>
+            {t('dashboard.organization.domains.add_domain')}
+          </Button>
         </div>
 
-        {/* Add Domain Dialog */}
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent>
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle>{t('dashboard.organization.domains.add_custom_domain')}</DialogTitle>
-              <DialogDescription>
-                {t('dashboard.organization.domains.add_custom_domain_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-6 pb-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="domain">{t('dashboard.organization.domains.domain_label')}</Label>
-                <Input
-                  id="domain"
-                  value={newDomain}
-                  onChange={(e) => setNewDomain(e.target.value)}
-                  placeholder={t('dashboard.organization.domains.domain_placeholder')}
-                />
-                <p className="text-xs text-gray-500">
-                  {t('dashboard.organization.domains.domain_hint')}
-                </p>
-              </div>
-
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  {t('common.cancel')}
-                </Button>
-                <Button onClick={handleAddDomain}>{t('dashboard.organization.domains.add_domain')}</Button>
-              </DialogFooter>
+        <div className={`bg-white rounded-2xl nice-shadow overflow-hidden ${TABLE_GRID}`}>
+          {(isLoading || domainList.length > 0) && (
+            <div className={`hidden ${ROW_GRID} px-5 py-3 border-b border-neutral-100 text-xs font-medium text-neutral-500`}>
+              <span>{t('dashboard.organization.domains.table_domain')}</span>
+              <span>{t('dashboard.organization.domains.table_status')}</span>
+              <span>{t('dashboard.organization.domains.table_ssl')}</span>
+              <span>{t('dashboard.organization.domains.table_added')}</span>
+              <span>{t('dashboard.organization.domains.table_verified')}</span>
+              <span className="sr-only">{t('dashboard.organization.domains.table_actions')}</span>
             </div>
-          </DialogContent>
-        </Dialog>
+          )}
 
-        {/* Verify Domain Dialog */}
-        <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle>{t('dashboard.organization.domains.verify_domain')}</DialogTitle>
-              <DialogDescription>
-                {t('dashboard.organization.domains.verify_domain_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-6 pb-6 space-y-4">
-              {verificationInfo && (
-                <>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
-                      <div>
-                        <p className="font-medium text-blue-800">{t('dashboard.organization.domains.dns_config_required')}</p>
-                        <p className="text-sm text-blue-700">
-                          {t('dashboard.organization.domains.dns_config_description')}
-                        </p>
-                      </div>
-                    </div>
+          {isLoading ? (
+            <div className="animate-pulse divide-y divide-neutral-100 lg:col-span-full">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-4 px-5 py-4">
+                  <div className="h-4 bg-neutral-100 rounded w-48" />
+                  <div className="h-6 w-20 bg-neutral-100 rounded-full" />
+                  <div className="h-6 w-20 bg-neutral-100 rounded-full" />
+                </div>
+              ))}
+            </div>
+          ) : domainList.length === 0 ? (
+            <div className="lg:col-span-full">
+              <EmptyState
+                icon={<Globe size={22} />}
+                title={t('dashboard.organization.domains.no_domains_yet')}
+                description={t('dashboard.organization.domains.add_first_domain')}
+                action={
+                  <Button variant="primary" icon={<Plus size={14} weight="bold" />} onClick={() => setIsAddDialogOpen(true)}>
+                    {t('dashboard.organization.domains.add_domain')}
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <ul className={`divide-y divide-neutral-100 ${ROW_GRID}`}>
+              {domainList.map((domain) => (
+                <li key={domain.domain_uuid} className={`${ROW_GRID} px-5 py-3.5 flex flex-col gap-2 hover:bg-neutral-50/60 transition-colors`}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Globe size={16} className="text-neutral-400 shrink-0" />
+                    <code dir="ltr" className="font-mono text-[13px] font-medium text-neutral-900 truncate">{domain.domain}</code>
+                    {domain.status === 'verified' && (
+                      <a
+                        href={`https://${domain.domain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-neutral-400 hover:text-neutral-700 shrink-0"
+                        aria-label={domain.domain}
+                      >
+                        <ArrowSquareOut size={14} />
+                      </a>
+                    )}
+                    <CopyButton value={domain.domain} label={false} variant="ghost" />
                   </div>
-
-                  {/* TXT Record */}
-                  <div className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{t('dashboard.organization.domains.txt_record')}</Badge>
-                      <span className="text-sm text-gray-500">{t('dashboard.organization.domains.for_verification')}</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <Label className="text-xs text-gray-500">{t('dashboard.organization.domains.host_name')}</Label>
-                        <div className="flex gap-2 mt-1">
-                          <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm break-all">
-                            {verificationInfo.txt_record_host}
-                          </code>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => copyToClipboard(verificationInfo.txt_record_host, 'txt_host')}
-                          >
-                            {copiedField === 'txt_host' ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                          </Button>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">{t('dashboard.organization.domains.value')}</Label>
-                        <div className="flex gap-2 mt-1">
-                          <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm break-all">
-                            {verificationInfo.txt_record_value}
-                          </code>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => copyToClipboard(verificationInfo.txt_record_value, 'txt_value')}
-                          >
-                            {copiedField === 'txt_value' ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {getStatusBadge(domain.status)}
+                    <span className="lg:hidden">{getSSLBadge(domain)}</span>
                   </div>
-
-                  {/* CNAME Record */}
-                  <div className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{t('dashboard.organization.domains.cname_record')}</Badge>
-                      <span className="text-sm text-gray-500">{t('dashboard.organization.domains.for_routing')}</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <Label className="text-xs text-gray-500">{t('dashboard.organization.domains.host_name')}</Label>
-                        <div className="flex gap-2 mt-1">
-                          <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm break-all">
-                            {verificationInfo.cname_record_host}
-                          </code>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => copyToClipboard(verificationInfo.cname_record_host, 'cname_host')}
-                          >
-                            {copiedField === 'cname_host' ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                          </Button>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">{t('dashboard.organization.domains.value_target')}</Label>
-                        <div className="flex gap-2 mt-1">
-                          <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm break-all">
-                            {verificationInfo.cname_record_value}
-                          </code>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => copyToClipboard(verificationInfo.cname_record_value, 'cname_value')}
-                          >
-                            {copiedField === 'cname_value' ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="hidden lg:block">{getSSLBadge(domain)}</div>
+                  <div className="text-xs text-neutral-600" title={formatDate(domain.creation_date)}>
+                    <span className="lg:hidden text-neutral-400">{t('dashboard.organization.domains.table_added')}: </span>
+                    {formatRelative(domain.creation_date, i18n.language) ?? '—'}
                   </div>
+                  <div className="text-xs text-neutral-600">
+                    <span className="lg:hidden text-neutral-400">{t('dashboard.organization.domains.table_verified')}: </span>
+                    {domain.verified_at ? formatDate(domain.verified_at) : <span className="text-neutral-400">—</span>}
+                  </div>
+                  <div className="flex items-center gap-1 lg:justify-end">
+                    {domain.status === 'pending' ? (
+                      <Button
+                        size="sm"
+                        onClick={() => openRecords(domain)}
+                        loading={opening === domain.domain_uuid}
+                        icon={<ArrowsClockwise size={13} />}
+                      >
+                        {t('dashboard.organization.domains.verify')}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openRecords(domain)}
+                        loading={opening === domain.domain_uuid}
+                        aria-label={t('dashboard.developers.domains.dns_records')}
+                        title={t('dashboard.developers.domains.dns_records')}
+                        icon={<ListBullets size={15} />}
+                      />
+                    )}
+                    <Button
+                      variant="danger-ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedDomain(domain)
+                        setIsDeleteDialogOpen(true)
+                      }}
+                      aria-label={t('dashboard.organization.domains.delete_domain')}
+                      title={t('dashboard.organization.domains.delete_domain')}
+                      icon={<Trash size={15} />}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
 
-                  {/* SSL Certificate Status */}
-                  {selectedDomain && selectedDomain.status === 'verified' && (
-                    <div className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{t('dashboard.organization.domains.ssl_certificate')}</Badge>
-                          <span className="text-sm text-gray-500">{t('dashboard.organization.domains.https_status')}</span>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCheckSSL(selectedDomain)}
-                          disabled={sslLoading[selectedDomain.domain_uuid]}
-                        >
-                          {sslLoading[selectedDomain.domain_uuid] ? (
-                            <Loader2 size={14} className="me-1 animate-spin" />
-                          ) : (
-                            <RefreshCw size={14} className="me-1" />
+      {/* Add domain */}
+      <Modal
+        isDialogOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        size="md"
+        preventClose={adding}
+        icon={<Globe size={16} />}
+        dialogTitle={t('dashboard.organization.domains.add_custom_domain')}
+        dialogDescription={t('dashboard.organization.domains.add_custom_domain_desc')}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setIsAddDialogOpen(false)} disabled={adding}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="primary"
+              loading={adding}
+              onClick={async () => {
+                setAdding(true)
+                await handleAddDomain()
+                setAdding(false)
+              }}
+            >
+              {t('dashboard.organization.domains.add_domain')}
+            </Button>
+          </div>
+        }
+        dialogContent={
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              setAdding(true)
+              await handleAddDomain()
+              setAdding(false)
+            }}
+          >
+            <label className="block">
+              <FieldLabel>{t('dashboard.organization.domains.domain_label')}</FieldLabel>
+              <input
+                autoFocus
+                dir="ltr"
+                className={`${INPUT} font-mono text-[13px]`}
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                placeholder={t('dashboard.organization.domains.domain_placeholder')}
+              />
+            </label>
+            <p className="mt-2 text-xs text-neutral-500">{t('dashboard.organization.domains.domain_hint')}</p>
+          </form>
+        }
+      />
+
+      {/* DNS records / verification */}
+      <Modal
+        isDialogOpen={isVerifyDialogOpen}
+        onOpenChange={(open) => (open ? setIsVerifyDialogOpen(true) : closeVerify())}
+        size="lg"
+        preventClose={isVerifying}
+        icon={<ListBullets size={16} />}
+        dialogTitle={
+          selectedDomain?.status === 'pending'
+            ? t('dashboard.organization.domains.verify_domain')
+            : t('dashboard.developers.domains.dns_records')
+        }
+        dialogDescription={
+          selectedDomain ? (
+            <span className="font-mono" dir="ltr">
+              {selectedDomain.domain}
+            </span>
+          ) : (
+            t('dashboard.organization.domains.verify_domain_desc')
+          )
+        }
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button onClick={closeVerify} disabled={isVerifying}>
+              {t('common.close')}
+            </Button>
+            {selectedDomain?.status !== 'verified' && (
+              <Button variant="primary" onClick={handleVerifyDomain} loading={isVerifying} icon={<Check size={14} weight="bold" />}>
+                {isVerifying ? t('dashboard.organization.domains.verifying') : t('dashboard.organization.domains.verify_dns')}
+              </Button>
+            )}
+          </div>
+        }
+        dialogContent={
+          <div className="flex flex-col gap-5">
+            <div className="flex items-start gap-3 rounded-xl bg-sky-50 ring-1 ring-inset ring-sky-600/15 px-3.5 py-3">
+              <Info size={18} weight="fill" className="text-sky-500 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-sky-900">{t('dashboard.organization.domains.dns_config_required')}</p>
+                <p className="mt-0.5 text-xs text-sky-800/80">{t('dashboard.organization.domains.dns_config_description')}</p>
+              </div>
+            </div>
+
+            {verificationInfo ? (
+              <div className="rounded-xl ring-1 ring-inset ring-neutral-200/80 overflow-hidden">
+                <div className="hidden sm:grid grid-cols-[5.5rem_minmax(0,1fr)_minmax(0,1.4fr)] gap-x-4 px-4 py-2.5 border-b border-neutral-100 text-xs font-medium text-neutral-500">
+                  <span>{t('dashboard.developers.domains.type')}</span>
+                  <span>{t('dashboard.organization.domains.host_name')}</span>
+                  <span>{t('dashboard.organization.domains.value_target')}</span>
+                </div>
+                <div className="divide-y divide-neutral-100">
+                  <DnsRecord
+                    type="TXT"
+                    purpose={t('dashboard.organization.domains.for_verification')}
+                    host={verificationInfo.txt_record_host}
+                    value={verificationInfo.txt_record_value}
+                  />
+                  <DnsRecord
+                    type="CNAME"
+                    purpose={t('dashboard.organization.domains.for_routing')}
+                    host={verificationInfo.cname_record_host}
+                    value={verificationInfo.cname_record_value}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl ring-1 ring-inset ring-neutral-200/80 p-4 animate-pulse space-y-3">
+                <div className="h-4 bg-neutral-100 rounded w-2/3" />
+                <div className="h-4 bg-neutral-100 rounded w-1/2" />
+              </div>
+            )}
+
+            {/* SSL certificate status */}
+            {selectedDomain && selectedDomain.status === 'verified' && (
+              <div className="rounded-xl ring-1 ring-inset ring-neutral-200/80 px-4 py-3.5 flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <ShieldCheck size={16} className="text-neutral-500 shrink-0" />
+                    <span className="text-sm font-semibold text-neutral-900">{t('dashboard.organization.domains.ssl_certificate')}</span>
+                    <span className="text-xs text-neutral-400">{t('dashboard.organization.domains.https_status')}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => handleCheckSSL(selectedDomain)}
+                    loading={sslLoading[selectedDomain.domain_uuid]}
+                    icon={<ArrowsClockwise size={13} />}
+                  >
+                    {t('dashboard.organization.domains.check')}
+                  </Button>
+                </div>
+                {selectedSsl ? (
+                  <div className="flex items-start gap-2.5">
+                    {selectedSsl.has_ssl ? (
+                      <ShieldCheck size={18} weight="fill" className="text-emerald-500 shrink-0" />
+                    ) : selectedSsl.status === 'provisioning' ? (
+                      <CircleNotch size={18} className="text-amber-500 shrink-0 animate-spin" />
+                    ) : (
+                      <ShieldWarning size={18} weight="fill" className="text-rose-500 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm text-neutral-800">{selectedSsl.message}</p>
+                      {selectedSsl.has_ssl && (
+                        <div className="mt-1 flex flex-wrap gap-x-4 text-xs text-neutral-500">
+                          {selectedSsl.issuer && (
+                            <span>
+                              {t('dashboard.organization.domains.issuer')}: {selectedSsl.issuer}
+                            </span>
                           )}
-                          {t('dashboard.organization.domains.check')}
-                        </Button>
-                      </div>
-                      {sslStatuses[selectedDomain.domain_uuid] ? (
-                        <div className={`rounded-lg p-3 ${
-                          sslStatuses[selectedDomain.domain_uuid].has_ssl
-                            ? 'bg-green-50 border border-green-200'
-                            : sslStatuses[selectedDomain.domain_uuid].status === 'provisioning'
-                            ? 'bg-yellow-50 border border-yellow-200'
-                            : 'bg-red-50 border border-red-200'
-                        }`}>
-                          <div className="flex items-start gap-2">
-                            {sslStatuses[selectedDomain.domain_uuid].has_ssl ? (
-                              <ShieldCheck size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
-                            ) : sslStatuses[selectedDomain.domain_uuid].status === 'provisioning' ? (
-                              <Loader2 size={18} className="text-yellow-600 flex-shrink-0 mt-0.5 animate-spin" />
-                            ) : (
-                              <ShieldAlert size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
-                            )}
-                            <div>
-                              <p className={`text-sm font-medium ${
-                                sslStatuses[selectedDomain.domain_uuid].has_ssl
-                                  ? 'text-green-800'
-                                  : sslStatuses[selectedDomain.domain_uuid].status === 'provisioning'
-                                  ? 'text-yellow-800'
-                                  : 'text-red-800'
-                              }`}>
-                                {sslStatuses[selectedDomain.domain_uuid].message}
-                              </p>
-                              {sslStatuses[selectedDomain.domain_uuid].has_ssl && (
-                                <div className="text-xs text-green-700 mt-1 space-y-0.5">
-                                  {sslStatuses[selectedDomain.domain_uuid].issuer && (
-                                    <p>{t('dashboard.organization.domains.issuer')}: {sslStatuses[selectedDomain.domain_uuid].issuer}</p>
-                                  )}
-                                  {sslStatuses[selectedDomain.domain_uuid].expires && (
-                                    <p>{t('dashboard.organization.domains.expires')}: {sslStatuses[selectedDomain.domain_uuid].expires}</p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Loader2 size={14} className="animate-spin" />
-                          {t('dashboard.organization.domains.checking_ssl')}
+                          {selectedSsl.expires && (
+                            <span>
+                              {t('dashboard.organization.domains.expires')}: {selectedSsl.expires}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </>
-              )}
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsVerifyDialogOpen(false)
-                    setSelectedDomain(null)
-                    setVerificationInfo(null)
-                  }}
-                >
-                  {t('common.close')}
-                </Button>
-                <Button onClick={handleVerifyDomain} disabled={isVerifying}>
-                  {isVerifying ? (
-                    <>
-                      <RefreshCw size={16} className="me-2 animate-spin" />
-                      {t('dashboard.organization.domains.verifying')}
-                    </>
-                  ) : (
-                    <>
-                      <Check size={16} className="me-2" />
-                      {t('dashboard.organization.domains.verify_dns')}
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Domain Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle className="flex items-center gap-2 text-red-600">
-                <AlertTriangle size={20} />
-                {t('dashboard.organization.domains.delete_domain_title')}
-              </DialogTitle>
-              <DialogDescription>
-                {t('dashboard.organization.domains.delete_domain_confirm')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-6 pb-6">
-              {selectedDomain && (
-                <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Globe size={16} className="text-gray-400" />
-                    <span className="font-medium">{selectedDomain.domain}</span>
                   </div>
-                </div>
-              )}
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                  {t('common.cancel')}
-                </Button>
-                <Button variant="destructive" onClick={handleDeleteDomain}>
-                  {t('dashboard.organization.domains.delete_domain')}
-                </Button>
-              </DialogFooter>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-neutral-500">
+                    <CircleNotch size={14} className="animate-spin" />
+                    {t('dashboard.organization.domains.checking_ssl')}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        }
+      />
+
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open)
+          if (!open) setSelectedDomain(null)
+        }}
+        title={t('dashboard.organization.domains.delete_domain_title')}
+        message={
+          <>
+            {t('dashboard.organization.domains.delete_domain_confirm')}
+            {selectedDomain && (
+              <span className="mt-3 flex items-center gap-2 rounded-lg bg-neutral-50 ring-1 ring-inset ring-neutral-200/70 px-3 py-2">
+                <Globe size={14} className="text-neutral-400 shrink-0" />
+                <code dir="ltr" className="font-mono text-xs text-neutral-800 truncate">{selectedDomain.domain}</code>
+              </span>
+            )}
+          </>
+        }
+        confirmLabel={t('dashboard.organization.domains.delete_domain')}
+        onConfirm={handleDeleteDomain}
+      />
     </FeatureGate>
+  )
+}
+
+// One DNS record: type, host and value, each copyable in mono.
+function DnsRecord({ type, purpose, host, value }: { type: string; purpose: string; host: string; value: string }) {
+  const { t } = useTranslation()
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[5.5rem_minmax(0,1fr)_minmax(0,1.4fr)] gap-x-4 gap-y-2 px-4 py-3 sm:items-center">
+      <div>
+        <span className="inline-flex items-center h-5 px-1.5 rounded-md bg-neutral-900 text-white font-mono text-[10.5px] font-bold tracking-wide">
+          {type}
+        </span>
+        <p className="mt-1 text-[11px] text-neutral-400">{purpose}</p>
+      </div>
+      <DnsValue label={t('dashboard.organization.domains.host_name')} value={host} />
+      <DnsValue label={t('dashboard.organization.domains.value_target')} value={value} />
+    </div>
+  )
+}
+
+function DnsValue({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <span className="sm:hidden block mb-1 text-[11px] font-medium text-neutral-400">{label}</span>
+      <div className="flex items-center gap-1 rounded-lg bg-neutral-50 ring-1 ring-inset ring-neutral-200/80 ps-2.5 pe-1 py-1 min-w-0">
+        <code dir="ltr" className="flex-1 min-w-0 font-mono text-[12px] text-neutral-800 break-all">
+          {value}
+        </code>
+        <CopyButton value={value} label={false} variant="ghost" />
+      </div>
+    </div>
   )
 }
 

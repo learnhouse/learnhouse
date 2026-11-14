@@ -98,7 +98,7 @@ export function CertificateShowcase({
             {subject}
           </div>
 
-          <aside className="space-y-4 lg:sticky lg:top-24">
+          <aside className="space-y-4 lg:sticky lg:top-[calc(6rem+var(--lh-company-bar-h,0px))]">
             <div className="bg-white rounded-xl nice-shadow p-5 space-y-2.5">
               {isOwner && (
                 <>

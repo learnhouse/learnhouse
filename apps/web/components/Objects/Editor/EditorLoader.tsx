@@ -13,6 +13,7 @@ import EmbedActivity from '@components/Objects/Activities/Embed/EmbedActivity'
 import ResourceActivity from '@components/Objects/Activities/Resource/ResourceActivity'
 import OnboardingTracker from '@components/Dashboard/Onboarding/OnboardingTracker'
 import { useRegisterAtlasPageContext } from '@ee/components/Atlas/AtlasMiniContext'
+import TranslationGate, { useEditorLocaleParam } from './Translation/TranslationGate'
 
 interface EditorLoaderProps {
   courseid: string
@@ -32,12 +33,19 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
   const { t } = useTranslation()
   const { accessToken: access_token } = useAuth()
   const [editorReady, setEditorReady] = React.useState(false)
+  const markEditorReady = React.useCallback(() => setEditorReady(true), [])
+  // `?lang=fr`: edit that translation of the page (Translation/TranslationGate)
+  const locale = useEditorLocaleParam()
 
   const { data: bootstrap, error: bootstrapError } = useQuery({
     queryKey: queryKeys.activity.editorBootstrap(activityuuid),
     queryFn: () => apiFetch(`${getAPIUrl()}activities/activity_${activityuuid}/editor-bootstrap`, access_token ?? undefined),
     enabled: !!access_token && !!activityuuid,
     staleTime: 60_000,
+    // The editor owns the content once open (live room or its own saves): a
+    // background refetch would reset it, or unmount it on a transient error
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   })
 
   const courseInfo = bootstrap?.course
@@ -61,7 +69,8 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
       : null,
   )
 
-  if (bootstrapError) {
+  // Only when nothing loaded: a failed background refetch must not unmount an open editor
+  if (bootstrapError && !bootstrap) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500">
         <p className="text-sm">{t('editor.loader.failed')}</p>
@@ -116,13 +125,18 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
             transition: 'opacity 300ms ease-out',
           }}
         >
-          <EditorWrapper
-            org={org}
-            course={courseInfo}
-            activity={activity}
-            content={activity.content}
-            onEditorReady={() => setEditorReady(true)}
-          />
+          <TranslationGate locale={locale} activity={activity} course={courseInfo} onReady={markEditorReady}>
+            {(translation) => (
+              <EditorWrapper
+                key={locale || 'source'}
+                org={org}
+                course={courseInfo}
+                activity={translation?.activity ?? activity}
+                content={translation ? translation.content : activity.content}
+                onEditorReady={markEditorReady}
+              />
+            )}
+          </TranslationGate>
         </div>
       )}
       <OnboardingTracker />

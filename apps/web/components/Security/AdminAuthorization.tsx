@@ -16,6 +16,9 @@ type AuthorizationProps = {
 // This component wraps the whole dashboard layout, so gate all of it: the old
 // allow-list named 3 sections and left /dash plus 10 others open to any member.
 const ADMIN_PATH_PREFIX = '/dash';
+// Pages under /dash that members reach without an admin role; each checks its
+// own access with the API (My team: managers see their reports' training).
+const MEMBER_DASH_PATHS = ['/dash/my-team', '/dash/my-groups'];
 
 const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizationMode }) => {
   const session = useLHSession() as any;
@@ -33,6 +36,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
 
   const isAdminPath = useMemo(() => {
     if (typeof pathname !== 'string') return false;
+    if (MEMBER_DASH_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return false;
     // The trailing check keeps a hypothetical sibling like /dashboard out.
     return pathname === ADMIN_PATH_PREFIX || pathname.startsWith(`${ADMIN_PATH_PREFIX}/`);
   }, [pathname]);

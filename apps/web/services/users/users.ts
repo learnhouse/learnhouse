@@ -42,9 +42,9 @@ export async function getUserByUsername(username: string, access_token: string) 
  * SECURITY: Requires authentication.
  * The access_token parameter is required.
  */
-export async function getCoursesByUser(user_id: string, access_token: string) {
+export async function getCoursesByUser(user_id: string, access_token: string, limit?: number) {
   const result = await fetch(
-    `${getAPIUrl()}users/${user_id}/courses`,
+    `${getAPIUrl()}users/${user_id}/courses${limit ? `?limit=${Math.min(50, Math.max(1, Math.floor(limit)))}` : ''}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   const res = await getResponseMetadata(result)

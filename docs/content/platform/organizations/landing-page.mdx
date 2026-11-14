@@ -6,64 +6,65 @@ import { Callout } from '@/components/mdx'
 
 # Landing Page
 
-By default, your organization's home page lists your courses and other content. The landing page builder lets you replace it with your own page, made of sections you stack and style: a hero, course lists, testimonials, pricing, an FAQ and more.
+Your organization's home page is a page you design in the **page builder**: you stack sections, edit text in place, and style everything for desktop, tablet and phone. Course lists, pricing, paths, communities and forms pull in your live content.
 
 <YouTube video="growth-2" />
 
-Go to **Organization** → **Landing Page** and turn on the switch at the top. While it is off, visitors see the default home page. Your sections are kept either way.
+Go to **Website** in the sidebar. It shows what visitors see right now, whether the home page is live, your pages, your theme and the template gallery. Click **Open the builder** to edit. (The old **Organization** → **Landing Page** link opens it too.)
+
+<Callout type="info">
+Until you publish your own home page, visitors see a default page built from your organization: a short welcome and your course catalog. Organizations that had a landing page from the previous editor were converted automatically, sections, colors and backgrounds included.
+</Callout>
 
 ## Starting points
 
-- **Start from a template**: **Academy**, **Launch**, **Product training** or **Minimal**. A template fills the page with example sections you then edit.
-- **Import**: load a page from a JSON file (1 to 60 sections). Imported pages are not live until you save.
-- **Export**: download the current page as a JSON file you can import again later.
+- **Templates**: fifteen designed templates, one per kind of school (academy, bootcamp, corporate training, university, creator and coach, language school, health and CE credits, coding school, kids, nonprofit, cohort course, membership community, partner academy, art and design school, certification body), plus the Simple catalog. Each has its own colors, fonts and layout, real copy with your organization's name, and live sections that show your own courses, paths, live sessions and communities. Preview a template full size on desktop or phone, in its own colors or in **My brand** (your brand color and fonts), then use it on the home page or a new page. Your current draft goes to the history first.
+- **Blank page**: start empty and add sections from the library.
+- **Write with AI**: describe your organization and the page you want, and AI drafts it for you to review.
 
-<img src="/img/pages/organizations/landing-page-templates.webp" alt="The Landing Page tab with the switch on, Add Section, Page settings, Import and Export, and the four templates" width={1600} height={900} style={{ borderRadius: 10 }} />
+## The builder
 
-## Page settings
+- **Add** (left panel): ready-made sections (hero, courses, pricing, testimonials, FAQ, navbar, footer and more) and single elements (heading, text, button, image, video, form, countdown…). Click to add, or drag onto the page. A navbar always goes to the top and a footer to the bottom.
+- **Designed** (left panel): every section of the fifteen templates, to add one at a time.
+- **Saved**: sections you saved with the bookmark in the inspector, ready to add to any page of your site.
+- **Layers**: the page as a tree. Drag to reorder, click to select.
+- **Inspector** (right panel): the selected element's **Content**, **Style** and **Settings**. With nothing selected it shows the page **Theme**.
+- **Breakpoints**: switch between desktop, tablet and phone at the top. A style change made on tablet or phone applies to that size and smaller only.
+- Double-click a heading, text or button to edit its text in place. Undo and redo work as usual (Cmd/Ctrl+Z).
 
-**Page settings** apply to the whole page: the background, the **Content width** (Normal or Wide) and the **Gap between sections** (none, small or medium).
+## Theme and fonts
 
-## Sections
+The theme sets the page colors, corner radius, button style, width and spacing. **Brand** values follow your organization's branding.
 
-Click **Add Section** and pick a type:
+Pick a **heading font** and a **body font** from the curated list. Each name is shown in its own font, and **Font pairings** set both at once. **System** fonts use the visitor's own fonts and load instantly. Any element can use its own font from **Style** → **Typography**. Fonts are only downloaded when the page uses them.
 
-| Section | Description |
-| --- | --- |
-| **Hero** | A heading, subheading and buttons, with an optional illustration, background and dark overlay. Height can go up to full screen. |
-| **Text & Image** | Text and an image side by side, with buttons |
-| **Logos** | A row of logos, such as partners or clients |
-| **People** | Team members with name, description and photo |
-| **Courses** | Courses you pick, or your latest courses (you set how many) |
-| **Video** | Embed a YouTube, Vimeo or Loom video, or upload your own |
-| **Text** | A heading and formatted text, written in Markdown |
-| **Features** | A grid of 2 to 4 columns of cards with an emoji icon, a title and a description |
-| **Stats** | Big numbers with a label, like learners or courses |
-| **Testimonials** | Quotes with name, role or company and photo |
-| **FAQ** | Questions that expand to show their answer |
-| **Call to action** | A bold banner with a heading and buttons |
-| **Gallery** | A grid of 2 to 4 columns of images |
-| **Spacer** | Empty space, with an optional dividing line |
-| **Pricing** | Plan cards with a price, a feature list and a button. A card can be linked to a store product so its price and checkout link stay in sync with your [offers](/platform/payments/offers). |
-| **Steps** | A numbered sequence, side by side or stacked |
-| **Columns** | Two to four columns of Markdown text |
-| **Image** | A single large image with an optional caption and link |
-| **Embed** | A form, calendar, map or board from a supported service: Calendly, Typeform, Tally, Airtable, Google Docs, Forms and Maps, Figma, Loom, Canva, Miro, YouTube or Vimeo |
-| **Announcement** | A slim bar for news or promotions, with an optional link |
-| **Countdown** | A live timer to a launch or deadline, with text to show once it is over |
+**Use my organization's theme** sets the page's colors and fonts to follow your branding, so a later change in **Branding** → **Theme** updates the page too.
 
-## Options on every section
+The page shows in the colors you chose, whatever the visitor's light or dark mode setting. To follow visitors in dark mode, turn on a **Dark palette** (page theme → Dark mode) and pick its colors. If your organization keeps its public pages **Always light** (Branding → Theme → Dark mode), the dark palette is not used.
+
+## Options on every element
 
 | Option | Choices |
 | --- | --- |
 | Visibility | **Everyone**, **Signed-in users only** or **Signed-out visitors only** |
-| **Hide this section** | Keep it in the editor without showing it |
-| **Devices** | **All devices**, **Desktop only** or **Mobile only** |
-| **Show from** / **Show until** | A date and time window, handy for launches and promotions |
-| Styling | Background (none, solid color, gradient or image), **Text color**, **Vertical spacing**, **Width** (Normal or Narrow), **Title alignment**, an **Anchor** to link to the section, and an **Entrance animation** (none, fade in or slide up) |
+| Hide on | Desktop, tablet or phone |
+| Schedule | Show from / until a date and time, handy for launches and promotions |
+| Animation | Fade or slide in as it scrolls into view |
+| Anchor | An id to link to, like `#pricing` |
 
-Save to publish your changes.
+## Search and sharing
 
-<Callout type="info">
-Visibility rules make it easy to show a sign-up pitch to visitors and a "continue learning" section to members on the same page.
-</Callout>
+In the page theme, set the **page title**, **description** and a **social image** for links shared on social networks and chat apps. **Hide from search engines** keeps a page out of search results.
+
+## Saving, history and publishing
+
+Changes save automatically as a draft. **Preview** opens the draft in a new tab with a private link. **Publish** shows what changed since the live version and puts the draft live. **History** keeps every publish, autosave checkpoint and AI edit, and can put any of them back into the draft. If the page is edited in another tab or by Atlas while you work, the builder tells you instead of overwriting.
+
+## Extra pages and custom code
+
+- **Extra pages** such as `/p/about` are included from the **Standard** plan (up to 20). A new page starts with the home page's navigation and footer, and can be added to the home page's navigation in one click.
+- The **Custom code** element (your own HTML and CSS, shown in a sandbox) is included from the **Pro** plan.
+
+## Atlas, MCP and the API
+
+Atlas can design and edit pages for you: ask it to build a launch page or to make the hero warmer. Its edits land in the draft with a review bar, and it only publishes when you approve. The same landing tools are available to AI apps over MCP (`?toolsets=landing`) and to API tokens, including listing and applying templates, adding a template section, and reading or changing the organization theme (`get_org_theme`, `update_org_theme`). Theme changes go live on every public page at once, so they always need your approval.

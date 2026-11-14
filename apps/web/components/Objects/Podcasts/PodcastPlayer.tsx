@@ -1,345 +1,395 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
-import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
+import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
-import { useOrg } from '@components/Contexts/OrgContext'
 import {
-  getPodcastThumbnailMediaDirectory,
-  getEpisodeThumbnailMediaDirectory,
-  getPodcastAudioStreamUrl,
-} from '@services/media/media'
-import {
-  Play,
+  ArrowClockwise,
+  ArrowCounterClockwise,
+  CaretDown,
   Pause,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  VolumeX,
+  Play,
+  SpeakerHigh,
+  SpeakerLow,
+  SpeakerSlash,
   X,
-  Minimize2,
-  Maximize2,
-} from 'lucide-react'
-import { formatDuration } from '@services/podcasts/episodes'
-import WaveSurfer from 'wavesurfer.js'
+} from '@phosphor-icons/react'
+import { PLAYBACK_RATES, usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
+import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
+import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+import { getUriWithOrg } from '@services/config/config'
+import { episodeCover, formatClock } from '@components/Objects/Podcasts/podcastUi'
+import { resourcePath } from '@/lib/seo/paths'
 
+/**
+ * The persistent podcast player. Desktop: one bar along the bottom with every
+ * control. Phones: a compact floating bar above the tab bar that opens into a
+ * full-screen "now playing" sheet. Playback itself lives in the context, so
+ * the audio keeps going across page navigations.
+ */
 export default function PodcastPlayer() {
-  const { state, togglePlay, seekTo, setVolume, closePlayer, toggleMinimize, audioRef } = usePodcastPlayer()
-  const org = useOrg() as any
-  const waveformRef = useRef<HTMLDivElement>(null)
-  const miniWaveformRef = useRef<HTMLDivElement>(null)
-  const wavesurferRef = useRef<WaveSurfer | null>(null)
-  const miniWavesurferRef = useRef<WaveSurfer | null>(null)
-  const [isMuted, setIsMuted] = useState(false)
-  const [previousVolume, setPreviousVolume] = useState(1)
-
-  const { currentEpisode, podcast, isPlaying, currentTime, duration, volume, isMinimized, isVisible } = state
+  const { state, togglePlay, seekTo, skip, setVolume, setPlaybackRate, closePlayer, toggleMinimize } = usePodcastPlayer()
   const { t } = useTranslation()
+  const org = useOrg() as any
+  const { orgslug } = useOrgMembership()
+  const { currentEpisode, podcast, isPlaying, currentTime, duration, volume, isMinimized, isVisible, playbackRate } = state
+
   useShortcut(
-    { id: 'podcast.toggle', keys: 'p', group: 'global', label: t('shortcuts.play_pause_podcast'),
-      run: togglePlay },
+    { id: 'podcast.toggle', keys: 'p', group: 'global', label: t('shortcuts.play_pause_podcast'), run: togglePlay },
     isVisible && !!currentEpisode,
   )
 
-  // Get audio URL
-  const audioUrl = currentEpisode && podcast && org
-    ? getPodcastAudioStreamUrl(
-        org.org_uuid,
-        podcast.podcast_uuid,
-        currentEpisode.episode_uuid,
-        currentEpisode.audio_file
-      )
-    : ''
-
-  // Get thumbnail
-  const thumbnailUrl = currentEpisode?.thumbnail_image && podcast && org
-    ? getEpisodeThumbnailMediaDirectory(
-        org.org_uuid,
-        podcast.podcast_uuid,
-        currentEpisode.episode_uuid,
-        currentEpisode.thumbnail_image
-      )
-    : podcast?.thumbnail_image && org
-    ? getPodcastThumbnailMediaDirectory(org.org_uuid, podcast.podcast_uuid, podcast.thumbnail_image)
-    : '/empty_thumbnail.png'
-
-  // Initialize WaveSurfer for expanded view
+  // The full-screen sheet locks page scroll while open, on phones only.
+  const sheetOpen = isVisible && !isMinimized
   useEffect(() => {
-    if (!waveformRef.current || !audioUrl || isMinimized) return
-
-    // Destroy existing instance
-    if (wavesurferRef.current) {
-      wavesurferRef.current.destroy()
-    }
-
-    // Create new WaveSurfer instance
-    const wavesurfer = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: '#d1d5db',
-      progressColor: '#111827',
-      cursorColor: '#111827',
-      barWidth: 2,
-      barGap: 1,
-      barRadius: 2,
-      height: 40,
-      normalize: true,
-      backend: 'MediaElement',
-      media: audioRef.current || undefined,
-    })
-
-    wavesurferRef.current = wavesurfer
-
-    // Load audio
-    wavesurfer.load(audioUrl)
-
-    // Event listeners
-    wavesurfer.on('click', () => {
-      const time = wavesurfer.getCurrentTime()
-      seekTo(time)
-    })
-
+    if (!sheetOpen || window.matchMedia('(min-width: 768px)').matches) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     return () => {
-      wavesurfer.destroy()
+      document.body.style.overflow = prev
     }
-  }, [audioUrl, isMinimized])
+  }, [sheetOpen])
 
-  // Initialize mini WaveSurfer for minimized view
-  useEffect(() => {
-    if (!miniWaveformRef.current || !audioUrl || !isMinimized) return
+  if (!isVisible || !currentEpisode || !podcast) return null
 
-    // Destroy existing instance
-    if (miniWavesurferRef.current) {
-      miniWavesurferRef.current.destroy()
-    }
+  const cover = episodeCover(org?.org_uuid, podcast, currentEpisode)
+  const podcastHref = orgslug ? getUriWithOrg(orgslug, resourcePath('podcast', podcast)) : null
+  const total = duration || currentEpisode.duration_seconds || 0
+  const fraction = total ? Math.min(1, currentTime / total) : 0
+  const nextRate = () => {
+    const i = PLAYBACK_RATES.indexOf(playbackRate as (typeof PLAYBACK_RATES)[number])
+    setPlaybackRate(PLAYBACK_RATES[(i + 1) % PLAYBACK_RATES.length])
+  }
 
-    // Create new mini WaveSurfer instance
-    const wavesurfer = WaveSurfer.create({
-      container: miniWaveformRef.current,
-      waveColor: '#d1d5db',
-      progressColor: '#111827',
-      cursorColor: 'transparent',
-      barWidth: 2,
-      barGap: 1,
-      barRadius: 2,
-      height: 24,
-      normalize: true,
-      backend: 'MediaElement',
-      media: audioRef.current || undefined,
-    })
-
-    miniWavesurferRef.current = wavesurfer
-
-    // Load audio
-    wavesurfer.load(audioUrl)
-
-    // Event listeners
-    wavesurfer.on('click', () => {
-      const time = wavesurfer.getCurrentTime()
-      seekTo(time)
-    })
-
-    return () => {
-      wavesurfer.destroy()
-    }
-  }, [audioUrl, isMinimized])
-
-  // Sync play/pause state with WaveSurfer
-  useEffect(() => {
-    if (wavesurferRef.current) {
-      if (isPlaying) {
-        void Promise.resolve(wavesurferRef.current.play()).catch(() => {})
-      } else {
-        wavesurferRef.current.pause()
-      }
-    }
-    if (miniWavesurferRef.current) {
-      if (isPlaying) {
-        void Promise.resolve(miniWavesurferRef.current.play()).catch(() => {})
-      } else {
-        miniWavesurferRef.current.pause()
-      }
-    }
-  }, [isPlaying])
-
-  // Toggle mute
-  const toggleMute = () => {
-    if (isMuted) {
-      setVolume(previousVolume)
-      setIsMuted(false)
-    } else {
-      setPreviousVolume(volume)
-      setVolume(0)
-      setIsMuted(true)
+  // Space toggles playback while focus is anywhere in the player, except on
+  // controls that already use it (buttons, links, the volume slider).
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const el = e.target as HTMLElement
+    const onScrubber = el.tagName === 'INPUT' && 'scrubber' in el.dataset
+    if (e.key === ' ' && (onScrubber || !['BUTTON', 'A', 'INPUT'].includes(el.tagName))) {
+      e.preventDefault()
+      togglePlay()
+    } else if (e.key === 'Escape' && !isMinimized) {
+      toggleMinimize()
     }
   }
 
-  // Skip forward/backward
-  const skipForward = () => {
-    seekTo(Math.min(currentTime + 15, duration))
-  }
-
-  const skipBackward = () => {
-    seekTo(Math.max(currentTime - 15, 0))
-  }
-
-  if (!isVisible || !currentEpisode || !podcast) {
-    return null
-  }
+  const playLabel = isPlaying ? t('podcasts.listen.pause') : t('podcasts.listen.play')
 
   return (
     <>
-      {/* Hidden audio element */}
-      <audio
-        ref={audioRef}
-        src={audioUrl}
-        preload="metadata"
-      />
+      {/* Room at the end of every page so the bar never covers the footer. */}
+      <div aria-hidden className="h-[76px] md:h-16" />
 
-      {/* Player UI. On phones it sits on the tab bar, and the expanded player
-          wraps into two rows: episode + window buttons, then transport + waveform. */}
+      {/* Desktop bar */}
       <div
-        className={`fixed bottom-[var(--lh-mobile-nav-h)] md:bottom-0 start-0 end-0 bg-white border-t border-gray-200 shadow-lg transition-all duration-300 z-50 ${
-          isMinimized ? 'h-16' : 'md:h-24'
-        }`}
+        role="region"
+        aria-label={t('podcasts.listen.player')}
+        onKeyDown={onKeyDown}
+        className="hidden md:block fixed bottom-0 inset-x-0 h-16 bg-white shadow-[0_-1px_0_rgba(0,0,0,0.06),0_-12px_32px_-16px_rgba(0,0,0,0.18)]"
+        style={{ zIndex: 'var(--z-nav)' }}
       >
-        <div className={`h-full max-w-7xl mx-auto px-3 md:px-4 flex items-center md:gap-4 ${isMinimized ? 'gap-3' : 'flex-wrap md:flex-nowrap gap-x-3 gap-y-1 py-2.5 md:py-0'}`}>
-          {/* Thumbnail */}
-          <div className="flex-shrink-0 order-1 md:order-none">
-            <div
-              className={`bg-gray-200 rounded-lg overflow-hidden ${
-                isMinimized ? 'w-10 h-10' : 'w-12 h-12 md:w-16 md:h-16'
-              }`}
-            >
-              <ThumbnailImage
-                src={thumbnailUrl}
-                alt={currentEpisode.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Episode info */}
-          <div className={`min-w-0 flex-1 md:flex-none order-2 md:order-none ${isMinimized ? 'md:max-w-[120px]' : 'md:w-48'}`}>
-            <h4 className="text-sm font-semibold text-gray-900 truncate">
-              {currentEpisode.title}
-            </h4>
-            {!isMinimized && (
-              <p className="text-xs text-gray-500 truncate">{podcast.name}</p>
-            )}
-          </div>
-
-          {/* Controls */}
-          {/* Phone-only line break before the transport row */}
-          {!isMinimized && <div className="basis-full h-0 order-4 md:hidden" />}
-          <div className={`flex items-center gap-1 md:order-none ${isMinimized ? 'order-3' : 'order-5'}`}>
-            {!isMinimized && (
-              <button
-                onClick={skipBackward}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title={t('media.audio.skip_back')}
-              >
-                <SkipBack size={18} className="text-gray-600" />
-              </button>
-            )}
-
-            <button
-              onClick={togglePlay}
-              className={`rounded-full bg-gray-900 hover:bg-gray-800 transition-colors ${
-                isMinimized ? 'p-2.5 md:p-2' : 'p-3'
-              }`}
-            >
-              {isPlaying ? (
-                <Pause size={isMinimized ? 16 : 20} className="text-white" fill="white" />
+        <div className="h-full px-4 lg:px-6 grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] items-center gap-4">
+          {/* Now playing */}
+          <div className="flex items-center gap-3 min-w-0">
+            <NowPlayingCover src={cover} playing={isPlaying} className="w-11 h-11 rounded-lg" />
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-neutral-900 truncate" dir="auto" title={currentEpisode.title}>
+                {currentEpisode.title}
+              </p>
+              {podcastHref ? (
+                <Link href={podcastHref} className="block text-xs text-neutral-500 hover:text-neutral-900 hover:underline underline-offset-2 truncate" dir="auto">
+                  {podcast.name}
+                </Link>
               ) : (
-                <Play size={isMinimized ? 16 : 20} className="text-white" fill="white" />
+                <p className="text-xs text-neutral-500 truncate" dir="auto">{podcast.name}</p>
               )}
-            </button>
-
-            {!isMinimized && (
-              <button
-                onClick={skipForward}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title={t('media.audio.skip_forward')}
-              >
-                <SkipForward size={18} className="text-gray-600" />
-              </button>
-            )}
+            </div>
           </div>
 
-          {/* Waveform / Progress */}
-          {isMinimized ? (
-            <div className="hidden md:flex flex-1 items-center gap-2 min-w-0">
-              <div ref={miniWaveformRef} className="flex-1 cursor-pointer min-w-[100px]" />
-              <span className="text-xs text-gray-500 flex-shrink-0 tabular-nums">
-                {formatDuration(Math.floor(currentTime))}
-              </span>
-            </div>
-          ) : (
-            <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3 order-6 md:order-none">
-              <span className="text-xs text-gray-500 md:w-12 text-end tabular-nums">
-                {formatDuration(Math.floor(currentTime))}
-              </span>
-              <div ref={waveformRef} className="flex-1 cursor-pointer" />
-              <span className="text-xs text-gray-500 md:w-12 tabular-nums">
-                {formatDuration(Math.floor(duration))}
-              </span>
-            </div>
-          )}
-
-          {/* Volume control (expanded only; phones use their volume buttons) */}
-          {!isMinimized && (
-            <div className="hidden md:flex items-center gap-2">
+          {/* Transport + scrubber */}
+          <div className="flex flex-col items-center justify-center gap-0.5 min-w-0">
+            <div className="flex items-center gap-2">
+              <SkipButton dir="back" onClick={() => skip(-15)} label={t('media.audio.skip_back')} />
               <button
-                onClick={toggleMute}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                type="button"
+                onClick={togglePlay}
+                aria-label={playLabel}
+                title={`${playLabel} (P)`}
+                className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center shadow-[0_1px_1px_rgba(0,0,0,0.12)] hover:bg-neutral-800 hover:scale-105 active:scale-95 transition"
               >
-                {isMuted || volume === 0 ? (
-                  <VolumeX size={18} className="text-gray-600" />
-                ) : (
-                  <Volume2 size={18} className="text-gray-600" />
-                )}
+                {isPlaying ? <Pause size={15} weight="fill" /> : <Play size={15} weight="fill" className="ms-0.5 rtl:-scale-x-100" />}
               </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={volume}
-                onChange={(e) => {
-                  const newVolume = parseFloat(e.target.value)
-                  setVolume(newVolume)
-                  setIsMuted(newVolume === 0)
-                }}
-                className="w-20 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"
-              />
+              <SkipButton dir="forward" onClick={() => skip(15)} label={t('media.audio.skip_forward')} />
             </div>
-          )}
+            <div className="w-full max-w-xl flex items-center gap-2.5">
+              <span className="w-10 text-end text-[11px] text-neutral-500 tabular-nums">{formatClock(currentTime)}</span>
+              <Scrubber value={currentTime} max={total} onSeek={seekTo} label={t('podcasts.listen.seek')} />
+              <span className="w-10 text-[11px] text-neutral-500 tabular-nums">-{formatClock(Math.max(0, total - currentTime))}</span>
+            </div>
+          </div>
 
-          {/* Minimize/Close buttons */}
-          <div className={`flex items-center md:gap-1 flex-shrink-0 md:order-none ${isMinimized ? 'order-4' : 'order-3'}`}>
+          {/* Speed, volume, close */}
+          <div className="flex items-center justify-end gap-1.5 min-w-0">
+            <RateButton rate={playbackRate} onClick={nextRate} label={t('podcasts.listen.speed')} />
+            <VolumeControl volume={volume} setVolume={setVolume} t={t} />
             <button
-              onClick={toggleMinimize}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title={isMinimized ? t('common.expand') : t('podcasts.player.minimize')}
-            >
-              {isMinimized ? (
-                <Maximize2 size={16} className="text-gray-600" />
-              ) : (
-                <Minimize2 size={18} className="text-gray-600" />
-              )}
-            </button>
-            <button
+              type="button"
               onClick={closePlayer}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title={t('common.close')}
+              aria-label={t('podcasts.listen.close_player')}
+              title={t('podcasts.listen.close_player')}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
             >
-              <X size={isMinimized ? 16 : 18} className="text-gray-600" />
+              <X size={16} />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Phone: compact floating bar */}
+      {isMinimized && (
+        <div
+          className="md:hidden fixed inset-x-2 px-0"
+          style={{ bottom: 'calc(var(--lh-mobile-nav-h) + 8px)', zIndex: 'var(--z-nav)' }}
+        >
+          <div className="relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_-8px_rgba(0,0,0,0.25),0_0_0_1px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center gap-3 p-2 pe-1.5">
+              <button
+                type="button"
+                onClick={toggleMinimize}
+                className="flex items-center gap-3 min-w-0 flex-1 text-start"
+                aria-label={t('podcasts.listen.open_player')}
+              >
+                <NowPlayingCover src={cover} playing={isPlaying} className="w-11 h-11 rounded-xl" />
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-semibold text-neutral-900 truncate" dir="auto">{currentEpisode.title}</span>
+                  <span className="block text-xs text-neutral-500 truncate" dir="auto">{podcast.name}</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={togglePlay}
+                aria-label={playLabel}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-neutral-900 active:bg-neutral-100 shrink-0"
+              >
+                {isPlaying ? <Pause size={22} weight="fill" /> : <Play size={22} weight="fill" className="rtl:-scale-x-100" />}
+              </button>
+              <button
+                type="button"
+                onClick={closePlayer}
+                aria-label={t('podcasts.listen.close_player')}
+                className="w-9 h-10 rounded-full flex items-center justify-center text-neutral-400 active:bg-neutral-100 shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="absolute bottom-0 inset-x-3 h-[2px] rounded-full bg-neutral-200 overflow-hidden">
+              <div className="h-full bg-neutral-900" style={{ width: `${fraction * 100}%` }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phone: full-screen now playing */}
+      {!isMinimized && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('podcasts.listen.now_playing')}
+          onKeyDown={onKeyDown}
+          className="md:hidden fixed inset-0 flex flex-col bg-white px-6 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),20px)] animate-in slide-in-from-bottom-8 fade-in duration-200 motion-reduce:animate-none"
+          style={{ zIndex: 'var(--z-modal)' }}
+        >
+          <div className="flex items-center justify-between h-12 -mx-2">
+            <button
+              type="button"
+              onClick={toggleMinimize}
+              aria-label={t('podcasts.player.minimize')}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-neutral-700 active:bg-neutral-100"
+            >
+              <CaretDown size={22} />
+            </button>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">{t('podcasts.listen.now_playing')}</span>
+            <button
+              type="button"
+              onClick={closePlayer}
+              aria-label={t('podcasts.listen.close_player')}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-neutral-500 active:bg-neutral-100"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex-1 min-h-0 flex items-center justify-center py-4">
+            <ThumbnailImage
+              src={cover}
+              alt=""
+              loading="eager"
+              className={`w-full max-w-[min(20rem,42vh)] aspect-square rounded-3xl ring-1 ring-black/5 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.45)] transition-transform duration-300 motion-reduce:transition-none ${isPlaying ? 'scale-100' : 'scale-[0.92]'}`}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xl font-bold tracking-tight text-neutral-900 line-clamp-2" dir="auto">{currentEpisode.title}</p>
+            {podcastHref ? (
+              <Link href={podcastHref} onClick={toggleMinimize} className="block text-sm text-neutral-500 truncate" dir="auto">
+                {podcast.name}
+              </Link>
+            ) : (
+              <p className="text-sm text-neutral-500 truncate" dir="auto">{podcast.name}</p>
+            )}
+          </div>
+
+          <div className="mt-6">
+            <Scrubber value={currentTime} max={total} onSeek={seekTo} label={t('podcasts.listen.seek')} large />
+            <div className="mt-1.5 flex justify-between text-xs text-neutral-500 tabular-nums">
+              <span>{formatClock(currentTime)}</span>
+              <span>-{formatClock(Math.max(0, total - currentTime))}</span>
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-center justify-between">
+            <RateButton rate={playbackRate} onClick={nextRate} label={t('podcasts.listen.speed')} large />
+            <div className="flex items-center gap-5">
+              <SkipButton dir="back" onClick={() => skip(-15)} label={t('media.audio.skip_back')} large />
+              <button
+                type="button"
+                onClick={togglePlay}
+                aria-label={playLabel}
+                className="w-16 h-16 rounded-full bg-neutral-900 text-white flex items-center justify-center shadow-[0_8px_20px_-8px_rgba(0,0,0,0.5)] active:scale-95 transition-transform"
+              >
+                {isPlaying ? <Pause size={28} weight="fill" /> : <Play size={28} weight="fill" className="ms-1 rtl:-scale-x-100" />}
+              </button>
+              <SkipButton dir="forward" onClick={() => skip(15)} label={t('media.audio.skip_forward')} large />
+            </div>
+            {/* Balances the speed button so the transport stays centred. */}
+            <span className="w-12" aria-hidden />
+          </div>
+        </div>
+      )}
     </>
+  )
+}
+
+function NowPlayingCover({ src, playing, className }: { src: string | null; playing: boolean; className: string }) {
+  return (
+    <span className={`relative shrink-0 overflow-hidden bg-neutral-100 ring-1 ring-black/5 ${className}`}>
+      <ThumbnailImage src={src} alt="" className="w-full h-full" />
+      {playing && <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />}
+    </span>
+  )
+}
+
+function SkipButton({ dir, onClick, label, large }: { dir: 'back' | 'forward'; onClick: () => void; label: string; large?: boolean }) {
+  const Icon = dir === 'back' ? ArrowCounterClockwise : ArrowClockwise
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={`relative rounded-full flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 active:scale-95 transition ${
+        large ? 'w-12 h-12 text-neutral-800' : 'w-8 h-8'
+      }`}
+    >
+      <Icon size={large ? 30 : 20} className="rtl:-scale-x-100" />
+      <span className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums ${large ? 'text-[9px] pt-0.5' : 'text-[7px] pt-px'}`}>
+        15
+      </span>
+    </button>
+  )
+}
+
+function RateButton({ rate, onClick, label, large }: { rate: number; onClick: () => void; label: string; large?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`${label}: ${rate}×`}
+      title={label}
+      className={`rounded-lg font-semibold tabular-nums transition-colors ${
+        rate !== 1 ? 'text-neutral-900 bg-neutral-100' : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100'
+      } ${large ? 'w-12 h-9 text-sm' : 'min-w-10 h-7 px-1.5 text-xs'}`}
+    >
+      {rate}×
+    </button>
+  )
+}
+
+function VolumeControl({ volume, setVolume, t }: { volume: number; setVolume: (_v: number) => void; t: (_k: string) => string }) {
+  // Volume to come back to after unmuting.
+  const [restore, setRestore] = useState(1)
+  const muted = volume === 0
+  const Icon = muted ? SpeakerSlash : volume < 0.5 ? SpeakerLow : SpeakerHigh
+  return (
+    <div className="hidden lg:flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => {
+          if (muted) setVolume(restore || 1)
+          else {
+            setRestore(volume)
+            setVolume(0)
+          }
+        }}
+        aria-label={muted ? t('podcasts.listen.unmute') : t('podcasts.listen.mute')}
+        title={muted ? t('podcasts.listen.unmute') : t('podcasts.listen.mute')}
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+      >
+        <Icon size={17} />
+      </button>
+      <div className="w-24">
+        <Scrubber value={volume} max={1} step={0.01} onSeek={setVolume} label={t('podcasts.listen.volume')} />
+      </div>
+    </div>
+  )
+}
+
+/** A slim track with a native range input over it, so dragging, clicking and
+ *  the arrow keys all work and screen readers get a real slider. */
+function Scrubber({
+  value,
+  max,
+  onSeek,
+  label,
+  step = 1,
+  large,
+}: {
+  value: number
+  max: number
+  onSeek: (_v: number) => void
+  label: string
+  step?: number
+  large?: boolean
+}) {
+  const pct = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0
+  const isTime = step >= 1
+  return (
+    <div className={`group/scrub relative flex-1 min-w-0 flex items-center ${large ? 'h-6' : 'h-4'}`}>
+      <div className={`w-full rounded-full bg-neutral-200 overflow-hidden ${large ? 'h-1.5' : 'h-1'}`}>
+        <div className="h-full rounded-full bg-neutral-900 group-hover/scrub:bg-neutral-700" style={{ width: `${pct}%` }} />
+      </div>
+      <span
+        aria-hidden
+        className={`absolute top-1/2 -translate-y-1/2 rounded-full bg-neutral-900 shadow pointer-events-none transition-opacity ${
+          large ? 'w-4 h-4 -ms-2 opacity-100' : 'w-3 h-3 -ms-1.5 opacity-0 group-hover/scrub:opacity-100 group-focus-within/scrub:opacity-100'
+        }`}
+        style={{ insetInlineStart: `${pct}%` }}
+      />
+      <input
+        type="range"
+        min={0}
+        max={max || 0}
+        step={step}
+        value={Math.min(value, max || 0)}
+        onChange={(e) => onSeek(Number(e.target.value))}
+        aria-label={label}
+        aria-valuetext={isTime ? formatClock(value) : `${Math.round(pct)}%`}
+        data-scrubber={isTime ? '' : undefined}
+        disabled={!max}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-default"
+      />
+    </div>
   )
 }

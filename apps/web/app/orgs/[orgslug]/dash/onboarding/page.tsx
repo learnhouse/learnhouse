@@ -11,15 +11,15 @@ import { WELCOME_VIDEO } from '@components/Dashboard/Onboarding/onboardingMedia'
 
 export default function OnboardingPage() {
   const { t } = useTranslation()
-  const { steps, progress, allCompleted, minutesLeft, intent, dismissed, resume } = useOnboarding()
+  const { loaded, steps, progress, allCompleted, minutesLeft, intent, dismissed, resume } = useOnboarding()
   const completedCount = steps.filter((s) => s.completed).length
   const [tour, setTour] = useState(false)
 
   // Opening the plan (from the sidebar, the home card or a link) brings it back
   // if it was put away.
   useEffect(() => {
-    if (dismissed) resume()
-  }, [dismissed, resume])
+    if (loaded && dismissed) resume()
+  }, [loaded, dismissed, resume])
 
   return (
     <div className="h-full w-full bg-[#f8f8f8] ps-4 pe-4 sm:ps-10 sm:pe-10 pb-16">

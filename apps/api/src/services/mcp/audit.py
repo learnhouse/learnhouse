@@ -75,34 +75,31 @@ def record(
 async def _to_org_log(
     principal: MCPPrincipal, org_id: int, spec: ToolSpec, arguments: dict[str, Any], approval: str | None = None
 ) -> None:
-    from src.core.ee_hooks import is_ee_available
+    """Hand the call to the audit log (EE): the typed events the tool's
+    services recorded get the app and approval merged in, or one entry is
+    written for the tool. Actor is the member behind the connection; via is
+    ``mcp``."""
+    from src.core.ee_hooks import audit_agent_action, is_ee_available
 
     if not is_ee_available():
         return
     try:
-        from ee.services.audit import is_enterprise_plan, queue_audit_log  # type: ignore
-
-        from src.core.events.database import _async_session_factory
         from src.security.auth import resolve_acting_user_id
 
-        async with _async_session_factory() as session:
-            if not await is_enterprise_plan(session, org_id):
-                return
         target = arguments.get(spec.target_param) if spec.target_param else None
-        await queue_audit_log(
+        audit_agent_action(
+            via="mcp",
             user_id=resolve_acting_user_id(principal.user),
             org_id=org_id,
-            action=f"AI app: {spec.title or spec.name}",
-            resource=spec.target_kind or spec.toolset or "mcp",
-            method="MCP",
-            path=f"/mcp/tools/{spec.name}",
-            status_code=200,
-            payload={
+            tool=spec.name,
+            target_kind=spec.target_kind,
+            target_id=target,
+            title=spec.title,
+            args=_payload(arguments),
+            details={
                 "app": principal.client_name or principal.kind,
-                "args": _payload(arguments),
                 **({"approval": approval} if approval else {}),
             },
-            resource_id=str(target) if target else None,
         )
     except Exception:
         logger.exception("mcp audit: could not write to the organization's audit log")

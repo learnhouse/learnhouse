@@ -1,8 +1,8 @@
 """Regression tests: author/member lists must not leak private user fields.
 
-Course/podcast authors, course contributors, board members and usergroup
-members are all readable by people who are not editors of the resource
-(anonymous readers on public courses and boards, learners on usergroups).
+Course/podcast authors, course contributors and usergroup members are all
+readable by people who are not editors of the resource (anonymous readers on
+public courses, learners on usergroups). Board members: ee/tests.
 Emails and other private user fields must only reach callers who can edit.
 """
 
@@ -10,7 +10,6 @@ from datetime import datetime
 
 import pytest
 
-from src.db.boards import Board, BoardMember, BoardMemberRole
 from src.db.courses.courses import AuthorWithRole
 from src.db.resource_authors import (
     ResourceAuthor,
@@ -20,7 +19,6 @@ from src.db.resource_authors import (
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup
 from src.db.users import UserRead
-from src.services.boards.boards import get_board_members
 from src.services.courses.contributors import get_course_contributors
 from src.services.courses.courses import get_course
 from src.services.users.usergroups import get_users_linked_to_usergroup
@@ -39,31 +37,6 @@ async def _add_course_creator(db, course, user_id):
         update_date=now,
     ))
     await db.commit()
-
-
-async def _make_board(db, org, owner_id):
-    board = Board(
-        org_id=org.id,
-        name="Board",
-        description="Desc",
-        thumbnail_image="",
-        public=True,
-        board_uuid="board_email_test",
-        created_by=owner_id,
-        creation_date="2024-01-01",
-        update_date="2024-01-01",
-    )
-    db.add(board)
-    await db.commit()
-    await db.refresh(board)
-    db.add(BoardMember(
-        board_id=board.id,
-        user_id=owner_id,
-        role=BoardMemberRole.OWNER,
-        creation_date="2024-01-01",
-    ))
-    await db.commit()
-    return board
 
 
 class TestCourseAuthors:
@@ -148,30 +121,6 @@ class TestCourseContributors:
         )
 
         assert contributors[0]["user"]["email"] == "admin@test.com"
-
-
-class TestBoardMembers:
-    @pytest.mark.asyncio
-    async def test_anonymous_sees_no_member_email(
-        self, db, org, admin_user, anonymous_user, mock_request
-    ):
-        board = await _make_board(db, org, admin_user.id)
-
-        members = await get_board_members(mock_request, board.board_uuid, anonymous_user, db)
-
-        assert members
-        assert all(m.email is None for m in members)
-        assert members[0].username == "admin"
-
-    @pytest.mark.asyncio
-    async def test_owner_sees_member_email(
-        self, db, org, admin_user, mock_request
-    ):
-        board = await _make_board(db, org, admin_user.id)
-
-        members = await get_board_members(mock_request, board.board_uuid, admin_user, db)
-
-        assert members[0].email == "admin@test.com"
 
 
 class TestUsergroupMembers:

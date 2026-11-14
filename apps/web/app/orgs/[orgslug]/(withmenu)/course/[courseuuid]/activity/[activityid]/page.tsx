@@ -1,121 +1,109 @@
+import { notFound, permanentRedirect } from 'next/navigation'
+import { Metadata } from 'next'
 import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { getCourseMetadata } from '@services/courses/courses'
-import ActivityClient from './activity'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { Metadata } from 'next'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getOrgSeoConfig } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { resolvePublicKey } from '@/lib/seo/resolve.server'
+import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
+import { prosemirrorText } from '@/lib/seo/meta'
+import { courseLanguageSeo } from '@/lib/seo/alternates'
+import { parseLangParam } from '@/lib/contentLanguage'
+import ActivityClient from './activity'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string; activityid: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
+/**
+ * The course uuid for an activity URL. Only an old course slug redirects
+ * (to the current one); uuid course keys stay as they are so in-app links
+ * built from uuids don't bounce, and the canonical tag points at the slug URL.
+ */
+async function courseKey(orgslug: string, courseKey: string, activityid: string) {
+  const resolved = await resolvePublicKey(orgslug, 'course', courseKey)
+  if (resolved?.match === 'redirect') {
+    permanentRedirect(`/course/${resolved.canonical_key}/activity/${activityid}`)
+  }
+  return { uuid: resolved?.bare_uuid ?? decodeURIComponent(courseKey), resolved }
+}
+
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
-  const params = await props.params;
+  const params = await props.params
+  // `?lang=fr`: one language version of the lesson (see the course page).
+  const requestedLang = parseLangParam((await props.searchParams)?.lang)
+  const { uuid, resolved } = await courseKey(params.orgslug, params.courseuuid, params.activityid)
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token || null
+  const isCourseEnd = params.activityid === 'end'
+  let courseStatus: number | undefined
 
-  const [org, course_meta, activity] = await Promise.all([
-    getOrganizationContextInfo(params.orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
+  const [ctx, course, activity] = await Promise.all([
+    getSeoContext(params.orgslug),
+    getCourseMetadata(uuid, { revalidate: 120, tags: ['courses'] }, access_token, { slim: true, lang: requestedLang ?? undefined }).catch((e: any) => {
+      courseStatus = e?.status
+      return null
     }),
-    getCourseMetadata(params.courseuuid, { revalidate: 120, tags: ['courses'] }, access_token || null, { slim: true }).catch(() => null),
-    getActivityWithAuthHeader(
-      params.activityid,
-      { revalidate: 120, tags: ['activities'] },
-      access_token || null
-    ).catch(() => null),
+    isCourseEnd
+      ? Promise.resolve(null)
+      : getActivityWithAuthHeader(params.activityid, { revalidate: 120, tags: ['activities'] }, access_token, requestedLang ?? undefined).catch(
+          () => null,
+        ),
   ])
 
   // A course/activity this visitor can't read (e.g. signed out on a members-only
-  // course) must not throw here: that replaces the whole page with the generic
-  // error boundary. Fall back to neutral metadata and let the client render the
-  // sign-in prompt.
-  if (!course_meta || !activity) {
-    return {
-      title: `Activity | ${org?.name || 'LearnHouse'}`,
-      description: 'View this activity on LearnHouse',
-    }
+  // course) must not throw: the client renders the sign-in prompt. Missing ones 404.
+  if (!course) {
+    if (!resolved && courseStatus === 404) notFound()
+    return noindexMetadata(`Activity | ${ctx.org?.name || 'LearnHouse'}`)
+  }
+  const key = course.slug || uuid
+  if (isCourseEnd) return noindexMetadata(`${course.name} | ${ctx.org?.name || ''}`)
+  if (!activity?.activity_uuid) {
+    if (/not found/i.test(String(activity?.detail ?? ''))) notFound()
+    return noindexMetadata(`${course.name} | ${ctx.org?.name || ''}`)
   }
 
-  // Check if this is the course end page
-  const isCourseEnd = params.activityid === 'end';
-  const seoConfig = getOrgSeoConfig(org)
-  const rawTitle = isCourseEnd ? `Congratulations | ${course_meta.name} Course` : `${activity.name} | ${course_meta.name} Course`
-  const pageTitle = seoConfig.default_meta_title_suffix ? `${rawTitle}${seoConfig.default_meta_title_suffix}` : rawTitle
-
-  const orgOgImageUrl = seoConfig.default_og_image
-    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
-    : null
-  const imageUrl = course_meta?.thumbnail_image
-    ? getCourseThumbnailMediaDirectory(
-        org?.org_uuid,
-        course_meta?.course_uuid,
-        course_meta?.thumbnail_image
-      )
-    : orgOgImageUrl || '/empty_thumbnail.png'
-  const canonical = await getServerCanonicalUrl(params.orgslug, `/course/${params.courseuuid}/activity/${params.activityid}`)
-
-  // SEO
-  return {
-    title: pageTitle,
-    description: course_meta.description || seoConfig.default_meta_description || '',
-    keywords: course_meta.learnings,
-    robots: {
-      index: true,
-      follow: true,
-      nocache: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      title: pageTitle,
-      description: course_meta.description || seoConfig.default_meta_description || '',
-      publishedTime: course_meta.creation_date,
-      tags: course_meta.learnings,
-      images: [
-        {
-          url: imageUrl,
-          width: 800,
-          height: 600,
-          alt: course_meta.name,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: pageTitle,
-      description: course_meta.description || seoConfig.default_meta_description || '',
-      images: [imageUrl],
-      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
-    },
-  }
+  const excerpt = prosemirrorText(activity.content, 400)
+  const indexable =
+    !!course.public && !!course.published && !resolved?.restricted && activity.published !== false && (activity.lock_type ?? 'public') === 'public'
+  // An untranslated lesson (shown in the original) is the default version:
+  // its canonical is the plain URL.
+  const lang = courseLanguageSeo({
+    baseUrl: await ctx.url(`/course/${key}/activity/${params.activityid}`),
+    requested: requestedLang,
+    servedByApi: activity.translation_fallback ? null : activity.locale || course.locale,
+    defaultLocale: course.default_locale || ctx.lang,
+    available: course.available_locales,
+  })
+  return buildResourceMetadata({
+    ctx,
+    name: `${activity.name} · ${course.name}`,
+    description: excerpt || course.description,
+    canonical: lang.canonical,
+    locale: lang.translation || (lang.languages ? lang.locale : undefined),
+    alternateLocales: lang.alternateLocales,
+    languages: lang.languages,
+    // The course's own robots switches apply to its lessons too.
+    seo: { robots_noindex: course.seo?.robots_noindex, robots_nofollow: course.seo?.robots_nofollow, image_alt: course.seo?.image_alt },
+    thumbnail: course.thumbnail_image
+      ? getCourseThumbnailMediaDirectory(ctx.org?.org_uuid, course.course_uuid, course.thumbnail_image)
+      : undefined,
+    generatedImage: await ctx.url(`/og/course/${key}`),
+    ogType: 'article',
+    indexable,
+    keywords: course.seo?.keywords || course.tags,
+    publishedTime: activity.creation_date,
+    modifiedTime: activity.update_date,
+  })
 }
 
-const ActivityPage = async (params: any) => {
-  const activityid = (await params.params).activityid
-  const courseuuid = (await params.params).courseuuid
-  const orgslug = (await params.params).orgslug
-
-  return (
-    <ActivityClient
-      activityid={activityid}
-      courseuuid={courseuuid}
-      orgslug={orgslug}
-      activity={null}
-      course={null}
-    />
-  )
+const ActivityPage = async (props: MetadataProps) => {
+  const { activityid, courseuuid, orgslug } = await props.params
+  const { uuid } = await courseKey(orgslug, courseuuid, activityid)
+  return <ActivityClient activityid={activityid} courseuuid={uuid} orgslug={orgslug} activity={null} course={null} />
 }
 
 export default ActivityPage

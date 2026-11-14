@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-label="Typographic poster">
+<rect width="300" height="400" fill="#111111"/>
+<g font-family="Helvetica, Arial, sans-serif" font-weight="900">
+<text x="-10" y="170" font-size="210" fill="#e2401c">A</text>
+<text x="110" y="250" font-size="210" fill="#f2efe9" opacity=".9">g</text>
+<text x="40" y="380" font-size="150" fill="#2f54eb">9</text>
+</g>
+<text x="20" y="30" font-family="Helvetica, Arial, sans-serif" font-size="11" letter-spacing="3" fill="#f2efe9">TYPE STUDIES — 04</text>
+</svg>

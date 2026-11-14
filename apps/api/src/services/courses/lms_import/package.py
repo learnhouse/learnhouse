@@ -281,7 +281,8 @@ class PackageWriter:
             "description": _first_sentences(summary, 500),
             "about": summary,
             "learnings": json.dumps(learnings) if learnings else None,
-            "tags": ",".join(t.strip() for t in c.tags if t.strip()) or None,
+            # "|" is the stored tag separator (see services/ai/tools/courses.py).
+            "tags": "|".join(t.replace("|", " ").strip() for t in c.tags if t.strip()) or None,
             "thumbnail_type": "image",
             "thumbnail_image": thumbnail_name,
             "thumbnail_video": "",

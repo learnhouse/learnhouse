@@ -41,7 +41,7 @@ export function StandaloneCourseProvider({ children, course }: { children: React
 }
 
 export interface ActivityRendererProps
-  extends Pick<StaticCanvaProps, 'components' | 'marks' | 'hiddenNodes' | 'className'> {
+  extends Pick<StaticCanvaProps, 'components' | 'marks' | 'hiddenNodes' | 'className' | 'theme'> {
   activity: any
   course: any
   style?: React.CSSProperties

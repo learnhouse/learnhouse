@@ -15,7 +15,8 @@ The pieces, and where each one comes from:
 * ``logo_url``:       the square logo (``customization.general.square_logo_image``)
                       when uploaded, else ``Organization.logo_image``, as an
                       absolute URL.
-* ``brand_color``:    ``customization.general.color``; tints the CTA button.
+* ``brand_color``:    the theme accent (``customization.theme``) when set, else
+                      ``customization.general.color``; tints the CTA button.
 * ``powered_by``:     ``customization.general.watermark``; renders the small
                       "Powered by LearnHouse" footer line. Always on for the
                       open-source edition and for SaaS free-plan orgs; a paid
@@ -56,20 +57,33 @@ def normalize_brand_color(raw: Any) -> Optional[str]:
     return f"#{digits}"
 
 
-def contrasting_text_color(hex_color: str) -> str:
-    """Black or white, whichever is legible on ``hex_color``.
-
-    WCAG relative luminance against a 0.179 threshold, the crossover at which
-    white and black text have equal contrast ratio with the background.
-    """
+def relative_luminance(hex_color: str) -> float:
+    """WCAG relative luminance of a ``#rrggbb`` color, 0 (black) to 1 (white)."""
     digits = hex_color.lstrip("#")
     r, g, b = (int(digits[i : i + 2], 16) / 255 for i in (0, 2, 4))
 
     def _lin(channel: float) -> float:
         return channel / 12.92 if channel <= 0.03928 else ((channel + 0.055) / 1.055) ** 2.4
 
-    luminance = 0.2126 * _lin(r) + 0.7152 * _lin(g) + 0.0722 * _lin(b)
-    return "#000000" if luminance > 0.179 else "#ffffff"
+    return 0.2126 * _lin(r) + 0.7152 * _lin(g) + 0.0722 * _lin(b)
+
+
+def contrasting_text_color(hex_color: str) -> str:
+    """Black or white, whichever is legible on ``hex_color``.
+
+    WCAG relative luminance against a 0.179 threshold, the crossover at which
+    white and black text have equal contrast ratio with the background.
+    """
+    return "#000000" if relative_luminance(hex_color) > 0.179 else "#ffffff"
+
+
+# Above this the color is effectively white: as a button fill it disappears
+# into the white email card, so the default button is used instead.
+NEAR_WHITE_LUMINANCE = 0.85
+
+
+def is_near_white(hex_color: str) -> bool:
+    return relative_luminance(hex_color) >= NEAR_WHITE_LUMINANCE
 
 
 def _section(parent: Any, key: str) -> dict:
@@ -93,7 +107,13 @@ def _general_section(config: Any) -> dict:
 
 
 def resolve_org_brand_color(org_config) -> Optional[str]:
+    """The CTA color: the theme's accent when the org picked one, else the brand color."""
+    from src.services.orgs.theme import resolve_theme_accent
+
     config = getattr(org_config, "config", None)
+    accent = resolve_theme_accent(config)
+    if accent:
+        return normalize_brand_color(accent)
     return normalize_brand_color(_general_section(config).get("color"))
 
 

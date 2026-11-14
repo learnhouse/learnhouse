@@ -11,4 +11,5 @@ export const sitePage: SitePageMeta = {
   shortcut: 'g b',
   featureKey: 'boards',
   requiresAuth: true,
+  menuType: 'boards',
 }

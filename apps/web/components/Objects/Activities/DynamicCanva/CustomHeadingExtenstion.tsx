@@ -1,29 +1,41 @@
 import Heading from '@tiptap/extension-heading'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
+import { computeHeadingIds } from './headingIds'
 
-// Custom Heading extension that adds IDs
+export const headingIdsKey = new PluginKey<DecorationSet>('lhHeadingIds')
+
+function decorate(doc: any): DecorationSet {
+  const decorations = computeHeadingIds(doc).map((h) => {
+    const node = doc.nodeAt(h.pos)
+    return Decoration.node(h.pos, h.pos + node.nodeSize, { id: h.id })
+  })
+  return DecorationSet.create(doc, decorations)
+}
+
+/**
+ * Headings with ids the "On this page" outline can link to. The ids are
+ * computed over the whole document (headingIds.ts), so duplicate titles get
+ * distinct ids and an empty heading keeps the same id on every render; a
+ * per-node renderHTML can't see the other headings, which is why this is a
+ * decoration rather than an attribute.
+ */
 export const CustomHeading = Heading.extend({
-  renderHTML({ node, HTMLAttributes }: { node: any; HTMLAttributes: any }) {
-    const hasLevel = this.options.levels.includes(node.attrs.level)
-    const level = hasLevel ? node.attrs.level : this.options.levels[0]
-
-    // Generate ID from heading text
-    const headingText = node.textContent || ''
-    const slug = headingText
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
-      .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
-    
-    const id = slug ? `heading-${slug}` : `heading-${Math.random().toString(36).substr(2, 9)}`
-
+  addProseMirrorPlugins() {
     return [
-      `h${level}`,
-      {
-        ...HTMLAttributes,
-        id,
-      },
-      0,
+      ...(this.parent?.() ?? []),
+      new Plugin<DecorationSet>({
+        key: headingIdsKey,
+        state: {
+          init: (_config, state) => decorate(state.doc),
+          apply: (tr, old) => (tr.docChanged ? decorate(tr.doc) : old),
+        },
+        props: {
+          decorations(state) {
+            return headingIdsKey.getState(state)
+          },
+        },
+      }),
     ]
   },
 })

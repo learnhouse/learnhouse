@@ -27,6 +27,8 @@ export default Node.create({
         default: '# Write your code here\n',
       },
       testCases: {
+        // { id, label, stdin, expectedStdout, hidden? }: hidden tests show
+        // learners a verdict but not their input/output.
         default: [],
       },
       description: {
@@ -67,6 +69,11 @@ export default Node.create({
       },
       additionalFiles: {
         default: [],  // Array of { name: string, content: string }
+      },
+      // Stable id for this block's submissions (history). Given on the first
+      // edit in the editor; blocks saved before it existed read as 'unknown'.
+      blockUuid: {
+        default: null,
       },
     }
   },

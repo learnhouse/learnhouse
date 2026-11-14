@@ -110,6 +110,20 @@ export async function updateOrgCommunitiesConfig(
   return res
 }
 
+/** Brand color, body font and theme options in one write (see lib/theme/orgTheme.ts). */
+export async function updateOrgThemeConfig(
+  org_id: string,
+  theme: { color: string; font: string; theme: Record<string, unknown> },
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/theme`,
+    RequestBodyWithAuthHeader('PUT', theme, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function updateOrgColorConfig(
   org_id: string,
   color: string,
@@ -270,7 +284,30 @@ export interface SignupFieldItem {
   max_length?: number | null
   min_value?: number | null
   max_value?: number | null
+  /** Also save the answer to the member's people data (EE people data). */
+  people_field?: SignupPeopleField | null
 }
+
+export type SignupPeopleField =
+  | 'department'
+  | 'title'
+  | 'employee_id'
+  | 'location'
+  | 'cost_center'
+  | 'manager_email'
+  | 'attribute'
+
+/** The people fields a signup field can be saved to, and the field types that
+ *  fit each (the server checks the same). */
+export const SIGNUP_PEOPLE_FIELDS: { value: SignupPeopleField; types: SignupFieldType[] }[] = [
+  { value: 'department', types: ['text', 'select', 'number'] },
+  { value: 'title', types: ['text', 'select', 'number'] },
+  { value: 'employee_id', types: ['text', 'select', 'number'] },
+  { value: 'location', types: ['text', 'select', 'number'] },
+  { value: 'cost_center', types: ['text', 'select', 'number'] },
+  { value: 'manager_email', types: ['text'] },
+  { value: 'attribute', types: ['text', 'textarea', 'select', 'checkbox', 'number', 'date'] },
+]
 
 export async function updateOrgSignupFieldsConfig(
   org_id: string,
@@ -302,11 +339,18 @@ export function readSignupFields(orgConfig: any): SignupFieldItem[] {
 
 export interface SeoOrgConfig {
   default_meta_title_suffix: string
+  default_title_template?: string
   default_meta_description: string
   default_og_image: string
   google_site_verification: string
+  bing_site_verification?: string
+  yandex_verification?: string
+  pinterest_verification?: string
   twitter_handle: string
   noindex_communities: boolean
+  indexing_disabled?: boolean
+  robots_extra_rules?: string
+  organization_type?: string
 }
 
 export async function updateOrgSeoConfig(

@@ -1,6 +1,6 @@
 // Access is checked when a socket authenticates, but a member removed from a
-// board (or an org, or whose session ended) would otherwise keep editing for
-// as long as the socket stays open. The server re-runs the access check for
+// board or a course (or an org, or whose session ended) would otherwise keep
+// editing for as long as the socket stays open. The server re-runs the access check for
 // every open connection on an interval and acts on the answer.
 
 /**
@@ -8,7 +8,7 @@
  * used to re-check; the client must reconnect with a fresh one. "unknown"
  * means the check itself failed (API unreachable or erroring).
  */
-export type AccessVerdict = 'write' | 'read' | 'denied' | 'expired' | 'unknown'
+export type AccessVerdict = 'write' | 'read' | 'denied' | 'disabled' | 'expired' | 'unknown'
 
 export interface RecheckableConnection {
   readOnly: boolean
@@ -19,13 +19,21 @@ export interface RecheckableConnection {
 
 export interface ConnectionAuth {
   token: string
-  boardUuid: string
+  /** Room kind ("board", "activity"): picks the API endpoint that answers. */
+  room: string
+  /** The board or activity uuid. */
+  resourceId: string
   /** When access was last confirmed (ms epoch); updated by each re-check. */
   verifiedAt: number
 }
 
 /** Terminal: the client must not reconnect. */
 export const ACCESS_REVOKED = { code: 4403, reason: 'Access revoked' }
+/**
+ * Terminal: live editing was turned off for this room (org or activity
+ * setting); the editor switches to saving manually.
+ */
+export const LIVE_EDITING_DISABLED = { code: 4409, reason: 'Live editing disabled' }
 /** Reconnectable: the client reconnects and authenticates with a fresh token. */
 export const REAUTH_REQUIRED = { code: 4401, reason: 'Token expired' }
 
@@ -51,16 +59,17 @@ export interface MembershipResponse {
  */
 export function createAccessChecker(deps: {
   tokenState: (token: string) => TokenState
-  fetchMembership: (boardUuid: string, token: string) => Promise<MembershipResponse>
+  fetchAccess: (auth: ConnectionAuth) => Promise<MembershipResponse>
 }): (auth: ConnectionAuth) => Promise<AccessVerdict> {
-  return async ({ token, boardUuid }) => {
+  return async (auth) => {
+    const { token } = auth
     const before = deps.tokenState(token)
     if (before === 'invalid') return 'denied'
     if (before === 'expired') return 'expired'
 
     let response: MembershipResponse
     try {
-      response = await deps.fetchMembership(boardUuid, token)
+      response = await deps.fetchAccess(auth)
     } catch {
       return 'unknown'
     }
@@ -68,7 +77,17 @@ export function createAccessChecker(deps: {
       // The token may have lapsed while the request was in flight
       return deps.tokenState(token) === 'valid' ? 'denied' : 'expired'
     }
-    if (response.status === 403 || response.status === 404) return 'denied'
+    if (response.status === 403) {
+      // The API says why: live editing turned off is not a lost permission
+      try {
+        const body = (await response.json()) as { detail?: unknown } | null
+        if (body?.detail === 'collab_disabled') return 'disabled'
+      } catch {
+        // no body: a plain refusal
+      }
+      return 'denied'
+    }
+    if (response.status === 404) return 'denied'
     if (!response.ok) return 'unknown'
 
     let membership: { role?: unknown } | null
@@ -94,7 +113,8 @@ function authOf(connection: RecheckableConnection): ConnectionAuth | null {
   const auth = (connection.context as { auth?: ConnectionAuth } | null)?.auth
   return auth &&
     typeof auth.token === 'string' &&
-    typeof auth.boardUuid === 'string' &&
+    typeof auth.room === 'string' &&
+    typeof auth.resourceId === 'string' &&
     typeof auth.verifiedAt === 'number'
     ? auth
     : null
@@ -128,6 +148,11 @@ export async function recheckConnections(
       const verdict = auth ? await check(auth) : 'denied'
       if (verdict === 'denied') {
         dropConnection(connection, ACCESS_REVOKED)
+        closed++
+        return
+      }
+      if (verdict === 'disabled') {
+        dropConnection(connection, LIVE_EDITING_DISABLED)
         closed++
         return
       }

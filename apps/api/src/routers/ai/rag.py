@@ -22,7 +22,7 @@ from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
-from src.security.features_utils.usage import reserve_ai_credit
+from src.services.ai import metering
 from src.security.org_auth import is_org_member, require_org_admin, enforce_org_mfa
 from src.services.ai.rag import pipeline
 from src.services.ai.rag import queue as rag_queue
@@ -257,17 +257,11 @@ async def api_rag_search(
     if not access_scope.course_ids:
         return RAGSearchResponse(sources=[])
 
-    # One embedding call for the query.
-    await reserve_ai_credit(org_id, db_session, amount=1)
-    try:
+    # One embedding call for the query; refunded if the search fails.
+    async with metering.charge("ask_ai", org_id=org_id, db=db_session):
         rows = await search_course_content(
             search_request.query, org_id, db_session, access_scope, top_k=search_request.limit
         )
-    except Exception:
-        from src.security.features_utils.usage import refund_ai_credit
-
-        refund_ai_credit(org_id, 1)
-        raise
     return RAGSearchResponse(sources=[source_from_row(row).to_dict() for row in rows])
 
 

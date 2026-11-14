@@ -15,15 +15,52 @@ export async function getOrgCourses(
   org_slug: string,
   next: any,
   access_token?: any,
-  include_unpublished: boolean = false
+  include_unpublished: boolean = false,
+  // `lang`: the learner's content language list (localized names);
+  // `language`: only courses available in that locale.
+  i18n?: { lang?: string; language?: string }
 ) {
-  const url = `${getAPIUrl()}courses/org_slug/${org_slug}/page/1/limit/100${include_unpublished ? '?include_unpublished=true' : ''}`
+  const qs = new URLSearchParams()
+  if (include_unpublished) qs.set('include_unpublished', 'true')
+  if (i18n?.lang) qs.set('lang', i18n.lang)
+  if (i18n?.language) qs.set('language', i18n.language)
+  const url = `${getAPIUrl()}courses/org_slug/${org_slug}/page/1/limit/100${qs.toString() ? `?${qs.toString()}` : ''}`
   const result: any = await fetch(
     url,
     RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
   return res
+}
+
+// The list endpoint caps a page at 100 rows, so a dashboard that asked for
+// "limit 500" silently lost everything past the 100th course. Walk the pages
+// until a short one comes back instead.
+const ORG_COURSES_PAGE_SIZE = 100
+const ORG_COURSES_MAX_PAGES = 50
+
+export async function getAllOrgCourses(
+  org_slug: string,
+  access_token?: any,
+  include_unpublished: boolean = true
+) {
+  const seen = new Set<string>()
+  const all: any[] = []
+  for (let page = 1; page <= ORG_COURSES_MAX_PAGES; page++) {
+    const url = `${getAPIUrl()}courses/org_slug/${org_slug}/page/${page}/limit/${ORG_COURSES_PAGE_SIZE}${include_unpublished ? '?include_unpublished=true' : ''}`
+    const res = await fetch(url, RequestBodyWithAuthHeader('GET', null, null, access_token))
+    if (!res.ok) throw new Error('Failed to fetch courses')
+    const batch = await res.json()
+    if (!Array.isArray(batch)) break
+    for (const course of batch) {
+      // A course created mid-walk shifts later pages by one; skip the repeat.
+      if (seen.has(course.course_uuid)) continue
+      seen.add(course.course_uuid)
+      all.push(course)
+    }
+    if (batch.length < ORG_COURSES_PAGE_SIZE) break
+  }
+  return all
 }
 
 export async function searchOrgCourses(
@@ -46,10 +83,12 @@ export async function getCourseMetadata(
   course_uuid: string,
   next: any,
   access_token: string | null | undefined,
-  options?: { slim?: boolean; withUnpublishedActivities?: boolean }
+  options?: { slim?: boolean; withUnpublishedActivities?: boolean; lang?: string }
 ) {
   const searchParams = new URLSearchParams()
   if (options?.slim) searchParams.set('slim', 'true')
+  // Learner content language list (`fr,en`): localized texts when published.
+  if (options?.lang) searchParams.set('lang', options.lang)
   if (options?.withUnpublishedActivities !== undefined) {
     searchParams.set('with_unpublished_activities', String(options.withUnpublishedActivities))
   }

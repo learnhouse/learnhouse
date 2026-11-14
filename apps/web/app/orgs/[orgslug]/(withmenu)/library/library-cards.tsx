@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
-import { removeFolderPrefix } from '@services/folders/folders'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
+import { Chip } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { getFolderThumbnailMediaDirectory } from '@services/media/media'
 import { folderTone } from '@components/Dashboard/Library/LibraryToolbar'
 import { shareFolderLink } from '@components/Dashboard/Library/shareFolder'
@@ -15,13 +15,13 @@ import MediaPreview from '@components/Dashboard/Library/MediaPreview'
 import MediaLightbox from '@components/Objects/Media/MediaLightbox'
 import { mediaKind } from '@/lib/media/mediaKind'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { resourcePath } from '@/lib/seo/paths'
 import {
   FolderSimple,
   GraduationCap,
   MicrophoneStage,
-  ChatsCircle,
   SquaresFour,
-  Cube,
+  Lightning,
   LinkSimple,
   FilePdf,
   VideoCamera,
@@ -31,6 +31,7 @@ import {
   ArrowSquareOut,
   Eye,
   type IconProps,
+  Garage,
 } from '@phosphor-icons/react'
 
 type ResourceType = 'courses' | 'podcasts' | 'communities' | 'boards' | 'playgrounds' | 'media'
@@ -60,14 +61,14 @@ function typeIcon(type: string, resource: any): React.ComponentType<IconProps> {
     case 'courses': return GraduationCap
     case 'media': return mediaIcon(resource)
     case 'podcasts': return MicrophoneStage
-    case 'communities': return ChatsCircle
+    case 'communities': return Garage
     case 'boards': return SquaresFour
-    case 'playgrounds': return Cube
+    case 'playgrounds': return Lightning
     default: return FileIcon
   }
 }
 
-const CARD = 'group relative bg-white nice-shadow rounded-xl p-3 hover:bg-gray-50/50 transition-colors'
+const CARD = 'group relative bg-white nice-shadow rounded-2xl p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg'
 
 export function FolderCard({ folder, orgslug }: { folder: any; orgslug: string }) {
   const { t } = useTranslation()
@@ -77,7 +78,7 @@ export function FolderCard({ folder, orgslug }: { folder: any; orgslug: string }
     ? getFolderThumbnailMediaDirectory(org?.org_uuid, folder.folder_uuid, folder.thumbnail_image)
     : null
   return (
-    <Link data-kbd-item="" href={getUriWithOrg(orgslug, `/library/folder/${removeFolderPrefix(folder.folder_uuid)}`)} className={CARD}>
+    <Link data-kbd-item="" href={getUriWithOrg(orgslug, resourcePath('folder', folder))} className={CARD}>
       <button
         onClick={(e) => {
           e.preventDefault()
@@ -99,8 +100,8 @@ export function FolderCard({ folder, orgslug }: { folder: any; orgslug: string }
           </div>
         )}
         <div className="flex flex-col min-w-0">
-          <h3 className="text-[15px] font-bold text-gray-900 truncate leading-tight">{folder.name}</h3>
-          <span className="text-xs text-gray-400">{count} {t('library.items')}</span>
+          <h3 className="text-[15px] font-semibold text-neutral-900 truncate leading-tight">{folder.name}</h3>
+          <span className="text-xs text-neutral-400">{count} {t('library.items')}</span>
         </div>
       </div>
     </Link>
@@ -150,14 +151,18 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
           <Icon size={46} weight="fill" />
         </div>
       )}
-      <div className="p-3 flex flex-col space-y-1.5">
-        <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-1">{name}</h3>
-        <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t(`library.tabs.${type}`)}</span>
+      <div className="flex flex-col flex-1 p-4 gap-1">
+        <h3 className="text-[15px] font-semibold text-neutral-900 leading-snug line-clamp-1" dir="auto">{name}</h3>
+        <p className="text-xs text-neutral-500 line-clamp-2 min-h-[2rem]" dir="auto">
+          {resource?.description || '\u00a0'}
+        </p>
+        <div className="mt-auto pt-3 flex items-center justify-between gap-2">
+          {/* eslint-disable-next-line react-hooks/static-components */}
+          <Chip icon={<Icon size={12} weight="fill" />}>{t(`library.tabs.${type}`)}</Chip>
           {(href || type === 'media') && (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs font-semibold text-neutral-500 group-hover:text-neutral-900 group-hover:bg-neutral-100 transition-colors">
               {type === 'media' ? t('library.preview') : t('library.open_resource')}
-              {type === 'media' ? <Eye size={11} /> : <ArrowSquareOut size={11} />}
+              {type === 'media' ? <Eye size={12} /> : <ArrowSquareOut size={12} />}
             </span>
           )}
         </div>
@@ -165,7 +170,8 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
     </>
   )
 
-  const BIG = 'group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all hover:bg-gray-50/40'
+  // Same tile look as the shared course card, so the library reads as one grid.
+  const BIG = 'group relative flex flex-col bg-white rounded-2xl nice-shadow overflow-hidden w-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg'
   // Media opens in-app rather than sending the learner off to the raw file.
   if (type === 'media') {
     return (

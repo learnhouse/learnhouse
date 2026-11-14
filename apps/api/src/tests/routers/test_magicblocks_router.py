@@ -88,9 +88,9 @@ class TestEventGeneratorRefund:
                 yield ""  # pragma: no cover
             raise RuntimeError("boom")
 
-        with patch.object(mb, "refund_ai_credit") as refund:
+        with patch("src.security.features_utils.usage.refund_ai_credit") as refund:
             events = await _drain(
-                mb.event_generator(failing(), "sess_1", org_id=3, reserved_credits=3)
+                mb.event_generator(failing(), "sess_1", meter=_meter(3, 3))
             )
 
         assert any('"type": "error"' in e for e in events)
@@ -102,9 +102,9 @@ class TestEventGeneratorRefund:
                 yield ""  # pragma: no cover
             return
 
-        with patch.object(mb, "refund_ai_credit") as refund:
+        with patch("src.security.features_utils.usage.refund_ai_credit") as refund:
             events = await _drain(
-                mb.event_generator(empty(), "sess_1", org_id=4, reserved_credits=3)
+                mb.event_generator(empty(), "sess_1", meter=_meter(4, 3))
             )
 
         # done emitted but no content -> refund
@@ -115,9 +115,9 @@ class TestEventGeneratorRefund:
         async def good():
             yield "html"
 
-        with patch.object(mb, "refund_ai_credit") as refund:
+        with patch("src.security.features_utils.usage.refund_ai_credit") as refund:
             events = await _drain(
-                mb.event_generator(good(), "sess_1", org_id=5, reserved_credits=3)
+                mb.event_generator(good(), "sess_1", meter=_meter(5, 3))
             )
 
         assert any('"type": "chunk"' in e for e in events)
@@ -129,11 +129,11 @@ class TestEventGeneratorRefund:
                 yield ""  # pragma: no cover
             raise asyncio.CancelledError()
 
-        with patch.object(mb, "refund_ai_credit") as refund:
+        with patch("src.security.features_utils.usage.refund_ai_credit") as refund:
             with pytest.raises(asyncio.CancelledError):
                 await _drain(
                     mb.event_generator(
-                        cancelling(), "sess_1", org_id=6, reserved_credits=3
+                        cancelling(), "sess_1", meter=_meter(6, 3)
                     )
                 )
 
@@ -145,9 +145,9 @@ class TestEventGeneratorRefund:
                 yield ""  # pragma: no cover
             raise RuntimeError("boom")
 
-        with patch.object(mb, "refund_ai_credit") as refund:
+        with patch("src.security.features_utils.usage.refund_ai_credit") as refund:
             await _drain(
-                mb.event_generator(failing(), "sess_1", org_id=None, reserved_credits=3)
+                mb.event_generator(failing(), "sess_1", meter=_meter(None, 3))
             )
 
         refund.assert_not_called()
@@ -160,11 +160,10 @@ class TestEventGeneratorRefund:
                 yield ""  # pragma: no cover
             raise RuntimeError("boom")
 
-        with patch.object(
-            mb, "refund_ai_credit", side_effect=RuntimeError("refund down")
+        with patch("src.security.features_utils.usage.refund_ai_credit", side_effect=RuntimeError("refund down")
         ):
             events = await _drain(
-                mb.event_generator(failing(), "sess_1", org_id=8, reserved_credits=3)
+                mb.event_generator(failing(), "sess_1", meter=_meter(8, 3))
             )
 
         assert any('"type": "error"' in e for e in events)
@@ -177,9 +176,9 @@ class TestEventGeneratorRefund:
                 yield ""  # pragma: no cover
             raise RuntimeError("boom")
 
-        with patch.object(mb, "refund_ai_credit") as refund:
+        with patch("src.security.features_utils.usage.refund_ai_credit") as refund:
             await _drain(
-                mb.event_generator(failing(), "sess_1", org_id=8, reserved_credits=0)
+                mb.event_generator(failing(), "sess_1", meter=_meter(8, 0))
             )
 
         refund.assert_not_called()
@@ -208,7 +207,7 @@ class TestStartMagicblockSession:
 
         with patch.object(mb, "resolve_acting_user_id", return_value=1), patch.object(
             mb, "is_org_member", new_callable=AsyncMock, return_value=False
-        ), patch.object(mb, "reserve_ai_credit", new_callable=AsyncMock) as reserve:
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock) as reserve:
             with pytest.raises(HTTPException) as exc:
                 await mb.start_magicblock_session(
                     MagicMock(), self._request_obj(), current_user, db
@@ -230,8 +229,7 @@ class TestStartMagicblockSession:
 
         with patch.object(mb, "resolve_acting_user_id", return_value=1), patch.object(
             mb, "is_org_member", new_callable=AsyncMock, return_value=True
-        ), patch.object(
-            mb, "reserve_ai_credit", new_callable=AsyncMock
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             mb, "get_org_ai_model", new_callable=AsyncMock, return_value="gemini-x"
         ), patch.object(
@@ -305,7 +303,7 @@ class TestIterateMagicblockSession:
             mb, "resolve_acting_user_id", return_value=1
         ), patch.object(
             mb, "is_org_member", new_callable=AsyncMock, return_value=False
-        ), patch.object(mb, "reserve_ai_credit", new_callable=AsyncMock) as reserve:
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock) as reserve:
             with pytest.raises(HTTPException) as exc:
                 await mb.iterate_magicblock_session(
                     MagicMock(), self._msg(), MagicMock(), db
@@ -327,8 +325,7 @@ class TestIterateMagicblockSession:
             mb, "resolve_acting_user_id", return_value=1
         ), patch.object(
             mb, "is_org_member", new_callable=AsyncMock, return_value=True
-        ), patch.object(
-            mb, "reserve_ai_credit", new_callable=AsyncMock
+        ), patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ), patch.object(
             mb, "get_org_ai_model", new_callable=AsyncMock, return_value="gemini-x"
         ), patch.object(
@@ -393,3 +390,18 @@ class TestGetSessionState:
         ):
             resp = await mb.get_session_state("sess_1", MagicMock(), AsyncMock())
         assert resp.session_uuid == "sess_1"
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy
+
+
+def _meter(org_id, reserved: int):
+    """An open magic block charge (None when there is no org to charge)."""
+    from src.services.ai.metering import Meter
+
+    if org_id is None or not reserved:
+        return None
+    return Meter(feature="magic_block", org_id=org_id, reserved=reserved)

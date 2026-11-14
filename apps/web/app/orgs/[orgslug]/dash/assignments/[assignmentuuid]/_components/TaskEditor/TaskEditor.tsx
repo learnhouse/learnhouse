@@ -1,10 +1,11 @@
 'use client';
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
 import { deleteAssignmentTask } from '@services/courses/assignments';
-import { ClipboardList, SlidersHorizontal, SquarePen, Trash2, Type } from 'lucide-react'
+import { ClipboardText, TextT, Trash } from '@phosphor-icons/react'
 import React from 'react'
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -12,15 +13,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import dynamic from 'next/dynamic';
 import { sortTasksByOrder } from '@/lib/assignments/taskOrder'
-import { AssignmentTaskGeneralEdit } from './Subs/AssignmentTaskGeneralEdit';
+import { TaskDetailsRow, TaskTitleAndDescription } from './Subs/TaskInlineDetails';
 import { TASK_TYPE_META, TaskCreateActions } from '../Tasks';
 const AssignmentTaskContentEdit = dynamic(() => import('./Subs/AssignmentTaskContentEdit'))
 
-type EditorTab = 'content' | 'general'
-
-function AssignmentTaskEditor({ page }: { page?: EditorTab }) {
+// The task's title, instructions, hint and reference file are edited inline
+// in the header, so the editor is a single view with no tabs. `page` is
+// accepted for old callers and ignored.
+function AssignmentTaskEditor(_props: { page?: string }) {
     const { t } = useTranslation()
-    const [selectedSubPage, setSelectedSubPage] = React.useState<EditorTab>(page ?? 'content')
     const assignment = useAssignments() as any
     const assignmentTaskState = useAssignmentsTask() as any
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
@@ -46,40 +47,26 @@ function AssignmentTaskEditor({ page }: { page?: EditorTab }) {
         }
     }
 
-    // Go back to the content tab whenever a different task is opened
-    // (adjusting state during render rather than in an effect).
-    const selectedUUID = assignmentTaskState.selectedAssignmentTaskUUID
-    const [tabTaskUUID, setTabTaskUUID] = React.useState(selectedUUID)
-    if (tabTaskUUID !== selectedUUID) {
-        setTabTaskUUID(selectedUUID)
-        setSelectedSubPage('content')
-    }
-
     const task = assignmentTaskState.assignmentTask
     const hasTask = task && Object.keys(task).length > 0
     const tasks: any[] = sortTasksByOrder(assignment?.assignment_tasks)
     const taskIndex = hasTask ? tasks.findIndex((x: any) => x.assignment_task_uuid === task.assignment_task_uuid) : -1
-    const meta = hasTask ? (TASK_TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: Type }) : null
+    const meta = hasTask ? (TASK_TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: TextT }) : null
     const TypeIcon = meta?.Icon
-
-    const tabs: { key: EditorTab; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
-        { key: 'content', label: t('dashboard.assignments.editor.task_tabs.content'), Icon: SquarePen },
-        { key: 'general', label: t('dashboard.assignments.editor.task_tabs.general'), Icon: SlidersHorizontal },
-    ]
 
     return (
         <div className='flex flex-col w-full min-w-0 lg:h-full lg:min-h-0'>
             {hasTask && meta && TypeIcon && (
                 <div className='flex-1 lg:min-h-0 lg:overflow-y-auto'>
-                    <div className='max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6'>
+                    <div className='w-full px-4 sm:px-6 lg:px-10 pt-5 sm:pt-6 pb-10'>
                         <section className='bg-white rounded-2xl nice-shadow'>
-                            {/* Task header */}
+                            {/* Task header: everything here is editable in place */}
                             <div className='flex items-start justify-between gap-3 px-4 sm:px-6 pt-5'>
-                                <div className='flex items-start gap-3 min-w-0'>
+                                <div className='flex items-start gap-3 min-w-0 flex-1'>
                                     <span className='w-10 h-10 rounded-xl bg-neutral-900 text-white flex items-center justify-center shrink-0'>
                                         <TypeIcon size={18} />
                                     </span>
-                                    <div className='min-w-0'>
+                                    <div className='min-w-0 flex-1'>
                                         <p className='text-xs text-neutral-500 tabular-nums'>
                                             {taskIndex >= 0 && t('dashboard.assignments.editor.task_position', { number: taskIndex + 1, total: tasks.length })}
                                             {taskIndex >= 0 && ' · '}
@@ -88,9 +75,7 @@ function AssignmentTaskEditor({ page }: { page?: EditorTab }) {
                                                 <> · {t('dashboard.assignments.editor.points_short', { points: task.max_grade_value })}</>
                                             )}
                                         </p>
-                                        <h2 className='text-lg font-semibold text-neutral-900 leading-snug break-words'>
-                                            {task.title || <span className='text-neutral-400 italic font-normal'>{t('dashboard.assignments.editor.untitled_task')}</span>}
-                                        </h2>
+                                        <TaskTitleAndDescription />
                                     </div>
                                 </div>
                                 <ConfirmationModal
@@ -103,41 +88,21 @@ function AssignmentTaskEditor({ page }: { page?: EditorTab }) {
                                         <button
                                             type='button'
                                             aria-label={t('dashboard.assignments.editor.delete_task')}
-                                            className='inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-xl text-sm font-semibold text-rose-700 hover:bg-rose-50 transition-colors shrink-0'
+                                            className={buttonClass('danger-ghost', 'md', 'shrink-0')}
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash size={14} />
                                             <span className='hidden sm:inline'>{t('dashboard.assignments.editor.delete_task')}</span>
                                         </button>
                                     }
                                 />
                             </div>
-
-                            {/* Tabs */}
-                            <div className='mt-3 px-4 sm:px-6 flex gap-5 border-b border-neutral-100' role='tablist'>
-                                {tabs.map(({ key, label, Icon }) => {
-                                    const active = selectedSubPage === key
-                                    return (
-                                        <button
-                                            key={key}
-                                            type='button'
-                                            role='tab'
-                                            aria-selected={active}
-                                            onClick={() => setSelectedSubPage(key)}
-                                            className={`-mb-px flex items-center gap-1.5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
-                                                active ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-800'
-                                            }`}
-                                        >
-                                            <Icon size={15} />
-                                            {label}
-                                        </button>
-                                    )
-                                })}
+                            <div className='px-4 sm:px-6 pt-3 pb-4 sm:ps-[76px] border-b border-neutral-100'>
+                                <TaskDetailsRow />
                             </div>
 
                             {/* Body */}
                             <div className='px-3 sm:px-6 py-4 sm:py-5'>
-                                {selectedSubPage === 'general' && <AssignmentTaskGeneralEdit />}
-                                {selectedSubPage === 'content' && <AssignmentTaskContentEdit />}
+                                <AssignmentTaskContentEdit />
                             </div>
                         </section>
                     </div>
@@ -145,10 +110,10 @@ function AssignmentTaskEditor({ page }: { page?: EditorTab }) {
             )}
 
             {!hasTask && assignment && tasks.length === 0 && (
-                <div className='flex flex-1 items-center justify-center px-4 py-10 lg:py-6'>
-                    <div className='w-full max-w-md bg-white rounded-2xl nice-shadow px-6 py-8 text-center'>
+                <div className='w-full px-4 sm:px-6 lg:px-10 pt-5 sm:pt-6 pb-10'>
+                    <div className='w-full bg-white rounded-2xl nice-shadow px-6 py-12 text-center'>
                         <div className='mx-auto w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-500 flex items-center justify-center'>
-                            <ClipboardList size={22} />
+                            <ClipboardText size={22} />
                         </div>
                         <h2 className='mt-4 text-base font-semibold text-neutral-900'>{t('dashboard.assignments.editor.empty_title')}</h2>
                         <p className='mt-1 text-sm text-neutral-500'>{t('dashboard.assignments.editor.empty_description')}</p>
@@ -161,7 +126,7 @@ function AssignmentTaskEditor({ page }: { page?: EditorTab }) {
 
             {/* A task is being opened (first one is selected automatically). */}
             {!hasTask && tasks.length > 0 && (
-                <div className='max-w-4xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6' aria-busy='true'>
+                <div className='w-full px-4 sm:px-6 lg:px-10 pt-5 sm:pt-6 pb-10' aria-busy='true'>
                     <div className='bg-white rounded-2xl nice-shadow p-6 animate-pulse space-y-4'>
                         <div className='flex items-center gap-3'>
                             <div className='w-10 h-10 rounded-xl bg-neutral-100' />

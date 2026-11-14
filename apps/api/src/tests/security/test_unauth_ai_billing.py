@@ -15,7 +15,6 @@ from src.core.events.database import get_db_session
 from src.routers.ai import ai as ai_router_module
 from src.routers.ai import magicblocks as magicblocks_router_module
 from src.routers.ai import rag as rag_router_module
-from src.routers.boards import boards_playground as boards_playground_router_module
 from src.routers.courses import migration as migration_router_module
 
 
@@ -41,26 +40,6 @@ UNAUTH_BILLING_ROUTES = [
         {
             "session_uuid": "x",
             "activity_uuid": "x",
-            "block_uuid": "x",
-            "message": "x",
-        },
-    ),
-    (
-        "POST",
-        "/api/v1/boards/playground/start",
-        {
-            "board_uuid": "x",
-            "block_uuid": "x",
-            "prompt": "x",
-            "context": {},
-        },
-    ),
-    (
-        "POST",
-        "/api/v1/boards/playground/iterate",
-        {
-            "session_uuid": "x",
-            "board_uuid": "x",
             "block_uuid": "x",
             "message": "x",
         },
@@ -118,9 +97,6 @@ def app(db):
     app.include_router(ai_router_module.router, prefix="/api/v1/ai")
     app.include_router(magicblocks_router_module.router, prefix="/api/v1/ai")
     app.include_router(rag_router_module.router, prefix="/api/v1/ai")
-    app.include_router(
-        boards_playground_router_module.router, prefix="/api/v1/boards"
-    )
     app.include_router(
         migration_router_module.router, prefix="/api/v1/courses"
     )

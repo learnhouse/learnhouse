@@ -21,6 +21,9 @@ import { getFinalGrade, retryAssignmentSubmission, submitAssignmentForGrading } 
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import { useAssignmentDirtyTasks } from '@components/Contexts/Assignments/AssignmentDirtyTasksContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { AIChip } from '@components/Objects/AI/AIBrand'
+import { navControlClass } from '@components/Pages/Activity/ActivityNavBar'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { ASSIGNMENT_SUBMIT_EVENT } from '@components/Objects/Activities/Assignment/assignmentUI'
@@ -40,10 +43,14 @@ export default function AssignmentTools(props: {
   course: any
   orgslug: string
   assignment: any
+  dark?: boolean
+  compact?: boolean
 }) {
   const { t } = useTranslation();
+  const opts = { dark: props.dark, compact: props.compact }
   const submission = useAssignmentSubmission() as any
   const session = useLHSession() as any;
+  const org = useOrg() as any;
   const queryClient = useQueryClient();
   const dirtyTasks = useAssignmentDirtyTasks();
   const [gradeData, setGradeData] = React.useState<any>(null);
@@ -86,6 +93,9 @@ export default function AssignmentTools(props: {
           // fetched with it stripped, so refetch that too; otherwise the
           // learner has to reload the page to see what they just earned.
           queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(props.assignment?.assignment_uuid) })
+          // The learner's own assignment list (the trail's "due this week"
+          // and assignments section) reads status from the same submission.
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.mine(org?.id) })
         }
         else {
           toast.error(t('assignments.failed_submit_assignment'))
@@ -125,6 +135,7 @@ export default function AssignmentTools(props: {
         // answer server-side. Refetch so the learner isn't left reading the
         // corrigé they are no longer entitled to for this attempt.
         queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(props.assignment?.assignment_uuid) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.mine(org?.id) });
         setGradeData(null);
         setIsGradeModalOpen(false);
         // Re-arm the auto-open on this fresh attempt so the next graded
@@ -195,15 +206,10 @@ export default function AssignmentTools(props: {
     // generic failure toast with no explanation of why.
     if (isAssignmentPastDue(props.assignment?.due_date)) {
       return (
-        <div className="bg-rose-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-          <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
-          <div className="flex items-center space-x-2">
-            <BookOpenCheck size={17} />
-            <span className="text-xs font-bold">
-              {t('assignments.past_due', { defaultValue: 'Deadline passed' })}
-            </span>
-          </div>
-        </div>
+        <span role="status" className={navControlClass('danger', opts)}>
+          <BookOpenCheck size={16} className="shrink-0" />
+          {t('assignments.past_due', { defaultValue: 'Deadline passed' })}
+        </span>
       )
     }
 
@@ -212,15 +218,10 @@ export default function AssignmentTools(props: {
     // the bar is what the learner is looking at.
     if (isSubmitting) {
       return (
-        <div className="bg-cyan-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-          <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
-          <div className="flex items-center space-x-2">
-            <Loader2 size={17} className="animate-spin" />
-            <span className="text-xs font-bold">
-              {t('assignments.submitting', { defaultValue: 'Submitting…' })}
-            </span>
-          </div>
-        </div>
+        <span role="status" aria-busy="true" className={navControlClass('neutral', opts)}>
+          <Loader2 size={16} className="animate-spin shrink-0" />
+          {t('assignments.submitting', { defaultValue: 'Submitting…' })}
+        </span>
       )
     }
 
@@ -242,21 +243,18 @@ export default function AssignmentTools(props: {
             : t('assignments.submit_assignment_title')
         }
         dialogTrigger={
-          <div className="bg-cyan-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
-            <span className="text-[10px] font-bold mb-1 uppercase">
-              {isRetryAttempt
-                ? t('assignments.attempt_count', { current: attemptNumber })
-                : t('common.status')}
-            </span>
-            <div className="flex items-center space-x-2">
-              <BookOpenCheck size={17} />
-              <span className="text-xs font-bold">
-                {isUngradedAssignment
-                  ? t('assignments.hand_in', { defaultValue: 'Hand in my work' })
-                  : t('assignments.submit_for_grading')}
+          // Completion is automatic here: handing in is the action, not a toggle.
+          <button type="button" className={navControlClass('primary', opts)}>
+            <BookOpenCheck size={16} className="shrink-0" />
+            {isUngradedAssignment
+              ? t('assignments.hand_in', { defaultValue: 'Hand in my work' })
+              : t('assignments.submit_for_grading')}
+            {isRetryAttempt && (
+              <span className="text-xs font-medium opacity-60">
+                {t('assignments.attempt_count', { current: attemptNumber })}
               </span>
-            </div>
-          </div>
+            )}
+          </button>
         }
         functionToExecute={submitForGradingUI}
         status="info"
@@ -278,16 +276,11 @@ export default function AssignmentTools(props: {
         (maxRetries === 0 || currentAttempt < maxRetries);
 
       return (
-        <div className="flex items-center gap-2">
-          <div className="bg-teal-700 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-            <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
-            <div className="flex items-center space-x-2">
-              <CheckCircle size={17} />
-              <span className="text-xs font-bold">
-                {t('assignments.handed_in', { defaultValue: 'Handed in' })}
-              </span>
-            </div>
-          </div>
+        <div className={`flex items-center gap-2 ${props.compact ? 'w-full' : ''}`}>
+          <span role="status" className={navControlClass('done', opts)}>
+            <CheckCircle size={16} className="lh-t-accent shrink-0" />
+            {t('assignments.handed_in', { defaultValue: 'Handed in' })}
+          </span>
           {canRetry && (
             <ConfirmationModal
               confirmationButtonText={t('assignments.retry_assignment')}
@@ -302,9 +295,9 @@ export default function AssignmentTools(props: {
                 <button
                   type="button"
                   disabled={isRetrying}
-                  className="h-full inline-flex items-center gap-1.5 px-3 py-2.5 rounded-md bg-white/90 hover:bg-white disabled:opacity-50 text-teal-800 text-xs font-bold nice-shadow transition-colors"
+                  className={`${navControlClass('todo', opts)} ${props.compact ? 'w-auto! shrink-0' : ''}`}
                 >
-                  <RotateCcw size={14} />
+                  <RotateCcw size={14} className="shrink-0" />
                   {t('assignments.retry_assignment')}
                 </button>
               }
@@ -317,13 +310,10 @@ export default function AssignmentTools(props: {
     }
 
     return (
-      <div className="bg-amber-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-        <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
-        <div className="flex items-center space-x-2">
-          <UserRoundPen size={17} />
-          <span className="text-xs font-bold">{t('assignments.grading_in_progress')}</span>
-        </div>
-      </div>
+      <span role="status" className={navControlClass('warn', opts)}>
+        <UserRoundPen size={16} className="shrink-0" />
+        {t('assignments.grading_in_progress')}
+      </span>
     )
   }
 
@@ -337,8 +327,6 @@ export default function AssignmentTools(props: {
     const feedback = gradeData?.overall_feedback;
     const tasks = gradeData?.tasks as any[] | undefined;
     const isPassing = passed !== false;
-    const pillBg = isPassing ? 'bg-teal-600' : 'bg-rose-600';
-    const pillChip = isPassing ? 'bg-white text-teal-800' : 'bg-white text-rose-700';
 
     // Retry availability mirrors the backend's eligibility check: teacher
     // opted in (allow_retries) and attempt counter hasn't reached the cap
@@ -360,33 +348,27 @@ export default function AssignmentTools(props: {
 
     return (
       <>
-        {/* Compact pill: same footprint and alignment as the Next button */}
+        {/* The grade, as the bar's status pill; opens the details. */}
         <button
           type="button"
           onClick={() => setIsGradeModalOpen(true)}
-          className={`${pillBg} rounded-md px-3 sm:px-4 nice-shadow flex flex-col items-start text-start p-2 sm:p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
+          className={navControlClass(isPassing ? 'done' : 'danger', opts)}
         >
-          <span className="text-[10px] font-bold mb-1 uppercase text-white/90 flex items-center gap-1.5">
-            <span>{t('common.status')}</span>
-            {allowRetries && currentAttempt > 1 && (
-              <span className="bg-white/20 text-white px-1.5 py-px rounded-full text-[9px] font-bold tracking-normal normal-case">
-                {maxRetries
-                  ? t('assignments.attempt_count_bounded', {
-                      current: currentAttempt,
-                      max: maxRetries,
-                    })
-                  : t('assignments.attempt_count', { current: currentAttempt })}
-              </span>
-            )}
+          <CheckCircle size={16} className={`shrink-0 ${isPassing ? 'lh-t-accent' : ''}`} />
+          {t('assignments.graded')}
+          <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums ${
+            props.dark ? 'bg-white/10' : 'bg-white/80 ring-1 ring-inset ring-black/[0.06]'
+          }`}>
+            {displayGrade}
           </span>
-          <div className="flex items-center space-x-1.5">
-            <CheckCircle size={15} className="shrink-0" />
-            <span className="text-xs sm:text-sm font-semibold">{t('assignments.graded')}</span>
-            <span className={`${pillChip} px-1.5 py-0.5 rounded-md text-[11px] font-bold`}>
-              {displayGrade}
+          {allowRetries && currentAttempt > 1 && (
+            <span className="text-[11px] font-medium opacity-60">
+              {maxRetries
+                ? t('assignments.attempt_count_bounded', { current: currentAttempt, max: maxRetries })
+                : t('assignments.attempt_count', { current: currentAttempt })}
             </span>
-            <ChevronRight size={15} className="shrink-0" />
-          </div>
+          )}
+          <ChevronRight size={14} className="shrink-0 opacity-60 rtl:rotate-180" />
         </button>
 
         {/* Confetti for passing students. Fires once each time the modal
@@ -460,6 +442,13 @@ export default function AssignmentTools(props: {
                       <p className="text-sm text-gray-500 font-medium pt-1">
                         {[percentageDisplay, pointsSummary].filter(Boolean).join(' · ')}
                       </p>
+                    )}
+                    {gradeData?.ai_graded && (
+                      <div className="flex justify-center pt-1">
+                        <AIChip tone="soft" title={t('assignments.ai_graded_hint')}>
+                          {t('assignments.ai_graded_badge')}
+                        </AIChip>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -580,7 +569,7 @@ export default function AssignmentTools(props: {
                             <button
                               type="button"
                               disabled={isRetrying}
-                              className="mt-3 w-full inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+                              className="lh-t-btn mt-3 w-full inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
                             >
                               <RotateCcw size={14} />
                               {t('assignments.retry_assignment')}

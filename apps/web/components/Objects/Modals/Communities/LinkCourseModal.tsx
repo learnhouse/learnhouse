@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { linkCommunityToCourse, unlinkCommunityFromCourse, Community } from '@services/communities/communities'
-import { getOrgCourses } from '@services/courses/courses'
+import { getAllOrgCourses } from '@services/courses/courses'
 import { revalidateTags } from '@services/utils/ts/requests'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2, Link2, Unlink, Search } from 'lucide-react'
@@ -50,7 +50,7 @@ export function LinkCourseModal({
 
       setIsLoadingCourses(true)
       try {
-        const result = await getOrgCourses(orgSlug, null, accessToken)
+        const result = await getAllOrgCourses(orgSlug, accessToken, false)
         setCourses(result || [])
       } catch (_error) {
         // silent; empty list handles it

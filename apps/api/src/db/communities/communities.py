@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict, Any
 from sqlalchemy import Column, ForeignKey, Index, Integer, Text, JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
 
@@ -39,6 +40,8 @@ class Community(CommunityBase, table=True):
         sa_column=Column(Integer, ForeignKey("course.id", ondelete="SET NULL"))
     )
     community_uuid: str = Field(default="", index=True)
+    slug: Optional[str] = Field(default=None, max_length=100)
+    seo: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSONB, nullable=True))
     moderation_words: List[str] = Field(default_factory=list, sa_column=Column(JSON, default=list))
     moderation_settings: Optional[Dict[str, Any]] = Field(
         default=None, sa_column=Column(JSON, nullable=True)
@@ -65,6 +68,8 @@ class CommunityRead(CommunityBase):
     org_id: int = Field(default=None, foreign_key="organization.id")
     course_id: Optional[int] = Field(default=None, foreign_key="course.id")
     community_uuid: str
+    slug: Optional[str] = None
+    seo: Optional[Dict[str, Any]] = None
     moderation_words: List[str] = []
     moderation_settings: Optional[Dict[str, Any]] = None
     creation_date: str

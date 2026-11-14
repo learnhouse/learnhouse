@@ -169,6 +169,11 @@ async def dispatch_webhooks(
                      (used by the test/ping feature).
     """
     validate_event_data(event_name, data)
+    if not webhook_ids:
+        # Same events feed EE integrations (CRM sync); test pings don't.
+        from src.core.ee_hooks import notify_ee_event
+
+        notify_ee_event(event_name, org_id, data)
     if not webhook_ids and _active_cache_get(org_id) is False:
         return
     task = asyncio.create_task(
