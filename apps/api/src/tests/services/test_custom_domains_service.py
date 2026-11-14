@@ -756,7 +756,7 @@ class TestResolveAndSslStatus:
             "src.services.orgs.custom_domains.ssl.create_default_context",
             return_value=fake_context,
         ), patch(
-            "src.services.orgs.custom_domains.socket.create_connection",
+            "src.services.orgs.custom_domains.connect_validated",
             return_value=_FakeSocket(),
         ) as mock_connect:
             active_result = await check_domain_ssl_status(
@@ -777,7 +777,7 @@ class TestResolveAndSslStatus:
             "src.services.orgs.custom_domains.ssl.create_default_context",
             return_value=fake_context_invalid,
         ), patch(
-            "src.services.orgs.custom_domains.socket.create_connection",
+            "src.services.orgs.custom_domains.connect_validated",
             return_value=_FakeSocket(),
         ):
             invalid_result = await check_domain_ssl_status(
@@ -789,7 +789,7 @@ class TestResolveAndSslStatus:
             )
 
         with patch(
-            "src.services.orgs.custom_domains.socket.create_connection",
+            "src.services.orgs.custom_domains.connect_validated",
             side_effect=ConnectionRefusedError("refused"),
         ):
             provisioning_result = await check_domain_ssl_status(
@@ -809,7 +809,7 @@ class TestResolveAndSslStatus:
         assert active_result["status"] == "active"
         assert active_result["expires"] == "Jan 01 00:00:00 2030 GMT"
         assert active_result["issuer"] == "Lets Encrypt"
-        mock_connect.assert_called_once_with((verified.domain, 443), timeout=5)
+        mock_connect.assert_called_once_with(verified.domain, 443, timeout=5)
         assert invalid_result["has_ssl"] is False
         assert invalid_result["status"] == "invalid"
         assert "invalid certificate" in invalid_result["message"]
@@ -820,7 +820,7 @@ class TestResolveAndSslStatus:
         }
 
         with patch(
-            "src.services.orgs.custom_domains.socket.create_connection",
+            "src.services.orgs.custom_domains.connect_validated",
             side_effect=RuntimeError("ssl boom"),
         ):
             unknown_result = await check_domain_ssl_status(
@@ -866,7 +866,7 @@ class TestResolveAndSslStatus:
                 "URL https://imds.example.com resolves to blocked address range (169.254.169.254)"
             ),
         ), patch(
-            "src.services.orgs.custom_domains.socket.create_connection"
+            "src.services.orgs.custom_domains.connect_validated"
         ) as socket_mock:
             result = await check_domain_ssl_status(
                 mock_request, db, org.id, domain.domain_uuid, admin_user

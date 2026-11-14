@@ -338,14 +338,15 @@ LEARNHOUSE_COOKIE_DOMAIN=.example.com
 LEARNHOUSE_PORT=9000
 
 # Security and bootstrap
-LEARNHOUSE_AUTH_JWT_SECRET_KEY=replace-with-at-least-32-random-characters
+# Generate each secret with: openssl rand -hex 32
+LEARNHOUSE_AUTH_JWT_SECRET_KEY=
 LEARNHOUSE_INITIAL_ADMIN_EMAIL=admin@example.com
 LEARNHOUSE_INITIAL_ADMIN_PASSWORD=change-this-password
 LEARNHOUSE_INITIAL_ORG_NAME=Default Organization
 LEARNHOUSE_INITIAL_ORG_SLUG=default
 
 # Collaboration
-COLLAB_INTERNAL_KEY=replace-with-random-shared-secret
+COLLAB_INTERNAL_KEY=
 LEARNHOUSE_REDIS_URL=redis://redis:6379
 NEXT_PUBLIC_COLLAB_URL=wss://learn.example.com/collab
 

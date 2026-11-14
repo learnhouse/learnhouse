@@ -7,6 +7,25 @@ from dotenv import load_dotenv
 # One-shot guard for the missing-credential report below: config is loaded on
 # every request, and repeating the report drowns out every other startup log.
 _LOGGED_MISSING_INTERNAL_KEYS = False
+# Same, for the example-JWT-secret warning.
+_LOGGED_PLACEHOLDER_JWT_SECRET = False
+
+# Example values from .env.example files and the docs. A deployment that kept
+# one has a secret anyone can read. Keep in sync with apps/collab/src/index.ts.
+PLACEHOLDER_SECRETS = frozenset({
+    "your-jwt-secret-key",
+    "your-internal-key",
+    "CHANGE_ME_generate_with_openssl_rand_hex_32",
+    "replace-with-at-least-32-random-characters",
+    "replace-with-random-shared-secret",
+})
+
+
+def shared_secret_from_env(name: str) -> str:
+    """A service-to-service key from the environment, or "" when it is unset or
+    still an example value (which anyone can read, so it must open nothing)."""
+    value = os.getenv(name, "")
+    return "" if value in PLACEHOLDER_SECRETS else value
 
 
 class CookieConfig(BaseModel):
@@ -284,6 +303,21 @@ def get_learnhouse_config() -> LearnHouseConfig:
         raise ValueError(
             "SECURITY ERROR: LEARNHOUSE_AUTH_JWT_SECRET_KEY must be set. "
             "Generate a secure key with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+        )
+    global _LOGGED_PLACEHOLDER_JWT_SECRET
+    if auth_jwt_secret_key in PLACEHOLDER_SECRETS and not _LOGGED_PLACEHOLDER_JWT_SECRET:
+        # Warn rather than refuse: the key also derives the encryption for
+        # stored webhook and MFA secrets and peppers API tokens, so rotating it
+        # is a planned migration, not something to force on an upgrade. Once
+        # per process: config is loaded on every request.
+        _LOGGED_PLACEHOLDER_JWT_SECRET = True
+        import logging as _cfg_log
+        _cfg_log.getLogger(__name__).critical(
+            "SECURITY: LEARNHOUSE_AUTH_JWT_SECRET_KEY is the example value from the docs, "
+            "so anyone can sign valid sessions for this instance. Rotate it to a random value "
+            "(python -c \"import secrets; print(secrets.token_urlsafe(32))\"). Rotating signs "
+            "everyone out and invalidates stored webhook secrets, API tokens and MFA enrolments "
+            "unless LEARNHOUSE_MFA_ENCRYPTION_KEY is set."
         )
     if len(auth_jwt_secret_key) < 32:
         raise ValueError(

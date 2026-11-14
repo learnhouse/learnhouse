@@ -115,6 +115,7 @@ def _mock_transport_client_factory(handler):
     """Replacement for ``httpx.AsyncClient`` that routes through a mock transport."""
 
     def _factory(**kwargs):
+        kwargs.pop("transport", None)
         return _REAL_ASYNC_CLIENT(transport=httpx.MockTransport(handler), **kwargs)
 
     return _factory

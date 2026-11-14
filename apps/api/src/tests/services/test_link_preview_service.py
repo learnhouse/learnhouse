@@ -52,6 +52,7 @@ def _patch_client(handler):
     """Patch ``httpx.AsyncClient`` so the service talks to ``handler`` instead."""
 
     def _factory(**kwargs):
+        kwargs.pop("transport", None)
         return _REAL_ASYNC_CLIENT(transport=httpx.MockTransport(handler), **kwargs)
 
     return patch("src.services.utils.link_preview.httpx.AsyncClient", _factory)
@@ -561,3 +562,20 @@ async def test_fetch_link_preview_stops_after_the_redirect_budget():
 
     assert result == _MINIMAL_PREVIEW
     assert len(handler.requested_urls) == hops
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_blocks_a_name_that_rebinds_at_connect_time():
+    import socket
+
+    public = [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.215.14", 0))]
+    loopback = [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 0))]
+    # The first lookup passes the guard; the one made when connecting does not
+    with patch(
+        "src.services.utils.ssrf_guard.socket.getaddrinfo", side_effect=[public, loopback]
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await fetch_link_preview("http://rebind.example/admin")
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "This URL cannot be previewed"
