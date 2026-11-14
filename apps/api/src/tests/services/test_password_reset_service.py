@@ -389,7 +389,10 @@ class TestPasswordResetService:
         ), patch(
             "src.services.users.password_reset.redis.Redis.from_url",
             return_value=fake_redis,
-        ):
+        ), patch(
+            "src.services.users.password_reset._drop_unverified_sso_links",
+            new_callable=AsyncMock,
+        ) as drop_links:
             result = await change_password_with_reset_code(
                 mock_request,
                 db,
@@ -406,6 +409,8 @@ class TestPasswordResetService:
         assert refreshed.password != old_password
         assert security_verify_password("NewPassword123!", refreshed.password)
         assert not inbox_unproven(refreshed)
+        # IdP links made while the inbox was unproven go with it
+        drop_links.assert_awaited_once_with(user.id, db)
         fake_redis.getdel.assert_called_once_with(redis_key)
 
     @pytest.mark.asyncio

@@ -11,7 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.security.security import security_hash_password
-from src.services.users.users import clear_inbox_unproven
+from src.services.users.users import clear_inbox_unproven, inbox_unproven
 from config.config import get_learnhouse_config
 from src.services.users.emails import (
     send_password_reset_email,
@@ -333,7 +333,7 @@ async def change_password_with_reset_code(
 
     # The reset code proved the inbox: identity-provider links made before
     # that (an org's IdP or LMS asserting this unclaimed address) go.
-    if not user.email_verified:
+    if not user.email_verified or inbox_unproven(user):
         await _drop_unverified_sso_links(user.id, db_session)
 
     # Change password
@@ -477,7 +477,7 @@ async def change_password_with_reset_code_platform(
             detail="Invalid or expired reset code",
         )
 
-    if not user.email_verified:
+    if not user.email_verified or inbox_unproven(user):
         await _drop_unverified_sso_links(user.id, db_session)
 
     user.password = security_hash_password(new_password)
