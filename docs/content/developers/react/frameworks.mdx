@@ -129,18 +129,19 @@ The core of the package is small; most of the weight is the blocks themselves, l
 
 ## Where to fetch: browser or server
 
-When you pass `activityId`, the component fetches the activity from the browser. LearnHouse's API only answers browsers
-on origins it trusts:
+When you pass `activityId`, the component fetches the activity from the browser. LearnHouse answers those requests
+from any origin as long as they carry no cookies: anonymously for public courses, or with a
+[learner session](/developers/react/learners). Cookie sessions only work on the origins the instance trusts:
 
-| Instance | Browser requests are accepted from |
+| Instance | Cookie sessions are accepted from |
 | --- | --- |
 | Self-hosted, single organization | The instance's own domain, and `localhost` |
 | Self-hosted, multi-organization | Origins matching `LEARNHOUSE_ALLOWED_REGEXP` (by default the instance domain and its subdomains) |
 | LearnHouse Cloud | LearnHouse's own domains |
 
-So if your app runs on another domain, **fetch on your server and pass `activity`** (or `content`), as in
-[Fetch on the server](#fetch-on-the-server-render-with-no-client-round-trip) above. It is also the faster option:
-the lesson arrives with the page. Images, video and audio in the lesson load straight from your instance.
+Self-hosters who set `LEARNHOUSE_BEARER_CORS=false` limit every browser request to that table.
 
-Fetching from the browser with `activityId` works when your app runs on the instance's domain or a subdomain it
-trusts, and on `localhost` while you develop.
+**Fetching on your server and passing `activity`** (or `content`), as in
+[Fetch on the server](#fetch-on-the-server-render-with-no-client-round-trip) above, is still the faster option for
+anonymous lessons: the lesson arrives with the page. Images, video and audio in the lesson load straight from your
+instance.

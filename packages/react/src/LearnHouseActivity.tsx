@@ -1,18 +1,38 @@
-import React, { Component, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Component, Suspense, lazy, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { I18nextProvider } from 'react-i18next'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'react-hot-toast'
 // Straight from the LearnHouse web app: the same renderer its embed uses.
 import ActivityRenderer, { RENDERABLE_ACTIVITY_TYPES } from '@components/Objects/Activities/ActivityRenderer/ActivityRenderer'
 import { OrgContext } from '@components/Contexts/OrgContext'
 import { SessionContext } from '@components/Contexts/LHSessionContext'
 import { LearnHouseInternalContext, useLearnHouseInternal } from './context'
 import { LearnHouseProvider, useLearnHouseDefaults } from './provider'
+import { Completion } from './completion'
 import { useActivitySource } from './data'
 import { useRendererEvents } from './events'
 import { applyLocale, createI18n, setCurrentI18n } from './i18n'
 import { isRtl, resolveMode, themeToStyle } from './theme'
 import type { LearnHouseActivityData, LearnHouseActivityProps, LearnHouseEvent } from './types'
+
+// Assignments need a signed-in learner; their code loads only then.
+const StandaloneAssignment = lazy(() => import('@components/Objects/Activities/Assignment/StandaloneAssignment'))
+
+// One toast host for every activity on the page (assignment saves, completion errors).
+let toasterOwners = 0
+function SharedToaster() {
+  const [owner, setOwner] = useState(false)
+  useEffect(() => {
+    if (toasterOwners > 0) return
+    toasterOwners += 1
+    setOwner(true)
+    return () => {
+      toasterOwners -= 1
+    }
+  }, [])
+  return owner ? <Toaster position="bottom-center" /> : null
+}
 
 class RenderBoundary extends Component<
   { fallback: (error: Error, retry: () => void) => ReactNode; onError: (error: Error) => void; children: ReactNode },
@@ -49,16 +69,20 @@ function ActivityView(props: LearnHouseActivityProps) {
   // the ones blocks send through the analytics shim.
   const onEventRef = useRef(props.onEvent)
   onEventRef.current = props.onEvent
+  // Counts how often the end of the activity came into view (completion: 'scroll').
+  const [reachedEnd, setReachedEnd] = useState(0)
   const internal = useMemo(
     () => ({
       ...parent,
       emit: (event: LearnHouseEvent) => {
+        if (event.type === 'complete') setReachedEnd((n) => n + 1)
         parent.emit(event)
         onEventRef.current?.(event)
       },
     }),
     [parent],
   )
+  const signedIn = internal.session.status === 'authenticated'
   const theme = { ...defaults?.theme, ...props.theme }
   const locale = props.locale ?? defaults?.locale ?? 'en'
   const messages = props.messages ?? defaults?.messages
@@ -80,13 +104,20 @@ function ActivityView(props: LearnHouseActivityProps) {
   const source = useActivitySource(props)
   const { activity, course, org } = source
 
+  const isAssignment = activity?.activity_type === 'TYPE_ASSIGNMENT'
+  // Completion is saved for a signed-in learner on activities that came from
+  // the API (a raw `content` document has nothing to complete).
+  const completion =
+    signedIn && activity && !isAssignment && activity.id != null ? (props.completion ?? 'button') : 'none'
+  const watchEnd = (props.trackCompletion ?? false) || completion === 'scroll'
+
   const rootRef = useRef<HTMLDivElement>(null)
   const { sentinelRef } = useRendererEvents(rootRef, internal.emit, {
     enabled: source.status === 'ready',
     activityId: activity?.activity_uuid,
     linkTarget,
     onLinkClick: props.onLinkClick,
-    trackCompletion: props.trackCompletion ?? false,
+    trackCompletion: watchEnd,
   })
 
   const onLoadRef = useRef(props.onLoad)
@@ -119,7 +150,9 @@ function ActivityView(props: LearnHouseActivityProps) {
     body = props.fallback ?? null
   } else if (source.status === 'error' || !activity) {
     body = errorFallback(source.error ?? new Error('Activity not found'), source.retry)
-  } else if (!RENDERABLE_ACTIVITY_TYPES.includes(activity.activity_type)) {
+  } else if (isAssignment && !signedIn) {
+    body = errorFallback(new Error('Assignments need a signed-in learner: pass a session to LearnHouseProvider'), source.retry)
+  } else if (!isAssignment && !RENDERABLE_ACTIVITY_TYPES.includes(activity.activity_type)) {
     body = errorFallback(new Error(`Activity type ${activity.activity_type} can't be rendered outside LearnHouse`), source.retry)
   } else {
     const activityUrl = source.activityUrl
@@ -134,20 +167,37 @@ function ActivityView(props: LearnHouseActivityProps) {
             internal.emit({ type: 'error', error })
           }}
         >
-          <OrgContext.Provider value={{ org, isUserPartOfTheOrg: false, orgslug: org?.slug ?? '' }}>
+          <OrgContext.Provider value={{ org, isUserPartOfTheOrg: signedIn, orgslug: org?.slug ?? '' }}>
             <SessionContext.Provider value={internal.session}>
-              <ActivityRenderer
-                activity={activity}
-                course={course}
-                fallback={props.fallback ?? null}
-                components={props.components as any}
-                marks={props.marks as any}
-                hiddenNodes={props.hideBlocks}
-              />
+              {isAssignment ? (
+                <Suspense fallback={props.fallback ?? null}>
+                  <StandaloneAssignment
+                    activity={activity}
+                    course={course}
+                    fallback={props.fallback ?? null}
+                    onError={(error: Error) => {
+                      onErrorRef.current?.(error)
+                      internal.emit({ type: 'error', error })
+                    }}
+                  />
+                </Suspense>
+              ) : (
+                <ActivityRenderer
+                  activity={activity}
+                  course={course}
+                  fallback={props.fallback ?? null}
+                  components={props.components as any}
+                  marks={props.marks as any}
+                  hiddenNodes={props.hideBlocks}
+                />
+              )}
             </SessionContext.Provider>
           </OrgContext.Provider>
         </RenderBoundary>
-        {props.trackCompletion && <div ref={sentinelRef} className="lh-complete-sentinel" aria-hidden />}
+        {watchEnd && <div ref={sentinelRef} className="lh-complete-sentinel" aria-hidden />}
+        {completion !== 'none' && (
+          <Completion activity={activity} course={course} mode={completion} reachedEnd={reachedEnd} />
+        )}
         {renderSlot(props.footer, activity)}
         {props.showPoweredBy && activityUrl && (
           <a className="lh-powered-by" href={activityUrl} target="_blank" rel="noopener noreferrer">
@@ -164,6 +214,7 @@ function ActivityView(props: LearnHouseActivityProps) {
       <QueryClientProvider client={queryClient}>
         <div ref={rootRef} className={rootClass} style={rootStyle} dir={dir} lang={locale} data-lh-status={source.status}>
           <div className="lh-activity-body">{body}</div>
+          {signedIn && <SharedToaster />}
         </div>
       </QueryClientProvider>
     </I18nextProvider>
@@ -181,7 +232,7 @@ export function LearnHouseActivity(props: LearnHouseActivityProps) {
   const { client } = useContext(LearnHouseInternalContext)
   if (!client && props.baseUrl) {
     return (
-      <LearnHouseProvider baseUrl={props.baseUrl} token={props.token}>
+      <LearnHouseProvider baseUrl={props.baseUrl} token={props.token} session={props.session} getSession={props.getSession}>
         <ActivityView {...props} />
       </LearnHouseProvider>
     )

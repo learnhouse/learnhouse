@@ -175,6 +175,47 @@ class TestBoardsService:
         assert {member.user_id for member in members} == {admin_user.id, other_user.id}
 
     @pytest.mark.asyncio
+    async def test_get_boards_by_org_reports_my_role(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        """my_role is the caller's own member role, the one
+        check_board_membership reports, and None without a member row."""
+        owned = await _make_board(db, org, admin_user, id=70, board_uuid="board_owned")
+        edited = await _make_board(db, org, admin_user, id=71, board_uuid="board_edited")
+        foreign = await _make_board(db, org, admin_user, id=72, board_uuid="board_foreign")
+        for board in (owned, edited, foreign):
+            await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
+        await _make_member(db, owned.id, regular_user.id, BoardMemberRole.OWNER)
+        await _make_member(db, edited.id, regular_user.id, BoardMemberRole.EDITOR)
+
+        with patch("src.services.boards.boards.require_org_membership"), patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            boards = await get_boards_by_org(mock_request, org.id, regular_user, db)
+            memberships = {
+                b.board_uuid: await check_board_membership(
+                    mock_request, b.board_uuid, regular_user, db
+                )
+                for b in (owned, edited)
+            }
+
+        roles = {b.board_uuid: b.my_role for b in boards}
+        assert roles == {
+            "board_owned": "owner",
+            "board_edited": "editor",
+            "board_foreign": None,
+        }
+        assert {k: m.role for k, m in memberships.items()} == {
+            k: roles[k] for k in memberships
+        }
+        assert {b.board_uuid: b.member_count for b in boards} == {
+            "board_owned": 2,
+            "board_edited": 2,
+            "board_foreign": 1,
+        }
+
+    @pytest.mark.asyncio
     async def test_add_and_batch_add_members(
         self, db, org, admin_user, mock_request
     ):

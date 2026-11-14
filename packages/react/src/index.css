@@ -50,3 +50,46 @@
 .lh-activity .lh-complete-sentinel {
   height: 1px;
 }
+
+/* Completion toggle under the activity (signed-in learners). */
+.lh-activity .lh-completion {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
+}
+.lh-activity .lh-completion-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--lh-radius, 8px);
+  border: 1px solid var(--lh-border, #e4e4e7);
+  background: var(--lh-bg, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 0.875em;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lh-activity .lh-completion-button:hover:not(:disabled) {
+  border-color: var(--lh-accent, #2563eb);
+}
+.lh-activity .lh-completion-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.lh-activity .lh-completion-button.is-complete {
+  border-color: transparent;
+  background: var(--lh-accent, #16a34a);
+  color: #fff;
+}
+.lh-activity .lh-completion-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+  font-size: 0.8em;
+  line-height: 1;
+}

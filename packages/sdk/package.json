@@ -1,6 +1,6 @@
 {
   "name": "@learnhouse/sdk",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Typed JavaScript/TypeScript client for the LearnHouse API. Runs in browsers, Node 18+, Bun, Deno, edge workers and React Native.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -39,7 +39,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/learnhouse/learnhouse.git",
+    "url": "git+https://github.com/learnhouse/learnhouse.git",
     "directory": "packages/sdk"
   },
   "homepage": "https://learnhouse.app",

@@ -231,4 +231,48 @@ describe('package', () => {
     expect(css).toBe(readFileSync(path.join(import.meta.dirname, '../../react/dist/styles.css'), 'utf8'))
     expect(css).toContain('.lh-activity')
   })
+
+  it('shares one learner session between activities: one getSession, bearer everywhere, progress events', async () => {
+    const b64 = (o: unknown) => btoa(JSON.stringify(o)).replace(/=+$/, '')
+    const token = `${b64({ alg: 'HS256' })}.${b64({ sub: 'lea@example.com', exp: Math.floor(Date.now() / 1000) + 900 })}.sig`
+    const withId = { ...activity, id: 5 }
+    const metaWithId = { ...meta, id: 11 }
+    const auths: (string | null)[] = []
+    let completed = false
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
+        const url = String(input instanceof Request ? input.url : input)
+        auths.push(new Headers(init.headers).get('authorization'))
+        let body: unknown = null
+        if (url.includes(`/courses/${COURSE}/meta`)) body = metaWithId
+        else if (url.endsWith('/activities/activity_payouts')) body = withId
+        else if (url.includes('/users/session')) body = { user: { id: 9 }, roles: [] }
+        else if (url.includes('/trail/add_activity/')) {
+          completed = true
+          body = { runs: [{ course_id: 11, steps: [{ activity_id: 5 }] }] }
+        } else if (url.includes('/trail/org/1/trail')) body = { runs: [{ course_id: 11, steps: completed ? [{ activity_id: 5 }] : [] }] }
+        return new Response(JSON.stringify(body ?? { detail: 'Not Found' }), {
+          status: body ? 200 : 404,
+          headers: { 'content-type': 'application/json' },
+        })
+      }),
+    )
+    const getSession = vi.fn(async () => ({ access_token: token }))
+    const progress: unknown[] = []
+    const App = withProvider({ baseUrl: BASE, getSession }, () => [
+      h(LearnHouseActivity, { activityId: 'activity_payouts', courseId: COURSE, onProgress: (e: unknown) => progress.push(e) }),
+      h(LearnHouseActivity, { activityId: 'activity_payouts', courseId: COURSE, completion: 'none' }),
+    ])
+    const w = mount(App, { attachTo: document.body })
+    await until(() => w.findAll('.lh-completion-button').length === 1, 30000)
+    expect(w.text()).toContain('Fetched body')
+    await w.find('.lh-completion-button').trigger('click')
+    await until(() => progress.length === 1)
+    expect(progress[0]).toEqual({ type: 'progress', activityId: 'activity_payouts', completed: true })
+    expect(getSession).toHaveBeenCalledTimes(1)
+    expect(auths.length).toBeGreaterThan(3)
+    expect(auths.every((a) => a === `Bearer ${token}`)).toBe(true)
+    w.unmount()
+  }, 60000)
 })

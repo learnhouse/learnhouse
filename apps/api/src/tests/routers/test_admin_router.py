@@ -177,6 +177,28 @@ class TestAdminRouter:
         assert response.status_code == 200
         assert response.json()[0]["course"]["course_uuid"] == "course_1"
 
+    async def test_issue_embed_session(self, client, api_user):
+        minted = {
+            "access_token": "embed-token",
+            "token_type": "bearer",
+            "expires_in": 600,
+            "expires_at": 1_900_000_000,
+            "user_id": 2,
+            "user_uuid": "user_2",
+            "org_id": 1,
+        }
+        with _admin_context(api_user), patch(
+            "src.routers.admin.issue_embed_session",
+            new_callable=AsyncMock,
+            return_value=minted,
+        ) as issue:
+            response = await client.post(
+                "/api/v1/admin/acme/auth/embed-session", json={"user_id": 2, "ttl_seconds": 600}
+            )
+        assert response.status_code == 200
+        assert response.json() == minted
+        assert issue.await_args.args[1:] == (2, issue.await_args.args[2], 600)
+
     async def test_check_course_access(self, client, api_user):
         with _admin_context(api_user), patch(
             "src.routers.admin.check_course_access",

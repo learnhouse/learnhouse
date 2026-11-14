@@ -142,3 +142,12 @@ class TestAwardedCertificates:
         assert resp.status_code == 200
         assert resp.json() == []
         assert svc.await_args.args[1] is admin_user
+        assert svc.await_args.kwargs == {"org_id": None}
+
+    async def test_all_my_certificates_forwards_org_id(self, client, admin_user):
+        with _mock("get_all_user_certificates", return_value=[]) as svc:
+            resp = await client.get(f"{BASE}/user/all", params={"org_id": 7})
+
+        assert resp.status_code == 200
+        assert svc.await_args.args[1] is admin_user
+        assert svc.await_args.kwargs == {"org_id": 7}

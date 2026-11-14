@@ -1,7 +1,7 @@
 [project]
 description = "Learnhouse Backend"
 name = "learnhouse-api"
-version = "1.4.4"
+version = "1.4.5"
 requires-python = ">=3.14.7,<3.14.8"
 authors = [
     {name = "Badr B. (swve)"}
@@ -12,7 +12,7 @@ dependencies = [
     "faker==40.44.0",
     "fastapi==0.162.0",
     "httpx==0.28.1",
-    "google-genai==2.34.0",
+    "google-genai==3.1.0",
     "pydantic-ai-slim[openai,anthropic,google,mistral]==2.66.0",
     "pwdlib[argon2]==0.3.1",
     "psycopg2-binary==2.9.13",
@@ -44,11 +44,11 @@ dependencies = [
     "pytest-xdist==3.8.0",
     "sentry-sdk[fastapi]==2.74.0",
     "protobuf==7.36.2",
-    "workos==10.7.0",
+    "workos==10.8.0",
     "dnspython==2.9.2",
     "defusedxml==0.7.1",
     "pgvector==0.5.1",
-    "pypdf==6.21.4",
+    "pypdf==7.0.1",
     "regex==2026.9.29",
     "mcp==2.3.0",
     "fakeredis==2.40.0",

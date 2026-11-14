@@ -174,9 +174,11 @@ export function pickKeys(messages, keys) {
 }
 
 async function buildLocales(metafile) {
+  // Web source, plus the package's own components (they reuse web keys).
+  const srcDir = path.join(pkgDir, 'src')
   const webInputs = Object.keys(metafile.inputs)
     .map((f) => path.resolve(pkgDir, f))
-    .filter((f) => f.startsWith(webDir) && /\.(t|j)sx?$/.test(f))
+    .filter((f) => (f.startsWith(webDir) || f.startsWith(srcDir)) && /\.(t|j)sx?$/.test(f))
   const sources = await Promise.all(webInputs.map((f) => readFile(f, 'utf8')))
   const localesDir = path.join(webDir, 'locales')
   const en = JSON.parse(await readFile(path.join(localesDir, 'en.json'), 'utf8'))
@@ -227,6 +229,11 @@ async function buildJs({ write = true } = {}) {
   return result.metafile
 }
 
+/** Packages only a compiler reads; never a runtime dependency of dist/. */
+export function isBuildOnly(name) {
+  return name === 'typescript' || name.startsWith('@types/')
+}
+
 /** Third-party packages the bundle imports, with the versions apps/web pins. */
 export async function externalDependencies(metafile) {
   const webPkg = JSON.parse(await readFile(path.join(webDir, 'package.json'), 'utf8'))
@@ -257,12 +264,16 @@ export async function externalDependencies(metafile) {
   }
   // Peers of those packages that the web app installs too (@videojs/react's
   // optional HLS adapter, @tiptap/pm…): consumers need the same pairs.
+  // Type packages and the compiler are peers too (i18next wants typescript,
+  // @tiptap/react wants @types/react) but nothing loads them at runtime, so
+  // they stay out: TypeScript users already have their own.
   for (const name of Object.keys(deps)) {
     const manifest = path.join(webDir, 'node_modules', name, 'package.json')
     if (!existsSync(manifest)) continue
     const { peerDependencies = {} } = JSON.parse(await readFile(manifest, 'utf8'))
     for (const peer of Object.keys(peerDependencies)) {
-      if (peer !== 'react' && peer !== 'react-dom' && webDeps[peer] && !deps[peer]) deps[peer] = webDeps[peer]
+      if (peer === 'react' || peer === 'react-dom' || isBuildOnly(peer)) continue
+      if (webDeps[peer] && !deps[peer]) deps[peer] = webDeps[peer]
     }
   }
   return { deps: Object.fromEntries(Object.entries(deps).sort(([a], [b]) => a.localeCompare(b))), missing }
@@ -280,6 +291,8 @@ async function buildCss() {
     'components/Contexts',
     'lib',
     'services',
+    // Learner-side assignment task editors (rendered for signed-in learners).
+    'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes',
   ].map((dir) => `@source '${path.join(webDir, dir)}';`)
   const input = globals
     .replace(/@import ['"]tailwindcss['"];/, `@import 'tailwindcss' source(none);\n${sources.join('\n')}\n@source '${path.join(pkgDir, 'src')}';`)

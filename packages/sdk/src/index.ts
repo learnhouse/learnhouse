@@ -1,4 +1,14 @@
 export { createClient } from './client'
+export {
+  ApiTokenInBrowserError,
+  REFRESH_MARGIN_MS,
+  SessionStore,
+  refreshDelay,
+  resolveSession,
+  tokenExpiry,
+  withSessionRetry,
+} from './session'
+export type { GetLearnHouseSession, LearnHouseSessionInput, ResolvedSession } from './session'
 export type { ClientOptions, LearnHouseClient } from './client'
 
 export { LearnHouseError, isLearnHouseError } from './errors'
@@ -40,6 +50,7 @@ export type { ListCoursesOptions, ListAllCoursesOptions, CourseMetaOptions } fro
 export type { ActivityRef, ResolveActivityOptions } from './resources/activities'
 export type { SearchOptions, SearchPagesOptions } from './resources/search'
 export type { LoginInput, RefreshOptions } from './resources/auth'
+export type { CreateEmbedSessionInput } from './resources/embed'
 
 export type {
   Activity,
@@ -48,6 +59,7 @@ export type {
   Chapter,
   Course,
   CourseMeta,
+  EmbedSession,
   LoginMfaChallenge,
   LoginResult,
   LoginSuccess,

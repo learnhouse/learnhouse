@@ -21,6 +21,22 @@ describe('public surface', () => {
     expect(runtime.VERSION).toBe(web.version)
   })
 
+  // dependencies are what every consumer installs: compiler-only packages
+  // (pulled in as peers of i18next, @tiptap/react…) don't belong there.
+  it('depends on no type packages or compiler', () => {
+    const pkg = JSON.parse(readFileSync(path.join(import.meta.dirname, '../package.json'), 'utf8'))
+    const buildOnly = Object.keys(pkg.dependencies ?? {}).filter((name) => name === 'typescript' || name.startsWith('@types/'))
+    expect(buildOnly).toEqual([])
+  })
+
+  // npm rewrites a bare https repository URL on publish and warns about it.
+  it('keeps package.json in the shape npm publishes', () => {
+    for (const dir of ['sdk', 'react', 'vue']) {
+      const pkg = JSON.parse(readFileSync(path.join(import.meta.dirname, `../../${dir}/package.json`), 'utf8'))
+      expect(pkg.repository.url, dir).toMatch(/^git\+https:\/\//)
+    }
+  })
+
   // The component runs on other people's sites: LearnHouse's own product
   // analytics must stay out of it (blocks report through onEvent instead).
   it('bundles no product analytics client', () => {

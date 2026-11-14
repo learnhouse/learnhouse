@@ -24,6 +24,7 @@ from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.ee_hooks import register_ee_middlewares
 from src.core.events.events import shutdown_app, startup_app
 from src.core.middleware.body_size import RequestBodySizeLimitMiddleware
+from src.core.middleware.bearer_cors import BearerCORSMiddleware, bearer_cors_enabled
 from src.core.middleware.cors import configure_cors
 from src.security.csrf import CSRFProtectionMiddleware
 from src.router import v1_router
@@ -157,7 +158,7 @@ app = FastAPI(
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
     # The schema lists every internal route; publish it only where the docs are.
     openapi_url="/openapi.json" if learnhouse_config.general_config.development_mode else None,
-    version="1.4.4",
+    version="1.4.5",
     lifespan=lifespan,
 )
 
@@ -172,6 +173,10 @@ app.add_middleware(
 )
 app.add_middleware(CSRFProtectionMiddleware)
 configure_cors(app)
+# Wraps the API's CORS: origins it doesn't trust get credential-less CORS, so
+# apps on other domains can call the API with a bearer token (embed sessions).
+if bearer_cors_enabled():
+    app.add_middleware(BearerCORSMiddleware)
 # compresslevel 9 costs several times the CPU of 6 for a couple of percent on
 # JSON; 6 is gzip's own default.
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000, compresslevel=6)

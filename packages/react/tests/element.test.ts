@@ -47,6 +47,59 @@ describe('<learnhouse-activity>', () => {
     el.remove()
   })
 
+  it('acts as the learner with a session attribute and fires lh-progress', async () => {
+    const b64 = (o: unknown) => btoa(JSON.stringify(o)).replace(/=+$/, '')
+    const token = `${b64({ alg: 'HS256' })}.${b64({ sub: 'lea@example.com', exp: Math.floor(Date.now() / 1000) + 900 })}.sig`
+    const activity = {
+      id: 5, activity_uuid: 'activity_el', name: 'L', activity_type: 'TYPE_DYNAMIC',
+      activity_sub_type: 'SUBTYPE_DYNAMIC_PAGE', course_id: 3, org_id: 1, published: true,
+      content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Element learner' }] }] },
+    }
+    const auths: (string | null)[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        auths.push(new Headers(init.headers).get('authorization'))
+        const url = String(input)
+        const body = url.endsWith('/activities/activity_el')
+          ? activity
+          : url.includes('/courses/course_el/meta')
+            ? { id: 3, org_id: 1, course_uuid: 'course_el', chapters: [] }
+            : url.includes('/trail/')
+              ? { runs: [{ course_id: 3, steps: init.method === 'POST' ? [{ activity_id: 5 }] : [] }] }
+              : url.includes('/users/session')
+                ? { user: { id: 9 }, roles: [] }
+                : null
+        return new Response(JSON.stringify(body ?? {}), {
+          status: body ? 200 : 404,
+          headers: { 'content-type': 'application/json' },
+        })
+      }),
+    )
+    const progress = vi.fn()
+    const el = mount((el) => {
+      el.setAttribute('base-url', BASE)
+      el.setAttribute('session', token)
+      el.setAttribute('activity-id', 'activity_el')
+      el.setAttribute('course-id', 'course_el')
+      el.setAttribute('completion', 'button')
+      el.addEventListener('lh-progress', (e: CustomEvent) => progress(e.detail))
+    })
+    const button = await waitFor(
+      () => {
+        const b = el.querySelector('.lh-completion-button') as HTMLButtonElement | null
+        expect(b).toBeTruthy()
+        return b!
+      },
+      { timeout: 30000 },
+    )
+    button.click()
+    await waitFor(() => expect(progress).toHaveBeenCalledWith({ type: 'progress', activityId: 'activity_el', completed: true }))
+    expect(auths.every((a) => a === `Bearer ${token}`)).toBe(true)
+    el.remove()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 404 })))
+  }, 60000)
+
   it('picks up properties set before the element was upgraded', async () => {
     // Simulate a framework setting props on an element that is not defined yet.
     const pending = document.createElement('learnhouse-activity-later') as any
