@@ -10,12 +10,20 @@ when the deployment already runs on Gemini.
 Two modes share one call:
 - ``tts``:     single voice reads the given text.
 - ``podcast``: up to two named speakers (Gemini caps multi-speaker at 2) read a
-  dialogue script, with tone/pacing steered by a natural-language style prefix.
+  dialogue script.
 
-Gemini returns headerless 24 kHz / 16-bit / mono PCM; we wrap it in a WAV
-container (stdlib ``wave``) so it can be stored and streamed like any uploaded
-audio file. All TTS model ids are still *preview* upstream, so the model id is a
-config value (``LEARNHOUSE_AI_TTS_MODEL``), never hard-coded into behaviour.
+Gemini has two request shapes for TTS:
+- GA models (``gemini-3.8-flash-tts`` and later) take the transcript verbatim,
+  with tone/pacing/language in ``speech_metadata.style``. Multi-speaker requests
+  must send one text part per turn tagged with ``speech_metadata.speaker``; the
+  old single-block "Host: ..." script is rejected with HTTP 400.
+- The retiring preview models reject ``speech_metadata`` and instead read a
+  natural-language style prefix and a "Speaker: line" script in one text block.
+
+The output format differs too: GA models return a complete WAV file, the preview
+models headerless 16-bit mono PCM. ``_to_wav`` handles both, so the result is
+always a WAV that can be stored and streamed like any uploaded audio file. The
+model id stays a config value (``LEARNHOUSE_AI_TTS_MODEL``).
 """
 
 from __future__ import annotations
@@ -23,6 +31,7 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import re
 import wave
 from dataclasses import dataclass
 from typing import Optional
@@ -33,12 +42,25 @@ from src.services.ai.llm.provider import _GOOGLE_ALIASES
 
 logger = logging.getLogger(__name__)
 
-# Cheapest Gemini TTS model with a free tier; supports single AND multi-speaker.
-# Override with LEARNHOUSE_AI_TTS_MODEL (e.g. gemini-2.5-pro-preview-tts for higher
-# quality, or a newer preview once it is allowlisted for your key).
-DEFAULT_TTS_MODEL = "gemini-2.5-flash-preview-tts"
+# GA Gemini TTS model; supports single AND multi-speaker. Override with
+# LEARNHOUSE_AI_TTS_MODEL (e.g. gemini-3.8-flash-lite-tts for lower cost).
+DEFAULT_TTS_MODEL = "gemini-3.8-flash-tts"
 
-# Gemini TTS output audio characteristics (fixed by the API).
+# Preview TTS models that predate ``speech_metadata``: they reject it with HTTP 400
+# and need the legacy single-block prompt. Google is shutting all of them down, so
+# this list only shrinks; any other model id gets the current request shape.
+_LEGACY_PROMPT_MODELS = frozenset({
+    "gemini-2.5-flash-preview-tts",
+    "gemini-2.5-pro-preview-tts",
+    "gemini-3.1-flash-tts-preview",
+})
+
+# ``speech_metadata`` is only exposed on the v1beta Gemini API; the SDK's default
+# (v1) rejects the field as unknown. The legacy preview models work on v1beta too.
+_GENAI_API_VERSION = "v1beta"
+
+# Raw PCM characteristics. Fixed by the API for the preview models; GA models
+# return a WAV header instead, which ``_to_wav`` passes through untouched.
 _SAMPLE_RATE = 24000
 _SAMPLE_WIDTH = 2  # 16-bit
 _CHANNELS = 1
@@ -128,13 +150,11 @@ def _resolve_tts_config() -> tuple[str, str]:
     return api_key, model
 
 
-def _build_prompt(text: str, *, style: Optional[str], language: Optional[str], podcast: bool) -> str:
-    """Prefix the script with natural-language directives.
+def _style_directive(style: Optional[str], language: Optional[str], podcast: bool) -> Optional[str]:
+    """Tone, pacing and target language as one natural-language instruction.
 
-    Gemini TTS has no separate style/language parameter: tone, pacing and target
-    language are all steered through the prompt text. Language is otherwise
-    auto-detected from the input, so this directive only nudges it when the caller
-    explicitly picked one.
+    Language is otherwise auto-detected from the input, so the language part only
+    nudges it when the caller explicitly picked one.
     """
     directives: list[str] = []
     if style and style.strip():
@@ -143,14 +163,93 @@ def _build_prompt(text: str, *, style: Optional[str], language: Optional[str], p
         directives.append("Read aloud in a warm, upbeat, natural podcast tone")
     if language and language.strip():
         directives.append(f"speak in {language.strip()}")
-
-    text = text.strip()
     if not directives:
+        return None
+    return ", ".join(directives).capitalize()
+
+
+def _build_prompt(text: str, *, style: Optional[str], language: Optional[str], podcast: bool) -> str:
+    """Legacy (preview model) prompt: the style directive prefixed to the script.
+
+    The preview models have no style field, so tone and language ride in the
+    prompt text itself.
+    """
+    directive = _style_directive(style, language, podcast)
+    text = text.strip()
+    if not directive:
         return text
-    lead = ", ".join(directives).capitalize() + ":"
+    lead = directive + ":"
     if podcast:
         return f"{lead}\nTTS the following conversation:\n{text}"
     return f"{lead}\n{text}"
+
+
+def _uses_speech_metadata(model: str) -> bool:
+    """Whether ``model`` takes the current request shape (``speech_metadata``)."""
+    name = model.strip()
+    if name.startswith("models/"):
+        name = name[len("models/"):]
+    return name not in _LEGACY_PROMPT_MODELS
+
+
+def _split_turns(script: str, speaker_names: list[str]) -> list[tuple[str, str]]:
+    """Split a "Name: line" dialogue script into ``(speaker, text)`` turns.
+
+    A line starts a new turn when its label matches a configured speaker
+    (case-insensitive, ignoring markdown emphasis such as ``**Host:**``). Any
+    other line continues the current turn, and text before the first label goes
+    to the first speaker, so no part of the script is dropped.
+    """
+    canonical = {n.strip().lower(): n for n in speaker_names if n and n.strip()}
+    if not canonical:
+        raise ValueError("Podcast mode needs at least one named speaker.")
+    first = next(iter(canonical.values()))
+
+    turns: list[list[str]] = []
+    for raw in script.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        label, sep, rest = line.partition(":")
+        speaker = canonical.get(label.strip().strip("*_ ").lower()) if sep else None
+        if speaker:
+            turns.append([speaker, rest.strip().lstrip("*_ ").strip()])
+        elif turns:
+            turns[-1][1] = f"{turns[-1][1]} {line}".strip()
+        else:
+            turns.append([first, line])
+    return [(speaker, text) for speaker, text in turns if text]
+
+
+def _build_contents(
+    text: str,
+    *,
+    model: str,
+    speakers: Optional[list[Speaker]],
+    style: Optional[str],
+    language: Optional[str],
+):
+    """Request ``contents`` in the shape ``model`` accepts (see module docstring)."""
+    from google.genai import types
+
+    podcast = bool(speakers)
+    if not _uses_speech_metadata(model):
+        return _build_prompt(text, style=style, language=language, podcast=podcast)
+
+    directive = _style_directive(style, language, podcast)
+    if podcast:
+        turns = _split_turns(text, [s.name for s in speakers[:MAX_SPEAKERS]])
+    else:
+        turns = [(None, text.strip())]
+    parts = [
+        types.Part(
+            text=turn_text,
+            speech_metadata=types.SpeechMetadata(speaker=speaker, style=directive)
+            if (speaker or directive) else None,
+        )
+        for speaker, turn_text in turns
+    ]
+    return types.Content(role="user", parts=parts)
 
 
 _PODCAST_SCRIPT_SYSTEM = (
@@ -260,19 +359,41 @@ async def generate_spoken_script(
     return text
 
 
-def _pcm_to_wav(pcm: bytes) -> bytes:
-    """Wrap raw 24 kHz/16-bit/mono PCM in a WAV container."""
+def _pcm_to_wav(pcm: bytes, sample_rate: int = _SAMPLE_RATE, channels: int = _CHANNELS) -> bytes:
+    """Wrap raw 16-bit PCM in a WAV container."""
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wf:
-        wf.setnchannels(_CHANNELS)
+        wf.setnchannels(channels)
         wf.setsampwidth(_SAMPLE_WIDTH)
-        wf.setframerate(_SAMPLE_RATE)
+        wf.setframerate(sample_rate)
         wf.writeframes(pcm)
     return buf.getvalue()
 
 
-def _extract_pcm(response) -> Optional[bytes]:
-    """Pull the first inline audio payload out of a GenAI response."""
+def _mime_param(mime_type: Optional[str], name: str, default: int) -> int:
+    """Read an integer parameter such as ``rate=24000`` from an audio mime type."""
+    match = re.search(rf"(?:^|;)\s*{name}\s*=\s*(\d+)", mime_type or "", re.IGNORECASE)
+    return int(match.group(1)) if match else default
+
+
+def _to_wav(data: bytes, mime_type: Optional[str]) -> bytes:
+    """Return the audio as WAV whatever the model sent.
+
+    GA models already return a complete WAV file (``audio/wav``); wrapping it
+    again would bury its header inside the samples. Preview models return
+    headerless PCM (``audio/L16;rate=24000``), which gets wrapped here.
+    """
+    if data[:4] == b"RIFF" and data[8:12] == b"WAVE":
+        return data
+    return _pcm_to_wav(
+        data,
+        sample_rate=_mime_param(mime_type, "rate", _SAMPLE_RATE),
+        channels=_mime_param(mime_type, "channels", _CHANNELS),
+    )
+
+
+def _extract_audio(response) -> tuple[Optional[bytes], Optional[str]]:
+    """Pull the first inline audio payload and its mime type out of a GenAI response."""
     candidates = getattr(response, "candidates", None) or []
     for candidate in candidates:
         content = getattr(candidate, "content", None)
@@ -281,8 +402,8 @@ def _extract_pcm(response) -> Optional[bytes]:
             inline = getattr(part, "inline_data", None)
             data = getattr(inline, "data", None) if inline else None
             if data:
-                return data
-    return None
+                return data, getattr(inline, "mime_type", None)
+    return None, None
 
 
 async def generate_speech(
@@ -315,7 +436,7 @@ async def generate_speech(
 
     api_key, model = _resolve_tts_config()
     podcast = bool(speakers)
-    prompt = _build_prompt(text, style=style, language=language, podcast=podcast)
+    contents = _build_contents(text, model=model, speakers=speakers, style=style, language=language)
 
     if podcast:
         speaker_configs = [
@@ -348,13 +469,13 @@ async def generate_speech(
         speech_config=speech_config,
     )
 
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(api_key=api_key, http_options={"api_version": _GENAI_API_VERSION})
     response = None
     for attempt in range(1, _MAX_ATTEMPTS + 1):
         try:
             response = await client.aio.models.generate_content(
                 model=model,
-                contents=prompt,
+                contents=contents,
                 config=config,
             )
             break
@@ -368,13 +489,19 @@ async def generate_speech(
                 )
                 await asyncio.sleep(_RETRY_BACKOFF_SECONDS * attempt)
                 continue
-            logger.error("Audio generation call failed: %s", type(e).__name__)
+            # The status code is safe to log and tells a model/request mismatch
+            # (400) apart from an auth problem (401/403) or a retired model (404).
+            status = getattr(e, "code", None) or getattr(e, "status_code", None)
+            logger.error(
+                "Audio generation call failed: %s (status=%s, model=%s)",
+                type(e).__name__, status, model,
+            )
             raise RuntimeError("Audio generation failed") from e
 
-    pcm = _extract_pcm(response)
-    if not pcm:
+    audio, mime_type = _extract_audio(response)
+    if not audio:
         logger.warning("Audio generation returned no audio")
         raise RuntimeError(
             "The model did not return any audio. Try rephrasing or shortening your text."
         )
-    return _pcm_to_wav(pcm)
+    return _to_wav(audio, mime_type)

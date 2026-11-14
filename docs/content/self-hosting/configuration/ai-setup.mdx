@@ -103,8 +103,8 @@ LEARNHOUSE_AI_MODEL_FAST=gpt-4o-mini
 ```env
 LEARNHOUSE_AI_PROVIDER=anthropic
 LEARNHOUSE_AI_API_KEY=sk-ant-...
-LEARNHOUSE_AI_MODEL_STANDARD=claude-sonnet-4-5
-LEARNHOUSE_AI_MODEL_FAST=claude-haiku-4-5
+LEARNHOUSE_AI_MODEL_STANDARD=claude-sonnet-5-5
+LEARNHOUSE_AI_MODEL_FAST=claude-haiku-5-5
 ```
 </Tabs.Tab>
 
@@ -256,9 +256,10 @@ model:
 # AI image generation ("nano banana"). Default: gemini-2.5-flash-image
 LEARNHOUSE_AI_IMAGE_MODEL=gemini-2.5-flash-image
 
-# AI audio / podcast generation (Gemini TTS). Default: gemini-2.5-flash-preview-tts
-# All Gemini TTS models are currently preview, so this is kept configurable.
-LEARNHOUSE_AI_TTS_MODEL=gemini-2.5-flash-preview-tts
+# AI audio / podcast generation (Gemini TTS). Default: gemini-3.8-flash-tts
+# gemini-3.8-flash-lite-tts is a cheaper alternative. The older preview TTS models
+# still work but Google is shutting them down.
+LEARNHOUSE_AI_TTS_MODEL=gemini-3.8-flash-tts
 ```
 
 The audio feature powers the editor's **Generate** audio tab (text-to-speech, a two-voice podcast,
@@ -282,6 +283,6 @@ limit, further AI requests are rejected until the window resets.
 | `LEARNHOUSE_AI_MODEL_FAST` / `_STANDARD` / `_PRO` | Per-tier model overrides (see table above). |
 | `LEARNHOUSE_AI_EMBEDDING_PROVIDER` / `_MODEL` / `_DIMENSIONS` | Optional RAG embedding overrides. Default: same provider, per-provider model, 768 dims. |
 | `LEARNHOUSE_AI_IMAGE_MODEL` | Google image-generation model. Default `gemini-2.5-flash-image`. Google-only path. |
-| `LEARNHOUSE_AI_TTS_MODEL` | Google text-to-speech model for audio/podcast generation. Default `gemini-2.5-flash-preview-tts` (all Gemini TTS models are preview). Google-only path. |
+| `LEARNHOUSE_AI_TTS_MODEL` | Google text-to-speech model for audio/podcast generation. Default `gemini-3.8-flash-tts`. Google-only path. |
 | `LEARNHOUSE_GEMINI_API_KEY` | Google/Gemini key. Also the **embeddings fallback** for providers without an embeddings API, and the key used for image/TTS generation on non-Google providers. |
 | `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Standard AWS credentials, used only when `provider=bedrock`. |

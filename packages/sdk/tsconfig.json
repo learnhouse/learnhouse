@@ -11,7 +11,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "types": [],
-    "baseUrl": ".",
     "paths": {
       "@learnhouse-web/media": ["../../apps/web/services/media/media.ts"],
       "@services/config/config": ["./src/media/config-shim.ts"]

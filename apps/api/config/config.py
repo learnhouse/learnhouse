@@ -74,8 +74,7 @@ class AIConfig(BaseModel):
     # Text-to-speech / podcast model (Google Gemini TTS). Like image generation
     # this is a Google-only path resolving its key from `api_key` (when provider
     # is Google) or `gemini_api_key`. Override the exact model id with
-    # LEARNHOUSE_AI_TTS_MODEL; defaults to `gemini-2.5-flash-preview-tts`. All
-    # Gemini TTS models are currently preview, so keep this configurable.
+    # LEARNHOUSE_AI_TTS_MODEL; defaults to the GA `gemini-3.8-flash-tts`.
     tts_model: str | None = None
     # Model used by the Atlas dashboard agent (resolved by the provider-agnostic
     # LLM layer). Defaults to a fast tier because tool-use latency adds up fast;
