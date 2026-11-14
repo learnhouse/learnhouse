@@ -14,7 +14,6 @@ server-to-server call (Next.js route handlers, collab, cron, integrations).
 
 import hmac
 import logging
-import os
 import re
 import time
 from typing import Callable
@@ -22,7 +21,7 @@ from urllib.parse import urlparse
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
-from config.config import get_learnhouse_config
+from config.config import get_learnhouse_config, shared_secret_from_env
 from src.core.middleware.cors import (
     _host_from,
     _single_tenancy_origin_regex,
@@ -75,13 +74,13 @@ def _cors_origin_regex(config) -> str | None:
 
 
 def _matches_any_key(provided: str | None, env_names: tuple[str, ...]) -> bool:
-    """Constant-time compare of ``provided`` against each non-empty env key."""
+    """Constant-time compare of ``provided`` against each set, non-example env key."""
     if not provided:
         return False
     provided_b = provided.encode()
     matched = False
     for name in env_names:
-        expected = os.getenv(name, "")
+        expected = shared_secret_from_env(name)
         if expected and hmac.compare_digest(provided_b, expected.encode()):
             matched = True
     return matched
