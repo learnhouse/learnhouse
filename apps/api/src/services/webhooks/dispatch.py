@@ -21,6 +21,7 @@ from src.db.webhooks import WebhookEndpoint, WebhookDeliveryLog
 from src.services.utils.ssrf_guard import (
     SSRFBlockedError,
     assert_connected_peer_allowed,
+    pinned_transport,
     resolve_and_validate_url,
 )
 from src.services.webhooks.crypto import decrypt_secret, compute_signature
@@ -44,6 +45,9 @@ LOG_RETENTION_PER_ENDPOINT = 200
 # fire-and-forget in the shared worker, so an endless (or gzip-bombed) response
 # body must never be buffered or decompressed here.
 MAX_RESPONSE_BYTES = 8 * 1024
+# Delivery logs are shown to org admins; the guard's own message names the
+# resolved address, which would reveal internal IPs.
+_SSRF_BLOCKED_MESSAGE = "Blocked: the endpoint resolves to a non-public address"
 # Bound concurrent outbound requests across all orgs in this worker so an
 # event burst can't open thousands of sockets at once.
 MAX_CONCURRENT_DELIVERIES = 20
@@ -102,6 +106,7 @@ def _get_webhook_client() -> httpx.AsyncClient:
     global _webhook_client
     if _webhook_client is None:
         _webhook_client = httpx.AsyncClient(
+            transport=pinned_transport(),
             timeout=10.0,
             follow_redirects=False,
             headers={"User-Agent": "LearnHouse-Webhooks/1.0"},
@@ -330,8 +335,9 @@ async def _deliver_to_endpoint(
                     try:
                         assert_connected_peer_allowed(resp, validated_ips)
                     except SSRFBlockedError as ssrf_exc:
+                        logger.warning("Webhook %s blocked by SSRF guard: %s", ep.id, ssrf_exc)
                         log_entry.success = False
-                        log_entry.error_message = f"SSRF guard: {ssrf_exc}"[:1000]
+                        log_entry.error_message = _SSRF_BLOCKED_MESSAGE
                     else:
                         body = await _read_capped_body(resp)
                         log_entry.response_status = resp.status_code
@@ -339,8 +345,9 @@ async def _deliver_to_endpoint(
                         log_entry.success = 200 <= resp.status_code < 300
 
             except SSRFBlockedError as e:
+                logger.warning("Webhook %s blocked by SSRF guard: %s", ep.id, e)
                 log_entry.success = False
-                log_entry.error_message = f"SSRF guard: {e}"[:1000]
+                log_entry.error_message = _SSRF_BLOCKED_MESSAGE
             except Exception as e:
                 log_entry.success = False
                 log_entry.error_message = str(e)[:1000]

@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -117,6 +117,7 @@ class TestWebhookDispatchHelpers:
             assert first is fake_client
             assert second is fake_client
             mock_client_cls.assert_called_once_with(
+                transport=ANY,
                 timeout=10.0,
                 follow_redirects=False,
                 headers={"User-Agent": "LearnHouse-Webhooks/1.0"},
@@ -439,7 +440,7 @@ class TestWebhookDispatchHelpers:
         ).scalars().all()
         assert len(ssrf_logs) == 3
         assert all(log.success is False for log in ssrf_logs)
-        assert all(log.error_message.startswith("SSRF guard: ") for log in ssrf_logs)
+        assert all(log.error_message == dispatch._SSRF_BLOCKED_MESSAGE for log in ssrf_logs)
 
     @pytest.mark.asyncio
     async def test_deliver_to_endpoint_handles_ssrf_resolution_failure(self, db):
@@ -492,7 +493,7 @@ class TestWebhookDispatchHelpers:
         ).scalars().all()
         assert len(logs) == 3
         assert all(log.success is False for log in logs)
-        assert all("SSRF guard: blocked hostname" == log.error_message for log in logs)
+        assert all(log.error_message == dispatch._SSRF_BLOCKED_MESSAGE for log in logs)
 
     @pytest.mark.asyncio
     async def test_deliver_to_endpoint_handles_generic_exception(self, db):
