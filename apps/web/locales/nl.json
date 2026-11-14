@@ -435,7 +435,10 @@
       "login_failed": "Inloggen mislukt",
       "sign_in_failed": "Inloggen mislukt",
       "link_invalid": "Deze link is niet meer geldig.",
-      "google_not_configured": "Google OAuth is niet geconfigureerd"
+      "google_not_configured": "Google OAuth is niet geconfigureerd",
+      "profile_field_invalid": "Links en e-mailadressen zijn niet toegestaan in: {{fields}}",
+      "field_no_links": "Geen links of e-mailadressen",
+      "rate_limited": "Te veel pogingen. Wacht even en probeer het opnieuw."
     },
     "sso_errors": {
       "access_denied": "Toegang geweigerd. Je hebt het inlogverzoek mogelijk geweigerd of hebt geen toestemming voor deze applicatie.",

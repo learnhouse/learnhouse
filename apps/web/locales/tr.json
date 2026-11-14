@@ -435,7 +435,10 @@
       "login_failed": "Giriş başarısız oldu",
       "sign_in_failed": "Oturum açma başarısız oldu",
       "link_invalid": "Bu bağlantı artık geçerli değil.",
-      "google_not_configured": "Google OAuth yapılandırılmamış"
+      "google_not_configured": "Google OAuth yapılandırılmamış",
+      "profile_field_invalid": "{{fields}} alanlarında bağlantı ve e-posta adresi kullanılamaz",
+      "field_no_links": "Bağlantı veya e-posta adresi kullanılamaz",
+      "rate_limited": "Çok fazla deneme. Lütfen biraz bekleyip tekrar deneyin."
     },
     "sso_errors": {
       "access_denied": "Erişim reddedildi. Giriş isteğini reddetmiş olabilirsiniz veya bu uygulamaya erişim izniniz yok.",

@@ -435,7 +435,10 @@
       "login_failed": "लॉगिन विफल रहा",
       "sign_in_failed": "साइन इन विफल रहा",
       "link_invalid": "यह लिंक अब मान्य नहीं है।",
-      "google_not_configured": "Google OAuth कॉन्फ़िगर नहीं है"
+      "google_not_configured": "Google OAuth कॉन्फ़िगर नहीं है",
+      "profile_field_invalid": "{{fields}} में लिंक और ईमेल पते की अनुमति नहीं है",
+      "field_no_links": "लिंक या ईमेल पते नहीं",
+      "rate_limited": "बहुत अधिक प्रयास। कृपया थोड़ी देर रुककर फिर से कोशिश करें।"
     },
     "sso_errors": {
       "access_denied": "एक्सेस अस्वीकार कर दिया गया। हो सकता है आपने लॉगिन अनुरोध अस्वीकार कर दिया हो या आपके पास इस एप्लिकेशन को एक्सेस करने की अनुमति न हो।",

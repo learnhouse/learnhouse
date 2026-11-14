@@ -435,7 +435,10 @@
       "login_failed": "Falha no login",
       "sign_in_failed": "Falha ao entrar",
       "link_invalid": "Este link não é mais válido.",
-      "google_not_configured": "OAuth do Google não configurado"
+      "google_not_configured": "OAuth do Google não configurado",
+      "profile_field_invalid": "Links e endereços de e-mail não são permitidos em: {{fields}}",
+      "field_no_links": "Sem links ou endereços de e-mail",
+      "rate_limited": "Muitas tentativas. Aguarde um momento e tente novamente."
     },
     "sso_errors": {
       "access_denied": "O acesso foi negado. Você pode ter recusado a solicitação de login ou não ter permissão para acessar este aplicativo.",

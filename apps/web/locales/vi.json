@@ -435,7 +435,10 @@
       "login_failed": "Đăng nhập thất bại",
       "sign_in_failed": "Đăng nhập thất bại",
       "link_invalid": "Liên kết này không còn hợp lệ.",
-      "google_not_configured": "Chưa cấu hình Google OAuth"
+      "google_not_configured": "Chưa cấu hình Google OAuth",
+      "profile_field_invalid": "Không được dùng liên kết và địa chỉ email trong: {{fields}}",
+      "field_no_links": "Không dùng liên kết hoặc địa chỉ email",
+      "rate_limited": "Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại."
     },
     "sso_errors": {
       "access_denied": "Quyền truy cập bị từ chối. Có thể bạn đã từ chối yêu cầu đăng nhập hoặc không có quyền truy cập ứng dụng này.",

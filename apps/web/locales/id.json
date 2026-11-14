@@ -435,7 +435,10 @@
       "login_failed": "Gagal masuk",
       "sign_in_failed": "Gagal masuk",
       "link_invalid": "Tautan ini sudah tidak valid.",
-      "google_not_configured": "Google OAuth belum dikonfigurasi"
+      "google_not_configured": "Google OAuth belum dikonfigurasi",
+      "profile_field_invalid": "Tautan dan alamat email tidak diizinkan di: {{fields}}",
+      "field_no_links": "Tanpa tautan atau alamat email",
+      "rate_limited": "Terlalu banyak percobaan. Harap tunggu sebentar lalu coba lagi."
     },
     "sso_errors": {
       "access_denied": "Akses ditolak. Anda mungkin menolak permintaan login atau tidak memiliki izin untuk mengakses aplikasi ini.",

@@ -435,7 +435,10 @@
       "login_failed": "登录失败",
       "sign_in_failed": "登录失败",
       "link_invalid": "此链接已失效。",
-      "google_not_configured": "未配置 Google OAuth"
+      "google_not_configured": "未配置 Google OAuth",
+      "profile_field_invalid": "{{fields}} 中不能包含链接或电子邮件地址",
+      "field_no_links": "不能包含链接或电子邮件地址",
+      "rate_limited": "尝试次数过多，请稍后再试。"
     },
     "sso_errors": {
       "access_denied": "访问被拒绝。您可能拒绝了登录请求，或没有访问此应用程序的权限。",

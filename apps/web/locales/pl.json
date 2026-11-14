@@ -435,7 +435,10 @@
       "login_failed": "Logowanie nie powiodło się",
       "sign_in_failed": "Logowanie nie powiodło się",
       "link_invalid": "Ten link jest już nieważny.",
-      "google_not_configured": "Google OAuth nie jest skonfigurowany"
+      "google_not_configured": "Google OAuth nie jest skonfigurowany",
+      "profile_field_invalid": "Linki i adresy e-mail są niedozwolone w polach: {{fields}}",
+      "field_no_links": "Bez linków i adresów e-mail",
+      "rate_limited": "Zbyt wiele prób. Odczekaj chwilę i spróbuj ponownie."
     },
     "sso_errors": {
       "access_denied": "Odmówiono dostępu. Mogłeś(-aś) odrzucić prośbę o logowanie lub nie masz uprawnień do tej aplikacji.",

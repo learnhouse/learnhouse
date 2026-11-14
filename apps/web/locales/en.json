@@ -439,7 +439,10 @@
       "login_failed": "Login failed",
       "sign_in_failed": "Sign in failed",
       "link_invalid": "This link is no longer valid.",
-      "google_not_configured": "Google OAuth not configured"
+      "google_not_configured": "Google OAuth not configured",
+      "profile_field_invalid": "Links and email addresses aren't allowed in: {{fields}}",
+      "field_no_links": "No links or email addresses",
+      "rate_limited": "Too many attempts. Please wait a moment and try again."
     },
     "sso_errors": {
       "access_denied": "Access was denied. You may have declined the login request or don't have permission to access this application.",
