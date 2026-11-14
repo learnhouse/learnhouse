@@ -435,7 +435,10 @@
       "login_failed": "Anmeldung fehlgeschlagen",
       "sign_in_failed": "Anmeldung fehlgeschlagen",
       "link_invalid": "Dieser Link ist nicht mehr gültig.",
-      "google_not_configured": "Google OAuth ist nicht konfiguriert"
+      "google_not_configured": "Google OAuth ist nicht konfiguriert",
+      "profile_field_invalid": "Links und E-Mail-Adressen sind hier nicht erlaubt: {{fields}}",
+      "field_no_links": "Keine Links oder E-Mail-Adressen",
+      "rate_limited": "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut."
     },
     "sso_errors": {
       "access_denied": "Der Zugriff wurde verweigert. Möglicherweise haben Sie die Anmeldeanfrage abgelehnt oder haben keine Berechtigung für diese Anwendung.",

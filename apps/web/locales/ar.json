@@ -439,7 +439,10 @@
       "login_failed": "فشل تسجيل الدخول",
       "sign_in_failed": "فشل تسجيل الدخول",
       "link_invalid": "لم يعد هذا الرابط صالحًا.",
-      "google_not_configured": "لم يتم إعداد Google OAuth"
+      "google_not_configured": "لم يتم إعداد Google OAuth",
+      "profile_field_invalid": "لا يُسمح بالروابط وعناوين البريد الإلكتروني في: {{fields}}",
+      "field_no_links": "بدون روابط أو عناوين بريد إلكتروني",
+      "rate_limited": "محاولات كثيرة جدًا. يُرجى الانتظار قليلًا ثم المحاولة مرة أخرى."
     },
     "sso_errors": {
       "access_denied": "تم رفض الوصول. ربما رفضت طلب تسجيل الدخول أو ليس لديك إذن للوصول إلى هذا التطبيق.",

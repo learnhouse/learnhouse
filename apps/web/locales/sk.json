@@ -435,7 +435,10 @@
       "login_failed": "Prihlásenie zlyhalo",
       "sign_in_failed": "Prihlásenie zlyhalo",
       "link_invalid": "Tento odkaz už nie je platný.",
-      "google_not_configured": "Google OAuth nie je nakonfigurovaný"
+      "google_not_configured": "Google OAuth nie je nakonfigurovaný",
+      "profile_field_invalid": "Odkazy a e-mailové adresy nie sú povolené v poliach: {{fields}}",
+      "field_no_links": "Bez odkazov a e-mailových adries",
+      "rate_limited": "Príliš veľa pokusov. Chvíľu počkajte a skúste to znova."
     },
     "sso_errors": {
       "access_denied": "Prístup bol zamietnutý. Možno ste odmietli žiadosť o prihlásenie alebo nemáte oprávnenie na prístup k tejto aplikácii.",

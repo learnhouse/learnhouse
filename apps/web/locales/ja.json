@@ -435,7 +435,10 @@
       "login_failed": "ログインに失敗しました",
       "sign_in_failed": "ログインに失敗しました",
       "link_invalid": "このリンクは無効になっています。",
-      "google_not_configured": "Google OAuthが設定されていません"
+      "google_not_configured": "Google OAuthが設定されていません",
+      "profile_field_invalid": "{{fields}} にリンクやメールアドレスは使用できません",
+      "field_no_links": "リンクやメールアドレスは使用できません",
+      "rate_limited": "試行回数が多すぎます。しばらく待ってから再度お試しください。"
     },
     "sso_errors": {
       "access_denied": "アクセスが拒否されました。ログイン要求を拒否したか、このアプリケーションへのアクセス権がない可能性があります。",

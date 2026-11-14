@@ -435,7 +435,10 @@
       "login_failed": "로그인에 실패했습니다",
       "sign_in_failed": "로그인에 실패했습니다",
       "link_invalid": "이 링크는 더 이상 유효하지 않습니다.",
-      "google_not_configured": "Google OAuth가 구성되지 않았습니다"
+      "google_not_configured": "Google OAuth가 구성되지 않았습니다",
+      "profile_field_invalid": "{{fields}}에는 링크나 이메일 주소를 사용할 수 없습니다",
+      "field_no_links": "링크나 이메일 주소는 사용할 수 없습니다",
+      "rate_limited": "시도 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요."
     },
     "sso_errors": {
       "access_denied": "접근이 거부되었습니다. 로그인 요청을 거부했거나 이 애플리케이션에 접근할 권한이 없을 수 있습니다.",

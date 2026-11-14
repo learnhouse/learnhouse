@@ -13,7 +13,7 @@ import { defaultPostAuthPath } from '@services/auth/redirects'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, isOnCustomDomain } from '@services/config/config'
-import { getErrorMessage } from '@services/utils/ts/errorMessage'
+import { getErrorMessage, getFieldErrors } from '@services/utils/ts/errorMessage'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
 import TurnstileWidget, { useTurnstileRequired, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
@@ -100,7 +100,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
     },
     validate: (values) => validate(values, t, customFields),
     enableReinitialize: true,
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setFieldError, setFieldTouched }) => {
       setError('')
       setMessage(null)
       setIsSubmitting(true)
@@ -115,13 +115,19 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
           // Surface the backend's actual detail for ANY non-2xx instead of
           // masking everything past a few statuses behind a generic message.
           track(AnalyticsEvent.SignupFailed, { status_code: res.status })
-          setError(getErrorMessage(message?.detail, t('common.something_went_wrong')))
+          setError(getErrorMessage(message?.detail, t('common.something_went_wrong'), t))
+          // Point at the inputs the server rejected (e.g. an email address
+          // autofilled into the username field) next to the field itself.
+          for (const [field, fieldError] of Object.entries(getFieldErrors(message?.detail, t))) {
+            setFieldTouched(field, true, false)
+            setFieldError(field, fieldError)
+          }
           // Turnstile tokens are single-use, so fetch a fresh one for the retry.
           turnstileRef.current?.reset()
         }
       } catch (err) {
         // A network throw must not leave the form permanently locked.
-        setError(getErrorMessage((err as any)?.detail, t('common.something_went_wrong')))
+        setError(getErrorMessage((err as any)?.detail, t('common.something_went_wrong'), t))
         turnstileRef.current?.reset()
       } finally {
         setIsSubmitting(false)
@@ -227,6 +233,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.email}
+                autoComplete="email"
                 type="email"
                 required
                 className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
@@ -250,6 +257,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.first_name}
+                  autoComplete="given-name"
                   type="text"
                   className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
                 />
@@ -270,6 +278,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.last_name}
+                  autoComplete="family-name"
                   type="text"
                   className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
                 />
@@ -316,6 +325,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.username}
+                autoComplete="nickname"
                 type="text"
                 required
                 className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"

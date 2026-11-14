@@ -435,7 +435,10 @@
       "login_failed": "Échec de la connexion",
       "sign_in_failed": "Échec de la connexion",
       "link_invalid": "Ce lien n'est plus valide.",
-      "google_not_configured": "Google OAuth n'est pas configuré"
+      "google_not_configured": "Google OAuth n'est pas configuré",
+      "profile_field_invalid": "Les liens et les adresses e-mail ne sont pas autorisés dans : {{fields}}",
+      "field_no_links": "Pas de liens ni d'adresses e-mail",
+      "rate_limited": "Trop de tentatives. Veuillez patienter un instant avant de réessayer."
     },
     "sso_errors": {
       "access_denied": "L'accès a été refusé. Vous avez peut-être refusé la demande de connexion ou vous n'avez pas l'autorisation d'accéder à cette application.",

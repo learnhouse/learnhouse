@@ -1,13 +1,50 @@
 'use client'
-import React, { useMemo } from 'react'
+import React from 'react'
 import { Check, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-interface PasswordRequirement {
+interface PasswordRule {
     id: string
-    label: string
-    validator: (password: string) => boolean
+    /** i18n key for the checklist label. */
+    labelKey: string
+    /** English message returned by validatePasswordStrength. */
+    error: string
+    test: (password: string) => boolean
 }
+
+// Mirrors the API's password policy (password_validation.py).
+const PASSWORD_RULES: PasswordRule[] = [
+    {
+        id: 'minLength',
+        labelKey: 'auth.password_req_min_length',
+        error: 'Password must be at least 8 characters',
+        test: (pwd) => pwd.length >= 8,
+    },
+    {
+        id: 'uppercase',
+        labelKey: 'auth.password_req_uppercase',
+        error: 'Password must contain at least one uppercase letter',
+        test: (pwd) => /[A-Z]/.test(pwd),
+    },
+    {
+        id: 'lowercase',
+        labelKey: 'auth.password_req_lowercase',
+        error: 'Password must contain at least one lowercase letter',
+        test: (pwd) => /[a-z]/.test(pwd),
+    },
+    {
+        id: 'number',
+        labelKey: 'auth.password_req_number',
+        error: 'Password must contain at least one number',
+        test: (pwd) => /[0-9]/.test(pwd),
+    },
+    {
+        id: 'special',
+        labelKey: 'auth.password_req_special',
+        error: 'Password must contain at least one special character',
+        test: (pwd) => /[!@#$%^&*()_+\-=[\]{}|;':",./<>?]/.test(pwd),
+    },
+]
 
 interface PasswordStrengthIndicatorProps {
     password: string
@@ -20,39 +57,10 @@ export function PasswordStrengthIndicator({
 }: PasswordStrengthIndicatorProps) {
     const { t } = useTranslation()
 
-    const requirements: PasswordRequirement[] = useMemo(() => [
-        {
-            id: 'minLength',
-            label: t('auth.password_req_min_length'),
-            validator: (pwd: string) => pwd.length >= 8,
-        },
-        {
-            id: 'uppercase',
-            label: t('auth.password_req_uppercase'),
-            validator: (pwd: string) => /[A-Z]/.test(pwd),
-        },
-        {
-            id: 'lowercase',
-            label: t('auth.password_req_lowercase'),
-            validator: (pwd: string) => /[a-z]/.test(pwd),
-        },
-        {
-            id: 'number',
-            label: t('auth.password_req_number'),
-            validator: (pwd: string) => /[0-9]/.test(pwd),
-        },
-        {
-            id: 'special',
-            label: t('auth.password_req_special'),
-            validator: (pwd: string) => /[!@#$%^&*()_+\-=\[\]{}|;':",./<>?]/.test(pwd),
-        },
-    ], [t])
-
-    const validCount = useMemo(() => {
-        return requirements.filter(req => req.validator(password)).length
-    }, [password, requirements])
-
-    const strengthPercentage = (validCount / requirements.length) * 100
+    // Labels are translated during render rather than memoized on `t`, so they
+    // always follow the active language, including when its bundle loads late.
+    const validCount = PASSWORD_RULES.filter((rule) => rule.test(password)).length
+    const strengthPercentage = (validCount / PASSWORD_RULES.length) * 100
 
     const getStrengthColor = () => {
         if (strengthPercentage === 0) return 'bg-gray-200'
@@ -101,11 +109,11 @@ export function PasswordStrengthIndicator({
             {/* Requirements list */}
             {showRequirements && (
                 <ul className="text-xs space-y-1">
-                    {requirements.map((req) => {
-                        const isValid = req.validator(password)
+                    {PASSWORD_RULES.map((rule) => {
+                        const isValid = rule.test(password)
                         return (
                             <li
-                                key={req.id}
+                                key={rule.id}
                                 className={`flex items-center gap-1.5 ${
                                     isValid ? 'text-green-600' : 'text-gray-500'
                                 }`}
@@ -115,7 +123,7 @@ export function PasswordStrengthIndicator({
                                 ) : (
                                     <X className="h-3.5 w-3.5" />
                                 )}
-                                <span>{req.label}</span>
+                                <span>{t(rule.labelKey)}</span>
                             </li>
                         )
                     })}
@@ -129,24 +137,7 @@ export function validatePasswordStrength(password: string): {
     isValid: boolean
     errors: string[]
 } {
-    const errors: string[] = []
-
-    if (password.length < 8) {
-        errors.push('Password must be at least 8 characters')
-    }
-    if (!/[A-Z]/.test(password)) {
-        errors.push('Password must contain at least one uppercase letter')
-    }
-    if (!/[a-z]/.test(password)) {
-        errors.push('Password must contain at least one lowercase letter')
-    }
-    if (!/[0-9]/.test(password)) {
-        errors.push('Password must contain at least one number')
-    }
-    if (!/[!@#$%^&*()_+\-=\[\]{}|;':",./<>?]/.test(password)) {
-        errors.push('Password must contain at least one special character')
-    }
-
+    const errors = PASSWORD_RULES.filter((rule) => !rule.test(password)).map((rule) => rule.error)
     return {
         isValid: errors.length === 0,
         errors,

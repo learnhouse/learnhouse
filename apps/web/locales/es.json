@@ -435,7 +435,10 @@
       "login_failed": "Error al iniciar sesión",
       "sign_in_failed": "Error al iniciar sesión",
       "link_invalid": "Este enlace ya no es válido.",
-      "google_not_configured": "Google OAuth no está configurado"
+      "google_not_configured": "Google OAuth no está configurado",
+      "profile_field_invalid": "No se permiten enlaces ni direcciones de correo electrónico en: {{fields}}",
+      "field_no_links": "Sin enlaces ni direcciones de correo electrónico",
+      "rate_limited": "Demasiados intentos. Espera un momento y vuelve a intentarlo."
     },
     "sso_errors": {
       "access_denied": "Se denegó el acceso. Puede que hayas rechazado la solicitud de inicio de sesión o que no tengas permiso para acceder a esta aplicación.",
