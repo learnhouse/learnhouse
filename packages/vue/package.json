@@ -47,7 +47,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "vue": "^3.5.45"
+    "vue": "^3.3.0"
   },
   "dependencies": {
     "@learnhouse/react": "1.4.4",

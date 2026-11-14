@@ -134,6 +134,16 @@
       "description": "sqlmodel 0.0.45 maps every datetime field to a timestamptz type that rejects naive datetimes on write. The API writes naive datetimes into naive columns, so the bump fails password changes, packs and usage events. Lift this cap once the models and columns are migrated to aware datetimes.",
       "matchPackageNames": ["sqlmodel"],
       "allowedVersions": "<0.0.45"
+    },
+    {
+      "description": "pydantic-ai-slim[google] requires google-genai below 3 since 2.67.0: 3.x moves the Gemini Developer API default from v1beta to v1, which GoogleModel has not been checked against. Lift this cap once pydantic-ai drops its <3 bound (pydantic/pydantic-ai#12732).",
+      "matchPackageNames": ["google-genai"],
+      "allowedVersions": "<3"
+    },
+    {
+      "description": "rangeStrategy bump raises peer dependency floors to the newest release, which locks out consumers of the published packages on older versions that still work. Widen instead.",
+      "matchDepTypes": ["peerDependencies"],
+      "rangeStrategy": "widen"
     }
   ]
 }
