@@ -3,6 +3,7 @@ import { ClockCounterClockwise, ArrowCounterClockwise, Eye } from '@phosphor-ico
 import { cn } from '@/lib/utils'
 import type { MagicBlockRevision } from './types'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 interface MagicBlockRevisionsProps {
   revisions: MagicBlockRevision[]
@@ -11,7 +12,7 @@ interface MagicBlockRevisionsProps {
   onRestore: (_revision: MagicBlockRevision) => void
 }
 
-function formatRelativeTime(unixSeconds: number, t: (_key: string, _opts?: any) => string): string {
+function formatRelativeTime(unixSeconds: number, t: TFunction): string {
   const diff = Date.now() / 1000 - unixSeconds
   if (diff < 60) return t('editor.blocks.magic_block_content.time_just_now')
   if (diff < 3600) return t('editor.blocks.magic_block_content.time_minutes_ago', { count: Math.floor(diff / 60) })

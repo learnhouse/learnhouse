@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { Cube } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 import { searchOrgContent } from '@services/search/search'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -179,7 +180,7 @@ interface SectionDescriptor<T> {
 interface RenderContext {
   orgSlug: string
   orgUuid: string
-  t: (_k: string, _o?: any) => string
+  t: TFunction
 }
 
 const sections: SectionDescriptor<any>[] = [
@@ -754,7 +755,7 @@ function LoadingGrid() {
   )
 }
 
-function EmptyState({ query, t }: { query: string; t: (_k: string, _o?: any) => string }) {
+function EmptyState({ query, t }: { query: string; t: TFunction }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="mb-4 p-4 bg-black/5 rounded-full">
