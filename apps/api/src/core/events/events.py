@@ -86,12 +86,6 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.messaging.scheduler import start_scheduler as start_messaging_emails
         start_messaging_emails()
 
-        # The shared demo organization refreshes itself on an interval, so the
-        # feature needs no external scheduler. No-op unless
-        # LEARNHOUSE_DEMO_ENABLED; never raises.
-        from src.services.demo.scheduler import start_scheduler as start_demo_scheduler
-        start_demo_scheduler()
-
         # Start the in-app HLS transcoding consumer (drains the Redis queue as a
         # background task; no separate worker). No-op unless LEARNHOUSE_HLS_ENABLED.
         from src.services.utils.hls_jobs import start_consumer
@@ -166,9 +160,6 @@ def shutdown_app(app: FastAPI) -> Callable:
         await stop_drip_scheduler()
         from src.services.messaging.scheduler import stop_scheduler as stop_messaging_emails
         await stop_messaging_emails()
-        # Stop the demo refresh tick.
-        from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
-        await stop_demo_scheduler()
         # Let EE stop its background work and write what it still holds
         # (queued analytics events). Never raises.
         await run_ee_shutdown(app)

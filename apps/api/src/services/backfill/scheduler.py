@@ -1,7 +1,7 @@
 """Runs every content backfill (``backfill.jobs``) on a long interval from
 inside the API, so the work needs no external scheduler.
 
-Modelled on ``src/services/demo/scheduler.py`` and the AI search backfill: a
+Modelled on the AI search backfill (``src/services/ai/rag/scheduler.py``): a
 failed run never kills the loop, and nothing here can stop the application
 booting. Two differences, both because the interval (two days by default) is
 much longer than a deploy cycle:
