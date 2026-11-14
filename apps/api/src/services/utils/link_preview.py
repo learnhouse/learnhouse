@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from src.services.utils.ssrf_guard import (
     SSRFBlockedError,
     assert_connected_peer_allowed,
+    pinned_transport,
     resolve_and_validate_url,
 )
 
@@ -83,6 +84,7 @@ async def _fetch_html(url: str) -> Optional[str]:
     are all decided from the headers, before a single body byte is consumed.
     """
     async with httpx.AsyncClient(
+        transport=pinned_transport(),
         follow_redirects=False,
         timeout=_SOCKET_TIMEOUT,
         max_redirects=0,
@@ -145,6 +147,9 @@ async def _fetch_html(url: str) -> Optional[str]:
                         return await _read_capped_text(response)
                     except Exception:
                         return None
+            except SSRFBlockedError:
+                # Raised at connect time when the name re-resolves somewhere private
+                raise HTTPException(status_code=400, detail=_BLOCKED_DETAIL)
             except httpx.HTTPError:
                 return None
 
