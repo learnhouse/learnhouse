@@ -21,8 +21,8 @@ def _cfg(**kw):
     return SimpleNamespace(ai_config=SimpleNamespace(**base))
 
 
-def _fake_response(pcm=b"PCMDATA"):
-    part = SimpleNamespace(inline_data=SimpleNamespace(data=pcm))
+def _fake_response(pcm=b"PCMDATA", mime_type="audio/L16;codec=pcm;rate=24000"):
+    part = SimpleNamespace(inline_data=SimpleNamespace(data=pcm, mime_type=mime_type))
     content = SimpleNamespace(parts=[part])
     return SimpleNamespace(candidates=[SimpleNamespace(content=content)])
 
@@ -74,13 +74,99 @@ def test_build_prompt_podcast_defaults_to_podcast_tone():
     assert "Host: hi" in p
 
 
-def test_extract_pcm():
-    assert gen._extract_pcm(_fake_response(b"PCM")) == b"PCM"
+def test_extract_audio():
+    assert gen._extract_audio(_fake_response(b"PCM", "audio/wav")) == (b"PCM", "audio/wav")
     no_inline = SimpleNamespace(
         candidates=[SimpleNamespace(content=SimpleNamespace(parts=[SimpleNamespace(inline_data=None)]))]
     )
-    assert gen._extract_pcm(no_inline) is None
-    assert gen._extract_pcm(SimpleNamespace(candidates=[])) is None
+    assert gen._extract_audio(no_inline) == (None, None)
+    assert gen._extract_audio(SimpleNamespace(candidates=[])) == (None, None)
+
+
+def test_to_wav_passes_through_a_complete_wav():
+    # GA models return a full WAV file; wrapping it again would corrupt it.
+    wav = gen._pcm_to_wav(b"\x01\x02" * 50)
+    assert gen._to_wav(wav, "audio/wav") is wav
+
+
+def test_to_wav_wraps_raw_pcm_using_the_mime_rate():
+    pcm = b"\x00\x01" * 100
+    out = gen._to_wav(pcm, "audio/l16; rate=16000; channels=1")
+    with wave.open(io.BytesIO(out)) as wf:
+        assert wf.getframerate() == 16000
+        assert wf.getnchannels() == 1
+        assert wf.readframes(100) == pcm
+    # No rate in the mime type: fall back to the documented 24 kHz.
+    with wave.open(io.BytesIO(gen._to_wav(pcm, None))) as wf:
+        assert wf.getframerate() == 24000
+
+
+def test_default_model_uses_current_request_shape():
+    assert gen._uses_speech_metadata(gen.DEFAULT_TTS_MODEL) is True
+    assert gen._uses_speech_metadata("gemini-3.8-flash-lite-tts") is True
+
+
+@pytest.mark.parametrize(
+    "model",
+    ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts", "gemini-3.1-flash-tts-preview",
+     "models/gemini-2.5-flash-preview-tts"],
+)
+def test_preview_models_use_legacy_request_shape(model):
+    assert gen._uses_speech_metadata(model) is False
+
+
+def test_split_turns_basic_dialogue():
+    script = "Host: Welcome to the show.\nGuest: Thanks for having me!"
+    assert gen._split_turns(script, ["Host", "Guest"]) == [
+        ("Host", "Welcome to the show."),
+        ("Guest", "Thanks for having me!"),
+    ]
+
+
+def test_split_turns_keeps_every_line():
+    script = (
+        "Intro line without a label.\n\n"
+        "**host:** First point,\n"
+        "continued on the next line.\n"
+        "Guest: Note: colons inside a line are fine.\n"
+        "Narrator: not a configured speaker"
+    )
+    assert gen._split_turns(script, ["Host", "Guest"]) == [
+        ("Host", "Intro line without a label."),
+        ("Host", "First point, continued on the next line."),
+        ("Guest", "Note: colons inside a line are fine. Narrator: not a configured speaker"),
+    ]
+
+
+def test_build_contents_ga_podcast_tags_each_turn():
+    speakers = [gen.Speaker(name="Host", voice="Kore"), gen.Speaker(name="Guest", voice="Puck")]
+    contents = gen._build_contents(
+        "Host: hi\nGuest: hey", model="gemini-3.8-flash-tts", speakers=speakers,
+        style=None, language="French",
+    )
+    assert [p.text for p in contents.parts] == ["hi", "hey"]
+    assert [p.speech_metadata.speaker for p in contents.parts] == ["Host", "Guest"]
+    style = contents.parts[0].speech_metadata.style.lower()
+    assert "podcast" in style and "french" in style
+
+
+def test_build_contents_ga_single_voice_keeps_text_verbatim():
+    plain = gen._build_contents("Hello", model="gemini-3.8-flash-tts", speakers=None, style=None, language=None)
+    assert plain.parts[0].text == "Hello"
+    assert plain.parts[0].speech_metadata is None
+    styled = gen._build_contents("Hello", model="gemini-3.8-flash-tts", speakers=None, style="calm", language=None)
+    assert styled.parts[0].text == "Hello"
+    assert styled.parts[0].speech_metadata.style == "Calm"
+    assert styled.parts[0].speech_metadata.speaker is None
+
+
+def test_build_contents_legacy_model_uses_prompt_prefix():
+    speakers = [gen.Speaker(name="Host", voice="Kore")]
+    contents = gen._build_contents(
+        "Host: hi", model="gemini-2.5-flash-preview-tts", speakers=speakers, style=None, language=None,
+    )
+    assert isinstance(contents, str)
+    assert "TTS the following conversation" in contents and "Host: hi" in contents
 
 
 def test_is_retryable():
@@ -122,6 +208,17 @@ async def test_generate_speech_single_voice():
     assert client.aio.models.generate_content.await_count == 1
 
 
+async def test_generate_speech_uses_v1beta_and_returns_ga_wav_unchanged():
+    # speech_metadata only exists on v1beta; GA models answer with a full WAV.
+    wav = gen._pcm_to_wav(b"\x01\x00" * 64)
+    client = _fake_client(_fake_response(wav, "audio/wav"))
+    with patch.object(gen, "get_learnhouse_config", return_value=_cfg()), \
+         patch("google.genai.Client", return_value=client) as client_cls:
+        out = await gen.generate_speech("Hello world")
+    assert out == wav
+    assert client_cls.call_args.kwargs["http_options"] == {"api_version": "v1beta"}
+
+
 async def test_generate_speech_multi_speaker():
     client = _fake_client(_fake_response())
     speakers = [gen.Speaker(name="Host", voice="Kore"), gen.Speaker(name="Guest", voice="Puck")]
@@ -129,6 +226,8 @@ async def test_generate_speech_multi_speaker():
          patch("google.genai.Client", return_value=client):
         out = await gen.generate_speech("Host: hi\nGuest: hey", speakers=speakers, style="upbeat", language="English")
     assert out[8:12] == b"WAVE"
+    contents = client.aio.models.generate_content.await_args.kwargs["contents"]
+    assert [p.speech_metadata.speaker for p in contents.parts] == ["Host", "Guest"]
 
 
 async def test_generate_speech_empty_text_raises():
