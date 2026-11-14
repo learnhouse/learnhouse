@@ -1,6 +1,6 @@
 {
   "name": "@learnhouse/react",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Render LearnHouse activities in any React app, with the same blocks and styles as LearnHouse itself.",
   "type": "module",
   "module": "./dist/index.js",
@@ -57,7 +57,7 @@
     "react-dom": "^18.2.0 || ^19.0.0"
   },
   "dependencies": {
-    "@learnhouse/sdk": "1.4.4",
+    "@learnhouse/sdk": "1.4.5",
     "@codemirror/autocomplete": "^6.20.4",
     "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/lang-go": "^6.0.1",

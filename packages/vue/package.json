@@ -1,6 +1,6 @@
 {
   "name": "@learnhouse/vue",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Render LearnHouse activities in any Vue 3 app, with the same blocks and styles as LearnHouse itself.",
   "type": "module",
   "module": "./dist/index.js",
@@ -50,8 +50,8 @@
     "vue": "^3.3.0"
   },
   "dependencies": {
-    "@learnhouse/react": "1.4.4",
-    "@learnhouse/sdk": "1.4.4",
+    "@learnhouse/react": "1.4.5",
+    "@learnhouse/sdk": "1.4.5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
