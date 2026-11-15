@@ -1,5 +1,7 @@
-// Minimal translate signature, so this module doesn't depend on react-i18next.
-export type Translate = (key: string, options?: Record<string, unknown>) => string
+// i18next's own type, so this module doesn't depend on react-i18next.
+import type { TFunction } from 'i18next'
+
+export type Translate = TFunction
 
 // API error codes the web phrases itself, mapped to their i18n keys.
 const ERROR_CODE_KEYS: Record<string, string> = {
