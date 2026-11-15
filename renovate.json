@@ -120,9 +120,10 @@
       "allowedVersions": "<7"
     },
     {
-      "description": "rehype-katex and react-katex both require katex ^0.16, so a 0.17+ direct dependency resolves to a second nested copy: math is rendered with 0.16 class names while the katex.min.css we import carries the renamed 0.18 ones (.base -> .katex-base) and comes out unstyled. Lift this cap once both libraries support the newer major.",
+      "description": "katex is a direct dependency and an override, so rehype-katex and react-katex render with the same copy whose stylesheet we import (two copies leave math unstyled). Keep every katex entry on one version in one PR.",
       "matchPackageNames": ["katex"],
-      "allowedVersions": "<0.17"
+      "groupName": "katex",
+      "groupSlug": "katex"
     },
     {
       "description": "nextra-theme-docs 4.6.1 drops children from the props it validates but its schema still requires it, and from zod 4.4 that throws 'expected nonoptional, received undefined' at children. docs/patches makes children optional. bun only applies the patch to that exact version, so a bump has to move or drop the patch.",
