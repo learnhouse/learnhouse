@@ -1882,3 +1882,42 @@ Why: usability test found bottom NEXT looking disabled, and three different fina
 - `apps/e2e/features/assignments/pages/student.ts`: selectors follow the new labels (`getByText('Submit', { exact: true })`, button `Submit` exact).
 
 Re-apply: after a sync, re-check those four en.json keys and the `NextActivityButton` class string; re-run `git diff origin/dev -- <files>` from the PR.
+
+## Route all AI through the MKA Brand Center MCP (feat/mka-brandcenter-ai)
+
+Why: owner decision to apply MKA brand/culture guardrails to every AI call (live MCP tool-calling plus a deterministic cached floor). `llm/client.py::_agent` and `image/generator.py::generate_image` are the only choke points for text and images; no extension point exists. All logic lives in the fork-owned `apps/api/src/services/ai/mka_brand/`; no upstream signature changes. Enabled iff `MKA_BRANDCENTER_TOKEN` is set (kill switch: unset it, behavior is identical to upstream). Other AI entry points (`base.py`, `editor.py`, `captions.py`, `rag/media.py`, `caption_jobs.py`, `ai.py`, `quiz.py`, etc.) all funnel into `llm.client.generate/generate_stream`, so they need no hook. Not covered: TTS audio synthesis in `audio/generator.py` (speech, not text; its script text does go through `generate`).
+
+- `apps/api/src/services/ai/llm/client.py` (`_agent`): import `mka_brand`; hoist `build_model(...)` into a local so `toolsets_for(model)` can check tool support.
+- `apps/api/src/services/ai/image/generator.py` (`generate_image`): import `mka_brand`; rewrite the prompt after the length clamp.
+- `apps/api/pyproject.toml` + `apps/api/uv.lock`: `pydantic-ai-slim` gains the `mcp` extra (regenerate the lock with `uv lock`, never hand-merge).
+
+```diff
+--- a/apps/api/src/services/ai/llm/client.py
++from src.services.ai import mka_brand  # MKA fork
+ from src.services.ai.llm.provider import build_model
+@@ def _agent
+-    return Agent(
+-        build_model(model_name),
+-        output_type=output_type,
+-        system_prompt=system_prompt or (),
+-    )
++    model = build_model(model_name)  # MKA fork: hoisted so toolsets_for can inspect it
++    return Agent(
++        model,
++        output_type=output_type,
++        system_prompt=mka_brand.augment(system_prompt) or (),  # MKA fork
++        toolsets=mka_brand.toolsets_for(model),  # MKA fork
++    )
+--- a/apps/api/src/services/ai/image/generator.py
++from src.services.ai import mka_brand  # MKA fork
+ from src.services.ai.llm import AINotConfiguredError
+@@ generate_image, after the MAX_PROMPT_CHARS clamp
++    prompt = await mka_brand.brand_image_prompt(  # MKA fork
++        prompt, editing=bool(input_images), max_chars=MAX_PROMPT_CHARS
++    )
+--- a/apps/api/pyproject.toml
+-    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.54.0",
++    "pydantic-ai-slim[openai,anthropic,google,mistral,mcp]==2.54.0",
+```
+
+Re-apply: `grep -n "MKA fork" apps/api/src/services/ai/llm/client.py apps/api/src/services/ai/image/generator.py` (4 + 2 lines), then `cd apps/api && uv lock`. Guarded by `apps/api/src/tests/mka_brand/` (fails if `_agent` stops honoring toolsets/system prompt). Note: pydantic-ai 2.54 has no `MCPServerStreamableHTTP`; the integration uses `pydantic_ai.mcp.MCPToolset` (fastmcp client, `headers=`).
