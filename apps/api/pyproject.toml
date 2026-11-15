@@ -7,12 +7,12 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.44.0",
+    "boto3==1.44.1",
     "faker==40.54.0",
-    "fastapi==0.162.4",
+    "fastapi==0.162.5",
     "httpx==0.28.1",
     "google-genai==2.34.0",
-    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.67.0",
+    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.68.0",
     "pwdlib[argon2]==0.3.1",
     "psycopg2-binary==2.9.13",
     "asyncpg==0.32.0",
@@ -41,7 +41,7 @@ dependencies = [
     "pillow==13.0.0",
     "pytest-asyncio==1.4.1.post1",
     "pytest-xdist==3.8.0",
-    "sentry-sdk[fastapi]==2.74.0",
+    "sentry-sdk[fastapi]==2.75.0",
     "protobuf==7.36.2",
     "workos==10.8.0",
     "dnspython==2.9.2",
