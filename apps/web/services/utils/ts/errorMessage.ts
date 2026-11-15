@@ -1,5 +1,10 @@
 // Minimal translate signature, so this module doesn't depend on react-i18next.
-export type Translate = (key: string, options?: Record<string, unknown>) => string
+// Overloads rather than one optional `options` param: i18next's `t` has no
+// single signature with optional, loosely typed options to match against.
+export type Translate = {
+  (key: string): string
+  (key: string, options: Record<string, string>): string
+}
 
 // API error codes the web phrases itself, mapped to their i18n keys.
 const ERROR_CODE_KEYS: Record<string, string> = {
