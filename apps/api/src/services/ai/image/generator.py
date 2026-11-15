@@ -20,6 +20,7 @@ import logging
 from typing import Optional
 
 from config.config import get_learnhouse_config
+from src.services.ai import mka_brand  # MKA fork
 from src.services.ai.llm import AINotConfiguredError
 from src.services.ai.llm.provider import _GOOGLE_ALIASES
 
@@ -124,6 +125,9 @@ async def generate_image(
         raise ValueError("A non-empty prompt is required for image generation.")
     if len(prompt) > MAX_PROMPT_CHARS:
         prompt = prompt[:MAX_PROMPT_CHARS]
+    prompt = await mka_brand.brand_image_prompt(  # MKA fork
+        prompt, editing=bool(input_images), max_chars=MAX_PROMPT_CHARS
+    )
 
     api_key, model = _resolve_image_config()
 

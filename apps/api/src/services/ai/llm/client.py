@@ -25,6 +25,7 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.settings import ModelSettings
 
+from src.services.ai import mka_brand  # MKA fork
 from src.services.ai.llm.provider import build_model
 
 logger = logging.getLogger(__name__)
@@ -111,10 +112,12 @@ def _settings(
 
 
 def _agent(model_name: str, system_prompt: Optional[str], output_type: Any) -> Agent:
+    model = build_model(model_name)  # MKA fork: hoisted so toolsets_for can inspect it
     return Agent(
-        build_model(model_name),
+        model,
         output_type=output_type,
-        system_prompt=system_prompt or (),
+        system_prompt=mka_brand.augment(system_prompt) or (),  # MKA fork
+        toolsets=mka_brand.toolsets_for(model),  # MKA fork
     )
 
 
