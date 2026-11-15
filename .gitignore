@@ -71,4 +71,3 @@ apps/web/ee
 
 # Playwright MCP session artifacts
 .playwright-mcp/
-.demo-secrets
