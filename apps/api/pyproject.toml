@@ -8,7 +8,6 @@ authors = [
 ]
 dependencies = [
     "boto3==1.44.0",
-    "botocore==1.44.0",
     "faker==40.54.0",
     "fastapi==0.162.4",
     "httpx==0.28.1",
