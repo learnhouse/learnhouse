@@ -73,7 +73,7 @@
       "matchPackageNames": [
         "fastapi", "uvicorn", "pydantic", "python-multipart", "python-dotenv",
         "sqlmodel", "sqlalchemy", "sqlalchemy-utils", "alembic", "alembic-postgresql-enum", "psycopg2-binary", "pgvector",
-        "boto3", "botocore",
+        "boto3",
         "redis",
         "stripe", "resend", "workos",
         "httpx", "requests", "pyyaml", "beautifulsoup4", "pypdf",
