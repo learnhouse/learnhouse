@@ -791,12 +791,23 @@
       "signup_title": "Bergabung dengan {{org}}",
       "signup_desc": "Anda diundang. Pilih kata sandi dan Anda langsung masuk.",
       "choose_password": "Pilih kata sandi",
-      "create_and_join": "Bergabung dengan {{org}}"
+      "create_and_join": "Bergabung dengan {{org}}",
+      "details": {
+        "role": "Anda akan bergabung sebagai {{role}}.",
+        "role_by": "{{name}} mengundang Anda untuk bergabung sebagai {{role}}.",
+        "groups": "Anda akan ditambahkan ke: {{names}}",
+        "courses": "Anda akan didaftarkan di: {{names}}",
+        "verify_note": "Tautan ini dibagikan langsung kepada Anda, jadi Anda akan memverifikasi email sebelum bergabung."
+      },
+      "verify_title": "Periksa kotak masuk Anda",
+      "verify_desc": "Akun Anda sudah siap. Kami mengirim tautan verifikasi ke {{email}}. Verifikasi email Anda, lalu buka undangan ini lagi atau terima dari halaman beranda Anda untuk bergabung dengan {{org}}."
     },
     "login_failed_forgot": "Lupa kata sandi?",
     "login_failed_reset": "Atur ulang",
     "login_failed_magic": "Kirimi saya tautan masuk saja",
-    "login_failed_google_hint": "Mendaftar dengan Google? Gunakan Lanjutkan dengan Google di bawah."
+    "login_failed_google_hint": "Mendaftar dengan Google? Gunakan Lanjutkan dengan Google di bawah.",
+    "email_verified_set_password": "Email Anda telah diverifikasi. Demi keamanan Anda, kata sandi yang ditetapkan sebelumnya telah dihapus: pilih kata sandi baru untuk masuk dengan kata sandi.",
+    "set_new_password": "Atur kata sandi baru"
   },
   "validation": {
     "required": "Wajib isi",
@@ -8017,7 +8028,8 @@
           "audit_logs": "Log Audit",
           "analytics": "Analitik",
           "sign_in": "Masuk",
-          "two_factor": "Dua faktor"
+          "two_factor": "Dua faktor",
+          "signups_invite": "Pendaftaran & Undangan"
         },
         "pages": {
           "users": {
@@ -8055,6 +8067,10 @@
           "sign_in": {
             "title": "Masuk",
             "subtitle": "Pilih cara anggota diizinkan masuk ke organisasi ini"
+          },
+          "signups_invite": {
+            "title": "Pendaftaran & Undangan",
+            "subtitle": "Undang orang, pilih cara mereka bergabung, dan bagikan kode undangan"
           }
         },
         "mobile": {
@@ -9345,6 +9361,239 @@
         "more": "Tindakan lainnya",
         "remove_filter": "Hapus filter: {{name}}",
         "any": "Semua"
+      },
+      "invitations": {
+        "invite_people": "Undang anggota",
+        "dialog": {
+          "title": "Undang anggota",
+          "description": "Mereka menerima tautan pribadi lewat email. Saat bergabung, peran, grup, dan kursus di bawah diterapkan otomatis.",
+          "done_title": "Undangan terkirim",
+          "done_description": "Berikut hasil untuk setiap alamat.",
+          "invite_more": "Undang lagi",
+          "send": "Kirim undangan",
+          "send_count_one": "Kirim {{count}} undangan",
+          "send_count_other": "Kirim {{count}} undangan",
+          "update_count_one": "Perbarui {{count}} anggota",
+          "update_count_other": "Perbarui {{count}} anggota"
+        },
+        "fields": {
+          "emails": "Alamat email",
+          "emails_hint": "Tempel satu atau beberapa alamat, pisahkan dengan koma, spasi, atau baris baru",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} alamat",
+          "valid_count_other": "{{count}} alamat",
+          "invalid_count_one": "{{count}} alamat tidak valid",
+          "invalid_count_other": "{{count}} alamat tidak valid",
+          "too_many": "Anda bisa mengundang hingga {{max}} orang sekaligus",
+          "update_existing_one": "Perbarui juga {{count}} orang yang sudah menjadi anggota",
+          "update_existing_other": "Perbarui juga {{count}} orang yang sudah menjadi anggota",
+          "update_existing_hint": "Peran mereka berubah menjadi peran di bawah dan mereka ditambahkan ke grup dan kursus. Biarkan nonaktif untuk melewati mereka.",
+          "role": "Peran",
+          "role_hint": "Yang bisa mereka lakukan setelah bergabung",
+          "groups": "Tambahkan ke grup",
+          "groups_placeholder": "Pilih grup",
+          "no_groups": "Organisasi ini belum memiliki grup pengguna.",
+          "courses": "Daftarkan ke kursus",
+          "courses_placeholder": "Pilih kursus",
+          "no_courses": "Organisasi ini belum memiliki kursus.",
+          "selected_count_one": "{{count}} dipilih",
+          "selected_count_other": "{{count}} dipilih",
+          "search": "Cari",
+          "no_match": "Tidak ada yang cocok dengan pencarian Anda.",
+          "draft": "Draf",
+          "remove_item": "Hapus {{name}}",
+          "message": "Pesan pribadi",
+          "message_placeholder": "Tambahkan catatan singkat ke email (opsional, tanpa tautan)",
+          "expiry": "Kedaluwarsa setelah",
+          "days_one": "{{count}} hari",
+          "days_other": "{{count}} hari",
+          "expires_on": "Hingga {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "Pelajar",
+            "description": "Mengikuti kursus, bergabung dengan komunitas, dan memantau progres sendiri. Tidak punya akses ke dasbor."
+          },
+          "instructor": {
+            "name": "Instruktur",
+            "description": "Membuat dan mengajar kursusnya sendiri serta menilai pelajarnya. Menggunakan satu kursi admin."
+          },
+          "maintainer": {
+            "name": "Maintainer",
+            "description": "Mengelola semua kursus, anggota, dan grup. Tidak dapat mengubah tagihan atau pengaturan organisasi."
+          },
+          "admin": {
+            "name": "Admin",
+            "description": "Kendali penuh atas organisasi, termasuk pengaturan, tagihan, dan admin lainnya."
+          },
+          "custom_roles": "Peran kustom",
+          "custom_description": "Peran kustom yang ditetapkan untuk organisasi ini.",
+          "admin_seat": "Kursi admin",
+          "refusal_admin_only": "Hanya admin yang dapat mengundang orang dengan peran ini.",
+          "refusal_above": "Peran ini memiliki izin yang tidak dimiliki peran Anda.",
+          "refusal_code": "Kode undangan tidak dapat memberikan peran yang mengelola orang atau membuka dasbor."
+        },
+        "preview": {
+          "new_one": "{{count}} baru",
+          "new_other": "{{count}} baru",
+          "pending_one": "{{count}} sudah diundang, akan menerima tautan baru",
+          "pending_other": "{{count}} sudah diundang, akan menerima tautan baru",
+          "members_one": "{{count}} sudah menjadi anggota",
+          "members_other": "{{count}} sudah menjadi anggota"
+        },
+        "summary": {
+          "people_one": "{{count}} orang akan bergabung sebagai {{role}}",
+          "people_other": "{{count}} orang akan bergabung sebagai {{role}}",
+          "groups_one": "ditambahkan ke {{names}}",
+          "groups_other": "ditambahkan ke {{count}} grup ({{names}})",
+          "courses_one": "terdaftar di {{count}} kursus",
+          "courses_other": "terdaftar di {{count}} kursus",
+          "and": ", ",
+          "updated_one": "{{count}} anggota yang sudah ada juga akan diperbarui.",
+          "updated_other": "{{count}} anggota yang sudah ada juga akan diperbarui."
+        },
+        "capacity": {
+          "members": "Anggota",
+          "admin_seats": "Kursi admin",
+          "of": "{{count}} dari {{limit}}",
+          "pending_note_one": "Termasuk {{count}} undangan tertunda",
+          "pending_note_other": "Termasuk {{count}} undangan tertunda",
+          "members_blocked": "Paket Anda mencakup {{limit}} anggota, termasuk undangan tertunda. Tingkatkan paket atau cabut beberapa undangan untuk mengundang lebih banyak.",
+          "seats_blocked": "Paket Anda mencakup {{limit}} kursi admin, termasuk undangan tertunda. Pilih peran pelajar, atau tingkatkan paket untuk menambah admin."
+        },
+        "results": {
+          "status": {
+            "sent": "Terkirim",
+            "resent": "Tautan baru terkirim",
+            "email_failed": "Email gagal",
+            "already_member": "Sudah menjadi anggota",
+            "member_updated": "Anggota diperbarui",
+            "member_update_failed": "Tidak diperbarui",
+            "invalid_email": "Alamat tidak valid"
+          },
+          "count": {
+            "sent_one": "{{count}} terkirim",
+            "sent_other": "{{count}} terkirim",
+            "resent_one": "{{count}} tautan baru",
+            "resent_other": "{{count}} tautan baru",
+            "email_failed_one": "{{count}} gagal",
+            "email_failed_other": "{{count}} gagal",
+            "already_member_one": "{{count}} sudah menjadi anggota",
+            "already_member_other": "{{count}} sudah menjadi anggota",
+            "member_updated_one": "{{count}} anggota diperbarui",
+            "member_updated_other": "{{count}} anggota diperbarui",
+            "member_update_failed_one": "{{count}} tidak diperbarui",
+            "member_update_failed_other": "{{count}} tidak diperbarui",
+            "invalid_email_one": "{{count}} tidak valid",
+            "invalid_email_other": "{{count}} tidak valid"
+          }
+        },
+        "status": {
+          "pending": "Tertunda",
+          "accepted": "Diterima",
+          "declined": "Ditolak",
+          "revoked": "Dicabut",
+          "expired": "Kedaluwarsa"
+        },
+        "list": {
+          "title": "Undangan",
+          "subtitle": "Semua orang yang Anda undang, beserta peran dan akses yang akan mereka dapatkan",
+          "filter": "Filter menurut status",
+          "all": "Semua",
+          "person": "Orang",
+          "role": "Peran",
+          "access": "Grup dan kursus",
+          "status": "Status",
+          "select_all": "Pilih semua",
+          "select": "Pilih {{email}}",
+          "selected_one": "{{count}} dipilih",
+          "selected_other": "{{count}} dipilih",
+          "actions": "Tindakan untuk {{email}}",
+          "invited_by": "Diundang oleh {{name}} {{when}}",
+          "joined": "Bergabung {{when}}",
+          "email_not_sent": "email tidak terkirim",
+          "groups_one": "{{count}} grup",
+          "groups_other": "{{count}} grup",
+          "courses_one": "{{count}} kursus",
+          "courses_other": "{{count}} kursus",
+          "expires_in_one": "Kedaluwarsa dalam {{count}} hari",
+          "expires_in_other": "Kedaluwarsa dalam {{count}} hari",
+          "legacy": "Dikirim sebelum undangan menyertakan peran",
+          "empty_title": "Belum ada undangan",
+          "empty_description": "Undang orang lewat email. Mereka bergabung dengan peran, grup, dan kursus yang Anda pilih.",
+          "no_results": "Tidak ada undangan yang cocok",
+          "clear_filter": "Tampilkan semua",
+          "error": "Tidak dapat memuat undangan"
+        },
+        "actions": {
+          "resend": "Kirim ulang",
+          "copy_link": "Salin tautan undangan",
+          "edit": "Ubah peran atau akses",
+          "revoke": "Cabut",
+          "none": "Tidak ada tindakan"
+        },
+        "revoke": {
+          "title": "Cabut undangan ini?",
+          "message": "Tautan yang dikirim ke {{email}} tidak akan berfungsi lagi. Anda dapat mengundangnya lagi nanti.",
+          "bulk_title_one": "Cabut {{count}} undangan?",
+          "bulk_title_other": "Cabut {{count}} undangan?",
+          "bulk_message": "Tautan mereka tidak akan berfungsi lagi. Anda dapat mengundang mereka lagi nanti."
+        },
+        "edit": {
+          "title": "Ubah undangan",
+          "description": "Untuk {{email}}. Berlaku saat undangan diterima.",
+          "keep_expiry": "Tetap ({{date}})",
+          "extend_one": "{{count}} hari dari sekarang",
+          "extend_other": "{{count}} hari dari sekarang",
+          "save": "Simpan perubahan"
+        },
+        "toasts": {
+          "sent": "Undangan terkirim",
+          "some_failed_one": "{{count}} email tidak dapat dikirim. Salin tautan undangan dari daftar sebagai gantinya.",
+          "some_failed_other": "{{count}} email tidak dapat dikirim. Salin tautan undangan dari daftar sebagai gantinya.",
+          "error": "Terjadi kesalahan. Silakan coba lagi.",
+          "resent": "Undangan baru dikirim ke {{email}}",
+          "email_failed": "Email tidak dapat dikirim. Salin tautan undangan sebagai gantinya.",
+          "link_copied": "Tautan undangan disalin. Siapa pun yang membukanya akan memverifikasi emailnya sebelum bergabung. Tautan di email sebelumnya tidak berfungsi lagi.",
+          "revoked": "Undangan dicabut",
+          "updated": "Undangan diperbarui",
+          "bulk_resend_one": "{{count}} undangan dikirim ulang",
+          "bulk_resend_other": "{{count}} undangan dikirim ulang",
+          "bulk_revoke_one": "{{count}} undangan dicabut",
+          "bulk_revoke_other": "{{count}} undangan dicabut"
+        },
+        "codes": {
+          "description": "Satu tautan atau kode untuk banyak orang. Semua yang bergabung dengannya mendapat pengaturan di bawah.",
+          "role_hint": "Hanya peran setingkat pelajar",
+          "role_note": "Siapa pun yang memiliki kode dapat menggunakannya, jadi kode tidak dapat memberikan peran admin, maintainer, instruktur, atau peran apa pun yang mengelola orang.",
+          "max_uses": "Penggunaan maksimum",
+          "max_uses_invalid": "Masukkan bilangan bulat mulai dari 1",
+          "unlimited": "Tidak terbatas",
+          "never": "Tidak pernah",
+          "no_expiry": "Tanpa kedaluwarsa",
+          "uses_one": "{{count}} penggunaan",
+          "uses_other": "{{count}} penggunaan",
+          "uses_of": "{{count}} / {{max}} penggunaan",
+          "uses_title": "Berapa kali kode ini dipakai untuk bergabung"
+        },
+        "page": {
+          "join_title": "Cara orang bergabung",
+          "join_description": "Pilih apakah siapa pun bisa mendaftar atau hanya orang yang Anda undang.",
+          "mode_open": "Terbuka",
+          "mode_open_description": "Siapa pun yang memiliki tautan akademi Anda dapat membuat akun dan bergabung.",
+          "mode_invite_only": "Hanya undangan",
+          "mode_invite_only_description": "Hanya orang yang Anda undang lewat email atau yang memiliki kode undangan yang dapat bergabung.",
+          "confirm_open_title": "Izinkan siapa pun bergabung?",
+          "confirm_invite_only_title": "Jadikan bergabung hanya lewat undangan?",
+          "confirm_open": "Ubah ke terbuka",
+          "confirm_invite_only": "Ubah ke hanya undangan",
+          "codes_description": "Satu tautan atau kode untuk seluruh grup. Semua yang bergabung dengannya mendapat peran, grup, dan kursusnya.",
+          "codes_need_invite_only": "Kode undangan untuk bergabung lewat undangan saja. Ubah ke Hanya undangan di atas untuk membuatnya.",
+          "edit_fields": "Edit kolom",
+          "code_expired": "Kedaluwarsa",
+          "code_used_up": "Habis terpakai",
+          "code_revoked": "Dihapus"
+        }
       }
     },
     "assignments": {
@@ -11723,7 +11972,17 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> mengedit jawaban pendaftaran <b>{{target}}</b>",
         "members__signup_backfilled": "<b>{{actor}}</b> menyalin jawaban pendaftaran ke data karyawan",
         "security__support_access__started": "<b>{{actor}}</b> mulai mengimpersonasi <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> berhenti mengimpersonasi <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> berhenti mengimpersonasi <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b> mengubah undangan untuk <b>{{target}}</b>",
+        "members__invitation__resent": "<b>{{actor}}</b> mengirim ulang undangan untuk <b>{{target}}</b>",
+        "members__invitation__link_copied": "<b>{{actor}}</b> menyalin tautan undangan baru untuk <b>{{target}}</b>",
+        "members__invitation__revoked": "<b>{{actor}}</b> mencabut undangan untuk <b>{{target}}</b>",
+        "members__invitation__accepted": "<b>{{actor}}</b> menerima undangannya",
+        "members__invitation__declined": "<b>{{actor}}</b> menolak undangannya",
+        "members__invitation__role_applied": "<b>{{actor}}</b> mendapatkan peran dari undangannya",
+        "members__invite_code__updated": "<b>{{actor}}</b> mengubah tautan undangan",
+        "members__invite_code__used": "<b>{{actor}}</b> bergabung lewat tautan undangan",
+        "members__invitation__closed": "<b>{{actor}}</b> bergabung dengan cara lain, jadi undangannya ditutup"
       },
       "export": {
         "generating": "Menyiapkan ekspor…",
@@ -11887,7 +12146,8 @@
         "customers": "daftar pelanggan",
         "scim": "Provisioning SCIM",
         "scim_token": "Token SCIM",
-        "training_rule": "pelatihan wajib"
+        "training_rule": "pelatihan wajib",
+        "invitation": "undangan"
       }
     },
     "course_builder": {
@@ -28976,7 +29236,8 @@
       "trial_ending": "Uji coba segera berakhir",
       "plan_downgraded": "Pindah ke Gratis",
       "plan_restored": "Paket dipulihkan",
-      "payments_checkout_failing": "Pembayaran gagal"
+      "payments_checkout_failing": "Pembayaran gagal",
+      "invitation_accepted": "Undangan diterima"
     },
     "copy": {
       "assignment_graded": "Dinilai: {{assignment}}",
@@ -29038,7 +29299,8 @@
       "trial_ending": "Uji coba {{plan}} Anda berakhir dalam {{days}} hari",
       "plan_downgraded": "Anda sekarang di paket Gratis. Tidak ada yang dihapus",
       "plan_restored": "Selamat datang kembali di {{plan}}",
-      "payments_checkout_failing": "Pelajar tidak bisa membeli saat ini ({{count}} pembayaran gagal)"
+      "payments_checkout_failing": "Pelajar tidak bisa membeli saat ini ({{count}} pembayaran gagal)",
+      "invitation_accepted": "{{actor}} menerima undangan Anda"
     },
     "routing": {
       "short": "Siapa yang diberi tahu",
@@ -29193,7 +29455,9 @@
       "verify_title": "Verifikasi email Anda untuk melihat undangan",
       "verify_desc": "Undangan dikirim ke alamat email, jadi akan muncul setelah Anda mengonfirmasi bahwa itu milik Anda.",
       "verify_resend": "Kirim ulang email verifikasi",
-      "verify_sent": "Terkirim. Periksa kotak masuk Anda."
+      "verify_sent": "Terkirim. Periksa kotak masuk Anda.",
+      "invited_as": "Mengundang Anda sebagai {{role}}",
+      "invited_as_by": "{{name}} mengundang Anda sebagai {{role}}"
     },
     "celebrate": {
       "title": "Kursus pertama Anda sudah tayang",

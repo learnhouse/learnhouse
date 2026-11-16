@@ -44,34 +44,11 @@ async def test_api_tokens_skip_the_admin_only_removal_gate(db, org, mock_request
 async def test_invites_must_come_from_an_existing_member(db, org, mock_request):
     """A caller whose account row is gone cannot send invitations."""
     ghost = PublicUser(id=999, username="ghost", first_name="G", last_name="H", email="g@h.com", user_uuid="user_ghost")
-    with patch.object(org_users, "get_learnhouse_config", return_value=_REDIS_CONFIG), \
-         patch.object(org_users, "rbac_check", new_callable=AsyncMock):
+    with patch("src.services.orgs.orgs.rbac_check", new_callable=AsyncMock):
         with pytest.raises(HTTPException) as exc:
             await org_users.invite_batch_users(mock_request, org.id, "a@test.com", None, db, ghost)
     assert exc.value.status_code == 403
     assert exc.value.detail == "Invitations must come from a member"
-
-
-async def test_unreadable_pending_invite_counts_toward_the_cap(db, org, admin_user, mock_request):
-    """A corrupt pending-invite record is counted, so it cannot be used to slip past the member cap."""
-    fake_redis = Mock()
-    fake_redis.get = Mock(side_effect=lambda key: b"{corrupt" if key == "invited_user:old@test.com:org:org_test" else None)
-    fake_redis.scan_iter = Mock(return_value=["invited_user:old@test.com:org:org_test"])
-    fake_redis.set = Mock()
-
-    with patch.object(org_users, "get_learnhouse_config", return_value=_REDIS_CONFIG), \
-         patch.object(org_users.redis.Redis, "from_url", return_value=fake_redis), \
-         patch.object(org_users, "rbac_check", new_callable=AsyncMock), \
-         patch.object(org_users, "enforce_free_tier_age_gate", new_callable=AsyncMock), \
-         patch.object(org_users, "check_members_limit_with_pending", new_callable=AsyncMock) as limit, \
-         patch.object(org_users, "enforce_invite_rate_limit"), \
-         patch.object(org_users, "send_invite_email", new=AsyncMock(return_value=True)), \
-         patch.object(org_users, "dispatch_webhooks", new_callable=AsyncMock):
-        result = await org_users.invite_batch_users(mock_request, org.id, "new@test.com", None, db, admin_user)
-
-    # One unreadable existing record plus the one new invite.
-    limit.assert_awaited_once_with(org.id, 2, db)
-    assert result["summary"]["sent"] == 1
 
 
 # ─── orgs.py ─────────────────────────────────────────────────────────────────

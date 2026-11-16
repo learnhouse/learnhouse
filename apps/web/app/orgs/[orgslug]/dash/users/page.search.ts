@@ -23,7 +23,7 @@ export const searchMetas: SearchMeta[] = [
     descriptionKey: 'dashboard.search.entries.users_add.description',
     keywordsKey: 'dashboard.search.entries.users_add.keywords',
     icon: UserPlus,
-    href: '/dash/users/settings/add',
+    href: '/dash/users/settings/signups',
     group: 'users',
   },
   {
@@ -46,7 +46,7 @@ export const searchMetas: SearchMeta[] = [
   },
   {
     id: 'dash.users.signups',
-    titleKey: 'dashboard.users.settings.tabs.signups',
+    titleKey: 'dashboard.users.settings.tabs.signups_invite',
     descriptionKey: 'dashboard.search.entries.signups.description',
     keywordsKey: 'dashboard.search.entries.signups.keywords',
     icon: UserPlus,

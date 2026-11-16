@@ -562,298 +562,112 @@ class TestOrgUsersService:
 
     @pytest.mark.asyncio
     async def test_invite_batch_users_guard_paths_and_summary(
-        self, mock_request, db, org, admin_user
+        self, mock_request, db, org, admin_user, user_role
     ):
-        empty_config = SimpleNamespace(
-            redis_config=SimpleNamespace(redis_connection_string="")
-        )
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=empty_config,
-        ):
-            with pytest.raises(Exception) as redis_missing_exc:
-                await invite_batch_users(
-                    mock_request, org.id, "a@test.com", "invite_uuid", db, admin_user
-                )
-        assert redis_missing_exc.value.status_code == 500
+        from src.db.org_invitations import OrgInvitation
 
-        fake_config = SimpleNamespace(
-            redis_config=SimpleNamespace(redis_connection_string="redis://test")
-        )
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=fake_config,
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ):
-            with pytest.raises(Exception) as org_missing_exc:
-                await invite_batch_users(
-                    mock_request, 999, "a@test.com", "invite_uuid", db, admin_user
-                )
+        with pytest.raises(HTTPException) as org_missing_exc:
+            await invite_batch_users(mock_request, 999, "a@test.com", None, db, admin_user)
         assert org_missing_exc.value.status_code == 404
 
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=fake_config,
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.enforce_free_tier_age_gate",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=None,
-        ):
-            with pytest.raises(Exception) as redis_conn_exc:
-                await invite_batch_users(
-                    mock_request, org.id, "a@test.com", "invite_uuid", db, admin_user
-                )
-        assert redis_conn_exc.value.status_code == 500
+        with pytest.raises(HTTPException) as code_missing_exc:
+            await invite_batch_users(mock_request, org.id, "a@test.com", "invite_uuid", db, admin_user)
+        assert code_missing_exc.value.status_code == 404
 
-        fake_redis = Mock()
-        fake_redis.get = Mock(side_effect=lambda key: b"x" if "existing@test.com" in key else None)
-        fake_redis.scan_iter = Mock(return_value=[])
-        fake_redis.set = Mock()
-        fake_redis.__bool__ = Mock(return_value=True)
-
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=fake_config,
+        send = AsyncMock(side_effect=[True, True, True, False])
+        with patch("src.services.orgs.invitations.service._send_email", send), patch(
+            "src.services.security.rate_limiting.enforce_invite_rate_limit"
         ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=fake_redis,
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.check_members_limit_with_pending",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.enforce_free_tier_age_gate",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.enforce_invite_rate_limit",
-        ), patch(
-            "src.services.orgs.users.send_invite_email",
-            side_effect=[True, False],
-        ), patch(
-            "src.services.orgs.users.dispatch_webhooks",
-            new_callable=AsyncMock,
+            "src.services.webhooks.dispatch.dispatch_webhooks", new_callable=AsyncMock
         ) as dispatch_mock, patch(
-            "src.services.orgs.users.track", new_callable=AsyncMock
+            "src.services.analytics.analytics.track", new_callable=AsyncMock
         ) as mock_track:
+            await invite_batch_users(mock_request, org.id, "existing@test.com", None, db, admin_user)
+            mock_track.reset_mock()
             result = await invite_batch_users(
                 mock_request,
                 org.id,
                 "new@test.com,existing@test.com,failed@test.com,",
-                "invite_uuid",
+                None,
                 db,
                 admin_user,
             )
 
-        assert result["summary"] == {
-            "total": 3,
-            "sent": 1,
-            "failed": 1,
-            "already_invited": 1,
-            "invalid_email": 0,
-        }
-        assert [item["status"] for item in result["results"]] == [
-            "sent",
-            "already_invited",
-            "email_failed",
-        ]
-        # Per sent invite: its personal link record, then the invite record
-        # carrying that link's hash (only the newest link for it works).
-        assert fake_redis.set.call_count == 4
-        keys = [c.args[0] for c in fake_redis.set.call_args_list]
-        assert keys[0].startswith("invite_link:") and keys[1] == f"invited_user:new@test.com:org:{org.org_uuid}"
-        assert json.loads(fake_redis.set.call_args_list[1].args[1])["link_hash"] == keys[0].split(":", 1)[1]
-        dispatch_mock.assert_awaited_once()
-        # One event for the whole batch; the already-pending address is not
-        # counted, the failed email is (its invite is recorded).
+        assert result["summary"]["total"] == 3
+        assert result["summary"]["sent"] == 1
+        assert result["summary"]["failed"] == 1
+        # A pending invitation gets a fresh email (and link) instead of a skip.
+        assert result["summary"]["already_invited"] == 1
+        assert [item["status"] for item in result["results"]] == ["sent", "resent", "email_failed"]
+        rows = (await db.execute(select(OrgInvitation).order_by(OrgInvitation.email))).scalars().all()
+        assert [r.email for r in rows] == ["existing@test.com", "failed@test.com", "new@test.com"]
+        assert all(r.role_id == user_role.id and r.token_hash for r in rows)
+        assert dispatch_mock.await_count == 2
         mock_track.assert_awaited_once_with(
             event_name="user_invited",
             org_id=org.id,
             user_id=admin_user.id,
-            properties={"invite_method": "email", "count": 2},
+            properties={"invite_method": "email", "count": 3},
         )
 
     @pytest.mark.asyncio
-    async def test_get_and_remove_invited_users_redis_paths(
-        self, mock_request, db, org, admin_user
+    async def test_get_and_remove_invited_users_paths(
+        self, mock_request, db, org, admin_user, user_role
     ):
-        empty_config = SimpleNamespace(
-            redis_config=SimpleNamespace(redis_connection_string="")
-        )
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=empty_config,
-        ):
-            with pytest.raises(Exception) as list_missing_exc:
-                await get_list_of_invited_users(mock_request, org.id, db, admin_user)
-        assert list_missing_exc.value.status_code == 500
+        from src.db.org_invitations import OrgInvitation
+        from src.services.orgs.invitations.policy import utcnow
+        from datetime import timedelta
 
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="redis://test")
-            ),
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ):
-            with pytest.raises(Exception) as list_org_missing_exc:
-                await get_list_of_invited_users(mock_request, 999, db, admin_user)
+        with pytest.raises(HTTPException) as list_org_missing_exc:
+            await get_list_of_invited_users(mock_request, 999, db, admin_user)
         assert list_org_missing_exc.value.status_code == 404
 
+        now = utcnow()
+        for i, (email, status, expires) in enumerate((
+            ("db@test.com", "pending", now + timedelta(days=3)),
+            ("joined@test.com", "accepted", now + timedelta(days=3)),
+            ("late@test.com", "pending", now - timedelta(days=1)),
+        )):
+            db.add(OrgInvitation(
+                invitation_uuid=f"invitation_{email}", org_id=org.id, email=email, role_id=user_role.id,
+                status=status, expires_at=expires, created_at=now - timedelta(minutes=i), updated_at=now,
+            ))
+        await db.commit()
+
         fake_redis = Mock()
-        fake_redis.scan_iter.return_value = [
-            b"invited_user:a@test.com:org:org_test",
-            b"invited_user:b@test.com:org:org_test",
-        ]
-        fake_redis.get.side_effect = [
-            json.dumps({"email": "a@test.com"}).encode("utf-8"),
-            json.dumps({"email": "b@test.com"}).encode("utf-8"),
-        ]
-        fake_redis.__bool__ = Mock(return_value=True)
-
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="redis://test")
-            ),
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=fake_redis,
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ):
+        fake_redis.scan_iter.return_value = [b"invited_user:a@test.com:org:org_test"]
+        fake_redis.get.side_effect = lambda key: json.dumps({"email": "a@test.com", "pending": True}).encode("utf-8")
+        with patch("src.core.redis.get_redis_client", return_value=fake_redis):
             invited = await get_list_of_invited_users(mock_request, org.id, db, admin_user)
+        assert [item["email"] for item in invited] == ["db@test.com", "joined@test.com", "a@test.com"]
+        assert invited[0]["pending"] is True and invited[1]["pending"] is False
 
-        assert [item["email"] for item in invited] == ["a@test.com", "b@test.com"]
+        # Redis down: the database invitations still list.
+        with patch("src.core.redis.get_redis_client", return_value=None):
+            invited = await get_list_of_invited_users(mock_request, org.id, db, admin_user)
+        assert [item["email"] for item in invited] == ["db@test.com", "joined@test.com"]
 
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="redis://test")
-            ),
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=False,
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ):
-            with pytest.raises(Exception) as list_redis_exc:
-                await get_list_of_invited_users(mock_request, org.id, db, admin_user)
-        assert list_redis_exc.value.status_code == 500
-
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=empty_config,
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=None,
-        ):
-            with pytest.raises(Exception) as remove_redis_exc:
-                await remove_invited_user(
-                    mock_request, org.id, "a@test.com", db, admin_user
-                )
-        assert remove_redis_exc.value.status_code == 500
-
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=empty_config,
-        ):
-            with pytest.raises(Exception) as remove_missing_conn_exc:
-                await remove_invited_user(
-                    mock_request, org.id, "a@test.com", db, admin_user
-                )
-        assert remove_missing_conn_exc.value.status_code == 500
-
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="redis://test")
-            ),
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ):
-            with pytest.raises(Exception) as remove_org_missing_exc:
-                await remove_invited_user(
-                    mock_request, 999, "a@test.com", db, admin_user
-                )
+        with pytest.raises(HTTPException) as remove_org_missing_exc:
+            await remove_invited_user(mock_request, 999, "a@test.com", db, admin_user)
         assert remove_org_missing_exc.value.status_code == 404
 
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="redis://test")
-            ),
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=False,
-        ):
-            with pytest.raises(Exception) as remove_conn_exc:
-                await remove_invited_user(
-                    mock_request, org.id, "a@test.com", db, admin_user
-                )
-        assert remove_conn_exc.value.status_code == 500
-
-        missing_redis = Mock()
-        missing_redis.get.return_value = None
-        missing_redis.__bool__ = Mock(return_value=True)
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="redis://test")
-            ),
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=missing_redis,
-        ):
-            with pytest.raises(Exception) as missing_invite_exc:
-                await remove_invited_user(
-                    mock_request, org.id, "missing@test.com", db, admin_user
-                )
-        assert missing_invite_exc.value.status_code == 404
-
-        fake_redis = Mock()
-        fake_redis.get.return_value = json.dumps({"email": "a@test.com"}).encode("utf-8")
-        fake_redis.delete = Mock()
-        fake_redis.__bool__ = Mock(return_value=True)
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=SimpleNamespace(
-                redis_config=SimpleNamespace(redis_connection_string="redis://test")
-            ),
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=fake_redis,
-        ):
-            result = await remove_invited_user(
-                mock_request, org.id, "a@test.com", db, admin_user
-            )
-
+        result = await remove_invited_user(mock_request, org.id, "DB@test.com", db, admin_user)
         assert result == {"detail": "User removed"}
-        fake_redis.delete.assert_called_once()
+        row = (await db.execute(select(OrgInvitation).where(OrgInvitation.email == "db@test.com"))).scalars().one()
+        assert row.status == "revoked"
+
+        legacy = Mock()
+        legacy.get.side_effect = lambda key: b"x" if "legacy@test.com" in key else None
+        with patch("src.core.redis.get_redis_client", return_value=legacy):
+            assert await remove_invited_user(mock_request, org.id, "legacy@test.com", db, admin_user) == {"detail": "User removed"}
+            legacy.delete.assert_called_once_with(f"invited_user:legacy@test.com:org:{org.org_uuid}")
+            with pytest.raises(HTTPException) as missing_invite_exc:
+                await remove_invited_user(mock_request, org.id, "nobody@test.com", db, admin_user)
+        assert missing_invite_exc.value.status_code == 404
+        with patch("src.core.redis.get_redis_client", return_value=None):
+            with pytest.raises(HTTPException) as no_redis_exc:
+                await remove_invited_user(mock_request, org.id, "nobody@test.com", db, admin_user)
+        assert no_redis_exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_organization_users_fake_session_edge_cases(
@@ -1294,128 +1108,76 @@ class TestOrgUsersService:
 
     @pytest.mark.asyncio
     async def test_invite_batch_users(
-        self, mock_request, db, org, admin_user
+        self, mock_request, db, org, admin_user, user_role, course
     ):
-        fake_redis = Mock()
-        fake_redis.get = Mock(side_effect=lambda key: b"x" if "existing@test.com" in key else None)
-        fake_redis.scan_iter = Mock(return_value=[])
-        fake_redis.set = Mock()
-        fake_redis.__bool__ = Mock(return_value=True)
-        fake_config = SimpleNamespace(
-            redis_config=SimpleNamespace(redis_connection_string="redis://test")
+        """An invite code's groups and courses ride along (database and Redis codes)."""
+        from src.db.org_invitations import OrgInvitation, OrgInviteCode
+        from src.services.orgs.invitations.policy import utcnow
+
+        group = UserGroup(
+            org_id=org.id, name="G", description="", usergroup_uuid="ug_batch",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
         )
+        db.add(group)
+        await db.commit()
+        await db.refresh(group)
+        code_uuid = "org_invite_code_12345678-1234-1234-1234-1234567890ab"
+        db.add(OrgInviteCode(
+            code_uuid=code_uuid, org_id=org.id, code="ABCDEFGH", role_id=user_role.id,
+            usergroup_ids=[group.id], course_uuids=[course.course_uuid], uses=0,
+            created_at=utcnow(), updated_at=utcnow(),
+        ))
+        await db.commit()
 
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=fake_config,
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=fake_redis,
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.check_members_limit_with_pending",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.enforce_free_tier_age_gate",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.enforce_invite_rate_limit",
-        ), patch(
-            "src.services.orgs.users.send_invite_email",
-            return_value=True,
-        ), patch(
-            "src.services.orgs.users.dispatch_webhooks",
-            new_callable=AsyncMock,
+        legacy_uuid = "org_invite_code_99999999-9999-9999-9999-999999999999"
+        legacy = Mock()
+        legacy.scan_iter.side_effect = lambda match, count: [b"k"] if match.startswith(legacy_uuid) else []
+        legacy.get.return_value = json.dumps({"usergroup_id": group.id}).encode()
+        with patch("src.services.orgs.invitations.service._send_email", AsyncMock(return_value=True)), patch(
+            "src.services.security.rate_limiting.enforce_invite_rate_limit"
+        ), patch("src.services.webhooks.dispatch.dispatch_webhooks", new_callable=AsyncMock), patch(
+            "src.core.redis.get_redis_client", return_value=legacy
         ):
-            result = await invite_batch_users(
-                mock_request,
-                org.id,
-                "new@test.com,existing@test.com",
-                "invite_uuid",
-                db,
-                admin_user,
-            )
+            result = await invite_batch_users(mock_request, org.id, "new@test.com", code_uuid, db, admin_user)
+            legacy_result = await invite_batch_users(mock_request, org.id, "old@test.com", legacy_uuid, db, admin_user)
+            with pytest.raises(HTTPException) as unknown:
+                await invite_batch_users(
+                    mock_request, org.id, "x@test.com", "org_invite_code_00000000-0000-0000-0000-000000000000", db, admin_user
+                )
+        assert unknown.value.status_code == 404
+        with patch("src.core.redis.get_redis_client", return_value=None):
+            with pytest.raises(HTTPException) as no_redis:
+                await invite_batch_users(mock_request, org.id, "x@test.com", legacy_uuid, db, admin_user)
+        assert no_redis.value.status_code == 404
 
-        assert result["summary"]["sent"] == 1
-        assert result["summary"]["already_invited"] == 1
-
-        with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=fake_config,
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
-            return_value=fake_redis,
-        ), patch(
-            "src.services.orgs.users.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.check_members_limit_with_pending",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.enforce_free_tier_age_gate",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.dispatch_webhooks",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.users.track", new_callable=AsyncMock
-        ) as mock_track:
-            again = await invite_batch_users(
-                mock_request, org.id, "existing@test.com", "invite_uuid", db, admin_user
-            )
-
-        # Nobody new was invited, so nothing is tracked.
-        assert again["summary"]["already_invited"] == 1
-        mock_track.assert_not_awaited()
+        assert result["summary"]["sent"] == 1 and legacy_result["summary"]["sent"] == 1
+        rows = {r.email: r for r in (await db.execute(select(OrgInvitation))).scalars().all()}
+        assert rows["new@test.com"].usergroup_ids == [group.id]
+        assert rows["new@test.com"].course_uuids == [course.course_uuid]
+        assert rows["old@test.com"].usergroup_ids == [group.id] and rows["old@test.com"].course_uuids == []
 
     @pytest.mark.asyncio
     async def test_invite_batch_users_rejects_malformed_and_oversized(
-        self, mock_request, db, org, admin_user
+        self, mock_request, db, org, admin_user, user_role
     ):
         from src.services.security.rate_limiting import INVITE_MAX_BATCH_SIZE
 
-        fake_redis = Mock()
-        fake_redis.get = Mock(return_value=None)
-        fake_redis.scan_iter = Mock(return_value=[])
-        fake_redis.set = Mock()
-        fake_redis.__bool__ = Mock(return_value=True)
-        fake_config = SimpleNamespace(
-            redis_config=SimpleNamespace(redis_connection_string="redis://test")
-        )
-
-        patches = [
-            patch("src.services.orgs.users.get_learnhouse_config", return_value=fake_config),
-            patch("src.services.orgs.users.redis.Redis.from_url", return_value=fake_redis),
-            patch("src.services.orgs.users.rbac_check", new_callable=AsyncMock),
-            patch("src.services.orgs.users.check_members_limit_with_pending", new_callable=AsyncMock),
-            patch("src.services.orgs.users.enforce_free_tier_age_gate", new_callable=AsyncMock),
-            patch("src.services.orgs.users.enforce_invite_rate_limit"),
-            patch("src.services.orgs.users.send_invite_email", new_callable=AsyncMock, return_value=True),
-            patch("src.services.orgs.users.dispatch_webhooks", new_callable=AsyncMock),
-        ]
-        for p in patches:
-            p.start()
-        try:
+        with patch("src.services.orgs.invitations.service._send_email", AsyncMock(return_value=True)), patch(
+            "src.services.security.rate_limiting.enforce_invite_rate_limit"
+        ), patch("src.services.webhooks.dispatch.dispatch_webhooks", new_callable=AsyncMock):
             # A malformed address is rejected (never sent) and reported.
             result = await invite_batch_users(
-                mock_request, org.id, "ok@test.com,not-an-email", "invite_uuid", db, admin_user
+                mock_request, org.id, "ok@test.com,not-an-email", None, db, admin_user
             )
             assert result["summary"]["invalid_email"] == 1
             assert any(r["status"] == "invalid_email" for r in result["results"])
 
-            # More than the batch cap → 400 BATCH/INVITE_BATCH_TOO_LARGE.
+            # More than the batch cap → 400 INVITE_BATCH_TOO_LARGE.
             too_many = ",".join(f"user{i}@test.com" for i in range(INVITE_MAX_BATCH_SIZE + 1))
             with pytest.raises(HTTPException) as exc:
-                await invite_batch_users(
-                    mock_request, org.id, too_many, "invite_uuid", db, admin_user
-                )
+                await invite_batch_users(mock_request, org.id, too_many, None, db, admin_user)
             assert exc.value.status_code == 400
             assert exc.value.detail["code"] == "INVITE_BATCH_TOO_LARGE"
-        finally:
-            for p in patches:
-                p.stop()
 
     @pytest.mark.asyncio
     async def test_remove_batch_users_from_org_empty_list(

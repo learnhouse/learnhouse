@@ -207,7 +207,13 @@ async def signWithGoogle(
     org_id: Optional[int] = None,
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
+    outcome: Optional[dict] = None,
 ):
+    """``outcome`` (optional) is filled with ``joined``: whether this sign-in
+    made the account a member of ``org_id``. The returned user's email is the
+    address Google verified."""
+    if outcome is not None:
+        outcome["joined"] = False
     # Google
     google_user = await get_google_user_info(access_token)
 
@@ -291,9 +297,13 @@ async def signWithGoogle(
         )
 
         if org_id is not None:
+            # The caller accepts the address's invitation (or closes it) next.
             user = await create_user(
-                request, db_session, current_user, user_object, org_id, is_oauth=True, signup_provider="google"
+                request, db_session, current_user, user_object, org_id, is_oauth=True, signup_provider="google",
+                keep_invitations=True,
             )
+            if outcome is not None:
+                outcome["joined"] = True
 
             return user
         else:
@@ -352,6 +362,8 @@ async def signWithGoogle(
             db_session.add(user_organization)
             await db_session.commit()
             await db_session.refresh(user_organization)
+            if outcome is not None:
+                outcome["joined"] = True
             await increase_feature_usage("members", org_id, db_session)
 
             # /users/session is served from a 10 minute Redis cache keyed on the

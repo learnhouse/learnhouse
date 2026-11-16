@@ -1,12 +1,14 @@
 ---
-description: "Manage LearnHouse members: search and export the Users list, set open or closed signup, create invite codes, add signup fields and invite people by email."
+description: "Manage LearnHouse members: search and export the Users list, invite people by email with a role, groups and courses, follow and manage invitations, set open or closed signup, and create invite codes."
 ---
 
 import { Callout } from '@/components/mdx'
 
 # Members & Invites
 
-This page covers the **Users**, **Signups & Invite Codes** and **Invite Members** tabs under **Users** in the dashboard.
+This page covers the **Users** and **Signups and Invite** tabs under **Users** in the dashboard.
+
+**Signups and Invite** is one page, top to bottom: the **Invite people** button with your pending, accepted and expired counts (and admin seats, when your plan limits them), the list of invitations, **How people can join**, your **Invite codes**, and **Custom signup fields**. Older links to the former **Invite Members** and **Signups & Invite Codes** tabs open this page.
 
 <YouTube video="guide-5" />
 
@@ -30,32 +32,35 @@ The download icon next to the search box exports the member list as CSV.
 Only roles that can manage the organization (Admin and Maintainer by default) can change roles or remove members.
 </Callout>
 
-## Signup mode
+## How people can join
 
-On **Signups & Invite Codes**, **Join method** decides how new people can join:
+On **Signups and Invite**, **How people can join** decides who can sign up:
 
 | Option | Behavior |
 | --- | --- |
-| **Open** | Users can join freely from the signup page. This is the default. |
-| **Closed** | Users can join only by invitation: an email invite or an invite code. Google sign-up is refused without a valid invite. |
+| **Open** | Anyone with your academy's link can create an account and join. This is the default. |
+| **Invite only** | Only people you invite by email or who have an invite code can join. Google sign-up is refused without a valid invite. |
 
 ## Invite codes
 
-Invite codes are shareable links for a **Closed** organization. The section is greyed out while the join method is **Open**.
+Invite codes are shareable links or codes for an **Invite only** organization: one code for a whole class. While joining is **Open**, the section says so instead of offering **New invite code**.
 
-1. Click **Generate invite code**.
-2. Choose **Normal Invite Code**, or **Invite Code linked to a UserGroup** to add everyone who signs up with it to that group.
-3. Copy the code or its signup link (`/signup?inviteCode=...`) and share it.
+1. Click **New invite code**.
+2. Pick the **role** people get when they join with it. Codes only offer learner-level roles: anyone who has the code can use it, so a code can only grant a role that can do nothing the built-in User role can't (no Admin, Maintainer or Instructor, and no custom role that can manage people, edit content or open the dashboard).
+3. Optionally add **groups** to put everyone in and **courses** to enroll them in, a **maximum number of uses** and an **expiry** (7, 30, 90 or 365 days, or never).
+4. Copy the code or its signup link (`/signup?inviteCode=...`) and share it.
+
+Everyone who joins with the code, by email signup or Google, gets its role, groups and courses straight away. Each code shows how many times it was used (**3 / 10 uses**) and when it expires. The use is counted as the person joins, so a capped code never lets one more in. A code that is used up or expired stops working and stays in the list until you delete it.
 
 | Limit | Value |
 | --- | --- |
-| Codes per organization | 6 at a time |
+| Live codes per organization | 6 at a time |
 | Code format | 8 letters and digits |
-| Lifetime | 1 year, then the code stops working |
+| Lifetime | What you choose, or no expiry |
 
-Delete a code from the table to revoke it.
+Delete a code from the table to revoke it. Codes created before this version keep working (with their user group) until they expire.
 
-<img src="/img/pages/users/users-invite-codes.webp" alt="Signups & Invite Codes with the Closed join method active and two invite codes with their signup links and expiration dates" width={1600} height={900} style={{ borderRadius: 10 }} />
+<img src="/img/pages/users/users-invite-codes.webp" alt="Invite codes on Signups and Invite, each with its role, groups, uses and expiry" width={1600} height={900} style={{ borderRadius: 10 }} />
 
 ## Custom signup fields
 
@@ -69,21 +74,58 @@ Field labels are public: anyone who opens the signup page can read them.
 
 ## Inviting people by email
 
-On **Invite Members**, enter email addresses separated by commas and click **Send invites via email**. You can attach an **Invite Code** so that invitees land in the code's user group.
+On **Signups and Invite**, click **Invite people**. In one dialog:
 
-<img src="/img/pages/users/users-invite-members.webp" alt="The Invite Members tab with the email box, the Invite Code picker and the Invited Users list" width={1600} height={900} style={{ borderRadius: 10 }} />
+1. **Email addresses**: paste one or many, separated by commas, spaces or new lines. Duplicates are merged and malformed addresses are flagged before anything is sent.
+2. **Role**: what they can do once they join. Each role has a short description: **Learner** (takes courses, no dashboard), **Instructor** (creates and teaches their own courses, uses an admin seat), **Maintainer** (manages courses, members and groups), **Admin** (everything, including billing and settings), plus your organization's custom roles.
+3. **Add to groups** and **Enroll in courses** (optional).
+4. **Personal message** (optional, up to 1,000 characters, no links). It appears in the email.
+5. **Expires after**: 1 to 90 days, 14 by default.
+
+A summary shows what will happen ("3 people will join as Instructor, added to Cohort A, enrolled in 2 courses") and how many member and admin seats your plan has left, counting pending invitations.
+
+Each person gets a branded email with a personal link. **Whichever way they arrive, everything is applied automatically when they join**: the membership with the chosen role, the groups and the course enrollments, in one step. That works when they:
+
+- follow the emailed link and create their account (the emailed link proves their email, so the account starts verified);
+- follow the link and sign in to an existing account (they must be signed in with the invited address);
+- accept from the list of pending invitations on their LearnHouse home page;
+- sign in with Google using the invited address.
+
+Whoever sent the invitation gets a notification when it is accepted.
+
+**People who are already members** are skipped and reported as such. Tick **Also update the people who are already members** to apply the role, groups and courses to them instead; their role then follows the same rules as changing it on the Users list (you can't change your own role, and only admins can change an admin's or maintainer's role).
+
+An invitation never demotes anyone: accepting one only changes the role of someone already in the organization when the new role takes nothing away, and signing in with Google never changes an existing member's role. When someone joins another way (an invite code, open signup, an admin or your identity provider adding them), their pending invitations close.
+
+<img src="/img/pages/users/users-invite-members.webp" alt="Signups and Invite with the invitation counts, the Invite people button and the invitations list" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+### Managing invitations
+
+**Signups and Invite** lists every invitation with its status (**Pending**, **Accepted**, **Expired**, **Revoked** or **Declined**), role, groups and courses, who sent it and when it expires. Filter by status with the counts at the top or the filter bar, and search by email. Each row shows the role, then the groups and courses in plain text. For each invitation you can:
+
+- **Resend**: emails a new link and restarts the expiry. The link in the earlier email stops working.
+- **Copy invite link**: to share it yourself, for example when the email didn't arrive. This also replaces the earlier link. A copied link doesn't prove the person owns the address, so they verify their email before the invitation applies; resend it by email if you want them to join in one step.
+- **Change role or access**: edit the role, groups, courses, message or expiry while it is still pending.
+- **Revoke**: the link stops working.
+
+Select several invitations to resend or revoke them together.
 
 | Limit | Value |
 | --- | --- |
-| Emails per batch | 25 |
-| Invites per day | 100 per organization and 100 per inviting user |
-| Invitation lifetime | 60 days |
+| People per batch | 25 |
+| Invites per day | 100 per organization and 100 per inviting user (resends count) |
+| Invitation lifetime | 1 to 90 days (14 by default) |
 
-Duplicates and malformed addresses are skipped. The result tells you how many invites were sent, failed or were already pending.
+### Who can invite whom
 
-The **Invited Users** table shows each invite's **Signup Status** (**Pending** or **Signed up**) and whether the email was sent. Use **Remove** to cancel a pending invite.
+- Admins and Maintainers can invite people. Only **Admins** can invite someone as Admin or Maintainer, or revoke such an invitation.
+- Below Admin, nobody can grant a role with a permission their own role doesn't have.
+- Groups, courses and roles must belong to your organization.
+- On plans with a member limit, pending invitations count toward it. Roles that open the dashboard (Admin, Maintainer, Instructor) count toward your plan's admin seats, pending invitations included. If an invitation would go over a limit, the dialog says so and sending is blocked.
 
-Each invitation fires the `user_invited_to_org` event for [webhooks and Zapier](/platform/automations/events).
+Personal links are single use and bound to the invited address; only a fingerprint of each link is stored. Invitations are only shown to, accepted by or declined by an account that has proven it owns the address (a verified email, Google, or the emailed link itself). Every step is recorded in the [audit log](/enterprise/audit-logs) (invited, resent, changed, revoked, accepted, role applied). Each send fires the `user_invited_to_org` event for [webhooks and Zapier](/platform/automations/events).
+
+Invitations sent before this version keep working until they expire. They show in the list as older invitations, which you can still revoke.
 
 <Callout type="warning">
 On the LearnHouse Cloud free plan, both the organization and your own account must be at least 7 days old before you can send invites or create invite codes. Paid plans are not affected.

@@ -695,3 +695,16 @@ class TestWhiteLabel:
                 assert "Acme" in call["body"], lang
             assert "LearnHouse" not in sent_magic.call_args.kwargs["body"], lang
             assert "LearnHouse" not in sent_magic.call_args.kwargs["subject"], lang
+
+    def test_invitation_with_role_note_and_expiry_in_every_language(self):
+        from src.services.email.translations import SUPPORTED_LANGUAGES
+
+        for lang in SUPPORTED_LANGUAGES:
+            with patch("src.services.users.emails.send_email", return_value=True) as sent:
+                send_invitation_email(
+                    "invitee@test.com", "Acme", "owner", "https://acme.test/signup?invite=tok",
+                    lang=lang, role_name="Instructor<b>", message="Line one\nLine <two>", expires_on="2026-12-01",
+                )
+            body = sent.call_args.kwargs["body"]
+            assert "Instructor&lt;b&gt;" in body and "Line one<br>Line &lt;two&gt;" in body, lang
+            assert "2026-12-01" in body and "{" not in body.split("<body", 1)[-1].replace("{{", ""), lang

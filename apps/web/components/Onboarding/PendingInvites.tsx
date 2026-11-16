@@ -12,6 +12,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { detailMessage } from '@services/utils/ts/requests'
 import { resendVerificationEmail } from '@services/auth/auth'
 import { acceptInvite, declineInvite, onboardingKeys, type PendingInvite } from '@services/onboarding/onboarding'
+import { useRoleText } from '@components/Dashboard/Pages/Users/OrgUsersAdd/roleText'
 
 /**
  * Invitations waiting for the signed-in user. Someone invited to a school
@@ -36,6 +37,7 @@ export default function PendingInvites({
   const { track } = useLHAnalytics('hub')
   const [busy, setBusy] = useState<string | null>(null)
   const [resent, setResent] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const roleText = useRoleText()
 
   if (unverified) {
     const email = session?.data?.user?.email
@@ -115,7 +117,18 @@ export default function PendingInvites({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-neutral-900">{inv.name}</p>
-              <p className="truncate text-xs text-neutral-500">{t('onb2.invites.invited_you')}</p>
+              <p className="truncate text-xs text-neutral-500">
+                {inv.role
+                  ? inv.invited_by
+                    ? t('onb2.invites.invited_as_by', { name: inv.invited_by, role: roleText({ role_uuid: inv.role_uuid ?? '', name: inv.role }).name })
+                    : t('onb2.invites.invited_as', { role: roleText({ role_uuid: inv.role_uuid ?? '', name: inv.role }).name })
+                  : t('onb2.invites.invited_you')}
+              </p>
+              {inv.message && (
+                <p className="mt-1 line-clamp-2 text-xs italic text-neutral-600" dir="auto">
+                  “{inv.message}”
+                </p>
+              )}
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <Button size="sm" variant="ghost" disabled={busy === inv.org_uuid} onClick={() => decline(inv)}>

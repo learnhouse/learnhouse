@@ -105,7 +105,7 @@ def test_reject_urls_in_profile_fields_helper():
 
 
 def test_looks_like_email_rejects_malformed_and_control_chars():
-    from src.services.orgs.users import _looks_like_email
+    from src.services.orgs.invitations.policy import looks_like_email as _looks_like_email
 
     assert _looks_like_email("a@test.com") is True
     assert _looks_like_email("no-at-sign") is False

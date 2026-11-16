@@ -1305,10 +1305,12 @@ async def provision_user(
 ) -> UserRead:
     """Create a user and attach them to the token's org in one call.
 
-    Designed for SSO/JIT provisioning: email is auto-verified and the user
-    bypasses the normal email-verification flow.
+    Designed for SSO/JIT provisioning: the user can sign in to the org at once
+    (no email-verification step), but the inbox counts as unproven until its
+    owner proves it, so the account can't claim invitations elsewhere.
     """
     _require_token_right(token_user, "users", "create")
+    from src.services.users.users import _INBOX_UNPROVEN
 
     name_check = validate_profile_fields({
         "username": username,
@@ -1377,8 +1379,13 @@ async def provision_user(
         last_name=last_name,
         password=security_hash_password(password) if password else "",
         user_uuid=f"user_{uuid4()}",
+        # Verified for this org's sign-in, but nothing proved the owner holds
+        # the inbox (the token holder chose the address and the password): the
+        # unproven marker keeps other orgs' invitations to it out of reach
+        # until the owner proves it (an emailed link, Google, a verification
+        # email, a password reset or a magic link).
         email_verified=True,
-        email_verified_at=now.isoformat(),
+        email_verified_at=_INBOX_UNPROVEN,
         signup_method="admin_api",
         creation_date=str(now),
         update_date=str(now),
@@ -1397,6 +1404,12 @@ async def provision_user(
     )
     db_session.add(membership)
     await db_session.commit()
+    # Added with a role chosen here: invitations left for the address close.
+    from src.services.orgs.invitations.apply import close_pending_invitations
+
+    # The org's own admin added this person with a role of its choosing, so
+    # its invitations to the address are settled (whoever owns the inbox).
+    await close_pending_invitations(request, db_session, token_user.org_id, email, actor=token_user, owner_proven=True)
 
     await increase_feature_usage("members", token_user.org_id, db_session)
 

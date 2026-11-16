@@ -133,7 +133,13 @@ async def data_signals(db_session: AsyncSession, org: Organization) -> set[str]:
         done.add("publish_course")
     if org.logo_image:
         done.add("brand_school")
-    if await _count(db_session, UserOrganization, UserOrganization.org_id == org.id) > 1 or _has_pending_invite(org):
+    from src.services.orgs.invitations.apply import has_pending_invitations
+
+    if (
+        await _count(db_session, UserOrganization, UserOrganization.org_id == org.id) > 1
+        or await has_pending_invitations(db_session, org.id)
+        or _has_pending_invite(org)
+    ):
         done.add("invite_learners")
     if await _count(db_session, Community, Community.org_id == org.id):
         done.add("build_community")

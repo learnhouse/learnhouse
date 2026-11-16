@@ -28,7 +28,6 @@ import {
   UsersThree,
   Shield,
   UserPlus,
-  ClipboardText,
   Palette,
   Rocket,
   LinkSimple,
@@ -733,14 +732,8 @@ function DashLeftMenu() {
                   </HoverMenuItem>
                   <HoverMenuItem asChild>
                     <Link href="/dash/users/settings/signups" className={MENU_ITEM_CLASS}>
-                      <ClipboardText size={16} weight="duotone" />
-                      <span>{t('dashboard.users.settings.tabs.signups')}</span>
-                    </Link>
-                  </HoverMenuItem>
-                  <HoverMenuItem asChild>
-                    <Link href="/dash/users/settings/add" className={MENU_ITEM_CLASS}>
                       <UserPlus size={16} weight="duotone" />
-                      <span>{t('dashboard.users.settings.tabs.add')}</span>
+                      <span>{t('dashboard.users.settings.tabs.signups_invite')}</span>
                     </Link>
                   </HoverMenuItem>
                 </HoverMenuContent>

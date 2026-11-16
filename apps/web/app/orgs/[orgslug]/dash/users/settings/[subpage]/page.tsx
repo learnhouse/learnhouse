@@ -39,8 +39,7 @@ const listLoading = () => (
   </div>
 )
 const OrgUsers = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'), { loading: listLoading })
-const OrgAccess = dynamic(() => import('@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'), { loading })
-const OrgUsersAdd = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'), { loading })
+const SignupsAndInvite = dynamic(() => import('@components/Dashboard/Pages/Users/SignupsAndInvite/SignupsAndInvite'), { loading: listLoading })
 const OrgUserGroups = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'), { loading })
 const OrgRoles = dynamic(() => import('@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'), { loading })
 const OrgAuditLogs = dynamic(() => import('@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'), { loading })
@@ -51,8 +50,7 @@ const ScimProvisioningPage = dynamic(() => import('@ee/components/HR/Provisionin
 // The other tabs' code, fetched while the browser is idle (see usePreloadOnIdle).
 const TAB_CHUNKS = [
   () => import('@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'),
-  () => import('@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'),
-  () => import('@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'),
+  () => import('@components/Dashboard/Pages/Users/SignupsAndInvite/SignupsAndInvite'),
   () => import('@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'),
   () => import('@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'),
   () => import('@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'),
@@ -67,8 +65,7 @@ export type SettingsParams = {
 
 const PAGES: Record<string, React.ComponentType> = {
   users: OrgUsers,
-  signups: OrgAccess,
-  add: OrgUsersAdd,
+  signups: SignupsAndInvite,
   usergroups: OrgUserGroups,
   roles: OrgRoles,
   'audit-logs': OrgAuditLogs,
@@ -83,6 +80,8 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   usePreloadOnIdle(TAB_CHUNKS)
   // People data lives on the Users tab now (columns, filters, import).
   if (params.subpage === 'people') redirect('/dash/users/settings/users')
+  // Invite Members and Signups & Invite Codes became one tab.
+  if (params.subpage === 'add') redirect('/dash/users/settings/signups')
 
   return (
     // No fade-in from transparent: on arrival it blanked the pane between the

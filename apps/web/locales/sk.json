@@ -794,12 +794,23 @@
       "signup_title": "Pridajte sa k {{org}}",
       "signup_desc": "Dostali ste pozvánku. Zvoľte heslo a ste dnu.",
       "choose_password": "Zvoľte heslo",
-      "create_and_join": "Pridať sa k {{org}}"
+      "create_and_join": "Pridať sa k {{org}}",
+      "details": {
+        "role": "Pripojíte sa s rolou {{role}}.",
+        "role_by": "{{name}} vás pozýva, aby ste sa pripojili s rolou {{role}}.",
+        "groups": "Pridáme vás do: {{names}}",
+        "courses": "Zapíšeme vás do: {{names}}",
+        "verify_note": "Tento odkaz vám niekto poslal priamo, preto si pred pripojením overíte e-mail."
+      },
+      "verify_title": "Skontrolujte si doručenú poštu",
+      "verify_desc": "Váš účet je pripravený. Na adresu {{email}} sme poslali overovací odkaz. Overte svoj e-mail a potom túto pozvánku otvorte znova alebo ju prijmite na svojej domovskej stránke, aby ste sa pripojili k {{org}}."
     },
     "login_failed_forgot": "Zabudli ste heslo?",
     "login_failed_reset": "Obnoviť",
     "login_failed_magic": "Poslať mi radšej prihlasovací odkaz",
-    "login_failed_google_hint": "Registrovali ste sa cez Google? Použite nižšie Pokračovať cez Google."
+    "login_failed_google_hint": "Registrovali ste sa cez Google? Použite nižšie Pokračovať cez Google.",
+    "email_verified_set_password": "Váš e-mail bol overený. Z bezpečnostných dôvodov bolo predtým nastavené heslo odstránené: zvoľte si nové, aby ste sa mohli prihlasovať heslom.",
+    "set_new_password": "Nastaviť nové heslo"
   },
   "validation": {
     "required": "Povinné",
@@ -8299,7 +8310,8 @@
           "audit_logs": "Auditné záznamy",
           "analytics": "Analytika",
           "sign_in": "Prihlásenie",
-          "two_factor": "Dvojfaktorové"
+          "two_factor": "Dvojfaktorové",
+          "signups_invite": "Registrácie a pozývanie"
         },
         "pages": {
           "users": {
@@ -8337,6 +8349,10 @@
           "sign_in": {
             "title": "Prihlásenie",
             "subtitle": "Vyberte, ako sa členovia môžu do tejto organizácie prihlasovať"
+          },
+          "signups_invite": {
+            "title": "Registrácie a pozývanie",
+            "subtitle": "Pozývajte ľudí, vyberte, ako sa môžu pripojiť, a zdieľajte kódy pozvánok"
           }
         },
         "mobile": {
@@ -9705,6 +9721,303 @@
         "more": "Ďalšie akcie",
         "remove_filter": "Odstrániť filter: {{name}}",
         "any": "Akýkoľvek"
+      },
+      "invitations": {
+        "invite_people": "Pozvať ľudí",
+        "dialog": {
+          "title": "Pozvať ľudí",
+          "description": "Každý dostane e-mailom osobný odkaz. Keď sa pripojí, automaticky sa použije rola, skupiny a kurzy nižšie.",
+          "done_title": "Pozvánky boli odoslané",
+          "done_description": "Tu je, čo sa stalo s každou adresou.",
+          "invite_more": "Pozvať ďalších",
+          "send": "Odoslať pozvánky",
+          "send_count_one": "Odoslať {{count}} pozvánku",
+          "send_count_few": "Odoslať {{count}} pozvánky",
+          "send_count_many": "Odoslať {{count}} pozvánky",
+          "send_count_other": "Odoslať {{count}} pozvánok",
+          "update_count_one": "Aktualizovať {{count}} člena",
+          "update_count_few": "Aktualizovať {{count}} členov",
+          "update_count_many": "Aktualizovať {{count}} člena",
+          "update_count_other": "Aktualizovať {{count}} členov"
+        },
+        "fields": {
+          "emails": "E-mailové adresy",
+          "emails_hint": "Vložte jednu alebo viac, oddelené čiarkami, medzerami alebo novými riadkami",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} adresa",
+          "valid_count_few": "{{count}} adresy",
+          "valid_count_many": "{{count}} adresy",
+          "valid_count_other": "{{count}} adries",
+          "invalid_count_one": "{{count}} adresa nie je platná",
+          "invalid_count_few": "{{count}} adresy nie sú platné",
+          "invalid_count_many": "{{count}} adresy nie sú platné",
+          "invalid_count_other": "{{count}} adries nie je platných",
+          "too_many": "Naraz môžete pozvať najviac {{max}} ľudí",
+          "update_existing_one": "Aktualizovať aj {{count}} osobu, ktorá už je členom",
+          "update_existing_few": "Aktualizovať aj {{count}} osoby, ktoré už sú členmi",
+          "update_existing_many": "Aktualizovať aj {{count}} osoby, ktoré už sú členmi",
+          "update_existing_other": "Aktualizovať aj {{count}} osôb, ktoré už sú členmi",
+          "update_existing_hint": "Ich rola sa zmení na tú nižšie a pridajú sa do skupín a kurzov. Nechajte vypnuté, ak ich chcete preskočiť.",
+          "role": "Rola",
+          "role_hint": "Čo budú môcť robiť po pripojení",
+          "groups": "Pridať do skupín",
+          "groups_placeholder": "Vyberte skupiny",
+          "no_groups": "Táto organizácia zatiaľ nemá žiadne skupiny používateľov.",
+          "courses": "Zapísať do kurzov",
+          "courses_placeholder": "Vyberte kurzy",
+          "no_courses": "Táto organizácia zatiaľ nemá žiadne kurzy.",
+          "selected_count_one": "Vybrané: {{count}}",
+          "selected_count_few": "Vybrané: {{count}}",
+          "selected_count_many": "Vybrané: {{count}}",
+          "selected_count_other": "Vybrané: {{count}}",
+          "search": "Hľadať",
+          "no_match": "Vášmu hľadaniu nič nezodpovedá.",
+          "draft": "Koncept",
+          "remove_item": "Odstrániť {{name}}",
+          "message": "Osobná správa",
+          "message_placeholder": "Pridajte do e-mailu krátku poznámku (voliteľné, bez odkazov)",
+          "expiry": "Platnosť",
+          "days_one": "{{count}} deň",
+          "days_few": "{{count}} dni",
+          "days_many": "{{count}} dňa",
+          "days_other": "{{count}} dní",
+          "expires_on": "Do {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "Študent",
+            "description": "Absolvuje kurzy, zapája sa do komunít a sleduje svoj pokrok. Bez prístupu k nástenke."
+          },
+          "instructor": {
+            "name": "Inštruktor",
+            "description": "Vytvára a vedie vlastné kurzy a hodnotí svojich študentov. Zaberá administrátorské miesto."
+          },
+          "maintainer": {
+            "name": "Správca",
+            "description": "Spravuje všetky kurzy, členov a skupiny. Nemôže meniť fakturáciu ani nastavenia organizácie."
+          },
+          "admin": {
+            "name": "Admin",
+            "description": "Úplná kontrola nad organizáciou vrátane nastavení, fakturácie a ostatných adminov."
+          },
+          "custom_roles": "Vlastné roly",
+          "custom_description": "Vlastná rola definovaná pre túto organizáciu.",
+          "admin_seat": "Administrátorské miesto",
+          "refusal_admin_only": "Ľudí s touto rolou môžu pozývať iba admini.",
+          "refusal_above": "Táto rola má oprávnenia, ktoré vaša rola nemá.",
+          "refusal_code": "Pozývacie kódy nemôžu udeliť rolu, ktorá spravuje ľudí alebo otvára nástenku."
+        },
+        "preview": {
+          "new_one": "{{count}} nový",
+          "new_few": "{{count}} noví",
+          "new_many": "{{count}} nového",
+          "new_other": "{{count}} nových",
+          "pending_one": "{{count}} už pozvaný, dostane nový odkaz",
+          "pending_few": "{{count}} už pozvaní, dostanú nový odkaz",
+          "pending_many": "{{count}} už pozvaní, dostanú nový odkaz",
+          "pending_other": "{{count}} už pozvaných, dostanú nový odkaz",
+          "members_one": "{{count}} už je členom",
+          "members_few": "{{count}} už sú členmi",
+          "members_many": "{{count}} už sú členmi",
+          "members_other": "{{count}} už sú členmi"
+        },
+        "summary": {
+          "people_one": "{{count}} osoba sa pripojí s rolou {{role}}",
+          "people_few": "{{count}} osoby sa pripoja s rolou {{role}}",
+          "people_many": "{{count}} osoby sa pripojí s rolou {{role}}",
+          "people_other": "{{count}} osôb sa pripojí s rolou {{role}}",
+          "groups_one": "s pridaním do skupiny {{names}}",
+          "groups_few": "s pridaním do {{count}} skupín ({{names}})",
+          "groups_many": "s pridaním do {{count}} skupiny ({{names}})",
+          "groups_other": "s pridaním do {{count}} skupín ({{names}})",
+          "courses_one": "so zápisom do {{count}} kurzu",
+          "courses_few": "so zápisom do {{count}} kurzov",
+          "courses_many": "so zápisom do {{count}} kurzu",
+          "courses_other": "so zápisom do {{count}} kurzov",
+          "and": ", ",
+          "updated_one": "Aktualizuje sa aj {{count}} existujúci člen.",
+          "updated_few": "Aktualizujú sa aj {{count}} existujúci členovia.",
+          "updated_many": "Aktualizuje sa aj {{count}} existujúceho člena.",
+          "updated_other": "Aktualizuje sa aj {{count}} existujúcich členov."
+        },
+        "capacity": {
+          "members": "Členovia",
+          "admin_seats": "Administrátorské miesta",
+          "of": "{{count}} z {{limit}}",
+          "pending_note_one": "Vrátane {{count}} čakajúcej pozvánky",
+          "pending_note_few": "Vrátane {{count}} čakajúcich pozvánok",
+          "pending_note_many": "Vrátane {{count}} čakajúcej pozvánky",
+          "pending_note_other": "Vrátane {{count}} čakajúcich pozvánok",
+          "members_blocked": "Váš plán zahŕňa {{limit}} členov vrátane čakajúcich pozvánok. Ak chcete pozvať ďalších, prejdite na vyšší plán alebo zrušte niektoré pozvánky.",
+          "seats_blocked": "Váš plán zahŕňa {{limit}} administrátorských miest vrátane čakajúcich pozvánok. Vyberte študentskú rolu alebo prejdite na vyšší plán a pridajte ďalších adminov."
+        },
+        "results": {
+          "status": {
+            "sent": "Odoslané",
+            "resent": "Nový odkaz odoslaný",
+            "email_failed": "E-mail zlyhal",
+            "already_member": "Už je členom",
+            "member_updated": "Člen aktualizovaný",
+            "member_update_failed": "Neaktualizované",
+            "invalid_email": "Neplatná adresa"
+          },
+          "count": {
+            "sent_one": "Odoslané: {{count}}",
+            "sent_few": "Odoslané: {{count}}",
+            "sent_many": "Odoslané: {{count}}",
+            "sent_other": "Odoslané: {{count}}",
+            "resent_one": "{{count}} nový odkaz",
+            "resent_few": "{{count}} nové odkazy",
+            "resent_many": "{{count}} nového odkazu",
+            "resent_other": "{{count}} nových odkazov",
+            "email_failed_one": "Zlyhalo: {{count}}",
+            "email_failed_few": "Zlyhalo: {{count}}",
+            "email_failed_many": "Zlyhalo: {{count}}",
+            "email_failed_other": "Zlyhalo: {{count}}",
+            "already_member_one": "Už členovia: {{count}}",
+            "already_member_few": "Už členovia: {{count}}",
+            "already_member_many": "Už členovia: {{count}}",
+            "already_member_other": "Už členovia: {{count}}",
+            "member_updated_one": "{{count}} člen aktualizovaný",
+            "member_updated_few": "{{count}} členovia aktualizovaní",
+            "member_updated_many": "{{count}} člena aktualizovaného",
+            "member_updated_other": "{{count}} členov aktualizovaných",
+            "member_update_failed_one": "Neaktualizované: {{count}}",
+            "member_update_failed_few": "Neaktualizované: {{count}}",
+            "member_update_failed_many": "Neaktualizované: {{count}}",
+            "member_update_failed_other": "Neaktualizované: {{count}}",
+            "invalid_email_one": "Neplatné: {{count}}",
+            "invalid_email_few": "Neplatné: {{count}}",
+            "invalid_email_many": "Neplatné: {{count}}",
+            "invalid_email_other": "Neplatné: {{count}}"
+          }
+        },
+        "status": {
+          "pending": "Čaká",
+          "accepted": "Prijatá",
+          "declined": "Odmietnutá",
+          "revoked": "Zrušená",
+          "expired": "Platnosť vypršala"
+        },
+        "list": {
+          "title": "Pozvánky",
+          "subtitle": "Všetci, ktorých ste pozvali, s rolou a prístupom, ktoré dostanú",
+          "filter": "Filtrovať podľa stavu",
+          "all": "Všetky",
+          "person": "Osoba",
+          "role": "Rola",
+          "access": "Skupiny a kurzy",
+          "status": "Stav",
+          "select_all": "Vybrať všetky",
+          "select": "Vybrať {{email}}",
+          "selected_one": "Vybrané: {{count}}",
+          "selected_few": "Vybrané: {{count}}",
+          "selected_many": "Vybrané: {{count}}",
+          "selected_other": "Vybrané: {{count}}",
+          "actions": "Akcie pre {{email}}",
+          "invited_by": "Pozvánka od {{name}}, {{when}}",
+          "joined": "Prijatá {{when}}",
+          "email_not_sent": "e-mail nebol doručený",
+          "groups_one": "{{count}} skupina",
+          "groups_few": "{{count}} skupiny",
+          "groups_many": "{{count}} skupiny",
+          "groups_other": "{{count}} skupín",
+          "courses_one": "{{count}} kurz",
+          "courses_few": "{{count}} kurzy",
+          "courses_many": "{{count}} kurzu",
+          "courses_other": "{{count}} kurzov",
+          "expires_in_one": "Vyprší o {{count}} deň",
+          "expires_in_few": "Vyprší o {{count}} dni",
+          "expires_in_many": "Vyprší o {{count}} dňa",
+          "expires_in_other": "Vyprší o {{count}} dní",
+          "legacy": "Odoslané predtým, ako pozvánky obsahovali rolu",
+          "empty_title": "Zatiaľ žiadne pozvánky",
+          "empty_description": "Pozvite ľudí e-mailom. Pripoja sa s rolou, skupinami a kurzami, ktoré vyberiete.",
+          "no_results": "Žiadne pozvánky nezodpovedajú",
+          "clear_filter": "Zobraziť všetky",
+          "error": "Pozvánky sa nepodarilo načítať"
+        },
+        "actions": {
+          "resend": "Odoslať znova",
+          "copy_link": "Kopírovať pozývací odkaz",
+          "edit": "Zmeniť rolu alebo prístup",
+          "revoke": "Zrušiť",
+          "none": "Žiadne akcie"
+        },
+        "revoke": {
+          "title": "Zrušiť túto pozvánku?",
+          "message": "Odkaz odoslaný na {{email}} prestane fungovať. Túto osobu môžete neskôr pozvať znova.",
+          "bulk_title_one": "Zrušiť {{count}} pozvánku?",
+          "bulk_title_few": "Zrušiť {{count}} pozvánky?",
+          "bulk_title_many": "Zrušiť {{count}} pozvánky?",
+          "bulk_title_other": "Zrušiť {{count}} pozvánok?",
+          "bulk_message": "Ich odkazy prestanú fungovať. Neskôr ich môžete pozvať znova."
+        },
+        "edit": {
+          "title": "Zmeniť pozvánku",
+          "description": "Pre {{email}}. Platí po prijatí pozvánky.",
+          "keep_expiry": "Ponechať ({{date}})",
+          "extend_one": "{{count}} deň odteraz",
+          "extend_few": "{{count}} dni odteraz",
+          "extend_many": "{{count}} dňa odteraz",
+          "extend_other": "{{count}} dní odteraz",
+          "save": "Uložiť zmeny"
+        },
+        "toasts": {
+          "sent": "Pozvánky boli odoslané",
+          "some_failed_one": "{{count}} e-mail sa nepodarilo odoslať. Skopírujte pozývací odkaz zo zoznamu.",
+          "some_failed_few": "{{count}} e-maily sa nepodarilo odoslať. Skopírujte pozývacie odkazy zo zoznamu.",
+          "some_failed_many": "{{count}} e-mailu sa nepodarilo odoslať. Skopírujte pozývacie odkazy zo zoznamu.",
+          "some_failed_other": "{{count}} e-mailov sa nepodarilo odoslať. Skopírujte pozývacie odkazy zo zoznamu.",
+          "error": "Niečo sa pokazilo. Skúste to znova.",
+          "resent": "Nová pozvánka odoslaná na {{email}}",
+          "email_failed": "E-mail sa nepodarilo odoslať. Skopírujte pozývací odkaz.",
+          "link_copied": "Pozývací odkaz skopírovaný. Kto ho otvorí, pred pripojením si overí e-mail. Odkaz v predchádzajúcom e-maile už nefunguje.",
+          "revoked": "Pozvánka zrušená",
+          "updated": "Pozvánka aktualizovaná",
+          "bulk_resend_one": "{{count}} pozvánka odoslaná znova",
+          "bulk_resend_few": "{{count}} pozvánky odoslané znova",
+          "bulk_resend_many": "{{count}} pozvánky odoslanej znova",
+          "bulk_resend_other": "{{count}} pozvánok odoslaných znova",
+          "bulk_revoke_one": "{{count}} pozvánka zrušená",
+          "bulk_revoke_few": "{{count}} pozvánky zrušené",
+          "bulk_revoke_many": "{{count}} pozvánky zrušenej",
+          "bulk_revoke_other": "{{count}} pozvánok zrušených"
+        },
+        "codes": {
+          "description": "Jeden odkaz alebo kód pre veľa ľudí. Každý, kto sa s ním pripojí, dostane nastavenia nižšie.",
+          "role_hint": "Iba roly na úrovni študenta",
+          "role_note": "Kód môže použiť ktokoľvek, kto ho má, preto nemôže udeliť rolu admina, správcu, inštruktora ani žiadnu rolu, ktorá spravuje ľudí.",
+          "max_uses": "Maximálny počet použití",
+          "max_uses_invalid": "Zadajte celé číslo od 1",
+          "unlimited": "Neobmedzene",
+          "never": "Nikdy",
+          "no_expiry": "Bez obmedzenia platnosti",
+          "uses_one": "{{count}} použitie",
+          "uses_few": "{{count}} použitia",
+          "uses_many": "{{count}} použitia",
+          "uses_other": "{{count}} použití",
+          "uses_of": "{{count}} / {{max}} použití",
+          "uses_title": "Koľkokrát sa s týmto kódom niekto pripojil"
+        },
+        "page": {
+          "join_title": "Ako sa môžu ľudia pripojiť",
+          "join_description": "Vyberte, či sa môže zaregistrovať ktokoľvek, alebo len ľudia, ktorých pozvete.",
+          "mode_open": "Otvorený",
+          "mode_open_description": "Ktokoľvek s odkazom na vašu akadémiu si môže vytvoriť účet a pripojiť sa.",
+          "mode_invite_only": "Len na pozvánku",
+          "mode_invite_only_description": "Pripojiť sa môžu len ľudia, ktorých pozvete e-mailom alebo ktorí majú kód pozvánky.",
+          "confirm_open_title": "Povoliť pripojenie komukoľvek?",
+          "confirm_invite_only_title": "Povoliť pripojenie len na pozvánku?",
+          "confirm_open": "Prepnúť na otvorený",
+          "confirm_invite_only": "Prepnúť na „Len na pozvánku“",
+          "codes_description": "Jeden odkaz alebo kód pre celú skupinu. Každý, kto sa s ním pripojí, dostane jeho rolu, skupiny a kurzy.",
+          "codes_need_invite_only": "Kódy pozvánok slúžia na pripojenie len na pozvánku. Ak chcete vytvoriť kód, prepnite vyššie na „Len na pozvánku“.",
+          "edit_fields": "Upraviť polia",
+          "code_expired": "Platnosť vypršala",
+          "code_used_up": "Vyčerpaný",
+          "code_revoked": "Odstránený"
+        }
       }
     },
     "assignments": {
@@ -12145,7 +12458,17 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> upravil(a) registračné odpovede používateľa <b>{{target}}</b>",
         "members__signup_backfilled": "<b>{{actor}}</b> skopíroval(a) registračné odpovede do údajov o ľuďoch",
         "security__support_access__started": "<b>{{actor}}</b> začal konať za <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> prestal konať za <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> prestal konať za <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b>: zmena pozvánky pre <b>{{target}}</b>",
+        "members__invitation__resent": "<b>{{actor}}</b>: opätovné odoslanie pozvánky pre <b>{{target}}</b>",
+        "members__invitation__link_copied": "<b>{{actor}}</b>: skopírovanie nového pozývacieho odkazu pre <b>{{target}}</b>",
+        "members__invitation__revoked": "<b>{{actor}}</b>: odvolanie pozvánky pre <b>{{target}}</b>",
+        "members__invitation__accepted": "<b>{{actor}}</b>: prijatie pozvánky",
+        "members__invitation__declined": "<b>{{actor}}</b>: odmietnutie pozvánky",
+        "members__invitation__role_applied": "<b>{{actor}}</b>: pridelenie roly z pozvánky",
+        "members__invite_code__updated": "<b>{{actor}}</b>: zmena pozývacieho odkazu",
+        "members__invite_code__used": "<b>{{actor}}</b>: vstup cez pozývací odkaz",
+        "members__invitation__closed": "<b>{{actor}}</b>: vstup iným spôsobom, pozvánka bola preto uzavretá"
       },
       "export": {
         "generating": "Pripravuje sa export…",
@@ -12309,7 +12632,8 @@
         "customers": "zoznam zákazníkov",
         "scim": "provisioning SCIM",
         "scim_token": "token SCIM",
-        "training_rule": "povinné školenie"
+        "training_rule": "povinné školenie",
+        "invitation": "pozvánka"
       }
     },
     "course_builder": {
@@ -30331,7 +30655,8 @@
       "trial_ending": "Skúšobná verzia končí",
       "plan_downgraded": "Prechod na Free",
       "plan_restored": "Plán obnovený",
-      "payments_checkout_failing": "Zlyhávajúce platby"
+      "payments_checkout_failing": "Zlyhávajúce platby",
+      "invitation_accepted": "Pozvánka prijatá"
     },
     "copy": {
       "assignment_graded": "Ohodnotené: {{assignment}}",
@@ -30393,7 +30718,8 @@
       "trial_ending": "Vaša skúšobná verzia {{plan}} končí o {{days}} d.",
       "plan_downgraded": "Teraz máte Free. Nič sa nevymazalo",
       "plan_restored": "Vitajte späť v pláne {{plan}}",
-      "payments_checkout_failing": "Študenti teraz nemôžu nakupovať (neúspešné platby: {{count}})"
+      "payments_checkout_failing": "Študenti teraz nemôžu nakupovať (neúspešné platby: {{count}})",
+      "invitation_accepted": "Pozvánku prijal(a): {{actor}}"
     },
     "routing": {
       "short": "Koho upozorniť",
@@ -30551,7 +30877,9 @@
       "verify_title": "Overte svoj e-mail, aby ste videli pozvánky",
       "verify_desc": "Pozvánky prichádzajú na e-mailovú adresu, preto sa zobrazia, keď potvrdíte, že je vaša.",
       "verify_resend": "Znova odoslať overovací e-mail",
-      "verify_sent": "Odoslané. Skontrolujte schránku."
+      "verify_sent": "Odoslané. Skontrolujte schránku.",
+      "invited_as": "Pozýva vás s rolou {{role}}",
+      "invited_as_by": "{{name}} vás pozýva s rolou {{role}}"
     },
     "celebrate": {
       "title": "Váš prvý kurz je zverejnený",

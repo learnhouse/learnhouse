@@ -35,6 +35,11 @@ TOKEN_TTL_SECONDS = 60 * 60
 NO_ORG_UUID = "none"
 
 
+# The message when verifying proved a previously unproven inbox and dropped a
+# password set before that: the caller tells the person to set a new one.
+INBOX_CLAIMED = "Email verified. Set a new password to sign in with one."
+
+
 def get_redis_connection() -> redis.Redis:
     """Get Redis connection from config."""
     LH_CONFIG = get_learnhouse_config()
@@ -292,9 +297,21 @@ async def verify_email_token(
         )
 
     # Check if already verified
+    from src.services.users.users import inbox_unproven
+
     if user.email_verified:
-        # Delete token and return success
         r.delete(redis_key)
+        if inbox_unproven(user):
+            # A self-hosted or admin-provisioned account marked verified
+            # without proof: this mailed token is the proof. Whoever set the
+            # password never proved the inbox, so it goes (and the sessions it
+            # opened), like on a first Google or magic-link sign-in; the owner
+            # sets a new one. SSO links made before go too.
+            from src.services.auth.utils import claim_account_on_inbox_proof
+
+            had_password = bool(user.password)
+            await claim_account_on_inbox_proof(user, db_session)
+            return user, (INBOX_CLAIMED if had_password else "Email verified")
         return user, "Email already verified"
 
     # Identity-provider links made while the address was unproven go first.
@@ -366,7 +383,7 @@ async def resend_verification_email(
     # SECURITY: return the same generic response on every path so the
     # endpoint cannot be used to enumerate accounts or to detect which
     # accounts are already verified. We still only send email when the
-    # user exists and is unverified.
+    # user exists and its inbox isn't proven yet.
     GENERIC_RESPONSE = (
         "If an account with this email exists, a verification email has been sent"
     )
@@ -374,7 +391,10 @@ async def resend_verification_email(
     statement = select(User).where(User.email == email)
     user = (await db_session.execute(statement)).scalars().first()
 
-    if user and not user.email_verified:
+    from src.services.users.users import inbox_proven
+
+    # Also a self-hosted account still waiting for its first proof.
+    if user and not inbox_proven(user):
         await send_verification_email(request, db_session, user, org_id, next_path=next_path)
 
     return GENERIC_RESPONSE

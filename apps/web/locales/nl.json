@@ -792,12 +792,23 @@
       "signup_title": "Word lid van {{org}}",
       "signup_desc": "Je bent uitgenodigd. Kies een wachtwoord en je bent binnen.",
       "choose_password": "Kies een wachtwoord",
-      "create_and_join": "Lid worden van {{org}}"
+      "create_and_join": "Lid worden van {{org}}",
+      "details": {
+        "role": "Je wordt lid als {{role}}.",
+        "role_by": "{{name}} heeft je uitgenodigd om lid te worden als {{role}}.",
+        "groups": "Je wordt toegevoegd aan: {{names}}",
+        "courses": "Je wordt ingeschreven voor: {{names}}",
+        "verify_note": "Deze link is rechtstreeks met je gedeeld, dus je verifieert je e-mailadres voordat je lid wordt."
+      },
+      "verify_title": "Check je inbox",
+      "verify_desc": "Je account is klaar. We hebben een verificatielink gestuurd naar {{email}}. Verifieer je e-mailadres en open deze uitnodiging daarna opnieuw, of accepteer hem vanaf je startpagina om lid te worden van {{org}}."
     },
     "login_failed_forgot": "Wachtwoord vergeten?",
     "login_failed_reset": "Opnieuw instellen",
     "login_failed_magic": "Stuur me liever een inloglink",
-    "login_failed_google_hint": "Aangemeld met Google? Gebruik hieronder Doorgaan met Google."
+    "login_failed_google_hint": "Aangemeld met Google? Gebruik hieronder Doorgaan met Google.",
+    "email_verified_set_password": "Je e-mail is geverifieerd. Voor je veiligheid is het eerder ingestelde wachtwoord verwijderd: kies een nieuw wachtwoord om met een wachtwoord in te loggen.",
+    "set_new_password": "Nieuw wachtwoord instellen"
   },
   "validation": {
     "required": "Verplicht",
@@ -8047,7 +8058,8 @@
           "audit_logs": "Auditlogboeken",
           "analytics": "Analyses",
           "sign_in": "Inloggen",
-          "two_factor": "Tweefactorauthenticatie"
+          "two_factor": "Tweefactorauthenticatie",
+          "signups_invite": "Aanmeldingen & Uitnodigingen"
         },
         "pages": {
           "users": {
@@ -8085,6 +8097,10 @@
           "sign_in": {
             "title": "Inloggen",
             "subtitle": "Kies hoe leden zich bij deze organisatie mogen aanmelden"
+          },
+          "signups_invite": {
+            "title": "Aanmeldingen & Uitnodigingen",
+            "subtitle": "Nodig mensen uit, kies hoe ze lid kunnen worden en deel uitnodigingscodes"
           }
         },
         "mobile": {
@@ -9375,6 +9391,239 @@
         "more": "Meer acties",
         "remove_filter": "Filter verwijderen: {{name}}",
         "any": "Alle"
+      },
+      "invitations": {
+        "invite_people": "Mensen uitnodigen",
+        "dialog": {
+          "title": "Mensen uitnodigen",
+          "description": "Iedereen krijgt een persoonlijke link per e-mail. Bij deelname worden de rol, groepen en cursussen hieronder automatisch toegepast.",
+          "done_title": "Uitnodigingen verstuurd",
+          "done_description": "Dit is er met elk adres gebeurd.",
+          "invite_more": "Meer uitnodigen",
+          "send": "Uitnodigingen versturen",
+          "send_count_one": "{{count}} uitnodiging versturen",
+          "send_count_other": "{{count}} uitnodigingen versturen",
+          "update_count_one": "{{count}} lid bijwerken",
+          "update_count_other": "{{count}} leden bijwerken"
+        },
+        "fields": {
+          "emails": "E-mailadressen",
+          "emails_hint": "Plak er een of meer, gescheiden door komma's, spaties of nieuwe regels",
+          "emails_placeholder": "lea@school.nl, sam@school.nl",
+          "valid_count_one": "{{count}} adres",
+          "valid_count_other": "{{count}} adressen",
+          "invalid_count_one": "{{count}} adres is ongeldig",
+          "invalid_count_other": "{{count}} adressen zijn ongeldig",
+          "too_many": "Je kunt maximaal {{max}} mensen tegelijk uitnodigen",
+          "update_existing_one": "Ook de {{count}} persoon bijwerken die al lid is",
+          "update_existing_other": "Ook de {{count}} mensen bijwerken die al lid zijn",
+          "update_existing_hint": "Hun rol wordt de rol hieronder en ze worden toegevoegd aan de groepen en cursussen. Laat dit uit om ze over te slaan.",
+          "role": "Rol",
+          "role_hint": "Wat ze kunnen doen zodra ze lid zijn",
+          "groups": "Toevoegen aan groepen",
+          "groups_placeholder": "Groepen kiezen",
+          "no_groups": "Deze organisatie heeft nog geen gebruikersgroepen.",
+          "courses": "Inschrijven voor cursussen",
+          "courses_placeholder": "Cursussen kiezen",
+          "no_courses": "Deze organisatie heeft nog geen cursussen.",
+          "selected_count_one": "{{count}} geselecteerd",
+          "selected_count_other": "{{count}} geselecteerd",
+          "search": "Zoeken",
+          "no_match": "Niets komt overeen met je zoekopdracht.",
+          "draft": "Concept",
+          "remove_item": "{{name}} verwijderen",
+          "message": "Persoonlijk bericht",
+          "message_placeholder": "Voeg een korte notitie toe aan de e-mail (optioneel, geen links)",
+          "expiry": "Verloopt na",
+          "days_one": "{{count}} dag",
+          "days_other": "{{count}} dagen",
+          "expires_on": "Tot {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "Leerling",
+            "description": "Volgt cursussen, neemt deel aan community's en houdt de eigen voortgang bij. Geen toegang tot het dashboard."
+          },
+          "instructor": {
+            "name": "Instructeur",
+            "description": "Maakt en geeft eigen cursussen en beoordeelt de eigen leerlingen. Gebruikt een beheerdersplek."
+          },
+          "maintainer": {
+            "name": "Maintainer",
+            "description": "Beheert alle cursussen, leden en groepen. Kan facturering en organisatie-instellingen niet wijzigen."
+          },
+          "admin": {
+            "name": "Beheerder",
+            "description": "Volledige controle over de organisatie, inclusief instellingen, facturering en andere beheerders."
+          },
+          "custom_roles": "Aangepaste rollen",
+          "custom_description": "Een aangepaste rol die voor deze organisatie is gedefinieerd.",
+          "admin_seat": "Beheerdersplek",
+          "refusal_admin_only": "Alleen beheerders kunnen mensen met deze rol uitnodigen.",
+          "refusal_above": "Deze rol heeft rechten die je eigen rol niet heeft.",
+          "refusal_code": "Uitnodigingscodes kunnen geen rol geven die mensen beheert of het dashboard opent."
+        },
+        "preview": {
+          "new_one": "{{count}} nieuw",
+          "new_other": "{{count}} nieuw",
+          "pending_one": "{{count}} al uitgenodigd, krijgt een nieuwe link",
+          "pending_other": "{{count}} al uitgenodigd, krijgen een nieuwe link",
+          "members_one": "{{count}} al lid",
+          "members_other": "{{count}} al lid"
+        },
+        "summary": {
+          "people_one": "{{count}} persoon wordt lid als {{role}}",
+          "people_other": "{{count}} mensen worden lid als {{role}}",
+          "groups_one": "toegevoegd aan {{names}}",
+          "groups_other": "toegevoegd aan {{count}} groepen ({{names}})",
+          "courses_one": "ingeschreven voor {{count}} cursus",
+          "courses_other": "ingeschreven voor {{count}} cursussen",
+          "and": ", ",
+          "updated_one": "{{count}} bestaand lid wordt ook bijgewerkt.",
+          "updated_other": "{{count}} bestaande leden worden ook bijgewerkt."
+        },
+        "capacity": {
+          "members": "Leden",
+          "admin_seats": "Beheerdersplekken",
+          "of": "{{count}} van {{limit}}",
+          "pending_note_one": "Inclusief {{count}} openstaande uitnodiging",
+          "pending_note_other": "Inclusief {{count}} openstaande uitnodigingen",
+          "members_blocked": "Je abonnement omvat {{limit}} leden, inclusief openstaande uitnodigingen. Upgrade of trek uitnodigingen in om meer mensen uit te nodigen.",
+          "seats_blocked": "Je abonnement omvat {{limit}} beheerdersplekken, inclusief openstaande uitnodigingen. Kies een leerlingrol of upgrade om meer beheerders toe te voegen."
+        },
+        "results": {
+          "status": {
+            "sent": "Verstuurd",
+            "resent": "Nieuwe link verstuurd",
+            "email_failed": "E-mail mislukt",
+            "already_member": "Al lid",
+            "member_updated": "Lid bijgewerkt",
+            "member_update_failed": "Niet bijgewerkt",
+            "invalid_email": "Ongeldig adres"
+          },
+          "count": {
+            "sent_one": "{{count}} verstuurd",
+            "sent_other": "{{count}} verstuurd",
+            "resent_one": "{{count}} nieuwe link",
+            "resent_other": "{{count}} nieuwe links",
+            "email_failed_one": "{{count}} mislukt",
+            "email_failed_other": "{{count}} mislukt",
+            "already_member_one": "{{count}} al lid",
+            "already_member_other": "{{count}} al lid",
+            "member_updated_one": "{{count}} lid bijgewerkt",
+            "member_updated_other": "{{count}} leden bijgewerkt",
+            "member_update_failed_one": "{{count}} niet bijgewerkt",
+            "member_update_failed_other": "{{count}} niet bijgewerkt",
+            "invalid_email_one": "{{count}} ongeldig",
+            "invalid_email_other": "{{count}} ongeldig"
+          }
+        },
+        "status": {
+          "pending": "In afwachting",
+          "accepted": "Geaccepteerd",
+          "declined": "Geweigerd",
+          "revoked": "Ingetrokken",
+          "expired": "Verlopen"
+        },
+        "list": {
+          "title": "Uitnodigingen",
+          "subtitle": "Iedereen die je hebt uitgenodigd, met de rol en toegang die ze krijgen",
+          "filter": "Filteren op status",
+          "all": "Alle",
+          "person": "Persoon",
+          "role": "Rol",
+          "access": "Groepen en cursussen",
+          "status": "Status",
+          "select_all": "Alles selecteren",
+          "select": "{{email}} selecteren",
+          "selected_one": "{{count}} geselecteerd",
+          "selected_other": "{{count}} geselecteerd",
+          "actions": "Acties voor {{email}}",
+          "invited_by": "Uitgenodigd door {{name}} {{when}}",
+          "joined": "Lid geworden {{when}}",
+          "email_not_sent": "e-mail niet afgeleverd",
+          "groups_one": "{{count}} groep",
+          "groups_other": "{{count}} groepen",
+          "courses_one": "{{count}} cursus",
+          "courses_other": "{{count}} cursussen",
+          "expires_in_one": "Verloopt over {{count}} dag",
+          "expires_in_other": "Verloopt over {{count}} dagen",
+          "legacy": "Verstuurd voordat uitnodigingen een rol bevatten",
+          "empty_title": "Nog geen uitnodigingen",
+          "empty_description": "Nodig mensen uit per e-mail. Ze worden lid met de rol, groepen en cursussen die je kiest.",
+          "no_results": "Geen uitnodigingen gevonden",
+          "clear_filter": "Alles tonen",
+          "error": "Uitnodigingen laden lukte niet"
+        },
+        "actions": {
+          "resend": "Opnieuw versturen",
+          "copy_link": "Uitnodigingslink kopiëren",
+          "edit": "Rol of toegang wijzigen",
+          "revoke": "Intrekken",
+          "none": "Geen acties"
+        },
+        "revoke": {
+          "title": "Deze uitnodiging intrekken?",
+          "message": "De link die naar {{email}} is gestuurd, werkt dan niet meer. Je kunt deze persoon later opnieuw uitnodigen.",
+          "bulk_title_one": "{{count}} uitnodiging intrekken?",
+          "bulk_title_other": "{{count}} uitnodigingen intrekken?",
+          "bulk_message": "Hun links werken dan niet meer. Je kunt ze later opnieuw uitnodigen."
+        },
+        "edit": {
+          "title": "Uitnodiging wijzigen",
+          "description": "Voor {{email}}. Geldt zodra de uitnodiging wordt geaccepteerd.",
+          "keep_expiry": "Behouden ({{date}})",
+          "extend_one": "{{count}} dag vanaf nu",
+          "extend_other": "{{count}} dagen vanaf nu",
+          "save": "Wijzigingen opslaan"
+        },
+        "toasts": {
+          "sent": "Uitnodigingen verstuurd",
+          "some_failed_one": "{{count}} e-mail kon niet worden verstuurd. Kopieer in plaats daarvan de uitnodigingslink uit de lijst.",
+          "some_failed_other": "{{count}} e-mails konden niet worden verstuurd. Kopieer in plaats daarvan de uitnodigingslinks uit de lijst.",
+          "error": "Er ging iets mis. Probeer het opnieuw.",
+          "resent": "Nieuwe uitnodiging verstuurd naar {{email}}",
+          "email_failed": "De e-mail kon niet worden verstuurd. Kopieer in plaats daarvan de uitnodigingslink.",
+          "link_copied": "Uitnodigingslink gekopieerd. Wie de link opent, verifieert eerst het e-mailadres en wordt daarna lid. De link in de eerdere e-mail werkt niet meer.",
+          "revoked": "Uitnodiging ingetrokken",
+          "updated": "Uitnodiging bijgewerkt",
+          "bulk_resend_one": "{{count}} uitnodiging opnieuw verstuurd",
+          "bulk_resend_other": "{{count}} uitnodigingen opnieuw verstuurd",
+          "bulk_revoke_one": "{{count}} uitnodiging ingetrokken",
+          "bulk_revoke_other": "{{count}} uitnodigingen ingetrokken"
+        },
+        "codes": {
+          "description": "Eén link of code voor veel mensen. Iedereen die ermee lid wordt, krijgt de instellingen hieronder.",
+          "role_hint": "Alleen rollen op leerlingniveau",
+          "role_note": "Iedereen met de code kan hem gebruiken, dus hij kan geen beheerder, maintainer, instructeur of andere rol geven die mensen beheert.",
+          "max_uses": "Maximaal aantal keer",
+          "max_uses_invalid": "Vul een heel getal in vanaf 1",
+          "unlimited": "Onbeperkt",
+          "never": "Nooit",
+          "no_expiry": "Verloopt niet",
+          "uses_one": "{{count}} keer gebruikt",
+          "uses_other": "{{count}} keer gebruikt",
+          "uses_of": "{{count}} / {{max}} keer gebruikt",
+          "uses_title": "Aantal keer dat iemand met deze code lid werd"
+        },
+        "page": {
+          "join_title": "Hoe mensen lid kunnen worden",
+          "join_description": "Kies of iedereen zich kan aanmelden of alleen de mensen die je uitnodigt.",
+          "mode_open": "Open",
+          "mode_open_description": "Iedereen met de link van je academie kan een account aanmaken en lid worden.",
+          "mode_invite_only": "Alleen op uitnodiging",
+          "mode_invite_only_description": "Alleen mensen die je per e-mail uitnodigt of die een uitnodigingscode hebben, kunnen lid worden.",
+          "confirm_open_title": "Iedereen lid laten worden?",
+          "confirm_invite_only_title": "Lid worden alleen op uitnodiging?",
+          "confirm_open": "Overschakelen naar open",
+          "confirm_invite_only": "Overschakelen naar alleen op uitnodiging",
+          "codes_description": "Eén link of code voor een hele groep. Iedereen die ermee lid wordt, krijgt de bijbehorende rol, groepen en cursussen.",
+          "codes_need_invite_only": "Uitnodigingscodes zijn voor lid worden op uitnodiging. Schakel hierboven over naar Alleen op uitnodiging om er een te maken.",
+          "edit_fields": "Velden bewerken",
+          "code_expired": "Verlopen",
+          "code_used_up": "Opgebruikt",
+          "code_revoked": "Verwijderd"
+        }
       }
     },
     "assignments": {
@@ -11757,7 +12006,17 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> heeft de aanmeldantwoorden van <b>{{target}}</b> bewerkt",
         "members__signup_backfilled": "<b>{{actor}}</b> heeft aanmeldantwoorden naar personengegevens gekopieerd",
         "security__support_access__started": "<b>{{actor}}</b> is begonnen met het impersoneren van <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> is gestopt met het impersoneren van <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> is gestopt met het impersoneren van <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b> heeft de uitnodiging voor <b>{{target}}</b> gewijzigd",
+        "members__invitation__resent": "<b>{{actor}}</b> heeft de uitnodiging voor <b>{{target}}</b> opnieuw verstuurd",
+        "members__invitation__link_copied": "<b>{{actor}}</b> heeft een nieuwe uitnodigingslink voor <b>{{target}}</b> gekopieerd",
+        "members__invitation__revoked": "<b>{{actor}}</b> heeft de uitnodiging voor <b>{{target}}</b> ingetrokken",
+        "members__invitation__accepted": "<b>{{actor}}</b> heeft de uitnodiging geaccepteerd",
+        "members__invitation__declined": "<b>{{actor}}</b> heeft de uitnodiging afgewezen",
+        "members__invitation__role_applied": "<b>{{actor}}</b> heeft de rol uit de uitnodiging gekregen",
+        "members__invite_code__updated": "<b>{{actor}}</b> heeft een uitnodigingslink gewijzigd",
+        "members__invite_code__used": "<b>{{actor}}</b> is lid geworden via een uitnodigingslink",
+        "members__invitation__closed": "<b>{{actor}}</b> is op een andere manier lid geworden, dus de uitnodiging is gesloten"
       },
       "export": {
         "generating": "Export voorbereiden…",
@@ -11921,7 +12180,8 @@
         "customers": "klantenlijst",
         "scim": "SCIM-provisioning",
         "scim_token": "SCIM-token",
-        "training_rule": "verplichte training"
+        "training_rule": "verplichte training",
+        "invitation": "uitnodiging"
       }
     },
     "course_builder": {
@@ -29019,7 +29279,8 @@
       "trial_ending": "Proefperiode loopt af",
       "plan_downgraded": "Overgestapt naar Gratis",
       "plan_restored": "Abonnement hersteld",
-      "payments_checkout_failing": "Afrekenen mislukt"
+      "payments_checkout_failing": "Afrekenen mislukt",
+      "invitation_accepted": "Uitnodiging geaccepteerd"
     },
     "copy": {
       "assignment_graded": "Beoordeeld: {{assignment}}",
@@ -29081,7 +29342,8 @@
       "trial_ending": "Je {{plan}}-proefperiode eindigt over {{days}} dagen",
       "plan_downgraded": "Je zit nu op Gratis. Er is niets verwijderd",
       "plan_restored": "Welkom terug bij {{plan}}",
-      "payments_checkout_failing": "Cursisten kunnen nu niets kopen ({{count}} mislukte betalingen)"
+      "payments_checkout_failing": "Cursisten kunnen nu niets kopen ({{count}} mislukte betalingen)",
+      "invitation_accepted": "{{actor}} heeft je uitnodiging geaccepteerd"
     },
     "routing": {
       "short": "Wie een melding krijgt",
@@ -29237,7 +29499,9 @@
       "verify_title": "Bevestig je e-mail om je uitnodigingen te zien",
       "verify_desc": "Uitnodigingen gaan naar een e-mailadres en verschijnen zodra je bevestigt dat het van jou is.",
       "verify_resend": "Bevestigingsmail opnieuw sturen",
-      "verify_sent": "Verstuurd. Kijk in je inbox."
+      "verify_sent": "Verstuurd. Kijk in je inbox.",
+      "invited_as": "Heeft je uitgenodigd als {{role}}",
+      "invited_as_by": "{{name}} heeft je uitgenodigd als {{role}}"
     },
     "celebrate": {
       "title": "Je eerste cursus staat live",

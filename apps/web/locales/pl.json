@@ -794,12 +794,23 @@
       "signup_title": "Dołącz do {{org}}",
       "signup_desc": "Otrzymałeś zaproszenie. Wybierz hasło i gotowe.",
       "choose_password": "Wybierz hasło",
-      "create_and_join": "Dołącz do {{org}}"
+      "create_and_join": "Dołącz do {{org}}",
+      "details": {
+        "role": "Dołączysz jako {{role}}.",
+        "role_by": "{{name}} zaprasza cię do dołączenia jako {{role}}.",
+        "groups": "Zostaniesz dodany(-a) do: {{names}}",
+        "courses": "Zostaniesz zapisany(-a) na: {{names}}",
+        "verify_note": "Ten link został Ci udostępniony bezpośrednio, więc przed dołączeniem zweryfikujesz swój e-mail."
+      },
+      "verify_title": "Sprawdź skrzynkę odbiorczą",
+      "verify_desc": "Twoje konto jest gotowe. Wysłaliśmy link weryfikacyjny na adres {{email}}. Zweryfikuj e-mail, a potem otwórz to zaproszenie ponownie lub zaakceptuj je na swojej stronie głównej, aby dołączyć do {{org}}."
     },
     "login_failed_forgot": "Nie pamiętasz hasła?",
     "login_failed_reset": "Zresetuj je",
     "login_failed_magic": "Wyślij mi link do logowania",
-    "login_failed_google_hint": "Rejestracja przez Google? Użyj poniżej opcji Kontynuuj z Google."
+    "login_failed_google_hint": "Rejestracja przez Google? Użyj poniżej opcji Kontynuuj z Google.",
+    "email_verified_set_password": "Twój e-mail został zweryfikowany. Ze względów bezpieczeństwa hasło ustawione wcześniej zostało usunięte: wybierz nowe, aby logować się za pomocą hasła.",
+    "set_new_password": "Ustaw nowe hasło"
   },
   "validation": {
     "required": "Wymagane",
@@ -8299,7 +8310,8 @@
           "audit_logs": "Dzienniki audytu",
           "analytics": "Analityka",
           "sign_in": "Logowanie",
-          "two_factor": "Dwuskładnikowe"
+          "two_factor": "Dwuskładnikowe",
+          "signups_invite": "Rejestracje i zaproszenia"
         },
         "pages": {
           "users": {
@@ -8337,6 +8349,10 @@
           "sign_in": {
             "title": "Logowanie",
             "subtitle": "Wybierz, w jaki sposób członkowie mogą logować się do tej organizacji"
+          },
+          "signups_invite": {
+            "title": "Rejestracje i zaproszenia",
+            "subtitle": "Zapraszaj osoby, wybierz, jak mogą dołączyć, i udostępniaj kody zaproszeń"
           }
         },
         "mobile": {
@@ -9705,6 +9721,303 @@
         "more": "Więcej działań",
         "remove_filter": "Usuń filtr: {{name}}",
         "any": "Dowolny"
+      },
+      "invitations": {
+        "invite_people": "Zaproś osoby",
+        "dialog": {
+          "title": "Zaproś osoby",
+          "description": "Każda osoba dostanie e-mailem osobisty link. Po dołączeniu automatycznie otrzyma poniższą rolę, grupy i kursy.",
+          "done_title": "Zaproszenia wysłane",
+          "done_description": "Oto wynik dla każdego adresu.",
+          "invite_more": "Zaproś kolejne osoby",
+          "send": "Wyślij zaproszenia",
+          "send_count_one": "Wyślij {{count}} zaproszenie",
+          "send_count_few": "Wyślij {{count}} zaproszenia",
+          "send_count_many": "Wyślij {{count}} zaproszeń",
+          "send_count_other": "Wyślij {{count}} zaproszenia",
+          "update_count_one": "Zaktualizuj {{count}} członka",
+          "update_count_few": "Zaktualizuj {{count}} członków",
+          "update_count_many": "Zaktualizuj {{count}} członków",
+          "update_count_other": "Zaktualizuj {{count}} członka"
+        },
+        "fields": {
+          "emails": "Adresy e-mail",
+          "emails_hint": "Wklej jeden lub wiele, rozdzielonych przecinkami, spacjami lub nowymi wierszami",
+          "emails_placeholder": "lea@szkola.pl, sam@szkola.pl",
+          "valid_count_one": "{{count}} adres",
+          "valid_count_few": "{{count}} adresy",
+          "valid_count_many": "{{count}} adresów",
+          "valid_count_other": "{{count}} adresu",
+          "invalid_count_one": "{{count}} adres jest nieprawidłowy",
+          "invalid_count_few": "{{count}} adresy są nieprawidłowe",
+          "invalid_count_many": "{{count}} adresów jest nieprawidłowych",
+          "invalid_count_other": "Nieprawidłowe adresy: {{count}}",
+          "too_many": "Możesz zaprosić maksymalnie {{max}} osób naraz",
+          "update_existing_one": "Zaktualizuj też {{count}} osobę, która już jest członkiem",
+          "update_existing_few": "Zaktualizuj też {{count}} osoby, które już są członkami",
+          "update_existing_many": "Zaktualizuj też {{count}} osób, które już są członkami",
+          "update_existing_other": "Zaktualizuj też {{count}} osoby, które już są członkami",
+          "update_existing_hint": "Ich rola zmieni się na wybraną poniżej, a oni zostaną dodani do grup i kursów. Zostaw wyłączone, aby ich pominąć.",
+          "role": "Rola",
+          "role_hint": "Co będą mogli robić po dołączeniu",
+          "groups": "Dodaj do grup",
+          "groups_placeholder": "Wybierz grupy",
+          "no_groups": "Ta organizacja nie ma jeszcze grup użytkowników.",
+          "courses": "Zapisz na kursy",
+          "courses_placeholder": "Wybierz kursy",
+          "no_courses": "Ta organizacja nie ma jeszcze kursów.",
+          "selected_count_one": "Wybrano: {{count}}",
+          "selected_count_few": "Wybrano: {{count}}",
+          "selected_count_many": "Wybrano: {{count}}",
+          "selected_count_other": "Wybrano: {{count}}",
+          "search": "Szukaj",
+          "no_match": "Nic nie pasuje do wyszukiwania.",
+          "draft": "Szkic",
+          "remove_item": "Usuń {{name}}",
+          "message": "Osobista wiadomość",
+          "message_placeholder": "Dodaj krótką notkę do e-maila (opcjonalnie, bez linków)",
+          "expiry": "Wygasa po",
+          "days_one": "{{count}} dzień",
+          "days_few": "{{count}} dni",
+          "days_many": "{{count}} dni",
+          "days_other": "{{count}} dnia",
+          "expires_on": "Do {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "Uczeń",
+            "description": "Bierze udział w kursach i społecznościach oraz śledzi własne postępy. Bez dostępu do panelu."
+          },
+          "instructor": {
+            "name": "Instruktor",
+            "description": "Tworzy i prowadzi własne kursy oraz ocenia swoich uczniów. Zajmuje miejsce administratora."
+          },
+          "maintainer": {
+            "name": "Opiekun",
+            "description": "Zarządza wszystkimi kursami, członkami i grupami. Nie może zmieniać rozliczeń ani ustawień organizacji."
+          },
+          "admin": {
+            "name": "Administrator",
+            "description": "Pełna kontrola nad organizacją, w tym ustawieniami, rozliczeniami i innymi administratorami."
+          },
+          "custom_roles": "Role niestandardowe",
+          "custom_description": "Rola niestandardowa zdefiniowana dla tej organizacji.",
+          "admin_seat": "Miejsce administratora",
+          "refusal_admin_only": "Tylko administratorzy mogą zapraszać osoby z tą rolą.",
+          "refusal_above": "Ta rola ma uprawnienia, których nie ma Twoja rola.",
+          "refusal_code": "Kody zaproszeń nie mogą nadawać roli, która zarządza osobami lub otwiera panel."
+        },
+        "preview": {
+          "new_one": "Nowe: {{count}}",
+          "new_few": "Nowe: {{count}}",
+          "new_many": "Nowe: {{count}}",
+          "new_other": "Nowe: {{count}}",
+          "pending_one": "Już zaproszone, nowy link: {{count}}",
+          "pending_few": "Już zaproszone, nowy link: {{count}}",
+          "pending_many": "Już zaproszone, nowy link: {{count}}",
+          "pending_other": "Już zaproszone, nowy link: {{count}}",
+          "members_one": "Już członkowie: {{count}}",
+          "members_few": "Już członkowie: {{count}}",
+          "members_many": "Już członkowie: {{count}}",
+          "members_other": "Już członkowie: {{count}}"
+        },
+        "summary": {
+          "people_one": "{{count}} osoba dołączy jako {{role}}",
+          "people_few": "{{count}} osoby dołączą jako {{role}}",
+          "people_many": "{{count}} osób dołączy jako {{role}}",
+          "people_other": "{{count}} osoby dołączy jako {{role}}",
+          "groups_one": "dodanie do {{names}}",
+          "groups_few": "dodanie do {{count}} grup ({{names}})",
+          "groups_many": "dodanie do {{count}} grup ({{names}})",
+          "groups_other": "dodanie do {{count}} grupy ({{names}})",
+          "courses_one": "zapis na {{count}} kurs",
+          "courses_few": "zapis na {{count}} kursy",
+          "courses_many": "zapis na {{count}} kursów",
+          "courses_other": "zapis na {{count}} kursu",
+          "and": ", ",
+          "updated_one": "{{count}} obecny członek również zostanie zaktualizowany.",
+          "updated_few": "{{count}} obecnych członków również zostanie zaktualizowanych.",
+          "updated_many": "{{count}} obecnych członków również zostanie zaktualizowanych.",
+          "updated_other": "Zaktualizowani zostaną też obecni członkowie: {{count}}."
+        },
+        "capacity": {
+          "members": "Członkowie",
+          "admin_seats": "Miejsca administratorów",
+          "of": "{{count}} z {{limit}}",
+          "pending_note_one": "W tym {{count}} oczekujące zaproszenie",
+          "pending_note_few": "W tym {{count}} oczekujące zaproszenia",
+          "pending_note_many": "W tym {{count}} oczekujących zaproszeń",
+          "pending_note_other": "W tym {{count}} oczekującego zaproszenia",
+          "members_blocked": "Twój plan obejmuje {{limit}} członków, wliczając oczekujące zaproszenia. Przejdź na wyższy plan lub unieważnij część zaproszeń, aby zaprosić więcej osób.",
+          "seats_blocked": "Twój plan obejmuje {{limit}} miejsc administratorów, wliczając oczekujące zaproszenia. Wybierz rolę ucznia lub przejdź na wyższy plan, aby dodać więcej administratorów."
+        },
+        "results": {
+          "status": {
+            "sent": "Wysłano",
+            "resent": "Wysłano nowy link",
+            "email_failed": "Błąd e-maila",
+            "already_member": "Już jest członkiem",
+            "member_updated": "Członek zaktualizowany",
+            "member_update_failed": "Nie zaktualizowano",
+            "invalid_email": "Nieprawidłowy adres"
+          },
+          "count": {
+            "sent_one": "Wysłano: {{count}}",
+            "sent_few": "Wysłano: {{count}}",
+            "sent_many": "Wysłano: {{count}}",
+            "sent_other": "Wysłano: {{count}}",
+            "resent_one": "Nowe linki: {{count}}",
+            "resent_few": "Nowe linki: {{count}}",
+            "resent_many": "Nowe linki: {{count}}",
+            "resent_other": "Nowe linki: {{count}}",
+            "email_failed_one": "Błędy: {{count}}",
+            "email_failed_few": "Błędy: {{count}}",
+            "email_failed_many": "Błędy: {{count}}",
+            "email_failed_other": "Błędy: {{count}}",
+            "already_member_one": "Już członkowie: {{count}}",
+            "already_member_few": "Już członkowie: {{count}}",
+            "already_member_many": "Już członkowie: {{count}}",
+            "already_member_other": "Już członkowie: {{count}}",
+            "member_updated_one": "Zaktualizowani członkowie: {{count}}",
+            "member_updated_few": "Zaktualizowani członkowie: {{count}}",
+            "member_updated_many": "Zaktualizowani członkowie: {{count}}",
+            "member_updated_other": "Zaktualizowani członkowie: {{count}}",
+            "member_update_failed_one": "Nie zaktualizowano: {{count}}",
+            "member_update_failed_few": "Nie zaktualizowano: {{count}}",
+            "member_update_failed_many": "Nie zaktualizowano: {{count}}",
+            "member_update_failed_other": "Nie zaktualizowano: {{count}}",
+            "invalid_email_one": "Nieprawidłowe: {{count}}",
+            "invalid_email_few": "Nieprawidłowe: {{count}}",
+            "invalid_email_many": "Nieprawidłowe: {{count}}",
+            "invalid_email_other": "Nieprawidłowe: {{count}}"
+          }
+        },
+        "status": {
+          "pending": "Oczekujące",
+          "accepted": "Zaakceptowane",
+          "declined": "Odrzucone",
+          "revoked": "Unieważnione",
+          "expired": "Wygasłe"
+        },
+        "list": {
+          "title": "Zaproszenia",
+          "subtitle": "Wszystkie zaproszone osoby wraz z rolą i dostępem, które otrzymają",
+          "filter": "Filtruj według statusu",
+          "all": "Wszystkie",
+          "person": "Osoba",
+          "role": "Rola",
+          "access": "Grupy i kursy",
+          "status": "Status",
+          "select_all": "Zaznacz wszystkie",
+          "select": "Zaznacz {{email}}",
+          "selected_one": "Zaznaczono: {{count}}",
+          "selected_few": "Zaznaczono: {{count}}",
+          "selected_many": "Zaznaczono: {{count}}",
+          "selected_other": "Zaznaczono: {{count}}",
+          "actions": "Akcje dla {{email}}",
+          "invited_by": "Zaproszenie od {{name}} {{when}}",
+          "joined": "Dołączył(a) {{when}}",
+          "email_not_sent": "e-mail niedostarczony",
+          "groups_one": "{{count}} grupa",
+          "groups_few": "{{count}} grupy",
+          "groups_many": "{{count}} grup",
+          "groups_other": "{{count}} grupy",
+          "courses_one": "{{count}} kurs",
+          "courses_few": "{{count}} kursy",
+          "courses_many": "{{count}} kursów",
+          "courses_other": "{{count}} kursu",
+          "expires_in_one": "Wygasa za {{count}} dzień",
+          "expires_in_few": "Wygasa za {{count}} dni",
+          "expires_in_many": "Wygasa za {{count}} dni",
+          "expires_in_other": "Wygasa za {{count}} dnia",
+          "legacy": "Wysłane, zanim zaproszenia zawierały rolę",
+          "empty_title": "Brak zaproszeń",
+          "empty_description": "Zaproś osoby e-mailem. Dołączą z wybraną przez Ciebie rolą, grupami i kursami.",
+          "no_results": "Brak pasujących zaproszeń",
+          "clear_filter": "Pokaż wszystkie",
+          "error": "Nie udało się wczytać zaproszeń"
+        },
+        "actions": {
+          "resend": "Wyślij ponownie",
+          "copy_link": "Kopiuj link z zaproszeniem",
+          "edit": "Zmień rolę lub dostęp",
+          "revoke": "Unieważnij",
+          "none": "Brak akcji"
+        },
+        "revoke": {
+          "title": "Unieważnić to zaproszenie?",
+          "message": "Link wysłany na {{email}} przestanie działać. Możesz zaprosić tę osobę ponownie później.",
+          "bulk_title_one": "Unieważnić {{count}} zaproszenie?",
+          "bulk_title_few": "Unieważnić {{count}} zaproszenia?",
+          "bulk_title_many": "Unieważnić {{count}} zaproszeń?",
+          "bulk_title_other": "Unieważnić {{count}} zaproszenia?",
+          "bulk_message": "Ich linki przestaną działać. Możesz zaprosić te osoby ponownie później."
+        },
+        "edit": {
+          "title": "Zmień zaproszenie",
+          "description": "Dla {{email}}. Zmiany obowiązują po przyjęciu zaproszenia.",
+          "keep_expiry": "Zachowaj ({{date}})",
+          "extend_one": "{{count}} dzień od dziś",
+          "extend_few": "{{count}} dni od dziś",
+          "extend_many": "{{count}} dni od dziś",
+          "extend_other": "{{count}} dnia od dziś",
+          "save": "Zapisz zmiany"
+        },
+        "toasts": {
+          "sent": "Zaproszenia wysłane",
+          "some_failed_one": "Nie udało się wysłać {{count}} e-maila. Skopiuj link z zaproszeniem z listy.",
+          "some_failed_few": "Nie udało się wysłać {{count}} e-maili. Skopiuj linki z zaproszeniami z listy.",
+          "some_failed_many": "Nie udało się wysłać {{count}} e-maili. Skopiuj linki z zaproszeniami z listy.",
+          "some_failed_other": "Nie udało się wysłać {{count}} e-maila. Skopiuj linki z zaproszeniami z listy.",
+          "error": "Coś poszło nie tak. Spróbuj ponownie.",
+          "resent": "Wysłano nowe zaproszenie na {{email}}",
+          "email_failed": "Nie udało się wysłać e-maila. Skopiuj link z zaproszeniem.",
+          "link_copied": "Skopiowano link z zaproszeniem. Osoba, która go otworzy, przed dołączeniem zweryfikuje swój e-mail. Link z poprzedniego e-maila już nie działa.",
+          "revoked": "Zaproszenie unieważnione",
+          "updated": "Zaproszenie zaktualizowane",
+          "bulk_resend_one": "Ponownie wysłano {{count}} zaproszenie",
+          "bulk_resend_few": "Ponownie wysłano {{count}} zaproszenia",
+          "bulk_resend_many": "Ponownie wysłano {{count}} zaproszeń",
+          "bulk_resend_other": "Ponownie wysłano {{count}} zaproszenia",
+          "bulk_revoke_one": "Unieważniono {{count}} zaproszenie",
+          "bulk_revoke_few": "Unieważniono {{count}} zaproszenia",
+          "bulk_revoke_many": "Unieważniono {{count}} zaproszeń",
+          "bulk_revoke_other": "Unieważniono {{count}} zaproszenia"
+        },
+        "codes": {
+          "description": "Jeden link lub kod dla wielu osób. Każdy, kto dołączy za jego pomocą, otrzyma poniższe ustawienia.",
+          "role_hint": "Tylko role na poziomie ucznia",
+          "role_note": "Każdy, kto ma kod, może go użyć, więc nie może on nadawać roli administratora, opiekuna, instruktora ani żadnej roli zarządzającej osobami.",
+          "max_uses": "Maksymalna liczba użyć",
+          "max_uses_invalid": "Wpisz liczbę całkowitą od 1",
+          "unlimited": "Bez limitu",
+          "never": "Nigdy",
+          "no_expiry": "Bez wygasania",
+          "uses_one": "{{count}} użycie",
+          "uses_few": "{{count}} użycia",
+          "uses_many": "{{count}} użyć",
+          "uses_other": "{{count}} użycia",
+          "uses_of": "Użycia: {{count}} / {{max}}",
+          "uses_title": "Ile razy ten kod posłużył do dołączenia"
+        },
+        "page": {
+          "join_title": "Jak można dołączyć",
+          "join_description": "Wybierz, czy każdy może się zarejestrować, czy tylko osoby, które zaprosisz.",
+          "mode_open": "Otwarta",
+          "mode_open_description": "Każdy, kto ma link do twojej akademii, może założyć konto i dołączyć.",
+          "mode_invite_only": "Tylko na zaproszenie",
+          "mode_invite_only_description": "Dołączyć mogą tylko osoby zaproszone przez ciebie e-mailem lub mające kod zaproszenia.",
+          "confirm_open_title": "Pozwolić każdemu dołączyć?",
+          "confirm_invite_only_title": "Dołączanie tylko na zaproszenie?",
+          "confirm_open": "Otwórz dołączanie",
+          "confirm_invite_only": "Ogranicz do zaproszeń",
+          "codes_description": "Jeden link lub kod dla całej grupy. Każdy, kto dołączy za jego pomocą, otrzyma przypisaną do niego rolę, grupy i kursy.",
+          "codes_need_invite_only": "Kody zaproszeń służą do dołączania tylko na zaproszenie. Aby utworzyć kod, przełącz powyżej na „Tylko na zaproszenie”.",
+          "edit_fields": "Edytuj pola",
+          "code_expired": "Wygasł",
+          "code_used_up": "Wykorzystany",
+          "code_revoked": "Usunięty"
+        }
       }
     },
     "assignments": {
@@ -12145,7 +12458,17 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> edytował(a) odpowiedzi rejestracyjne: <b>{{target}}</b>",
         "members__signup_backfilled": "<b>{{actor}}</b> skopiował(a) odpowiedzi rejestracyjne do danych pracowników",
         "security__support_access__started": "<b>{{actor}}</b> zaczął(-ęła) działać jako <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> przestał(a) działać jako <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> przestał(a) działać jako <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b>: zmieniono zaproszenie dla <b>{{target}}</b>",
+        "members__invitation__resent": "<b>{{actor}}</b>: ponownie wysłano zaproszenie dla <b>{{target}}</b>",
+        "members__invitation__link_copied": "<b>{{actor}}</b>: skopiowano nowy link z zaproszeniem dla <b>{{target}}</b>",
+        "members__invitation__revoked": "<b>{{actor}}</b>: unieważniono zaproszenie dla <b>{{target}}</b>",
+        "members__invitation__accepted": "<b>{{actor}}</b>: zaakceptowano zaproszenie",
+        "members__invitation__declined": "<b>{{actor}}</b>: odrzucono zaproszenie",
+        "members__invitation__role_applied": "<b>{{actor}}</b>: przypisano rolę z zaproszenia",
+        "members__invite_code__updated": "<b>{{actor}}</b>: zmieniono link z zaproszeniem",
+        "members__invite_code__used": "<b>{{actor}}</b>: dołączono przez link z zaproszeniem",
+        "members__invitation__closed": "<b>{{actor}}</b>: dołączono w inny sposób, więc zaproszenie zostało zamknięte"
       },
       "export": {
         "generating": "Przygotowywanie eksportu…",
@@ -12309,7 +12632,8 @@
         "customers": "lista klientów",
         "scim": "Provisioning SCIM",
         "scim_token": "Token SCIM",
-        "training_rule": "szkolenie obowiązkowe"
+        "training_rule": "szkolenie obowiązkowe",
+        "invitation": "zaproszenie"
       }
     },
     "course_builder": {
@@ -30331,7 +30655,8 @@
       "trial_ending": "Koniec okresu próbnego",
       "plan_downgraded": "Przejście na plan Bezpłatny",
       "plan_restored": "Plan przywrócony",
-      "payments_checkout_failing": "Nieudane płatności"
+      "payments_checkout_failing": "Nieudane płatności",
+      "invitation_accepted": "Zaproszenie przyjęte"
     },
     "copy": {
       "assignment_graded": "Oceniono: {{assignment}}",
@@ -30393,7 +30718,8 @@
       "trial_ending": "Twój okres próbny {{plan}} kończy się za {{days}} dni",
       "plan_downgraded": "Korzystasz teraz z planu Bezpłatny. Nic nie zostało usunięte",
       "plan_restored": "Witaj ponownie w planie {{plan}}",
-      "payments_checkout_failing": "Uczniowie nie mogą teraz nic kupić (nieudane płatności: {{count}})"
+      "payments_checkout_failing": "Uczniowie nie mogą teraz nic kupić (nieudane płatności: {{count}})",
+      "invitation_accepted": "{{actor}} przyjmuje Twoje zaproszenie"
     },
     "routing": {
       "short": "Kto dostaje powiadomienia",
@@ -30551,7 +30877,9 @@
       "verify_title": "Potwierdź e-mail, aby zobaczyć zaproszenia",
       "verify_desc": "Zaproszenia trafiają na adres e-mail, więc pojawią się, gdy potwierdzisz, że należy do ciebie.",
       "verify_resend": "Wyślij ponownie e-mail weryfikacyjny",
-      "verify_sent": "Wysłano. Sprawdź skrzynkę."
+      "verify_sent": "Wysłano. Sprawdź skrzynkę.",
+      "invited_as": "Zaprasza cię jako {{role}}",
+      "invited_as_by": "{{name}} zaprasza cię jako {{role}}"
     },
     "celebrate": {
       "title": "Twój pierwszy kurs jest opublikowany",

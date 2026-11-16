@@ -444,7 +444,7 @@ function OrgRow({ org, access_token, info }: { org: any; access_token: string; i
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={getUriWithOrg(org.slug, '/dash/users/settings/add')} className="flex items-center space-x-2">
+                <Link href={getUriWithOrg(org.slug, '/dash/users/settings/signups')} className="flex items-center space-x-2">
                   <UserPlus size={14} />
                   <span>{t('onb2.hub.invite_people')}</span>
                 </Link>

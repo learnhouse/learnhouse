@@ -8,7 +8,9 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { createInviteCode, inviteBatchUsers } from '@services/organizations/invites'
+import { createInviteCode } from '@services/organizations/invites'
+import { createInvitations } from '@services/organizations/invitations'
+import { useInvitationOptions, useRoleText } from '@components/Dashboard/Pages/Users/OrgUsersAdd/invitationsKit'
 import { apiFetch } from '@services/utils/ts/requests'
 import { useQuery } from '@tanstack/react-query'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -97,6 +99,11 @@ export default function InviteDialog({
   const needsCode = inviteOnly && !joinCode
   const joinUrl = absolute(getUriWithOrg(orgSlug, joinCode ? `/signup?inviteCode=${encodeURIComponent(joinCode)}` : '/signup'))
   const typed = useMemo(() => extractEmails(text), [text])
+  // The role people join with, picked from the roles this admin may grant.
+  const [roleId, setRoleId] = useState(4)
+  const { data: options } = useInvitationOptions(open && tab !== 'link')
+  const roleText = useRoleText()
+  const grantable = (options?.roles ?? []).filter((r) => r.grantable)
   const gated = !!gate?.gated
   const unlockDate = gate?.unlocks_at
     ? new Date(gate.unlocks_at).toLocaleDateString(i18n.language, { month: 'long', day: 'numeric' })
@@ -120,7 +127,11 @@ export default function InviteDialog({
     const result: Totals = { sent: 0, skipped: 0, failed: 0 }
     for (let i = 0; i < emails.length; i += BATCH) {
       const chunk = emails.slice(i, i + BATCH)
-      const res = await inviteBatchUsers(orgId, chunk.join(','), undefined, token).catch(() => null)
+      const res = await createInvitations(
+        orgId,
+        { emails: chunk, role_id: roleId, usergroup_ids: [], course_uuids: [], expires_in_days: 14, update_existing_members: false },
+        token
+      ).catch(() => null)
       if (!res?.success) {
         result.failed += chunk.length
         const detail = res?.data?.detail
@@ -129,8 +140,8 @@ export default function InviteDialog({
       }
       const rows: any[] = Array.isArray(res.data) ? res.data : res.data?.results ?? []
       for (const r of rows) {
-        if (r?.status === 'sent') result.sent += 1
-        else if (r?.status === 'already_invited' || r?.status === 'already_member') result.skipped += 1
+        if (r?.status === 'sent' || r?.status === 'resent') result.sent += 1
+        else if (r?.status === 'already_member') result.skipped += 1
         else result.failed += 1
       }
     }
@@ -166,6 +177,24 @@ export default function InviteDialog({
         </div>
       </div>
     </div>
+  )
+
+  const rolePicker = grantable.length > 1 && (
+    <label className="flex flex-wrap items-center justify-between gap-2 text-sm">
+      <span className="font-semibold text-neutral-800">{t('dashboard.users.invitations.fields.role')}</span>
+      <select
+        value={roleId}
+        onChange={(e) => setRoleId(Number(e.target.value))}
+        className={`${INPUT} w-auto min-w-48`}
+        aria-label={t('dashboard.users.invitations.fields.role')}
+      >
+        {grantable.map((r) => (
+          <option key={r.id} value={r.id}>
+            {roleText(r).name}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 
   const summary = totals && (
@@ -218,6 +247,7 @@ export default function InviteDialog({
       {tab === 'email' && (
         <div className="flex flex-col gap-3">
           {gateNotice}
+          {rolePicker}
           <textarea
             rows={5}
             value={text}
@@ -239,6 +269,7 @@ export default function InviteDialog({
       {tab === 'csv' && (
         <div className="flex flex-col gap-3">
           {gateNotice}
+          {rolePicker}
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-8 text-center hover:bg-neutral-100 transition-colors">
             <FileCsv size={24} className="text-neutral-400" />
             <span className="text-sm font-semibold text-neutral-800">{fileName || t('onb2.invite.csv_pick')}</span>

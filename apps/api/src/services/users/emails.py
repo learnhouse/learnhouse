@@ -681,10 +681,30 @@ def send_invitation_email(
     logo_url: str | None = None,
     brand_color: str | None = None,
     powered_by: bool = True,
+    role_name: str | None = None,
+    message: str | None = None,
+    expires_on: str | None = None,
 ):
-    """Invitation into an organization, branded to that organization."""
+    """Invitation into an organization, branded to that organization.
+
+    ``role_name``, ``message`` (the inviter's plain-text note) and
+    ``expires_on`` (a formatted date) are optional extra lines."""
     safe_org_name = html.escape(email_org_name(org_name))
     safe_inviter = html.escape(email_user_name(inviter_username))
+
+    details = ""
+    if role_name:
+        details += f"""
+        <p style="{STYLES['p']}">
+            {t(lang, "invitation.role_line", role=html.escape(role_name))}
+        </p>"""
+    if message:
+        safe_message = html.escape(message).replace("\n", "<br>")
+        details += f"""
+        <div style="margin: 0 0 24px 0; padding: 14px 16px; border-radius: 8px; background-color: {COLORS['subtle']}; border: 1px solid {COLORS['border']};">
+            <p style="margin: 0 0 6px 0; font-size: 12px; color: {COLORS['faint']};">{t(lang, "invitation.message_label", inviter=safe_inviter)}</p>
+            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: {COLORS['text']};">{safe_message}</p>
+        </div>"""
 
     code_section = ""
     if invite_code:
@@ -712,11 +732,17 @@ def send_invitation_email(
         <p style="{STYLES['p']}">
             {intro}
         </p>
+        {details}
         {code_section}
         <a href="{html.escape(signup_url)}" style="{_button_style(brand_color)}">
             {cta}
         </a>
     """
+    if expires_on:
+        body_content += f"""
+        <p style="{STYLES['link_text']}">
+            {t(lang, "invitation.expires", date=html.escape(expires_on))}
+        </p>"""
 
     return send_email(
         to=email,

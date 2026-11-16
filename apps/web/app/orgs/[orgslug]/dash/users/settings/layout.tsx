@@ -6,7 +6,6 @@ import {
   ArrowsClockwise,
   ClipboardText,
   Key,
-  ScanSmiley,
   Shield,
   ShieldCheck,
   UserPlus,
@@ -29,8 +28,10 @@ const TAB_COPY: Record<string, { title: string; subtitle: string; titleFallback?
     subtitle: 'dashboard.users.settings.pages.usergroups.subtitle',
   },
   roles: { title: 'dashboard.users.settings.pages.roles.title', subtitle: 'dashboard.users.settings.pages.roles.subtitle' },
-  signups: { title: 'dashboard.users.settings.pages.signups.title', subtitle: 'dashboard.users.settings.pages.signups.subtitle' },
-  add: { title: 'dashboard.users.settings.pages.add.title', subtitle: 'dashboard.users.settings.pages.add.subtitle' },
+  signups: {
+    title: 'dashboard.users.settings.pages.signups_invite.title',
+    subtitle: 'dashboard.users.settings.pages.signups_invite.subtitle',
+  },
   'audit-logs': {
     title: 'dashboard.users.settings.pages.audit_logs.title',
     subtitle: 'dashboard.users.settings.pages.audit_logs.subtitle',
@@ -55,7 +56,9 @@ const TAB_COPY: Record<string, { title: string; subtitle: string; titleFallback?
 export default function UsersSettingsLayout(props: { children: React.ReactNode; params: Promise<LayoutParams> }) {
   const { t } = useTranslation()
   const params = use(props.params)
-  const segment = useSelectedLayoutSegment() ?? 'users'
+  const raw = useSelectedLayoutSegment() ?? 'users'
+  // The old Invite tab redirects here; show the merged tab meanwhile.
+  const segment = raw === 'add' ? 'signups' : raw
   const copy = TAB_COPY[segment] ?? TAB_COPY.users
   const base = getUriWithOrg(params.orgslug, '') + '/dash/users/settings'
 
@@ -70,8 +73,7 @@ export default function UsersSettingsLayout(props: { children: React.ReactNode; 
     tab('users', t('dashboard.users.settings.tabs.users'), <Users size={16} />),
     tab('usergroups', t('dashboard.users.settings.tabs.usergroups'), <UsersThree size={16} />, 'standard'),
     tab('roles', t('dashboard.users.settings.tabs.roles'), <Shield size={16} />, 'pro'),
-    tab('signups', t('dashboard.users.settings.tabs.signups'), <ScanSmiley size={16} />),
-    tab('add', t('dashboard.users.settings.tabs.add'), <UserPlus size={16} />),
+    tab('signups', t('dashboard.users.settings.tabs.signups_invite'), <UserPlus size={16} />),
     tab('sign-in', t('dashboard.users.settings.tabs.sign_in', { defaultValue: 'Sign-in' }), <Key size={16} />),
     tab('provisioning', t('hr.scim.tab'), <ArrowsClockwise size={16} />, 'business'),
     tab('two-factor', t('dashboard.users.settings.tabs.two_factor', { defaultValue: 'Two-factor' }), <ShieldCheck size={16} />),

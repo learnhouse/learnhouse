@@ -230,7 +230,7 @@ export async function verifyEmail(
   token: string,
   userUuid: string,
   orgUuid: string
-): Promise<{ success: boolean; error?: string; next?: string | null }> {
+): Promise<{ success: boolean; error?: string; next?: string | null; setPassword?: boolean }> {
   try {
     const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
 
@@ -252,7 +252,8 @@ export async function verifyEmail(
 
     if (response.ok) {
       // Where they were headed when they signed up, kept with the token.
-      return { success: true, next: typeof data?.next === 'string' ? data.next : null }
+      // `set_password`: a password set before the inbox was proven was dropped.
+      return { success: true, next: typeof data?.next === 'string' ? data.next : null, setPassword: data?.set_password === true }
     } else {
       return {
         success: false,

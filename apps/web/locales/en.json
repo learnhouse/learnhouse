@@ -792,12 +792,23 @@
       "signup_title": "Join {{org}}",
       "signup_desc": "You've been invited. Choose a password and you're in.",
       "choose_password": "Choose a password",
-      "create_and_join": "Join {{org}}"
+      "create_and_join": "Join {{org}}",
+      "details": {
+        "role": "You'll join as {{role}}.",
+        "role_by": "{{name}} invited you to join as {{role}}.",
+        "groups": "You'll be added to: {{names}}",
+        "courses": "You'll be enrolled in: {{names}}",
+        "verify_note": "This link was shared with you directly, so you'll verify your email before joining."
+      },
+      "verify_title": "Check your inbox",
+      "verify_desc": "Your account is ready. We sent a verification link to {{email}}. Verify your email, then open this invitation again or accept it from your home page to join {{org}}."
     },
     "login_failed_forgot": "Forgot your password?",
     "login_failed_reset": "Reset it",
     "login_failed_magic": "Email me a login link instead",
-    "login_failed_google_hint": "Signed up with Google? Use Continue with Google below."
+    "login_failed_google_hint": "Signed up with Google? Use Continue with Google below.",
+    "email_verified_set_password": "Your email is verified. For your security, the password set before this was removed: choose a new one to sign in with a password.",
+    "set_new_password": "Set a new password"
   },
   "validation": {
     "required": "Required",
@@ -8037,7 +8048,8 @@
           "audit_logs": "Audit Logs",
           "analytics": "Analytics",
           "sign_in": "Sign-in",
-          "two_factor": "Two-factor"
+          "two_factor": "Two-factor",
+          "signups_invite": "Signups and Invite"
         },
         "pages": {
           "users": {
@@ -8075,6 +8087,10 @@
           "sign_in": {
             "title": "Sign-in",
             "subtitle": "Choose how members are allowed to sign in to this organization"
+          },
+          "signups_invite": {
+            "title": "Signups and Invite",
+            "subtitle": "Invite people, choose how they can join and share invite codes"
           }
         },
         "mobile": {
@@ -9365,6 +9381,239 @@
         "more": "More actions",
         "remove_filter": "Remove filter: {{name}}",
         "any": "Any"
+      },
+      "invitations": {
+        "invite_people": "Invite people",
+        "dialog": {
+          "title": "Invite people",
+          "description": "They get a personal link by email. When they join, the role, groups and courses below are applied automatically.",
+          "done_title": "Invitations sent",
+          "done_description": "Here is what happened to each address.",
+          "invite_more": "Invite more",
+          "send": "Send invitations",
+          "send_count_one": "Send {{count}} invitation",
+          "send_count_other": "Send {{count}} invitations",
+          "update_count_one": "Update {{count}} member",
+          "update_count_other": "Update {{count}} members"
+        },
+        "fields": {
+          "emails": "Email addresses",
+          "emails_hint": "Paste one or many, separated by commas, spaces or new lines",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} address",
+          "valid_count_other": "{{count}} addresses",
+          "invalid_count_one": "{{count}} address isn't valid",
+          "invalid_count_other": "{{count}} addresses aren't valid",
+          "too_many": "You can invite up to {{max}} people at a time",
+          "update_existing_one": "Also update the {{count}} person who is already a member",
+          "update_existing_other": "Also update the {{count}} people who are already members",
+          "update_existing_hint": "Their role changes to the one below and they are added to the groups and courses. Leave this off to skip them.",
+          "role": "Role",
+          "role_hint": "What they can do once they join",
+          "groups": "Add to groups",
+          "groups_placeholder": "Choose groups",
+          "no_groups": "This organization has no user groups yet.",
+          "courses": "Enroll in courses",
+          "courses_placeholder": "Choose courses",
+          "no_courses": "This organization has no courses yet.",
+          "selected_count_one": "{{count}} selected",
+          "selected_count_other": "{{count}} selected",
+          "search": "Search",
+          "no_match": "Nothing matches your search.",
+          "draft": "Draft",
+          "remove_item": "Remove {{name}}",
+          "message": "Personal message",
+          "message_placeholder": "Add a short note to the email (optional, no links)",
+          "expiry": "Expires after",
+          "days_one": "{{count}} day",
+          "days_other": "{{count}} days",
+          "expires_on": "Until {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "Learner",
+            "description": "Takes courses, joins communities and tracks their own progress. No access to the dashboard."
+          },
+          "instructor": {
+            "name": "Instructor",
+            "description": "Creates and teaches their own courses and grades their learners. Uses an admin seat."
+          },
+          "maintainer": {
+            "name": "Maintainer",
+            "description": "Manages all courses, members and groups. Can't change billing or organization settings."
+          },
+          "admin": {
+            "name": "Admin",
+            "description": "Full control of the organization, including settings, billing and other admins."
+          },
+          "custom_roles": "Custom roles",
+          "custom_description": "A custom role defined for this organization.",
+          "admin_seat": "Admin seat",
+          "refusal_admin_only": "Only admins can invite people with this role.",
+          "refusal_above": "This role has permissions your own role doesn't have.",
+          "refusal_code": "Invite codes can't grant a role that manages people or opens the dashboard."
+        },
+        "preview": {
+          "new_one": "{{count}} new",
+          "new_other": "{{count}} new",
+          "pending_one": "{{count}} already invited, will get a new link",
+          "pending_other": "{{count}} already invited, will get a new link",
+          "members_one": "{{count}} already a member",
+          "members_other": "{{count}} already members"
+        },
+        "summary": {
+          "people_one": "{{count}} person will join as {{role}}",
+          "people_other": "{{count}} people will join as {{role}}",
+          "groups_one": "added to {{names}}",
+          "groups_other": "added to {{count}} groups ({{names}})",
+          "courses_one": "enrolled in {{count}} course",
+          "courses_other": "enrolled in {{count}} courses",
+          "and": ", ",
+          "updated_one": "{{count}} existing member will be updated too.",
+          "updated_other": "{{count}} existing members will be updated too."
+        },
+        "capacity": {
+          "members": "Members",
+          "admin_seats": "Admin seats",
+          "of": "{{count}} of {{limit}}",
+          "pending_note_one": "Includes {{count}} pending invitation",
+          "pending_note_other": "Includes {{count}} pending invitations",
+          "members_blocked": "Your plan includes {{limit}} members, counting pending invitations. Upgrade or revoke some invitations to invite more.",
+          "seats_blocked": "Your plan includes {{limit}} admin seats, counting pending invitations. Pick a learner role, or upgrade to add more admins."
+        },
+        "results": {
+          "status": {
+            "sent": "Sent",
+            "resent": "New link sent",
+            "email_failed": "Email failed",
+            "already_member": "Already a member",
+            "member_updated": "Member updated",
+            "member_update_failed": "Not updated",
+            "invalid_email": "Invalid address"
+          },
+          "count": {
+            "sent_one": "{{count}} sent",
+            "sent_other": "{{count}} sent",
+            "resent_one": "{{count}} new link",
+            "resent_other": "{{count}} new links",
+            "email_failed_one": "{{count}} failed",
+            "email_failed_other": "{{count}} failed",
+            "already_member_one": "{{count}} already a member",
+            "already_member_other": "{{count}} already members",
+            "member_updated_one": "{{count}} member updated",
+            "member_updated_other": "{{count}} members updated",
+            "member_update_failed_one": "{{count}} not updated",
+            "member_update_failed_other": "{{count}} not updated",
+            "invalid_email_one": "{{count}} invalid",
+            "invalid_email_other": "{{count}} invalid"
+          }
+        },
+        "status": {
+          "pending": "Pending",
+          "accepted": "Accepted",
+          "declined": "Declined",
+          "revoked": "Revoked",
+          "expired": "Expired"
+        },
+        "list": {
+          "title": "Invitations",
+          "subtitle": "Everyone you invited, with the role and access they'll get",
+          "filter": "Filter by status",
+          "all": "All",
+          "person": "Person",
+          "role": "Role",
+          "access": "Groups and courses",
+          "status": "Status",
+          "select_all": "Select all",
+          "select": "Select {{email}}",
+          "selected_one": "{{count}} selected",
+          "selected_other": "{{count}} selected",
+          "actions": "Actions for {{email}}",
+          "invited_by": "Invited by {{name}} {{when}}",
+          "joined": "Joined {{when}}",
+          "email_not_sent": "email not delivered",
+          "groups_one": "{{count}} group",
+          "groups_other": "{{count}} groups",
+          "courses_one": "{{count}} course",
+          "courses_other": "{{count}} courses",
+          "expires_in_one": "Expires in {{count}} day",
+          "expires_in_other": "Expires in {{count}} days",
+          "legacy": "Sent before invitations carried a role",
+          "empty_title": "No invitations yet",
+          "empty_description": "Invite people by email. They join with the role, groups and courses you choose.",
+          "no_results": "No invitations match",
+          "clear_filter": "Show all",
+          "error": "Couldn't load invitations"
+        },
+        "actions": {
+          "resend": "Resend",
+          "copy_link": "Copy invite link",
+          "edit": "Change role or access",
+          "revoke": "Revoke",
+          "none": "No actions"
+        },
+        "revoke": {
+          "title": "Revoke this invitation?",
+          "message": "The link sent to {{email}} will stop working. You can invite them again later.",
+          "bulk_title_one": "Revoke {{count}} invitation?",
+          "bulk_title_other": "Revoke {{count}} invitations?",
+          "bulk_message": "Their links will stop working. You can invite them again later."
+        },
+        "edit": {
+          "title": "Change invitation",
+          "description": "For {{email}}. Applies when they accept.",
+          "keep_expiry": "Keep ({{date}})",
+          "extend_one": "{{count}} day from now",
+          "extend_other": "{{count}} days from now",
+          "save": "Save changes"
+        },
+        "toasts": {
+          "sent": "Invitations sent",
+          "some_failed_one": "{{count}} email couldn't be sent. Copy the invite link from the list instead.",
+          "some_failed_other": "{{count}} emails couldn't be sent. Copy the invite links from the list instead.",
+          "error": "Something went wrong. Please try again.",
+          "resent": "New invitation sent to {{email}}",
+          "email_failed": "The email couldn't be sent. Copy the invite link instead.",
+          "link_copied": "Invite link copied. Whoever opens it verifies their email before joining. The link in the earlier email no longer works.",
+          "revoked": "Invitation revoked",
+          "updated": "Invitation updated",
+          "bulk_resend_one": "{{count}} invitation sent again",
+          "bulk_resend_other": "{{count}} invitations sent again",
+          "bulk_revoke_one": "{{count}} invitation revoked",
+          "bulk_revoke_other": "{{count}} invitations revoked"
+        },
+        "codes": {
+          "description": "One link or code for many people. Everyone who joins with it gets the settings below.",
+          "role_hint": "Learner-level roles only",
+          "role_note": "Anyone who has the code can use it, so it can't grant admin, maintainer, instructor or any role that manages people.",
+          "max_uses": "Maximum uses",
+          "max_uses_invalid": "Enter a whole number from 1",
+          "unlimited": "Unlimited",
+          "never": "Never",
+          "no_expiry": "No expiry",
+          "uses_one": "{{count}} use",
+          "uses_other": "{{count}} uses",
+          "uses_of": "{{count}} / {{max}} uses",
+          "uses_title": "Times this code was used to join"
+        },
+        "page": {
+          "join_title": "How people can join",
+          "join_description": "Choose whether anyone can sign up or only the people you invite.",
+          "mode_open": "Open",
+          "mode_open_description": "Anyone with your academy's link can create an account and join.",
+          "mode_invite_only": "Invite only",
+          "mode_invite_only_description": "Only people you invite by email or who have an invite code can join.",
+          "confirm_open_title": "Let anyone join?",
+          "confirm_invite_only_title": "Make joining invite only?",
+          "confirm_open": "Switch to open",
+          "confirm_invite_only": "Switch to invite only",
+          "codes_description": "One link or code for a whole group. Everyone who joins with it gets its role, groups and courses.",
+          "codes_need_invite_only": "Invite codes are for invite-only joining. Switch to Invite only above to create one.",
+          "edit_fields": "Edit fields",
+          "code_expired": "Expired",
+          "code_used_up": "Used up",
+          "code_revoked": "Deleted"
+        }
       }
     },
     "assignments": {
@@ -11744,7 +11993,17 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> edited the signup answers of <b>{{target}}</b>",
         "members__signup_backfilled": "<b>{{actor}}</b> copied signup answers to people data",
         "security__support_access__started": "<b>{{actor}}</b> started impersonating <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> stopped impersonating <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> stopped impersonating <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b> changed the invitation for <b>{{target}}</b>",
+        "members__invitation__resent": "<b>{{actor}}</b> resent the invitation for <b>{{target}}</b>",
+        "members__invitation__link_copied": "<b>{{actor}}</b> copied a new invite link for <b>{{target}}</b>",
+        "members__invitation__revoked": "<b>{{actor}}</b> revoked the invitation for <b>{{target}}</b>",
+        "members__invitation__accepted": "<b>{{actor}}</b> accepted their invitation",
+        "members__invitation__declined": "<b>{{actor}}</b> declined their invitation",
+        "members__invitation__role_applied": "<b>{{actor}}</b> got the role from their invitation",
+        "members__invite_code__updated": "<b>{{actor}}</b> changed an invite link",
+        "members__invite_code__used": "<b>{{actor}}</b> joined with an invite link",
+        "members__invitation__closed": "<b>{{actor}}</b> joined another way, so their invitation was closed"
       },
       "export": {
         "generating": "Preparing the export…",
@@ -11908,7 +12167,8 @@
         "customers": "customer list",
         "scim": "SCIM provisioning",
         "scim_token": "SCIM token",
-        "training_rule": "required training"
+        "training_rule": "required training",
+        "invitation": "invitation"
       }
     },
     "course_builder": {
@@ -28999,7 +29259,8 @@
       "trial_ending": "Trial ending",
       "plan_downgraded": "Moved to Free",
       "plan_restored": "Plan restored",
-      "payments_checkout_failing": "Checkout failing"
+      "payments_checkout_failing": "Checkout failing",
+      "invitation_accepted": "Invitation accepted"
     },
     "copy": {
       "assignment_graded": "Graded: {{assignment}}",
@@ -29061,7 +29322,8 @@
       "trial_ending": "Your {{plan}} trial ends in {{days}} days",
       "plan_downgraded": "You're on Free now. Nothing was deleted",
       "plan_restored": "Welcome back to {{plan}}",
-      "payments_checkout_failing": "Learners can't buy right now ({{count}} failed checkouts)"
+      "payments_checkout_failing": "Learners can't buy right now ({{count}} failed checkouts)",
+      "invitation_accepted": "{{actor}} accepted your invitation"
     },
     "routing": {
       "short": "Who's notified",
@@ -29217,7 +29479,9 @@
       "verify_title": "Verify your email to see your invitations",
       "verify_desc": "Invitations are sent to an email address, so they appear once you confirm it's yours.",
       "verify_resend": "Resend the verification email",
-      "verify_sent": "Sent. Check your inbox."
+      "verify_sent": "Sent. Check your inbox.",
+      "invited_as": "Invited you as {{role}}",
+      "invited_as_by": "{{name}} invited you as {{role}}"
     },
     "celebrate": {
       "title": "Your first course is live",

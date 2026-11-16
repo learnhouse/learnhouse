@@ -84,10 +84,7 @@ class TestInvitedUsersListAuthz:
         self, mock_request, db, org, anonymous_user
     ):
         with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=_redis_config(),
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url"
+            "src.core.redis.get_redis_client"
         ) as from_url:
             with pytest.raises(HTTPException) as exc:
                 await get_list_of_invited_users(
@@ -102,10 +99,7 @@ class TestInvitedUsersListAuthz:
         self, mock_request, db, org, regular_user
     ):
         with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=_redis_config(),
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url"
+            "src.core.redis.get_redis_client"
         ) as from_url:
             with pytest.raises(HTTPException) as exc:
                 await get_list_of_invited_users(
@@ -120,10 +114,7 @@ class TestInvitedUsersListAuthz:
     ):
         # admin_user administers org 1 only; org 2 must be opaque to them.
         with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=_redis_config(),
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url"
+            "src.core.redis.get_redis_client"
         ) as from_url:
             with pytest.raises(HTTPException) as exc:
                 await get_list_of_invited_users(
@@ -139,10 +130,7 @@ class TestInvitedUsersListAuthz:
         fake_redis = _fake_redis(["a@test.com", "b@test.com"])
 
         with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=_redis_config(),
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
+            "src.core.redis.get_redis_client",
             return_value=fake_redis,
         ):
             invited = await get_list_of_invited_users(
@@ -160,10 +148,7 @@ class TestInvitedUsersListAuthz:
         fake_redis = _fake_redis(["c@test.com"])
 
         with patch(
-            "src.services.orgs.users.get_learnhouse_config",
-            return_value=_redis_config(),
-        ), patch(
-            "src.services.orgs.users.redis.Redis.from_url",
+            "src.core.redis.get_redis_client",
             return_value=fake_redis,
         ), patch(
             "src.services.orgs.users.is_org_member",

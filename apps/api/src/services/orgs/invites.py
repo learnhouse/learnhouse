@@ -1,10 +1,5 @@
 import json
 import logging
-import re
-import secrets
-import string
-import uuid
-from datetime import datetime, timedelta
 from typing import Optional
 
 import redis
@@ -17,14 +12,11 @@ from config.config import get_learnhouse_config
 from src.core.ee_hooks import audit_event
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
-from src.db.usergroups import UserGroup
 from src.db.users import AnonymousUser, PublicUser, UserRead
 from src.services.orgs.orgs import (
     rbac_check,
 )
 from src.services.users.emails import send_invitation_email
-from src.services.analytics import events as analytics_events
-from src.services.analytics.analytics import track
 
 logger = logging.getLogger(__name__)
 
@@ -37,161 +29,23 @@ def _get_redis(redis_conn_string: str) -> redis.Redis:
     return redis.Redis(connection_pool=_redis_pool)
 
 
-# Lua script: atomically count existing org invite codes and add a new one if
-# the per-org limit has not been reached.  Runs as a single atomic unit on the
-# Redis server, eliminating the check-then-set race condition.
-#
-# KEYS[1] = glob pattern for existing codes   (e.g. "org_invite_code_*:org:<uuid>:code:*")
-# KEYS[2] = the new key to write
-# ARGV[1] = JSON value to store
-# ARGV[2] = TTL in seconds
-# ARGV[3] = maximum number of codes allowed
-#
-# Returns 1 on success, 0 when the limit is already reached.
-_LUA_ATOMIC_INVITE = (
-    "local pattern = KEYS[1]\n"
-    "local new_key = KEYS[2]\n"
-    "local new_value = ARGV[1]\n"
-    "local ttl = tonumber(ARGV[2])\n"
-    "local max_codes = tonumber(ARGV[3])\n"
-    "local existing = redis.call('KEYS', pattern)\n"
-    "if #existing >= max_codes then\n"
-    "    return 0\n"
-    "end\n"
-    "redis.call('SET', new_key, new_value, 'EX', ttl)\n"
-    "return 1\n"
-)
-
-
 async def create_invite_code(
     request: Request,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
     usergroup_id: Optional[int] = None,
+    *,
+    settings=None,
 ):
-    # Every visitor to the shared demo holds admin on it, so without this an
-    # invite code minted there is a way for anyone to have the platform email
-    # arbitrary strangers on our domain. This is the abuse vector the demo
-    # would otherwise open, and it is blocked at the service rather than in
-    # the UI for that reason.
-    from src.services.demo.guards import require_not_demo_org
+    """Create a shareable invite code (stored in the database, see
+    ``src.services.orgs.invitations.codes``). ``usergroup_id`` is the older
+    single-group form; ``settings`` an ``InviteCodeCreate``."""
+    from src.services.orgs.invitations.codes import InviteCodeCreate, create_code
 
-    await require_not_demo_org(org_id, db_session)
-
-    # Redis init
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-
-    if not redis_conn_string:
-        raise HTTPException(
-            status_code=500,
-            detail="Redis connection string not found",
-        )
-
-    statement = select(Organization).where(Organization.id == org_id)
-    org = (await db_session.execute(statement)).scalars().first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Free-tier abuse gate: shareable invite links are a self-service member
-    # onboarding primitive, so a free org (and the acting user) must be at
-    # least FREE_TIER_MIN_AGE_DAYS old before minting one. Paid orgs exempt.
-    from src.security.auth import resolve_acting_user_id
-    from src.services.security.account_age import enforce_free_tier_age_gate
-
-    await enforce_free_tier_age_gate(
-        org_id, resolve_acting_user_id(current_user), db_session,
-        action="create invite links",
-    )
-
-    # Connect to Redis
-    r = _get_redis(redis_conn_string)
-
-    if not r:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not connect to Redis",
-        )
-
-    # Validate usergroup exists if provided
-    if usergroup_id is not None:
-        statement = select(UserGroup).where(
-            UserGroup.id == usergroup_id,
-            UserGroup.org_id == org_id,
-        )
-        usergroup = (await db_session.execute(statement)).scalars().first()
-        if not usergroup:
-            raise HTTPException(
-                status_code=404,
-                detail="UserGroup not found or does not belong to this organization",
-            )
-
-    # Generate invite code using cryptographically secure random
-    def generate_code(length=8):
-        alphabet = string.ascii_letters + string.digits
-        return "".join(secrets.choice(alphabet) for _ in range(length))
-
-    generated_invite_code = generate_code()
-    invite_code_uuid = f"org_invite_code_{uuid.uuid4()}"
-
-    # time to live in days to seconds
-    ttl = int(timedelta(days=365).total_seconds())
-
-    inviteCodeObject = {
-        "invite_code": generated_invite_code,
-        "invite_code_uuid": invite_code_uuid,
-        "invite_code_expires": ttl,
-        "invite_code_type": "signup",
-        "created_at": datetime.now().isoformat(),
-        "created_by": current_user.user_uuid,
-    }
-
-    if usergroup_id is not None:
-        inviteCodeObject["usergroup_id"] = usergroup_id
-
-    new_invite_key = f"{invite_code_uuid}:org:{org.org_uuid}:code:{generated_invite_code}"
-    invite_value = json.dumps(inviteCodeObject)
-
-    # Atomically check the per-org code limit and write the new key.
-    # _LUA_ATOMIC_INVITE returns 0 when the limit is reached, 1 on success.
-    result = r.eval(  # type: ignore[attr-defined]
-        _LUA_ATOMIC_INVITE,
-        2,
-        f"org_invite_code_*:org:{org.org_uuid}:code:*",
-        new_invite_key,
-        invite_value,
-        str(ttl),
-        "6",
-    )
-
-    if result == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Maximum number of invite codes reached",
-        )
-
-    # A shareable link invites nobody in particular yet, so no count.
-    await track(
-        event_name=analytics_events.USER_INVITED,
-        org_id=org_id,
-        user_id=resolve_acting_user_id(current_user),
-        properties={"invite_method": "invite_code"},
-    )
-    audit_event(
-        request, action="members.invite_code.created", org_id=org_id, actor=current_user,
-        target_type="invite_code", target_id=inviteCodeObject.get("invite_code_uuid"),
-        details={k: inviteCodeObject.get(k) for k in ("usergroup_id", "expiration_date") if inviteCodeObject.get(k)},
-    )
-
-    return inviteCodeObject
+    if settings is None:
+        settings = InviteCodeCreate(usergroup_ids=[usergroup_id] if usergroup_id is not None else [])
+    return await create_code(request, db_session, org_id, settings, current_user)
 
 
 async def get_invite_codes(
@@ -200,62 +54,11 @@ async def get_invite_codes(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ):
-    # Redis init
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
+    """Every live invite code of the org, with its settings and usage, and
+    the older Redis codes still in use."""
+    from src.services.orgs.invitations.codes import list_codes
 
-    if not redis_conn_string:
-        raise HTTPException(
-            status_code=500,
-            detail="Redis connection string not found",
-        )
-
-    statement = select(Organization).where(Organization.id == org_id)
-    org = (await db_session.execute(statement)).scalars().first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Connect to Redis
-    r = _get_redis(redis_conn_string)
-
-    if not r:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not connect to Redis",
-        )
-
-    # Get invite codes (use scan_iter to avoid blocking Redis)
-    invite_codes = list(r.scan_iter(match=f"org_invite_code_*:org:{org.org_uuid}:code:*", count=100))
-
-    invite_codes_list = []
-
-    for invite_code in invite_codes:  # type: ignore
-        invite_code = r.get(invite_code)
-        # The key may have expired between scan_iter() and get() (codes carry a
-        # TTL). r.get() then returns None and json.loads(None) raises TypeError,
-        # crashing the whole listing with a 500. Skip vanished keys instead.
-        if invite_code is None:
-            continue
-        invite_code = json.loads(invite_code)  # type: ignore
-
-        # Enrich with usergroup name if linked
-        if invite_code.get("usergroup_id"):
-            statement = select(UserGroup).where(
-                UserGroup.id == invite_code["usergroup_id"]
-            )
-            usergroup = (await db_session.execute(statement)).scalars().first()
-            invite_code["usergroup_name"] = usergroup.name if usergroup else None
-
-        invite_codes_list.append(invite_code)
-
-    return invite_codes_list
+    return await list_codes(request, db_session, org_id, current_user)
 
 
 async def get_invite_code(
@@ -265,16 +68,6 @@ async def get_invite_code(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ):
-    # Redis init
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-
-    if not redis_conn_string:
-        raise HTTPException(
-            status_code=500,
-            detail="Redis connection string not found",
-        )
-
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -287,15 +80,6 @@ async def get_invite_code(
     # RBAC check - verify user has permission to view invite codes for this org
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
-    # Connect to Redis
-    r = _get_redis(redis_conn_string)
-
-    if not r:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not connect to Redis",
-        )
-
     # SECURITY: Validate invite code is alphanumeric to prevent Redis wildcard injection
     if not invite_code.isalnum():
         raise HTTPException(
@@ -303,22 +87,30 @@ async def get_invite_code(
             detail="Invite code not found",
         )
 
-    # Get invite code (use scan_iter to avoid blocking Redis)
-    matched_key = None
-    for key in r.scan_iter(match=f"org_invite_code_*:org:{org.org_uuid}:code:{invite_code}", count=10):
-        matched_key = key
-        break
+    # Codes live in the database now; an expired, used-up or deleted one is
+    # simply not found. Older codes are still read from Redis below.
+    from src.services.orgs.invitations.codes import as_join_data, find_active_code
 
-    if not matched_key:
-        raise HTTPException(
-            status_code=404,
-            detail="Invite code not found",
-        )
+    db_code = await find_active_code(db_session, org.id, invite_code)
+    if db_code is not None:
+        return as_join_data(db_code)
 
-    invite_code_value = r.get(matched_key)
-    invite_code_data = json.loads(invite_code_value)
-
-    return invite_code_data
+    # A legacy code: without a reachable Redis it simply isn't found.
+    not_found = HTTPException(status_code=404, detail="Invite code not found")
+    redis_conn_string = get_learnhouse_config().redis_config.redis_connection_string
+    r = _get_redis(redis_conn_string) if redis_conn_string else None
+    if not r:
+        raise not_found
+    try:
+        # Use scan_iter to avoid blocking Redis.
+        matched_key = next(iter(r.scan_iter(match=f"org_invite_code_*:org:{org.org_uuid}:code:{invite_code}", count=10)), None)
+        invite_code_value = r.get(matched_key) if matched_key else None
+    except redis.RedisError:
+        logger.warning("Could not look up a legacy invite code for org %s", org.id, exc_info=True)
+        raise not_found
+    if not invite_code_value:
+        raise not_found
+    return json.loads(invite_code_value)
 
 
 async def delete_invite_code(
@@ -350,6 +142,12 @@ async def delete_invite_code(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
+    from src.services.orgs.invitations.codes import revoke_code
+
+    revoked = await revoke_code(request, db_session, org_id, invite_code_uuid, current_user)
+    if revoked is not None:
+        return revoked
+
     # Connect to Redis
     r = _get_redis(redis_conn_string)
 
@@ -359,17 +157,9 @@ async def delete_invite_code(
             detail="Could not connect to Redis",
         )
 
-    # SECURITY: the UUID is interpolated into a Redis SCAN glob pattern. Without
-    # validation an admin could pass wildcard characters (e.g. "*") to match,
-    # and delete, every invite code key for the org in a single call, instead
-    # of the one resource the endpoint is meant to address. Restrict to the
-    # exact "org_invite_code_<uuid4>" shape this codebase generates.
-    if not re.fullmatch(r"org_invite_code_[0-9a-fA-F-]{36}", invite_code_uuid):
-        raise HTTPException(
-            status_code=404,
-            detail="Invite code not found",
-        )
-
+    # SECURITY: the UUID is interpolated into a Redis SCAN glob pattern;
+    # revoke_code above already refused anything but the exact
+    # "org_invite_code_<uuid4>" shape, so no wildcard can reach it.
     # Delete invite code (use scan_iter to avoid blocking Redis)
     keys = list(r.scan_iter(match=f"{invite_code_uuid}:org:{org.org_uuid}:code:*", count=10))
     if keys:

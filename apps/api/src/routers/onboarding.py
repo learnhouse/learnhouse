@@ -370,10 +370,11 @@ async def api_accept_invite(
     responses={200: {"description": "Declined."}, 404: {"description": "No pending invitation"}},
 )
 async def api_decline_invite(
+    request: Request,
     org_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     user_id = resolve_acting_user_id(current_user)
     enforce_limit("invite", user_id)
-    return await invite_service.decline_invite(db_session, user_id, org_uuid)
+    return await invite_service.decline_invite(db_session, user_id, org_uuid, request)

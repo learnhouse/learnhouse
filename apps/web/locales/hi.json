@@ -792,12 +792,23 @@
       "signup_title": "{{org}} से जुड़ें",
       "signup_desc": "आपको आमंत्रित किया गया है। पासवर्ड चुनें और आप अंदर हैं।",
       "choose_password": "पासवर्ड चुनें",
-      "create_and_join": "{{org}} से जुड़ें"
+      "create_and_join": "{{org}} से जुड़ें",
+      "details": {
+        "role": "आप {{role}} के रूप में जुड़ेंगे।",
+        "role_by": "{{name}} ने आपको {{role}} के रूप में जुड़ने के लिए आमंत्रित किया है।",
+        "groups": "आपको इनमें जोड़ा जाएगा: {{names}}",
+        "courses": "आपका इनमें नामांकन होगा: {{names}}",
+        "verify_note": "यह लिंक सीधे आपके साथ साझा किया गया था, इसलिए जुड़ने से पहले आप अपना ईमेल सत्यापित करेंगे।"
+      },
+      "verify_title": "अपना इनबॉक्स देखें",
+      "verify_desc": "आपका खाता तैयार है। हमने {{email}} पर एक सत्यापन लिंक भेजा है। अपना ईमेल सत्यापित करें, फिर {{org}} से जुड़ने के लिए यह आमंत्रण दोबारा खोलें या अपने होम पेज से इसे स्वीकार करें।"
     },
     "login_failed_forgot": "पासवर्ड भूल गए?",
     "login_failed_reset": "रीसेट करें",
     "login_failed_magic": "इसके बजाय मुझे लॉगिन लिंक ईमेल करें",
-    "login_failed_google_hint": "Google से साइन अप किया था? नीचे Google के साथ जारी रखें चुनें।"
+    "login_failed_google_hint": "Google से साइन अप किया था? नीचे Google के साथ जारी रखें चुनें।",
+    "email_verified_set_password": "आपका ईमेल सत्यापित हो गया है। आपकी सुरक्षा के लिए, इससे पहले सेट किया गया पासवर्ड हटा दिया गया है: पासवर्ड से लॉगिन करने के लिए एक नया पासवर्ड चुनें।",
+    "set_new_password": "नया पासवर्ड सेट करें"
   },
   "validation": {
     "required": "आवश्यक",
@@ -8047,7 +8058,8 @@
           "audit_logs": "ऑडिट लॉग",
           "analytics": "एनालिटिक्स",
           "sign_in": "साइन-इन",
-          "two_factor": "टू-फ़ैक्टर"
+          "two_factor": "टू-फ़ैक्टर",
+          "signups_invite": "साइनअप और आमंत्रण"
         },
         "pages": {
           "users": {
@@ -8085,6 +8097,10 @@
           "sign_in": {
             "title": "साइन-इन",
             "subtitle": "चुनें कि सदस्य इस संगठन में किन तरीकों से साइन इन कर सकते हैं"
+          },
+          "signups_invite": {
+            "title": "साइनअप और आमंत्रण",
+            "subtitle": "लोगों को आमंत्रित करें, चुनें कि वे कैसे जुड़ सकते हैं और आमंत्रण कोड साझा करें"
           }
         },
         "mobile": {
@@ -9375,6 +9391,239 @@
         "more": "और कार्रवाइयाँ",
         "remove_filter": "फ़िल्टर हटाएँ: {{name}}",
         "any": "कोई भी"
+      },
+      "invitations": {
+        "invite_people": "लोगों को आमंत्रित करें",
+        "dialog": {
+          "title": "लोगों को आमंत्रित करें",
+          "description": "उन्हें ईमेल से एक निजी लिंक मिलेगा। जुड़ते ही नीचे दी गई भूमिका, समूह और कोर्स अपने आप लागू हो जाएँगे।",
+          "done_title": "आमंत्रण भेजे गए",
+          "done_description": "हर पते का नतीजा यहाँ है।",
+          "invite_more": "और आमंत्रित करें",
+          "send": "आमंत्रण भेजें",
+          "send_count_one": "{{count}} आमंत्रण भेजें",
+          "send_count_other": "{{count}} आमंत्रण भेजें",
+          "update_count_one": "{{count}} सदस्य को अपडेट करें",
+          "update_count_other": "{{count}} सदस्यों को अपडेट करें"
+        },
+        "fields": {
+          "emails": "ईमेल पते",
+          "emails_hint": "एक या कई पते पेस्ट करें, कॉमा, स्पेस या नई लाइन से अलग करके",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} पता",
+          "valid_count_other": "{{count}} पते",
+          "invalid_count_one": "{{count}} पता मान्य नहीं है",
+          "invalid_count_other": "{{count}} पते मान्य नहीं हैं",
+          "too_many": "आप एक बार में अधिकतम {{max}} लोगों को आमंत्रित कर सकते हैं",
+          "update_existing_one": "पहले से सदस्य {{count}} व्यक्ति को भी अपडेट करें",
+          "update_existing_other": "पहले से सदस्य {{count}} लोगों को भी अपडेट करें",
+          "update_existing_hint": "उनकी भूमिका नीचे दी गई भूमिका में बदल जाएगी और उन्हें समूहों और कोर्स में जोड़ा जाएगा। उन्हें छोड़ने के लिए इसे बंद रखें।",
+          "role": "भूमिका",
+          "role_hint": "जुड़ने के बाद वे क्या कर सकते हैं",
+          "groups": "समूहों में जोड़ें",
+          "groups_placeholder": "समूह चुनें",
+          "no_groups": "इस संगठन में अभी कोई उपयोगकर्ता समूह नहीं है।",
+          "courses": "कोर्स में नामांकन करें",
+          "courses_placeholder": "कोर्स चुनें",
+          "no_courses": "इस संगठन में अभी कोई कोर्स नहीं है।",
+          "selected_count_one": "{{count}} चुना गया",
+          "selected_count_other": "{{count}} चुने गए",
+          "search": "खोजें",
+          "no_match": "आपकी खोज से कुछ भी मेल नहीं खाता।",
+          "draft": "ड्राफ़्ट",
+          "remove_item": "{{name}} हटाएँ",
+          "message": "निजी संदेश",
+          "message_placeholder": "ईमेल में एक छोटा नोट जोड़ें (वैकल्पिक, लिंक नहीं)",
+          "expiry": "समाप्ति",
+          "days_one": "{{count}} दिन",
+          "days_other": "{{count}} दिन",
+          "expires_on": "{{date}} तक"
+        },
+        "roles": {
+          "user": {
+            "name": "शिक्षार्थी",
+            "description": "कोर्स करते हैं, समुदायों से जुड़ते हैं और अपनी प्रगति देखते हैं। डैशबोर्ड तक पहुँच नहीं।"
+          },
+          "instructor": {
+            "name": "प्रशिक्षक",
+            "description": "अपने कोर्स बनाते और पढ़ाते हैं, और अपने शिक्षार्थियों को ग्रेड देते हैं। एक एडमिन सीट इस्तेमाल होती है।"
+          },
+          "maintainer": {
+            "name": "मेंटेनर",
+            "description": "सभी कोर्स, सदस्य और समूह मैनेज करते हैं। बिलिंग या संगठन सेटिंग्स नहीं बदल सकते।"
+          },
+          "admin": {
+            "name": "एडमिन",
+            "description": "संगठन पर पूरा नियंत्रण, जिसमें सेटिंग्स, बिलिंग और दूसरे एडमिन शामिल हैं।"
+          },
+          "custom_roles": "कस्टम भूमिकाएँ",
+          "custom_description": "इस संगठन के लिए बनाई गई कस्टम भूमिका।",
+          "admin_seat": "एडमिन सीट",
+          "refusal_admin_only": "इस भूमिका के साथ केवल एडमिन ही आमंत्रित कर सकते हैं।",
+          "refusal_above": "इस भूमिका में ऐसी अनुमतियाँ हैं जो आपकी भूमिका में नहीं हैं।",
+          "refusal_code": "आमंत्रण कोड ऐसी भूमिका नहीं दे सकते जो लोगों को मैनेज करे या डैशबोर्ड खोले।"
+        },
+        "preview": {
+          "new_one": "{{count}} नया",
+          "new_other": "{{count}} नए",
+          "pending_one": "{{count}} पहले से आमंत्रित, नया लिंक मिलेगा",
+          "pending_other": "{{count}} पहले से आमंत्रित, नया लिंक मिलेगा",
+          "members_one": "{{count}} पहले से सदस्य",
+          "members_other": "{{count}} पहले से सदस्य"
+        },
+        "summary": {
+          "people_one": "{{count}} व्यक्ति {{role}} के रूप में जुड़ेगा",
+          "people_other": "{{count}} लोग {{role}} के रूप में जुड़ेंगे",
+          "groups_one": "{{names}} में जोड़े जाएँगे",
+          "groups_other": "{{count}} समूहों ({{names}}) में जोड़े जाएँगे",
+          "courses_one": "{{count}} कोर्स में नामांकित होंगे",
+          "courses_other": "{{count}} कोर्स में नामांकित होंगे",
+          "and": ", ",
+          "updated_one": "{{count}} मौजूदा सदस्य भी अपडेट होगा।",
+          "updated_other": "{{count}} मौजूदा सदस्य भी अपडेट होंगे।"
+        },
+        "capacity": {
+          "members": "सदस्य",
+          "admin_seats": "एडमिन सीटें",
+          "of": "{{limit}} में से {{count}}",
+          "pending_note_one": "{{count}} लंबित आमंत्रण शामिल है",
+          "pending_note_other": "{{count}} लंबित आमंत्रण शामिल हैं",
+          "members_blocked": "आपके प्लान में लंबित आमंत्रणों सहित {{limit}} सदस्य शामिल हैं। और लोगों को आमंत्रित करने के लिए अपग्रेड करें या कुछ आमंत्रण रद्द करें।",
+          "seats_blocked": "आपके प्लान में लंबित आमंत्रणों सहित {{limit}} एडमिन सीटें शामिल हैं। शिक्षार्थी भूमिका चुनें, या और एडमिन जोड़ने के लिए अपग्रेड करें।"
+        },
+        "results": {
+          "status": {
+            "sent": "भेजा गया",
+            "resent": "नया लिंक भेजा गया",
+            "email_failed": "ईमेल विफल",
+            "already_member": "पहले से सदस्य",
+            "member_updated": "सदस्य अपडेट हुआ",
+            "member_update_failed": "अपडेट नहीं हुआ",
+            "invalid_email": "अमान्य पता"
+          },
+          "count": {
+            "sent_one": "{{count}} भेजा गया",
+            "sent_other": "{{count}} भेजे गए",
+            "resent_one": "{{count}} नया लिंक",
+            "resent_other": "{{count}} नए लिंक",
+            "email_failed_one": "{{count}} विफल",
+            "email_failed_other": "{{count}} विफल",
+            "already_member_one": "{{count}} पहले से सदस्य",
+            "already_member_other": "{{count}} पहले से सदस्य",
+            "member_updated_one": "{{count}} सदस्य अपडेट हुआ",
+            "member_updated_other": "{{count}} सदस्य अपडेट हुए",
+            "member_update_failed_one": "{{count}} अपडेट नहीं हुआ",
+            "member_update_failed_other": "{{count}} अपडेट नहीं हुए",
+            "invalid_email_one": "{{count}} अमान्य",
+            "invalid_email_other": "{{count}} अमान्य"
+          }
+        },
+        "status": {
+          "pending": "लंबित",
+          "accepted": "स्वीकार किया",
+          "declined": "अस्वीकार किया",
+          "revoked": "रद्द किया गया",
+          "expired": "समाप्त"
+        },
+        "list": {
+          "title": "आमंत्रण",
+          "subtitle": "आपके आमंत्रित सभी लोग, और उन्हें मिलने वाली भूमिका और पहुँच",
+          "filter": "स्थिति के अनुसार फ़िल्टर करें",
+          "all": "सभी",
+          "person": "व्यक्ति",
+          "role": "भूमिका",
+          "access": "समूह और कोर्स",
+          "status": "स्थिति",
+          "select_all": "सभी चुनें",
+          "select": "{{email}} चुनें",
+          "selected_one": "{{count}} चुना गया",
+          "selected_other": "{{count}} चुने गए",
+          "actions": "{{email}} के लिए कार्रवाइयाँ",
+          "invited_by": "{{name}} ने {{when}} आमंत्रित किया",
+          "joined": "{{when}} जुड़े",
+          "email_not_sent": "ईमेल नहीं पहुँचा",
+          "groups_one": "{{count}} समूह",
+          "groups_other": "{{count}} समूह",
+          "courses_one": "{{count}} कोर्स",
+          "courses_other": "{{count}} कोर्स",
+          "expires_in_one": "{{count}} दिन में समाप्त होगा",
+          "expires_in_other": "{{count}} दिन में समाप्त होगा",
+          "legacy": "आमंत्रणों में भूमिका जुड़ने से पहले भेजा गया",
+          "empty_title": "अभी कोई आमंत्रण नहीं",
+          "empty_description": "लोगों को ईमेल से आमंत्रित करें। वे आपकी चुनी हुई भूमिका, समूहों और कोर्स के साथ जुड़ेंगे।",
+          "no_results": "कोई आमंत्रण मेल नहीं खाता",
+          "clear_filter": "सभी दिखाएँ",
+          "error": "आमंत्रण लोड नहीं हो सके"
+        },
+        "actions": {
+          "resend": "फिर से भेजें",
+          "copy_link": "आमंत्रण लिंक कॉपी करें",
+          "edit": "भूमिका या पहुँच बदलें",
+          "revoke": "रद्द करें",
+          "none": "कोई कार्रवाई नहीं"
+        },
+        "revoke": {
+          "title": "यह आमंत्रण रद्द करें?",
+          "message": "{{email}} को भेजा गया लिंक काम करना बंद कर देगा। आप उन्हें बाद में फिर से आमंत्रित कर सकते हैं।",
+          "bulk_title_one": "{{count}} आमंत्रण रद्द करें?",
+          "bulk_title_other": "{{count}} आमंत्रण रद्द करें?",
+          "bulk_message": "उनके लिंक काम करना बंद कर देंगे। आप उन्हें बाद में फिर से आमंत्रित कर सकते हैं।"
+        },
+        "edit": {
+          "title": "आमंत्रण बदलें",
+          "description": "{{email}} के लिए। स्वीकार करने पर लागू होगा।",
+          "keep_expiry": "वही रखें ({{date}})",
+          "extend_one": "अब से {{count}} दिन",
+          "extend_other": "अब से {{count}} दिन",
+          "save": "बदलाव सहेजें"
+        },
+        "toasts": {
+          "sent": "आमंत्रण भेजे गए",
+          "some_failed_one": "{{count}} ईमेल नहीं भेजा जा सका। इसके बजाय सूची से आमंत्रण लिंक कॉपी करें।",
+          "some_failed_other": "{{count}} ईमेल नहीं भेजे जा सके। इसके बजाय सूची से आमंत्रण लिंक कॉपी करें।",
+          "error": "कुछ गलत हो गया। कृपया फिर से कोशिश करें।",
+          "resent": "{{email}} को नया आमंत्रण भेजा गया",
+          "email_failed": "ईमेल नहीं भेजा जा सका। इसके बजाय आमंत्रण लिंक कॉपी करें।",
+          "link_copied": "आमंत्रण लिंक कॉपी हो गया। जो भी इसे खोलेगा, वह जुड़ने से पहले अपना ईमेल सत्यापित करेगा। पिछले ईमेल वाला लिंक अब काम नहीं करता।",
+          "revoked": "आमंत्रण रद्द किया गया",
+          "updated": "आमंत्रण अपडेट किया गया",
+          "bulk_resend_one": "{{count}} आमंत्रण फिर से भेजा गया",
+          "bulk_resend_other": "{{count}} आमंत्रण फिर से भेजे गए",
+          "bulk_revoke_one": "{{count}} आमंत्रण रद्द किया गया",
+          "bulk_revoke_other": "{{count}} आमंत्रण रद्द किए गए"
+        },
+        "codes": {
+          "description": "कई लोगों के लिए एक लिंक या कोड। इससे जुड़ने वाले हर व्यक्ति को नीचे की सेटिंग्स मिलेंगी।",
+          "role_hint": "केवल शिक्षार्थी-स्तर की भूमिकाएँ",
+          "role_note": "जिसके पास भी कोड है वह इसे इस्तेमाल कर सकता है, इसलिए यह एडमिन, मेंटेनर, प्रशिक्षक या लोगों को मैनेज करने वाली कोई भूमिका नहीं दे सकता।",
+          "max_uses": "अधिकतम उपयोग",
+          "max_uses_invalid": "1 या उससे बड़ी पूर्ण संख्या दर्ज करें",
+          "unlimited": "असीमित",
+          "never": "कभी नहीं",
+          "no_expiry": "कोई समाप्ति नहीं",
+          "uses_one": "{{count}} उपयोग",
+          "uses_other": "{{count}} उपयोग",
+          "uses_of": "{{count}} / {{max}} उपयोग",
+          "uses_title": "इस कोड से कितनी बार जुड़ा गया"
+        },
+        "page": {
+          "join_title": "लोग कैसे जुड़ सकते हैं",
+          "join_description": "चुनें कि कोई भी साइन अप कर सकता है या केवल वे लोग जिन्हें आप आमंत्रित करते हैं।",
+          "mode_open": "खुला",
+          "mode_open_description": "आपकी अकादमी का लिंक रखने वाला कोई भी व्यक्ति खाता बनाकर जुड़ सकता है।",
+          "mode_invite_only": "केवल आमंत्रण से",
+          "mode_invite_only_description": "केवल वे लोग जुड़ सकते हैं जिन्हें आप ईमेल से आमंत्रित करते हैं या जिनके पास आमंत्रण कोड है।",
+          "confirm_open_title": "किसी को भी जुड़ने दें?",
+          "confirm_invite_only_title": "जुड़ना केवल आमंत्रण से करें?",
+          "confirm_open": "खुला करें",
+          "confirm_invite_only": "केवल आमंत्रण से करें",
+          "codes_description": "पूरे समूह के लिए एक लिंक या कोड। इससे जुड़ने वाले हर व्यक्ति को इसकी भूमिका, समूह और कोर्स मिलेंगे।",
+          "codes_need_invite_only": "आमंत्रण कोड केवल आमंत्रण से जुड़ने के लिए हैं। कोड बनाने के लिए ऊपर \"केवल आमंत्रण से\" चुनें।",
+          "edit_fields": "फ़ील्ड संपादित करें",
+          "code_expired": "समाप्त",
+          "code_used_up": "उपयोग पूरा",
+          "code_revoked": "हटाया गया"
+        }
       }
     },
     "assignments": {
@@ -11757,7 +12006,17 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> ने <b>{{target}}</b> के साइन अप उत्तर संपादित किए",
         "members__signup_backfilled": "<b>{{actor}}</b> ने साइन अप उत्तर पीपल डेटा में कॉपी किए",
         "security__support_access__started": "<b>{{actor}}</b> ने <b>{{target}}</b> को इम्पर्सनेट करना शुरू किया",
-        "security__support_access__ended": "<b>{{actor}}</b> ने <b>{{target}}</b> को इम्पर्सनेट करना बंद किया"
+        "security__support_access__ended": "<b>{{actor}}</b> ने <b>{{target}}</b> को इम्पर्सनेट करना बंद किया",
+        "members__invitation__updated": "<b>{{actor}}</b> ने <b>{{target}}</b> का आमंत्रण बदला",
+        "members__invitation__resent": "<b>{{actor}}</b> ने <b>{{target}}</b> का आमंत्रण दोबारा भेजा",
+        "members__invitation__link_copied": "<b>{{actor}}</b> ने <b>{{target}}</b> के लिए नया आमंत्रण लिंक कॉपी किया",
+        "members__invitation__revoked": "<b>{{actor}}</b> ने <b>{{target}}</b> का आमंत्रण वापस लिया",
+        "members__invitation__accepted": "<b>{{actor}}</b> ने अपना आमंत्रण स्वीकार किया",
+        "members__invitation__declined": "<b>{{actor}}</b> ने अपना आमंत्रण अस्वीकार किया",
+        "members__invitation__role_applied": "<b>{{actor}}</b> को अपने आमंत्रण से भूमिका मिली",
+        "members__invite_code__updated": "<b>{{actor}}</b> ने आमंत्रण लिंक बदला",
+        "members__invite_code__used": "<b>{{actor}}</b> आमंत्रण लिंक से जुड़े",
+        "members__invitation__closed": "<b>{{actor}}</b> किसी और तरीके से जुड़े, इसलिए उनका आमंत्रण बंद कर दिया गया"
       },
       "export": {
         "generating": "एक्सपोर्ट तैयार हो रहा है…",
@@ -11921,7 +12180,8 @@
         "customers": "ग्राहक सूची",
         "scim": "SCIM प्रोविज़निंग",
         "scim_token": "SCIM टोकन",
-        "training_rule": "अनिवार्य प्रशिक्षण"
+        "training_rule": "अनिवार्य प्रशिक्षण",
+        "invitation": "आमंत्रण"
       }
     },
     "course_builder": {
@@ -29019,7 +29279,8 @@
       "trial_ending": "ट्रायल खत्म हो रहा है",
       "plan_downgraded": "मुफ़्त प्लान पर आ गए",
       "plan_restored": "प्लान वापस आ गया",
-      "payments_checkout_failing": "चेकआउट विफल हो रहा है"
+      "payments_checkout_failing": "चेकआउट विफल हो रहा है",
+      "invitation_accepted": "आमंत्रण स्वीकार किया गया"
     },
     "copy": {
       "assignment_graded": "ग्रेड मिला: {{assignment}}",
@@ -29081,7 +29342,8 @@
       "trial_ending": "आपका {{plan}} ट्रायल {{days}} दिनों में खत्म होगा",
       "plan_downgraded": "अब आप मुफ़्त प्लान पर हैं। कुछ भी डिलीट नहीं हुआ",
       "plan_restored": "{{plan}} पर फिर से स्वागत है",
-      "payments_checkout_failing": "शिक्षार्थी अभी खरीदारी नहीं कर सकते ({{count}} विफल चेकआउट)"
+      "payments_checkout_failing": "शिक्षार्थी अभी खरीदारी नहीं कर सकते ({{count}} विफल चेकआउट)",
+      "invitation_accepted": "{{actor}} ने आपका आमंत्रण स्वीकार किया"
     },
     "routing": {
       "short": "किसे सूचित किया जाए",
@@ -29237,7 +29499,9 @@
       "verify_title": "अपने आमंत्रण देखने के लिए ईमेल सत्यापित करें",
       "verify_desc": "आमंत्रण किसी ईमेल पते पर भेजे जाते हैं, इसलिए यह पुष्टि करने के बाद दिखते हैं कि पता आपका है।",
       "verify_resend": "सत्यापन ईमेल फिर से भेजें",
-      "verify_sent": "भेज दिया। अपना इनबॉक्स देखें।"
+      "verify_sent": "भेज दिया। अपना इनबॉक्स देखें।",
+      "invited_as": "आपको {{role}} के रूप में आमंत्रित किया",
+      "invited_as_by": "{{name}} ने आपको {{role}} के रूप में आमंत्रित किया"
     },
     "celebrate": {
       "title": "आपका पहला कोर्स लाइव है",

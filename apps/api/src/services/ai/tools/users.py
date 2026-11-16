@@ -12,7 +12,6 @@ organization.
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 from datetime import datetime, timedelta, timezone
@@ -443,7 +442,9 @@ class InviteMembersParams(BaseModel):
 _INVITE_STATUS = {
     "sent": "invited",
     "email_failed": "email_failed",
-    "already_invited": "already_invited",
+    # A pending invitation for the address got a fresh email.
+    "resent": "already_invited",
+    "already_member": "already_member",
     "invalid_email": "invalid_email",
 }
 
@@ -507,7 +508,7 @@ async def _invite_members(ctx: ToolContext, p: InviteMembersParams):
     failed = counts.get("email_failed", 0)
     parts = [f"Sent {sent} of {len(emails)} invitation(s)"]
     if counts.get("already_invited"):
-        parts.append(f"{counts['already_invited']} already had a pending invitation")
+        parts.append(f"{counts['already_invited']} already had a pending invitation, sent again")
     if counts.get("already_member"):
         parts.append(f"{counts['already_member']} already belong to the organization")
     if counts.get("invalid_email"):
@@ -558,7 +559,7 @@ async def _code_item(ctx: ToolContext, code: dict, group_url: str | None) -> dic
         "code_uuid": code.get("invite_code_uuid"),
         "usergroup": group,
         "created_at": _iso(code.get("created_at")),
-        "expires_at": _expires_at(code.get("created_at"), code.get("invite_code_expires")),
+        "expires_at": code.get("expires_at") or _expires_at(code.get("created_at"), code.get("invite_code_expires")),
     }
 
 
@@ -590,28 +591,19 @@ class CreateInviteCodeParams(BaseModel):
     )
 
 
-def _shorten_code_ttl(ctx: ToolContext, code: dict, days: int) -> dict:
-    """The service always issues one-year links; shorten the stored key."""
-    from config.config import get_learnhouse_config
-    from src.services.orgs.invites import _get_redis
-
-    ttl = days * 86400
-    conn = get_learnhouse_config().redis_config.redis_connection_string
-    r = _get_redis(conn)
-    key = f"{code['invite_code_uuid']}:org:{ctx.org.org_uuid}:code:{code['invite_code']}"
-    updated = dict(code, invite_code_expires=ttl)
-    r.set(key, json.dumps(updated), ex=ttl)
-    return updated
-
-
 async def _create_invite_code(ctx: ToolContext, p: CreateInviteCodeParams):
     group = None
     if p.usergroup_uuid:
         group = await refs.load(ctx, "usergroup", p.usergroup_uuid)
+    from src.services.orgs.invitations.codes import InviteCodeCreate
+
     try:
         code = await create_invite_code(
             ctx.request, ctx.org.id, ctx.user, ctx.db_session,
-            usergroup_id=group.id if group else None,
+            settings=InviteCodeCreate(
+                usergroup_ids=[group.id] if group else [],
+                expires_in_days=p.expires_in_days or 365,
+            ),
         )
     except HTTPException as e:
         if e.status_code == 400 and "maximum" in _service_detail(e).lower():
@@ -623,9 +615,6 @@ async def _create_invite_code(ctx: ToolContext, p: CreateInviteCodeParams):
                 ),
             )
         raise
-    if p.expires_in_days and p.expires_in_days < 365:
-        code = _shorten_code_ttl(ctx, code, p.expires_in_days)
-
     base = await refs.web_base(ctx)
     join_link = f"{base}/signup?inviteCode={code['invite_code']}" if base else None
     group_ref = (
@@ -642,7 +631,7 @@ async def _create_invite_code(ctx: ToolContext, p: CreateInviteCodeParams):
         join_link=join_link,
         invite_code=None if join_link else code["invite_code"],
         usergroup=group_ref,
-        expires_at=_expires_at(code.get("created_at"), code.get("invite_code_expires")),
+        expires_at=code.get("expires_at"),
     )
 
 
