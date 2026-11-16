@@ -1,4 +1,5 @@
 'use client'
+import type { TFunction } from 'i18next'
 import React from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
@@ -501,6 +502,6 @@ export function CopyLinkButton({ href, label, size = 'md' }: { href?: string; la
 }
 
 /** An org's display name; orgs created with an empty name still get a label. */
-export function orgDisplayName(org: { id?: number | string; name?: string | null }, t: (k: string, o?: Record<string, unknown>) => string): string {
+export function orgDisplayName(org: { id?: number | string; name?: string | null }, t: TFunction): string {
   return org.name?.trim() || t('admin.orgs.untitled', { id: org.id ?? '' })
 }

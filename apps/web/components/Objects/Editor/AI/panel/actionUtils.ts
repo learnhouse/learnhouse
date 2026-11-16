@@ -1,4 +1,5 @@
 /* Shared pieces of the AI Editor's actions: icons, the message each sends. */
+import type { TFunction } from 'i18next'
 import type React from 'react'
 import {
   Article,
@@ -62,7 +63,7 @@ export interface ActionRun {
 }
 
 export function actionMessage(
-  t: (_k: string, _o?: any) => string,
+  t: TFunction,
   id: QuickActionId,
   opts: { param?: string; hasSelection?: boolean; heading?: string; asCopy?: boolean } = {}
 ): string {

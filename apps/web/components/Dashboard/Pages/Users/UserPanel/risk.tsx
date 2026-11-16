@@ -1,4 +1,5 @@
 'use client'
+import type { TFunction } from 'i18next'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, CaretRight, Exam, Pulse, SealWarning, Warning } from '@phosphor-icons/react'
@@ -27,7 +28,7 @@ const REASON_ICON: Record<string, React.ReactNode> = {
   unfinished_courses: <BookOpen size={14} weight="bold" />,
 }
 
-export function reasonLabel(t: (_k: string, _o?: any) => string, reason: RiskReason): string {
+export function reasonLabel(t: TFunction, reason: RiskReason): string {
   const p = reason.params || {}
   switch (reason.code) {
     case 'inactive':

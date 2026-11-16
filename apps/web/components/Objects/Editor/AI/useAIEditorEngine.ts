@@ -12,6 +12,7 @@
  transactions. Before the first change of a proposal is applied, a version
  named "Before AI: …" is saved, so the version history can always go back.
 */
+import type { TFunction } from 'i18next'
 import React from 'react'
 import type { Editor } from '@tiptap/core'
 import toast from 'react-hot-toast'
@@ -168,7 +169,7 @@ export interface EngineDeps {
   token: string | null
   /** Name a version of the page now (collab checkpoint or autosave flush + name). */
   nameVersion?: (_label: string) => Promise<boolean>
-  t: (_key: string, _opts?: any) => string
+  t: TFunction
 }
 
 export function useAIEditorEngine({ editor, activity, orgId, token, nameVersion, t }: EngineDeps) {

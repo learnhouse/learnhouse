@@ -1,6 +1,7 @@
 'use client'
 // AI credits on the usage page: where the credits went (by day, by feature,
 // by member) and what each AI feature costs (the published price table).
+import type { TFunction } from 'i18next'
 import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -164,7 +165,7 @@ export function AICreditsUsageBreakdown({ orgId }: { orgId: number }) {
   )
 }
 
-export function priceText(t: (_k: string, _o?: any) => string, fp: AIFeaturePrice): string {
+export function priceText(t: TFunction, fp: AIFeaturePrice): string {
   if (fp.absorbed) return t('ai_credits.prices.included', { defaultValue: 'Included' })
   const unit = t(`ai_credits.units.${fp.unit}`, { defaultValue: fp.unit })
   const amount = t('ai_credits.count', { count: fp.credits, defaultValue: '{{count}} credits' })

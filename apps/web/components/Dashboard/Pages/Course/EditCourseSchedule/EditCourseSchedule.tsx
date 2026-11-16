@@ -1,5 +1,6 @@
 'use client'
 
+import type { TFunction } from 'i18next'
 import React, { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -650,7 +651,7 @@ function ScheduleEditor(props: {
 // before anything is sent.
 function scheduleError(
   value: { settings: DripSettings; chapters: ChapterRow[] },
-  t: (key: string, opts?: any) => string
+  t: TFunction
 ): string | null {
   const { settings, chapters } = value
   if (!settings.enabled) return null

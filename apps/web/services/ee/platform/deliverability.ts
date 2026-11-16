@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { saRequest } from './api'
 
 // Client for the console's newsletter deliverability API (EE superadmin,
@@ -140,7 +141,7 @@ export const removeGlobalSuppression = (
 const REASON_CODES = ['review_threshold', 'volume_spike', 'campaign_bounces', 'bounce_rate', 'complaint_rate', 'suspended']
 
 /** The translated pause reason, or the API's text for unknown codes. */
-export function pausedReasonText(t: (key: string, opts?: any) => string, o: Pick<DeliverabilityOrg, 'paused_reason' | 'paused_reason_code' | 'paused_reason_params'>): string {
-  if (o.paused_reason_code && REASON_CODES.includes(o.paused_reason_code)) return t(`newsletter.reasons.${o.paused_reason_code}`, o.paused_reason_params ?? {})
+export function pausedReasonText(t: TFunction, o: Pick<DeliverabilityOrg, 'paused_reason' | 'paused_reason_code' | 'paused_reason_params'>): string {
+  if (o.paused_reason_code && REASON_CODES.includes(o.paused_reason_code)) return String(t(`newsletter.reasons.${o.paused_reason_code}`, o.paused_reason_params ?? {}))
   return o.paused_reason ?? ''
 }

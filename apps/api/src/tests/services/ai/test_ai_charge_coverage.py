@@ -40,7 +40,8 @@ MODEL_CALLS = {
 # (module, enclosing function) -> the charge that pays for it.
 COVERED = {
     # The model layer itself (records usage on the active charge).
-    ("services/ai/llm/client.py", "_agent"): "metered model",
+    ("services/ai/llm/client.py", "generate"): "metered model",
+    ("services/ai/llm/client.py", "generate_stream"): "metered model",
     ("services/ai/llm/embeddings.py", "embed_documents"): "metered embeddings",
     ("services/ai/llm/embeddings.py", "embed_query"): "metered embeddings",
     ("services/ai/image/generator.py", "generate_image"): "records usage (image_generation)",

@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import UserAvatar from '@components/Objects/UserAvatar';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
@@ -517,7 +518,7 @@ function SubmissionsList({
 // badge, so a teacher would open Evaluate on a student who had submitted
 // nothing and grading it would zero their in-flight retry. Unrecognised
 // statuses degrade to a neutral chip that shows the raw value.
-export function submissionStatus(t: (key: string, opts?: any) => string, value: string): { label: string; tone: ChipTone; icon: React.ReactNode } {
+export function submissionStatus(t: TFunction, value: string): { label: string; tone: ChipTone; icon: React.ReactNode } {
     const config: Record<string, { label: string; tone: ChipTone; icon: React.ReactNode }> = {
         LATE: { label: t('dashboard.assignments.submissions.status.late'), tone: 'rose', icon: <Clock size={12} /> },
         SUBMITTED: { label: t('dashboard.assignments.submissions.status.submitted'), tone: 'amber', icon: <PaperPlaneRight size={12} /> },

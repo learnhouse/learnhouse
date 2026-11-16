@@ -1,4 +1,5 @@
 'use client'
+import type { TFunction } from 'i18next'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -139,7 +140,7 @@ const EVENT_LABELS: Record<string, string> = {
   certificate_claimed: 'Earned a certificate',
 }
 
-export function eventLabel(t: (_k: string, _o?: any) => string, type: string): string {
+export function eventLabel(t: TFunction, type: string): string {
   return t(`${P}.events.${type}`, { defaultValue: EVENT_LABELS[type] ?? type.replace(/_/g, ' ') })
 }
 

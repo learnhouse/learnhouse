@@ -1,6 +1,7 @@
+import type { TFunction } from 'i18next'
 import type { AIEditorHunk } from '@services/ai/aiEditor'
 
-type T = (_key: string, _opts?: any) => string
+type T = TFunction
 
 const BLOCK_KEYS: Record<string, string> = {
   paragraph: 'paragraph',

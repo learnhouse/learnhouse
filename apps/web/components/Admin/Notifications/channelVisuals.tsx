@@ -1,4 +1,5 @@
 'use client'
+import type { TFunction } from 'i18next'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bell, DiscordLogo, EnvelopeSimple, NotionLogo, SlackLogo, WebhooksLogo } from '@phosphor-icons/react'
@@ -43,7 +44,7 @@ export function DeliveryStatusPill({ status }: { status: string }) {
 }
 
 /** The masked config as a short, readable line ("https://…/•••• abcd"). */
-export function maskedSummary(kind: string, config: Record<string, unknown> | null | undefined, t: (_k: string, _o?: Record<string, unknown>) => string): string {
+export function maskedSummary(kind: string, config: Record<string, unknown> | null | undefined, t: TFunction): string {
   const c = config ?? {}
   if (kind === 'notion') return [c.database_id ? String(c.database_id) : '', c.token ? String(c.token) : ''].filter(Boolean).join(' · ')
   if (kind === 'email') {

@@ -208,7 +208,7 @@ export default function ThemeStudio({ value, onChange, onReplace, orgName, logoU
   const isDefault = themeStatesEqual(value, DEFAULT_THEME_STATE)
   const seg = <K extends keyof ThemeOptions>(key: K, keys: ThemeOptions[K][], prefix: string) => ({
     value: th[key] as ThemeOptions[K] & string,
-    options: keys.map((k) => ({ key: k as ThemeOptions[K] & string, label: t(`${prefix}.${k || 'auto'}`) })),
+    options: keys.map((k) => ({ key: k as ThemeOptions[K] & string, label: t(`${prefix}.${k || 'auto'}` as string) })),
     onChange: (v: string) => onChange({ theme: { [key]: v } as Partial<ThemeOptions> }),
   })
   const pairings = FONT_PAIRINGS.filter((p) => FEATURED_PAIRINGS.includes(p.key))

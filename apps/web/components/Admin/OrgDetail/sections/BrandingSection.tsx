@@ -1,4 +1,5 @@
 'use client'
+import type { TFunction } from 'i18next'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowSquareOut, CloudArrowUp, ImageSquare, Images, PaintBrush, Plus, SignIn, Trash } from '@phosphor-icons/react'
@@ -29,7 +30,7 @@ const BACKDROP: Record<Backdrop, React.CSSProperties> = {
 const BOX: Record<ImageShape, string> = { wide: 'h-36', square: 'h-36', icon: 'h-36', banner: 'h-36' }
 
 // Dashboard copy already names the three logos; the rest are console strings.
-function slotText(t: (_k: string, _o?: Record<string, unknown>) => string, slot: OrgImageSlot) {
+function slotText(t: TFunction, slot: OrgImageSlot) {
   switch (slot) {
     case 'logo':
       return { title: t('dashboard.organization.branding.logos.wide.title'), where: t('admin.org_cfg.where.logo') }
@@ -323,10 +324,10 @@ function Choice<T extends string>({ value, options, onChange, disabled, label, p
     <div className="min-w-0">
       <p className="mb-1.5 text-xs font-semibold text-neutral-700">{label}</p>
       {disabled ? (
-        <span className="text-sm text-neutral-700">{t(`${prefix}.${value}`)}</span>
+        <span className="text-sm text-neutral-700">{t(`${prefix}.${value}` as string)}</span>
       ) : (
         <div className="overflow-x-auto -mx-1 px-1">
-          <SegmentedControl value={value} onChange={onChange} ariaLabel={label} options={options.map((o) => ({ key: o, label: t(`${prefix}.${o}`) }))} />
+          <SegmentedControl value={value} onChange={onChange} ariaLabel={label} options={options.map((o) => ({ key: o, label: t(`${prefix}.${o}` as string) }))} />
         </div>
       )}
     </div>

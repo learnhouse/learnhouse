@@ -1,4 +1,5 @@
 'use client'
+import type { TFunction } from 'i18next'
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
@@ -70,6 +71,6 @@ export function AuditSentence({ entry }: { entry: AuditEntry }) {
 }
 
 /** "usergroup" → "group", through `dashboard.audit.types.*`. */
-export function targetTypeLabel(t: (_key: string, _options?: Record<string, unknown>) => string, type: string): string {
+export function targetTypeLabel(t: TFunction, type: string): string {
   return t(`${KEY_PREFIX}types.${type}`, { defaultValue: TARGET_TYPES[type] ?? type.replace(/_/g, ' ') })
 }

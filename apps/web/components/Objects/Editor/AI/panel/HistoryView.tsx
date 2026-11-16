@@ -5,13 +5,14 @@
  when a change was edited since, the version saved before it ("Before AI: …")
  is one click away in the version history.
 */
+import type { TFunction } from 'i18next'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowCounterClockwise, ClockCounterClockwise, CircleNotch } from '@phosphor-icons/react'
 import type { AIEditorProposal } from '@services/ai/aiEditor'
 import { cn } from '@/lib/utils'
 
-function relative(ts: number | null | undefined, t: (_k: string, _o?: any) => string): string {
+function relative(ts: number | null | undefined, t: TFunction): string {
   if (!ts) return ''
   const ms = ts < 1e12 ? ts * 1000 : ts
   const diff = Math.max(0, Date.now() - ms)

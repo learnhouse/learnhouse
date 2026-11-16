@@ -1,4 +1,5 @@
 'use client'
+import type { TFunction } from 'i18next'
 import React from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
@@ -90,7 +91,7 @@ const VERBS = new Set(['created', 'updated', 'deleted', 'published', 'unpublishe
 
 export function eventTitle(
   e: { title?: string | null; summary?: string | null; action: string; target_name?: string | null; target_id?: string | null },
-  t: (k: string, o?: Record<string, unknown>) => string
+  t: TFunction
 ): string {
   // The API's human title wins; the phrase builder below is the fallback.
   if (e.title) return e.target_name && !e.title.includes(e.target_name) ? `${e.title} · ${e.target_name}` : e.title

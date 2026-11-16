@@ -1,4 +1,5 @@
 'use client'
+import type { TFunction } from 'i18next'
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -100,7 +101,7 @@ function toDraft(a?: Automation | null): Draft {
   }
 }
 
-function validate(d: Draft, t: (_k: string, _o?: Record<string, unknown>) => string, cap = 200): string | null {
+function validate(d: Draft, t: TFunction, cap = 200): string | null {
   if (!d.name.trim()) return t('admin.automations.validation.name')
   if (!d.actions.length) return t('admin.automations.validation.actions')
   if (d.trigger === 'event' && !d.event_types.length) return t('admin.automations.validation.events')
@@ -344,7 +345,7 @@ export default function AutomationEditor({ uuid }: { uuid?: string }) {
   })
 
   const trySave = () => {
-    const problem = validate(draft, (k, o) => t(k, o), cap)
+    const problem = validate(draft, t, cap)
     if (problem) {
       // Empty condition values are also flagged on the row itself.
       const empty = draft.conditions.flatMap((c, i) =>
