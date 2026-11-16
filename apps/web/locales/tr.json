@@ -13458,7 +13458,10 @@
     },
     "loader": {
       "failed": "Düzenleyici yüklenemedi. Lütfen sayfayı yenileyin.",
-      "refresh": "Yenile"
+      "refresh": "Yenile",
+      "signed_out": "Oturumunuz geri yüklenemedi. Bu etkinliği düzenlemek için yeniden giriş yapın.",
+      "stalled": "Düzenleyicinin yüklenmesi çok uzun sürüyor.",
+      "sign_in": "Giriş yap"
     },
     "activity_switcher": {
       "scroll_left": "Sola kaydır",
@@ -14136,7 +14139,10 @@
       "on": "Bu etkinlik için açık",
       "off": "Bu etkinlik için kapalı",
       "turned_off_toast": "Canlı düzenleme bir yönetici tarafından kapatıldı; değişiklikler artık elle kaydedilir",
-      "save_first": "Canlı düzenlemeyi açmadan önce değişikliklerinizi kaydedin."
+      "save_first": "Canlı düzenlemeyi açmadan önce değişikliklerinizi kaydedin.",
+      "reconnecting": "Canlı düzenlemeye yeniden bağlanılıyor… Çalışmaya devam edebilirsiniz; değişiklikler otomatik kaydedilir.",
+      "unavailable_manual": "Canlı düzenleme kullanılamıyor, değişiklikler elle kaydedilir.",
+      "forbidden": "Bu etkinliği düzenleyemezsiniz."
     },
     "save_shortcut": "Kaydet (⌘S)",
     "ai_editor_v2": {

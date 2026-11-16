@@ -13680,7 +13680,10 @@
     },
     "loader": {
       "failed": "Falha ao carregar o editor. Atualize a página.",
-      "refresh": "Atualizar"
+      "refresh": "Atualizar",
+      "signed_out": "Não foi possível restaurar sua sessão. Entre novamente para editar esta atividade.",
+      "stalled": "O editor está demorando muito para carregar.",
+      "sign_in": "Entrar"
     },
     "activity_switcher": {
       "scroll_left": "Rolar para a esquerda",
@@ -14375,7 +14378,10 @@
       "on": "Ativado para esta atividade",
       "off": "Desativado para esta atividade",
       "turned_off_toast": "A edição ao vivo foi desativada por um administrador; as alterações agora são salvas manualmente",
-      "save_first": "Salve suas alterações antes de ativar a edição ao vivo."
+      "save_first": "Salve suas alterações antes de ativar a edição ao vivo.",
+      "reconnecting": "Reconectando à edição ao vivo… Você pode continuar trabalhando; as alterações são salvas automaticamente.",
+      "unavailable_manual": "Edição ao vivo indisponível, as alterações são salvas manualmente.",
+      "forbidden": "Você não pode editar esta atividade."
     },
     "save_shortcut": "Salvar (⌘S)",
     "ai_editor_v2": {

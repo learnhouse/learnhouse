@@ -13932,7 +13932,10 @@
     },
     "loader": {
       "failed": "Editor sa nepodarilo načítať. Obnovte stránku.",
-      "refresh": "Obnoviť"
+      "refresh": "Obnoviť",
+      "signed_out": "Reláciu sa nepodarilo obnoviť. Ak chcete upravovať túto aktivitu, znova sa prihláste.",
+      "stalled": "Načítanie editora trvá príliš dlho.",
+      "sign_in": "Prihlásiť sa"
     },
     "activity_switcher": {
       "scroll_left": "Posunúť doľava",
@@ -14644,7 +14647,10 @@
       "on": "Zapnuté pre túto aktivitu",
       "off": "Vypnuté pre túto aktivitu",
       "turned_off_toast": "Spoločné úpravy vypol správca; zmeny sa teraz ukladajú ručne",
-      "save_first": "Pred zapnutím spoločných úprav uložte zmeny."
+      "save_first": "Pred zapnutím spoločných úprav uložte zmeny.",
+      "reconnecting": "Znovu sa pripája k spoločným úpravám… Môžete pokračovať v práci; zmeny sa ukladajú automaticky.",
+      "unavailable_manual": "Spoločné úpravy nie sú dostupné, zmeny sa ukladajú ručne.",
+      "forbidden": "Túto aktivitu nemôžete upravovať."
     },
     "save_shortcut": "Uložiť (⌘S)",
     "ai_editor_v2": {

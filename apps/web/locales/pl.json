@@ -13932,7 +13932,10 @@
     },
     "loader": {
       "failed": "Nie udało się wczytać edytora. Odśwież stronę.",
-      "refresh": "Odśwież"
+      "refresh": "Odśwież",
+      "signed_out": "Nie udało się przywrócić sesji. Zaloguj się ponownie, aby edytować tę aktywność.",
+      "stalled": "Wczytywanie edytora trwa zbyt długo.",
+      "sign_in": "Zaloguj się"
     },
     "activity_switcher": {
       "scroll_left": "Przewiń w lewo",
@@ -14644,7 +14647,10 @@
       "on": "Włączone dla tej aktywności",
       "off": "Wyłączone dla tej aktywności",
       "turned_off_toast": "Edycja na żywo została wyłączona przez administratora; zmiany są teraz zapisywane ręcznie",
-      "save_first": "Zapisz zmiany przed włączeniem edycji na żywo."
+      "save_first": "Zapisz zmiany przed włączeniem edycji na żywo.",
+      "reconnecting": "Ponowne łączenie z edycją na żywo… Możesz dalej pracować; zmiany zapisują się automatycznie.",
+      "unavailable_manual": "Edycja na żywo niedostępna, zmiany są zapisywane ręcznie.",
+      "forbidden": "Nie możesz edytować tej aktywności."
     },
     "save_shortcut": "Zapisz (⌘S)",
     "ai_editor_v2": {

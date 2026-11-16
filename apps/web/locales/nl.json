@@ -13458,7 +13458,10 @@
     },
     "loader": {
       "failed": "Laden van de editor mislukt. Vernieuw de pagina.",
-      "refresh": "Vernieuwen"
+      "refresh": "Vernieuwen",
+      "signed_out": "Je sessie kon niet worden hersteld. Meld je opnieuw aan om deze activiteit te bewerken.",
+      "stalled": "Het laden van de editor duurt te lang.",
+      "sign_in": "Aanmelden"
     },
     "activity_switcher": {
       "scroll_left": "Naar links scrollen",
@@ -14136,7 +14139,10 @@
       "on": "Aan voor deze activiteit",
       "off": "Uit voor deze activiteit",
       "turned_off_toast": "Live bewerken is uitgeschakeld door een beheerder; wijzigingen worden nu handmatig opgeslagen",
-      "save_first": "Sla je wijzigingen op voordat je live bewerken inschakelt."
+      "save_first": "Sla je wijzigingen op voordat je live bewerken inschakelt.",
+      "reconnecting": "Opnieuw verbinden met live bewerken… Je kunt doorwerken; wijzigingen worden automatisch opgeslagen.",
+      "unavailable_manual": "Live bewerken niet beschikbaar, wijzigingen worden handmatig opgeslagen.",
+      "forbidden": "Je kunt deze activiteit niet bewerken."
     },
     "save_shortcut": "Opslaan (⌘S)",
     "ai_editor_v2": {
