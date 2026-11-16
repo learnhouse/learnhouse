@@ -321,7 +321,8 @@ export default function MobileAppButton({
               }}
               aria-haspopup="menu"
               aria-expanded={menu}
-              title={t('mobile_app.qr_actions', 'Save or copy the QR code')}
+              // No native tooltip: it covered the code. The hint stays for screen readers.
+              aria-description={t('mobile_app.qr_actions', 'Save or copy the QR code')}
               className={`absolute left-1/2 top-1/2 w-[336px] h-[336px] -translate-x-1/2 -translate-y-1/2 rounded-[30px] origin-center cursor-pointer [perspective:1100px] transition-[scale] duration-200 ease-out outline-none focus-visible:ring-4 focus-visible:ring-neutral-900 ${menu ? 'scale-100 z-10' : 'scale-[0.524] group-hover:scale-100 group-hover:z-10'}`}
               data-testid="mobile-app-qr"
             >
