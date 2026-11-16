@@ -241,14 +241,14 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                       key={src}
                       src={src}
                       title={activity.name}
-                      preload="none"
+                      preload="auto"
                       posterImageUrl={courseThumb}
                       ambient
                       prevItem={prevItem}
                       nextItem={nextItem}
                       isHls={isHls}
                       fallbackSrc={fallbackSrc}
-                      details={details}
+                      details={{ ...details, autoplay: true }}
                       thumbnails={thumbnails}
                       captions={captions}
                       chapters={chapters}

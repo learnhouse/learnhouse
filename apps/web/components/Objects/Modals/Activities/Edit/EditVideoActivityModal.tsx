@@ -54,7 +54,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
   const [videoDetails, setVideoDetails] = useState<VideoDetails>({
     startTime: 0,
     endTime: null,
-    autoplay: false,
+    autoplay: true,
     muted: false,
   })
   const [isLoading, setIsLoading] = useState(true)
@@ -74,7 +74,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
         setVideoDetails({
           startTime: data.details.startTime ?? 0,
           endTime: data.details.endTime ?? null,
-          autoplay: data.details.autoplay ?? false,
+          autoplay: data.details.autoplay ?? true,
           muted: data.details.muted ?? false,
         })
       }
