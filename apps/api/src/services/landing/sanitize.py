@@ -169,7 +169,7 @@ _CSS_BAD = [
     re.compile(r"@charset[^;]*;?", re.I),
     re.compile(r"@namespace[^;]*;?", re.I),
     re.compile(r"</?\s*style", re.I),
-    re.compile(r"<!--|-->", re.I),
+    re.compile(r"<!--|--!?>", re.I),
     # CSS never needs "<": dropping it keeps markup out of the stylesheet.
     re.compile(r"<"),
 ]
