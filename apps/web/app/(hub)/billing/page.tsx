@@ -279,7 +279,7 @@ function BillingClient() {
   const showLoader = isLoading || (isAuthenticated && !orgsError && (orgsLoading || !org))
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
+    <div className="fixed inset-0 z-[100] bg-white overflow-y-auto" data-billing-scroll>
       <Toaster toastOptions={{ className: 'lh-toast' }} />
       <div className="relative min-h-screen">
         {/* Blueprint grid, fades in from bottom */}
@@ -298,8 +298,8 @@ function BillingClient() {
           }}
         />
 
-        <div className="relative z-10 min-h-screen px-4 py-8">
-          <div className="w-full max-w-4xl mx-auto">
+        <div className="relative z-10 min-h-screen px-4 sm:px-8 lg:px-12 py-8">
+          <div className={`w-full mx-auto ${view === 'switch' ? 'max-w-7xl' : 'max-w-4xl'}`}>
             {/* Top bar */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3 min-w-0">
@@ -394,6 +394,9 @@ function BillingClient() {
                   org={org}
                   currentPlanId={currentPlanId}
                   hasExistingSub={hasExistingSub}
+                  currentBilling={subscription?.billing ?? null}
+                  currentPeriodEnd={subscription?.currentPeriodEnd ?? null}
+                  downgradePreview={overview?.downgrade_preview ?? null}
                   priceOverrides={prices?.plans}
                   pricesLoading={isPricesLoading}
                   planLimits={prices?.limits}

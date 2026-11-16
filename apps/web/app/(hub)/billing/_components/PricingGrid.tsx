@@ -1,257 +1,217 @@
 'use client'
-import React from 'react'
+// The plan cards of the upgrade flow, laid out like the marketing pricing page:
+// Standard, Pro, Business and a dark Enterprise card across the full width,
+// with Free in a slim strip underneath (where marketing puts self-hosting).
+// Each card: name badge, price, how it's billed, a one-line pitch, a short
+// highlight list and one action (rendered by the caller).
+import React, { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check } from 'lucide-react'
+import { Check, Cube } from '@phosphor-icons/react'
+import { Skeleton } from '@/design'
+import { findPlan, calcPrice, applyPlanLimits, type Plan, type PriceOverrides, type PlanLimits } from '../_lib/plans'
+import { planName, featureLabel } from '../../_billing/planText'
 import {
-  GENERAL_PLANS,
-  ENTERPRISE_PLAN,
-  ANNUAL_DISCOUNT,
-  PERSONAL_ANNUAL_DISCOUNT,
-  applyPlanLimits,
-  type Plan,
-  type PriceOverrides,
-  type PlanLimits,
-} from '../_lib/plans'
-import { planName, planNameByLabel, planTagline, featureLabel, featureBadge } from '../../_billing/planText'
+  ACCENT,
+  CARD_PLANS,
+  PlanBadge,
+  annualTotal,
+  formatPlanMoney,
+  patternStyle,
+  planHighlights,
+  planTaglineV2,
+  type AccentKey,
+  type CardPlanId,
+} from './planDisplay'
 
 interface PricingGridProps {
-  /** @deprecated Personal plans are no longer sold; only the general grid renders. */
-  planType?: 'general' | 'personal'
-  /** @deprecated See planType. */
-  onPlanTypeChange?: (_t: 'general' | 'personal') => void
   annual: boolean
-  onAnnualChange: (_v: boolean) => void
   priceOverrides?: PriceOverrides
   pricesLoading?: boolean
   planLimits?: PlanLimits
-  showEnterprise?: boolean
-  hideFreePlan?: boolean
-  /** Per-card CTA renderer. Receives the (limit-applied) plan + computed price. */
+  currentPlanId: string
+  /** Outline and scroll to this card (an Enterprise deep link). */
+  highlightPlanId?: string | null
+  /** Label for the current plan's flag ("Current plan", or the trial). */
+  currentLabel?: string
+  /** The one action on each card (and on the Free strip). */
   renderCta: (_plan: Plan, _price: number) => React.ReactNode
 }
 
 export default function PricingGrid({
   annual,
-  onAnnualChange,
   priceOverrides,
   pricesLoading = false,
   planLimits,
-  showEnterprise = false,
-  hideFreePlan = false,
+  currentPlanId,
+  highlightPlanId,
+  currentLabel,
   renderCta,
 }: PricingGridProps) {
-  const { t } = useTranslation()
-  const detectedCurrency = Object.values(priceOverrides ?? {})[0]?.currency
+  const { t, i18n } = useTranslation()
+  const lng = i18n.language
+  const billing = annual ? 'annual' : 'monthly'
+  const highlightRef = useRef<HTMLDivElement>(null)
 
-  function getCurrencySymbol(planId: string) {
-    const c = priceOverrides?.[planId]?.currency ?? detectedCurrency
-    return c === 'eur' ? '€' : '$'
-  }
+  useEffect(() => {
+    if (highlightPlanId) highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [highlightPlanId])
 
-  function calcPrice(planId: string, monthlyPrice: number, isPersonal = false) {
-    if (monthlyPrice === 0) return 0
-    const override = priceOverrides?.[planId]
-    if (override) {
-      if (annual && override.annualPerMonth > 0) return Math.round(override.annualPerMonth)
-      if (!annual && override.monthly > 0) return Math.round(override.monthly)
-    }
-    const discount = isPersonal ? PERSONAL_ANNUAL_DISCOUNT : ANNUAL_DISCOUNT
-    return annual ? Math.round(monthlyPrice * (1 - discount)) : monthlyPrice
-  }
+  const flagCurrent = currentLabel ?? t('billing.flow.current_plan', { defaultValue: 'Current plan' })
 
-  const generalRaw = GENERAL_PLANS.map((p) => applyPlanLimits(p, planLimits))
-  const generalPlans = hideFreePlan
-    ? generalRaw
-        .filter((p) => p.id !== 'free')
-        .map((p) => (p.inheritsFrom === 'Free' ? { ...p, inheritsFrom: undefined, inheritsBadge: undefined } : p))
-    : generalRaw
+  function card(id: CardPlanId) {
+    const raw = findPlan(id)
+    if (!raw) return null
+    const plan = applyPlanLimits(raw, planLimits)
+    const dark = id === 'enterprise'
+    const accent: AccentKey = id
+    const a = ACCENT[accent]
+    const isCurrent = id === currentPlanId
+    const isHighlighted = id === highlightPlanId
+    const price = dark ? 0 : calcPrice(plan.monthlyPrice, billing, id, priceOverrides)
+    const muted = dark ? 'text-white/40' : 'text-black/40'
+    const inherits: Record<string, CardPlanId> = { pro: 'standard', business: 'pro', enterprise: 'business' }
+    const parent = inherits[id]
+    const flag = isCurrent
+      ? { label: flagCurrent, className: dark ? 'bg-white text-black' : 'bg-neutral-900 text-white' }
+      : id === 'pro'
+        ? { label: t('billing.pricing.popular', { defaultValue: 'Popular' }), className: 'bg-purple-600 text-white' }
+        : null
 
-  function renderPlanCard(plan: Plan, isPersonal: boolean) {
-    const price = calcPrice(plan.id, plan.monthlyPrice, isPersonal)
-    const isFree = plan.monthlyPrice === 0
     return (
       <div
-        key={plan.id}
-        className="relative flex flex-col rounded-2xl p-7 bg-white nice-shadow overflow-hidden"
+        key={id}
+        ref={isHighlighted ? highlightRef : undefined}
+        data-testid={`plan-card-${id}`}
+        className={`relative flex flex-col rounded-2xl p-6 xl:p-7 overflow-hidden min-w-0 ${
+          dark ? 'bg-neutral-950' : 'bg-white nice-shadow'
+        } ${isCurrent || isHighlighted ? `ring-2 ${a.ring}` : ''}`}
       >
-        <div
-          className="absolute top-0 start-0 w-[200px] h-[200px] pointer-events-none"
-          style={{ background: `radial-gradient(ellipse at top left, ${plan.topGlow} 0%, transparent 70%)` }}
-        />
-        <div
-          className="absolute top-0 start-0 bottom-0 w-[140px] pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(circle, ${plan.patternColor} 1px, transparent 1px)`,
-            backgroundSize: '16px 16px',
-            maskImage: 'linear-gradient(to right, black, transparent)',
-            WebkitMaskImage: 'linear-gradient(to right, black, transparent)',
-          }}
-        />
-
-        {plan.popular && (
-          <span
-            className={`absolute top-4 end-4 text-[10px] font-bold px-2 py-0.5 rounded-md text-white ${
-              isPersonal ? 'bg-amber-500' : plan.id === 'pro' ? 'bg-purple-600' : plan.id === 'business' ? 'bg-teal-700' : 'bg-blue-600'
-            }`}
-          >
-            {isPersonal ? t('billing.pricing.best_value') : t('billing.pricing.popular')}
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[150px] pointer-events-none" style={patternStyle(a.pat)} />
+        {flag && (
+          <span className={`absolute top-6 end-6 xl:top-7 xl:end-7 z-10 text-[10px] font-bold px-2.5 py-1 rounded-full leading-none ${flag.className}`}>
+            {flag.label}
           </span>
         )}
 
-        <span
-          className={`inline-flex w-fit px-2 py-1 text-xs font-semibold rounded-md border ${plan.badge} relative z-10`}
-        >
-          {planName(t, plan)}
-        </span>
+        <div className="relative z-10 flex flex-col flex-1">
+          <PlanBadge accent={accent}>{planName(t, plan)}</PlanBadge>
 
-        <div className="mt-4 relative z-10">
-          <div className="flex items-baseline gap-1">
-            {pricesLoading && !isFree ? (
-              <span className="inline-block h-[42px] w-[100px] rounded-lg bg-black/[0.06] animate-pulse" />
+          <div className="mt-6 flex items-baseline gap-1.5 min-h-[44px]">
+            {dark ? (
+              <span className="text-[40px] xl:text-[44px] font-black leading-none tracking-tight text-white">
+                {t('billing.flow.custom_price', { defaultValue: 'Custom' })}
+              </span>
+            ) : pricesLoading ? (
+              <Skeleton className="h-[44px] w-[120px]" />
             ) : (
               <>
-                <span className="text-[42px] font-black leading-none text-black">
-                  {getCurrencySymbol(plan.id)}
-                  {price}
+                <span className="text-[40px] xl:text-[44px] font-black leading-none tracking-tight tabular-nums text-black">
+                  {formatPlanMoney(price, id, priceOverrides, lng)}
                 </span>
-                {!isFree && <span className="text-sm font-medium text-black/35">{t('billing.pricing.per_month')}</span>}
+                <span className={`text-sm font-medium ${muted}`}>{t('billing.pricing.per_month', { defaultValue: '/mo' })}</span>
               </>
             )}
           </div>
-        </div>
+          <p className={`mt-2 text-[13px] font-medium ${muted}`}>
+            {dark
+              ? t('billing.flow.annual_contract', { defaultValue: 'Annual contract' })
+              : pricesLoading
+                ? ' '
+                : annual
+                  ? t('billing.flow.billed_yearly', { amount: formatPlanMoney(annualTotal(id, price, priceOverrides), id, priceOverrides, lng) })
+                  : t('billing.flow.billed_monthly', { defaultValue: 'Billed monthly' })}
+          </p>
+          <p className={`mt-4 text-[14px] font-medium leading-snug min-h-[2.75em] ${dark ? 'text-white/60' : 'text-black/55'}`}>
+            {planTaglineV2(t, id, plan.tagline)}
+          </p>
 
-        <p className="mt-2 text-sm font-medium leading-snug text-black/45 relative z-10">{planTagline(t, plan)}</p>
+          <div className={`mt-5 mb-6 h-px ${dark ? 'bg-white/10' : 'bg-black/[0.06]'}`} />
 
-        <div className="my-6 h-px bg-black/[0.06] relative z-10" />
-
-        <div className="flex-1 relative z-10">
-          {plan.inheritsFrom && (
-            <p className="text-xs font-semibold mb-3 text-black/25 flex items-center gap-1.5">
-              {t('billing.pricing.everything_in')}{' '}
-              <span className={`inline-flex px-1 py-px text-[9px] font-semibold rounded border ${plan.inheritsBadge}`}>
-                {planNameByLabel(t, plan.inheritsFrom)}
-              </span>{' '}
-              {t('billing.pricing.plus')}
-            </p>
-          )}
-          <ul className="space-y-2.5">
-            {plan.features.map((f) => (
-              <li key={f.label} className="flex items-start gap-2.5">
-                <Check size={15} className={`mt-0.5 flex-shrink-0 ${plan.accentColor} opacity-60`} />
-                <span className="text-[13.5px] font-medium leading-snug text-black/60">
-                  {featureLabel(t, f)}
-                  {f.badge && (
-                    <span className="ms-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-black/35 border border-black/[0.06] rounded-md">
-                      {featureBadge(t, f)}
+          <div className="flex-1">
+            {parent && (
+              <p className={`mb-4 text-[12px] font-semibold flex items-center gap-1.5 flex-wrap ${dark ? 'text-white/30' : 'text-black/30'}`}>
+                {t('billing.pricing.everything_in', { defaultValue: 'Everything in' })}{' '}
+                <PlanBadge accent={parent} mini>
+                  {planName(t, findPlan(parent)!)}
+                </PlanBadge>{' '}
+                {t('billing.pricing.plus', { defaultValue: 'plus:' })}
+              </p>
+            )}
+            <ul className="space-y-3">
+              {planHighlights(t, id, planLimits).map((h) => {
+                const I = h.icon
+                return (
+                  <li key={h.label} className="flex items-start gap-2.5">
+                    <I size={17} weight="duotone" className={`mt-[2px] flex-shrink-0 ${a.icon}`} />
+                    <span className={`text-[13.5px] font-medium leading-[1.45] ${dark ? 'text-white/75' : 'text-black/65'}`}>
+                      {h.label}
+                      {h.chip && (
+                        <span
+                          className={`ms-1.5 inline-flex px-1.5 py-px text-[10px] font-medium rounded-md border whitespace-nowrap align-[1px] ${
+                            dark ? 'text-white/40 border-white/10' : 'text-black/40 border-black/[0.07]'
+                          }`}
+                        >
+                          {h.chip}
+                        </span>
+                      )}
                     </span>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
 
-        <div className="mt-8 relative z-10">{renderCta(plan, price)}</div>
+          <div className="mt-8">{renderCta(plan, price)}</div>
+        </div>
       </div>
     )
   }
 
-  const annualSavePct = (() => {
-    const refPlan = 'standard'
-    const override = priceOverrides?.[refPlan]
-    if (override && override.monthly > 0 && override.annualPerMonth > 0) {
-      return Math.round((1 - override.annualPerMonth / override.monthly) * 100)
-    }
-    return Math.round(ANNUAL_DISCOUNT * 100)
-  })()
+  const free = findPlan('free')
+  const freePlan = free ? applyPlanLimits(free, planLimits) : null
+  const freeIsCurrent = currentPlanId === 'free'
 
   return (
     <div>
-      {/* Toggles */}
-      <div className="flex flex-row items-center justify-end gap-4 mb-10 flex-wrap">
-        <div className="inline-flex items-center gap-1 bg-neutral-100 rounded-full p-1">
-          <button
-            onClick={() => onAnnualChange(false)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-              !annual ? 'bg-white text-black shadow-sm' : 'text-black/40 hover:text-black/60'
-            }`}
-          >
-            {t('billing.pricing.monthly')}
-          </button>
-          <button
-            onClick={() => onAnnualChange(true)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-              annual ? 'bg-white text-black shadow-sm' : 'text-black/40 hover:text-black/60'
-            }`}
-          >
-            {t('billing.pricing.annual')}
-            {annualSavePct > 0 && (
-              <span className="ms-1.5 text-[10px] font-bold text-white bg-emerald-500 px-1.5 py-0.5 rounded-full">
-                {t('billing.pricing.save_pct', { pct: annualSavePct })}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">{CARD_PLANS.map(card)}</div>
 
-      {/* General cards */}
-      {(
-        <>
-          <div
-            className={`grid grid-cols-1 gap-5 ${
-              generalPlans.length <= 2 ? 'md:grid-cols-2' : generalPlans.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 xl:grid-cols-4'
-            }`}
-          >
-            {generalPlans.map((p) => renderPlanCard(p, false))}
-          </div>
-
-          {showEnterprise && (
-            <div className="mt-5">
-              <div className="rounded-2xl overflow-hidden bg-neutral-950 relative">
-                <div
-                  className="absolute inset-0 opacity-[0.06] pointer-events-none"
-                  style={{
-                    backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
-                    backgroundSize: '40px 40px',
-                  }}
-                />
-                <div className="relative z-10 p-10 md:p-14">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 lg:gap-16">
-                    <div className="lg:max-w-sm">
-                      <span className="inline-flex w-fit px-2 py-1 text-xs font-semibold rounded-md border bg-gradient-to-br from-amber-900/40 to-amber-800/30 text-amber-300 border-amber-700/30">
-                        {t('billing.pricing.enterprise')}
-                      </span>
-                      <h2 className="mt-3 text-white font-black text-[28px] md:text-[36px] leading-[1.08] tracking-tight">
-                        {t('billing.pricing.built_for_scale')}
-                      </h2>
-                      <p className="mt-3 text-white/40 text-base leading-relaxed font-medium">
-                        {planTagline(t, ENTERPRISE_PLAN)}
-                      </p>
-                      <a
-                        href="https://learnhouse.app/contact?subject=business"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block mt-6 px-5 py-2.5 text-[14px] font-bold bg-white text-black rounded-lg hover:bg-white/90 transition-colors"
-                      >
-                        {t('billing.pricing.talk_to_us')}
-                      </a>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 lg:pt-1">
-                      {ENTERPRISE_PLAN.features.map((f) => (
-                        <div key={f.label} className="flex items-center gap-3">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/[0.07] flex items-center justify-center">
-                            <Check size={16} className="text-white/60" />
-                          </div>
-                          <span className="text-white/70 text-[14px] font-medium">{featureLabel(t, f)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+      {freePlan && (
+        <div
+          data-testid="plan-card-free"
+          className={`mt-4 rounded-2xl bg-white nice-shadow px-6 xl:px-7 py-5 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-10 ${
+            freeIsCurrent ? `ring-2 ${ACCENT.free.ring}` : ''
+          }`}
+        >
+          <div className="flex items-start gap-4 min-w-0 flex-1">
+            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-neutral-50 ring-1 ring-black/[0.06] grid place-items-center">
+              <Cube size={22} weight="duotone" className="text-black/60" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <PlanBadge accent="free">{planName(t, freePlan)}</PlanBadge>
+                <span className="text-[15px] font-black text-black tabular-nums">
+                  {formatPlanMoney(0, 'free', priceOverrides, lng)}
+                </span>
+                {freeIsCurrent && (
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full leading-none bg-neutral-900 text-white">{flagCurrent}</span>
+                )}
+              </div>
+              <p className="mt-1.5 text-[14px] font-medium text-black/50 leading-relaxed">{planTaglineV2(t, 'free', freePlan.tagline)}</p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {freePlan.features.map((f) => (
+                  <span
+                    key={f.label}
+                    className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-neutral-50 ring-1 ring-black/[0.06] text-[12.5px] font-semibold text-black/60"
+                  >
+                    <Check size={12} weight="bold" className="text-black/40" />
+                    {featureLabel(t, f)}
+                  </span>
+                ))}
               </div>
             </div>
-          )}
-        </>
+          </div>
+          <div className="flex-shrink-0 lg:w-56">{renderCta(freePlan, 0)}</div>
+        </div>
       )}
     </div>
   )
