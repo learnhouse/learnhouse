@@ -9637,7 +9637,9 @@
           "export_done": "Eksport gotowy",
           "export_error": "Eksport nie powiódł się. Spróbuj ponownie.",
           "copy_profile": "Kopiuj link do profilu",
-          "profile_copied": "Skopiowano link do profilu"
+          "profile_copied": "Skopiowano link do profilu",
+          "view_as": "Zobacz jako {{name}}",
+          "view_as_error": "Nie udało się otworzyć widoku. Spróbuj ponownie."
         },
         "atlas": {
           "prompt": "Podsumuj postępy użytkownika {{name}} w tej organizacji i zaproponuj kolejne kroki, które mu pomogą."
@@ -30476,7 +30478,8 @@
     "no_access_title": "Nie masz dostępu do {{org}}",
     "no_access_desc": "Poproś administratora LearnHouse o dostęp do działania jako członek.",
     "back_to_console": "Wróć do konsoli",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "refused_private": "Prywatne wiadomości ucznia pozostają prywatne, nawet gdy oglądasz jako on."
   },
   "mobile_app": {
     "title": "Pobierz aplikację mobilną",

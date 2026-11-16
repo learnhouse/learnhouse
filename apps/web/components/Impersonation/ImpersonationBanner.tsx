@@ -102,14 +102,21 @@ export default function ImpersonationBanner() {
       }
       setActiveImpersonation(null)
       broadcastImpersonationEnded(imp?.session_uuid)
-      const target = consoleUrl(returnUrl, readCookie('LH_frontend_domain'))
+      // An admin's "view as" goes back to where it started in the org's own
+      // dashboard; platform support access goes back to the console.
+      const target =
+        imp?.scope === 'org'
+          ? returnUrl && /^\/dash(\/|\?|$)/.test(returnUrl) && !returnUrl.startsWith('//')
+            ? returnUrl
+            : '/dash/users/settings/users'
+          : consoleUrl(returnUrl, readCookie('LH_frontend_domain'))
       const sep = target.includes('?') ? '&' : '?'
       // A full navigation on purpose: the console must start from its own
       // session, not this tab's in-memory impersonation state.
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign(`${target}${sep}impersonation=${reason}`)
     },
-    [imp?.return_url, imp?.session_uuid],
+    [imp?.return_url, imp?.session_uuid, imp?.scope],
   )
 
   const doSwitch = useCallback(async (body: ImpersonationSwitch) => {
@@ -185,7 +192,9 @@ export default function ImpersonationBanner() {
           ? 'impersonation.refused_read_only'
           : code === 'IMPERSONATION_MESSAGING_BLOCKED'
             ? 'impersonation.refused_messaging'
-            : code === 'IMPERSONATION_WRONG_ORG'
+            : code === 'IMPERSONATION_PRIVATE'
+              ? 'impersonation.refused_private'
+              : code === 'IMPERSONATION_WRONG_ORG'
               ? 'impersonation.refused_wrong_org'
               : 'impersonation.refused_denied'
       setNotice(t(key))
@@ -244,7 +253,8 @@ export default function ImpersonationBanner() {
     )
   }
 
-  const readOnly = imp.mode !== 'full'
+  const orgView = imp.scope === 'org'
+  const readOnly = orgView || imp.mode !== 'full'
   const isRole = imp.target?.kind === 'role'
   const roleLabel = imp.target?.role_label ?? ''
   const name = imp.target?.label ?? ''
@@ -264,10 +274,11 @@ export default function ImpersonationBanner() {
       >
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-haspopup="menu"
-          aria-label={t('impersonation.menu')}
+          // An admin's "view as" has nothing to switch: the badge only shows who.
+          onClick={orgView ? undefined : () => setOpen((v) => !v)}
+          aria-expanded={orgView ? undefined : open}
+          aria-haspopup={orgView ? undefined : 'menu'}
+          aria-label={orgView ? undefined : t('impersonation.menu')}
           className="flex h-7 min-w-0 items-center gap-2 rounded-full ps-0.5 pe-2 text-[12.5px] leading-none outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400"
         >
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-amber-400 text-neutral-950">
@@ -287,7 +298,7 @@ export default function ImpersonationBanner() {
               <span className="hidden sm:inline">{t('impersonation.read_only')}</span>
             </span>
           )}
-          <CaretDown size={11} className={`shrink-0 opacity-60 transition-transform ${open ? 'rotate-180' : ''}`} />
+          {!orgView && <CaretDown size={11} className={`shrink-0 opacity-60 transition-transform ${open ? 'rotate-180' : ''}`} />}
         </button>
         <button
           type="button"
@@ -310,7 +321,7 @@ export default function ImpersonationBanner() {
         </div>
       )}
 
-      {open && (
+      {open && !orgView && (
         <div
           role="menu"
           data-testid="impersonation-menu"

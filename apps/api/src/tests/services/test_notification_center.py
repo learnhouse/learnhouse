@@ -520,6 +520,17 @@ async def test_stream_route(app, client, org, other_org):
     assert '"type": "hello"' in r.text and '"counts"' in r.text
     # Not a member of the other org: refused before streaming.
     assert (await client.get(f"{B}/stream", params={"org_id": other_org.id})).status_code == 403
+    # A session held to one org streams that org, whatever it asks for.
+    seen = {}
+
+    async def spy(user_id, org_id, hello, is_disconnected):
+        seen["org"] = org_id
+        yield "data: {}\n\n"
+
+    with patch.object(realtime, "event_stream", side_effect=spy), \
+         patch("src.security.session_context.held_org_id", return_value=org.id):
+        r = await client.get(f"{B}/stream")
+    assert r.status_code == 200 and seen["org"] == org.id
 
 
 # ---------------------------------------------------------------------------
@@ -639,3 +650,22 @@ async def test_replace_read_keeps_one_row_per_group(db, org, admin_user):
     await svc.notify(db, [_n(admin_user.id, type="submission_to_grade", title="Again", group_key="submit:1:2", replace_read=True)])
     rows = await _rows(db, admin_user.id)
     assert [(r.title, r.count) for r in rows] == [("Again", 2)]
+
+
+async def test_a_session_held_to_one_org_only_sees_that_org(db, org, other_org, admin_user):
+    """An impersonation (or LMS launch, custom-domain sign-in) is held to one
+    org: the person's notifications from their other orgs stay out of reach,
+    whatever org the request asks for."""
+    for oid, title in ((org.id, "here"), (other_org.id, "elsewhere")):
+        db.add(Notification(user_id=admin_user.id, org_id=oid, type="message", category="messages", title=title,
+                            audience="personal", creation_date="", update_date=""))
+    await db.commit()
+    with patch("src.security.session_context.held_org_id", return_value=org.id):
+        everything = await svc.list_notifications(db, admin_user.id, None, audience="all")
+        asked_elsewhere = await svc.list_notifications(db, admin_user.id, other_org.id, audience="all")
+        counted = await svc.unread_count(db, admin_user.id, None, "all")
+    assert {r["title"] for r in everything["items"]} == {"here"}
+    assert {r["title"] for r in asked_elsewhere["items"]} == {"here"}
+    assert counted["unread_count"] == 1
+    free = await svc.list_notifications(db, admin_user.id, None, audience="all")
+    assert {r["title"] for r in free["items"]} == {"here", "elsewhere"}

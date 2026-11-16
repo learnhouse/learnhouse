@@ -64,6 +64,13 @@ KIND_USER = "user"
 KIND_ROLE = "role"
 KINDS = (KIND_USER, KIND_ROLE)
 
+# Who opened the session: platform staff (the console), or an org admin
+# viewing one of their own learners ("view as", always read-only, never
+# messaging, never switching).
+SCOPE_PLATFORM = "platform"
+SCOPE_ORG = "org"
+SCOPES = (SCOPE_PLATFORM, SCOPE_ORG)
+
 # How impersonated activity is attributed wherever the org can see it.
 SUPPORT_LABEL = "LearnHouse"
 
@@ -83,6 +90,7 @@ def is_shadow_email(address: Optional[str]) -> bool:
 CODE_READ_ONLY = "IMPERSONATION_READ_ONLY"
 CODE_DENIED = "IMPERSONATION_DENIED"
 CODE_MESSAGING = "IMPERSONATION_MESSAGING_BLOCKED"
+CODE_PRIVATE = "IMPERSONATION_PRIVATE"
 CODE_ENDED = "IMPERSONATION_ENDED"
 CODE_WRONG_ORG = "IMPERSONATION_WRONG_ORG"
 # Audit-only: an impersonation token presented outside LH_imp / Bearer.
@@ -104,12 +112,17 @@ class ImpersonationContext:
     allow_messaging: bool
     expires_at: int
     jti: str
+    scope: str = SCOPE_PLATFORM
     verified: bool = False
     target_label: Optional[str] = None
 
     @property
     def read_only(self) -> bool:
-        return self.mode != MODE_FULL
+        return self.mode != MODE_FULL or self.scope == SCOPE_ORG
+
+    @property
+    def org_scoped(self) -> bool:
+        return self.scope == SCOPE_ORG
 
     def confirmed(self, target_label: Optional[str]) -> "ImpersonationContext":
         return replace(self, verified=True, target_label=target_label)
@@ -117,7 +130,7 @@ class ImpersonationContext:
     def audit_details(self) -> dict:
         """What an audit entry records about the session (never the reason)."""
         return {
-            "by": SUPPORT_LABEL,
+            "by": SUPPORT_LABEL if self.scope == SCOPE_PLATFORM else "admin_view",
             "session": self.session_id,
             "mode": self.mode,
         }
@@ -162,6 +175,7 @@ def mint_impersonation_token(
     role_id: Optional[int],
     allow_messaging: bool,
     expires_at: int,
+    scope: str = SCOPE_PLATFORM,
 ) -> str:
     """Sign the token for a session the EE service has just recorded.
 
@@ -186,6 +200,7 @@ def mint_impersonation_token(
             "kind": kind,
             "role": role_id,
             "msg": bool(allow_messaging),
+            "sc": scope,
         },
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -237,7 +252,8 @@ def context_from_claims(payload: Optional[dict]) -> Optional[ImpersonationContex
         jti = payload["jti"]
         if not isinstance(sid, str) or not sid or not isinstance(jti, str) or not jti:
             return None
-        if mode not in MODES or kind not in KINDS:
+        scope = imp.get("sc", SCOPE_PLATFORM)
+        if mode not in MODES or kind not in KINDS or scope not in SCOPES:
             return None
         return ImpersonationContext(
             session_id=sid,
@@ -250,6 +266,7 @@ def context_from_claims(payload: Optional[dict]) -> Optional[ImpersonationContex
             allow_messaging=imp.get("msg") is True,
             expires_at=int(payload["exp"]),
             jti=jti,
+            scope=scope,
         )
     except (KeyError, TypeError, ValueError):
         return None
@@ -391,10 +408,22 @@ _MESSAGING = (
     re.compile(r"^/api/v1/emails(/|$)"),
 )
 
+# What stays private to the learner even from their own admins: direct
+# messages (and their live stream), group/email threads, their personal notes
+# and their Atlas chat history.
+_PRIVATE_READS = (
+    re.compile(r"^/api/v1/messaging(/|$)"),
+    re.compile(r"^/api/v1/usergroups/[^/]+/(email|emails|message|messages)(/|$)"),
+    re.compile(r"^/api/v1/emails(/|$)"),
+    re.compile(r"^/api/v1/notes(/|$)"),
+    re.compile(r"^/api/v1/ai/atlas/(chat|sessions?)(/|$)"),
+)
+
 _MESSAGES = {
     CODE_READ_ONLY: "You're impersonating in read-only mode: nothing was changed.",
     CODE_DENIED: "This action is not available while impersonating.",
     CODE_MESSAGING: "Messaging as this member is off. Turn it on from the impersonation badge.",
+    CODE_PRIVATE: "A learner's private messages stay private, even when you view as them.",
     CODE_ENDED: "This impersonation has ended.",
     CODE_WRONG_ORG: "This impersonation only works in the organization it was started for.",
 }
@@ -419,6 +448,9 @@ def request_policy(method: str, path: str, ctx: ImpersonationContext) -> Optiona
     for methods, pattern in _DENIED:
         if (methods is None or method in methods) and pattern.match(path):
             return CODE_DENIED
+    # An admin viewing as a learner never reads the learner's private messages.
+    if ctx.scope == SCOPE_ORG and any(p.match(path) for p in _PRIVATE_READS):
+        return CODE_PRIVATE
     if method in SAFE_METHODS:
         return None
     if ctx.read_only:

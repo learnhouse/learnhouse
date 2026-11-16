@@ -9637,7 +9637,9 @@
           "export_done": "Export je pripravený",
           "export_error": "Export zlyhal. Skúste znova.",
           "copy_profile": "Kopírovať odkaz na profil",
-          "profile_copied": "Odkaz na profil skopírovaný"
+          "profile_copied": "Odkaz na profil skopírovaný",
+          "view_as": "Zobraziť ako {{name}}",
+          "view_as_error": "Zobrazenie sa nepodarilo otvoriť. Skúste to znova."
         },
         "atlas": {
           "prompt": "Zhrň pokrok člena {{name}} v tejto organizácii a navrhni ďalšie kroky, ktoré mu pomôžu."
@@ -30476,7 +30478,8 @@
     "no_access_title": "Nemáte prístup k {{org}}",
     "no_access_desc": "Požiadajte správcu LearnHouse o prístup ku konaniu za členov.",
     "back_to_console": "Späť do konzoly",
-    "retry": "Skúsiť znova"
+    "retry": "Skúsiť znova",
+    "refused_private": "Súkromné správy študenta zostávajú súkromné, aj keď sa pozeráte ako on."
   },
   "mobile_app": {
     "title": "Stiahnuť mobilnú aplikáciu",

@@ -15,6 +15,8 @@ export interface ImpersonationSession {
   target: { kind: 'user' | 'role'; user_id: number | null; label: string; role_id: number | null; role_label: string | null }
   org: { id: number | null; name: string | null; slug: string | null }
   mode: ImpersonationMode
+  /** "platform": staff support access. "org": an org admin viewing as one of their learners (read-only, no switching). */
+  scope?: 'platform' | 'org'
   allow_messaging: boolean
   org_visible: boolean
   notify_admins: boolean
@@ -37,6 +39,7 @@ export const IMPERSONATION_CODES = [
   'IMPERSONATION_READ_ONLY',
   'IMPERSONATION_DENIED',
   'IMPERSONATION_MESSAGING_BLOCKED',
+  'IMPERSONATION_PRIVATE',
   'IMPERSONATION_WRONG_ORG',
 ] as const
 

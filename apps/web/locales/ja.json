@@ -9291,7 +9291,9 @@
           "export_done": "エクスポートの準備ができました",
           "export_error": "エクスポートに失敗しました。もう一度お試しください。",
           "copy_profile": "プロフィールリンクをコピー",
-          "profile_copied": "プロフィールリンクをコピーしました"
+          "profile_copied": "プロフィールリンクをコピーしました",
+          "view_as": "{{name}} として表示",
+          "view_as_error": "表示を開けませんでした。もう一度お試しください。"
         },
         "atlas": {
           "prompt": "この組織での{{name}}さんの進捗を要約し、サポートのための次のステップを提案してください。"
@@ -29120,7 +29122,8 @@
     "no_access_title": "{{org}}へのアクセス権がありません",
     "no_access_desc": "LearnHouseの管理者になりすましの権限を依頼してください。",
     "back_to_console": "コンソールに戻る",
-    "retry": "再試行"
+    "retry": "再試行",
+    "refused_private": "学習者のプライベートメッセージは、本人として表示しても非公開のままです。"
   },
   "mobile_app": {
     "title": "モバイルアプリを入手",

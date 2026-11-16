@@ -9319,7 +9319,9 @@
           "export_done": "Dışa aktarma hazır",
           "export_error": "Dışa aktarma başarısız oldu. Tekrar deneyin.",
           "copy_profile": "Profil bağlantısını kopyala",
-          "profile_copied": "Profil bağlantısı kopyalandı"
+          "profile_copied": "Profil bağlantısı kopyalandı",
+          "view_as": "{{name}} olarak görüntüle",
+          "view_as_error": "Görünüm açılamadı. Tekrar deneyin."
         },
         "atlas": {
           "prompt": "{{name}} üyesinin bu kuruluştaki ilerlemesini özetle ve ona yardımcı olacak sonraki adımları öner."
@@ -29162,7 +29164,8 @@
     "no_access_title": "{{org}} organizasyonuna erişiminiz yok",
     "no_access_desc": "Kimliğe bürünme erişimi için bir LearnHouse yöneticisine başvurun.",
     "back_to_console": "Konsola dön",
-    "retry": "Tekrar dene"
+    "retry": "Tekrar dene",
+    "refused_private": "Bir öğrencinin özel mesajları, onun gözünden bakarken bile gizli kalır."
   },
   "mobile_app": {
     "title": "Mobil uygulamayı edinin",

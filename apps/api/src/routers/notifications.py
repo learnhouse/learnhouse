@@ -143,6 +143,12 @@ async def api_stream(
     current_user: PublicUser = CurrentUser,
     db_session: AsyncSession = Depends(get_db_session),
 ):
+    from src.security.session_context import held_org_id
+
+    # A session held to one org streams only that org's events.
+    held = held_org_id()
+    if held is not None:
+        org_id = held
     await _member(db_session, current_user.id, org_id)
     hello = {"type": "hello", "counts": await service.counts(db_session, current_user.id, org_id)}
     user_id = current_user.id

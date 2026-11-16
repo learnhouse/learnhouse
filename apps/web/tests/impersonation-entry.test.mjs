@@ -25,6 +25,12 @@ describe("impersonation auto entry", () => {
     expect(autoEntryMode(impersonating("acme"), at("globex", "/dash"))).toBe("switch");
   });
 
+  test("an admin's view as a learner never follows them into another org", () => {
+    const view = impersonating("acme");
+    view.data.impersonation.scope = "org";
+    expect(autoEntryMode(view, at("globex", "/dash"))).toBeNull();
+  });
+
   test("the impersonated org itself is left alone", () => {
     expect(autoEntryMode(impersonating("acme"), at("acme", "/dash"))).toBeNull();
   });

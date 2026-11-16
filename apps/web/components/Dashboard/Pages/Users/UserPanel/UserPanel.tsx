@@ -18,6 +18,7 @@ import {
   Check,
   Copy,
   DotsThree,
+  Eye,
   DownloadSimple,
   Exam,
   LinkSimple,
@@ -197,6 +198,41 @@ function PanelShell({
   const name = user ? displayName(user) : ''
   const isSelf = userId === currentUserId
   const canManage = !!canManageOrg && !isSelf
+  // "View as" (EE): admins see the platform as one of their learners,
+  // read-only. The API decides who counts as a learner; this only hides the
+  // option where it can't apply.
+  const canViewAs =
+    canManage &&
+    getDeploymentMode() !== 'oss' &&
+    !session?.data?.impersonation &&
+    !!role &&
+    ![1, 2, 3].includes(Number(role.id)) &&
+    roleKind(role?.name) === 'member'
+  const [viewingAs, setViewingAs] = useState(false)
+  const viewAs = async () => {
+    if (!user || !org?.id || viewingAs) return
+    setViewingAs(true)
+    try {
+      const res = await fetch('/api/auth/view-as', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org_id: org.id, user_id: user.id, return_url: `${window.location.pathname}${window.location.search}` }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        const detail = data?.detail
+        toast.error((typeof detail === 'string' ? detail : detail?.message) || t(`${P}.more.view_as_error`))
+        setViewingAs(false)
+        return
+      }
+      // A full load, so every page renders as the learner from the start.
+      window.location.assign(typeof data?.landing === 'string' && data.landing.startsWith('/') ? data.landing : '/')
+    } catch {
+      toast.error(t(`${P}.more.view_as_error`))
+      setViewingAs(false)
+    }
+  }
 
   const analyticsEdition = isOrgAnalyticsAvailable()
   const analyticsAvailable = analyticsEdition && planMeetsRequirement(plan, 'pro')
@@ -694,6 +730,7 @@ function PanelShell({
               onCopyEmail={() => user.email && copy(user.email, t('dashboard.users.dash.members.email_copied'))}
               onCopyProfile={profileUrl ? () => copy(profileUrl, t(`${P}.more.profile_copied`)) : undefined}
               onRemove={() => setRemoving(true)}
+              onViewAs={canViewAs ? () => void viewAs() : undefined}
             />
           )}
         </div>
@@ -839,6 +876,7 @@ function MoreMenu({
   onCopyEmail,
   onCopyProfile,
   onRemove,
+  onViewAs,
 }: {
   user: any
   name: string
@@ -851,6 +889,7 @@ function MoreMenu({
   onCopyEmail: () => void
   onCopyProfile?: () => void
   onRemove: () => void
+  onViewAs?: () => void
 }) {
   const { t } = useTranslation()
   const params = useParams() as any
@@ -902,7 +941,12 @@ function MoreMenu({
             </Link>
           </DropdownMenuItem>
         )}
-        {(canMessage || atlas || analytics) && <DropdownMenuSeparator />}
+        {onViewAs && (
+          <DropdownMenuItem onSelect={onViewAs} className={ITEM}>
+            <Eye size={15} className="text-amber-600" /> {t(`${P}.more.view_as`, { name })}
+          </DropdownMenuItem>
+        )}
+        {(canMessage || atlas || analytics || onViewAs) && <DropdownMenuSeparator />}
         {user.email && (
           <DropdownMenuItem onSelect={onCopyEmail} className={ITEM}>
             <Copy size={15} className="text-neutral-500" /> {t('dashboard.users.dash.members.copy_email')}

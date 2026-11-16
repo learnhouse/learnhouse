@@ -346,6 +346,14 @@ Audience = str  # "personal" | "admin" | "all"
 
 
 def _scope(stmt, user_id: int, org_id: Optional[int], audience: Optional[str] = "personal"):
+    # A session held to one org (an impersonation, an LMS launch, a custom
+    # domain sign-in) only ever sees that org's notifications, whatever the
+    # request asks for: the person's other orgs stay out of reach.
+    from src.security.session_context import held_org_id
+
+    held = held_org_id()
+    if held is not None:
+        org_id = held
     stmt = stmt.where(Notification.user_id == user_id)
     if org_id is not None:
         stmt = stmt.where(or_(Notification.org_id == org_id, Notification.org_id.is_(None)))  # type: ignore[union-attr]

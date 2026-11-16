@@ -9319,7 +9319,9 @@
           "export_done": "Export gereed",
           "export_error": "De export is mislukt. Probeer het opnieuw.",
           "copy_profile": "Profiellink kopiëren",
-          "profile_copied": "Profiellink gekopieerd"
+          "profile_copied": "Profiellink gekopieerd",
+          "view_as": "Bekijken als {{name}}",
+          "view_as_error": "De weergave kon niet worden geopend. Probeer het opnieuw."
         },
         "atlas": {
           "prompt": "Vat de voortgang van {{name}} in deze organisatie samen en stel vervolgstappen voor om te helpen."
@@ -29162,7 +29164,8 @@
     "no_access_title": "Je hebt geen toegang tot {{org}}",
     "no_access_desc": "Vraag een LearnHouse-beheerder om toegang tot impersonatie.",
     "back_to_console": "Terug naar de console",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "refused_private": "Privéberichten van een cursist blijven privé, ook als je als die cursist kijkt."
   },
   "mobile_app": {
     "title": "Download de mobiele app",

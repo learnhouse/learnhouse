@@ -9289,7 +9289,9 @@
           "export_done": "Ekspor siap",
           "export_error": "Ekspor gagal. Coba lagi.",
           "copy_profile": "Salin tautan profil",
-          "profile_copied": "Tautan profil disalin"
+          "profile_copied": "Tautan profil disalin",
+          "view_as": "Lihat sebagai {{name}}",
+          "view_as_error": "Tampilan tidak dapat dibuka. Coba lagi."
         },
         "atlas": {
           "prompt": "Ringkas kemajuan {{name}} di organisasi ini dan sarankan langkah berikutnya untuk membantunya."
@@ -29118,7 +29120,8 @@
     "no_access_title": "Anda tidak memiliki akses ke {{org}}",
     "no_access_desc": "Minta akses impersonasi ke admin LearnHouse.",
     "back_to_console": "Kembali ke konsol",
-    "retry": "Coba lagi"
+    "retry": "Coba lagi",
+    "refused_private": "Pesan pribadi pelajar tetap pribadi, bahkan saat Anda melihat sebagai mereka."
   },
   "mobile_app": {
     "title": "Dapatkan aplikasi seluler",
