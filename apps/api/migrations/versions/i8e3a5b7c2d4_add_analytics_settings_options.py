@@ -24,7 +24,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    columns = {c['name'] for c in sa.inspect(op.get_bind()).get_columns('analytics_settings')}
+    inspector = sa.inspect(op.get_bind())
+    # The table belongs to EE analytics; a schema built without it has nothing to alter.
+    if not inspector.has_table('analytics_settings'):
+        return
+    columns = {c['name'] for c in inspector.get_columns('analytics_settings')}
     if 'options' not in columns:
         op.add_column(
             'analytics_settings',
@@ -33,4 +37,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_column('analytics_settings', 'options')
+    inspector = sa.inspect(op.get_bind())
+    if not inspector.has_table('analytics_settings'):
+        return
+    if 'options' in {c['name'] for c in inspector.get_columns('analytics_settings')}:
+        op.drop_column('analytics_settings', 'options')
