@@ -105,11 +105,16 @@ class TestSlugs:
         assert slugs.slug_problem("acme") is None
 
     def test_demo_slug_is_reserved_when_the_demo_runs(self):
-        with patch("src.services.demo.flags.demo_enabled", return_value=True), patch(
-            "src.services.demo.flags.demo_slug", return_value="demo"
-        ):
+        from types import SimpleNamespace
+
+        running = SimpleNamespace(demo_enabled=lambda: True, demo_slug=lambda: "demo")
+        stopped = SimpleNamespace(demo_enabled=lambda: False, demo_slug=lambda: "demo")
+        with patch("src.core.ee_hooks.get_ee_module", return_value=running):
             assert slugs.slug_problem("demo") == "reserved"
-        assert slugs.slug_problem("demo") is None
+        with patch("src.core.ee_hooks.get_ee_module", return_value=stopped):
+            assert slugs.slug_problem("demo") is None
+        with patch("src.core.ee_hooks.get_ee_module", return_value=None):
+            assert slugs.slug_problem("demo") is None
 
     async def test_suggest(self, db, org):
         assert await slugs.suggest_slug("Acme", db) == "acme"

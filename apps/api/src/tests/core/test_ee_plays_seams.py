@@ -13,16 +13,9 @@ from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from sqlalchemy import func, select
 from sqlmodel import Field, SQLModel
 
 from src.core import ee_hooks
-from src.tests.services.test_demo_drift import (  # noqa: F401  (fixtures)
-    demo_org,
-    no_uploads,
-    synced,
-    visitor,
-)
 
 EPOCH_DAY = date(2026, 8, 9)
 
@@ -128,40 +121,6 @@ async def test_search_asks_ee_for_playgrounds(db, org, anonymous_user, mock_requ
     assert kwargs["only_public"] is True and kwargs["is_token"] is False
 
 
-# ─── demo ────────────────────────────────────────────────────────────────────
-
-
-async def test_demo_without_ee_seeds_no_plays(db, demo_org):  # noqa: F811 (imported fixtures)
-    assert (await db.execute(select(func.count()).select_from(_StandInPlayground))).scalar_one() == 0
-
-
-async def test_demo_with_ee_seeds_restores_and_sweeps_plays(db, no_uploads, monkeypatch):  # noqa: F811 (imported fixtures)
-    from src.db.organizations import Organization
-    from src.services.demo import sync as sync_module
-
-    monkeypatch.setattr(sync_module, "_playground_models", lambda: PLAYS)
-    with _with_ee():
-        await sync_module.sync_demo(db, today=EPOCH_DAY)
-        org = (await db.execute(select(Organization).where(Organization.is_demo.is_(True)))).scalars().first()
-        plays = (await db.execute(select(_StandInPlayground).where(_StandInPlayground.org_id == org.id))).scalars().all()
-        assert plays, "the bundle's plays are seeded with EE"
-        seeded = plays[0]
-        name = seeded.name
-
-        # A visitor's rename is reverted, their own play and reaction removed.
-        seeded.name = "Renamed"
-        db.add(seeded)
-        db.add(_StandInPlayground(org_id=org.id, name="Visitor's", playground_uuid="playground_visitor"))
-        db.add(_StandInReaction(playground_id=seeded.id, user_id=1, emoji="👏", reaction_uuid="r1"))
-        await db.commit()
-        stats = await sync_module.sync_demo(db, today=EPOCH_DAY)
-
-    await db.refresh(seeded)
-    assert seeded.name == name
-    uuids = {p.playground_uuid for p in (await db.execute(select(_StandInPlayground))).scalars().all()}
-    assert "playground_visitor" not in uuids
-    assert (await db.execute(select(func.count()).select_from(_StandInReaction))).scalar_one() == 0
-    assert stats.drift_deleted >= 2
 
 
 @pytest.fixture(autouse=True)

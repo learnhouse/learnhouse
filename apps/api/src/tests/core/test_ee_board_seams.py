@@ -15,16 +15,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from src.core import ee_hooks
 from src.tests.core.board_standins import BOARDS, StandInBoard, StandInBoardMember
-from src.tests.services.test_demo_drift import (  # noqa: F401  (fixtures)
-    demo_org,
-    no_uploads,
-    synced,
-    visitor,
-)
 
 EPOCH_DAY = date(2026, 8, 9)
 
@@ -176,45 +170,6 @@ async def test_library_root_and_search_gate_boards_through_ee(db, org, regular_u
     assert [i["resource_uuid"] for i in found["items"]] == ["board_lib"]
 
 
-# ─── demo ────────────────────────────────────────────────────────────────────
-
-
-async def test_demo_without_ee_seeds_no_boards(db, demo_org):  # noqa: F811 (imported fixtures)
-    assert (await db.execute(select(func.count()).select_from(StandInBoard))).scalar_one() == 0
-
-
-async def test_demo_with_ee_seeds_restores_and_sweeps_boards(db, no_uploads, monkeypatch):  # noqa: F811
-    from src.db.organizations import Organization
-    from src.services.demo import sync as sync_module
-
-    monkeypatch.setattr(sync_module, "_board_models", lambda: BOARDS)
-    await sync_module.sync_demo(db, today=EPOCH_DAY)
-    org = (await db.execute(select(Organization).where(Organization.is_demo.is_(True)))).scalars().first()
-    boards = (await db.execute(select(StandInBoard).where(StandInBoard.org_id == org.id))).scalars().all()
-    assert boards, "the bundle's boards are seeded with EE"
-    seeded = boards[0]
-    name = seeded.name
-
-    # A visitor's rename is reverted and their own board removed.
-    seeded.name = "Renamed"
-    db.add(seeded)
-    db.add(StandInBoard(org_id=org.id, name="Visitor's", board_uuid="board_visitor"))
-    await db.commit()
-    stats = await sync_module.sync_demo(db, today=EPOCH_DAY)
-
-    await db.refresh(seeded)
-    assert seeded.name == name
-    uuids = {b.board_uuid for b in (await db.execute(select(StandInBoard))).scalars().all()}
-    assert "board_visitor" not in uuids
-    assert stats.drift_deleted >= 1
-
-
-def test_demo_board_models_come_from_ee():
-    from src.services.demo import sync as sync_module
-
-    assert sync_module._board_models() is None
-    with _with_ee():
-        assert sync_module._board_models() is BOARDS
 
 
 @pytest.fixture(autouse=True)

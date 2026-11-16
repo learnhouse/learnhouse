@@ -36,9 +36,11 @@ def slugify(value: str) -> str:
 
 
 def _demo_slug() -> Optional[str]:
-    from src.services.demo.flags import demo_enabled, demo_slug
+    """The shared demo's slug while it runs (EE), so no org can claim it."""
+    from src.core.ee_hooks import get_ee_module
 
-    return demo_slug() if demo_enabled() else None
+    flags = get_ee_module("ee.services.demo.flags")
+    return flags.demo_slug() if flags is not None and flags.demo_enabled() else None
 
 
 def slug_problem(slug: str) -> Optional[str]:

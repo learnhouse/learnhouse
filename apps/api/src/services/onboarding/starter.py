@@ -22,7 +22,7 @@ from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.courses import Course, ThumbnailType
 from src.db.organizations import Organization
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
-from src.services.demo.content import compile_document
+from src.services.onboarding.content import compile_document
 from src.services.onboarding import goals as goal_defs
 from src.services.onboarding.state import get_or_create, stamp
 
