@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { switchSubscriptionPlan } from "@services/billing/stripe";
-import type { PlanId, Billing } from "@services/billing/plans";
+import { RETIRED_PLANS, type PlanId, type Billing } from "@services/billing/plans";
 import { guardBilling, badRequest, requireOrgBillingAccess } from "../_lib";
 
 // POST /api/billing/switch
@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
   const { orgId, newPlan, newBilling, downgrade, promotionCode } = body ?? {};
   if (!orgId || !newPlan || !newBilling) {
     return badRequest("Missing required fields: orgId, newPlan, newBilling");
+  }
+
+  if (RETIRED_PLANS.has(String(newPlan))) {
+    return NextResponse.json({ error: "This plan is no longer available" }, { status: 400 });
   }
 
   const access = await requireOrgBillingAccess(orgId);

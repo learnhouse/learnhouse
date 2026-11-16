@@ -130,8 +130,8 @@ export function ListSkeleton({ rows = 6, avatar = true }: { rows?: number; avata
 
 // ─── chips ───────────────────────────────────────────────────────────────────
 
-// Same hues as the console always used: free grey, standard blue, pro purple, enterprise amber.
-const PLAN_TONE: Record<string, ChipTone> = { free: 'neutral', standard: 'sky', pro: 'violet', enterprise: 'amber' }
+// Same hues as the console always used: free grey, standard blue, pro purple, business teal, enterprise amber.
+const PLAN_TONE: Record<string, ChipTone> = { free: 'neutral', standard: 'sky', pro: 'violet', business: 'teal', enterprise: 'amber' }
 
 export function PlanChip({ plan }: { plan?: string | null }) {
   const { t } = useTranslation()
@@ -360,6 +360,7 @@ export const PLAN_COLORS: Record<string, string> = {
   free: 'var(--adm-plan-free)',
   standard: 'var(--adm-plan-standard)',
   pro: 'var(--adm-plan-pro)',
+  business: 'var(--adm-plan-business)',
   enterprise: 'var(--adm-plan-enterprise)',
 }
 

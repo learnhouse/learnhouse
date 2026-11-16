@@ -259,6 +259,23 @@ function PanelShell({
     return () => document.removeEventListener('keydown', onKey)
   }, [next, prev])
 
+  // A click on the page behind closes the panel. Clicking another member
+  // row switches to that member instead, and nothing closes while a menu,
+  // dialog or picker the panel opened is on top (those render in portals).
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return
+      const target = e.target as HTMLElement | null
+      if (!target || !target.isConnected) return
+      if (panelRef.current?.contains(target)) return
+      if (overlayOpen()) return
+      if (target.closest('[data-member-row], [data-radix-popper-content-wrapper], [data-sonner-toaster], [role="status"]')) return
+      closeUserPanel()
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [])
+
   // Focus moves into the panel when it opens and back to the row on close.
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null

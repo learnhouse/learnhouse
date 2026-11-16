@@ -15934,7 +15934,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "気軽に基本を試せます。",
@@ -15978,7 +15979,17 @@
         "multi_tenancy": "マルチテナンシー",
         "white_label": "ホワイトラベル",
         "support_sla": "サポートSLA",
-        "self_hosted_option": "セルフホストのオプション"
+        "self_hosted_option": "セルフホストのオプション",
+        "plays": "Plays",
+        "paths": "パス",
+        "company_seats": "企業向けシート",
+        "required_training": "必須トレーニング",
+        "live_sessions": "ライブセッション",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business AI",
+        "scheduled_atlas_agents": "スケジュール済み Atlas エージェント"
       },
       "pack_ai_credits": "AIクレジット{{formatted}}",
       "admin_seats_count_one": "管理者席 {{formatted}}",
@@ -17302,7 +17313,8 @@
       "dau_tooltip_one": "{{date}}：{{count}} 人",
       "enrolled_count_one": "{{count}} 人が受講中",
       "users_count_one": "ユーザー {{count}} 人",
-      "views_count_one": "{{count}} 回表示"
+      "views_count_one": "{{count}} 回表示",
+      "plan_business_desc": "SSO、LTI、SCORM、監査ログ"
     },
     "login": {
       "invalid_credentials": "メールアドレスまたはパスワードが正しくありません",

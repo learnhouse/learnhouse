@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCheckoutSession } from "@services/billing/stripe";
-import type { PlanId, Billing } from "@services/billing/plans";
+import { RETIRED_PLANS, type PlanId, type Billing } from "@services/billing/plans";
 import { guardBilling, badRequest, requireOrgBillingAccess } from "../_lib";
 
 // POST /api/billing/checkout
@@ -22,6 +22,10 @@ export async function POST(request: NextRequest) {
   const { plan, billing, orgId, orgSlug, promotionCode } = body ?? {};
   if (!plan || !billing || !orgId) {
     return badRequest("Missing required fields: plan, billing, orgId");
+  }
+
+  if (RETIRED_PLANS.has(String(plan))) {
+    return NextResponse.json({ error: "This plan is no longer available" }, { status: 400 });
   }
 
   const access = await requireOrgBillingAccess(orgId);

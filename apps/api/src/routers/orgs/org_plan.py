@@ -30,6 +30,7 @@ VALID_PLANS = {
     "personal-family",
     "standard",
     "pro",
+    "business",
     "enterprise",
 }
 

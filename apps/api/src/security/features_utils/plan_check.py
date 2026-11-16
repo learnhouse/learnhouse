@@ -99,6 +99,26 @@ async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     return config.get("cloud", {}).get("plan", "free")
 
 
+async def _meets_plan_or_legacy(
+    org_id: int, current_plan: str, required_plan: str, feature_name: str, db_session: AsyncSession
+) -> bool:
+    """The plan check, plus the V2 grace period: a Pro org from before the
+    move keeps the features that went to Business until its
+    ``legacy_pro_until`` date."""
+    if plan_meets_requirement(current_plan, required_plan):
+        return True
+    from src.security.features_utils.plans import LEGACY_PRO_FEATURES
+
+    feature_key = feature_name.lower().replace(' ', '_')
+    if current_plan != "pro" or feature_key not in LEGACY_PRO_FEATURES:
+        return False
+    from src.security.features_utils.resolve import _legacy_pro_grant
+    from src.services.orgs.org_config_lookup import get_session_org_config
+
+    org_config = await get_session_org_config(db_session, org_id)
+    return bool(org_config) and _legacy_pro_grant(org_config.config or {}, current_plan, feature_key)
+
+
 async def check_org_plan(
     org_id: int,
     required_plan: PlanLevel,
@@ -112,7 +132,7 @@ async def check_org_plan(
         return bypass
 
     current_plan = await get_org_plan(org_id, db_session)
-    if not plan_meets_requirement(current_plan, required_plan):
+    if not await _meets_plan_or_legacy(org_id, current_plan, required_plan, feature_name, db_session):
         raise HTTPException(
             status_code=403,
             detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
@@ -171,7 +191,7 @@ def require_plan(required_plan: PlanLevel, feature_name: str):
 
         current_plan = await get_org_plan(org_id, db_session)
 
-        if not plan_meets_requirement(current_plan, required_plan):
+        if not await _meets_plan_or_legacy(org_id, current_plan, required_plan, feature_name, db_session):
             raise HTTPException(
                 status_code=403,
                 detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "

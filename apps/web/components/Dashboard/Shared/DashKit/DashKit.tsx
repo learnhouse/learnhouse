@@ -58,7 +58,7 @@ export const INPUT =
 export const TEXTAREA =
   'w-full px-3 py-2 text-sm bg-white rounded-xl ring-1 ring-inset ring-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-900/15 placeholder:text-neutral-400 transition-shadow resize-none'
 
-export type ChipTone = 'neutral' | 'amber' | 'emerald' | 'rose' | 'sky' | 'violet'
+export type ChipTone = 'neutral' | 'amber' | 'emerald' | 'rose' | 'sky' | 'violet' | 'teal'
 
 // Labels: a flat tint with a hairline ring in the same hue.
 const CHIP_TONES: Record<ChipTone, string> = {
@@ -68,6 +68,7 @@ const CHIP_TONES: Record<ChipTone, string> = {
   rose: 'text-rose-700 bg-rose-50 ring-rose-600/10',
   sky: 'text-sky-800 bg-sky-50 ring-sky-600/10',
   violet: 'text-violet-800 bg-violet-50 ring-violet-600/10',
+  teal: 'text-teal-800 bg-teal-50 ring-teal-600/10',
 }
 
 export function Chip({

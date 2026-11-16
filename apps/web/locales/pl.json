@@ -16521,7 +16521,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Poznaj podstawy, bez zobowiązań.",
@@ -16574,7 +16575,17 @@
         "multi_tenancy": "Wielodostępność",
         "white_label": "White-label",
         "support_sla": "SLA wsparcia",
-        "self_hosted_option": "Opcja self-hosted"
+        "self_hosted_option": "Opcja self-hosted",
+        "plays": "Plays",
+        "paths": "Ścieżki",
+        "company_seats": "Miejsca dla firm",
+        "required_training": "Szkolenia obowiązkowe",
+        "live_sessions": "Sesje na żywo",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "AI Business",
+        "scheduled_atlas_agents": "Zaplanowani agenci Atlas"
       },
       "pack_ai_credits": "Kredyty AI: {{formatted}}"
     },
@@ -17977,7 +17988,8 @@
       "slug_hint": "Używany w adresach URL. Zmiana spowoduje uszkodzenie istniejących linków.",
       "settings_saved": "Ustawienia zostały zapisane",
       "reset": "Resetuj",
-      "page_of": "Strona {{page}} z {{totalPages}}"
+      "page_of": "Strona {{page}} z {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM i dzienniki audytu"
     },
     "login": {
       "invalid_credentials": "Nieprawidłowy e-mail lub hasło",

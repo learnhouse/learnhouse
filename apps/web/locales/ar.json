@@ -16906,7 +16906,8 @@
         "personal": "شخصي",
         "family": "عائلي",
         "personal_family": "عائلي",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "استكشف الأساسيات دون أي التزام.",
@@ -16965,7 +16966,17 @@
         "multi_tenancy": "تعدد المستأجرين",
         "white_label": "علامة تجارية بيضاء",
         "support_sla": "اتفاقية مستوى خدمة الدعم",
-        "self_hosted_option": "خيار الاستضافة الذاتية"
+        "self_hosted_option": "خيار الاستضافة الذاتية",
+        "plays": "Plays",
+        "paths": "المسارات",
+        "company_seats": "مقاعد الشركات",
+        "required_training": "التدريب الإلزامي",
+        "live_sessions": "الجلسات المباشرة",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "ذكاء Business",
+        "scheduled_atlas_agents": "وكلاء Atlas المجدولون"
       },
       "pack_ai_credits": "{{formatted}} رصيد ذكاء اصطناعي"
     },
@@ -18490,7 +18501,8 @@
       "slug_hint": "يُستخدم في الروابط. تغييره سيعطّل الروابط الحالية.",
       "settings_saved": "تم حفظ الإعدادات بنجاح",
       "reset": "إعادة تعيين",
-      "page_of": "الصفحة {{page}} من {{totalPages}}"
+      "page_of": "الصفحة {{page}} من {{totalPages}}",
+      "plan_business_desc": "SSO وLTI وSCORM وسجلات التدقيق"
     },
     "login": {
       "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",

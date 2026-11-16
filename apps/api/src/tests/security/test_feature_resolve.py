@@ -219,7 +219,7 @@ class TestFeatureResolve:
             "enabled": False,
             "available": False,
             "limit": 0,
-            "required_plan": "enterprise",
+            "required_plan": "business",
             "disabled_by": None,
             "upgrade_plan": "enterprise",
         }
@@ -300,7 +300,9 @@ class TestFeatureResolve:
         with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="saas"):
             standard = {"config_version": "2.0", "plan": "standard"}
             assert resolve_feature("boards", standard, org_id=0)["upgrade_plan"] == "pro"
-            assert resolve_feature("live_sessions", standard, org_id=0)["upgrade_plan"] == "pro"
+            assert resolve_feature("live_sessions", standard, org_id=0)["upgrade_plan"] == "business"
+            pro = {"config_version": "2.0", "plan": "pro"}
+            assert resolve_feature("live_sessions", pro, org_id=0)["upgrade_plan"] == "business"
             assert resolve_feature("communities", standard, org_id=0)["upgrade_plan"] is None
             free = {"config_version": "2.0", "plan": "free"}
             assert resolve_feature("communities", free, org_id=0)["upgrade_plan"] == "standard"
@@ -317,7 +319,10 @@ class TestFeatureResolve:
         # Unknown current plan starts from the bottom of the business line.
         assert get_upgrade_plan("oss", "communities") == "standard"
         # The personal line can move up through the business plans.
-        assert get_upgrade_plan("personal-family", "sso") == "enterprise"
+        assert get_upgrade_plan("personal-family", "sso") == "business"
+        # Business is the first plan that unlocks SSO from the business line.
+        assert get_upgrade_plan("pro", "sso") == "business"
+        assert get_upgrade_plan("business", "sso") is None
 
     def test_fetch_purchased_extras_returns_defaults_when_org_id_zero(self):
         result = _fetch_purchased_extras(0)

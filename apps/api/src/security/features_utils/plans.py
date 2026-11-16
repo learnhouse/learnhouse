@@ -10,10 +10,10 @@ from typing import Literal
 
 
 # Plan type definition - matches OrgCloudConfig
-PlanLevel = Literal["free", "personal", "personal-family", "standard", "pro", "enterprise"]
+PlanLevel = Literal["free", "personal", "personal-family", "standard", "pro", "business", "enterprise"]
 
 # Plan hierarchy (lower index = lower tier)
-PLAN_HIERARCHY: list[str] = ["free", "personal", "personal-family", "standard", "pro", "enterprise"]
+PLAN_HIERARCHY: list[str] = ["free", "personal", "personal-family", "standard", "pro", "business", "enterprise"]
 
 # Feature to required plan mapping
 FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
@@ -26,7 +26,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "drip": "standard",
     "payments": "standard",
     "podcasts": "standard",
-    "live_sessions": "pro",
+    "live_sessions": "business",
     "seo": "standard",
     "usergroups": "standard",
     "api_tokens": "pro",
@@ -40,13 +40,13 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "roles": "pro",
     "versioning": "pro",
     "analytics_advanced": "pro",
-    "audit_logs": "enterprise",
-    "scorm": "enterprise",
-    "sso": "enterprise",
-    "lti": "enterprise",
-    "scim": "enterprise",
-    "required_training": "pro",
-    "company_seats": "pro",
+    "audit_logs": "business",
+    "scorm": "business",
+    "sso": "business",
+    "lti": "business",
+    "scim": "business",
+    "required_training": "business",
+    "company_seats": "business",
     # Newsletters and one-off emails to learners (EE). The plan limit is the
     # monthly number of newsletter emails the org may send (0 = unlimited).
     "newsletter": "standard",
@@ -60,6 +60,15 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "crm": "pro",
     "crm_salesforce": "enterprise",
 }
+
+# Atlas (chat, the AI editor, course translation) is on every plan; AI credits
+# meter it. Only scheduled Atlas agents need a plan (Business).
+ATLAS_REQUIRED_PLAN: PlanLevel = "free"
+
+# Pro orgs that existed when these moved to Business keep them until the
+# date in their config's ``legacy_pro_until`` (stamped by migration
+# v2p1a2n3s4g5, one year after the V2 plans shipped).
+LEGACY_PRO_FEATURES: frozenset[str] = frozenset({"live_sessions", "required_training", "company_seats"})
 
 # ============================================================================
 # Comprehensive plan feature configs (single source of truth)
@@ -95,12 +104,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "scim": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
             "required_training": {"enabled": False},
             "company_seats": {"enabled": False},
-            "scim": {"enabled": False},
             "newsletter": {"enabled": False, "limit": 0},
             "crm": {"enabled": False},
             "crm_salesforce": {"enabled": False},
@@ -117,7 +126,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "collaboration": {"enabled": False, "limit": 0},
             "courses": {"enabled": True, "limit": 0},
 
-            "members": {"admin_limit": 1, "enabled": True, "limit": 1},
+            "members": {"admin_limit": 1, "enabled": True, "limit": 4},
             "payments": {"enabled": False},
 
             "usergroups": {"enabled": False, "limit": 0},
@@ -133,12 +142,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "scim": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
             "required_training": {"enabled": False},
             "company_seats": {"enabled": False},
-            "scim": {"enabled": False},
             "newsletter": {"enabled": False, "limit": 0},
             "crm": {"enabled": False},
             "crm_salesforce": {"enabled": False},
@@ -171,12 +180,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "scim": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
             "required_training": {"enabled": False},
             "company_seats": {"enabled": False},
-            "scim": {"enabled": False},
             "newsletter": {"enabled": False, "limit": 0},
             "crm": {"enabled": False},
             "crm_salesforce": {"enabled": False},
@@ -193,7 +202,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "collaboration": {"enabled": True, "limit": 0},
             "courses": {"enabled": True, "limit": 0},
 
-            "members": {"admin_limit": 2, "enabled": True, "limit": 200},
+            "members": {"admin_limit": 3, "enabled": True, "limit": 0},
             "payments": {"enabled": True},
 
             "usergroups": {"enabled": True, "limit": 0},
@@ -209,12 +218,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "scim": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
             "required_training": {"enabled": False},
             "company_seats": {"enabled": False},
-            "scim": {"enabled": False},
             "newsletter": {"enabled": True, "limit": 10000},
             "crm": {"enabled": False},
             "crm_salesforce": {"enabled": False},
@@ -231,7 +240,45 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "collaboration": {"enabled": True, "limit": 0},
             "courses": {"enabled": True, "limit": 0},
 
-            "members": {"admin_limit": 10, "enabled": True, "limit": 500},
+            "members": {"admin_limit": 10, "enabled": True, "limit": 0},
+            "payments": {"enabled": True},
+
+            "usergroups": {"enabled": True, "limit": 0},
+            "podcasts": {"enabled": True, "limit": 0},
+            "live_sessions": {"enabled": False, "limit": 0},
+            "boards": {"enabled": True, "limit": 0},
+            "folders": {"enabled": True},
+            "paths": {"enabled": True},
+            "messaging": {"enabled": True},
+            "communities": {"enabled": True},
+            "playgrounds": {"enabled": True, "limit": 0},
+            "roles": {"enabled": True},
+            "scorm": {"enabled": False},
+            "sso": {"enabled": False},
+            "lti": {"enabled": False},
+            "scim": {"enabled": False},
+            "versioning": {"enabled": True},
+            "webhooks": {"enabled": True, "limit": 0},
+            "audit_logs": {"enabled": False},
+            "required_training": {"enabled": False},
+            "company_seats": {"enabled": False},
+            "newsletter": {"enabled": True, "limit": 50000},
+            "crm": {"enabled": True},
+            "crm_salesforce": {"enabled": False},
+        },
+        "general": {"watermark": False},
+        "cloud": {"plan": "pro", "custom_domain": True},
+    },
+    "business": {
+        "features": {
+            "ai": {"enabled": True, "limit": 10000},
+            "analytics": {"enabled": True, "limit": 0},
+            "api": {"enabled": True, "limit": 0},
+            "assignments": {"enabled": True, "limit": 0},
+            "collaboration": {"enabled": True, "limit": 0},
+            "courses": {"enabled": True, "limit": 0},
+
+            "members": {"admin_limit": 25, "enabled": True, "limit": 0},
             "payments": {"enabled": True},
 
             "usergroups": {"enabled": True, "limit": 0},
@@ -244,21 +291,21 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "communities": {"enabled": True},
             "playgrounds": {"enabled": True, "limit": 0},
             "roles": {"enabled": True},
-            "scorm": {"enabled": False},
-            "sso": {"enabled": False},
-            "lti": {"enabled": False},
+            "scorm": {"enabled": True},
+            "sso": {"enabled": True},
+            "lti": {"enabled": True},
+            "scim": {"enabled": True},
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
-            "audit_logs": {"enabled": False},
+            "audit_logs": {"enabled": True},
             "required_training": {"enabled": True},
             "company_seats": {"enabled": True},
-            "scim": {"enabled": False},
-            "newsletter": {"enabled": True, "limit": 50000},
+            "newsletter": {"enabled": True, "limit": 100000},
             "crm": {"enabled": True},
             "crm_salesforce": {"enabled": False},
         },
         "general": {"watermark": False},
-        "cloud": {"plan": "pro", "custom_domain": True},
+        "cloud": {"plan": "business", "custom_domain": True},
     },
     "enterprise": {
         "features": {
@@ -285,12 +332,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": True},
             "sso": {"enabled": True},
             "lti": {"enabled": True},
+            "scim": {"enabled": True},
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
             "audit_logs": {"enabled": True},
             "required_training": {"enabled": True},
             "company_seats": {"enabled": True},
-            "scim": {"enabled": True},
             "newsletter": {"enabled": True, "limit": 250000},
             "crm": {"enabled": True},
             "crm_salesforce": {"enabled": True},
@@ -322,6 +369,7 @@ AI_CREDIT_LIMITS: dict[str, int] = {
     "personal-family": 3000,
     "standard": 1000,
     "pro": 2000,
+    "business": 10000,
     "enterprise": -1,
 }
 
@@ -355,8 +403,8 @@ def is_paying_plan(plan: str) -> bool:
 
 # Plans an organization can move up to, in order. The personal line is a
 # separate product for individual creators, so organizations on the business
-# line (free/standard/pro) are never pointed at it.
-_BUSINESS_UPGRADES: list[str] = ["standard", "pro", "enterprise"]
+# line (free/standard/pro/business) are never pointed at it.
+_BUSINESS_UPGRADES: list[str] = ["standard", "pro", "business", "enterprise"]
 
 
 def get_upgrade_plan(plan: str, feature: str) -> str | None:
@@ -453,7 +501,9 @@ def plan_meets_requirement(current_plan: str, required_plan: str) -> bool:
     if mode == 'ee':
         return True
     if mode == 'oss':
-        return required_plan != 'enterprise'
+        # Business and Enterprise gate EE-only features (SSO, LTI, SCORM,
+        # audit logs), which the community edition doesn't ship.
+        return required_plan not in ('business', 'enterprise')
     # SaaS: normal hierarchy check
     try:
         current_index = PLAN_HIERARCHY.index(current_plan)

@@ -16521,7 +16521,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Preskúmajte základy, bez záväzkov.",
@@ -16574,7 +16575,17 @@
         "multi_tenancy": "Multi-tenancy",
         "white_label": "White-label",
         "support_sla": "SLA podpory",
-        "self_hosted_option": "Možnosť vlastného hostovania"
+        "self_hosted_option": "Možnosť vlastného hostovania",
+        "plays": "Plays",
+        "paths": "Cesty",
+        "company_seats": "Miesta pre firmy",
+        "required_training": "Povinné školenia",
+        "live_sessions": "Živé relácie",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "AI Business",
+        "scheduled_atlas_agents": "Plánovaní agenti Atlas"
       },
       "pack_ai_credits": "{{formatted}} AI kreditov"
     },
@@ -17977,7 +17988,8 @@
       "slug_hint": "Používa sa v URL. Zmenou sa pokazia existujúce odkazy.",
       "settings_saved": "Nastavenia boli úspešne uložené",
       "reset": "Obnoviť",
-      "page_of": "Strana {{page}} z {{totalPages}}"
+      "page_of": "Strana {{page}} z {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM a auditné záznamy"
     },
     "login": {
       "invalid_credentials": "Neplatný e-mail alebo heslo",

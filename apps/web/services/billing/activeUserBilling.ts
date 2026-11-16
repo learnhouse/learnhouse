@@ -41,7 +41,7 @@ const stripe: any = new Proxy(
 // $1 / €1 per active user over the included limit (one minor-unit-hundred).
 const OVERAGE_UNIT_AMOUNT = 100;
 // Only these plans carry active-user overage.
-const BILLABLE_PLANS = new Set(["standard", "pro"]);
+const BILLABLE_PLANS = new Set(["standard", "pro", "business"]);
 // A renewal invoice reconciles every complete month of its own billing interval
 // (1 for monthly, 12 for annual) plus this buffer, so a missed invoice.created
 // webhook is caught up on the next renewal invoice. Idempotency (alreadyBilled)

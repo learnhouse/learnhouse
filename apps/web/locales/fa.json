@@ -15967,7 +15967,8 @@
         "personal": "شخصی",
         "family": "خانواده",
         "personal_family": "خانواده",
-        "enterprise": "سازمانی"
+        "enterprise": "سازمانی",
+        "business": "Business"
       },
       "taglines": {
         "free": "مبانی را بدون تعهد کاوش کنید.",
@@ -16014,7 +16015,17 @@
         "multi_tenancy": "چندمستأجری",
         "white_label": "برچسب سفید",
         "support_sla": "SLA پشتیبانی",
-        "self_hosted_option": "گزینهٔ میزبانی شخصی"
+        "self_hosted_option": "گزینهٔ میزبانی شخصی",
+        "plays": "Plays",
+        "paths": "مسیرها",
+        "company_seats": "صندلی‌های شرکتی",
+        "required_training": "آموزش اجباری",
+        "live_sessions": "جلسات زنده",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "هوش مصنوعی Business",
+        "scheduled_atlas_agents": "عامل‌های زمان‌بندی‌شده Atlas"
       },
       "pack_ai_credits": "{{formatted}} اعتبار هوش مصنوعی"
     },
@@ -17341,7 +17352,8 @@
       "slug_hint": "در نشانی‌ها استفاده می‌شود. تغییر آن پیوندهای موجود را از کار می‌اندازد.",
       "settings_saved": "تنظیمات با موفقیت ذخیره شد",
       "reset": "بازنشانی",
-      "page_of": "صفحهٔ {{page}} از {{totalPages}}"
+      "page_of": "صفحهٔ {{page}} از {{totalPages}}",
+      "plan_business_desc": "SSO، LTI، SCORM و گزارش‌های حسابرسی"
     },
     "login": {
       "invalid_credentials": "ایمیل یا رمز عبور نامعتبر است",

@@ -1,10 +1,9 @@
 'use client'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, GraduationCap, Presentation } from 'lucide-react'
+import { Check } from 'lucide-react'
 import {
   GENERAL_PLANS,
-  PERSONAL_PLANS,
   ENTERPRISE_PLAN,
   ANNUAL_DISCOUNT,
   PERSONAL_ANNUAL_DISCOUNT,
@@ -16,8 +15,10 @@ import {
 import { planName, planNameByLabel, planTagline, featureLabel, featureBadge } from '../../_billing/planText'
 
 interface PricingGridProps {
-  planType: 'general' | 'personal'
-  onPlanTypeChange: (_t: 'general' | 'personal') => void
+  /** @deprecated Personal plans are no longer sold; only the general grid renders. */
+  planType?: 'general' | 'personal'
+  /** @deprecated See planType. */
+  onPlanTypeChange?: (_t: 'general' | 'personal') => void
   annual: boolean
   onAnnualChange: (_v: boolean) => void
   priceOverrides?: PriceOverrides
@@ -30,8 +31,6 @@ interface PricingGridProps {
 }
 
 export default function PricingGrid({
-  planType,
-  onPlanTypeChange,
   annual,
   onAnnualChange,
   priceOverrides,
@@ -66,7 +65,6 @@ export default function PricingGrid({
         .filter((p) => p.id !== 'free')
         .map((p) => (p.inheritsFrom === 'Free' ? { ...p, inheritsFrom: undefined, inheritsBadge: undefined } : p))
     : generalRaw
-  const personalPlans = PERSONAL_PLANS.map((p) => applyPlanLimits(p, planLimits))
 
   function renderPlanCard(plan: Plan, isPersonal: boolean) {
     const price = calcPrice(plan.id, plan.monthlyPrice, isPersonal)
@@ -93,7 +91,7 @@ export default function PricingGrid({
         {plan.popular && (
           <span
             className={`absolute top-4 end-4 text-[10px] font-bold px-2 py-0.5 rounded-md text-white ${
-              isPersonal ? 'bg-amber-500' : plan.id === 'pro' ? 'bg-purple-600' : 'bg-blue-600'
+              isPersonal ? 'bg-amber-500' : plan.id === 'pro' ? 'bg-purple-600' : plan.id === 'business' ? 'bg-teal-700' : 'bg-blue-600'
             }`}
           >
             {isPersonal ? t('billing.pricing.best_value') : t('billing.pricing.popular')}
@@ -159,38 +157,18 @@ export default function PricingGrid({
   }
 
   const annualSavePct = (() => {
-    const refPlan = planType === 'personal' ? 'personal' : 'standard'
+    const refPlan = 'standard'
     const override = priceOverrides?.[refPlan]
     if (override && override.monthly > 0 && override.annualPerMonth > 0) {
       return Math.round((1 - override.annualPerMonth / override.monthly) * 100)
     }
-    return Math.round((planType === 'personal' ? PERSONAL_ANNUAL_DISCOUNT : ANNUAL_DISCOUNT) * 100)
+    return Math.round(ANNUAL_DISCOUNT * 100)
   })()
 
   return (
     <div>
       {/* Toggles */}
-      <div className="flex flex-row items-center justify-between gap-4 mb-10 flex-wrap">
-        <div className="inline-flex items-center gap-1 bg-neutral-100 rounded-full p-1">
-          <button
-            onClick={() => onPlanTypeChange('general')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-              planType === 'general' ? 'bg-white text-black shadow-sm' : 'text-black/40 hover:text-black/60'
-            }`}
-          >
-            <Presentation size={16} />
-            {t('billing.pricing.general')}
-          </button>
-          <button
-            onClick={() => onPlanTypeChange('personal')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
-              planType === 'personal' ? 'bg-white text-black shadow-sm' : 'text-black/40 hover:text-black/60'
-            }`}
-          >
-            <GraduationCap size={16} />
-            {t('billing.pricing.personal')}
-          </button>
-        </div>
+      <div className="flex flex-row items-center justify-end gap-4 mb-10 flex-wrap">
         <div className="inline-flex items-center gap-1 bg-neutral-100 rounded-full p-1">
           <button
             onClick={() => onAnnualChange(false)}
@@ -216,19 +194,12 @@ export default function PricingGrid({
         </div>
       </div>
 
-      {/* Personal cards */}
-      {planType === 'personal' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {personalPlans.map((p) => renderPlanCard(p, true))}
-        </div>
-      )}
-
       {/* General cards */}
-      {planType === 'general' && (
+      {(
         <>
           <div
             className={`grid grid-cols-1 gap-5 ${
-              generalPlans.length <= 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'
+              generalPlans.length <= 2 ? 'md:grid-cols-2' : generalPlans.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 xl:grid-cols-4'
             }`}
           >
             {generalPlans.map((p) => renderPlanCard(p, false))}

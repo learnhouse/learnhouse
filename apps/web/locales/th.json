@@ -15932,7 +15932,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "สำรวจพื้นฐาน ไม่มีข้อผูกมัด",
@@ -15976,7 +15977,17 @@
         "multi_tenancy": "Multi Tenancy",
         "white_label": "White-label",
         "support_sla": "SLA การสนับสนุน",
-        "self_hosted_option": "ตัวเลือกโฮสต์เอง"
+        "self_hosted_option": "ตัวเลือกโฮสต์เอง",
+        "plays": "Plays",
+        "paths": "เส้นทาง",
+        "company_seats": "ที่นั่งสำหรับบริษัท",
+        "required_training": "การฝึกอบรมภาคบังคับ",
+        "live_sessions": "เซสชันสด",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "AI Business",
+        "scheduled_atlas_agents": "เอเจนต์ Atlas ตามกำหนดเวลา"
       },
       "pack_ai_credits": "{{formatted}} เครดิต AI",
       "admin_seats_count_one": "ที่นั่งผู้ดูแล {{formatted}} ที่",
@@ -17300,7 +17311,8 @@
       "dau_tooltip_one": "{{date}}: {{count}} ผู้ใช้",
       "enrolled_count_one": "ลงทะเบียน {{count}} คน",
       "users_count_one": "{{count}} ผู้ใช้",
-      "views_count_one": "{{count}} การเข้าชม"
+      "views_count_one": "{{count}} การเข้าชม",
+      "plan_business_desc": "SSO, LTI, SCORM และบันทึกการตรวจสอบ"
     },
     "login": {
       "invalid_credentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",

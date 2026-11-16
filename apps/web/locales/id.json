@@ -15932,7 +15932,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Jelajahi dasarnya, tanpa komitmen.",
@@ -15976,7 +15977,17 @@
         "multi_tenancy": "Multi Tenancy",
         "white_label": "White-label",
         "support_sla": "SLA Dukungan",
-        "self_hosted_option": "Opsi self-hosted"
+        "self_hosted_option": "Opsi self-hosted",
+        "plays": "Plays",
+        "paths": "Jalur",
+        "company_seats": "Kursi perusahaan",
+        "required_training": "Pelatihan wajib",
+        "live_sessions": "Sesi langsung",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "AI Business",
+        "scheduled_atlas_agents": "Agen Atlas terjadwal"
       },
       "pack_ai_credits": "{{formatted}} Kredit AI",
       "admin_seats_count_one": "{{formatted}} kursi Admin",
@@ -17300,7 +17311,8 @@
       "dau_tooltip_one": "{{date}}: {{count}} pengguna",
       "enrolled_count_one": "{{count}} terdaftar",
       "users_count_one": "{{count}} pengguna",
-      "views_count_one": "{{count}} tayangan"
+      "views_count_one": "{{count}} tayangan",
+      "plan_business_desc": "SSO, LTI, SCORM, dan log audit"
     },
     "login": {
       "invalid_credentials": "Email atau kata sandi tidak valid",

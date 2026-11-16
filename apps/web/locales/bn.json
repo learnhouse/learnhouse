@@ -15967,7 +15967,8 @@
         "personal": "পার্সোনাল",
         "family": "ফ্যামিলি",
         "personal_family": "ফ্যামিলি",
-        "enterprise": "এন্টারপ্রাইজ"
+        "enterprise": "এন্টারপ্রাইজ",
+        "business": "Business"
       },
       "taglines": {
         "free": "কোনো প্রতিশ্রুতি ছাড়াই মূল বিষয়গুলো ঘুরে দেখুন।",
@@ -16014,7 +16015,17 @@
         "multi_tenancy": "মাল্টি টেন্যান্সি",
         "white_label": "হোয়াইট-লেবেল",
         "support_sla": "সাপোর্ট SLA",
-        "self_hosted_option": "সেলফ-হোস্টেড অপশন"
+        "self_hosted_option": "সেলফ-হোস্টেড অপশন",
+        "plays": "Plays",
+        "paths": "পাথ",
+        "company_seats": "কোম্পানির আসন",
+        "required_training": "বাধ্যতামূলক প্রশিক্ষণ",
+        "live_sessions": "লাইভ সেশন",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business AI",
+        "scheduled_atlas_agents": "নির্ধারিত Atlas এজেন্ট"
       },
       "pack_ai_credits": "{{formatted}} AI ক্রেডিট"
     },
@@ -17341,7 +17352,8 @@
       "slug_hint": "URL-এ ব্যবহৃত হয়। এটি পরিবর্তন করলে বিদ্যমান লিঙ্ক কাজ করা বন্ধ করবে।",
       "settings_saved": "সেটিংস সফলভাবে সংরক্ষিত হয়েছে",
       "reset": "রিসেট",
-      "page_of": "পেজ {{page}} / {{totalPages}}"
+      "page_of": "পেজ {{page}} / {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM ও অডিট লগ"
     },
     "login": {
       "invalid_credentials": "ইমেল বা পাসওয়ার্ড ভুল",

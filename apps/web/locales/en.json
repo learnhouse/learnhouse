@@ -15949,7 +15949,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Explore the basics, no commitment.",
@@ -15996,7 +15997,17 @@
         "multi_tenancy": "Multi Tenancy",
         "white_label": "White-label",
         "support_sla": "Support SLA",
-        "self_hosted_option": "Self-hosted option"
+        "self_hosted_option": "Self-hosted option",
+        "plays": "Plays",
+        "paths": "Paths",
+        "company_seats": "Company seats",
+        "required_training": "Required training",
+        "live_sessions": "Live sessions",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business AI",
+        "scheduled_atlas_agents": "Scheduled Atlas agents"
       },
       "pack_ai_credits": "{{formatted}} AI Credits"
     },
@@ -17368,7 +17379,8 @@
       "slug_hint": "Used in URLs. Changing this will break existing links.",
       "settings_saved": "Settings saved successfully",
       "reset": "Reset",
-      "page_of": "Page {{page}} of {{totalPages}}"
+      "page_of": "Page {{page}} of {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM and audit logs"
     },
     "login": {
       "invalid_credentials": "Invalid email or password",

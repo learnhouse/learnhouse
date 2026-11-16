@@ -16229,7 +16229,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Esplora le basi, senza impegno.",
@@ -16279,7 +16280,17 @@
         "multi_tenancy": "Multi-tenancy",
         "white_label": "White-label",
         "support_sla": "SLA di supporto",
-        "self_hosted_option": "Opzione self-hosted"
+        "self_hosted_option": "Opzione self-hosted",
+        "plays": "Plays",
+        "paths": "Percorsi",
+        "company_seats": "Posti aziendali",
+        "required_training": "Formazione obbligatoria",
+        "live_sessions": "Sessioni live",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "IA Business",
+        "scheduled_atlas_agents": "Agenti Atlas pianificati"
       },
       "pack_ai_credits": "{{formatted}} crediti IA"
     },
@@ -17639,7 +17650,8 @@
       "slug_hint": "Usato negli URL. Modificarlo interromperà i link esistenti.",
       "settings_saved": "Impostazioni salvate con successo",
       "reset": "Reimposta",
-      "page_of": "Pagina {{page}} di {{totalPages}}"
+      "page_of": "Pagina {{page}} di {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM e log di audit"
     },
     "login": {
       "invalid_credentials": "Email o password non valida",

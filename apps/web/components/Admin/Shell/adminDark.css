@@ -55,6 +55,7 @@ html:has([data-adm-theme]) {
   --adm-plan-free: #a3a3a3;
   --adm-plan-standard: #0ea5e9;
   --adm-plan-pro: #7c3aed;
+  --adm-plan-business: #0f766e;
   --adm-plan-enterprise: #f59e0b;
 
   background-color: var(--adm-canvas);
@@ -88,6 +89,7 @@ html[data-theme='dark']:has([data-adm-theme]) {
   --adm-plan-free: #a1a1aa;
   --adm-plan-standard: #38bdf8;
   --adm-plan-pro: #a78bfa;
+  --adm-plan-business: #2dd4bf;
   --adm-plan-enterprise: #fbbf24;
 }
 

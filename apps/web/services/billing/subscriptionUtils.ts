@@ -87,7 +87,19 @@ export function selectCheckoutCustomerId(
 // changes but the metadata stays stale, so reconciling org config from
 // metadata would set the WRONG (old) plan. The price id is the source of truth.
 
-export type PriceMapEntry = { plan: string; billing?: "monthly" | "annual"; isPack: boolean };
+export type PriceMapEntry = {
+  plan: string;
+  billing?: "monthly" | "annual";
+  isPack: boolean;
+  /** A grandfathered price: resolves to its plan but is never sold again. */
+  legacy?: boolean;
+};
+
+/** Parse a comma-separated env value of Stripe price ids ("" / unset → []). */
+export function parseLegacyPriceIds(value: string | undefined | null): string[] {
+  if (!value) return [];
+  return value.split(",").map((id) => id.trim()).filter(Boolean);
+}
 
 /**
  * Build a reverse lookup (Stripe price id → plan/billing) from the app's
@@ -97,8 +109,18 @@ export type PriceMapEntry = { plan: string; billing?: "monthly" | "annual"; isPa
 export function buildPriceToPlan(
   priceIds: Record<string, Partial<Record<"monthly" | "annual", string>>>,
   packPriceIds: Record<string, string> = {},
+  legacyPriceIds: Record<string, Partial<Record<"monthly" | "annual", readonly string[]>> | undefined> = {},
 ): Map<string, PriceMapEntry> {
   const map = new Map<string, PriceMapEntry>();
+  // Legacy (grandfathered) ids first, so a current id always wins if an id is
+  // ever listed in both places by mistake.
+  for (const [plan, byBilling] of Object.entries(legacyPriceIds)) {
+    for (const [billing, ids] of Object.entries(byBilling ?? {})) {
+      for (const priceId of ids ?? []) {
+        if (priceId) map.set(priceId, { plan, billing: billing as "monthly" | "annual", isPack: false, legacy: true });
+      }
+    }
+  }
   for (const [plan, byBilling] of Object.entries(priceIds)) {
     for (const [billing, priceId] of Object.entries(byBilling ?? {})) {
       if (priceId) map.set(priceId, { plan, billing: billing as "monthly" | "annual", isPack: false });

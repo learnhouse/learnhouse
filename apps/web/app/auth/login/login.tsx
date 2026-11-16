@@ -263,11 +263,11 @@ const LoginClient = (props: LoginClientProps) => {
         setSsoEnabled(false)
         return
       }
-      // SSO is only available for enterprise plan (requires EE or SaaS/enterprise)
+      // SSO comes with the Business and Enterprise plans (or EE)
       const orgConfig = props.org?.config?.config
       const plan = orgConfig?.plan ?? orgConfig?.cloud?.plan
       const mode = getDeploymentMode()
-      if (mode === 'oss' || (mode === 'saas' && plan !== 'enterprise')) {
+      if (mode === 'oss' || (mode === 'saas' && plan !== 'business' && plan !== 'enterprise')) {
         setSsoEnabled(false)
         return
       }

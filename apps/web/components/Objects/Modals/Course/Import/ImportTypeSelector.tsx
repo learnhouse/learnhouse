@@ -41,7 +41,7 @@ function ImportTypeSelector({ onSelectType, currentPlan }: ImportTypeSelectorPro
             <h3 className={`font-semibold ${canUseScorm ? 'text-gray-900' : 'text-gray-500'}`}>
               {t('courses.import.scorm_package')}
             </h3>
-            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.scorm?.required_plan || 'enterprise') as PlanLevel} size="sm" />
+            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.scorm?.required_plan || 'business') as PlanLevel} size="sm" />
           </div>
           <p className={`text-sm text-center ${canUseScorm ? 'text-gray-500' : 'text-gray-400'}`}>
             {t('courses.import.scorm_description')}

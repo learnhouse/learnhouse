@@ -16521,7 +16521,8 @@
         "personal": "Особистий",
         "family": "Сімейний",
         "personal_family": "Сімейний",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Вивчіть основи без зобов'язань.",
@@ -16574,7 +16575,17 @@
         "multi_tenancy": "Багатоорендність",
         "white_label": "White-label",
         "support_sla": "SLA підтримки",
-        "self_hosted_option": "Варіант із власним хостингом"
+        "self_hosted_option": "Варіант із власним хостингом",
+        "plays": "Plays",
+        "paths": "Траєкторії",
+        "company_seats": "Місця для компаній",
+        "required_training": "Обовʼязкове навчання",
+        "live_sessions": "Живі сесії",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "ШІ Business",
+        "scheduled_atlas_agents": "Заплановані агенти Atlas"
       },
       "pack_ai_credits": "Кредитів ШІ: {{formatted}}"
     },
@@ -17977,7 +17988,8 @@
       "slug_hint": "Використовується в URL-адресах. Зміна зламає наявні посилання.",
       "settings_saved": "Налаштування успішно збережено",
       "reset": "Скинути",
-      "page_of": "Сторінка {{page}} із {{totalPages}}"
+      "page_of": "Сторінка {{page}} із {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM і журнали аудиту"
     },
     "login": {
       "invalid_credentials": "Недійсна електронна адреса або пароль",

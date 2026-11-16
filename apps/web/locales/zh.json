@@ -15934,7 +15934,8 @@
         "personal": "个人版",
         "family": "家庭版",
         "personal_family": "家庭版",
-        "enterprise": "企业版"
+        "enterprise": "企业版",
+        "business": "Business"
       },
       "taglines": {
         "free": "无需承诺，体验基础功能。",
@@ -15978,7 +15979,17 @@
         "multi_tenancy": "多租户",
         "white_label": "白标",
         "support_sla": "支持 SLA",
-        "self_hosted_option": "可选自托管"
+        "self_hosted_option": "可选自托管",
+        "plays": "Plays",
+        "paths": "学习路径",
+        "company_seats": "企业席位",
+        "required_training": "必修培训",
+        "live_sessions": "直播课程",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business AI",
+        "scheduled_atlas_agents": "定时 Atlas 智能体"
       },
       "pack_ai_credits": "{{formatted}} AI 额度",
       "admin_seats_count_one": "{{formatted}} 个管理员席位",
@@ -17302,7 +17313,8 @@
       "dau_tooltip_one": "{{date}}：{{count}} 位用户",
       "enrolled_count_one": "{{count}} 人已报名",
       "users_count_one": "{{count}} 位用户",
-      "views_count_one": "{{count}} 次浏览"
+      "views_count_one": "{{count}} 次浏览",
+      "plan_business_desc": "SSO、LTI、SCORM 和审计日志"
     },
     "login": {
       "invalid_credentials": "邮箱或密码无效",

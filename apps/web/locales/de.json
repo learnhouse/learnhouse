@@ -15967,7 +15967,8 @@
         "personal": "Persönlich",
         "family": "Familie",
         "personal_family": "Familie",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Entdecken Sie die Grundlagen, ganz unverbindlich.",
@@ -16014,7 +16015,17 @@
         "multi_tenancy": "Mandantenfähigkeit",
         "white_label": "White-Label",
         "support_sla": "Support-SLA",
-        "self_hosted_option": "Self-Hosted-Option"
+        "self_hosted_option": "Self-Hosted-Option",
+        "plays": "Plays",
+        "paths": "Lernpfade",
+        "company_seats": "Firmenplätze",
+        "required_training": "Pflichtschulungen",
+        "live_sessions": "Live-Sessions",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business-KI",
+        "scheduled_atlas_agents": "Geplante Atlas-Agenten"
       },
       "pack_ai_credits": "{{formatted}} KI-Credits"
     },
@@ -17341,7 +17352,8 @@
       "slug_hint": "Wird in URLs verwendet. Eine Änderung macht bestehende Links ungültig.",
       "settings_saved": "Einstellungen erfolgreich gespeichert",
       "reset": "Zurücksetzen",
-      "page_of": "Seite {{page}} von {{totalPages}}"
+      "page_of": "Seite {{page}} von {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM und Audit-Logs"
     },
     "login": {
       "invalid_credentials": "Ungültige E-Mail-Adresse oder ungültiges Passwort",
