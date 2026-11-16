@@ -13424,7 +13424,10 @@
     },
     "loader": {
       "failed": "Gagal memuat editor. Silakan muat ulang halaman.",
-      "refresh": "Muat ulang"
+      "refresh": "Muat ulang",
+      "signed_out": "Sesi Anda tidak dapat dipulihkan. Masuk lagi untuk mengedit aktivitas ini.",
+      "stalled": "Editor terlalu lama dimuat.",
+      "sign_in": "Masuk"
     },
     "activity_switcher": {
       "scroll_left": "Gulir ke kiri",
@@ -14101,7 +14104,10 @@
       "on": "Aktif untuk aktivitas ini",
       "off": "Nonaktif untuk aktivitas ini",
       "turned_off_toast": "Pengeditan langsung dinonaktifkan oleh admin; perubahan kini disimpan secara manual",
-      "save_first": "Simpan perubahan Anda sebelum mengaktifkan pengeditan langsung."
+      "save_first": "Simpan perubahan Anda sebelum mengaktifkan pengeditan langsung.",
+      "reconnecting": "Menyambung ulang ke pengeditan langsung… Anda bisa terus bekerja; perubahan disimpan otomatis.",
+      "unavailable_manual": "Pengeditan langsung tidak tersedia, perubahan disimpan secara manual.",
+      "forbidden": "Anda tidak dapat mengedit aktivitas ini."
     },
     "save_shortcut": "Simpan (⌘S)",
     "ai_editor_v2": {

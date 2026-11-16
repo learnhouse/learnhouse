@@ -14,6 +14,8 @@ import ResourceActivity from '@components/Objects/Activities/Resource/ResourceAc
 import OnboardingTracker from '@components/Dashboard/Onboarding/OnboardingTracker'
 import { useRegisterAtlasPageContext } from '@ee/components/Atlas/AtlasMiniContext'
 import TranslationGate, { useEditorLocaleParam } from './Translation/TranslationGate'
+import { withNextParam } from '@/lib/auth/nextParam'
+import { EDITOR_READY_FALLBACK_MS, LOADER_STALL_MS, editorLoaderView } from './editorLoaderState'
 
 interface EditorLoaderProps {
   courseid: string
@@ -31,9 +33,11 @@ interface EditorLoaderProps {
  */
 export default function EditorLoader({ courseid: _courseid, activityuuid }: EditorLoaderProps) {
   const { t } = useTranslation()
-  const { accessToken: access_token } = useAuth()
+  const { accessToken: access_token, status: authStatus } = useAuth()
   const [editorReady, setEditorReady] = React.useState(false)
   const markEditorReady = React.useCallback(() => setEditorReady(true), [])
+  // Set when the data has not arrived after LOADER_STALL_MS (see editorLoaderState)
+  const [stalled, setStalled] = React.useState(false)
   // `?lang=fr`: edit that translation of the page (Translation/TranslationGate)
   const locale = useEditorLocaleParam()
 
@@ -53,6 +57,26 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
   const org = bootstrap?.org
   const dataReady = Boolean(bootstrap)
 
+  // Never sit on the skeleton for good: offer a reload when the data does not
+  // come, and uncover a mounted editor that never reported ready.
+  React.useEffect(() => {
+    if (dataReady) return
+    const id = setTimeout(() => setStalled(true), LOADER_STALL_MS)
+    return () => clearTimeout(id)
+  }, [dataReady])
+  React.useEffect(() => {
+    if (!dataReady || editorReady) return
+    const id = setTimeout(markEditorReady, EDITOR_READY_FALLBACK_MS)
+    return () => clearTimeout(id)
+  }, [dataReady, editorReady, markEditorReady])
+  const view = editorLoaderView({
+    hasData: dataReady,
+    hasError: !!bootstrapError,
+    hasToken: !!access_token,
+    authStatus,
+    stalled,
+  })
+
   // Tell Atlas the user is editing this specific activity. Both course
   // AND activity context flow to the backend, so terse messages like
   // "translate this" / "make it shorter" resolve to the focused activity
@@ -70,16 +94,32 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
   )
 
   // Only when nothing loaded: a failed background refetch must not unmount an open editor
-  if (bootstrapError && !bootstrap) {
+  if (view === 'error' || view === 'stalled' || view === 'signed_out') {
+    const message =
+      view === 'signed_out'
+        ? t('editor.loader.signed_out', 'Your session could not be restored. Sign in again to edit this activity.')
+        : view === 'stalled'
+          ? t('editor.loader.stalled', 'The editor is taking too long to load.')
+          : t('editor.loader.failed')
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500">
-        <p className="text-sm">{t('editor.loader.failed')}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="text-sm text-indigo-600 hover:underline"
-        >
-          {t('editor.loader.refresh')}
-        </button>
+      <div data-testid="editor-loader-failed" data-view={view} className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500">
+        <p className="text-sm">{message}</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => window.location.reload()}
+            className="text-sm text-indigo-600 hover:underline"
+          >
+            {t('editor.loader.refresh')}
+          </button>
+          {view === 'signed_out' && (
+            <a
+              href={withNextParam('/login', typeof window !== 'undefined' ? window.location.pathname + window.location.search : null)}
+              className="text-sm text-indigo-600 hover:underline"
+            >
+              {t('editor.loader.sign_in', 'Sign in')}
+            </a>
+          )}
+        </div>
       </div>
     )
   }

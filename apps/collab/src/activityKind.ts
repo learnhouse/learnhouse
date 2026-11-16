@@ -3,6 +3,7 @@
 import type Redis from 'ioredis'
 import type { RoomKind } from './rooms.js'
 import { ACTIVITY_SEATS, sanitizeActivityAwareness } from './activityPresence.js'
+import { AUTH_REFUSAL, AuthRefusal, isUnavailableStatus } from './authRefusal.js'
 import {
   type ActivityApi,
   type ActivityCache,
@@ -166,11 +167,22 @@ export function createActivityKind(
         response = await fetchAccess(uuid, token)
       } catch (err) {
         console.error(`[collab] Access check failed for ${uuid}:`, err)
-        throw new Error('Authentication service unavailable')
+        throw new AuthRefusal(AUTH_REFUSAL.unavailable, 'Authentication service unavailable')
       }
-      if (!response.ok) throw new Error('Not authorized for this activity')
-      const user = presenceIdentity((await response.json()) as AccessAnswer)
-      if (!user.id) throw new Error('Not authorized for this activity')
+      // A failing or overloaded API is "try again", not "no": the editor
+      // retries those and gives up on refusals.
+      if (isUnavailableStatus(response.status)) {
+        throw new AuthRefusal(AUTH_REFUSAL.unavailable, 'Authentication service unavailable')
+      }
+      if (!response.ok) throw new AuthRefusal(AUTH_REFUSAL.refused, 'Not authorized for this activity')
+      let answer: AccessAnswer
+      try {
+        answer = (await response.json()) as AccessAnswer
+      } catch {
+        throw new AuthRefusal(AUTH_REFUSAL.unavailable, 'Authentication service unavailable')
+      }
+      const user = presenceIdentity(answer)
+      if (!user.id) throw new AuthRefusal(AUTH_REFUSAL.refused, 'Not authorized for this activity')
       return { readOnly: user.role !== 'editor', user }
     },
 

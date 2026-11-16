@@ -30,7 +30,8 @@ const quietLog = { log() {}, warn() {}, error() {} }
 /** In-memory API: content, version and ydoc per activity, plus who may do what. */
 function memoryApi() {
   const activities = new Map<string, { content: unknown; version: number; ydoc: string | null; ydocVersion: number | null }>()
-  const roles = new Map<number, 'editor' | 'viewer' | null>()
+  // 'down': the API can't be reached; 'error': it answers 502
+  const roles = new Map<number, 'editor' | 'viewer' | 'down' | 'error' | null>()
   const puts: Array<{ uuid: string; body: PutStateBody; at: number }> = []
   const api: ActivityApi = {
     async getState(uuid) {
@@ -71,6 +72,8 @@ async function startServer(opts: { debounceMs: number; maxDebounceMs: number }) 
         const auth = String((init?.headers as Record<string, string>)?.Authorization ?? '')
         const sub = Number((jwt.decode(auth.replace('Bearer ', '')) as any)?.sub)
         const role = mem.roles.get(sub)
+        if (role === 'down') throw new Error('connect ECONNREFUSED')
+        if (role === 'error') return new Response('{}', { status: 502 })
         if (!role) return new Response('{}', { status: 403 })
         return new Response(
           JSON.stringify({ role, user: { id: sub, username: `user${sub}`, display_name: `User ${sub}`, color: '#112233' } }),
@@ -113,7 +116,7 @@ interface Client {
   failed?: string
 }
 
-function connect(server: Started, userId: number, name = ROOM): Promise<Client> {
+function connect(server: Started, userId: number, name = ROOM, tokenOverride?: string): Promise<Client> {
   const ydoc = new Y.Doc()
   const client: Client = { ydoc, stateless: [], closes: [], provider: null as any }
   return new Promise((resolve) => {
@@ -121,7 +124,7 @@ function connect(server: Started, userId: number, name = ROOM): Promise<Client> 
       url: server.url,
       name,
       document: ydoc,
-      token: token(userId),
+      token: tokenOverride ?? token(userId),
       onAuthenticated: ({ scope }) => {
         client.scope = scope
       },
@@ -214,14 +217,38 @@ describe('collab server: activity rooms', () => {
     assert.deepEqual(json(editor), before, 'the viewer edit never reached the room')
 
     const learner = await connect(server, 4)
-    assert.ok(learner.failed, 'learner authentication fails')
+    assert.equal(learner.failed, 'access-refused', 'learner authentication fails')
     learner.provider.destroy()
 
     const badRoom = await connect(server, 1, 'activity:activity_not-a-uuid')
-    assert.ok(badRoom.failed)
+    assert.equal(badRoom.failed, 'access-refused')
     badRoom.provider.destroy()
     viewer.provider.destroy()
     editor.provider.destroy()
+    await waitFor(() => !server.collab.server.hocuspocus.documents.has(ROOM), 3000, 'unload')
+  })
+
+  it('tells a refusal apart from an access check that could not run', async () => {
+    server.mem.roles.set(5, null)
+    server.mem.roles.set(6, 'down')
+    server.mem.roles.set(7, 'error')
+    const refused = await connect(server, 5)
+    const down = await connect(server, 6)
+    const failing = await connect(server, 7)
+    const forged = await connect(server, 1, ROOM, jwt.sign({ sub: 1 }, 'x'.repeat(40), { algorithm: 'HS256' }))
+    const expired = await connect(server, 1, ROOM, jwt.sign({ sub: 1, exp: Math.floor(Date.now() / 1000) - 60 }, SECRET, { algorithm: 'HS256' }))
+    assert.equal(refused.failed, 'access-refused')
+    assert.equal(down.failed, 'auth-unavailable')
+    assert.equal(failing.failed, 'auth-unavailable')
+    assert.equal(forged.failed, 'invalid-token')
+    assert.equal(expired.failed, 'invalid-token')
+    for (const c of [refused, down, failing, forged, expired]) c.provider.destroy()
+
+    // Once the API is back the same user gets in
+    server.mem.roles.set(6, 'editor')
+    const back = await connect(server, 6)
+    assert.equal(back.failed, undefined)
+    back.provider.destroy()
     await waitFor(() => !server.collab.server.hocuspocus.documents.has(ROOM), 3000, 'unload')
   })
 
@@ -242,7 +269,7 @@ describe('collab server: activity rooms', () => {
     await waitFor(() => !server.collab.server.hocuspocus.documents.has(ROOM), 3000, 'unload')
   })
 
-  it('relays editors\' mouse pointers in memory only, never viewers\' and never as a save', async () => {
+  it('relays mouse pointers in memory only (viewers\' too) and never as a save', async () => {
     const a = await connect(server, 1)
     const b = await connect(server, 2)
     const viewer = await connect(server, 3)
@@ -251,8 +278,8 @@ describe('collab server: activity rooms', () => {
     viewer.provider.awareness!.setLocalStateField('pointer', { b: 0, x: 0.1, y: 0.1 })
     await waitFor(() => b.provider.awareness!.getStates().get(a.ydoc.clientID)?.pointer?.b === 2, 3000, 'pointer relayed')
     assert.deepEqual(b.provider.awareness!.getStates().get(a.ydoc.clientID)!.pointer, { b: 2, x: 0.25, y: 0.5 })
-    await waitFor(() => b.provider.awareness!.getStates().has(viewer.ydoc.clientID), 3000, 'viewer presence')
-    assert.equal('pointer' in b.provider.awareness!.getStates().get(viewer.ydoc.clientID)!, false)
+    // A pointer is presence, not an edit: read-only sessions share theirs too
+    await waitFor(() => b.provider.awareness!.getStates().get(viewer.ydoc.clientID)?.pointer?.b === 0, 3000, 'viewer pointer')
     // Moving the pointer around is not an edit: nothing is stored
     for (let i = 0; i < 20; i++) {
       a.provider.awareness!.setLocalStateField('pointer', { b: 2, x: 0.25 + i / 100, y: 0.5 })

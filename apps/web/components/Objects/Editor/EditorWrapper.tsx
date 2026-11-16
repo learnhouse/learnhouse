@@ -11,6 +11,7 @@ import { preloadComponentsForContent } from './editorPreload'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useAuth } from '@components/Contexts/AuthContext'
 import { useActivityCollab } from './Collab/useActivityCollab'
+import CollabNotice from './Collab/CollabNotice'
 import { useCollabSnapshot } from './Collab/CollabContext'
 import { type LiveEditingMode, activityLiveEditingMode, orgLiveEditing, resolveLiveEditing } from './Collab/liveEditing'
 import { getAPIUrl } from '@services/config/config'
@@ -104,8 +105,14 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     enabled: props.activity.activity_sub_type === 'SUBTYPE_DYNAMIC_PAGE' && liveEditing,
     getToken: getAccessToken,
   })
+  // Live editing gave up (refused by the room, or unreachable after every
+  // retry): the editor saves manually once autosave has nothing in flight.
+  const [manualFallback, setManualFallback] = React.useState(false)
   // The server is the judge (the org default may have changed since load)
-  const manualSave = !liveEditing || collab.phase === 'disabled'
+  const manualSave = !liveEditing || collab.phase === 'disabled' || manualFallback
+  // The API says this user may not edit: show the content, read-only
+  const forbidden = collab.phase === 'forbidden'
+  const joining = collab.phase === 'connecting' || collab.phase === 'reconnecting'
   const [contentOverride, setContentOverride] = React.useState<any>(null)
   const [graceOver, setGraceOver] = React.useState(false)
   React.useEffect(() => {
@@ -143,6 +150,24 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     return () => clearInterval(id)
   }, [collab, graceOver, live])
   const liveSession = live && collab.phase === 'live' && liveEditing ? collab.session : null
+
+  // Hand autosave mode over to manual saving without losing what's on screen:
+  // wait until nothing is unsaved or in flight, then keep its content.
+  React.useEffect(() => {
+    if (collab.phase !== 'fallback' || manualFallback) return
+    const handOver = () => {
+      const handle = legacyHandle.current
+      if (handle && !handle.isClean()) return false
+      if (handle && graceOver) setContentOverride(handle.getJSON())
+      setManualFallback(true)
+      return true
+    }
+    if (handOver()) return
+    const id = setInterval(() => {
+      if (handOver()) clearInterval(id)
+    }, 250)
+    return () => clearInterval(id)
+  }, [collab.phase, manualFallback, graceOver])
 
   // Live editing turned off while in the room: the server saved it and closed
   // the room. Continue on the same content, saving manually.
@@ -373,9 +398,10 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
             collab={liveSession}
             saveMode={manualSave ? 'manual' : 'auto'}
             liveEditing={{ mode: liveMode, orgDefault, onChange: setActivityLiveMode }}
-            readOnly={!manualSave && !liveSession && collab.phase === 'connecting' && !graceOver}
-            connecting={!manualSave && !liveSession && collab.phase === 'connecting'}
+            readOnly={forbidden || (!manualSave && !liveSession && joining && !graceOver)}
+            connecting={!forbidden && !manualSave && !liveSession && joining}
             onLegacyHandle={onLegacyHandle}
+            notice={<CollabNotice state={collab} live={!!liveSession} />}
             handoverSelection={handoverSelection}
             org={props.org}
             course={props.course}

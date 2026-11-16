@@ -13426,7 +13426,10 @@
     },
     "loader": {
       "failed": "加载编辑器失败。请刷新页面。",
-      "refresh": "刷新"
+      "refresh": "刷新",
+      "signed_out": "无法恢复你的会话。请重新登录以编辑此活动。",
+      "stalled": "编辑器加载时间过长。",
+      "sign_in": "登录"
     },
     "activity_switcher": {
       "scroll_left": "向左滚动",
@@ -14103,7 +14106,10 @@
       "on": "此活动开启",
       "off": "此活动关闭",
       "turned_off_toast": "管理员已关闭实时编辑；更改现需手动保存",
-      "save_first": "开启实时编辑之前，请先保存更改。"
+      "save_first": "开启实时编辑之前，请先保存更改。",
+      "reconnecting": "正在重新连接实时编辑… 你可以继续工作，更改会自动保存。",
+      "unavailable_manual": "实时编辑不可用，更改需手动保存。",
+      "forbidden": "你无法编辑此活动。"
     },
     "save_shortcut": "保存（⌘S）",
     "ai_editor_v2": {

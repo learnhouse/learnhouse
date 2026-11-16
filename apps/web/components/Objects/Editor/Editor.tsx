@@ -144,6 +144,8 @@ interface EditorProps {
   saveMode?: 'auto' | 'manual'
   /** The activity's live editing override, shown in the History menu. */
   liveEditing?: LiveEditingControl
+  /** Shown above the content (live editing status: reconnecting, unavailable, read-only). */
+  notice?: React.ReactNode
 }
 
 export interface LiveEditingControl {
@@ -816,6 +818,7 @@ function Editor(props: EditorProps) {
           {editorLocale && <TranslationSourcePane activity={props.activity} />}
           <div className="activity-editor-content-wrapper" style={{ flex: 1, margin: 0, marginTop: '97px' }}>
             {editorLocale && <TranslationBar activity={props.activity} course={props.course} />}
+            {props.notice}
             <AIEditorToolkit activity={props.activity} editor={editor} />
             <DynamicReachProvider editor={editor} activityUuid={props.activity.activity_uuid}>
               {/* Blocks follow the page behind them like in the lesson view

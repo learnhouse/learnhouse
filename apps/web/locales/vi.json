@@ -13424,7 +13424,10 @@
     },
     "loader": {
       "failed": "Không thể tải trình soạn thảo. Vui lòng làm mới trang.",
-      "refresh": "Làm mới"
+      "refresh": "Làm mới",
+      "signed_out": "Không thể khôi phục phiên của bạn. Đăng nhập lại để chỉnh sửa hoạt động này.",
+      "stalled": "Trình soạn thảo tải quá lâu.",
+      "sign_in": "Đăng nhập"
     },
     "activity_switcher": {
       "scroll_left": "Cuộn sang trái",
@@ -14101,7 +14104,10 @@
       "on": "Bật cho hoạt động này",
       "off": "Tắt cho hoạt động này",
       "turned_off_toast": "Quản trị viên đã tắt chỉnh sửa trực tiếp; các thay đổi hiện được lưu thủ công",
-      "save_first": "Hãy lưu các thay đổi của bạn trước khi bật chỉnh sửa trực tiếp."
+      "save_first": "Hãy lưu các thay đổi của bạn trước khi bật chỉnh sửa trực tiếp.",
+      "reconnecting": "Đang kết nối lại chỉnh sửa trực tiếp… Bạn có thể tiếp tục làm việc; các thay đổi được tự động lưu.",
+      "unavailable_manual": "Chỉnh sửa trực tiếp không khả dụng, các thay đổi được lưu thủ công.",
+      "forbidden": "Bạn không thể chỉnh sửa hoạt động này."
     },
     "save_shortcut": "Lưu (⌘S)",
     "ai_editor_v2": {

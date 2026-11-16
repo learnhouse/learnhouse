@@ -13458,7 +13458,10 @@
     },
     "loader": {
       "failed": "Der Editor konnte nicht geladen werden. Bitte aktualisieren Sie die Seite.",
-      "refresh": "Aktualisieren"
+      "refresh": "Aktualisieren",
+      "signed_out": "Ihre Sitzung konnte nicht wiederhergestellt werden. Melden Sie sich erneut an, um diese Aktivität zu bearbeiten.",
+      "stalled": "Das Laden des Editors dauert zu lange.",
+      "sign_in": "Anmelden"
     },
     "activity_switcher": {
       "scroll_left": "Nach links scrollen",
@@ -14136,7 +14139,10 @@
       "on": "Für diese Aktivität an",
       "off": "Für diese Aktivität aus",
       "turned_off_toast": "Die Live-Bearbeitung wurde von einem Admin deaktiviert; Änderungen werden jetzt manuell gespeichert",
-      "save_first": "Speichere deine Änderungen, bevor du die Live-Bearbeitung aktivierst."
+      "save_first": "Speichere deine Änderungen, bevor du die Live-Bearbeitung aktivierst.",
+      "reconnecting": "Verbindet neu mit der Live-Bearbeitung… Sie können weiterarbeiten; Änderungen werden automatisch gespeichert.",
+      "unavailable_manual": "Live-Bearbeitung nicht verfügbar, Änderungen werden manuell gespeichert.",
+      "forbidden": "Sie können diese Aktivität nicht bearbeiten."
     },
     "save_shortcut": "Speichern (⌘S)",
     "ai_editor_v2": {

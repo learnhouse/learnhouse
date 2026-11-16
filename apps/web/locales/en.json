@@ -13443,7 +13443,10 @@
     },
     "loader": {
       "failed": "Failed to load editor. Please refresh the page.",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "signed_out": "Your session could not be restored. Sign in again to edit this activity.",
+      "stalled": "The editor is taking too long to load.",
+      "sign_in": "Sign in"
     },
     "activity_switcher": {
       "scroll_left": "Scroll left",
@@ -14120,7 +14123,10 @@
       "on": "On for this activity",
       "off": "Off for this activity",
       "turned_off_toast": "Live editing was turned off by an admin; changes are now saved manually",
-      "save_first": "Save your changes before turning live editing on."
+      "save_first": "Save your changes before turning live editing on.",
+      "reconnecting": "Reconnecting to live editing… You can keep working; changes save automatically.",
+      "unavailable_manual": "Live editing unavailable, changes save manually.",
+      "forbidden": "You can't edit this activity."
     },
     "save_shortcut": "Save (⌘S)",
     "ai_editor_v2": {

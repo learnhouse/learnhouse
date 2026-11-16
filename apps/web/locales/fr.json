@@ -13680,7 +13680,10 @@
     },
     "loader": {
       "failed": "Échec du chargement de l'éditeur. Veuillez actualiser la page.",
-      "refresh": "Actualiser"
+      "refresh": "Actualiser",
+      "signed_out": "Votre session n’a pas pu être restaurée. Reconnectez-vous pour modifier cette activité.",
+      "stalled": "Le chargement de l’éditeur prend trop de temps.",
+      "sign_in": "Se connecter"
     },
     "activity_switcher": {
       "scroll_left": "Défiler vers la gauche",
@@ -14375,7 +14378,10 @@
       "on": "Activé pour cette activité",
       "off": "Désactivé pour cette activité",
       "turned_off_toast": "L’édition en direct a été désactivée par un admin ; les modifications sont désormais enregistrées manuellement",
-      "save_first": "Enregistrez vos modifications avant d’activer l’édition en direct."
+      "save_first": "Enregistrez vos modifications avant d’activer l’édition en direct.",
+      "reconnecting": "Reconnexion à l’édition en direct… Vous pouvez continuer ; les modifications sont enregistrées automatiquement.",
+      "unavailable_manual": "Édition en direct indisponible, les modifications sont enregistrées manuellement.",
+      "forbidden": "Vous ne pouvez pas modifier cette activité."
     },
     "save_shortcut": "Enregistrer (⌘S)",
     "ai_editor_v2": {
