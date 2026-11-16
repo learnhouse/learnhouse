@@ -16521,7 +16521,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Изучите основы без обязательств.",
@@ -16574,7 +16575,17 @@
         "multi_tenancy": "Мультиарендность",
         "white_label": "White-label",
         "support_sla": "SLA поддержки",
-        "self_hosted_option": "Вариант на собственных серверах"
+        "self_hosted_option": "Вариант на собственных серверах",
+        "plays": "Plays",
+        "paths": "Траектории",
+        "company_seats": "Места для компаний",
+        "required_training": "Обязательное обучение",
+        "live_sessions": "Живые сессии",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "ИИ Business",
+        "scheduled_atlas_agents": "Запланированные агенты Atlas"
       },
       "pack_ai_credits": "Кредитов ИИ: {{formatted}}"
     },
@@ -17977,7 +17988,8 @@
       "slug_hint": "Используется в URL. Изменение сломает существующие ссылки.",
       "settings_saved": "Настройки успешно сохранены",
       "reset": "Сбросить",
-      "page_of": "Страница {{page}} из {{totalPages}}"
+      "page_of": "Страница {{page}} из {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM и журналы аудита"
     },
     "login": {
       "invalid_credentials": "Неверный email или пароль",

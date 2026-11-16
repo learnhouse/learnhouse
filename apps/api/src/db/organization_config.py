@@ -639,7 +639,7 @@ class OrgGeneralConfig(BaseModel):
 
 
 class OrgCloudConfig(BaseModel):
-    plan: Literal["free", "personal", "personal-family", "standard", "pro", "enterprise", "oss"] = "free"
+    plan: Literal["free", "personal", "personal-family", "standard", "pro", "business", "enterprise", "oss"] = "free"
     custom_domain: bool = False
 
 

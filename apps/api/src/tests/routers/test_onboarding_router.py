@@ -180,7 +180,7 @@ class TestPlanPicker:
             res = await call(make_app(admin_user), "GET", f"/orgs/{org.id}/plans")
         assert res.status_code == 200
         body = res.json()
-        assert body["current_plan"] == "free" and body["recommended_plan"] == "pro" and body["can_continue_free"]
+        assert body["current_plan"] == "free" and body["recommended_plan"] == "business" and body["can_continue_free"]
 
 
 class TestGoalsAndHub:

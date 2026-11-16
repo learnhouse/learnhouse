@@ -15967,7 +15967,8 @@
         "personal": "पर्सनल",
         "family": "फ़ैमिली",
         "personal_family": "फ़ैमिली",
-        "enterprise": "एंटरप्राइज़"
+        "enterprise": "एंटरप्राइज़",
+        "business": "Business"
       },
       "taglines": {
         "free": "बिना किसी प्रतिबद्धता के बुनियादी बातें जानें।",
@@ -16014,7 +16015,17 @@
         "multi_tenancy": "मल्टी टेनेंसी",
         "white_label": "व्हाइट-लेबल",
         "support_sla": "सपोर्ट SLA",
-        "self_hosted_option": "सेल्फ-होस्टेड विकल्प"
+        "self_hosted_option": "सेल्फ-होस्टेड विकल्प",
+        "plays": "Plays",
+        "paths": "पाथ",
+        "company_seats": "कंपनी सीटें",
+        "required_training": "अनिवार्य प्रशिक्षण",
+        "live_sessions": "लाइव सत्र",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business AI",
+        "scheduled_atlas_agents": "शेड्यूल किए गए Atlas एजेंट"
       },
       "pack_ai_credits": "{{formatted}} AI क्रेडिट"
     },
@@ -17341,7 +17352,8 @@
       "slug_hint": "URL में इस्तेमाल होता है। इसे बदलने से मौजूदा लिंक टूट जाएंगे।",
       "settings_saved": "सेटिंग्स सफलतापूर्वक सहेजी गईं",
       "reset": "रीसेट",
-      "page_of": "पेज {{page}} / {{totalPages}}"
+      "page_of": "पेज {{page}} / {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM और ऑडिट लॉग"
     },
     "login": {
       "invalid_credentials": "अमान्य ईमेल या पासवर्ड",

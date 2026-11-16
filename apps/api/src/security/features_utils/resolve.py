@@ -4,9 +4,12 @@ Central feature resolution logic (v2 config).
 4-layer resolution: deployment mode → plan config → overrides → purchased packs → admin toggles.
 """
 
+from datetime import datetime, timezone
+
 from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
 from src.security.features_utils.plans import (
     FEATURE_PLAN_REQUIREMENTS,
+    LEGACY_PRO_FEATURES,
     get_plan_feature_config,
     get_upgrade_plan,
     is_paying_plan,
@@ -43,6 +46,23 @@ def _get_plan_from_config(config: dict) -> str:
         return config.get("plan", "free")
     # v1: plan is under cloud.plan
     return config.get("cloud", {}).get("plan", "free")
+
+
+def _legacy_pro_grant(config: dict, plan: str, feature: str) -> bool:
+    """A Pro org from before the V2 plans keeps the features that moved to
+    Business until its ``legacy_pro_until`` date."""
+    if plan != "pro" or feature not in LEGACY_PRO_FEATURES:
+        return False
+    until = config.get("legacy_pro_until")
+    if not until:
+        return False
+    try:
+        end = datetime.fromisoformat(str(until))
+    except ValueError:
+        return False
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) < end
 
 
 def _get_admin_toggle(config: dict, feature: str) -> dict:
@@ -206,7 +226,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
 
     # Layer 2: Overrides (comp grants beyond the plan)
     overrides = _get_overrides(config, feature)
-    force_enabled = overrides.get("force_enabled", False)
+    force_enabled = overrides.get("force_enabled", False) or _legacy_pro_grant(config, plan, feature)
     extra_limit = overrides.get("extra_limit", 0)
 
     # "available" = the org is entitled to this feature: the plan includes it,

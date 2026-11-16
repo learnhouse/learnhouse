@@ -16,6 +16,7 @@ import {
   getCurrencySymbol,
   calcPrice,
   PACK_CATALOG,
+  PURCHASABLE_PACKS,
   getPackPrice,
   getPackCurrencySymbol,
   type PackCatalogEntry,
@@ -637,7 +638,7 @@ export default function PlanUsage({
       </div>
 
       {/* Add-ons (paid plans only) */}
-      {!subLoading && currentPlanId !== 'free' && (
+      {!subLoading && currentPlanId !== 'free' && (activePacks.length > 0 || PURCHASABLE_PACKS.length > 0) && (
         <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
           <div className="px-6 py-5 border-b border-black/[0.05]">
             <h2 className="font-bold text-base tracking-tight text-black">
@@ -708,6 +709,7 @@ export default function PlanUsage({
               })()}
 
             {/* Available add-ons */}
+            {PURCHASABLE_PACKS.length > 0 && (
             <div className="space-y-3">
               {activePacks.length > 0 && (
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-black/25">
@@ -715,7 +717,7 @@ export default function PlanUsage({
                 </p>
               )}
               <div className="grid md:grid-cols-2 gap-3">
-                {PACK_CATALOG.map((pack) => (
+                {PURCHASABLE_PACKS.map((pack) => (
                   <div
                     key={pack.id}
                     className="flex items-center justify-between rounded-2xl bg-white nice-shadow px-4 py-3 hover:shadow-md transition-shadow"
@@ -752,6 +754,7 @@ export default function PlanUsage({
                 ))}
               </div>
             </div>
+            )}
           </div>
         </div>
       )}

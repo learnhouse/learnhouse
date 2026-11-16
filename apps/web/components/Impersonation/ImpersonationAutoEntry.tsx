@@ -9,14 +9,16 @@ import { getAPIUrl } from '@services/config/config'
 import { errorMessage, startImpersonation } from '@services/ee/platform/api'
 import { usePlatformMe } from '@components/Admin/hooks'
 import { consoleUrl, isPlatformContext } from '@/lib/auth/impersonation'
+import { autoEntryMode } from '@/lib/auth/impersonationEntry'
 
 // Platform staff opening an org they don't belong to go straight in: the
 // impersonation starts at once as the org's owner (full access when they may
 // make changes, read-only otherwise) and the very URL they opened reloads as
 // them. Staff without the permission get a plain "no access" page. Members of
-// the org are just themselves and never see any of this.
+// the org are just themselves and never see any of this. Opening another
+// org while already impersonating switches to that org's owner right away;
+// the API ends the previous session when the next one starts.
 
-const EXEMPT = /^\/(login|signup|reset|forgot|verify-email|auth|home|new|redirect_from_auth|embed|oauth|payments|admin)(\/|$)/
 // Started this recently and still not impersonating: show the error, don't loop.
 const RETRY_GUARD_MS = 20_000
 
@@ -35,25 +37,19 @@ export default function ImpersonationAutoEntry() {
   }, [])
 
   const data = session?.data
-  const roles: any[] = Array.isArray(data?.roles) ? data.roles : []
-  const applies =
-    session?.status === 'authenticated' &&
-    data?.user?.is_superadmin === true &&
-    !data?.impersonation &&
-    !!where &&
-    !where.platform &&
-    !!where.slug &&
-    !EXEMPT.test(where.path) &&
-    !roles.some((r) => r?.org?.slug === where.slug)
-
-  if (!applies) return null
-  return <Entry slug={where!.slug!} token={data?.tokens?.access_token} />
+  const mode = autoEntryMode(session, where)
+  if (!mode) return null
+  return <Entry slug={where!.slug!} token={data?.tokens?.access_token} switching={mode === 'switch'} />
 }
 
-function Entry({ slug, token }: { slug: string; token?: string }) {
+function Entry({ slug, token, switching = false }: { slug: string; token?: string; switching?: boolean }) {
   const { t } = useTranslation()
   const me = usePlatformMe()
-  const allowed = me.can('impersonation.readonly')
+  // While impersonating, this browser's platform identity reads as the person
+  // being impersonated, so the switch leaves the permission check to the API
+  // (it refuses staff without it, and the error shows below).
+  const allowed = switching || me.can('impersonation.readonly')
+  const meLoading = !switching && me.isLoading
   const [error, setError] = React.useState('')
   const startedRef = React.useRef(false)
 
@@ -88,7 +84,7 @@ function Entry({ slug, token }: { slug: string; token?: string }) {
   }, [org?.id, slug, token, t])
 
   React.useEffect(() => {
-    if (startedRef.current || me.isLoading || !allowed || !org?.id) return
+    if (startedRef.current || meLoading || !allowed || !org?.id) return
     startedRef.current = true
     let recent = false
     try {
@@ -101,10 +97,10 @@ function Entry({ slug, token }: { slug: string; token?: string }) {
       return
     }
     void start()
-  }, [me.isLoading, allowed, org?.id, slug, start, t])
+  }, [meLoading, allowed, org?.id, slug, start, t])
 
   const back = consoleUrl(org?.id ? `/admin/organizations/${org.id}` : '/admin', readCookie('LH_frontend_domain'))
-  const blocked = !me.isLoading && !allowed
+  const blocked = !meLoading && !allowed
   const failed = !!error || orgQ.isError
 
   return (

@@ -577,56 +577,52 @@ def _utc(year, month, day, hour=12):
 
 class TestPlanHistory:
     """Overage is billed in arrears, so a past month must resolve to the plan
-    that applied during it, not whatever the org is on today."""
+    that applied during it, not whatever the org is on today. Paid business
+    plans include unlimited members, so these use the plans that still cap
+    them: Free (10) and Family (4)."""
 
     async def test_no_history_falls_back_to_current_plan(self, db):
         from src.services.orgs.plan_history import resolve_plan_for_month
         with _saas():
-            assert await resolve_plan_for_month(ORG, 2026, 7, "standard", db) == (
-                "standard", 200,
-            )
+            assert await resolve_plan_for_month(ORG, 2026, 7, "free", db) == ("free", 10)
 
     async def test_downgrade_after_the_month_bills_the_old_plan(self, db):
-        """Pro through July, downgraded in August: July is still a Pro month."""
+        """Free through July, moved to Family in August: July is still a Free month."""
         from src.services.orgs.plan_history import resolve_plan_for_month
-        await _add_plan_change(db, ORG, "pro", _utc(2026, 3, 1))
-        await _add_plan_change(db, ORG, "standard", _utc(2026, 8, 10))
+        await _add_plan_change(db, ORG, "free", _utc(2026, 3, 1))
+        await _add_plan_change(db, ORG, "personal-family", _utc(2026, 8, 10))
         with _saas():
-            assert await resolve_plan_for_month(ORG, 2026, 7, "standard", db) == (
-                "pro", 500,
-            )
+            assert await resolve_plan_for_month(ORG, 2026, 7, "personal-family", db) == ("free", 10)
 
     async def test_downgrade_inside_the_month_keeps_the_higher_limit(self, db):
         from src.services.orgs.plan_history import resolve_plan_for_month
-        await _add_plan_change(db, ORG, "pro", _utc(2026, 3, 1))
-        await _add_plan_change(db, ORG, "standard", _utc(2026, 7, 20))
+        await _add_plan_change(db, ORG, "free", _utc(2026, 3, 1))
+        await _add_plan_change(db, ORG, "personal-family", _utc(2026, 7, 20))
         with _saas():
-            assert await resolve_plan_for_month(ORG, 2026, 7, "standard", db) == (
-                "pro", 500,
-            )
+            assert await resolve_plan_for_month(ORG, 2026, 7, "personal-family", db) == ("free", 10)
 
     async def test_upgrade_inside_the_month_keeps_the_higher_limit(self, db):
         from src.services.orgs.plan_history import resolve_plan_for_month
-        await _add_plan_change(db, ORG, "standard", _utc(2026, 3, 1))
-        await _add_plan_change(db, ORG, "pro", _utc(2026, 7, 28))
+        await _add_plan_change(db, ORG, "personal-family", _utc(2026, 3, 1))
+        await _add_plan_change(db, ORG, "free", _utc(2026, 7, 28))
         with _saas():
-            assert await resolve_plan_for_month(ORG, 2026, 7, "pro", db) == ("pro", 500)
+            assert await resolve_plan_for_month(ORG, 2026, 7, "free", db) == ("free", 10)
 
     async def test_unlimited_plan_wins_over_a_numeric_limit(self, db):
         from src.services.orgs.plan_history import resolve_plan_for_month
-        await _add_plan_change(db, ORG, "standard", _utc(2026, 3, 1))
-        await _add_plan_change(db, ORG, "enterprise", _utc(2026, 7, 15))
+        await _add_plan_change(db, ORG, "free", _utc(2026, 3, 1))
+        await _add_plan_change(db, ORG, "standard", _utc(2026, 7, 15))
         with _saas():
             plan, limit = await resolve_plan_for_month(ORG, 2026, 7, "standard", db)
-        assert (plan, limit) == ("enterprise", 0)  # 0 == unlimited
+        assert (plan, limit) == ("standard", 0)  # 0 == unlimited
 
     async def test_history_starting_after_the_month_falls_back(self, db):
         """An org whose first recorded change is later than the billed month."""
         from src.services.orgs.plan_history import resolve_plan_for_month
-        await _add_plan_change(db, ORG, "pro", _utc(2026, 9, 1))
+        await _add_plan_change(db, ORG, "free", _utc(2026, 9, 1))
         with _saas():
-            assert await resolve_plan_for_month(ORG, 2026, 7, "standard", db) == (
-                "standard", 200,
+            assert await resolve_plan_for_month(ORG, 2026, 7, "personal-family", db) == (
+                "personal-family", 4,
             )
 
     async def test_history_is_org_scoped(self, db):
@@ -637,10 +633,10 @@ class TestPlanHistory:
 
     async def test_change_on_the_first_instant_of_the_month_counts(self, db):
         from src.services.orgs.plan_history import resolve_plan_for_month
-        await _add_plan_change(db, ORG, "free", _utc(2026, 1, 1))
-        await _add_plan_change(db, ORG, "pro", datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc))
+        await _add_plan_change(db, ORG, "personal-family", _utc(2026, 1, 1))
+        await _add_plan_change(db, ORG, "free", datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc))
         with _saas():
-            assert await resolve_plan_for_month(ORG, 2026, 7, "pro", db) == ("pro", 500)
+            assert await resolve_plan_for_month(ORG, 2026, 7, "free", db) == ("free", 10)
 
 
 class TestRecordPlanChange:
@@ -665,19 +661,32 @@ class TestRecordPlanChange:
 
 class TestSummaryUsesPlanHistory:
     async def test_summary_prices_a_past_month_at_the_old_plan(self, db, org):
-        """243 active users in July on Pro, downgraded to Standard in August.
-        July must bill against Pro's 500, i.e. no overage at all."""
+        """8 active users in July on Free, moved to Family in August. July
+        must bill against Free's 10, i.e. no overage at all."""
         from src.security.features_utils.active_users import get_active_user_summary
-        await _add_plan_change(db, ORG, "pro", _utc(2026, 3, 1))
-        await _add_plan_change(db, ORG, "standard", _utc(2026, 8, 10))
-        for user_id in range(1000, 1000 + 243):
+        await _add_plan_change(db, ORG, "free", _utc(2026, 3, 1))
+        await _add_plan_change(db, ORG, "personal-family", _utc(2026, 8, 10))
+        for user_id in range(1000, 1008):
             await _add_member(db, ORG, user_id)
             await _add_days(db, ORG, user_id, [date(2026, 7, 4), date(2026, 7, 5)])
         with _saas():
             summary = await get_active_user_summary(ORG, db, year=2026, month=7)
-        assert summary["active_users"] == 243
-        assert summary["plan"] == "pro"
-        assert summary["plan_limit"] == 500
+        assert summary["active_users"] == 8
+        assert summary["plan"] == "free"
+        assert summary["plan_limit"] == 10
+        assert summary["overage_units"] == 0
+
+    async def test_paid_plans_have_no_member_overage(self, db, org):
+        """Every paid business plan includes unlimited members."""
+        from src.security.features_utils.active_users import get_active_user_summary
+        await _add_plan_change(db, ORG, "pro", _utc(2026, 3, 1))
+        for user_id in range(1100, 1115):
+            await _add_member(db, ORG, user_id)
+            await _add_days(db, ORG, user_id, [date(2026, 7, 4), date(2026, 7, 5)])
+        with _saas():
+            summary = await get_active_user_summary(ORG, db, year=2026, month=7)
+        assert summary["plan_limit"] == 0
+        assert summary["members_beyond_included"] == 0
         assert summary["overage_units"] == 0
 
 

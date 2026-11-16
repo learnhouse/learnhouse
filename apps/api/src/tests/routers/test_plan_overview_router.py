@@ -152,7 +152,7 @@ class TestFeatureMatrix:
         assert f["courses"]["state"] == "included" and f["courses"]["limit"] == 1
         assert f["payments"]["upgrade_plan"] == "standard"
         assert f["boards"]["upgrade_plan"] == "pro"
-        assert f["sso"]["upgrade_plan"] == "enterprise"
+        assert f["sso"]["upgrade_plan"] == "business"
         assert f["remove_watermark"]["upgrade_plan"] == "standard"
         assert f["custom_domain"]["upgrade_plan"] == "pro"
         assert f["podcasts"]["toggle_tab"] == "features" and f["ai"]["toggle_tab"] == "ai" and f["sso"]["toggle_tab"] is None
@@ -164,7 +164,7 @@ class TestFeatureMatrix:
         with mode("saas"):
             pro = await po.get_plan_overview(org.id, db)
             ent = await po.get_plan_overview(other_org.id, db)
-        assert (pro["status"], pro["billing"], pro["next_plan"]) == ("active", "stripe", "enterprise")
+        assert (pro["status"], pro["billing"], pro["next_plan"]) == ("active", "stripe", "business")
         assert by_key(pro)["newsletter"]["limit"] == 50000
         assert (ent["plan"], ent["billing"], ent["next_plan"]) == ("enterprise", "contract", None)
         assert all(f["state"] == "included" for f in ent["features"])

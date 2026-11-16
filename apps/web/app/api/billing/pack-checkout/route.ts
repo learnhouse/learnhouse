@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPackCheckoutSession } from "@services/billing/stripe";
-import type { PackId } from "@services/billing/plans";
+import { RETIRED_PACKS, type PackId } from "@services/billing/plans";
 import { guardBilling, badRequest, requireOrgBillingAccess } from "../_lib";
 
 // POST /api/billing/pack-checkout
@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
   const { packId, orgId, orgSlug } = body ?? {};
   if (!packId || !orgId) {
     return badRequest("Missing required fields: packId, orgId");
+  }
+
+  if (RETIRED_PACKS.has(String(packId))) {
+    return NextResponse.json({ error: "This add-on is no longer available" }, { status: 410 });
   }
 
   const access = await requireOrgBillingAccess(orgId);

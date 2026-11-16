@@ -652,7 +652,7 @@ class TestGateMatrix:
 
     def test_trial_plan_unlocks_every_feature_up_to_pro(self):
         for feature in GATED:
-            if FEATURE_PLAN_REQUIREMENTS[feature] != "enterprise":
+            if FEATURE_PLAN_REQUIREMENTS[feature] not in ("business", "enterprise"):
                 assert PLAN_FEATURE_CONFIGS[trial.TRIAL_PLAN]["features"][feature]["enabled"], feature
 
 

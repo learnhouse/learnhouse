@@ -197,6 +197,7 @@ function DashMobileMenu() {
                   mode === 'ee' ? 'text-amber-400' :
                   mode === 'oss' ? 'text-green-400' :
                   plan === 'enterprise' ? 'text-amber-400' :
+                  plan === 'business' ? 'text-teal-400' :
                   plan === 'pro' ? 'text-purple-400' :
                   plan === 'standard' ? 'text-blue-400' :
                   'text-white/40'

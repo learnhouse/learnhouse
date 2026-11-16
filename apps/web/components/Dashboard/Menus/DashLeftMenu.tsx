@@ -287,6 +287,7 @@ function DashLeftMenu() {
     mode === 'ee' ? 'bg-amber-300' :
     mode === 'oss' ? 'bg-green-300' :
     plan === 'enterprise' ? 'bg-amber-300' :
+    plan === 'business' ? 'bg-teal-300' :
     plan === 'pro' ? 'bg-purple-300' :
     plan === 'standard' ? 'bg-blue-300' :
     'bg-white/30'
@@ -920,7 +921,7 @@ function DashLeftMenu() {
                   <HoverMenuItem asChild>
                     <Link href="/dash/developers/sso" className={MENU_ITEM_CLASS}>
                       <Lock size={16} weight="duotone" />
-                      <span className="flex items-center">{t('dashboard.organization.settings.tabs.sso', { defaultValue: 'SSO' })}<PlanBadge currentPlan={plan} requiredPlan="enterprise" variant="dark" /></span>
+                      <span className="flex items-center">{t('dashboard.organization.settings.tabs.sso', { defaultValue: 'SSO' })}<PlanBadge currentPlan={plan} requiredPlan="business" variant="dark" /></span>
                     </Link>
                   </HoverMenuItem>
                 </HoverMenuContent>

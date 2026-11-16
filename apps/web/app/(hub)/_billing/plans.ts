@@ -10,7 +10,7 @@
 // The platform repo imports ALL_PLANS / PERSONAL_PLANS / PricingCards from
 // @components/Landing/*, none of which exist in apps/web. This module rebuilds
 // the minimal catalog the UI needs: the plan hierarchy
-// (free → personal → personal-family → standard → pro → enterprise), their
+// (free → personal → personal-family → standard → pro → business → enterprise), their
 // display/badge styling, static fallback prices, and the add-on packs.
 //
 // Live prices/limits come from GET /api/billing/prices and are layered on top
@@ -28,6 +28,7 @@ export type PlanId =
   | "personal-family"
   | "standard"
   | "pro"
+  | "business"
   | "enterprise";
 export type PackId = "ai_500";
 
@@ -97,6 +98,8 @@ const BADGE = {
   standard:
     "bg-gradient-to-br from-blue-100 to-blue-200 text-blue-800 border-blue-200 shadow-sm shadow-blue-200/50",
   pro: "bg-gradient-to-br from-purple-100 to-purple-200 text-purple-800 border-purple-200 shadow-sm shadow-purple-200/50",
+  business:
+    "bg-gradient-to-br from-teal-100 to-teal-200 text-teal-800 border-teal-200 shadow-sm shadow-teal-200/50",
   personal:
     "bg-gradient-to-br from-amber-100 to-yellow-200 text-amber-800 border-amber-200 shadow-sm shadow-amber-200/50",
   enterprise:
@@ -124,7 +127,7 @@ export const GENERAL_PLANS: Plan[] = [
     id: "standard",
     name: "Standard",
     tagline: "Payments, AI, analytics, and more.",
-    monthlyPrice: 49,
+    monthlyPrice: 59,
     badge: BADGE.standard,
     ctaStyle: "bg-blue-600 text-white hover:bg-blue-700",
     topGlow: "rgba(59,130,246,0.05)",
@@ -133,8 +136,8 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Free",
     inheritsBadge: BADGE.free,
     features: [
-      { label: "200 Members", limitKey: "members" },
-      { label: "2 Admin seats", limitKey: "admin_seats" },
+      { label: "Unlimited Members", limitKey: "members" },
+      { label: "3 Admin seats", limitKey: "admin_seats" },
       { label: "Standard AI", badge: "1,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Unlimited Courses" },
       { label: "No Watermark" },
@@ -150,7 +153,7 @@ export const GENERAL_PLANS: Plan[] = [
     id: "pro",
     name: "Pro",
     tagline: "Custom domains, certifications, and full control.",
-    monthlyPrice: 149,
+    monthlyPrice: 179,
     popular: true,
     badge: BADGE.pro,
     ctaStyle: "bg-purple-600 text-white hover:bg-purple-700",
@@ -160,10 +163,11 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Standard",
     inheritsBadge: BADGE.standard,
     features: [
-      { label: "500 Members", limitKey: "members" },
+      { label: "Unlimited Members", limitKey: "members" },
       { label: "10 Admin seats", limitKey: "admin_seats" },
       { label: "Advanced AI", badge: "2,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Certifications" },
+      { label: "Paths" },
       { label: "Plays" },
       { label: "Boards" },
       { label: "Custom Domains" },
@@ -171,6 +175,33 @@ export const GENERAL_PLANS: Plan[] = [
       { label: "Advanced Analytics" },
       { label: "Priority Support" },
       { label: "API Access" },
+    ],
+  },
+  {
+    id: "business",
+    name: "Business",
+    tagline: "Train companies and teams: seats, required training, SSO and LTI.",
+    monthlyPrice: 399,
+    badge: BADGE.business,
+    ctaStyle: "bg-teal-700 text-white hover:bg-teal-800",
+    topGlow: "rgba(15,118,110,0.05)",
+    patternColor: "rgba(15,118,110,0.06)",
+    accentColor: "text-teal-700",
+    inheritsFrom: "Pro",
+    inheritsBadge: BADGE.pro,
+    features: [
+      { label: "Unlimited Members", limitKey: "members" },
+      { label: "25 Admin seats", limitKey: "admin_seats" },
+      { label: "Business AI", badge: "10,000 Credits", badgeLimitKey: "ai_credits" },
+      { label: "Company seats" },
+      { label: "Required training" },
+      { label: "Live Sessions" },
+      { label: "SSO / OIDC" },
+      { label: "SCIM" },
+      { label: "LTI 1.3" },
+      { label: "SCORM" },
+      { label: "Audit Logs" },
+      { label: "Scheduled Atlas agents" },
     ],
   },
 ];
@@ -189,7 +220,7 @@ export const PERSONAL_PLANS: Plan[] = [
     accentColor: "text-amber-600",
     features: [
       { label: "Unlimited Courses" },
-      { label: "1 Member", limitKey: "members" },
+      { label: "4 Members", limitKey: "members" },
       { label: "Standard AI", badge: "500 Credits", badgeLimitKey: "ai_credits" },
       { label: "Boards" },
     ],
@@ -226,12 +257,9 @@ export const ENTERPRISE_PLAN: Plan = {
   topGlow: "rgba(245,158,11,0.05)",
   patternColor: "rgba(245,158,11,0.06)",
   accentColor: "text-amber-600",
-  inheritsFrom: "Pro",
-  inheritsBadge: BADGE.pro,
+  inheritsFrom: "Business",
+  inheritsBadge: BADGE.business,
   features: [
-    { label: "Audit Logs" },
-    { label: "SSO / OIDC" },
-    { label: "SCORM" },
     { label: "RBAC" },
     { label: "Multi Tenancy" },
     { label: "White-label" },
@@ -363,11 +391,16 @@ export interface PackCatalogEntry {
   quantity: number;
   label: string;
   fallbackPrice: number;
+  /** No longer sold: still shown on orgs that already have it, never offered. */
+  retired?: boolean;
 }
 
 export const PACK_CATALOG: PackCatalogEntry[] = [
-  { id: "ai_500", type: "ai_credits", quantity: 500, label: "500 AI Credits", fallbackPrice: 5 },
+  { id: "ai_500", type: "ai_credits", quantity: 500, label: "500 AI Credits", fallbackPrice: 5, retired: true },
 ];
+
+/** Packs that can still be bought. */
+export const PURCHASABLE_PACKS = PACK_CATALOG.filter((p) => !p.retired);
 
 export function getPackPrice(packId: string, packPrices?: PackPrices): number {
   const stripePrice = packPrices?.[packId];

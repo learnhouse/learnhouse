@@ -15967,7 +15967,8 @@
         "personal": "Kişisel",
         "family": "Aile",
         "personal_family": "Aile",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Temelleri keşfedin, taahhüt yok.",
@@ -16014,7 +16015,17 @@
         "multi_tenancy": "Çoklu Kiracılık",
         "white_label": "Beyaz Etiket",
         "support_sla": "Destek SLA'sı",
-        "self_hosted_option": "Kendi sunucunuzda barındırma seçeneği"
+        "self_hosted_option": "Kendi sunucunuzda barındırma seçeneği",
+        "plays": "Plays",
+        "paths": "Yollar",
+        "company_seats": "Şirket koltukları",
+        "required_training": "Zorunlu eğitimler",
+        "live_sessions": "Canlı oturumlar",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business Yapay Zekâ",
+        "scheduled_atlas_agents": "Zamanlanmış Atlas ajanları"
       },
       "pack_ai_credits": "{{formatted}} Yapay Zeka Kredisi"
     },
@@ -17341,7 +17352,8 @@
       "slug_hint": "URL'lerde kullanılır. Bunu değiştirmek mevcut bağlantıları bozar.",
       "settings_saved": "Ayarlar başarıyla kaydedildi",
       "reset": "Sıfırla",
-      "page_of": "Sayfa {{page}} / {{totalPages}}"
+      "page_of": "Sayfa {{page}} / {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM ve denetim kayıtları"
     },
     "login": {
       "invalid_credentials": "Geçersiz e-posta veya parola",

@@ -15932,7 +15932,8 @@
         "personal": "Cá nhân",
         "family": "Gia đình",
         "personal_family": "Gia đình",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Khám phá những điều cơ bản, không ràng buộc.",
@@ -15976,7 +15977,17 @@
         "multi_tenancy": "Đa người thuê",
         "white_label": "White-label",
         "support_sla": "SLA hỗ trợ",
-        "self_hosted_option": "Tùy chọn tự lưu trữ"
+        "self_hosted_option": "Tùy chọn tự lưu trữ",
+        "plays": "Plays",
+        "paths": "Lộ trình",
+        "company_seats": "Chỗ cho doanh nghiệp",
+        "required_training": "Đào tạo bắt buộc",
+        "live_sessions": "Phiên trực tiếp",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "AI Business",
+        "scheduled_atlas_agents": "Tác tử Atlas theo lịch"
       },
       "pack_ai_credits": "{{formatted}} tín dụng AI",
       "admin_seats_count_one": "{{formatted}} chỗ quản trị viên",
@@ -17300,7 +17311,8 @@
       "dau_tooltip_one": "{{date}}: {{count}} người dùng",
       "enrolled_count_one": "{{count}} người đã ghi danh",
       "users_count_one": "{{count}} người dùng",
-      "views_count_one": "{{count}} lượt xem"
+      "views_count_one": "{{count}} lượt xem",
+      "plan_business_desc": "SSO, LTI, SCORM và nhật ký kiểm tra"
     },
     "login": {
       "invalid_credentials": "Email hoặc mật khẩu không hợp lệ",

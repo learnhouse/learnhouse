@@ -15932,7 +15932,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "부담 없이 기본 기능을 살펴보세요.",
@@ -15976,7 +15977,17 @@
         "multi_tenancy": "멀티 테넌시",
         "white_label": "화이트 라벨",
         "support_sla": "지원 SLA",
-        "self_hosted_option": "자체 호스팅 옵션"
+        "self_hosted_option": "자체 호스팅 옵션",
+        "plays": "Plays",
+        "paths": "경로",
+        "company_seats": "기업 좌석",
+        "required_training": "필수 교육",
+        "live_sessions": "라이브 세션",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business AI",
+        "scheduled_atlas_agents": "예약된 Atlas 에이전트"
       },
       "pack_ai_credits": "AI 크레딧 {{formatted}}개",
       "admin_seats_count_one": "관리자 좌석 {{formatted}}개",
@@ -17300,7 +17311,8 @@
       "dau_tooltip_one": "{{date}}: {{count}}명",
       "enrolled_count_one": "{{count}}명 수강 중",
       "users_count_one": "사용자 {{count}}명",
-      "views_count_one": "조회 {{count}}회"
+      "views_count_one": "조회 {{count}}회",
+      "plan_business_desc": "SSO, LTI, SCORM 및 감사 로그"
     },
     "login": {
       "invalid_credentials": "이메일 또는 비밀번호가 올바르지 않습니다",

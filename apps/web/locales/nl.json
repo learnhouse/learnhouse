@@ -15967,7 +15967,8 @@
         "personal": "Personal",
         "family": "Family",
         "personal_family": "Family",
-        "enterprise": "Enterprise"
+        "enterprise": "Enterprise",
+        "business": "Business"
       },
       "taglines": {
         "free": "Ontdek de basis, zonder verplichtingen.",
@@ -16014,7 +16015,17 @@
         "multi_tenancy": "Multi-tenancy",
         "white_label": "White-label",
         "support_sla": "Support-SLA",
-        "self_hosted_option": "Self-hosted optie"
+        "self_hosted_option": "Self-hosted optie",
+        "plays": "Plays",
+        "paths": "Leerpaden",
+        "company_seats": "Bedrijfsplaatsen",
+        "required_training": "Verplichte trainingen",
+        "live_sessions": "Livesessies",
+        "scim": "SCIM",
+        "lti_1_3": "LTI 1.3",
+        "scorm": "SCORM",
+        "business_ai": "Business-AI",
+        "scheduled_atlas_agents": "Geplande Atlas-agents"
       },
       "pack_ai_credits": "{{formatted}} AI-credits"
     },
@@ -17341,7 +17352,8 @@
       "slug_hint": "Wordt in URL's gebruikt. Wijzigen breekt bestaande links.",
       "settings_saved": "Instellingen opgeslagen",
       "reset": "Resetten",
-      "page_of": "Pagina {{page}} van {{totalPages}}"
+      "page_of": "Pagina {{page}} van {{totalPages}}",
+      "plan_business_desc": "SSO, LTI, SCORM en auditlogs"
     },
     "login": {
       "invalid_credentials": "Ongeldig e-mailadres of wachtwoord",

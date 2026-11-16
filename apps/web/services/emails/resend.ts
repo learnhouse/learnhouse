@@ -81,6 +81,7 @@ export const PLAN_COLORS: Record<string, string> = {
   'personal-family': '#3b82f6',
   standard: '#8b5cf6',
   pro: '#7c3aed',
+  business: '#0f766e',
   enterprise: '#171717',
 }
 

@@ -73,9 +73,9 @@ export default function UsersSettingsLayout(props: { children: React.ReactNode; 
     tab('signups', t('dashboard.users.settings.tabs.signups'), <ScanSmiley size={16} />),
     tab('add', t('dashboard.users.settings.tabs.add'), <UserPlus size={16} />),
     tab('sign-in', t('dashboard.users.settings.tabs.sign_in', { defaultValue: 'Sign-in' }), <Key size={16} />),
-    tab('provisioning', t('hr.scim.tab'), <ArrowsClockwise size={16} />, 'enterprise'),
+    tab('provisioning', t('hr.scim.tab'), <ArrowsClockwise size={16} />, 'business'),
     tab('two-factor', t('dashboard.users.settings.tabs.two_factor', { defaultValue: 'Two-factor' }), <ShieldCheck size={16} />),
-    tab('audit-logs', t('dashboard.users.settings.tabs.audit_logs'), <ClipboardText size={16} />, 'enterprise'),
+    tab('audit-logs', t('dashboard.users.settings.tabs.audit_logs'), <ClipboardText size={16} />, 'business'),
   ]
 
   return (

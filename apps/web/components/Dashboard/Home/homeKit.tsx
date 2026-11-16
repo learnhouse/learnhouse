@@ -10,6 +10,7 @@ const PLAN_TONES: Record<string, ChipTone> = {
   oss: 'emerald',
   standard: 'sky',
   pro: 'violet',
+  business: 'teal',
   enterprise: 'amber',
 }
 
