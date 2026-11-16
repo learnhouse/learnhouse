@@ -103,7 +103,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_AI_MODEL_STANDARD` | Standard model tier for chat, RAG, and standard-plan generation. | model id | `gemini-3.5-flash` | API |
 | `LEARNHOUSE_AI_MODEL_PRO` | Pro model tier for upgraded course planning and generation flows. | model id | `gemini-3.1-pro-preview` | API |
 | `LEARNHOUSE_AI_IMAGE_MODEL` | Google image-generation model ("nano banana"). Google-only path (uses the Gemini key regardless of provider). | model id | `gemini-2.5-flash-image` | API |
-| `LEARNHOUSE_AI_TTS_MODEL` | Google text-to-speech model for AI audio / podcast generation. Google-only path. All Gemini TTS models are currently preview. | model id | `gemini-2.5-flash-preview-tts` | API |
+| `LEARNHOUSE_AI_TTS_MODEL` | Google text-to-speech model for AI audio / podcast generation. Google-only path. | model id | `gemini-3.8-flash-tts` | API |
 | `LEARNHOUSE_AI_EMBEDDING_PROVIDER` | Optional provider override for RAG embeddings. | string | same as `LEARNHOUSE_AI_PROVIDER` | API |
 | `LEARNHOUSE_AI_EMBEDDING_MODEL` | Optional embedding model override. | model id | provider default, such as `gemini-embedding-001`, `text-embedding-3-small`, or `nomic-embed-text` | API |
 | `LEARNHOUSE_AI_EMBEDDING_DIMENSIONS` | Embedding vector size. Changing this requires a matching database migration and re-index. | integer | `768` | API |
@@ -178,15 +178,6 @@ These jobs run inside the API process. Most of them need Redis.
 | `LEARNHOUSE_BACKFILL_CHAPTERS_LIMIT` | Maximum videos one backfill run spends AI credits on for chapters. | integer | `100` | API |
 | `LEARNHOUSE_DRIP_EMAILS_DISABLED` | Any value turns off the hourly job that emails learners when drip content unlocks. | any value or unset | unset (job runs) | API |
 | `LEARNHOUSE_MESSAGING_EMAILS_DISABLED` | Any value turns off the job that emails unread messages and delivers reminders. | any value or unset | unset (job runs) | API |
-
-## Demo organization
-
-| Variable | Description | Type | Default / required | Used by |
-| --- | --- | --- | --- | --- |
-| `LEARNHOUSE_DEMO_ENABLED` | Turn on the shared demo organization. Accepts `true`/`1`/`yes`/`on`. | boolean | `false` | API |
-| `LEARNHOUSE_DEMO_SLUG` | Slug of the demo organization. | slug string | `demo` | API |
-| `LEARNHOUSE_DEMO_REFRESH_MINUTES` | Minutes between demo resets. | integer | `10` | API |
-| `LEARNHOUSE_DEMO_NO_SCHEDULER` | Turn off the built-in reset schedule, for example to run the API's `demo-sync` command from your own cron. | boolean | `false` | API |
 
 ## Code execution
 
@@ -338,14 +329,15 @@ LEARNHOUSE_COOKIE_DOMAIN=.example.com
 LEARNHOUSE_PORT=9000
 
 # Security and bootstrap
-LEARNHOUSE_AUTH_JWT_SECRET_KEY=replace-with-at-least-32-random-characters
+# Generate each secret with: openssl rand -hex 32
+LEARNHOUSE_AUTH_JWT_SECRET_KEY=
 LEARNHOUSE_INITIAL_ADMIN_EMAIL=admin@example.com
 LEARNHOUSE_INITIAL_ADMIN_PASSWORD=change-this-password
 LEARNHOUSE_INITIAL_ORG_NAME=Default Organization
 LEARNHOUSE_INITIAL_ORG_SLUG=default
 
 # Collaboration
-COLLAB_INTERNAL_KEY=replace-with-random-shared-secret
+COLLAB_INTERNAL_KEY=
 LEARNHOUSE_REDIS_URL=redis://redis:6379
 NEXT_PUBLIC_COLLAB_URL=wss://learn.example.com/collab
 

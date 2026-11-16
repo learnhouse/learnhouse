@@ -171,4 +171,4 @@ A custom-UI example lives in `demo/agent.tsx`: `bun run demo`, then open
 
 - Blocks render without an editor: the document goes through TipTap's static renderer into LearnHouse's block components. A block's code loads only when a document contains that block.
 - One LearnHouse instance per page: media URLs come from the most recently mounted provider's `baseUrl`.
-- License: TODO (to be confirmed by the maintainers before the first publish).
+- License: MIT. See [LICENSE](./LICENSE).

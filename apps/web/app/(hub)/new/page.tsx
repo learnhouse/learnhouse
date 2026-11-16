@@ -23,7 +23,7 @@ import {
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { signOut } from '@components/Contexts/AuthContext'
 import UserAvatar from '@components/Objects/UserAvatar'
-import DemoEntryCard from '@components/Objects/Demo/DemoEntryCard'
+import DemoEntryCard from '@ee/components/Demo/DemoEntryCard'
 import PendingInvites from '@components/Onboarding/PendingInvites'
 import { INTENTS } from '@components/Dashboard/Onboarding/onboardingCopy'
 import { useLHAnalytics } from '@services/analytics/useLHAnalytics'

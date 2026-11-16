@@ -3,8 +3,9 @@ import { ArrowCounterClockwise, ClockCounterClockwise } from '@phosphor-icons/re
 import { useTranslation } from 'react-i18next'
 import { AIShimmer } from '@components/Objects/AI/AIBrand'
 import type { MagicBlockRevision } from './types'
+import type { TFunction } from 'i18next'
 
-function formatRelativeTime(unixSeconds: number, t: (_key: string, _opts?: any) => string): string {
+function formatRelativeTime(unixSeconds: number, t: TFunction): string {
   const diff = Date.now() / 1000 - unixSeconds
   if (diff < 60) return t('editor.blocks.magic_block_content.time_just_now')
   if (diff < 3600) return t('editor.blocks.magic_block_content.time_minutes_ago', { count: Math.floor(diff / 60) })

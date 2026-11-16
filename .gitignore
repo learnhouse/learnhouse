@@ -72,4 +72,3 @@ apps/collab/ee
 
 # Playwright MCP session artifacts
 .playwright-mcp/
-.demo-secrets

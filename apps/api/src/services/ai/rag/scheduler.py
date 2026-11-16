@@ -9,9 +9,8 @@ indexer, or are out of date. It only looks at orgs that use AI search, caps
 how much one sweep queues, and never transcribes media, so it spends no AI
 credits; a quiet platform costs one query per interval.
 
-Modelled on ``src/services/demo/scheduler.py``: one replica per interval via a
-Redis lock, a failed sweep never kills the loop, and nothing here can stop the
-application booting.
+One replica per interval via a Redis lock, a failed sweep never kills the
+loop, and nothing here can stop the application booting.
 """
 
 from __future__ import annotations

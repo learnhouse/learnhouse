@@ -101,12 +101,6 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.plans.scheduler import start_scheduler as start_trial_job
         start_trial_job()
 
-        # The shared demo organization refreshes itself on an interval, so the
-        # feature needs no external scheduler. No-op unless
-        # LEARNHOUSE_DEMO_ENABLED; never raises.
-        from src.services.demo.scheduler import start_scheduler as start_demo_scheduler
-        start_demo_scheduler()
-
         # One-time conversion of classic landing configs into page builder
         # home pages (batched, per-org transactions, backed up, idempotent).
         # Background task; never raises.
@@ -203,9 +197,6 @@ def shutdown_app(app: FastAPI) -> Callable:
         await stop_notifications()
         from src.services.plans.scheduler import stop_scheduler as stop_trial_job
         await stop_trial_job()
-        # Stop the demo refresh tick.
-        from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
-        await stop_demo_scheduler()
         # Let EE stop its background work and write what it still holds
         # (queued analytics events). Never raises.
         await run_ee_shutdown(app)

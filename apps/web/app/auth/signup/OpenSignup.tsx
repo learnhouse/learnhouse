@@ -10,7 +10,7 @@ import { signup, signUpWithInviteCode, resendVerificationEmail } from '@services
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, isOnCustomDomain } from '@services/config/config'
-import { getErrorMessage } from '@services/utils/ts/errorMessage'
+import { getErrorMessage, getFieldErrors } from '@services/utils/ts/errorMessage'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
 import PasswordInput from '@components/Auth/PasswordInput'
@@ -106,7 +106,7 @@ function OpenSignUpComponent({ org: propOrg, inviteCode }: OpenSignUpComponentPr
     },
     validate: (values) => validate(values, t, customFields),
     enableReinitialize: true,
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setFieldError, setFieldTouched }) => {
       setError('')
       setMessage(null)
       setIsSubmitting(true)
@@ -130,13 +130,19 @@ function OpenSignUpComponent({ org: propOrg, inviteCode }: OpenSignUpComponentPr
           // already-exists, 422 validation, 503 email-service-down) instead of
           // masking everything behind a generic message.
           track(AnalyticsEvent.SignupFailed, { status_code: res.status })
-          setError(getErrorMessage(data?.detail, t('common.something_went_wrong')))
+          setError(getErrorMessage(data?.detail, t('common.something_went_wrong'), t))
+          // Point at the inputs the server rejected next to the field itself.
+          for (const [field, fieldError] of Object.entries(getFieldErrors(data?.detail, t))) {
+            if (!(field in formik.values)) continue
+            setFieldTouched(field, true, false)
+            setFieldError(field, fieldError)
+          }
           // Turnstile tokens are single-use, so fetch a fresh one for the retry.
           turnstileRef.current?.reset()
         }
       } catch (err) {
         // A network throw must not leave the form permanently locked.
-        setError(getErrorMessage((err as any)?.detail, t('common.something_went_wrong')))
+        setError(getErrorMessage((err as any)?.detail, t('common.something_went_wrong'), t))
         turnstileRef.current?.reset()
       } finally {
         setIsSubmitting(false)

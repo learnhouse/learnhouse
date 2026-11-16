@@ -630,6 +630,30 @@ def test_playlist_cannot_reach_a_url(tmp_path):
     assert "not on whitelist" in out.stderr
 
 
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg not installed")
+def test_playlist_cannot_pull_in_another_local_file(tmp_path):
+    other = tmp_path / "someone_elses_video.mp4"
+    subprocess.run(
+        ["ffmpeg", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc=duration=1:size=32x32", str(other)],
+        check=True, capture_output=True, timeout=60,
+    )
+    playlist = tmp_path / "evil.m3u8"
+    playlist.write_text(f"#EXTM3U\n#EXT-X-TARGETDURATION:1\n#EXTINF:1,\n{other}\n#EXT-X-ENDLIST\n")
+    out = subprocess.run(
+        ["ffmpeg", "-loglevel", "error", *vp.SAFE_INPUT_ARGS, "-i", str(playlist), "-f", "null", "-"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert out.returncode != 0
+    assert "not on whitelist" in out.stderr
+
+    # Real media still opens
+    ok = subprocess.run(
+        ["ffmpeg", "-loglevel", "error", *vp.SAFE_INPUT_ARGS, "-i", str(other), "-f", "null", "-"],
+        capture_output=True, timeout=60,
+    )
+    assert ok.returncode == 0
+
+
 
 async def test_update_keeps_pipeline_state(db, org, course, chapter, activity, admin_user, mock_request):
     from src.db.courses.activities import ActivityUpdate

@@ -2,7 +2,7 @@
 import DashLeftMenu from '@components/Dashboard/Menus/DashLeftMenu';
 import DashMobileMenu from '@components/Dashboard/Menus/DashMobileMenu';
 import OnboardingTracker from '@components/Dashboard/Onboarding/OnboardingTracker';
-import DemoBanner from '@components/Objects/Demo/DemoBanner';
+import DemoBanner from '@ee/components/Demo/DemoBanner';
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { SessionGate } from '@components/Contexts/LHSessionContext'
 import { CommandPaletteProvider } from '@components/Dashboard/CommandPalette/CommandPaletteContext'

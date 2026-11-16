@@ -14,6 +14,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 import { searchOrgContent } from '@services/search/search'
 import { useLHSession } from '@components/Contexts/LHSessionContext'

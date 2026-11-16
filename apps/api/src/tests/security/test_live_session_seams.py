@@ -23,3 +23,20 @@ def test_ee_calendar_sources_hook():
 
     with patch.object(ee_hooks, "get_ee_hooks", return_value=SimpleNamespace(register_calendar_sources=boom)):
         ee_hooks.register_ee_calendar_sources()  # logged, not raised
+
+
+def test_ee_cli_hook():
+    seen = []
+    hooks = SimpleNamespace(register_cli=seen.append)
+    with patch.object(ee_hooks, "get_ee_hooks", return_value=hooks):
+        ee_hooks.register_ee_cli("cli")
+    assert seen == ["cli"]
+
+    def boom(cli):
+        raise RuntimeError("bad command")
+
+    with patch.object(ee_hooks, "get_ee_hooks", return_value=SimpleNamespace(register_cli=boom)):
+        ee_hooks.register_ee_cli("cli")  # logged, not raised
+
+    with patch.object(ee_hooks, "get_ee_hooks", return_value=None):
+        ee_hooks.register_ee_cli("cli")

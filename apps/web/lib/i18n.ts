@@ -67,11 +67,19 @@ i18n
     },
     react: {
       useSuspense: false,
+      // Non-English bundles arrive after the first render (see loadLocale).
+      // Adding a bundle doesn't change the language, so without this the `t`
+      // from useTranslation keeps its identity and anything memoized on it
+      // (useMemo(..., [t])) stays in English until a full reload. Re-rendering
+      // on the store's 'added' event hands every consumer a fresh `t`.
+      bindI18nStore: 'added',
     }
   });
 
-// Load the detected language if it's not English, and export the promise
-// so I18nProvider can wait for resources before rendering.
+// Load the detected language if it's not English. Rendering doesn't wait for
+// it: English shows first and useTranslation consumers re-render when the
+// bundle is added (bindI18nStore above). The promise is exported for callers
+// that need the translations in place before acting.
 // The date locale rides along: dayjs keeps its own registry, and without this
 // every "2 hours ago" renders in English no matter the language.
 export const initialLocaleReady = Promise.all([
