@@ -12,19 +12,19 @@ from src.services.plans import trial
 class TestTrialCreditCap:
     def test_default_and_override(self, monkeypatch):
         monkeypatch.delenv("LEARNHOUSE_TRIAL_AI_CREDITS", raising=False)
-        assert trial.trial_ai_credits() == 30
+        assert trial.trial_ai_credits() == 200
         monkeypatch.setenv("LEARNHOUSE_TRIAL_AI_CREDITS", "50")
         assert trial.trial_ai_credits() == 50
         monkeypatch.setenv("LEARNHOUSE_TRIAL_AI_CREDITS", "-5")
         assert trial.trial_ai_credits() == 0
         monkeypatch.setenv("LEARNHOUSE_TRIAL_AI_CREDITS", "lots")
-        assert trial.trial_ai_credits() == 30
+        assert trial.trial_ai_credits() == 200
 
     async def test_only_an_active_trial_on_the_trial_plan_is_capped(self, monkeypatch):
         monkeypatch.delenv("LEARNHOUSE_TRIAL_AI_CREDITS", raising=False)
         active = AsyncMock(return_value=type("T", (), {"status": TrialStatus.ACTIVE})())
         with patch.object(trial, "trials_enabled", return_value=True), patch.object(trial, "get_active_trial", active):
-            assert await trial.trial_ai_credit_cap(None, 1, trial.TRIAL_PLAN) == 30
+            assert await trial.trial_ai_credit_cap(None, 1, trial.TRIAL_PLAN) == 200
             # A paid plan (bought during or after the trial) is never capped.
             assert await trial.trial_ai_credit_cap(None, 1, "standard") is None
         with patch.object(trial, "trials_enabled", return_value=True), \
@@ -38,11 +38,11 @@ class TestBaseCredits:
     @pytest.mark.parametrize(
         "plan_limit, cap, expected",
         [
-            (2000, 30, 30),  # trial: capped
+            (2000, 200, 200),  # trial: capped
             (2000, None, 2000),  # paid: the plan's allowance
-            (20, 30, 20),  # never raised above the plan
-            (-1, 30, 30),  # an unlimited plan in trial is still capped
-            (0, 30, 0),  # no AI at all stays none
+            (20, 200, 20),  # never raised above the plan
+            (-1, 200, 200),  # an unlimited plan in trial is still capped
+            (0, 200, 0),  # no AI at all stays none
         ],
     )
     async def test_cap(self, plan_limit, cap, expected):

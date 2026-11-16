@@ -202,8 +202,11 @@ def test_margin_floor_holds_at_p90(key):
 
 def test_typical_and_p90_credits():
     atlas = pricing.FEATURES["atlas_chat"]
+    scheduled = pricing.FEATURES["atlas_scheduled"]
     # Shown "About N" is the typical request when above the minimum.
-    assert atlas.shown == atlas.typical > atlas.credits
+    assert scheduled.shown == scheduled.typical > scheduled.credits
+    # A typical Atlas question costs its minimum.
+    assert atlas.shown == atlas.credits and atlas.typical == 0
     assert pricing.FEATURES["magic_block"].shown == pricing.FEATURES["magic_block"].credits
     # Metered: the p90 request is charged its cost at the floor; flat: its price; absorbed: nothing.
     assert pricing.p90_credits(atlas) == pricing.credits_for_cost(atlas.p90_cost_usd)
@@ -212,4 +215,14 @@ def test_typical_and_p90_credits():
     rows = {r["key"]: r for r in pricing.pricing_summary()["features"]}
     assert rows["rag_indexing"]["p90_margin_multiple"] is None
     assert rows["atlas_chat"]["p90_margin_multiple"] >= pricing.MARGIN_FLOOR
-    assert {r["key"]: r["typical"] for r in pricing.public_price_table()}["atlas_chat"] == atlas.typical
+    assert {r["key"]: r["typical"] for r in pricing.public_price_table()}["atlas_chat"] == atlas.shown
+
+
+@pytest.mark.parametrize("key", ["atlas_chat", "atlas_scheduled", "ai_editor_turn"])
+def test_about_n_is_what_a_typical_request_is_charged(key):
+    """The "About N credits" the UI shows (``shown``) is what the feature's p50
+    request is charged at today's price: not a number made up apart from the meter."""
+    fp = pricing.FEATURES[key]
+    fx = FIXTURES[key]
+    cost = pricing.total_cost_usd(_usages(fx["p50_usage"]), on=date(2026, 11, 16))
+    assert fp.shown == pricing.settle_credits(key, cost)

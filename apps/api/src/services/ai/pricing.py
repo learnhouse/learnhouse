@@ -10,9 +10,11 @@ One place answers three questions:
 The rule every price here follows: our provider cost for a request is at most half
 of what the credits we charge for it are worth (``MARGIN_FLOOR = 2.0``), measured
 at p90 usage. Metered features charge ``max(published minimum, cost x 2 / credit
-value)`` rounded up to whole credits, so a long or heavy request can never sell
-below the floor; flat features have a published price checked against the p90 cost
-in ``src/tests/services/ai/fixtures/ai_usage_fixtures.json``.
+value)`` rounded up to whole credits once per request, where cost is the provider's
+price on the day (cached input at the cached rate), so a long or heavy request can
+never sell below the floor and a light one is not charged a later price; flat
+features have a published price checked against the p90 cost (at the highest
+announced price) in ``src/tests/services/ai/fixtures/ai_usage_fixtures.json``.
 
 Updating prices: edit ``MODEL_PRICES`` (keep the source and date), then run
 ``pytest src/tests/services/ai/test_pricing.py`` -- it fails when a flat feature
@@ -271,8 +273,8 @@ class FeaturePrice:
     extra: dict[str, int] = field(default_factory=dict)
     # Platform work we pay for but don't charge (metered for the cost reports only).
     absorbed: bool = False
-    # What a typical request charges (p50 at the standard model tier), when that
-    # is above the minimum: what the customer sees as "About N credits".
+    # What a typical request charges (its p50 usage fixture at today's price),
+    # when that is above the minimum: what the customer sees as "About N credits".
     typical: int = 0
 
     @property
@@ -287,13 +289,16 @@ FEATURES: dict[str, FeaturePrice] = {
     fp.key: fp
     for fp in [
         # Atlas (EE): usage-based. The published number is the minimum per message;
-        # long jobs (many steps) charge their real cost at the floor.
-        _f("atlas_chat", "Atlas message", 3, "message", metered=True, group="atlas", edition="ee", typical=18, p90_cost_usd=0.130,
+        # long jobs (many steps) charge their real cost at the floor. Measured
+        # 2026-11-16 with tools loaded on demand: a question ("how many credits do
+        # I have?", 2 model calls, ~19k input tokens) charges 3, a four-call
+        # analytics answer 5 ($0.023 today: 2.2x).
+        _f("atlas_chat", "Atlas message", 3, "message", metered=True, group="atlas", edition="ee", p90_cost_usd=0.0462,
            note="Charged by usage: a long multi-step job costs more"),
-        _f("atlas_scheduled", "Scheduled agent run", 3, "run", metered=True, group="atlas", edition="ee", typical=18, p90_cost_usd=0.130),
+        _f("atlas_scheduled", "Scheduled agent run", 3, "run", metered=True, group="atlas", edition="ee", typical=8, p90_cost_usd=0.130),
         _f("course_builder_plan", "Course builder: course plan", 4, "plan", metered=True, group="atlas", edition="ee", typical=6),
         _f("course_builder_lesson", "Course builder: lesson", 4, "lesson", metered=True, group="atlas", edition="ee", typical=9),
-        _f("ai_editor_turn", "AI Editor message", 3, "message", metered=True, group="atlas", edition="ee", typical=18, p90_cost_usd=0.130),
+        _f("ai_editor_turn", "AI Editor message", 3, "message", metered=True, group="atlas", edition="ee", typical=5, p90_cost_usd=0.130),
         _f("ai_editor_complete", "AI Editor autocomplete", 1, "request", metered=True, group="atlas", edition="ee"),
         _f("thumbnail", "Course thumbnail", 8, "image", group="media", p90_cost_usd=0.0354),
         _f("image_generation", "Image generation", 9, "image", group="media", p90_cost_usd=0.0388),

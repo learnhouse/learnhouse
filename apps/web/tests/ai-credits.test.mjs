@@ -40,8 +40,8 @@ describe("estimateCredits", () => {
     expect(estimateCredits(undefined, "image_generation")).toBeNull();
     expect(estimateCredits(prices, "rag_indexing", 10)).toBe(0);
     // A metered feature shows its typical request, not just its minimum.
-    const withTypical = { ...prices, features: [{ key: "atlas_chat", label: "Atlas", credits: 3, typical: 18, unit: "message", metered: true, group: "atlas", edition: "ee" }] };
-    expect(estimateCredits(withTypical, "atlas_chat")).toBe(18);
+    const withTypical = { ...prices, features: [{ key: "atlas_scheduled", label: "Scheduled run", credits: 3, typical: 8, unit: "run", metered: true, group: "atlas", edition: "ee" }] };
+    expect(estimateCredits(withTypical, "atlas_scheduled")).toBe(8);
     expect(estimateCredits(prices, "image_generation", 0)).toBe(0);
   });
 });
@@ -119,5 +119,27 @@ describe.skipIf(!hasEE)("Atlas credits", () => {
     });
     const card = parts.find((p) => p.kind === "action");
     expect(card.estimateCredits).toBe(24);
+  });
+
+  test("About N for an Atlas message is the API's typical row (what a simple question is debited)", () => {
+    // The API publishes typical = what its p50 request is charged (3 for a
+    // question since tools load on demand; it used to say 18).
+    const api = { ...prices, features: [{ key: "atlas_chat", label: "Atlas message", credits: 3, typical: 3, unit: "message", metered: true, group: "atlas", edition: "ee" }] };
+    expect(estimateCredits(api, "atlas_chat")).toBe(3);
+  });
+
+  test("Used N credits is the sum of the turn's done.credits, nothing else", async () => {
+    const { addTurnCredits } = await import(turnsPath);
+    let turn = { id: "t1", role: "model", content: "" };
+    turn = addTurnCredits(turn, { type: "message.delta", delta: "hi" });
+    expect(turn.creditsUsed).toBeUndefined();
+    turn = addTurnCredits(turn, { type: "done", credits: 3 });
+    expect(turn.creditsUsed).toBe(3);
+    // A run paused for approval and resumed settles again: both are shown.
+    turn = addTurnCredits(turn, { type: "done", credits: 2 });
+    expect(turn.creditsUsed).toBe(5);
+    expect(addTurnCredits(turn, { type: "done" }).creditsUsed).toBe(5);
+    expect(addTurnCredits(turn, { type: "done", credits: -1 }).creditsUsed).toBe(5);
+    expect(creditsFromEvent({ type: "done", credits: 3 })).toBe(3);
   });
 });

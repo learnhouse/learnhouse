@@ -172,6 +172,78 @@ async def test_lock_helpers_survive_a_redis_outage(monkeypatch):
     metering._forget_lock("")  # nothing to forget
 
 
+# ── what a metered request is charged ────────────────────────────────────
+
+# One Atlas turn as Gemini billed it (live, 2026-11-16): "How many AI credits do
+# I have left?" before tools were loaded on demand, two model calls. The second
+# call's prompt was cached.
+TURN_CALLS = [
+    Usage(model="gemini-3.6-flash", input_tokens=60_572, output_tokens=69),
+    Usage(model="gemini-3.6-flash", input_tokens=60_695, cached_input_tokens=58_539, output_tokens=84),
+]
+
+
+class _Day(pricing.date):
+    today_is = pricing.date(2026, 11, 16)
+
+    @classmethod
+    def today(cls):
+        return cls.today_is
+
+
+@pytest.fixture
+def on_day(monkeypatch):
+    monkeypatch.setattr(_Day, "today_is", pricing.date(2026, 11, 16))
+    monkeypatch.setattr(pricing, "date", _Day)
+    return _Day
+
+
+async def test_metered_requests_pay_todays_price_not_an_announced_one(on_day):
+    meter = metering.Meter(feature="atlas_chat", org_id=1)
+    for call in TURN_CALLS:
+        meter.add(call)
+    # $0.75 / $0.075 cached / $3.75 per 1M today: $0.0520 -> 11 credits (2.1x).
+    assert meter.cost_usd == pytest.approx(0.05201, abs=1e-5)
+    assert meter.credits_due() == 11
+    assert pricing.margin_multiple(11, meter.cost_usd) >= pricing.MARGIN_FLOOR
+    # Charging the 2027 price on top of the floor (as before) made it 21: 4x the cost.
+    assert pricing.settle_credits("atlas_chat", meter.planning_cost_usd) == 21
+    # From the announced date the higher price applies on its own.
+    on_day.today_is = pricing.date(2027, 1, 2)
+    assert meter.credits_due() == 21
+
+
+async def test_a_run_is_rounded_once_not_per_model_call(on_day):
+    calls = [Usage(model="gemini-3.6-flash", input_tokens=7_000, output_tokens=100)] * 4  # $0.005625 each
+    meter = metering.Meter(feature="atlas_chat", org_id=1, minimum=0)
+    for call in calls:
+        meter.add(call)
+    per_call = sum(pricing.credits_for_cost(pricing.cost_usd(c)) for c in calls)
+    assert per_call == 8  # 4 x ceil(1.125)
+    assert meter.credits_due() == 5  # ceil(4 x 1.125)
+
+
+async def test_cached_input_is_charged_at_the_cached_rate(on_day):
+    cold = metering.Meter(feature="atlas_chat", org_id=1, minimum=0)
+    cold.add(Usage(model="gemini-3.6-flash", input_tokens=100_000))
+    warm = metering.Meter(feature="atlas_chat", org_id=1, minimum=0)
+    warm.add(Usage(model="gemini-3.6-flash", input_tokens=100_000, cached_input_tokens=90_000))
+    assert cold.cost_usd == pytest.approx(0.075) and cold.credits_due() == 15
+    # 10k at $0.75 + 90k at $0.075 per 1M = $0.01425.
+    assert warm.cost_usd == pytest.approx(0.01425) and warm.credits_due() == 3
+
+
+async def test_settlement_charges_what_is_reported(ai_credit_spy, on_day):
+    """The credits a request reports (done.credits / X-AI-Credits-Used) are the
+    ones taken from the org: reserved minus refunded plus the extra charged."""
+    async with metering.charge("atlas_chat", org_id=1, db=None) as meter:
+        for call in TURN_CALLS:
+            metering.record_usage(call)
+    debited = sum(a for _, a in ai_credit_spy.reserved) - sum(a for _, a in ai_credit_spy.refunded)
+    debited += sum(a for _, a in ai_credit_spy.extra)
+    assert meter.credits == debited == 11
+
+
 # ── long runs ──────────────────────────────────────────────────────────────
 
 
