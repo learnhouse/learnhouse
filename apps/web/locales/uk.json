@@ -794,7 +794,13 @@
       "signup_title": "Приєднатися до {{org}}",
       "signup_desc": "Вас запросили. Оберіть пароль, і все готово.",
       "choose_password": "Оберіть пароль",
-      "create_and_join": "Приєднатися до {{org}}"
+      "create_and_join": "Приєднатися до {{org}}",
+      "details": {
+        "role": "Ви приєднаєтеся з роллю {{role}}.",
+        "role_by": "{{name}} запрошує вас приєднатися з роллю {{role}}.",
+        "groups": "Вас буде додано до: {{names}}",
+        "courses": "Вас буде записано на: {{names}}"
+      }
     },
     "login_failed_forgot": "Забули пароль?",
     "login_failed_reset": "Скинути",
@@ -9705,6 +9711,290 @@
         "more": "Інші дії",
         "remove_filter": "Прибрати фільтр: {{name}}",
         "any": "Будь-який"
+      },
+      "invitations": {
+        "invite_people": "Запросити людей",
+        "dialog": {
+          "title": "Запросити людей",
+          "description": "Кожен отримає особисте посилання поштою. Коли людина приєднається, роль, групи й курси нижче застосуються автоматично.",
+          "done_title": "Запрошення надіслано",
+          "done_description": "Ось що сталося з кожною адресою.",
+          "invite_more": "Запросити ще",
+          "send": "Надіслати запрошення",
+          "send_count_one": "Надіслати {{count}} запрошення",
+          "send_count_few": "Надіслати {{count}} запрошення",
+          "send_count_many": "Надіслати {{count}} запрошень",
+          "send_count_other": "Надіслати {{count}} запрошення",
+          "update_count_one": "Оновити {{count}} учасника",
+          "update_count_few": "Оновити {{count}} учасників",
+          "update_count_many": "Оновити {{count}} учасників",
+          "update_count_other": "Оновити {{count}} учасника"
+        },
+        "fields": {
+          "emails": "Адреси електронної пошти",
+          "emails_hint": "Вставте одну або кілька, через кому, пробіл або з нового рядка",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} адреса",
+          "valid_count_few": "{{count}} адреси",
+          "valid_count_many": "{{count}} адрес",
+          "valid_count_other": "{{count}} адреси",
+          "invalid_count_one": "{{count}} адреса недійсна",
+          "invalid_count_few": "{{count}} адреси недійсні",
+          "invalid_count_many": "{{count}} адрес недійсні",
+          "invalid_count_other": "{{count}} адреси недійсні",
+          "too_many": "За раз можна запросити не більше {{max}} людей",
+          "update_existing_one": "Також оновити {{count}} людину, яка вже є учасником",
+          "update_existing_few": "Також оновити {{count}} людей, які вже є учасниками",
+          "update_existing_many": "Також оновити {{count}} людей, які вже є учасниками",
+          "update_existing_other": "Також оновити {{count}} людини, які вже є учасниками",
+          "update_existing_hint": "Їхня роль зміниться на вказану нижче, і їх буде додано до груп і курсів. Залиште вимкненим, щоб пропустити їх.",
+          "role": "Роль",
+          "role_hint": "Що вони зможуть робити після приєднання",
+          "groups": "Додати до груп",
+          "groups_placeholder": "Виберіть групи",
+          "no_groups": "У цій організації ще немає груп користувачів.",
+          "courses": "Записати на курси",
+          "courses_placeholder": "Виберіть курси",
+          "no_courses": "У цій організації ще немає курсів.",
+          "selected_count_one": "Вибрано: {{count}}",
+          "selected_count_few": "Вибрано: {{count}}",
+          "selected_count_many": "Вибрано: {{count}}",
+          "selected_count_other": "Вибрано: {{count}}",
+          "search": "Пошук",
+          "no_match": "Нічого не знайдено.",
+          "draft": "Чернетка",
+          "remove_item": "Прибрати {{name}}",
+          "message": "Особисте повідомлення",
+          "message_placeholder": "Додайте коротку примітку до листа (необов’язково, без посилань)",
+          "expiry": "Термін дії",
+          "days_one": "{{count}} день",
+          "days_few": "{{count}} дні",
+          "days_many": "{{count}} днів",
+          "days_other": "{{count}} дня",
+          "expires_on": "До {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "Учень",
+            "description": "Проходить курси, долучається до спільнот і стежить за власним прогресом. Без доступу до панелі керування."
+          },
+          "instructor": {
+            "name": "Інструктор",
+            "description": "Створює й веде власні курси та оцінює своїх учнів. Займає місце адміністратора."
+          },
+          "maintainer": {
+            "name": "Супроводжувач",
+            "description": "Керує всіма курсами, учасниками й групами. Не може змінювати оплату чи налаштування організації."
+          },
+          "admin": {
+            "name": "Адміністратор",
+            "description": "Повний контроль над організацією, зокрема налаштуваннями, оплатою та іншими адміністраторами."
+          },
+          "custom_roles": "Власні ролі",
+          "custom_description": "Власна роль, створена для цієї організації.",
+          "admin_seat": "Місце адміністратора",
+          "refusal_admin_only": "Запрошувати з цією роллю можуть лише адміністратори.",
+          "refusal_above": "Ця роль має дозволи, яких немає у вашої ролі.",
+          "refusal_code": "Коди запрошень не можуть надавати роль, яка керує людьми або відкриває панель керування."
+        },
+        "preview": {
+          "new_one": "{{count}} новий",
+          "new_few": "{{count}} нові",
+          "new_many": "{{count}} нових",
+          "new_other": "{{count}} нового",
+          "pending_one": "{{count}} вже запрошено, отримає нове посилання",
+          "pending_few": "{{count}} вже запрошено, отримають нове посилання",
+          "pending_many": "{{count}} вже запрошено, отримають нове посилання",
+          "pending_other": "{{count}} вже запрошено, отримають нове посилання",
+          "members_one": "{{count}} вже в організації",
+          "members_few": "{{count}} вже в організації",
+          "members_many": "{{count}} вже в організації",
+          "members_other": "{{count}} вже в організації"
+        },
+        "summary": {
+          "people_one": "{{count}} людина приєднається з роллю {{role}}",
+          "people_few": "{{count}} людини приєднаються з роллю {{role}}",
+          "people_many": "{{count}} людей приєднаються з роллю {{role}}",
+          "people_other": "{{count}} людини приєднаються з роллю {{role}}",
+          "groups_one": "з додаванням до групи {{names}}",
+          "groups_few": "з додаванням до {{count}} груп ({{names}})",
+          "groups_many": "з додаванням до {{count}} груп ({{names}})",
+          "groups_other": "з додаванням до {{count}} групи ({{names}})",
+          "courses_one": "із записом на {{count}} курс",
+          "courses_few": "із записом на {{count}} курси",
+          "courses_many": "із записом на {{count}} курсів",
+          "courses_other": "із записом на {{count}} курсу",
+          "and": ", ",
+          "updated_one": "Також буде оновлено {{count}} наявного учасника.",
+          "updated_few": "Також буде оновлено {{count}} наявних учасників.",
+          "updated_many": "Також буде оновлено {{count}} наявних учасників.",
+          "updated_other": "Також буде оновлено {{count}} наявного учасника."
+        },
+        "capacity": {
+          "members": "Учасники",
+          "admin_seats": "Місця адміністраторів",
+          "of": "{{count}} з {{limit}}",
+          "pending_note_one": "Враховано {{count}} запрошення в очікуванні",
+          "pending_note_few": "Враховано {{count}} запрошення в очікуванні",
+          "pending_note_many": "Враховано {{count}} запрошень в очікуванні",
+          "pending_note_other": "Враховано {{count}} запрошення в очікуванні",
+          "members_blocked": "Ваш тариф включає {{limit}} учасників з урахуванням запрошень в очікуванні. Перейдіть на вищий тариф або відкличте частину запрошень, щоб запросити більше.",
+          "seats_blocked": "Ваш тариф включає {{limit}} місць адміністраторів з урахуванням запрошень в очікуванні. Виберіть роль учня або перейдіть на вищий тариф, щоб додати адміністраторів."
+        },
+        "results": {
+          "status": {
+            "sent": "Надіслано",
+            "resent": "Нове посилання надіслано",
+            "email_failed": "Лист не надіслано",
+            "already_member": "Вже учасник",
+            "member_updated": "Учасника оновлено",
+            "member_update_failed": "Не оновлено",
+            "invalid_email": "Недійсна адреса"
+          },
+          "count": {
+            "sent_one": "Надіслано: {{count}}",
+            "sent_few": "Надіслано: {{count}}",
+            "sent_many": "Надіслано: {{count}}",
+            "sent_other": "Надіслано: {{count}}",
+            "resent_one": "{{count}} нове посилання",
+            "resent_few": "{{count}} нові посилання",
+            "resent_many": "{{count}} нових посилань",
+            "resent_other": "{{count}} нового посилання",
+            "email_failed_one": "Не надіслано: {{count}}",
+            "email_failed_few": "Не надіслано: {{count}}",
+            "email_failed_many": "Не надіслано: {{count}}",
+            "email_failed_other": "Не надіслано: {{count}}",
+            "already_member_one": "Вже учасники: {{count}}",
+            "already_member_few": "Вже учасники: {{count}}",
+            "already_member_many": "Вже учасники: {{count}}",
+            "already_member_other": "Вже учасники: {{count}}",
+            "member_updated_one": "Оновлено учасників: {{count}}",
+            "member_updated_few": "Оновлено учасників: {{count}}",
+            "member_updated_many": "Оновлено учасників: {{count}}",
+            "member_updated_other": "Оновлено учасників: {{count}}",
+            "member_update_failed_one": "Не оновлено: {{count}}",
+            "member_update_failed_few": "Не оновлено: {{count}}",
+            "member_update_failed_many": "Не оновлено: {{count}}",
+            "member_update_failed_other": "Не оновлено: {{count}}",
+            "invalid_email_one": "Недійсних: {{count}}",
+            "invalid_email_few": "Недійсних: {{count}}",
+            "invalid_email_many": "Недійсних: {{count}}",
+            "invalid_email_other": "Недійсних: {{count}}"
+          }
+        },
+        "status": {
+          "pending": "В очікуванні",
+          "accepted": "Прийнято",
+          "declined": "Відхилено",
+          "revoked": "Відкликано",
+          "expired": "Термін минув"
+        },
+        "list": {
+          "title": "Запрошення",
+          "subtitle": "Усі, кого ви запросили, з роллю та доступом, які вони отримають",
+          "filter": "Фільтр за статусом",
+          "all": "Усі",
+          "person": "Людина",
+          "role": "Роль",
+          "access": "Групи й курси",
+          "status": "Статус",
+          "select_all": "Вибрати всі",
+          "select": "Вибрати {{email}}",
+          "selected_one": "Вибрано: {{count}}",
+          "selected_few": "Вибрано: {{count}}",
+          "selected_many": "Вибрано: {{count}}",
+          "selected_other": "Вибрано: {{count}}",
+          "actions": "Дії для {{email}}",
+          "invited_by": "Запрошення від {{name}}, {{when}}",
+          "joined": "Прийнято {{when}}",
+          "email_not_sent": "лист не доставлено",
+          "groups_one": "{{count}} група",
+          "groups_few": "{{count}} групи",
+          "groups_many": "{{count}} груп",
+          "groups_other": "{{count}} групи",
+          "courses_one": "{{count}} курс",
+          "courses_few": "{{count}} курси",
+          "courses_many": "{{count}} курсів",
+          "courses_other": "{{count}} курсу",
+          "expires_in_one": "Спливає через {{count}} день",
+          "expires_in_few": "Спливає через {{count}} дні",
+          "expires_in_many": "Спливає через {{count}} днів",
+          "expires_in_other": "Спливає через {{count}} дня",
+          "legacy": "Надіслано до того, як у запрошеннях з’явилися ролі",
+          "empty_title": "Запрошень ще немає",
+          "empty_description": "Запрошуйте людей поштою. Вони приєднаються з вибраними вами роллю, групами й курсами.",
+          "no_results": "Немає відповідних запрошень",
+          "clear_filter": "Показати всі",
+          "error": "Не вдалося завантажити запрошення"
+        },
+        "actions": {
+          "resend": "Надіслати повторно",
+          "copy_link": "Копіювати посилання-запрошення",
+          "edit": "Змінити роль або доступ",
+          "revoke": "Відкликати",
+          "none": "Немає дій"
+        },
+        "revoke": {
+          "title": "Відкликати це запрошення?",
+          "message": "Посилання, надіслане на {{email}}, перестане працювати. Пізніше ви зможете запросити цю людину знову.",
+          "bulk_title_one": "Відкликати {{count}} запрошення?",
+          "bulk_title_few": "Відкликати {{count}} запрошення?",
+          "bulk_title_many": "Відкликати {{count}} запрошень?",
+          "bulk_title_other": "Відкликати {{count}} запрошення?",
+          "bulk_message": "Їхні посилання перестануть працювати. Пізніше ви зможете запросити їх знову."
+        },
+        "edit": {
+          "title": "Змінити запрошення",
+          "description": "Для {{email}}. Застосується, коли запрошення приймуть.",
+          "keep_expiry": "Залишити ({{date}})",
+          "extend_one": "{{count}} день від сьогодні",
+          "extend_few": "{{count}} дні від сьогодні",
+          "extend_many": "{{count}} днів від сьогодні",
+          "extend_other": "{{count}} дня від сьогодні",
+          "save": "Зберегти зміни"
+        },
+        "toasts": {
+          "sent": "Запрошення надіслано",
+          "some_failed_one": "Не вдалося надіслати {{count}} лист. Скопіюйте посилання-запрошення зі списку.",
+          "some_failed_few": "Не вдалося надіслати {{count}} листи. Скопіюйте посилання-запрошення зі списку.",
+          "some_failed_many": "Не вдалося надіслати {{count}} листів. Скопіюйте посилання-запрошення зі списку.",
+          "some_failed_other": "Не вдалося надіслати {{count}} листа. Скопіюйте посилання-запрошення зі списку.",
+          "error": "Щось пішло не так. Спробуйте ще раз.",
+          "resent": "Нове запрошення надіслано на {{email}}",
+          "email_failed": "Не вдалося надіслати лист. Скопіюйте посилання-запрошення.",
+          "link_copied": "Посилання-запрошення скопійовано. Посилання з попереднього листа більше не працює.",
+          "revoked": "Запрошення відкликано",
+          "updated": "Запрошення оновлено",
+          "bulk_resend_one": "{{count}} запрошення надіслано повторно",
+          "bulk_resend_few": "{{count}} запрошення надіслано повторно",
+          "bulk_resend_many": "{{count}} запрошень надіслано повторно",
+          "bulk_resend_other": "{{count}} запрошення надіслано повторно",
+          "bulk_revoke_one": "{{count}} запрошення відкликано",
+          "bulk_revoke_few": "{{count}} запрошення відкликано",
+          "bulk_revoke_many": "{{count}} запрошень відкликано",
+          "bulk_revoke_other": "{{count}} запрошення відкликано"
+        },
+        "codes": {
+          "description": "Одне посилання чи код для багатьох людей. Усі, хто приєднається з ним, отримають налаштування нижче.",
+          "role_hint": "Лише ролі рівня учня",
+          "role_note": "Код може використати будь-хто, хто його має, тому він не може надавати роль адміністратора, супроводжувача, інструктора чи будь-яку роль, що керує людьми.",
+          "max_uses": "Максимум використань",
+          "max_uses_invalid": "Введіть ціле число від 1",
+          "unlimited": "Без обмежень",
+          "never": "Ніколи",
+          "no_expiry": "Безстроково",
+          "uses_one": "{{count}} використання",
+          "uses_few": "{{count}} використання",
+          "uses_many": "{{count}} використань",
+          "uses_other": "{{count}} використання",
+          "uses_of": "{{count}} / {{max}} використань",
+          "uses_title": "Скільки разів за цим кодом приєдналися"
+        },
+        "codes_card": {
+          "title": "Коди запрошень",
+          "description": "Поділіться одним посиланням чи кодом із цілим класом. Задайте роль, групи, курси, кількість використань і термін дії.",
+          "manage": "Керувати кодами запрошень"
+        }
       }
     },
     "assignments": {
@@ -12145,7 +12435,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> змінив(ла) відповіді під час реєстрації в <b>{{target}}</b>",
         "members__signup_backfilled": "<b>{{actor}}</b> скопіював(ла) відповіді під час реєстрації в дані про співробітників",
         "security__support_access__started": "<b>{{actor}}</b> увійшов(-ла) від імені <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> завершив(-ла) вхід від імені <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> завершив(-ла) вхід від імені <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b> змінив(ла) запрошення для <b>{{target}}</b>",
+        "members__invitation__resent": "<b>{{actor}}</b> повторно надіслав(ла) запрошення для <b>{{target}}</b>",
+        "members__invitation__link_copied": "<b>{{actor}}</b> скопіював(ла) нове посилання-запрошення для <b>{{target}}</b>",
+        "members__invitation__revoked": "<b>{{actor}}</b> відкликав(ла) запрошення для <b>{{target}}</b>",
+        "members__invitation__accepted": "<b>{{actor}}</b> прийняв(ла) запрошення",
+        "members__invitation__declined": "<b>{{actor}}</b> відхилив(ла) запрошення",
+        "members__invitation__role_applied": "<b>{{actor}}</b> отримав(ла) роль із запрошення",
+        "members__invite_code__updated": "<b>{{actor}}</b> змінив(ла) посилання-запрошення",
+        "members__invite_code__used": "<b>{{actor}}</b> приєднався(лась) за посиланням-запрошенням"
       },
       "export": {
         "generating": "Підготовка експорту…",
@@ -12309,7 +12608,8 @@
         "customers": "список клієнтів",
         "scim": "провіжинінг SCIM",
         "scim_token": "токен SCIM",
-        "training_rule": "обов’язкове навчання"
+        "training_rule": "обов’язкове навчання",
+        "invitation": "запрошення"
       }
     },
     "course_builder": {
@@ -30331,7 +30631,8 @@
       "trial_ending": "Пробний період завершується",
       "plan_downgraded": "Перехід на Безкоштовний",
       "plan_restored": "Тариф відновлено",
-      "payments_checkout_failing": "Збої оплати"
+      "payments_checkout_failing": "Збої оплати",
+      "invitation_accepted": "Запрошення прийнято"
     },
     "copy": {
       "assignment_graded": "Оцінено: {{assignment}}",
@@ -30393,7 +30694,8 @@
       "trial_ending": "До кінця пробного періоду {{plan}}: {{days}} дн.",
       "plan_downgraded": "Тепер у вас Безкоштовний тариф. Нічого не видалено",
       "plan_restored": "З поверненням на {{plan}}",
-      "payments_checkout_failing": "Учні зараз не можуть нічого купити (невдалих оплат: {{count}})"
+      "payments_checkout_failing": "Учні зараз не можуть нічого купити (невдалих оплат: {{count}})",
+      "invitation_accepted": "Запрошення прийнято: {{actor}}"
     },
     "routing": {
       "short": "Кого сповіщати",
@@ -30551,7 +30853,9 @@
       "verify_title": "Підтвердьте пошту, щоб побачити запрошення",
       "verify_desc": "Запрошення надходять на адресу пошти, тож з’являться, коли ви підтвердите, що вона ваша.",
       "verify_resend": "Надіслати лист ще раз",
-      "verify_sent": "Надіслано. Перевірте пошту."
+      "verify_sent": "Надіслано. Перевірте пошту.",
+      "invited_as": "Запрошує вас із роллю {{role}}",
+      "invited_as_by": "{{name}} запрошує вас із роллю {{role}}"
     },
     "celebrate": {
       "title": "Ваш перший курс опубліковано",

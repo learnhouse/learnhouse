@@ -15,7 +15,6 @@ from src.db.roles import RoleRead
 from src.db.user_organizations import UserOrganization
 from src.db.users import (
     AnonymousUser,
-    InternalUser,
     PublicUser,
     User,
     UserCreate,
@@ -823,9 +822,9 @@ class TestUserPasswordAvatarSession:
         ), patch(
             "src.services.users.users.increase_feature_usage"
         ), patch(
-            "src.services.users.users.add_users_to_usergroup",
+            "src.services.orgs.invitations.apply.apply_invite_code",
             new_callable=AsyncMock,
-        ) as mock_add_users_to_usergroup, patch(
+        ) as mock_apply_code, patch(
             "src.services.users.users.get_learnhouse_config",
             return_value=Mock(redis_config=Mock(redis_connection_string="redis://test")),
         ), patch(
@@ -842,11 +841,11 @@ class TestUserPasswordAvatarSession:
             )
 
         assert result.id == 77
-        mock_add_users_to_usergroup.assert_awaited_once()
-        args = mock_add_users_to_usergroup.await_args.args
-        assert isinstance(args[2], InternalUser)
-        assert args[3] == 12
-        assert args[4] == "77"
+        # The code's settings (here a Redis code's user group) are applied.
+        mock_apply_code.assert_awaited_once()
+        args = mock_apply_code.await_args.args
+        assert args[2].id == 77 and args[3].id == org.id
+        assert args[4] == {"usergroup_id": 12}
         fake_redis.set.assert_called_once()
         assert fake_redis.set.call_args.kwargs["ex"] == 90
         assert json.loads(fake_redis.set.call_args.args[1])["pending"] is False

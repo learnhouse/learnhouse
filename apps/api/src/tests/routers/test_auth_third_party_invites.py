@@ -181,35 +181,32 @@ class TestPendingEmailInvite:
 
 
 class TestInviteCodeUsergroup:
-    async def test_usergroup_from_invite_code_is_attached(self, db, org, signed_in):
+    async def test_invite_code_is_applied_after_sign_in(self, db, org, signed_in):
         await _make_invite_only(db, org.id)
-        add_to_group = AsyncMock()
+        apply = AsyncMock()
+        code = {"invite_code": "CODE", "usergroup_id": "12"}
 
         with patch(
-            "src.services.orgs.invites.get_invite_code",
-            AsyncMock(return_value={"invite_code": "CODE", "usergroup_id": "12"}),
-        ), patch("src.services.users.usergroups.add_users_to_usergroup", add_to_group):
+            "src.services.orgs.invites.get_invite_code", AsyncMock(return_value=code)
+        ), patch("src.routers.auth._apply_oauth_invites", apply):
             result = await _login(db, org, invite_code="CODE")
 
         assert result["tokens"]["access_token"]
-        args = add_to_group.await_args.args
-        # usergroup id coerced to int, user id passed as the comma-list string.
-        assert args[3] == 12
-        assert args[4] == "7"
+        args = apply.await_args.args
+        # The user and org it signed into, and the code (a new member).
+        assert args[2:] == (7, org.id, code)
 
-    async def test_usergroup_failure_does_not_fail_sign_in(
+    async def test_follow_up_failure_does_not_fail_sign_in(
         self, db, org, signed_in, caplog
     ):
-        await _make_invite_only(db, org.id)
+        from src.routers.auth import _apply_oauth_invites
 
         with patch(
-            "src.services.orgs.invites.get_invite_code",
-            AsyncMock(return_value={"invite_code": "CODE", "usergroup_id": 12}),
-        ), patch(
-            "src.services.users.usergroups.add_users_to_usergroup",
-            AsyncMock(side_effect=HTTPException(status_code=400, detail="gone")),
-        ), caplog.at_level(logging.WARNING, logger="src.routers.auth"):
-            result = await _login(db, org, invite_code="CODE")
+            "src.services.orgs.invitations.apply.find_pending_invitation",
+            AsyncMock(side_effect=RuntimeError("down")),
+        ), patch("src.routers.auth.select", side_effect=RuntimeError("db down")), caplog.at_level(
+            logging.WARNING, logger="src.routers.auth"
+        ):
+            await _apply_oauth_invites(SimpleNamespace(), db, 7, org.id, {"invite_code": "CODE"})
 
-        assert result["tokens"]["access_token"]
-        assert "Could not attach OAuth user to invite usergroup" in caplog.text
+        assert "Could not apply the invitation after Google sign-in" in caplog.text

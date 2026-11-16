@@ -6,7 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
-from src.db.users import AnonymousUser, InternalUser, PublicUser, User
+from src.db.users import AnonymousUser, PublicUser, User
 from src.services.analytics import events as analytics_events
 from src.services.analytics.analytics import track
 from src.security.features_utils.usage import (
@@ -16,7 +16,6 @@ from src.security.features_utils.usage import (
 from src.services.orgs.invites import get_invite_code
 from src.services.orgs.join_notifications import notify_user_joined_org
 from src.services.orgs.orgs import get_org_join_mechanism
-from src.services.users.usergroups import add_users_to_usergroup
 
 
 class JoinOrg(BaseModel):
@@ -134,15 +133,11 @@ async def join_org(
             )
             await notify_user_joined_org(request, db_session, user, org.id, org=org)
 
-            # Add user to UserGroup if invite code is linked to one
-            if inviteCode.get("usergroup_id"):
-                await add_users_to_usergroup(
-                    request,
-                    db_session,
-                    InternalUser(id=0),
-                    int(inviteCode.get("usergroup_id")),
-                    str(user.id),
-                )
+            # Apply the code's role, user groups and courses (a Redis code:
+            # its user group), and count the use.
+            from src.services.orgs.invitations.apply import apply_invite_code
+
+            await apply_invite_code(request, db_session, user, org, inviteCode)
 
             return "Great, You're part of the Organization"
 
@@ -178,6 +173,7 @@ async def join_org(
                 properties={"join_method": "open"},
             )
             await notify_user_joined_org(request, db_session, user, org.id, org=org)
+            await _apply_open_join_invites(request, db_session, user, org, args.invite_code, current_user)
 
             return "Great, You're part of the Organization"
 
@@ -192,3 +188,24 @@ async def join_org(
             status_code=403,
             detail="Something wrong, try later.",
         )
+
+
+async def _apply_open_join_invites(request: Request, db_session: AsyncSession, user: User, org: Organization, invite_code: Optional[str], current_user) -> None:
+    """Joining an open org with a verified address: an invitation waiting for
+    that address still applies (role, groups, courses); otherwise an invite
+    code the person came through does."""
+    from src.services.orgs.invitations.apply import accept_invitation, apply_invite_code, find_pending_invitation
+
+    inv = await find_pending_invitation(db_session, user.email, org.id)
+    if inv is not None:
+        try:
+            await accept_invitation(request, db_session, user, org, inv, via="open_join")
+        except HTTPException:
+            pass
+        return
+    if invite_code:
+        try:
+            code_data = await get_invite_code(request, org.id, invite_code, current_user, db_session)
+        except HTTPException:
+            return
+        await apply_invite_code(request, db_session, user, org, code_data)

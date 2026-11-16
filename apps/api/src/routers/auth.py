@@ -800,6 +800,44 @@ async def login(
     return result
 
 
+async def _apply_oauth_invites(
+    request: Request,
+    db_session: AsyncSession,
+    user_id: int,
+    org_id: int,
+    code_data: Optional[dict],
+) -> None:
+    """After a Google sign-in into ``org_id``: accept the pending invitation
+    for the account's address (its role, groups and courses), or apply the
+    invite code the person joined through. Never turns a completed sign-in
+    into an error."""
+    import logging
+
+    from src.db.organizations import Organization
+    from src.db.user_organizations import UserOrganization
+    from src.services.orgs.invitations.apply import (
+        accept_invitation,
+        apply_invite_code,
+        find_pending_invitation,
+    )
+
+    try:
+        user = await db_session.get(User, user_id)
+        org = await db_session.get(Organization, org_id)
+        member = (await db_session.execute(
+            select(UserOrganization.id).where(UserOrganization.user_id == user_id, UserOrganization.org_id == org_id)
+        )).first()
+        if user is None or org is None or member is None:
+            return
+        inv = await find_pending_invitation(db_session, user.email, org_id)
+        if inv is not None:
+            await accept_invitation(request, db_session, user, org, inv, via="google_invite")
+        elif code_data:
+            await apply_invite_code(request, db_session, user, org, code_data)
+    except Exception:
+        logging.getLogger(__name__).warning("Could not apply the invitation after Google sign-in", exc_info=True)
+
+
 class ThirdPartyLogin(BaseModel):
     email: EmailStr
     provider: Literal["google"]
@@ -841,11 +879,13 @@ async def third_party_login(
     import redis as _redis
     _logger = logging.getLogger(__name__)
 
-    # Usergroup to attach the user to after sign-in, when they joined through an
-    # invite code that is linked to one (mirrors create_user_with_invite).
-    _invite_usergroup_id = None
+    # The invite code the user joined through, applied after sign-in (its
+    # role, groups and courses; mirrors create_user_with_invite).
+    _invite_code_data = None
     # Pending email invite to mark as consumed once the user actually joins.
     _consume_invite_key = None
+    # Whether the account already belonged to the org before this sign-in.
+    _was_member = False
 
     # Validate org_id before passing it downstream. The rule must mirror the
     # email/password signup endpoints, otherwise the same person gets a
@@ -924,6 +964,7 @@ async def third_party_login(
             )).scalars().first()
             if _existing_member:
                 _authorized = True
+                _was_member = True
 
             # 1. An invite code carried through the OAuth redirect, same code the
             #    form signup would have posted to /users/{org_id}/invite/{code}.
@@ -936,9 +977,15 @@ async def third_party_login(
                     _code_data = None
                 if _code_data:
                     _authorized = True
-                    _invite_usergroup_id = _code_data.get("usergroup_id")
+                    _invite_code_data = _code_data
 
-            # 2. Or a pending invite sent to this address from the org dashboard.
+            # 2. Or a pending invitation sent to this address from the org
+            #    dashboard (database first, then the older Redis records).
+            if not _authorized:
+                from src.services.orgs.invitations.apply import find_pending_invitation
+
+                if await find_pending_invitation(db_session, _invite_email, org_id) is not None:
+                    _authorized = True
             if not _authorized:
                 _r = None
                 try:
@@ -979,6 +1026,25 @@ async def third_party_login(
                     detail="You need an invite to join this organization",
                 )
 
+        elif invite_code and body.provider == "google":
+            # Open org, joined through an invite code link: its settings apply
+            # to someone who isn't a member yet.
+            try:
+                _invite_code_data = await get_invite_code(
+                    request, org_id, invite_code, current_user, db_session
+                )
+            except HTTPException:
+                _invite_code_data = None
+            if _invite_code_data:
+                from src.db.user_organizations import UserOrganization
+
+                _google_email = ((await get_google_user_info(body.access_token)).get("email") or "").strip().lower()
+                _was_member = (await db_session.execute(
+                    select(UserOrganization.id)
+                    .join(User, User.id == UserOrganization.user_id)  # type: ignore[arg-type]
+                    .where((func.lower(User.email) == _google_email) & (UserOrganization.org_id == org_id))
+                )).first() is not None
+
     user = None
 
     # Google
@@ -1000,27 +1066,15 @@ async def third_party_login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Finish the invite the same way the form signup does: attach the usergroup
-    # the invite code is linked to, and stop showing the invite as pending.
-    # Neither of these ran on the OAuth path before, so a user invited by email
-    # stayed "pending" in the org's member list after joining, and an invite code
-    # carrying a usergroup silently didn't apply it.
-    if _invite_usergroup_id and user.id is not None:
-        from src.db.users import InternalUser
-        from src.services.users.usergroups import add_users_to_usergroup
-
-        try:
-            await add_users_to_usergroup(
-                request,
-                db_session,
-                InternalUser(id=0),
-                int(_invite_usergroup_id),
-                str(user.id),
-            )
-        except Exception:
-            # The account exists and is in the org; a usergroup failure must not
-            # turn a completed sign-in into an error.
-            _logger.warning("Could not attach OAuth user to invite usergroup")
+    # Finish the invite the same way the form signup does: apply the
+    # invitation addressed to this (Google-verified) address, or the invite
+    # code's role, groups and courses for someone who just joined, and stop
+    # showing a Redis invite as pending.
+    if org_id is not None and user.id is not None:
+        await _apply_oauth_invites(
+            request, db_session, user.id, org_id,
+            None if _was_member else _invite_code_data,
+        )
 
     if _consume_invite_key:
         _r = None

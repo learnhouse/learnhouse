@@ -3,21 +3,19 @@ import io
 import json
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 
-import redis
 from fastapi import HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import aliased
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from config.config import get_learnhouse_config
 from src.core.ee_hooks import audit_event
 from src.services.audit.org_log import role_name, user_label
 from src.db.organization_config import OrganizationConfig
-from src.db.organizations import Organization, OrganizationRead, OrganizationUser
+from src.db.organizations import Organization, OrganizationUser
 from src.db.roles import Role, RoleRead
 from src.db.user_organizations import UserOrganization
 from src.db.usergroup_user import UserGroupUser
@@ -29,19 +27,14 @@ from src.db.users import (
     OrgMemberUserRead,
     PublicUser,
     User,
-    UserRead,
 )
 from src.security.auth import resolve_acting_user_id
 from src.security.features_utils.usage import (
-    check_members_limit_with_pending,
     decrease_feature_usage,
     enforce_admin_seat_limit_for_role_change,
 )
-from src.services.security.account_age import enforce_free_tier_age_gate
 from src.services.security.rate_limiting import (
-    INVITE_MAX_BATCH_SIZE,
     enforce_batch_size_limit,
-    enforce_invite_rate_limit,
 )
 from src.security.org_auth import (
     enforce_org_mfa,
@@ -51,7 +44,6 @@ from src.security.org_auth import (
     require_org_role_permission,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
-from src.services.orgs.invites import send_invite_email
 from src.services.demo.guards import hide_other_visitors
 from src.services.orgs.orgs import is_org_admin_role, rbac_check
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
@@ -79,13 +71,6 @@ def _csv_safe(value):
     return value
 
 
-# Deliberately permissive email shape check: exactly one "@", a dotted domain,
-# no whitespace/control chars, bounded length. The goal is to reject malformed
-# input (and ":"/whitespace that would shape the Redis invite key), not to
-# fully validate deliverability; the mail provider is the source of truth.
-_EMAIL_RE = re.compile(r"^[^@\s:]{1,64}@[^@\s:]{1,255}\.[a-zA-Z]{2,}$")
-
-
 def _hide_other_visitors(statement, org: Organization, acting_user_id: int):
     """Restrict a member listing to the seeded students plus the caller.
 
@@ -95,14 +80,6 @@ def _hide_other_visitors(statement, org: Organization, acting_user_id: int):
     if not org.is_demo:
         return statement
     return hide_other_visitors(statement, acting_user_id)
-
-
-def _looks_like_email(value: str) -> bool:
-    if not value or len(value) > 254:
-        return False
-    if any(ord(c) < 32 or ord(c) == 127 for c in value):
-        return False
-    return bool(_EMAIL_RE.match(value))
 
 
 def _rights_within(granted, held) -> bool:
@@ -1295,235 +1272,57 @@ async def invite_batch_users(
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
-    # Redis init
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
+    """Invite a comma-separated list of addresses as Users (the older API,
+    kept for API clients, Atlas and the CRM sync). An invite code's groups
+    and courses are carried over. The invitations themselves are the same
+    database records the dashboard sends (see ``orgs.invitations.service``)."""
+    from src.services.orgs.invitations.service import InvitationCreate, create_invitations
 
-    if not redis_conn_string:
-        raise HTTPException(
-            status_code=500,
-            detail="Redis connection string not found",
-        )
-
-    statement = select(Organization).where(Organization.id == org_id)
-    org = (await db_session.execute(statement)).scalars().first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "create", db_session)
-
-    # This is the endpoint that actually sends the mail, so it needs the demo
-    # guard even though create_invite_code already has one: an invite code is
-    # optional here, and without one send_invite_email still delivers, pointing
-    # at the org's /signup. Every visitor to the shared demo holds admin on it,
-    # and the free-tier age gate below exempts paid plans, which the demo is by
-    # design: an account minutes old could otherwise have the platform email 25
-    # strangers at a time under an organization name it controls.
-    from src.services.demo.guards import require_not_demo_org
-
-    await require_not_demo_org(org_id, db_session)
-
-    acting_user_id = resolve_acting_user_id(current_user)
-    # The sender: the member themselves, or whoever created the API token
-    # (a token's own id is not a user id).
-    user = await db_session.get(User, acting_user_id) if acting_user_id else None
-    if user is None:
-        raise HTTPException(status_code=403, detail="Invitations must come from a member")
-
-    # Free-tier abuse gate: the org AND the acting user must be at least
-    # FREE_TIER_MIN_AGE_DAYS old before invites can be sent. This stops a
-    # freshly-registered free org from being spun up purely to relay spam.
-    await enforce_free_tier_age_gate(
-        org.id, acting_user_id, db_session, action="invite members"
+    usergroup_ids: list[int] = []
+    course_uuids: list[str] = []
+    if invite_code_uuid:
+        usergroup_ids, course_uuids = await _invite_code_targets(org_id, invite_code_uuid, db_session)
+    outcome = await create_invitations(
+        request,
+        db_session,
+        org_id,
+        InvitationCreate(emails=emails, usergroup_ids=usergroup_ids, course_uuids=course_uuids),
+        current_user,
     )
-
-    # Connect to Redis
-    r = redis.Redis.from_url(redis_conn_string)
-
-    if not r:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not connect to Redis",
-        )
-
-    # Normalize + dedupe requested emails up front, then cap the batch size so
-    # a single request cannot fan out unbounded email. Malformed addresses are
-    # rejected here (never sent), which also prevents ':'/whitespace-bearing
-    # input from shaping the ``invited_user:{email}:org:{uuid}`` Redis key.
-    seen_emails = set()
-    invite_list = []
-    invalid_results = []
-    for raw_email in emails.split(","):
-        candidate = raw_email.strip()
-        if not candidate or candidate.lower() in seen_emails:
-            continue
-        seen_emails.add(candidate.lower())
-        if not _looks_like_email(candidate):
-            invalid_results.append({"email": candidate, "status": "invalid_email"})
-            continue
-        # Key invites on the lower-cased address. Every reader lower-cases before
-        # looking the key up (the OAuth invite gate, signup's invite consumption),
-        # so storing the admin's typed casing made an invite to "Jane.Doe@x.com"
-        # permanently unmatchable: the invitee could never consume it, it stayed
-        # "Pending" in the dashboard forever, and it kept occupying a member seat.
-        invite_list.append(candidate.lower())
-
-    if len(invite_list) > INVITE_MAX_BATCH_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "code": "INVITE_BATCH_TOO_LARGE",
-                "message": (
-                    f"You can invite at most {INVITE_MAX_BATCH_SIZE} people at "
-                    f"a time."
-                ),
-                "max_batch_size": INVITE_MAX_BATCH_SIZE,
-            },
-        )
-
-    # Which requested emails are genuinely new (not already pending)?
-    new_emails = [
-        e for e in invite_list
-        if not r.get(f"invited_user:{e}:org:{org.org_uuid}")
-    ]
-
-    # Count pending invites toward the member limit (not just joined members),
-    # so a free org can't queue invitations that would exceed its cap once
-    # accepted. Existing pending + new invites are both counted.
-    #
-    # Only the ones still PENDING, though. Accepted invites keep their Redis key
-    # (flipped to pending=False) for the full 60 day TTL, so counting every key
-    # charged an accepted invitee twice (once as a real member and once as a
-    # phantom pending invite), and an org that had filled its seats through
-    # invitations was told it had hit the member limit while well under it.
-    existing_pending = 0
-    for key in r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=1000):
-        try:
-            record = json.loads(r.get(key))
-            if record.get("pending", True):
-                existing_pending += 1
-        except Exception:
-            # Unreadable record: count it, so a corrupt entry can't be used to
-            # slip past the cap.
-            existing_pending += 1
-    await check_members_limit_with_pending(
-        org.id, existing_pending + len(new_emails), db_session
-    )
-
-    # Per-org AND per-user daily invite rate limit, reserving capacity for the
-    # new emails about to be sent.
-    if new_emails:
-        enforce_invite_rate_limit(org.id, acting_user_id, len(new_emails))
-
-    # invitations expire after 60 days
-    ttl = int(timedelta(days=60).total_seconds())
-
-    results = []
-
-    for email in invite_list:
-        # Check if user is already invited
-        invited_user = r.get(f"invited_user:{email}:org:{org.org_uuid}")
-
-        if invited_user:
-            results.append({"email": email, "status": "already_invited"})
-            continue
-
-        org = OrganizationRead.model_validate(org)
-        user = UserRead.model_validate(user)
-
-        # The email's button is a personal, single-use link to the org's own
-        # signup page with this address filled in (see onboarding/invite_links).
-        from src.services.onboarding.invite_links import create_invite_link
-
-        link_token, link_hash = create_invite_link(r, email, org.id, org.org_uuid, invite_code_uuid, ttl)
-
-        isEmailSent = await send_invite_email(
-            org,
-            invite_code_uuid,
-            user,
-            email,
-            request,
-            db_session=db_session,
-            invite_link_token=link_token,
-        )
-
-        invited_user_object = {
-            "email": email,
-            "org_id": org.id,
-            "invite_code_uuid": invite_code_uuid,
-            "pending": True,
-            "email_sent": isEmailSent,
-            "expires": ttl,
-            "created_at": datetime.now().isoformat(),
-            "created_by": user.user_uuid,
-            "link_hash": link_hash,
-        }
-
-        r.set(
-            f"invited_user:{email}:org:{org.org_uuid}",
-            json.dumps(invited_user_object),
-            ex=ttl,
-        )
-
-        results.append({
-            "email": email,
-            "status": "sent" if isEmailSent else "email_failed",
-        })
-
-    # Surface malformed addresses that were rejected before sending.
-    results.extend(invalid_results)
-
-    sent = sum(1 for r in results if r["status"] == "sent")
-    failed = sum(1 for r in results if r["status"] == "email_failed")
-    skipped = sum(1 for r in results if r["status"] == "already_invited")
-    invalid = sum(1 for r in results if r["status"] == "invalid_email")
-
-    # One event per admin action. Failed emails still count: the invite is
-    # recorded and can be resent; already-pending and malformed ones don't.
-    if sent + failed:
-        await track(
-            event_name=analytics_events.USER_INVITED,
-            org_id=org_id,
-            user_id=acting_user_id,
-            properties={"invite_method": "email", "count": sent + failed},
-        )
-        audit_event(
-            request, action="members.invited", org_id=org_id, actor=current_user,
-            target_type="organization", target_id=org_id,
-            details={
-                "count": sent + failed,
-                "emails": [r["email"] for r in results if r["status"] in ("sent", "email_failed", "invited")][:50],
-                "email_failures": failed,
-            },
-        )
-
-    await dispatch_webhooks(
-        event_name="user_invited_to_org",
-        org_id=org_id,
-        data={
-            "org_id": org_id,
-            "emails": invite_list,
-            "invite_code_uuid": invite_code_uuid,
-            "invited_by": user.user_uuid,
-        },
-    )
-
+    summary = outcome["summary"]
     return {
-        "detail": "Users invited",
-        "results": results,
+        **outcome,
         "summary": {
-            "total": len(results),
-            "sent": sent,
-            "failed": failed,
-            "already_invited": skipped,
-            "invalid_email": invalid,
+            **summary,
+            "failed": summary["email_failed"],
+            "already_invited": summary["resent"],
         },
     }
+
+
+async def _invite_code_targets(org_id: int, invite_code_uuid: str, db_session: AsyncSession) -> tuple[list[int], list[str]]:
+    """The groups and courses an invite code carries (database or Redis)."""
+    from src.db.org_invitations import OrgInviteCode
+
+    code = (await db_session.execute(
+        select(OrgInviteCode).where(OrgInviteCode.code_uuid == invite_code_uuid, OrgInviteCode.org_id == org_id)
+    )).scalars().first()
+    if code is not None:
+        return list(code.usergroup_ids or []), list(code.course_uuids or [])
+    if not re.fullmatch(r"org_invite_code_[0-9a-fA-F-]{36}", invite_code_uuid):
+        raise HTTPException(status_code=404, detail="Invite code not found")
+    org = await db_session.get(Organization, org_id)
+    from src.core.redis import get_redis_client
+
+    r = get_redis_client()
+    if org is None or r is None:
+        raise HTTPException(status_code=404, detail="Invite code not found")
+    for key in r.scan_iter(match=f"{invite_code_uuid}:org:{org.org_uuid}:code:*", count=10):
+        raw = r.get(key)
+        if raw:
+            group = json.loads(raw).get("usergroup_id")
+            return ([int(group)] if group else []), []
+    raise HTTPException(status_code=404, detail="Invite code not found")
 
 
 async def get_list_of_invited_users(
@@ -1532,16 +1331,6 @@ async def get_list_of_invited_users(
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
-    # Redis init
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-
-    if not redis_conn_string:
-        raise HTTPException(
-            status_code=500,
-            detail="Redis connection string not found",
-        )
-
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -1581,26 +1370,39 @@ async def get_list_of_invited_users(
                 detail="Only administrators and maintainers can view organization invites",
             )
 
-    # Connect to Redis
-    r = redis.Redis.from_url(redis_conn_string)
+    from src.db.org_invitations import InvitationStatus, OrgInvitation
+    from src.services.orgs.invitations.policy import aware, effective_status, iso
 
-    if not r:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not connect to Redis",
+    rows = (await db_session.execute(
+        select(OrgInvitation)
+        .where(
+            OrgInvitation.org_id == org.id,
+            OrgInvitation.status.in_([InvitationStatus.PENDING.value, InvitationStatus.ACCEPTED.value]),  # type: ignore[attr-defined]
         )
-
-    # Use scan_iter instead of keys() to avoid blocking Redis
-    invited_users = list(r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=100))
-
+        .order_by(OrgInvitation.created_at.desc())  # type: ignore[union-attr]
+    )).scalars().all()
     invited_users_list = []
+    for inv in rows:
+        status = effective_status(inv)
+        if status == InvitationStatus.EXPIRED.value:
+            continue
+        invited_users_list.append({
+            "email": inv.email,
+            "org_id": org.id,
+            "invitation_uuid": inv.invitation_uuid,
+            "status": status,
+            "pending": status == InvitationStatus.PENDING.value,
+            "email_sent": bool(inv.email_sent),
+            "created_at": iso(inv.created_at),
+            "expires_at": iso(inv.expires_at),
+            "expires": int((aware(inv.expires_at) - aware(inv.created_at)).total_seconds()),
+            "invite_code_uuid": None,
+        })
 
-    for user in invited_users:
-        invited_user = r.get(user)
-        if invited_user:
-            invited_user = json.loads(invited_user.decode("utf-8"))
-            invited_users_list.append(invited_user)
+    # Invitations sent before they moved to the database, until they expire.
+    from src.services.orgs.invitations.service import legacy_records
 
+    invited_users_list.extend(legacy_records(org))
     return invited_users_list
 
 
@@ -1611,16 +1413,6 @@ async def remove_invited_user(
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
-    # Redis init
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-
-    if not redis_conn_string:
-        raise HTTPException(
-            status_code=500,
-            detail="Redis connection string not found",
-        )
-
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -1633,29 +1425,28 @@ async def remove_invited_user(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
 
-    # Connect to Redis
-    r = redis.Redis.from_url(redis_conn_string)
-
-    if not r:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not connect to Redis",
-        )
-
-    # Invites are keyed on the lower-cased address (see invite_batch_users), so
-    # normalise here too. Otherwise an admin who typed the address with any
-    # capitals could never withdraw the invitation they had just sent.
+    # Invites are keyed on the lower-cased address, so normalise here too.
+    # Otherwise an admin who typed the address with any capitals could never
+    # withdraw the invitation they had just sent.
     email = email.strip().lower()
 
-    invited_user = r.get(f"invited_user:{email}:org:{org.org_uuid}")
+    from src.services.orgs.invitations.service import revoke_by_email
 
-    if not invited_user:
+    if await revoke_by_email(request, db_session, org, email, current_user):
+        return {"detail": "User removed"}
+
+    # An invitation sent before they moved to the database (Redis).
+    from src.core.redis import get_redis_client
+
+    r = get_redis_client()
+    key = f"invited_user:{email}:org:{org.org_uuid}"
+    if r is None or not r.get(key):
         raise HTTPException(
             status_code=404,
             detail="User not found",
         )
 
-    r.delete(f"invited_user:{email}:org:{org.org_uuid}")
+    r.delete(key)
     audit_event(
         request, action="members.invite.cancelled", org_id=org_id, actor=current_user,
         target_type="invite", target_name=email,

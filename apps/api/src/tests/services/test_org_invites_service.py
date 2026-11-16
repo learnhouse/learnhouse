@@ -61,28 +61,14 @@ def _fake_redis(scan_keys=None, values=None, eval_return=1):
 class TestOrgInvitesService:
     @pytest.mark.asyncio
     async def test_create_invite_code_success_with_usergroup(
-        self, mock_request, db, org, admin_user
+        self, mock_request, db, org, admin_user, user_role
     ):
-        usergroup = _make_usergroup(db, org, id=11)
-        fake_redis = _fake_redis()
+        from src.db.org_invitations import OrgInviteCode
+        from sqlmodel import select
 
+        usergroup = _make_usergroup(db, org, id=11)
         with patch(
-            "src.services.orgs.invites.get_learnhouse_config",
-            return_value=_fake_config(),
-        ), patch(
-            "src.services.orgs.invites.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.invites._get_redis",
-            return_value=fake_redis,
-        ), patch(
-            "src.services.orgs.invites.uuid.uuid4",
-            return_value="invite-uuid",
-        ), patch(
-            "src.services.orgs.invites.secrets.choice",
-            side_effect=list("ABCDEFGH"),
-        ), patch(
-            "src.services.orgs.invites.track", new_callable=AsyncMock
+            "src.services.analytics.analytics.track", new_callable=AsyncMock
         ) as mock_track:
             result = await create_invite_code(
                 mock_request,
@@ -92,11 +78,12 @@ class TestOrgInvitesService:
                 usergroup.id,
             )
 
-        assert result["invite_code"] == "ABCDEFGH"
-        assert result["invite_code_uuid"] == "org_invite_code_invite-uuid"
+        assert result["invite_code"].isalnum() and len(result["invite_code"]) == 8
+        assert result["invite_code_uuid"].startswith("org_invite_code_")
         assert result["usergroup_id"] == usergroup.id
-        # Code creation now uses an atomic Lua script (eval) instead of SET.
-        fake_redis.eval.assert_called_once()
+        assert result["role"]["id"] == user_role.id and result["uses"] == 0
+        row = (await db.execute(select(OrgInviteCode))).scalars().one()
+        assert row.code == result["invite_code"] and row.usergroup_ids == [usergroup.id]
         mock_track.assert_awaited_once_with(
             event_name="user_invited",
             org_id=org.id,
@@ -106,48 +93,23 @@ class TestOrgInvitesService:
 
     @pytest.mark.asyncio
     async def test_create_invite_code_validation_and_limit_guards(
-        self, mock_request, db, org, admin_user
+        self, mock_request, db, org, admin_user, user_role
     ):
-        with patch(
-            "src.services.orgs.invites.get_learnhouse_config",
-            return_value=_fake_config(None),
-        ):
-            with pytest.raises(HTTPException) as exc_info:
+        with patch("src.services.analytics.analytics.track", new_callable=AsyncMock):
+            for _ in range(6):
                 await create_invite_code(mock_request, org.id, admin_user, db)
-        assert exc_info.value.status_code == 500
-
-        with patch(
-            "src.services.orgs.invites.get_learnhouse_config",
-            return_value=_fake_config(),
-        ), patch(
-            "src.services.orgs.invites.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.invites._get_redis",
-            return_value=_fake_redis(eval_return=0),
-        ):
             with pytest.raises(HTTPException) as limit_exc:
                 await create_invite_code(mock_request, org.id, admin_user, db)
         assert limit_exc.value.status_code == 400
 
-        with patch(
-            "src.services.orgs.invites.get_learnhouse_config",
-            return_value=_fake_config(),
-        ), patch(
-            "src.services.orgs.invites.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.invites._get_redis",
-            return_value=_fake_redis(),
-        ):
-            with pytest.raises(HTTPException) as group_exc:
-                await create_invite_code(
-                    mock_request,
-                    org.id,
-                    admin_user,
-                    db,
-                    usergroup_id=999,
-                )
+        with pytest.raises(HTTPException) as group_exc:
+            await create_invite_code(
+                mock_request,
+                org.id,
+                admin_user,
+                db,
+                usergroup_id=999,
+            )
         assert group_exc.value.status_code == 404
 
     @pytest.mark.asyncio
@@ -158,10 +120,6 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.get_learnhouse_config",
             return_value=_fake_config(None),
         ):
-            with pytest.raises(HTTPException) as create_redis_exc:
-                await create_invite_code(mock_request, org.id, admin_user, db)
-            with pytest.raises(HTTPException) as get_codes_redis_exc:
-                await get_invite_codes(mock_request, org.id, admin_user, db)
             with pytest.raises(HTTPException) as get_code_redis_exc:
                 await get_invite_code(
                     mock_request,
@@ -179,9 +137,8 @@ class TestOrgInvitesService:
                     db,
                 )
 
-        assert create_redis_exc.value.status_code == 500
-        assert get_codes_redis_exc.value.status_code == 500
-        assert get_code_redis_exc.value.status_code == 500
+        # Codes live in the database: no Redis just means no legacy code.
+        assert get_code_redis_exc.value.status_code == 404
         assert delete_redis_exc.value.status_code == 500
 
         with patch(
@@ -230,10 +187,6 @@ class TestOrgInvitesService:
             "src.services.orgs.invites._get_redis",
             return_value=None,
         ):
-            with pytest.raises(HTTPException) as create_conn_exc:
-                await create_invite_code(mock_request, org.id, admin_user, db)
-            with pytest.raises(HTTPException) as get_codes_conn_exc:
-                await get_invite_codes(mock_request, org.id, admin_user, db)
             with pytest.raises(HTTPException) as get_code_conn_exc:
                 await get_invite_code(
                     mock_request,
@@ -246,14 +199,12 @@ class TestOrgInvitesService:
                 await delete_invite_code(
                     mock_request,
                     org.id,
-                    "org_invite_code_test",
+                    "org_invite_code_12345678-1234-1234-1234-1234567890ab",
                     admin_user,
                     db,
                 )
 
-        assert create_conn_exc.value.status_code == 500
-        assert get_codes_conn_exc.value.status_code == 500
-        assert get_code_conn_exc.value.status_code == 500
+        assert get_code_conn_exc.value.status_code == 404
         assert delete_conn_exc.value.status_code == 500
 
         invite_payload = {
@@ -298,7 +249,7 @@ class TestOrgInvitesService:
                 await delete_invite_code(
                     mock_request,
                     org.id,
-                    "org_invite_code_missing",
+                    "org_invite_code_12345678-1234-1234-1234-1234567890ab",
                     admin_user,
                     db,
                 )
@@ -323,20 +274,12 @@ class TestOrgInvitesService:
             values={b"invite-key": json.dumps(invite_payload)},
         )
 
-        with patch(
-            "src.services.orgs.invites.get_learnhouse_config",
-            return_value=_fake_config(),
-        ), patch(
-            "src.services.orgs.invites.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.invites._get_redis",
-            return_value=fake_redis,
-        ):
+        with patch("src.core.redis.get_redis_client", return_value=fake_redis):
             result = await get_invite_codes(mock_request, org.id, admin_user, db)
 
         assert result[0]["invite_code"] == "ABC12345"
         assert result[0]["usergroup_name"] == "Beta Group"
+        assert result[0]["legacy"] is True
 
     @pytest.mark.asyncio
     async def test_get_invite_codes_skips_vanished_key(
@@ -357,16 +300,7 @@ class TestOrgInvitesService:
             values={b"live-key": json.dumps(invite_payload)},
         )
 
-        with patch(
-            "src.services.orgs.invites.get_learnhouse_config",
-            return_value=_fake_config(),
-        ), patch(
-            "src.services.orgs.invites.rbac_check",
-            new_callable=AsyncMock,
-        ), patch(
-            "src.services.orgs.invites._get_redis",
-            return_value=fake_redis,
-        ):
+        with patch("src.core.redis.get_redis_client", return_value=fake_redis):
             result = await get_invite_codes(mock_request, org.id, admin_user, db)
 
         # Only the live key is returned; the vanished one is silently skipped.

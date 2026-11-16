@@ -792,7 +792,13 @@
       "signup_title": "{{org}} kuruluşuna katılın",
       "signup_desc": "Davet edildiniz. Bir şifre seçin, hazırsınız.",
       "choose_password": "Bir şifre seçin",
-      "create_and_join": "{{org}} kuruluşuna katıl"
+      "create_and_join": "{{org}} kuruluşuna katıl",
+      "details": {
+        "role": "{{role}} olarak katılacaksınız.",
+        "role_by": "{{name}} sizi {{role}} olarak katılmaya davet etti.",
+        "groups": "Şu gruplara ekleneceksiniz: {{names}}",
+        "courses": "Şu kurslara kaydedileceksiniz: {{names}}"
+      }
     },
     "login_failed_forgot": "Şifrenizi mi unuttunuz?",
     "login_failed_reset": "Sıfırlayın",
@@ -9375,6 +9381,226 @@
         "more": "Diğer işlemler",
         "remove_filter": "Filtreyi kaldır: {{name}}",
         "any": "Herhangi"
+      },
+      "invitations": {
+        "invite_people": "Kişi davet et",
+        "dialog": {
+          "title": "Kişi davet et",
+          "description": "Her biri e-postayla kişisel bir bağlantı alır. Katıldıklarında aşağıdaki rol, gruplar ve kurslar otomatik olarak uygulanır.",
+          "done_title": "Davetler gönderildi",
+          "done_description": "Her adrese ne olduğu burada.",
+          "invite_more": "Daha fazla davet et",
+          "send": "Davetleri gönder",
+          "send_count_one": "{{count}} davet gönder",
+          "send_count_other": "{{count}} davet gönder",
+          "update_count_one": "{{count}} üyeyi güncelle",
+          "update_count_other": "{{count}} üyeyi güncelle"
+        },
+        "fields": {
+          "emails": "E-posta adresleri",
+          "emails_hint": "Bir veya birden fazla adres yapıştırın; virgül, boşluk veya yeni satırla ayırın",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} adres",
+          "valid_count_other": "{{count}} adres",
+          "invalid_count_one": "{{count}} adres geçerli değil",
+          "invalid_count_other": "{{count}} adres geçerli değil",
+          "too_many": "Bir seferde en fazla {{max}} kişi davet edebilirsiniz",
+          "update_existing_one": "Zaten üye olan {{count}} kişiyi de güncelle",
+          "update_existing_other": "Zaten üye olan {{count}} kişiyi de güncelle",
+          "update_existing_hint": "Rolleri aşağıdaki rolle değişir ve gruplara ve kurslara eklenirler. Onları atlamak için bunu kapalı bırakın.",
+          "role": "Rol",
+          "role_hint": "Katıldıklarında neler yapabilecekleri",
+          "groups": "Gruplara ekle",
+          "groups_placeholder": "Grup seçin",
+          "no_groups": "Bu kuruluşun henüz kullanıcı grubu yok.",
+          "courses": "Kurslara kaydet",
+          "courses_placeholder": "Kurs seçin",
+          "no_courses": "Bu kuruluşun henüz kursu yok.",
+          "selected_count_one": "{{count}} seçildi",
+          "selected_count_other": "{{count}} seçildi",
+          "search": "Ara",
+          "no_match": "Aramanızla eşleşen bir şey yok.",
+          "draft": "Taslak",
+          "remove_item": "{{name}} öğesini kaldır",
+          "message": "Kişisel mesaj",
+          "message_placeholder": "E-postaya kısa bir not ekleyin (isteğe bağlı, bağlantı olmadan)",
+          "expiry": "Geçerlilik süresi",
+          "days_one": "{{count}} gün",
+          "days_other": "{{count}} gün",
+          "expires_on": "{{date}} tarihine kadar"
+        },
+        "roles": {
+          "user": {
+            "name": "Öğrenci",
+            "description": "Kurs alır, topluluklara katılır ve kendi ilerlemesini takip eder. Panele erişimi yoktur."
+          },
+          "instructor": {
+            "name": "Eğitmen",
+            "description": "Kendi kurslarını oluşturur, yürütür ve öğrencilerini notlandırır. Bir yönetici yeri kullanır."
+          },
+          "maintainer": {
+            "name": "Sorumlu",
+            "description": "Tüm kursları, üyeleri ve grupları yönetir. Faturalandırmayı veya kuruluş ayarlarını değiştiremez."
+          },
+          "admin": {
+            "name": "Yönetici",
+            "description": "Ayarlar, faturalandırma ve diğer yöneticiler dahil kuruluş üzerinde tam kontrol."
+          },
+          "custom_roles": "Özel roller",
+          "custom_description": "Bu kuruluş için tanımlanmış özel bir rol.",
+          "admin_seat": "Yönetici yeri",
+          "refusal_admin_only": "Bu rolle yalnızca yöneticiler davet gönderebilir.",
+          "refusal_above": "Bu rolün, sizin rolünüzde olmayan izinleri var.",
+          "refusal_code": "Davet kodları, kişileri yöneten veya panele erişim veren bir rol veremez."
+        },
+        "preview": {
+          "new_one": "{{count}} yeni",
+          "new_other": "{{count}} yeni",
+          "pending_one": "{{count}} kişi zaten davetli, yeni bağlantı alacak",
+          "pending_other": "{{count}} kişi zaten davetli, yeni bağlantı alacak",
+          "members_one": "{{count}} kişi zaten üye",
+          "members_other": "{{count}} kişi zaten üye"
+        },
+        "summary": {
+          "people_one": "{{count}} kişi {{role}} olarak katılacak",
+          "people_other": "{{count}} kişi {{role}} olarak katılacak",
+          "groups_one": "{{names}} grubuna eklenecek",
+          "groups_other": "{{count}} gruba eklenecek ({{names}})",
+          "courses_one": "{{count}} kursa kaydedilecek",
+          "courses_other": "{{count}} kursa kaydedilecek",
+          "and": ", ",
+          "updated_one": "Mevcut {{count}} üye de güncellenecek.",
+          "updated_other": "Mevcut {{count}} üye de güncellenecek."
+        },
+        "capacity": {
+          "members": "Üyeler",
+          "admin_seats": "Yönetici yerleri",
+          "of": "{{count}} / {{limit}}",
+          "pending_note_one": "Bekleyen {{count}} davet dahil",
+          "pending_note_other": "Bekleyen {{count}} davet dahil",
+          "members_blocked": "Planınız, bekleyen davetler dahil {{limit}} üye içerir. Daha fazla davet etmek için planınızı yükseltin veya bazı davetleri iptal edin.",
+          "seats_blocked": "Planınız, bekleyen davetler dahil {{limit}} yönetici yeri içerir. Öğrenci rolü seçin veya daha fazla yönetici eklemek için planınızı yükseltin."
+        },
+        "results": {
+          "status": {
+            "sent": "Gönderildi",
+            "resent": "Yeni bağlantı gönderildi",
+            "email_failed": "E-posta gönderilemedi",
+            "already_member": "Zaten üye",
+            "member_updated": "Üye güncellendi",
+            "member_update_failed": "Güncellenmedi",
+            "invalid_email": "Geçersiz adres"
+          },
+          "count": {
+            "sent_one": "{{count}} gönderildi",
+            "sent_other": "{{count}} gönderildi",
+            "resent_one": "{{count}} yeni bağlantı",
+            "resent_other": "{{count}} yeni bağlantı",
+            "email_failed_one": "{{count}} başarısız",
+            "email_failed_other": "{{count}} başarısız",
+            "already_member_one": "{{count}} kişi zaten üye",
+            "already_member_other": "{{count}} kişi zaten üye",
+            "member_updated_one": "{{count}} üye güncellendi",
+            "member_updated_other": "{{count}} üye güncellendi",
+            "member_update_failed_one": "{{count}} güncellenmedi",
+            "member_update_failed_other": "{{count}} güncellenmedi",
+            "invalid_email_one": "{{count}} geçersiz",
+            "invalid_email_other": "{{count}} geçersiz"
+          }
+        },
+        "status": {
+          "pending": "Beklemede",
+          "accepted": "Kabul edildi",
+          "declined": "Reddedildi",
+          "revoked": "İptal edildi",
+          "expired": "Süresi doldu"
+        },
+        "list": {
+          "title": "Davetler",
+          "subtitle": "Davet ettiğiniz herkes, alacakları rol ve erişimle birlikte",
+          "filter": "Duruma göre filtrele",
+          "all": "Tümü",
+          "person": "Kişi",
+          "role": "Rol",
+          "access": "Gruplar ve kurslar",
+          "status": "Durum",
+          "select_all": "Tümünü seç",
+          "select": "{{email}} adresini seç",
+          "selected_one": "{{count}} seçildi",
+          "selected_other": "{{count}} seçildi",
+          "actions": "{{email}} için işlemler",
+          "invited_by": "{{name}} davet etti, {{when}}",
+          "joined": "Katıldı, {{when}}",
+          "email_not_sent": "e-posta teslim edilmedi",
+          "groups_one": "{{count}} grup",
+          "groups_other": "{{count}} grup",
+          "courses_one": "{{count}} kurs",
+          "courses_other": "{{count}} kurs",
+          "expires_in_one": "{{count}} gün içinde sona eriyor",
+          "expires_in_other": "{{count}} gün içinde sona eriyor",
+          "legacy": "Davetlerde rol bulunmadan önce gönderildi",
+          "empty_title": "Henüz davet yok",
+          "empty_description": "Kişileri e-postayla davet edin. Seçtiğiniz rol, gruplar ve kurslarla katılırlar.",
+          "no_results": "Eşleşen davet yok",
+          "clear_filter": "Tümünü göster",
+          "error": "Davetler yüklenemedi"
+        },
+        "actions": {
+          "resend": "Yeniden gönder",
+          "copy_link": "Davet bağlantısını kopyala",
+          "edit": "Rolü veya erişimi değiştir",
+          "revoke": "İptal et",
+          "none": "İşlem yok"
+        },
+        "revoke": {
+          "title": "Bu davet iptal edilsin mi?",
+          "message": "{{email}} adresine gönderilen bağlantı çalışmayı durduracak. Bu kişiyi daha sonra yeniden davet edebilirsiniz.",
+          "bulk_title_one": "{{count}} davet iptal edilsin mi?",
+          "bulk_title_other": "{{count}} davet iptal edilsin mi?",
+          "bulk_message": "Bağlantıları çalışmayı durduracak. Onları daha sonra yeniden davet edebilirsiniz."
+        },
+        "edit": {
+          "title": "Daveti değiştir",
+          "description": "{{email}} için. Daveti kabul ettiğinde uygulanır.",
+          "keep_expiry": "Koru ({{date}})",
+          "extend_one": "Bugünden itibaren {{count}} gün",
+          "extend_other": "Bugünden itibaren {{count}} gün",
+          "save": "Değişiklikleri kaydet"
+        },
+        "toasts": {
+          "sent": "Davetler gönderildi",
+          "some_failed_one": "{{count}} e-posta gönderilemedi. Bunun yerine davet bağlantısını listeden kopyalayın.",
+          "some_failed_other": "{{count}} e-posta gönderilemedi. Bunun yerine davet bağlantılarını listeden kopyalayın.",
+          "error": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+          "resent": "{{email}} adresine yeni davet gönderildi",
+          "email_failed": "E-posta gönderilemedi. Bunun yerine davet bağlantısını kopyalayın.",
+          "link_copied": "Davet bağlantısı kopyalandı. Önceki e-postadaki bağlantı artık çalışmıyor.",
+          "revoked": "Davet iptal edildi",
+          "updated": "Davet güncellendi",
+          "bulk_resend_one": "{{count}} davet yeniden gönderildi",
+          "bulk_resend_other": "{{count}} davet yeniden gönderildi",
+          "bulk_revoke_one": "{{count}} davet iptal edildi",
+          "bulk_revoke_other": "{{count}} davet iptal edildi"
+        },
+        "codes": {
+          "description": "Birçok kişi için tek bir bağlantı veya kod. Bununla katılan herkes aşağıdaki ayarları alır.",
+          "role_hint": "Yalnızca öğrenci düzeyinde roller",
+          "role_note": "Kodu elinde bulunduran herkes kullanabilir; bu yüzden yönetici, sorumlu, eğitmen veya kişileri yöneten herhangi bir rol veremez.",
+          "max_uses": "En fazla kullanım",
+          "max_uses_invalid": "1 veya daha büyük bir tam sayı girin",
+          "unlimited": "Sınırsız",
+          "never": "Asla",
+          "no_expiry": "Süresiz",
+          "uses_one": "{{count}} kullanım",
+          "uses_other": "{{count}} kullanım",
+          "uses_of": "{{count}} / {{max}} kullanım",
+          "uses_title": "Bu kodla kaç kez katılım yapıldığı"
+        },
+        "codes_card": {
+          "title": "Davet kodları",
+          "description": "Bütün bir sınıfla tek bir bağlantı veya kod paylaşın. Rolünü, gruplarını, kurslarını, kullanım sayısını ve geçerlilik süresini belirleyin.",
+          "manage": "Davet kodlarını yönet"
+        }
       }
     },
     "assignments": {
@@ -11757,7 +11983,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b>, <b>{{target}}</b> kişisinin kayıt yanıtlarını düzenledi",
         "members__signup_backfilled": "<b>{{actor}}</b>, kayıt yanıtlarını kişi verilerine kopyaladı",
         "security__support_access__started": "<b>{{actor}}</b>, <b>{{target}}</b> kimliğine bürünmeye başladı",
-        "security__support_access__ended": "<b>{{actor}}</b>, <b>{{target}}</b> kimliğine bürünmeyi bıraktı"
+        "security__support_access__ended": "<b>{{actor}}</b>, <b>{{target}}</b> kimliğine bürünmeyi bıraktı",
+        "members__invitation__updated": "<b>{{actor}}</b>, <b>{{target}}</b> için daveti değiştirdi",
+        "members__invitation__resent": "<b>{{actor}}</b>, <b>{{target}}</b> için daveti yeniden gönderdi",
+        "members__invitation__link_copied": "<b>{{actor}}</b>, <b>{{target}}</b> için yeni bir davet bağlantısı kopyaladı",
+        "members__invitation__revoked": "<b>{{actor}}</b>, <b>{{target}}</b> için daveti geri aldı",
+        "members__invitation__accepted": "<b>{{actor}}</b> davetini kabul etti",
+        "members__invitation__declined": "<b>{{actor}}</b> davetini reddetti",
+        "members__invitation__role_applied": "<b>{{actor}}</b> davetindeki rolü aldı",
+        "members__invite_code__updated": "<b>{{actor}}</b> bir davet bağlantısını değiştirdi",
+        "members__invite_code__used": "<b>{{actor}}</b> bir davet bağlantısıyla katıldı"
       },
       "export": {
         "generating": "Dışa aktarım hazırlanıyor…",
@@ -11921,7 +12156,8 @@
         "customers": "müşteri listesi",
         "scim": "SCIM provisioning",
         "scim_token": "SCIM token",
-        "training_rule": "zorunlu eğitim"
+        "training_rule": "zorunlu eğitim",
+        "invitation": "davet"
       }
     },
     "course_builder": {
@@ -29019,7 +29255,8 @@
       "trial_ending": "Deneme bitiyor",
       "plan_downgraded": "Ücretsiz plana geçildi",
       "plan_restored": "Plan geri yüklendi",
-      "payments_checkout_failing": "Ödemeler başarısız oluyor"
+      "payments_checkout_failing": "Ödemeler başarısız oluyor",
+      "invitation_accepted": "Davet kabul edildi"
     },
     "copy": {
       "assignment_graded": "Notlandırıldı: {{assignment}}",
@@ -29081,7 +29318,8 @@
       "trial_ending": "{{plan}} denemeniz {{days}} gün içinde bitiyor",
       "plan_downgraded": "Artık Ücretsiz plandasınız. Hiçbir şey silinmedi",
       "plan_restored": "{{plan}} planına tekrar hoş geldiniz",
-      "payments_checkout_failing": "Öğrenciler şu anda satın alamıyor ({{count}} başarısız ödeme)"
+      "payments_checkout_failing": "Öğrenciler şu anda satın alamıyor ({{count}} başarısız ödeme)",
+      "invitation_accepted": "{{actor}} davetinizi kabul etti"
     },
     "routing": {
       "short": "Kimlere bildirilir",
@@ -29237,7 +29475,9 @@
       "verify_title": "Davetlerini görmek için e-postanı doğrula",
       "verify_desc": "Davetler bir e-posta adresine gönderilir; adresin sana ait olduğunu doğruladığında görünür.",
       "verify_resend": "Doğrulama e-postasını yeniden gönder",
-      "verify_sent": "Gönderildi. Gelen kutunu kontrol et."
+      "verify_sent": "Gönderildi. Gelen kutunu kontrol et.",
+      "invited_as": "Seni {{role}} olarak davet etti",
+      "invited_as_by": "{{name}} seni {{role}} olarak davet etti"
     },
     "celebrate": {
       "title": "İlk kursun yayında",

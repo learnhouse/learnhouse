@@ -115,7 +115,18 @@ export default function PendingInvites({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-neutral-900">{inv.name}</p>
-              <p className="truncate text-xs text-neutral-500">{t('onb2.invites.invited_you')}</p>
+              <p className="truncate text-xs text-neutral-500">
+                {inv.role
+                  ? inv.invited_by
+                    ? t('onb2.invites.invited_as_by', { name: inv.invited_by, role: inv.role })
+                    : t('onb2.invites.invited_as', { role: inv.role })
+                  : t('onb2.invites.invited_you')}
+              </p>
+              {inv.message && (
+                <p className="mt-1 line-clamp-2 text-xs italic text-neutral-600" dir="auto">
+                  “{inv.message}”
+                </p>
+              )}
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <Button size="sm" variant="ghost" disabled={busy === inv.org_uuid} onClick={() => decline(inv)}>

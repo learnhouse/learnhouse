@@ -29,6 +29,7 @@ from src.routers.orgs import custom_domains
 from src.routers.orgs import packs
 from src.routers.orgs import org_plan
 from src.routers.orgs import member_panel as member_panel_router
+from src.routers.orgs import invitations as invitations_router
 from src.routers.orgs import plan_overview as plan_overview_router
 from src.routers.courses import chapters, courses, assignments, certifications
 from src.routers.folders import folders as folders_router_module
@@ -122,6 +123,13 @@ v1_router.include_router(
     prefix="/orgs",
     tags=["orgs"],
     dependencies=[Depends(get_non_api_token_user)]
+)
+# Invitations and invite codes (session users only; admins and maintainers).
+v1_router.include_router(
+    invitations_router.router,
+    prefix="/orgs",
+    tags=["orgs"],
+    dependencies=[Depends(require_authenticated_user)]
 )
 # The member side panel on the dashboard Users page (session users only).
 v1_router.include_router(

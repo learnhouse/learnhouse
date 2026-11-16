@@ -83,6 +83,9 @@ from src.db.users import AnonymousUser, PublicUser, User
 # Rights helpers
 # ---------------------------------------------------------------------------
 
+# Fixtures shared by the invitation tests (world, quiet).
+pytest_plugins = ["src.tests.fixtures.invitations"]
+
 def _full_permission() -> Permission:
     return Permission(
         action_create=True,

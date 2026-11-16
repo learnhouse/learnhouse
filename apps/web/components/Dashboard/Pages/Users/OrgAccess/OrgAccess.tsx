@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowSquareOut,
+  BookOpen,
   Check,
   Copy,
   DoorOpen,
@@ -46,6 +47,8 @@ import { changeSignupMechanism, deleteInviteCode } from '@services/organizations
 import { queryKeys } from '@/lib/query/keys'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import OrgSignupFields from './OrgSignupFields'
+import { RoleChip } from '../usersUi'
+import { useRoleText } from '../OrgUsersAdd/invitationsKit'
 import { SubTabPanel, SubTabs, useSubTab } from '@components/Dashboard/Shared/DashKit/SubTabs'
 
 type JoinMethod = 'open' | 'inviteOnly'
@@ -109,6 +112,7 @@ function OrgAccess() {
   const queryClient = useQueryClient()
   const router = useRouter()
   const { track } = useLHAnalytics('dashboard')
+  const roleText = useRoleText()
 
   // The org config is the source of truth; a local override shows a change
   // at once (and survives the org payload being briefly stale after it).
@@ -128,7 +132,9 @@ function OrgAccess() {
     staleTime: 60_000,
   })
   const invites: any[] = Array.isArray(data) ? data : []
-  const atLimit = invites.length >= MAX_INVITE_CODES
+  // Expired and used-up codes stay listed (with their usage) but don't count.
+  const activeCount = invites.filter((i) => !i.status || i.status === 'active').length
+  const atLimit = activeCount >= MAX_INVITE_CODES
 
   async function changeJoinMethod(method: JoinMethod) {
     const previous = override
@@ -228,7 +234,7 @@ function OrgAccess() {
             actions={
               <>
                 <Chip tone={atLimit ? 'amber' : 'neutral'}>
-                  {t('dashboard.users.dash.signups.codes_used', { count: invites.length, max: MAX_INVITE_CODES })}
+                  {t('dashboard.users.dash.signups.codes_used', { count: activeCount, max: MAX_INVITE_CODES })}
                 </Chip>
                 <Button
                   variant="primary"
@@ -268,23 +274,39 @@ function OrgAccess() {
               ) : (
                 invites.map((invite) => {
                   const link = signupLink(invite)
-                  const expires = dayjs(invite.created_at).add(1, 'year')
-                  const daysLeft = expires.diff(dayjs(), 'day')
+                  // Older Redis codes lasted a year; database codes may never expire.
+                  const expires = invite.expires_at
+                    ? dayjs(invite.expires_at)
+                    : invite.legacy
+                      ? dayjs(invite.created_at).add(1, 'year')
+                      : null
+                  const daysLeft = expires ? expires.diff(dayjs(), 'day') : null
+                  const groups: any[] = invite.usergroups ?? (invite.usergroup_id ? [{ id: invite.usergroup_id, name: invite.usergroup_name }] : [])
+                  const courses: any[] = invite.courses ?? []
+                  const usedUp = invite.status === 'used_up'
                   return (
                     <div key={invite.invite_code_uuid} className="flex flex-wrap sm:flex-nowrap items-center gap-3 px-5 py-3.5">
                       <div className="w-9 h-9 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">
-                        {invite.usergroup_id ? <UsersThree size={17} /> : <Users size={17} />}
+                        {groups.length ? <UsersThree size={17} /> : <Users size={17} />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <code className="text-sm font-semibold font-mono text-neutral-900">{invite.invite_code}</code>
                           <CopyIconButton text={invite.invite_code} label={t('dashboard.users.dash.signups.copy_code')} />
-                          {invite.usergroup_id ? (
-                            <Chip tone="sky" icon={<UsersThree size={11} />}>
-                              {invite.usergroup_name || t('dashboard.users.signups.invite_codes.types.linked_to_usergroup')}
+                          {invite.role && <RoleChip name={roleText(invite.role).name} />}
+                          {groups.length > 0 ? (
+                            <Chip tone="sky" icon={<UsersThree size={11} />} title={groups.map((g) => g.name).join(', ')}>
+                              {groups.length === 1
+                                ? groups[0].name || t('dashboard.users.signups.invite_codes.types.linked_to_usergroup')
+                                : t('dashboard.users.invitations.list.groups', { count: groups.length })}
                             </Chip>
                           ) : (
-                            <Chip tone="neutral">{t('dashboard.users.signups.invite_codes.types.normal')}</Chip>
+                            !invite.role && <Chip tone="neutral">{t('dashboard.users.signups.invite_codes.types.normal')}</Chip>
+                          )}
+                          {courses.length > 0 && (
+                            <Chip tone="teal" icon={<BookOpen size={11} />} title={courses.map((c) => c.name).join(', ')}>
+                              {t('dashboard.users.invitations.list.courses', { count: courses.length })}
+                            </Chip>
                           )}
                         </div>
                         <div className="flex items-center gap-1 min-w-0 mt-0.5">
@@ -294,13 +316,22 @@ function OrgAccess() {
                           </span>
                         </div>
                       </div>
+                      {typeof invite.uses === 'number' && (
+                        <Chip tone={usedUp ? 'rose' : invite.uses > 0 ? 'emerald' : 'neutral'} title={t('dashboard.users.invitations.codes.uses_title')}>
+                          {invite.max_uses
+                            ? t('dashboard.users.invitations.codes.uses_of', { count: invite.uses, max: invite.max_uses })
+                            : t('dashboard.users.invitations.codes.uses', { count: invite.uses })}
+                        </Chip>
+                      )}
                       <Chip
-                        tone={daysLeft < 0 ? 'rose' : daysLeft < 30 ? 'amber' : 'neutral'}
+                        tone={daysLeft === null ? 'neutral' : daysLeft < 0 ? 'rose' : daysLeft < 30 ? 'amber' : 'neutral'}
                         title={t('dashboard.users.signups.invite_codes.table.expiration_date')}
                       >
-                        {daysLeft < 0
-                          ? t('dashboard.users.dash.signups.expired')
-                          : t('dashboard.users.dash.signups.expires', { date: dateFmt.format(expires.toDate()) })}
+                        {daysLeft === null || !expires
+                          ? t('dashboard.users.invitations.codes.no_expiry')
+                          : daysLeft < 0
+                            ? t('dashboard.users.dash.signups.expired')
+                            : t('dashboard.users.dash.signups.expires', { date: dateFmt.format(expires.toDate()) })}
                       </Chip>
                       <Button variant="secondary" size="sm" icon={<Copy size={13} />} onClick={() => copyText(link)} className="hidden md:inline-flex">
                         {t('dashboard.users.dash.signups.copy_link')}

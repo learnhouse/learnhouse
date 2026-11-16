@@ -791,7 +791,13 @@
       "signup_title": "{{org}}에 참여하기",
       "signup_desc": "초대받으셨어요. 비밀번호만 정하면 바로 참여돼요.",
       "choose_password": "비밀번호 정하기",
-      "create_and_join": "{{org}}에 참여"
+      "create_and_join": "{{org}}에 참여",
+      "details": {
+        "role": "{{role}}(으)로 참여하게 돼요.",
+        "role_by": "{{name}}님이 {{role}}(으)로 참여하도록 초대했어요.",
+        "groups": "추가될 그룹: {{names}}",
+        "courses": "등록될 코스: {{names}}"
+      }
     },
     "login_failed_forgot": "비밀번호를 잊으셨나요?",
     "login_failed_reset": "재설정하기",
@@ -9345,6 +9351,226 @@
         "more": "추가 작업",
         "remove_filter": "필터 제거: {{name}}",
         "any": "전체"
+      },
+      "invitations": {
+        "invite_people": "멤버 초대",
+        "dialog": {
+          "title": "멤버 초대",
+          "description": "이메일로 개인 링크가 전송돼요. 참여하면 아래의 역할, 그룹, 코스가 자동으로 적용돼요.",
+          "done_title": "초대를 보냈어요",
+          "done_description": "주소별 처리 결과예요.",
+          "invite_more": "더 초대하기",
+          "send": "초대 보내기",
+          "send_count_one": "초대 {{count}}개 보내기",
+          "send_count_other": "초대 {{count}}개 보내기",
+          "update_count_one": "멤버 {{count}}명 업데이트",
+          "update_count_other": "멤버 {{count}}명 업데이트"
+        },
+        "fields": {
+          "emails": "이메일 주소",
+          "emails_hint": "하나 또는 여러 개를 붙여넣으세요. 쉼표, 공백, 줄바꿈으로 구분해요",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "주소 {{count}}개",
+          "valid_count_other": "주소 {{count}}개",
+          "invalid_count_one": "주소 {{count}}개가 올바르지 않아요",
+          "invalid_count_other": "주소 {{count}}개가 올바르지 않아요",
+          "too_many": "한 번에 최대 {{max}}명까지 초대할 수 있어요",
+          "update_existing_one": "이미 멤버인 {{count}}명도 업데이트",
+          "update_existing_other": "이미 멤버인 {{count}}명도 업데이트",
+          "update_existing_hint": "역할이 아래 역할로 바뀌고 그룹과 코스에 추가돼요. 끄면 이 사람들은 건너뛰어요.",
+          "role": "역할",
+          "role_hint": "참여한 후 할 수 있는 일",
+          "groups": "그룹에 추가",
+          "groups_placeholder": "그룹 선택",
+          "no_groups": "이 조직에는 아직 사용자 그룹이 없어요.",
+          "courses": "코스에 등록",
+          "courses_placeholder": "코스 선택",
+          "no_courses": "이 조직에는 아직 코스가 없어요.",
+          "selected_count_one": "{{count}}개 선택됨",
+          "selected_count_other": "{{count}}개 선택됨",
+          "search": "검색",
+          "no_match": "검색과 일치하는 항목이 없어요.",
+          "draft": "초안",
+          "remove_item": "{{name}} 제거",
+          "message": "개인 메시지",
+          "message_placeholder": "이메일에 짧은 메모를 덧붙이세요 (선택 사항, 링크 불가)",
+          "expiry": "만료 기간",
+          "days_one": "{{count}}일",
+          "days_other": "{{count}}일",
+          "expires_on": "{{date}}까지"
+        },
+        "roles": {
+          "user": {
+            "name": "학습자",
+            "description": "코스를 수강하고 커뮤니티에 참여하며 자신의 진도를 확인해요. 대시보드에는 접근할 수 없어요."
+          },
+          "instructor": {
+            "name": "강사",
+            "description": "자신의 코스를 만들어 가르치고 학습자를 채점해요. 관리자 좌석을 사용해요."
+          },
+          "maintainer": {
+            "name": "유지관리자",
+            "description": "모든 코스, 멤버, 그룹을 관리해요. 결제나 조직 설정은 변경할 수 없어요."
+          },
+          "admin": {
+            "name": "관리자",
+            "description": "설정, 결제, 다른 관리자를 포함해 조직 전체를 관리해요."
+          },
+          "custom_roles": "맞춤 역할",
+          "custom_description": "이 조직에서 정의한 맞춤 역할이에요.",
+          "admin_seat": "관리자 좌석",
+          "refusal_admin_only": "이 역할로 초대하는 것은 관리자만 할 수 있어요.",
+          "refusal_above": "이 역할에는 내 역할에 없는 권한이 있어요.",
+          "refusal_code": "초대 코드로는 사람을 관리하거나 대시보드에 접근하는 역할을 부여할 수 없어요."
+        },
+        "preview": {
+          "new_one": "신규 {{count}}명",
+          "new_other": "신규 {{count}}명",
+          "pending_one": "{{count}}명은 이미 초대됨, 새 링크를 받아요",
+          "pending_other": "{{count}}명은 이미 초대됨, 새 링크를 받아요",
+          "members_one": "{{count}}명은 이미 멤버",
+          "members_other": "{{count}}명은 이미 멤버"
+        },
+        "summary": {
+          "people_one": "{{count}}명이 {{role}}(으)로 참여",
+          "people_other": "{{count}}명이 {{role}}(으)로 참여",
+          "groups_one": "{{names}}에 추가",
+          "groups_other": "그룹 {{count}}개({{names}})에 추가",
+          "courses_one": "코스 {{count}}개에 등록",
+          "courses_other": "코스 {{count}}개에 등록",
+          "and": ", ",
+          "updated_one": "기존 멤버 {{count}}명도 업데이트돼요.",
+          "updated_other": "기존 멤버 {{count}}명도 업데이트돼요."
+        },
+        "capacity": {
+          "members": "멤버",
+          "admin_seats": "관리자 좌석",
+          "of": "{{count}} / {{limit}}",
+          "pending_note_one": "대기 중인 초대 {{count}}개 포함",
+          "pending_note_other": "대기 중인 초대 {{count}}개 포함",
+          "members_blocked": "현재 플랜은 대기 중인 초대를 포함해 멤버 {{limit}}명까지 가능해요. 더 초대하려면 업그레이드하거나 일부 초대를 취소하세요.",
+          "seats_blocked": "현재 플랜은 대기 중인 초대를 포함해 관리자 좌석 {{limit}}개까지 가능해요. 학습자 역할을 선택하거나 업그레이드해 관리자를 늘리세요."
+        },
+        "results": {
+          "status": {
+            "sent": "전송됨",
+            "resent": "새 링크 전송됨",
+            "email_failed": "이메일 실패",
+            "already_member": "이미 멤버",
+            "member_updated": "멤버 업데이트됨",
+            "member_update_failed": "업데이트 안 됨",
+            "invalid_email": "잘못된 주소"
+          },
+          "count": {
+            "sent_one": "{{count}}개 전송됨",
+            "sent_other": "{{count}}개 전송됨",
+            "resent_one": "새 링크 {{count}}개",
+            "resent_other": "새 링크 {{count}}개",
+            "email_failed_one": "{{count}}개 실패",
+            "email_failed_other": "{{count}}개 실패",
+            "already_member_one": "{{count}}명 이미 멤버",
+            "already_member_other": "{{count}}명 이미 멤버",
+            "member_updated_one": "멤버 {{count}}명 업데이트됨",
+            "member_updated_other": "멤버 {{count}}명 업데이트됨",
+            "member_update_failed_one": "{{count}}명 업데이트 안 됨",
+            "member_update_failed_other": "{{count}}명 업데이트 안 됨",
+            "invalid_email_one": "{{count}}개 잘못됨",
+            "invalid_email_other": "{{count}}개 잘못됨"
+          }
+        },
+        "status": {
+          "pending": "대기 중",
+          "accepted": "수락됨",
+          "declined": "거절됨",
+          "revoked": "취소됨",
+          "expired": "만료됨"
+        },
+        "list": {
+          "title": "초대",
+          "subtitle": "초대한 모든 사람과 받게 될 역할 및 접근 권한",
+          "filter": "상태로 필터",
+          "all": "전체",
+          "person": "사람",
+          "role": "역할",
+          "access": "그룹 및 코스",
+          "status": "상태",
+          "select_all": "모두 선택",
+          "select": "{{email}} 선택",
+          "selected_one": "{{count}}개 선택됨",
+          "selected_other": "{{count}}개 선택됨",
+          "actions": "{{email}} 작업",
+          "invited_by": "{{name}}님이 {{when}} 초대",
+          "joined": "{{when}} 참여",
+          "email_not_sent": "이메일 전달 안 됨",
+          "groups_one": "그룹 {{count}}개",
+          "groups_other": "그룹 {{count}}개",
+          "courses_one": "코스 {{count}}개",
+          "courses_other": "코스 {{count}}개",
+          "expires_in_one": "{{count}}일 후 만료",
+          "expires_in_other": "{{count}}일 후 만료",
+          "legacy": "초대에 역할이 포함되기 전에 보낸 초대",
+          "empty_title": "아직 초대가 없어요",
+          "empty_description": "이메일로 사람들을 초대하세요. 선택한 역할, 그룹, 코스로 참여해요.",
+          "no_results": "일치하는 초대가 없어요",
+          "clear_filter": "모두 보기",
+          "error": "초대를 불러오지 못했어요"
+        },
+        "actions": {
+          "resend": "다시 보내기",
+          "copy_link": "초대 링크 복사",
+          "edit": "역할 또는 접근 권한 변경",
+          "revoke": "초대 취소",
+          "none": "작업 없음"
+        },
+        "revoke": {
+          "title": "이 초대를 취소할까요?",
+          "message": "{{email}}(으)로 보낸 링크가 더 이상 작동하지 않아요. 나중에 다시 초대할 수 있어요.",
+          "bulk_title_one": "초대 {{count}}개를 취소할까요?",
+          "bulk_title_other": "초대 {{count}}개를 취소할까요?",
+          "bulk_message": "보낸 링크가 더 이상 작동하지 않아요. 나중에 다시 초대할 수 있어요."
+        },
+        "edit": {
+          "title": "초대 변경",
+          "description": "{{email}} 대상. 수락할 때 적용돼요.",
+          "keep_expiry": "유지 ({{date}})",
+          "extend_one": "지금부터 {{count}}일",
+          "extend_other": "지금부터 {{count}}일",
+          "save": "변경 사항 저장"
+        },
+        "toasts": {
+          "sent": "초대를 보냈어요",
+          "some_failed_one": "이메일 {{count}}개를 보내지 못했어요. 대신 목록에서 초대 링크를 복사하세요.",
+          "some_failed_other": "이메일 {{count}}개를 보내지 못했어요. 대신 목록에서 초대 링크를 복사하세요.",
+          "error": "문제가 발생했어요. 다시 시도해 주세요.",
+          "resent": "{{email}}(으)로 새 초대를 보냈어요",
+          "email_failed": "이메일을 보내지 못했어요. 대신 초대 링크를 복사하세요.",
+          "link_copied": "초대 링크를 복사했어요. 이전 이메일의 링크는 더 이상 작동하지 않아요.",
+          "revoked": "초대를 취소했어요",
+          "updated": "초대를 업데이트했어요",
+          "bulk_resend_one": "초대 {{count}}개를 다시 보냈어요",
+          "bulk_resend_other": "초대 {{count}}개를 다시 보냈어요",
+          "bulk_revoke_one": "초대 {{count}}개를 취소했어요",
+          "bulk_revoke_other": "초대 {{count}}개를 취소했어요"
+        },
+        "codes": {
+          "description": "하나의 링크나 코드를 여러 사람이 사용해요. 이 코드로 참여한 모든 사람에게 아래 설정이 적용돼요.",
+          "role_hint": "학습자 수준의 역할만 가능",
+          "role_note": "코드를 가진 사람은 누구나 사용할 수 있으므로 관리자, 유지관리자, 강사 또는 사람을 관리하는 역할은 부여할 수 없어요.",
+          "max_uses": "최대 사용 횟수",
+          "max_uses_invalid": "1 이상의 정수를 입력하세요",
+          "unlimited": "무제한",
+          "never": "없음",
+          "no_expiry": "만료 없음",
+          "uses_one": "{{count}}회 사용",
+          "uses_other": "{{count}}회 사용",
+          "uses_of": "{{count}} / {{max}}회 사용",
+          "uses_title": "이 코드로 참여한 횟수"
+        },
+        "codes_card": {
+          "title": "초대 코드",
+          "description": "하나의 링크나 코드를 반 전체와 공유하세요. 역할, 그룹, 코스, 사용 횟수, 만료일을 설정할 수 있어요.",
+          "manage": "초대 코드 관리"
+        }
       }
     },
     "assignments": {
@@ -11723,7 +11949,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b>님이 <b>{{target}}</b>님의 가입 답변을 수정했습니다",
         "members__signup_backfilled": "<b>{{actor}}</b>님이 가입 답변을 인사 데이터로 복사했습니다",
         "security__support_access__started": "<b>{{actor}}</b> 님이 <b>{{target}}</b>(으)로 대리 접속을 시작했어요",
-        "security__support_access__ended": "<b>{{actor}}</b> 님이 <b>{{target}}</b>(으)로의 대리 접속을 종료했어요"
+        "security__support_access__ended": "<b>{{actor}}</b> 님이 <b>{{target}}</b>(으)로의 대리 접속을 종료했어요",
+        "members__invitation__updated": "<b>{{actor}}</b> 님이 <b>{{target}}</b> 님에 대한 초대를 변경했어요",
+        "members__invitation__resent": "<b>{{actor}}</b> 님이 <b>{{target}}</b> 님에게 초대를 다시 보냈어요",
+        "members__invitation__link_copied": "<b>{{actor}}</b> 님이 <b>{{target}}</b> 님을 위한 새 초대 링크를 복사했어요",
+        "members__invitation__revoked": "<b>{{actor}}</b> 님이 <b>{{target}}</b> 님에 대한 초대를 철회했어요",
+        "members__invitation__accepted": "<b>{{actor}}</b> 님이 초대를 수락했어요",
+        "members__invitation__declined": "<b>{{actor}}</b> 님이 초대를 거절했어요",
+        "members__invitation__role_applied": "<b>{{actor}}</b> 님이 초대에 지정된 역할을 받았어요",
+        "members__invite_code__updated": "<b>{{actor}}</b> 님이 초대 링크를 변경했어요",
+        "members__invite_code__used": "<b>{{actor}}</b> 님이 초대 링크로 참여했어요"
       },
       "export": {
         "generating": "내보내기를 준비하는 중…",
@@ -11887,7 +12122,8 @@
         "customers": "고객 목록",
         "scim": "SCIM 프로비저닝",
         "scim_token": "SCIM 토큰",
-        "training_rule": "필수 교육"
+        "training_rule": "필수 교육",
+        "invitation": "초대"
       }
     },
     "course_builder": {
@@ -28976,7 +29212,8 @@
       "trial_ending": "체험 종료 예정",
       "plan_downgraded": "무료 플랜으로 변경됨",
       "plan_restored": "플랜 복원됨",
-      "payments_checkout_failing": "결제 실패"
+      "payments_checkout_failing": "결제 실패",
+      "invitation_accepted": "초대 수락됨"
     },
     "copy": {
       "assignment_graded": "채점 완료: {{assignment}}",
@@ -29038,7 +29275,8 @@
       "trial_ending": "{{plan}} 체험이 {{days}}일 후 종료됩니다",
       "plan_downgraded": "이제 무료 플랜을 사용 중입니다. 삭제된 것은 없습니다",
       "plan_restored": "{{plan}}에 다시 오신 것을 환영합니다",
-      "payments_checkout_failing": "지금 학습자가 구매할 수 없습니다 (실패한 결제 {{count}}건)"
+      "payments_checkout_failing": "지금 학습자가 구매할 수 없습니다 (실패한 결제 {{count}}건)",
+      "invitation_accepted": "{{actor}}님이 초대를 수락했어요"
     },
     "routing": {
       "short": "알림 대상",
@@ -29193,7 +29431,9 @@
       "verify_title": "초대를 보려면 이메일을 인증하세요",
       "verify_desc": "초대는 이메일 주소로 전송되므로 본인 주소임을 확인하면 표시됩니다.",
       "verify_resend": "인증 이메일 다시 보내기",
-      "verify_sent": "보냈습니다. 받은편지함을 확인하세요."
+      "verify_sent": "보냈습니다. 받은편지함을 확인하세요.",
+      "invited_as": "{{role}}(으)로 초대했어요",
+      "invited_as_by": "{{name}}님이 {{role}}(으)로 초대했어요"
     },
     "celebrate": {
       "title": "첫 코스가 공개되었습니다",

@@ -78,6 +78,13 @@ export type PendingInvite = {
   slug: string
   logo_image: string | null
   invited_at: string | null
+  // Database invitations also say who sent them, the role and any note.
+  role?: string | null
+  invited_by?: string | null
+  message?: string | null
+  expires_at?: string | null
+  courses?: number
+  usergroups?: number
 }
 
 // `invites` is empty until the user's email is verified (`email_verified`):

@@ -16,7 +16,6 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.core.deployment_mode import get_deployment_mode
-from src.services.users.usergroups import add_users_to_usergroup
 from src.services.users.emails import (
     send_account_creation_email,
 )
@@ -31,7 +30,6 @@ from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.users import (
     AnonymousUser,
-    InternalUser,
     PublicUser,
     User,
     UserCreate,
@@ -429,16 +427,13 @@ async def create_user_with_invite(
 
     user = await create_user(request, db_session, current_user, user_object, org_id, signup_provider="invite", next_path=next_path)
 
-    # Check if invite code contains UserGroup
-    if inviteCode.get("usergroup_id"): # type: ignore
-        # Add user to UserGroup
-        await add_users_to_usergroup(
-            request,
-            db_session,
-            InternalUser(id=0),
-            int(inviteCode.get("usergroup_id")), # type: ignore / Convert to int since usergroup_id is expected to be int
-            str(user.id),
-        )
+    # Apply the code's settings: its role, user groups and courses (a Redis
+    # code: its user group), and count the use.
+    from src.services.orgs.invitations.apply import apply_invite_code
+
+    org_row = await db_session.get(Organization, org_id)
+    if org_row is not None:
+        await apply_invite_code(request, db_session, user, org_row, inviteCode)
 
     # NOTE: members usage is already incremented inside create_user(); do not
     # increment again here or every invited signup double-counts the member quota.

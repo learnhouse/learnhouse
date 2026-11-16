@@ -104,6 +104,8 @@ NOTIFICATION_TYPE_META: dict[str, TypeMeta] = {
     "submission_to_grade": TypeMeta("teaching", "admin", default_roles=("course_authors",)),
     "training_overdue_report": TypeMeta("teaching", "admin", default_roles=("admins",)),
     "member_joined": TypeMeta("people", "admin", default_roles=("admins",)),
+    # To whoever sent the invitation, not routable.
+    "invitation_accepted": TypeMeta("people", "admin"),
     "signup_pending": TypeMeta("people", "admin", "important", default_roles=("admins",)),
     "join_request": TypeMeta("people", "admin", "important", default_roles=("admins",)),
     "seat_limit_reached": TypeMeta("people", "admin", "important", default_roles=("admins",)),
@@ -164,6 +166,7 @@ NOTIFICATION_LINKS: dict[str, str] = {
     "submission_to_grade": "/dash/assignments/{assignment}?subpage=submissions",
     "training_overdue_report": "/dash/training",
     "member_joined": "/dash/users/settings/users",
+    "invitation_accepted": "/dash/users/settings/users",
     "signup_pending": "/dash/users/settings/users",
     "join_request": "/dash/users/settings/users",
     "seat_limit_reached": "/dash/companies/{company}",

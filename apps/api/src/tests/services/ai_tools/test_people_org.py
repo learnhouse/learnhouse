@@ -94,12 +94,12 @@ def environment(fake_redis):
     """Redis, email, webhooks and links replaced by in-process fakes."""
     cfg = SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string="redis://fake"))
     send = AsyncMock(return_value=True)
-    with patch("src.services.orgs.users.get_learnhouse_config", return_value=cfg), patch(
+    with patch(
         "src.services.orgs.invites.get_learnhouse_config", return_value=cfg
-    ), patch("src.services.orgs.users.redis.Redis.from_url", return_value=fake_redis), patch(
+    ), patch("src.core.redis.get_redis_client", return_value=fake_redis), patch(
         "src.services.orgs.invites._get_redis", return_value=fake_redis
-    ), patch("src.services.orgs.users.send_invite_email", send), patch(
-        "src.services.orgs.users.enforce_invite_rate_limit", Mock()
+    ), patch("src.services.orgs.invitations.service._send_email", send), patch("src.services.webhooks.dispatch.dispatch_webhooks", AsyncMock()), patch(
+        "src.services.security.rate_limiting.enforce_invite_rate_limit", Mock()
     ), patch("src.services.orgs.users.dispatch_webhooks", AsyncMock()), patch(
         "src.services.users.usergroups.dispatch_webhooks", AsyncMock()
     ), patch("src.services.orgs.orgs.dispatch_webhooks", AsyncMock()), patch(
@@ -391,16 +391,19 @@ async def test_invite_members_limits(registry, db, org, admin_user, regular_user
     from fastapi import HTTPException
 
     limit = HTTPException(status_code=429, detail={"code": "RATE_LIMITED", "message": "Invite limit reached."})
-    with patch("src.services.orgs.users.enforce_invite_rate_limit", Mock(side_effect=limit)):
+    with patch("src.services.security.rate_limiting.enforce_invite_rate_limit", Mock(side_effect=limit)):
         reason = denied(await call(registry, "invite_members", {"emails": ["d@x.com"]}, _ctx(db, org, admin_user, approved=True)), "http_429")
     assert reason == "Invite limit reached."
 
 
 async def test_cancel_invitation(registry, db, org, admin_user, setup, fake_redis):
+    from src.db.org_invitations import OrgInvitation
+
     ok(await call(registry, "invite_members", {"emails": ["e@x.com"]}, _ctx(db, org, admin_user, approved=True)))
     denied(await call(registry, "cancel_invitation", {"email": "e@x.com"}, _ctx(db, org, admin_user)), "approval_required")
     ok(await call(registry, "cancel_invitation", {"email": "E@x.com"}, _ctx(db, org, admin_user, approved=True)))
-    assert not fake_redis.scan_iter(match="invited_user:e@x.com:*")
+    row = (await db.execute(select(OrgInvitation).where(OrgInvitation.email == "e@x.com"))).scalars().one()
+    assert row.status == "revoked"
 
 
 async def test_invite_links(registry, db, org, admin_user, regular_user, setup, fake_redis):
@@ -414,8 +417,12 @@ async def test_invite_links(registry, db, org, admin_user, regular_user, setup, 
     )
     assert out["join_link"].startswith(f"{BASE}/signup?inviteCode=")
     assert out["usergroup"]["uuid"] == "usergroup_a"
-    key = next(k for k in fake_redis.store if k.startswith(out["code_uuid"]))
-    assert fake_redis.ttl[key] == 7 * 86400
+    from src.db.org_invitations import OrgInviteCode
+    from src.services.orgs.invitations.policy import aware, utcnow
+
+    row = (await db.execute(select(OrgInviteCode).where(OrgInviteCode.code_uuid == out["code_uuid"]))).scalars().one()
+    assert 6 <= (aware(row.expires_at) - utcnow()).days <= 7
+    assert len(row.usergroup_ids) == 1
 
     listing = ok(await call(registry, "list_invite_codes", {}, _ctx(db, org, admin_user)))
     assert listing["total"] == 1 and listing["remaining"] == 5
@@ -428,7 +435,10 @@ async def test_invite_links(registry, db, org, admin_user, regular_user, setup, 
     denied(await call(registry, "list_invite_codes", {}, _ctx(db, org, regular_user)), "http_403")
     denied(await call(registry, "delete_invite_code", {"code_uuid": "org_invite_code_*"}, _ctx(db, org, admin_user, approved=True)), "http_400")
     ok(await call(registry, "delete_invite_code", {"code_uuid": out["code_uuid"]}, _ctx(db, org, admin_user, approved=True)))
-    assert not fake_redis.store
+    await db.refresh(row)
+    assert row.revoked_at is not None
+    gone = ok(await call(registry, "list_invite_codes", {}, _ctx(db, org, admin_user)))
+    assert gone["total"] == 0
 
 
 async def test_invite_link_cap_is_explained(registry, db, org, admin_user, setup):

@@ -791,7 +791,13 @@
       "signup_title": "加入 {{org}}",
       "signup_desc": "你已受邀。设置密码即可加入。",
       "choose_password": "设置密码",
-      "create_and_join": "加入 {{org}}"
+      "create_and_join": "加入 {{org}}",
+      "details": {
+        "role": "你将以{{role}}身份加入。",
+        "role_by": "{{name}} 邀请你以{{role}}身份加入。",
+        "groups": "你将被加入：{{names}}",
+        "courses": "你将报名：{{names}}"
+      }
     },
     "login_failed_forgot": "忘记密码？",
     "login_failed_reset": "重置密码",
@@ -9347,6 +9353,226 @@
         "more": "更多操作",
         "remove_filter": "移除筛选：{{name}}",
         "any": "任意"
+      },
+      "invitations": {
+        "invite_people": "邀请成员",
+        "dialog": {
+          "title": "邀请成员",
+          "description": "他们会通过邮件收到专属链接。加入后，下方的角色、用户组和课程会自动生效。",
+          "done_title": "邀请已发送",
+          "done_description": "以下是每个地址的处理结果。",
+          "invite_more": "继续邀请",
+          "send": "发送邀请",
+          "send_count_one": "发送 {{count}} 份邀请",
+          "send_count_other": "发送 {{count}} 份邀请",
+          "update_count_one": "更新 {{count}} 名成员",
+          "update_count_other": "更新 {{count}} 名成员"
+        },
+        "fields": {
+          "emails": "邮箱地址",
+          "emails_hint": "可粘贴一个或多个，用逗号、空格或换行分隔",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} 个地址",
+          "valid_count_other": "{{count}} 个地址",
+          "invalid_count_one": "{{count}} 个地址无效",
+          "invalid_count_other": "{{count}} 个地址无效",
+          "too_many": "每次最多可邀请 {{max}} 人",
+          "update_existing_one": "同时更新 {{count}} 名已是成员的用户",
+          "update_existing_other": "同时更新 {{count}} 名已是成员的用户",
+          "update_existing_hint": "他们的角色会改为下方选择的角色，并被加入所选用户组和课程。关闭此项则跳过他们。",
+          "role": "角色",
+          "role_hint": "加入后可以做什么",
+          "groups": "加入用户组",
+          "groups_placeholder": "选择用户组",
+          "no_groups": "该组织还没有用户组。",
+          "courses": "报名课程",
+          "courses_placeholder": "选择课程",
+          "no_courses": "该组织还没有课程。",
+          "selected_count_one": "已选 {{count}} 项",
+          "selected_count_other": "已选 {{count}} 项",
+          "search": "搜索",
+          "no_match": "没有符合搜索条件的结果。",
+          "draft": "草稿",
+          "remove_item": "移除 {{name}}",
+          "message": "附言",
+          "message_placeholder": "在邮件中附上一段简短留言（可选，不能包含链接）",
+          "expiry": "有效期",
+          "days_one": "{{count}} 天",
+          "days_other": "{{count}} 天",
+          "expires_on": "至 {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "学习者",
+            "description": "学习课程、加入社区并查看自己的进度。无法访问仪表板。"
+          },
+          "instructor": {
+            "name": "讲师",
+            "description": "创建并讲授自己的课程，为学习者评分。占用一个管理员席位。"
+          },
+          "maintainer": {
+            "name": "维护者",
+            "description": "管理所有课程、成员和用户组。不能更改账单或组织设置。"
+          },
+          "admin": {
+            "name": "管理员",
+            "description": "完全管理组织，包括设置、账单和其他管理员。"
+          },
+          "custom_roles": "自定义角色",
+          "custom_description": "为该组织定义的自定义角色。",
+          "admin_seat": "管理员席位",
+          "refusal_admin_only": "只有管理员可以用此角色邀请他人。",
+          "refusal_above": "此角色拥有你当前角色没有的权限。",
+          "refusal_code": "邀请码不能授予可管理成员或可进入仪表板的角色。"
+        },
+        "preview": {
+          "new_one": "{{count}} 位新用户",
+          "new_other": "{{count}} 位新用户",
+          "pending_one": "{{count}} 位已邀请，将收到新链接",
+          "pending_other": "{{count}} 位已邀请，将收到新链接",
+          "members_one": "{{count}} 位已是成员",
+          "members_other": "{{count}} 位已是成员"
+        },
+        "summary": {
+          "people_one": "{{count}} 人将以{{role}}身份加入",
+          "people_other": "{{count}} 人将以{{role}}身份加入",
+          "groups_one": "加入 {{names}}",
+          "groups_other": "加入 {{count}} 个用户组（{{names}}）",
+          "courses_one": "报名 {{count}} 门课程",
+          "courses_other": "报名 {{count}} 门课程",
+          "and": "、",
+          "updated_one": "{{count}} 名现有成员也会被更新。",
+          "updated_other": "{{count}} 名现有成员也会被更新。"
+        },
+        "capacity": {
+          "members": "成员",
+          "admin_seats": "管理员席位",
+          "of": "{{count}} / {{limit}}",
+          "pending_note_one": "含 {{count}} 份待处理邀请",
+          "pending_note_other": "含 {{count}} 份待处理邀请",
+          "members_blocked": "你的套餐包含 {{limit}} 名成员（含待处理邀请）。如需邀请更多人，请升级套餐或撤销部分邀请。",
+          "seats_blocked": "你的套餐包含 {{limit}} 个管理员席位（含待处理邀请）。请选择学习者角色，或升级套餐以添加更多管理员。"
+        },
+        "results": {
+          "status": {
+            "sent": "已发送",
+            "resent": "已发送新链接",
+            "email_failed": "邮件发送失败",
+            "already_member": "已是成员",
+            "member_updated": "成员已更新",
+            "member_update_failed": "未更新",
+            "invalid_email": "地址无效"
+          },
+          "count": {
+            "sent_one": "已发送 {{count}} 份",
+            "sent_other": "已发送 {{count}} 份",
+            "resent_one": "{{count}} 个新链接",
+            "resent_other": "{{count}} 个新链接",
+            "email_failed_one": "{{count}} 份失败",
+            "email_failed_other": "{{count}} 份失败",
+            "already_member_one": "{{count}} 位已是成员",
+            "already_member_other": "{{count}} 位已是成员",
+            "member_updated_one": "已更新 {{count}} 名成员",
+            "member_updated_other": "已更新 {{count}} 名成员",
+            "member_update_failed_one": "{{count}} 位未更新",
+            "member_update_failed_other": "{{count}} 位未更新",
+            "invalid_email_one": "{{count}} 个无效",
+            "invalid_email_other": "{{count}} 个无效"
+          }
+        },
+        "status": {
+          "pending": "待处理",
+          "accepted": "已接受",
+          "declined": "已拒绝",
+          "revoked": "已撤销",
+          "expired": "已过期"
+        },
+        "list": {
+          "title": "邀请",
+          "subtitle": "你邀请的所有人，以及他们将获得的角色和权限",
+          "filter": "按状态筛选",
+          "all": "全部",
+          "person": "受邀人",
+          "role": "角色",
+          "access": "用户组和课程",
+          "status": "状态",
+          "select_all": "全选",
+          "select": "选择 {{email}}",
+          "selected_one": "已选 {{count}} 项",
+          "selected_other": "已选 {{count}} 项",
+          "actions": "{{email}} 的操作",
+          "invited_by": "{{name}} 邀请 · {{when}}",
+          "joined": "{{when}}加入",
+          "email_not_sent": "邮件未送达",
+          "groups_one": "{{count}} 个用户组",
+          "groups_other": "{{count}} 个用户组",
+          "courses_one": "{{count}} 门课程",
+          "courses_other": "{{count}} 门课程",
+          "expires_in_one": "{{count}} 天后过期",
+          "expires_in_other": "{{count}} 天后过期",
+          "legacy": "在邀请支持角色之前发送",
+          "empty_title": "暂无邀请",
+          "empty_description": "通过邮件邀请他人。他们将以你选择的角色、用户组和课程加入。",
+          "no_results": "没有符合条件的邀请",
+          "clear_filter": "显示全部",
+          "error": "无法加载邀请"
+        },
+        "actions": {
+          "resend": "重新发送",
+          "copy_link": "复制邀请链接",
+          "edit": "更改角色或权限",
+          "revoke": "撤销",
+          "none": "无可用操作"
+        },
+        "revoke": {
+          "title": "撤销此邀请？",
+          "message": "发送给 {{email}} 的链接将失效。你之后可以再次邀请。",
+          "bulk_title_one": "撤销 {{count}} 份邀请？",
+          "bulk_title_other": "撤销 {{count}} 份邀请？",
+          "bulk_message": "他们的链接将失效。你之后可以再次邀请。"
+        },
+        "edit": {
+          "title": "修改邀请",
+          "description": "发给 {{email}}。将在对方接受时生效。",
+          "keep_expiry": "保持不变（{{date}}）",
+          "extend_one": "从现在起 {{count}} 天",
+          "extend_other": "从现在起 {{count}} 天",
+          "save": "保存更改"
+        },
+        "toasts": {
+          "sent": "邀请已发送",
+          "some_failed_one": "{{count}} 封邮件未能发送。请改为从列表中复制邀请链接。",
+          "some_failed_other": "{{count}} 封邮件未能发送。请改为从列表中复制邀请链接。",
+          "error": "出了点问题，请重试。",
+          "resent": "已向 {{email}} 发送新邀请",
+          "email_failed": "邮件未能发送。请改为复制邀请链接。",
+          "link_copied": "邀请链接已复制。之前邮件中的链接已失效。",
+          "revoked": "邀请已撤销",
+          "updated": "邀请已更新",
+          "bulk_resend_one": "已重新发送 {{count}} 份邀请",
+          "bulk_resend_other": "已重新发送 {{count}} 份邀请",
+          "bulk_revoke_one": "已撤销 {{count}} 份邀请",
+          "bulk_revoke_other": "已撤销 {{count}} 份邀请"
+        },
+        "codes": {
+          "description": "一个链接或邀请码，多人共用。凡是通过它加入的人都会应用下方设置。",
+          "role_hint": "仅限学习者级别的角色",
+          "role_note": "任何拿到邀请码的人都能使用，因此不能授予管理员、维护者、讲师或任何可管理成员的角色。",
+          "max_uses": "最多使用次数",
+          "max_uses_invalid": "请输入不小于 1 的整数",
+          "unlimited": "无限制",
+          "never": "永不",
+          "no_expiry": "永不过期",
+          "uses_one": "已使用 {{count}} 次",
+          "uses_other": "已使用 {{count}} 次",
+          "uses_of": "已使用 {{count}} / {{max}} 次",
+          "uses_title": "通过此邀请码加入的次数"
+        },
+        "codes_card": {
+          "title": "邀请码",
+          "description": "与整个班级共享一个链接或邀请码。可设置角色、用户组、课程、使用次数和有效期。",
+          "manage": "管理邀请码"
+        }
       }
     },
     "assignments": {
@@ -11725,7 +11951,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> 编辑了 <b>{{target}}</b> 的注册答案",
         "members__signup_backfilled": "<b>{{actor}}</b> 将注册答案复制到了人员数据",
         "security__support_access__started": "<b>{{actor}}</b> 开始模拟 <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> 停止模拟 <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> 停止模拟 <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b> 更改了对 <b>{{target}}</b> 的邀请",
+        "members__invitation__resent": "<b>{{actor}}</b> 重新发送了对 <b>{{target}}</b> 的邀请",
+        "members__invitation__link_copied": "<b>{{actor}}</b> 为 <b>{{target}}</b> 复制了新的邀请链接",
+        "members__invitation__revoked": "<b>{{actor}}</b> 撤销了对 <b>{{target}}</b> 的邀请",
+        "members__invitation__accepted": "<b>{{actor}}</b> 接受了邀请",
+        "members__invitation__declined": "<b>{{actor}}</b> 拒绝了邀请",
+        "members__invitation__role_applied": "<b>{{actor}}</b> 从邀请中获得了角色",
+        "members__invite_code__updated": "<b>{{actor}}</b> 更改了邀请链接",
+        "members__invite_code__used": "<b>{{actor}}</b> 通过邀请链接加入"
       },
       "export": {
         "generating": "正在准备导出…",
@@ -11889,7 +12124,8 @@
         "customers": "客户列表",
         "scim": "SCIM 同步",
         "scim_token": "SCIM 令牌",
-        "training_rule": "必修培训"
+        "training_rule": "必修培训",
+        "invitation": "邀请"
       }
     },
     "course_builder": {
@@ -28978,7 +29214,8 @@
       "trial_ending": "试用即将结束",
       "plan_downgraded": "已转为免费版",
       "plan_restored": "方案已恢复",
-      "payments_checkout_failing": "结账失败"
+      "payments_checkout_failing": "结账失败",
+      "invitation_accepted": "邀请已接受"
     },
     "copy": {
       "assignment_graded": "已批改：{{assignment}}",
@@ -29040,7 +29277,8 @@
       "trial_ending": "你的 {{plan}} 试用将在 {{days}} 天后结束",
       "plan_downgraded": "你现在使用的是免费版，没有删除任何内容",
       "plan_restored": "欢迎回到 {{plan}}",
-      "payments_checkout_failing": "学员目前无法购买（{{count}} 次结账失败）"
+      "payments_checkout_failing": "学员目前无法购买（{{count}} 次结账失败）",
+      "invitation_accepted": "{{actor}} 接受了你的邀请"
     },
     "routing": {
       "short": "通知对象",
@@ -29195,7 +29433,9 @@
       "verify_title": "验证邮箱后即可查看邀请",
       "verify_desc": "邀请是发送到邮箱地址的，因此需要先确认该邮箱属于你才会显示。",
       "verify_resend": "重新发送验证邮件",
-      "verify_sent": "已发送，请查看收件箱。"
+      "verify_sent": "已发送，请查看收件箱。",
+      "invited_as": "邀请你以{{role}}身份加入",
+      "invited_as_by": "{{name}} 邀请你以{{role}}身份加入"
     },
     "celebrate": {
       "title": "你的第一门课程已上线",

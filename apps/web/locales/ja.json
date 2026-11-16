@@ -791,7 +791,13 @@
       "signup_title": "{{org}} に参加",
       "signup_desc": "招待されています。パスワードを決めればすぐに参加できます。",
       "choose_password": "パスワードを決める",
-      "create_and_join": "{{org}} に参加"
+      "create_and_join": "{{org}} に参加",
+      "details": {
+        "role": "{{role}}として参加します。",
+        "role_by": "{{name}}さんから{{role}}として招待されています。",
+        "groups": "追加されるグループ：{{names}}",
+        "courses": "登録されるコース：{{names}}"
+      }
     },
     "login_failed_forgot": "パスワードをお忘れですか？",
     "login_failed_reset": "再設定する",
@@ -9347,6 +9353,226 @@
         "more": "その他の操作",
         "remove_filter": "フィルターを解除：{{name}}",
         "any": "すべて"
+      },
+      "invitations": {
+        "invite_people": "メンバーを招待",
+        "dialog": {
+          "title": "メンバーを招待",
+          "description": "メールで個別のリンクが届きます。参加すると、下記のロール、グループ、コースが自動で適用されます。",
+          "done_title": "招待を送信しました",
+          "done_description": "各アドレスの処理結果です。",
+          "invite_more": "さらに招待",
+          "send": "招待を送信",
+          "send_count_one": "{{count}}件の招待を送信",
+          "send_count_other": "{{count}}件の招待を送信",
+          "update_count_one": "{{count}}人のメンバーを更新",
+          "update_count_other": "{{count}}人のメンバーを更新"
+        },
+        "fields": {
+          "emails": "メールアドレス",
+          "emails_hint": "1件でも複数でも貼り付けられます。カンマ、スペース、改行で区切ってください",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}}件のアドレス",
+          "valid_count_other": "{{count}}件のアドレス",
+          "invalid_count_one": "{{count}}件のアドレスが無効です",
+          "invalid_count_other": "{{count}}件のアドレスが無効です",
+          "too_many": "一度に招待できるのは{{max}}人までです",
+          "update_existing_one": "すでにメンバーの{{count}}人も更新する",
+          "update_existing_other": "すでにメンバーの{{count}}人も更新する",
+          "update_existing_hint": "ロールが下記のものに変わり、グループとコースに追加されます。オフにするとスキップします。",
+          "role": "ロール",
+          "role_hint": "参加後にできること",
+          "groups": "グループに追加",
+          "groups_placeholder": "グループを選択",
+          "no_groups": "この組織にはまだユーザーグループがありません。",
+          "courses": "コースに登録",
+          "courses_placeholder": "コースを選択",
+          "no_courses": "この組織にはまだコースがありません。",
+          "selected_count_one": "{{count}}件を選択中",
+          "selected_count_other": "{{count}}件を選択中",
+          "search": "検索",
+          "no_match": "検索に一致する項目はありません。",
+          "draft": "下書き",
+          "remove_item": "{{name}}を削除",
+          "message": "メッセージ",
+          "message_placeholder": "メールに短いメッセージを添えます（任意、リンク不可）",
+          "expiry": "有効期限",
+          "days_one": "{{count}}日",
+          "days_other": "{{count}}日",
+          "expires_on": "{{date}}まで"
+        },
+        "roles": {
+          "user": {
+            "name": "学習者",
+            "description": "コースを受講し、コミュニティに参加し、自分の進捗を確認できます。ダッシュボードにはアクセスできません。"
+          },
+          "instructor": {
+            "name": "講師",
+            "description": "自分のコースを作成・指導し、受講者を採点します。管理者枠を1つ使用します。"
+          },
+          "maintainer": {
+            "name": "メンテナー",
+            "description": "すべてのコース、メンバー、グループを管理します。請求や組織の設定は変更できません。"
+          },
+          "admin": {
+            "name": "管理者",
+            "description": "設定、請求、ほかの管理者を含め、組織のすべてを管理できます。"
+          },
+          "custom_roles": "カスタムロール",
+          "custom_description": "この組織で定義されたカスタムロールです。",
+          "admin_seat": "管理者枠",
+          "refusal_admin_only": "このロールで招待できるのは管理者のみです。",
+          "refusal_above": "このロールには、あなたのロールにない権限が含まれています。",
+          "refusal_code": "招待コードでは、メンバーを管理するロールやダッシュボードを開けるロールは付与できません。"
+        },
+        "preview": {
+          "new_one": "新規 {{count}}人",
+          "new_other": "新規 {{count}}人",
+          "pending_one": "{{count}}人は招待済み（新しいリンクを送信）",
+          "pending_other": "{{count}}人は招待済み（新しいリンクを送信）",
+          "members_one": "{{count}}人はすでにメンバー",
+          "members_other": "{{count}}人はすでにメンバー"
+        },
+        "summary": {
+          "people_one": "{{count}}人が{{role}}として参加",
+          "people_other": "{{count}}人が{{role}}として参加",
+          "groups_one": "{{names}}に追加",
+          "groups_other": "{{count}}個のグループ（{{names}}）に追加",
+          "courses_one": "{{count}}件のコースに登録",
+          "courses_other": "{{count}}件のコースに登録",
+          "and": "、",
+          "updated_one": "既存メンバー{{count}}人も更新されます。",
+          "updated_other": "既存メンバー{{count}}人も更新されます。"
+        },
+        "capacity": {
+          "members": "メンバー",
+          "admin_seats": "管理者枠",
+          "of": "{{count}} / {{limit}}",
+          "pending_note_one": "保留中の招待{{count}}件を含む",
+          "pending_note_other": "保留中の招待{{count}}件を含む",
+          "members_blocked": "ご利用のプランのメンバー上限は{{limit}}人です（保留中の招待を含む）。さらに招待するには、アップグレードするか招待をいくつか取り消してください。",
+          "seats_blocked": "ご利用のプランの管理者枠は{{limit}}件です（保留中の招待を含む）。学習者向けのロールを選ぶか、アップグレードして管理者を追加してください。"
+        },
+        "results": {
+          "status": {
+            "sent": "送信済み",
+            "resent": "新しいリンクを送信",
+            "email_failed": "メール送信失敗",
+            "already_member": "すでにメンバー",
+            "member_updated": "メンバーを更新",
+            "member_update_failed": "未更新",
+            "invalid_email": "無効なアドレス"
+          },
+          "count": {
+            "sent_one": "{{count}}件送信",
+            "sent_other": "{{count}}件送信",
+            "resent_one": "新しいリンク{{count}}件",
+            "resent_other": "新しいリンク{{count}}件",
+            "email_failed_one": "{{count}}件失敗",
+            "email_failed_other": "{{count}}件失敗",
+            "already_member_one": "{{count}}人はすでにメンバー",
+            "already_member_other": "{{count}}人はすでにメンバー",
+            "member_updated_one": "{{count}}人のメンバーを更新",
+            "member_updated_other": "{{count}}人のメンバーを更新",
+            "member_update_failed_one": "{{count}}人は未更新",
+            "member_update_failed_other": "{{count}}人は未更新",
+            "invalid_email_one": "{{count}}件が無効",
+            "invalid_email_other": "{{count}}件が無効"
+          }
+        },
+        "status": {
+          "pending": "保留中",
+          "accepted": "承諾済み",
+          "declined": "辞退",
+          "revoked": "取り消し済み",
+          "expired": "期限切れ"
+        },
+        "list": {
+          "title": "招待",
+          "subtitle": "招待したすべての人と、付与されるロールとアクセス",
+          "filter": "ステータスで絞り込み",
+          "all": "すべて",
+          "person": "招待先",
+          "role": "ロール",
+          "access": "グループとコース",
+          "status": "ステータス",
+          "select_all": "すべて選択",
+          "select": "{{email}}を選択",
+          "selected_one": "{{count}}件を選択中",
+          "selected_other": "{{count}}件を選択中",
+          "actions": "{{email}}の操作",
+          "invited_by": "{{name}}が{{when}}に招待",
+          "joined": "{{when}}に参加",
+          "email_not_sent": "メール未配信",
+          "groups_one": "{{count}}グループ",
+          "groups_other": "{{count}}グループ",
+          "courses_one": "{{count}}コース",
+          "courses_other": "{{count}}コース",
+          "expires_in_one": "あと{{count}}日で期限切れ",
+          "expires_in_other": "あと{{count}}日で期限切れ",
+          "legacy": "ロール指定に対応する前に送信された招待",
+          "empty_title": "招待はまだありません",
+          "empty_description": "メールでメンバーを招待しましょう。選んだロール、グループ、コースで参加します。",
+          "no_results": "一致する招待はありません",
+          "clear_filter": "すべて表示",
+          "error": "招待を読み込めませんでした"
+        },
+        "actions": {
+          "resend": "再送信",
+          "copy_link": "招待リンクをコピー",
+          "edit": "ロールやアクセスを変更",
+          "revoke": "取り消す",
+          "none": "操作なし"
+        },
+        "revoke": {
+          "title": "この招待を取り消しますか？",
+          "message": "{{email}}に送信したリンクは使えなくなります。あとで再度招待できます。",
+          "bulk_title_one": "{{count}}件の招待を取り消しますか？",
+          "bulk_title_other": "{{count}}件の招待を取り消しますか？",
+          "bulk_message": "送信したリンクは使えなくなります。あとで再度招待できます。"
+        },
+        "edit": {
+          "title": "招待を変更",
+          "description": "{{email}}宛て。承諾時に適用されます。",
+          "keep_expiry": "変更しない（{{date}}）",
+          "extend_one": "今日から{{count}}日",
+          "extend_other": "今日から{{count}}日",
+          "save": "変更を保存"
+        },
+        "toasts": {
+          "sent": "招待を送信しました",
+          "some_failed_one": "{{count}}件のメールを送信できませんでした。代わりに一覧から招待リンクをコピーしてください。",
+          "some_failed_other": "{{count}}件のメールを送信できませんでした。代わりに一覧から招待リンクをコピーしてください。",
+          "error": "問題が発生しました。もう一度お試しください。",
+          "resent": "{{email}}に新しい招待を送信しました",
+          "email_failed": "メールを送信できませんでした。代わりに招待リンクをコピーしてください。",
+          "link_copied": "招待リンクをコピーしました。以前のメールのリンクは使えなくなりました。",
+          "revoked": "招待を取り消しました",
+          "updated": "招待を更新しました",
+          "bulk_resend_one": "{{count}}件の招待を再送信しました",
+          "bulk_resend_other": "{{count}}件の招待を再送信しました",
+          "bulk_revoke_one": "{{count}}件の招待を取り消しました",
+          "bulk_revoke_other": "{{count}}件の招待を取り消しました"
+        },
+        "codes": {
+          "description": "1つのリンクやコードを大勢で使えます。参加した全員に下記の設定が適用されます。",
+          "role_hint": "学習者レベルのロールのみ",
+          "role_note": "コードを知っていれば誰でも使えるため、管理者、メンテナー、講師、またはメンバーを管理するロールは付与できません。",
+          "max_uses": "最大使用回数",
+          "max_uses_invalid": "1以上の整数を入力してください",
+          "unlimited": "無制限",
+          "never": "無期限",
+          "no_expiry": "有効期限なし",
+          "uses_one": "{{count}}回使用",
+          "uses_other": "{{count}}回使用",
+          "uses_of": "{{count}} / {{max}}回使用",
+          "uses_title": "このコードで参加した回数"
+        },
+        "codes_card": {
+          "title": "招待コード",
+          "description": "1つのリンクやコードをクラス全体で共有できます。ロール、グループ、コース、使用回数、有効期限を設定します。",
+          "manage": "招待コードを管理"
+        }
       }
     },
     "assignments": {
@@ -11725,7 +11951,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> が <b>{{target}}</b> のサインアップの回答を編集しました",
         "members__signup_backfilled": "<b>{{actor}}</b> がサインアップの回答を人事データにコピーしました",
         "security__support_access__started": "<b>{{actor}}</b>が<b>{{target}}</b>へのなりすましを開始しました",
-        "security__support_access__ended": "<b>{{actor}}</b>が<b>{{target}}</b>へのなりすましを終了しました"
+        "security__support_access__ended": "<b>{{actor}}</b>が<b>{{target}}</b>へのなりすましを終了しました",
+        "members__invitation__updated": "<b>{{actor}}</b>さんが<b>{{target}}</b>さんへの招待を変更しました",
+        "members__invitation__resent": "<b>{{actor}}</b>さんが<b>{{target}}</b>さんへの招待を再送しました",
+        "members__invitation__link_copied": "<b>{{actor}}</b>さんが<b>{{target}}</b>さん用の新しい招待リンクをコピーしました",
+        "members__invitation__revoked": "<b>{{actor}}</b>さんが<b>{{target}}</b>さんへの招待を取り消しました",
+        "members__invitation__accepted": "<b>{{actor}}</b>さんが招待を承諾しました",
+        "members__invitation__declined": "<b>{{actor}}</b>さんが招待を辞退しました",
+        "members__invitation__role_applied": "<b>{{actor}}</b>さんが招待からロールを付与されました",
+        "members__invite_code__updated": "<b>{{actor}}</b>さんが招待リンクを変更しました",
+        "members__invite_code__used": "<b>{{actor}}</b>さんが招待リンクから参加しました"
       },
       "export": {
         "generating": "エクスポートを準備しています…",
@@ -11889,7 +12124,8 @@
         "customers": "顧客リスト",
         "scim": "SCIMプロビジョニング",
         "scim_token": "SCIMトークン",
-        "training_rule": "必須研修"
+        "training_rule": "必須研修",
+        "invitation": "招待"
       }
     },
     "course_builder": {
@@ -28978,7 +29214,8 @@
       "trial_ending": "トライアル終了間近",
       "plan_downgraded": "Freeに移行",
       "plan_restored": "プランを復元しました",
-      "payments_checkout_failing": "チェックアウトの失敗"
+      "payments_checkout_failing": "チェックアウトの失敗",
+      "invitation_accepted": "招待が承諾されました"
     },
     "copy": {
       "assignment_graded": "採点されました：{{assignment}}",
@@ -29040,7 +29277,8 @@
       "trial_ending": "{{plan}}トライアルはあと{{days}}日で終了します",
       "plan_downgraded": "現在はFreeです。何も削除されていません",
       "plan_restored": "{{plan}}へおかえりなさい",
-      "payments_checkout_failing": "学習者が現在購入できません（失敗したチェックアウト: {{count}}件）"
+      "payments_checkout_failing": "学習者が現在購入できません（失敗したチェックアウト: {{count}}件）",
+      "invitation_accepted": "{{actor}}さんが招待を承諾しました"
     },
     "routing": {
       "short": "通知先",
@@ -29195,7 +29433,9 @@
       "verify_title": "招待を見るにはメールを確認してください",
       "verify_desc": "招待はメールアドレス宛てに届くため、そのアドレスがご自身のものだと確認すると表示されます。",
       "verify_resend": "確認メールを再送",
-      "verify_sent": "送信しました。受信トレイをご確認ください。"
+      "verify_sent": "送信しました。受信トレイをご確認ください。",
+      "invited_as": "{{role}}として招待されています",
+      "invited_as_by": "{{name}}さんから{{role}}として招待されています"
     },
     "celebrate": {
       "title": "最初のコースを公開しました",

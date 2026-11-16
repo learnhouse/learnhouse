@@ -1,61 +1,73 @@
 'use client'
 import React from 'react'
-import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowSquareOut, Ticket, Users, UsersThree } from '@phosphor-icons/react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Info, Ticket } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { Button, ChoiceCard, FieldLabel, INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithOrg } from '@services/config/config'
-import { createInviteCode } from '@services/organizations/invites'
-import { getUserGroups } from '@services/usergroups/usergroups'
-import { asArray } from '@services/utils/ts/requests'
+import { Button, FieldLabel, INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { createInviteCodeV2 } from '@services/organizations/invitations'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { queryKeys } from '@/lib/query/keys'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import {
+  CourseIcon,
+  GroupIcon,
+  MultiPicker,
+  RolePickerGrid,
+  useCourseItems,
+  useGroupItems,
+  useInvitationAuth,
+  useInvitationOptions,
+} from '@components/Dashboard/Pages/Users/OrgUsersAdd/invitationsKit'
 
-// Dialog that creates an invite code, optionally tied to a user group so new
-// members land in it on signup.
+const CODE_EXPIRY = [0, 7, 30, 90, 365]
+
+// Creates a shareable invite code: a learner-level role (never one that can
+// manage people or open the dashboard), optional groups and courses, an
+// optional use cap and expiry.
 function OrgInviteCodeGenerate({ open, onOpenChange }: { open: boolean; onOpenChange: (_open: boolean) => void }) {
   const { t } = useTranslation()
-  const org = useOrg() as any
-  const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
+  const { orgId, token } = useInvitationAuth()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('dashboard')
-  const [mode, setMode] = React.useState<'normal' | 'usergroup'>('normal')
-  const [usergroupId, setUsergroupId] = React.useState(0)
+  const { data: options } = useInvitationOptions(open)
+  const groupItems = useGroupItems(open)
+  const courseItems = useCourseItems(open)
+  const [roleId, setRoleId] = React.useState(4)
+  const [groups, setGroups] = React.useState<string[]>([])
+  const [courses, setCourses] = React.useState<string[]>([])
+  const [maxUses, setMaxUses] = React.useState('')
+  const [expiry, setExpiry] = React.useState(0)
   const [pending, setPending] = React.useState(false)
 
-  const { data: usergroups = [] } = useQuery({
-    queryKey: queryKeys.usergroups.list(org?.id),
-    queryFn: () => getUserGroups(org.id, access_token),
-    select: (res: any) => asArray<any>(res),
-    enabled: !!(org?.id && access_token && open),
-    staleTime: 60_000,
-  })
-  const hasGroups = usergroups.length > 0
-
-  // Default to the first group once they load, and reset when reopened.
   React.useEffect(() => {
     if (!open) return
-    setMode('normal')
-    setUsergroupId(usergroups[0]?.id ?? 0)
-  }, [open, usergroups])
+    setRoleId(4)
+    setGroups([])
+    setCourses([])
+    setMaxUses('')
+    setExpiry(0)
+  }, [open])
+
+  const uses = maxUses.trim() ? Number(maxUses) : null
+  const usesInvalid = uses !== null && (!Number.isInteger(uses) || uses < 1 || uses > 100000)
 
   async function handleGenerate() {
-    const ugId = mode === 'usergroup' && usergroupId ? usergroupId : undefined
+    if (usesInvalid) return
     setPending(true)
     try {
-      const res = await createInviteCode(org.id, access_token, ugId)
-      if (res.status == 200) {
-        track(AnalyticsEvent.InviteCodeCreated, { mode, usergroup_id: ugId })
-        queryClient.invalidateQueries({ queryKey: queryKeys.org.inviteCodes(org.id) })
+      const res = await createInviteCodeV2(
+        orgId,
+        { role_id: roleId, usergroup_ids: groups.map(Number), course_uuids: courses, max_uses: uses, expires_in_days: expiry || null },
+        token
+      )
+      if (res.success) {
+        track(AnalyticsEvent.InviteCodeCreated, { mode: groups.length ? 'usergroup' : 'normal', usergroup_id: groups[0] ? Number(groups[0]) : undefined })
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.inviteCodes(orgId) })
         onOpenChange(false)
       } else {
-        toast.error(t('dashboard.users.signups.generate_modal.toasts.error', { status: res.status, detail: res.data?.detail }))
+        toast.error(getErrorMessage(res.data?.detail, t('dashboard.users.invitations.toasts.error')))
       }
     } finally {
       setPending(false)
@@ -67,67 +79,82 @@ function OrgInviteCodeGenerate({ open, onOpenChange }: { open: boolean; onOpenCh
       isDialogOpen={open}
       onOpenChange={onOpenChange}
       preventClose={pending}
-      size="md"
+      size="lg"
       icon={<Ticket size={16} />}
       dialogTitle={t('dashboard.users.signups.invite_codes.actions.generate_title')}
-      dialogDescription={t('dashboard.users.signups.invite_codes.actions.generate_description')}
+      dialogDescription={t('dashboard.users.invitations.codes.description')}
       footer={
         <>
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={pending}>
             {t('common.cancel')}
           </Button>
-          <Button variant="primary" icon={<Ticket size={14} />} onClick={handleGenerate} loading={pending}>
+          <Button variant="primary" icon={<Ticket size={14} />} onClick={handleGenerate} loading={pending} disabled={usesInvalid}>
             {t('dashboard.users.signups.generate_modal.generate_button')}
           </Button>
         </>
       }
       dialogContent={
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="radiogroup">
-            <ChoiceCard
-              selected={mode === 'normal'}
-              onClick={() => setMode('normal')}
-              icon={<Users size={18} />}
-              title={t('dashboard.users.signups.generate_modal.normal_title')}
-              description={t('dashboard.users.signups.generate_modal.normal_description')}
-            />
-            <ChoiceCard
-              selected={mode === 'usergroup'}
-              onClick={() => hasGroups && setMode('usergroup')}
-              icon={<UsersThree size={18} />}
-              title={t('dashboard.users.signups.generate_modal.linked_title')}
-              description={t('dashboard.users.signups.generate_modal.linked_description')}
-            />
-          </div>
-
-          {mode === 'usergroup' && hasGroups && (
-            <label className="block">
-              <FieldLabel hint={t('dashboard.users.dash.signups.usergroup_hint')}>{t('access.select_user_group')}</FieldLabel>
-              <select value={usergroupId} onChange={(e) => setUsergroupId(Number(e.target.value))} className={INPUT}>
-                {usergroups.map((ug: any) => (
-                  <option key={ug.id} value={ug.id}>
-                    {ug.name}
+        <div className="flex flex-col gap-6">
+          <section>
+            <FieldLabel hint={t('dashboard.users.invitations.codes.role_hint')}>{t('dashboard.users.invitations.fields.role')}</FieldLabel>
+            {options && <RolePickerGrid roles={options.roles} value={roleId} onChange={setRoleId} codesOnly />}
+            <p className="mt-2 flex items-start gap-1.5 text-xs text-neutral-500">
+              <Info size={13} className="shrink-0 mt-0.5 text-neutral-400" />
+              {t('dashboard.users.invitations.codes.role_note')}
+            </p>
+          </section>
+          <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="min-w-0">
+              <FieldLabel hint={t('common.optional')}>{t('dashboard.users.invitations.fields.groups')}</FieldLabel>
+              <MultiPicker
+                items={groupItems}
+                value={groups}
+                onChange={setGroups}
+                icon={<GroupIcon />}
+                label={t('dashboard.users.invitations.fields.groups')}
+                placeholder={t('dashboard.users.invitations.fields.groups_placeholder')}
+                emptyText={t('dashboard.users.invitations.fields.no_groups')}
+              />
+            </div>
+            <div className="min-w-0">
+              <FieldLabel hint={t('common.optional')}>{t('dashboard.users.invitations.fields.courses')}</FieldLabel>
+              <MultiPicker
+                items={courseItems}
+                value={courses}
+                onChange={setCourses}
+                icon={<CourseIcon />}
+                label={t('dashboard.users.invitations.fields.courses')}
+                placeholder={t('dashboard.users.invitations.fields.courses_placeholder')}
+                emptyText={t('dashboard.users.invitations.fields.no_courses')}
+              />
+            </div>
+          </section>
+          <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label className="block min-w-0">
+              <FieldLabel error={usesInvalid ? t('dashboard.users.invitations.codes.max_uses_invalid') : undefined} hint={t('common.optional')}>
+                {t('dashboard.users.invitations.codes.max_uses')}
+              </FieldLabel>
+              <input
+                type="number"
+                min={1}
+                inputMode="numeric"
+                value={maxUses}
+                onChange={(e) => setMaxUses(e.target.value)}
+                placeholder={t('dashboard.users.invitations.codes.unlimited')}
+                className={INPUT}
+              />
+            </label>
+            <label className="block min-w-0">
+              <FieldLabel>{t('dashboard.users.invitations.fields.expiry')}</FieldLabel>
+              <select value={expiry} onChange={(e) => setExpiry(Number(e.target.value))} className={INPUT}>
+                {CODE_EXPIRY.map((d) => (
+                  <option key={d} value={d}>
+                    {d ? t('dashboard.users.invitations.fields.days', { count: d }) : t('dashboard.users.invitations.codes.never')}
                   </option>
                 ))}
               </select>
             </label>
-          )}
-
-          {!hasGroups && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-neutral-50 ring-1 ring-inset ring-neutral-200 px-3.5 py-2.5 text-xs text-neutral-600">
-              <span>{t('dashboard.users.signups.generate_modal.no_usergroups')}</span>
-              <Link
-                target="_blank"
-                href={getUriWithOrg(org?.slug, '/dash/users/settings/usergroups')}
-                className="inline-flex items-center gap-1 font-semibold text-neutral-800 hover:text-neutral-950"
-              >
-                {t('dashboard.users.signups.generate_modal.create_usergroup_link')}
-                <ArrowSquareOut size={12} />
-              </Link>
-            </div>
-          )}
-
-          <p className="text-xs text-neutral-400">{t('dashboard.users.dash.signups.expiry_hint')}</p>
+          </section>
         </div>
       }
     />

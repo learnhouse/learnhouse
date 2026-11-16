@@ -91,7 +91,7 @@ routing), A = org admins (by routing), O = the person who owns the thing.
 | Boards (EE) | Added to a board or a student copy → `board_invited`; copy returned / regraded → `board_feedback` → L; hand raised → `board_hand_raise` → hosts (collapsed per board); breakout started → `board_breakout` → group members | Mentions: boards have none |
 | Plays (EE) | | No share-with-a-person event |
 | User groups | Added / removed (per group setting) → `group_joined` / `group_left`; announcement → `group_announcement` → members; access ends within 3 days → `group_access_expiring` → member | Smart-rule syncs go through the same join path (deduped per hour) |
-| Roles, invites, signups, approvals | New member → `member_joined` → A (collapsed per org) | `signup_pending` / `join_request` are in the catalog; the product has no approval queue yet |
+| Roles, invites, signups, approvals | New member → `member_joined` → A (collapsed per org); invitation accepted → `invitation_accepted` → the inviter | `signup_pending` / `join_request` are in the catalog; the product has no approval queue yet |
 | Payments, offers, subscriptions (EE) | Paid checkout → `purchase_confirmed`; renewal → `subscription_renewed`; failed payment → `payment_failed` → buyer | Refunds: not handled by the payments webhook today |
 | Company seats (EE) | Seat given → `seat_assigned` → member; pool full → `seat_limit_reached` → A | |
 | Affiliates | | Payouts are reviewed in the dashboard; no per-event hook |

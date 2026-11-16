@@ -202,9 +202,9 @@ class TestOrgJoinService:
             "src.services.orgs.join.get_invite_code",
             new=AsyncMock(return_value={"usergroup_id": usergroup.id}),
         ), patch(
-            "src.services.orgs.join.add_users_to_usergroup",
+            "src.services.orgs.invitations.apply.apply_invite_code",
             new=AsyncMock(),
-        ) as mock_add_users, patch(
+        ) as mock_apply_code, patch(
             "src.services.orgs.join.increase_feature_usage"
         ), patch(
             "src.routers.users._invalidate_session_cache"
@@ -219,7 +219,8 @@ class TestOrgJoinService:
             )
 
         assert result == "Great, You're part of the Organization"
-        mock_add_users.assert_awaited_once()
+        mock_apply_code.assert_awaited_once()
+        assert mock_apply_code.await_args.args[4] == {"usergroup_id": usergroup.id}
         mock_track.assert_awaited_once_with(
             event_name="user_joined_org",
             org_id=org.id,

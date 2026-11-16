@@ -72,6 +72,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Create your account to accept the invitation.",
         "invitation.cta": "Join {org_name}",
         "invitation.footer": "Sent by @{inviter}. Not expecting it? Ignore this email.",
+        "invitation.role_line": "You'll join as <strong>{role}</strong>.",
+        "invitation.message_label": "A note from @{inviter}",
+        "invitation.expires": "This invitation expires on {date}.",
 
         "org_join.subject": "Welcome to {org_name}",
         "org_join.heading": "You're in, {username}",
@@ -186,6 +189,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Cliquez sur le bouton ci-dessous pour commencer.",
         "invitation.cta": "Rejoindre {org_name}",
         "invitation.footer": "Cette invitation a été envoyée par @{inviter}. Si vous ne l'attendiez pas, vous pouvez l'ignorer.",
+        "invitation.role_line": "Vous rejoindrez l'organisation en tant que <strong>{role}</strong>.",
+        "invitation.message_label": "Un mot de @{inviter}",
+        "invitation.expires": "Cette invitation expire le {date}.",
 
         "org_join.subject": "Bienvenue chez {org_name}",
         "org_join.heading": "Vous y êtes, {username} !",
@@ -253,6 +259,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Klicke auf die Schaltfläche unten, um loszulegen.",
         "invitation.cta": "{org_name} beitreten",
         "invitation.footer": "Diese Einladung wurde von @{inviter} gesendet. Falls du sie nicht erwartet hast, kannst du sie ignorieren.",
+        "invitation.role_line": "Du trittst als <strong>{role}</strong> bei.",
+        "invitation.message_label": "Eine Nachricht von @{inviter}",
+        "invitation.expires": "Diese Einladung läuft am {date} ab.",
 
         "org_join.subject": "Willkommen bei {org_name}",
         "org_join.heading": "Du bist dabei, {username}!",
@@ -320,6 +329,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Haz clic en el botón de abajo para empezar.",
         "invitation.cta": "Unirse a {org_name}",
         "invitation.footer": "Esta invitación fue enviada por @{inviter}. Si no la esperabas, puedes ignorarla.",
+        "invitation.role_line": "Te unirás como <strong>{role}</strong>.",
+        "invitation.message_label": "Un mensaje de @{inviter}",
+        "invitation.expires": "Esta invitación caduca el {date}.",
 
         "org_join.subject": "Bienvenido a {org_name}",
         "org_join.heading": "¡Ya estás dentro, {username}!",
@@ -387,6 +399,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "انقر على الزر أدناه للبدء.",
         "invitation.cta": "الانضمام إلى {org_name}",
         "invitation.footer": "أُرسلت هذه الدعوة من قِبل @{inviter}. إذا لم تكن تتوقعها، يمكنك تجاهلها.",
+        "invitation.role_line": "ستنضم بصفة <strong>{role}</strong>.",
+        "invitation.message_label": "رسالة من @{inviter}",
+        "invitation.expires": "تنتهي صلاحية هذه الدعوة في {date}.",
 
         "org_join.subject": "مرحبًا بك في {org_name}",
         "org_join.heading": "أهلاً بك، {username}!",
@@ -454,6 +469,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "下のボタンから始めてください。",
         "invitation.cta": "{org_name}に参加",
         "invitation.footer": "この招待は@{inviter}さんから送信されました。心当たりがない場合は無視してかまいません。",
+        "invitation.role_line": "<strong>{role}</strong>として参加します。",
+        "invitation.message_label": "@{inviter}さんからのメッセージ",
+        "invitation.expires": "この招待の有効期限は{date}です。",
 
         "org_join.subject": "{org_name} へようこそ",
         "org_join.heading": "{username} さん、参加が完了しました！",
@@ -521,6 +539,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Clique no botão abaixo para começar.",
         "invitation.cta": "Entrar em {org_name}",
         "invitation.footer": "Este convite foi enviado por @{inviter}. Se não estava à espera dele, pode ignorá-lo.",
+        "invitation.role_line": "Vai juntar-se como <strong>{role}</strong>.",
+        "invitation.message_label": "Uma mensagem de @{inviter}",
+        "invitation.expires": "Este convite expira em {date}.",
 
         "org_join.subject": "Bem-vindo à {org_name}",
         "org_join.heading": "Você entrou, {username}!",
@@ -588,6 +609,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Нажмите на кнопку ниже, чтобы начать.",
         "invitation.cta": "Вступить в {org_name}",
         "invitation.footer": "Это приглашение отправлено @{inviter}. Если вы его не ожидали, его можно проигнорировать.",
+        "invitation.role_line": "Вы присоединитесь с ролью <strong>{role}</strong>.",
+        "invitation.message_label": "Сообщение от @{inviter}",
+        "invitation.expires": "Срок действия приглашения истекает {date}.",
 
         "org_join.subject": "Добро пожаловать в {org_name}",
         "org_join.heading": "Вы с нами, {username}!",
@@ -655,6 +679,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "点击下方按钮开始使用。",
         "invitation.cta": "加入 {org_name}",
         "invitation.footer": "此邀请由 @{inviter} 发出。如果您并未预期，可忽略此邮件。",
+        "invitation.role_line": "您将以 <strong>{role}</strong> 身份加入。",
+        "invitation.message_label": "来自 @{inviter} 的留言",
+        "invitation.expires": "此邀请将于 {date} 过期。",
 
         "org_join.subject": "欢迎加入 {org_name}",
         "org_join.heading": "{username}，你已加入！",
@@ -722,6 +749,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "शुरू करने के लिए नीचे बटन पर क्लिक करें।",
         "invitation.cta": "{org_name} में शामिल हों",
         "invitation.footer": "यह निमंत्रण @{inviter} द्वारा भेजा गया था। यदि आप इसकी अपेक्षा नहीं कर रहे थे, तो आप इसे अनदेखा कर सकते हैं।",
+        "invitation.role_line": "आप <strong>{role}</strong> के रूप में जुड़ेंगे।",
+        "invitation.message_label": "@{inviter} का संदेश",
+        "invitation.expires": "यह निमंत्रण {date} को समाप्त हो जाएगा।",
 
         "org_join.subject": "{org_name} में आपका स्वागत है",
         "org_join.heading": "आप जुड़ गए हैं, {username}!",
@@ -789,6 +819,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "아래 버튼을 클릭하여 시작하세요.",
         "invitation.cta": "{org_name} 참여",
         "invitation.footer": "이 초대는 @{inviter}님이 보냈습니다. 예상하지 못한 초대라면 무시하셔도 됩니다.",
+        "invitation.role_line": "<strong>{role}</strong>(으)로 참여하게 됩니다.",
+        "invitation.message_label": "@{inviter}님의 메시지",
+        "invitation.expires": "이 초대는 {date}에 만료됩니다.",
 
         "org_join.subject": "{org_name}에 오신 것을 환영합니다",
         "org_join.heading": "{username}님, 가입이 완료되었어요!",
@@ -856,6 +889,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Clicca sul pulsante qui sotto per iniziare.",
         "invitation.cta": "Unisciti a {org_name}",
         "invitation.footer": "Questo invito è stato inviato da @{inviter}. Se non te lo aspettavi, puoi ignorarlo.",
+        "invitation.role_line": "Entrerai come <strong>{role}</strong>.",
+        "invitation.message_label": "Un messaggio da @{inviter}",
+        "invitation.expires": "Questo invito scade il {date}.",
 
         "org_join.subject": "Benvenuto in {org_name}",
         "org_join.heading": "Ci sei, {username}!",
@@ -923,6 +959,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Başlamak için aşağıdaki butona tıkla.",
         "invitation.cta": "{org_name} organizasyonuna katıl",
         "invitation.footer": "Bu davet @{inviter} tarafından gönderildi. Beklemediysen yok sayabilirsin.",
+        "invitation.role_line": "<strong>{role}</strong> olarak katılacaksın.",
+        "invitation.message_label": "@{inviter} kullanıcısından bir not",
+        "invitation.expires": "Bu davetin süresi {date} tarihinde doluyor.",
 
         "org_join.subject": "{org_name} organizasyonuna hoş geldiniz",
         "org_join.heading": "Aramızdasınız, {username}!",
@@ -990,6 +1029,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Nhấn vào nút bên dưới để bắt đầu.",
         "invitation.cta": "Tham gia {org_name}",
         "invitation.footer": "Lời mời này được gửi bởi @{inviter}. Nếu bạn không mong đợi nhận được lời mời này, bạn có thể bỏ qua.",
+        "invitation.role_line": "Bạn sẽ tham gia với vai trò <strong>{role}</strong>.",
+        "invitation.message_label": "Lời nhắn từ @{inviter}",
+        "invitation.expires": "Lời mời này hết hạn vào {date}.",
 
         "org_join.subject": "Chào mừng bạn đến với {org_name}",
         "org_join.heading": "Bạn đã tham gia, {username}!",
@@ -1057,6 +1099,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Klik tombol di bawah untuk memulai.",
         "invitation.cta": "Gabung {org_name}",
         "invitation.footer": "Undangan ini dikirim oleh @{inviter}. Jika Anda tidak mengharapkannya, Anda dapat mengabaikannya.",
+        "invitation.role_line": "Anda akan bergabung sebagai <strong>{role}</strong>.",
+        "invitation.message_label": "Pesan dari @{inviter}",
+        "invitation.expires": "Undangan ini berakhir pada {date}.",
 
         "org_join.subject": "Selamat datang di {org_name}",
         "org_join.heading": "Kamu sudah bergabung, {username}!",
@@ -1124,6 +1169,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Kliknij przycisk poniżej, aby rozpocząć.",
         "invitation.cta": "Dołącz do {org_name}",
         "invitation.footer": "To zaproszenie zostało wysłane przez @{inviter}. Jeśli się go nie spodziewałeś, możesz je zignorować.",
+        "invitation.role_line": "Dołączysz jako <strong>{role}</strong>.",
+        "invitation.message_label": "Wiadomość od @{inviter}",
+        "invitation.expires": "To zaproszenie wygasa {date}.",
 
         "org_join.subject": "Witamy w {org_name}",
         "org_join.heading": "Jesteś już z nami, {username}!",
@@ -1191,6 +1239,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Натисніть кнопку нижче, щоб почати.",
         "invitation.cta": "Приєднатися до {org_name}",
         "invitation.footer": "Це запрошення надіслав @{inviter}. Якщо ви цього не очікували, можете проігнорувати його.",
+        "invitation.role_line": "Ви приєднаєтеся з роллю <strong>{role}</strong>.",
+        "invitation.message_label": "Повідомлення від @{inviter}",
+        "invitation.expires": "Термін дії запрошення спливає {date}.",
 
         "org_join.subject": "Ласкаво просимо до {org_name}",
         "org_join.heading": "Ви приєдналися, {username}!",
@@ -1258,6 +1309,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "Klik op de knop hieronder om te beginnen.",
         "invitation.cta": "Word lid van {org_name}",
         "invitation.footer": "Deze uitnodiging is verzonden door @{inviter}. Verwachtte je hem niet, dan kun je hem negeren.",
+        "invitation.role_line": "Je komt erbij als <strong>{role}</strong>.",
+        "invitation.message_label": "Een bericht van @{inviter}",
+        "invitation.expires": "Deze uitnodiging verloopt op {date}.",
 
         "org_join.subject": "Welkom bij {org_name}",
         "org_join.heading": "Je doet mee, {username}!",
@@ -1325,6 +1379,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "คลิกที่ปุ่มด้านล่างเพื่อเริ่มต้นใช้งาน",
         "invitation.cta": "เข้าร่วม {org_name}",
         "invitation.footer": "คำเชิญนี้ถูกส่งโดย @{inviter} หากคุณไม่ได้คาดหวัง สามารถละเว้นได้",
+        "invitation.role_line": "คุณจะเข้าร่วมในฐานะ <strong>{role}</strong>",
+        "invitation.message_label": "ข้อความจาก @{inviter}",
+        "invitation.expires": "คำเชิญนี้จะหมดอายุในวันที่ {date}",
 
         "org_join.subject": "ยินดีต้อนรับสู่ {org_name}",
         "org_join.heading": "คุณเข้าร่วมแล้ว {username}!",
@@ -1392,6 +1449,9 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.no_code_hint": "শুরু করতে নিচের বোতামে ক্লিক করুন।",
         "invitation.cta": "{org_name}-এ যোগ দিন",
         "invitation.footer": "এই আমন্ত্রণটি পাঠিয়েছেন @{inviter}। আপনি যদি এটি প্রত্যাশা না করে থাকেন, তাহলে নিরাপদে উপেক্ষা করতে পারেন।",
+        "invitation.role_line": "আপনি <strong>{role}</strong> হিসেবে যোগ দেবেন।",
+        "invitation.message_label": "@{inviter}-এর একটি বার্তা",
+        "invitation.expires": "এই আমন্ত্রণের মেয়াদ {date} তারিখে শেষ হবে।",
 
         "org_join.subject": "{org_name}-এ স্বাগতম",
         "org_join.heading": "আপনি যুক্ত হয়েছেন, {username}!",

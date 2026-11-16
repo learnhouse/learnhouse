@@ -791,7 +791,13 @@
       "signup_title": "เข้าร่วม {{org}}",
       "signup_desc": "คุณได้รับเชิญ ตั้งรหัสผ่านแล้วเข้าร่วมได้เลย",
       "choose_password": "ตั้งรหัสผ่าน",
-      "create_and_join": "เข้าร่วม {{org}}"
+      "create_and_join": "เข้าร่วม {{org}}",
+      "details": {
+        "role": "คุณจะเข้าร่วมในบทบาท{{role}}",
+        "role_by": "{{name}} เชิญคุณเข้าร่วมในบทบาท{{role}}",
+        "groups": "คุณจะถูกเพิ่มเข้า: {{names}}",
+        "courses": "คุณจะได้ลงทะเบียนเรียน: {{names}}"
+      }
     },
     "login_failed_forgot": "ลืมรหัสผ่าน?",
     "login_failed_reset": "รีเซ็ต",
@@ -9345,6 +9351,226 @@
         "more": "การดำเนินการเพิ่มเติม",
         "remove_filter": "นำตัวกรองออก: {{name}}",
         "any": "ทั้งหมด"
+      },
+      "invitations": {
+        "invite_people": "เชิญสมาชิก",
+        "dialog": {
+          "title": "เชิญสมาชิก",
+          "description": "ผู้รับจะได้ลิงก์ส่วนตัวทางอีเมล เมื่อเข้าร่วมแล้ว บทบาท กลุ่ม และคอร์สด้านล่างจะถูกนำไปใช้โดยอัตโนมัติ",
+          "done_title": "ส่งคำเชิญแล้ว",
+          "done_description": "ผลลัพธ์ของแต่ละที่อยู่",
+          "invite_more": "เชิญเพิ่ม",
+          "send": "ส่งคำเชิญ",
+          "send_count_one": "ส่งคำเชิญ {{count}} รายการ",
+          "send_count_other": "ส่งคำเชิญ {{count}} รายการ",
+          "update_count_one": "อัปเดตสมาชิก {{count}} คน",
+          "update_count_other": "อัปเดตสมาชิก {{count}} คน"
+        },
+        "fields": {
+          "emails": "ที่อยู่อีเมล",
+          "emails_hint": "วางได้ทั้งรายการเดียวหรือหลายรายการ คั่นด้วยจุลภาค เว้นวรรค หรือขึ้นบรรทัดใหม่",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} ที่อยู่",
+          "valid_count_other": "{{count}} ที่อยู่",
+          "invalid_count_one": "{{count}} ที่อยู่ไม่ถูกต้อง",
+          "invalid_count_other": "{{count}} ที่อยู่ไม่ถูกต้อง",
+          "too_many": "เชิญได้สูงสุดครั้งละ {{max}} คน",
+          "update_existing_one": "อัปเดต {{count}} คนที่เป็นสมาชิกอยู่แล้วด้วย",
+          "update_existing_other": "อัปเดต {{count}} คนที่เป็นสมาชิกอยู่แล้วด้วย",
+          "update_existing_hint": "บทบาทของพวกเขาจะเปลี่ยนเป็นบทบาทด้านล่าง และจะถูกเพิ่มเข้ากลุ่มและคอร์ส ปิดตัวเลือกนี้ไว้หากต้องการข้ามพวกเขา",
+          "role": "บทบาท",
+          "role_hint": "สิ่งที่ทำได้หลังเข้าร่วม",
+          "groups": "เพิ่มเข้ากลุ่ม",
+          "groups_placeholder": "เลือกกลุ่ม",
+          "no_groups": "องค์กรนี้ยังไม่มีกลุ่มผู้ใช้",
+          "courses": "ลงทะเบียนเรียนคอร์ส",
+          "courses_placeholder": "เลือกคอร์ส",
+          "no_courses": "องค์กรนี้ยังไม่มีคอร์ส",
+          "selected_count_one": "เลือกแล้ว {{count}}",
+          "selected_count_other": "เลือกแล้ว {{count}}",
+          "search": "ค้นหา",
+          "no_match": "ไม่พบรายการที่ตรงกับการค้นหา",
+          "draft": "ฉบับร่าง",
+          "remove_item": "นำ {{name}} ออก",
+          "message": "ข้อความส่วนตัว",
+          "message_placeholder": "เพิ่มโน้ตสั้น ๆ ในอีเมล (ไม่บังคับ ใส่ลิงก์ไม่ได้)",
+          "expiry": "หมดอายุหลังจาก",
+          "days_one": "{{count}} วัน",
+          "days_other": "{{count}} วัน",
+          "expires_on": "จนถึง {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "ผู้เรียน",
+            "description": "เรียนคอร์ส เข้าร่วมชุมชน และติดตามความคืบหน้าของตนเอง เข้าแดชบอร์ดไม่ได้"
+          },
+          "instructor": {
+            "name": "ผู้สอน",
+            "description": "สร้างและสอนคอร์สของตนเอง และให้คะแนนผู้เรียนของตน ใช้ที่นั่งผู้ดูแลระบบ 1 ที่"
+          },
+          "maintainer": {
+            "name": "ผู้ดูแล",
+            "description": "จัดการคอร์ส สมาชิก และกลุ่มทั้งหมด เปลี่ยนการเรียกเก็บเงินหรือการตั้งค่าองค์กรไม่ได้"
+          },
+          "admin": {
+            "name": "ผู้ดูแลระบบ",
+            "description": "ควบคุมองค์กรได้ทั้งหมด รวมถึงการตั้งค่า การเรียกเก็บเงิน และผู้ดูแลระบบคนอื่น"
+          },
+          "custom_roles": "บทบาทที่กำหนดเอง",
+          "custom_description": "บทบาทที่กำหนดเองสำหรับองค์กรนี้",
+          "admin_seat": "ที่นั่งผู้ดูแลระบบ",
+          "refusal_admin_only": "เฉพาะผู้ดูแลระบบเท่านั้นที่เชิญด้วยบทบาทนี้ได้",
+          "refusal_above": "บทบาทนี้มีสิทธิ์ที่บทบาทของคุณไม่มี",
+          "refusal_code": "รหัสเชิญไม่สามารถให้บทบาทที่จัดการผู้คนหรือเข้าถึงแดชบอร์ดได้"
+        },
+        "preview": {
+          "new_one": "ใหม่ {{count}} คน",
+          "new_other": "ใหม่ {{count}} คน",
+          "pending_one": "เชิญไปแล้ว {{count}} คน จะได้รับลิงก์ใหม่",
+          "pending_other": "เชิญไปแล้ว {{count}} คน จะได้รับลิงก์ใหม่",
+          "members_one": "เป็นสมาชิกอยู่แล้ว {{count}} คน",
+          "members_other": "เป็นสมาชิกอยู่แล้ว {{count}} คน"
+        },
+        "summary": {
+          "people_one": "{{count}} คนจะเข้าร่วมในบทบาท{{role}}",
+          "people_other": "{{count}} คนจะเข้าร่วมในบทบาท{{role}}",
+          "groups_one": "เพิ่มเข้า {{names}}",
+          "groups_other": "เพิ่มเข้า {{count}} กลุ่ม ({{names}})",
+          "courses_one": "ลงทะเบียนเรียน {{count}} คอร์ส",
+          "courses_other": "ลงทะเบียนเรียน {{count}} คอร์ส",
+          "and": " และ ",
+          "updated_one": "สมาชิกเดิม {{count}} คนจะได้รับการอัปเดตด้วย",
+          "updated_other": "สมาชิกเดิม {{count}} คนจะได้รับการอัปเดตด้วย"
+        },
+        "capacity": {
+          "members": "สมาชิก",
+          "admin_seats": "ที่นั่งผู้ดูแลระบบ",
+          "of": "{{count}} จาก {{limit}}",
+          "pending_note_one": "รวมคำเชิญที่รอดำเนินการ {{count}} รายการ",
+          "pending_note_other": "รวมคำเชิญที่รอดำเนินการ {{count}} รายการ",
+          "members_blocked": "แพ็กเกจของคุณรองรับสมาชิก {{limit}} คน โดยนับรวมคำเชิญที่รอดำเนินการ อัปเกรดหรือเพิกถอนคำเชิญบางรายการเพื่อเชิญเพิ่ม",
+          "seats_blocked": "แพ็กเกจของคุณมีที่นั่งผู้ดูแลระบบ {{limit}} ที่ โดยนับรวมคำเชิญที่รอดำเนินการ เลือกบทบาทระดับผู้เรียน หรืออัปเกรดเพื่อเพิ่มผู้ดูแลระบบ"
+        },
+        "results": {
+          "status": {
+            "sent": "ส่งแล้ว",
+            "resent": "ส่งลิงก์ใหม่แล้ว",
+            "email_failed": "ส่งอีเมลไม่สำเร็จ",
+            "already_member": "เป็นสมาชิกอยู่แล้ว",
+            "member_updated": "อัปเดตสมาชิกแล้ว",
+            "member_update_failed": "ไม่ได้อัปเดต",
+            "invalid_email": "ที่อยู่ไม่ถูกต้อง"
+          },
+          "count": {
+            "sent_one": "ส่งแล้ว {{count}}",
+            "sent_other": "ส่งแล้ว {{count}}",
+            "resent_one": "ลิงก์ใหม่ {{count}}",
+            "resent_other": "ลิงก์ใหม่ {{count}}",
+            "email_failed_one": "ไม่สำเร็จ {{count}}",
+            "email_failed_other": "ไม่สำเร็จ {{count}}",
+            "already_member_one": "เป็นสมาชิกอยู่แล้ว {{count}}",
+            "already_member_other": "เป็นสมาชิกอยู่แล้ว {{count}}",
+            "member_updated_one": "อัปเดตสมาชิกแล้ว {{count}}",
+            "member_updated_other": "อัปเดตสมาชิกแล้ว {{count}}",
+            "member_update_failed_one": "ไม่ได้อัปเดต {{count}}",
+            "member_update_failed_other": "ไม่ได้อัปเดต {{count}}",
+            "invalid_email_one": "ไม่ถูกต้อง {{count}}",
+            "invalid_email_other": "ไม่ถูกต้อง {{count}}"
+          }
+        },
+        "status": {
+          "pending": "รอดำเนินการ",
+          "accepted": "ยอมรับแล้ว",
+          "declined": "ปฏิเสธแล้ว",
+          "revoked": "เพิกถอนแล้ว",
+          "expired": "หมดอายุ"
+        },
+        "list": {
+          "title": "คำเชิญ",
+          "subtitle": "ทุกคนที่คุณเชิญ พร้อมบทบาทและสิทธิ์เข้าถึงที่จะได้รับ",
+          "filter": "กรองตามสถานะ",
+          "all": "ทั้งหมด",
+          "person": "ผู้รับเชิญ",
+          "role": "บทบาท",
+          "access": "กลุ่มและคอร์ส",
+          "status": "สถานะ",
+          "select_all": "เลือกทั้งหมด",
+          "select": "เลือก {{email}}",
+          "selected_one": "เลือกแล้ว {{count}}",
+          "selected_other": "เลือกแล้ว {{count}}",
+          "actions": "การดำเนินการสำหรับ {{email}}",
+          "invited_by": "เชิญโดย {{name}} {{when}}",
+          "joined": "เข้าร่วมเมื่อ {{when}}",
+          "email_not_sent": "ส่งอีเมลไม่ถึง",
+          "groups_one": "{{count}} กลุ่ม",
+          "groups_other": "{{count}} กลุ่ม",
+          "courses_one": "{{count}} คอร์ส",
+          "courses_other": "{{count}} คอร์ส",
+          "expires_in_one": "หมดอายุใน {{count}} วัน",
+          "expires_in_other": "หมดอายุใน {{count}} วัน",
+          "legacy": "ส่งก่อนที่คำเชิญจะระบุบทบาทได้",
+          "empty_title": "ยังไม่มีคำเชิญ",
+          "empty_description": "เชิญผู้คนทางอีเมล พวกเขาจะเข้าร่วมด้วยบทบาท กลุ่ม และคอร์สที่คุณเลือก",
+          "no_results": "ไม่มีคำเชิญที่ตรงกัน",
+          "clear_filter": "แสดงทั้งหมด",
+          "error": "โหลดคำเชิญไม่ได้"
+        },
+        "actions": {
+          "resend": "ส่งอีกครั้ง",
+          "copy_link": "คัดลอกลิงก์คำเชิญ",
+          "edit": "เปลี่ยนบทบาทหรือสิทธิ์เข้าถึง",
+          "revoke": "เพิกถอน",
+          "none": "ไม่มีการดำเนินการ"
+        },
+        "revoke": {
+          "title": "เพิกถอนคำเชิญนี้ไหม",
+          "message": "ลิงก์ที่ส่งไปยัง {{email}} จะใช้ไม่ได้อีก คุณเชิญใหม่ได้ภายหลัง",
+          "bulk_title_one": "เพิกถอนคำเชิญ {{count}} รายการไหม",
+          "bulk_title_other": "เพิกถอนคำเชิญ {{count}} รายการไหม",
+          "bulk_message": "ลิงก์ของพวกเขาจะใช้ไม่ได้อีก คุณเชิญใหม่ได้ภายหลัง"
+        },
+        "edit": {
+          "title": "แก้ไขคำเชิญ",
+          "description": "สำหรับ {{email}} มีผลเมื่อผู้รับยอมรับ",
+          "keep_expiry": "คงเดิม ({{date}})",
+          "extend_one": "{{count}} วันนับจากนี้",
+          "extend_other": "{{count}} วันนับจากนี้",
+          "save": "บันทึกการเปลี่ยนแปลง"
+        },
+        "toasts": {
+          "sent": "ส่งคำเชิญแล้ว",
+          "some_failed_one": "ส่งอีเมล {{count}} ฉบับไม่ได้ คัดลอกลิงก์คำเชิญจากรายการแทน",
+          "some_failed_other": "ส่งอีเมล {{count}} ฉบับไม่ได้ คัดลอกลิงก์คำเชิญจากรายการแทน",
+          "error": "เกิดข้อผิดพลาด โปรดลองอีกครั้ง",
+          "resent": "ส่งคำเชิญใหม่ไปยัง {{email}} แล้ว",
+          "email_failed": "ส่งอีเมลไม่ได้ คัดลอกลิงก์คำเชิญแทน",
+          "link_copied": "คัดลอกลิงก์คำเชิญแล้ว ลิงก์ในอีเมลก่อนหน้าใช้ไม่ได้อีกต่อไป",
+          "revoked": "เพิกถอนคำเชิญแล้ว",
+          "updated": "อัปเดตคำเชิญแล้ว",
+          "bulk_resend_one": "ส่งคำเชิญอีกครั้ง {{count}} รายการ",
+          "bulk_resend_other": "ส่งคำเชิญอีกครั้ง {{count}} รายการ",
+          "bulk_revoke_one": "เพิกถอนคำเชิญ {{count}} รายการแล้ว",
+          "bulk_revoke_other": "เพิกถอนคำเชิญ {{count}} รายการแล้ว"
+        },
+        "codes": {
+          "description": "ลิงก์หรือรหัสเดียวสำหรับหลายคน ทุกคนที่เข้าร่วมด้วยรหัสนี้จะได้รับการตั้งค่าด้านล่าง",
+          "role_hint": "เฉพาะบทบาทระดับผู้เรียน",
+          "role_note": "ใครก็ตามที่มีรหัสก็ใช้ได้ จึงไม่สามารถให้บทบาทผู้ดูแลระบบ ผู้ดูแล ผู้สอน หรือบทบาทใดที่จัดการผู้คนได้",
+          "max_uses": "จำนวนครั้งที่ใช้ได้สูงสุด",
+          "max_uses_invalid": "ป้อนจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+          "unlimited": "ไม่จำกัด",
+          "never": "ไม่หมดอายุ",
+          "no_expiry": "ไม่มีวันหมดอายุ",
+          "uses_one": "ใช้ {{count}} ครั้ง",
+          "uses_other": "ใช้ {{count}} ครั้ง",
+          "uses_of": "ใช้ {{count}} / {{max}} ครั้ง",
+          "uses_title": "จำนวนครั้งที่ใช้รหัสนี้เข้าร่วม"
+        },
+        "codes_card": {
+          "title": "รหัสเชิญ",
+          "description": "แชร์ลิงก์หรือรหัสเดียวให้ทั้งชั้นเรียน กำหนดบทบาท กลุ่ม คอร์ส จำนวนครั้งที่ใช้ และวันหมดอายุได้",
+          "manage": "จัดการรหัสเชิญ"
+        }
       }
     },
     "assignments": {
@@ -11723,7 +11949,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> แก้ไขคำตอบตอนสมัครของ <b>{{target}}</b>",
         "members__signup_backfilled": "<b>{{actor}}</b> คัดลอกคำตอบตอนสมัครไปยังข้อมูลบุคลากร",
         "security__support_access__started": "<b>{{actor}}</b> เริ่มสวมสิทธิ์เป็น <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> หยุดสวมสิทธิ์เป็น <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> หยุดสวมสิทธิ์เป็น <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b> เปลี่ยนคำเชิญสำหรับ <b>{{target}}</b>",
+        "members__invitation__resent": "<b>{{actor}}</b> ส่งคำเชิญสำหรับ <b>{{target}}</b> อีกครั้ง",
+        "members__invitation__link_copied": "<b>{{actor}}</b> คัดลอกลิงก์เชิญใหม่สำหรับ <b>{{target}}</b>",
+        "members__invitation__revoked": "<b>{{actor}}</b> เพิกถอนคำเชิญสำหรับ <b>{{target}}</b>",
+        "members__invitation__accepted": "<b>{{actor}}</b> ยอมรับคำเชิญ",
+        "members__invitation__declined": "<b>{{actor}}</b> ปฏิเสธคำเชิญ",
+        "members__invitation__role_applied": "<b>{{actor}}</b> ได้รับบทบาทจากคำเชิญ",
+        "members__invite_code__updated": "<b>{{actor}}</b> เปลี่ยนลิงก์เชิญ",
+        "members__invite_code__used": "<b>{{actor}}</b> เข้าร่วมผ่านลิงก์เชิญ"
       },
       "export": {
         "generating": "กำลังเตรียมการส่งออก…",
@@ -11887,7 +12122,8 @@
         "customers": "รายชื่อลูกค้า",
         "scim": "การสร้างบัญชีอัตโนมัติ SCIM",
         "scim_token": "โทเค็น SCIM",
-        "training_rule": "การอบรมภาคบังคับ"
+        "training_rule": "การอบรมภาคบังคับ",
+        "invitation": "คำเชิญ"
       }
     },
     "course_builder": {
@@ -28976,7 +29212,8 @@
       "trial_ending": "ช่วงทดลองใช้ใกล้หมด",
       "plan_downgraded": "ย้ายไปใช้แผนฟรีแล้ว",
       "plan_restored": "กู้คืนแผนแล้ว",
-      "payments_checkout_failing": "การชำระเงินล้มเหลว"
+      "payments_checkout_failing": "การชำระเงินล้มเหลว",
+      "invitation_accepted": "ยอมรับคำเชิญแล้ว"
     },
     "copy": {
       "assignment_graded": "ตรวจแล้ว: {{assignment}}",
@@ -29038,7 +29275,8 @@
       "trial_ending": "ช่วงทดลองใช้ {{plan}} ของคุณจะสิ้นสุดในอีก {{days}} วัน",
       "plan_downgraded": "ตอนนี้คุณใช้แผนฟรี ไม่มีอะไรถูกลบ",
       "plan_restored": "ยินดีต้อนรับกลับสู่ {{plan}}",
-      "payments_checkout_failing": "ผู้เรียนซื้อไม่ได้ในขณะนี้ (ชำระเงินไม่สำเร็จ {{count}} รายการ)"
+      "payments_checkout_failing": "ผู้เรียนซื้อไม่ได้ในขณะนี้ (ชำระเงินไม่สำเร็จ {{count}} รายการ)",
+      "invitation_accepted": "{{actor}} ยอมรับคำเชิญของคุณแล้ว"
     },
     "routing": {
       "short": "ใครได้รับแจ้ง",
@@ -29193,7 +29431,9 @@
       "verify_title": "ยืนยันอีเมลเพื่อดูคำเชิญของคุณ",
       "verify_desc": "คำเชิญถูกส่งไปยังที่อยู่อีเมล จึงจะแสดงเมื่อคุณยืนยันว่าเป็นอีเมลของคุณ",
       "verify_resend": "ส่งอีเมลยืนยันอีกครั้ง",
-      "verify_sent": "ส่งแล้ว ตรวจสอบกล่องจดหมาย"
+      "verify_sent": "ส่งแล้ว ตรวจสอบกล่องจดหมาย",
+      "invited_as": "เชิญคุณในบทบาท{{role}}",
+      "invited_as_by": "{{name}} เชิญคุณในบทบาท{{role}}"
     },
     "celebrate": {
       "title": "คอร์สแรกของคุณเผยแพร่แล้ว",

@@ -792,7 +792,13 @@
       "signup_title": "Entrar em {{org}}",
       "signup_desc": "Foi convidado. Escolha uma palavra-passe e está dentro.",
       "choose_password": "Escolha uma palavra-passe",
-      "create_and_join": "Entrar em {{org}}"
+      "create_and_join": "Entrar em {{org}}",
+      "details": {
+        "role": "Você vai entrar como {{role}}.",
+        "role_by": "{{name}} convidou você para entrar como {{role}}.",
+        "groups": "Você será adicionado a: {{names}}",
+        "courses": "Você será matriculado em: {{names}}"
+      }
     },
     "login_failed_forgot": "Esqueceu sua senha?",
     "login_failed_reset": "Redefinir",
@@ -9525,6 +9531,258 @@
         "more": "Mais ações",
         "remove_filter": "Remover filtro: {{name}}",
         "any": "Qualquer"
+      },
+      "invitations": {
+        "invite_people": "Convidar pessoas",
+        "dialog": {
+          "title": "Convidar pessoas",
+          "description": "Cada pessoa recebe um link pessoal por e-mail. Quando ela entrar, a função, os grupos e os cursos abaixo são aplicados automaticamente.",
+          "done_title": "Convites enviados",
+          "done_description": "Veja o que aconteceu com cada endereço.",
+          "invite_more": "Convidar mais",
+          "send": "Enviar convites",
+          "send_count_one": "Enviar {{count}} convite",
+          "send_count_other": "Enviar {{count}} convites",
+          "send_count_many": "Enviar {{count}} convites",
+          "update_count_one": "Atualizar {{count}} membro",
+          "update_count_other": "Atualizar {{count}} membros",
+          "update_count_many": "Atualizar {{count}} membros"
+        },
+        "fields": {
+          "emails": "Endereços de e-mail",
+          "emails_hint": "Cole um ou vários, separados por vírgulas, espaços ou quebras de linha",
+          "emails_placeholder": "lea@escola.org, sam@escola.org",
+          "valid_count_one": "{{count}} endereço",
+          "valid_count_other": "{{count}} endereços",
+          "valid_count_many": "{{count}} endereços",
+          "invalid_count_one": "{{count}} endereço não é válido",
+          "invalid_count_other": "{{count}} endereços não são válidos",
+          "invalid_count_many": "{{count}} endereços não são válidos",
+          "too_many": "Você pode convidar até {{max}} pessoas por vez",
+          "update_existing_one": "Atualizar também {{count}} pessoa que já é membro",
+          "update_existing_other": "Atualizar também as {{count}} pessoas que já são membros",
+          "update_existing_many": "Atualizar também as {{count}} pessoas que já são membros",
+          "update_existing_hint": "A função delas muda para a escolhida abaixo e elas são adicionadas aos grupos e cursos. Deixe desativado para ignorá-las.",
+          "role": "Função",
+          "role_hint": "O que elas poderão fazer ao entrar",
+          "groups": "Adicionar a grupos",
+          "groups_placeholder": "Escolher grupos",
+          "no_groups": "Esta organização ainda não tem grupos de usuários.",
+          "courses": "Matricular em cursos",
+          "courses_placeholder": "Escolher cursos",
+          "no_courses": "Esta organização ainda não tem cursos.",
+          "selected_count_one": "{{count}} selecionado",
+          "selected_count_other": "{{count}} selecionados",
+          "selected_count_many": "{{count}} selecionados",
+          "search": "Buscar",
+          "no_match": "Nada corresponde à sua busca.",
+          "draft": "Rascunho",
+          "remove_item": "Remover {{name}}",
+          "message": "Mensagem pessoal",
+          "message_placeholder": "Adicione uma nota curta ao e-mail (opcional, sem links)",
+          "expiry": "Expira após",
+          "days_one": "{{count}} dia",
+          "days_other": "{{count}} dias",
+          "days_many": "{{count}} dias",
+          "expires_on": "Até {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "Aluno",
+            "description": "Faz cursos, participa de comunidades e acompanha o próprio progresso. Sem acesso ao painel."
+          },
+          "instructor": {
+            "name": "Instrutor",
+            "description": "Cria e ministra os próprios cursos e avalia os próprios alunos. Usa uma vaga de admin."
+          },
+          "maintainer": {
+            "name": "Mantenedor",
+            "description": "Gerencia todos os cursos, membros e grupos. Não pode alterar o faturamento nem as configurações da organização."
+          },
+          "admin": {
+            "name": "Admin",
+            "description": "Controle total da organização, incluindo configurações, faturamento e outros admins."
+          },
+          "custom_roles": "Funções personalizadas",
+          "custom_description": "Uma função personalizada definida para esta organização.",
+          "admin_seat": "Vaga de admin",
+          "refusal_admin_only": "Só admins podem convidar pessoas com esta função.",
+          "refusal_above": "Esta função tem permissões que a sua própria função não tem.",
+          "refusal_code": "Códigos de convite não podem conceder uma função que gerencia pessoas ou abre o painel."
+        },
+        "preview": {
+          "new_one": "{{count}} novo",
+          "new_other": "{{count}} novos",
+          "new_many": "{{count}} novos",
+          "pending_one": "{{count}} já convidado, vai receber um novo link",
+          "pending_other": "{{count}} já convidados, vão receber um novo link",
+          "pending_many": "{{count}} já convidados, vão receber um novo link",
+          "members_one": "{{count}} já é membro",
+          "members_other": "{{count}} já são membros",
+          "members_many": "{{count}} já são membros"
+        },
+        "summary": {
+          "people_one": "{{count}} pessoa vai entrar como {{role}}",
+          "people_other": "{{count}} pessoas vão entrar como {{role}}",
+          "people_many": "{{count}} pessoas vão entrar como {{role}}",
+          "groups_one": "inclusão em {{names}}",
+          "groups_other": "inclusão em {{count}} grupos ({{names}})",
+          "groups_many": "inclusão em {{count}} grupos ({{names}})",
+          "courses_one": "matrícula em {{count}} curso",
+          "courses_other": "matrícula em {{count}} cursos",
+          "courses_many": "matrícula em {{count}} cursos",
+          "and": ", ",
+          "updated_one": "{{count}} membro existente também será atualizado.",
+          "updated_other": "{{count}} membros existentes também serão atualizados.",
+          "updated_many": "{{count}} membros existentes também serão atualizados."
+        },
+        "capacity": {
+          "members": "Membros",
+          "admin_seats": "Vagas de admin",
+          "of": "{{count}} de {{limit}}",
+          "pending_note_one": "Inclui {{count}} convite pendente",
+          "pending_note_other": "Inclui {{count}} convites pendentes",
+          "pending_note_many": "Inclui {{count}} convites pendentes",
+          "members_blocked": "Seu plano inclui {{limit}} membros, contando os convites pendentes. Faça upgrade ou revogue alguns convites para convidar mais pessoas.",
+          "seats_blocked": "Seu plano inclui {{limit}} vagas de admin, contando os convites pendentes. Escolha uma função de aluno ou faça upgrade para adicionar mais admins."
+        },
+        "results": {
+          "status": {
+            "sent": "Enviado",
+            "resent": "Novo link enviado",
+            "email_failed": "Falha no e-mail",
+            "already_member": "Já é membro",
+            "member_updated": "Membro atualizado",
+            "member_update_failed": "Não atualizado",
+            "invalid_email": "Endereço inválido"
+          },
+          "count": {
+            "sent_one": "{{count}} enviado",
+            "sent_other": "{{count}} enviados",
+            "sent_many": "{{count}} enviados",
+            "resent_one": "{{count}} novo link",
+            "resent_other": "{{count}} novos links",
+            "resent_many": "{{count}} novos links",
+            "email_failed_one": "{{count}} falha",
+            "email_failed_other": "{{count}} falhas",
+            "email_failed_many": "{{count}} falhas",
+            "already_member_one": "{{count}} já é membro",
+            "already_member_other": "{{count}} já são membros",
+            "already_member_many": "{{count}} já são membros",
+            "member_updated_one": "{{count}} membro atualizado",
+            "member_updated_other": "{{count}} membros atualizados",
+            "member_updated_many": "{{count}} membros atualizados",
+            "member_update_failed_one": "{{count}} não atualizado",
+            "member_update_failed_other": "{{count}} não atualizados",
+            "member_update_failed_many": "{{count}} não atualizados",
+            "invalid_email_one": "{{count}} inválido",
+            "invalid_email_other": "{{count}} inválidos",
+            "invalid_email_many": "{{count}} inválidos"
+          }
+        },
+        "status": {
+          "pending": "Pendente",
+          "accepted": "Aceito",
+          "declined": "Recusado",
+          "revoked": "Revogado",
+          "expired": "Expirado"
+        },
+        "list": {
+          "title": "Convites",
+          "subtitle": "Todas as pessoas que você convidou, com a função e o acesso que vão receber",
+          "filter": "Filtrar por status",
+          "all": "Todos",
+          "person": "Pessoa",
+          "role": "Função",
+          "access": "Grupos e cursos",
+          "status": "Status",
+          "select_all": "Selecionar tudo",
+          "select": "Selecionar {{email}}",
+          "selected_one": "{{count}} selecionado",
+          "selected_other": "{{count}} selecionados",
+          "selected_many": "{{count}} selecionados",
+          "actions": "Ações para {{email}}",
+          "invited_by": "Convidado por {{name}} {{when}}",
+          "joined": "Entrou {{when}}",
+          "email_not_sent": "e-mail não entregue",
+          "groups_one": "{{count}} grupo",
+          "groups_other": "{{count}} grupos",
+          "groups_many": "{{count}} grupos",
+          "courses_one": "{{count}} curso",
+          "courses_other": "{{count}} cursos",
+          "courses_many": "{{count}} cursos",
+          "expires_in_one": "Expira em {{count}} dia",
+          "expires_in_other": "Expira em {{count}} dias",
+          "expires_in_many": "Expira em {{count}} dias",
+          "legacy": "Enviado antes de os convites incluírem uma função",
+          "empty_title": "Nenhum convite ainda",
+          "empty_description": "Convide pessoas por e-mail. Elas entram com a função, os grupos e os cursos que você escolher.",
+          "no_results": "Nenhum convite corresponde",
+          "clear_filter": "Mostrar todos",
+          "error": "Não foi possível carregar os convites"
+        },
+        "actions": {
+          "resend": "Reenviar",
+          "copy_link": "Copiar link do convite",
+          "edit": "Alterar função ou acesso",
+          "revoke": "Revogar",
+          "none": "Nenhuma ação"
+        },
+        "revoke": {
+          "title": "Revogar este convite?",
+          "message": "O link enviado para {{email}} vai parar de funcionar. Você pode convidar essa pessoa de novo depois.",
+          "bulk_title_one": "Revogar {{count}} convite?",
+          "bulk_title_other": "Revogar {{count}} convites?",
+          "bulk_title_many": "Revogar {{count}} convites?",
+          "bulk_message": "Os links vão parar de funcionar. Você pode convidar essas pessoas de novo depois."
+        },
+        "edit": {
+          "title": "Alterar convite",
+          "description": "Para {{email}}. Vale quando o convite for aceito.",
+          "keep_expiry": "Manter ({{date}})",
+          "extend_one": "{{count}} dia a partir de hoje",
+          "extend_other": "{{count}} dias a partir de hoje",
+          "extend_many": "{{count}} dias a partir de hoje",
+          "save": "Salvar alterações"
+        },
+        "toasts": {
+          "sent": "Convites enviados",
+          "some_failed_one": "Não foi possível enviar {{count}} e-mail. Copie o link do convite na lista.",
+          "some_failed_other": "Não foi possível enviar {{count}} e-mails. Copie os links dos convites na lista.",
+          "some_failed_many": "Não foi possível enviar {{count}} e-mails. Copie os links dos convites na lista.",
+          "error": "Algo deu errado. Tente novamente.",
+          "resent": "Novo convite enviado para {{email}}",
+          "email_failed": "Não foi possível enviar o e-mail. Copie o link do convite.",
+          "link_copied": "Link do convite copiado. O link do e-mail anterior não funciona mais.",
+          "revoked": "Convite revogado",
+          "updated": "Convite atualizado",
+          "bulk_resend_one": "{{count}} convite reenviado",
+          "bulk_resend_other": "{{count}} convites reenviados",
+          "bulk_resend_many": "{{count}} convites reenviados",
+          "bulk_revoke_one": "{{count}} convite revogado",
+          "bulk_revoke_other": "{{count}} convites revogados",
+          "bulk_revoke_many": "{{count}} convites revogados"
+        },
+        "codes": {
+          "description": "Um link ou código para muitas pessoas. Quem entrar com ele recebe as configurações abaixo.",
+          "role_hint": "Só funções de nível aluno",
+          "role_note": "Qualquer pessoa com o código pode usá-lo, então ele não pode conceder as funções admin, mantenedor, instrutor nem qualquer função que gerencie pessoas.",
+          "max_uses": "Usos máximos",
+          "max_uses_invalid": "Digite um número inteiro a partir de 1",
+          "unlimited": "Ilimitado",
+          "never": "Nunca",
+          "no_expiry": "Sem expiração",
+          "uses_one": "{{count}} uso",
+          "uses_other": "{{count}} usos",
+          "uses_many": "{{count}} usos",
+          "uses_of": "{{count}} / {{max}} usos",
+          "uses_title": "Vezes que este código foi usado para entrar"
+        },
+        "codes_card": {
+          "title": "Códigos de convite",
+          "description": "Compartilhe um link ou código com uma turma inteira. Defina a função, os grupos, os cursos, os usos e a expiração.",
+          "manage": "Gerenciar códigos de convite"
+        }
       }
     },
     "assignments": {
@@ -11936,7 +12194,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> editou as respostas de cadastro de <b>{{target}}</b>",
         "members__signup_backfilled": "<b>{{actor}}</b> copiou respostas de cadastro para os dados de pessoas",
         "security__support_access__started": "<b>{{actor}}</b> começou a personificar <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> parou de personificar <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> parou de personificar <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b> alterou o convite de <b>{{target}}</b>",
+        "members__invitation__resent": "<b>{{actor}}</b> reenviou o convite de <b>{{target}}</b>",
+        "members__invitation__link_copied": "<b>{{actor}}</b> copiou um novo link de convite para <b>{{target}}</b>",
+        "members__invitation__revoked": "<b>{{actor}}</b> revogou o convite de <b>{{target}}</b>",
+        "members__invitation__accepted": "<b>{{actor}}</b> aceitou o convite",
+        "members__invitation__declined": "<b>{{actor}}</b> recusou o convite",
+        "members__invitation__role_applied": "<b>{{actor}}</b> recebeu o papel definido no convite",
+        "members__invite_code__updated": "<b>{{actor}}</b> alterou um link de convite",
+        "members__invite_code__used": "<b>{{actor}}</b> entrou com um link de convite"
       },
       "export": {
         "generating": "Preparando a exportação…",
@@ -12100,7 +12367,8 @@
         "customers": "lista de clientes",
         "scim": "Provisionamento SCIM",
         "scim_token": "Token SCIM",
-        "training_rule": "treinamento obrigatório"
+        "training_rule": "treinamento obrigatório",
+        "invitation": "convite"
       }
     },
     "course_builder": {
@@ -29613,7 +29881,8 @@
       "trial_ending": "Teste terminando",
       "plan_downgraded": "Mudança para o Gratuito",
       "plan_restored": "Plano restaurado",
-      "payments_checkout_failing": "Falhas no checkout"
+      "payments_checkout_failing": "Falhas no checkout",
+      "invitation_accepted": "Convite aceito"
     },
     "copy": {
       "assignment_graded": "Corrigida: {{assignment}}",
@@ -29675,7 +29944,8 @@
       "trial_ending": "Seu teste do {{plan}} termina em {{days}} dias",
       "plan_downgraded": "Agora você está no Gratuito. Nada foi excluído",
       "plan_restored": "Boas-vindas de volta ao {{plan}}",
-      "payments_checkout_failing": "Os alunos não conseguem comprar agora ({{count}} checkouts com falha)"
+      "payments_checkout_failing": "Os alunos não conseguem comprar agora ({{count}} checkouts com falha)",
+      "invitation_accepted": "{{actor}} aceitou seu convite"
     },
     "routing": {
       "short": "Quem é avisado",
@@ -29831,7 +30101,9 @@
       "verify_title": "Verifique seu e-mail para ver seus convites",
       "verify_desc": "Os convites vão para um endereço de e-mail, então aparecem quando você confirma que ele é seu.",
       "verify_resend": "Reenviar o e-mail de verificação",
-      "verify_sent": "Enviado. Confira sua caixa de entrada."
+      "verify_sent": "Enviado. Confira sua caixa de entrada.",
+      "invited_as": "Convidou você como {{role}}",
+      "invited_as_by": "{{name}} convidou você como {{role}}"
     },
     "celebrate": {
       "title": "Seu primeiro curso está no ar",

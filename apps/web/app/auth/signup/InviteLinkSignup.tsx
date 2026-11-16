@@ -256,11 +256,36 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
     )
   }
 
+  const details = info.invitation
   const joiningAs = (
-    <div className="mt-6 flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3.5 py-2.5 ring-1 ring-inset ring-neutral-200/80 min-w-0">
-      <EnvelopeSimple size={16} className="shrink-0 text-neutral-400" aria-hidden="true" />
-      <span className="truncate text-sm text-neutral-800" data-testid="invite-email">{info.email}</span>
-    </div>
+    <>
+      <div className="mt-6 flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3.5 py-2.5 ring-1 ring-inset ring-neutral-200/80 min-w-0">
+        <EnvelopeSimple size={16} className="shrink-0 text-neutral-400" aria-hidden="true" />
+        <span className="truncate text-sm text-neutral-800" data-testid="invite-email">{info.email}</span>
+      </div>
+      {details && (details.role || details.message || details.courses.length > 0 || details.usergroups.length > 0) && (
+        <div className="mt-3 rounded-xl px-3.5 py-3 ring-1 ring-inset ring-neutral-200/80 text-[13px] leading-relaxed text-neutral-600" data-testid="invite-details">
+          {details.role && (
+            <p>
+              {details.invited_by
+                ? t('auth.invite_link.details.role_by', { name: details.invited_by, role: details.role.name })
+                : t('auth.invite_link.details.role', { role: details.role.name })}
+            </p>
+          )}
+          {details.message && (
+            <p className="mt-2 rounded-lg bg-neutral-50 px-3 py-2 italic text-neutral-700 whitespace-pre-line" dir="auto">
+              {details.message}
+            </p>
+          )}
+          {details.usergroups.length > 0 && (
+            <p className="mt-2">{t('auth.invite_link.details.groups', { names: details.usergroups.join(', ') })}</p>
+          )}
+          {details.courses.length > 0 && (
+            <p className="mt-1">{t('auth.invite_link.details.courses', { names: details.courses.join(', ') })}</p>
+          )}
+        </div>
+      )}
+    </>
   )
 
   if (phase === 'signin') {

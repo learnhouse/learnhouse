@@ -6,6 +6,10 @@ had an account, or who signed up on the platform's own page, had no way to
 accept: an invite-only org refuses a join without a code. These endpoints let
 the hub list the invitations addressed to the user's verified email and join
 the org in one click, so an invited person never has to create an org.
+
+Invitations are database records now (``org_invitation``): accepting one
+applies its role, groups and courses (``orgs.invitations.apply``). Redis
+invitations sent before that are still listed and honoured until they expire.
 """
 
 import json
@@ -82,14 +86,56 @@ def _require_verified(user: User) -> None:
         raise HTTPException(status_code=403, detail=VERIFY_FIRST)
 
 
+async def _db_pending(db_session: AsyncSession, email: str) -> dict[int, Any]:
+    """org_id → newest usable database invitation for ``email``."""
+    from src.db.org_invitations import InvitationStatus, OrgInvitation
+    from src.services.orgs.invitations.policy import normalize_email, utcnow
+
+    rows = (await db_session.execute(
+        select(OrgInvitation)
+        .where(
+            OrgInvitation.email == normalize_email(email),
+            OrgInvitation.status == InvitationStatus.PENDING.value,
+            OrgInvitation.expires_at > utcnow(),
+        )
+        .order_by(OrgInvitation.id)  # type: ignore[arg-type]
+    )).scalars().all()
+    return {inv.org_id: inv for inv in rows}
+
+
+async def _invite_details(db_session: AsyncSession, inv) -> dict:
+    from src.db.roles import Role
+    from src.services.orgs.invitations.policy import iso, role_for_grant
+
+    role: Optional[Role] = await role_for_grant(db_session, inv.org_id, inv.role_id)
+    inviter = await db_session.get(User, inv.invited_by_user_id) if inv.invited_by_user_id else None
+    inviter_name = None
+    if inviter is not None:
+        inviter_name = " ".join(p for p in (inviter.first_name, inviter.last_name) if p).strip() or inviter.username
+    return {
+        "invited_at": iso(inv.created_at),
+        "expires_at": iso(inv.expires_at),
+        "role": role.name if role else None,
+        "invited_by": inviter_name,
+        "message": inv.message,
+        "courses": len(inv.course_uuids or []),
+        "usergroups": len(inv.usergroup_ids or []),
+    }
+
+
 async def list_pending_invites(db_session: AsyncSession, user_id: int) -> list[dict]:
     user = await _user(db_session, user_id)
     if not user.email_verified:
         return []
+    db_invites = await _db_pending(db_session, user.email)
     records = _pending_records(user.email)
-    if not records:
+    if not records and not db_invites:
         return []
-    orgs = (await db_session.execute(select(Organization).where(Organization.org_uuid.in_(list(records))))).scalars().all()
+    orgs = (await db_session.execute(
+        select(Organization).where(
+            Organization.org_uuid.in_(list(records)) | Organization.id.in_(list(db_invites))  # type: ignore[attr-defined]
+        )
+    )).scalars().all()
     member_of = set((await db_session.execute(
         select(UserOrganization.org_id).where(UserOrganization.user_id == user_id)
     )).scalars().all())
@@ -97,15 +143,18 @@ async def list_pending_invites(db_session: AsyncSession, user_id: int) -> list[d
     for org in orgs:
         if org.id in member_of or org.is_demo:
             continue
-        rec = records[org.org_uuid]
-        out.append({
+        row = {
             "org_uuid": org.org_uuid,
             "org_id": org.id,
             "name": org.name,
             "slug": org.slug,
             "logo_image": org.logo_image,
-            "invited_at": rec.get("created_at"),
-        })
+        }
+        if org.id in db_invites:
+            row.update(await _invite_details(db_session, db_invites[org.id]))
+        else:
+            row["invited_at"] = records[org.org_uuid].get("created_at")
+        out.append(row)
     out.sort(key=lambda o: o["invited_at"] or "", reverse=True)
     return out
 
@@ -156,9 +205,15 @@ async def join_from_invite(request: Request, db_session: AsyncSession, user: Use
 
 
 async def accept_invite(request: Request, db_session: AsyncSession, user_id: int, org_uuid: str) -> dict:
+    from src.services.orgs.invitations.apply import accept_invitation, find_pending_invitation
+
     user = await _user(db_session, user_id)
     _require_verified(user)
     org = await _org_by_uuid(db_session, org_uuid)
+    inv = await find_pending_invitation(db_session, user.email, org.id)
+    if inv is not None and not org.is_demo:
+        joined = await accept_invitation(request, db_session, user, org, inv, via="email_invite")
+        return {"org_id": org.id, "slug": org.slug, "name": org.name, "role": joined["role"]}
     r = _redis()
     if r is None:
         raise HTTPException(status_code=503, detail="Could not check your invitation right now, please try again.")
@@ -189,10 +244,26 @@ async def accept_invite(request: Request, db_session: AsyncSession, user_id: int
     return {"org_id": org.id, "slug": org.slug, "name": org.name}
 
 
-async def decline_invite(db_session: AsyncSession, user_id: int, org_uuid: str) -> dict:
+async def decline_invite(db_session: AsyncSession, user_id: int, org_uuid: str, request: Optional[Request] = None) -> dict:
+    from src.core.ee_hooks import audit_event
+    from src.db.org_invitations import InvitationStatus
+    from src.services.orgs.invitations.apply import find_pending_invitation
+    from src.services.orgs.invitations.policy import utcnow
+
     user = await _user(db_session, user_id)
     _require_verified(user)
     org = await _org_by_uuid(db_session, org_uuid)
+    inv = await find_pending_invitation(db_session, user.email, org.id)
+    if inv is not None:
+        inv.status = InvitationStatus.DECLINED.value
+        inv.updated_at = utcnow()
+        db_session.add(inv)
+        await db_session.commit()
+        audit_event(
+            request, action="members.invitation.declined", org_id=org.id, actor=user,
+            target_type="invitation", target_id=inv.invitation_uuid, target_name=inv.email,
+        )
+        return {"org_id": org.id, "declined": True}
     r = _redis()
     if r is None:
         raise HTTPException(status_code=503, detail="Could not update your invitation right now, please try again.")

@@ -791,7 +791,13 @@
       "signup_title": "Tham gia {{org}}",
       "signup_desc": "Bạn đã được mời. Chọn mật khẩu là xong.",
       "choose_password": "Chọn mật khẩu",
-      "create_and_join": "Tham gia {{org}}"
+      "create_and_join": "Tham gia {{org}}",
+      "details": {
+        "role": "Bạn sẽ tham gia với vai trò {{role}}.",
+        "role_by": "{{name}} đã mời bạn tham gia với vai trò {{role}}.",
+        "groups": "Bạn sẽ được thêm vào: {{names}}",
+        "courses": "Bạn sẽ được ghi danh vào: {{names}}"
+      }
     },
     "login_failed_forgot": "Quên mật khẩu?",
     "login_failed_reset": "Đặt lại",
@@ -9345,6 +9351,226 @@
         "more": "Thao tác khác",
         "remove_filter": "Bỏ bộ lọc: {{name}}",
         "any": "Bất kỳ"
+      },
+      "invitations": {
+        "invite_people": "Mời mọi người",
+        "dialog": {
+          "title": "Mời mọi người",
+          "description": "Mỗi người nhận một liên kết riêng qua email. Khi họ tham gia, vai trò, nhóm và khóa học bên dưới sẽ được áp dụng tự động.",
+          "done_title": "Đã gửi lời mời",
+          "done_description": "Đây là kết quả với từng địa chỉ.",
+          "invite_more": "Mời thêm",
+          "send": "Gửi lời mời",
+          "send_count_one": "Gửi {{count}} lời mời",
+          "send_count_other": "Gửi {{count}} lời mời",
+          "update_count_one": "Cập nhật {{count}} thành viên",
+          "update_count_other": "Cập nhật {{count}} thành viên"
+        },
+        "fields": {
+          "emails": "Địa chỉ email",
+          "emails_hint": "Dán một hoặc nhiều địa chỉ, phân tách bằng dấu phẩy, dấu cách hoặc xuống dòng",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} địa chỉ",
+          "valid_count_other": "{{count}} địa chỉ",
+          "invalid_count_one": "{{count}} địa chỉ không hợp lệ",
+          "invalid_count_other": "{{count}} địa chỉ không hợp lệ",
+          "too_many": "Bạn có thể mời tối đa {{max}} người mỗi lần",
+          "update_existing_one": "Cập nhật cả {{count}} người đã là thành viên",
+          "update_existing_other": "Cập nhật cả {{count}} người đã là thành viên",
+          "update_existing_hint": "Vai trò của họ sẽ đổi thành vai trò bên dưới và họ được thêm vào các nhóm và khóa học. Để tắt nếu muốn bỏ qua họ.",
+          "role": "Vai trò",
+          "role_hint": "Những gì họ có thể làm sau khi tham gia",
+          "groups": "Thêm vào nhóm",
+          "groups_placeholder": "Chọn nhóm",
+          "no_groups": "Tổ chức này chưa có nhóm người dùng nào.",
+          "courses": "Ghi danh vào khóa học",
+          "courses_placeholder": "Chọn khóa học",
+          "no_courses": "Tổ chức này chưa có khóa học nào.",
+          "selected_count_one": "Đã chọn {{count}}",
+          "selected_count_other": "Đã chọn {{count}}",
+          "search": "Tìm kiếm",
+          "no_match": "Không có kết quả phù hợp.",
+          "draft": "Bản nháp",
+          "remove_item": "Bỏ {{name}}",
+          "message": "Lời nhắn riêng",
+          "message_placeholder": "Thêm một ghi chú ngắn vào email (không bắt buộc, không chứa liên kết)",
+          "expiry": "Hết hạn sau",
+          "days_one": "{{count}} ngày",
+          "days_other": "{{count}} ngày",
+          "expires_on": "Đến {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "Học viên",
+            "description": "Học các khóa học, tham gia cộng đồng và theo dõi tiến độ của bản thân. Không có quyền truy cập bảng điều khiển."
+          },
+          "instructor": {
+            "name": "Giảng viên",
+            "description": "Tạo và giảng dạy khóa học của riêng mình, chấm điểm học viên của mình. Chiếm một chỗ quản trị viên."
+          },
+          "maintainer": {
+            "name": "Người duy trì",
+            "description": "Quản lý mọi khóa học, thành viên và nhóm. Không thể thay đổi thanh toán hoặc cài đặt tổ chức."
+          },
+          "admin": {
+            "name": "Quản trị viên",
+            "description": "Toàn quyền với tổ chức, bao gồm cài đặt, thanh toán và các quản trị viên khác."
+          },
+          "custom_roles": "Vai trò tùy chỉnh",
+          "custom_description": "Một vai trò tùy chỉnh được định nghĩa cho tổ chức này.",
+          "admin_seat": "Chỗ quản trị viên",
+          "refusal_admin_only": "Chỉ quản trị viên mới có thể mời người với vai trò này.",
+          "refusal_above": "Vai trò này có những quyền mà vai trò của bạn không có.",
+          "refusal_code": "Mã mời không thể cấp vai trò quản lý người dùng hoặc có quyền vào bảng điều khiển."
+        },
+        "preview": {
+          "new_one": "{{count}} mới",
+          "new_other": "{{count}} mới",
+          "pending_one": "{{count}} người đã được mời, sẽ nhận liên kết mới",
+          "pending_other": "{{count}} người đã được mời, sẽ nhận liên kết mới",
+          "members_one": "{{count}} người đã là thành viên",
+          "members_other": "{{count}} người đã là thành viên"
+        },
+        "summary": {
+          "people_one": "{{count}} người sẽ tham gia với vai trò {{role}}",
+          "people_other": "{{count}} người sẽ tham gia với vai trò {{role}}",
+          "groups_one": "được thêm vào {{names}}",
+          "groups_other": "được thêm vào {{count}} nhóm ({{names}})",
+          "courses_one": "được ghi danh vào {{count}} khóa học",
+          "courses_other": "được ghi danh vào {{count}} khóa học",
+          "and": ", ",
+          "updated_one": "{{count}} thành viên hiện có cũng sẽ được cập nhật.",
+          "updated_other": "{{count}} thành viên hiện có cũng sẽ được cập nhật."
+        },
+        "capacity": {
+          "members": "Thành viên",
+          "admin_seats": "Chỗ quản trị viên",
+          "of": "{{count}} / {{limit}}",
+          "pending_note_one": "Bao gồm {{count}} lời mời đang chờ",
+          "pending_note_other": "Bao gồm {{count}} lời mời đang chờ",
+          "members_blocked": "Gói của bạn có {{limit}} thành viên, tính cả lời mời đang chờ. Hãy nâng cấp hoặc thu hồi bớt lời mời để mời thêm.",
+          "seats_blocked": "Gói của bạn có {{limit}} chỗ quản trị viên, tính cả lời mời đang chờ. Hãy chọn vai trò học viên, hoặc nâng cấp để thêm quản trị viên."
+        },
+        "results": {
+          "status": {
+            "sent": "Đã gửi",
+            "resent": "Đã gửi liên kết mới",
+            "email_failed": "Gửi email thất bại",
+            "already_member": "Đã là thành viên",
+            "member_updated": "Đã cập nhật thành viên",
+            "member_update_failed": "Chưa cập nhật",
+            "invalid_email": "Địa chỉ không hợp lệ"
+          },
+          "count": {
+            "sent_one": "Đã gửi {{count}}",
+            "sent_other": "Đã gửi {{count}}",
+            "resent_one": "{{count}} liên kết mới",
+            "resent_other": "{{count}} liên kết mới",
+            "email_failed_one": "{{count}} thất bại",
+            "email_failed_other": "{{count}} thất bại",
+            "already_member_one": "{{count}} đã là thành viên",
+            "already_member_other": "{{count}} đã là thành viên",
+            "member_updated_one": "Đã cập nhật {{count}} thành viên",
+            "member_updated_other": "Đã cập nhật {{count}} thành viên",
+            "member_update_failed_one": "{{count}} chưa cập nhật",
+            "member_update_failed_other": "{{count}} chưa cập nhật",
+            "invalid_email_one": "{{count}} không hợp lệ",
+            "invalid_email_other": "{{count}} không hợp lệ"
+          }
+        },
+        "status": {
+          "pending": "Đang chờ",
+          "accepted": "Đã chấp nhận",
+          "declined": "Đã từ chối",
+          "revoked": "Đã thu hồi",
+          "expired": "Hết hạn"
+        },
+        "list": {
+          "title": "Lời mời",
+          "subtitle": "Tất cả những người bạn đã mời, kèm vai trò và quyền truy cập họ sẽ nhận",
+          "filter": "Lọc theo trạng thái",
+          "all": "Tất cả",
+          "person": "Người",
+          "role": "Vai trò",
+          "access": "Nhóm và khóa học",
+          "status": "Trạng thái",
+          "select_all": "Chọn tất cả",
+          "select": "Chọn {{email}}",
+          "selected_one": "Đã chọn {{count}}",
+          "selected_other": "Đã chọn {{count}}",
+          "actions": "Thao tác cho {{email}}",
+          "invited_by": "{{name}} đã mời {{when}}",
+          "joined": "Đã tham gia {{when}}",
+          "email_not_sent": "email chưa được gửi tới",
+          "groups_one": "{{count}} nhóm",
+          "groups_other": "{{count}} nhóm",
+          "courses_one": "{{count}} khóa học",
+          "courses_other": "{{count}} khóa học",
+          "expires_in_one": "Hết hạn sau {{count}} ngày",
+          "expires_in_other": "Hết hạn sau {{count}} ngày",
+          "legacy": "Được gửi trước khi lời mời có kèm vai trò",
+          "empty_title": "Chưa có lời mời nào",
+          "empty_description": "Mời mọi người qua email. Họ sẽ tham gia với vai trò, nhóm và khóa học bạn chọn.",
+          "no_results": "Không có lời mời phù hợp",
+          "clear_filter": "Hiện tất cả",
+          "error": "Không thể tải lời mời"
+        },
+        "actions": {
+          "resend": "Gửi lại",
+          "copy_link": "Sao chép liên kết mời",
+          "edit": "Đổi vai trò hoặc quyền truy cập",
+          "revoke": "Thu hồi",
+          "none": "Không có thao tác"
+        },
+        "revoke": {
+          "title": "Thu hồi lời mời này?",
+          "message": "Liên kết đã gửi tới {{email}} sẽ không còn hoạt động. Bạn có thể mời lại họ sau.",
+          "bulk_title_one": "Thu hồi {{count}} lời mời?",
+          "bulk_title_other": "Thu hồi {{count}} lời mời?",
+          "bulk_message": "Liên kết của họ sẽ không còn hoạt động. Bạn có thể mời lại họ sau."
+        },
+        "edit": {
+          "title": "Thay đổi lời mời",
+          "description": "Cho {{email}}. Áp dụng khi họ chấp nhận.",
+          "keep_expiry": "Giữ nguyên ({{date}})",
+          "extend_one": "{{count}} ngày kể từ hôm nay",
+          "extend_other": "{{count}} ngày kể từ hôm nay",
+          "save": "Lưu thay đổi"
+        },
+        "toasts": {
+          "sent": "Đã gửi lời mời",
+          "some_failed_one": "Không thể gửi {{count}} email. Hãy sao chép liên kết mời trong danh sách.",
+          "some_failed_other": "Không thể gửi {{count}} email. Hãy sao chép các liên kết mời trong danh sách.",
+          "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
+          "resent": "Đã gửi lời mời mới tới {{email}}",
+          "email_failed": "Không thể gửi email. Hãy sao chép liên kết mời.",
+          "link_copied": "Đã sao chép liên kết mời. Liên kết trong email trước không còn hoạt động.",
+          "revoked": "Đã thu hồi lời mời",
+          "updated": "Đã cập nhật lời mời",
+          "bulk_resend_one": "Đã gửi lại {{count}} lời mời",
+          "bulk_resend_other": "Đã gửi lại {{count}} lời mời",
+          "bulk_revoke_one": "Đã thu hồi {{count}} lời mời",
+          "bulk_revoke_other": "Đã thu hồi {{count}} lời mời"
+        },
+        "codes": {
+          "description": "Một liên kết hoặc mã cho nhiều người. Ai tham gia bằng mã này đều nhận các thiết lập bên dưới.",
+          "role_hint": "Chỉ các vai trò cấp học viên",
+          "role_note": "Bất kỳ ai có mã đều có thể dùng, nên mã không thể cấp vai trò quản trị viên, người duy trì, giảng viên hay bất kỳ vai trò nào quản lý người dùng.",
+          "max_uses": "Số lần dùng tối đa",
+          "max_uses_invalid": "Nhập một số nguyên từ 1 trở lên",
+          "unlimited": "Không giới hạn",
+          "never": "Không bao giờ",
+          "no_expiry": "Không hết hạn",
+          "uses_one": "{{count}} lượt dùng",
+          "uses_other": "{{count}} lượt dùng",
+          "uses_of": "{{count}} / {{max}} lượt dùng",
+          "uses_title": "Số lần mã này được dùng để tham gia"
+        },
+        "codes_card": {
+          "title": "Mã mời",
+          "description": "Chia sẻ một liên kết hoặc mã với cả lớp. Đặt vai trò, nhóm, khóa học, số lượt dùng và thời hạn.",
+          "manage": "Quản lý mã mời"
+        }
       }
     },
     "assignments": {
@@ -11723,7 +11949,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> đã chỉnh sửa câu trả lời đăng ký của <b>{{target}}</b>",
         "members__signup_backfilled": "<b>{{actor}}</b> đã sao chép câu trả lời đăng ký vào dữ liệu nhân sự",
         "security__support_access__started": "<b>{{actor}}</b> đã bắt đầu đóng vai <b>{{target}}</b>",
-        "security__support_access__ended": "<b>{{actor}}</b> đã ngừng đóng vai <b>{{target}}</b>"
+        "security__support_access__ended": "<b>{{actor}}</b> đã ngừng đóng vai <b>{{target}}</b>",
+        "members__invitation__updated": "<b>{{actor}}</b> đã thay đổi lời mời dành cho <b>{{target}}</b>",
+        "members__invitation__resent": "<b>{{actor}}</b> đã gửi lại lời mời dành cho <b>{{target}}</b>",
+        "members__invitation__link_copied": "<b>{{actor}}</b> đã sao chép một liên kết mời mới cho <b>{{target}}</b>",
+        "members__invitation__revoked": "<b>{{actor}}</b> đã thu hồi lời mời dành cho <b>{{target}}</b>",
+        "members__invitation__accepted": "<b>{{actor}}</b> đã chấp nhận lời mời",
+        "members__invitation__declined": "<b>{{actor}}</b> đã từ chối lời mời",
+        "members__invitation__role_applied": "<b>{{actor}}</b> đã nhận vai trò từ lời mời",
+        "members__invite_code__updated": "<b>{{actor}}</b> đã thay đổi một liên kết mời",
+        "members__invite_code__used": "<b>{{actor}}</b> đã tham gia bằng một liên kết mời"
       },
       "export": {
         "generating": "Đang chuẩn bị bản xuất…",
@@ -11887,7 +12122,8 @@
         "customers": "danh sách khách hàng",
         "scim": "Cấp phát SCIM",
         "scim_token": "Token SCIM",
-        "training_rule": "đào tạo bắt buộc"
+        "training_rule": "đào tạo bắt buộc",
+        "invitation": "lời mời"
       }
     },
     "course_builder": {
@@ -28976,7 +29212,8 @@
       "trial_ending": "Sắp hết dùng thử",
       "plan_downgraded": "Đã chuyển sang Miễn phí",
       "plan_restored": "Đã khôi phục gói",
-      "payments_checkout_failing": "Thanh toán thất bại"
+      "payments_checkout_failing": "Thanh toán thất bại",
+      "invitation_accepted": "Lời mời đã được chấp nhận"
     },
     "copy": {
       "assignment_graded": "Đã chấm điểm: {{assignment}}",
@@ -29038,7 +29275,8 @@
       "trial_ending": "Thời gian dùng thử {{plan}} sẽ kết thúc sau {{days}} ngày",
       "plan_downgraded": "Bạn đang dùng gói Miễn phí. Không có gì bị xóa",
       "plan_restored": "Chào mừng bạn quay lại {{plan}}",
-      "payments_checkout_failing": "Học viên hiện không thể mua ({{count}} lượt thanh toán thất bại)"
+      "payments_checkout_failing": "Học viên hiện không thể mua ({{count}} lượt thanh toán thất bại)",
+      "invitation_accepted": "{{actor}} đã chấp nhận lời mời của bạn"
     },
     "routing": {
       "short": "Ai nhận thông báo",
@@ -29193,7 +29431,9 @@
       "verify_title": "Xác minh email để xem lời mời",
       "verify_desc": "Lời mời được gửi tới một địa chỉ email, nên sẽ hiện khi bạn xác nhận đó là email của bạn.",
       "verify_resend": "Gửi lại email xác minh",
-      "verify_sent": "Đã gửi. Hãy kiểm tra hộp thư."
+      "verify_sent": "Đã gửi. Hãy kiểm tra hộp thư.",
+      "invited_as": "Đã mời bạn với vai trò {{role}}",
+      "invited_as_by": "{{name}} đã mời bạn với vai trò {{role}}"
     },
     "celebrate": {
       "title": "Khóa học đầu tiên đã lên sóng",

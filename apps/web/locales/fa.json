@@ -792,7 +792,13 @@
       "signup_title": "به {{org}} بپیوندید",
       "signup_desc": "دعوت شده‌اید. یک رمز عبور انتخاب کنید و وارد شوید.",
       "choose_password": "یک رمز عبور انتخاب کنید",
-      "create_and_join": "پیوستن به {{org}}"
+      "create_and_join": "پیوستن به {{org}}",
+      "details": {
+        "role": "با نقش {{role}} می‌پیوندید.",
+        "role_by": "{{name}} شما را دعوت کرده تا با نقش {{role}} بپیوندید.",
+        "groups": "به این گروه‌ها افزوده می‌شوید: {{names}}",
+        "courses": "در این دوره‌ها ثبت‌نام می‌شوید: {{names}}"
+      }
     },
     "login_failed_forgot": "رمز عبور را فراموش کرده‌اید؟",
     "login_failed_reset": "بازنشانی",
@@ -9375,6 +9381,226 @@
         "more": "اقدامات بیشتر",
         "remove_filter": "حذف فیلتر: {{name}}",
         "any": "هر"
+      },
+      "invitations": {
+        "invite_people": "دعوت از افراد",
+        "dialog": {
+          "title": "دعوت از افراد",
+          "description": "هر نفر یک پیوند شخصی با ایمیل دریافت می‌کند. وقتی بپیوندد، نقش، گروه‌ها و دوره‌های زیر به‌طور خودکار اعمال می‌شوند.",
+          "done_title": "دعوت‌نامه‌ها ارسال شدند",
+          "done_description": "این است آنچه برای هر نشانی رخ داد.",
+          "invite_more": "دعوت بیشتر",
+          "send": "ارسال دعوت‌نامه‌ها",
+          "send_count_one": "ارسال {{count}} دعوت‌نامه",
+          "send_count_other": "ارسال {{count}} دعوت‌نامه",
+          "update_count_one": "به‌روزرسانی {{count}} عضو",
+          "update_count_other": "به‌روزرسانی {{count}} عضو"
+        },
+        "fields": {
+          "emails": "نشانی‌های ایمیل",
+          "emails_hint": "یک یا چند نشانی را بچسبانید و با ویرگول، فاصله یا خط جدید جدا کنید",
+          "emails_placeholder": "lea@school.org, sam@school.org",
+          "valid_count_one": "{{count}} نشانی",
+          "valid_count_other": "{{count}} نشانی",
+          "invalid_count_one": "{{count}} نشانی معتبر نیست",
+          "invalid_count_other": "{{count}} نشانی معتبر نیستند",
+          "too_many": "هر بار حداکثر می‌توانید {{max}} نفر را دعوت کنید",
+          "update_existing_one": "{{count}} نفری که از قبل عضو است هم به‌روزرسانی شود",
+          "update_existing_other": "{{count}} نفری که از قبل عضو هستند هم به‌روزرسانی شوند",
+          "update_existing_hint": "نقش آن‌ها به نقش زیر تغییر می‌کند و به گروه‌ها و دوره‌ها افزوده می‌شوند. برای رد کردن آن‌ها، این گزینه را خاموش بگذارید.",
+          "role": "نقش",
+          "role_hint": "پس از پیوستن چه کارهایی می‌توانند انجام دهند",
+          "groups": "افزودن به گروه‌ها",
+          "groups_placeholder": "انتخاب گروه‌ها",
+          "no_groups": "این سازمان هنوز گروه کاربری ندارد.",
+          "courses": "ثبت‌نام در دوره‌ها",
+          "courses_placeholder": "انتخاب دوره‌ها",
+          "no_courses": "این سازمان هنوز دوره‌ای ندارد.",
+          "selected_count_one": "{{count}} انتخاب‌شده",
+          "selected_count_other": "{{count}} انتخاب‌شده",
+          "search": "جستجو",
+          "no_match": "چیزی با جستجوی شما مطابقت ندارد.",
+          "draft": "پیش‌نویس",
+          "remove_item": "حذف {{name}}",
+          "message": "پیام شخصی",
+          "message_placeholder": "یک یادداشت کوتاه به ایمیل اضافه کنید (اختیاری، بدون پیوند)",
+          "expiry": "مدت اعتبار",
+          "days_one": "{{count}} روز",
+          "days_other": "{{count}} روز",
+          "expires_on": "تا {{date}}"
+        },
+        "roles": {
+          "user": {
+            "name": "یادگیرنده",
+            "description": "در دوره‌ها شرکت می‌کند، به انجمن‌ها می‌پیوندد و پیشرفت خود را دنبال می‌کند. به داشبورد دسترسی ندارد."
+          },
+          "instructor": {
+            "name": "مربی",
+            "description": "دوره‌های خودش را می‌سازد و تدریس می‌کند و به یادگیرندگانش نمره می‌دهد. یک صندلی مدیر را اشغال می‌کند."
+          },
+          "maintainer": {
+            "name": "نگهدارنده",
+            "description": "همه دوره‌ها، اعضا و گروه‌ها را مدیریت می‌کند. نمی‌تواند صورت‌حساب یا تنظیمات سازمان را تغییر دهد."
+          },
+          "admin": {
+            "name": "مدیر",
+            "description": "کنترل کامل سازمان، از جمله تنظیمات، صورت‌حساب و دیگر مدیران."
+          },
+          "custom_roles": "نقش‌های سفارشی",
+          "custom_description": "نقشی سفارشی که برای این سازمان تعریف شده است.",
+          "admin_seat": "صندلی مدیر",
+          "refusal_admin_only": "فقط مدیران می‌توانند افراد را با این نقش دعوت کنند.",
+          "refusal_above": "این نقش دسترسی‌هایی دارد که نقش شما ندارد.",
+          "refusal_code": "کدهای دعوت نمی‌توانند نقشی بدهند که افراد را مدیریت می‌کند یا داشبورد را باز می‌کند."
+        },
+        "preview": {
+          "new_one": "{{count}} جدید",
+          "new_other": "{{count}} جدید",
+          "pending_one": "{{count}} نفر قبلاً دعوت شده و پیوند تازه می‌گیرد",
+          "pending_other": "{{count}} نفر قبلاً دعوت شده‌اند و پیوند تازه می‌گیرند",
+          "members_one": "{{count}} نفر از قبل عضو است",
+          "members_other": "{{count}} نفر از قبل عضو هستند"
+        },
+        "summary": {
+          "people_one": "{{count}} نفر با نقش {{role}} می‌پیوندد",
+          "people_other": "{{count}} نفر با نقش {{role}} می‌پیوندند",
+          "groups_one": "به {{names}} افزوده می‌شوند",
+          "groups_other": "به {{count}} گروه افزوده می‌شوند ({{names}})",
+          "courses_one": "در {{count}} دوره ثبت‌نام می‌شوند",
+          "courses_other": "در {{count}} دوره ثبت‌نام می‌شوند",
+          "and": "، ",
+          "updated_one": "{{count}} عضو فعلی هم به‌روزرسانی می‌شود.",
+          "updated_other": "{{count}} عضو فعلی هم به‌روزرسانی می‌شوند."
+        },
+        "capacity": {
+          "members": "اعضا",
+          "admin_seats": "صندلی‌های مدیر",
+          "of": "{{count}} از {{limit}}",
+          "pending_note_one": "شامل {{count}} دعوت‌نامه در انتظار",
+          "pending_note_other": "شامل {{count}} دعوت‌نامه در انتظار",
+          "members_blocked": "طرح شما با احتساب دعوت‌نامه‌های در انتظار شامل {{limit}} عضو است. برای دعوت بیشتر، طرح را ارتقا دهید یا برخی دعوت‌نامه‌ها را لغو کنید.",
+          "seats_blocked": "طرح شما با احتساب دعوت‌نامه‌های در انتظار شامل {{limit}} صندلی مدیر است. یک نقش یادگیرنده انتخاب کنید یا برای افزودن مدیران بیشتر، طرح را ارتقا دهید."
+        },
+        "results": {
+          "status": {
+            "sent": "ارسال شد",
+            "resent": "پیوند تازه ارسال شد",
+            "email_failed": "ایمیل ناموفق بود",
+            "already_member": "از قبل عضو است",
+            "member_updated": "عضو به‌روزرسانی شد",
+            "member_update_failed": "به‌روزرسانی نشد",
+            "invalid_email": "نشانی نامعتبر"
+          },
+          "count": {
+            "sent_one": "{{count}} ارسال شد",
+            "sent_other": "{{count}} ارسال شد",
+            "resent_one": "{{count}} پیوند تازه",
+            "resent_other": "{{count}} پیوند تازه",
+            "email_failed_one": "{{count}} ناموفق",
+            "email_failed_other": "{{count}} ناموفق",
+            "already_member_one": "{{count}} نفر از قبل عضو",
+            "already_member_other": "{{count}} نفر از قبل عضو",
+            "member_updated_one": "{{count}} عضو به‌روزرسانی شد",
+            "member_updated_other": "{{count}} عضو به‌روزرسانی شدند",
+            "member_update_failed_one": "{{count}} به‌روزرسانی نشد",
+            "member_update_failed_other": "{{count}} به‌روزرسانی نشدند",
+            "invalid_email_one": "{{count}} نامعتبر",
+            "invalid_email_other": "{{count}} نامعتبر"
+          }
+        },
+        "status": {
+          "pending": "در انتظار",
+          "accepted": "پذیرفته شد",
+          "declined": "رد شد",
+          "revoked": "لغو شد",
+          "expired": "منقضی‌شده"
+        },
+        "list": {
+          "title": "دعوت‌نامه‌ها",
+          "subtitle": "همه کسانی که دعوت کرده‌اید، همراه با نقش و دسترسی‌ای که خواهند داشت",
+          "filter": "فیلتر بر اساس وضعیت",
+          "all": "همه",
+          "person": "فرد",
+          "role": "نقش",
+          "access": "گروه‌ها و دوره‌ها",
+          "status": "وضعیت",
+          "select_all": "انتخاب همه",
+          "select": "انتخاب {{email}}",
+          "selected_one": "{{count}} انتخاب‌شده",
+          "selected_other": "{{count}} انتخاب‌شده",
+          "actions": "اقدامات برای {{email}}",
+          "invited_by": "دعوت‌شده توسط {{name}}، {{when}}",
+          "joined": "پیوست، {{when}}",
+          "email_not_sent": "ایمیل تحویل نشد",
+          "groups_one": "{{count}} گروه",
+          "groups_other": "{{count}} گروه",
+          "courses_one": "{{count}} دوره",
+          "courses_other": "{{count}} دوره",
+          "expires_in_one": "{{count}} روز دیگر منقضی می‌شود",
+          "expires_in_other": "{{count}} روز دیگر منقضی می‌شود",
+          "legacy": "پیش از آنکه دعوت‌نامه‌ها نقش داشته باشند ارسال شده",
+          "empty_title": "هنوز دعوت‌نامه‌ای نیست",
+          "empty_description": "افراد را با ایمیل دعوت کنید. آن‌ها با نقش، گروه‌ها و دوره‌هایی که انتخاب می‌کنید می‌پیوندند.",
+          "no_results": "هیچ دعوت‌نامه‌ای مطابقت ندارد",
+          "clear_filter": "نمایش همه",
+          "error": "بارگیری دعوت‌نامه‌ها ممکن نشد"
+        },
+        "actions": {
+          "resend": "ارسال دوباره",
+          "copy_link": "کپی پیوند دعوت",
+          "edit": "تغییر نقش یا دسترسی",
+          "revoke": "لغو",
+          "none": "اقدامی موجود نیست"
+        },
+        "revoke": {
+          "title": "این دعوت‌نامه لغو شود؟",
+          "message": "پیوندی که به {{email}} فرستاده شده دیگر کار نمی‌کند. بعداً می‌توانید دوباره دعوتش کنید.",
+          "bulk_title_one": "{{count}} دعوت‌نامه لغو شود؟",
+          "bulk_title_other": "{{count}} دعوت‌نامه لغو شوند؟",
+          "bulk_message": "پیوندهایشان دیگر کار نمی‌کند. بعداً می‌توانید دوباره دعوتشان کنید."
+        },
+        "edit": {
+          "title": "تغییر دعوت‌نامه",
+          "description": "برای {{email}}. هنگام پذیرفتن اعمال می‌شود.",
+          "keep_expiry": "حفظ ({{date}})",
+          "extend_one": "{{count}} روز از اکنون",
+          "extend_other": "{{count}} روز از اکنون",
+          "save": "ذخیره تغییرات"
+        },
+        "toasts": {
+          "sent": "دعوت‌نامه‌ها ارسال شدند",
+          "some_failed_one": "{{count}} ایمیل ارسال نشد. به‌جای آن پیوند دعوت را از فهرست کپی کنید.",
+          "some_failed_other": "{{count}} ایمیل ارسال نشد. به‌جای آن پیوندهای دعوت را از فهرست کپی کنید.",
+          "error": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید.",
+          "resent": "دعوت‌نامه تازه به {{email}} ارسال شد",
+          "email_failed": "ایمیل ارسال نشد. به‌جای آن پیوند دعوت را کپی کنید.",
+          "link_copied": "پیوند دعوت کپی شد. پیوند ایمیل قبلی دیگر کار نمی‌کند.",
+          "revoked": "دعوت‌نامه لغو شد",
+          "updated": "دعوت‌نامه به‌روزرسانی شد",
+          "bulk_resend_one": "{{count}} دعوت‌نامه دوباره ارسال شد",
+          "bulk_resend_other": "{{count}} دعوت‌نامه دوباره ارسال شد",
+          "bulk_revoke_one": "{{count}} دعوت‌نامه لغو شد",
+          "bulk_revoke_other": "{{count}} دعوت‌نامه لغو شد"
+        },
+        "codes": {
+          "description": "یک پیوند یا کد برای افراد زیاد. هر کس با آن بپیوندد تنظیمات زیر را می‌گیرد.",
+          "role_hint": "فقط نقش‌های در سطح یادگیرنده",
+          "role_note": "هر کسی که کد را داشته باشد می‌تواند از آن استفاده کند، پس این کد نمی‌تواند نقش مدیر، نگهدارنده، مربی یا هر نقشی که افراد را مدیریت می‌کند بدهد.",
+          "max_uses": "حداکثر دفعات استفاده",
+          "max_uses_invalid": "یک عدد صحیح از ۱ به بالا وارد کنید",
+          "unlimited": "نامحدود",
+          "never": "هرگز",
+          "no_expiry": "بدون انقضا",
+          "uses_one": "{{count}} بار استفاده",
+          "uses_other": "{{count}} بار استفاده",
+          "uses_of": "{{count}} / {{max}} بار استفاده",
+          "uses_title": "تعداد دفعاتی که با این کد پیوسته‌اند"
+        },
+        "codes_card": {
+          "title": "کدهای دعوت",
+          "description": "یک پیوند یا کد را با کل یک کلاس به اشتراک بگذارید. نقش، گروه‌ها، دوره‌ها، دفعات استفاده و انقضای آن را تعیین کنید.",
+          "manage": "مدیریت کدهای دعوت"
+        }
       }
     },
     "assignments": {
@@ -11757,7 +11983,16 @@
         "members__signup_answers_updated": "<b>{{actor}}</b> پاسخ‌های ثبت‌نام <b>{{target}}</b> را ویرایش کرد",
         "members__signup_backfilled": "<b>{{actor}}</b> پاسخ‌های ثبت‌نام را در اطلاعات افراد کپی کرد",
         "security__support_access__started": "<b>{{actor}}</b> جعل هویت <b>{{target}}</b> را آغاز کرد",
-        "security__support_access__ended": "<b>{{actor}}</b> جعل هویت <b>{{target}}</b> را متوقف کرد"
+        "security__support_access__ended": "<b>{{actor}}</b> جعل هویت <b>{{target}}</b> را متوقف کرد",
+        "members__invitation__updated": "<b>{{actor}}</b> دعوت <b>{{target}}</b> را تغییر داد",
+        "members__invitation__resent": "<b>{{actor}}</b> دعوت <b>{{target}}</b> را دوباره فرستاد",
+        "members__invitation__link_copied": "<b>{{actor}}</b> یک پیوند دعوت جدید برای <b>{{target}}</b> کپی کرد",
+        "members__invitation__revoked": "<b>{{actor}}</b> دعوت <b>{{target}}</b> را باطل کرد",
+        "members__invitation__accepted": "<b>{{actor}}</b> دعوت خود را پذیرفت",
+        "members__invitation__declined": "<b>{{actor}}</b> دعوت خود را رد کرد",
+        "members__invitation__role_applied": "<b>{{actor}}</b> نقش را از دعوت خود دریافت کرد",
+        "members__invite_code__updated": "<b>{{actor}}</b> یک پیوند دعوت را تغییر داد",
+        "members__invite_code__used": "<b>{{actor}}</b> با یک پیوند دعوت پیوست"
       },
       "export": {
         "generating": "در حال آماده‌سازی خروجی…",
@@ -11921,7 +12156,8 @@
         "customers": "فهرست مشتریان",
         "scim": "تأمین خودکار SCIM",
         "scim_token": "توکن SCIM",
-        "training_rule": "آموزش اجباری"
+        "training_rule": "آموزش اجباری",
+        "invitation": "دعوت‌نامه"
       }
     },
     "course_builder": {
@@ -29019,7 +29255,8 @@
       "trial_ending": "پایان دورهٔ آزمایشی",
       "plan_downgraded": "انتقال به طرح رایگان",
       "plan_restored": "طرح بازگردانده شد",
-      "payments_checkout_failing": "خطا در پرداخت"
+      "payments_checkout_failing": "خطا در پرداخت",
+      "invitation_accepted": "دعوت‌نامه پذیرفته شد"
     },
     "copy": {
       "assignment_graded": "نمره‌دهی شد: {{assignment}}",
@@ -29081,7 +29318,8 @@
       "trial_ending": "دورهٔ آزمایشی {{plan}} شما {{days}} روز دیگر تمام می‌شود",
       "plan_downgraded": "اکنون روی طرح رایگان هستید. چیزی حذف نشد",
       "plan_restored": "به {{plan}} خوش برگشتید",
-      "payments_checkout_failing": "یادگیرندگان فعلاً نمی‌توانند خرید کنند ({{count}} پرداخت ناموفق)"
+      "payments_checkout_failing": "یادگیرندگان فعلاً نمی‌توانند خرید کنند ({{count}} پرداخت ناموفق)",
+      "invitation_accepted": "{{actor}} دعوت شما را پذیرفت"
     },
     "routing": {
       "short": "چه کسانی مطلع می‌شوند",
@@ -29237,7 +29475,9 @@
       "verify_title": "برای دیدن دعوت‌ها ایمیلتان را تأیید کنید",
       "verify_desc": "دعوت‌ها به یک نشانی ایمیل فرستاده می‌شوند، پس وقتی تأیید کنید مال شماست نمایش داده می‌شوند.",
       "verify_resend": "ارسال دوباره ایمیل تأیید",
-      "verify_sent": "ارسال شد. صندوق ورودی را ببینید."
+      "verify_sent": "ارسال شد. صندوق ورودی را ببینید.",
+      "invited_as": "شما را با نقش {{role}} دعوت کرده است",
+      "invited_as_by": "{{name}} شما را با نقش {{role}} دعوت کرده است"
     },
     "celebrate": {
       "title": "اولین دوره‌تان منتشر شد",
