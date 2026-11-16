@@ -162,7 +162,9 @@ export function sanitizeActivityAwareness<C extends ActivityPresenceConnection>(
     const clean: Record<string, any> = { user: { ...user } }
     const cursor = sanitizeCursor(state?.cursor)
     if (cursor) clean.cursor = cursor
-    const pointer = connection.readOnly ? null : sanitizePointer(state?.pointer)
+    // A pointer is presence, not an edit: viewers and read-only sessions
+    // show theirs too. Only editors get a block outline.
+    const pointer = sanitizePointer(state?.pointer)
     if (pointer) clean.pointer = pointer
     // The block an editor has selected or is editing inside: {b: index}
     const block = state?.block

@@ -84,7 +84,7 @@ describe('activity presence', () => {
     assert.equal(reclaimed.get(5)!.user.name, 'Bob')
   })
 
-  it('keeps a well-formed mouse pointer from editors only', () => {
+  it('keeps a well-formed mouse pointer, and block outlines from editors only', () => {
     const states = new Map<number, Record<string, any>>([[1, { pointer: { b: 3, x: 0.5, y: 0.25, extra: 'x'.repeat(500) } }]])
     sanitizeActivityAwareness(ada, states, new Set(), new Map(), [ada])
     assert.deepEqual(states.get(1)!.pointer, { b: 3, x: 0.5, y: 0.25 })
@@ -105,7 +105,8 @@ describe('activity presence', () => {
     const fromViewer = new Map<number, Record<string, any>>([[2, { pointer: { b: 0, x: 0.1, y: 0.1 } }]])
     fromViewer.get(2)!.block = { b: 1 }
     sanitizeActivityAwareness(viewer, fromViewer, new Set(), new Map(), [viewer])
-    assert.equal('pointer' in fromViewer.get(2)!, false)
+    // A pointer is presence, not an edit: viewers keep theirs.
+    assert.deepEqual(fromViewer.get(2)!.pointer, { b: 0, x: 0.1, y: 0.1 })
     assert.equal('block' in fromViewer.get(2)!, false)
 
     for (const pointer of [

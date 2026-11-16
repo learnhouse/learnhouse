@@ -76,7 +76,7 @@ describe("pointer anchoring", () => {
     }
   });
 
-  test("lists other people's pointers, never my own tabs", () => {
+  test("lists every other tab's pointer, never this tab's", () => {
     const states = new Map([
       [1, { user: { id: 7, name: "Me", color: "#111111" }, pointer: { b: 0, x: 0.1, y: 0.1 } }],
       [2, { user: { id: 7, name: "Me (tab 2)", color: "#111111" }, pointer: { b: 0, x: 0.2, y: 0.2 } }],
@@ -86,9 +86,10 @@ describe("pointer anchoring", () => {
       [7, { pointer: { b: 0, x: 0, y: 0 } }],
     ]);
     const list = remotePointers(states, 1, 7);
-    expect(list.map((p) => p.clientId)).toEqual([4, 5]);
-    expect(list[0].color).toBe("#64748b"); // unsafe colour replaced
-    expect(list[1]).toEqual({ clientId: 5, userId: 9, name: "Bo", color: "#22aa33", pointer: { b: 1, x: 0.3, y: 0.3 } });
+    // My other tab counts as its own presence; only this client is skipped.
+    expect(list.map((p) => p.clientId)).toEqual([2, 4, 5]);
+    expect(list[1].color).toBe("#64748b"); // unsafe colour replaced
+    expect(list[2]).toEqual({ clientId: 5, userId: 9, name: "Bo", color: "#22aa33", pointer: { b: 1, x: 0.3, y: 0.3 } });
   });
 });
 

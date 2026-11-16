@@ -157,12 +157,14 @@ export interface RemoteBlock {
 }
 
 /** Blocks other people have selected or are editing (my own tabs left out). */
-export function remoteBlocks(states: Map<number, Record<string, any>>, selfClientId: number, selfUserId: number): RemoteBlock[] {
+// Each tab is its own presence (another tab of the same person shows too),
+// so only this very client is skipped.
+export function remoteBlocks(states: Map<number, Record<string, any>>, selfClientId: number, _selfUserId?: number): RemoteBlock[] {
   const out: RemoteBlock[] = []
   for (const [clientId, state] of states) {
     if (clientId === selfClientId) continue
     const user = state?.user
-    if (!user || typeof user.id !== 'number' || user.id <= 0 || user.id === selfUserId) continue
+    if (!user || typeof user.id !== 'number' || user.id <= 0) continue
     const block = parseBlockFocus(state.block)
     if (!block) continue
     out.push({
@@ -193,13 +195,13 @@ export interface RemotePointer {
 export function remotePointers(
   states: Map<number, Record<string, any>>,
   selfClientId: number,
-  selfUserId: number,
+  _selfUserId?: number,
 ): RemotePointer[] {
   const out: RemotePointer[] = []
   for (const [clientId, state] of states) {
     if (clientId === selfClientId) continue
     const user = state?.user
-    if (!user || typeof user.id !== 'number' || user.id <= 0 || user.id === selfUserId) continue
+    if (!user || typeof user.id !== 'number' || user.id <= 0) continue
     const pointer = parsePointer(state.pointer)
     if (!pointer) continue
     out.push({

@@ -214,7 +214,7 @@ export default function RemotePointers({
 
     const publish = () => {
       frame = 0
-      if (!point || editor.isDestroyed || document.visibilityState === 'hidden' || session.getSnapshot().readOnly) return
+      if (!point || editor.isDestroyed || document.visibilityState === 'hidden') return
       const hit = anchorAt(view, point)
       if (!hit || !movedEnough(sent, hit.anchor, hit.contentWidth, hit.blockHeight)) return
       sent = hit.anchor
