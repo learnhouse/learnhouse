@@ -799,7 +799,7 @@ function DashLeftMenu() {
                     <HoverMenuItem asChild>
                       <Link href="/dash/analytics" className={MENU_ITEM_CLASS}>
                         <ChartLine size={16} weight="duotone" />
-                        <span className="flex items-center">{t('analytics.tabs.advanced')}<PlanBadge currentPlan={plan} requiredPlan="enterprise" variant="dark" /></span>
+                        <span className="flex items-center">{t('analytics.tabs.advanced')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
                       </Link>
                     </HoverMenuItem>
                   </HoverMenuContent>

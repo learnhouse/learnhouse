@@ -26,6 +26,10 @@ import { planName, featureLabel } from '../../_billing/planText'
 
 type SwitchView = 'choose-plan' | 'confirm' | 'success'
 
+/** Enterprise is sold by talking to us: it has no self-serve price, so it can
+ *  never be checked out from the Confirm step. */
+const isSelfServe = (planId: string | null | undefined) => !!planId && planId !== 'enterprise'
+
 interface SwitchWizardProps {
   org: any
   currentPlanId: string
@@ -66,6 +70,7 @@ export default function SwitchWizard({
     currentIsPersonal ? 'personal' : 'general',
   )
   const [loading, setLoading] = useState(false)
+  const [showEnterprise, setShowEnterprise] = useState(false)
   const [promoCode, setPromoCode] = useState('')
   const [promoStatus, setPromoStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle')
   const [promoDetail, setPromoDetail] = useState<{ percentOff?: number; amountOff?: number; currency?: string } | null>(null)
@@ -76,6 +81,11 @@ export default function SwitchWizard({
   useEffect(() => {
     if (!initialPlanId || initialPlanId === currentPlanId) return
     if (!findPlan(initialPlanId)) return
+    if (!isSelfServe(initialPlanId)) {
+      // Stay on the plan grid and show the Enterprise "talk to us" card.
+      setShowEnterprise(true)
+      return
+    }
     setSelectedPlan(initialPlanId as PlanId)
     if (isPersonalPlan(initialPlanId)) setPlanType('personal')
     setView('confirm')
@@ -110,14 +120,14 @@ export default function SwitchWizard({
   }
 
   function handlePlanSelect(planId: string, planBilling: Billing) {
-    if (planId === currentPlanId) return
+    if (planId === currentPlanId || !isSelfServe(planId)) return
     setSelectedPlan(planId as PlanId)
     setBilling(planBilling)
     setView('confirm')
   }
 
   async function handleConfirm() {
-    if (!selectedPlan || !org?.id) return
+    if (!selectedPlan || !org?.id || !isSelfServe(selectedPlan)) return
     setLoading(true)
     try {
       const validPromo = promoStatus === 'valid' ? promoCode.trim() : undefined
@@ -212,7 +222,7 @@ export default function SwitchWizard({
       {view === 'choose-plan' && (
         <div className="max-w-5xl mx-auto">
           <PricingGrid
-            showEnterprise={false}
+            showEnterprise={showEnterprise}
             planType={planType}
             onPlanTypeChange={setPlanType}
             annual={billing === 'annual'}
@@ -251,7 +261,7 @@ export default function SwitchWizard({
       )}
 
       {/* Confirm View */}
-      {view === 'confirm' && selectedPlanData && (
+      {view === 'confirm' && selectedPlanData && isSelfServe(selectedPlan) && (
         <div className="max-w-md mx-auto space-y-5">
           <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
             <div className="px-6 py-5 border-b border-black/[0.06]">

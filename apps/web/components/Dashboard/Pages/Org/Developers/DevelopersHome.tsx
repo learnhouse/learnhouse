@@ -192,7 +192,7 @@ export default function DevelopersHome() {
             description: t('dashboard.developers.home.steps.sso.description'),
             href: `${base}/sso`,
             state: stateFor(sso, ssoQ, !!ssoQ.data?.enabled),
-            requiredPlan: sso.reason === 'plan' ? ('enterprise' as PlanLevel) : undefined,
+            requiredPlan: sso.reason === 'plan' ? ('business' as PlanLevel) : undefined,
           },
         ]
       : []),
