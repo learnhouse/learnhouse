@@ -806,6 +806,7 @@ async def _apply_oauth_invites(
     user_id: int,
     org_id: int,
     code_data: Optional[dict],
+    google_verified_email: Optional[str] = None,
 ) -> None:
     """After a Google sign-in into ``org_id``: accept the pending invitation
     for the account's address (its role, groups and courses), or apply the
@@ -831,7 +832,9 @@ async def _apply_oauth_invites(
             return
         inv = await find_pending_invitation(db_session, user.email, org_id)
         if inv is not None:
-            await accept_invitation(request, db_session, user, org, inv, via="google_invite")
+            # Google vouching for this exact address proves ownership.
+            proven = bool(google_verified_email) and (user.email or "").strip().lower() == google_verified_email
+            await accept_invitation(request, db_session, user, org, inv, via="google_invite", ownership_proven=proven)
         elif code_data:
             await apply_invite_code(request, db_session, user, org, code_data)
     except Exception:
@@ -886,6 +889,8 @@ async def third_party_login(
     _consume_invite_key = None
     # Whether the account already belonged to the org before this sign-in.
     _was_member = False
+    # The address Google vouched for, when this is a Google sign-in.
+    _google_verified_email: Optional[str] = None
 
     # Validate org_id before passing it downstream. The rule must mirror the
     # email/password signup endpoints, otherwise the same person gets a
@@ -944,6 +949,7 @@ async def third_party_login(
                         detail="Google did not return a verified email for this account",
                     )
                 _invite_email = _verified_email.strip().lower()
+                _google_verified_email = _invite_email
             else:
                 _invite_email = body.email.strip().lower()
 
@@ -1074,6 +1080,7 @@ async def third_party_login(
         await _apply_oauth_invites(
             request, db_session, user.id, org_id,
             None if _was_member else _invite_code_data,
+            google_verified_email=_google_verified_email,
         )
 
     if _consume_invite_key:

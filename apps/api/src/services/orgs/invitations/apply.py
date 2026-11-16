@@ -205,6 +205,7 @@ async def accept_invitation(
     inv: OrgInvitation,
     *,
     via: str,
+    ownership_proven: bool = False,
 ) -> dict:
     """Claim ``inv`` for ``user`` and apply it: membership (created or moved to
     the chosen role), groups and courses, in one commit.
@@ -221,6 +222,11 @@ async def accept_invitation(
     from src.services.orgs.join_notifications import notify_user_joined_org
 
     if inv.org_id != org.id or normalize_email(user.email) != inv.email:
+        raise HTTPException(status_code=404, detail=INVALID_INVITATION)
+    # Matching the address is not proof of owning it: anyone can sign up with
+    # an invited address. Only a verified address or the personal link (its
+    # token was mailed to that address) proves it.
+    if not ownership_proven and not getattr(user, "email_verified", False):
         raise HTTPException(status_code=404, detail=INVALID_INVITATION)
 
     membership = (await db_session.execute(

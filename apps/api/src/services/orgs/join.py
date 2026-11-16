@@ -196,7 +196,8 @@ async def _apply_open_join_invites(request: Request, db_session: AsyncSession, u
     code the person came through does."""
     from src.services.orgs.invitations.apply import accept_invitation, apply_invite_code, find_pending_invitation
 
-    inv = await find_pending_invitation(db_session, user.email, org.id)
+    # Only a verified address claims an invitation sent to it.
+    inv = await find_pending_invitation(db_session, user.email, org.id) if user.email_verified else None
     if inv is not None:
         try:
             await accept_invitation(request, db_session, user, org, inv, via="open_join")

@@ -434,14 +434,18 @@ async def test_accept_for_an_existing_member(world, mock_request, db):
     db.add(UserGroupUser(usergroup_id=1, user_id=regular.id, org_id=world.org.id, creation_date=NOW, update_date=NOW))
     db.add(TrailRun(trail_id=0, course_id=world.course.id, org_id=world.org.id, user_id=regular.id, creation_date=NOW, update_date=NOW))
     await db.commit()
-    out = await apply.accept_invitation(mock_request, db, regular, world.org, await _row(db, "regular@test.com"), via="email_invite")
+    out = await apply.accept_invitation(
+        mock_request, db, regular, world.org, await _row(db, "regular@test.com"), via="email_invite", ownership_proven=True
+    )
     assert out["already_member"] is True and out["role"] == "Learner Plus" and out["usergroups"] == 0 and out["courses"] == 0
     assert (await _membership(db, regular.id, world.org.id)).role_id == 9
     assert (await db.execute(select(Notification).where(Notification.type == "invitation_accepted"))).scalars().first() is None
 
     # An Admin is never demoted by an invitation.
     admin = await db.get(User, world.admin.id)
-    out = await apply.accept_invitation(mock_request, db, admin, world.org, await _row(db, "admin@test.com"), via="email_invite")
+    out = await apply.accept_invitation(
+        mock_request, db, admin, world.org, await _row(db, "admin@test.com"), via="email_invite", ownership_proven=True
+    )
     assert out["role"] is None and (await _membership(db, admin.id, world.org.id)).role_id == 1
 
 
@@ -728,3 +732,23 @@ async def test_capacity_without_a_config_row(world, mock_request, db, other_org)
         cap = await policy.capacity(db, other_org.id)
     assert cap["plan"] is None and cap["members"]["limit"] is None
     assert policy.capacity_refusal(cap, 5, 5) is None
+
+
+async def test_an_unproven_address_cannot_claim_an_invitation(world, mock_request, db):
+    # Signing up with an invited address proves nothing until it's verified.
+    db.add(OrgInvitation(
+        invitation_uuid="invitation_unverified", org_id=world.org.id, email="regular@test.com", role_id=4,
+        invited_by_user_id=world.admin.id, expires_at=policy.utcnow() + timedelta(days=1),
+        created_at=policy.utcnow(), updated_at=policy.utcnow(),
+    ))
+    await db.commit()
+    regular = await db.get(User, world.regular.id)
+    regular.email_verified = False
+    await db.commit()
+    with pytest.raises(HTTPException) as exc:
+        await apply.accept_invitation(mock_request, db, regular, world.org, await _row(db, "regular@test.com"), via="open_join")
+    assert exc.value.status_code == 404
+    regular.email_verified = True
+    await db.commit()
+    out = await apply.accept_invitation(mock_request, db, regular, world.org, await _row(db, "regular@test.com"), via="open_join")
+    assert out["role"]

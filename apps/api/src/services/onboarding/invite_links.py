@@ -381,7 +381,7 @@ async def _signup_with_db_invitation(request: Request, db_session: AsyncSession,
             signup_provider="invite", email_verified_by_link=True,
         )
         user = await db_session.get(User, created.id)
-        await accept_invitation(request, db_session, user, org, inv, via="email_invite_link")
+        await accept_invitation(request, db_session, user, org, inv, via="email_invite_link", ownership_proven=True)
     finally:
         if r is not None:
             _release(r, digest)
@@ -401,7 +401,7 @@ async def _accept_db_invitation(request: Request, db_session: AsyncSession, user
     r = _optional_claim(digest)
     try:
         await _prove_inbox(db_session, user)
-        result = await accept_invitation(request, db_session, user, org, inv, via="email_invite_link")
+        result = await accept_invitation(request, db_session, user, org, inv, via="email_invite_link", ownership_proven=True)
     finally:
         if r is not None:
             _release(r, digest)
