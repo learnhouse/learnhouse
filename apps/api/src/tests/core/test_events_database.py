@@ -582,3 +582,52 @@ def test_pooler_url_uses_small_pool_and_logs(monkeypatch, caplog):
 
     assert received_kwargs.get("pool_size") == 5
     assert "connection pooler" in caplog.text
+
+
+def _capture_engine(received):
+    def capture_engine(url, *args, **kwargs):
+        received["url"] = url
+        received["kwargs"] = kwargs
+
+        class _FakeSyncEngine:
+            pass
+
+        class _E:
+            sync_engine = _FakeSyncEngine()
+
+        return _E()
+
+    return capture_engine
+
+
+def test_default_driver_is_asyncpg_with_unnamed_statements(monkeypatch):
+    monkeypatch.delenv("LEARNHOUSE_DB_DRIVER", raising=False)
+    received = {}
+    reloaded = _reload_with_url(monkeypatch, "postgresql://u:p@host:6543/db", _capture_engine(received))
+
+    assert reloaded._driver == "asyncpg"
+    assert received["url"] == "postgresql+asyncpg://u:p@host:6543/db"
+    assert received["kwargs"]["connect_args"]["statement_cache_size"] == 0
+
+
+def test_psycopg_driver_switch_rewrites_url_and_disables_prepares(monkeypatch, caplog):
+    """LEARNHOUSE_DB_DRIVER=psycopg wins over the driver in the URL and keeps
+    the pooler pool settings."""
+    monkeypatch.setenv("LEARNHOUSE_DB_DRIVER", "psycopg")
+    received = {}
+    with caplog.at_level(logging.INFO):
+        reloaded = _reload_with_url(
+            monkeypatch, "postgresql+asyncpg://u:p@host:6543/db", _capture_engine(received)
+        )
+
+    assert reloaded._driver == "psycopg"
+    assert received["url"] == "postgresql+psycopg://u:p@host:6543/db"
+    assert received["kwargs"]["connect_args"]["prepare_threshold"] is None
+    assert received["kwargs"]["pool_size"] == 5
+    assert "DB engine (psycopg): detected connection pooler" in caplog.text
+
+    # psycopg engines check the server TimeZone on every new connection.
+    seen = []
+    monkeypatch.setattr(reloaded, "warn_if_server_timezone_not_utc", lambda conn: seen.append(conn))
+    reloaded.check_server_timezone("conn", None)
+    assert seen == ["conn"]

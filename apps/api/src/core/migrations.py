@@ -107,7 +107,7 @@ def sync_database_url(url: Optional[str] = None) -> str:
         from config.config import get_learnhouse_config
 
         url = str(get_learnhouse_config().database_config.sql_connection_string)
-    for prefix in ("postgresql+asyncpg://", "postgresql+psycopg2://", "postgres://"):
+    for prefix in ("postgresql+asyncpg://", "postgresql+psycopg2://", "postgresql+psycopg://", "postgres://"):
         if url.startswith(prefix):
             return "postgresql://" + url[len(prefix):]
     return url

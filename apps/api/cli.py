@@ -26,7 +26,8 @@ from src.services.setup.setup import (
     install_default_elements,
 )
 
-from src.core.migrations import ensure_schema
+from src.core.db_driver import async_connect_args, async_database_url
+from src.core.migrations import ensure_schema, sync_database_url
 
 cli = typer.Typer()
 
@@ -41,16 +42,12 @@ from src.core.ee_hooks import register_ee_cli
 register_ee_cli(cli)
 
 
-def _to_async_url(url: str) -> str:
-    if "+asyncpg" in url:
-        return url
-    if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    return url
-
-
-def _to_sync_url(url: str) -> str:
-    return url.replace("+asyncpg", "")
+def _async_engine(url: str):
+    """An engine for a CLI command, on the driver LEARNHOUSE_DB_DRIVER picks,
+    with the same pooler-safe connect args as the API."""
+    return create_async_engine(
+        async_database_url(url), echo=False, pool_pre_ping=True, connect_args=async_connect_args()
+    )
 
 
 @cli.command()
@@ -112,16 +109,14 @@ async def _install_async(short: bool) -> None:
 
     # Same schema step the API runs on startup: creates and stamps a new
     # database, migrates an existing one.
-    ensure_schema(_to_sync_url(sql_url))
+    ensure_schema(sync_database_url(sql_url))
 
     # The install_* coroutines use sqlmodel.ext.asyncio.session.AsyncSession.
     # expire_on_commit=False keeps already-loaded attributes accessible after
     # each commit; without it, `UserRead.model_validate(user)` inside
     # `install_create_organization_user` triggers async refresh outside the
     # session's greenlet context and raises MissingGreenlet.
-    async_engine = create_async_engine(
-        _to_async_url(sql_url), echo=False, pool_pre_ping=True
-    )
+    async_engine = _async_engine(sql_url)
 
     try:
         async with AsyncSession(
@@ -498,7 +493,7 @@ async def _compute_active_user_overage(year: int, month: int) -> None:
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _async_engine(sql_url)
 
     try:
         async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
@@ -567,7 +562,7 @@ async def _run_nudges(
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _async_engine(sql_url)
 
     try:
         async with AsyncSession(async_engine, expire_on_commit=False) as db_session:
@@ -618,7 +613,7 @@ async def _nudges_stats(days: int) -> None:
 
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
-    async_engine = create_async_engine(_to_async_url(sql_url), echo=False, pool_pre_ping=True)
+    async_engine = _async_engine(sql_url)
     since = datetime.now(timezone.utc) - timedelta(days=days)
 
     try:

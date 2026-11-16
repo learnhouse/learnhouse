@@ -24,7 +24,7 @@ Exact versions are pinned in `apps/api/pyproject.toml` and `uv.lock`.
 
 ## Key Dependencies
 
-- **asyncpg** and **psycopg2-binary**: PostgreSQL drivers (async for the app, sync for Alembic)
+- **asyncpg**, **psycopg[binary]** and **psycopg2-binary**: PostgreSQL drivers (asyncpg by default for the app or psycopg 3 with `LEARNHOUSE_DB_DRIVER=psycopg`, psycopg2 for Alembic)
 - **pyjwt[crypto]**: JWT token handling
 - **pwdlib[argon2]**: Password hashing with Argon2
 - **pydantic-ai-slim**: Provider-agnostic AI generation (Google, OpenAI, Anthropic, Mistral, and others)
