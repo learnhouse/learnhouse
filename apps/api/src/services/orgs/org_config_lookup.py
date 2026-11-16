@@ -63,3 +63,11 @@ async def get_session_org_config(
         else:
             pinned[org_id] = row
     return row
+
+
+def remember_org_config(db_session: AsyncSession, org_id: int, row: Optional[OrganizationConfig]) -> None:
+    """Pin a config row a caller loaded itself (e.g. joined onto another
+    query), so the gates later in the request don't select it again."""
+    pinned = _pinned_rows(db_session)
+    if pinned is not None and row is not None and row.org_id == org_id:
+        pinned[org_id] = row

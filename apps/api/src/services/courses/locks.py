@@ -13,9 +13,11 @@ to be checked at once without N+1 queries.
 
 from typing import Iterable
 
+from sqlalchemy import and_
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.core.session_memo import session_memo
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
@@ -39,52 +41,41 @@ async def batch_accessible_restricted_uuids(
     """Return the subset of resource_uuids the user can access via usergroup.
 
     Reading a chapter's activities asks this once per activity, mostly about
-    the same course and chapter. Answers are memoized per session, but only
-    the stable ones: "accessible", and "no usergroup is linked to it". A
-    resource that is linked but not (yet) granted is always asked again, so a
+    the same course and chapter, and the paywall asks it about the course.
+    Answers are kept in the session memo, which is dropped on any write, so a
     membership added during the request still counts.
     """
     uuids = list(dict.fromkeys(u for u in resource_uuids if u))
     if not uuids:
         return set()
 
-    memo = getattr(db_session, "_usergroup_access_cache", None)
-    if not isinstance(memo, dict):
-        memo = {}
-        try:
-            db_session._usergroup_access_cache = memo
-        except Exception:
-            pass
-    accessible = {u for u in uuids if memo.get((user_id, u)) is True}
-    pending = [u for u in uuids if (user_id, u) not in memo]
+    memo = session_memo(db_session)
+    known = {} if memo is None else {
+        u: memo[("usergroup_access", user_id, u)]
+        for u in uuids if ("usergroup_access", user_id, u) in memo
+    }
+    accessible = {u for u, granted in known.items() if granted}
+    pending = [u for u in uuids if u not in known]
     if not pending:
         return accessible
 
-    ugrs = (await db_session.execute(
-        select(
-            UserGroupResource.resource_uuid,
-            UserGroupResource.usergroup_id,
-        ).where(UserGroupResource.resource_uuid.in_(pending))
+    # Every usergroup linked to the resources, with the user's membership of
+    # it when there is one: linked-and-member means accessible.
+    rows = (await db_session.execute(
+        select(UserGroupResource.resource_uuid, UserGroupUser.id)
+        .outerjoin(
+            UserGroupUser,
+            and_(
+                UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,  # type: ignore[arg-type]
+                UserGroupUser.user_id == user_id,  # type: ignore[arg-type]
+            ),
+        )
+        .where(UserGroupResource.resource_uuid.in_(pending))  # type: ignore[attr-defined]
     )).all()
-    linked = {row[0] for row in ugrs}
-    for resource_uuid in pending:
-        if resource_uuid not in linked:
-            memo[(user_id, resource_uuid)] = False
-    if not ugrs:
-        return accessible
-
-    ug_ids = list({row[1] for row in ugrs})
-    member_ug_ids = set(
-        (await db_session.execute(
-            select(UserGroupUser.usergroup_id).where(
-                UserGroupUser.usergroup_id.in_(ug_ids),
-                UserGroupUser.user_id == user_id,
-            )
-        )).scalars().all()
-    )
-    granted = {resource_uuid for resource_uuid, ug_id in ugrs if ug_id in member_ug_ids}
-    for resource_uuid in granted:
-        memo[(user_id, resource_uuid)] = True
+    granted = {resource_uuid for resource_uuid, membership_id in rows if membership_id is not None}
+    if memo is not None:
+        for resource_uuid in pending:
+            memo[("usergroup_access", user_id, resource_uuid)] = resource_uuid in granted
     return accessible | granted
 
 

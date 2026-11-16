@@ -7,6 +7,7 @@ from sqlalchemy import event
 
 from src.db.courses.courses import Course
 from src.db.usergroup_resources import UserGroupResource
+from src.db.usergroup_user import UserGroupUser
 from src.security.org_auth import get_user_org_rows, holds_admin_or_maintainer_role
 from src.security.rbac.resource_access import (
     ResourceAccessChecker,
@@ -156,17 +157,23 @@ class TestUsergroupAccessMemo:
             stop()
         assert statements == []
 
-    async def test_linked_but_not_granted_is_asked_again(self, db, org, regular_user):
+    async def test_linked_but_not_granted_until_the_session_writes(self, db, org, regular_user):
         db.add(UserGroupResource(usergroup_id=77, resource_uuid="course_b", org_id=org.id,
                                  creation_date="now", update_date="now"))
         await db.commit()
         assert await batch_accessible_restricted_uuids(regular_user.id, ["course_b"], db) == set()
-        assert (regular_user.id, "course_b") not in db._usergroup_access_cache
+        with patch.object(db, "execute", new=AsyncMock(side_effect=AssertionError("queried"))):
+            assert await batch_accessible_restricted_uuids(regular_user.id, ["course_b"], db) == set()
+        # A membership added during the request (a write) is seen by the next ask.
+        db.add(UserGroupUser(usergroup_id=77, user_id=regular_user.id, org_id=org.id,
+                             creation_date="now", update_date="now"))
+        assert await batch_accessible_restricted_uuids(regular_user.id, ["course_b"], db) == {"course_b"}
+        await db.commit()
+        assert await batch_accessible_restricted_uuids(regular_user.id, ["course_b"], db) == {"course_b"}
 
     async def test_granted_access_is_remembered(self, db, regular_user):
         with patch.object(db, "execute", new=AsyncMock(side_effect=[
             MagicMock(all=MagicMock(return_value=[("course_c", 5)])),
-            MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[5])))),
         ])):
             assert await batch_accessible_restricted_uuids(regular_user.id, ["course_c"], db) == {"course_c"}
         with patch.object(db, "execute", new=AsyncMock(side_effect=AssertionError("queried"))):

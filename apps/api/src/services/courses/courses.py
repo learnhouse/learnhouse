@@ -225,8 +225,15 @@ async def get_course_meta(
     from src.services.courses.chapters import get_course_chapters
 
     # Get course with authors and organization in a single query using joins
+    from src.services.courses.translations.learner import (
+        has_published_translation,
+        note_published_translations,
+    )
+
+    # Whether it has a published language version rides along too: the
+    # router localizes the read next, and most courses have none.
     course_statement = (
-        select(Course, ResourceAuthor, User, Organization)
+        select(Course, ResourceAuthor, User, Organization, has_published_translation(Course.id))
         .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
         .outerjoin(User, ResourceAuthor.user_id == User.id)  # type: ignore
         .join(Organization, Organization.id == Course.org_id)  # type: ignore
@@ -244,7 +251,16 @@ async def get_course_meta(
     # Extract course, authors, and organization from results
     course = results[0][0]  # First result's Course
     org = results[0][3]  # First result's Organization
-    author_results = [(ra, u) for _, ra, u, _ in results if ra is not None and u is not None]
+    author_results = [(ra, u) for _, ra, u, _, _ in results if ra is not None and u is not None]
+    note_published_translations(db_session, course.id, results[0][4])
+    # Every author row of the course came along, which answers the access
+    # check's "is the reader an author" too.
+    from src.security.rbac.rbac import remember_resource_authors
+
+    remember_resource_authors(
+        db_session, course.course_uuid, resolve_acting_user_id(current_user) or 0,
+        [ra for _, ra, _, _, _ in results if ra is not None],
+    )
 
     # DASHBOARD context lets authors/admins/usergroup members access unpublished
     # courses; regular users still fall back to public view rules.

@@ -122,3 +122,19 @@ export const getServerAccessToken = cache(async (): Promise<string | null> => {
     return null
   }
 })
+
+/**
+ * Whether the request carries a session at all (any auth cookie), without
+ * asking the backend who it is. Crawlers never do, so crawler-only output
+ * (structured data built from the anonymous view) can skip its fetches.
+ */
+export async function hasSessionCookie(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies()
+    return [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, IMPERSONATION_COOKIE].some(
+      (name) => !!cookieStore.get(name)?.value,
+    )
+  } catch {
+    return false
+  }
+}

@@ -14,6 +14,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
 from src.db.users import APITokenUser
+from src.core.session_memo import session_memo
 from src.security.superadmin import is_user_superadmin, superadmin_org_bypass_blocked
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
@@ -34,11 +35,17 @@ async def get_user_org_rows(user_id: int, org_id: int, db_session: AsyncSession)
     key = (user_id, org_id)
     if key in _cache:
         return _cache[key]
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == user_id,
-        UserOrganization.org_id == org_id,
+    # Each row's role comes along: the role check that usually follows needs it.
+    statement = (
+        select(UserOrganization, Role)
+        .outerjoin(Role, Role.id == UserOrganization.role_id)  # type: ignore[arg-type]
+        .where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
     )
-    rows = list((await db_session.execute(statement)).scalars().all())
+    pairs = (await db_session.execute(statement)).all()
+    rows = [membership for membership, _ in pairs]
     # Only cache positive memberships. Caching a "not a member" result is
     # unsafe: a membership granted later within the same request/session
     # (e.g. add-to-org immediately followed by an authz check) would otherwise
@@ -46,7 +53,31 @@ async def get_user_org_rows(user_id: int, org_id: int, db_session: AsyncSession)
     # access. Positive rows are safe to memoize for the request's lifetime.
     if rows:
         _cache[key] = rows
+        # The roles go in the session memo, which a write, commit or rollback
+        # clears: after any of those the caller queries roles afresh instead
+        # of reading expired (or deleted) membership rows.
+        memo = session_memo(db_session)
+        if memo is not None:
+            memo[("org_roles", user_id, org_id)] = {
+                membership.role_id: role for membership, role in pairs
+            }
     return rows
+
+
+def roles_of_memberships(
+    db_session: AsyncSession, user_id: int, org_id: int, memberships: list[UserOrganization]
+) -> Optional[list[Role]]:
+    """The roles held through ``memberships``, as loaded with them by
+    ``get_user_org_rows``. None when they weren't loaded together, or a
+    membership's role changed since (the caller then queries)."""
+    memo = session_memo(db_session)
+    by_role_id = memo.get(("org_roles", user_id, org_id)) if memo is not None else None
+    if not isinstance(by_role_id, dict):
+        return None
+    role_ids = [getattr(m, "role_id", None) for m in memberships]
+    if any(role_id not in by_role_id for role_id in role_ids):
+        return None
+    return [by_role_id[role_id] for role_id in role_ids if by_role_id[role_id] is not None]
 
 
 async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> Optional[UserOrganization]:

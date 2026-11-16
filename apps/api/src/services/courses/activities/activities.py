@@ -167,16 +167,29 @@ async def get_activity(
     db_session: AsyncSession,
     lang: Optional[str] = None,
 ):
-    # Activity, course, last modified user and parent chapter (the lock check
-    # needs it) in a single query
+    from src.services.courses.translations.learner import (
+        has_published_translation,
+        note_published_translations,
+    )
+
+    # Activity, course, last modified user, parent chapter (the lock check
+    # needs it) and whether the course has any published language version in
+    # a single query. A signed-in reader also gets the org config the MFA and
+    # auth-method gates read.
+    signed_in = not isinstance(current_user, AnonymousUser)
+    columns = [Activity, Course, User, Chapter, has_published_translation(Course.id)]
+    if signed_in:
+        columns.append(OrganizationConfig)
     statement = (
-        select(Activity, Course, User, Chapter)
+        select(*columns)
         .join(Course, Course.id == Activity.course_id)
         .outerjoin(User, Activity.last_modified_by_id == User.id)
         .outerjoin(ChapterActivity, ChapterActivity.activity_id == Activity.id)
         .outerjoin(Chapter, Chapter.id == ChapterActivity.chapter_id)
         .where(Activity.activity_uuid == activity_uuid)
     )
+    if signed_in:
+        statement = statement.outerjoin(OrganizationConfig, OrganizationConfig.org_id == Course.org_id)
     result = (await db_session.execute(statement)).first()
 
     if not result:
@@ -185,7 +198,12 @@ async def get_activity(
             detail="Activity not found",
         )
 
-    activity, course, last_modified_user, parent_chapter = result
+    activity, course, last_modified_user, parent_chapter, translated = result[:5]
+    note_published_translations(db_session, course.id, translated)
+    if signed_in:
+        from src.services.orgs.org_config_lookup import remember_org_config
+
+        remember_org_config(db_session, course.org_id, result[5])
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)

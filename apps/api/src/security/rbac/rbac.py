@@ -17,6 +17,7 @@ from src.security.rbac.utils import (
     get_element_organization_id,
 )
 from src.security.superadmin import is_user_superadmin, superadmin_org_bypass_blocked
+from src.core.session_memo import session_memo
 
 logger = logging.getLogger(__name__)
 
@@ -224,30 +225,62 @@ async def authorization_verify_if_user_is_author(
         return True  # Allow creation if user is authenticated
 
     if action in ["update", "delete", "read"]:
-        # Query for the current user's authorship record specifically
-        # FIXED: Previously this only filtered by resource_uuid and got .first(),
-        # which would return the first author (usually CREATOR) even if the current
-        # user was a different contributor. Now we filter by both resource_uuid AND user_id.
-        statement = select(ResourceAuthor).where(
-            ResourceAuthor.resource_uuid == element_uuid,
-            ResourceAuthor.user_id == user_id
-        )
-        resource_author = (await db_session.execute(statement)).scalars().first()
-
-        if resource_author:
-            valid_authorships = [
-                ResourceAuthorshipEnum.CREATOR,
-                ResourceAuthorshipEnum.MAINTAINER,
-                ResourceAuthorshipEnum.CONTRIBUTOR,
-            ]
-            if (resource_author.authorship in valid_authorships and
-                    resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE):
-                return True
-            else:
-                return False
-        else:
-            return False
+        return await user_is_active_author(user_id, element_uuid, db_session)
     return False
+
+
+_EDITING_AUTHORSHIPS = (
+    ResourceAuthorshipEnum.CREATOR,
+    ResourceAuthorshipEnum.MAINTAINER,
+    ResourceAuthorshipEnum.CONTRIBUTOR,
+)
+
+
+def _is_editing_authorship(resource_author: Optional[ResourceAuthor]) -> bool:
+    return bool(
+        resource_author
+        and resource_author.authorship in _EDITING_AUTHORSHIPS
+        and resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+    )
+
+
+def remember_resource_authors(
+    db_session: AsyncSession, element_uuid: str, user_id: int, author_rows: list[ResourceAuthor]
+) -> None:
+    """Answer ``user_is_active_author`` for ``user_id`` from a caller that
+    loaded EVERY author row of the resource (e.g. a course read joined with
+    its authors), so the access checks after it don't ask again."""
+    memo = session_memo(db_session)
+    if memo is None or not user_id:
+        return
+    own = next((ra for ra in author_rows if ra.resource_uuid == element_uuid and ra.user_id == user_id), None)
+    memo[("active_author", element_uuid, user_id)] = _is_editing_authorship(own)
+
+
+async def user_is_active_author(user_id: int, element_uuid: str, db_session: AsyncSession) -> bool:
+    """True if the user holds an active creator/maintainer/contributor row on
+    the resource. Org membership is not checked here.
+
+    One read asks this up to three times (paywall manager check, the course
+    edit check and its role fallback), so the answer is kept in the session
+    memo until the session writes.
+    """
+    memo = session_memo(db_session)
+    key = ("active_author", element_uuid, user_id)
+    if memo is not None and key in memo:
+        return memo[key]
+    # Filter on the user too: the first author row of a resource is usually
+    # its creator, not the current user.
+    resource_author = (await db_session.execute(
+        select(ResourceAuthor).where(
+            ResourceAuthor.resource_uuid == element_uuid,
+            ResourceAuthor.user_id == user_id,
+        )
+    )).scalars().first()
+    is_author = _is_editing_authorship(resource_author)
+    if memo is not None:
+        memo[key] = is_author
+    return is_author
 
 
 async def _load_applicable_roles(
@@ -279,9 +312,17 @@ async def _load_applicable_roles(
 
     from src.security.org_auth import get_user_org_rows
 
-    if not await get_user_org_rows(user_id, target_org_id, db_session):
+    memberships = await get_user_org_rows(user_id, target_org_id, db_session)
+    if not memberships:
         # Non-member: never grant role-based access to this org's resources.
         return []
+
+    # The membership lookup loads each row's role alongside it.
+    from src.security.org_auth import roles_of_memberships
+
+    held = roles_of_memberships(db_session, user_id, target_org_id, memberships)
+    if held is not None:
+        return [role for role in held if role.org_id in (target_org_id, None)]
 
     # Only the role the user holds *in the target org* applies. Global default
     # roles (Admin, User, ...) have org_id NULL, so without pinning the
@@ -471,6 +512,16 @@ async def authorization_verify_based_on_org_admin_status(
     from src.security.org_auth import holds_admin_or_maintainer_role
 
     return await holds_admin_or_maintainer_role(user_id, target_org_id, db_session)
+
+
+async def authorization_verify_org_admin_by_id(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """``authorization_verify_based_on_org_admin_status`` for a caller that
+    already knows the org id, without resolving it from a uuid."""
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
+        return True
+    from src.security.org_auth import holds_admin_or_maintainer_role
+
+    return await holds_admin_or_maintainer_role(user_id, org_id, db_session)
 
 
 # Tested and working
