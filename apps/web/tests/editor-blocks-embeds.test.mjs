@@ -3,7 +3,7 @@
 // node definitions (every stored attr kept, new attrs at defaults, the view helpers
 // resolving to what the old blocks rendered, and nothing lost through collab seeding).
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { Window } from "happy-dom";
 
 const domWindow = new Window({ url: "http://localhost/" });
@@ -16,7 +16,10 @@ const { getSchema } = await import("@tiptap/core");
 const { default: StarterKit } = await import("@tiptap/starter-kit");
 const Y = await import("yjs");
 const { yXmlFragmentToProseMirrorRootNode } = await import("@tiptap/y-tiptap");
-const server = await import("../../collab/src/prosemirrorY.ts");
+// The collab app's own packages are installed only where the collab app is
+// (not in the web-only CI job); without them these checks have nothing to load.
+const HAS_COLLAB = existsSync(new URL("../../collab/node_modules/yjs", import.meta.url));
+const server = HAS_COLLAB ? await import("../../collab/src/prosemirrorY.ts") : null;
 
 const U = await import("../components/Objects/Editor/Extensions/Users/userCard.ts");
 const W = await import("../components/Objects/Editor/Extensions/WebPreview/previewMeta.ts");
@@ -274,7 +277,7 @@ describe("stored content loads unchanged through the real node definitions", () 
   });
 });
 
-describe("new attrs survive collab seeding", () => {
+describe.skipIf(!HAS_COLLAB)("new attrs survive collab seeding", () => {
   test("hidden tests, overrides, layouts and block ids round-trip through the server's Yjs encoding", () => {
     const content = {
       type: "doc",

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { Window } from "happy-dom";
 
 // The collab server seeds rooms from stored activity JSON without knowing the
@@ -36,7 +36,10 @@ const { CommunityTag } = await import("../components/Objects/Communities/Tags/Co
 
 // The collab server's converter. It lives in apps/collab and uses that app's
 // copy of yjs, so documents cross over as encoded updates (as on the wire).
-const server = await import("../../collab/src/prosemirrorY.ts");
+// The collab app's own packages are installed only where the collab app is
+// (not in the web-only CI job); without them these checks have nothing to load.
+const HAS_COLLAB = existsSync(new URL("../../collab/node_modules/yjs", import.meta.url));
+const server = HAS_COLLAB ? await import("../../collab/src/prosemirrorY.ts") : null;
 
 const ext = (path) => import(`../components/Objects/Editor/Extensions/${path}`).then((m) => m.default);
 const BLOCK_EXTENSIONS = await Promise.all([
@@ -121,7 +124,7 @@ function editorJSON(content) {
   return schema.nodeFromJSON(server.normalizeActivityContent(content)).toJSON();
 }
 
-describe("collab seeding against the real editor schema", () => {
+describe.skipIf(!HAS_COLLAB)("collab seeding against the real editor schema", () => {
   test("the converter is the server's", () => {
     expect(fixtures.length).toBeGreaterThanOrEqual(10);
   });

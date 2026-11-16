@@ -2,13 +2,16 @@
 // route files re-export these generateMetadata helpers). Private pages are
 // noindex; the team storefront is indexable and uses the seat offer's name.
 import { beforeEach, describe, expect, test } from "bun:test";
+import { existsSync } from "node:fs";
 
 const org = { id: 7, name: "Kitebase Academy" };
 let seatOffer = null;
 let space = null;
 let token = "tok";
-const { makeCompanyMetadata } = await import("../ee/app/companies/metadataCore.ts");
-const m = makeCompanyMetadata({
+// EE sources ship only with the Enterprise Edition; the EE CI runs these.
+const HAS_EE = existsSync(new URL("../ee/components", import.meta.url));
+const { makeCompanyMetadata } = HAS_EE ? await import("../ee/app/companies/metadataCore.ts") : {};
+const m = HAS_EE && makeCompanyMetadata({
   getOrg: async () => org,
   title: (page, o) => `${page} | ${o.name}`,
   getToken: async () => token,
@@ -23,7 +26,7 @@ beforeEach(() => {
   token = "tok";
 });
 
-describe("company page metadata", () => {
+describe.skipIf(!HAS_EE)("company page metadata", () => {
   test("team portal: titled and private", async () => {
     const meta = await m.teamPortalMetadata(params());
     expect(String(meta.title)).toContain("Team");
