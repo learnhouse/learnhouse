@@ -76,12 +76,20 @@ function Entry({ slug, token, switching = false }: { slug: string; token?: strin
       /* storage blocked */
     }
     try {
-      await startImpersonation(token, { org_id: org.id, return_url: null })
+      // Switching: this page's token is the current impersonation's, which
+      // the API resolves to the member being impersonated. Send none, so the
+      // start route uses the staff member's own session cookie.
+      if (switching) {
+        // The staff session's own access cookie may have expired while the
+        // impersonation ran; refresh it (the console's scope) before starting.
+        await fetch('/api/auth/refresh?scope=platform', { credentials: 'include', cache: 'no-store' }).catch(() => null)
+      }
+      await startImpersonation(switching ? undefined : token, { org_id: org.id, return_url: null })
       window.location.reload()
     } catch (err) {
       setError(errorMessage(err, t('admin.common.error_desc')))
     }
-  }, [org?.id, slug, token, t])
+  }, [org?.id, slug, token, t, switching])
 
   React.useEffect(() => {
     if (startedRef.current || meLoading || !allowed || !org?.id) return

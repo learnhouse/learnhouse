@@ -1006,6 +1006,19 @@ def is_role_dashboard_enabled(role: Role) -> bool:
 # AI Credit Management Functions (Redis)
 # ============================================================================
 
+async def _base_ai_credits(org_id: int, org_plan: str, db_session: AsyncSession) -> int:
+    """The plan's AI credit allowance, capped while the org is on a free trial."""
+    base = get_ai_credit_limit(org_plan)
+    if base == 0:
+        return base
+    from src.services.plans.trial import trial_ai_credit_cap
+
+    cap = await trial_ai_credit_cap(db_session, org_id, org_plan)
+    if cap is None:
+        return base
+    return cap if base == -1 else min(base, cap)
+
+
 async def check_ai_credits(
     org_id: int,
     db_session: AsyncSession,
@@ -1036,7 +1049,7 @@ async def check_ai_credits(
     org_plan = _get_org_plan(org_config)
     r = _get_redis_client()
 
-    base_credits = get_ai_credit_limit(org_plan)
+    base_credits = await _base_ai_credits(org_id, org_plan, db_session)
 
     if base_credits == -1:
         return True
@@ -1206,7 +1219,7 @@ async def reserve_ai_credit(
         return int(r.incrby(f"ai_credits_used:{org_id}", amount))
 
     org_plan = _get_org_plan(org_config)
-    base_credits = get_ai_credit_limit(org_plan)
+    base_credits = await _base_ai_credits(org_id, org_plan, db_session)
 
     config = org_config.config or {}
     extra = 0
@@ -1322,7 +1335,7 @@ async def ai_credit_limits(org_id: int, db_session: AsyncSession) -> dict:
         return {"base": 0, "extra": 0, "unlimited": True}
     if _is_non_saas():
         return {"base": 0, "extra": 0, "unlimited": True}
-    base = get_ai_credit_limit(_get_org_plan(org_config))
+    base = await _base_ai_credits(org_id, _get_org_plan(org_config), db_session)
     config = org_config.config or {}
     extra = 0
     if config.get("config_version", "1.0").startswith("2"):
@@ -1418,7 +1431,7 @@ async def get_ai_credits_summary(org_id: int, db_session: AsyncSession) -> dict:
             "remaining_credits": "unlimited",
         }
 
-    base_credits = get_ai_credit_limit(org_plan)
+    base_credits = await _base_ai_credits(org_id, org_plan, db_session)
 
     config = org_config.config or {}
     extra = 0

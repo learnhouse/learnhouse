@@ -29,6 +29,10 @@ logger = logging.getLogger(__name__)
 # contract features. Change it here and nowhere else.
 TRIAL_PLAN = "pro"
 TRIAL_DAYS = 14
+# AI credits a trial gets in all, instead of the trial plan's monthly
+# allowance: enough to try Atlas and the AI tools, not to run on for free.
+# Buying any plan lifts it to that plan's allowance at once.
+TRIAL_AI_CREDITS = 30
 
 
 def _utc(value: datetime) -> datetime:
@@ -84,6 +88,24 @@ async def get_trial(db_session: AsyncSession, org_id: int) -> Optional[OrgTrial]
 async def get_active_trial(db_session: AsyncSession, org_id: int) -> Optional[OrgTrial]:
     trial = await get_trial(db_session, org_id)
     return trial if trial is not None and trial.status == TrialStatus.ACTIVE else None
+
+
+def trial_ai_credits() -> int:
+    """The trial's AI credit cap (``LEARNHOUSE_TRIAL_AI_CREDITS`` overrides it)."""
+    raw = os.environ.get("LEARNHOUSE_TRIAL_AI_CREDITS", "").strip()
+    try:
+        return max(0, int(raw)) if raw else TRIAL_AI_CREDITS
+    except ValueError:
+        return TRIAL_AI_CREDITS
+
+
+async def trial_ai_credit_cap(db_session: AsyncSession, org_id: int, plan: str) -> Optional[int]:
+    """The AI credit cap for an org mid-trial, else None (its plan applies)."""
+    if plan != TRIAL_PLAN or not trials_enabled():
+        return None
+    if await get_active_trial(db_session, org_id) is None:
+        return None
+    return trial_ai_credits()
 
 
 async def active_trial_org_ids(db_session: AsyncSession, org_ids: list[int]) -> set[int]:

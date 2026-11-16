@@ -16,13 +16,28 @@ import { BACKEND_URL, clearCookie, forwardHeaders, isCrossSite, readJson, setCoo
 // Same-origin only for the state-changing verbs (the API's own CSRF check
 // can't see the browser's Origin through this proxy).
 
+function jwtPurpose(token: string): string | null {
+  try {
+    const part = token.split('.')[1]
+    if (!part) return null
+    const json = Buffer.from(part.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8')
+    const purpose = JSON.parse(json)?.purpose
+    return typeof purpose === 'string' ? purpose : null
+  } catch {
+    return null
+  }
+}
+
 export async function POST(request: NextRequest) {
   if (isCrossSite(request)) {
     return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 })
   }
   // The console's own token (it holds a fresh one), else its cookie.
   const auth = request.headers.get('authorization') || ''
-  const bearer = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : ''
+  let bearer = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : ''
+  // An impersonation token acts as the member, never as staff: fall back to
+  // the staff member's own session cookie instead.
+  if (bearer && jwtPurpose(bearer) === 'impersonation') bearer = ''
   const token = bearer || (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value
   if (!token || token.toLowerCase().startsWith('lh_')) {
     return NextResponse.json({ detail: 'Sign in to the console first' }, { status: 401 })
