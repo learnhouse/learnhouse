@@ -55,11 +55,15 @@ async def _post(app, path, body=None):
         return await c.post(path, json=body)
 
 
-async def _token_for(world, mock_request, db, email, **kw):
-    """Send an invitation and return its link token (from the link endpoint)."""
+async def _token_for(world, mock_request, db, email, delivery="email", **kw):
+    """Send an invitation and return its link token: the one in the email
+    (the mocked sender's call), or a link the admin copied."""
     await _invite(world, mock_request, db, email, **kw)
     inv = await _row(db, email)
+    if delivery == "email":
+        return service._send_email.await_args.args[5], inv
     link = await service.invitation_link(mock_request, db, world.org.id, inv.invitation_uuid, world.admin)
+    await db.refresh(inv)
     return link["url"].split("invite=", 1)[1], inv
 
 

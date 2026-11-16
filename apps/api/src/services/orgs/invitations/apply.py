@@ -197,6 +197,55 @@ async def notify_inviter(db_session: AsyncSession, inv: OrgInvitation, user: Use
     )
 
 
+async def _role_is_upgrade(db_session: AsyncSession, current_role_id: Optional[int], new_role: Role) -> bool:
+    """Moving to ``new_role`` takes no permission away (and an Admin stays
+    an Admin)."""
+    from src.services.orgs.invitations.policy import rights_within
+
+    if current_role_id == ADMIN_ROLE_ID:
+        return False
+    current = await db_session.get(Role, current_role_id) if current_role_id else None
+    return current is None or rights_within(current.rights, new_role.rights)
+
+
+async def close_pending_invitations(
+    request: Optional[Request],
+    db_session: AsyncSession,
+    org_id: int,
+    email: Optional[str],
+    actor=None,
+) -> int:
+    """Someone with this address just became a member another way (an invite
+    code, an open join, a signup, an admin adding them): their pending
+    invitations to the org are closed, so an old link or a later automatic
+    path can't change the role they joined with. Returns how many."""
+    email = normalize_email(email or "")
+    if not email:
+        return 0
+    rows = (await db_session.execute(
+        select(OrgInvitation).where(
+            OrgInvitation.org_id == org_id,
+            OrgInvitation.email == email,
+            OrgInvitation.status == InvitationStatus.PENDING.value,
+        )
+    )).scalars().all()
+    if not rows:
+        return 0
+    now = utcnow()
+    for inv in rows:
+        inv.status = InvitationStatus.REVOKED.value
+        inv.updated_at = now
+        db_session.add(inv)
+    await db_session.commit()
+    for inv in rows:
+        audit_event(
+            request, action="members.invitation.closed", org_id=org_id, actor=actor,
+            target_type="invitation", target_id=inv.invitation_uuid, target_name=inv.email,
+            details={"reason": "joined_another_way"},
+        )
+    return len(rows)
+
+
 async def accept_invitation(
     request: Optional[Request],
     db_session: AsyncSession,
@@ -206,13 +255,20 @@ async def accept_invitation(
     *,
     via: str,
     ownership_proven: bool = False,
+    joined_now: bool = False,
+    may_change_role: bool = True,
 ) -> dict:
     """Claim ``inv`` for ``user`` and apply it: membership (created or moved to
     the chosen role), groups and courses, in one commit.
 
-    The caller has already checked that ``user`` owns the invited address
-    (signed in as it, signed up with it, or Google verified it). An existing
-    Admin keeps their role: an invitation never demotes one.
+    ``ownership_proven``: the caller proved the inbox (the emailed link, or
+    Google vouching for this address); otherwise the account itself must have
+    a proven inbox. ``joined_now``: the membership was created moments ago as
+    part of this arrival (a signup), so its placeholder role is replaced
+    freely. Otherwise an existing member's role only changes when
+    ``may_change_role`` (explicit acceptance through the link or the hub, never
+    an automatic path) and the new role takes nothing away: an invitation
+    never demotes anyone.
     """
     from src.routers.users import _invalidate_session_cache
     from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
@@ -226,7 +282,9 @@ async def accept_invitation(
     # Matching the address is not proof of owning it: anyone can sign up with
     # an invited address. Only a verified address or the personal link (its
     # token was mailed to that address) proves it.
-    if not ownership_proven and not getattr(user, "email_verified", False):
+    from src.services.users.users import inbox_proven
+
+    if not ownership_proven and not inbox_proven(user):
         raise HTTPException(status_code=404, detail=INVALID_INVITATION)
 
     membership = (await db_session.execute(
@@ -266,7 +324,9 @@ async def accept_invitation(
             creation_date=str(datetime.now()), update_date=str(datetime.now()),
         )
         db_session.add(membership)
-    elif membership.role_id != role.id and membership.role_id != ADMIN_ROLE_ID:
+    elif membership.role_id != role.id and (
+        joined_now or (may_change_role and await _role_is_upgrade(db_session, membership.role_id, role))
+    ):
         membership.role_id = role.id
         membership.update_date = str(datetime.now())
         db_session.add(membership)
@@ -333,16 +393,37 @@ async def claim_code_use(db_session: AsyncSession, code_id: int) -> bool:
     return result.rowcount == 1
 
 
+CODE_EXHAUSTED = {
+    "code": "INVITE_CODE_EXHAUSTED",
+    "message": "This invite code has been used up or has expired. Ask for a new one.",
+}
+
+
+async def claim_code_for_join(db_session: AsyncSession, code_data: Optional[dict]) -> bool:
+    """Count one use of a database code before the membership is created, in
+    the same transaction (the caller's next commit). Raises 403 when the code
+    ran out or expired meanwhile, so a capped code never lets one more in.
+    False for a Redis code or no code (nothing to count)."""
+    if not code_data or code_data.get("source") != "db":
+        return False
+    if not await claim_code_use(db_session, code_data["id"]):
+        raise HTTPException(status_code=403, detail=CODE_EXHAUSTED)
+    return True
+
+
 async def apply_invite_code(
     request: Optional[Request],
     db_session: AsyncSession,
     user: User,
     org: Organization,
     code_data: Optional[dict],
+    *,
+    claimed: bool = False,
 ) -> None:
     """Apply an invite code to someone who just joined ``org`` through it.
 
-    A code stored in the database: count the use, set its role (only on a
+    A code stored in the database: count the use (unless the caller already
+    did, see ``claim_code_for_join``), set its role (only on a
     plain member, and only if the role still has no management rights),
     add the groups and courses, one commit. A legacy Redis code: its user
     group, as before. Never raises: the person is already a member.
@@ -362,14 +443,14 @@ async def apply_invite_code(
         code = await db_session.get(OrgInviteCode, code_data["id"])
         if code is None or code.org_id != org.id:
             return
-        if not await claim_code_use(db_session, code.id):
+        if not claimed and not await claim_code_use(db_session, code.id):
             logger.warning("Invite code %s was used up before user %s joined", code.code_uuid, user.id)
             return
         membership = (await db_session.execute(
             select(UserOrganization).where(UserOrganization.user_id == user.id, UserOrganization.org_id == org.id)
         )).scalars().first()
         role = await role_for_grant(db_session, org.id, code.role_id)
-        if not code_role_allowed(role):
+        if not code_role_allowed(role, await db_session.get(Role, USER_ROLE_ID)):
             role = await db_session.get(Role, USER_ROLE_ID)
         role_set = False
         if membership is not None and role is not None and membership.role_id == USER_ROLE_ID and role.id != USER_ROLE_ID:

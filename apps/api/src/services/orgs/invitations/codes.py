@@ -4,10 +4,10 @@ A code may carry a default role, user groups and courses, a use cap and an
 expiry, and counts how often it was used. Joining through it applies its
 settings like an invitation does (see ``apply.apply_invite_code``).
 
-A code reaches anyone it is forwarded to, so its role is limited to roles
-without management rights or dashboard access (no Admin, Maintainer,
-Instructor, or a custom role that can manage people, groups, roles or the
-organization). The role is checked again at each use, in case it was edited.
+A code reaches anyone it is forwarded to, so its role is limited to roles that
+can do nothing the built-in User role can't (no Admin, Maintainer, Instructor,
+and no custom role with management, dashboard or content write rights). The
+role is checked again at each use, in case it was edited.
 
 Codes made before this lived in Redis; they still work and are listed (with
 ``legacy``) until they expire or are deleted.
@@ -164,12 +164,12 @@ async def _active_count(db_session: AsyncSession, org: Organization) -> int:
 
 
 async def _check_code_role(db_session: AsyncSession, org: Organization, current_user: Caller, role: Role) -> None:
-    if not policy.code_role_allowed(role):
+    if not policy.code_role_allowed(role, await policy.builtin_user_role(db_session)):
         raise HTTPException(
             status_code=400,
             detail={
                 "code": "CODE_ROLE_NOT_ALLOWED",
-                "message": "Invite codes can't grant a role with management rights or dashboard access. Send personal invitations instead.",
+                "message": "Invite codes can only grant a learner-level role (nothing the User role can't do). Send personal invitations instead.",
             },
         )
     await policy.assert_can_grant_role(db_session, org, current_user, role)

@@ -12,6 +12,8 @@ export type InviteLinkDetails = {
   usergroups: string[]
   courses: string[]
   expires_at: string | null
+  // False for a link the admin copied: joining waits until the email is verified.
+  proves_inbox?: boolean
 }
 // `invitation` is there for invitations sent from the dashboard since they
 // moved to the database (older links carry no details).
@@ -43,7 +45,7 @@ export const signupWithInviteLink = (body: {
   first_name?: string
   last_name?: string
   custom_fields?: Record<string, unknown>
-}) => post<{ email: string; org: InviteLinkOrg }>('signup', body)
+}) => post<{ email: string; org: InviteLinkOrg; verification_required?: boolean }>('signup', body)
 
 export const acceptInviteLink = (token: string, accessToken: string) =>
   post<{ org: InviteLinkOrg; already_member: boolean; role?: string | null }>('accept', { token }, accessToken)

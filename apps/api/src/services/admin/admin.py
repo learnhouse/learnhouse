@@ -1397,6 +1397,10 @@ async def provision_user(
     )
     db_session.add(membership)
     await db_session.commit()
+    # Added with a role chosen here: invitations left for the address close.
+    from src.services.orgs.invitations.apply import close_pending_invitations
+
+    await close_pending_invitations(request, db_session, token_user.org_id, email, actor=token_user)
 
     await increase_feature_usage("members", token_user.org_id, db_session)
 

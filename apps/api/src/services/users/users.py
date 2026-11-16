@@ -72,6 +72,14 @@ def inbox_unproven(user) -> bool:
     return user.email_verified_at == _INBOX_UNPROVEN
 
 
+def inbox_proven(user) -> bool:
+    """Whether the account's owner has shown they control its inbox: verified,
+    and not a self-hosted signup still waiting for its first proof. Invitations
+    addressed to the email go only to such an account (or through the emailed
+    personal link, which is itself the proof)."""
+    return bool(getattr(user, "email_verified", False)) and getattr(user, "email_verified_at", None) != _INBOX_UNPROVEN
+
+
 def clear_inbox_unproven(user) -> None:
     """Record that something (Google, an emailed link or reset code) proved the inbox."""
     if inbox_unproven(user):
@@ -204,7 +212,10 @@ async def create_user(
     signup_provider: str = "email",
     email_verified_by_link: bool = False,
     next_path: str | None = None,
+    keep_invitations: bool = False,
 ):
+    # ``keep_invitations``: the caller accepts the address's pending invitation
+    # right after (an emailed link, Google); otherwise joining here closes it.
     # ``email_verified_by_link``: the account comes from a personal invitation
     # link mailed to this address, so the inbox is already proven; it starts
     # verified and gets the welcome email instead of a verification one.
@@ -332,6 +343,12 @@ async def create_user(
 
     user_read = UserRead.model_validate(user)
 
+    if not keep_invitations:
+        # Joined without its invitation: an old link can't change the role later.
+        from src.services.orgs.invitations.apply import close_pending_invitations
+
+        await close_pending_invitations(request, db_session, org_id, user_read.email, actor=user_read)
+
     await increase_feature_usage("members", org_id, db_session)
 
     # Brand-new signups skip notify_user_joined_org (they get the welcome
@@ -425,15 +442,19 @@ async def create_user_with_invite(
     # Usage check
     await check_limits_with_usage("members", org_id, db_session)
 
+    # Count the code's use before the account and membership exist (it rides
+    # their first commit): a capped code never lets one more person in.
+    from src.services.orgs.invitations.apply import apply_invite_code, claim_code_for_join
+
+    claimed = await claim_code_for_join(db_session, inviteCode)
+
     user = await create_user(request, db_session, current_user, user_object, org_id, signup_provider="invite", next_path=next_path)
 
     # Apply the code's settings: its role, user groups and courses (a Redis
-    # code: its user group), and count the use.
-    from src.services.orgs.invitations.apply import apply_invite_code
-
+    # code: its user group).
     org_row = await db_session.get(Organization, org_id)
     if org_row is not None:
-        await apply_invite_code(request, db_session, user, org_row, inviteCode)
+        await apply_invite_code(request, db_session, user, org_row, inviteCode, claimed=claimed)
 
     # NOTE: members usage is already incremented inside create_user(); do not
     # increment again here or every invited signup double-counts the member quota.

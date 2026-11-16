@@ -52,6 +52,10 @@ EMAIL_MISMATCH = {
     "message": "This invitation was sent to a different email address. Sign in with that address to accept it.",
 }
 ACCOUNT_EXISTS = {"code": "ACCOUNT_EXISTS", "message": "You already have an account. Sign in to accept the invitation."}
+VERIFY_FIRST = {
+    "code": "INVITE_VERIFY_EMAIL",
+    "message": "Verify your email address first, then open this invitation again.",
+}
 IN_USE = {"code": "INVITE_LINK_IN_USE", "message": "This invitation is being accepted already. Please try again in a moment."}
 
 
@@ -195,6 +199,8 @@ async def _invitation_summary(db_session: AsyncSession, inv) -> dict:
         "usergroups": list(groups),
         "courses": list(courses),
         "expires_at": iso(inv.expires_at),
+        # A copied link: joining waits until the person verifies their email.
+        "proves_inbox": inv.token_delivery == "email",
     }
 
 
@@ -334,9 +340,12 @@ async def accept_invite_link(request: Request, db_session: AsyncSession, user_id
 
 async def _prove_inbox(db_session: AsyncSession, user: User) -> None:
     """Signed in with the password AND holding the link mailed to this
-    address: the inbox is proven. Same rule as a magic link, which also drops
-    identity-provider links made while it was unproven."""
-    if user.email_verified:
+    address: the inbox is proven (an unverified account, or a self-hosted one
+    still waiting for its first proof). Same rule as a magic link, which also
+    drops identity-provider links made while it was unproven."""
+    from src.services.users.users import inbox_proven
+
+    if inbox_proven(user):
         return
     from src.services.auth.utils import _drop_unverified_sso_links
 
@@ -357,10 +366,16 @@ def _optional_claim(digest: str):
     return r
 
 
+def _emailed(inv) -> bool:
+    """Only a token that was mailed to the invited address proves the inbox.
+    A link the admin copied to share by hand proves nothing about it."""
+    return inv.token_delivery == "email"
+
+
 async def _signup_with_db_invitation(request: Request, db_session: AsyncSession, body: InviteSignupBody, inv, org: Organization) -> dict:
     from src.routers.users import _enforce_password_signup_allowed
     from src.services.orgs.invitations.apply import accept_invitation
-    from src.services.users.users import create_user
+    from src.services.users.users import create_user, create_user_without_org
 
     if await _user_by_email(db_session, inv.email) is not None:
         raise HTTPException(status_code=409, detail=ACCOUNT_EXISTS)
@@ -376,16 +391,42 @@ async def _signup_with_db_invitation(request: Request, db_session: AsyncSession,
             password=body.password,
             custom_fields=body.custom_fields,
         )
+        if not _emailed(inv):
+            # A copied link: the account is created like any signup, with its
+            # email still to verify, and the invitation waits for that proof.
+            created = await create_user_without_org(request, db_session, AnonymousUser(), user_object)
+            await _send_proof_request(request, db_session, created.id, org)
+            return {"email": inv.email, "org": _public_org(org), "verification_required": True}
         created = await create_user(
             request, db_session, AnonymousUser(), user_object, org.id,
-            signup_provider="invite", email_verified_by_link=True,
+            signup_provider="invite", email_verified_by_link=True, keep_invitations=True,
         )
         user = await db_session.get(User, created.id)
-        await accept_invitation(request, db_session, user, org, inv, via="email_invite_link", ownership_proven=True)
+        await accept_invitation(
+            request, db_session, user, org, inv, via="email_invite_link", ownership_proven=True, joined_now=True,
+        )
     finally:
         if r is not None:
             _release(r, digest)
-    return {"email": inv.email, "org": _public_org(org)}
+    return {"email": inv.email, "org": _public_org(org), "verification_required": False}
+
+
+async def _send_proof_request(request: Request, db_session: AsyncSession, user_id: int, org: Organization) -> None:
+    """On a self-hosted install the new account counts as verified without an
+    email round trip, so no verification email went out: send one (branded to
+    the org), so the person can prove the inbox and then accept. A SaaS signup
+    already got its verification email. Never fails the signup."""
+    from src.services.users.users import inbox_unproven
+
+    user = await db_session.get(User, user_id)
+    if user is None or not inbox_unproven(user):
+        return
+    try:
+        from src.services.users.email_verification import send_verification_email
+
+        await send_verification_email(request, db_session, user, org.id)
+    except Exception:
+        logger.warning("Could not send the verification email for user %s", user_id, exc_info=True)
 
 
 async def _accept_db_invitation(request: Request, db_session: AsyncSession, user_id: int, inv, org: Organization) -> dict:
@@ -396,12 +437,22 @@ async def _accept_db_invitation(request: Request, db_session: AsyncSession, user
         raise HTTPException(status_code=404, detail="User not found")
     if (user.email or "").strip().lower() != inv.email:
         raise HTTPException(status_code=403, detail=EMAIL_MISMATCH)
+    emailed = _emailed(inv)
+    if not emailed:
+        from src.services.users.users import inbox_proven
+
+        # A copied link proves nothing: the account must have proven its inbox.
+        if not inbox_proven(user):
+            raise HTTPException(status_code=403, detail=VERIFY_FIRST)
     # Found by this token, so the hash is the one on the invitation.
     digest = inv.token_hash
     r = _optional_claim(digest)
     try:
-        await _prove_inbox(db_session, user)
-        result = await accept_invitation(request, db_session, user, org, inv, via="email_invite_link", ownership_proven=True)
+        if emailed:
+            await _prove_inbox(db_session, user)
+        result = await accept_invitation(
+            request, db_session, user, org, inv, via="email_invite_link", ownership_proven=emailed,
+        )
     finally:
         if r is not None:
             _release(r, digest)

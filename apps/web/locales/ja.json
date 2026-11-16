@@ -796,8 +796,11 @@
         "role": "{{role}}として参加します。",
         "role_by": "{{name}}さんから{{role}}として招待されています。",
         "groups": "追加されるグループ：{{names}}",
-        "courses": "登録されるコース：{{names}}"
-      }
+        "courses": "登録されるコース：{{names}}",
+        "verify_note": "このリンクは直接共有されたものなので、参加する前にメールアドレスを確認していただきます。"
+      },
+      "verify_title": "受信トレイを確認してください",
+      "verify_desc": "アカウントの準備ができました。{{email}} に確認リンクを送信しました。メールアドレスを確認してから、この招待をもう一度開くか、ホームページで承諾すると {{org}} に参加できます。"
     },
     "login_failed_forgot": "パスワードをお忘れですか？",
     "login_failed_reset": "再設定する",
@@ -9546,7 +9549,7 @@
           "error": "問題が発生しました。もう一度お試しください。",
           "resent": "{{email}}に新しい招待を送信しました",
           "email_failed": "メールを送信できませんでした。代わりに招待リンクをコピーしてください。",
-          "link_copied": "招待リンクをコピーしました。以前のメールのリンクは使えなくなりました。",
+          "link_copied": "招待リンクをコピーしました。リンクを開いた人は、参加する前にメールアドレスを確認します。以前のメールのリンクは使えなくなりました。",
           "revoked": "招待を取り消しました",
           "updated": "招待を更新しました",
           "bulk_resend_one": "{{count}}件の招待を再送信しました",
@@ -11960,7 +11963,8 @@
         "members__invitation__declined": "<b>{{actor}}</b>さんが招待を辞退しました",
         "members__invitation__role_applied": "<b>{{actor}}</b>さんが招待からロールを付与されました",
         "members__invite_code__updated": "<b>{{actor}}</b>さんが招待リンクを変更しました",
-        "members__invite_code__used": "<b>{{actor}}</b>さんが招待リンクから参加しました"
+        "members__invite_code__used": "<b>{{actor}}</b>さんが招待リンクから参加しました",
+        "members__invitation__closed": "<b>{{actor}}</b>さんが別の方法で参加したため、招待を終了しました"
       },
       "export": {
         "generating": "エクスポートを準備しています…",

@@ -807,11 +807,16 @@ async def _apply_oauth_invites(
     org_id: int,
     code_data: Optional[dict],
     google_verified_email: Optional[str] = None,
+    *,
+    was_member: bool = False,
+    code_claimed: bool = False,
 ) -> None:
-    """After a Google sign-in into ``org_id``: accept the pending invitation
-    for the account's address (its role, groups and courses), or apply the
-    invite code the person joined through. Never turns a completed sign-in
-    into an error."""
+    """After a Google sign-in into ``org_id``. Someone who just joined: accept
+    the pending invitation for the Google-verified address (its role, groups
+    and courses), or apply the invite code they came through, then close any
+    invitation left for the address. Someone who was already a member: nothing
+    automatic happens (an invitation never changes a member's role behind
+    their back). Never turns a completed sign-in into an error."""
     import logging
 
     from src.db.organizations import Organization
@@ -819,6 +824,7 @@ async def _apply_oauth_invites(
     from src.services.orgs.invitations.apply import (
         accept_invitation,
         apply_invite_code,
+        close_pending_invitations,
         find_pending_invitation,
     )
 
@@ -828,15 +834,18 @@ async def _apply_oauth_invites(
         member = (await db_session.execute(
             select(UserOrganization.id).where(UserOrganization.user_id == user_id, UserOrganization.org_id == org_id)
         )).first()
-        if user is None or org is None or member is None:
+        if was_member or user is None or org is None or member is None:
             return
-        inv = await find_pending_invitation(db_session, user.email, org_id)
+        # Google vouching for this exact address proves ownership.
+        proven = bool(google_verified_email) and (user.email or "").strip().lower() == google_verified_email
+        inv = await find_pending_invitation(db_session, user.email, org_id) if proven else None
         if inv is not None:
-            # Google vouching for this exact address proves ownership.
-            proven = bool(google_verified_email) and (user.email or "").strip().lower() == google_verified_email
-            await accept_invitation(request, db_session, user, org, inv, via="google_invite", ownership_proven=proven)
+            await accept_invitation(
+                request, db_session, user, org, inv, via="google_invite", ownership_proven=True, joined_now=True,
+            )
         elif code_data:
-            await apply_invite_code(request, db_session, user, org, code_data)
+            await apply_invite_code(request, db_session, user, org, code_data, claimed=code_claimed)
+        await close_pending_invitations(request, db_session, org_id, user.email, actor=user)
     except Exception:
         logging.getLogger(__name__).warning("Could not apply the invitation after Google sign-in", exc_info=True)
 
@@ -891,6 +900,10 @@ async def third_party_login(
     _was_member = False
     # The address Google vouched for, when this is a Google sign-in.
     _google_verified_email: Optional[str] = None
+    # Whether the invite code's use was already counted before sign-in.
+    _code_claimed = False
+    # Filled by signWithGoogle: whether this sign-in made the account a member.
+    _google_outcome: dict = {}
 
     # Validate org_id before passing it downstream. The rule must mirror the
     # email/password signup endpoints, otherwise the same person gets a
@@ -1032,24 +1045,24 @@ async def third_party_login(
                     detail="You need an invite to join this organization",
                 )
 
-        elif invite_code and body.provider == "google":
+            # Joining through a capped code: count the use before the
+            # membership exists (it rides the sign-in's first commit), unless
+            # an invitation is what lets this person in.
+            if _invite_code_data and not _was_member:
+                from src.services.orgs.invitations.apply import claim_code_for_join, find_pending_invitation
+
+                if await find_pending_invitation(db_session, _invite_email, org_id) is None:
+                    _code_claimed = await claim_code_for_join(db_session, _invite_code_data)
+
+        elif invite_code:
             # Open org, joined through an invite code link: its settings apply
-            # to someone who isn't a member yet.
+            # to someone this sign-in makes a member.
             try:
                 _invite_code_data = await get_invite_code(
                     request, org_id, invite_code, current_user, db_session
                 )
             except HTTPException:
                 _invite_code_data = None
-            if _invite_code_data:
-                from src.db.user_organizations import UserOrganization
-
-                _google_email = ((await get_google_user_info(body.access_token)).get("email") or "").strip().lower()
-                _was_member = (await db_session.execute(
-                    select(UserOrganization.id)
-                    .join(User, User.id == UserOrganization.user_id)  # type: ignore[arg-type]
-                    .where((func.lower(User.email) == _google_email) & (UserOrganization.org_id == org_id))
-                )).first() is not None
 
     user = None
 
@@ -1057,7 +1070,8 @@ async def third_party_login(
     if body.provider == "google":
 
         user = await signWithGoogle(
-            request, body.access_token, body.email, org_id, current_user, db_session
+            request, body.access_token, body.email, org_id, current_user, db_session,
+            outcome=_google_outcome,
         )
     else:
         raise HTTPException(
@@ -1077,10 +1091,13 @@ async def third_party_login(
     # code's role, groups and courses for someone who just joined, and stop
     # showing a Redis invite as pending.
     if org_id is not None and user.id is not None:
+        # signWithGoogle matched or created the account by the address Google
+        # verified, so that address is proven.
         await _apply_oauth_invites(
-            request, db_session, user.id, org_id,
-            None if _was_member else _invite_code_data,
-            google_verified_email=_google_verified_email,
+            request, db_session, user.id, org_id, _invite_code_data,
+            google_verified_email=_google_verified_email or (user.email or "").strip().lower(),
+            was_member=_was_member or not _google_outcome.get("joined", False),
+            code_claimed=_code_claimed,
         )
 
     if _consume_invite_key:

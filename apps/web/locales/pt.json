@@ -797,8 +797,11 @@
         "role": "Você vai entrar como {{role}}.",
         "role_by": "{{name}} convidou você para entrar como {{role}}.",
         "groups": "Você será adicionado a: {{names}}",
-        "courses": "Você será matriculado em: {{names}}"
-      }
+        "courses": "Você será matriculado em: {{names}}",
+        "verify_note": "Este link foi compartilhado diretamente com você, então você vai verificar seu e-mail antes de entrar."
+      },
+      "verify_title": "Verifique sua caixa de entrada",
+      "verify_desc": "Sua conta está pronta. Enviamos um link de verificação para {{email}}. Verifique seu e-mail e depois abra este convite novamente ou aceite-o na sua página inicial para entrar em {{org}}."
     },
     "login_failed_forgot": "Esqueceu sua senha?",
     "login_failed_reset": "Redefinir",
@@ -9753,7 +9756,7 @@
           "error": "Algo deu errado. Tente novamente.",
           "resent": "Novo convite enviado para {{email}}",
           "email_failed": "Não foi possível enviar o e-mail. Copie o link do convite.",
-          "link_copied": "Link do convite copiado. O link do e-mail anterior não funciona mais.",
+          "link_copied": "Link do convite copiado. Quem abrir o link verifica o e-mail antes de entrar. O link do e-mail anterior não funciona mais.",
           "revoked": "Convite revogado",
           "updated": "Convite atualizado",
           "bulk_resend_one": "{{count}} convite reenviado",
@@ -12203,7 +12206,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> recusou o convite",
         "members__invitation__role_applied": "<b>{{actor}}</b> recebeu o papel definido no convite",
         "members__invite_code__updated": "<b>{{actor}}</b> alterou um link de convite",
-        "members__invite_code__used": "<b>{{actor}}</b> entrou com um link de convite"
+        "members__invite_code__used": "<b>{{actor}}</b> entrou com um link de convite",
+        "members__invitation__closed": "<b>{{actor}}</b> entrou de outra forma, então o convite foi encerrado"
       },
       "export": {
         "generating": "Preparando a exportação…",

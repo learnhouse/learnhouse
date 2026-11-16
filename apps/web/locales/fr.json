@@ -797,8 +797,11 @@
         "role": "Vous rejoindrez l'organisation en tant que {{role}}.",
         "role_by": "{{name}} vous a invité à rejoindre l'organisation en tant que {{role}}.",
         "groups": "Vous serez ajouté à : {{names}}",
-        "courses": "Vous serez inscrit à : {{names}}"
-      }
+        "courses": "Vous serez inscrit à : {{names}}",
+        "verify_note": "Ce lien vous a été partagé directement, vous vérifierez donc votre e-mail avant de rejoindre l'organisation."
+      },
+      "verify_title": "Consultez votre boîte de réception",
+      "verify_desc": "Votre compte est prêt. Nous avons envoyé un lien de vérification à {{email}}. Vérifiez votre e-mail, puis rouvrez cette invitation ou acceptez-la depuis votre page d'accueil pour rejoindre {{org}}."
     },
     "login_failed_forgot": "Mot de passe oublié ?",
     "login_failed_reset": "Le réinitialiser",
@@ -9753,7 +9756,7 @@
           "error": "Une erreur est survenue. Veuillez réessayer.",
           "resent": "Nouvelle invitation envoyée à {{email}}",
           "email_failed": "L'e-mail n'a pas pu être envoyé. Copiez plutôt le lien d'invitation.",
-          "link_copied": "Lien d'invitation copié. Le lien de l'e-mail précédent ne fonctionne plus.",
+          "link_copied": "Lien d'invitation copié. La personne qui l'ouvre vérifie son e-mail avant de rejoindre l'organisation. Le lien de l'e-mail précédent ne fonctionne plus.",
           "revoked": "Invitation révoquée",
           "updated": "Invitation mise à jour",
           "bulk_resend_one": "{{count}} invitation renvoyée",
@@ -12203,7 +12206,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> a refusé son invitation",
         "members__invitation__role_applied": "<b>{{actor}}</b> a obtenu le rôle de son invitation",
         "members__invite_code__updated": "<b>{{actor}}</b> a modifié un lien d'invitation",
-        "members__invite_code__used": "<b>{{actor}}</b> a rejoint via un lien d'invitation"
+        "members__invite_code__used": "<b>{{actor}}</b> a rejoint via un lien d'invitation",
+        "members__invitation__closed": "<b>{{actor}}</b> a rejoint par un autre moyen, son invitation a donc été clôturée"
       },
       "export": {
         "generating": "Préparation de l'export…",

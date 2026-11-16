@@ -59,6 +59,10 @@ class OrgInvitation(SQLModel, table=True):
     status: str = Field(default=InvitationStatus.PENDING.value, sa_column=Column(String(16), nullable=False))
     # SHA-256 hex of the personal link token; rotated on resend.
     token_hash: Optional[str] = Field(default=None, sa_column=Column(String(64), nullable=True))
+    # How the current token reached the invitee: "email" (sent to the invited
+    # address, so following it proves the inbox) or "copied" (handed to the
+    # admin to share by hand, which proves nothing about the inbox).
+    token_delivery: Optional[str] = Field(default=None, sa_column=Column(String(16), nullable=True))
     expires_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
     accepted_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     accepted_user_id: Optional[int] = Field(

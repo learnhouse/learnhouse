@@ -689,7 +689,8 @@ def test_rights_helpers():
     assert policy.occupies_seat(None) is False and policy.has_management_rights(None) is False
     assert policy.has_management_rights(Role(id=50, name="x", rights={"roles": {"action_delete": True}})) is True
     assert policy.has_management_rights(Role(id=51, name="x", rights={"users": "odd"})) is False
-    assert policy.code_role_allowed(None) is False
+    assert policy.code_role_allowed(None, Role(id=4, name='User', rights={})) is False
+    assert policy.code_role_allowed(Role(id=60, name='x', rights={}), None) is False
 
 
 async def test_targets_roles_and_callers(world, mock_request, db):

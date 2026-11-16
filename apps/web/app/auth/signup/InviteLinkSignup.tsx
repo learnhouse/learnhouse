@@ -35,6 +35,7 @@ import {
   type InviteLinkInfo,
 } from '@services/auth/inviteLinks'
 import { inviteSignInHref, setLoginHint, splitFullName } from '@/lib/auth/signup'
+import { useRoleText } from '@components/Dashboard/Pages/Users/OrgUsersAdd/roleText'
 
 /** Absolute URL on this host, for the full page loads after auth. */
 function fullPageUrl(path: string): string {
@@ -62,6 +63,8 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
   const [peeked, setPeeked] = React.useState(false)
   const [error, setError] = React.useState('')
   const [submitting, setSubmitting] = React.useState(false)
+  const [verifySent, setVerifySent] = React.useState(false)
+  const roleText = useRoleText()
   const joinStarted = React.useRef(false)
 
   const sessionStatus: string = session?.status
@@ -162,6 +165,14 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
         setSubmitting(false)
         return
       }
+      if (res.data.verification_required) {
+        // A copied link proves nothing about the inbox: the account exists,
+        // and the invitation applies once the email is verified.
+        track(AnalyticsEvent.SignupSucceeded, { email_verified: false })
+        setVerifySent(true)
+        setSubmitting(false)
+        return
+      }
       track(AnalyticsEvent.SignupSucceeded, { email_verified: true })
       // The link proved the inbox, so the new account can sign in right away.
       const signed: any = await auth.signIn('credentials', {
@@ -257,19 +268,33 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
   }
 
   const details = info.invitation
+  // Built-in roles read in the visitor's language ("Learner", not "User").
+  const roleLabel = details?.role ? roleText({ role_uuid: details.role.role_uuid, name: details.role.name }).name : ''
+  const copiedLink = details ? details.proves_inbox === false : false
+
+  if (verifySent) {
+    return (
+      <div data-testid="invite-link-verify">
+        <AuthHeading
+          title={t('auth.invite_link.verify_title')}
+          description={t('auth.invite_link.verify_desc', { email: info.email, org: orgName })}
+        />
+      </div>
+    )
+  }
   const joiningAs = (
     <>
       <div className="mt-6 flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3.5 py-2.5 ring-1 ring-inset ring-neutral-200/80 min-w-0">
         <EnvelopeSimple size={16} className="shrink-0 text-neutral-400" aria-hidden="true" />
         <span className="truncate text-sm text-neutral-800" data-testid="invite-email">{info.email}</span>
       </div>
-      {details && (details.role || details.message || details.courses.length > 0 || details.usergroups.length > 0) && (
+      {details && (details.role || details.message || details.courses.length > 0 || details.usergroups.length > 0 || copiedLink) && (
         <div className="mt-3 rounded-xl px-3.5 py-3 ring-1 ring-inset ring-neutral-200/80 text-[13px] leading-relaxed text-neutral-600" data-testid="invite-details">
           {details.role && (
             <p>
               {details.invited_by
-                ? t('auth.invite_link.details.role_by', { name: details.invited_by, role: details.role.name })
-                : t('auth.invite_link.details.role', { role: details.role.name })}
+                ? t('auth.invite_link.details.role_by', { name: details.invited_by, role: roleLabel })
+                : t('auth.invite_link.details.role', { role: roleLabel })}
             </p>
           )}
           {details.message && (
@@ -283,6 +308,7 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
           {details.courses.length > 0 && (
             <p className="mt-1">{t('auth.invite_link.details.courses', { names: details.courses.join(', ') })}</p>
           )}
+          {copiedLink && <p className="mt-2 text-neutral-500">{t('auth.invite_link.details.verify_note')}</p>}
         </div>
       )}
     </>

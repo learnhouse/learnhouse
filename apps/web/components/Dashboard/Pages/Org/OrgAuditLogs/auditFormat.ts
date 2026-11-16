@@ -223,6 +223,7 @@ export const ACTION_SENTENCES: Record<string, string> = {
   'members.invitation.accepted': '<b>{{actor}}</b> accepted their invitation',
   'members.invitation.declined': '<b>{{actor}}</b> declined their invitation',
   'members.invitation.role_applied': '<b>{{actor}}</b> got the role from their invitation',
+  'members.invitation.closed': '<b>{{actor}}</b> joined another way, so their invitation was closed',
   'members.invite_code.updated': '<b>{{actor}}</b> changed an invite link',
   'members.invite_code.used': '<b>{{actor}}</b> joined with an invite link',
   'members.joined': '<b>{{actor}}</b> joined the organization',

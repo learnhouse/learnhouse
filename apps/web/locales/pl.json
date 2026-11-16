@@ -799,8 +799,11 @@
         "role": "Dołączysz jako {{role}}.",
         "role_by": "{{name}} zaprasza cię do dołączenia jako {{role}}.",
         "groups": "Zostaniesz dodany(-a) do: {{names}}",
-        "courses": "Zostaniesz zapisany(-a) na: {{names}}"
-      }
+        "courses": "Zostaniesz zapisany(-a) na: {{names}}",
+        "verify_note": "Ten link został Ci udostępniony bezpośrednio, więc przed dołączeniem zweryfikujesz swój e-mail."
+      },
+      "verify_title": "Sprawdź skrzynkę odbiorczą",
+      "verify_desc": "Twoje konto jest gotowe. Wysłaliśmy link weryfikacyjny na adres {{email}}. Zweryfikuj e-mail, a potem otwórz to zaproszenie ponownie lub zaakceptuj je na swojej stronie głównej, aby dołączyć do {{org}}."
     },
     "login_failed_forgot": "Nie pamiętasz hasła?",
     "login_failed_reset": "Zresetuj je",
@@ -9962,7 +9965,7 @@
           "error": "Coś poszło nie tak. Spróbuj ponownie.",
           "resent": "Wysłano nowe zaproszenie na {{email}}",
           "email_failed": "Nie udało się wysłać e-maila. Skopiuj link z zaproszeniem.",
-          "link_copied": "Skopiowano link z zaproszeniem. Link z poprzedniego e-maila już nie działa.",
+          "link_copied": "Skopiowano link z zaproszeniem. Osoba, która go otworzy, przed dołączeniem zweryfikuje swój e-mail. Link z poprzedniego e-maila już nie działa.",
           "revoked": "Zaproszenie unieważnione",
           "updated": "Zaproszenie zaktualizowane",
           "bulk_resend_one": "Ponownie wysłano {{count}} zaproszenie",
@@ -12444,7 +12447,8 @@
         "members__invitation__declined": "<b>{{actor}}</b>: odrzucono zaproszenie",
         "members__invitation__role_applied": "<b>{{actor}}</b>: przypisano rolę z zaproszenia",
         "members__invite_code__updated": "<b>{{actor}}</b>: zmieniono link z zaproszeniem",
-        "members__invite_code__used": "<b>{{actor}}</b>: dołączono przez link z zaproszeniem"
+        "members__invite_code__used": "<b>{{actor}}</b>: dołączono przez link z zaproszeniem",
+        "members__invitation__closed": "<b>{{actor}}</b>: dołączono w inny sposób, więc zaproszenie zostało zamknięte"
       },
       "export": {
         "generating": "Przygotowywanie eksportu…",

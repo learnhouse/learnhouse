@@ -207,6 +207,7 @@ async def test_existing_user_with_org_id_creates_membership(db, mock_request, or
         "src.security.features_utils.usage.increase_feature_usage",
         new=AsyncMock(return_value=None),
     ) as increase_mock:
+        outcome: dict = {}
         result = await signWithGoogle(
             mock_request,
             access_token="legit_google_token",
@@ -214,9 +215,12 @@ async def test_existing_user_with_org_id_creates_membership(db, mock_request, or
             org_id=org.id,
             current_user=None,
             db_session=db,
+            outcome=outcome,
         )
 
     assert result.email == existing_user.email
+    # The caller learns this sign-in made the account a member.
+    assert outcome == {"joined": True}
     check_mock.assert_awaited_once()
     increase_mock.assert_awaited_once()
 
@@ -257,6 +261,7 @@ async def test_existing_user_with_org_id_skips_when_already_member(
         "src.security.features_utils.usage.increase_feature_usage",
         new=AsyncMock(return_value=None),
     ) as increase_mock:
+        outcome: dict = {}
         result = await signWithGoogle(
             mock_request,
             access_token="legit_google_token",
@@ -264,9 +269,11 @@ async def test_existing_user_with_org_id_skips_when_already_member(
             org_id=org.id,
             current_user=None,
             db_session=db,
+            outcome=outcome,
         )
 
     assert result.email == admin_user.email
+    assert outcome == {"joined": False}
     check_mock.assert_not_awaited()
     increase_mock.assert_not_awaited()
 

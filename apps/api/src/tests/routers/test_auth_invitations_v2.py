@@ -17,7 +17,7 @@ from src.db.organization_config import OrganizationConfig
 from src.db.user_organizations import UserOrganization
 from src.db.users import AnonymousUser, User
 from src.routers.auth import _apply_oauth_invites, third_party_login
-from src.services.orgs.join import JoinOrg, _apply_open_join_invites, join_org
+from src.services.orgs.join import JoinOrg, _join_with_invitation, join_org
 from src.tests.routers.test_invite_links_router import join_side_effects
 from src.tests.fixtures.invitations import _code, _invite, _membership, _row, _user
 
@@ -41,11 +41,15 @@ def _google(db, user_id, email, org=None):
     """Google says ``email``; signing in makes the account a member (as
     signWithGoogle does for an org_id)."""
 
-    async def sign(request, token, body_email, org_id, current_user, db_session):
+    async def sign(request, token, body_email, org_id, current_user, db_session, outcome=None):
         user = await db_session.get(User, user_id)
+        joined = False
         if org_id and await _membership(db_session, user_id, org_id) is None:
             db_session.add(UserOrganization(user_id=user_id, org_id=org_id, role_id=4, creation_date="", update_date=""))
             await db_session.commit()
+            joined = True
+        if outcome is not None:
+            outcome["joined"] = joined
         return user
 
     return (
@@ -136,11 +140,11 @@ async def test_joining_an_open_org_applies_an_invitation_or_a_code(world, mock_r
         await join_org(mock_request, JoinOrg(org_id=world.org.id, user_id=72, invite_code="NOPE1234"), _as_public(kim), db)
         assert (await _membership(db, 72, world.org.id)).role_id == 4
 
-    # A refused acceptance never fails the join itself.
+    # A refused acceptance never fails the join itself: it becomes a plain join.
     await _invite(world, mock_request, db, "zoe@test.com")
-    zoe = await _user(db, 73, "zoe@test.com", world.org, 4)
+    zoe = await _user(db, 73, "zoe@test.com")
     with patch("src.services.orgs.invitations.apply.accept_invitation", AsyncMock(side_effect=HTTPException(status_code=404))):
-        await _apply_open_join_invites(mock_request, db, zoe, world.org, None, _as_public(zoe))
+        assert await _join_with_invitation(mock_request, db, zoe, world.org) is False
 
 
 def _as_public(user):

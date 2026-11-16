@@ -796,8 +796,11 @@
         "role": "你将以{{role}}身份加入。",
         "role_by": "{{name}} 邀请你以{{role}}身份加入。",
         "groups": "你将被加入：{{names}}",
-        "courses": "你将报名：{{names}}"
-      }
+        "courses": "你将报名：{{names}}",
+        "verify_note": "此链接是直接分享给你的，因此加入前需要先验证邮箱。"
+      },
+      "verify_title": "请查收邮件",
+      "verify_desc": "你的账号已就绪。我们已向 {{email}} 发送了验证链接。验证邮箱后，重新打开此邀请或在主页上接受邀请，即可加入 {{org}}。"
     },
     "login_failed_forgot": "忘记密码？",
     "login_failed_reset": "重置密码",
@@ -9546,7 +9549,7 @@
           "error": "出了点问题，请重试。",
           "resent": "已向 {{email}} 发送新邀请",
           "email_failed": "邮件未能发送。请改为复制邀请链接。",
-          "link_copied": "邀请链接已复制。之前邮件中的链接已失效。",
+          "link_copied": "邀请链接已复制。打开链接的人需先验证邮箱才能加入。之前邮件中的链接已失效。",
           "revoked": "邀请已撤销",
           "updated": "邀请已更新",
           "bulk_resend_one": "已重新发送 {{count}} 份邀请",
@@ -11960,7 +11963,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> 拒绝了邀请",
         "members__invitation__role_applied": "<b>{{actor}}</b> 从邀请中获得了角色",
         "members__invite_code__updated": "<b>{{actor}}</b> 更改了邀请链接",
-        "members__invite_code__used": "<b>{{actor}}</b> 通过邀请链接加入"
+        "members__invite_code__used": "<b>{{actor}}</b> 通过邀请链接加入",
+        "members__invitation__closed": "<b>{{actor}}</b> 通过其他方式加入，其邀请已关闭"
       },
       "export": {
         "generating": "正在准备导出…",

@@ -796,8 +796,11 @@
         "role": "Bạn sẽ tham gia với vai trò {{role}}.",
         "role_by": "{{name}} đã mời bạn tham gia với vai trò {{role}}.",
         "groups": "Bạn sẽ được thêm vào: {{names}}",
-        "courses": "Bạn sẽ được ghi danh vào: {{names}}"
-      }
+        "courses": "Bạn sẽ được ghi danh vào: {{names}}",
+        "verify_note": "Liên kết này được chia sẻ trực tiếp với bạn, vì vậy bạn sẽ xác minh email trước khi tham gia."
+      },
+      "verify_title": "Kiểm tra hộp thư đến của bạn",
+      "verify_desc": "Tài khoản của bạn đã sẵn sàng. Chúng tôi đã gửi liên kết xác minh đến {{email}}. Hãy xác minh email, sau đó mở lại lời mời này hoặc chấp nhận nó từ trang chủ của bạn để tham gia {{org}}."
     },
     "login_failed_forgot": "Quên mật khẩu?",
     "login_failed_reset": "Đặt lại",
@@ -9544,7 +9547,7 @@
           "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
           "resent": "Đã gửi lời mời mới tới {{email}}",
           "email_failed": "Không thể gửi email. Hãy sao chép liên kết mời.",
-          "link_copied": "Đã sao chép liên kết mời. Liên kết trong email trước không còn hoạt động.",
+          "link_copied": "Đã sao chép liên kết mời. Người mở liên kết sẽ xác minh email trước khi tham gia. Liên kết trong email trước không còn hoạt động.",
           "revoked": "Đã thu hồi lời mời",
           "updated": "Đã cập nhật lời mời",
           "bulk_resend_one": "Đã gửi lại {{count}} lời mời",
@@ -11958,7 +11961,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> đã từ chối lời mời",
         "members__invitation__role_applied": "<b>{{actor}}</b> đã nhận vai trò từ lời mời",
         "members__invite_code__updated": "<b>{{actor}}</b> đã thay đổi một liên kết mời",
-        "members__invite_code__used": "<b>{{actor}}</b> đã tham gia bằng một liên kết mời"
+        "members__invite_code__used": "<b>{{actor}}</b> đã tham gia bằng một liên kết mời",
+        "members__invitation__closed": "<b>{{actor}}</b> đã tham gia theo cách khác, nên lời mời của họ đã được đóng"
       },
       "export": {
         "generating": "Đang chuẩn bị bản xuất…",

@@ -796,8 +796,11 @@
         "role": "{{role}}(으)로 참여하게 돼요.",
         "role_by": "{{name}}님이 {{role}}(으)로 참여하도록 초대했어요.",
         "groups": "추가될 그룹: {{names}}",
-        "courses": "등록될 코스: {{names}}"
-      }
+        "courses": "등록될 코스: {{names}}",
+        "verify_note": "이 링크는 직접 공유된 링크라서 참여하기 전에 이메일을 인증하게 돼요."
+      },
+      "verify_title": "받은 편지함을 확인하세요",
+      "verify_desc": "계정이 준비됐어요. {{email}}(으)로 인증 링크를 보냈어요. 이메일을 인증한 뒤 이 초대를 다시 열거나 홈 페이지에서 수락하면 {{org}}에 참여할 수 있어요."
     },
     "login_failed_forgot": "비밀번호를 잊으셨나요?",
     "login_failed_reset": "재설정하기",
@@ -9544,7 +9547,7 @@
           "error": "문제가 발생했어요. 다시 시도해 주세요.",
           "resent": "{{email}}(으)로 새 초대를 보냈어요",
           "email_failed": "이메일을 보내지 못했어요. 대신 초대 링크를 복사하세요.",
-          "link_copied": "초대 링크를 복사했어요. 이전 이메일의 링크는 더 이상 작동하지 않아요.",
+          "link_copied": "초대 링크를 복사했어요. 링크를 여는 사람은 참여하기 전에 이메일을 인증해요. 이전 이메일의 링크는 더 이상 작동하지 않아요.",
           "revoked": "초대를 취소했어요",
           "updated": "초대를 업데이트했어요",
           "bulk_resend_one": "초대 {{count}}개를 다시 보냈어요",
@@ -11958,7 +11961,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> 님이 초대를 거절했어요",
         "members__invitation__role_applied": "<b>{{actor}}</b> 님이 초대에 지정된 역할을 받았어요",
         "members__invite_code__updated": "<b>{{actor}}</b> 님이 초대 링크를 변경했어요",
-        "members__invite_code__used": "<b>{{actor}}</b> 님이 초대 링크로 참여했어요"
+        "members__invite_code__used": "<b>{{actor}}</b> 님이 초대 링크로 참여했어요",
+        "members__invitation__closed": "<b>{{actor}}</b> 님이 다른 방법으로 참여해서 초대가 종료됐어요"
       },
       "export": {
         "generating": "내보내기를 준비하는 중…",

@@ -797,8 +797,11 @@
         "role": "Je wordt lid als {{role}}.",
         "role_by": "{{name}} heeft je uitgenodigd om lid te worden als {{role}}.",
         "groups": "Je wordt toegevoegd aan: {{names}}",
-        "courses": "Je wordt ingeschreven voor: {{names}}"
-      }
+        "courses": "Je wordt ingeschreven voor: {{names}}",
+        "verify_note": "Deze link is rechtstreeks met je gedeeld, dus je verifieert je e-mailadres voordat je lid wordt."
+      },
+      "verify_title": "Check je inbox",
+      "verify_desc": "Je account is klaar. We hebben een verificatielink gestuurd naar {{email}}. Verifieer je e-mailadres en open deze uitnodiging daarna opnieuw, of accepteer hem vanaf je startpagina om lid te worden van {{org}}."
     },
     "login_failed_forgot": "Wachtwoord vergeten?",
     "login_failed_reset": "Opnieuw instellen",
@@ -9574,7 +9577,7 @@
           "error": "Er ging iets mis. Probeer het opnieuw.",
           "resent": "Nieuwe uitnodiging verstuurd naar {{email}}",
           "email_failed": "De e-mail kon niet worden verstuurd. Kopieer in plaats daarvan de uitnodigingslink.",
-          "link_copied": "Uitnodigingslink gekopieerd. De link in de eerdere e-mail werkt niet meer.",
+          "link_copied": "Uitnodigingslink gekopieerd. Wie de link opent, verifieert eerst het e-mailadres en wordt daarna lid. De link in de eerdere e-mail werkt niet meer.",
           "revoked": "Uitnodiging ingetrokken",
           "updated": "Uitnodiging bijgewerkt",
           "bulk_resend_one": "{{count}} uitnodiging opnieuw verstuurd",
@@ -11992,7 +11995,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> heeft de uitnodiging afgewezen",
         "members__invitation__role_applied": "<b>{{actor}}</b> heeft de rol uit de uitnodiging gekregen",
         "members__invite_code__updated": "<b>{{actor}}</b> heeft een uitnodigingslink gewijzigd",
-        "members__invite_code__used": "<b>{{actor}}</b> is lid geworden via een uitnodigingslink"
+        "members__invite_code__used": "<b>{{actor}}</b> is lid geworden via een uitnodigingslink",
+        "members__invitation__closed": "<b>{{actor}}</b> is op een andere manier lid geworden, dus de uitnodiging is gesloten"
       },
       "export": {
         "generating": "Export voorbereiden…",

@@ -292,9 +292,20 @@ async def verify_email_token(
         )
 
     # Check if already verified
+    from src.services.users.users import clear_inbox_unproven, inbox_unproven
+
     if user.email_verified:
-        # Delete token and return success
         r.delete(redis_key)
+        if inbox_unproven(user):
+            # A self-hosted account marked verified without proof: this mailed
+            # token is the proof (links made before it go, as below).
+            from src.services.auth.utils import _drop_unverified_sso_links
+
+            await _drop_unverified_sso_links(user.id, db_session)
+            clear_inbox_unproven(user)
+            db_session.add(user)
+            await db_session.commit()
+            await db_session.refresh(user)
         return user, "Email already verified"
 
     # Identity-provider links made while the address was unproven go first.
@@ -366,7 +377,7 @@ async def resend_verification_email(
     # SECURITY: return the same generic response on every path so the
     # endpoint cannot be used to enumerate accounts or to detect which
     # accounts are already verified. We still only send email when the
-    # user exists and is unverified.
+    # user exists and its inbox isn't proven yet.
     GENERIC_RESPONSE = (
         "If an account with this email exists, a verification email has been sent"
     )
@@ -374,7 +385,10 @@ async def resend_verification_email(
     statement = select(User).where(User.email == email)
     user = (await db_session.execute(statement)).scalars().first()
 
-    if user and not user.email_verified:
+    from src.services.users.users import inbox_proven
+
+    # Also a self-hosted account still waiting for its first proof.
+    if user and not inbox_proven(user):
         await send_verification_email(request, db_session, user, org_id, next_path=next_path)
 
     return GENERIC_RESPONSE

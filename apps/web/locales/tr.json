@@ -797,8 +797,11 @@
         "role": "{{role}} olarak katılacaksınız.",
         "role_by": "{{name}} sizi {{role}} olarak katılmaya davet etti.",
         "groups": "Şu gruplara ekleneceksiniz: {{names}}",
-        "courses": "Şu kurslara kaydedileceksiniz: {{names}}"
-      }
+        "courses": "Şu kurslara kaydedileceksiniz: {{names}}",
+        "verify_note": "Bu bağlantı sizinle doğrudan paylaşıldı, bu yüzden katılmadan önce e-postanızı doğrulayacaksınız."
+      },
+      "verify_title": "Gelen kutunuzu kontrol edin",
+      "verify_desc": "Hesabınız hazır. {{email}} adresine bir doğrulama bağlantısı gönderdik. E-postanızı doğrulayın, ardından {{org}} kuruluşuna katılmak için bu daveti yeniden açın veya ana sayfanızdan kabul edin."
     },
     "login_failed_forgot": "Şifrenizi mi unuttunuz?",
     "login_failed_reset": "Sıfırlayın",
@@ -9574,7 +9577,7 @@
           "error": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
           "resent": "{{email}} adresine yeni davet gönderildi",
           "email_failed": "E-posta gönderilemedi. Bunun yerine davet bağlantısını kopyalayın.",
-          "link_copied": "Davet bağlantısı kopyalandı. Önceki e-postadaki bağlantı artık çalışmıyor.",
+          "link_copied": "Davet bağlantısı kopyalandı. Bağlantıyı açan kişi katılmadan önce e-postasını doğrular. Önceki e-postadaki bağlantı artık çalışmıyor.",
           "revoked": "Davet iptal edildi",
           "updated": "Davet güncellendi",
           "bulk_resend_one": "{{count}} davet yeniden gönderildi",
@@ -11992,7 +11995,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> davetini reddetti",
         "members__invitation__role_applied": "<b>{{actor}}</b> davetindeki rolü aldı",
         "members__invite_code__updated": "<b>{{actor}}</b> bir davet bağlantısını değiştirdi",
-        "members__invite_code__used": "<b>{{actor}}</b> bir davet bağlantısıyla katıldı"
+        "members__invite_code__used": "<b>{{actor}}</b> bir davet bağlantısıyla katıldı",
+        "members__invitation__closed": "<b>{{actor}}</b> başka bir yolla katıldı, bu yüzden daveti kapatıldı"
       },
       "export": {
         "generating": "Dışa aktarım hazırlanıyor…",

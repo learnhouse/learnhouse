@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { useRoleText } from './roleText'
 import { useQuery } from '@tanstack/react-query'
 import {
   BookOpen,
@@ -108,22 +109,7 @@ export function roleLook(role?: { role_uuid?: string } | null) {
   return ROLE_LOOK[BUILT_IN_ROLES[role?.role_uuid ?? ''] ?? 'custom']
 }
 
-export function useRoleText() {
-  const { t } = useTranslation()
-  return React.useCallback(
-    (role: RoleOption | { role_uuid: string; name: string; description?: string | null }) => {
-      const kind = BUILT_IN_ROLES[role.role_uuid]
-      if (kind) {
-        return {
-          name: t(`dashboard.users.invitations.roles.${kind}.name`),
-          description: t(`dashboard.users.invitations.roles.${kind}.description`),
-        }
-      }
-      return { name: role.name, description: role.description || t('dashboard.users.invitations.roles.custom_description') }
-    },
-    [t]
-  )
-}
+export { useRoleText }
 
 function refusalText(t: (k: string) => string, refusal: RoleOption['refusal']) {
   if (refusal === 'ADMIN_ONLY') return t('dashboard.users.invitations.roles.refusal_admin_only')

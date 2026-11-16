@@ -9,8 +9,9 @@ Security model, in one place:
   turns on a permission their own role lacks; an API token is held to its
   creator's role and to its own rights.
 - User groups and courses must belong to the org (else 404, no hint).
-- Invite codes never carry a role with management rights or dashboard access:
-  anyone holding the code could otherwise claim it.
+- Invite codes only carry roles that can do no more than the built-in User
+  role (no management, dashboard or content write rights): anyone holding the
+  code could otherwise claim it.
 - Plan capacity counts pending invitations: member caps where the plan has
   one, admin seats for roles that open the dashboard.
 """
@@ -213,8 +214,17 @@ def has_management_rights(role: Optional[Role]) -> bool:
     return False
 
 
-def code_role_allowed(role: Optional[Role]) -> bool:
-    return role is not None and not has_management_rights(role)
+def code_role_allowed(role: Optional[Role], user_role: Optional[Role]) -> bool:
+    """A role an invite code may carry: no management rights, and nothing the
+    built-in User role can't do (so no course or content write access either).
+    Fails closed without the User role to compare with."""
+    if role is None or user_role is None or has_management_rights(role):
+        return False
+    return role.id == user_role.id or rights_within(role.rights, user_role.rights)
+
+
+async def builtin_user_role(db_session: AsyncSession) -> Optional[Role]:
+    return await db_session.get(Role, USER_ROLE_ID)
 
 
 def dedupe_ints(values: Iterable) -> list[int]:

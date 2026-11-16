@@ -797,8 +797,11 @@
         "role": "You'll join as {{role}}.",
         "role_by": "{{name}} invited you to join as {{role}}.",
         "groups": "You'll be added to: {{names}}",
-        "courses": "You'll be enrolled in: {{names}}"
-      }
+        "courses": "You'll be enrolled in: {{names}}",
+        "verify_note": "This link was shared with you directly, so you'll verify your email before joining."
+      },
+      "verify_title": "Check your inbox",
+      "verify_desc": "Your account is ready. We sent a verification link to {{email}}. Verify your email, then open this invitation again or accept it from your home page to join {{org}}."
     },
     "login_failed_forgot": "Forgot your password?",
     "login_failed_reset": "Reset it",
@@ -9564,7 +9567,7 @@
           "error": "Something went wrong. Please try again.",
           "resent": "New invitation sent to {{email}}",
           "email_failed": "The email couldn't be sent. Copy the invite link instead.",
-          "link_copied": "Invite link copied. The link in the earlier email no longer works.",
+          "link_copied": "Invite link copied. Whoever opens it verifies their email before joining. The link in the earlier email no longer works.",
           "revoked": "Invitation revoked",
           "updated": "Invitation updated",
           "bulk_resend_one": "{{count}} invitation sent again",
@@ -11979,7 +11982,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> declined their invitation",
         "members__invitation__role_applied": "<b>{{actor}}</b> got the role from their invitation",
         "members__invite_code__updated": "<b>{{actor}}</b> changed an invite link",
-        "members__invite_code__used": "<b>{{actor}}</b> joined with an invite link"
+        "members__invite_code__used": "<b>{{actor}}</b> joined with an invite link",
+        "members__invitation__closed": "<b>{{actor}}</b> joined another way, so their invitation was closed"
       },
       "export": {
         "generating": "Preparing the export…",

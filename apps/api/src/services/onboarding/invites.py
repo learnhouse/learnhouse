@@ -82,7 +82,11 @@ def _require_verified(user: User) -> None:
     until they prove they own it, they must not learn which orgs invited it
     (an information leak) or decline those invitations (denying the real
     invitee)."""
-    if not user.email_verified:
+    from src.services.users.users import inbox_proven
+
+    # A self-hosted signup counts as verified before anything proved the
+    # inbox: that is not enough either.
+    if not inbox_proven(user):
         raise HTTPException(status_code=403, detail=VERIFY_FIRST)
 
 
@@ -116,6 +120,7 @@ async def _invite_details(db_session: AsyncSession, inv) -> dict:
         "invited_at": iso(inv.created_at),
         "expires_at": iso(inv.expires_at),
         "role": role.name if role else None,
+        "role_uuid": role.role_uuid if role else None,
         "invited_by": inviter_name,
         "message": inv.message,
         "courses": len(inv.course_uuids or []),
@@ -124,8 +129,10 @@ async def _invite_details(db_session: AsyncSession, inv) -> dict:
 
 
 async def list_pending_invites(db_session: AsyncSession, user_id: int) -> list[dict]:
+    from src.services.users.users import inbox_proven
+
     user = await _user(db_session, user_id)
-    if not user.email_verified:
+    if not inbox_proven(user):
         return []
     db_invites = await _db_pending(db_session, user.email)
     records = _pending_records(user.email)
@@ -193,6 +200,10 @@ async def join_from_invite(request: Request, db_session: AsyncSession, user: Use
         creation_date=str(datetime.now()), update_date=str(datetime.now()),
     ))
     await db_session.commit()
+    # Joined through an older invitation: newer ones for the address close.
+    from src.services.orgs.invitations.apply import close_pending_invitations
+
+    await close_pending_invitations(request, db_session, org.id, user.email, actor=user)
     await increase_feature_usage("members", org.id, db_session)
     _invalidate_session_cache(user.id)
     await track(

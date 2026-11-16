@@ -799,8 +799,11 @@
         "role": "Pripojíte sa s rolou {{role}}.",
         "role_by": "{{name}} vás pozýva, aby ste sa pripojili s rolou {{role}}.",
         "groups": "Pridáme vás do: {{names}}",
-        "courses": "Zapíšeme vás do: {{names}}"
-      }
+        "courses": "Zapíšeme vás do: {{names}}",
+        "verify_note": "Tento odkaz vám niekto poslal priamo, preto si pred pripojením overíte e-mail."
+      },
+      "verify_title": "Skontrolujte si doručenú poštu",
+      "verify_desc": "Váš účet je pripravený. Na adresu {{email}} sme poslali overovací odkaz. Overte svoj e-mail a potom túto pozvánku otvorte znova alebo ju prijmite na svojej domovskej stránke, aby ste sa pripojili k {{org}}."
     },
     "login_failed_forgot": "Zabudli ste heslo?",
     "login_failed_reset": "Obnoviť",
@@ -9962,7 +9965,7 @@
           "error": "Niečo sa pokazilo. Skúste to znova.",
           "resent": "Nová pozvánka odoslaná na {{email}}",
           "email_failed": "E-mail sa nepodarilo odoslať. Skopírujte pozývací odkaz.",
-          "link_copied": "Pozývací odkaz skopírovaný. Odkaz v predchádzajúcom e-maile už nefunguje.",
+          "link_copied": "Pozývací odkaz skopírovaný. Kto ho otvorí, pred pripojením si overí e-mail. Odkaz v predchádzajúcom e-maile už nefunguje.",
           "revoked": "Pozvánka zrušená",
           "updated": "Pozvánka aktualizovaná",
           "bulk_resend_one": "{{count}} pozvánka odoslaná znova",
@@ -12444,7 +12447,8 @@
         "members__invitation__declined": "<b>{{actor}}</b>: odmietnutie pozvánky",
         "members__invitation__role_applied": "<b>{{actor}}</b>: pridelenie roly z pozvánky",
         "members__invite_code__updated": "<b>{{actor}}</b>: zmena pozývacieho odkazu",
-        "members__invite_code__used": "<b>{{actor}}</b>: vstup cez pozývací odkaz"
+        "members__invite_code__used": "<b>{{actor}}</b>: vstup cez pozývací odkaz",
+        "members__invitation__closed": "<b>{{actor}}</b>: vstup iným spôsobom, pozvánka bola preto uzavretá"
       },
       "export": {
         "generating": "Pripravuje sa export…",

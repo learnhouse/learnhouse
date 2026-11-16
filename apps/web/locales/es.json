@@ -797,8 +797,11 @@
         "role": "Te unirás como {{role}}.",
         "role_by": "{{name}} te invitó a unirte como {{role}}.",
         "groups": "Se te añadirá a: {{names}}",
-        "courses": "Se te inscribirá en: {{names}}"
-      }
+        "courses": "Se te inscribirá en: {{names}}",
+        "verify_note": "Este enlace se compartió contigo directamente, así que verificarás tu correo antes de unirte."
+      },
+      "verify_title": "Revisa tu bandeja de entrada",
+      "verify_desc": "Tu cuenta está lista. Enviamos un enlace de verificación a {{email}}. Verifica tu correo y luego vuelve a abrir esta invitación o acéptala desde tu página de inicio para unirte a {{org}}."
     },
     "login_failed_forgot": "¿Olvidaste tu contraseña?",
     "login_failed_reset": "Restablécela",
@@ -9753,7 +9756,7 @@
           "error": "Algo salió mal. Inténtalo de nuevo.",
           "resent": "Nueva invitación enviada a {{email}}",
           "email_failed": "No se pudo enviar el correo. Copia el enlace de invitación.",
-          "link_copied": "Enlace de invitación copiado. El enlace del correo anterior ya no funciona.",
+          "link_copied": "Enlace de invitación copiado. Quien lo abra verificará su correo antes de unirse. El enlace del correo anterior ya no funciona.",
           "revoked": "Invitación revocada",
           "updated": "Invitación actualizada",
           "bulk_resend_one": "{{count}} invitación reenviada",
@@ -12203,7 +12206,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> rechazó su invitación",
         "members__invitation__role_applied": "<b>{{actor}}</b> recibió el rol de su invitación",
         "members__invite_code__updated": "<b>{{actor}}</b> cambió un enlace de invitación",
-        "members__invite_code__used": "<b>{{actor}}</b> se unió con un enlace de invitación"
+        "members__invite_code__used": "<b>{{actor}}</b> se unió con un enlace de invitación",
+        "members__invitation__closed": "<b>{{actor}}</b> se unió de otra forma, así que su invitación se cerró"
       },
       "export": {
         "generating": "Preparando la exportación…",

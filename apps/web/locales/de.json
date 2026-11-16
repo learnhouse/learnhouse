@@ -797,8 +797,11 @@
         "role": "Du trittst als {{role}} bei.",
         "role_by": "{{name}} hat dich eingeladen, als {{role}} beizutreten.",
         "groups": "Du wirst hinzugefügt zu: {{names}}",
-        "courses": "Du wirst eingeschrieben in: {{names}}"
-      }
+        "courses": "Du wirst eingeschrieben in: {{names}}",
+        "verify_note": "Dieser Link wurde direkt mit dir geteilt, deshalb bestätigst du vor dem Beitritt deine E-Mail-Adresse."
+      },
+      "verify_title": "Schau in dein Postfach",
+      "verify_desc": "Dein Konto ist bereit. Wir haben einen Bestätigungslink an {{email}} gesendet. Bestätige deine E-Mail-Adresse und öffne dann diese Einladung erneut oder nimm sie auf deiner Startseite an, um {{org}} beizutreten."
     },
     "login_failed_forgot": "Passwort vergessen?",
     "login_failed_reset": "Zurücksetzen",
@@ -9574,7 +9577,7 @@
           "error": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
           "resent": "Neue Einladung an {{email}} gesendet",
           "email_failed": "Die E-Mail konnte nicht gesendet werden. Kopiere stattdessen den Einladungslink.",
-          "link_copied": "Einladungslink kopiert. Der Link in der früheren E-Mail funktioniert nicht mehr.",
+          "link_copied": "Einladungslink kopiert. Wer ihn öffnet, bestätigt vor dem Beitritt die eigene E-Mail-Adresse. Der Link in der früheren E-Mail funktioniert nicht mehr.",
           "revoked": "Einladung widerrufen",
           "updated": "Einladung aktualisiert",
           "bulk_resend_one": "{{count}} Einladung erneut gesendet",
@@ -11992,7 +11995,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> hat die Einladung abgelehnt",
         "members__invitation__role_applied": "<b>{{actor}}</b> hat die Rolle aus der Einladung erhalten",
         "members__invite_code__updated": "<b>{{actor}}</b> hat einen Einladungslink geändert",
-        "members__invite_code__used": "<b>{{actor}}</b> ist über einen Einladungslink beigetreten"
+        "members__invite_code__used": "<b>{{actor}}</b> ist über einen Einladungslink beigetreten",
+        "members__invitation__closed": "<b>{{actor}}</b> ist auf anderem Weg beigetreten, daher wurde die Einladung geschlossen"
       },
       "export": {
         "generating": "Export wird vorbereitet…",

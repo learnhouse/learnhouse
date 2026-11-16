@@ -797,8 +797,11 @@
         "role": "Entrerai come {{role}}.",
         "role_by": "{{name}} ti ha invitato a entrare come {{role}}.",
         "groups": "Verrai aggiunto a: {{names}}",
-        "courses": "Verrai iscritto a: {{names}}"
-      }
+        "courses": "Verrai iscritto a: {{names}}",
+        "verify_note": "Questo link ti è stato condiviso direttamente, quindi verificherai la tua email prima di entrare."
+      },
+      "verify_title": "Controlla la tua casella di posta",
+      "verify_desc": "Il tuo account è pronto. Abbiamo inviato un link di verifica a {{email}}. Verifica la tua email, poi riapri questo invito o accettalo dalla tua home page per entrare in {{org}}."
     },
     "login_failed_forgot": "Password dimenticata?",
     "login_failed_reset": "Reimpostala",
@@ -9753,7 +9756,7 @@
           "error": "Qualcosa è andato storto. Riprova.",
           "resent": "Nuovo invito inviato a {{email}}",
           "email_failed": "Non è stato possibile inviare l'email. Copia invece il link di invito.",
-          "link_copied": "Link di invito copiato. Il link nell'email precedente non funziona più.",
+          "link_copied": "Link di invito copiato. Chi lo apre verifica la propria email prima di entrare. Il link nell'email precedente non funziona più.",
           "revoked": "Invito revocato",
           "updated": "Invito aggiornato",
           "bulk_resend_one": "{{count}} invito inviato di nuovo",
@@ -12203,7 +12206,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> ha rifiutato il proprio invito",
         "members__invitation__role_applied": "<b>{{actor}}</b> ha ricevuto il ruolo dal proprio invito",
         "members__invite_code__updated": "<b>{{actor}}</b> ha modificato un link di invito",
-        "members__invite_code__used": "<b>{{actor}}</b> è entrato/a con un link di invito"
+        "members__invite_code__used": "<b>{{actor}}</b> è entrato/a con un link di invito",
+        "members__invitation__closed": "<b>{{actor}}</b> è entrato/a in un altro modo, quindi il suo invito è stato chiuso"
       },
       "export": {
         "generating": "Preparazione dell'esportazione…",

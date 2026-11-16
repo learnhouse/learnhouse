@@ -88,7 +88,9 @@ async def hub_summary(db_session: AsyncSession, user_id: int) -> dict:
         orgs.append(entry)
     # Invitations are only shown to the verified owner of the address; the
     # flag lets the hub ask an unverified user to verify first.
-    verified = bool((await db_session.execute(select(User.email_verified).where(User.id == user_id))).scalar())
+    from src.services.users.users import inbox_proven
+
+    verified = inbox_proven(await db_session.get(User, user_id))
     return {
         "mode": mode,
         "orgs": orgs,

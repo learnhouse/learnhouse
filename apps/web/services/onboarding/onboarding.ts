@@ -80,6 +80,7 @@ export type PendingInvite = {
   invited_at: string | null
   // Database invitations also say who sent them, the role and any note.
   role?: string | null
+  role_uuid?: string | null
   invited_by?: string | null
   message?: string | null
   expires_at?: string | null

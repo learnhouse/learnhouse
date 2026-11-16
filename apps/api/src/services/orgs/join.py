@@ -108,6 +108,16 @@ async def join_org(
                     detail="Invite code is incorrect",
                 )
 
+            from src.services.orgs.invitations.apply import (
+                apply_invite_code,
+                claim_code_for_join,
+                close_pending_invitations,
+            )
+
+            # Count the code's use first, in the same commit as the
+            # membership: a capped code can't let one more person in.
+            claimed = await claim_code_for_join(db_session, inviteCode)
+
             # Link user and organization
             user_organization = UserOrganization(
                 user_id=user.id,
@@ -119,6 +129,7 @@ async def join_org(
 
             db_session.add(user_organization)
             await db_session.commit()
+            await close_pending_invitations(request, db_session, org.id, user.email, actor=user)
 
             await increase_feature_usage("members", org.id, db_session)
 
@@ -134,10 +145,8 @@ async def join_org(
             await notify_user_joined_org(request, db_session, user, org.id, org=org)
 
             # Apply the code's role, user groups and courses (a Redis code:
-            # its user group), and count the use.
-            from src.services.orgs.invitations.apply import apply_invite_code
-
-            await apply_invite_code(request, db_session, user, org, inviteCode)
+            # its user group).
+            await apply_invite_code(request, db_session, user, org, inviteCode, claimed=claimed)
 
             return "Great, You're part of the Organization"
 
@@ -149,6 +158,12 @@ async def join_org(
 
     if join_method == "open" and user and org:
         if user.id is not None and org.id is not None:
+            # An invitation waiting for this (proven) address: joining
+            # accepts it, so the person arrives with its role, groups and
+            # courses.
+            if await _join_with_invitation(request, db_session, user, org):
+                return "Great, You're part of the Organization"
+
             # Link user and organization
             user_organization = UserOrganization(
                 user_id=user.id,
@@ -173,7 +188,7 @@ async def join_org(
                 properties={"join_method": "open"},
             )
             await notify_user_joined_org(request, db_session, user, org.id, org=org)
-            await _apply_open_join_invites(request, db_session, user, org, args.invite_code, current_user)
+            await _after_open_join(request, db_session, user, org, args.invite_code, current_user)
 
             return "Great, You're part of the Organization"
 
@@ -190,20 +205,30 @@ async def join_org(
         )
 
 
-async def _apply_open_join_invites(request: Request, db_session: AsyncSession, user: User, org: Organization, invite_code: Optional[str], current_user) -> None:
-    """Joining an open org with a verified address: an invitation waiting for
-    that address still applies (role, groups, courses); otherwise an invite
-    code the person came through does."""
-    from src.services.orgs.invitations.apply import accept_invitation, apply_invite_code, find_pending_invitation
+async def _join_with_invitation(request: Request, db_session: AsyncSession, user: User, org: Organization) -> bool:
+    """Join an open org by accepting the invitation for the user's address,
+    when the inbox is proven. True when that made them a member."""
+    from src.services.orgs.invitations.apply import accept_invitation, find_pending_invitation
+    from src.services.users.users import inbox_proven
 
-    # Only a verified address claims an invitation sent to it.
-    inv = await find_pending_invitation(db_session, user.email, org.id) if user.email_verified else None
-    if inv is not None:
-        try:
-            await accept_invitation(request, db_session, user, org, inv, via="open_join")
-        except HTTPException:
-            pass
-        return
+    if not inbox_proven(user):
+        return False
+    inv = await find_pending_invitation(db_session, user.email, org.id)
+    if inv is None:
+        return False
+    try:
+        await accept_invitation(request, db_session, user, org, inv, via="open_join")
+    except HTTPException:
+        return False
+    return True
+
+
+async def _after_open_join(request: Request, db_session: AsyncSession, user: User, org: Organization, invite_code: Optional[str], current_user) -> None:
+    """After a plain open join: close invitations left for the address (it
+    joined another way), then apply an invite code the person came through."""
+    from src.services.orgs.invitations.apply import apply_invite_code, close_pending_invitations
+
+    await close_pending_invitations(request, db_session, org.id, user.email, actor=user)
     if invite_code:
         try:
             code_data = await get_invite_code(request, org.id, invite_code, current_user, db_session)

@@ -119,6 +119,7 @@ class TestAuthUtilsService:
             "src.services.auth.utils.random.randint",
             return_value=42,
         ):
+            outcome: dict = {}
             result = await signWithGoogle(
                 request=request,
                 access_token="access-token",
@@ -126,10 +127,14 @@ class TestAuthUtilsService:
                 org_id=10,
                 current_user=current_user,
                 db_session=db_session,
+                outcome=outcome,
             )
 
         assert result is org_result
+        assert outcome == {"joined": True}
         mock_create_with_org.assert_awaited_once()
+        # The caller accepts or closes the address's invitation afterwards.
+        assert mock_create_with_org.call_args.kwargs["keep_invitations"] is True
         created_user = mock_create_with_org.call_args.args[3]
         assert created_user.email == "google@test.com"
         assert created_user.username == "AdaLovelace42"

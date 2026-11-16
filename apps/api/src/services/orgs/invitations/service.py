@@ -124,6 +124,13 @@ async def _load(db_session: AsyncSession, org: Organization, invitation_uuid: st
     return inv
 
 
+async def _lock_org(db_session: AsyncSession, org_id: int) -> None:
+    """Serialise capacity checks per org until the caller commits (SELECT ...
+    FOR UPDATE on Postgres; SQLite ignores it and serialises writes anyway),
+    so two sends can't both pass the plan check and overshoot it."""
+    await db_session.execute(select(Organization.id).where(Organization.id == org_id).with_for_update())
+
+
 async def _expire_stale(db_session: AsyncSession, org_id: int) -> None:
     now = utcnow()
     await db_session.execute(
@@ -337,6 +344,7 @@ async def invitation_options(request: Request, db_session: AsyncSession, org_id:
         select(Role).where(or_(Role.org_id.is_(None), Role.org_id == org.id)).order_by(Role.id)  # type: ignore[union-attr]
     )).scalars().all()
     unrestricted, caller_role = await policy.caller_grant_ceiling(db_session, org, current_user)
+    user_role = await policy.builtin_user_role(db_session)
     out = []
     for role in roles:
         refusal = policy.grant_refusal(role, unrestricted, caller_role, current_user)
@@ -349,7 +357,7 @@ async def invitation_options(request: Request, db_session: AsyncSession, org_id:
             "grantable": refusal is None,
             "refusal": refusal,
             "occupies_seat": policy.occupies_seat(role),
-            "code_allowed": policy.code_role_allowed(role) and refusal is None,
+            "code_allowed": policy.code_role_allowed(role, user_role) and refusal is None,
         })
     return {
         "roles": out,
@@ -456,6 +464,7 @@ async def create_invitations(request: Request, db_session: AsyncSession, org_id:
     new_emails = [e for e in valid if e not in members]
     to_update = [members[e] for e in valid if e in members] if body.update_existing_members else []
 
+    await _lock_org(db_session, org.id)
     new_members, new_seats = await _plan_demand(db_session, role, new_emails, pending, to_update)
     await policy.check_capacity(db_session, org.id, new_members, new_seats)
     if new_emails:
@@ -482,6 +491,7 @@ async def create_invitations(request: Request, db_session: AsyncSession, org_id:
         inv.message = message
         inv.invited_by_user_id = sender.id
         inv.token_hash = digest
+        inv.token_delivery = "email"
         inv.expires_at = expires_at
         inv.updated_at = now
         db_session.add(inv)
@@ -674,6 +684,7 @@ async def update_invitation(
         await policy.assert_can_grant_role(db_session, org, current_user, role)
         if role.id != inv.role_id:
             if policy.occupies_seat(role) and not policy.occupies_seat(old_role):
+                await _lock_org(db_session, org.id)
                 await policy.check_capacity(db_session, org.id, 0, 1)
             changes["role"] = {"from": old_role.name if old_role else None, "to": role.name}
             inv.role_id = role.id
@@ -728,9 +739,11 @@ async def _rotate_and_send(
         await policy.assert_can_grant_role(db_session, org, current_user, role)
     if policy.effective_status(inv) == InvitationStatus.EXPIRED.value:
         # Back to pending: it counts against the plan again.
+        await _lock_org(db_session, org.id)
         await policy.check_capacity(db_session, org.id, 1, 1 if policy.occupies_seat(role) else 0)
     token, digest = policy.mint_token()
     inv.token_hash = digest
+    inv.token_delivery = "email"
     inv.status = InvitationStatus.PENDING.value
     inv.expires_at = policy.expiry_from_days(expires_in_days)
     inv.updated_at = utcnow()
@@ -767,7 +780,8 @@ async def resend_invitation(
 async def invitation_link(request: Request, db_session: AsyncSession, org_id: int, invitation_uuid: str, current_user: Caller) -> dict:
     """A fresh personal link to share by hand. The token is only ever stored
     hashed, so this mints a new one: the link in the earlier email stops
-    working."""
+    working. A copied link doesn't prove the invitee's inbox, so they verify
+    their email before the invitation applies."""
     org, _sender = await _sending_context(request, db_session, org_id, current_user)
     inv = await _load(db_session, org, invitation_uuid)
     _require_status(inv, (InvitationStatus.PENDING.value,), "Only pending invitations have a link.")
@@ -776,6 +790,9 @@ async def invitation_link(request: Request, db_session: AsyncSession, org_id: in
         await policy.assert_can_grant_role(db_session, org, current_user, role)
     token, digest = policy.mint_token()
     inv.token_hash = digest
+    # Handed to the admin, not mailed to the address: following it proves
+    # nothing about the inbox, so joining waits for the email to be verified.
+    inv.token_delivery = "copied"
     inv.updated_at = utcnow()
     db_session.add(inv)
     await db_session.commit()
@@ -787,6 +804,11 @@ async def invitation_link(request: Request, db_session: AsyncSession, org_id: in
 
 
 async def _revoke(request: Request, db_session: AsyncSession, org: Organization, inv: OrgInvitation, current_user: Caller) -> None:
+    # Withdrawing an invitation takes the same right as granting its role: a
+    # Maintainer can't revoke an Admin's or Maintainer's invitation.
+    role = await db_session.get(Role, inv.role_id) if inv.role_id else None
+    if role is not None:
+        await policy.assert_can_grant_role(db_session, org, current_user, role)
     inv.status = InvitationStatus.REVOKED.value
     inv.updated_at = utcnow()
     db_session.add(inv)

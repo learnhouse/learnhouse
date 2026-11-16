@@ -2,7 +2,7 @@
 
 Adds ``org_invitation`` (one row per emailed invitation: the role, user groups
 and courses to apply on joining, a personal message, who sent it, its status,
-a SHA-256 of the link token and its expiry) and ``org_invite_code`` (shareable
+a SHA-256 of the link token, how that token was delivered (emailed or copied) and its expiry) and ``org_invite_code`` (shareable
 join codes with a default role, groups, courses, a use cap, a use count and an
 expiry). Both used to live in Redis; the Redis records are still honoured
 until they expire.
@@ -40,6 +40,7 @@ def upgrade() -> None:
             sa.Column('invited_by_user_id', sa.Integer(), sa.ForeignKey('user.id', ondelete='SET NULL'), nullable=True),
             sa.Column('status', sa.String(16), nullable=False, server_default='pending'),
             sa.Column('token_hash', sa.String(64), nullable=True),
+            sa.Column('token_delivery', sa.String(16), nullable=True),
             sa.Column('expires_at', sa.DateTime(timezone=True), nullable=False),
             sa.Column('accepted_at', sa.DateTime(timezone=True), nullable=True),
             sa.Column('accepted_user_id', sa.Integer(), sa.ForeignKey('user.id', ondelete='SET NULL'), nullable=True),

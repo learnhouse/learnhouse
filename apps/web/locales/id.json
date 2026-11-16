@@ -796,8 +796,11 @@
         "role": "Anda akan bergabung sebagai {{role}}.",
         "role_by": "{{name}} mengundang Anda untuk bergabung sebagai {{role}}.",
         "groups": "Anda akan ditambahkan ke: {{names}}",
-        "courses": "Anda akan didaftarkan di: {{names}}"
-      }
+        "courses": "Anda akan didaftarkan di: {{names}}",
+        "verify_note": "Tautan ini dibagikan langsung kepada Anda, jadi Anda akan memverifikasi email sebelum bergabung."
+      },
+      "verify_title": "Periksa kotak masuk Anda",
+      "verify_desc": "Akun Anda sudah siap. Kami mengirim tautan verifikasi ke {{email}}. Verifikasi email Anda, lalu buka undangan ini lagi atau terima dari halaman beranda Anda untuk bergabung dengan {{org}}."
     },
     "login_failed_forgot": "Lupa kata sandi?",
     "login_failed_reset": "Atur ulang",
@@ -9544,7 +9547,7 @@
           "error": "Terjadi kesalahan. Silakan coba lagi.",
           "resent": "Undangan baru dikirim ke {{email}}",
           "email_failed": "Email tidak dapat dikirim. Salin tautan undangan sebagai gantinya.",
-          "link_copied": "Tautan undangan disalin. Tautan di email sebelumnya tidak berfungsi lagi.",
+          "link_copied": "Tautan undangan disalin. Siapa pun yang membukanya akan memverifikasi emailnya sebelum bergabung. Tautan di email sebelumnya tidak berfungsi lagi.",
           "revoked": "Undangan dicabut",
           "updated": "Undangan diperbarui",
           "bulk_resend_one": "{{count}} undangan dikirim ulang",
@@ -11958,7 +11961,8 @@
         "members__invitation__declined": "<b>{{actor}}</b> menolak undangannya",
         "members__invitation__role_applied": "<b>{{actor}}</b> mendapatkan peran dari undangannya",
         "members__invite_code__updated": "<b>{{actor}}</b> mengubah tautan undangan",
-        "members__invite_code__used": "<b>{{actor}}</b> bergabung lewat tautan undangan"
+        "members__invite_code__used": "<b>{{actor}}</b> bergabung lewat tautan undangan",
+        "members__invitation__closed": "<b>{{actor}}</b> bergabung dengan cara lain, jadi undangannya ditutup"
       },
       "export": {
         "generating": "Menyiapkan ekspor…",

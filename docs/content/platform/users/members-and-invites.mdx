@@ -44,11 +44,11 @@ On **Signups & Invite Codes**, **Join method** decides how new people can join:
 Invite codes are shareable links or codes for a **Closed** organization: one code for a whole class. The section is greyed out while the join method is **Open**.
 
 1. Click **Generate invite code**.
-2. Pick the **role** people get when they join with it. Codes only offer learner-level roles: anyone who has the code can use it, so a code can never grant Admin, Maintainer, Instructor or any role that can manage people, groups, roles or the organization, or that opens the dashboard.
+2. Pick the **role** people get when they join with it. Codes only offer learner-level roles: anyone who has the code can use it, so a code can only grant a role that can do nothing the built-in User role can't (no Admin, Maintainer or Instructor, and no custom role that can manage people, edit content or open the dashboard).
 3. Optionally add **groups** to put everyone in and **courses** to enroll them in, a **maximum number of uses** and an **expiry** (7, 30, 90 or 365 days, or never).
 4. Copy the code or its signup link (`/signup?inviteCode=...`) and share it.
 
-Everyone who joins with the code, by email signup or Google, gets its role, groups and courses straight away. Each code shows how many times it was used (**3 / 10 uses**) and when it expires. A code that is used up or expired stops working and stays in the list until you delete it.
+Everyone who joins with the code, by email signup or Google, gets its role, groups and courses straight away. Each code shows how many times it was used (**3 / 10 uses**) and when it expires. The use is counted as the person joins, so a capped code never lets one more in. A code that is used up or expired stops working and stays in the list until you delete it.
 
 | Limit | Value |
 | --- | --- |
@@ -84,14 +84,16 @@ A summary shows what will happen ("3 people will join as Instructor, added to Co
 
 Each person gets a branded email with a personal link. **Whichever way they arrive, everything is applied automatically when they join**: the membership with the chosen role, the groups and the course enrollments, in one step. That works when they:
 
-- follow the link and create their account (the link proves their email, so the account starts verified);
+- follow the emailed link and create their account (the emailed link proves their email, so the account starts verified);
 - follow the link and sign in to an existing account (they must be signed in with the invited address);
 - accept from the list of pending invitations on their LearnHouse home page;
 - sign in with Google using the invited address.
 
 Whoever sent the invitation gets a notification when it is accepted.
 
-**People who are already members** are skipped and reported as such. Tick **Also update the people who are already members** to apply the role, groups and courses to them instead; their role then follows the same rules as changing it on the Users list (you can't change your own role, and only admins can change an admin's or maintainer's role). An invitation never demotes an Admin.
+**People who are already members** are skipped and reported as such. Tick **Also update the people who are already members** to apply the role, groups and courses to them instead; their role then follows the same rules as changing it on the Users list (you can't change your own role, and only admins can change an admin's or maintainer's role).
+
+An invitation never demotes anyone: accepting one only changes the role of someone already in the organization when the new role takes nothing away, and signing in with Google never changes an existing member's role. When someone joins another way (an invite code, open signup, an admin or your identity provider adding them), their pending invitations close.
 
 <img src="/img/pages/users/users-invite-members.webp" alt="The Invite tab with the invitations list, its status filters and the Invite people button" width={1600} height={900} style={{ borderRadius: 10 }} />
 
@@ -100,7 +102,7 @@ Whoever sent the invitation gets a notification when it is accepted.
 The **Invite** tab lists every invitation with its status (**Pending**, **Accepted**, **Expired**, **Revoked** or **Declined**), role, groups and courses, who sent it and when it expires. Filter by status with the tiles or the filter bar, and search by email. For each invitation you can:
 
 - **Resend**: emails a new link and restarts the expiry. The link in the earlier email stops working.
-- **Copy invite link**: to share it yourself, for example when the email didn't arrive. This also replaces the earlier link.
+- **Copy invite link**: to share it yourself, for example when the email didn't arrive. This also replaces the earlier link. A copied link doesn't prove the person owns the address, so they verify their email before the invitation applies; resend it by email if you want them to join in one step.
 - **Change role or access**: edit the role, groups, courses, message or expiry while it is still pending.
 - **Revoke**: the link stops working.
 
@@ -114,12 +116,12 @@ Select several invitations to resend or revoke them together.
 
 ### Who can invite whom
 
-- Admins and Maintainers can invite people. Only **Admins** can invite someone as Admin or Maintainer.
+- Admins and Maintainers can invite people. Only **Admins** can invite someone as Admin or Maintainer, or revoke such an invitation.
 - Below Admin, nobody can grant a role with a permission their own role doesn't have.
 - Groups, courses and roles must belong to your organization.
 - On plans with a member limit, pending invitations count toward it. Roles that open the dashboard (Admin, Maintainer, Instructor) count toward your plan's admin seats, pending invitations included. If an invitation would go over a limit, the dialog says so and sending is blocked.
 
-Personal links are single use and bound to the invited address; only a fingerprint of each link is stored. Every step is recorded in the [audit log](/enterprise/audit-logs) (invited, resent, changed, revoked, accepted, role applied). Each send fires the `user_invited_to_org` event for [webhooks and Zapier](/platform/automations/events).
+Personal links are single use and bound to the invited address; only a fingerprint of each link is stored. Invitations are only shown to, accepted by or declined by an account that has proven it owns the address (a verified email, Google, or the emailed link itself). Every step is recorded in the [audit log](/enterprise/audit-logs) (invited, resent, changed, revoked, accepted, role applied). Each send fires the `user_invited_to_org` event for [webhooks and Zapier](/platform/automations/events).
 
 Invitations sent before this version keep working until they expire. They show in the list as older invitations, which you can still revoke.
 
