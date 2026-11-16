@@ -13504,6 +13504,7 @@
     "collab": {
       "no_cursor": "{{name}} has no cursor in the page right now",
       "jump_to": "Go to {{name}}",
+      "is_editing": "{{name}} is editing",
       "status": {
         "live": "Live",
         "saving": "Saving…",
@@ -13524,6 +13525,7 @@
       "too_large": "This page is too large to keep editing together. Split it into smaller pages.",
       "title": {
         "live": "Connected. Changes are saved automatically.",
+        "live_sync": "Live: everyone's changes sync and save automatically",
         "save_retry": "Saving failed; retrying.",
         "saving": "Saving your changes…",
         "saved": "All changes saved",

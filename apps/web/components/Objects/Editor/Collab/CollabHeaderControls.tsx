@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast'
 import EditorHeaderControls from '../Header/EditorHeaderControls'
 import type { SaveState } from '../Header/SaveIndicator'
 import type { CollabSession } from './collabRuntime'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { avatarUrl } from './collabAvatar'
 import { useCollabSnapshot } from './CollabContext'
 import { type CollabPeer, type CollabSnapshot, deriveStatus, initials } from './collabStatus'
@@ -12,51 +13,86 @@ import './collab.css'
 
 const MAX_AVATARS = 3
 
-function PeerAvatar({ peer, onClick, label }: { peer: CollabPeer; onClick: () => void; label: string }) {
+/**
+ * One collaborator: their photo (or initials on their colour), ringed in the
+ * colour of their caret and mouse pointer. Click to go to their caret.
+ */
+function PeerAvatar({ peer, onClick, label, z }: { peer: CollabPeer; onClick: () => void; label: string; z: number }) {
   const url = avatarUrl(peer)
+  const [broken, setBroken] = React.useState(false)
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      aria-label={label}
-      data-collab-peer={peer.id}
-      className={`relative -ms-1 first:ms-0 size-6 shrink-0 rounded-full ring-2 ring-white transition-opacity hover:z-10 focus-visible:outline-none ${peer.idle ? 'opacity-50' : ''}`}
-      style={{ boxShadow: `0 0 0 3px ${peer.color}` }}
-    >
-      {url ? (
-        <img src={url} alt="" className="size-full rounded-full object-cover" />
-      ) : (
-        <span className="flex size-full items-center justify-center rounded-full text-[9px] font-bold text-white" style={{ backgroundColor: peer.color }}>
-          {initials(peer.name)}
-        </span>
-      )}
-    </button>
+    <ToolTip content={peer.name} side="bottom">
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        data-collab-peer={peer.id}
+        className={`relative -ms-1 first:ms-0 size-[26px] shrink-0 rounded-full transition-[transform,opacity] hover:!z-20 hover:-translate-y-px focus-visible:!z-20 focus-visible:outline-none ${peer.idle ? 'opacity-55' : ''}`}
+        // White gap, then the person's colour (matches their caret and pointer)
+        style={{ zIndex: z, boxShadow: `0 0 0 2px var(--lh-collab-avatar-gap, #fff), 0 0 0 3.5px ${peer.color}` }}
+      >
+        {url && !broken ? (
+          <img src={url} alt="" onError={() => setBroken(true)} className="size-full rounded-full object-cover" />
+        ) : (
+          <span
+            className="flex size-full items-center justify-center rounded-full text-[10px] font-bold leading-none tracking-tight text-white"
+            style={{ backgroundColor: peer.color }}
+          >
+            {initials(peer.name)}
+          </span>
+        )}
+      </button>
+    </ToolTip>
   )
 }
 
 function PresenceAvatars({ session, peers }: { session: CollabSession; peers: CollabPeer[] }) {
   const { t } = useTranslation()
   if (peers.length === 0) return null
-  const shown = peers.slice(0, MAX_AVATARS)
-  const hidden = peers.slice(MAX_AVATARS)
+  // Room for MAX_AVATARS: show them all, else MAX_AVATARS - 1 and a "+N"
+  const shown = peers.length <= MAX_AVATARS ? peers : peers.slice(0, MAX_AVATARS - 1)
+  const hidden = peers.slice(shown.length)
   const jump = (peer: CollabPeer) => {
     if (!session.scrollToUser(peer.id)) {
       toast(t('editor.collab.no_cursor', '{{name}} has no cursor in the page right now', { name: peer.name }))
     }
   }
   return (
-    <div className="flex items-center ps-1" data-testid="collab-presence">
-      {shown.map((peer) => (
-        <PeerAvatar key={peer.id} peer={peer} onClick={() => jump(peer)} label={t('editor.collab.jump_to', 'Go to {{name}}', { name: peer.name })} />
+    <div className="flex items-center px-1.5" data-testid="collab-presence">
+      {/* The first is on top of the stack */}
+      {shown.map((peer, i) => (
+        <PeerAvatar
+          key={peer.id}
+          peer={peer}
+          z={shown.length - i}
+          onClick={() => jump(peer)}
+          label={t('editor.collab.jump_to', 'Go to {{name}}', { name: peer.name })}
+        />
       ))}
       {hidden.length > 0 && (
-        <span
-          title={hidden.map((p) => p.name).join(', ')}
-          className="-ms-1 flex size-6 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold text-neutral-600 ring-2 ring-white"
+        <ToolTip
+          side="bottom"
+          content={
+            <span className="flex flex-col gap-0.5">
+              {hidden.map((p) => (
+                <span key={p.id} className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full" style={{ backgroundColor: p.color }} />
+                  {p.name}
+                </span>
+              ))}
+            </span>
+          }
         >
-          +{hidden.length}
-        </span>
+          <span
+            tabIndex={0}
+            aria-label={hidden.map((p) => p.name).join(', ')}
+            data-testid="collab-presence-more"
+            className="relative -ms-1 flex size-[26px] items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold tabular-nums text-neutral-600 outline-none"
+            style={{ boxShadow: '0 0 0 2px var(--lh-collab-avatar-gap, #fff)' }}
+          >
+            +{hidden.length}
+          </span>
+        </ToolTip>
       )}
     </div>
   )
@@ -73,7 +109,7 @@ export function collabSaveState(snapshot: CollabSnapshot): SaveState {
     readonly: 'readonly',
     error: 'failed',
   } as const
-  return { status: map[status], lastSavedAt: snapshot.lastSavedAt }
+  return { status: map[status], lastSavedAt: snapshot.lastSavedAt, collaborative: true }
 }
 
 /** Header controls in collaborative mode: presence + the shared controls. */

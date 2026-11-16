@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import type { Editor } from '@tiptap/core'
+import { useCollabSession } from '../Collab/CollabContext'
 import {
   type CommentThread,
   type CommentThreadList,
@@ -9,10 +10,13 @@ import {
 
 // Thread list for one activity, kept fresh while several people edit.
 //
-// In collaborative mode the Y doc is shared, so a mutation bumps
-// `meta.commentsRev` in it and every other client refetches at once. Without
-// collaboration (legacy manual-save mode) there is no shared channel: poll
-// every 30 s while the tab is visible, and refetch when it regains focus.
+// In collaborative mode a mutation sends a small "comments changed" signal
+// over the room's connection (relayed by the collab server, never stored)
+// and every other editor refetches at once. Older clients bumped
+// `meta.commentsRev` in the shared Y doc instead, which also saved the
+// document; that bump is still listened to. Without collaboration (legacy
+// manual-save mode) there is no shared channel: poll every 30 s while the
+// tab is visible, and refetch when it regains focus.
 
 export const POLL_MS = 30_000
 const META_MAP = 'meta'
@@ -43,6 +47,7 @@ export function useActivityComments(editor: Editor | null, activityUuid: string,
   React.useEffect(() => {
     tokenRef.current = token
   }, [token])
+  const session = useCollabSession()
   const inflight = React.useRef<Promise<void> | null>(null)
   const again = React.useRef(false)
 
@@ -92,8 +97,10 @@ export function useActivityComments(editor: Editor | null, activityUuid: string,
     return () => meta.unobserve(onChange)
   }, [ydoc, refetch])
 
+  React.useEffect(() => (session ? session.onSignal('comments', () => refetch()) : undefined), [session, refetch])
+
   React.useEffect(() => {
-    if (ydoc) return
+    if (ydoc || session) return
     const tick = () => {
       if (document.visibilityState === 'visible') refetch()
       // Collaboration may have connected since: switch channel.
@@ -107,10 +114,14 @@ export function useActivityComments(editor: Editor | null, activityUuid: string,
       window.clearInterval(id)
       window.removeEventListener('focus', onFocus)
     }
-  }, [ydoc, editor, refetch])
+  }, [ydoc, session, editor, refetch])
 
   /** Tell the other editors that comments changed. */
   const bump = React.useCallback(() => {
+    if (session) {
+      session.signal('comments')
+      return
+    }
     if (!ydoc) return
     const meta = ydoc.getMap(META_MAP)
     const rev = Number(meta.get(REV_KEY)) || 0
@@ -138,5 +149,5 @@ export function useActivityComments(editor: Editor | null, activityUuid: string,
     [bump]
   )
 
-  return { data, error, refetch, applyThread, collaborative: !!ydoc }
+  return { data, error, refetch, applyThread, collaborative: !!ydoc || !!session }
 }

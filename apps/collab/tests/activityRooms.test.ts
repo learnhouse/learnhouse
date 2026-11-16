@@ -2,7 +2,13 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import http from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { ACTIVITY_SEATS, presenceUserOf, sanitizeActivityAwareness } from '../src/activityPresence.ts'
+import {
+  ACTIVITY_SEATS,
+  AWARENESS_BURST,
+  createAwarenessLimiter,
+  presenceUserOf,
+  sanitizeActivityAwareness,
+} from '../src/activityPresence.ts'
 import { seatRefusal } from '../src/seats.ts'
 import { createRoomRegistry, type RoomKind } from '../src/rooms.ts'
 import { extractLiveNotesUuid } from '../src/liveNotesRoom.ts'
@@ -76,6 +82,82 @@ describe('activity presence', () => {
     const reclaimed = new Map<number, Record<string, any>>([[5, {}]])
     sanitizeActivityAwareness(bob, reclaimed, new Set(), claims, [bob])
     assert.equal(reclaimed.get(5)!.user.name, 'Bob')
+  })
+
+  it('keeps a well-formed mouse pointer from editors only', () => {
+    const states = new Map<number, Record<string, any>>([[1, { pointer: { b: 3, x: 0.5, y: 0.25, extra: 'x'.repeat(500) } }]])
+    sanitizeActivityAwareness(ada, states, new Set(), new Map(), [ada])
+    assert.deepEqual(states.get(1)!.pointer, { b: 3, x: 0.5, y: 0.25 })
+    const onText = new Map<number, Record<string, any>>([[1, { pointer: { b: 3, x: 0.5, y: 0.25, p: 42, dx: 4, dy: 999 } }]])
+    sanitizeActivityAwareness(ada, onText, new Set(), new Map(), [ada])
+    assert.deepEqual(onText.get(1)!.pointer, { b: 3, x: 0.5, y: 0.25, p: 42, dx: 4, dy: 0 })
+    const badPos = new Map<number, Record<string, any>>([[1, { pointer: { b: 3, x: 0.5, y: 0.25, p: -4 } }]])
+    sanitizeActivityAwareness(ada, badPos, new Set(), new Map(), [ada])
+    assert.deepEqual(badPos.get(1)!.pointer, { b: 3, x: 0.5, y: 0.25 })
+
+    const withBlock = new Map<number, Record<string, any>>([[1, { block: { b: 4, extra: 1 } }], [2, { block: { b: -1 } }], [3, { block: 'x' }]])
+    sanitizeActivityAwareness(ada, withBlock, new Set(), new Map(), [ada])
+    assert.deepEqual(withBlock.get(1)!.block, { b: 4 })
+    assert.equal('block' in withBlock.get(2)!, false)
+    assert.equal('block' in withBlock.get(3)!, false)
+
+    const viewer = conn({ id: 3, name: 'Viewer' }, true)
+    const fromViewer = new Map<number, Record<string, any>>([[2, { pointer: { b: 0, x: 0.1, y: 0.1 } }]])
+    fromViewer.get(2)!.block = { b: 1 }
+    sanitizeActivityAwareness(viewer, fromViewer, new Set(), new Map(), [viewer])
+    assert.equal('pointer' in fromViewer.get(2)!, false)
+    assert.equal('block' in fromViewer.get(2)!, false)
+
+    for (const pointer of [
+      null,
+      'x',
+      [1, 2, 3],
+      { b: -1, x: 0, y: 0 },
+      { b: 1.5, x: 0, y: 0 },
+      { b: 1_000_000, x: 0, y: 0 },
+      { b: 1, x: Number.NaN, y: 0 },
+      { b: 1, x: 5, y: 0 },
+      { b: 1, x: 0, y: -100 },
+      { b: '1', x: 0, y: 0 },
+    ]) {
+      const bad = new Map<number, Record<string, any>>([[4, { pointer }]])
+      sanitizeActivityAwareness(ada, bad, new Set(), new Map(), [ada])
+      assert.equal('pointer' in bad.get(4)!, false, JSON.stringify(pointer))
+    }
+  })
+
+  it('caps the awareness rate of one connection but never blocks leaving', () => {
+    let now = 0
+    const limiter = createAwarenessLimiter(AWARENESS_BURST, 25, () => now)
+    const flood = conn({ id: 9, name: 'Flood' })
+    const send = () => {
+      const states = new Map<number, Record<string, any>>([[7, { pointer: { b: 0, x: 0.5, y: 0.5 } }]])
+      sanitizeActivityAwareness(flood, states, new Set(), new Map(), [flood], limiter)
+      return states.size
+    }
+    let accepted = 0
+    for (let i = 0; i < 100; i++) accepted += send()
+    assert.equal(accepted, AWARENESS_BURST, 'a burst goes through, the rest is dropped')
+    // Refills at 25 a second: 200 ms later, 5 more
+    now = 200
+    accepted = 0
+    for (let i = 0; i < 20; i++) accepted += send()
+    assert.equal(accepted, 5)
+    // The editor's real pace (one every 66 ms) is never limited
+    const editor = conn({ id: 10, name: 'Editor' })
+    let kept = 0
+    for (let i = 0; i < 1000; i++) {
+      now += 66
+      const states = new Map<number, Record<string, any>>([[8, { pointer: { b: 0, x: 0.5, y: 0.5 } }]])
+      sanitizeActivityAwareness(editor, states, new Set(), new Map(), [editor], limiter)
+      kept += states.size
+    }
+    assert.equal(kept, 1000)
+    // Removing your own state still works while limited
+    const claims = new Map([[7, flood]])
+    const removed = new Set([7])
+    sanitizeActivityAwareness(flood, new Map(), removed, claims, [flood], limiter)
+    assert.equal(removed.size, 1)
   })
 
   it('fills a safe identity when the context is incomplete', () => {

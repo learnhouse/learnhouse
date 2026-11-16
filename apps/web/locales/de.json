@@ -13519,6 +13519,7 @@
     "collab": {
       "no_cursor": "{{name}} hat gerade keinen Cursor auf der Seite",
       "jump_to": "Zu {{name}} springen",
+      "is_editing": "{{name}} bearbeitet",
       "status": {
         "live": "Live",
         "saving": "Speichert …",
@@ -13539,6 +13540,7 @@
       "too_large": "Diese Seite ist zu groß, um gemeinsam weiterbearbeitet zu werden. Teile sie in kleinere Seiten auf.",
       "title": {
         "live": "Verbunden. Änderungen werden automatisch gespeichert.",
+        "live_sync": "Live: Änderungen aller werden synchronisiert und automatisch gespeichert",
         "save_retry": "Speichern fehlgeschlagen; neuer Versuch läuft.",
         "saving": "Deine Änderungen werden gespeichert …",
         "saved": "Alle Änderungen gespeichert",

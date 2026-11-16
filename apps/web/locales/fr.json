@@ -13742,6 +13742,7 @@
     "collab": {
       "no_cursor": "{{name}} n’a pas de curseur dans la page pour le moment",
       "jump_to": "Aller à {{name}}",
+      "is_editing": "{{name}} modifie",
       "status": {
         "live": "En direct",
         "saving": "Enregistrement…",
@@ -13762,6 +13763,7 @@
       "too_large": "Cette page est trop volumineuse pour être modifiée à plusieurs. Divisez-la en pages plus petites.",
       "title": {
         "live": "Connecté. Les modifications sont enregistrées automatiquement.",
+        "live_sync": "En direct : les modifications de chacun sont synchronisées et enregistrées automatiquement",
         "save_retry": "L’enregistrement a échoué ; nouvelle tentative.",
         "saving": "Enregistrement de vos modifications…",
         "saved": "Toutes les modifications sont enregistrées",

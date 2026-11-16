@@ -13742,6 +13742,7 @@
     "collab": {
       "no_cursor": "{{name}} não tem cursor na página agora",
       "jump_to": "Ir para {{name}}",
+      "is_editing": "{{name}} está editando",
       "status": {
         "live": "Ao vivo",
         "saving": "Salvando…",
@@ -13762,6 +13763,7 @@
       "too_large": "Esta página é grande demais para continuar sendo editada em conjunto. Divida-a em páginas menores.",
       "title": {
         "live": "Conectado. As alterações são salvas automaticamente.",
+        "live_sync": "Ao vivo: as alterações de todos são sincronizadas e salvas automaticamente",
         "save_retry": "Falha ao salvar; tentando novamente.",
         "saving": "Salvando suas alterações…",
         "saved": "Todas as alterações salvas",

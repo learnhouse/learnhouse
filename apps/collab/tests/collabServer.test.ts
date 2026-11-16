@@ -242,6 +242,62 @@ describe('collab server: activity rooms', () => {
     await waitFor(() => !server.collab.server.hocuspocus.documents.has(ROOM), 3000, 'unload')
   })
 
+  it('relays editors\' mouse pointers in memory only, never viewers\' and never as a save', async () => {
+    const a = await connect(server, 1)
+    const b = await connect(server, 2)
+    const viewer = await connect(server, 3)
+    const putsBefore = server.mem.puts.length
+    a.provider.awareness!.setLocalStateField('pointer', { b: 2, x: 0.25, y: 0.5 })
+    viewer.provider.awareness!.setLocalStateField('pointer', { b: 0, x: 0.1, y: 0.1 })
+    await waitFor(() => b.provider.awareness!.getStates().get(a.ydoc.clientID)?.pointer?.b === 2, 3000, 'pointer relayed')
+    assert.deepEqual(b.provider.awareness!.getStates().get(a.ydoc.clientID)!.pointer, { b: 2, x: 0.25, y: 0.5 })
+    await waitFor(() => b.provider.awareness!.getStates().has(viewer.ydoc.clientID), 3000, 'viewer presence')
+    assert.equal('pointer' in b.provider.awareness!.getStates().get(viewer.ydoc.clientID)!, false)
+    // Moving the pointer around is not an edit: nothing is stored
+    for (let i = 0; i < 20; i++) {
+      a.provider.awareness!.setLocalStateField('pointer', { b: 2, x: 0.25 + i / 100, y: 0.5 })
+      await new Promise((r) => setTimeout(r, 20))
+    }
+    await waitFor(() => b.provider.awareness!.getStates().get(a.ydoc.clientID)?.pointer?.x === 0.44, 3000, 'last pointer')
+    await new Promise((r) => setTimeout(r, 400))
+    assert.equal(server.mem.puts.length, putsBefore, 'pointer moves never trigger a save')
+    // Clearing the pointer reaches the others
+    a.provider.awareness!.setLocalStateField('pointer', null)
+    await waitFor(() => !('pointer' in (b.provider.awareness!.getStates().get(a.ydoc.clientID) ?? { pointer: 1 })), 3000, 'pointer cleared')
+    a.provider.destroy()
+    b.provider.destroy()
+    viewer.provider.destroy()
+    await waitFor(() => !server.collab.server.hocuspocus.documents.has(ROOM), 3000, 'unload')
+  })
+
+  it('relays change signals to the other editors only, for known topics, rate limited', async () => {
+    const a = await connect(server, 1)
+    const b = await connect(server, 2)
+    const viewer = await connect(server, 3)
+    const putsBefore = server.mem.puts.length
+    a.provider.sendStateless(JSON.stringify({ type: 'signal', topic: 'comments', extra: 'dropped' }))
+    await waitFor(() => b.stateless.some((m) => m.type === 'signal'), 3000, 'signal relayed')
+    assert.deepEqual(b.stateless.find((m) => m.type === 'signal'), { type: 'signal', topic: 'comments', by: 1 })
+    await waitFor(() => viewer.stateless.some((m) => m.type === 'signal'), 3000, 'viewers hear it too')
+    assert.equal(a.stateless.some((m) => m.type === 'signal'), false, 'not echoed to the sender')
+    // A burst collapses to one relay at the end of the interval; unknown
+    // topics and viewers are ignored
+    const count = () => b.stateless.filter((m) => m.type === 'signal').length
+    for (let i = 0; i < 10; i++) a.provider.sendStateless(JSON.stringify({ type: 'signal', topic: 'comments' }))
+    a.provider.sendStateless(JSON.stringify({ type: 'signal', topic: 'anything' }))
+    viewer.provider.sendStateless(JSON.stringify({ type: 'signal', topic: 'comments' }))
+    await new Promise((r) => setTimeout(r, 100))
+    assert.equal(count(), 1, 'nothing more within the interval')
+    await waitFor(() => count() === 2, 3000, 'one trailing relay for the burst')
+    await new Promise((r) => setTimeout(r, 400))
+    assert.equal(count(), 2, 'the burst cost one message, junk ignored')
+    assert.equal(server.mem.puts.length, putsBefore, 'signals never save the document')
+    a.provider.destroy()
+    b.provider.destroy()
+    viewer.provider.destroy()
+    await waitFor(() => !server.collab.server.hocuspocus.documents.has(ROOM), 3000, 'unload')
+  })
+
   it('applies an external write to connected clients and tells them who made it', async () => {
     const a = await connect(server, 1)
     const version = server.mem.activities.get(UUID)!.version

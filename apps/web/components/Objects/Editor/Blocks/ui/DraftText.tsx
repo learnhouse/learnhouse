@@ -1,17 +1,21 @@
 'use client'
 /*
  Inline text field for block interiors (quiz questions/options, flipcard
- faces). Keeps a local draft while focused and commits once on blur (or
- Enter when `onEnter` is set), so collaborators get one update per edit
- instead of one per keystroke. While not focused it follows the stored value,
- so undo and remote edits show up.
+ faces). Keeps a local draft while focused and commits it after a short
+ pause in typing (and on blur, or Enter when `onEnter` is set), so
+ collaborators see the text as it is written, one update per pause instead
+ of one per keystroke. While not focused it follows the stored value, so
+ undo and remote edits show up.
 
- Escape reverts the draft. The draft lives in a ref as well as in state:
+ Escape reverts the field to what it held when it was focused. The draft lives in a ref as well as in state:
  blur() called from the keydown handler runs the blur handler of the CURRENT
  render, which would otherwise still see the old draft.
 */
 import React from 'react'
 import { cn } from '@/lib/utils'
+
+/** Pause in typing after which the draft is committed (others see it). */
+export const LIVE_COMMIT_MS = 400
 
 export interface DraftTextHandle {
   focus: (_atEnd?: boolean) => void
@@ -43,7 +47,25 @@ export const DraftText = React.forwardRef<DraftTextHandle, Props>(function Draft
   const editing = React.useRef(false)
   // What this field last committed (or found on focus): blur only commits a change.
   const committed = React.useRef(value)
+  // What the field held on focus: Escape goes back to it.
+  const atFocus = React.useRef(value)
+  const pause = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const el = React.useRef<HTMLTextAreaElement>(null)
+  const onCommitRef = React.useRef(onCommit)
+  onCommitRef.current = onCommit
+
+  const clearPause = () => {
+    if (pause.current) clearTimeout(pause.current)
+    pause.current = null
+  }
+  const commitDraft = () => {
+    clearPause()
+    if (draftRef.current !== committed.current) {
+      committed.current = draftRef.current
+      onCommitRef.current(draftRef.current)
+    }
+  }
+  React.useEffect(() => clearPause, [])
 
   React.useEffect(() => {
     if (!editing.current) {
@@ -78,10 +100,7 @@ export const DraftText = React.forwardRef<DraftTextHandle, Props>(function Draft
   const commit = () => {
     editing.current = false
     onFocusChange?.(false)
-    if (draftRef.current !== committed.current) {
-      committed.current = draftRef.current
-      onCommit(draftRef.current)
-    }
+    commitDraft()
   }
 
   return (
@@ -98,12 +117,15 @@ export const DraftText = React.forwardRef<DraftTextHandle, Props>(function Draft
       onFocus={() => {
         editing.current = true
         committed.current = value
+        atFocus.current = value
         onFocusChange?.(true)
       }}
       onChange={(e) => {
         const next = multiline ? e.target.value : e.target.value.replace(/\n/g, ' ')
         draftRef.current = next
         setDraft(next)
+        clearPause()
+        pause.current = setTimeout(commitDraft, LIVE_COMMIT_MS)
       }}
       onBlur={commit}
       onKeyDown={(e) => {
@@ -111,24 +133,23 @@ export const DraftText = React.forwardRef<DraftTextHandle, Props>(function Draft
         if (!e.metaKey && !e.ctrlKey) e.stopPropagation()
         if (e.key === 'Escape') {
           e.preventDefault()
-          draftRef.current = committed.current
-          setDraft(committed.current)
+          clearPause()
+          draftRef.current = atFocus.current
+          setDraft(atFocus.current)
           e.currentTarget.blur()
           return
         }
         if (e.key === 'Enter' && !e.nativeEvent.isComposing && (onEnter || !multiline) && !(multiline && e.shiftKey)) {
           e.preventDefault()
           const v = draftRef.current
-          if (v !== committed.current) {
-            committed.current = v
-            onCommit(v)
-          }
+          commitDraft()
           if (onEnter) onEnter(v)
           else e.currentTarget.blur()
           return
         }
         if (e.key === 'Backspace' && onEmptyBackspace && draftRef.current === '') {
           e.preventDefault()
+          clearPause()
           committed.current = ''
           onEmptyBackspace()
         }

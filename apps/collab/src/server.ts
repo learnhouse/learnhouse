@@ -53,6 +53,13 @@ const CHECKPOINT_INTERVAL_MS = 5000
 // Tokens this close to expiry are treated as expired by the re-check, so a
 // clock skew with the API can't turn "about to lapse" into a revoke.
 const TOKEN_EXPIRY_MARGIN_MS = 30_000
+// "Something changed, refetch" signals an editor may relay to the others in
+// its activity room, for data that lives outside the Y document (REST):
+// comments. Only the topic travels; clients refetch through the API, which
+// checks access as usual.
+export const SIGNAL_TOPICS = new Set(['comments'])
+// Fewest milliseconds between two relayed signals from one connection
+const SIGNAL_INTERVAL_MS = 250
 // Plain HTTP requests (health checks, probes) per IP
 const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
 const RATE_LIMIT_MAX = 30 // max requests per IP per window
@@ -139,6 +146,9 @@ export function createCollabServer(opts: CollabServerOptions) {
   const awarenessClaims = new WeakMap<object, Map<number, any>>()
   // Last named version per connection, to rate limit checkpoints
   const lastCheckpoint = new WeakMap<object, number>()
+  // Last relayed signal per connection, and the trailing relay a burst waits for
+  const lastSignal = new WeakMap<object, number>()
+  const pendingSignal = new WeakMap<object, Set<string>>()
 
   const server = new Server({
     port: opts.port,
@@ -218,14 +228,45 @@ export function createCollabServer(opts: CollabServerOptions) {
       }
     },
 
-    async onStateless({ connection, documentName, payload }: onStatelessPayload) {
-      // Named versions ("Save version"), editors of activity rooms only
+    async onStateless({ connection, document, documentName, payload }: onStatelessPayload) {
+      // Named versions ("Save version") and change signals, editors of activity rooms only
       const room = registry.resolve(documentName)
       if (room?.kind.name !== 'activity' || connection.readOnly) return
+      if (payload.length > 512 && !payload.includes('"checkpoint"')) return
       let message: any
       try {
         message = JSON.parse(payload)
       } catch {
+        return
+      }
+      if (message?.type === 'signal') {
+        // Relayed to the room's other connections as {type, topic, by}: nothing
+        // else from the client goes through, nothing is stored.
+        // A burst collapses into one relay now and one at the end of the
+        // interval, so the last change always reaches the others.
+        const topic = message.topic
+        if (typeof topic !== 'string' || !SIGNAL_TOPICS.has(topic)) return
+        const relay = (t: string) => {
+          lastSignal.set(connection, Date.now())
+          const by = Number(connection.context?.user?.id) || null
+          document.broadcastStateless(JSON.stringify({ type: 'signal', topic: t, by }), (other) => other !== connection)
+        }
+        const wait = SIGNAL_INTERVAL_MS - (Date.now() - (lastSignal.get(connection) ?? 0))
+        if (wait <= 0) {
+          relay(topic)
+          return
+        }
+        let pending = pendingSignal.get(connection)
+        if (!pending) {
+          pending = new Set()
+          pendingSignal.set(connection, pending)
+          setTimeout(() => {
+            const topics = pendingSignal.get(connection)
+            pendingSignal.delete(connection)
+            topics?.forEach(relay)
+          }, wait).unref?.()
+        }
+        pending.add(topic)
         return
       }
       if (message?.type !== 'checkpoint') return

@@ -6,6 +6,7 @@
  commit on click.
 */
 import React from 'react'
+import { LIVE_COMMIT_MS } from '../../Blocks/ui/DraftText'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowDown,
@@ -66,8 +67,30 @@ export function InlineTextArea({
   const [draft, setDraft] = React.useState(value)
   const editing = React.useRef(false)
   const ref = React.useRef<HTMLTextAreaElement>(null)
+  // Committed after a pause in typing too, so collaborators see the text as
+  // it is written (one update per pause, not per keystroke)
+  const draftRef = React.useRef(value)
+  const committed = React.useRef(value)
+  const atFocus = React.useRef(value)
+  const pause = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onCommitRef = React.useRef(onCommit)
+  onCommitRef.current = onCommit
+  const flush = () => {
+    if (pause.current) clearTimeout(pause.current)
+    pause.current = null
+    if (draftRef.current !== committed.current) {
+      committed.current = draftRef.current
+      onCommitRef.current(draftRef.current)
+    }
+  }
+  React.useEffect(() => () => {
+    if (pause.current) clearTimeout(pause.current)
+  }, [])
   React.useEffect(() => {
-    if (!editing.current) setDraft(value)
+    if (!editing.current) {
+      setDraft(value)
+      draftRef.current = value
+    }
   }, [value])
   React.useLayoutEffect(() => {
     const el = ref.current
@@ -89,16 +112,27 @@ export function InlineTextArea({
         'w-full resize-none overflow-hidden rounded-lg bg-transparent px-2 py-1.5 outline-none transition-shadow placeholder:text-neutral-400 hover:bg-neutral-50 focus:bg-white focus:shadow-[0_0_0_1px_rgba(0,0,0,0.15),0_0_0_3px_rgba(22,163,74,0.08)]',
         className,
       )}
-      onFocus={() => (editing.current = true)}
-      onChange={(e) => setDraft(e.target.value)}
+      onFocus={() => {
+        editing.current = true
+        committed.current = value
+        atFocus.current = value
+      }}
+      onChange={(e) => {
+        draftRef.current = e.target.value
+        setDraft(e.target.value)
+        if (pause.current) clearTimeout(pause.current)
+        pause.current = setTimeout(flush, LIVE_COMMIT_MS)
+      }}
       onBlur={() => {
         editing.current = false
-        if (draft !== value) onCommit(draft)
+        flush()
       }}
       onKeyDown={(e) => {
         e.stopPropagation()
         if (e.key === 'Escape') {
-          setDraft(value)
+          draftRef.current = atFocus.current
+          setDraft(atFocus.current)
+          flush()
           editing.current = false
           ;(e.target as HTMLTextAreaElement).blur()
         }

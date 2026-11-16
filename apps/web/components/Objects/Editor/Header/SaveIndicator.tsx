@@ -12,6 +12,8 @@ export interface SaveState {
   status: SaveStatus
   lastSavedAt: number | null
   onRetry?: () => void
+  /** Live editing with others: the live state says so in words. */
+  collaborative?: boolean
 }
 
 function relative(ms: number, locale: string): string {
@@ -45,7 +47,9 @@ export default function SaveIndicator({ state }: { state: SaveState }) {
         </span>
       ),
       label: t('editor.save_status.live', 'Live'),
-      title: savedAgo
+      title: state.collaborative
+        ? t('editor.collab.title.live_sync', "Live: everyone's changes sync and save automatically")
+        : savedAgo
         ? t('editor.save_status.live_ago_short', 'Live: all changes saved {{when}}', { when: savedAgo })
         : t('editor.save_status.live_tip', 'Live: all changes saved'),
       tone: 'text-emerald-700',
@@ -73,7 +77,7 @@ export default function SaveIndicator({ state }: { state: SaveState }) {
     },
     offline: {
       icon: <CloudSlash size={14} />,
-      label: t('editor.save_status.offline_short', 'Offline'),
+      label: state.collaborative ? t('editor.collab.status.reconnecting', 'Reconnecting') : t('editor.save_status.offline_short', 'Offline'),
       title: t('editor.save_status.offline_title', 'Keep editing: your changes sync when the connection is back.'),
       tone: 'text-amber-700',
     },
@@ -101,7 +105,8 @@ export default function SaveIndicator({ state }: { state: SaveState }) {
   const current = look[state.status]
   // The normal state is just the dot (or cloud); only states that need
   // attention spell themselves out, keeping the header narrow
-  const quiet = state.status === 'live' || state.status === 'saved'
+  // (Live editing with others names itself: it tells you edits sync.)
+  const quiet = (state.status === 'live' && !state.collaborative) || state.status === 'saved'
 
   return (
     <ToolTip content={current.title} side="bottom">

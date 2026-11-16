@@ -13995,6 +13995,7 @@
     "collab": {
       "no_cursor": "{{name}} nie ma teraz kursora na stronie",
       "jump_to": "Przejdź do: {{name}}",
+      "is_editing": "{{name}} edytuje",
       "status": {
         "live": "Na żywo",
         "saving": "Zapisywanie…",
@@ -14015,6 +14016,7 @@
       "too_large": "Ta strona jest zbyt duża, aby dalej edytować ją wspólnie. Podziel ją na mniejsze strony.",
       "title": {
         "live": "Połączono. Zmiany zapisują się automatycznie.",
+        "live_sync": "Na żywo: zmiany wszystkich są synchronizowane i zapisywane automatycznie",
         "save_retry": "Zapis nie powiódł się; ponawianie.",
         "saving": "Zapisywanie zmian…",
         "saved": "Wszystkie zmiany zapisane",

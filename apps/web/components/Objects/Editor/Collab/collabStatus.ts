@@ -113,10 +113,21 @@ export function samePeers(a: CollabPeer[], b: CollabPeer[]): boolean {
   })
 }
 
+/**
+ * One or two letters for an avatar: the first letters of the first and last
+ * words of the name. Labels in brackets ("Ada (Support)") and punctuation are
+ * skipped, so a name never shows as "A(".
+ */
 export function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  return ((parts[0][0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase()
+  const words = String(name ?? '')
+    .replace(/[([{][^)\]}]*[)\]}]?/g, ' ')
+    .split(/\s+/)
+    .map((w) => Array.from(w).filter((c) => /[\p{L}\p{N}]/u.test(c)).join(''))
+    .filter(Boolean)
+  if (words.length === 0) return '?'
+  const first = Array.from(words[0])[0]
+  const last = words.length > 1 ? Array.from(words[words.length - 1])[0] : ''
+  return (first + last).toUpperCase()
 }
 
 /**

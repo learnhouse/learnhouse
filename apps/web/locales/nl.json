@@ -13519,6 +13519,7 @@
     "collab": {
       "no_cursor": "{{name}} heeft nu geen cursor op de pagina",
       "jump_to": "Ga naar {{name}}",
+      "is_editing": "{{name}} is aan het bewerken",
       "status": {
         "live": "Live",
         "saving": "Opslaan…",
@@ -13539,6 +13540,7 @@
       "too_large": "Deze pagina is te groot om samen te blijven bewerken. Splits hem op in kleinere pagina’s.",
       "title": {
         "live": "Verbonden. Wijzigingen worden automatisch opgeslagen.",
+        "live_sync": "Live: ieders wijzigingen worden gesynchroniseerd en automatisch opgeslagen",
         "save_retry": "Opslaan mislukt; opnieuw proberen.",
         "saving": "Je wijzigingen worden opgeslagen…",
         "saved": "Alle wijzigingen opgeslagen",

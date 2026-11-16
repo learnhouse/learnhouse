@@ -86,6 +86,7 @@ import type { CollabSession } from './Collab/collabRuntime'
 import { CollabContext } from './Collab/CollabContext'
 import { hasUnsyncedEdits } from './Collab/collabStatus'
 const CollabHeaderControls = dynamic(() => import('./Collab/CollabHeaderControls'), { ssr: false, loading: () => null })
+const RemotePointers = dynamic(() => import('./Collab/RemotePointers'), { ssr: false, loading: () => null })
 import EditorHeaderControls from './Header/EditorHeaderControls'
 import { useEditorLocale } from './Translation/EditorLocaleContext'
 import { isRtlLocale } from '@services/courses/translations'
@@ -837,6 +838,11 @@ function Editor(props: EditorProps) {
               {editorReady && editor && <SelectionBubble editor={editor} activity={props.activity} course={props.course} />}
             </DynamicReachProvider>
           </div>
+
+          {/* Other editors' mouse pointers (live editing only) */}
+          {editorReady && editor && props.collab && (
+            <RemotePointers editor={editor} session={props.collab} canBroadcast={!props.readOnly} />
+          )}
 
           {editorReady && <ActivityComments editor={editor} activity={props.activity} />}
 
