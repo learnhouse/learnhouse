@@ -12,7 +12,9 @@ import { avatarUrl } from './collabAvatar'
 import {
   type CollabSnapshot,
   type CollabUser,
+  CollabStartError,
   INITIAL_SNAPSHOT,
+  authFailureKind,
   editsSaved,
   initials,
   presenceList,
@@ -30,6 +32,9 @@ import {
 } from './pointerPresence'
 
 const CHECKPOINT_TIMEOUT_MS = 10_000
+// Longest wait for the first sync before this attempt counts as failed (the
+// caller retries with backoff, then gives up on live editing)
+export const SYNC_TIMEOUT_MS = 8_000
 
 export interface ExternalUpdate {
   by: { id: number; name: string } | null
@@ -110,12 +115,16 @@ export interface StartOptions {
   locale?: string | null
   user: CollabUser
   getToken: () => Promise<string | null>
+  /** Overrides SYNC_TIMEOUT_MS (tests). */
+  syncTimeoutMs?: number
 }
 
 /**
  * Connects to the activity's room. `ready` resolves once the document has
- * synced (retrying in the background while the server is unreachable), and
- * rejects, after cleaning up, when the room refuses this user.
+ * synced. It always settles: it rejects with a CollabStartError, after
+ * cleaning up, when the room refuses this user ('refused'), when the server
+ * could not check them or did not sync in time ('unavailable', worth a retry),
+ * or when the room is closed for good ('refused' / 'disabled').
  */
 export function startCollabSession(opts: StartOptions): { session: CollabSession; ready: Promise<void> } {
   const ydoc = new Y.Doc()
@@ -143,9 +152,10 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
     resolveReady = resolve
     rejectReady = reject
   })
-  const fail = (reason: string) => {
+  let syncTimer: ReturnType<typeof setTimeout> | null = null
+  const fail = (kind: CollabStartError['kind'], reason: string) => {
     if (everSynced || destroyed) return
-    rejectReady(new Error(reason))
+    rejectReady(new CollabStartError(kind, reason))
     session.destroy()
   }
 
@@ -156,8 +166,8 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
     token: async () => (await opts.getToken().catch(() => null)) ?? '',
     onStatus: ({ status }) => set({ connection: status as CollabSnapshot['connection'] }),
     onAuthenticated: ({ scope }) => set({ readOnly: scope === 'readonly' }),
-    onAuthenticationFailed: () => {
-      fail('authentication failed')
+    onAuthenticationFailed: ({ reason }) => {
+      fail(authFailureKind(reason), `authentication failed: ${reason || 'unknown'}`)
       if (everSynced) {
         set({ terminal: 'access_revoked' })
         provider.disconnect()
@@ -167,6 +177,8 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
       set({ synced: state })
       if (state && !everSynced) {
         everSynced = true
+        if (syncTimer) clearTimeout(syncTimer)
+        syncTimer = null
         resolveReady()
       }
     },
@@ -176,7 +188,9 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
       if (terminal) {
         // Runs before the socket schedules its reconnect, so this stops it
         set({ terminal })
-        provider.disconnect()
+        // Closed for good before the first sync: nobody else would settle `ready`
+        fail(terminal === 'disabled' ? 'disabled' : 'refused', `closed: ${terminal}`)
+        if (!destroyed) provider.disconnect()
       }
     },
     onStateless: ({ payload }) => {
@@ -216,6 +230,13 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
       }
     },
   })
+
+  // An unreachable server or a stalled access check would otherwise keep the
+  // provider retrying (and the editor waiting) forever
+  syncTimer = setTimeout(() => {
+    syncTimer = null
+    fail('unavailable', 'sync timed out')
+  }, opts.syncTimeoutMs ?? SYNC_TIMEOUT_MS)
 
   // Local edits are "unsaved" until a save's state vector covers them
   const onUpdate = (_update: Uint8Array, origin: unknown) => {
@@ -356,6 +377,8 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
     destroy() {
       if (destroyed) return
       destroyed = true
+      if (syncTimer) clearTimeout(syncTimer)
+      syncTimer = null
       presence.cancel()
       document.removeEventListener('visibilitychange', onVisibility)
       awareness.off('change', refreshPeers)

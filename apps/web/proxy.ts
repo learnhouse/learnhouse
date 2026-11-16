@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server'
 import { isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
 import { isThirdPartyRelayPath, withoutCredentialHeaders } from './lib/thirdPartyRelay'
 import { landingDecision, threadRedirect } from './lib/seo/legacyRedirect'
+import { healSessionMarker } from './lib/auth/sessionMarker'
 import { seoRouteFor } from './lib/seo/publicRoutes'
 
 // =============================================================================
@@ -304,6 +305,14 @@ export const config = {
 }
 
 export default async function proxy(req: NextRequest) {
+  const response = await route(req)
+  // Signed in for the server but not for the client: give the client its
+  // marker back so it restores the session (see lib/auth/sessionMarker).
+  if (response && !isThirdPartyRelayPath(req.nextUrl.pathname)) healSessionMarker(req, response)
+  return response
+}
+
+async function route(req: NextRequest) {
   // PostHog / Sentry relays: these are external rewrites that would otherwise
   // hand the browser's session cookies to a third party. Drop credentials and
   // let the rewrite run; no tenancy routing applies to them.

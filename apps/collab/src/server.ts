@@ -25,6 +25,7 @@ import {
 } from './connectionGuard.js'
 import { createDocSizeGuard } from './docLimits.js'
 import { seatRefusal } from './seats.js'
+import { AUTH_REFUSAL, AuthRefusal, asAuthRefusal } from './authRefusal.js'
 import {
   type ConnectionAuth,
   type TokenState,
@@ -353,8 +354,9 @@ export function createCollabServer(opts: CollabServerOptions) {
       instance,
       socketId,
     }: onAuthenticatePayload) {
+      // Every refusal carries a reason the client acts on (see authRefusal.ts)
       if (!token) {
-        throw new Error('Authentication required')
+        throw new AuthRefusal(AUTH_REFUSAL.invalidToken, 'Authentication required')
       }
 
       // Verify JWT using same secret + algorithm as backend
@@ -362,16 +364,21 @@ export function createCollabServer(opts: CollabServerOptions) {
       try {
         payload = jwt.verify(token, opts.secretKey, { algorithms: ['HS256'] })
       } catch {
-        throw new Error('Invalid token')
+        throw new AuthRefusal(AUTH_REFUSAL.invalidToken, 'Invalid token')
       }
 
       const room = registry.resolve(documentName)
       if (!room) {
-        throw new Error('Invalid document name')
+        throw new AuthRefusal(AUTH_REFUSAL.refused, 'Invalid document name')
       }
 
       // Verify access via the backend API (with timeout)
-      const access = await room.kind.authorize(room.resourceId, token, payload.sub)
+      let access: Awaited<ReturnType<typeof room.kind.authorize>>
+      try {
+        access = await room.kind.authorize(room.resourceId, token, payload.sub)
+      } catch (err) {
+        throw asAuthRefusal(err)
+      }
 
       // Viewers' sockets must not write.
       connectionConfig.readOnly = access.readOnly
@@ -381,7 +388,7 @@ export function createCollabServer(opts: CollabServerOptions) {
       const existing = instance.documents.get(documentName)?.getConnections() ?? []
       const refusal = seatRefusal(existing, { readOnly: connectionConfig.readOnly, socketId }, room.kind.seats)
       if (refusal) {
-        throw new Error(refusal)
+        throw new AuthRefusal(AUTH_REFUSAL.roomFull, refusal)
       }
 
       connectionGuard.markAuthenticated(requestHeaders.get(CONNECTION_ID_HEADER))

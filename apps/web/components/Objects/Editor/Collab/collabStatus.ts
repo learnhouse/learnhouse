@@ -184,3 +184,140 @@ export function terminalCloseOf(event: { code?: number; reason?: string } | unde
 export function editsSaved(savedClock: number | undefined, ownClock: number): boolean {
   return (savedClock ?? 0) >= ownClock
 }
+
+// ── Joining the room: what went wrong and what to do next ──────────────────
+
+/**
+ * Why joining the live room failed:
+ * - refused:        the collab server refused this user although the API let
+ *                   them load the editor (REST editing still works)
+ * - forbidden:      the API says they may not edit this activity
+ * - unavailable:    could not be checked or reached right now (retry)
+ * - disabled:       live editing is turned off for the org or activity
+ * - not_configured: collaboration is not set up on this server
+ * - other:          anything else (plan without collaboration, no session…)
+ */
+export type CollabFailureKind = 'refused' | 'forbidden' | 'unavailable' | 'disabled' | 'not_configured' | 'other'
+
+export class CollabStartError extends Error {
+  readonly kind: CollabFailureKind
+
+  constructor(kind: CollabFailureKind, message: string) {
+    super(message)
+    this.name = 'CollabStartError'
+    this.kind = kind
+  }
+}
+
+/** Refusal reasons the collab server sends (apps/collab/src/authRefusal.ts). */
+const RETRYABLE_AUTH_REASONS = new Set(['auth-unavailable', 'invalid-token', 'room-full'])
+
+/**
+ * The collab server's authentication refusal: "could not check" reasons (and a
+ * stale token, which the next attempt replaces) are worth retrying; anything
+ * else, older servers' "permission-denied" included, is a refusal.
+ */
+export function authFailureKind(reason: string | undefined | null): 'refused' | 'unavailable' {
+  return reason && RETRYABLE_AUTH_REASONS.has(reason) ? 'unavailable' : 'refused'
+}
+
+/** The failure for the editor's own access check (GET …/collab/access), null when it passed. */
+export function accessResponseKind(status: number, detail?: unknown): CollabFailureKind | null {
+  if (status >= 200 && status < 300) return null
+  if (status === 503) return 'not_configured'
+  if (status === 403 && detail === 'collab_disabled') return 'disabled'
+  if (status === 403 && detail === 'Not allowed to edit this activity') return 'forbidden'
+  if (status >= 500 || status === 429 || status === 408) return 'unavailable'
+  return 'other'
+}
+
+/** The failure kind of anything joining threw (network errors are "unavailable"). */
+export function failureKindOf(err: unknown): CollabFailureKind {
+  if (err instanceof CollabStartError) return err.kind
+  if (err instanceof TypeError) return 'unavailable' // fetch could not reach the API
+  return 'other'
+}
+
+/** Waits between attempts while the room can't be reached; then live editing gives up. */
+export const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 15000] as const
+
+export type CollabNextStep =
+  | { retryIn: number }
+  /** Edit without the room, saving manually. */
+  | { fallback: 'refused' | 'unreachable' }
+  /** Show the content read-only. */
+  | { forbidden: true }
+  | { disabled: true }
+  /** No live editing here (autosave mode, as before). */
+  | { unavailable: string }
+
+/** What to do after attempt number `attempt` (0-based) failed with `kind`. */
+export function nextCollabStep(kind: CollabFailureKind, attempt: number, message: string = kind): CollabNextStep {
+  switch (kind) {
+    case 'unavailable':
+      return attempt < RETRY_DELAYS_MS.length ? { retryIn: RETRY_DELAYS_MS[attempt] } : { fallback: 'unreachable' }
+    case 'refused':
+      return { fallback: 'refused' }
+    case 'forbidden':
+      return { forbidden: true }
+    case 'disabled':
+      return { disabled: true }
+    case 'not_configured':
+      return { unavailable: 'not configured' }
+    default:
+      return { unavailable: message }
+  }
+}
+
+/** The join loop's outcome when it stops (live, or given up). */
+export type CollabJoinOutcome<S> =
+  | { phase: 'live'; session: S }
+  | { phase: 'fallback'; reason: 'refused' | 'unreachable' }
+  | { phase: 'forbidden' }
+  | { phase: 'disabled' }
+  | { phase: 'unavailable'; reason: string }
+
+/**
+ * Runs `join` until it succeeds or nextCollabStep gives up, reporting each
+ * retry through `onRetry` (1-based attempt about to run). Resolves with the
+ * outcome, or null once `isCancelled()` turns true.
+ */
+export async function joinWithRetry<S>(opts: {
+  join: () => Promise<S>
+  onRetry: (_attempt: number) => void
+  sleep: (_ms: number) => Promise<void>
+  isCancelled: () => boolean
+}): Promise<CollabJoinOutcome<S> | null> {
+  for (let attempt = 0; !opts.isCancelled(); attempt++) {
+    try {
+      const session = await opts.join()
+      return opts.isCancelled() ? null : { phase: 'live', session }
+    } catch (err) {
+      if (opts.isCancelled()) return null
+      const message = err instanceof Error ? err.message : 'failed'
+      const step = nextCollabStep(failureKindOf(err), attempt, message)
+      if ('retryIn' in step) {
+        opts.onRetry(attempt + 1)
+        await opts.sleep(step.retryIn)
+        continue
+      }
+      if ('fallback' in step) return { phase: 'fallback', reason: step.fallback }
+      if ('forbidden' in step) return { phase: 'forbidden' }
+      if ('disabled' in step) return { phase: 'disabled' }
+      return { phase: 'unavailable', reason: step.unavailable }
+    }
+  }
+  return null
+}
+
+/** Which notice the editor shows for the join state (null: none). */
+export function collabNoticeKind(
+  state: { phase: string },
+  live: boolean,
+): 'reconnecting' | 'manual' | 'forbidden' | null {
+  if (live) return null
+  if (state.phase === 'reconnecting') return 'reconnecting'
+  if (state.phase === 'fallback') return 'manual'
+  if (state.phase === 'forbidden') return 'forbidden'
+  return null
+}
