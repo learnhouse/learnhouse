@@ -29,12 +29,14 @@ from src.db.courses.courses import Course
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.services.ai import chapters as chap
+from src.services.ai import metering, pricing
 from src.services.courses.activities.video import _CAPTION_LANG_RE
 from src.services.courses.transfer.storage_utils import read_file_content
 
 logger = logging.getLogger(__name__)
 
-CHAPTERS_CREDIT_COST = 1
+# Published price (src/services/ai/pricing.py, "video_chapters"); metered.
+CHAPTERS_CREDIT_COST = pricing.FEATURES["video_chapters"].credits
 
 
 def _now() -> str:
@@ -113,11 +115,7 @@ async def generate_activity_chapters(activity_uuid: str, *, force: bool = False)
 
     await _patch_chapters(activity_uuid, status="processing", error=None)
 
-    from src.security.features_utils.usage import (
-        check_feature_enabled,
-        refund_ai_credit,
-        reserve_ai_credit,
-    )
+    from src.security.features_utils.usage import check_feature_enabled
     from src.services.ai.llm import model_for_tier
 
     org_id = info["org_id"]
@@ -126,7 +124,7 @@ async def generate_activity_chapters(activity_uuid: str, *, force: bool = False)
         f"/activities/{activity_uuid}/video/captions/{lang}.vtt"
     )
     model_name = model_for_tier("fast")
-    reserved = 0
+    meter = None
     try:
         raw = await asyncio.to_thread(read_file_content, key)
         if not raw:
@@ -136,10 +134,11 @@ async def generate_activity_chapters(activity_uuid: str, *, force: bool = False)
 
         async with _async_session_factory() as db:
             await check_feature_enabled("ai", org_id, db)
-            await reserve_ai_credit(org_id, db, amount=CHAPTERS_CREDIT_COST)
-        reserved = CHAPTERS_CREDIT_COST
+            meter = await metering.start("video_chapters", org_id=org_id, db=db)
 
-        items = await chap.generate_chapters(vtt, model_name)
+        with metering.use_meter(meter):
+            items = await chap.generate_chapters(vtt, model_name)
+        await meter.settle()
         await _patch_chapters(
             activity_uuid,
             status="ready",
@@ -155,18 +154,20 @@ async def generate_activity_chapters(activity_uuid: str, *, force: bool = False)
         await _patch_chapters(activity_uuid, status="failed", error=str(getattr(e, "detail", "ai_error"))[:200])
         return False
     except asyncio.CancelledError:
+        if meter is not None and not meter.settled:
+            await meter.settle(failed=True)
         raise
     except ValueError as e:
         logger.info("Chapters: nothing usable for %s: %s", activity_uuid, e)
         await _patch_chapters(activity_uuid, status="failed", error="no_chapters")
-        if reserved:
-            refund_ai_credit(org_id, amount=reserved)
+        if meter is not None and not meter.settled:
+            await meter.settle(failed=True)
         return False
     except Exception as e:
         logger.error("Chapters job crashed for %s: %s", activity_uuid, e)
         await _patch_chapters(activity_uuid, status="failed", error="exception")
-        if reserved:
-            refund_ai_credit(org_id, amount=reserved)
+        if meter is not None and not meter.settled:
+            await meter.settle(failed=True)
         return False
 
 

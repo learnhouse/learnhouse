@@ -1,3 +1,5 @@
+import { activeImpersonation, dispatchImpersonationEnded } from './impersonation'
+
 export const AUTH_EXPIRED_EVENT = 'learnhouse:auth-expired'
 export const AUTH_REFRESHED_EVENT = 'learnhouse:auth-refreshed'
 
@@ -16,6 +18,12 @@ const AUTH_EXPIRED_DEBOUNCE_MS = 1500
 
 export function dispatchAuthExpired(detail: AuthExpiredDetail = {}) {
   if (typeof window === 'undefined') return
+  // Inside an impersonation a dead token means the session ended:
+  // go back to the console, never sign the superadmin out.
+  if (activeImpersonation()) {
+    dispatchImpersonationEnded('expired')
+    return
+  }
 
   const now = Date.now()
   if (now - lastAuthExpiredAt < AUTH_EXPIRED_DEBOUNCE_MS) {

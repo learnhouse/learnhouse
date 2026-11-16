@@ -37,10 +37,12 @@ import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
 import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
 import { CommunityTag } from '@components/Objects/Communities/Tags/CommunityTag'
 import { normalizeCalloutContent } from './Extensions/Callout/calloutContent'
+// Previews render without editor comment marks (this schema doesn't know them).
+import { stripCommentMarks } from './Comments/commentContent'
 
 // Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from './editorLowlight'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { LHCodeBlock as CodeBlockLowlight, ToggleBlock, DividerStyle, TEXT_MARKS } from './Blocks/extensions'
 
 interface EditorPreviewProps {
   content: any
@@ -135,6 +137,9 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
       TableRow,
       TableHeader,
       TableCell,
+      ToggleBlock,
+      DividerStyle,
+      ...TEXT_MARKS,
       getLinkExtension(),
       WebPreview.configure({
         editable: false,
@@ -164,7 +169,7 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
       DynamicVariable,
       CommunityTag,
     ],
-    content: normalizeCalloutContent(content),
+    content: normalizeCalloutContent(stripCommentMarks(content)),
     immediatelyRender: false,
   })
 
@@ -176,7 +181,7 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
     if (!editor || !content || content === initialContent.current) return
     initialContent.current = content
     queueMicrotask(() => {
-      if (!editor.isDestroyed) editor.commands.setContent(normalizeCalloutContent(content))
+      if (!editor.isDestroyed) editor.commands.setContent(normalizeCalloutContent(stripCommentMarks(content)))
     })
   }, [editor, content])
 

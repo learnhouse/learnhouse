@@ -138,6 +138,39 @@ def test_strict_problems_marks():
     assert d.strict_problems({"type": "youtube", "attrs": {"src": "https://y.test"}}, authoring=False) == []
 
 
+
+def test_editor_styling_marks_and_block_attrs_load():
+    """Marks and attrs the editor's selection menu and redesigned blocks write
+    are kept when a document is loaded, but tools do not write them."""
+    styled = _p(
+        {"type": "text", "text": "x", "marks": [
+            {"type": "highlight", "attrs": {"color": "amber", "style": "marker"}},
+            {"type": "textEffect", "attrs": {"effect": "glow"}},
+            {"type": "definition", "attrs": {"note": "A word"}},
+            {"type": "spoiler"}, {"type": "superscript"}, {"type": "textColor", "attrs": {"color": "red"}},
+        ]},
+        {"type": "text", "text": "Ctrl", "marks": [{"type": "kbd"}]},
+        {"type": "text", "text": "2", "marks": [{"type": "subscript"}]},
+    )
+    assert d.strict_problems(styled, authoring=False) == []
+    assert "Unknown mark 'kbd'" in " ".join(d.strict_problems(styled))
+    blocks = [
+        {"type": "toggleBlock", "attrs": {"summary": "Hint", "defaultOpen": False}, "content": [_p("x")]},
+        {"type": "horizontalRule", "attrs": {"variant": "dashed"}},
+        {"type": "codeBlock", "attrs": {"language": "python", "filename": "a.py"}, "content": [text("x")]},
+        {"type": "callout", "attrs": {"type": "tip", "dismissible": False, "icon": "rocket"}, "content": [_p("x")]},
+        {"type": "blockVideo", "attrs": {"blockObject": None, "caption": "c", "startTime": 3, "chapters": []}},
+        {"type": "blockAudio", "attrs": {"blockObject": None, "caption": "", "transcript": "t"}},
+        {"type": "blockPDF", "attrs": {"blockObject": None, "pdfHeight": None, "caption": "c"}},
+    ]
+    for node in blocks:
+        assert d.strict_problems(node, authoring=False) == [], node["type"]
+    assert problems(blocks[0]) == ""  # toggles are authorable
+    # Markdown (Atlas/MCP reads) keeps the words and drops the styling.
+    md_out = doc_to_markdown({"type": "doc", "content": [styled, blocks[0]]})
+    assert md_out.splitlines()[0] == "xCtrl2"
+    assert "toggleBlock" in md_out  # kept as an opaque block, like other editor-only blocks
+
 QUESTION = {"question_id": "q", "question": "Q?", "answers": [
     {"answer_id": "a", "answer": "yes", "correct": True},
     {"answer_id": "b", "answer": "no", "correct": False},
@@ -164,6 +197,7 @@ ATTR_CASES = [
     ({"type": "orderedList", "attrs": {"type": "x"}, "content": [_li("a")]}, "orderedList.type must be one of"),
     ({"type": "codeBlock", "attrs": {"language": "py thon"}}, "short language name"),
     ({"type": "flipcard", "attrs": {"question": None, "answer": "A"}}, "flipcard.question must be text"),
+    ({"type": "flipcard", "attrs": {"question": "Q", "answer": "A", "style": "glossy"}}, "flipcard.style must be one of"),
     ({"type": "badge", "attrs": {"color": 5}}, "badge.color must be text"),
     ({"type": "badge", "attrs": {"emoji": "x" * 17}}, "badge.emoji must be at most 16 characters"),
     ({"type": "button", "attrs": {"link": "javascript:alert(1)"}}, "button.link must be an http(s) URL"),
@@ -203,6 +237,27 @@ def test_valid_attribute_values_pass():
     assert d.strict_problems({"type": "blockEmbed", "attrs": {"embedUrl": "https://e.test", "embedType": None}}) == []
     assert d.strict_problems({"type": "blockWebPreview", "attrs": {"url": "https://site.test", "og_image": None}}) == []
     assert d.strict_problems({"type": "blockQuiz", "attrs": {"questions": [question()]}}) == []
+    # What the redesigned Quiz and Flipcard blocks store loads and validates.
+    explained = {**question(), "explanation": "Why", "answers": [{**a, "feedback": "Note"} for a in question()["answers"]]}
+    quiz = {"quizId": "q", "questions": [explained], "settings": {"maxAttempts": 2, "shuffleAnswers": True}}
+    assert d.strict_problems({"type": "blockQuiz", "attrs": quiz}) == []
+    card = {"question": "Q", "answer": "A", "color": "pink", "size": "small", "style": "soft"}
+    assert d.strict_problems({"type": "flipcard", "attrs": card}) == []
+    # What the redesigned User card, Web preview and Code playground store.
+    assert d.attrs_problems("blockUser", {"user_id": 3, "layout": "compact"}) == []
+    preview = {"url": "https://site.test", "layout": "compact", "customTitle": "Mine", "customDescription": None}
+    assert d.strict_problems({"type": "blockWebPreview", "attrs": preview}) == []
+    code = {"languageId": 71, "blockUuid": "b-1", "testCases": [{"id": "t", "label": "T", "stdin": "", "expectedStdout": "1", "hidden": True}]}
+    assert d.strict_problems({"type": "blockCode", "attrs": code}) == []
+    assert "blockUser.layout" in " ".join(d.attrs_problems("blockUser", {"layout": "huge"}))
+    assert "blockWebPreview.layout" in " ".join(d.strict_problems({"type": "blockWebPreview", "attrs": {"url": "https://site.test", "layout": "tiny"}}))
+
+
+def test_web_preview_text_prefers_the_authors_overrides():
+    plain = {"type": "blockWebPreview", "attrs": {"url": "https://site.test", "title": "Site", "description": "About"}}
+    assert d.block_text(plain) == "Site https://site.test About"
+    custom = {"type": "blockWebPreview", "attrs": {**plain["attrs"], "customTitle": "Mine", "customDescription": "Ours"}}
+    assert d.block_text(custom) == "Mine https://site.test Ours"
     flow = [step(options=[{"text": "next", "nextScenarioId": "s2"}]), step(id="s2", text="End")]
     assert d.strict_problems({"type": "scenarios", "attrs": {"title": "Flow", "scenarios": flow}}) == []
 
@@ -719,3 +774,32 @@ def test_is_prose_edges():
     with_media = {"type": "bulletList", "content": [{"type": "listItem", "content": [_p("a"), {"type": "blockVideo", "attrs": MEDIA}]}]}
     assert not md.is_prose(with_media)
     assert md.is_prose(rich_doc()["content"][3])
+
+
+UNSAFE_URLS = [
+    "javascript:alert(1)",
+    "JaVaScRiPt:alert(1)",
+    " javascript:alert(1)",
+    "\tjavascript:alert(1)",
+    "data:text/html,<script>alert(1)</script>",
+    "DATA:text/html;base64,PHNjcmlwdD4=",
+    "vbscript:msgbox(1)",
+    "VBScript:msgbox(1)",
+]
+
+
+@pytest.mark.parametrize("url", UNSAFE_URLS)
+def test_only_http_urls_pass_the_schema_anywhere(url):
+    nodes = [
+        {"type": "button", "attrs": {"link": url}, "content": [text("Go")]},
+        {"type": "blockH5P", "attrs": {"h5pUrl": url}},
+        {"type": "blockWebPreview", "attrs": {"url": url}},
+        {"type": "blockEmbed", "attrs": {"embedUrl": url, "embedType": "url"}},
+        {"type": "blockEmbed", "attrs": {"embedUrl": "https://ok.example", "embedSourceUrl": url}},
+        {"type": "paragraph", "content": [{"type": "text", "text": "x", "marks": [{"type": "link", "attrs": {"href": url}}]}]},
+        {"type": "scenarios", "attrs": {"title": "t", "scenarios": [{"id": "a", "text": "t", "imageUrl": url, "options": []}]}},
+    ]
+    for node in nodes:
+        assert d.strict_problems(node), (node["type"], url)
+    # Plain http(s) stays fine.
+    assert d.strict_problems({"type": "blockH5P", "attrs": {"h5pUrl": "https://h5p.org/h5p/embed/1"}}) == []

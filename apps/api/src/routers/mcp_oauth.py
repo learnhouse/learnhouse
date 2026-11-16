@@ -278,7 +278,7 @@ async def delete_connection(
     if not admin and not await is_org_member(user.id, org_id, db_session):
         raise HTTPException(status_code=403, detail="Not a member of this organization")
     revoked = await oauth.revoke_grant_by_uuid(
-        grant_uuid, org_id, db_session, user_id=None if admin else user.id
+        grant_uuid, org_id, db_session, user_id=None if admin else user.id, actor=user
     )
     if not revoked:
         raise HTTPException(status_code=404, detail="Connection not found")
@@ -331,7 +331,15 @@ async def put_settings(
     from src.security.org_auth import enforce_org_mfa
 
     await enforce_org_mfa(user.id, org_id, db_session)
+    was_enabled = await mcp_enabled_for_org(org_id, db_session)
     await set_mcp_enabled_for_org(org_id, body.enabled, db_session)
+    from src.core.ee_hooks import audit_event
+
+    audit_event(
+        None, action="integrations.mcp.settings_updated", org_id=org_id, actor=user,
+        target_type="organization", target_id=org_id,
+        before={"enabled": was_enabled}, after={"enabled": body.enabled}, via="ui",
+    )
     return {"enabled": body.enabled}
 
 

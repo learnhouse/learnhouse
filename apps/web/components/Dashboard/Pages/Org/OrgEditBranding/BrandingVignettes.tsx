@@ -42,7 +42,8 @@ interface VignetteProps {
 export function Vignette({ icon: Icon, label, children, className, size = 'w-[228px]' }: VignetteProps) {
   return (
     <figure className={cn('flex flex-col gap-2 min-w-0', size)}>
-      <div className={cn('relative overflow-hidden rounded-xl ring-1 ring-black/[0.07] bg-[#f4f4f5]', className)}>
+      {/* A preview of org-branded pages: keeps its own colors in dark mode. */}
+      <div data-lh-user-content="" className={cn('relative overflow-hidden rounded-xl ring-1 ring-black/[0.07] bg-[#f4f4f5]', className)}>
         {children}
       </div>
       <figcaption className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
@@ -488,10 +489,12 @@ interface FooterLinksVignetteProps {
   links: Record<string, string>
   name?: string
   label: string
+  /** Custom footer line; replaces the copyright line when set. */
+  footerText?: string
 }
 
 /** The public footer, where social links and custom links are listed. */
-export function FooterLinksVignette({ socials, links, name, label }: FooterLinksVignetteProps) {
+export function FooterLinksVignette({ socials, links, name, label, footerText }: FooterLinksVignetteProps) {
   const { t } = useTranslation()
   const icons: { key: string; Icon: React.ElementType; color: string }[] = [
     { key: 'twitter', Icon: SiX, color: '#111' },
@@ -499,8 +502,8 @@ export function FooterLinksVignette({ socials, links, name, label }: FooterLinks
     { key: 'instagram', Icon: SiInstagram, color: '#E4405F' },
     { key: 'youtube', Icon: SiYoutube, color: '#FF0000' },
   ]
-  const active = icons.filter((i) => socials[i.key])
-  const customLinks = Object.keys(links).filter(Boolean)
+  const active = icons.filter((i) => socials?.[i.key])
+  const customLinks = Object.keys(links ?? {}).filter(Boolean)
   return (
     <Vignette icon={Layout} label={label} size="w-full max-w-[420px]">
       <div className="bg-[#f8f8f8]">
@@ -522,7 +525,9 @@ export function FooterLinksVignette({ socials, links, name, label }: FooterLinks
               <Icon key={key} size={9} color={color} />
             ))}
           </div>
-          <p className="mt-2 text-center text-[7px] text-gray-400">© {name || t('dashboard.organization.branding.vignette_text.your_organization')}</p>
+          <p className="mt-2 text-center text-[7px] text-gray-400 truncate">
+            {footerText?.trim() || `© ${name || t('dashboard.organization.branding.vignette_text.your_organization')}`}
+          </p>
         </div>
       </div>
     </Vignette>

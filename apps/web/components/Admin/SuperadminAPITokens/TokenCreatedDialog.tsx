@@ -2,109 +2,92 @@
 import React, { useState } from 'react'
 import { Copy, Check, Warning } from '@phosphor-icons/react'
 import { Trans, useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
+import { Button, Chip, Modal } from '@/design'
+import { getAPIUrl } from '@services/config/config'
+import type { CreatedToken } from '@services/ee/platform/types'
 
-export interface CreatedToken {
-  token: string
-  token_uuid: string
-  name: string
-  description: string | null
-  token_prefix: string
-  created_by_user_id: number
-  creation_date: string
-  expires_at: string | null
-}
+export type { CreatedToken }
 
-export default function TokenCreatedDialog({
-  token,
-  onClose,
-}: {
-  token: CreatedToken | null
-  onClose: () => void
-}) {
+export default function TokenCreatedDialog({ token, onClose }: { token: CreatedToken | null; onClose: () => void }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
-  if (!token) return null
-
   const handleCopy = async () => {
+    if (!token) return
     try {
       await navigator.clipboard.writeText(token.token)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Clipboard API failed (e.g. insecure context); fall through silently.
+      // Clipboard blocked (insecure context): select the token so ⌘C works.
+      const el = document.getElementById('lh-created-token')
+      if (el) {
+        const range = document.createRange()
+        range.selectNodeContents(el)
+        const sel = window.getSelection()
+        sel?.removeAllRanges()
+        sel?.addRange(range)
+      }
+      toast.error(t('admin.tokens.copy_blocked'))
     }
   }
 
+  const apiBase = getAPIUrl().replace(/\/$/, '')
+
   return (
-    <div
-      // Intentionally NO click-outside-to-close: the secret cannot be retrieved
-      // later; closing must be a deliberate action.
-      className="fixed inset-0 z-[1001] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-    >
-      <div className="w-full max-w-lg bg-[#141415] border border-white/[0.08] rounded-2xl shadow-2xl">
-        <div className="px-6 py-4 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <Warning size={18} weight="fill" className="text-amber-300" />
-            <h2 className="text-base font-semibold text-white">{t('admin.tokens.save_now')}</h2>
-          </div>
+    <Modal
+      isDialogOpen={!!token}
+      // Intentionally no outside-click / Escape close: the secret cannot be
+      // retrieved later; closing must be a deliberate action.
+      onOpenChange={() => {}}
+      preventClose
+      closeOnOutsideClick={false}
+      size="md"
+      icon={<Warning size={18} className="text-amber-600" />}
+      dialogTitle={t('admin.tokens.save_now')}
+      footer={
+        <div className="flex justify-end">
+          <Button variant="primary" onClick={onClose}>
+            {t('admin.tokens.saved_token')}
+          </Button>
         </div>
-
-        <div className="px-6 py-5 space-y-4">
-          <p className="text-sm text-white/70">
-            <Trans
-              i18nKey="admin.tokens.save_body"
-              values={{ name: token.name }}
-              components={{ strong: <strong /> }}
-            />
-          </p>
-
-          <div className="rounded-lg bg-black/40 border border-white/[0.1] overflow-hidden">
-            <div className="flex items-stretch">
-              <code className="flex-1 px-3 py-2.5 font-mono text-xs text-white break-all overflow-x-auto">
+      }
+      dialogContent={
+        token ? (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-neutral-600">
+              <Trans i18nKey="admin.tokens.save_body" values={{ name: token.name }} components={{ strong: <strong className="text-neutral-900" /> }} />
+            </p>
+            <div className="flex items-stretch rounded-xl bg-neutral-50 ring-1 ring-inset ring-neutral-200 overflow-hidden">
+              <code id="lh-created-token" dir="ltr" className="flex-1 min-w-0 px-3 py-2.5 font-mono text-xs text-neutral-900 break-all">
                 {token.token}
               </code>
               <button
+                type="button"
                 onClick={handleCopy}
-                className="px-3 border-s border-white/[0.08] hover:bg-white/[0.04] transition-colors flex items-center gap-1.5 text-xs text-white/70 hover:text-white"
+                className="px-3 border-s border-neutral-200 hover:bg-neutral-100 flex items-center gap-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900"
               >
-                {copied ? (
-                  <>
-                    <Check size={14} weight="bold" className="text-emerald-300" />
-                    {t('admin.tokens.copied')}
-                  </>
-                ) : (
-                  <>
-                    <Copy size={14} weight="fill" />
-                    {t('admin.tokens.copy')}
-                  </>
-                )}
+                {copied ? <Check size={14} weight="bold" className="text-emerald-600" /> : <Copy size={14} />}
+                {copied ? t('admin.tokens.copied') : t('admin.tokens.copy')}
               </button>
             </div>
+            {(token.role || (Array.isArray(token.scopes) && token.scopes.length > 0)) && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {token.role && <Chip>{t(`admin.roles.${token.role}`, { defaultValue: token.role })}</Chip>}
+                {(token.scopes ?? []).map((s) => (
+                  <Chip key={s} className="!font-mono !text-[11px]">
+                    {s}
+                  </Chip>
+                ))}
+              </div>
+            )}
+            <pre dir="ltr" className="rounded-xl bg-[#1d1d21] ring-1 ring-inset ring-[rgb(255_255_255/0.06)] px-3 py-2.5 text-xs text-[rgb(255_255_255/0.85)] font-mono whitespace-pre-wrap break-all">
+              {`curl -H "Authorization: Bearer <token>" \\\n  ${apiBase}/ee/superadmin/organizations`}
+            </pre>
           </div>
-
-          <div className="rounded-lg bg-white/[0.03] border border-white/[0.08] px-3 py-2.5 text-xs text-white/60 font-mono">
-            curl -H "Authorization: Bearer &lt;token&gt;" \<br />
-            &nbsp;&nbsp;{getApiBase()}/ee/superadmin/organizations
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end px-6 py-4 border-t border-white/[0.06]">
-          <button
-            onClick={onClose}
-            className="px-3.5 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors"
-          >
-            {t('admin.tokens.saved_token')}
-          </button>
-        </div>
-      </div>
-    </div>
+        ) : null
+      }
+    />
   )
-}
-
-function getApiBase(): string {
-  // Best-effort hint for the example curl. The user is expected to know
-  // their own deployment's base URL; this is just a copy-paste convenience.
-  if (typeof window === 'undefined') return 'https://your-api'
-  return `${window.location.protocol}//api.${window.location.host.replace(/^www\./, '')}/api/v1`
 }

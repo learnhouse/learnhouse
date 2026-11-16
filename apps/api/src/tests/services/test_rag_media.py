@@ -108,7 +108,7 @@ class TestTranscribe:
         assert await media.transcribe(_media()) is True
 
         ai.reserve_ai_credit.assert_awaited_once()
-        assert ai.reserve_ai_credit.await_args.kwargs["amount"] == 2  # 20 min = two 10-min chunks
+        assert ai.reserve_ai_credit.await_args.kwargs["amount"] == 20  # 1 credit per started minute
         ai.write.assert_called_once_with(_media().transcript_key, VTT.encode())
         await db.refresh(video)
         status = _status(video)
@@ -135,7 +135,7 @@ class TestTranscribe:
     async def test_transcription_failure_refunds(self, db, video, ai):
         ai.transcribe_to_vtt.side_effect = ValueError("no cues")
         assert await media.transcribe(_media()) is False
-        ai.refund_ai_credit.assert_called_once_with(1, amount=2)
+        ai.refund_ai_credit.assert_called_once_with(1, 20)
         await db.refresh(video)
         assert _status(video)["status"] == TranscriptStatus.FAILED
 
@@ -203,3 +203,9 @@ class TestReset:
         assert "transcript" not in kept[35] and "transcript" not in kept[36]
         block = await db.get(Block, 9)
         assert "transcript" not in block.content
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

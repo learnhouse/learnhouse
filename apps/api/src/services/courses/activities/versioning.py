@@ -14,6 +14,7 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import index_activity
 from src.security.features_utils.usage import check_feature_access
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.courses.activities.collab_notify import notify_collab_content_changed
 
 # Maximum number of versions to keep per activity
 # Change this constant to adjust how many saves are stored
@@ -144,6 +145,7 @@ async def get_activity_versions(
             created_at=version.created_at,
             created_by_username=user.username if user else None,
             created_by_avatar=user.avatar_image if user else None,
+            label=version.label,
         )
         versions.append(version_read)
 
@@ -213,6 +215,7 @@ async def get_activity_version(
         created_at=version.created_at,
         created_by_username=user.username if user else None,
         created_by_avatar=user.avatar_image if user else None,
+        label=version.label,
     )
 
 
@@ -340,6 +343,7 @@ async def restore_activity_version(
     await db_session.commit()
     await db_session.refresh(activity)
     index_activity(activity.id)
+    notify_collab_content_changed(activity, current_user)
 
     await dispatch_webhooks(
         event_name="activity_version_restored",

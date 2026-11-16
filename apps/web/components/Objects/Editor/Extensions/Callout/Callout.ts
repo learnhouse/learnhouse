@@ -2,6 +2,7 @@ import { mergeAttributes, Node } from '@tiptap/core'
 import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import CalloutComponent from './CalloutComponent'
 import { CALLOUT_CONTENT } from './calloutContent'
+import { CALLOUT_EXTRA_ATTRS } from '../../Blocks/schema/blockAttrs'
 
 export default Node.create({
   name: 'callout',
@@ -21,6 +22,7 @@ export default Node.create({
         parseHTML: (el) => el.getAttribute('data-dismissible') === 'true',
         renderHTML: (attrs) => attrs.dismissible ? { 'data-dismissible': 'true' } : {},
       },
+      ...CALLOUT_EXTRA_ATTRS,
     }
   },
 

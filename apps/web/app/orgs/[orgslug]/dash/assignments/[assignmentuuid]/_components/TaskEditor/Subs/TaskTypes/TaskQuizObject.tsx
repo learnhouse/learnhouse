@@ -4,7 +4,7 @@ import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Cont
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
-import { AlertTriangle, Check, CircleDot, Info, ListChecks, Minus, Plus, PlusCircle, X } from 'lucide-react';
+import { Warning, Check, RadioButton, Info, ListChecks, Minus, Plus, PlusCircle, X } from '@phosphor-icons/react'
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -236,7 +236,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
     // 100% submission. Only trust the key when it is genuinely present.
     const answerKeyPresent = useMemo(
         () => questions.some((question) =>
-            question.options.some((option) => typeof option.assigned_right_answer === 'boolean')
+            (question.options ?? []).some((option) => typeof option.assigned_right_answer === 'boolean')
         ),
         [questions]
     );
@@ -244,7 +244,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
 
     // Did the learner pick this option?
     const isOptionSelected = (questionUUID?: string, optionUUID?: string) =>
-        userSubmissions.submissions.some(
+        (userSubmissions.submissions ?? []).some(
             (submission) =>
                 submission.questionUUID === questionUUID &&
                 submission.optionUUID === optionUUID &&
@@ -319,7 +319,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             const res = await getAssignmentTask(assignmentTaskUUID, access_token);
             if (res.success) {
                 setAssignmentTaskOutsideProvider(res.data);
-                setQuestions(res.data.contents.questions);
+                // A quiz task that was created but never edited has empty
+                // contents; grading it must render an empty quiz, not crash.
+                setQuestions(Array.isArray(res.data.contents?.questions) ? res.data.contents.questions : []);
                 setGradingMode(resolveQuizGradingMode(res.data.contents?.grading_mode));
             }
 
@@ -482,15 +484,17 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
         if (assignmentTaskUUID && user_id) {
             const res = await getAssignmentTaskSubmissionsUser(assignmentTaskUUID, user_id, assignment.assignment_object.assignment_uuid, access_token);
             if (res.success) {
-                setUserSubmissions({
+                // A learner who never answered this task has no submissions
+                // array; keep the shape the render code relies on.
+                const hydrated = {
                     ...res.data.task_submission,
+                    questions: res.data.task_submission?.questions ?? [],
+                    submissions: Array.isArray(res.data.task_submission?.submissions) ? res.data.task_submission.submissions : [],
                     assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                });
+                };
+                setUserSubmissions(hydrated);
                 setUserSubmissionObject(res.data);
-                setInitialUserSubmissions({
-                    ...res.data.task_submission,
-                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                });
+                setInitialUserSubmissions(hydrated);
             }
 
         }
@@ -697,7 +701,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                 : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                                                 }`}
                                         >
-                                            {mode === QUIZ_RESPONSE_SINGLE ? <CircleDot size={11} /> : <ListChecks size={11} />}
+                                            {mode === QUIZ_RESPONSE_SINGLE ? <RadioButton size={11} /> : <ListChecks size={11} />}
                                             <span>
                                                 {mode === QUIZ_RESPONSE_SINGLE
                                                     ? t('assignments.quiz.response_type_single')
@@ -710,7 +714,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                         // correct option entirely, so the teacher should know
                                         // it will not count, but they may still be mid-edit.
                                         <span className="flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">
-                                            <AlertTriangle size={11} />
+                                            <Warning size={11} />
                                             <span>{t('assignments.quiz.no_correct_option_warning')}</span>
                                         </span>
                                     )}
@@ -925,7 +929,7 @@ function StudentQuizOption(props: {
                 aria-hidden='true'
                 className={`flex h-5 w-5 flex-none items-center justify-center border-2 transition-colors ${single ? 'rounded-full' : 'rounded-md'} ${mark}`}
             >
-                {selected && (single ? <span className='h-2 w-2 rounded-full bg-white' /> : <Check size={12} strokeWidth={3} />)}
+                {selected && (single ? <span className='h-2 w-2 rounded-full bg-white' /> : <Check size={12} weight="bold" />)}
             </span>
         </div>
     )

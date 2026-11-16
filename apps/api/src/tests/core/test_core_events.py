@@ -394,13 +394,17 @@ async def test_startup_runs_and_shutdown_closes_the_mcp_session_manager(monkeypa
     calls = []
 
     class _Manager:
+        def __init__(self, name="mcp"):
+            self.name = name
+
         @asynccontextmanager
         async def run(self):
-            calls.append("mcp-start")
+            calls.append(f"{self.name}-start")
             yield
-            calls.append("mcp-stop")
+            calls.append(f"{self.name}-stop")
 
-    app = SimpleNamespace(state=SimpleNamespace(mcp_session_manager=_Manager()))
+    app = SimpleNamespace(state=SimpleNamespace(
+        mcp_session_manager=_Manager(), platform_mcp_session_manager=_Manager("platform")))
     monkeypatch.setattr(events, "get_learnhouse_config", lambda: SimpleNamespace(name="cfg"))
     for name in ("connect_to_db", "close_database"):
         monkeypatch.setattr(events, name, AsyncMock())
@@ -427,9 +431,10 @@ async def test_startup_runs_and_shutdown_closes_the_mcp_session_manager(monkeypa
     monkeypatch.setattr(events.asyncio, "create_task", create_task)
 
     await events.startup_app(app)()
-    assert calls == ["mcp-start"] and events._mcp_lifespan_stack is not None
+    assert calls == ["mcp-start", "platform-start"] and events._mcp_lifespan_stack is not None
     await events.shutdown_app(app)()
-    assert calls == ["mcp-start", "mcp-stop"] and events._mcp_lifespan_stack is None
+    assert calls == ["mcp-start", "platform-start", "platform-stop", "mcp-stop"]
+    assert events._mcp_lifespan_stack is None
 
 
 @pytest.mark.asyncio

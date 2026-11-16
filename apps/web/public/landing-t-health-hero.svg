@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 560" role="img" aria-label="Heartbeat line and certificate">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3f3f1"/><stop offset="1" stop-color="#cfe9e5"/></linearGradient></defs>
+<rect width="600" height="560" rx="32" fill="url(#bg)"/>
+<circle cx="470" cy="120" r="90" fill="#3bb7a5" opacity=".18"/>
+<circle cx="110" cy="460" r="120" fill="#0e7c7b" opacity=".08"/>
+<rect x="70" y="110" width="460" height="300" rx="22" fill="#ffffff"/>
+<polyline points="100,270 180,270 205,220 235,330 265,180 295,300 318,270 500,270" fill="none" stroke="#0e7c7b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="100" y="150" width="150" height="12" rx="6" fill="#10262a" opacity=".8"/><rect x="100" y="172" width="90" height="9" rx="4" fill="#526a6e" opacity=".4"/>
+<rect x="390" y="146" width="110" height="34" rx="17" fill="#eef7f6"/><circle cx="410" cy="163" r="7" fill="#3bb7a5"/><rect x="424" y="158" width="58" height="9" rx="4" fill="#0e7c7b"/>
+<rect x="100" y="350" width="400" height="10" rx="5" fill="#eef7f6"/><rect x="100" y="350" width="290" height="10" rx="5" fill="#0e7c7b"/>
+<g transform="translate(380,330)"><circle r="78" cx="78" cy="78" fill="#073b3a"/><circle r="62" cx="78" cy="78" fill="none" stroke="#3bb7a5" stroke-width="3" stroke-dasharray="4 6"/>
+<path d="M52 80l18 18 34-38" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

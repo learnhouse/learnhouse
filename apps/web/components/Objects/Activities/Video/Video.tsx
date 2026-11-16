@@ -1,14 +1,16 @@
 import React from 'react'
-import YouTube from 'react-youtube'
+import { preconnect } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import LearnHousePlayer, { type PlayerNavItem } from './LearnHousePlayer'
+import YouTubeFacade from './YouTubeFacade'
 import VideoChapters from './VideoChapters'
 import { positiveIntParam } from '@/lib/copilot/sources'
 import { useVideoProgress } from '@services/analytics/useVideoProgress'
+import { registerVideoClock } from '@/lib/notes/videoClock'
 import {
   isActivityHlsReady,
   resolveActivityVideoSource,
@@ -17,6 +19,7 @@ import {
   resolveActivityChapters,
   resolveAdjacentActivities,
   spriteFrameStyle,
+  urlOrigin,
 } from './videoSource'
 
 interface VideoDetails {
@@ -110,6 +113,8 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
     youtubePoll.current = null
   }, [])
   React.useEffect(() => stopYoutubePoll, [stopYoutubePoll])
+  const youtubeClockOff = React.useRef<(() => void) | null>(null)
+  React.useEffect(() => () => youtubeClockOff.current?.(), [])
   const onYoutubeStateChange = (event: { data: number; target: any }) => {
     stopYoutubePoll()
     if (event.data === 0) {
@@ -186,6 +191,16 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
       filename: activity.content?.filename,
     })
 
+  // Course thumbnail: the poster backdrop for an MP4 with no storyboard yet.
+  const courseThumb = course?.thumbnail_image
+    ? getCourseThumbnailMediaDirectory(resolvedOrgUuid, course.course_uuid, course.thumbnail_image)
+    : null
+
+  // Open the connection to the media origin while the player mounts, so the
+  // first byte range (or playlist) doesn't pay for DNS + TLS on play.
+  const mediaOrigin = activity.activity_sub_type === 'SUBTYPE_VIDEO_HOSTED' ? urlOrigin(getVideoSource().src) : null
+  if (mediaOrigin) preconnect(mediaOrigin, { crossOrigin: 'use-credentials' })
+
   return (
     <div className="w-full max-w-full">
       {activity && (
@@ -194,7 +209,7 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
             // lh-video-bleed: square corners on phones, where the page runs the
             // video edge to edge (player.css).
             <div className="w-full lh-video-bleed">
-              <div className="relative w-full aspect-video">
+              <div className="lh-video-frame relative w-full aspect-video">
                 {(() => {
                   const { src, isHls } = getVideoSource()
                   const thumbnails = isHls
@@ -226,6 +241,8 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                       key={src}
                       src={src}
                       title={activity.name}
+                      preload="none"
+                      posterImageUrl={courseThumb}
                       ambient
                       prevItem={prevItem}
                       nextItem={nextItem}
@@ -260,27 +277,30 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
           )}
           {activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE' && (
             <div className="w-full">
-              <div className="relative w-full aspect-video overflow-hidden rounded-[20px] ring-1 ring-white/10 max-sm:rounded-none max-sm:ring-0">
-                <YouTube
-                  className="w-full h-full"
-                  opts={{
-                    width: '100%',
-                    height: '100%',
-                    playerVars: {
-                      autoplay: activity.details?.autoplay ? 1 : 0,
-                      mute: activity.details?.muted ? 1 : 0,
-                      start: activity.details?.startTime || 0,
-                      end: activity.details?.endTime || undefined,
-                      controls: 1,
-                      modestbranding: 1,
-                      rel: 0
-                    },
-                  }}
+              <div className="lh-video-frame relative w-full aspect-video overflow-hidden rounded-[20px] ring-1 ring-white/10 max-sm:rounded-none max-sm:ring-0">
+                <YouTubeFacade
                   videoId={videoId}
+                  title={activity.name}
+                  playLabel={activity.name ? `${t('activities.play_video', 'Play video')}: ${activity.name}` : t('activities.play_video', 'Play video')}
+                  eager={!!activity.details?.autoplay}
+                  playerVars={{
+                    mute: activity.details?.muted ? 1 : 0,
+                    start: activity.details?.startTime || 0,
+                    end: activity.details?.endTime || undefined,
+                    controls: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                  }}
                   onReady={(event) => {
                     if (activity.details?.startTime) {
                       event.target.seekTo(activity.details.startTime, true)
                     }
+                    // Timestamped notes read and seek this player.
+                    youtubeClockOff.current?.()
+                    youtubeClockOff.current = registerVideoClock({
+                      getTime: () => Promise.resolve(event.target?.getCurrentTime?.()).then((v) => (Number.isFinite(Number(v)) ? Number(v) : null)).catch(() => null),
+                      seek: (s) => event.target?.seekTo?.(s, true),
+                    })
                   }}
                   onStateChange={onYoutubeStateChange}
                 />

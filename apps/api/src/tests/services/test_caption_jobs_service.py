@@ -451,3 +451,9 @@ def test_valid_targets_skips_malformed_and_duplicate_entries():
     assert cj._valid_targets(languages) == [
         {"code": "fr", "name": "French"}, {"code": "de"},
     ]
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

@@ -1,59 +1,21 @@
 'use client'
-import React, { Suspense, useEffect, useRef } from 'react'
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import posthog from 'posthog-js'
-import type { CaptureResult } from 'posthog-js'
-import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react'
 import { getPOSTHOG_KEY_VAL } from '@services/config/config'
+import { onAfterLoad } from '@/lib/afterLoad'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { scrubUrl, scrubUrlProperties } from '@services/utils/ts/scrubUrl'
+import { scrubUrl } from '@services/utils/ts/scrubUrl'
+import {
+  PostHogClientContext,
+  PostHogFacade,
+  usePostHogClient,
+  usePostHogReady,
+} from '@/lib/analytics/posthogClient'
 
-let initialized = false
-
-// Auth links carry reset codes, magic/verify tokens, OAuth codes etc. in the
-// query string; strip them from every URL-valued property before sending.
-function scrubCapture(cr: CaptureResult | null): CaptureResult | null {
-  if (!cr) return cr
-  scrubUrlProperties(cr.properties)
-  scrubUrlProperties(cr.$set)
-  scrubUrlProperties(cr.$set_once)
-  // Session replay meta events record the page href.
-  const snapshots = cr.properties?.$snapshot_data
-  if (Array.isArray(snapshots)) {
-    for (const snap of snapshots) {
-      if (snap?.data && typeof snap.data.href === 'string') snap.data.href = scrubUrl(snap.data.href)
-    }
-  }
-  return cr
-}
-
-function initPostHog(key: string) {
-  if (initialized || typeof window === 'undefined') return
-  initialized = true
-  posthog.init(key, {
-    // Same-origin reverse proxy (see next.config.js rewrites) so adblockers
-    // don't strip ingestion. Not '/ingest': filter lists block '/ingest/*ip='.
-    // ui_host keeps "open in PostHog" links working.
-    api_host: '/lhrel',
-    ui_host: 'https://eu.posthog.com',
-    persistence: 'localStorage+cookie',
-    autocapture: true,
-    capture_pageview: false, // fired manually by PostHogPageView (App Router)
-    capture_pageleave: true,
-    // Session replay ON but privacy-safe: mask every input and all text so no
-    // typed PII (and no on-screen content) leaks into recordings.
-    disable_session_recording: false,
-    session_recording: {
-      maskAllInputs: true,
-      maskTextSelector: '*',
-      maskCapturedNetworkRequestFn: (req) => {
-        if (req?.name) req.name = scrubUrl(req.name)
-        return req
-      },
-    },
-    before_send: scrubCapture,
-  })
-}
+// The SDK and its init options live in lib/analytics/posthogInit.ts, loaded
+// once the browser is idle after the page; calls made before that are queued
+// by the facade (lib/analytics/posthogClient.ts).
+const loadPostHogInit = () => import('@/lib/analytics/posthogInit')
 
 /**
  * Disables ALL PostHog capture (autocapture, pageviews, session replay) while
@@ -61,25 +23,29 @@ function initPostHog(key: string) {
  * internal dashboard and is intentionally untracked. Re-enables elsewhere.
  */
 function PostHogAdminGuard() {
-  const posthogClient = usePostHog()
+  const posthogClient = usePostHogClient()
+  // Re-checked once the SDK has loaded: its persisted opt-out is unknown before.
+  const ready = usePostHogReady()
   const pathname = usePathname()
+  // An impersonation is not the member's activity.
+  const impersonating = !!(useLHSession() as any)?.data?.impersonation
 
   useEffect(() => {
     if (!posthogClient) return
-    const isAdmin = pathname?.startsWith('/admin')
+    const isAdmin = pathname?.startsWith('/admin') || impersonating
     if (isAdmin) {
       if (!posthogClient.has_opted_out_capturing()) posthogClient.opt_out_capturing()
     } else if (posthogClient.has_opted_out_capturing()) {
       posthogClient.opt_in_capturing()
     }
-  }, [posthogClient, pathname])
+  }, [posthogClient, pathname, ready, impersonating])
 
   return null
 }
 
 /** Fires PostHog's native $pageview on every App Router navigation. */
 function PostHogPageView() {
-  const posthogClient = usePostHog()
+  const posthogClient = usePostHogClient()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -102,14 +68,18 @@ function PostHogPageView() {
  * token-exchange, cross-tab logout and 401 expiry are all covered from one place.
  */
 function PostHogIdentify() {
-  const posthogClient = usePostHog()
+  const posthogClient = usePostHogClient()
   const session = useLHSession() as any
   const status = session?.status
   const user = session?.data?.user
   const identifiedRef = useRef<string | null>(null)
 
+  const impersonating = !!session?.data?.impersonation
+
   useEffect(() => {
     if (!posthogClient) return
+    // Never identify the browser as the member an impersonation acts for.
+    if (impersonating) return
 
     if (status === 'authenticated' && user?.user_uuid) {
       if (identifiedRef.current !== user.user_uuid) {
@@ -124,7 +94,7 @@ function PostHogIdentify() {
       identifiedRef.current = null
       posthogClient.reset()
     }
-  }, [posthogClient, status, user?.user_uuid])
+  }, [posthogClient, status, user?.user_uuid, impersonating])
 
   return null
 }
@@ -135,21 +105,38 @@ function PostHogIdentify() {
  */
 export default function PostHogProvider({ children }: { children: React.ReactNode }) {
   const key = getPOSTHOG_KEY_VAL()
+  const client = useMemo(() => (key ? new PostHogFacade() : null), [key])
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (key) initPostHog(key)
-  }, [key])
+    if (!client || !key) return
+    let cancelled = false
+    const load = () => {
+      loadPostHogInit()
+        .then(({ initPostHog }) => {
+          if (cancelled) return
+          client.attach(initPostHog(key))
+          setReady(true)
+        })
+        .catch(() => {})
+    }
+    // After the page's own work: analytics never competes with first paint.
+    const cancelWait = onAfterLoad(load, { timeout: 3000 })
+    return () => { cancelled = true; cancelWait() }
+  }, [client, key])
 
-  if (!key) return <>{children}</>
+  const value = useMemo(() => ({ client, ready }), [client, ready])
+
+  if (!client) return <>{children}</>
 
   return (
-    <PHProvider client={posthog}>
+    <PostHogClientContext.Provider value={value}>
       <PostHogAdminGuard />
       <Suspense fallback={null}>
         <PostHogPageView />
       </Suspense>
       <PostHogIdentify />
       {children}
-    </PHProvider>
+    </PostHogClientContext.Provider>
   )
 }

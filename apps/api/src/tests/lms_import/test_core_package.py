@@ -250,7 +250,7 @@ def test_manifest_course_and_chapter_shapes(tmp_path):
     c = pkg.course
     assert c["name"] == "Intro to X"
     assert c["description"] == "First. Second sentence." == c["about"]
-    assert c["tags"] == "a,b"
+    assert c["tags"] == "a|b"
     learnings = json.loads(c["learnings"])
     assert [x["text"] for x in learnings] == ["Learn A", ("Learn B" * 100)[:300]]
     assert all(x["emoji"] == "✅" and x["id"].startswith("learning_") for x in learnings)

@@ -41,6 +41,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.requests import Request
 
 from config.config import get_learnhouse_config
+from src.core.ee_hooks import audit_event
 from src.db.mcp_oauth import MCPOAuthClient, MCPOAuthCode, MCPOAuthGrant, MCPOAuthToken
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
@@ -601,6 +602,12 @@ async def decide_authorization(
         raise OAuthError("invalid_client", "This app is no longer registered")
 
     if not approve:
+        if org_id is not None:
+            audit_event(
+                None, action="integrations.mcp.grant_denied", org_id=org_id, actor=user,
+                target_type="mcp_app", target_id=client.client_id, target_name=client.client_name,
+                outcome="denied", reason="declined_by_member", via="ui", require_member=True,
+            )
         return redirect_with(
             redirect_uri,
             {
@@ -674,6 +681,11 @@ async def decide_authorization(
         )
     )
     await db_session.commit()
+    audit_event(
+        None, action="integrations.mcp.grant_approved", org_id=org_id, actor=user,
+        target_type="mcp_app", target_id=grant.grant_uuid, target_name=client.client_name,
+        details={"scope": grant.scope, "replaced_connections": len(previous)}, via="ui",
+    )
     return redirect_with(redirect_uri, {"code": code, "state": state, "iss": issuer})
 
 
@@ -828,6 +840,12 @@ async def _exchange_refresh(
             logger.warning("mcp-oauth: refresh token replay, revoking grant %s", grant.grant_uuid)
             await _revoke_grant(grant.id, db_session)
             await db_session.commit()
+            audit_event(
+                request, action="integrations.mcp.refresh_replay", org_id=grant.org_id, actor=grant.user_id,
+                target_type="mcp_app", target_id=grant.grant_uuid, target_name=client.client_name,
+                outcome="denied", reason="refresh_token_reused", details={"connection_revoked": True},
+                via="system",
+            )
         raise OAuthError("invalid_grant", "refresh_token was already used")
     if grant.revoked_at is not None or token.expires_at < _now():
         raise OAuthError("invalid_grant", "refresh_token expired or was revoked")
@@ -1034,7 +1052,8 @@ async def list_grants(
 
 
 async def revoke_grant_by_uuid(
-    grant_uuid: str, org_id: int, db_session: AsyncSession, user_id: Optional[int] = None
+    grant_uuid: str, org_id: int, db_session: AsyncSession, user_id: Optional[int] = None,
+    actor: Any = None,
 ) -> bool:
     query = select(MCPOAuthGrant).where(
         MCPOAuthGrant.grant_uuid == grant_uuid,
@@ -1048,6 +1067,13 @@ async def revoke_grant_by_uuid(
         return False
     await _revoke_grant(grant.id, db_session)
     await db_session.commit()
+    client = await get_client(grant.client_id, db_session)
+    audit_event(
+        None, action="integrations.mcp.grant_revoked", org_id=org_id, actor=actor,
+        target_type="mcp_app", target_id=grant.grant_uuid,
+        target_name=getattr(client, "client_name", None),
+        details={"owner_user_id": grant.user_id}, via="ui",
+    )
     return True
 
 

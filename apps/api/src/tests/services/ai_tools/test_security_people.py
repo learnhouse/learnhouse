@@ -23,14 +23,12 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.services.ai.tools import ToolRegistry, run_tool
-from src.services.ai.tools import boards as board_tools
 from src.services.ai.tools import courses as course_tools
 from src.services.ai.tools import discovery, learners, refs, results
 from src.services.ai.tools import org as org_tools
 from src.services.ai.tools import usergroups as group_tools
 from src.services.ai.tools import users as user_tools
 from src.services.ai.tools.results import UNTRUSTED_NOTE
-from src.tests.services.ai_tools.test_community_library import board  # noqa: F401
 from src.tests.services.ai_tools.test_people_org import (  # noqa: F401
     _ctx,
     _token,
@@ -205,14 +203,6 @@ async def test_course_learners_keep_their_status_note(db, org, admin_user, regul
     out = ok(await call(_registry(learners), "list_course_learners", {"course_uuid": "course_test"}, _ctx(db, org, admin_user)))
     assert out["note"].startswith("The course has no published activities") and out["note"].endswith(UNTRUSTED_NOTE)
     assert out["untrusted_fields"] == ["items"]
-
-
-async def test_boards_are_marked(db, org, admin_user, board):
-    reg = _registry(board_tools)
-    page = ok(await call(reg, "list_boards", {}, _ctx(db, org, admin_user)))
-    assert page["untrusted_fields"] == ["items"] and page["note"] == UNTRUSTED_NOTE
-    out = ok(await call(reg, "get_board", {"board_uuid": "board_plan"}, _ctx(db, org, admin_user)))
-    assert out["untrusted_fields"] == ["board", "description", "members"]
 
 
 async def test_get_course_marks_co_authors(db, org, admin_user, course):

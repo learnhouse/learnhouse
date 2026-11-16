@@ -111,6 +111,58 @@ In dark mode, text and background follow the theme. Blocks keep the light cards 
 
 Attributes: `activity-id`, `activity-name`, `course-id`, `base-url`, `media-url`, `site-url`, `org-id`, `token`, `locale`, `dir`, `link-target`, `theme`, `messages` and `content` (JSON), `hide-blocks` (comma list or JSON), and the booleans `show-title`, `track-completion`, `show-powered-by`, `unstyled`, `hide-error`. Objects and functions (`activity`, `content`, `client`, `getToken`, `user`, `transformContent`) are set as properties. Events arrive as DOM events: `lh-load`, `lh-ready`, `lh-error`, `lh-complete`, `lh-media`, `lh-resize`, `lh-visible`, `lh-analytics`, `lh-event` (all of them) and the cancelable `lh-link-click`, each with the event in `detail`. `el.reload()` mounts the activity again.
 
+## Agent API
+
+Rebuild the Atlas / copilot chat in your own UI on the Agent API (see the
+`client.agent` section of [`@learnhouse/sdk`](https://www.npmjs.com/package/@learnhouse/sdk)).
+
+`useAgentConversation()` keeps one conversation as state. Streamed text appends
+live; views, citations and approvals attach to the assistant message; a dropped
+stream resumes from the last event id.
+
+```tsx
+import { useAgentConversation, AgentView } from '@learnhouse/react'
+
+const chat = useAgentConversation({ baseUrl, token, agent: 'copilot', create: { context: { course_uuid } } })
+// chat.messages, chat.status ('idle' | 'loading' | 'streaming' | 'requires_action' | 'error'), chat.error
+// chat.send(text), chat.approve(id, phrase?), chat.deny(id, reason?), chat.cancel()
+// chat.submitToolResult(callId, output), chat.pendingApprovals, chat.pendingToolCalls, chat.suggestions
+```
+
+It takes a `client`, or `baseUrl` + `token` / `session`, or uses the nearest
+`<LearnHouseProvider>`'s client. With a member session (a user JWT) pass
+`orgId`: it is sent when the agent profile loads (`chat.agent`) and when the
+conversation is created. The conversation is created on the first
+`send()` (or pass `conversationId` to open one; a running turn is re-attached).
+
+`<AgentChat />` is a ready-made chat on top of it: message list, composer,
+approval cards (with the typed confirmation phrase when `approval.confirmation`
+is set), citations, suggestion chips and renderers for the common view
+components (kpis, table, chart, cards, timeline, steps, callout, text,
+checklist, progress, comparison, code, quiz, choices, glossary). A view with any
+other component type shows its `fallback_markdown`, rendered as React elements
+(server strings are never injected as HTML).
+
+```tsx
+<AgentChat baseUrl={baseUrl} token={token} agent="copilot" siteUrl="https://learn.example.com"
+  renderers={{ table: MyTable }} renderView={(view, fallback) => fallback} theme="auto" />
+```
+
+Override any component type with `renderers` (a renderer gets `component`,
+`view`, `message`, `send` and `resolveLink`), or wrap whole views and messages
+with `renderView` / `renderMessage`. View links (`_link` on table rows, `link`
+on progress items, a card's `kind` + `uuid`) open on `siteUrl` (relative paths,
+and course pages); pass `resolveLink` to send them into your own routes. `AgentView`, `ApprovalCard`,
+`CitationList` and `AgentMarkdown` are exported for custom layouts. Styles are
+the `lh-agent-*` classes in `styles.css`, themed with `--lh-agent-*` custom
+properties (light and dark). `@learnhouse/react/element` also registers
+`<learnhouse-agent-chat>` (attributes `base-url`, `token`, `agent`, `org-id`,
+`conversation-id`, `site-url`, `placeholder`, `theme`, `starters`; events
+`lh-agent-event`, `lh-agent-conversation`, `lh-agent-error`).
+
+A custom-UI example lives in `demo/agent.tsx`: `bun run demo`, then open
+`http://localhost:3538/agent.html?base=http://localhost:1377&token=<jwt>&agent=atlas&org=<org id>`.
+
 ## Styles
 
 `@learnhouse/react/styles.css` is LearnHouse's own stylesheet, compiled for the blocks the renderer uses and scoped under `.lh-activity`, so it doesn't leak into your page.

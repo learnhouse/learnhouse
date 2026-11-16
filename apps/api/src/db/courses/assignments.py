@@ -33,6 +33,54 @@ class SolutionRevealEnum(str, Enum):
     AFTER_GRADING = "AFTER_GRADING"
 
 
+class AIGradingModeEnum(str, Enum):
+    """How AI grading is used on an assignment.
+
+    OFF      - no AI grading at all (the buttons are hidden, the API refuses).
+    SUGGEST  - a teacher asks for it and gets a draft grade to accept, edit or
+               discard. Nothing runs (or costs credits) unless they ask.
+    AUTO     - every hand-in is graded by AI in the background and the grade
+               is applied, marked as AI-graded. A teacher can still regrade.
+    """
+
+    OFF = "OFF"
+    SUGGEST = "SUGGEST"
+    AUTO = "AUTO"
+
+
+# Caps on the teacher's AI grading rubric (it goes into every grading prompt).
+MAX_AI_GRADING_INSTRUCTIONS_CHARS = 20_000
+MAX_AI_GRADING_TASK_INSTRUCTIONS = 200
+MAX_AI_GRADING_TASK_INSTRUCTION_CHARS = 5_000
+
+
+def _check_ai_grading_instructions(value):
+    if value is not None and len(value) > MAX_AI_GRADING_INSTRUCTIONS_CHARS:
+        raise ValueError(
+            f"ai_grading_instructions must be at most {MAX_AI_GRADING_INSTRUCTIONS_CHARS} characters"
+        )
+    return value
+
+
+def _check_ai_grading_task_instructions(value):
+    """{task uuid: rubric text}; empty lines are dropped."""
+    if value is None:
+        return value
+    if not isinstance(value, dict) or len(value) > MAX_AI_GRADING_TASK_INSTRUCTIONS:
+        raise ValueError("ai_grading_task_instructions must be an object of at most 200 entries")
+    cleaned = {}
+    for key, text in value.items():
+        if not isinstance(key, str) or not isinstance(text, str):
+            raise ValueError("ai_grading_task_instructions maps task uuids to text")
+        if len(text) > MAX_AI_GRADING_TASK_INSTRUCTION_CHARS:
+            raise ValueError(
+                f"each task's AI grading instructions must be at most {MAX_AI_GRADING_TASK_INSTRUCTION_CHARS} characters"
+            )
+        if text.strip():
+            cleaned[key] = text
+    return cleaned
+
+
 class AssignmentBase(SQLModel):
     """Represents the common fields for an assignment."""
 
@@ -92,6 +140,14 @@ class AssignmentBase(SQLModel):
     # `upload_solution_file` (same convention as AssignmentTask.reference_file).
     solution_file: Optional[str] = None
     solution_reveal: Optional[SolutionRevealEnum] = SolutionRevealEnum.NEVER
+    # AI grading. The instructions are the teacher's rubric, the only thing the
+    # model takes orders from; the per-task ones are keyed by task uuid. Both
+    # are instructor-only: the read services blank them for learners.
+    ai_grading_mode: Optional[AIGradingModeEnum] = AIGradingModeEnum.SUGGEST
+    ai_grading_instructions: Optional[str] = None
+    ai_grading_task_instructions: Optional[Dict] = Field(
+        default=None, sa_column=Column(JSON)
+    )
 
     org_id: int
     course_id: int
@@ -102,7 +158,12 @@ class AssignmentBase(SQLModel):
 class AssignmentCreate(AssignmentBase):
     """Model for creating a new assignment."""
 
-    pass  # Inherits all fields from AssignmentBase
+    _cap_ai_instructions = field_validator("ai_grading_instructions")(
+        _check_ai_grading_instructions
+    )
+    _cap_ai_task_instructions = field_validator("ai_grading_task_instructions")(
+        _check_ai_grading_task_instructions
+    )
 
 
 class AssignmentRead(AssignmentBase):
@@ -123,6 +184,10 @@ class AssignmentRead(AssignmentBase):
     # whenever a corrigé exists.
     has_solution: Optional[bool] = None
     solution_unlocked: Optional[bool] = None
+    # Per-status submission tally, filled in only for instructors by the course
+    # listing so the dashboard can show "to grade / graded" on every row
+    # without one submissions request per assignment. None for learners.
+    submission_counts: Optional[dict] = None
 
 
 class AssignmentUpdate(SQLModel):
@@ -151,7 +216,19 @@ class AssignmentUpdate(SQLModel):
     ungraded: Optional[bool] = None
     solution: Optional[str] = None
     solution_reveal: Optional[SolutionRevealEnum] = None
+    ai_grading_mode: Optional[AIGradingModeEnum] = None
+    ai_grading_instructions: Optional[str] = None
+    ai_grading_task_instructions: Optional[Dict] = Field(
+        default=None, sa_column=Column(JSON)
+    )
     update_date: Optional[str] = None
+
+    _cap_ai_instructions = field_validator("ai_grading_instructions")(
+        _check_ai_grading_instructions
+    )
+    _cap_ai_task_instructions = field_validator("ai_grading_task_instructions")(
+        _check_ai_grading_task_instructions
+    )
 
 
 class Assignment(AssignmentBase, table=True):

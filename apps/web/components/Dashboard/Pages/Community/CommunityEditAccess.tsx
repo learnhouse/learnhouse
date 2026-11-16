@@ -1,33 +1,44 @@
 'use client'
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { Info, LinkSimple, Plus, UsersThree, X } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useCommunity, useCommunityDispatch } from '@components/Contexts/CommunityContext'
-import { updateCommunity } from '@services/communities/communities'
-import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
-import { revalidateTags, RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCommunity } from '@components/Contexts/CommunityContext'
+import { getUserGroups, linkResourcesToUserGroup, unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
+import { asArray, RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { queryKeys } from '@/lib/query/keys'
-import { getAPIUrl } from '@services/config/config'
-import { Globe, Users, SquareUserRound, X } from 'lucide-react'
-import toast from 'react-hot-toast'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import LinkCommunityToUserGroup from '@components/Objects/Modals/Dash/EditCommunityAccess/LinkCommunityToUserGroup'
+import {
+  Button,
+  ConfirmDialog,
+  EmptyState,
+  FieldLabel,
+  SectionCard,
+  buttonClass,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
 
-const CommunityEditAccess: React.FC = () => {
+const resourceGroupsKey = (communityUuid?: string, orgId?: number) => ['usergroups', 'resource', communityUuid, orgId]
+
+// Who can see a restricted community: the user groups linked to it. Part of
+// the Settings tab; linking and unlinking apply at once.
+export function UserGroupsSection() {
   const { t } = useTranslation()
+  const community = useCommunity()?.community
   const session = useLHSession() as any
-  const org = useOrg() as any
-  const communityState = useCommunity()
-  const dispatch = useCommunityDispatch()
-  const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
+  const org = useOrg() as any
   const queryClient = useQueryClient()
+  const [linkOpen, setLinkOpen] = useState(false)
+  const [unlinking, setUnlinking] = useState<any | null>(null)
 
-  const { data: usergroups, isLoading: isLoadingUsergroups } = useQuery({
-    queryKey: ['usergroups', 'resource', community?.community_uuid, org?.id],
+  const key = resourceGroupsKey(community?.community_uuid, org?.id)
+  const { data, isLoading } = useQuery({
+    queryKey: key,
     queryFn: async () => {
       const url = `${getAPIUrl()}usergroups/resource/${community!.community_uuid}?org_id=${org.id}`
       const res = await fetch(url, RequestBodyWithAuthHeader('GET', null, null, accessToken))
@@ -37,238 +48,230 @@ const CommunityEditAccess: React.FC = () => {
     enabled: !!(community?.community_uuid && org?.id),
     staleTime: 60_000,
   })
-
-  // Track local public state
-  const [isClientPublic, setIsClientPublic] = useState<boolean | undefined>(undefined)
-  const hasInitializedRef = useRef(false)
-  const previousPublicRef = useRef<boolean | undefined>(undefined)
-  const [isSaving, setIsSaving] = useState(false)
-
-  // Initialize local state from community
-  useEffect(() => {
-    if (community?.public !== undefined && !hasInitializedRef.current) {
-      setIsClientPublic(community.public)
-      previousPublicRef.current = community.public
-      hasInitializedRef.current = true
-    }
-  }, [community?.public])
-
-  // Handle public state change
-  const handleSetPublic = useCallback(
-    async (value: boolean) => {
-      if (!community || isSaving) return
-
-      setIsClientPublic(value)
-      setIsSaving(true)
-
-      try {
-        const result = await updateCommunity(
-          community.community_uuid,
-          { public: value },
-          accessToken
-        )
-
-        if (result) {
-          await revalidateTags(['communities'], org.slug)
-          queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
-          if (dispatch) {
-            dispatch({ type: 'setCommunity', payload: { ...community, public: value } })
-          }
-          previousPublicRef.current = value
-          toast.success(t('dashboard.courses.communities.access.toasts.update_success'))
-        }
-      } catch (error) {
-        console.error('Failed to update community access:', error)
-        setIsClientPublic(previousPublicRef.current)
-        toast.error(t('dashboard.courses.communities.access.toasts.update_error'))
-      } finally {
-        setIsSaving(false)
-      }
-    },
-    [community, accessToken, org?.slug, dispatch, isSaving, t]
-  )
+  const linked: any[] = asArray<any>(data)
 
   if (!community) return null
 
-  return (
-    <div>
-      <div className="h-6"></div>
-      <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
-        <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-          <h1 className="font-bold text-lg sm:text-xl text-gray-800">
-            {t('dashboard.courses.communities.access.title')}
-          </h1>
-          <h2 className="text-gray-500 text-xs sm:text-sm">
-            {t('dashboard.courses.communities.access.subtitle')}
-          </h2>
-        </div>
-        <div
-          className={`flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mx-auto mb-3 ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}
-        >
-          <ConfirmationModal
-            confirmationButtonText={t('dashboard.courses.communities.access.public.confirmation_button')}
-            confirmationMessage={t('dashboard.courses.communities.access.public.confirmation_message')}
-            dialogTitle={t('dashboard.courses.communities.access.public.confirmation_title')}
-            dialogTrigger={
-              <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
-                {isClientPublic && (
-                  <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
-                    {t('dashboard.courses.communities.access.public.active')}
-                  </div>
-                )}
-                <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
-                  <Globe className="text-slate-400" size={32} />
-                  <div className="text-xl sm:text-2xl text-slate-700 font-bold">
-                    {t('dashboard.courses.communities.access.public.title')}
-                  </div>
-                  <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
-                    {t('dashboard.courses.communities.access.public.description')}
-                  </div>
-                </div>
-              </div>
-            }
-            functionToExecute={() => handleSetPublic(true)}
-            status="info"
-          />
-          <ConfirmationModal
-            confirmationButtonText={t('dashboard.courses.communities.access.restricted.confirmation_button')}
-            confirmationMessage={t('dashboard.courses.communities.access.restricted.confirmation_message')}
-            dialogTitle={t('dashboard.courses.communities.access.restricted.confirmation_title')}
-            dialogTrigger={
-              <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
-                {!isClientPublic && (
-                  <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
-                    {t('dashboard.courses.communities.access.restricted.active')}
-                  </div>
-                )}
-                <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
-                  <Users className="text-slate-400" size={32} />
-                  <div className="text-xl sm:text-2xl text-slate-700 font-bold">
-                    {t('dashboard.courses.communities.access.restricted.title')}
-                  </div>
-                  <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
-                    {t('dashboard.courses.communities.access.restricted.description')}
-                  </div>
-                </div>
-              </div>
-            }
-            functionToExecute={() => handleSetPublic(false)}
-            status="info"
-          />
-        </div>
-        {!isClientPublic && <UserGroupsSection usergroups={usergroups} isLoading={isLoadingUsergroups} />}
-      </div>
-    </div>
-  )
-}
-
-function UserGroupsSection({ usergroups, isLoading }: { usergroups: any[]; isLoading?: boolean }) {
-  const { t } = useTranslation()
-  const communityState = useCommunity()
-  const community = communityState?.community
-  const [userGroupModal, setUserGroupModal] = useState(false)
-  const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
-  const org = useOrg() as any
-  const queryClient = useQueryClient()
-
-  const removeUserGroupLink = async (usergroup_id: number) => {
-    if (!community) return
+  const removeLink = async (usergroup: any) => {
     try {
-      const res = await unLinkResourcesToUserGroup(
-        usergroup_id,
-        community.community_uuid,
-        org.id,
-        access_token
-      )
+      const res = await unLinkResourcesToUserGroup(usergroup.id, community.community_uuid, org.id, accessToken)
       if (res.status === 200) {
         toast.success(t('dashboard.courses.communities.access.usergroups.toasts.unlink_success'))
-        queryClient.invalidateQueries({ queryKey: ['usergroups', 'resource', community.community_uuid, org.id] })
+        queryClient.invalidateQueries({ queryKey: key })
       } else {
         toast.error(
           t('dashboard.courses.communities.access.usergroups.toasts.link_error', {
             status: res.status,
-            detail: res.data.detail,
+            detail: res.data?.detail,
           })
         )
       }
-    } catch (error) {
+    } catch {
       toast.error(t('dashboard.courses.communities.access.usergroups.toasts.unlink_error'))
     }
   }
 
   return (
-    <>
-      <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-        <h1 className="font-bold text-lg sm:text-xl text-gray-800">
-          {t('dashboard.courses.communities.access.usergroups.title')}
-        </h1>
-        <h2 className="text-gray-500 text-xs sm:text-sm">
-          {t('dashboard.courses.communities.access.usergroups.subtitle')}
-        </h2>
-      </div>
-      <div className="overflow-x-auto">
-        {isLoading ? (
-          <div className="space-y-2 animate-pulse">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-7 bg-gray-200 rounded w-24" />
+    <SectionCard
+      icon={<UsersThree size={18} />}
+      title={t('dashboard.courses.communities.access.usergroups.title')}
+      description={t('dashboard.courses.communities.access.usergroups.subtitle')}
+      actions={
+        <Button icon={<Plus size={14} />} onClick={() => setLinkOpen(true)}>
+          {t('dashboard.courses.communities.access.usergroups.actions.link_to_usergroup')}
+        </Button>
+      }
+      bodyClassName="px-5 pb-5 pt-4"
+    >
+      {isLoading ? (
+        <div className="rounded-xl ring-1 ring-inset ring-neutral-100 divide-y divide-neutral-100 animate-pulse">
+          {[0, 1].map((i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3">
+              <div className="w-8 h-8 rounded-lg bg-neutral-100" />
+              <div className="h-3.5 w-40 rounded bg-neutral-100" />
+            </div>
+          ))}
+        </div>
+      ) : linked.length === 0 ? (
+        <div className="rounded-xl ring-1 ring-inset ring-neutral-100">
+          <EmptyState
+            icon={<UsersThree size={22} />}
+            title={t('communities.dash.access.no_groups')}
+            description={t('communities.dash.access.no_groups_description')}
+            action={
+              <Button size="sm" variant="primary" icon={<Plus size={13} />} onClick={() => setLinkOpen(true)}>
+                {t('dashboard.courses.communities.access.usergroups.actions.link_to_usergroup')}
+              </Button>
+            }
+          />
+        </div>
+      ) : (
+        <ul className="rounded-xl ring-1 ring-inset ring-neutral-100 divide-y divide-neutral-100">
+          {linked.map((usergroup: any) => (
+            <li key={usergroup.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-8 h-8 rounded-lg bg-neutral-100 text-neutral-500 flex items-center justify-center shrink-0">
+                  <UsersThree size={16} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-neutral-900 truncate" dir="auto">{usergroup.name}</p>
+                  {usergroup.description && (
+                    <p className="text-xs text-neutral-500 truncate" dir="auto">{usergroup.description}</p>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-        ) : (
-        <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
-          <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
-            <tr className="font-bolder text-sm">
-              <th className="py-3 px-4">{t('dashboard.courses.communities.access.usergroups.table.name')}</th>
-              <th className="py-3 px-4">{t('dashboard.courses.communities.access.usergroups.table.actions')}</th>
-            </tr>
-          </thead>
-          <tbody className="mt-5 bg-white rounded-md">
-            {usergroups?.map((usergroup: any) => (
-              <tr key={usergroup.invite_code_uuid || usergroup.id} className="border-b border-gray-100 text-sm">
-                <td className="py-3 px-4">{usergroup.name}</td>
-                <td className="py-3 px-4">
-                  <ConfirmationModal
-                    confirmationButtonText={t('dashboard.courses.communities.access.usergroups.modals.unlink_button')}
-                    confirmationMessage={t('dashboard.courses.communities.access.usergroups.modals.unlink_message')}
-                    dialogTitle={t('dashboard.courses.communities.access.usergroups.modals.unlink_title')}
-                    dialogTrigger={
-                      <button className="me-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
-                        <X className="w-4 h-4" />
-                        <span>{t('dashboard.courses.communities.access.usergroups.actions.delete_link')}</span>
-                      </button>
-                    }
-                    functionToExecute={() => removeUserGroupLink(usergroup.id)}
-                    status="warning"
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        )}
-      </div>
-      <div className="flex flex-row-reverse mt-3 me-2">
-        <Modal
-          isDialogOpen={userGroupModal}
-          onOpenChange={() => setUserGroupModal(!userGroupModal)}
-          minHeight="no-min"
-          minWidth="md"
-          dialogContent={<LinkCommunityToUserGroup setUserGroupModal={setUserGroupModal} />}
-          dialogTitle={t('dashboard.courses.communities.access.usergroups.modals.link_title')}
-          dialogDescription={t('dashboard.courses.communities.access.usergroups.modals.link_description')}
-          dialogTrigger={
-            <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-xs sm:text-sm text-green-100">
-              <SquareUserRound className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>{t('dashboard.courses.communities.access.usergroups.actions.link_to_usergroup')}</span>
-            </button>
-          }
-        />
-      </div>
-    </>
+              <Button size="sm" variant="danger-ghost" icon={<X size={13} />} onClick={() => setUnlinking(usergroup)}>
+                {t('dashboard.courses.communities.access.usergroups.actions.delete_link')}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <LinkUserGroupDialog
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
+        linkedIds={linked.map((g) => g.id)}
+        onLinked={() => queryClient.invalidateQueries({ queryKey: key })}
+      />
+      <ConfirmDialog
+        open={!!unlinking}
+        onOpenChange={(open) => !open && setUnlinking(null)}
+        title={t('dashboard.courses.communities.access.usergroups.modals.unlink_title')}
+        message={t('dashboard.courses.communities.access.usergroups.modals.unlink_message')}
+        confirmLabel={t('dashboard.courses.communities.access.usergroups.modals.unlink_button')}
+        onConfirm={() => (unlinking ? removeLink(unlinking) : undefined)}
+      />
+    </SectionCard>
   )
 }
 
-export default CommunityEditAccess
+function LinkUserGroupDialog({
+  open,
+  onOpenChange,
+  linkedIds,
+  onLinked,
+}: {
+  open: boolean
+  onOpenChange: (_open: boolean) => void
+  linkedIds: number[]
+  onLinked: () => void
+}) {
+  const { t } = useTranslation()
+  const community = useCommunity()?.community
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const accessToken = session?.data?.tokens?.access_token
+  const [selected, setSelected] = useState<string>('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const { data: usergroups = [], isLoading } = useQuery({
+    queryKey: queryKeys.usergroups.list(org?.id),
+    queryFn: () => getUserGroups(org.id, accessToken),
+    select: (res: any) => asArray<any>(res),
+    enabled: open && !!(org?.id && accessToken),
+    staleTime: 60_000,
+  })
+  // Groups that already grant access are left out of the picker.
+  const linkedKey = linkedIds.join(',')
+  const available = useMemo(
+    () => usergroups.filter((g: any) => !linkedKey.split(',').includes(String(g.id))),
+    [usergroups, linkedKey]
+  )
+
+  // Preselect the first available group each time the list changes.
+  useEffect(() => {
+    if (!available.some((g: any) => String(g.id) === selected)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelected(available[0] ? String(available[0].id) : '')
+    }
+  }, [available, selected])
+
+  const handleLink = async () => {
+    if (!community || !selected) return
+    setSubmitting(true)
+    try {
+      const res = await linkResourcesToUserGroup(selected, community.community_uuid, org.id, accessToken)
+      if (res.status === 200) {
+        toast.success(t('dashboard.courses.communities.access.usergroups.toasts.link_success'))
+        onLinked()
+        onOpenChange(false)
+      } else {
+        toast.error(
+          t('dashboard.courses.communities.access.usergroups.toasts.link_error', {
+            status: res.status,
+            detail: res.data?.detail,
+          })
+        )
+      }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Modal
+      isDialogOpen={open}
+      onOpenChange={onOpenChange}
+      icon={<LinkSimple size={16} />}
+      size="sm"
+      preventClose={submitting}
+      dialogTitle={t('dashboard.courses.communities.access.usergroups.modals.link_title')}
+      dialogDescription={t('dashboard.courses.communities.access.usergroups.modals.link_description')}
+      dialogContent={
+        <div className="flex flex-col gap-4">
+          {isLoading ? (
+            <div className="h-9 rounded-lg bg-neutral-100 animate-pulse" />
+          ) : available.length === 0 ? (
+            <div className="rounded-xl bg-neutral-50 ring-1 ring-inset ring-neutral-100 px-4 py-4 text-sm text-neutral-600">
+              <p className="font-semibold text-neutral-800">
+                {usergroups.length === 0
+                  ? t('dashboard.courses.communities.access.usergroups.modals.no_usergroups')
+                  : t('communities.dash.access.all_linked')}
+              </p>
+              <Link
+                href={getUriWithOrg(org?.slug, '/dash/users/settings/usergroups')}
+                target="_blank"
+                className={buttonClass('secondary', 'sm', 'mt-3')}
+              >
+                <Plus size={13} />
+                {t('dashboard.courses.communities.access.usergroups.modals.create_usergroup')}
+              </Link>
+            </div>
+          ) : (
+            <div>
+              <FieldLabel>{t('dashboard.courses.communities.access.usergroups.modals.usergroup_name')}</FieldLabel>
+              <select
+                value={selected}
+                onChange={(e) => setSelected(e.target.value)}
+                aria-label={t('dashboard.courses.communities.access.usergroups.modals.usergroup_name')}
+                className="w-full h-9 px-3 text-sm bg-white rounded-lg ring-1 ring-inset ring-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-900/15"
+              >
+                {available.map((group: any) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="flex items-start gap-2 rounded-xl bg-amber-50 ring-1 ring-inset ring-amber-200/70 px-3.5 py-3 text-xs text-amber-800">
+            <Info size={15} className="shrink-0 mt-px" />
+            <span>{t('dashboard.courses.communities.access.usergroups.modals.warning')}</span>
+          </div>
+        </div>
+      }
+      footer={
+        <>
+          <Button onClick={() => onOpenChange(false)} disabled={submitting}>
+            {t('common.cancel')}
+          </Button>
+          <Button variant="primary" onClick={handleLink} loading={submitting} disabled={!selected}>
+            {t('dashboard.courses.communities.access.usergroups.modals.link_button')}
+          </Button>
+        </>
+      }
+    />
+  )
+}
+

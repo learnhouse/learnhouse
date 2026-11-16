@@ -1,0 +1,932 @@
+{
+  "_meta": {
+    "status": "Measured on the local stack 2026-11-09 (real Gemini usage from ai_usage_event / direct generator calls) for: ask_ai, assignment_generation, atlas_chat, course_planning, editor_ai, image_generation, magic_block, podcast_audio, podcast_script, quiz_generation, rag_indexing, scenario_generation, seo_generation, thumbnail, translation. Other features keep modelled estimates (metered features hold the floor by construction).",
+    "schema": "{feature: {units, p50_usage: [Usage kwargs per provider call or per model], p90_usage: [...]}}",
+    "podcast_audio": "per minute: 25 audio tokens/s x 60 s = 1500 tokens; measured 207 tokens for 8.3 s"
+  },
+  "atlas_chat": {
+    "units": 1,
+    "measured": true,
+    "samples": 22,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 56694,
+        "output_tokens": 41,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 233741,
+        "output_tokens": 799,
+        "cached_input_tokens": 168132,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 4
+      }
+    ]
+  },
+  "atlas_scheduled": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 14000,
+        "output_tokens": 600
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 14000,
+        "output_tokens": 600
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 14000,
+        "output_tokens": 600
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 22000,
+        "output_tokens": 1500
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 22000,
+        "output_tokens": 1500
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 22000,
+        "output_tokens": 1500
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 22000,
+        "output_tokens": 1500
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 22000,
+        "output_tokens": 1500
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 22000,
+        "output_tokens": 1500
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 22000,
+        "output_tokens": 1500
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 22000,
+        "output_tokens": 1500
+      }
+    ]
+  },
+  "course_builder_plan": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 6000,
+        "output_tokens": 3000
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 20000,
+        "output_tokens": 6000
+      }
+    ]
+  },
+  "course_builder_lesson": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 5000,
+        "output_tokens": 3500
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 12000,
+        "output_tokens": 7000
+      }
+    ]
+  },
+  "ai_editor_turn": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 12000,
+        "output_tokens": 800
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 12000,
+        "output_tokens": 800
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 20000,
+        "output_tokens": 2000
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 20000,
+        "output_tokens": 2000
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 20000,
+        "output_tokens": 2000
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 20000,
+        "output_tokens": 2000
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 20000,
+        "output_tokens": 2000
+      }
+    ]
+  },
+  "ai_editor_complete": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 1500,
+        "output_tokens": 80
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 4000,
+        "output_tokens": 200
+      }
+    ]
+  },
+  "thumbnail": {
+    "units": 1,
+    "measured": true,
+    "samples": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite-image",
+        "input_tokens": 19,
+        "output_tokens": 417,
+        "image_output_tokens": 1120
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite-image",
+        "input_tokens": 19,
+        "output_tokens": 1200,
+        "image_output_tokens": 1120
+      }
+    ]
+  },
+  "image_generation": {
+    "units": 1,
+    "measured": true,
+    "samples": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-2.5-flash-image",
+        "input_tokens": 13,
+        "output_tokens": 7,
+        "image_output_tokens": 1290
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-2.5-flash-image",
+        "input_tokens": 13,
+        "output_tokens": 7,
+        "image_output_tokens": 1290
+      }
+    ]
+  },
+  "course_planning": {
+    "units": 1,
+    "measured": true,
+    "samples": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-pro-preview",
+        "input_tokens": 859,
+        "output_tokens": 2497,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-pro-preview",
+        "input_tokens": 859,
+        "output_tokens": 2497,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "editor_ai": {
+    "units": 1,
+    "measured": true,
+    "samples": 2,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 2852,
+        "output_tokens": 531,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      },
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 171,
+        "output_tokens": 37,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 2850,
+        "output_tokens": 1867,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      },
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 205,
+        "output_tokens": 39,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "magic_block": {
+    "units": 1,
+    "measured": true,
+    "samples": 2,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 2303,
+        "output_tokens": 1439,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 2322,
+        "output_tokens": 1740,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "quiz_generation": {
+    "units": 1,
+    "measured": true,
+    "samples": 2,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-pro-preview",
+        "input_tokens": 1232,
+        "output_tokens": 2057,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-pro-preview",
+        "input_tokens": 1716,
+        "output_tokens": 6731,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "assignment_generation": {
+    "units": 1,
+    "measured": true,
+    "samples": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-pro-preview",
+        "input_tokens": 3027,
+        "output_tokens": 3325,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-pro-preview",
+        "input_tokens": 3027,
+        "output_tokens": 3325,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "scenario_generation": {
+    "units": 1,
+    "measured": true,
+    "samples": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-pro-preview",
+        "input_tokens": 1197,
+        "output_tokens": 2171,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-pro-preview",
+        "input_tokens": 1197,
+        "output_tokens": 2171,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "seo_generation": {
+    "units": 1,
+    "measured": true,
+    "samples": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 306,
+        "output_tokens": 946,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 306,
+        "output_tokens": 946,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "course_import": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 8000,
+        "output_tokens": 1500
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 30000,
+        "output_tokens": 3000
+      }
+    ]
+  },
+  "boards_playground": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 2500,
+        "output_tokens": 3000
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 6000,
+        "output_tokens": 7000
+      }
+    ]
+  },
+  "translation": {
+    "units": 1,
+    "measured": true,
+    "samples": 3,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 424,
+        "output_tokens": 142,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 434,
+        "output_tokens": 157,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "ask_ai": {
+    "units": 1,
+    "measured": true,
+    "samples": 4,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 453,
+        "output_tokens": 718,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      },
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 166,
+        "output_tokens": 43,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 935,
+        "output_tokens": 2552,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      },
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 186,
+        "output_tokens": 46,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "ai_grading": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 4000,
+        "output_tokens": 1200
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 12000,
+        "output_tokens": 2500,
+        "audio_input_tokens": 3840
+      }
+    ]
+  },
+  "messaging_agent": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 300,
+        "output_tokens": 20
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 3000,
+        "output_tokens": 500
+      },
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 1200,
+        "output_tokens": 60
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 600,
+        "output_tokens": 40
+      },
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 7000,
+        "output_tokens": 1200
+      },
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 1500,
+        "output_tokens": 100
+      }
+    ]
+  },
+  "podcast_script": {
+    "units": 1,
+    "measured": true,
+    "samples": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 223,
+        "output_tokens": 1757,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 223,
+        "output_tokens": 1757,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "podcast_audio": {
+    "units": 1,
+    "measured": true,
+    "samples": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-2.5-flash-preview-tts",
+        "input_tokens": 1700,
+        "audio_output_tokens": 1500
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-2.5-flash-preview-tts",
+        "input_tokens": 1700,
+        "audio_output_tokens": 1500
+      }
+    ]
+  },
+  "captions": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 1920,
+        "output_tokens": 250,
+        "audio_input_tokens": 1920
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 2000,
+        "output_tokens": 400,
+        "audio_input_tokens": 1920
+      }
+    ]
+  },
+  "video_chapters": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 3000,
+        "output_tokens": 300
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 15000,
+        "output_tokens": 600
+      }
+    ]
+  },
+  "media_indexing": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 1920,
+        "output_tokens": 250,
+        "audio_input_tokens": 1920
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 2000,
+        "output_tokens": 400,
+        "audio_input_tokens": 1920
+      }
+    ]
+  },
+  "plays_generation": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 3000,
+        "output_tokens": 4000
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 8000,
+        "output_tokens": 8000
+      }
+    ]
+  },
+  "plays_step": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 800,
+        "output_tokens": 150
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 2000,
+        "output_tokens": 400
+      }
+    ]
+  },
+  "plays_copilot": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 4000,
+        "output_tokens": 600
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 10000,
+        "output_tokens": 1500
+      }
+    ]
+  },
+  "mcp_tools": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-embedding-001",
+        "input_tokens": 20,
+        "output_tokens": 0
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-embedding-001",
+        "input_tokens": 80,
+        "output_tokens": 0
+      }
+    ]
+  },
+  "rag_indexing": {
+    "units": 1,
+    "measured": true,
+    "samples": 2,
+    "p50_usage": [
+      {
+        "model": "gemini-embedding-001",
+        "input_tokens": 74,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-embedding-001",
+        "input_tokens": 76,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ]
+  },
+  "live_session_summary": {
+    "units": 1,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 12000,
+        "output_tokens": 800,
+        "audio_input_tokens": 11000
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 60000,
+        "output_tokens": 1500,
+        "audio_input_tokens": 58000
+      }
+    ]
+  },
+  "newsletter_draft": {
+    "units": 1,
+    "measured": false,
+    "samples": 0,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 900,
+        "output_tokens": 1400,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 1600,
+        "output_tokens": 2600,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "note": "Estimated: prompt + org context in, subject lines + a block document out (no live sample yet; Gemini key 403 locally)."
+  },
+  "landing_generation": {
+    "units": 1,
+    "measured": false,
+    "samples": 0,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 1100,
+        "output_tokens": 1800,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 1800,
+        "output_tokens": 3600,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "note": "Estimated: system prompt + brief + up to 12 course names in, 5-9 section specs out (no live sample yet; Gemini key 403 locally)."
+  },
+  "landing_copy": {
+    "units": 1,
+    "measured": false,
+    "samples": 0,
+    "p50_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 300,
+        "output_tokens": 120,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "p90_usage": [
+      {
+        "model": "gemini-3.6-flash",
+        "input_tokens": 1200,
+        "output_tokens": 600,
+        "cached_input_tokens": 0,
+        "audio_input_tokens": 0,
+        "image_output_tokens": 0,
+        "audio_output_tokens": 0,
+        "requests": 1
+      }
+    ],
+    "note": "Estimated: one text (up to 4,000 chars) + instruction in, the rewrite out (no live sample yet; Gemini key 403 locally)."
+  }
+}

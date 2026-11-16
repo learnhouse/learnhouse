@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
 import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+import { resourcePath } from '@/lib/seo/paths'
 
 type PropsType = {
   community: Community
@@ -43,7 +44,7 @@ function CommunityCard(props: PropsType) {
   // Different links based on variant
   const communityLink = variant === 'dashboard'
     ? getUriWithOrg(props.orgslug, `/dash/communities/${communityId}/general`)
-    : getUriWithOrg(props.orgslug, `/community/${communityId}`)
+    : getUriWithOrg(props.orgslug, resourcePath('community', props.community))
 
   return (
     <div

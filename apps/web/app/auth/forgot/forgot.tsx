@@ -1,16 +1,15 @@
 'use client'
 import React from 'react'
-import FormLayout, {
-    FormField,
-} from '@components/Objects/StyledElements/Form/Form'
+import FormLayout from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { AlertTriangle, ArrowLeft, CheckCircle, Info, X } from 'lucide-react'
+import { ArrowLeft } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { useFormik } from 'formik'
 import { sendResetLink } from '@services/auth/auth'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
+import { AUTH_INPUT, AUTH_LINK, AuthButton, AuthFootnote, AuthHeading, AuthLabel, AuthNotice } from '@components/Auth/AuthUI'
 import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
@@ -89,88 +88,45 @@ function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
             defaultValue: "We'll help you get back into your account in no time.",
           })}
         >
-                {/* Notification: soft, rounded, inset to match the auth page style */}
-                {showMessage && (error || message) && (
-                    <div className={`
-                        mx-6 md:mx-12 lg:mx-20 mt-6 rounded-xl border px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200
-                        ${error ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}
-                    `}>
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                            {error ? <AlertTriangle size={18} className="shrink-0" /> : <CheckCircle size={18} className="shrink-0" />}
-                            <span className="text-sm font-medium">{error || message}</span>
-                        </div>
-                        <button
-                            onClick={() => setShowMessage(false)}
-                            className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0 opacity-60 hover:opacity-100"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-                )}
+            {showMessage && (error || message) && (
+                <AuthNotice tone={error ? 'danger' : 'success'} onDismiss={() => setShowMessage(false)} className="mb-6">
+                    {error || message}
+                </AuthNotice>
+            )}
 
-                <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-                    <div className="w-full max-w-[420px] py-10">
-                        {/* Header */}
-                        <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.forgot_password_title')}</h1>
-                        <p className="mt-2 text-black/45 text-[15px] font-medium">{t('auth.forgot_password_description')}</p>
+            <AuthHeading title={t('auth.forgot_password_title')} description={t('auth.forgot_password_description')} />
 
-                        {/* Form */}
-                        <div className="mt-8">
-                            <FormLayout onSubmit={formik.handleSubmit}>
-                                <FormField name="email">
-                                    <div className="flex items-center space-x-2 mb-1.5">
-                                        <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.email')}</Form.Label>
-                                        {formik.errors.email && (
-                                            <div className="text-red-500 text-xs flex items-center space-x-1">
-                                                <Info size={11} />
-                                                <span>{formik.errors.email}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <Form.Control asChild>
-                                        <input
-                                            onChange={formik.handleChange}
-                                            value={formik.values.email}
-                                            type="email"
-                                            required
-                                            className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-                                        />
-                                    </Form.Control>
-                                </FormField>
+            <FormLayout onSubmit={formik.handleSubmit} className="mt-7 flex flex-col gap-4">
+                <Form.Field name="email" className="grid">
+                    <AuthLabel error={formik.errors.email}>{t('auth.email')}</AuthLabel>
+                    <Form.Control asChild>
+                        <input
+                            onChange={formik.handleChange}
+                            value={formik.values.email}
+                            type="email"
+                            autoComplete="email"
+                            required
+                            aria-invalid={formik.errors.email ? true : undefined}
+                            className={AUTH_INPUT}
+                        />
+                    </Form.Control>
+                </Form.Field>
 
-                                <TurnstileWidget
-                                    ref={turnstileRef}
-                                    onToken={setTurnstileToken}
-                                    className="mt-2 flex justify-center"
-                                />
+                <TurnstileWidget ref={turnstileRef} onToken={setTurnstileToken} className="flex justify-center empty:hidden" />
 
-                                <Form.Submit asChild>
-                                    <button
-                                        disabled={isSubmitting || (turnstileRequired && !turnstileToken)}
-                                        className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-2 transition-all disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? (
-                                            <span className="flex items-center space-x-2">
-                                                <span className="w-4 h-4 border-t-2 border-white rounded-full animate-spin" />
-                                                <span>{t('common.loading')}</span>
-                                            </span>
-                                        ) : (
-                                            t('auth.send_reset_link')
-                                        )}
-                                    </button>
-                                </Form.Submit>
-                            </FormLayout>
-                        </div>
+                <Form.Submit asChild>
+                    <AuthButton loading={isSubmitting} disabled={turnstileRequired && !turnstileToken} className="mt-1">
+                        {t('auth.send_reset_link')}
+                    </AuthButton>
+                </Form.Submit>
+            </FormLayout>
 
-                        {/* Back to Login */}
-                        <p className="text-center text-sm text-black/35 mt-6">
-                            <Link href="/login" className="inline-flex items-center gap-2 text-black font-semibold hover:underline">
-                                <ArrowLeft size={16} />
-                                {t('auth.back_to_login')}
-                            </Link>
-                        </p>
-                    </div>
-                </div>
+            <AuthFootnote>
+                <Link href="/login" className={`${AUTH_LINK} inline-flex items-center gap-1.5`}>
+                    <ArrowLeft size={14} className="rtl:rotate-180" aria-hidden="true" />
+                    {t('auth.back_to_login')}
+                </Link>
+            </AuthFootnote>
         </AuthLayout>
     )
 }

@@ -67,3 +67,26 @@ export function stepsDoneFromData(d: OnboardingSignalData): string[] {
   }
   return Object.keys(done).filter((k) => done[k])
 }
+
+const EMAIL_RE = /[A-Z0-9._%+'-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi
+
+/** Every distinct email address in free text or a CSV export, lower-cased, in order. */
+export function extractEmails(text: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const m of text.match(EMAIL_RE) ?? []) {
+    const e = m.toLowerCase()
+    if (!seen.has(e)) {
+      seen.add(e)
+      out.push(e)
+    }
+  }
+  return out
+}
+
+/** Free days left before a date (ISO), never negative; null when unknown. */
+export function daysUntil(iso: string | null | undefined, now = Date.now()): number | null {
+  if (!iso) return null
+  const ms = new Date(iso).getTime() - now
+  return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms / 86_400_000)) : null
+}

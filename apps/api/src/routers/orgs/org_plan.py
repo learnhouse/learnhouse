@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 import secrets
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
@@ -59,6 +60,10 @@ class UpdateOrgPlanResponse(BaseModel):
     detail: str
     org_id: int
     plan: str
+    # For billing's conversion analytics (no personal data): whether this
+    # purchase ended a running trial, and how old the org is.
+    trial_converted: bool = False
+    org_age_days: Optional[int] = None
 
 
 @internal_router.put(
@@ -111,6 +116,10 @@ async def api_update_org_plan(
             detail="The demo organization's plan cannot be changed.",
         )
 
+    # Plain values: the plan-change reactions below commit (and may roll back),
+    # which would expire the loaded row.
+    org_slug, org_created = org.slug, org.creation_date
+
     # Load the existing org config (so we only mutate the plan key)
     org_config = (
         await db_session.execute(
@@ -135,8 +144,17 @@ async def api_update_org_plan(
         cloud["plan"] = body.plan
         config["cloud"] = cloud
 
-    # Persist via the existing org config service (no reimplementation)
+    # Persist via the existing org config service (no reimplementation). It
+    # also runs the plan-change reactions (trial settled, Free plan content
+    # rules on a downgrade, their undo on an upgrade).
     await update_org_with_config_no_auth(request, config, body.org_id, db_session)
+
+    # This endpoint is what billing calls after a payment. Buying the plan the
+    # trial already runs on doesn't change the plan string, so settle the trial
+    # explicitly: a paying org must never be moved to Free when the date passes.
+    from src.services.plans.trial import mark_converted
+
+    trial_converted = await mark_converted(db_session, body.org_id, body.plan)
 
     # A plan change must be reflected immediately. Proactively invalidate every
     # cache that would otherwise serve the OLD plan/limits until its TTL lapses:
@@ -146,14 +164,27 @@ async def api_update_org_plan(
     #     shows its new plan badge but stale free-tier limits (e.g. Pro plan with
     #     "Courses 2/1" and "Limit reached") for up to the cache TTL.
     invalidate_org_config_cache(body.org_id)
-    invalidate_org_cache(org.slug)
+    invalidate_org_cache(org_slug)
     invalidate_usage_cache(body.org_id)
 
     return UpdateOrgPlanResponse(
         detail="Organization plan updated",
         org_id=body.org_id,
         plan=body.plan,
+        trial_converted=trial_converted,
+        org_age_days=_age_days(org_created),
     )
+
+
+def _age_days(creation_date: Optional[str]) -> Optional[int]:
+    """Whole days since the org was created (creation_date is a naive string)."""
+    from datetime import datetime
+
+    try:
+        created = datetime.fromisoformat(str(creation_date))
+    except (TypeError, ValueError):
+        return None
+    return max(0, (datetime.now() - created.replace(tzinfo=None)).days)
 
 
 class ReconcileAdminsResponse(BaseModel):
@@ -212,3 +243,61 @@ async def api_reconcile_loops_admins(
         detail="Loops admin reconcile scheduled",
         admins_synced=synced,
     )
+
+
+class FastForwardTrialRequest(BaseModel):
+    days: float
+
+
+@internal_router.post(
+    "/trials/run",
+    summary="Run the trial job now",
+    description=(
+        "Moves organizations whose trial ran out to the Free plan, then sends any "
+        "trial email that is due. The same job runs hourly inside the API; this "
+        "runs it on demand. Idempotent. Protected by the internal cloud key."
+    ),
+    responses={200: {"description": "Orgs moved to Free and emails sent"}, 403: {"description": "Invalid internal API key"}},
+)
+async def api_run_trial_job(db_session: AsyncSession = Depends(get_db_session)) -> dict:
+    from src.services.plans.scheduler import run_once
+
+    return await run_once(db_session)
+
+
+@internal_router.post(
+    "/trials/{org_id}/fast_forward",
+    summary="Move a trial forward in time",
+    description=(
+        "Shifts an organization's trial start and end dates `days` into the past "
+        "and runs the trial job, as if that much time had passed. For staging and "
+        "end-to-end tests of the trial emails and the move to Free. Protected by "
+        "the internal cloud key."
+    ),
+    responses={
+        200: {"description": "The trial after the shift, and what the job did"},
+        403: {"description": "Invalid internal API key"},
+        404: {"description": "Organization has no trial"},
+    },
+)
+async def api_fast_forward_trial(
+    org_id: int,
+    body: FastForwardTrialRequest,
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    from datetime import timedelta
+
+    from src.services.plans.scheduler import run_once
+    from src.services.plans.trial import get_trial, trial_state
+
+    trial = await get_trial(db_session, org_id)
+    if trial is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization has no trial")
+    shift = timedelta(days=body.days)
+    trial.started_at = trial.started_at - shift
+    trial.ends_at = trial.ends_at - shift
+    db_session.add(trial)
+    await db_session.commit()
+    job = await run_once(db_session)
+    await db_session.refresh(trial)
+    return {"trial": trial_state(trial), "job": job}

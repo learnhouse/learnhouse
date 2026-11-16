@@ -693,7 +693,7 @@ async def test_get_org_settings(registry, db, org, admin_user, regular_user, set
     assert out["profile"]["name"] == "Test Org" and out["profile"]["email"] == "test@org.com"
     assert out["signup"]["mode"] == "open" and out["plan"] == "enterprise"
     assert out["branding"]["color"] == "#111111"
-    assert out["landing"]["sections"][0]["type"] == "hero"
+    assert out["landing"] == {"home_published": False, "home_sections": 0, "extra_pages": [], "edit_with": "get_landing_page and the other landing page tools"}
     assert "scripts" not in json.dumps(out["profile"])
     assert set(out["features"]) == set(org_tools._TOGGLES)
     denied(await call(registry, "get_org_settings", {}, _ctx(db, org, regular_user, can_admin=False)), "insufficient_scope")
@@ -733,8 +733,8 @@ async def test_update_org_settings_validation(registry, db, org, admin_user, set
         {"section": "mcp", "enabled": False},
         {"section": "security", "require_2fa": False},
         {"section": "menu", "items": [{"type": "custom", "url": "javascript:alert(1)"}]},
-        {"section": "landing", "sections": [{"type": "hero", "buttons": [{"link": "javascript:alert(1)"}]}]},
-        {"section": "landing", "sections": [{"type": "script"}]},
+        # Landing pages moved to the landing page tools.
+        {"section": "landing", "enabled": True},
     ):
         denied(await call(registry, "update_org_settings", {"settings": bad}, ctx), "invalid_args")
     config = await _org_config(db, org)
@@ -779,13 +779,6 @@ async def test_update_org_settings_sections(registry, db, org, admin_user, setup
     assert items[0]["enabled"] is False and len(items) == 2
     await apply({"section": "menu", "mode": "replace", "items": [{"type": "library"}]})
     assert [i["type"] for i in (await _org_config(db, org))["customization"]["menu"]["items"]] == ["library"]
-
-    await apply({"section": "landing", "enabled": True})
-    landing = (await _org_config(db, org))["customization"]["landing"]
-    assert landing["enabled"] is True and landing["sections"][0]["type"] == "hero"
-    await apply({"section": "landing", "mode": "replace", "sections": [{"type": "cta", "title": "Join"}]})
-    landing = (await _org_config(db, org))["customization"]["landing"]
-    assert landing == {"sections": [{"type": "cta", "title": "Join"}], "enabled": True}
 
     await apply({"section": "course_end", "message": "Well done", "button_link": "/courses"})
     assert (await _org_config(db, org))["customization"]["course_end"]["message"] == "Well done"

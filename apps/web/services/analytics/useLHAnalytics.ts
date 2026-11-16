@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useRef } from 'react'
-import { usePostHog } from 'posthog-js/react'
+import { usePostHogClient } from '@/lib/analytics/posthogClient'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -46,7 +46,8 @@ const MAX_PENDING = 50
  *   track(AnalyticsEvent.CourseStarted, { course_uuid, total_activities })
  */
 export function useLHAnalytics(surface?: string) {
-  const posthog = usePostHog()
+  // Null when PostHog is off; queues until the SDK has loaded otherwise.
+  const posthog = usePostHogClient()
   const { track: backendTrack } = useAnalytics()
   const standard = useStandardProps(surface)
   const { orgslug } = useOrgMembership()

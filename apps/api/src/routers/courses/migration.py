@@ -11,7 +11,7 @@ from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user, resolve_acting_user_id
 from src.security.org_auth import is_org_member, enforce_org_mfa, require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
-from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
+from src.services.ai import metering
 from src.services.security.rate_limiting import enforce_ai_rate_limit
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
@@ -177,27 +177,17 @@ async def api_suggest_structure(
     # This endpoint spends the server's provider key on a caller-supplied
     # prompt, so it is rate limited and metered like the /ai routers.
     enforce_ai_rate_limit(user_id, org_id)
-    await reserve_ai_credit(org_id, db_session)
 
-    try:
-        return await suggest_structure(
-            temp_id=body.temp_id,
-            course_name=body.course_name,
-            description=body.description,
-        )
-    except ValueError as e:
-        _refund_suggest_credit(org_id)
-        raise _migration_value_error_to_http(e) from e
-    except Exception:
-        _refund_suggest_credit(org_id)
-        raise
-
-
-def _refund_suggest_credit(org_id: int) -> None:
-    try:
-        refund_ai_credit(org_id)
-    except Exception:
-        pass
+    # Metered; refunded in full if the suggestion fails.
+    async with metering.charge("course_import", org_id=org_id, db=db_session, user_id=user_id):
+        try:
+            return await suggest_structure(
+                temp_id=body.temp_id,
+                course_name=body.course_name,
+                description=body.description,
+            )
+        except ValueError as e:
+            raise _migration_value_error_to_http(e) from e
 
 
 @router.post(

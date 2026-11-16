@@ -109,7 +109,7 @@ async def test_non_author_denied_by_rbac(monkeypatch):
     with patch.object(ag, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(ag, "check_resource_access",
                       new=AsyncMock(side_effect=HTTPException(status_code=403, detail="denied"))), \
-         patch.object(ag, "reserve_ai_credit", new=reserve):
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve):
         with pytest.raises(HTTPException) as exc:
             await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
     assert exc.value.status_code == 403
@@ -121,7 +121,7 @@ async def test_happy_path():
     rec = AsyncMock(return_value=record)
     with patch.object(ag, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(ag, "enforce_ai_rate_limit"), \
-         patch.object(ag, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(ag, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(ag, "generate_assignment_plan", new=AsyncMock(return_value=(_plan(), "s1"))), \
          patch.object(ag, "record_generation", new=rec):
@@ -135,10 +135,10 @@ async def test_no_tasks_refunds_and_502():
     empty = GeneratedAssignmentPlan(title="A", description="d", grading_type="PERCENTAGE", tasks=[])
     with patch.object(ag, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(ag, "enforce_ai_rate_limit"), \
-         patch.object(ag, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(ag, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(ag, "generate_assignment_plan", new=AsyncMock(return_value=(empty, "s1"))), \
-         patch.object(ag, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
     assert exc.value.status_code == 502
@@ -148,10 +148,10 @@ async def test_no_tasks_refunds_and_502():
 async def test_not_configured_refunds_and_403():
     with patch.object(ag, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(ag, "enforce_ai_rate_limit"), \
-         patch.object(ag, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(ag, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(ag, "generate_assignment_plan", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
-         patch.object(ag, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
     assert exc.value.status_code == 403
@@ -161,10 +161,10 @@ async def test_not_configured_refunds_and_403():
 async def test_generation_error_refunds_and_502():
     with patch.object(ag, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(ag, "enforce_ai_rate_limit"), \
-         patch.object(ag, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(ag, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(ag, "generate_assignment_plan", new=AsyncMock(side_effect=RuntimeError("boom"))), \
-         patch.object(ag, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await ag.api_generate_assignment(_req(), _http_req(), _user(), _db_returning(_org(), _course()))
     assert exc.value.status_code == 502
@@ -199,3 +199,9 @@ def _skip_org_mfa_policy():
     """
     with patch.object(ag, "enforce_org_mfa", new=AsyncMock(return_value=None)):
         yield
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

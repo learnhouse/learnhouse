@@ -3,6 +3,7 @@ import AdminProviders from './providers'
 import React from 'react'
 import { fetchInstanceMode, isSuperadminSurfaceBlocked } from '@lib/eeGate'
 import EERequiredScreen from '@components/Security/EERequiredScreen'
+import AdminTheme from '@components/Admin/Shell/AdminTheme'
 
 // The gate is resolved per request. An ISR-cached result would outlive a
 // licence change, and this layout is what decides whether /admin exists.
@@ -28,5 +29,11 @@ export default async function AdminRootLayout({
     return <EERequiredScreen />
   }
 
-  return <AdminProviders>{children}</AdminProviders>
+  // The console follows the app-wide Light / Dark choice, painted before
+  // first paint by theme-init.js (see AdminTheme).
+  return (
+    <AdminTheme>
+      <AdminProviders>{children}</AdminProviders>
+    </AdminTheme>
+  )
 }

@@ -1,3 +1,4 @@
+import { createAgentResource } from './agent/client'
 import { createHttpCore, type CoreOptions, type FetchLike, type HttpCore } from './core/http'
 import { bindMedia, type MediaHelpers } from './media'
 import { createActivitiesResource } from './resources/activities'
@@ -44,6 +45,8 @@ export interface LearnHouseClient extends HttpCore {
   /** Server-side: mint embed sessions for learners (needs an org API token). */
   readonly embed: ReturnType<typeof createEmbedResource>
   readonly media: MediaHelpers
+  /** The Agent API (Atlas, the learner copilot, custom agents): conversations and streamed turns. */
+  readonly agent: ReturnType<typeof createAgentResource>
   /** The learner session store, when the client was created with a session. */
   readonly session: SessionStore | null
 }
@@ -78,6 +81,7 @@ export function createClient(options: ClientOptions): LearnHouseClient {
     auth: createAuthResource(http),
     embed: createEmbedResource(http),
     media: bindMedia({ baseUrl: options.baseUrl, mediaUrl: options.mediaUrl }),
+    agent: createAgentResource(http),
     session: store,
   }
 }

@@ -2,10 +2,11 @@
 import React, { useState } from 'react'
 import { useFormik } from 'formik'
 import { useTranslation } from 'react-i18next'
-import { Award, Loader2, Save } from 'lucide-react'
+import { Medal, CircleNotch, FloppyDisk } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
 import CertificateDesigner, { CertificateDesignValues } from '@components/Objects/Certificates/CertificateDesigner'
 import { Switch } from '@components/ui/switch'
+import { BTN_PRIMARY, SectionCard } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { Path, updatePath } from '@services/paths/paths'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { usePathCache } from './usePathSave'
@@ -66,52 +67,50 @@ function EditPathCertificate({ path }: { path: Path }) {
 
   return (
     <div className="px-4 sm:px-10 pt-6">
-      <div className="bg-white rounded-xl shadow-sm px-4 py-4">
-        <div className="flex items-center justify-between gap-4 bg-gray-50 px-3 sm:px-5 py-3 rounded-md mb-4">
-          <div className="flex flex-col -space-y-1">
-            <h2 className="font-bold text-lg sm:text-xl text-gray-800">{t('paths.dashboard.certificate.title')}</h2>
-            <p className="text-gray-500 text-xs sm:text-sm">{t('paths.dashboard.certificate.subtitle')}</p>
-          </div>
+      <SectionCard
+        icon={<Medal size={16} />}
+        title={t('paths.dashboard.certificate.title')}
+        description={t('paths.dashboard.certificate.subtitle')}
+        actions={
           <Switch checked={path.certificate_enabled} onCheckedChange={toggle} aria-label={t('paths.dashboard.certificate.title')} />
-        </div>
-
+        }
+      >
         {path.certificate_enabled ? (
           <CertificateDesigner
             values={formik.values}
             errors={formik.errors}
             onChange={(field, value) => formik.setFieldValue(field, value)}
             footer={
-              <div className="flex justify-end pt-4 border-t border-gray-100">
+              <div className="flex justify-end pt-4 border-t border-neutral-100">
                 <button
                   type="button"
                   onClick={() => formik.handleSubmit()}
                   disabled={isSaving || !formik.isValid}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={BTN_PRIMARY}
                 >
-                  {isSaving ? <Loader2 size={16} className="me-2 animate-spin" /> : <Save size={16} className="me-2" />}
+                  {isSaving ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
                   {t('paths.form.save')}
                 </button>
               </div>
             }
           />
         ) : (
-          <div className="border border-dashed border-gray-200 rounded-lg px-6 py-12 text-center">
-            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
-              <Award className="w-6 h-6 text-gray-400" />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-amber-50/70 to-white ring-1 ring-inset ring-amber-100/80 px-6 py-14 text-center">
+            <div className="relative mx-auto mb-4 w-14 h-14">
+              <div className="absolute inset-0 rounded-2xl bg-amber-200/50 rotate-6" />
+              <div className="relative w-14 h-14 rounded-2xl bg-white nice-shadow text-amber-500 flex items-center justify-center">
+                <Medal size={26} />
+              </div>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-1">{t('paths.dashboard.certificate.disabled_title')}</h3>
-            <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">{t('paths.dashboard.certificate.disabled_message')}</p>
-            <button
-              type="button"
-              onClick={() => toggle(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors"
-            >
-              <Award size={16} />
+            <h3 className="text-base font-semibold text-neutral-900">{t('paths.dashboard.certificate.disabled_title')}</h3>
+            <p className="mt-1 text-sm text-neutral-500 max-w-md mx-auto">{t('paths.dashboard.certificate.disabled_message')}</p>
+            <button type="button" onClick={() => toggle(true)} className={`${BTN_PRIMARY} mt-5`}>
+              <Medal size={16} />
               {t('paths.dashboard.certificate.enable')}
             </button>
           </div>
         )}
-      </div>
+      </SectionCard>
     </div>
   )
 }

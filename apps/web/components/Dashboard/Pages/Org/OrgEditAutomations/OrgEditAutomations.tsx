@@ -5,51 +5,40 @@ import Image from 'next/image'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
-import { Button } from '@components/ui/button'
 import { getAPIUrl } from '@services/config/config'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { apiFetch } from '@services/utils/ts/requests'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@components/ui/dialog'
-import { Input } from '@components/ui/input'
-import { Textarea } from '@components/ui/textarea'
-import { Label } from '@components/ui/label'
 import { Switch } from '@components/ui/switch'
-import { Badge } from '@components/ui/badge'
 import { Checkbox } from '@components/ui/checkbox'
 import {
-  Zap,
-  Plus,
-  Copy,
-  Trash2,
-  RefreshCw,
-  Eye,
-  EyeOff,
-  AlertTriangle,
-  Check,
-  Send,
-  ChevronDown,
-  ChevronUp,
-  Clock,
+  ArrowSquareOut,
+  ArrowsClockwise,
+  CaretDown,
+  CaretRight,
   CheckCircle,
+  ClockCounterClockwise,
+  FlowArrow,
+  PaperPlaneTilt,
+  PencilSimple,
+  Plus,
+  Trash,
+  WebhooksLogo,
   XCircle,
-  ExternalLink,
-} from 'lucide-react'
+} from '@phosphor-icons/react'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import {
+  Button,
+  Chip,
+  ConfirmDialog,
+  EmptyState,
+  FieldLabel,
+  INPUT,
+  TEXTAREA,
+  buttonClass,
+  formatRelative,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
+import { CodeBlock, SecretOnce, StatusCode } from '@components/Dashboard/Pages/Org/Developers/devKit'
 
 const ZapierLogo: React.FC<{ size?: number; className?: string }> = ({
   size = 20,
@@ -107,11 +96,21 @@ function buildCategories(events: Record<string, EventInfo>): EventCategory[] {
   return [...categoryMap.values()]
 }
 
+// Desktop table: header and rows are subgrids of the card grid.
+const TABLE_GRID =
+  'lg:grid lg:grid-cols-[minmax(0,2.4fr)_minmax(0,1.5fr)_minmax(0,0.8fr)_auto] lg:gap-x-4'
+const ROW_GRID = 'lg:col-span-full lg:grid lg:grid-cols-subgrid lg:items-center lg:gap-x-4'
+const LOG_GRID =
+  'md:grid md:grid-cols-[auto_minmax(0,1.6fr)_minmax(0,0.9fr)_minmax(0,0.5fr)_minmax(0,0.9fr)_auto] md:gap-x-4'
+const LOG_ROW = 'md:col-span-full md:grid md:grid-cols-subgrid md:items-center md:gap-x-4'
+
+type EditorState = { mode: 'create' } | { mode: 'edit'; webhook: WebhookEndpoint }
+
 const OrgEditAutomations: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('dashboard')
 
@@ -127,25 +126,19 @@ const OrgEditAutomations: React.FC = () => {
   const allEventIds = Object.keys(eventRegistry)
 
   // Dialog state
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = useState(false)
-  const [isDeliveryLogOpen, setIsDeliveryLogOpen] = useState(false)
-  const [selectedWebhook, setSelectedWebhook] = useState<WebhookEndpoint | null>(null)
-  const [newSecret, setNewSecret] = useState<string | null>(null)
-  const [showSecret, setShowSecret] = useState(false)
-  const [copiedSecret, setCopiedSecret] = useState(false)
+  const [editor, setEditor] = useState<EditorState | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<WebhookEndpoint | null>(null)
+  const [regenTarget, setRegenTarget] = useState<WebhookEndpoint | null>(null)
+  const [logsFor, setLogsFor] = useState<WebhookEndpoint | null>(null)
+  // A freshly minted signing secret: shown once, then gone.
+  const [secret, setSecret] = useState<{ value: string; kind: 'created' | 'regenerated'; url: string } | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
 
-  // Create form state
-  const [createUrl, setCreateUrl] = useState('')
-  const [createDescription, setCreateDescription] = useState('')
-  const [createEvents, setCreateEvents] = useState<string[]>([])
-
-  // Edit state
-  const [editingWebhook, setEditingWebhook] = useState<string | null>(null)
-  const [editUrl, setEditUrl] = useState('')
-  const [editDescription, setEditDescription] = useState('')
-  const [editEvents, setEditEvents] = useState<string[]>([])
+  // Form state, shared by create and edit
+  const [formUrl, setFormUrl] = useState('')
+  const [formDescription, setFormDescription] = useState('')
+  const [formEvents, setFormEvents] = useState<string[]>([])
 
   // Delivery logs
   const [deliveryLogs, setDeliveryLogs] = useState<WebhookDeliveryLog[]>([])
@@ -160,46 +153,91 @@ const OrgEditAutomations: React.FC = () => {
   })
 
   // Split webhooks by source so the Zapier and manual lists render separately.
-  const zapierWebhooks = (webhooks || []).filter((w) => w.source === 'zapier')
-  const manualWebhooks = (webhooks || []).filter((w) => w.source !== 'zapier')
+  const allWebhooks = Array.isArray(webhooks) ? webhooks : []
+  const zapierWebhooks = allWebhooks.filter((w) => w.source === 'zapier')
+  const manualWebhooks = allWebhooks.filter((w) => w.source !== 'zapier')
 
-  const resetCreateForm = () => {
-    setCreateUrl('')
-    setCreateDescription('')
-    setCreateEvents([])
+  const openCreate = () => {
+    setFormUrl('')
+    setFormDescription('')
+    setFormEvents([])
+    setSecret(null)
+    setEditor({ mode: 'create' })
+  }
+
+  const openEdit = (webhook: WebhookEndpoint) => {
+    setFormUrl(webhook.url)
+    setFormDescription(webhook.description || '')
+    setFormEvents([...(webhook.events ?? [])])
+    setSecret(null)
+    setEditor({ mode: 'edit', webhook })
+  }
+
+  const closeEditor = () => {
+    setEditor(null)
+    setSecret(null)
   }
 
   const handleCreate = async () => {
-    if (!createUrl.trim()) {
+    if (!formUrl.trim()) {
       toast.error(t('dashboard.organization.automations.toasts.url_required'))
       return
     }
-    if (createEvents.length === 0) {
+    if (formEvents.length === 0) {
       toast.error(t('dashboard.organization.automations.toasts.select_event'))
       return
     }
 
+    setSaving(true)
     const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.creating'))
     try {
       const data: WebhookCreateRequest = {
-        url: createUrl.trim(),
-        description: createDescription.trim() || null,
-        events: createEvents,
+        url: formUrl.trim(),
+        description: formDescription.trim() || null,
+        events: formEvents,
       }
       const response = await createWebhookEndpoint(org.id, data, access_token)
 
       if (response.success) {
-        setNewSecret(response.data.secret)
-        setShowSecret(true)
-        track(AnalyticsEvent.WebhookCreated, { events_count: createEvents.length })
+        setSecret({ value: response.data.secret, kind: 'created', url: data.url })
+        track(AnalyticsEvent.WebhookCreated, { events_count: formEvents.length })
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success(t('dashboard.organization.automations.toasts.created'), { id: loadingToast })
-        resetCreateForm()
       } else {
         toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.create_failed'), { id: loadingToast })
       }
     } catch (error: any) {
       toast.error(error.message || t('dashboard.organization.automations.toasts.create_failed'), { id: loadingToast })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveEdit = async (webhook: WebhookEndpoint) => {
+    setSaving(true)
+    const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.saving'))
+    try {
+      const response = await updateWebhookEndpoint(
+        org.id,
+        webhook.webhook_uuid,
+        {
+          url: formUrl.trim(),
+          description: formDescription.trim() || null,
+          events: formEvents,
+        },
+        access_token
+      )
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
+        toast.success(t('dashboard.organization.automations.toasts.updated'), { id: loadingToast })
+        closeEditor()
+      } else {
+        toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.update_failed'), { id: loadingToast })
+      }
+    } catch (error: any) {
+      toast.error(error.message || t('dashboard.organization.automations.toasts.update_failed'), { id: loadingToast })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -224,15 +262,14 @@ const OrgEditAutomations: React.FC = () => {
   }
 
   const handleDelete = async () => {
-    if (!selectedWebhook) return
+    const target = deleteTarget
+    if (!target) return
     const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.deleting'))
     try {
-      const response = await deleteWebhookEndpoint(org.id, selectedWebhook.webhook_uuid, access_token)
+      const response = await deleteWebhookEndpoint(org.id, target.webhook_uuid, access_token)
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success(t('dashboard.organization.automations.toasts.deleted'), { id: loadingToast })
-        setIsDeleteDialogOpen(false)
-        setSelectedWebhook(null)
       } else {
         toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.delete_failed'), { id: loadingToast })
       }
@@ -242,13 +279,13 @@ const OrgEditAutomations: React.FC = () => {
   }
 
   const handleRegenerate = async () => {
-    if (!selectedWebhook) return
+    const target = regenTarget
+    if (!target) return
     const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.regenerating'))
     try {
-      const response = await regenerateWebhookSecret(org.id, selectedWebhook.webhook_uuid, access_token)
+      const response = await regenerateWebhookSecret(org.id, target.webhook_uuid, access_token)
       if (response.success) {
-        setNewSecret(response.data.secret)
-        setShowSecret(true)
+        setSecret({ value: response.data.secret, kind: 'regenerated', url: target.url })
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
         toast.success(t('dashboard.organization.automations.toasts.regenerated'), { id: loadingToast })
       } else {
@@ -273,14 +310,12 @@ const OrgEditAutomations: React.FC = () => {
     }
   }
 
-  const handleViewLogs = async (webhook: WebhookEndpoint) => {
-    setSelectedWebhook(webhook)
-    setIsDeliveryLogOpen(true)
+  const loadLogs = async (webhook: WebhookEndpoint) => {
     setLogsLoading(true)
     try {
       const response = await getWebhookDeliveryLogs(org.id, webhook.webhook_uuid, access_token, 30)
       if (response.success) {
-        setDeliveryLogs(response.data)
+        setDeliveryLogs(Array.isArray(response.data) ? response.data : [])
       }
     } catch {
       toast.error(t('dashboard.organization.automations.toasts.logs_failed'))
@@ -289,632 +324,575 @@ const OrgEditAutomations: React.FC = () => {
     }
   }
 
-  const handleStartEdit = (webhook: WebhookEndpoint) => {
-    setEditingWebhook(webhook.webhook_uuid)
-    setEditUrl(webhook.url)
-    setEditDescription(webhook.description || '')
-    setEditEvents([...webhook.events])
-  }
-
-  const handleSaveEdit = async (webhook: WebhookEndpoint) => {
-    const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.saving'))
-    try {
-      const response = await updateWebhookEndpoint(
-        org.id,
-        webhook.webhook_uuid,
-        {
-          url: editUrl.trim(),
-          description: editDescription.trim() || null,
-          events: editEvents,
-        },
-        access_token
-      )
-      if (response.success) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
-        toast.success(t('dashboard.organization.automations.toasts.updated'), { id: loadingToast })
-        setEditingWebhook(null)
-      } else {
-        toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.update_failed'), { id: loadingToast })
-      }
-    } catch (error: any) {
-      toast.error(error.message || t('dashboard.organization.automations.toasts.update_failed'), { id: loadingToast })
-    }
-  }
-
-  const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopiedSecret(true)
-    toast.success(t('dashboard.organization.automations.toasts.copied'))
-    setTimeout(() => setCopiedSecret(false), 2000)
+  const handleViewLogs = (webhook: WebhookEndpoint) => {
+    setLogsFor(webhook)
+    setDeliveryLogs([])
+    loadLogs(webhook)
   }
 
   const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    } catch {
-      return dateStr
-    }
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(d)
   }
 
   // Zapier hero card stays hidden until the LearnHouse Zapier app is live
   const showZapierHeroCard = false
 
+  const createdSecret = editor?.mode === 'create' && secret?.kind === 'created' ? secret : null
+
   return (
     <FeatureGate feature="webhooks">
-      <>
+      <div className="flex flex-col gap-5">
         {/* ── Zapier hero card (hidden until the LearnHouse Zapier app is live) ────────────────────── */}
         {showZapierHeroCard && (
-        <div className="sm:mx-10 mx-0 mb-6 bg-white rounded-xl nice-shadow overflow-hidden">
-          <div className="px-5 py-4 flex items-center gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden nice-shadow">
-              <ZapierLogo size={40} className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-gray-800 text-[15px]">Zapier</h2>
-                <Badge className="bg-violet-50 text-violet-700 border border-violet-200 text-[10px] font-semibold uppercase tracking-wider hover:bg-violet-50">
-                  {t('dashboard.organization.automations.beta')}
-                </Badge>
-                {zapierWebhooks.length > 0 && (
-                  <Badge className="bg-[#FFF5F0] text-[#FF4A00] border border-[#FFE5D6] text-[10px] font-semibold uppercase tracking-wider hover:bg-[#FFF5F0]">
-                    {t('dashboard.organization.automations.active_zaps', { count: zapierWebhooks.length })}
-                  </Badge>
-                )}
+          <section className="bg-white rounded-2xl nice-shadow overflow-hidden">
+            <div className="px-5 py-4 flex items-center gap-4">
+              <div className="shrink-0 w-10 h-10 rounded-xl overflow-hidden nice-shadow">
+                <ZapierLogo size={40} className="w-full h-full object-cover" />
               </div>
-              <p className="text-gray-500 text-xs mt-0.5">
-                {t('dashboard.organization.automations.zapier_description')}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <a
-                href="https://zapier.com/app/dashboard"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-700 text-xs"
-              >
-                {t('dashboard.organization.automations.manage_zaps')}
-              </a>
-              <a
-                href="https://zapier.com/apps/learnhouse/integrations"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-200 text-gray-700 hover:bg-gray-50"
-                >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-semibold text-neutral-900 text-base">Zapier</h2>
+                  <Chip tone="violet">{t('dashboard.organization.automations.beta')}</Chip>
+                  {zapierWebhooks.length > 0 && (
+                    <Chip tone="amber">{t('dashboard.organization.automations.active_zaps', { count: zapierWebhooks.length })}</Chip>
+                  )}
+                </div>
+                <p className="text-neutral-500 text-sm mt-0.5">{t('dashboard.organization.automations.zapier_description')}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <a href="https://zapier.com/app/dashboard" target="_blank" rel="noopener noreferrer" className={buttonClass('ghost', 'sm')}>
+                  {t('dashboard.organization.automations.manage_zaps')}
+                </a>
+                <a href="https://zapier.com/apps/learnhouse/integrations" target="_blank" rel="noopener noreferrer" className={buttonClass('secondary', 'sm')}>
                   {t('dashboard.organization.automations.connect')}
-                  <ExternalLink size={12} className="ms-1.5" />
-                </Button>
-              </a>
+                  <ArrowSquareOut size={12} />
+                </a>
+              </div>
             </div>
-          </div>
 
-          {zapierWebhooks.length > 0 && (
-            <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/60">
-              <div className="space-y-1.5">
+            {zapierWebhooks.length > 0 && (
+              <ul className="border-t border-neutral-100 divide-y divide-neutral-100">
                 {zapierWebhooks.map((zap) => (
                   <ZapierRow
                     key={zap.webhook_uuid}
                     zap={zap}
                     onToggleActive={() => handleToggleActive(zap)}
-                    onDelete={() => {
-                      setSelectedWebhook(zap)
-                      setIsDeleteDialogOpen(true)
-                    }}
+                    onDelete={() => setDeleteTarget(zap)}
                     onViewLogs={() => handleViewLogs(zap)}
                   />
                 ))}
-              </div>
-            </div>
-          )}
-        </div>
+              </ul>
+            )}
+          </section>
         )}
 
         {/* ── Manual webhooks ──────────────────────────────────────── */}
-        <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
-          <div className="flex flex-col gap-0">
-            <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mb-3 rounded-md">
-              <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.automations.webhooks_title')}</h1>
-              <h2 className="text-gray-500 text-md">
-                {t('dashboard.organization.automations.webhooks_subtitle')}
-              </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-white nice-shadow text-neutral-600 flex items-center justify-center shrink-0">
+              <WebhooksLogo size={18} />
             </div>
-
-            <div className="px-5 pb-4">
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-sm text-gray-600">
-                  {t('dashboard.organization.automations.webhooks_description')}
-                </p>
-                <Button
-                  onClick={() => {
-                    resetCreateForm()
-                    setNewSecret(null)
-                    setIsCreateDialogOpen(true)
-                  }}
-                  className="bg-black text-white hover:bg-black/90"
-                >
-                  <Plus size={16} className="me-2" />
-                  {t('dashboard.organization.automations.add_endpoint')}
-                </Button>
-              </div>
-
-              {isLoading ? (
-                <div className="animate-pulse space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="border rounded-lg p-4 flex items-center gap-4">
-                      <div className="h-5 w-9 bg-gray-100 rounded-full" />
-                      <div className="flex-1 space-y-1.5">
-                        <div className="h-4 bg-gray-100 rounded w-3/5" />
-                        <div className="h-3 bg-gray-100 rounded w-2/5" />
-                      </div>
-                      <div className="h-4 w-16 bg-gray-100 rounded" />
-                    </div>
-                  ))}
-                </div>
-              ) : manualWebhooks.length > 0 ? (
-                <div className="space-y-3">
-                  {manualWebhooks.map((webhook) => (
-                    <WebhookCard
-                      key={webhook.webhook_uuid}
-                      webhook={webhook}
-                      isEditing={editingWebhook === webhook.webhook_uuid}
-                      editUrl={editUrl}
-                      editDescription={editDescription}
-                      editEvents={editEvents}
-                      onEditUrl={setEditUrl}
-                      onEditDescription={setEditDescription}
-                      onEditEvents={setEditEvents}
-                      onStartEdit={() => handleStartEdit(webhook)}
-                      onSaveEdit={() => handleSaveEdit(webhook)}
-                      onCancelEdit={() => setEditingWebhook(null)}
-                      onToggleActive={() => handleToggleActive(webhook)}
-                      onTest={() => handleTest(webhook)}
-                      onViewLogs={() => handleViewLogs(webhook)}
-                      onRegenerate={() => {
-                        setSelectedWebhook(webhook)
-                        setNewSecret(null)
-                        setShowSecret(false)
-                        setIsRegenerateDialogOpen(true)
-                      }}
-                      onDelete={() => {
-                        setSelectedWebhook(webhook)
-                        setIsDeleteDialogOpen(true)
-                      }}
-                      formatDate={formatDate}
-                      eventCategories={eventCategories}
-                      eventRegistry={eventRegistry}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Zap size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>{t('dashboard.organization.automations.no_endpoints')}</p>
-                  <p className="text-sm">{t('dashboard.organization.automations.no_endpoints_hint')}</p>
-                </div>
-              )}
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold text-neutral-900 leading-tight">
+                {t('dashboard.organization.automations.webhooks_title')}
+              </h2>
+              <p className="text-sm text-neutral-500">{t('dashboard.organization.automations.webhooks_description')}</p>
             </div>
           </div>
+          <Button variant="primary" icon={<Plus size={14} weight="bold" />} onClick={openCreate}>
+            {t('dashboard.organization.automations.add_endpoint')}
+          </Button>
         </div>
 
-        {/* Create Webhook Dialog */}
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle>{t('dashboard.organization.automations.add_dialog_title')}</DialogTitle>
-              <DialogDescription>
-                {t('dashboard.organization.automations.add_dialog_desc')}
-              </DialogDescription>
-            </DialogHeader>
-
-            {newSecret ? (
-              <div className="px-6 pb-6 space-y-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
-                    <div>
-                      <p className="font-medium text-yellow-800">{t('dashboard.organization.automations.save_secret_title')}</p>
-                      <p className="text-sm text-yellow-700">
-                        {t('dashboard.organization.automations.save_secret_hint')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('dashboard.organization.automations.signing_secret')}</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type={showSecret ? 'text' : 'password'}
-                      value={newSecret}
-                      readOnly
-                      className="font-mono text-sm"
-                    />
-                    <Button variant="outline" size="icon" onClick={() => setShowSecret(!showSecret)}>
-                      {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(newSecret)}>
-                      {copiedSecret ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                    </Button>
-                  </div>
-                </div>
-
-                <DialogFooter>
-                  <Button onClick={() => { setIsCreateDialogOpen(false); setNewSecret(null); setShowSecret(false) }}>
-                    {t('dashboard.organization.automations.done')}
-                  </Button>
-                </DialogFooter>
-              </div>
-            ) : (
-              <div className="px-6 pb-6 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="webhookUrl">{t('dashboard.organization.automations.endpoint_url_required')}</Label>
-                  <Input
-                    id="webhookUrl"
-                    value={createUrl}
-                    onChange={(e) => setCreateUrl(e.target.value)}
-                    placeholder="https://hooks.zapier.com/hooks/catch/..."
-                    type="url"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="webhookDescription">{t('dashboard.organization.automations.description')}</Label>
-                  <Textarea
-                    id="webhookDescription"
-                    value={createDescription}
-                    onChange={(e) => setCreateDescription(e.target.value)}
-                    placeholder={t('dashboard.organization.automations.description_placeholder')}
-                    maxLength={500}
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label>{t('dashboard.organization.automations.events_required')}</Label>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => setCreateEvents([...allEventIds])}
-                      >
-                        {t('dashboard.organization.automations.select_all')}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => setCreateEvents([])}
-                      >
-                        {t('dashboard.organization.automations.clear')}
-                      </Button>
-                    </div>
-                  </div>
-                  <EventSelector
-                    categories={eventCategories}
-                    selectedEvents={createEvents}
-                    onChangeEvents={setCreateEvents}
-                  />
-                </div>
-
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>{t('common.cancel')}</Button>
-                  <Button onClick={handleCreate}>{t('dashboard.organization.automations.create_endpoint')}</Button>
-                </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle className="flex items-center gap-2 text-red-600">
-                <AlertTriangle size={20} />
-                {t('dashboard.organization.automations.delete_title')}
-              </DialogTitle>
-              <DialogDescription>
-                {t('dashboard.organization.automations.delete_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-6 pb-6">
-              {selectedWebhook && (
-                <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                  <p className="font-medium truncate">{selectedWebhook.url}</p>
-                  <p className="text-sm text-gray-500">{t('dashboard.organization.automations.events_subscribed', { count: selectedWebhook.events.length })}</p>
-                </div>
-              )}
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
-                <Button variant="destructive" onClick={handleDelete}>{t('dashboard.organization.automations.delete_endpoint')}</Button>
-              </DialogFooter>
+        <div className={`bg-white rounded-2xl nice-shadow overflow-hidden ${TABLE_GRID}`}>
+          {(isLoading || manualWebhooks.length > 0) && (
+            <div className={`hidden ${ROW_GRID} px-5 py-3 border-b border-neutral-100 text-xs font-medium text-neutral-500`}>
+              <span>{t('dashboard.organization.automations.endpoint_url')}</span>
+              <span>{t('dashboard.organization.automations.events')}</span>
+              <span>{t('common.status')}</span>
+              <span className="sr-only">{t('dashboard.organization.api_access.actions')}</span>
             </div>
-          </DialogContent>
-        </Dialog>
+          )}
 
-        {/* Regenerate Secret Dialog */}
-        <Dialog open={isRegenerateDialogOpen} onOpenChange={setIsRegenerateDialogOpen}>
-          <DialogContent>
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle className="flex items-center gap-2">
-                <RefreshCw size={20} />
-                {t('dashboard.organization.automations.regenerate_title')}
-              </DialogTitle>
-              <DialogDescription>
-                {t('dashboard.organization.automations.regenerate_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-6 pb-6">
-              {newSecret ? (
-                <div className="space-y-4">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
-                      <div>
-                        <p className="font-medium text-yellow-800">{t('dashboard.organization.automations.save_new_secret_title')}</p>
-                        <p className="text-sm text-yellow-700">{t('dashboard.organization.automations.save_new_secret_hint')}</p>
+          {isLoading ? (
+            <div className="animate-pulse divide-y divide-neutral-100 lg:col-span-full">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-4 px-5 py-4">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-neutral-100 rounded w-3/5" />
+                    <div className="h-3 bg-neutral-100 rounded w-2/5" />
+                  </div>
+                  <div className="h-5 w-9 bg-neutral-100 rounded-full" />
+                </div>
+              ))}
+            </div>
+          ) : manualWebhooks.length === 0 ? (
+            <div className="lg:col-span-full">
+              <EmptyState
+                icon={<FlowArrow size={22} />}
+                title={t('dashboard.organization.automations.no_endpoints')}
+                description={t('dashboard.organization.automations.no_endpoints_hint')}
+                action={
+                  <Button variant="primary" icon={<Plus size={14} weight="bold" />} onClick={openCreate}>
+                    {t('dashboard.organization.automations.add_endpoint')}
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <ul className={`divide-y divide-neutral-100 ${ROW_GRID}`}>
+              {manualWebhooks.map((webhook) => {
+                const events = Array.isArray(webhook.events) ? webhook.events : []
+                const open = expanded === webhook.webhook_uuid
+                return (
+                  <li key={webhook.webhook_uuid} className={`${ROW_GRID} ${open ? 'bg-neutral-50/60' : ''}`}>
+                    <div className={`${ROW_GRID} px-5 py-3.5 flex flex-col gap-2.5`}>
+                      <div className="min-w-0 flex items-start gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setExpanded(open ? null : webhook.webhook_uuid)}
+                          aria-expanded={open}
+                          aria-label={t('dashboard.organization.automations.events_count', { count: events.length })}
+                          className="mt-0.5 -ms-1 w-5 h-5 rounded-md flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 shrink-0"
+                        >
+                          {open ? <CaretDown size={12} /> : <CaretRight size={12} className="rtl:rotate-180" />}
+                        </button>
+                        <div className="min-w-0">
+                          <code
+                            dir="ltr"
+                            className={`block font-mono text-[12.5px] truncate ${webhook.is_active ? 'text-neutral-900' : 'text-neutral-400'}`}
+                            title={webhook.url}
+                          >
+                            {webhook.url}
+                          </code>
+                          {webhook.description && (
+                            <p className="mt-0.5 text-xs text-neutral-500 truncate">{webhook.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex flex-wrap items-center gap-1 ps-6 lg:ps-0">
+                        {events.slice(0, 2).map((ev) => (
+                          <code key={ev} className="font-mono text-[11px] text-neutral-600 bg-neutral-100 rounded-md px-1.5 py-0.5 truncate max-w-[180px]">
+                            {ev}
+                          </code>
+                        ))}
+                        {events.length > 2 && (
+                          <span className="text-xs font-semibold text-neutral-400 tabular-nums">+{events.length - 2}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 ps-6 lg:ps-0">
+                        <Switch
+                          checked={webhook.is_active}
+                          onCheckedChange={() => handleToggleActive(webhook)}
+                          aria-label={webhook.is_active ? t('dashboard.organization.automations.active') : t('dashboard.organization.automations.inactive')}
+                        />
+                        <span className={`text-xs font-medium ${webhook.is_active ? 'text-emerald-700' : 'text-neutral-400'}`}>
+                          {webhook.is_active ? t('dashboard.organization.automations.active') : t('dashboard.organization.automations.inactive')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-0.5 ps-5 lg:ps-0 lg:justify-end">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleTest(webhook)}
+                          title={t('dashboard.organization.automations.send_test_event')}
+                          aria-label={t('dashboard.organization.automations.send_test_event')}
+                          icon={<PaperPlaneTilt size={15} />}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewLogs(webhook)}
+                          title={t('dashboard.organization.automations.view_delivery_logs')}
+                          aria-label={t('dashboard.organization.automations.view_delivery_logs')}
+                          icon={<ClockCounterClockwise size={15} />}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEdit(webhook)}
+                          title={t('dashboard.organization.automations.edit')}
+                          aria-label={t('dashboard.organization.automations.edit')}
+                          icon={<PencilSimple size={15} />}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setRegenTarget(webhook)}
+                          title={t('dashboard.organization.automations.rotate_secret')}
+                          aria-label={t('dashboard.organization.automations.rotate_secret')}
+                          icon={<ArrowsClockwise size={15} />}
+                        />
+                        <Button
+                          variant="danger-ghost"
+                          size="icon"
+                          onClick={() => setDeleteTarget(webhook)}
+                          title={t('common.delete')}
+                          aria-label={t('common.delete')}
+                          icon={<Trash size={15} />}
+                        />
                       </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type={showSecret ? 'text' : 'password'}
-                      value={newSecret}
-                      readOnly
-                      className="font-mono text-sm"
-                    />
-                    <Button variant="outline" size="icon" onClick={() => setShowSecret(!showSecret)}>
-                      {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(newSecret)}>
-                      {copiedSecret ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                    </Button>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={() => { setIsRegenerateDialogOpen(false); setNewSecret(null); setShowSecret(false); setSelectedWebhook(null) }}>
-                      {t('dashboard.organization.automations.done')}
-                    </Button>
-                  </DialogFooter>
-                </div>
-              ) : (
-                <>
-                  {selectedWebhook && (
-                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                      <p className="font-medium truncate">{selectedWebhook.url}</p>
-                    </div>
-                  )}
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsRegenerateDialogOpen(false)}>{t('common.cancel')}</Button>
-                    <Button onClick={handleRegenerate}>{t('dashboard.organization.automations.regenerate')}</Button>
-                  </DialogFooter>
-                </>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+                    {open && (
+                      <div className="lg:col-span-full pe-5 pb-4 ps-11 flex flex-col gap-2">
+                        <div className="flex flex-col gap-1.5">
+                          {events.map((event) => (
+                            <EventPayloadRow key={event} eventId={event} info={eventRegistry[event]} />
+                          ))}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-400">
+                          <span>{t('dashboard.organization.automations.created_on', { date: formatDate(webhook.creation_date) })}</span>
+                          <span>{t('dashboard.organization.automations.updated_on', { date: formatDate(webhook.update_date) })}</span>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
 
-        {/* Delivery Logs Dialog */}
-        <Dialog open={isDeliveryLogOpen} onOpenChange={setIsDeliveryLogOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle>{t('dashboard.organization.automations.delivery_logs')}</DialogTitle>
-              <DialogDescription>
-                {t('dashboard.organization.automations.delivery_logs_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-6 pb-6">
-              {logsLoading ? (
-                <div className="flex justify-center py-8">
-                  <RefreshCw className="animate-spin text-gray-400" size={24} />
-                </div>
-              ) : deliveryLogs.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('common.status')}</TableHead>
-                      <TableHead>{t('dashboard.organization.automations.log_event')}</TableHead>
-                      <TableHead>{t('dashboard.organization.automations.log_response')}</TableHead>
-                      <TableHead>{t('dashboard.organization.automations.log_attempt')}</TableHead>
-                      <TableHead>{t('dashboard.organization.automations.log_time')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {deliveryLogs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell>
-                          {log.success ? (
-                            <CheckCircle size={16} className="text-green-600" />
-                          ) : (
-                            <XCircle size={16} className="text-red-500" />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">{log.event_name}</code>
-                        </TableCell>
-                        <TableCell>
-                          {log.response_status ? (
-                            <Badge
-                              variant={log.success ? 'default' : 'secondary'}
-                              className={log.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
-                            >
-                              {log.response_status}
-                            </Badge>
-                          ) : (
-                            <span className="text-sm text-gray-400">{log.error_message ? t('dashboard.organization.automations.log_error') : '-'}</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">#{log.attempt}</TableCell>
-                        <TableCell className="text-sm text-gray-500">{formatDate(log.created_at)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Clock size={32} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">{t('dashboard.organization.automations.no_logs')}</p>
-                </div>
-              )}
+      {/* Create / edit endpoint */}
+      <Modal
+        isDialogOpen={!!editor}
+        onOpenChange={(open) => !open && closeEditor()}
+        size="lg"
+        closeOnOutsideClick={!createdSecret}
+        preventClose={saving}
+        icon={createdSecret ? <CheckCircle size={17} weight="fill" className="text-emerald-500" /> : <WebhooksLogo size={16} />}
+        dialogTitle={
+          createdSecret
+            ? t('dashboard.developers.automations.endpoint_ready')
+            : editor?.mode === 'edit'
+              ? t('dashboard.developers.automations.edit_title')
+              : t('dashboard.organization.automations.add_dialog_title')
+        }
+        dialogDescription={createdSecret ? createdSecret.url : t('dashboard.organization.automations.add_dialog_desc')}
+        footer={
+          createdSecret ? (
+            <div className="flex justify-end">
+              <Button variant="primary" onClick={closeEditor}>
+                {t('dashboard.organization.automations.done')}
+              </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      </>
+          ) : (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-neutral-400 tabular-nums">
+                {t('dashboard.organization.automations.events_subscribed', { count: formEvents.length })}
+              </span>
+              <div className="flex gap-2">
+                <Button onClick={closeEditor} disabled={saving}>
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  variant="primary"
+                  loading={saving}
+                  onClick={() => (editor?.mode === 'edit' ? handleSaveEdit(editor.webhook) : handleCreate())}
+                >
+                  {editor?.mode === 'edit' ? t('common.save') : t('dashboard.organization.automations.create_endpoint')}
+                </Button>
+              </div>
+            </div>
+          )
+        }
+        dialogContent={
+          createdSecret ? (
+            <SecretOnce
+              title={t('dashboard.organization.automations.save_secret_title')}
+              hint={t('dashboard.organization.automations.save_secret_hint')}
+              label={t('dashboard.organization.automations.signing_secret')}
+              value={createdSecret.value}
+            />
+          ) : (
+            <div className="flex flex-col gap-5">
+              <label className="block">
+                <FieldLabel>{t('dashboard.organization.automations.endpoint_url_required')}</FieldLabel>
+                <input
+                  autoFocus
+                  type="url"
+                  dir="ltr"
+                  className={`${INPUT} font-mono text-[13px]`}
+                  value={formUrl}
+                  onChange={(e) => setFormUrl(e.target.value)}
+                  placeholder="https://example.com/webhooks/learnhouse"
+                />
+              </label>
+              <label className="block">
+                <FieldLabel>{t('dashboard.organization.automations.description')}</FieldLabel>
+                <textarea
+                  className={`${TEXTAREA} h-16`}
+                  value={formDescription}
+                  onChange={(e) => setFormDescription(e.target.value)}
+                  placeholder={t('dashboard.organization.automations.description_placeholder')}
+                  maxLength={500}
+                />
+              </label>
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-1.5">
+                  <span className="text-sm font-semibold text-neutral-800">
+                    {t('dashboard.organization.automations.events_required')}
+                  </span>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => setFormEvents([...allEventIds])}>
+                      {t('dashboard.organization.automations.select_all')}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setFormEvents([])}>
+                      {t('dashboard.organization.automations.clear')}
+                    </Button>
+                  </div>
+                </div>
+                <EventSelector categories={eventCategories} selectedEvents={formEvents} onChangeEvents={setFormEvents} />
+              </div>
+            </div>
+          )
+        }
+      />
+
+      {/* Rotated secret */}
+      <Modal
+        isDialogOpen={secret?.kind === 'regenerated'}
+        onOpenChange={(open) => !open && setSecret(null)}
+        size="md"
+        closeOnOutsideClick={false}
+        icon={<ArrowsClockwise size={16} />}
+        dialogTitle={t('dashboard.organization.automations.regenerate_title')}
+        dialogDescription={secret?.url}
+        footer={
+          <div className="flex justify-end">
+            <Button variant="primary" onClick={() => setSecret(null)}>
+              {t('dashboard.organization.automations.done')}
+            </Button>
+          </div>
+        }
+        dialogContent={
+          secret?.kind === 'regenerated' ? (
+            <SecretOnce
+              title={t('dashboard.organization.automations.save_new_secret_title')}
+              hint={t('dashboard.organization.automations.save_new_secret_hint')}
+              label={t('dashboard.organization.automations.signing_secret')}
+              value={secret.value}
+            />
+          ) : null
+        }
+      />
+
+      {/* Delivery logs */}
+      <Modal
+        isDialogOpen={!!logsFor}
+        onOpenChange={(open) => !open && setLogsFor(null)}
+        size="xl"
+        icon={<ClockCounterClockwise size={16} />}
+        dialogTitle={t('dashboard.organization.automations.delivery_logs')}
+        dialogDescription={
+          logsFor ? (
+            <span className="font-mono text-xs" dir="ltr">
+              {logsFor.url}
+            </span>
+          ) : (
+            t('dashboard.organization.automations.delivery_logs_desc')
+          )
+        }
+        headerActions={
+          logsFor ? (
+            <Button
+              size="sm"
+              onClick={() => loadLogs(logsFor)}
+              disabled={logsLoading}
+              icon={<ArrowsClockwise size={13} className={logsLoading ? 'animate-spin' : ''} />}
+            >
+              {t('dashboard.developers.automations.refresh')}
+            </Button>
+          ) : undefined
+        }
+        dialogContent={
+          <DeliveryLogs logs={deliveryLogs} loading={logsLoading} formatDate={formatDate} />
+        }
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title={t('dashboard.organization.automations.delete_title')}
+        message={
+          <>
+            {t('dashboard.organization.automations.delete_desc')}
+            {deleteTarget && <EndpointRef webhook={deleteTarget} />}
+          </>
+        }
+        confirmLabel={t('dashboard.organization.automations.delete_endpoint')}
+        onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={!!regenTarget}
+        onOpenChange={(open) => !open && setRegenTarget(null)}
+        tone="info"
+        title={t('dashboard.organization.automations.regenerate_title')}
+        message={
+          <>
+            {t('dashboard.organization.automations.regenerate_desc')}
+            {regenTarget && <EndpointRef webhook={regenTarget} />}
+          </>
+        }
+        confirmLabel={t('dashboard.organization.automations.regenerate')}
+        onConfirm={handleRegenerate}
+      />
     </FeatureGate>
   )
 }
 
-// Webhook Card Component
-const WebhookCard: React.FC<{
-  webhook: WebhookEndpoint
-  isEditing: boolean
-  editUrl: string
-  editDescription: string
-  editEvents: string[]
-  onEditUrl: (_v: string) => void
-  onEditDescription: (_v: string) => void
-  onEditEvents: (_v: string[]) => void
-  onStartEdit: () => void
-  onSaveEdit: () => void
-  onCancelEdit: () => void
-  onToggleActive: () => void
-  onTest: () => void
-  onViewLogs: () => void
-  onRegenerate: () => void
-  onDelete: () => void
-  formatDate: (_d: string) => string
-  eventCategories: EventCategory[]
-  eventRegistry: Record<string, EventInfo>
-}> = ({
-  webhook,
-  isEditing,
-  editUrl,
-  editDescription,
-  editEvents,
-  onEditUrl,
-  onEditDescription,
-  onEditEvents,
-  onStartEdit,
-  onSaveEdit,
-  onCancelEdit,
-  onToggleActive,
-  onTest,
-  onViewLogs,
-  onRegenerate,
-  onDelete,
-  formatDate,
-  eventCategories,
-  eventRegistry,
-}) => {
+function EndpointRef({ webhook }: { webhook: WebhookEndpoint }) {
   const { t } = useTranslation()
-  const [expanded, setExpanded] = useState(false)
+  const count = Array.isArray(webhook.events) ? webhook.events.length : 0
+  return (
+    <span className="mt-3 block rounded-lg bg-neutral-50 ring-1 ring-inset ring-neutral-200/70 px-3 py-2">
+      <code dir="ltr" className="block font-mono text-xs text-neutral-800 truncate">{webhook.url}</code>
+      <span className="block text-xs text-neutral-500 mt-0.5">
+        {t('dashboard.organization.automations.events_subscribed', { count })}
+      </span>
+    </span>
+  )
+}
+
+// Delivery attempts as a subgrid table. A row opens to show what was sent
+// and what came back.
+function DeliveryLogs({
+  logs,
+  loading,
+  formatDate,
+}: {
+  logs: WebhookDeliveryLog[]
+  loading: boolean
+  formatDate: (_d: string) => string
+}) {
+  const { t, i18n } = useTranslation()
+  const [open, setOpen] = useState<number | null>(null)
+
+  if (loading && logs.length === 0) {
+    return (
+      <div className="animate-pulse divide-y divide-neutral-100 -mx-1">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex items-center gap-4 px-1 py-3">
+            <div className="h-5 w-20 bg-neutral-100 rounded-full" />
+            <div className="h-4 bg-neutral-100 rounded w-40" />
+            <div className="h-4 bg-neutral-100 rounded w-12 ms-auto" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (logs.length === 0) {
+    return (
+      <EmptyState
+        icon={<ClockCounterClockwise size={22} />}
+        title={t('dashboard.organization.automations.no_logs')}
+        description={t('dashboard.organization.automations.delivery_logs_desc')}
+      />
+    )
+  }
+
+  const pretty = (value: unknown) => {
+    if (value == null || value === '') return ''
+    if (typeof value === 'string') {
+      try {
+        return JSON.stringify(JSON.parse(value), null, 2)
+      } catch {
+        return value
+      }
+    }
+    return JSON.stringify(value, null, 2)
+  }
 
   return (
-    <div className="border rounded-lg">
-      {/* Header row */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <Switch
-            checked={webhook.is_active}
-            onCheckedChange={onToggleActive}
-          />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <p className="font-medium text-sm truncate">{webhook.url}</p>
-              <Badge
-                variant={webhook.is_active ? 'default' : 'secondary'}
-                className={webhook.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}
-              >
-                {webhook.is_active ? t('dashboard.organization.automations.active') : t('dashboard.organization.automations.inactive')}
-              </Badge>
-            </div>
-            {webhook.description && (
-              <p className="text-xs text-gray-500 truncate">{webhook.description}</p>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button variant="ghost" size="sm" onClick={onTest} title={t('dashboard.organization.automations.send_test_event')}>
-            <Send size={14} />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onViewLogs} title={t('dashboard.organization.automations.view_delivery_logs')}>
-            <Clock size={14} />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </Button>
-        </div>
+    <div className={`rounded-xl ring-1 ring-inset ring-neutral-200/80 overflow-hidden ${LOG_GRID}`}>
+      <div className={`hidden ${LOG_ROW} px-4 py-2.5 border-b border-neutral-100 text-xs font-medium text-neutral-500`}>
+        <span>{t('common.status')}</span>
+        <span>{t('dashboard.organization.automations.log_event')}</span>
+        <span>{t('dashboard.organization.automations.log_response')}</span>
+        <span>{t('dashboard.organization.automations.log_attempt')}</span>
+        <span>{t('dashboard.organization.automations.log_time')}</span>
+        <span className="sr-only">{t('dashboard.developers.automations.details')}</span>
       </div>
-
-      {/* Expanded details */}
-      {expanded && (
-        <div className="border-t px-4 py-3 bg-gray-50/50 space-y-3">
-          {isEditing ? (
-            <>
-              <div className="space-y-2">
-                <Label>{t('dashboard.organization.automations.endpoint_url')}</Label>
-                <Input value={editUrl} onChange={(e) => onEditUrl(e.target.value)} type="url" />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('dashboard.organization.automations.description')}</Label>
-                <Textarea
-                  value={editDescription}
-                  onChange={(e) => onEditDescription(e.target.value)}
-                  maxLength={500}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('dashboard.organization.automations.events')}</Label>
-                <EventSelector categories={eventCategories} selectedEvents={editEvents} onChangeEvents={onEditEvents} />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button size="sm" onClick={onSaveEdit}>{t('common.save')}</Button>
-                <Button size="sm" variant="outline" onClick={onCancelEdit}>{t('common.cancel')}</Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <Label className="text-gray-500 text-xs">{t('dashboard.organization.automations.events_count', { count: webhook.events.length })}</Label>
-                <div className="mt-1 space-y-1">
-                  {webhook.events.map((event) => {
-                    const info = eventRegistry[event]
-                    return (
-                      <EventPayloadRow key={event} eventId={event} info={info} />
-                    )
-                  })}
+      <ul className={`divide-y divide-neutral-100 ${LOG_ROW}`}>
+        {logs.map((log) => {
+          const isOpen = open === log.id
+          return (
+            <li key={log.id} className={`${LOG_ROW} ${isOpen ? 'bg-neutral-50/70' : ''}`}>
+              <button
+                type="button"
+                onClick={() => setOpen(isOpen ? null : log.id)}
+                aria-expanded={isOpen}
+                className={`${LOG_ROW} w-full px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-start hover:bg-neutral-50/70 transition-colors`}
+              >
+                <span>
+                  {log.success ? (
+                    <Chip tone="emerald" icon={<CheckCircle size={12} weight="fill" />}>
+                      {t('dashboard.developers.automations.delivered')}
+                    </Chip>
+                  ) : (
+                    <Chip tone="rose" icon={<XCircle size={12} weight="fill" />}>
+                      {t('dashboard.developers.automations.failed')}
+                    </Chip>
+                  )}
+                </span>
+                <code className="min-w-0 truncate font-mono text-[12px] text-neutral-700">{log.event_name}</code>
+                <span className="min-w-0" title={log.error_message || undefined}>
+                  {log.response_status ? (
+                    <StatusCode code={log.response_status} />
+                  ) : (
+                    <span className="text-xs text-rose-600">
+                      {log.error_message ? t('dashboard.organization.automations.log_error') : '—'}
+                    </span>
+                  )}
+                </span>
+                <span className="text-xs text-neutral-500 tabular-nums">#{log.attempt}</span>
+                <span className="text-xs text-neutral-500" title={formatDate(log.created_at)}>
+                  {formatRelative(log.created_at, i18n.language) ?? formatDate(log.created_at)}
+                </span>
+                <span className="ms-auto md:ms-0 text-neutral-400">
+                  {isOpen ? <CaretDown size={13} /> : <CaretRight size={13} className="rtl:rotate-180" />}
+                </span>
+              </button>
+              {isOpen && (
+                <div className="md:col-span-full px-4 pb-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  <div className="min-w-0">
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                      {t('dashboard.developers.automations.request_payload')}
+                    </p>
+                    <CodeBlock
+                      title="payload.json"
+                      maxHeight="max-h-[260px]"
+                      tabs={[{ key: 'req', label: 'payload.json', code: pretty(log.request_payload) || '{}', lang: 'json' }]}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                      {t('dashboard.developers.automations.response_body')}
+                    </p>
+                    <CodeBlock
+                      title={log.response_status ? `HTTP ${log.response_status}` : 'error'}
+                      maxHeight="max-h-[260px]"
+                      tabs={[
+                        {
+                          key: 'res',
+                          label: 'response',
+                          code: pretty(log.response_body) || log.error_message || '—',
+                          lang: 'json',
+                        },
+                      ]}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <span>{t('dashboard.organization.automations.created_on', { date: formatDate(webhook.creation_date) })}</span>
-                <span>{t('dashboard.organization.automations.updated_on', { date: formatDate(webhook.update_date) })}</span>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <Button size="sm" variant="outline" onClick={onStartEdit}>{t('dashboard.organization.automations.edit')}</Button>
-                <Button size="sm" variant="outline" onClick={onRegenerate}>
-                  <RefreshCw size={12} className="me-1" />
-                  {t('dashboard.organization.automations.rotate_secret')}
-                </Button>
-                <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700" onClick={onDelete}>
-                  <Trash2 size={12} className="me-1" />
-                  {t('common.delete')}
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+              )}
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }
@@ -926,21 +904,27 @@ const EventPayloadRow: React.FC<{
 }> = ({ eventId, info }) => {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border rounded text-xs">
-      <div
-        className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-gray-50"
+    <div className="rounded-lg bg-white ring-1 ring-inset ring-neutral-200/80 overflow-hidden text-xs">
+      <button
+        type="button"
+        className="w-full flex items-center gap-2 px-2.5 py-1.5 text-start hover:bg-neutral-50"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
       >
-        <code className="bg-gray-100 px-1.5 py-0.5 rounded font-medium text-gray-700">{eventId}</code>
-        {info && <span className="text-gray-400 truncate">{info.description}</span>}
-        <span className="ms-auto flex-shrink-0 text-gray-400">
-          {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        <code className="font-mono font-medium text-neutral-800 bg-neutral-100 rounded px-1.5 py-0.5 shrink-0">{eventId}</code>
+        {info && <span className="text-neutral-500 truncate">{info.description}</span>}
+        <span className="ms-auto shrink-0 text-neutral-400">
+          {open ? <CaretDown size={12} /> : <CaretRight size={12} className="rtl:rotate-180" />}
         </span>
-      </div>
+      </button>
       {open && info?.data_schema && (
-        <pre className="px-3 py-2 bg-gray-50 border-t overflow-x-auto text-[11px] text-gray-600 leading-relaxed">
-          {JSON.stringify(info.data_schema, null, 2)}
-        </pre>
+        <div className="p-2 pt-0">
+          <CodeBlock
+            title={`${eventId}.json`}
+            maxHeight="max-h-[240px]"
+            tabs={[{ key: eventId, label: `${eventId}.json`, code: JSON.stringify(info.data_schema, null, 2), lang: 'json' }]}
+          />
+        </div>
       )}
     </div>
   )
@@ -974,53 +958,67 @@ const EventSelector: React.FC<{
     }
   }
 
+  if (categories.length === 0) {
+    return (
+      <div className="rounded-xl ring-1 ring-inset ring-neutral-200/80 px-4 py-6 animate-pulse space-y-2">
+        <div className="h-3 bg-neutral-100 rounded w-1/3" />
+        <div className="h-3 bg-neutral-100 rounded w-1/2" />
+        <div className="h-3 bg-neutral-100 rounded w-2/5" />
+      </div>
+    )
+  }
+
   return (
-    <div className="border rounded-lg max-h-[400px] overflow-y-auto">
+    <div className="rounded-xl ring-1 ring-inset ring-neutral-200/80 max-h-[380px] overflow-y-auto divide-y divide-neutral-100">
       {categories.map((category) => {
         const categoryEventIds = category.events.map((e) => e.id)
         const selectedCount = categoryEventIds.filter((id) => selectedEvents.includes(id)).length
+        const all = selectedCount === categoryEventIds.length
 
         return (
-          <div key={category.label} className="border-b last:border-b-0">
-            <div
-              className="flex items-center justify-between px-3 py-2 bg-gray-50 cursor-pointer hover:bg-gray-100"
+          <div key={category.label}>
+            <button
+              type="button"
+              className="sticky top-0 z-[1] w-full flex items-center justify-between px-3 py-2 bg-neutral-50 hover:bg-neutral-100 text-start"
               onClick={() => toggleCategory(category)}
+              aria-pressed={all}
             >
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                {category.label}
-              </span>
-              <span className="text-xs text-gray-400">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">{category.label}</span>
+              <span className={`text-[11px] font-semibold tabular-nums ${selectedCount ? 'text-neutral-800' : 'text-neutral-400'}`}>
                 {selectedCount}/{categoryEventIds.length}
               </span>
-            </div>
-            <div className="px-3 py-1.5 space-y-0">
+            </button>
+            <div className="px-2 py-1">
               {category.events.map((event) => (
                 <div key={event.id}>
-                  <div className="flex items-center gap-2 py-1.5 rounded px-1">
+                  <div className="flex items-center gap-2.5 py-1.5 px-1 rounded-md hover:bg-neutral-50">
                     <Checkbox
+                      id={`ev-${event.id}`}
                       checked={selectedEvents.includes(event.id)}
                       onCheckedChange={() => toggleEvent(event.id)}
                     />
-                    <label
-                      className="text-sm text-gray-700 cursor-pointer flex-1"
-                      onClick={() => toggleEvent(event.id)}
-                    >
+                    <label htmlFor={`ev-${event.id}`} className="text-sm text-neutral-700 cursor-pointer flex-1 min-w-0 truncate">
                       {event.description}
                     </label>
                     <button
                       type="button"
-                      className="text-gray-400 hover:text-gray-600 p-0.5 flex-shrink-0"
+                      className="inline-flex items-center gap-1 text-neutral-400 hover:text-neutral-700 px-1 py-0.5 rounded shrink-0"
                       onClick={() => setPreviewEvent(previewEvent === event.id ? null : event.id)}
                       title={t('dashboard.organization.automations.view_example_payload')}
+                      aria-expanded={previewEvent === event.id}
                     >
-                      <code className="text-[10px]">{event.id}</code>
-                      {previewEvent === event.id ? <ChevronUp size={10} className="inline ms-1" /> : <ChevronDown size={10} className="inline ms-1" />}
+                      <code className="font-mono text-[10.5px]">{event.id}</code>
+                      {previewEvent === event.id ? <CaretDown size={10} /> : <CaretRight size={10} className="rtl:rotate-180" />}
                     </button>
                   </div>
                   {previewEvent === event.id && event.data_schema && (
-                    <pre className="mx-1 mb-1.5 px-3 py-2 bg-gray-50 border rounded text-[11px] text-gray-600 overflow-x-auto leading-relaxed">
-{JSON.stringify(event.data_schema, null, 2)}
-                    </pre>
+                    <div className="px-1 pb-2">
+                      <CodeBlock
+                        title={`${event.id}.json`}
+                        maxHeight="max-h-[220px]"
+                        tabs={[{ key: event.id, label: event.id, code: JSON.stringify(event.data_schema, null, 2), lang: 'json' }]}
+                      />
+                    </div>
                   )}
                 </div>
               ))}
@@ -1045,39 +1043,33 @@ const ZapierRow: React.FC<{
   const { t } = useTranslation()
   const title = zap.zap_name || zap.description || t('dashboard.organization.automations.zapier_integration')
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white border border-gray-100 hover:border-gray-200 transition-colors">
+    <li className="flex items-center gap-3 px-5 py-2.5">
       <Switch checked={zap.is_active} onCheckedChange={onToggleActive} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="font-medium text-sm text-gray-800 truncate">{title}</p>
-          {zap.events[0] && (
-            <code className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-mono flex-shrink-0">
-              {zap.events[0]}
-            </code>
-          )}
-        </div>
+      <div className="min-w-0 flex-1 flex items-center gap-2">
+        <p className="font-medium text-sm text-neutral-800 truncate">{title}</p>
+        {zap.events?.[0] && (
+          <code className="text-[10.5px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 font-mono shrink-0">
+            {zap.events[0]}
+          </code>
+        )}
       </div>
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onViewLogs}
-          className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 h-8 w-8 p-0"
-          title={t('dashboard.organization.automations.view_delivery_logs')}
-        >
-          <Clock size={14} />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onDelete}
-          className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
-          title={t('dashboard.organization.automations.disconnect_zap')}
-        >
-          <Trash2 size={14} />
-        </Button>
-      </div>
-    </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onViewLogs}
+        title={t('dashboard.organization.automations.view_delivery_logs')}
+        aria-label={t('dashboard.organization.automations.view_delivery_logs')}
+        icon={<ClockCounterClockwise size={15} />}
+      />
+      <Button
+        variant="danger-ghost"
+        size="icon"
+        onClick={onDelete}
+        title={t('dashboard.organization.automations.disconnect_zap')}
+        aria-label={t('dashboard.organization.automations.disconnect_zap')}
+        icon={<Trash size={15} />}
+      />
+    </li>
   )
 }
 

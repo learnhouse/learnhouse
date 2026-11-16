@@ -1,14 +1,13 @@
 'use client'
 import React, { useState } from 'react'
 import { useAuth } from '@components/Contexts/AuthContext'
-import { useRouter } from 'next/navigation'
-import { Shield } from 'lucide-react'
+import { ShieldStar, WarningCircle } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
+import { Button, FieldLabel, INPUT } from '@/design'
 
 export default function AdminLoginPage() {
   const { t } = useTranslation()
   const { signIn } = useAuth()
-  const _router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -39,25 +38,24 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0f0f10]">
-      <div className="w-full max-w-sm px-6">
-        <div className="flex flex-col items-center mb-8">
-          <Shield className="w-10 h-10 text-white/70 mb-3" />
-          <h1 className="text-2xl font-bold text-white">LearnHouse Admin</h1>
-          <p className="text-white/40 text-sm mt-1">{t('admin.login.sign_in_to_continue')}</p>
+    <div className="flex items-center justify-center min-h-screen bg-[var(--adm-canvas)] px-4">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-6 text-center">
+          <img src="/lrn-dash.svg" alt="" className="h-11 w-11 mb-4" />
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">{t('admin.shell.title')}</h1>
+          <p className="mt-1 text-sm text-neutral-500">{t('admin.login.sign_in_to_continue')}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl nice-shadow p-6 flex flex-col gap-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">
+            <div role="alert" className="flex items-start gap-2 rounded-xl bg-rose-50 px-3 py-2.5 text-sm text-rose-700 ring-1 ring-inset ring-rose-600/10">
+              <WarningCircle size={16} className="mt-0.5 shrink-0" />
               {error}
             </div>
           )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-white/60 mb-1.5">
-              {t('admin.login.email')}
-            </label>
+          <label htmlFor="email" className="block">
+            <FieldLabel>{t('admin.login.email')}</FieldLabel>
             <input
               id="email"
               type="email"
@@ -65,15 +63,14 @@ export default function AdminLoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+              autoComplete="email"
+              className={INPUT}
               placeholder="admin@example.com"
             />
-          </div>
+          </label>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-white/60 mb-1.5">
-              {t('admin.login.password')}
-            </label>
+          <label htmlFor="password" className="block">
+            <FieldLabel>{t('admin.login.password')}</FieldLabel>
             <input
               id="password"
               type="password"
@@ -81,19 +78,20 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+              className={INPUT}
               placeholder={t('admin.login.password_placeholder')}
             />
-          </div>
+          </label>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2.5 bg-white text-black font-medium rounded-lg hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button type="submit" variant="primary" size="lg" loading={isLoading} className="w-full justify-center mt-1">
             {isLoading ? t('admin.login.signing_in') : t('admin.login.sign_in')}
-          </button>
+          </Button>
         </form>
+
+        <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-neutral-400">
+          <ShieldStar size={13} weight="fill" />
+          {t('admin.login.superadmin_only')}
+        </p>
       </div>
     </div>
   )

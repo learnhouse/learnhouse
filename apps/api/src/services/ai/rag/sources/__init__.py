@@ -10,6 +10,7 @@ changes.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable, Optional
 
@@ -85,6 +86,34 @@ def activity_summary(activity: Activity) -> Segment:
     return Segment(text=text, source_type=SourceType.ACTIVITY)
 
 
+async def translated_segments(activity: Activity, db: AsyncSession) -> list[Segment]:
+    """Published translations of a page (multilingual courses), one
+    localized document per language: learners searching in their language
+    find (and get cited) the version they read. ``locator.locale`` tells
+    which language a chunk is in."""
+    from src.db.courses.translations import ActivityTranslation, CourseTranslation, TranslationStatus
+    from src.services.courses.translations.content import iter_segments
+
+    published = TranslationStatus.PUBLISHED.value
+    rows = (await db.execute(
+        select(ActivityTranslation)
+        .join(CourseTranslation, (CourseTranslation.course_id == ActivityTranslation.course_id)
+              & (CourseTranslation.locale == ActivityTranslation.locale))
+        .where(
+            ActivityTranslation.activity_id == activity.id,
+            ActivityTranslation.status == published,
+            CourseTranslation.status == published,
+        )
+    )).scalars().all()
+    out: list[Segment] = []
+    for t in rows:
+        texts = [re.sub(r"</?[mx]\d+/?>", "", seg.text) for seg in iter_segments(t.content or {})]
+        text = join([f"Activity: {t.name or activity.name}", *texts])
+        if text.strip():
+            out.append(Segment(text=text, source_type=SourceType.ACTIVITY, locator={"locale": t.locale}))
+    return out
+
+
 async def extract(ref: ContentRef, db: AsyncSession) -> Optional[Extraction]:
     """Run the matching extractor for a ref. None when the ref no longer exists."""
     if ref.kind == "course":
@@ -123,6 +152,7 @@ async def extract(ref: ContentRef, db: AsyncSession) -> Optional[Extraction]:
             # A broken file or malformed content must not stop the activity
             # from being findable by name.
             logger.exception("RAG: extraction failed for activity %s", activity.id)
+    segments += await translated_segments(activity, db)
 
     return Extraction(
         ref=ref,

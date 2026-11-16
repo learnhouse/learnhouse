@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Sparkle } from '@phosphor-icons/react'
 import AIImagePicker from './AIImagePicker'
+import { AIMark, aiButtonClass } from './AIBrand'
+import useAIFeature from '@components/Hooks/useAIFeature'
 
 // Drop-in trigger for the shared AI image generator. Place next to an existing
 // Unsplash button on any image-upload surface; it manages its own modal state,
@@ -27,16 +28,22 @@ const AIImageButton: React.FC<AIImageButtonProps> = ({
 }) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  // Settings > AI: image generation can be turned off for the org.
+  const enabled = useAIFeature('image_generation')
 
-  const base =
-    variant === 'chip'
-      ? 'px-3 py-1 bg-neutral-100 rounded-lg hover:bg-neutral-200 nice-shadow transition-colors flex items-center gap-1.5 text-sm'
-      : 'px-3 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 nice-shadow transition-colors flex items-center gap-1.5 text-sm'
+  // Callers usually pass their own className to sit in a row of sibling
+  // buttons; the AI mark is what brands it either way.
+  const base = variant === 'chip' ? aiButtonClass('soft', 'sm') : aiButtonClass('solid', 'md')
+  if (!enabled) return null
 
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className || base}>
-        <Sparkle weight="duotone" size={15} />
+        {variant === 'button' && !className ? (
+          <AIMark size={18} alt="" />
+        ) : (
+          <AIMark size={16} alt="" />
+        )}
         {label ?? t('ai.image_picker.button_label')}
       </button>
       {open && (

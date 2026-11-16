@@ -126,3 +126,18 @@ describe("Turnstile on custom domains", () => {
     expect(backendCalls).toHaveLength(0);
   });
 });
+
+describe("where to land after verifying", () => {
+  test("a relative next goes to the backend with the signup", async () => {
+    await signup({ turnstileToken: "tok", org_id: 7, next: "/course/abc?x=1" });
+    expect(backendCalls[0].url).toBe("http://api.test/api/v1/users/7?next=%2Fcourse%2Fabc%3Fx%3D1");
+  });
+
+  test("anything that could leave the host is dropped", async () => {
+    for (const next of ["//evil.test/x", "https://evil.test", "/\\evil.test", "/a b", 42]) {
+      backendCalls.length = 0;
+      await signup({ turnstileToken: "tok", next });
+      expect(backendCalls[0].url).toBe("http://api.test/api/v1/users/");
+    }
+  });
+});

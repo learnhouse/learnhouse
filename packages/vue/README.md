@@ -49,6 +49,24 @@ Events: `@load`, `@ready`, `@complete`, `@media`, `@resize`, `@error`, `@event` 
 
 Never pass an `lh_` API token to the browser. Use the signed-in user's access token, and keep API tokens on your server with `@learnhouse/sdk`.
 
+## Agent API
+
+`<AgentChat>` wraps `<learnhouse-agent-chat>` from `@learnhouse/react` (the same
+React chat, no second renderer) and uses the provider's instance and session
+by default:
+
+```vue
+<AgentChat agent="copilot" :starters="['What should I study next?']" @event="log" @conversation="save" />
+```
+
+Props: `base-url`, `token`, `session`, `client`, `agent`, `org-id` (needed with a member session), `conversation-id`,
+`create`, `site-url`, `placeholder`, `theme`, `starters`, `greeting`, `labels`.
+
+For your own UI, `useAgentConversation()` runs on `@learnhouse/sdk` alone (no
+React; pass `orgId` with a member session) and returns refs: `messages`, `status`, `error`, `conversation`,
+`pendingApprovals`, `pendingToolCalls`, plus `send`, `approve`, `deny`,
+`cancel`, `submitToolResults`.
+
 ## Nuxt
 
 Add `css: ['@learnhouse/vue/styles.css']` to `nuxt.config.ts`. No `<ClientOnly>` needed: the server renders the `fallback` slot and the renderer loads in the browser.

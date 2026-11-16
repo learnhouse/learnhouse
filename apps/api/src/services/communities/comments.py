@@ -144,6 +144,12 @@ async def create_comment(
         },
     )
 
+    from src.services.feature_notifications import notify_discussion_comment
+
+    await notify_discussion_comment(
+        db_session, community=community, discussion=discussion, comment=comment, author_id=author_id
+    )
+
     return DiscussionCommentReadWithVoteStatus(
         **comment.model_dump(),
         author=UserReadAuthor.model_validate(author.model_dump()) if author else None,
@@ -370,8 +376,23 @@ async def delete_comment(
                 detail="You can only delete your own comments"
             )
 
+    # Deleting the accepted answer leaves the thread unanswered.
+    if discussion and discussion.answer_comment_id == comment.id:
+        discussion.answer_comment_id = None
+        db_session.add(discussion)
+
+    deleted_comment = comment.comment_uuid
     await db_session.delete(comment)
     await db_session.commit()
+    if discussion is not None:
+        from src.core.ee_hooks import audit_event
+
+        audit_event(
+            request, action="comment.deleted", org_id=discussion.org_id, actor=current_user,
+            target_type="comment", target_id=deleted_comment,
+            details={"discussion_uuid": discussion.discussion_uuid, "discussion_title": discussion.title,
+                     "moderated": not is_author},
+        )
 
     return {"detail": "Comment deleted"}
 

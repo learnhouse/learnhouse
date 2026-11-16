@@ -24,6 +24,7 @@ export interface PathCertificateConfig {
 export interface PathCourseCard {
   id?: number
   course_uuid: string
+  slug?: string | null
   org_id?: number
   name?: string
   description?: string
@@ -66,6 +67,9 @@ export interface Path {
   id: number
   org_id: number
   path_uuid: string
+  /** Human-readable URL key, unique per org. */
+  slug?: string | null
+  seo?: Record<string, any> | null
   name: string
   description: string
   about: string

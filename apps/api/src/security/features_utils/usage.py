@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from src.db.organization_config import OrganizationConfig
 from src.services.orgs.org_config_lookup import get_session_org_config
@@ -22,6 +23,8 @@ from src.security.features_utils.plans import (
     plan_meets_requirement,
     get_required_plan_for_feature,
 )
+
+logger = logging.getLogger(__name__)
 
 FeatureSet: TypeAlias = Literal[
     "admin_seats",
@@ -69,6 +72,21 @@ def _get_redis_client():
             detail="Redis connection string not found",
         )
     return r
+
+
+_LIMIT_NOUNS = {"members": "members", "admin_seats": "admin seats", "courses": "courses"}
+
+
+def _limit_detail(feature: str, limit: int) -> str:
+    """The 403 for a reached plan limit. Starts with the stable "Usage Limit
+    has been reached for X" prefix clients match on, then says what it means:
+    nothing is removed, only adding more needs a bigger plan."""
+    noun = _LIMIT_NOUNS.get(feature, feature.replace("_", " "))
+    return (
+        f"Usage Limit has been reached for {feature.capitalize()}. "
+        f"Your plan includes {limit} {noun}. Everything you already have stays; "
+        f"upgrade to add more."
+    )
 
 
 def _plan_from_config_dict(config: dict) -> PlanLevel:
@@ -333,7 +351,7 @@ async def check_limits_with_usage(
             else:
                 raise HTTPException(
                     status_code=403,
-                    detail=f"Usage Limit has been reached for {feature.capitalize()}",
+                    detail=_limit_detail(feature, feature_limit),
                 )
         return True
 
@@ -395,7 +413,7 @@ async def check_members_limit_with_pending(
     if current + max(pending_and_new, 0) > feature_limit:
         raise HTTPException(
             status_code=403,
-            detail="Usage Limit has been reached for Members",
+            detail=_limit_detail("members", feature_limit),
         )
     return True
 
@@ -409,6 +427,7 @@ async def increase_feature_usage(
     # Plan-based features - log event
     if feature in PLAN_BASED_FEATURES:
         await log_usage_event(org_id, feature, "add", db_session)
+        await _warn_if_near_limit(feature, org_id, db_session)
         return True
 
     # Redis-tracked features
@@ -421,7 +440,37 @@ async def increase_feature_usage(
         feature_usage_count = int(feature_usage)
 
     r.set(f"{feature}_usage:{org_id}", feature_usage_count + 1)
+    await _warn_if_near_limit(feature, org_id, db_session)
     return True
+
+
+# Share of a count limit at which the org's admins get a heads-up.
+NEAR_LIMIT_RATIO = 0.8
+
+
+async def _warn_if_near_limit(feature: str, org_id: int, db_session: AsyncSession) -> None:
+    """Notify the org's admins once a day while a count-limited feature sits at
+    or above 80% of its plan limit. Never raises."""
+    if feature not in DB_COUNTED_FEATURES or _is_non_saas():
+        return
+    try:
+        from src.security.features_utils.resolve import resolve_feature
+
+        org_config = await _get_org_config(org_id, db_session)
+        if org_config is None:
+            return
+        resolved = resolve_feature(feature, org_config.config or {}, org_id)
+        limit = resolved["limit"]
+        if not resolved["enabled"] or not limit or limit < 0:
+            return
+        used = await _get_actual_usage(feature, org_id, db_session)
+        if used < limit * NEAR_LIMIT_RATIO:
+            return
+        from src.services.feature_notifications import notify_plan_limit_near
+
+        await notify_plan_limit_near(db_session, org_id, feature, used, limit)
+    except Exception:
+        logger.warning("Plan limit check failed for %s in org %s", feature, org_id, exc_info=True)
 
 
 async def decrease_feature_usage(
@@ -800,7 +849,7 @@ async def check_admin_seat_limit(
     if current >= limit:
         raise HTTPException(
             status_code=403,
-            detail="Usage Limit has been reached for Admin_seats",
+            detail=_limit_detail("admin_seats", limit),
         )
     return True
 
@@ -872,7 +921,7 @@ async def enforce_admin_seat_limit_for_role_rights_change(
     if current + holders > limit:
         raise HTTPException(
             status_code=403,
-            detail="Usage Limit has been reached for Admin_seats",
+            detail=_limit_detail("admin_seats", limit),
         )
 
 
@@ -1209,7 +1258,32 @@ async def reserve_ai_credit(
             detail=f"AI credit limit reached. You have used all {total} credits.",
         )
 
+    if unlimited == "0":
+        await _warn_if_ai_credits_low(r, org_id, db_session, base_credits, extra, int(new_used), int(amount))
     return int(new_used)
+
+
+# Share of the org's credits left at which its admins get a heads-up.
+AI_CREDITS_LOW_RATIO = 0.1
+
+
+async def _warn_if_ai_credits_low(
+    r, org_id: int, db_session: AsyncSession, base: int, extra: int, used: int, amount: int
+) -> None:
+    """Notify the org's admins when this reservation took the balance below 10%
+    of its credits (deduped per day). Never raises."""
+    try:
+        purchased = int(r.get(f"ai_credits_purchased:{org_id}") or 0)
+        total = max(0, int(base)) + int(extra) + purchased
+        remaining = total - used
+        threshold = total * AI_CREDITS_LOW_RATIO
+        if total <= 0 or not (remaining < threshold <= remaining + amount):
+            return
+        from src.services.feature_notifications import notify_ai_credits_low
+
+        await notify_ai_credits_low(db_session, org_id, remaining, total)
+    except Exception:
+        logger.warning("AI credit low check failed for org %s", org_id, exc_info=True)
 
 
 _REFUND_LUA = """
@@ -1220,6 +1294,65 @@ if new_val < 0 then new_val = 0 end
 redis.call("SET", KEYS[1], new_val)
 return new_val
 """
+
+
+# Charge up to ARGV[3] credits, never past the org's total: the settlement of a
+# metered request whose real cost exceeded its reservation. Returns the amount
+# actually charged. ARGV like _ATOMIC_RESERVE_LUA.
+_CHARGE_UP_TO_LUA = """
+local amount = tonumber(ARGV[3])
+if ARGV[4] == "1" then
+    redis.call("INCRBY", KEYS[1], amount)
+    return amount
+end
+local total = tonumber(ARGV[1]) + tonumber(ARGV[2]) + tonumber(redis.call("GET", KEYS[2]) or "0")
+local used = tonumber(redis.call("GET", KEYS[1]) or "0")
+local room = total - used
+if room <= 0 then return 0 end
+if room < amount then amount = room end
+redis.call("INCRBY", KEYS[1], amount)
+return amount
+"""
+
+
+async def ai_credit_limits(org_id: int, db_session: AsyncSession) -> dict:
+    """The org's credit limits as the reservation sees them (for settlement)."""
+    org_config = await _load_org_config_for_ai(org_id, db_session)
+    if org_config is None:
+        return {"base": 0, "extra": 0, "unlimited": True}
+    if _is_non_saas():
+        return {"base": 0, "extra": 0, "unlimited": True}
+    base = get_ai_credit_limit(_get_org_plan(org_config))
+    config = org_config.config or {}
+    extra = 0
+    if config.get("config_version", "1.0").startswith("2"):
+        extra = config.get("overrides", {}).get("ai", {}).get("extra_limit", 0) or 0
+    return {"base": max(0, base), "extra": int(extra), "unlimited": base == -1}
+
+
+def charge_ai_credit_up_to(org_id: int, amount: int, limits: Optional[dict] = None) -> int:
+    """Charge up to ``amount`` more credits without going past the org's total.
+
+    Used when a metered request settles above its reservation; returns what was
+    actually charged (less than ``amount`` when the org ran out mid-request).
+    Without ``limits`` (see :func:`ai_credit_limits`) nothing is capped.
+    """
+    if amount <= 0:
+        return 0
+    limits = limits or {"base": 0, "extra": 0, "unlimited": True}
+    r = _get_redis_client()
+    script = r.register_script(_CHARGE_UP_TO_LUA)
+    return int(
+        script(
+            keys=[f"ai_credits_used:{org_id}", f"ai_credits_purchased:{org_id}"],
+            args=[
+                str(int(limits.get("base", 0))),
+                str(int(limits.get("extra", 0))),
+                str(int(amount)),
+                "1" if limits.get("unlimited") else "0",
+            ],
+        )
+    )
 
 
 def refund_ai_credit(org_id: int, amount: int = 1) -> int:

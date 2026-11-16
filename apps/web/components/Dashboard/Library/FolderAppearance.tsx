@@ -1,6 +1,7 @@
 'use client'
-import { FOLDER_COLORS } from '@components/Dashboard/Library/LibraryToolbar'
-import { Check, ImagePlus, X } from 'lucide-react'
+import { FOLDER_COLORS, folderTone } from '@components/Dashboard/Library/LibraryToolbar'
+import { FieldLabel } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { Check, FolderSimple, ImageSquare, X } from '@phosphor-icons/react'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -14,7 +15,6 @@ type Props = {
 
 export default function FolderAppearance({ color, onColorChange, file, onFileChange, existingThumbUrl }: Props) {
   const { t } = useTranslation()
-  const inputRef = React.useRef<HTMLInputElement>(null)
   const [objectUrl, setObjectUrl] = React.useState<string | null>(null)
 
   React.useEffect(() => {
@@ -28,62 +28,69 @@ export default function FolderAppearance({ color, onColorChange, file, onFileCha
   }, [file])
 
   const preview = objectUrl || existingThumbUrl || null
+  const pick = (e: React.ChangeEvent<HTMLInputElement>) => onFileChange(e.target.files?.[0] || null)
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Color */}
+    <div className="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-start">
       <div>
-        <span className="text-sm font-medium text-gray-700">{t('library.color')}</span>
-        <div className="flex flex-wrap gap-2 mt-1.5">
+        <FieldLabel hint={t('library.dash.color_hint')}>{t('library.color')}</FieldLabel>
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('library.color')}>
           {Object.entries(FOLDER_COLORS).map(([key, c]) => (
             <button
               key={key}
               type="button"
+              role="radio"
+              aria-checked={color === key}
               aria-label={key}
               onClick={() => onColorChange(key)}
               className={`w-7 h-7 rounded-full flex items-center justify-center transition-transform hover:scale-110 ${c.dot} ${
-                color === key ? 'ring-2 ring-offset-2 ring-gray-300' : ''
+                color === key ? 'ring-2 ring-offset-2 ring-neutral-900/30' : ''
               }`}
             >
-              {color === key && <Check size={14} className="text-white" strokeWidth={3} />}
+              {color === key && <Check size={13} weight="bold" className="text-white" />}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Cover image */}
+      {/* Cover: the tile shows what the folder card will look like. */}
       <div>
-        <span className="text-sm font-medium text-gray-700">{t('library.thumbnail')}</span>
-        {preview ? (
-          <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-gray-200 p-2.5">
-            {/* The thumbnail itself is the (replace) file input, the real click target */}
-            <label className="relative w-14 h-14 rounded-lg bg-cover bg-center flex-shrink-0 ring-1 ring-inset ring-black/10 cursor-pointer overflow-hidden" style={{ backgroundImage: `url(${preview})` }}>
-              <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => onFileChange(e.target.files?.[0] || null)} />
-            </label>
-            <label className="text-sm font-medium text-gray-600 hover:text-gray-900 cursor-pointer relative">
-              {t('library.replace_cover')}
-              <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => onFileChange(e.target.files?.[0] || null)} />
-            </label>
-            <button type="button" onClick={() => onFileChange(null)} className="ms-auto text-gray-400 hover:text-rose-600 p-1" aria-label={t('library.remove_thumbnail')}>
-              <X size={16} />
-            </button>
-          </div>
-        ) : (
-          <label className="mt-1.5 relative block w-full rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/60 hover:bg-gray-100/60 transition-colors py-5 cursor-pointer">
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={(e) => onFileChange(e.target.files?.[0] || null)}
-            />
-            <div className="pointer-events-none flex flex-col items-center justify-center gap-1 text-center">
-              <ImagePlus className="w-5 h-5 text-gray-400" />
-              <span className="text-sm font-semibold text-gray-700">{t('media.choose_file')}</span>
-              <span className="text-xs text-gray-400">{t('library.cover_hint')}</span>
-            </div>
+        <FieldLabel>{t('library.thumbnail')}</FieldLabel>
+        <div className="flex items-center gap-3">
+          <label
+            className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 cursor-pointer ring-1 ring-inset ring-black/5 group"
+            title={t('media.choose_file')}
+          >
+            {preview ? (
+              <span className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${preview})` }} />
+            ) : (
+              <span className={`absolute inset-0 flex items-center justify-center ${folderTone(color)}`}>
+                <FolderSimple size={26} weight="fill" />
+              </span>
+            )}
+            <span className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center text-white opacity-0 group-hover:opacity-100">
+              <ImageSquare size={18} />
+            </span>
+            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={pick} />
           </label>
-        )}
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <label className="relative text-xs font-semibold text-neutral-700 hover:text-neutral-900 cursor-pointer">
+              {preview ? t('library.replace_cover') : t('media.choose_file')}
+              <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={pick} />
+            </label>
+            {file ? (
+              <button
+                type="button"
+                onClick={() => onFileChange(null)}
+                className="inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-rose-600 text-start"
+              >
+                <X size={11} /> {t('library.remove_thumbnail')}
+              </button>
+            ) : (
+              <span className="text-xs text-neutral-400">{t('library.cover_hint')}</span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

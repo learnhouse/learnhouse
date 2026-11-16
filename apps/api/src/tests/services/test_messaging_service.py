@@ -417,6 +417,26 @@ async def test_preferences_roundtrip(db, org, regular_user):
     assert me["status_text"] == "Studying" and me["availability"] == "dnd"
 
 
+async def test_my_status_skips_the_gate_when_already_gated(db, org, regular_user):
+    # The SSE stream checks access once, then reads the caller's status; a
+    # second gate re-ran the membership, MFA and config lookups (Sentry N+1).
+    with patch.object(svc, "require_messaging", new_callable=AsyncMock) as gate:
+        me = await svc.get_my_status(org.id, regular_user, db, gated=True)
+    gate.assert_not_called()
+    assert me["email_mode"] == "direct"
+
+
+async def test_org_config_is_read_once_per_session(db, org):
+    db.add(OrganizationConfig(org_id=org.id, config={"config_version": "2.0", "plan": "pro"},
+                              creation_date="", update_date=""))
+    await db.commit()
+    first = await svc._org_config(org.id, db)
+    with patch.object(db, "execute", wraps=db.execute) as spy:
+        second = await svc._org_config(org.id, db)
+    assert first == second
+    spy.assert_not_called()
+
+
 async def test_directory_search(db, org, admin_user, regular_user):
     await _user(db, org, 3, "zelda")
     people = await svc.directory(org.id, "zel", admin_user, db)
@@ -869,3 +889,36 @@ async def test_unread_email_waits_for_personal_delay(db, org, admin_user, regula
         stats = await notify.run_unread_emails(db)
     assert stats.considered == 0
     sender.assert_not_called()
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy
+
+
+# ---------------------------------------------------------------------------
+# Notification inbox
+# ---------------------------------------------------------------------------
+
+
+async def test_dm_writes_inbox_row_and_reading_clears_it(db, org):
+    from src.db.notifications import Notification
+    from src.services.notifications.notifications import unread_count
+
+    ann = await _user(db, org, 31, "ann")
+    bob = await _user(db, org, 32, "bob")
+    conv = await _dm(db, org, ann, bob)
+    with patch("src.services.notifications.push.schedule_push") as push:
+        first, _ = await _send(db, conv["conversation_uuid"], ann, "one")
+        await _send(db, conv["conversation_uuid"], ann, "two")
+    assert push.call_count == 2
+    rows = (await db.execute(select(Notification).where(Notification.user_id == bob.id))).scalars().all()
+    assert len(rows) == 1 and rows[0].count == 2 and rows[0].body == "two"
+    assert (await unread_count(db, ann.id))["unread_count"] == 0  # the sender gets nothing
+
+    # Reading up to an older message leaves the row; catching up clears it.
+    await svc.mark_read(conv["conversation_uuid"], svc.ReadUpdate(message_uuid=first.message_uuid), bob, db)
+    assert (await unread_count(db, bob.id))["unread_count"] == 1
+    await svc.mark_read(conv["conversation_uuid"], svc.ReadUpdate(), bob, db)
+    assert (await unread_count(db, bob.id))["unread_count"] == 0

@@ -1,9 +1,14 @@
-import React from 'react'
+import React, { cache } from 'react'
 import { getUserByUsername } from '@services/users/users'
 import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
 import UserProfileClient from './UserProfileClient'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { buildPageTitle } from '@/lib/seo/utils'
+import { clipDescription, robotsMetadata } from '@/lib/seo/meta'
+import { getUserAvatarMediaDirectory } from '@services/media/media'
+import { normalizeProfile, richTextToPlain } from '@/lib/profile/profile'
 
 interface UserPageParams {
   username: string;
@@ -15,35 +20,67 @@ interface UserPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+// One profile read per request, shared by the metadata and the page.
+const loadUser = cache(async (username: string, accessToken: string) => getUserByUsername(username, accessToken))
+
+// Profiles need a signed-in viewer, so crawlers only ever reach the login
+// redirect: mark them members-only (never indexed, like other private pages)
+// and give signed-in shares a proper title, description, canonical URL and
+// the avatar as the image.
+
 export async function generateMetadata({ params }: UserPageProps): Promise<Metadata> {
+  const { username, orgslug } = await params
+  let ctx: Awaited<ReturnType<typeof getSeoContext>> | null = null
   try {
-    const resolvedParams = await params
+    ctx = await getSeoContext(orgslug)
+  } catch {
+    ctx = null
+  }
+  const orgName = ctx?.org?.name || ''
+  const titled = (name: string) => (ctx ? buildPageTitle(name, orgName, ctx.seo) : name)
+  const ROBOTS = robotsMetadata({ orgSeo: ctx?.seo, indexable: false })
+  const fallback: Metadata = { title: titled('Profile'), robots: ROBOTS }
+  try {
     const session = await getServerSession()
     const access_token = session?.tokens?.access_token
+    if (!access_token) return fallback
 
-    // If no session, return basic metadata (SEO will show generic title)
-    if (!access_token) {
-      return {
-        title: 'User Profile',
-        description: 'View user profile',
-      }
-    }
-
-    const userData = await getUserByUsername(resolvedParams.username, access_token)
+    const userData = await loadUser(username, access_token)
+    const name = [userData.first_name, userData.last_name].filter(Boolean).join(' ') || userData.username
+    const doc = normalizeProfile(userData.profile, userData.details)
+    const description = clipDescription(
+      [doc.headline, userData.bio || richTextToPlain(doc.about)].filter((s) => s && s.trim()).join(' · ') ||
+        `Profile of ${name}${orgName ? ` on ${orgName}` : ''}`
+    )
+    const canonical = ctx ? await ctx.url(`/user/${userData.username}`) : undefined
+    const avatar =
+      userData.avatar_image && !/^https?:\/\//.test(userData.avatar_image)
+        ? getUserAvatarMediaDirectory(userData.user_uuid, userData.avatar_image)
+        : userData.avatar_image || undefined
+    const title = titled(name)
     return {
-      title: `${userData.first_name} ${userData.last_name} | Profile`,
-      description: userData.bio || `Profile page of ${userData.first_name} ${userData.last_name}`,
+      title,
+      description,
+      robots: ROBOTS,
+      ...(canonical ? { alternates: { canonical } } : {}),
+      openGraph: {
+        title,
+        description,
+        type: 'profile',
+        username: userData.username,
+        ...(canonical ? { url: canonical } : {}),
+        ...(orgName ? { siteName: orgName } : {}),
+        ...(avatar ? { images: [{ url: avatar, alt: name }] } : {}),
+      },
+      twitter: { card: 'summary', title, description, ...(avatar ? { images: [avatar] } : {}) },
     }
   } catch {
-    return {
-      title: 'User Profile',
-    }
+    return fallback
   }
 }
 
 async function UserPage({ params }: UserPageProps) {
-  const resolvedParams = await params;
-  const { username } = resolvedParams;
+  const { username, orgslug } = await params
 
   // Get session for authentication
   const session = await getServerSession()
@@ -56,31 +93,25 @@ async function UserPage({ params }: UserPageProps) {
     redirect(`/login?redirect=/user/${username}`)
   }
 
+  let userData: any
   try {
-    // Fetch user data by username with authentication
-    const userData = await getUserByUsername(username, access_token);
-    const profile = userData.profile ? (
-      typeof userData.profile === 'string' ? JSON.parse(userData.profile) : userData.profile
-    ) : { sections: [] };
-
-    return (
-      <div>
-        <UserProfileClient
-          userData={userData}
-          profile={profile}
-        />
-      </div>
-    )
-  } catch (error) {
+    userData = await loadUser(username, access_token)
+  } catch (error: any) {
+    // Unknown (or not visible) users: the API answers a generic 404.
+    if (error?.status === 404) notFound()
     console.error('Error fetching user data:', error)
     return (
-      <div className="container mx-auto py-8">
-        <div className="bg-white rounded-xl nice-shadow p-6">
-          <p className="text-red-600">Error loading user profile. The user may not exist or you may not have permission to view this profile.</p>
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-2xl nice-shadow p-6">
+          <p className="text-sm text-rose-600">
+            Error loading user profile. The user may not exist or you may not have permission to view this profile.
+          </p>
         </div>
       </div>
     )
   }
+
+  return <UserProfileClient userData={userData} orgslug={orgslug} />
 }
 
 export default UserPage

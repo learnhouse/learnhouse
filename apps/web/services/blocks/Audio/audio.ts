@@ -1,3 +1,4 @@
+import { creditsUsedFromResponse } from '@services/ai/credits'
 import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyFormWithAuthHeader,
@@ -28,7 +29,9 @@ function extractDetail(data: any, fallback: string): string {
 // audio upload endpoint (a BlockRead), so callers can treat it like an upload.
 export async function generateAudioBlock(
   params: GenerateAudioParams,
-  access_token: string
+  access_token: string,
+  // Credits the generation charged (X-AI-Credits-Used), for "Used N credits".
+  onCredits?: (_credits: number | null) => void
 ) {
   const result = await fetch(
     `${getAPIUrl()}ai/audio/generate`,
@@ -40,6 +43,7 @@ export async function generateAudioBlock(
   if (!result.ok) {
     throw new Error(extractDetail(data, 'Audio generation failed'))
   }
+  onCredits?.(creditsUsedFromResponse(result))
 
   return data
 }
@@ -60,7 +64,8 @@ export type GenerateScriptParams = {
 // monologue for "speak" mode). Returns { transcript }.
 export async function generateScript(
   params: GenerateScriptParams,
-  access_token: string
+  access_token: string,
+  onCredits?: (_credits: number | null) => void
 ): Promise<{ transcript: string }> {
   const result = await fetch(
     `${getAPIUrl()}ai/audio/script`,
@@ -72,6 +77,7 @@ export async function generateScript(
   if (!result.ok) {
     throw new Error(extractDetail(data, 'Script generation failed'))
   }
+  onCredits?.(creditsUsedFromResponse(result))
 
   return data
 }

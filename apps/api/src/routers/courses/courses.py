@@ -72,6 +72,7 @@ from src.services.courses.transfer import (
     ImportAnalysisResponse,
     ImportResult,
 )
+from src.services.courses.translations.learner import localize_course, localize_course_list
 
 
 # Request models for batch operations
@@ -472,14 +473,18 @@ async def api_create_course_thumbnail(
 async def api_get_course(
     request: Request,
     course_uuid: str,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages, most preferred first (e.g. fr,en). Serves published translations."),
     db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
     Get single Course by course_uuid
     """
-    return await get_course(
+    course = await get_course(
         request, course_uuid, current_user=current_user, db_session=db_session
+    )
+    return await localize_course(
+        db_session, course, course_id=course.id, default_locale=course.default_locale, lang=lang, chapters=[]
     )
 
 
@@ -528,6 +533,7 @@ async def api_get_course_meta(
     course_uuid: str,
     with_unpublished_activities: bool = False,
     slim: bool = False,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages, most preferred first (e.g. fr,en). Serves published translations."),
     db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> FullCourseRead:
@@ -553,8 +559,11 @@ async def api_get_course_meta(
         if not decision.allowed:
             with_unpublished_activities = False
 
-    return await get_course_meta(
+    course = await get_course_meta(
         request, course_uuid, with_unpublished_activities, current_user=current_user, db_session=db_session, slim=slim
+    )
+    return await localize_course(
+        db_session, course, course_id=course.id, default_locale=course.default_locale, lang=lang
     )
 
 
@@ -630,15 +639,18 @@ async def api_get_course_by_orgslug(
     limit: int,
     org_slug: str,
     include_unpublished: bool = False,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages, most preferred first (e.g. fr,en). Serves published translations."),
+    language: Optional[str] = Query(None, max_length=20, description="Only courses available in this language (default or published translation)."),
     db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[CourseRead]:
     """
     Get courses by page and limit
     """
-    return await get_courses_orgslug(
-        request, current_user, org_slug, db_session, page, limit, include_unpublished
+    courses = await get_courses_orgslug(
+        request, current_user, org_slug, db_session, page, limit, include_unpublished, language=language
     )
+    return await localize_course_list(db_session, courses, lang)
 
 
 @router.get(
@@ -834,6 +846,15 @@ async def api_export_course(
     from datetime import datetime
 
     zip_path = await export_course(request, course_uuid, current_user, db_session)
+    from src.core.ee_hooks import audit_event
+    from src.services.audit.org_log import course_ref
+
+    course_org_id, course_name = await course_ref(db_session, course_uuid)
+    audit_event(
+        request, action="data.exported", org_id=course_org_id, actor=current_user,
+        target_type="course", target_id=course_uuid, target_name=course_name,
+        details={"export": "course", "format": "zip"},
+    )
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"learnhouse-export-{course_uuid}-{timestamp}.zip"

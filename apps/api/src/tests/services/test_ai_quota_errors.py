@@ -278,8 +278,7 @@ def _error_event(chunks):
 class TestStreamingEndpoints:
     @pytest.fixture(autouse=True)
     def _no_side_effects(self):
-        with patch("src.security.features_utils.usage.refund_ai_credit"), patch(
-            "src.routers.ai.magicblocks.refund_ai_credit"
+        with patch("src.security.features_utils.usage.refund_ai_credit"), patch("src.security.features_utils.usage.refund_ai_credit"
         ), patch("src.routers.ai.ai.save_message_to_history"):
             yield
 
@@ -336,3 +335,9 @@ class TestStreamingEndpoints:
 
 def test_module_exports_quota_message():
     assert errors.AI_QUOTA_MESSAGE == AI_QUOTA_MESSAGE
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

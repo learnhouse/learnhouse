@@ -12,14 +12,23 @@ export const queryKeys = {
   },
   courses: {
     list: (orgSlug: string) => ['courses', orgSlug] as const,
+    // The learner catalog in a content language (and optional language filter).
+    // Under the list prefix, so invalidating `list` refreshes it too.
+    catalog: (orgSlug: string, lang?: string, language?: string) =>
+      lang || language ? (['courses', orgSlug, { lang: lang || '', language: language || '' }] as const) : (['courses', orgSlug] as const),
+    // Every course incl. drafts, as the dashboard lists them. Kept under the
+    // list prefix so invalidating `list` refreshes it too.
+    dashAll: (orgSlug: string) => ['courses', orgSlug, 'dash-all'] as const,
     detail: (uuid: string) => ['course', uuid] as const,
-    meta: (uuid: string) => ['course', uuid, 'meta'] as const,
+    // `lang` = the learner's content language list: each language version is
+    // its own entry, still under the meta prefix that save actions invalidate.
+    meta: (uuid: string, lang?: string) => (lang ? (['course', uuid, 'meta', { lang }] as const) : (['course', uuid, 'meta'] as const)),
     contributors: (uuid: string) => ['course', uuid, 'contributors'] as const,
     updates: (uuid: string) => ['course', uuid, 'updates'] as const,
     rights: (uuid: string) => ['course', uuid, 'rights'] as const,
   },
   activity: {
-    detail: (uuid: string) => ['activity', uuid] as const,
+    detail: (uuid: string, lang?: string) => (lang ? (['activity', uuid, { lang }] as const) : (['activity', uuid] as const)),
     editorBootstrap: (uuid: string) => ['activity', uuid, 'editor-bootstrap'] as const,
     versions: (uuid: string) => ['activity', uuid, 'versions'] as const,
     state: (uuid: string) => ['activity', uuid, 'state'] as const,
@@ -49,12 +58,17 @@ export const queryKeys = {
   },
   assignments: {
     list: (orgSlug: string) => ['assignments', orgSlug] as const,
-    detail: (uuid: string) => ['assignment', uuid] as const,
-    tasks: (uuid: string) => ['assignment', uuid, 'tasks'] as const,
+    // The signed-in learner's assignments across their courses (Progress page).
+    mine: (orgId: number) => ['assignments', 'me', orgId] as const,
+    detail: (uuid: string, lang?: string) => (lang ? (['assignment', uuid, { lang }] as const) : (['assignment', uuid] as const)),
+    tasks: (uuid: string, lang?: string) => (lang ? (['assignment', uuid, 'tasks', { lang }] as const) : (['assignment', uuid, 'tasks'] as const)),
     submission: (uuid: string) => ['assignment', uuid, 'submission', 'me'] as const,
     taskSubmission: (uuid: string) => ['assignment', uuid, 'task-submission', 'me'] as const,
     analytics: (uuid: string) => ['assignment', uuid, 'analytics'] as const,
     allSubmissions: (uuid: string) => ['assignment', uuid, 'submissions'] as const,
+    // One course's assignments for the dashboard list. Under the
+    // 'assignments-all' prefix, which every assignment mutation invalidates.
+    byCourse: (courseUuid: string) => ['assignments-all', 'course', courseUuid] as const,
   },
   editorTemplates: {
     list: (orgId: number) => ['editor-templates', orgId] as const,
@@ -81,6 +95,8 @@ export const queryKeys = {
   },
   podcasts: {
     list: (orgSlug: string) => ['podcasts', orgSlug] as const,
+    // Every podcast incl. drafts, as the dashboard lists them.
+    dashList: (orgSlug: string) => ['podcasts', orgSlug, 'dash'] as const,
     detail: (uuid: string) => ['podcast', uuid] as const,
     meta: (uuid: string) => ['podcast', uuid, 'meta'] as const,
     episodes: (uuid: string) => ['podcast', uuid, 'episodes'] as const,

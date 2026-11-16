@@ -14,13 +14,14 @@
 
 import {
   ChalkboardSimple,
-  ChatsCircle,
-  Cube,
+  Garage,
+  Lightning,
   CurrencyCircleDollar,
   FolderSimple,
   Headphones,
-  Steps,
+  Circuitry,
   VideoCamera,
+  Newspaper,
 } from '@phosphor-icons/react'
 import type { IconProps } from '@phosphor-icons/react'
 import type { ComponentType } from 'react'
@@ -37,6 +38,7 @@ export type OptionalFeatureKey =
   | 'boards'
   | 'playgrounds'
   | 'payments'
+  | 'newsletter'
 
 export interface OptionalFeature {
   key: OptionalFeatureKey
@@ -51,17 +53,19 @@ export interface OptionalFeature {
 
 /** In sidebar order. */
 export const OPTIONAL_FEATURES: OptionalFeature[] = [
-  { key: 'paths', href: '/dash/paths', labelKey: 'paths.title', descriptionKey: 'dashboard.organization.features.toggles.paths.description', Icon: Steps },
+  { key: 'paths', href: '/dash/paths', labelKey: 'paths.title', descriptionKey: 'dashboard.organization.features.toggles.paths.description', Icon: Circuitry },
   { key: 'folders', href: '/dash/library', labelKey: 'library.library', descriptionKey: 'dashboard.organization.features.toggles.folders.description', Icon: FolderSimple },
-  { key: 'communities', href: '/dash/communities', labelKey: 'communities.title', descriptionKey: 'dashboard.organization.features.toggles.communities.description', Icon: ChatsCircle },
+  { key: 'communities', href: '/dash/communities', labelKey: 'communities.title', descriptionKey: 'dashboard.organization.features.toggles.communities.description', Icon: Garage },
   { key: 'podcasts', href: '/dash/podcasts', labelKey: 'podcasts.podcasts', descriptionKey: 'dashboard.organization.features.toggles.podcasts.description', Icon: Headphones },
   { key: 'live_sessions', href: '/dash/live-sessions', labelKey: 'live_sessions.title', descriptionKey: 'dashboard.organization.features.toggles.live_sessions.description', Icon: VideoCamera },
   { key: 'boards', href: '/dash/boards', labelKey: 'boards.boards', descriptionKey: 'dashboard.organization.features.toggles.boards.description', Icon: ChalkboardSimple },
-  { key: 'playgrounds', href: '/dash/playgrounds', labelKey: 'common.playgrounds', descriptionKey: 'dashboard.organization.features.toggles.playgrounds.description', Icon: Cube },
+  { key: 'playgrounds', href: '/dash/playgrounds', labelKey: 'common.playgrounds', descriptionKey: 'dashboard.organization.features.toggles.playgrounds.description', Icon: Lightning },
   { key: 'payments', href: '/dash/payments/overview', labelKey: 'common.payments', descriptionKey: 'dashboard.organization.features.toggles.payments.description', Icon: CurrencyCircleDollar },
+  { key: 'newsletter', href: '/dash/newsletter/overview', labelKey: 'newsletter.common.title', descriptionKey: 'dashboard.organization.features.toggles.newsletter.description', Icon: Newspaper },
 ]
 
-export const FEATURES_SETTINGS_HREF = '/dash/org/settings/features'
+// The switches are a section of General since the Features tab merged into it.
+export const FEATURES_SETTINGS_HREF = '/dash/org/settings/general#features'
 
 export type OptionalFeatureStatus = 'on' | 'off' | 'locked'
 

@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { CaretDown } from '@phosphor-icons/react'
 
 interface CustomSelectProps {
   value: string;
@@ -35,6 +35,7 @@ const CustomSelectContext = React.createContext<{
   setSelectedValue: (value: string) => void;
   onValueChange: (value: string) => void;
   disabled?: boolean;
+  placeholder?: string;
 } | null>(null);
 
 export const CustomSelect: React.FC<CustomSelectProps> = ({
@@ -67,7 +68,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         selectedValue,
         setSelectedValue,
         onValueChange: handleValueChange,
-        disabled
+        disabled,
+        placeholder
       }}
     >
       <div className={`relative ${className}`}>
@@ -94,11 +96,11 @@ export const CustomSelectTrigger: React.FC<CustomSelectTriggerProps> = ({
     <button
       type="button"
       disabled={isDisabled}
-      className={`flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs ring-offset-background placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 ${className}`}
+      className={`flex h-10 w-full items-center justify-between whitespace-nowrap rounded-xl bg-white px-3.5 text-sm text-neutral-800 ring-1 ring-inset ring-neutral-200 transition-shadow focus:outline-none focus:ring-2 focus:ring-neutral-900/15 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 ${className}`}
       onClick={() => !isDisabled && setIsOpen(!isOpen)}
     >
       {children}
-      <ChevronDown className={`h-4 w-4 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      <CaretDown className={`h-4 w-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
     </button>
   );
 };
@@ -117,7 +119,7 @@ export const CustomSelectContent: React.FC<CustomSelectContentProps> = ({
   if (!isOpen || disabled) return null;
 
   return (
-    <div className={`absolute z-dropdown max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 ${className}`}>
+    <div className={`absolute z-dropdown mt-1.5 max-h-96 min-w-[8rem] w-full overflow-hidden rounded-xl bg-white text-neutral-800 nice-shadow animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 ${className}`}>
       <div className="p-1">
         {children}
       </div>
@@ -139,7 +141,7 @@ export const CustomSelectItem: React.FC<CustomSelectItemProps> = ({
 
   return (
     <div
-      className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 ps-2 pe-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      className={`relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 ps-2.5 pe-8 text-sm outline-hidden hover:bg-neutral-100 ${selectedValue === value ? 'font-semibold text-neutral-900' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       onClick={() => !disabled && onValueChange(value)}
     >
       {children}
@@ -162,7 +164,9 @@ export const CustomSelectValue: React.FC<{ children?: React.ReactNode }> = ({
     throw new Error('CustomSelectValue must be used within CustomSelect');
   }
 
-  const { selectedValue } = context;
+  const { selectedValue, placeholder } = context;
+  const content = children || selectedValue;
 
-  return <span>{children || selectedValue}</span>;
+  // Never render an empty trigger: fall back to the placeholder.
+  return content ? <span>{content}</span> : <span className="text-neutral-400">{placeholder ?? '—'}</span>;
 }; 

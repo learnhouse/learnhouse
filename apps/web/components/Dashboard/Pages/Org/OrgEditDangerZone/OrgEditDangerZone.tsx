@@ -4,15 +4,17 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { toast } from 'react-hot-toast'
-import { AlertTriangle, Trash2, Users, Eraser, Loader2 } from 'lucide-react'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { Warning, Trash, UserMinus, Eraser, LockSimple } from '@phosphor-icons/react'
 import { Trans, useTranslation } from 'react-i18next'
 import {
   deleteOrganization,
   removeAllUsersFromOrg,
   wipeOrgContent,
 } from '@services/organizations/orgs'
+import { Button, ConfirmDialog, EmptyState, SectionCard, SettingRow } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { TypeToConfirmDialog } from '@components/Dashboard/Pages/Org/OrgSettingsShared/orgSettingsUi'
+
+type Dialog = 'members' | 'wipe' | 'delete' | null
 
 const OrgEditDangerZone: React.FC = () => {
   const { t } = useTranslation()
@@ -21,10 +23,10 @@ const OrgEditDangerZone: React.FC = () => {
   const org = useOrg() as any
   const { canManageOrg } = useAdminStatus()
 
-  const [confirmText, setConfirmText] = React.useState('')
-  const [isDeletingOrg, setIsDeletingOrg] = React.useState(false)
+  const [dialog, setDialog] = React.useState<Dialog>(null)
   const [isRemovingUsers, setIsRemovingUsers] = React.useState(false)
   const [isWipingContent, setIsWipingContent] = React.useState(false)
+  const [isDeletingOrg, setIsDeletingOrg] = React.useState(false)
 
   // Mirror the backend: delete/wipe/remove-all are authorized on admin/maintainer
   // role membership (rbac "delete"/"update" → authorization_verify_based_on_org_
@@ -39,10 +41,8 @@ const OrgEditDangerZone: React.FC = () => {
 
   if (!canManageOrg) {
     return (
-      <div className="sm:mx-10 mx-0">
-        <div className="bg-white rounded-xl nice-shadow p-6 text-gray-500">
-          {t('dashboard.organization.danger_zone.no_permission')}
-        </div>
+      <div className="bg-white rounded-2xl nice-shadow">
+        <EmptyState icon={<LockSimple size={22} />} title={t('dashboard.organization.danger_zone.no_permission')} />
       </div>
     )
   }
@@ -79,7 +79,6 @@ const OrgEditDangerZone: React.FC = () => {
   }
 
   const handleDeleteOrg = async () => {
-    if (confirmText !== org.slug) return
     setIsDeletingOrg(true)
     const loadingToast = toast.loading(t('dashboard.organization.danger_zone.deleting_org'))
     try {
@@ -96,130 +95,97 @@ const OrgEditDangerZone: React.FC = () => {
     }
   }
 
+  const close = (open: boolean) => !open && setDialog(null)
+
   return (
-    <div className="sm:mx-10 mx-0 space-y-4">
-      <div className="rounded-xl nice-shadow bg-white border border-red-100 overflow-hidden">
-        <div className="flex items-center space-x-2 bg-red-50 px-5 py-3 border-b border-red-100">
-          <AlertTriangle className="h-5 w-5 text-red-600" />
-          <div>
-            <h1 className="font-bold text-xl text-red-700">{t('dashboard.organization.danger_zone.title')}</h1>
-            <h2 className="text-red-500/80 text-sm">
-              {t('dashboard.organization.danger_zone.subtitle')}
-            </h2>
-          </div>
-        </div>
-
-        <div className="divide-y divide-gray-100">
-          {/* Remove all members */}
-          <div className="flex items-start justify-between gap-4 px-5 py-4">
-            <div className="space-y-0.5">
-              <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4 text-gray-700" />
-                <span className="font-semibold text-gray-800">{t('dashboard.organization.danger_zone.remove_members_title')}</span>
-              </div>
-              <p className="text-sm text-gray-500 max-w-xl">
-                {t('dashboard.organization.danger_zone.remove_members_desc')}
-              </p>
-            </div>
-            <ConfirmationModal
-              confirmationButtonText={t('dashboard.organization.danger_zone.remove_members_title')}
-              confirmationMessage={t('dashboard.organization.danger_zone.remove_members_confirm')}
-              dialogTitle={t('dashboard.organization.danger_zone.remove_members_dialog')}
-              status="warning"
-              functionToExecute={handleRemoveAllUsers}
-              dialogTrigger={
-                <button
-                  type="button"
-                  disabled={isRemovingUsers}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition disabled:opacity-50"
-                >
-                  {isRemovingUsers ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
-                  <span>{t('dashboard.organization.danger_zone.remove_all')}</span>
-                </button>
-              }
-            />
-          </div>
-
-          {/* Wipe content */}
-          <div className="flex items-start justify-between gap-4 px-5 py-4">
-            <div className="space-y-0.5">
-              <div className="flex items-center space-x-2">
-                <Eraser className="h-4 w-4 text-gray-700" />
-                <span className="font-semibold text-gray-800">{t('dashboard.organization.danger_zone.wipe_title')}</span>
-              </div>
-              <p className="text-sm text-gray-500 max-w-xl">
-                {t('dashboard.organization.danger_zone.wipe_desc')}
-              </p>
-            </div>
-            <ConfirmationModal
-              confirmationButtonText={t('dashboard.organization.danger_zone.wipe_title')}
-              confirmationMessage={t('dashboard.organization.danger_zone.wipe_confirm')}
-              dialogTitle={t('dashboard.organization.danger_zone.wipe_dialog')}
-              status="warning"
-              functionToExecute={handleWipeContent}
-              dialogTrigger={
-                <button
-                  type="button"
-                  disabled={isWipingContent}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition disabled:opacity-50"
-                >
-                  {isWipingContent ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eraser className="h-4 w-4" />}
-                  <span>{t('dashboard.organization.danger_zone.wipe_content')}</span>
-                </button>
-              }
-            />
-          </div>
-
-          {/* Delete organization (typed confirmation) */}
+    <>
+      <SectionCard
+        icon={<Warning size={18} />}
+        title={t('dashboard.organization.danger_zone.title')}
+        description={t('dashboard.organization.danger_zone.subtitle')}
+        className="ring-1 ring-rose-200/80 [&>div:first-child>div>div:first-child]:bg-rose-50 [&>div:first-child>div>div:first-child]:text-rose-600 [&_h2]:text-rose-700"
+      >
+        <div className="divide-y divide-rose-100/80">
+          <SettingRow
+            icon={<UserMinus size={18} />}
+            title={t('dashboard.organization.danger_zone.remove_members_title')}
+            description={t('dashboard.organization.danger_zone.remove_members_desc')}
+            control={
+              <Button variant="danger-ghost" onClick={() => setDialog('members')} loading={isRemovingUsers} className="ring-1 ring-inset ring-rose-200">
+                {t('dashboard.organization.danger_zone.remove_all')}
+              </Button>
+            }
+          />
+          <SettingRow
+            icon={<Eraser size={18} />}
+            title={t('dashboard.organization.danger_zone.wipe_title')}
+            description={t('dashboard.organization.danger_zone.wipe_desc')}
+            control={
+              <Button variant="danger-ghost" onClick={() => setDialog('wipe')} loading={isWipingContent} className="ring-1 ring-inset ring-rose-200">
+                {t('dashboard.organization.danger_zone.wipe_content')}
+              </Button>
+            }
+          />
           {canDeleteOrg && (
-            <div className="px-5 py-4 space-y-3 bg-red-50/30">
-              <div className="space-y-0.5">
-                <div className="flex items-center space-x-2">
-                  <Trash2 className="h-4 w-4 text-red-700" />
-                  <span className="font-semibold text-red-800">{t('dashboard.organization.danger_zone.delete_title')}</span>
-                </div>
-                <p className="text-sm text-gray-500 max-w-xl">
-                  <Trans
-                    i18nKey="dashboard.organization.danger_zone.delete_desc"
-                    values={{ name: org.name }}
-                    components={{ strong: <span className="font-semibold" /> }}
-                  />
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-gray-500">
-                  <Trans
-                    i18nKey="dashboard.organization.danger_zone.type_to_confirm"
-                    values={{ slug: org.slug }}
-                    components={{ code: <span data-ltr-content className="font-mono font-semibold text-gray-700" /> }}
-                  />
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={confirmText}
-                    onChange={(e) => setConfirmText(e.target.value)}
-                    placeholder={org.slug}
-                    className="w-full max-w-xs px-3 py-2 border border-red-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
-                  />
-                  <ToolTip content={t('dashboard.organization.danger_zone.delete_org_tooltip', { defaultValue: 'Permanently delete org' })} side="top" slateBlack>
-                    <button
-                      type="button"
-                      onClick={handleDeleteOrg}
-                      disabled={confirmText !== org.slug || isDeletingOrg}
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {isDeletingOrg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                      <span>{t('dashboard.organization.danger_zone.delete_org')}</span>
-                    </button>
-                  </ToolTip>
-                </div>
-              </div>
-            </div>
+            <SettingRow
+              icon={<Trash size={18} className="text-rose-500" />}
+              title={<span className="text-rose-700">{t('dashboard.organization.danger_zone.delete_title')}</span>}
+              description={
+                <Trans
+                  i18nKey="dashboard.organization.danger_zone.delete_desc"
+                  values={{ name: org.name }}
+                  components={{ strong: <span className="font-semibold text-neutral-700" /> }}
+                />
+              }
+              control={
+                <Button variant="danger" icon={<Trash size={14} />} onClick={() => setDialog('delete')} loading={isDeletingOrg}>
+                  {t('dashboard.organization.danger_zone.delete_org')}
+                </Button>
+              }
+            />
           )}
         </div>
-      </div>
-    </div>
+      </SectionCard>
+
+      <ConfirmDialog
+        open={dialog === 'members'}
+        onOpenChange={close}
+        title={t('dashboard.organization.danger_zone.remove_members_dialog')}
+        message={t('dashboard.organization.danger_zone.remove_members_confirm')}
+        confirmLabel={t('dashboard.organization.danger_zone.remove_members_title')}
+        onConfirm={handleRemoveAllUsers}
+      />
+      <ConfirmDialog
+        open={dialog === 'wipe'}
+        onOpenChange={close}
+        title={t('dashboard.organization.danger_zone.wipe_dialog')}
+        message={t('dashboard.organization.danger_zone.wipe_confirm')}
+        confirmLabel={t('dashboard.organization.danger_zone.wipe_title')}
+        onConfirm={handleWipeContent}
+      />
+      <TypeToConfirmDialog
+        open={dialog === 'delete'}
+        onOpenChange={close}
+        title={t('dashboard.organization.danger_zone.delete_title')}
+        message={
+          <Trans
+            i18nKey="dashboard.organization.danger_zone.delete_desc"
+            values={{ name: org.name }}
+            components={{ strong: <span className="font-semibold text-neutral-900" /> }}
+          />
+        }
+        expected={org.slug}
+        prompt={
+          <Trans
+            i18nKey="dashboard.organization.danger_zone.type_to_confirm"
+            values={{ slug: org.slug }}
+            components={{ code: <span data-ltr-content className="font-mono font-semibold text-neutral-700" /> }}
+          />
+        }
+        confirmLabel={t('dashboard.organization.danger_zone.delete_org')}
+        onConfirm={handleDeleteOrg}
+      />
+    </>
   )
 }
 

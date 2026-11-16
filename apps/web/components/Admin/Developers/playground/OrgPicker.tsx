@@ -6,6 +6,7 @@ import { getAPIUrl } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
+import { INPUT } from '@/design'
 
 interface OrgItem {
   id: number
@@ -46,7 +47,7 @@ export default function OrgPicker({
         const v = e.target.value
         onChange(v === '' ? '' : Number(v))
       }}
-      className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
+      className={INPUT}
     >
       <option value="">
         {isLoading ? t('common.loading') : items.length === 0 ? t('admin.developers.org_picker.none_yet') : t('admin.developers.org_picker.select')}

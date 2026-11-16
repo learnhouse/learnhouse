@@ -16,6 +16,8 @@ export interface ActivityVersion {
   created_at: string
   created_by_username: string | null
   created_by_avatar: string | null
+  /** Name of a version saved on purpose ("Save version"); null for automatic ones. */
+  label?: string | null
 }
 
 export interface ActivityState {

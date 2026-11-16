@@ -1,12 +1,13 @@
 'use client'
 import React from 'react'
-import { PenLine, Sparkles, Lock, Upload } from 'lucide-react'
+import { PencilLine, Lock, UploadSimple } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
-import Image from 'next/image'
-import lrnaiIcon from 'public/lrnai_icon.png'
+import { AIMark } from '@components/Objects/AI/AIBrand'
 import { useOrg } from '@components/Contexts/OrgContext'
+import useAIFeature from '@components/Hooks/useAIFeature'
+import AIFeatureOffNotice from '@components/Objects/AI/AIFeatureOffNotice'
 
 interface CourseCreationTypeSelectorProps {
   onSelectType: (type: 'scratch' | 'ai' | 'migrate') => void
@@ -17,7 +18,10 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
   const { t } = useTranslation()
   const org = useOrg() as any
   const rf = org?.config?.config?.resolved_features
-  const canUseAI = rf?.ai?.enabled === true
+  // Off in Settings > AI: the card stays, greyed, with a short note instead of an upsell.
+  const builderOn = useAIFeature('course_builder')
+  const turnedOff = rf?.ai?.available !== false && !builderOn
+  const canUseAI = rf?.ai?.enabled === true && builderOn
 
   return (
     <div className="sm:min-w-[650px] py-2">
@@ -28,7 +32,7 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
           className="group flex flex-col items-center p-6 max-sm:p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-black hover:shadow-lg transition-all duration-200"
         >
           <div className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center mb-4 max-sm:mb-2 max-sm:w-11 max-sm:h-11 shrink-0 group-hover:bg-gray-100 transition-colors">
-            <PenLine size={28} className="text-gray-600" />
+            <PencilLine size={28} className="text-gray-600" />
           </div>
           <h3 className="font-semibold text-gray-900 mb-1">
             {t('courses.create.from_scratch')}
@@ -40,6 +44,7 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
 
         {/* Start with AI option */}
         <button
+          data-testid="course-create-ai"
           onClick={() => canUseAI && onSelectType('ai')}
           disabled={!canUseAI}
           className={`group flex flex-col items-center p-6 max-sm:p-4 rounded-xl border-2 transition-all duration-200 ${
@@ -48,29 +53,22 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
               : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
           }`}
         >
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 max-sm:mb-2 max-sm:w-11 max-sm:h-11 shrink-0 transition-colors ${
-            canUseAI
-              ? 'rotating-gradient-bg'
-              : 'bg-gray-100'
-          }`}>
-            {canUseAI ? (
-              <Image
-                src={lrnaiIcon}
-                alt="AI"
-                width={28}
-                height={28}
-                className="drop-shadow-md"
-              />
-            ) : (
+          {canUseAI ? (
+            <AIMark size={56} alt="" className="mb-4 max-sm:mb-2 max-sm:!w-11 max-sm:!h-11" />
+          ) : (
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4 max-sm:mb-2 max-sm:w-11 max-sm:h-11 shrink-0 bg-gray-100">
               <Lock size={28} className="text-gray-400" />
-            )}
-          </div>
+            </div>
+          )}
           <div className="flex items-center gap-2 mb-1">
             <h3 className={`font-semibold ${canUseAI ? 'text-gray-900' : 'text-gray-500'}`}>
               {t('courses.create.with_ai')}
             </h3>
-            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.ai?.required_plan || 'standard') as PlanLevel} size="sm" />
+            {!turnedOff && (
+              <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.ai?.required_plan || 'standard') as PlanLevel} size="sm" />
+            )}
           </div>
+          {turnedOff && <AIFeatureOffNotice compact className="mb-1.5" />}
           <p className={`text-sm text-center ${canUseAI ? 'text-gray-500' : 'text-gray-400'}`}>
             {t('courses.create.with_ai_description')}
           </p>
@@ -82,7 +80,7 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
           className="group flex flex-col items-center p-6 max-sm:p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-black hover:shadow-lg transition-all duration-200"
         >
           <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mb-4 max-sm:mb-2 max-sm:w-11 max-sm:h-11 shrink-0 group-hover:bg-emerald-100 transition-colors">
-            <Upload size={28} className="text-emerald-600" />
+            <UploadSimple size={28} className="text-emerald-600" />
           </div>
           <h3 className="font-semibold text-gray-900 mb-1">
             {t('courses.create.from_existing')}

@@ -253,3 +253,17 @@ export async function joinOrg(
   const res = await getResponseMetadata(result)
   return res
 }
+
+// Enroll a member in one of the org's courses from an admin session.
+export async function enrollMemberInCourse(
+  org_id: number,
+  user_id: number,
+  course_uuid: string,
+  access_token: any
+) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/users/${user_id}/enrollments/${encodeURIComponent(course_uuid)}`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  return getResponseMetadata(result)
+}

@@ -96,10 +96,9 @@ class TestRBACUtilsRuntime:
             ("podcast_2", [None], None),
             ("episode_1", [23], 23),
             ("episode_2", [None], None),
-            ("board_1", [24], 24),
-            ("board_2", [None], None),
-            ("playground_1", [25], 25),
-            ("playground_2", [None], None),
+            # Plays and boards are EE-only: without EE their uuids have no org.
+            ("board_1", [24], None),
+            ("playground_1", [25], None),
         ],
     )
     async def test_get_element_organization_id_covers_remaining_branches(
@@ -111,23 +110,6 @@ class TestRBACUtilsRuntime:
         session = _session_with_results(*results)
 
         assert await get_element_organization_id(element_uuid, session) == expected
-
-    @pytest.mark.asyncio
-    async def test_get_element_organization_id_playground_returns_real_org_id(self, db, org):
-        """End-to-end: a real Playground row's org_id is resolved through the
-        new `playgrounds` branch of get_element_organization_id."""
-        from src.db.playgrounds import Playground
-
-        playground = Playground(
-            name="My Playground",
-            org_id=org.id,
-            playground_uuid="playground_runtime_1",
-        )
-        db.add(playground)
-        await db.commit()
-
-        result = await get_element_organization_id("playground_runtime_1", db)
-        assert result == org.id
 
     @pytest.mark.asyncio
     async def test_get_element_organization_id_unknown_type_returns_none(self):

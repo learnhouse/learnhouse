@@ -18,7 +18,10 @@ async def user_course_ids(ctx: CalendarContext) -> set[int]:
 
     A public course the user never started is not on their calendar. Callers
     still re-check course READ, since an enrollment can outlive access.
+    Computed once per request: several sources ask (Sentry flagged the repeat).
     """
+    if ctx._user_course_ids is not None:
+        return set(ctx._user_course_ids)
     db = ctx.db_session
     enrolled = (await db.execute(
         select(TrailRun.course_id).where(TrailRun.user_id == ctx.user_id, TrailRun.org_id == ctx.org.id)
@@ -35,7 +38,8 @@ async def user_course_ids(ctx: CalendarContext) -> set[int]:
         ids |= set((await db.execute(
             select(Course.id).where(Course.course_uuid.in_(course_uuids), Course.org_id == ctx.org.id)  # type: ignore[union-attr]
         )).scalars().all())
-    return ids
+    ctx._user_course_ids = ids
+    return set(ids)
 
 
 def parse_stored_timestamp(value: Optional[str]) -> Optional[datetime]:

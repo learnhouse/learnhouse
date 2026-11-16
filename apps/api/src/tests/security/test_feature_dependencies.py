@@ -8,14 +8,12 @@ from fastapi import Request
 from src.db.users import AnonymousUser, PublicUser
 from src.security.features_utils.dependencies import (
     _check_feature_enabled,
-    require_boards_feature,
     require_courses_feature,
     require_courses_feature_by_activity_uuid,
     require_courses_feature_by_course_uuid,
     require_courses_feature_by_org_id,
     require_courses_feature_by_org_slug,
     require_org_admin,
-    require_playgrounds_feature,
 )
 
 
@@ -301,141 +299,3 @@ class TestFeatureDependencies:
         result = await require_courses_feature(_request(), AsyncMock())
 
         assert result is True
-
-    async def test_require_boards_feature_returns_true_when_no_org(self):
-        result = await require_boards_feature(_request(), AsyncMock())
-
-        assert result is True
-
-    async def test_require_boards_feature_ignores_invalid_query_org_id(self):
-        request = _request(query_params={"org_id": "bad"})
-
-        result = await require_boards_feature(request, AsyncMock())
-
-        assert result is True
-
-    async def test_require_boards_feature_rejects_invalid_org_id(self):
-        request = _request({"org_id": "bad"})
-
-        with pytest.raises(HTTPException) as exc_info:
-            await require_boards_feature(request, AsyncMock())
-
-        assert exc_info.value.status_code == 400
-
-    async def test_require_boards_feature_rejects_missing_board(self):
-        db_session = _make_async_session(None)
-        request = _request({"board_uuid": "board-1"})
-
-        with pytest.raises(HTTPException) as exc_info:
-            await require_boards_feature(request, db_session)
-
-        assert exc_info.value.status_code == 404
-        assert "Board not found" in exc_info.value.detail
-
-    async def test_require_boards_feature_allows_query_org_id(self):
-        db_session = _make_async_session(SimpleNamespace(config={"config_version": "2.0", "plan": "pro"}))
-        request = _request(query_params={"org_id": "42"})
-
-        with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \
-             patch("src.security.features_utils.plan_check.get_org_plan", return_value="pro"), \
-             patch("src.security.features_utils.plans.plan_meets_requirement", return_value=True):
-            result = await require_boards_feature(request, db_session)
-
-        assert result is True
-        mock_check.assert_called_once_with("boards", 42, db_session)
-
-    async def test_require_boards_feature_rejects_below_personal_plan(self):
-        db_session = _make_async_session(21, SimpleNamespace(config={"config_version": "2.0", "plan": "free"}))
-        request = _request({"board_uuid": "board-1"})
-
-        with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \
-             patch("src.security.features_utils.plan_check.get_org_plan", return_value="free"), \
-             patch("src.security.features_utils.plans.plan_meets_requirement", return_value=False):
-            with pytest.raises(HTTPException) as exc_info:
-                await require_boards_feature(request, db_session)
-
-        mock_check.assert_called_once_with("boards", 21, db_session)
-        assert exc_info.value.status_code == 403
-        assert "Boards requires a Personal plan or higher" in exc_info.value.detail
-
-    async def test_require_boards_feature_allows_pro_plan(self):
-        db_session = _make_async_session(21, SimpleNamespace(config={"config_version": "2.0", "plan": "pro"}))
-        request = _request({"board_uuid": "board-1"})
-
-        with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \
-             patch("src.security.features_utils.plan_check.get_org_plan", return_value="pro"), \
-             patch("src.security.features_utils.plans.plan_meets_requirement", return_value=True):
-            result = await require_boards_feature(request, db_session)
-
-        assert result is True
-        mock_check.assert_called_once_with("boards", 21, db_session)
-
-    async def test_require_playgrounds_feature_returns_true_when_no_org(self):
-        result = await require_playgrounds_feature(_request(), AsyncMock())
-
-        assert result is True
-
-    async def test_require_playgrounds_feature_rejects_invalid_org_id(self):
-        request = _request({"org_id": "bad"})
-
-        with pytest.raises(HTTPException) as exc_info:
-            await require_playgrounds_feature(request, AsyncMock())
-
-        assert exc_info.value.status_code == 400
-
-    async def test_require_playgrounds_feature_ignores_invalid_query_org_id(self):
-        request = _request(query_params={"org_id": "bad"})
-
-        result = await require_playgrounds_feature(request, AsyncMock())
-
-        assert result is True
-
-    async def test_require_playgrounds_feature_ignores_missing_playground_uuid(self):
-        db_session = _make_async_session(None)
-        request = _request({"playground_uuid": "pg-1", "org_id": "23"})
-
-        with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \
-             patch("src.core.deployment_mode.get_deployment_mode", return_value="ee"):
-            result = await require_playgrounds_feature(request, db_session)
-
-        assert result is True
-        mock_check.assert_called_once_with("playgrounds", 23, db_session)
-
-    async def test_require_playgrounds_feature_allows_query_org_id_in_saas(self):
-        db_session = _make_async_session(SimpleNamespace(config={"config_version": "2.0", "plan": "pro"}))
-        request = _request(query_params={"org_id": "55"})
-
-        with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \
-             patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"), \
-             patch("src.security.features_utils.plan_check.get_org_plan", return_value="pro"), \
-             patch("src.security.features_utils.plans.plan_meets_requirement", return_value=True):
-            result = await require_playgrounds_feature(request, db_session)
-
-        assert result is True
-        mock_check.assert_called_once_with("playgrounds", 55, db_session)
-
-    async def test_require_playgrounds_feature_rejects_below_personal_plan_in_saas(self):
-        db_session = _make_async_session(SimpleNamespace(org_id=31), SimpleNamespace(config={"config_version": "2.0", "plan": "free"}))
-        request = _request({"playground_uuid": "pg-1"})
-
-        with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \
-             patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"), \
-             patch("src.security.features_utils.plan_check.get_org_plan", return_value="free"), \
-             patch("src.security.features_utils.plans.plan_meets_requirement", return_value=False):
-            with pytest.raises(HTTPException) as exc_info:
-                await require_playgrounds_feature(request, db_session)
-
-        mock_check.assert_called_once_with("playgrounds", 31, db_session)
-        assert exc_info.value.status_code == 403
-        assert "Playgrounds requires a Personal plan or higher" in exc_info.value.detail
-
-    async def test_require_playgrounds_feature_allows_non_saas_bypass(self):
-        db_session = _make_async_session(SimpleNamespace(org_id=31), SimpleNamespace(config={"config_version": "2.0", "plan": "standard"}))
-        request = _request({"playground_uuid": "pg-1"})
-
-        with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \
-             patch("src.core.deployment_mode.get_deployment_mode", return_value="oss"):
-            result = await require_playgrounds_feature(request, db_session)
-
-        assert result is True
-        mock_check.assert_called_once_with("playgrounds", 31, db_session)

@@ -7,7 +7,7 @@ Provides endpoints for managing AI credits for organizations:
 - Reset credit usage (for billing cycles)
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -27,6 +27,17 @@ from src.security.superadmin import ensure_ee_superadmin_surface, is_user_supera
 
 
 router = APIRouter()
+
+
+async def _require_platform_plan_role(user_id: int, db_session: AsyncSession) -> None:
+    """On EE the platform console roles apply here too: a superadmin whose
+    team role lacks ``orgs.plan`` (viewer, support, sales) can't change credits."""
+    from src.core.ee_hooks import get_ee_hooks
+
+    hooks = get_ee_hooks()
+    denied = getattr(hooks, "platform_permission_denied", None) if hooks else None
+    if denied is not None and await denied(db_session, user_id, "orgs.plan"):
+        raise HTTPException(status_code=403, detail="Your platform role can't change AI credits")
 
 
 class AddCreditsRequest(BaseModel):
@@ -68,6 +79,9 @@ class AICreditsSummary(BaseModel):
     used_credits: int
     remaining_credits: int | str
     mode: str | None = None
+    # ok | low (<= 20% left) | critical (<= 5%) | empty | unlimited
+    balance_state: str = "ok"
+    remaining_pct: float | None = None
 
 
 async def verify_user_is_org_admin(
@@ -144,7 +158,70 @@ async def get_org_ai_credits(
     if "error" in summary:
         raise HTTPException(status_code=404, detail=summary["error"])
 
-    return AICreditsSummary(**summary)
+    from src.services.ai.usage_reports import balance_state
+
+    state = balance_state(summary.get("remaining_credits"), summary.get("total_credits"))
+    return AICreditsSummary(**summary, balance_state=state["state"], remaining_pct=state["remaining_pct"])
+
+
+async def _require_member(org_id: int, current_user, db_session: AsyncSession, *, admin: bool = False) -> None:
+    org = (await db_session.execute(select(Organization).where(Organization.id == org_id))).scalars().first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    if isinstance(current_user, APITokenUser) and current_user.org_id != org_id:
+        raise HTTPException(status_code=403, detail="API token is not scoped to this organization")
+    user_id = resolve_acting_user_id(current_user)
+    check = verify_user_is_org_admin if admin else verify_user_is_org_member
+    if not user_id or not await check(user_id, org_id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="Admin rights required" if admin else "User is not a member of this organization",
+        )
+
+
+@router.get(
+    "/{org_id}/ai-credits/prices",
+    summary="AI credit prices per feature",
+    description=(
+        "The published credit price of every AI feature. Metered features charge at "
+        "least their price; long or heavy requests (many Atlas steps, long audio) charge "
+        "their real usage. The caller must be a member of the organization."
+    ),
+)
+async def get_org_ai_prices(
+    org_id: int,
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    await _require_member(org_id, current_user, db_session)
+    from src.services.ai.pricing import public_price_table
+    from src.services.ai.usage_reports import CRITICAL_BALANCE_PCT, LOW_BALANCE_PCT
+
+    return {
+        "features": public_price_table(),
+        "low_balance_pct": LOW_BALANCE_PCT,
+        "critical_balance_pct": CRITICAL_BALANCE_PCT,
+    }
+
+
+@router.get(
+    "/{org_id}/ai-credits/usage",
+    summary="AI credit usage breakdown",
+    description=(
+        "Credits used over the last `days` days, by feature, by member and by day. "
+        "Organization admins only."
+    ),
+)
+async def get_org_ai_usage(
+    org_id: int,
+    days: int = Query(30, ge=1, le=366),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    await _require_member(org_id, current_user, db_session, admin=True)
+    from src.services.ai.usage_reports import org_usage
+
+    return await org_usage(db_session, org_id, days=days)
 
 
 @router.post(
@@ -200,6 +277,7 @@ async def add_org_ai_credits(
             status_code=403,
             detail="Superadmin access required",
         )
+    await _require_platform_plan_role(user_id, db_session)
 
     # Validate amount
     if request.amount <= 0:
@@ -267,6 +345,7 @@ async def reset_org_ai_credits(
             status_code=403,
             detail="Superadmin access required",
         )
+    await _require_platform_plan_role(user_id, db_session)
 
     # Reset usage
     reset_ai_credits_usage(org_id)
@@ -308,6 +387,7 @@ async def set_org_ai_credits(
     user_id = resolve_acting_user_id(current_user)
     if not user_id or not await is_user_superadmin(user_id, db_session):
         raise HTTPException(status_code=403, detail="Superadmin access required")
+    await _require_platform_plan_role(user_id, db_session)
 
     if request.amount < 0:
         raise HTTPException(status_code=400, detail="Credit amount must be non-negative")

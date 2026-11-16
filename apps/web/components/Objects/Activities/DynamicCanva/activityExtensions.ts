@@ -4,6 +4,7 @@ import Youtube from '@tiptap/extension-youtube'
 // Custom Extensions
 import Callout from '@components/Objects/Editor/Extensions/Callout/Callout'
 import { normalizeCalloutContent } from '@components/Objects/Editor/Extensions/Callout/calloutContent'
+import { stripCommentMarks } from '@components/Objects/Editor/Comments/commentContent'
 import InfoCallout from '@components/Objects/Editor/Extensions/Callout/Info/InfoCallout'
 import WarningCallout from '@components/Objects/Editor/Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from '@components/Objects/Editor/Extensions/Image/ImageBlock'
@@ -17,7 +18,7 @@ import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
 import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicBlock'
 // Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from '@components/Objects/Editor/editorLowlight'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { LHCodeBlock as CodeBlockLowlight, ToggleBlock, DividerStyle, TEXT_MARKS } from '@components/Objects/Editor/Blocks/extensions'
 import { NoTextInput } from '@components/Objects/Editor/Extensions/NoTextInput/NoTextInput'
 import EmbedObjects from '@components/Objects/Editor/Extensions/EmbedObjects/EmbedObjects'
 import Badges from '@components/Objects/Editor/Extensions/Badges/Badges'
@@ -172,6 +173,9 @@ export function getActivityExtensions(props: ActivityExtensionOptions): Extensio
     TableRow,
     TableHeader,
     TableCell,
+    ToggleBlock,
+    DividerStyle,
+    ...TEXT_MARKS,
   ]
 }
 
@@ -198,14 +202,16 @@ function normalizeMarkTypes(content: any): any {
 }
 
 /**
- * Normalize stored content: fix AI-generated mark types (strong -> bold, em -> italic)
- * and wrap the inline text of callouts saved before they could hold lists.
+ * Normalize stored content: fix AI-generated mark types (strong -> bold, em -> italic),
+ * wrap the inline text of callouts saved before they could hold lists, and drop
+ * editor comment marks (never shown to readers, and this schema doesn't have
+ * them, so TipTap would drop the whole document).
  */
 export function normalizeActivityContent(content: any): any {
   if (!content) return content
   try {
     const parsed = typeof content === 'string' ? JSON.parse(content) : content
-    return normalizeCalloutContent(normalizeMarkTypes(parsed))
+    return normalizeCalloutContent(normalizeMarkTypes(stripCommentMarks(parsed)))
   } catch {
     return content
   }

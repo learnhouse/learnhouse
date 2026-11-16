@@ -36,9 +36,10 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "New to LearnHouse? {academy_link} covers the basics in a few minutes.",
         "academy_link_text": "LearnHouse Academy",
 
-        "org_created.subject": "Your organization {org_name} is ready",
+        "org_created.subject": "{org_name} is ready for its first learners",
         "org_created.heading": "{org_name} is ready",
-        "org_created.body": "Invite your team, create your first course and make the space your own from the dashboard.",
+        "org_created.body": "Publish one course and invite a few people. That is all it takes to see your academy working for real learners.",
+        "org_created.body_trial": "Publish one course and invite a few people. Every {plan} feature is yours for {days} days while you do, with no card needed.",
         "org_created.cta": "Open your dashboard",
         "org_created.footer": "You created this organization on LearnHouse.",
 
@@ -64,7 +65,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Didn't ask for a reset? Ignore this email and your password stays the same. The code expires soon.",
         "password_reset.footer_platform": "Didn't ask for a reset? Ignore this email and your password stays the same. The code expires in 1 hour.",
 
-        "invitation.subject": "You've been invited to join {org_name}",
+        "invitation.subject": "You're invited to learn at {org_name}",
         "invitation.heading": "You're invited",
         "invitation.intro": "<strong>@{inviter}</strong> has invited you to join <strong>{org_name}</strong>.",
         "invitation.code_hint": "Enter this code when you sign up, or use the button.",
@@ -79,10 +80,53 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "You joined {org_name}.",
         "drip_unlocked.subject": "New in {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} is open",
-        "drip_unlocked.body": "Hi {username}, a new chapter of {course} just opened.",
+        "drip_unlocked.body": "Hi {username}, the next chapter of {course} is ready for you. Pick up where you left off.",
         "drip_unlocked.more": "Also open now: {chapters}.",
         "drip_unlocked.cta": "Continue the course",
         "drip_unlocked.footer": "You're enrolled in {course} at {org_name}.",
+
+        "training.cta": "Open the training",
+        "training.footer": "{training} is required training at {org_name}.",
+        "training.assigned.subject": "Required training: {training}",
+        "training.assigned.heading": "New required training",
+        "training.assigned.body": "Hi {username}, {org_name} asks you to complete {training} by {due}.",
+        "training.assigned.body_no_due": "Hi {username}, {org_name} asks you to complete {training}.",
+        "training.due_soon.subject": "{training} is due {due}",
+        "training.due_soon.heading": "Due in {days} days",
+        "training.due_soon.body": "Hi {username}, {training} is due on {due}. You still have time to finish it.",
+        "training.due_today.subject": "{training} is due today",
+        "training.due_today.heading": "Due today",
+        "training.due_today.body": "Hi {username}, {training} is due today. There is still time to finish it.",
+        "training.overdue.subject": "Overdue: {training}",
+        "training.overdue.heading": "{training} is overdue",
+        "training.overdue.body": "Hi {username}, {training} was due on {due}. Please complete it as soon as you can.",
+        "training.nudge.subject": "Reminder: {training}",
+        "training.nudge.heading": "A reminder from {manager}",
+        "training.nudge.body": "Hi {username}, {manager} reminds you to complete {training}. It's due on {due}.",
+        "training.escalation.subject": "{learner} is {days} days late on {training}",
+        "training.escalation.heading": "Overdue training in your team",
+        "training.escalation.body": "Hi {username}, {learner} hasn't completed {training}. It's {days} days overdue.",
+        "training.escalation.cta": "View the team",
+        "training.escalation.footer": "You receive this because {learner} is in your reporting line at {org_name}.",
+        "training.digest.subject": "Your team's training: {overdue} overdue",
+        "training.digest.heading": "Your team's training this week",
+        "training.digest.body": "Hi {username}, your team is at {rate}% completion, with {open} open and {overdue} overdue.",
+        "training.digest.overdue_title": "Overdue",
+        "training.digest.due_soon_title": "Due in the next 14 days",
+        "training.digest.days_late": "{days} days late",
+        "training.digest.more": "and {count} more",
+        "training.digest.cta": "Open My team",
+        "training.digest.footer": "Weekly digest for managers at {org_name}. You can turn it off from My team.",
+        "usergroups.digest.subject": "{group}: {rate}% completion, {at_risk} at risk",
+        "usergroups.digest.heading": "{group} this week",
+        "usergroups.digest.body": "Hi {username}, {group} has {members} members, {active} active this week, at {rate}% course completion.",
+        "usergroups.digest.at_risk_title": "Members at risk",
+        "usergroups.digest.idle_days": "quiet for {days} days",
+        "usergroups.digest.never_active": "not active yet",
+        "usergroups.digest.courses_title": "Completion by course",
+        "usergroups.digest.more": "and {count} more",
+        "usergroups.digest.cta": "Open the group",
+        "usergroups.digest.footer": "Weekly digest for managers of {group} at {org_name}. An admin can turn it off in the group's settings.",
 
         "role_changed.subject": "Your role in {org_name} changed",
         "role_changed.heading": "Your role changed",
@@ -103,6 +147,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "magic_login.body": "Hi {username}, use the button to sign in. The link works once and expires in 15 minutes.",
         "magic_login.cta": "Sign in",
         "magic_login.footer": "Didn't ask to sign in to {brand}? Ignore this email. Nobody can use the link without access to your inbox.",
+
+        "comment_mention.subject": "{author} mentioned you in {activity}",
+        "comment_mention.heading": "{author} mentioned you",
+        "comment_mention.body": "Hi {username}, {author} mentioned you in a comment on <strong>{activity}</strong> ({course}).",
+        "comment_mention.cta": "Open the comment",
+        "comment_mention.footer": "You get this email because you can edit {course} in {org_name}.",
     },
     "fr": {
         "account_creation.subject": "Bienvenue sur LearnHouse, {username} !",
@@ -115,6 +165,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Besoin d'aide ? Consultez {academy_link} pour apprendre les bases.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "Tout est prêt pour les premiers apprenants de {org_name}",
+        "org_created.heading": "Tout est prêt pour {org_name}",
+        "org_created.body": "Publiez un cours et invitez quelques personnes. C'est tout ce qu'il faut pour voir votre académie fonctionner avec de vrais apprenants.",
+        "org_created.body_trial": "Publiez un cours et invitez quelques personnes. Toutes les fonctionnalités {plan} sont à vous pendant {days} jours, sans carte bancaire.",
+        "org_created.cta": "Ouvrir votre tableau de bord",
+        "org_created.footer": "Vous avez créé cette organisation sur LearnHouse.",
+
         "password_reset.subject": "Réinitialisez votre mot de passe",
         "password_reset.heading": "Réinitialisez votre mot de passe",
         "password_reset.body": "Bonjour {username}, nous avons reçu une demande de réinitialisation de votre mot de passe. Utilisez le code ci-dessous ou cliquez sur le bouton.",
@@ -122,7 +179,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet e-mail. Ce lien expirera prochainement.",
         "password_reset.footer_platform": "Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet e-mail. Ce lien expirera dans 1 heure.",
 
-        "invitation.subject": "Vous êtes invité à rejoindre {org_name}",
+        "invitation.subject": "Vous êtes invité à apprendre avec {org_name}",
         "invitation.heading": "Vous êtes invité !",
         "invitation.intro": "<strong>@{inviter}</strong> vous a invité à rejoindre <strong>{org_name}</strong>.",
         "invitation.code_hint": "Utilisez le code d'invitation ci-dessus, ou cliquez sur le bouton ci-dessous pour vous inscrire.",
@@ -137,10 +194,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Vous recevez cet e-mail parce que vous avez rejoint {org_name}.",
         "drip_unlocked.subject": "Nouveau dans {course} : {chapter}",
         "drip_unlocked.heading": "{chapter} est disponible",
-        "drip_unlocked.body": "Bonjour {username}, un nouveau chapitre de {course} est disponible pour vous.",
+        "drip_unlocked.body": "Bonjour {username}, le chapitre suivant de {course} vous attend. Reprenez là où vous vous étiez arrêté.",
         "drip_unlocked.more": "Également disponible : {chapters}.",
         "drip_unlocked.cta": "Continuer le cours",
         "drip_unlocked.footer": "Vous recevez cet e-mail parce que vous suivez {course} sur {org_name}.",
+
+        "training.due_today.body": "Bonjour {username}, {training} est à terminer aujourd'hui. Vous avez encore le temps de le finir.",
 
         "role_changed.subject": "Votre rôle dans {org_name} a été mis à jour",
         "role_changed.heading": "Votre rôle a été mis à jour",
@@ -173,6 +232,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Brauchst du Hilfe? Besuche {academy_link}, um die Grundlagen zu lernen.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "{org_name} ist bereit für die ersten Lernenden",
+        "org_created.heading": "{org_name} ist bereit",
+        "org_created.body": "Veröffentliche einen Kurs und lade ein paar Leute ein. Mehr braucht es nicht, um deine Akademie mit echten Lernenden in Aktion zu sehen.",
+        "org_created.body_trial": "Veröffentliche einen Kurs und lade ein paar Leute ein. Dabei kannst du {days} Tage lang alle {plan}-Funktionen nutzen, ganz ohne Kreditkarte.",
+        "org_created.cta": "Zum Dashboard",
+        "org_created.footer": "Du hast diese Organisation auf LearnHouse erstellt.",
+
         "password_reset.subject": "Passwort zurücksetzen",
         "password_reset.heading": "Passwort zurücksetzen",
         "password_reset.body": "Hallo {username}, wir haben eine Anfrage zum Zurücksetzen deines Passworts erhalten. Nutze den Code unten oder klicke auf die Schaltfläche.",
@@ -180,7 +246,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Falls du keine Zurücksetzung angefordert hast, kannst du diese E-Mail ignorieren. Dieser Link läuft in Kürze ab.",
         "password_reset.footer_platform": "Falls du keine Zurücksetzung angefordert hast, kannst du diese E-Mail ignorieren. Dieser Link läuft in 1 Stunde ab.",
 
-        "invitation.subject": "Du wurdest eingeladen, {org_name} beizutreten",
+        "invitation.subject": "Du bist eingeladen, bei {org_name} zu lernen",
         "invitation.heading": "Du wurdest eingeladen!",
         "invitation.intro": "<strong>@{inviter}</strong> hat dich eingeladen, <strong>{org_name}</strong> beizutreten.",
         "invitation.code_hint": "Verwende den obigen Einladungscode oder klicke auf die Schaltfläche unten, um dich zu registrieren.",
@@ -195,10 +261,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Du erhältst diese E-Mail, weil du {org_name} beigetreten bist.",
         "drip_unlocked.subject": "Neu in {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} ist freigeschaltet",
-        "drip_unlocked.body": "Hallo {username}, ein neues Kapitel von {course} ist jetzt für dich verfügbar.",
+        "drip_unlocked.body": "Hallo {username}, das nächste Kapitel von {course} ist für dich bereit. Mach dort weiter, wo du aufgehört hast.",
         "drip_unlocked.more": "Ebenfalls verfügbar: {chapters}.",
         "drip_unlocked.cta": "Kurs fortsetzen",
         "drip_unlocked.footer": "Du erhältst diese E-Mail, weil du bei {org_name} in {course} eingeschrieben bist.",
+
+        "training.due_today.body": "Hallo {username}, {training} ist heute fällig. Du hast noch Zeit, es abzuschließen.",
 
         "role_changed.subject": "Deine Rolle in {org_name} wurde aktualisiert",
         "role_changed.heading": "Deine Rolle wurde aktualisiert",
@@ -231,6 +299,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "¿Necesitas ayuda? Visita {academy_link} para aprender lo básico.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "Todo listo para los primeros estudiantes de {org_name}",
+        "org_created.heading": "Todo listo en {org_name}",
+        "org_created.body": "Publica un curso e invita a algunas personas. Es todo lo que necesitas para ver tu academia funcionando con estudiantes reales.",
+        "org_created.body_trial": "Publica un curso e invita a algunas personas. Mientras tanto, tienes todas las funciones de {plan} durante {days} días, sin tarjeta.",
+        "org_created.cta": "Abrir tu panel",
+        "org_created.footer": "Creaste esta organización en LearnHouse.",
+
         "password_reset.subject": "Restablece tu contraseña",
         "password_reset.heading": "Restablece tu contraseña",
         "password_reset.body": "Hola {username}, recibimos una solicitud para restablecer tu contraseña. Usa el código de abajo o haz clic en el botón.",
@@ -238,7 +313,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo. Este enlace caducará pronto.",
         "password_reset.footer_platform": "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo. Este enlace caducará en 1 hora.",
 
-        "invitation.subject": "Te han invitado a unirte a {org_name}",
+        "invitation.subject": "Te invitan a aprender en {org_name}",
         "invitation.heading": "¡Te han invitado!",
         "invitation.intro": "<strong>@{inviter}</strong> te ha invitado a unirte a <strong>{org_name}</strong>.",
         "invitation.code_hint": "Usa el código de invitación de arriba, o haz clic en el botón para registrarte.",
@@ -253,10 +328,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Recibes este correo porque te has unido a {org_name}.",
         "drip_unlocked.subject": "Novedad en {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} ya está disponible",
-        "drip_unlocked.body": "Hola {username}, ya tienes disponible un nuevo capítulo de {course}.",
+        "drip_unlocked.body": "Hola {username}, el siguiente capítulo de {course} ya está listo para ti. Sigue donde lo dejaste.",
         "drip_unlocked.more": "También disponible: {chapters}.",
         "drip_unlocked.cta": "Continuar el curso",
         "drip_unlocked.footer": "Recibes este correo porque estás inscrito en {course} en {org_name}.",
+
+        "training.due_today.body": "Hola {username}, {training} vence hoy. Todavía tienes tiempo de terminarlo.",
 
         "role_changed.subject": "Tu rol en {org_name} ha sido actualizado",
         "role_changed.heading": "Tu rol ha sido actualizado",
@@ -289,6 +366,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "هل تحتاج إلى مساعدة؟ تفضّل بزيارة {academy_link} لتعلّم الأساسيات.",
         "academy_link_text": "أكاديمية LearnHouse",
 
+        "org_created.subject": "كل شيء جاهز لاستقبال أول المتعلمين في {org_name}",
+        "org_created.heading": "كل شيء جاهز في {org_name}",
+        "org_created.body": "انشر دورة واحدة وادعُ بعض الأشخاص. هذا كل ما يلزم لترى أكاديميتك تعمل مع متعلمين حقيقيين.",
+        "org_created.body_trial": "انشر دورة واحدة وادعُ بعض الأشخاص. وخلال ذلك، تتاح لك كل ميزات {plan} لمدة {days} يومًا، دون الحاجة إلى بطاقة.",
+        "org_created.cta": "افتح لوحة التحكم",
+        "org_created.footer": "أنشأت هذه المؤسسة على LearnHouse.",
+
         "password_reset.subject": "إعادة تعيين كلمة المرور",
         "password_reset.heading": "إعادة تعيين كلمة المرور",
         "password_reset.body": "مرحبًا {username}، تلقّينا طلبًا لإعادة تعيين كلمة المرور. استخدم الرمز أدناه أو انقر على الزر.",
@@ -296,7 +380,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة. ستنتهي صلاحية هذا الرابط قريبًا.",
         "password_reset.footer_platform": "إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة. ستنتهي صلاحية هذا الرابط خلال ساعة واحدة.",
 
-        "invitation.subject": "لقد تمت دعوتك للانضمام إلى {org_name}",
+        "invitation.subject": "أنت مدعو للتعلّم في {org_name}",
         "invitation.heading": "لقد تمت دعوتك!",
         "invitation.intro": "قام <strong>@{inviter}</strong> بدعوتك للانضمام إلى <strong>{org_name}</strong>.",
         "invitation.code_hint": "استخدم رمز الدعوة أعلاه، أو انقر على الزر أدناه للتسجيل.",
@@ -311,10 +395,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "تصلك هذه الرسالة لأنك انضممت إلى {org_name}.",
         "drip_unlocked.subject": "جديد في {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} متاح الآن",
-        "drip_unlocked.body": "مرحبًا {username}، أصبح فصل جديد من {course} متاحًا لك.",
+        "drip_unlocked.body": "مرحبًا {username}، الفصل التالي من {course} جاهز لك. تابع من حيث توقفت.",
         "drip_unlocked.more": "متاح أيضًا: {chapters}.",
         "drip_unlocked.cta": "تابع الدورة",
         "drip_unlocked.footer": "تصلك هذه الرسالة لأنك مسجّل في {course} لدى {org_name}.",
+
+        "training.due_today.body": "مرحبًا {username}، موعد إكمال {training} هو اليوم. لا يزال لديك وقت لإنهائه.",
 
         "role_changed.subject": "تم تحديث دورك في {org_name}",
         "role_changed.heading": "تم تحديث دورك",
@@ -347,6 +433,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "サポートが必要ですか？ {academy_link}で基本を学べます。",
         "academy_link_text": "LearnHouseアカデミー",
 
+        "org_created.subject": "{org_name} で最初の受講者を迎える準備ができました",
+        "org_created.heading": "{org_name} の準備ができました",
+        "org_created.body": "コースを1つ公開して、何人か招待してみましょう。それだけで、実際の受講者とアカデミーが動き出す様子を確かめられます。",
+        "org_created.body_trial": "コースを1つ公開して、何人か招待してみましょう。その間の {days} 日間、{plan} のすべての機能をご利用いただけます。カードの登録は不要です。",
+        "org_created.cta": "ダッシュボードを開く",
+        "org_created.footer": "LearnHouse でこの組織を作成されました。",
+
         "password_reset.subject": "パスワードを再設定",
         "password_reset.heading": "パスワードを再設定",
         "password_reset.body": "{username}さん、パスワード再設定のリクエストを受け取りました。下記のコードを使うか、ボタンをクリックしてください。",
@@ -354,7 +447,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "再設定をリクエストしていない場合は、このメールを無視してかまいません。リンクは間もなく期限切れになります。",
         "password_reset.footer_platform": "再設定をリクエストしていない場合は、このメールを無視してかまいません。リンクは1時間後に期限切れになります。",
 
-        "invitation.subject": "{org_name}への招待が届いています",
+        "invitation.subject": "{org_name} での学習に招待されました",
         "invitation.heading": "招待が届いています！",
         "invitation.intro": "<strong>@{inviter}</strong>さんから、<strong>{org_name}</strong>へ招待されました。",
         "invitation.code_hint": "上の招待コードを使うか、下のボタンから登録してください。",
@@ -369,10 +462,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "このメールは、{org_name} に参加したため送信されています。",
         "drip_unlocked.subject": "{course} の新しい章：{chapter}",
         "drip_unlocked.heading": "{chapter} が公開されました",
-        "drip_unlocked.body": "{username} さん、{course} の新しい章が公開されました。",
+        "drip_unlocked.body": "{username} さん、{course} の次の章が公開されました。前回の続きから始めましょう。",
         "drip_unlocked.more": "こちらも公開中：{chapters}。",
         "drip_unlocked.cta": "コースを続ける",
         "drip_unlocked.footer": "このメールは、{org_name} の {course} に登録しているため送信されています。",
+
+        "training.due_today.body": "{username} さん、{training} の期限は今日です。まだ間に合います。",
 
         "role_changed.subject": "{org_name}でのロールが更新されました",
         "role_changed.heading": "ロールが更新されました",
@@ -405,6 +500,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Precisa de ajuda? Visite {academy_link} para aprender o básico.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "Tudo pronto para os primeiros alunos de {org_name}",
+        "org_created.heading": "Tudo pronto em {org_name}",
+        "org_created.body": "Publique um curso e convide algumas pessoas. Isso é tudo de que você precisa para ver sua academia funcionando com alunos de verdade.",
+        "org_created.body_trial": "Publique um curso e convide algumas pessoas. Enquanto isso, todos os recursos do {plan} são seus por {days} dias, sem precisar de cartão.",
+        "org_created.cta": "Abrir seu painel",
+        "org_created.footer": "Você criou esta organização no LearnHouse.",
+
         "password_reset.subject": "Redefina a sua palavra-passe",
         "password_reset.heading": "Redefina a sua palavra-passe",
         "password_reset.body": "Olá {username}, recebemos um pedido para redefinir a sua palavra-passe. Use o código abaixo ou clique no botão.",
@@ -412,7 +514,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Se não solicitou esta redefinição, pode ignorar este e-mail. Esta ligação irá expirar em breve.",
         "password_reset.footer_platform": "Se não solicitou esta redefinição, pode ignorar este e-mail. Esta ligação irá expirar dentro de 1 hora.",
 
-        "invitation.subject": "Você foi convidado para entrar em {org_name}",
+        "invitation.subject": "Você foi convidado para aprender em {org_name}",
         "invitation.heading": "Você foi convidado!",
         "invitation.intro": "<strong>@{inviter}</strong> convidou-o a entrar em <strong>{org_name}</strong>.",
         "invitation.code_hint": "Use o código de convite acima ou clique no botão abaixo para se registar.",
@@ -427,10 +529,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Você está recebendo este e-mail porque entrou na {org_name}.",
         "drip_unlocked.subject": "Novidade em {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} já está disponível",
-        "drip_unlocked.body": "Olá {username}, um novo capítulo de {course} já está disponível para você.",
+        "drip_unlocked.body": "Olá {username}, o próximo capítulo de {course} está pronto para você. Continue de onde parou.",
         "drip_unlocked.more": "Também disponível: {chapters}.",
         "drip_unlocked.cta": "Continuar o curso",
         "drip_unlocked.footer": "Você está recebendo este e-mail porque está inscrito em {course} na {org_name}.",
+
+        "training.due_today.body": "Olá {username}, o prazo de {training} termina hoje. Ainda dá tempo de concluir.",
 
         "role_changed.subject": "A sua função em {org_name} foi atualizada",
         "role_changed.heading": "A sua função foi atualizada",
@@ -463,6 +567,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Нужна помощь? Посетите {academy_link}, чтобы изучить основы.",
         "academy_link_text": "Академия LearnHouse",
 
+        "org_created.subject": "{org_name}: всё готово для первых учеников",
+        "org_created.heading": "{org_name}: всё готово",
+        "org_created.body": "Опубликуйте один курс и пригласите несколько человек. Этого достаточно, чтобы увидеть, как ваша академия работает с настоящими учениками.",
+        "org_created.body_trial": "Опубликуйте один курс и пригласите несколько человек. Все возможности {plan} открыты для вас на {days} дн., карта не нужна.",
+        "org_created.cta": "Открыть панель управления",
+        "org_created.footer": "Вы создали эту организацию в LearnHouse.",
+
         "password_reset.subject": "Сброс пароля",
         "password_reset.heading": "Сброс пароля",
         "password_reset.body": "Здравствуйте, {username}. Мы получили запрос на сброс вашего пароля. Используйте код ниже или нажмите на кнопку.",
@@ -470,7 +581,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Если вы не запрашивали сброс пароля, проигнорируйте это письмо. Срок действия ссылки скоро истечёт.",
         "password_reset.footer_platform": "Если вы не запрашивали сброс пароля, проигнорируйте это письмо. Ссылка действительна в течение 1 часа.",
 
-        "invitation.subject": "Вас пригласили вступить в {org_name}",
+        "invitation.subject": "Приглашение учиться в {org_name}",
         "invitation.heading": "Вас пригласили!",
         "invitation.intro": "<strong>@{inviter}</strong> приглашает вас вступить в <strong>{org_name}</strong>.",
         "invitation.code_hint": "Используйте код приглашения выше или нажмите на кнопку ниже, чтобы зарегистрироваться.",
@@ -485,10 +596,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Вы получили это письмо, потому что присоединились к {org_name}.",
         "drip_unlocked.subject": "Новое в курсе {course}: {chapter}",
         "drip_unlocked.heading": "Глава «{chapter}» открыта",
-        "drip_unlocked.body": "Здравствуйте, {username}. Новая глава курса {course} уже доступна для вас.",
+        "drip_unlocked.body": "Здравствуйте, {username}. Следующая глава курса {course} уже открыта. Продолжите с того места, где остановились.",
         "drip_unlocked.more": "Также открыто: {chapters}.",
         "drip_unlocked.cta": "Продолжить курс",
         "drip_unlocked.footer": "Вы получили это письмо, потому что записаны на курс {course} в {org_name}.",
+
+        "training.due_today.body": "Здравствуйте, {username}. Срок прохождения {training} истекает сегодня. Вы ещё успеваете его завершить.",
 
         "role_changed.subject": "Ваша роль в {org_name} обновлена",
         "role_changed.heading": "Ваша роль обновлена",
@@ -521,6 +634,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "需要帮助？请访问 {academy_link} 了解基础知识。",
         "academy_link_text": "LearnHouse 学院",
 
+        "org_created.subject": "{org_name} 已准备好迎接第一批学员",
+        "org_created.heading": "{org_name} 已准备就绪",
+        "org_created.body": "发布一门课程，邀请几位学员。这样就能看到你的学院真正为学员运转起来。",
+        "org_created.body_trial": "发布一门课程，邀请几位学员。在此期间，{plan} 的全部功能可使用 {days} 天，无需绑定银行卡。",
+        "org_created.cta": "打开控制台",
+        "org_created.footer": "你在 LearnHouse 上创建了这个组织。",
+
         "password_reset.subject": "重置您的密码",
         "password_reset.heading": "重置您的密码",
         "password_reset.body": "您好 {username}，我们收到了重置密码的请求。请使用下方代码或点击按钮。",
@@ -528,7 +648,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "如果您未请求重置密码，请忽略此邮件。该链接很快将失效。",
         "password_reset.footer_platform": "如果您未请求重置密码，请忽略此邮件。该链接将在 1 小时后失效。",
 
-        "invitation.subject": "您被邀请加入 {org_name}",
+        "invitation.subject": "{org_name} 邀请您一起学习",
         "invitation.heading": "您收到了一份邀请！",
         "invitation.intro": "<strong>@{inviter}</strong> 邀请您加入 <strong>{org_name}</strong>。",
         "invitation.code_hint": "请使用上方邀请码，或点击下方按钮注册。",
@@ -543,10 +663,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "你收到这封邮件是因为你加入了 {org_name}。",
         "drip_unlocked.subject": "{course} 新章节：{chapter}",
         "drip_unlocked.heading": "{chapter} 已开放",
-        "drip_unlocked.body": "{username}，你好！{course} 的新章节现已向你开放。",
+        "drip_unlocked.body": "{username}，你好！{course} 的下一章已经开放，从上次停下的地方继续吧。",
         "drip_unlocked.more": "同时开放：{chapters}。",
         "drip_unlocked.cta": "继续学习",
         "drip_unlocked.footer": "你收到这封邮件是因为你在 {org_name} 报名了 {course}。",
+
+        "training.due_today.body": "{username}，你好！{training} 今天截止，现在完成还来得及。",
 
         "role_changed.subject": "您在 {org_name} 中的角色已更新",
         "role_changed.heading": "您的角色已更新",
@@ -579,6 +701,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "मदद चाहिए? बुनियादी बातें सीखने के लिए {academy_link} देखें।",
         "academy_link_text": "LearnHouse अकादमी",
 
+        "org_created.subject": "{org_name} अपने पहले शिक्षार्थियों के लिए तैयार है",
+        "org_created.heading": "{org_name} तैयार है",
+        "org_created.body": "एक कोर्स प्रकाशित करें और कुछ लोगों को आमंत्रित करें। बस इतने से आप देख पाएंगे कि आपकी अकादमी असली शिक्षार्थियों के साथ कैसे काम करती है।",
+        "org_created.body_trial": "एक कोर्स प्रकाशित करें और कुछ लोगों को आमंत्रित करें। इस दौरान {days} दिनों तक {plan} की हर सुविधा आपके लिए खुली है, कोई कार्ड नहीं चाहिए।",
+        "org_created.cta": "अपना डैशबोर्ड खोलें",
+        "org_created.footer": "आपने LearnHouse पर यह संगठन बनाया है।",
+
         "password_reset.subject": "अपना पासवर्ड रीसेट करें",
         "password_reset.heading": "अपना पासवर्ड रीसेट करें",
         "password_reset.body": "नमस्ते {username}, हमें आपके पासवर्ड को रीसेट करने का अनुरोध मिला है। नीचे दिए गए कोड का उपयोग करें या बटन पर क्लिक करें।",
@@ -586,7 +715,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "अगर आपने रीसेट का अनुरोध नहीं किया, तो आप इस ईमेल को अनदेखा कर सकते हैं। यह लिंक जल्द ही समाप्त हो जाएगा।",
         "password_reset.footer_platform": "अगर आपने रीसेट का अनुरोध नहीं किया, तो आप इस ईमेल को अनदेखा कर सकते हैं। यह लिंक 1 घंटे में समाप्त हो जाएगा।",
 
-        "invitation.subject": "आपको {org_name} में शामिल होने का निमंत्रण मिला है",
+        "invitation.subject": "आपको {org_name} में सीखने के लिए आमंत्रित किया गया है",
         "invitation.heading": "आपको आमंत्रित किया गया है!",
         "invitation.intro": "<strong>@{inviter}</strong> ने आपको <strong>{org_name}</strong> में शामिल होने के लिए आमंत्रित किया है।",
         "invitation.code_hint": "ऊपर दिए गए आमंत्रण कोड का उपयोग करें, या साइन अप करने के लिए नीचे बटन पर क्लिक करें।",
@@ -601,10 +730,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "आपको यह ईमेल इसलिए मिला है क्योंकि आप {org_name} से जुड़े हैं।",
         "drip_unlocked.subject": "{course} में नया: {chapter}",
         "drip_unlocked.heading": "{chapter} खुल गया है",
-        "drip_unlocked.body": "नमस्ते {username}, {course} का एक नया अध्याय अब आपके लिए उपलब्ध है।",
+        "drip_unlocked.body": "नमस्ते {username}, {course} का अगला अध्याय आपके लिए तैयार है। जहाँ छोड़ा था, वहीं से शुरू करें।",
         "drip_unlocked.more": "अभी ये भी खुले हैं: {chapters}।",
         "drip_unlocked.cta": "कोर्स जारी रखें",
         "drip_unlocked.footer": "आपको यह ईमेल इसलिए मिला है क्योंकि आप {org_name} पर {course} में नामांकित हैं।",
+
+        "training.due_today.body": "नमस्ते {username}, {training} आज पूरा करना है। अभी भी समय है।",
 
         "role_changed.subject": "{org_name} में आपकी भूमिका अपडेट कर दी गई है",
         "role_changed.heading": "आपकी भूमिका अपडेट की गई",
@@ -637,6 +768,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "도움이 필요하신가요? {academy_link}에서 기본 사용법을 배워보세요.",
         "academy_link_text": "LearnHouse 아카데미",
 
+        "org_created.subject": "{org_name}에서 첫 학습자를 맞을 준비가 끝났어요",
+        "org_created.heading": "{org_name} 준비 완료",
+        "org_created.body": "코스 하나를 게시하고 몇 명을 초대해 보세요. 그것만으로도 실제 학습자와 함께 아카데미가 어떻게 돌아가는지 확인할 수 있어요.",
+        "org_created.body_trial": "코스 하나를 게시하고 몇 명을 초대해 보세요. 그사이 {days}일 동안 {plan}의 모든 기능을 카드 등록 없이 사용할 수 있어요.",
+        "org_created.cta": "대시보드 열기",
+        "org_created.footer": "LearnHouse에서 이 조직을 만들었어요.",
+
         "password_reset.subject": "비밀번호 재설정",
         "password_reset.heading": "비밀번호 재설정",
         "password_reset.body": "안녕하세요 {username}님, 비밀번호 재설정 요청을 받았습니다. 아래 코드를 사용하거나 버튼을 클릭하세요.",
@@ -644,7 +782,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "재설정을 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다. 링크는 곧 만료됩니다.",
         "password_reset.footer_platform": "재설정을 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다. 링크는 1시간 후 만료됩니다.",
 
-        "invitation.subject": "{org_name}에 초대되었습니다",
+        "invitation.subject": "{org_name}에서 함께 배우도록 초대받았어요",
         "invitation.heading": "초대를 받으셨습니다!",
         "invitation.intro": "<strong>@{inviter}</strong>님이 <strong>{org_name}</strong>에 초대했습니다.",
         "invitation.code_hint": "위 초대 코드를 사용하거나, 아래 버튼을 클릭하여 가입하세요.",
@@ -659,10 +797,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "{org_name}에 참여하여 이 메일을 받았습니다.",
         "drip_unlocked.subject": "{course} 새 장: {chapter}",
         "drip_unlocked.heading": "{chapter} 공개",
-        "drip_unlocked.body": "{username}님, {course}의 새로운 장이 공개되었어요.",
+        "drip_unlocked.body": "{username}님, {course}의 다음 장이 열렸어요. 지난번에 멈춘 곳부터 이어서 학습해 보세요.",
         "drip_unlocked.more": "함께 공개된 장: {chapters}.",
         "drip_unlocked.cta": "코스 이어서 학습하기",
         "drip_unlocked.footer": "{org_name}의 {course}에 등록되어 있어 이 메일을 받았습니다.",
+
+        "training.due_today.body": "{username}님, {training}의 마감일이 오늘이에요. 아직 끝낼 시간이 있어요.",
 
         "role_changed.subject": "{org_name}에서의 역할이 변경되었습니다",
         "role_changed.heading": "역할이 변경되었습니다",
@@ -695,6 +835,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Ti serve aiuto? Visita {academy_link} per imparare le basi.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "Tutto pronto per i primi studenti di {org_name}",
+        "org_created.heading": "Tutto pronto per {org_name}",
+        "org_created.body": "Pubblica un corso e invita qualche persona. Basta questo per vedere la tua accademia al lavoro con studenti veri.",
+        "org_created.body_trial": "Pubblica un corso e invita qualche persona. Nel frattempo hai tutte le funzionalità di {plan} per {days} giorni, senza carta di credito.",
+        "org_created.cta": "Apri la tua dashboard",
+        "org_created.footer": "Hai creato questa organizzazione su LearnHouse.",
+
         "password_reset.subject": "Reimposta la tua password",
         "password_reset.heading": "Reimposta la tua password",
         "password_reset.body": "Ciao {username}, abbiamo ricevuto una richiesta di reimpostazione della password. Usa il codice qui sotto o clicca sul pulsante.",
@@ -702,7 +849,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Se non hai richiesto la reimpostazione, puoi ignorare questa e-mail. Il link scadrà a breve.",
         "password_reset.footer_platform": "Se non hai richiesto la reimpostazione, puoi ignorare questa e-mail. Il link scadrà entro 1 ora.",
 
-        "invitation.subject": "Sei stato invitato a unirti a {org_name}",
+        "invitation.subject": "Sei invitato a imparare con {org_name}",
         "invitation.heading": "Sei stato invitato!",
         "invitation.intro": "<strong>@{inviter}</strong> ti ha invitato a unirti a <strong>{org_name}</strong>.",
         "invitation.code_hint": "Usa il codice di invito sopra, oppure clicca sul pulsante qui sotto per iscriverti.",
@@ -717,10 +864,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Ricevi questa email perché ti sei unito a {org_name}.",
         "drip_unlocked.subject": "Novità in {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} è disponibile",
-        "drip_unlocked.body": "Ciao {username}, un nuovo capitolo di {course} è ora disponibile per te.",
+        "drip_unlocked.body": "Ciao {username}, il prossimo capitolo di {course} ti aspetta. Riprendi da dove avevi lasciato.",
         "drip_unlocked.more": "Disponibili anche: {chapters}.",
         "drip_unlocked.cta": "Continua il corso",
         "drip_unlocked.footer": "Ricevi questa e-mail perché sei iscritto a {course} su {org_name}.",
+
+        "training.due_today.body": "Ciao {username}, {training} scade oggi. Hai ancora tempo per completarlo.",
 
         "role_changed.subject": "Il tuo ruolo in {org_name} è stato aggiornato",
         "role_changed.heading": "Il tuo ruolo è stato aggiornato",
@@ -753,6 +902,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Yardım mı lazım? Temelleri öğrenmek için {academy_link} adresine göz at.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "{org_name} ilk öğrencilerini karşılamaya hazır",
+        "org_created.heading": "{org_name} hazır",
+        "org_created.body": "Bir kurs yayınla ve birkaç kişiyi davet et. Akademinin gerçek öğrencilerle nasıl çalıştığını görmek için bu kadarı yeter.",
+        "org_created.body_trial": "Bir kurs yayınla ve birkaç kişiyi davet et. Bu sırada {days} gün boyunca tüm {plan} özellikleri senin, kart gerekmez.",
+        "org_created.cta": "Panonu aç",
+        "org_created.footer": "Bu organizasyonu LearnHouse'ta sen oluşturdun.",
+
         "password_reset.subject": "Şifreni sıfırla",
         "password_reset.heading": "Şifreni sıfırla",
         "password_reset.body": "Merhaba {username}, şifreni sıfırlama isteği aldık. Aşağıdaki kodu kullan veya butona tıkla.",
@@ -760,7 +916,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Şifre sıfırlama talebinde bulunmadıysan bu e-postayı yok sayabilirsin. Bu bağlantının süresi yakında dolacaktır.",
         "password_reset.footer_platform": "Şifre sıfırlama talebinde bulunmadıysan bu e-postayı yok sayabilirsin. Bu bağlantının süresi 1 saat içinde dolacaktır.",
 
-        "invitation.subject": "{org_name} organizasyonuna davet edildin",
+        "invitation.subject": "{org_name} seni öğrenmeye davet ediyor",
         "invitation.heading": "Davet edildin!",
         "invitation.intro": "<strong>@{inviter}</strong>, <strong>{org_name}</strong> organizasyonuna katılman için seni davet etti.",
         "invitation.code_hint": "Yukarıdaki davet kodunu kullan veya kayıt olmak için aşağıdaki butona tıkla.",
@@ -775,10 +931,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Bu e-postayı {org_name} organizasyonuna katıldığınız için alıyorsunuz.",
         "drip_unlocked.subject": "{course} kursunda yeni: {chapter}",
         "drip_unlocked.heading": "{chapter} açıldı",
-        "drip_unlocked.body": "Merhaba {username}, {course} kursunun yeni bir bölümü artık sizin için açık.",
+        "drip_unlocked.body": "Merhaba {username}, {course} kursunun sonraki bölümü sizi bekliyor. Kaldığınız yerden devam edin.",
         "drip_unlocked.more": "Şu anda açık olan diğer bölümler: {chapters}.",
         "drip_unlocked.cta": "Kursa devam et",
         "drip_unlocked.footer": "Bu e-postayı {org_name} bünyesindeki {course} kursuna kayıtlı olduğunuz için alıyorsunuz.",
+
+        "training.due_today.body": "Merhaba {username}, {training} için son gün bugün. Tamamlamak için hâlâ vaktiniz var.",
 
         "role_changed.subject": "{org_name} organizasyonundaki rolün güncellendi",
         "role_changed.heading": "Rolün güncellendi",
@@ -811,6 +969,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Cần trợ giúp? Truy cập {academy_link} để tìm hiểu các kiến thức cơ bản.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "{org_name} đã sẵn sàng đón những học viên đầu tiên",
+        "org_created.heading": "{org_name} đã sẵn sàng",
+        "org_created.body": "Hãy đăng một khóa học và mời vài người tham gia. Chỉ vậy là đủ để thấy học viện của bạn vận hành với học viên thật.",
+        "org_created.body_trial": "Hãy đăng một khóa học và mời vài người tham gia. Trong {days} ngày, bạn được dùng mọi tính năng của {plan} mà không cần thẻ.",
+        "org_created.cta": "Mở bảng điều khiển",
+        "org_created.footer": "Bạn đã tạo tổ chức này trên LearnHouse.",
+
         "password_reset.subject": "Đặt lại mật khẩu của bạn",
         "password_reset.heading": "Đặt lại mật khẩu của bạn",
         "password_reset.body": "Chào {username}, chúng tôi đã nhận được yêu cầu đặt lại mật khẩu của bạn. Hãy sử dụng mã bên dưới hoặc nhấn vào nút.",
@@ -818,7 +983,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Nếu bạn không yêu cầu đặt lại mật khẩu, bạn có thể bỏ qua email này. Liên kết này sẽ sớm hết hạn.",
         "password_reset.footer_platform": "Nếu bạn không yêu cầu đặt lại mật khẩu, bạn có thể bỏ qua email này. Liên kết này sẽ hết hạn trong 1 giờ.",
 
-        "invitation.subject": "Bạn được mời tham gia {org_name}",
+        "invitation.subject": "Bạn được mời học tại {org_name}",
         "invitation.heading": "Bạn được mời!",
         "invitation.intro": "<strong>@{inviter}</strong> đã mời bạn tham gia <strong>{org_name}</strong>.",
         "invitation.code_hint": "Sử dụng mã mời ở trên, hoặc nhấn vào nút bên dưới để đăng ký.",
@@ -833,10 +998,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Bạn nhận được email này vì bạn đã tham gia {org_name}.",
         "drip_unlocked.subject": "Mới trong {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} đã mở",
-        "drip_unlocked.body": "Chào {username}, một chương mới của {course} đã mở cho bạn.",
+        "drip_unlocked.body": "Chào {username}, chương tiếp theo của {course} đã sẵn sàng. Hãy tiếp tục từ chỗ bạn dừng lại.",
         "drip_unlocked.more": "Cũng đã mở: {chapters}.",
         "drip_unlocked.cta": "Tiếp tục khóa học",
         "drip_unlocked.footer": "Bạn nhận được email này vì bạn đã đăng ký {course} tại {org_name}.",
+
+        "training.due_today.body": "Chào {username}, hôm nay là hạn hoàn thành {training}. Bạn vẫn còn thời gian để học xong.",
 
         "role_changed.subject": "Vai trò của bạn trong {org_name} đã được cập nhật",
         "role_changed.heading": "Vai trò của bạn đã được cập nhật",
@@ -869,6 +1036,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Butuh bantuan? Kunjungi {academy_link} untuk mempelajari dasar-dasarnya.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "{org_name} siap menyambut peserta pertamanya",
+        "org_created.heading": "{org_name} sudah siap",
+        "org_created.body": "Terbitkan satu kursus dan undang beberapa orang. Hanya itu yang dibutuhkan untuk melihat akademi Anda berjalan bersama peserta sungguhan.",
+        "org_created.body_trial": "Terbitkan satu kursus dan undang beberapa orang. Selama {days} hari, semua fitur {plan} bisa Anda gunakan tanpa kartu.",
+        "org_created.cta": "Buka dasbor Anda",
+        "org_created.footer": "Anda membuat organisasi ini di LearnHouse.",
+
         "password_reset.subject": "Atur ulang kata sandi Anda",
         "password_reset.heading": "Atur ulang kata sandi Anda",
         "password_reset.body": "Halo {username}, kami menerima permintaan untuk mengatur ulang kata sandi Anda. Gunakan kode di bawah atau klik tombolnya.",
@@ -876,7 +1050,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Jika Anda tidak meminta pengaturan ulang kata sandi, abaikan saja email ini. Tautan ini akan segera kedaluwarsa.",
         "password_reset.footer_platform": "Jika Anda tidak meminta pengaturan ulang kata sandi, abaikan saja email ini. Tautan ini kedaluwarsa dalam 1 jam.",
 
-        "invitation.subject": "Anda diundang untuk bergabung dengan {org_name}",
+        "invitation.subject": "Anda diundang untuk belajar di {org_name}",
         "invitation.heading": "Anda diundang!",
         "invitation.intro": "<strong>@{inviter}</strong> mengundang Anda untuk bergabung dengan <strong>{org_name}</strong>.",
         "invitation.code_hint": "Gunakan kode undangan di atas, atau klik tombol di bawah untuk mendaftar.",
@@ -891,10 +1065,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Kamu menerima email ini karena bergabung dengan {org_name}.",
         "drip_unlocked.subject": "Baru di {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} sudah dibuka",
-        "drip_unlocked.body": "Hai {username}, bab baru dari {course} kini tersedia untukmu.",
+        "drip_unlocked.body": "Hai {username}, bab berikutnya dari {course} sudah siap untukmu. Lanjutkan dari bagian terakhir.",
         "drip_unlocked.more": "Juga sudah dibuka: {chapters}.",
         "drip_unlocked.cta": "Lanjutkan kursus",
         "drip_unlocked.footer": "Kamu menerima email ini karena terdaftar di {course} di {org_name}.",
+
+        "training.due_today.body": "Hai {username}, {training} jatuh tempo hari ini. Masih ada waktu untuk menyelesaikannya.",
 
         "role_changed.subject": "Peran Anda di {org_name} telah diperbarui",
         "role_changed.heading": "Peran Anda telah diperbarui",
@@ -927,6 +1103,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Potrzebujesz pomocy? Odwiedź {academy_link}, aby poznać podstawy.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "{org_name} czeka na pierwszych uczestników",
+        "org_created.heading": "{org_name}: wszystko gotowe",
+        "org_created.body": "Opublikuj jeden kurs i zaproś kilka osób. Tyle wystarczy, by zobaczyć, jak Twoja akademia działa z prawdziwymi uczestnikami.",
+        "org_created.body_trial": "Opublikuj jeden kurs i zaproś kilka osób. Przez {days} dni masz w tym czasie dostęp do wszystkich funkcji {plan}, bez podawania karty.",
+        "org_created.cta": "Otwórz panel",
+        "org_created.footer": "Ta organizacja została przez Ciebie utworzona w LearnHouse.",
+
         "password_reset.subject": "Zresetuj hasło",
         "password_reset.heading": "Zresetuj hasło",
         "password_reset.body": "Cześć {username}, otrzymaliśmy prośbę o zresetowanie Twojego hasła. Skorzystaj z kodu poniżej lub kliknij przycisk.",
@@ -934,7 +1117,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Jeśli nie prosiłeś o zresetowanie hasła, możesz zignorować tę wiadomość. Link wkrótce wygaśnie.",
         "password_reset.footer_platform": "Jeśli nie prosiłeś o zresetowanie hasła, możesz zignorować tę wiadomość. Link wygaśnie w ciągu 1 godziny.",
 
-        "invitation.subject": "Zostałeś zaproszony do {org_name}",
+        "invitation.subject": "Zaproszenie do nauki w {org_name}",
         "invitation.heading": "Otrzymujesz zaproszenie!",
         "invitation.intro": "<strong>@{inviter}</strong> zaprosił Cię do dołączenia do <strong>{org_name}</strong>.",
         "invitation.code_hint": "Skorzystaj z powyższego kodu zaproszenia lub kliknij przycisk poniżej, aby się zarejestrować.",
@@ -949,10 +1132,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Otrzymujesz tę wiadomość, ponieważ dołączyłeś do {org_name}.",
         "drip_unlocked.subject": "Nowość w kursie {course}: {chapter}",
         "drip_unlocked.heading": "Rozdział „{chapter}” jest już otwarty",
-        "drip_unlocked.body": "Cześć {username}, nowy rozdział kursu {course} jest już dla Ciebie dostępny.",
+        "drip_unlocked.body": "Cześć {username}, kolejny rozdział kursu {course} czeka na Ciebie. Możesz kontynuować od miejsca, w którym przerwano.",
         "drip_unlocked.more": "Otwarte są też: {chapters}.",
         "drip_unlocked.cta": "Kontynuuj kurs",
         "drip_unlocked.footer": "Otrzymujesz tę wiadomość, ponieważ jesteś zapisany na kurs {course} w {org_name}.",
+
+        "training.due_today.body": "Cześć {username}, termin ukończenia {training} mija dzisiaj. Wciąż masz czas, aby to zrobić.",
 
         "role_changed.subject": "Twoja rola w {org_name} została zaktualizowana",
         "role_changed.heading": "Twoja rola została zaktualizowana",
@@ -985,6 +1170,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Потрібна допомога? Відвідайте {academy_link}, щоб ознайомитися з основами.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "{org_name}: усе готово для перших учнів",
+        "org_created.heading": "{org_name}: усе готово",
+        "org_created.body": "Опублікуйте один курс і запросіть кількох людей. Цього достатньо, щоб побачити, як ваша академія працює зі справжніми учнями.",
+        "org_created.body_trial": "Опублікуйте один курс і запросіть кількох людей. Тим часом усі можливості {plan} доступні вам на {days} дн., картка не потрібна.",
+        "org_created.cta": "Відкрити панель керування",
+        "org_created.footer": "Ви створили цю організацію в LearnHouse.",
+
         "password_reset.subject": "Скидання пароля",
         "password_reset.heading": "Скидання пароля",
         "password_reset.body": "Вітаємо, {username}! Ми отримали запит на скидання вашого пароля. Скористайтеся кодом нижче або натисніть кнопку.",
@@ -992,7 +1184,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Якщо ви не надсилали запит на скидання пароля, можете проігнорувати цей лист. Посилання незабаром стане недійсним.",
         "password_reset.footer_platform": "Якщо ви не надсилали запит на скидання пароля, можете проігнорувати цей лист. Посилання стане недійсним за 1 годину.",
 
-        "invitation.subject": "Вас запросили приєднатися до {org_name}",
+        "invitation.subject": "Запрошення до навчання в {org_name}",
         "invitation.heading": "Вас запросили!",
         "invitation.intro": "<strong>@{inviter}</strong> запросив(-ла) вас приєднатися до <strong>{org_name}</strong>.",
         "invitation.code_hint": "Скористайтеся кодом запрошення вище або натисніть кнопку нижче, щоб зареєструватися.",
@@ -1007,10 +1199,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Ви отримали цей лист, тому що приєдналися до {org_name}.",
         "drip_unlocked.subject": "Нове в курсі {course}: {chapter}",
         "drip_unlocked.heading": "Розділ «{chapter}» відкрито",
-        "drip_unlocked.body": "Вітаємо, {username}! Новий розділ курсу {course} уже доступний для вас.",
+        "drip_unlocked.body": "Вітаємо, {username}! Наступний розділ курсу {course} уже відкрито. Продовжуйте з того місця, де зупинилися.",
         "drip_unlocked.more": "Також відкрито: {chapters}.",
         "drip_unlocked.cta": "Продовжити курс",
         "drip_unlocked.footer": "Ви отримали цей лист, тому що зараховані на курс {course} у {org_name}.",
+
+        "training.due_today.body": "Вітаємо, {username}! Термін проходження {training} спливає сьогодні. Ви ще встигаєте його завершити.",
 
         "role_changed.subject": "Вашу роль у {org_name} оновлено",
         "role_changed.heading": "Вашу роль оновлено",
@@ -1043,6 +1237,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "Hulp nodig? Bezoek {academy_link} om de basis te leren.",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "{org_name} is klaar voor de eerste cursisten",
+        "org_created.heading": "{org_name} staat klaar",
+        "org_created.body": "Publiceer één cursus en nodig een paar mensen uit. Meer is er niet nodig om je academie aan het werk te zien met echte cursisten.",
+        "org_created.body_trial": "Publiceer één cursus en nodig een paar mensen uit. Ondertussen kun je {days} dagen lang alle functies van {plan} gebruiken, zonder creditcard.",
+        "org_created.cta": "Open je dashboard",
+        "org_created.footer": "Je hebt deze organisatie aangemaakt op LearnHouse.",
+
         "password_reset.subject": "Wachtwoord opnieuw instellen",
         "password_reset.heading": "Wachtwoord opnieuw instellen",
         "password_reset.body": "Hoi {username}, we ontvingen een verzoek om je wachtwoord opnieuw in te stellen. Gebruik onderstaande code of klik op de knop.",
@@ -1050,7 +1251,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "Heb je dit niet aangevraagd, negeer deze e-mail dan. Deze link verloopt binnenkort.",
         "password_reset.footer_platform": "Heb je dit niet aangevraagd, negeer deze e-mail dan. Deze link verloopt over 1 uur.",
 
-        "invitation.subject": "Je bent uitgenodigd voor {org_name}",
+        "invitation.subject": "Je bent uitgenodigd om te leren bij {org_name}",
         "invitation.heading": "Je bent uitgenodigd!",
         "invitation.intro": "<strong>@{inviter}</strong> heeft je uitgenodigd voor <strong>{org_name}</strong>.",
         "invitation.code_hint": "Gebruik de uitnodigingscode hierboven of klik op de knop hieronder om je aan te melden.",
@@ -1065,10 +1266,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "Je ontvangt deze e-mail omdat je bent toegetreden tot {org_name}.",
         "drip_unlocked.subject": "Nieuw in {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} is open",
-        "drip_unlocked.body": "Hoi {username}, er is een nieuw hoofdstuk van {course} voor je beschikbaar.",
+        "drip_unlocked.body": "Hoi {username}, het volgende hoofdstuk van {course} staat voor je klaar. Ga verder waar je gebleven was.",
         "drip_unlocked.more": "Ook nu open: {chapters}.",
         "drip_unlocked.cta": "Ga verder met de cursus",
         "drip_unlocked.footer": "Je ontvangt deze e-mail omdat je bent ingeschreven voor {course} bij {org_name}.",
+
+        "training.due_today.body": "Hoi {username}, {training} moet vandaag af zijn. Je hebt nog tijd om het af te ronden.",
 
         "role_changed.subject": "Je rol in {org_name} is bijgewerkt",
         "role_changed.heading": "Je rol is bijgewerkt",
@@ -1101,6 +1304,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "ต้องการความช่วยเหลือ? เยี่ยมชม {academy_link} เพื่อเรียนรู้พื้นฐาน",
         "academy_link_text": "LearnHouse Academy",
 
+        "org_created.subject": "{org_name} พร้อมต้อนรับผู้เรียนกลุ่มแรกแล้ว",
+        "org_created.heading": "{org_name} พร้อมแล้ว",
+        "org_created.body": "เผยแพร่คอร์สสักหนึ่งคอร์สแล้วเชิญคนสักสองสามคน แค่นี้ก็จะเห็นสถาบันของคุณทำงานกับผู้เรียนจริงแล้ว",
+        "org_created.body_trial": "เผยแพร่คอร์สสักหนึ่งคอร์สแล้วเชิญคนสักสองสามคน ระหว่างนี้คุณใช้ฟีเจอร์ทั้งหมดของ {plan} ได้ {days} วัน โดยไม่ต้องใช้บัตร",
+        "org_created.cta": "เปิดแดชบอร์ด",
+        "org_created.footer": "คุณสร้างองค์กรนี้บน LearnHouse",
+
         "password_reset.subject": "รีเซ็ตรหัสผ่านของคุณ",
         "password_reset.heading": "รีเซ็ตรหัสผ่านของคุณ",
         "password_reset.body": "สวัสดี {username} เราได้รับคำขอรีเซ็ตรหัสผ่านของคุณ ใช้รหัสด้านล่างหรือคลิกที่ปุ่ม",
@@ -1108,7 +1318,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "หากคุณไม่ได้ขอรีเซ็ตรหัสผ่าน คุณสามารถละเว้นอีเมลฉบับนี้ได้ ลิงก์นี้จะหมดอายุในไม่ช้า",
         "password_reset.footer_platform": "หากคุณไม่ได้ขอรีเซ็ตรหัสผ่าน คุณสามารถละเว้นอีเมลฉบับนี้ได้ ลิงก์นี้จะหมดอายุภายใน 1 ชั่วโมง",
 
-        "invitation.subject": "คุณได้รับคำเชิญให้เข้าร่วม {org_name}",
+        "invitation.subject": "คุณได้รับคำเชิญให้มาเรียนที่ {org_name}",
         "invitation.heading": "คุณได้รับคำเชิญ!",
         "invitation.intro": "<strong>@{inviter}</strong> เชิญคุณเข้าร่วม <strong>{org_name}</strong>",
         "invitation.code_hint": "ใช้รหัสคำเชิญด้านบน หรือคลิกที่ปุ่มด้านล่างเพื่อสมัคร",
@@ -1123,10 +1333,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "คุณได้รับอีเมลนี้เพราะคุณเข้าร่วม {org_name}",
         "drip_unlocked.subject": "ใหม่ใน {course}: {chapter}",
         "drip_unlocked.heading": "{chapter} เปิดแล้ว",
-        "drip_unlocked.body": "สวัสดี {username} บทใหม่ของ {course} เปิดให้คุณเรียนแล้ว",
+        "drip_unlocked.body": "สวัสดี {username} บทถัดไปของ {course} พร้อมให้คุณเรียนแล้ว เรียนต่อจากที่ค้างไว้ได้เลย",
         "drip_unlocked.more": "เปิดแล้วเช่นกัน: {chapters}",
         "drip_unlocked.cta": "เรียนคอร์สต่อ",
         "drip_unlocked.footer": "คุณได้รับอีเมลนี้เพราะคุณลงทะเบียนเรียน {course} ที่ {org_name}",
+
+        "training.due_today.body": "สวัสดี {username} วันนี้เป็นวันครบกำหนดของ {training} ยังมีเวลาทำให้เสร็จ",
 
         "role_changed.subject": "บทบาทของคุณใน {org_name} ได้รับการอัปเดต",
         "role_changed.heading": "บทบาทของคุณได้รับการอัปเดต",
@@ -1159,6 +1371,13 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_creation.footer": "সাহায্য দরকার? মৌলিক বিষয়গুলো শিখতে {academy_link}-এ যান।",
         "academy_link_text": "LearnHouse অ্যাকাডেমি",
 
+        "org_created.subject": "{org_name} প্রথম শিক্ষার্থীদের জন্য প্রস্তুত",
+        "org_created.heading": "{org_name} প্রস্তুত",
+        "org_created.body": "একটি কোর্স প্রকাশ করুন এবং কয়েকজনকে আমন্ত্রণ জানান। আসল শিক্ষার্থীদের সঙ্গে আপনার অ্যাকাডেমি কীভাবে কাজ করে, তা দেখতে এটুকুই যথেষ্ট।",
+        "org_created.body_trial": "একটি কোর্স প্রকাশ করুন এবং কয়েকজনকে আমন্ত্রণ জানান। এই সময়ে {days} দিন ধরে {plan}-এর সব ফিচার আপনার, কোনো কার্ড লাগবে না।",
+        "org_created.cta": "আপনার ড্যাশবোর্ড খুলুন",
+        "org_created.footer": "আপনি LearnHouse-এ এই সংস্থাটি তৈরি করেছেন।",
+
         "password_reset.subject": "আপনার পাসওয়ার্ড রিসেট করুন",
         "password_reset.heading": "আপনার পাসওয়ার্ড রিসেট করুন",
         "password_reset.body": "হ্যালো {username}, আমরা আপনার পাসওয়ার্ড রিসেট করার অনুরোধ পেয়েছি। নিচের কোডটি ব্যবহার করুন অথবা বোতামে ক্লিক করুন।",
@@ -1166,7 +1385,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "password_reset.footer_org": "আপনি যদি পাসওয়ার্ড রিসেটের অনুরোধ না করে থাকেন, তাহলে এই ইমেইলটি উপেক্ষা করতে পারেন। লিঙ্কটির মেয়াদ শীঘ্রই শেষ হবে।",
         "password_reset.footer_platform": "আপনি যদি পাসওয়ার্ড রিসেটের অনুরোধ না করে থাকেন, তাহলে এই ইমেইলটি উপেক্ষা করতে পারেন। লিঙ্কটির মেয়াদ ১ ঘণ্টার মধ্যে শেষ হবে।",
 
-        "invitation.subject": "আপনাকে {org_name}-এ যোগ দিতে আমন্ত্রণ জানানো হয়েছে",
+        "invitation.subject": "{org_name}-এ শেখার জন্য আপনাকে আমন্ত্রণ জানানো হয়েছে",
         "invitation.heading": "আপনাকে আমন্ত্রণ জানানো হয়েছে!",
         "invitation.intro": "<strong>@{inviter}</strong> আপনাকে <strong>{org_name}</strong>-এ যোগ দিতে আমন্ত্রণ জানিয়েছেন।",
         "invitation.code_hint": "উপরের আমন্ত্রণ কোডটি ব্যবহার করুন, অথবা সাইন আপ করতে নিচের বোতামে ক্লিক করুন।",
@@ -1181,10 +1400,12 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "org_join.footer": "আপনি এই ইমেলটি পাচ্ছেন কারণ আপনি {org_name}-এ যোগ দিয়েছেন।",
         "drip_unlocked.subject": "{course}-এ নতুন: {chapter}",
         "drip_unlocked.heading": "{chapter} এখন খোলা",
-        "drip_unlocked.body": "হ্যালো {username}, {course}-এর একটি নতুন অধ্যায় এখন আপনার জন্য উপলব্ধ।",
+        "drip_unlocked.body": "হ্যালো {username}, {course}-এর পরের অধ্যায় আপনার জন্য প্রস্তুত। যেখানে থেমেছিলেন, সেখান থেকে শুরু করুন।",
         "drip_unlocked.more": "এখন আরও খোলা আছে: {chapters}।",
         "drip_unlocked.cta": "কোর্স চালিয়ে যান",
         "drip_unlocked.footer": "আপনি এই ইমেলটি পাচ্ছেন কারণ আপনি {org_name}-এ {course} কোর্সে নথিভুক্ত।",
+
+        "training.due_today.body": "হ্যালো {username}, আজই {training} শেষ করার শেষ দিন। এখনও সময় আছে।",
 
         "role_changed.subject": "{org_name}-এ আপনার ভূমিকা আপডেট হয়েছে",
         "role_changed.heading": "আপনার ভূমিকা আপডেট হয়েছে",
@@ -1215,6 +1436,12 @@ from src.services.email.nudge_translations import NUDGE_TRANSLATIONS  # noqa: E4
 
 for _nudge_lang, _nudge_keys in NUDGE_TRANSLATIONS.items():
     EMAIL_TRANSLATIONS.setdefault(_nudge_lang, {}).update(_nudge_keys)
+
+# Plan and trial emails to org admins, same namespace and lookup.
+from src.services.email.plan_translations import PLAN_EMAIL_TRANSLATIONS  # noqa: E402
+
+for _plan_lang, _plan_keys in PLAN_EMAIL_TRANSLATIONS.items():
+    EMAIL_TRANSLATIONS.setdefault(_plan_lang, {}).update(_plan_keys)
 
 
 def normalize_language(lang: str | None) -> str:

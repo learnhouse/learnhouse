@@ -13,6 +13,7 @@ import { DiscussionWithAuthor, getDiscussions } from '@services/communities/disc
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
+import { threadPath } from '@/lib/seo/paths'
 
 interface CourseCommunitySectionProps {
   courseUuid: string
@@ -94,7 +95,7 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
               return (
                 <Link
                   key={discussion.discussion_uuid}
-                  href={getUriWithOrg(orgslug, `/community/${communityId}/discussion/${discussionId}`)}
+                  href={getUriWithOrg(orgslug, discussion.id ? threadPath(communityId, discussion) : `/community/${communityId}/discussion/${discussionId}`)}
                   className="block p-4 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-start gap-3">

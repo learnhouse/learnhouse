@@ -18,7 +18,12 @@ export function getOrgSeoConfig(org: any) {
 }
 
 export function buildPageTitle(pageTitle: string, orgName: string, seoConfig: any): string {
-  const suffix = seoConfig.default_meta_title_suffix
+  // "%s · {org}"-style template wins over the plain suffix when it has a slot.
+  const template = seoConfig?.default_title_template
+  if (typeof template === 'string' && template.includes('%s')) {
+    return template.replace('%s', pageTitle).replace('%org', orgName)
+  }
+  const suffix = seoConfig?.default_meta_title_suffix
   if (suffix) return `${pageTitle}${suffix}`
   return `${pageTitle} | ${orgName}`
 }

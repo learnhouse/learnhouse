@@ -2,7 +2,18 @@ import React, { useMemo, useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
-import { Trophy, ArrowLeft, ArrowRight, BookOpen, Target, Download, Shield } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowSquareOut,
+  Certificate,
+  CheckCircle,
+  Circle,
+  CircleHalf,
+  DownloadSimple,
+  ShareNetwork,
+  ShieldCheck,
+} from '@phosphor-icons/react';
 import Link from 'next/link';
 import { getUriWithOrg, getAbsoluteUriWithOrg } from '@services/config/config';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
@@ -10,6 +21,7 @@ import { useWindowSize } from 'usehooks-ts';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { getUserCertificates } from '@services/courses/certifications';
+import { useContentLanguage } from '@/hooks/useContentLanguage'
 import { useCourseCertification } from '@components/Hooks/useCourseCertification';
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
 import {
@@ -18,8 +30,13 @@ import {
   CERTIFICATE_CAPTURE_WIDTH,
 } from '@services/courses/certificateDownload';
 import { useTranslation } from 'react-i18next';
-import { getCourseEndConfig, resolveCourseEndButton } from './courseEndConfig';
-import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+import { courseEndFlags, getCourseEndConfig, resolveCourseEndButton, resolveSecondaryButton, type CourseEndButton } from './courseEndConfig';
+import { getCourseEndProgress } from './courseEndProgress';
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage';
+import { useMyPaths } from '@/hooks/queries/usePaths';
+import { coursePath } from '@/lib/seo/paths';
+import { Panel, Skeleton, buttonClass } from '@/design';
+import CompanyContextChip from '@ee/components/Companies/CompanyContextChip'
 
 interface CourseEndViewProps {
   courseName: string;
@@ -30,13 +47,20 @@ interface CourseEndViewProps {
   trailData: any;
 }
 
-const CourseEndView: React.FC<CourseEndViewProps> = ({ 
-  courseName, 
-  orgslug, 
-  courseUuid, 
-  thumbnailImage, 
-  course, 
-  trailData 
+// The API stores "2026-11-04 22:54:15.878736"; Safari needs the "T".
+const parseApiDate = (value: unknown): Date | null => {
+  if (!value) return null;
+  const d = new Date(String(value).replace(' ', 'T'));
+  return isNaN(d.getTime()) ? null : d;
+};
+
+const CourseEndView: React.FC<CourseEndViewProps> = ({
+  courseName,
+  orgslug,
+  courseUuid,
+  thumbnailImage,
+  course,
+  trailData
 }) => {
   const { t, i18n } = useTranslation();
   const { width, height } = useWindowSize();
@@ -46,16 +70,22 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
   const [isLoadingCertificate, setIsLoadingCertificate] = useState(false);
   const [certificateError, setCertificateError] = useState<string | null>(null);
   // Offscreen, fixed-width render of the certificate used as the PDF source.
-  // The visible copy is fluid (max-w-2xl and narrower on mobile), so capturing
-  // it directly would make the exported file depend on the viewer's screen.
+  // The visible copy is fluid (narrower on mobile), so capturing it directly
+  // would make the exported file depend on the viewer's screen.
   const certificateCaptureRef = useRef<HTMLDivElement>(null);
 
-  // Org-level customization of this screen (Organization settings → Course completion).
-  const courseEndConfig = getCourseEndConfig(org);
+  // This course's completion screen (course editor → Certification tab),
+  // falling back to the organization-level config, then to the defaults.
+  const courseEndConfig = getCourseEndConfig(org, course);
+  const courseEndTitle = (courseEndConfig.title || '').trim();
   const courseEndMessage = (courseEndConfig.message || '').trim();
+  const { confetti: showConfetti, backButton: showBackButton } = courseEndFlags(courseEndConfig);
   const nextButton = resolveCourseEndButton(courseEndConfig);
   const nextButtonLabel = nextButton.text || t('courses.browse_all_courses');
-  const nextButtonClass = "inline-flex items-center space-x-2 bg-white text-gray-800 border border-gray-300 px-6 py-3 rounded-full hover:bg-gray-50 transition duration-200";
+  const secondaryButton = resolveSecondaryButton(courseEndConfig);
+
+  const courseHref = getUriWithOrg(orgslug, coursePath({ slug: course?.slug, course_uuid: courseUuid }));
+  const cleanCourseUuid = courseUuid.replace('course_', '');
 
   // Certificate copy is hidden only when this course definitively has no
   // certification. While the answer is loading (or if the request failed)
@@ -80,50 +110,23 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     return sessionFull || s?.username || '';
   };
   const learnerName = getLearnerName();
+  const certificateUuid = userCertificate?.certificate_user?.user_certification_uuid;
+  const verifyPath = `/certificates/${certificateUuid}/verify`;
   // Absolute: encoded in the QR code on the certificate PDF, scanned outside the app
-  const qrCodeLink = getAbsoluteUriWithOrg(orgslug, `/certificates/${userCertificate?.certificate_user.user_certification_uuid}/verify`);
+  const qrCodeLink = getAbsoluteUriWithOrg(orgslug, verifyPath);
 
+  // Done / total, per chapter, the first unfinished activity and when the
+  // last one was finished: all from the structure + trail already loaded.
+  const progress = useMemo(() => getCourseEndProgress(course, trailData), [course, trailData]);
+  const isCourseCompleted = !!trailData && progress.completed;
 
-
-  // Check if course is actually completed
-  const isCourseCompleted = useMemo(() => {
-    if (!trailData || !course) return false;
-    
-    // Flatten all activities
-    const allActivities = course.chapters.flatMap((chapter: any) => 
-      chapter.activities.map((activity: any) => ({
-        ...activity,
-        chapterId: chapter.id
-      }))
-    );
-    
-    // Check if all activities are completed
-    const isActivityDone = (activity: any) => {
-      const cleanCourseUuid = course.course_uuid?.replace('course_', '');
-      const run = trailData?.runs?.find(
-        (run: any) => {
-          const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
-          return cleanRunCourseUuid === cleanCourseUuid;
-        }
-      );
-      
-      if (run) {
-        return run.steps.find(
-          (step: any) => step.activity_id === activity.id && step.complete === true
-        );
-      }
-      return false;
-    };
-    
-    const totalActivities = allActivities.length;
-    const completedActivities = allActivities.filter((activity: any) => isActivityDone(activity)).length;
-    return totalActivities > 0 && completedActivities === totalActivities;
-  }, [trailData, course]);
+  // Course name on the certificate in the learner's content language (published translation).
+  const contentLang = useContentLanguage();
 
   // Fetch user certificate when course is completed
   useEffect(() => {
     const fetchUserCertificate = async () => {
-      if (!isCourseCompleted) return;
+      if (!isCourseCompleted || !contentLang.ready) return;
 
       // Nothing to fetch until we know the course certifies at all, and
       // nothing to fetch ever if it does not.
@@ -141,11 +144,11 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
       setIsLoadingCertificate(true);
       setCertificateError(null);
       try {
-        const cleanCourseUuid = courseUuid.replace('course_', '');
         const result = await getUserCertificates(
           `course_${cleanCourseUuid}`,
           org.id,
-          session.data.tokens.access_token
+          session.data.tokens.access_token,
+          contentLang.lang || undefined
         );
 
         if (result.success && result.data && result.data.length > 0) {
@@ -162,16 +165,11 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     };
 
     fetchUserCertificate();
-  }, [isCourseCompleted, courseUuid, session?.data?.tokens?.access_token, org?.id, isLoadingCertificationStatus, showCertificateUI]);
+  }, [isCourseCompleted, cleanCourseUuid, session?.data?.tokens?.access_token, org?.id, isLoadingCertificationStatus, showCertificateUI, contentLang.lang, contentLang.ready]);
 
-  // Generate the PDF from the SAME <CertificatePreview> the learner sees.
-  //
-  // This used to build a separate certificate out of a hand-written HTML
-  // string, which had drifted into a completely different design: no pattern
-  // artwork, no org logo or name, an emoji instead of the award mark, and its
-  // own colour palette. We now rasterise a hidden, fixed-width render of the
-  // real component (see `certificateCaptureRef` below), so the download always
-  // matches the on-screen and admin-preview certificate.
+  // The PDF is rasterised from a hidden, fixed-width render of the same
+  // <CertificatePreview> the learner sees (see `certificateCaptureRef`), so
+  // the download always matches the on-screen and admin-preview certificate.
   const downloadCertificate = async () => {
     if (!userCertificate) return;
     const node = certificateCaptureRef.current;
@@ -185,6 +183,28 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error(t('certificate.download_failed', 'Failed to generate PDF. Please try again.'));
+    }
+  };
+
+  // Native share sheet where there is one (phones), else copy the public
+  // verification link.
+  const shareCertificate = async () => {
+    if (!certificateUuid) return;
+    const title = userCertificate?.certification?.config?.certification_name || courseName;
+    const nav = typeof navigator !== 'undefined' ? navigator : null;
+    if (nav?.share) {
+      try {
+        await nav.share({ title, url: qrCodeLink });
+        return;
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return;
+      }
+    }
+    try {
+      await nav?.clipboard?.writeText(qrCodeLink);
+      toast.success(t('certificate.user_page.link_copied_toast'));
+    } catch {
+      toast.error(t('certificate.user_page.copy_failed'));
     }
   };
 
@@ -210,252 +230,339 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     };
   }, [userCertificate, learnerName, qrCodeLink, i18n.language]);
 
-  // Calculate progress for incomplete courses
-  const progressInfo = useMemo(() => {
-    if (!trailData || !course || isCourseCompleted) return null;
-    
-    const allActivities = course.chapters.flatMap((chapter: any) => 
-      chapter.activities.map((activity: any) => ({
-        ...activity,
-        chapterId: chapter.id
-      }))
-    );
-    
-    const isActivityDone = (activity: any) => {
-      const cleanCourseUuid = course.course_uuid?.replace('course_', '');
-      const run = trailData?.runs?.find(
-        (run: any) => {
-          const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
-          return cleanRunCourseUuid === cleanCourseUuid;
-        }
+  // "Completed on …": the certificate's award date, else the last finished activity.
+  const completedOn = useMemo(() => {
+    const date = parseApiDate(userCertificate?.certificate_user?.created_at) || progress.completedAt;
+    if (!date) return null;
+    try {
+      return new Intl.DateTimeFormat(i18n.language || undefined, { dateStyle: 'long' }).format(date);
+    } catch {
+      return date.toLocaleDateString();
+    }
+  }, [userCertificate, progress.completedAt, i18n.language]);
+
+  // Next course in a learning path that contains this one (Paths orgs only).
+  const pathsEnabled = org?.config?.config?.resolved_features?.paths?.enabled === true;
+  const { data: myPaths } = useMyPaths(isCourseCompleted && pathsEnabled ? org?.id : undefined);
+  const nextInPath = useMemo(() => {
+    if (!Array.isArray(myPaths)) return null;
+    for (const path of myPaths) {
+      const items = Array.isArray(path.courses) ? path.courses : [];
+      if (!items.some((c) => String(c.course_uuid).replace('course_', '') === cleanCourseUuid)) continue;
+      const next = items.find(
+        (c) => !c.completed && !c.locked && String(c.course_uuid).replace('course_', '') !== cleanCourseUuid,
       );
-      
-      if (run) {
-        return run.steps.find(
-          (step: any) => step.activity_id === activity.id && step.complete === true
-        );
-      }
-      return false;
-    };
-    
-    const totalActivities = allActivities.length;
-    const completedActivities = allActivities.filter((activity: any) => isActivityDone(activity)).length;
-    const progressPercentage = Math.round((completedActivities / totalActivities) * 100);
-    
-    return {
-      completed: completedActivities,
-      total: totalActivities,
-      percentage: progressPercentage
-    };
-  }, [trailData, course, isCourseCompleted]);
+      if (next?.course) return { name: next.course.name || '', path: coursePath(next.course) };
+    }
+    return null;
+  }, [myPaths, cleanCourseUuid]);
+
+  // One short, subtle burst when the screen opens; none for reduced motion.
+  const [confettiOn, setConfettiOn] = useState(false);
+  const [confettiColors, setConfettiColors] = useState<string[]>(['#171717', '#a3a3a3', '#e5e5e5']);
+  useEffect(() => {
+    if (!isCourseCompleted || !showConfetti) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const root = document.querySelector('.lh-theme') || document.documentElement;
+    const accent = getComputedStyle(root).getPropertyValue('--lh-accent').trim();
+    if (accent) setConfettiColors([accent, '#a3a3a3', '#e5e5e5']);
+    setConfettiOn(true);
+  }, [isCourseCompleted, showConfetti]);
+
+  const thumbnailSrc = thumbnailImage
+    ? getCourseThumbnailMediaDirectory(org?.org_uuid, courseUuid, thumbnailImage)
+    : null;
+
+  const header = (eyebrow: React.ReactNode, meta: React.ReactNode) => (
+    <>
+    {/* Back to the company space this course was opened from (EE). */}
+    <CompanyContextChip orgslug={orgslug} className="self-start" />
+    <header className="flex items-center gap-3 sm:gap-4 min-w-0">
+      <ThumbnailImage
+        src={thumbnailSrc}
+        alt=""
+        loading="eager"
+        className="w-24 h-[54px] sm:w-32 sm:h-[72px] shrink-0 rounded-lg sm:rounded-xl ring-1 ring-black/5 bg-neutral-100"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-lh-accent-ink">{eyebrow}</p>
+        <h1 className="mt-0.5 text-lg sm:text-2xl font-bold tracking-tight text-neutral-900 leading-snug line-clamp-2 break-words">
+          <bdi>{courseName}</bdi>
+        </h1>
+        {meta && <p className="mt-0.5 text-[13px] text-neutral-500">{meta}</p>}
+      </div>
+    </header>
+    </>
+  );
+
+  const linkButton = (button: CourseEndButton, label: string, variant: 'primary' | 'secondary') => {
+    const cls = buttonClass(variant, 'lg', 'max-w-full min-w-0');
+    const content = (
+      <>
+        <span className="truncate">{label}</span>
+        {button.external ? (
+          <ArrowSquareOut size={16} className="shrink-0" />
+        ) : (
+          <ArrowRight size={16} className="shrink-0 rtl:rotate-180" />
+        )}
+      </>
+    );
+    return button.external ? (
+      <a key={label} href={button.href} target="_blank" rel="noopener noreferrer" className={cls}>
+        {content}
+      </a>
+    ) : (
+      <Link key={label} href={getUriWithOrg(orgslug, button.href)} className={cls}>
+        {content}
+      </Link>
+    );
+  };
+
+  // Decorative fine dot grid behind the header, fading out downwards.
+  const backdrop = (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 top-0 h-64 -z-10"
+      style={{
+        backgroundImage: 'radial-gradient(rgba(0,0,0,0.12) 1px, transparent 1.2px)',
+        backgroundSize: '14px 14px',
+        backgroundPosition: 'center top',
+        maskImage: 'radial-gradient(90% 100% at 50% 0%, black 0%, transparent 70%)',
+        WebkitMaskImage: 'radial-gradient(90% 100% at 50% 0%, black 0%, transparent 70%)',
+      }}
+    />
+  );
 
   if (isCourseCompleted) {
-    // Show congratulations for completed course
+    const hasCertificate = !!(userCertificate && certificatePreviewProps);
+    const onward: React.ReactNode[] = [];
+    // One primary per view: the PDF when there is a certificate, else the
+    // first way onward.
+    if (nextInPath) {
+      onward.push(linkButton({ text: nextInPath.name, href: nextInPath.path, external: false }, t('trail.paths.next', { defaultValue: 'Next: {{name}}', name: nextInPath.name }), hasCertificate ? 'secondary' : 'primary'));
+    }
+    onward.push(linkButton(nextButton, nextButtonLabel, hasCertificate || nextInPath ? 'secondary' : 'primary'));
+    if (secondaryButton) onward.push(linkButton(secondaryButton, secondaryButton.text, 'secondary'));
+
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
-        <div className="fixed inset-0 pointer-events-none">
-          <ReactConfetti
-            width={width}
-            height={height}
-            numberOfPieces={200}
-            recycle={false}
-            colors={['#6366f1', '#10b981', '#3b82f6']}
-          />
-        </div>
-        
-        <div className="bg-white rounded-2xl p-8 nice-shadow max-w-4xl w-full space-y-6 relative z-10">
-          <div className="flex flex-col items-center space-y-6">
-            {thumbnailImage && (
-              <ThumbnailImage
-                className="w-[200px] h-[114px] rounded-lg shadow-md object-cover"
-                src={`${getCourseThumbnailMediaDirectory(
-                  org?.org_uuid,
-                  courseUuid,
-                  thumbnailImage
-                )}`}
-                alt={courseName}
-              />
-            )}
-            
-            <div className="bg-emerald-100 p-4 rounded-full">
-              <Trophy className="w-16 h-16 text-emerald-600" />
-            </div>
+      <div className="relative isolate w-full">
+        {backdrop}
+        {confettiOn && (
+          <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 'var(--z-overlay)' }}>
+            <ReactConfetti
+              width={width}
+              height={height}
+              numberOfPieces={70}
+              recycle={false}
+              gravity={0.22}
+              tweenDuration={2500}
+              confettiSource={{ x: width / 2 - 160, y: -10, w: 320, h: 0 }}
+              colors={confettiColors}
+              onConfettiComplete={() => setConfettiOn(false)}
+            />
           </div>
-          
-          <h1 className="text-4xl font-bold text-gray-900">
-            {t('courses.congratulations')}
-          </h1>
-          
-          <p className="text-xl text-gray-600">
-            {t('courses.successfully_completed')}
-            <span className="font-semibold text-gray-900"> {courseName}</span>
-          </p>
-          
-          <p className="text-gray-500 whitespace-pre-line">
-            {courseEndMessage || t('certificate.dedication_message')}
-          </p>
+        )}
+
+        <div className="mx-auto w-full max-w-2xl flex flex-col gap-5 pt-2 pb-10 sm:pt-10">
+          {header(
+            <>
+              <CheckCircle size={14} weight="fill" className="shrink-0" />
+              <span className="truncate" dir="auto">{courseEndTitle || t('courses.end.completed', 'Course completed')}</span>
+            </>,
+            completedOn ? t('courses.end.completed_on', { defaultValue: 'Completed on {{date}}', date: completedOn }) : null,
+          )}
+
+          {courseEndMessage && (
+            <blockquote className="border-s-2 border-neutral-200 ps-4 text-sm leading-relaxed text-neutral-600 whitespace-pre-line break-words">
+              <bdi>{courseEndMessage}</bdi>
+            </blockquote>
+          )}
 
           {/* Courses without certification skip this block entirely: no
-              spinner, no "no certificate" box for something never offered. */}
+              placeholder, no "no certificate" box for something never offered. */}
           {showCertificateUI && (
             isLoadingCertificate || isLoadingCertificationStatus ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-gray-900"></div>
-              <span className="ms-3 text-gray-600">{t('certificate.loading_certificate')}</span>
-            </div>
-          ) : certificateError ? (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-              <p className="text-yellow-800">
-                {certificateError}
-              </p>
-            </div>
-          ) : userCertificate && certificatePreviewProps ? (
-            <div className="space-y-4 text-start">
-              <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
-                <div className="max-w-2xl mx-auto rounded-sm overflow-hidden shadow-sm ring-1 ring-black/5">
-                  <CertificatePreview {...certificatePreviewProps} />
+              <Panel className="lh-t-card overflow-hidden">
+                <span className="sr-only" role="status">{t('certificate.loading_certificate')}</span>
+                <div className="bg-neutral-50 p-3 sm:p-6">
+                  <Skeleton className="mx-auto w-full max-w-xl aspect-[1.414] rounded-sm" />
                 </div>
-              </div>
-              {/* PDF source. Identical props to the visible certificate above,
-                  just pinned to a fixed width so the export is the same on
-                  every screen. Kept in the layout (offscreen, not display:none)
-                  because html2canvas cannot measure a hidden subtree. */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none fixed top-0 start-0 -z-50 opacity-0"
-                style={{ transform: 'translateX(-200vw)' }}
-              >
-                <div ref={certificateCaptureRef} style={{ width: CERTIFICATE_CAPTURE_WIDTH }}>
-                  <CertificatePreview {...certificatePreviewProps} />
+                <div className="flex items-center gap-3 p-4 sm:px-5">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="ms-auto h-9 w-28 rounded-xl" />
                 </div>
-              </div>
-              <div className="flex flex-wrap justify-center gap-3">
-                <button
-                  onClick={downloadCertificate}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-black hover:bg-black/90 rounded-lg transition-colors"
+              </Panel>
+            ) : hasCertificate ? (
+              <Panel className="lh-t-card overflow-hidden">
+                <div className="bg-neutral-50 border-b border-neutral-100 p-3 sm:p-6">
+                  <div className="mx-auto max-w-xl rounded-sm overflow-hidden shadow-sm ring-1 ring-black/5">
+                    <CertificatePreview {...certificatePreviewProps!} />
+                  </div>
+                </div>
+                {/* PDF source. Identical props to the visible certificate above,
+                    just pinned to a fixed width so the export is the same on
+                    every screen. Kept in the layout (offscreen, not display:none)
+                    because html2canvas cannot measure a hidden subtree. */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none fixed top-0 start-0 -z-50 opacity-0"
+                  style={{ transform: 'translateX(-200vw)' }}
                 >
-                  <Download className="w-4 h-4" />
-                  <span>{t('certificate.download_certificate')}</span>
-                </button>
-                <Link
-                  href={getUriWithOrg(orgslug, `/certificates/${userCertificate.certificate_user.user_certification_uuid}/verify`)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-800 bg-white ring-1 ring-gray-200 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  <Shield className="w-4 h-4" />
-                  <span>{t('certificate.page.view_and_share')}</span>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-gray-50 rounded-lg p-6">
-              <p className="text-gray-600">
-                {t('certificate.no_certificate_available')}
-              </p>
-            </div>
+                  <div ref={certificateCaptureRef} style={{ width: CERTIFICATE_CAPTURE_WIDTH }}>
+                    <CertificatePreview {...certificatePreviewProps!} />
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 sm:px-5">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <span className="w-8 h-8 rounded-lg bg-lh-accent-soft text-lh-accent-ink lh-t-tile flex items-center justify-center shrink-0">
+                      <Certificate size={16} />
+                    </span>
+                    <p className="text-sm font-semibold text-neutral-900 truncate">
+                      <bdi>{userCertificate.certification?.config?.certification_name || courseName}</bdi>
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:flex gap-2">
+                    <button type="button" onClick={downloadCertificate} className={buttonClass('primary', 'lg', 'col-span-2 px-3 sm:px-4')}>
+                      <DownloadSimple size={16} weight="bold" className="shrink-0" />
+                      <span className="truncate">{t('certificate.page.download')}</span>
+                    </button>
+                    <button type="button" onClick={shareCertificate} className={buttonClass('secondary', 'lg', 'px-3 sm:px-4')}>
+                      <ShareNetwork size={16} className="shrink-0" />
+                      <span className="truncate">{t('courses.end.share', 'Share')}</span>
+                    </button>
+                    <Link href={getUriWithOrg(orgslug, verifyPath)} className={buttonClass('secondary', 'lg', 'px-3 sm:px-4')}>
+                      <ShieldCheck size={16} className="shrink-0" />
+                      <span className="truncate">{t('certificate.verify')}</span>
+                    </Link>
+                  </div>
+                </div>
+              </Panel>
+            ) : (
+              <Panel padded className="lh-t-card flex items-center gap-3">
+                <span className="w-9 h-9 rounded-xl bg-neutral-100 text-neutral-500 flex items-center justify-center shrink-0">
+                  <Certificate size={18} />
+                </span>
+                <p className="text-sm text-neutral-600">
+                  {certificateError || t('certificate.no_certificate_available')}
+                </p>
+              </Panel>
             )
           )}
 
-          <div className="pt-6 flex flex-wrap justify-center gap-4">
-            <Link
-              href={getUriWithOrg(orgslug, `/course/${courseUuid.replace('course_', '')}`)}
-              className="inline-flex items-center space-x-2 bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition duration-200"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>{t('courses.back_to_course')}</span>
-            </Link>
-            {nextButton.external ? (
-              <a href={nextButton.href} className={nextButtonClass}>
-                <span>{nextButtonLabel}</span>
-                <ArrowRight className="w-5 h-5 rtl:rotate-180" />
-              </a>
-            ) : (
-              <Link href={getUriWithOrg(orgslug, nextButton.href)} className={nextButtonClass}>
-                <span>{nextButtonLabel}</span>
-                <ArrowRight className="w-5 h-5 rtl:rotate-180" />
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 pt-1">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:order-2 sm:ms-auto min-w-0">
+              {onward}
+            </div>
+            {showBackButton && (
+              <Link href={courseHref} className={buttonClass('ghost', 'lg', 'sm:order-1 sm:-ms-2')}>
+                <ArrowLeft size={16} className="shrink-0 rtl:rotate-180" />
+                <span>{t('courses.back_to_course')}</span>
               </Link>
             )}
           </div>
         </div>
       </div>
     );
-  } else {
-    // Show progress and encouragement for incomplete course
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
-        <div className="bg-white rounded-2xl p-8 nice-shadow max-w-2xl w-full space-y-6">
-          <div className="flex flex-col items-center space-y-6">
-            {thumbnailImage && (
-              <ThumbnailImage
-                className="w-[200px] h-[114px] rounded-lg shadow-md object-cover"
-                src={`${getCourseThumbnailMediaDirectory(
-                  org?.org_uuid,
-                  courseUuid,
-                  thumbnailImage
-                )}`}
-                alt={courseName}
-              />
-            )}
-            
-            <div className="bg-blue-100 p-4 rounded-full">
-              <Target className="w-16 h-16 text-blue-600" />
-            </div>
-          </div>
-          
-          <h1 className="text-4xl font-bold text-gray-900">
-            {t('courses.keep_going')}
-          </h1>
-          
-          <p className="text-xl text-gray-600">
-            {t('courses.making_great_progress')}
-            <span className="font-semibold text-gray-900"> {courseName}</span>
-          </p>
-          
-          {progressInfo && (
-            <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-              <div className="flex items-center justify-center space-x-2">
-                <BookOpen className="w-5 h-5 text-gray-600" />
-                <span className="text-lg font-semibold text-gray-700">{t('courses.course_progress')}</span>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">{t('courses.progress')}</span>
-                  <span className="font-semibold text-gray-900">{progressInfo.percentage}%</span>
-                </div>
-                
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${progressInfo.percentage}%` }}
-                  ></div>
-                </div>
-                
-                <div className="text-sm text-gray-500">
-                  {t('courses.completed_of', { completed: progressInfo.completed, total: progressInfo.total })}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <p className="text-gray-500">
-            {showCertificateUI
-              ? t('courses.keep_going_description')
-              : t('courses.keep_going_description_no_certificate')}
-          </p>
-
-          <div className="pt-6">
-            <Link
-              href={getUriWithOrg(orgslug, `/course/${courseUuid.replace('course_', '')}`)}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>{t('courses.continue_learning')}</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
   }
+
+  // In progress: where the learner stands and the one thing to do next.
+  const next = progress.next;
+  const nextHref = next
+    ? getUriWithOrg(orgslug, `/course/${cleanCourseUuid}/activity/${next.activityId}`)
+    : courseHref;
+
+  return (
+    <div className="relative isolate w-full">
+      {backdrop}
+      <div className="mx-auto w-full max-w-2xl flex flex-col gap-5 pt-2 pb-10 sm:pt-10">
+        {header(
+          <span>{t('trail.courses.in_progress', 'In progress')}</span>,
+          t('courses.completed_of', { completed: progress.done, total: progress.total }),
+        )}
+
+        <Panel className="lh-t-card p-4 sm:p-5 flex flex-col gap-4">
+          <div className="flex items-end justify-between gap-3">
+            <div className="text-[26px] font-bold leading-none tracking-tight tabular-nums text-neutral-900">
+              {progress.percent}%
+            </div>
+            {showCertificateUI && (
+              <p className="flex items-center gap-1.5 text-xs text-neutral-500 text-end">
+                <Certificate size={14} className="shrink-0" />
+                <span>{t('courses.unlock_certificate_message')}</span>
+              </p>
+            )}
+          </div>
+          <div
+            role="progressbar"
+            aria-label={t('courses.course_progress')}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress.percent}
+            className="h-2 w-full rounded-full bg-neutral-100 overflow-hidden"
+          >
+            <div
+              className="lh-t-progress h-full rounded-full bg-lh-accent transition-[width] duration-500 ease-lh-out"
+              style={{ width: `${progress.percent}%` }}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <Link href={nextHref} className={buttonClass('primary', 'lg', 'min-w-0 max-w-full sm:max-w-[70%]')}>
+              <span className="truncate" dir="auto">
+                {next
+                  ? t('courses.end.continue_to', { defaultValue: 'Continue: {{name}}', name: next.name })
+                  : t('courses.continue_learning')}
+              </span>
+              <ArrowRight size={16} className="shrink-0 rtl:rotate-180" />
+            </Link>
+            {next && (
+              <Link href={courseHref} className={buttonClass('secondary', 'lg')}>
+                <ArrowLeft size={16} className="shrink-0 rtl:rotate-180" />
+                <span>{t('courses.back_to_course')}</span>
+              </Link>
+            )}
+          </div>
+        </Panel>
+
+        {progress.chapters.length > 0 && (
+          <Panel as="ol" divided className="lh-t-card" aria-label={t('courses.chapters')}>
+            {progress.chapters.map((chapter, index) => {
+              const finished = chapter.total > 0 && chapter.done === chapter.total;
+              const isNext = !!next && next.chapterIndex === index;
+              return (
+                <li key={chapter.id} className="flex items-center gap-3 px-4 sm:px-5 py-3 min-w-0">
+                  {finished ? (
+                    <CheckCircle size={18} weight="fill" className="shrink-0 text-lh-accent-ink lh-t-accent" />
+                  ) : chapter.done > 0 ? (
+                    <CircleHalf size={18} weight="fill" className="shrink-0 text-neutral-400" />
+                  ) : (
+                    <Circle size={18} className={`shrink-0 ${isNext ? 'text-lh-accent-ink lh-t-accent' : 'text-neutral-300'}`} />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm truncate ${finished ? 'text-neutral-500' : 'font-medium text-neutral-900'}`}>
+                      <bdi>{chapter.name || t('trail.continue.chapter', { n: index + 1 })}</bdi>
+                    </p>
+                    {isNext && next && (
+                      <Link
+                        href={nextHref}
+                        className="mt-0.5 flex items-center gap-1 text-xs font-medium text-lh-accent-ink lh-t-link min-w-0"
+                      >
+                        <span className="shrink-0">{t('courses.end.up_next', 'Up next')}:</span>
+                        <span dir="auto" className="truncate">{next.name}</span>
+                      </Link>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-xs tabular-nums text-neutral-400">
+                    {chapter.done}/{chapter.total}
+                  </span>
+                </li>
+              );
+            })}
+          </Panel>
+        )}
+      </div>
+    </div>
+  );
 };
 
-export default CourseEndView; 
+export default CourseEndView;

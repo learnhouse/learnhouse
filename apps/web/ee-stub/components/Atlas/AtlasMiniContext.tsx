@@ -16,10 +16,12 @@ export interface AtlasPageContext {
 }
 
 export interface AtlasReference {
-  type: 'activity' | 'chapter'
+  type: 'activity' | 'chapter' | 'course' | 'user' | 'community' | 'page'
   uuid: string
   name: string
-  parent_course_uuid: string
+  parent_course_uuid?: string
+  // Dashboard path, for page references.
+  path?: string
   parent_chapter_id?: number
   parent_chapter_name?: string
   activity_type?: string
@@ -28,6 +30,10 @@ export interface AtlasReference {
 export interface AtlasMiniContextValue {
   available: boolean
   open: boolean
+  returnPath: string | null
+  ask: (_prompt: string, _reference?: AtlasReference) => void
+  queuedPrompt: { id: number; text: string } | null
+  clearQueuedPrompt: () => void
   setOpen: (_open: boolean) => void
   toggle: () => void
   input: string
@@ -41,6 +47,8 @@ export interface AtlasMiniContextValue {
   attachReference: (_ref: AtlasReference) => void
   removeReference: (_uuid: string) => void
   clearReferences: () => void
+  warm: boolean
+  prefetch: () => void
 }
 
 const noop = () => {}
@@ -48,6 +56,10 @@ const noop = () => {}
 const ATLAS_OFF: AtlasMiniContextValue = {
   available: false,
   open: false,
+  returnPath: null,
+  ask: noop,
+  queuedPrompt: null,
+  clearQueuedPrompt: noop,
   setOpen: noop,
   toggle: noop,
   input: '',
@@ -61,6 +73,8 @@ const ATLAS_OFF: AtlasMiniContextValue = {
   attachReference: noop,
   removeReference: noop,
   clearReferences: noop,
+  warm: false,
+  prefetch: noop,
 }
 
 export function useAtlasMini(): AtlasMiniContextValue {

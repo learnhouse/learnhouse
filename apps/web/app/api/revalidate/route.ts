@@ -14,6 +14,7 @@ const REVALIDATABLE_TAGS = new Set([
   'folders',
   'organizations',
   'podcasts',
+  'seo-sitemap',
 ])
 
 async function hasValidSession(request: NextRequest): Promise<boolean> {

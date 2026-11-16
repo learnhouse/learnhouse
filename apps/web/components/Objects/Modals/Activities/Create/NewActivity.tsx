@@ -1,5 +1,5 @@
 import React from 'react'
-import { Browsers, PlayCircle, FileText, Backpack, MarkdownLogo, Globe, Package, Cube, VideoCamera } from '@phosphor-icons/react'
+import { Browsers, PlayCircle, FileText, Backpack, MarkdownLogo, Globe, Package, Cube, VideoCamera, Lightning } from '@phosphor-icons/react'
 import { SiGoogledocs, SiGooglesheets, SiGoogleslides, SiGoogleforms, SiFigma, SiNotion, SiCanvas, SiLoom, SiMiro, SiYoutube, SiSpotify, SiAirtable, SiTypeform, SiDropbox, SiTrello } from '@icons-pack/react-simple-icons'
 import dynamic from 'next/dynamic'
 import DynamicCanvaModal from './NewActivityModal/DynamicActivityModal'
@@ -11,6 +11,10 @@ import Assignment from './NewActivityModal/AssignmentActivityModal'
 import ResourceModal from './NewActivityModal/ResourceActivityModal'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
+import { getOptionalFeatureState } from '@services/features/optionalFeatures'
+import type { PlanLevel } from '@services/plans/plans'
 
 // Live sessions and SCORM authoring live in the Enterprise (ee) package (`@ee` resolves to a
 // no-op stub in open-source builds); load it lazily (the card is also
@@ -20,6 +24,8 @@ const ScormActivityModal = dynamic(
   () => import('@ee/components/Modals/ScormActivityModal'),
   { ssr: false }
 )
+// Plays are Enterprise too (Pro plan and up on SaaS).
+const PlayActivityModal = dynamic(() => import('@ee/components/Plays/course/PlayActivityModal'), { ssr: false })
 
 const EMBED_SERVICES = [
   { Icon: SiGoogledocs, color: '#4285F4' },
@@ -62,24 +68,32 @@ const EmbedServicesIcon = () => (
   </div>
 )
 
-type ActivityTypeCard = {
+export type ActivityTypeCard = {
   key: string
-  icon: any
-  customIcon?: React.ComponentType
+  icon: React.ElementType
   labelKey: string
-  color: { icon: string }
+  descriptionKey: string
+  // Icon tile colours in the modal header.
+  tone: string
+  // The picker card: icon colour and background pattern.
+  iconColor: string
   pattern: string
   patternSize?: string
+  customIcon?: React.ComponentType
+  // English fallbacks while a type's strings are not in every locale yet.
+  labelDefault?: string
+  descriptionDefault?: string
 }
 
+// One line each, so the picker tells teachers what they get before they click.
 export const activityTypes: ActivityTypeCard[] = [
   {
     key: 'dynamic',
     icon: Browsers,
     labelKey: 'dashboard.courses.structure.activity.types.dynamic_page',
-    color: {
-      icon: 'text-blue-400',
-    },
+    descriptionKey: 'dashboard.courses.editor.activity_types.dynamic',
+    tone: 'bg-sky-50 text-sky-600',
+    iconColor: 'text-blue-400',
     pattern: `radial-gradient(circle, rgba(191,219,254,0.3) 1px, transparent 1px)`,
     patternSize: '12px 12px',
   },
@@ -87,81 +101,101 @@ export const activityTypes: ActivityTypeCard[] = [
     key: 'video',
     icon: PlayCircle,
     labelKey: 'dashboard.courses.structure.activity.types.video',
-    color: {
-      icon: 'text-violet-400',
-    },
+    descriptionKey: 'dashboard.courses.editor.activity_types.video',
+    tone: 'bg-violet-50 text-violet-600',
+    iconColor: 'text-violet-400',
     pattern: `repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(196,181,253,0.25) 6px, rgba(196,181,253,0.25) 7px)`,
   },
   {
     key: 'documentpdf',
     icon: FileText,
     labelKey: 'dashboard.courses.structure.activity.types.document',
-    color: {
-      icon: 'text-emerald-400',
-    },
+    descriptionKey: 'dashboard.courses.editor.activity_types.document',
+    tone: 'bg-emerald-50 text-emerald-600',
+    iconColor: 'text-emerald-400',
     pattern: `repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(167,243,208,0.25) 8px, rgba(167,243,208,0.25) 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(167,243,208,0.25) 8px, rgba(167,243,208,0.25) 9px)`,
   },
   {
     key: 'assignments',
     icon: Backpack,
     labelKey: 'dashboard.courses.structure.activity.types.assignments',
-    color: {
-      icon: 'text-amber-400',
-    },
+    descriptionKey: 'dashboard.courses.editor.activity_types.assignment',
+    tone: 'bg-amber-50 text-amber-600',
+    iconColor: 'text-amber-400',
     pattern: `repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(253,230,138,0.25) 5px, rgba(253,230,138,0.25) 6px)`,
   },
   {
     key: 'markdown',
     icon: MarkdownLogo,
     labelKey: 'dashboard.courses.structure.activity.types.markdown',
-    color: {
-      icon: 'text-rose-400',
-    },
+    descriptionKey: 'dashboard.courses.editor.activity_types.markdown',
+    tone: 'bg-rose-50 text-rose-600',
+    iconColor: 'text-rose-400',
     pattern: `repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(253,164,175,0.2) 6px, rgba(253,164,175,0.2) 7px), repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(253,164,175,0.2) 6px, rgba(253,164,175,0.2) 7px)`,
   },
   {
     key: 'embed',
     icon: Globe,
-    customIcon: EmbedServicesIcon,
     labelKey: 'dashboard.courses.structure.activity.types.embed',
-    color: {
-      icon: 'text-cyan-400',
-    },
+    descriptionKey: 'dashboard.courses.editor.activity_types.embed',
+    tone: 'bg-cyan-50 text-cyan-600',
+    iconColor: 'text-cyan-400',
     pattern: `radial-gradient(circle, rgba(165,243,252,0.4) 1px, transparent 1px)`,
     patternSize: '12px 12px',
+    customIcon: EmbedServicesIcon,
   },
   {
     key: 'resource',
     icon: Cube,
     labelKey: 'dashboard.courses.structure.activity.types.resource',
-    color: {
-      icon: 'text-indigo-400',
-    },
+    descriptionKey: 'dashboard.courses.editor.activity_types.resource',
+    tone: 'bg-indigo-50 text-indigo-600',
+    iconColor: 'text-indigo-400',
     pattern: `radial-gradient(circle, rgba(199,210,254,0.4) 1px, transparent 1px)`,
     patternSize: '12px 12px',
   },
 ]
 
-// SCORM authoring card, only shown when the org has the SCORM feature enabled.
-const scormActivityType: ActivityTypeCard = {
-  key: 'scorm',
-  icon: Package,
-  labelKey: 'dashboard.courses.structure.activity.types.scorm',
-  color: {
-    icon: 'text-sky-400',
-  },
-  pattern: `repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(186,230,253,0.3) 6px, rgba(186,230,253,0.3) 7px)`,
-}
-
 // Live session card, only shown when the org has live sessions enabled.
-const liveSessionActivityType: ActivityTypeCard = {
+export const liveSessionActivityType: ActivityTypeCard = {
   key: 'livesession',
   icon: VideoCamera,
   labelKey: 'dashboard.courses.structure.activity.types.livesession',
-  color: {
-    icon: 'text-red-400',
-  },
+  descriptionKey: 'dashboard.courses.editor.activity_types.livesession',
+  tone: 'bg-red-50 text-red-600',
+  iconColor: 'text-red-400',
   pattern: `repeating-linear-gradient(45deg, transparent, transparent 7px, rgba(254,202,202,0.3) 7px, rgba(254,202,202,0.3) 8px)`,
+}
+
+// SCORM authoring card, only shown when the org has the SCORM feature enabled.
+export const scormActivityType: ActivityTypeCard = {
+  key: 'scorm',
+  icon: Package,
+  labelKey: 'dashboard.courses.structure.activity.types.scorm',
+  descriptionKey: 'dashboard.courses.editor.activity_types.scorm',
+  tone: 'bg-neutral-100 text-neutral-700',
+  iconColor: 'text-sky-400',
+  pattern: `repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(186,230,253,0.3) 6px, rgba(186,230,253,0.3) 7px)`,
+}
+
+// Play card: a step-by-step play from the org's Plays, run inside the course.
+// Shown when Plays are on; with a plan badge (and the upgrade prompt) when
+// the plan doesn't include them.
+export const playActivityType: ActivityTypeCard = {
+  key: 'play',
+  icon: Lightning,
+  labelKey: 'play_activity.type_label',
+  descriptionKey: 'play_activity.type_description',
+  labelDefault: 'Play',
+  descriptionDefault: 'A step-by-step play from your Plays, completed by passing it.',
+  tone: 'bg-amber-50 text-amber-600',
+  iconColor: 'text-amber-400',
+  pattern: `radial-gradient(circle, rgba(253,230,138,0.45) 1px, transparent 1px)`,
+  patternSize: '10px 10px',
+}
+
+export function getActivityType(key: string): ActivityTypeCard | undefined {
+  return [...activityTypes, liveSessionActivityType, scormActivityType, playActivityType].find((a) => a.key === key)
 }
 
 function NewActivityModal({
@@ -175,31 +209,42 @@ function NewActivityModal({
   selectedView,
   setSelectedView,
   onLiveSessionCreated,
+  onPlayActivityCreated,
 }: any) {
   const { t } = useTranslation()
   const org = useOrg() as any
+  const { showUpgrade } = useUpgradeModal()
   const scormEnabled = org?.config?.config?.resolved_features?.scorm?.enabled === true
 
   const liveSessionsEnabled = org?.config?.config?.resolved_features?.live_sessions?.enabled === true
+  const plays = getOptionalFeatureState(org?.config?.config?.resolved_features?.playgrounds)
+  const playsLocked = plays.status === 'locked'
 
   const visibleActivityTypes = [
     ...activityTypes,
     ...(liveSessionsEnabled ? [liveSessionActivityType] : []),
     ...(scormEnabled ? [scormActivityType] : []),
+    ...(plays.status !== 'off' ? [playActivityType] : []),
   ]
 
   return (
     <>
       {selectedView === 'home' && (
-        <div className="grid grid-cols-3 gap-3 p-5 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
           {visibleActivityTypes.map((activity) => {
             const Icon = activity.icon
-            const CustomIcon = (activity as any).customIcon
+            const CustomIcon = activity.customIcon
+            const locked = activity.key === 'play' && playsLocked
             return (
-              <div
+              <button
                 key={activity.key}
-                onClick={() => setSelectedView(activity.key)}
-                className="relative flex flex-col items-center justify-center rounded-xl nice-shadow hover:scale-[1.02] transition-all duration-200 ease-in-out cursor-pointer overflow-hidden h-32"
+                type="button"
+                onClick={() =>
+                  locked
+                    ? showUpgrade({ source: 'new_activity_play', feature: 'playgrounds', requiredPlan: plays.upgradePlan ?? 'pro' })
+                    : setSelectedView(activity.key)
+                }
+                className="relative flex flex-col items-center justify-center rounded-xl nice-shadow hover:scale-[1.02] transition-all duration-200 ease-in-out cursor-pointer overflow-hidden h-32 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20"
               >
                 <div
                   className="absolute inset-0"
@@ -212,24 +257,23 @@ function NewActivityModal({
                   {CustomIcon ? (
                     <CustomIcon />
                   ) : (
-                    <Icon
-                      size={32}
-                      weight="duotone"
-                      className={activity.color.icon}
-                    />
+                    <Icon size={32} weight="duotone" className={activity.iconColor} />
                   )}
-                  <span className="text-xs font-medium text-gray-500 bg-white nice-shadow rounded-full px-3 py-1">
-                    {t(activity.labelKey)}
+                  <span className="inline-flex items-center text-xs font-medium text-gray-500 bg-white nice-shadow rounded-full px-3 py-1">
+                    {activity.labelDefault ? t(activity.labelKey, activity.labelDefault) : t(activity.labelKey)}
+                    {locked && (
+                      <PlanBadge currentPlan={'free' as PlanLevel} requiredPlan={(plays.upgradePlan ?? 'pro') as PlanLevel} alwaysShow />
+                    )}
                   </span>
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>
       )}
 
       {selectedView !== 'home' && (
-        <div className="p-5">
+        <div>
           {selectedView === 'dynamic' && (
             <DynamicCanvaModal
               submitActivity={submitActivity}
@@ -294,6 +338,14 @@ function NewActivityModal({
               chapterId={chapterId}
               course={course}
               onCreated={onLiveSessionCreated ?? closeModal}
+            />
+          )}
+
+          {selectedView === 'play' && !playsLocked && (
+            <PlayActivityModal
+              course={course}
+              chapterId={chapterId}
+              onCreated={onPlayActivityCreated ?? closeModal}
             />
           )}
 

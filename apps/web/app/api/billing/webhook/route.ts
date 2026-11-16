@@ -16,6 +16,7 @@ import {
 } from "@services/billing/packs";
 import { planForPriceId, stripeClient as stripe } from "@services/billing/stripe";
 import { billOverageForInvoice } from "@services/billing/activeUserBilling";
+import { captureConversion } from "@services/analytics/serverCapture";
 import {
   sendPurchaseCompleteMail,
   sendPackActivatedMail,
@@ -197,7 +198,8 @@ async function handleCheckoutCompleted(session: any) {
           `is the matching STRIPE_PRICE_* env set?`,
       );
     }
-    await updateOrganizationConfigInternally(orgId, plan as any);
+    const applied = await updateOrganizationConfigInternally(orgId, plan as any);
+    await captureConversion(orgId, plan, subscription, applied);
 
     if (customerEmail) {
       await sendPurchaseCompleteMail({

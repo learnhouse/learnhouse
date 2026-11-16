@@ -1,0 +1,590 @@
+{
+ "version": "2026-11-16",
+ "schema_version": 1,
+ "examples": {
+  "kpis": {
+   "type": "kpis",
+   "items": [
+    {
+     "label": "Learners",
+     "value": 1240,
+     "delta": 4.5
+    }
+   ]
+  },
+  "table": {
+   "type": "table",
+   "columns": [
+    {
+     "key": "name",
+     "label": "Course"
+    },
+    {
+     "key": "rate",
+     "label": "Completion",
+     "format": "percent"
+    }
+   ],
+   "rows": [
+    {
+     "name": "Python 101",
+     "rate": 62,
+     "_link": {
+      "kind": "course",
+      "uuid": "course_x"
+     }
+    }
+   ]
+  },
+  "chart": {
+   "type": "chart",
+   "kind": "line",
+   "x_key": "day",
+   "series": [
+    {
+     "key": "active",
+     "label": "Active"
+    }
+   ],
+   "data": [
+    {
+     "day": "2026-11-01",
+     "active": 12
+    },
+    {
+     "day": "2026-11-02",
+     "active": 18
+    }
+   ]
+  },
+  "timeline": {
+   "type": "timeline",
+   "items": [
+    {
+     "time": "Mon 9:00",
+     "title": "Kickoff"
+    }
+   ]
+  },
+  "steps": {
+   "type": "steps",
+   "items": [
+    {
+     "title": "Enroll"
+    },
+    {
+     "title": "Unlock chapter 2",
+     "detail": "7 days later"
+    }
+   ]
+  },
+  "comparison": {
+   "type": "comparison",
+   "columns": [
+    {
+     "title": "Drip",
+     "items": [
+      "Paced"
+     ]
+    },
+    {
+     "title": "Open",
+     "items": [
+      "All at once"
+     ]
+    }
+   ]
+  },
+  "checklist": {
+   "type": "checklist",
+   "items": [
+    {
+     "label": "Cover image",
+     "checked": true
+    },
+    {
+     "label": "SEO description"
+    }
+   ]
+  },
+  "progress": {
+   "type": "progress",
+   "items": [
+    {
+     "label": "Chapters written",
+     "value": 3,
+     "max": 4
+    }
+   ]
+  },
+  "kanban": {
+   "type": "kanban",
+   "columns": [
+    {
+     "title": "To review",
+     "cards": [
+      {
+       "title": "Essay 3"
+      }
+     ]
+    }
+   ]
+  },
+  "flow": {
+   "type": "flow",
+   "nodes": [
+    {
+     "id": "a",
+     "label": "Submit",
+     "shape": "start"
+    },
+    {
+     "id": "b",
+     "label": "Passed?",
+     "shape": "decision"
+    }
+   ],
+   "edges": [
+    {
+     "from": "a",
+     "to": "b"
+    }
+   ]
+  },
+  "outline": {
+   "type": "outline",
+   "chapters": [
+    {
+     "name": "Basics",
+     "activities": [
+      {
+       "name": "Intro",
+       "type": "page"
+      }
+     ]
+    }
+   ]
+  },
+  "page": {
+   "type": "page",
+   "markdown": "# Draft lesson\n\nText"
+  },
+  "diff": {
+   "type": "diff",
+   "before": "Old title",
+   "after": "New title"
+  },
+  "quiz": {
+   "type": "quiz",
+   "questions": [
+    {
+     "text": "2 + 2?",
+     "options": [
+      {
+       "text": "4",
+       "correct": true
+      },
+      {
+       "text": "5"
+      }
+     ]
+    }
+   ]
+  },
+  "flashcards": {
+   "type": "flashcards",
+   "cards": [
+    {
+     "front": "TTL",
+     "back": "Time to live"
+    }
+   ]
+  },
+  "gallery": {
+   "type": "gallery",
+   "images": [
+    {
+     "kind": "course",
+     "uuid": "course_x"
+    }
+   ]
+  },
+  "callout": {
+   "type": "callout",
+   "tone": "warning",
+   "text": "Learners already enrolled keep their access."
+  },
+  "choices": {
+   "type": "choices",
+   "options": [
+    {
+     "label": "Apply to all",
+     "prompt": "Apply it to every course"
+    }
+   ]
+  },
+  "cards": {
+   "type": "cards",
+   "items": [
+    {
+     "kind": "course",
+     "uuid": "course_x",
+     "name": "Python 101"
+    }
+   ]
+  },
+  "text": {
+   "type": "text",
+   "markdown": "Some **context**."
+  },
+  "heatmap": {
+   "type": "heatmap",
+   "x_labels": [
+    "9",
+    "12",
+    "18"
+   ],
+   "y_labels": [
+    "1",
+    "2"
+   ],
+   "y_weekdays": true,
+   "values": [
+    [
+     3,
+     8,
+     12
+    ],
+    [
+     1,
+     5,
+     9
+    ]
+   ]
+  },
+  "funnel": {
+   "type": "funnel",
+   "stages": [
+    {
+     "label": "Viewed",
+     "value": 1200
+    },
+    {
+     "label": "Enrolled",
+     "value": 310
+    },
+    {
+     "label": "Completed",
+     "value": 96
+    }
+   ]
+  },
+  "cohort": {
+   "type": "cohort",
+   "periods": [
+    "Week 1",
+    "Week 2",
+    "Week 4"
+   ],
+   "rows": [
+    {
+     "label": "Oct 6",
+     "size": 40,
+     "values": [
+      65,
+      48,
+      30
+     ]
+    }
+   ]
+  },
+  "radar": {
+   "type": "radar",
+   "axes": [
+    "Syntax",
+    "Testing",
+    "Debugging"
+   ],
+   "series": [
+    {
+     "label": "Ana",
+     "values": [
+      80,
+      55,
+      70
+     ]
+    }
+   ],
+   "max": 100
+  },
+  "gauge": {
+   "type": "gauge",
+   "label": "Training compliance",
+   "value": 82,
+   "max": 100,
+   "unit": "%",
+   "target": 90,
+   "bands": [
+    {
+     "to": 60,
+     "tone": "danger"
+    },
+    {
+     "to": 85,
+     "tone": "warning"
+    },
+    {
+     "to": 100,
+     "tone": "success"
+    }
+   ]
+  },
+  "leaderboard": {
+   "type": "leaderboard",
+   "value_label": "Completions",
+   "entries": [
+    {
+     "name": "Ana Silva",
+     "value": 42,
+     "link": {
+      "kind": "user",
+      "uuid": "user_x"
+     }
+    },
+    {
+     "name": "Li Wei",
+     "value": 37
+    }
+   ]
+  },
+  "sparklines": {
+   "type": "sparklines",
+   "items": [
+    {
+     "label": "Daily active",
+     "value": 182,
+     "points": [
+      120,
+      140,
+      135,
+      182
+     ],
+     "delta": 12
+    }
+   ]
+  },
+  "geo": {
+   "type": "geo",
+   "value_label": "Visits",
+   "items": [
+    {
+     "country": "FR",
+     "value": 420
+    },
+    {
+     "country": "US",
+     "value": 310
+    }
+   ]
+  },
+  "matrix": {
+   "type": "matrix",
+   "x_label": "Effort",
+   "y_label": "Impact",
+   "quadrants": [
+    "Quick wins",
+    "Big bets",
+    "Fill-ins",
+    "Money pits"
+   ],
+   "items": [
+    {
+     "label": "Add captions",
+     "x": 0.2,
+     "y": 0.8
+    }
+   ]
+  },
+  "tree": {
+   "type": "tree",
+   "nodes": [
+    {
+     "label": "Python 101",
+     "children": [
+      {
+       "label": "Basics",
+       "children": [
+        {
+         "label": "Variables",
+         "badge": "page"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "mindmap": {
+   "type": "mindmap",
+   "center": "Photosynthesis",
+   "branches": [
+    {
+     "label": "Inputs",
+     "children": [
+      "Light",
+      "Water",
+      "CO2"
+     ]
+    },
+    {
+     "label": "Outputs",
+     "children": [
+      "Glucose",
+      "Oxygen"
+     ]
+    }
+   ]
+  },
+  "gantt": {
+   "type": "gantt",
+   "unit": "week",
+   "tasks": [
+    {
+     "label": "Write chapters",
+     "start": 1,
+     "end": 4
+    },
+    {
+     "label": "Launch",
+     "start": 5
+    }
+   ]
+  },
+  "math": {
+   "type": "math",
+   "blocks": [
+    {
+     "latex": "E = mc^2",
+     "caption": "Mass-energy equivalence"
+    }
+   ]
+  },
+  "code": {
+   "type": "code",
+   "language": "python",
+   "code": "print(2 + 2)",
+   "output": "4"
+  },
+  "email": {
+   "type": "email",
+   "subject": "Week 2 is open",
+   "to": "Learners of Python 101",
+   "body": "Hi,\n\nChapter 2 is now available.",
+   "cta_label": "Continue"
+  },
+  "profile": {
+   "type": "profile",
+   "name": "Ana Silva",
+   "user_uuid": "user_x",
+   "subtitle": "Learner",
+   "stats": [
+    {
+     "label": "Courses",
+     "value": 3
+    }
+   ],
+   "courses": [
+    {
+     "name": "Python 101",
+     "progress": 64
+    }
+   ]
+  },
+  "rubric": {
+   "type": "rubric",
+   "levels": [
+    {
+     "label": "Excellent",
+     "points": 4
+    },
+    {
+     "label": "Needs work",
+     "points": 1
+    }
+   ],
+   "criteria": [
+    {
+     "label": "Clarity",
+     "descriptions": [
+      "Clear and well organized",
+      "Hard to follow"
+     ]
+    }
+   ]
+  },
+  "glossary": {
+   "type": "glossary",
+   "terms": [
+    {
+     "term": "Latency",
+     "definition": "The delay before data starts to move."
+    }
+   ]
+  },
+  "matching": {
+   "type": "matching",
+   "pairs": [
+    {
+     "left": "H2O",
+     "right": "Water"
+    },
+    {
+     "left": "NaCl",
+     "right": "Salt"
+    }
+   ]
+  },
+  "ordering": {
+   "type": "ordering",
+   "instruction": "Order the steps",
+   "items": [
+    "Plan",
+    "Write",
+    "Review"
+   ]
+  },
+  "fill_blanks": {
+   "type": "fill_blanks",
+   "text": "Water boils at [[100]] degrees [[Celsius|C]].",
+   "bank": true
+  },
+  "whatif": {
+   "type": "whatif",
+   "variables": [
+    {
+     "key": "price",
+     "label": "Price",
+     "min": 10,
+     "max": 200,
+     "value": 49,
+     "unit": "USD"
+    },
+    {
+     "key": "buyers",
+     "label": "Buyers",
+     "min": 0,
+     "max": 500,
+     "value": 120
+    }
+   ],
+   "outputs": [
+    {
+     "label": "Revenue",
+     "formula": "price * buyers",
+     "format": "currency",
+     "unit": "USD"
+    }
+   ]
+  }
+ }
+}

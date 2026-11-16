@@ -1,96 +1,39 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
 import {
-  CircleNotch, VideoCamera, UploadSimple, X, ArrowsLeftRight,
-  CheckCircle, WarningCircle, ArrowsOut,
+  VideoCamera, ArrowsOut, ArrowsClockwise, ArrowsHorizontal, Trash, Timer, ListNumbers, Plus, X,
 } from '@phosphor-icons/react'
 import React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { uploadNewVideoFileWithProgress, getVideoBlock } from '../../../../../services/blocks/Video/video'
+import { getVideoBlock } from '../../../../../services/blocks/Video/video'
 import { getVideoBlockStreamUrl, getVideoBlockHlsMasterUrl, getVideoBlockHlsThumbnailsUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { constructAcceptValue } from '@/lib/constants'
-import { cn } from '@/lib/utils'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import LearnHousePlayer from '@components/Objects/Activities/Video/LearnHousePlayer'
 import { useTranslation } from 'react-i18next'
-
-const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
-
-const VIDEO_SIZES = {
-  small: { width: 480, label: 'Small' },
-  medium: { width: 720, label: 'Medium' },
-  large: { width: 960, label: 'Large' },
-} as const
-
-type VideoSize = keyof typeof VIDEO_SIZES
-
-// Helper function to determine video size from width
-const getVideoSizeFromWidth = (width: number | string | undefined): VideoSize => {
-  if (!width) return 'medium'
-  if (width === '100%') return 'large'
-
-  const numWidth = typeof width === 'string' ? parseInt(width) : width
-
-  if (numWidth <= VIDEO_SIZES.small.width) return 'small'
-  if (numWidth <= VIDEO_SIZES.medium.width) return 'medium'
-  return 'large'
-}
-
-interface Organization {
-  org_uuid: string
-}
-
-interface Course {
-  courseStructure: {
-    course_uuid: string
-  }
-}
-
-interface EditorState {
-  isEditable: boolean
-}
-
-interface Session {
-  data?: {
-    tokens?: {
-      access_token?: string
-    }
-  }
-}
-
-// Legacy interface for backward compatibility
-interface LegacyVideoBlockObject {
-  block_uuid: string
-  content: {
-    file_id: string
-    file_format: string
-    activity_uuid?: string
-  }
-  size?: {
-    width?: number | string
-  }
-}
-
-interface VideoBlockObject {
-  block_uuid: string
-  content: {
-    file_id: string
-    file_format: string
-    activity_uuid?: string
-  }
-  size: VideoSize
-}
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import {
+  BlockChrome, BlockPopover, BlockToolbarButton, BlockToolbarDivider, CommitInput, FIELD_CLASS, Segmented, SettingsField,
+} from '../../Blocks/ui/BlockChrome'
+import BlockCaption from '../../Blocks/ui/BlockCaption'
+import MediaSourcePicker from '../../Blocks/ui/MediaSourcePicker'
+import { useBlockUpload } from '../../Blocks/media/useBlockUpload'
+import { acceptFor } from '../../Blocks/media/mediaKinds'
+import { fetchRemoteFile, looksLikeFileUrl, UrlImportError } from '../../Blocks/media/urlImport'
+import { embedAttrsFor, normalizeUserUrl, parseEmbedUrl } from '../../Blocks/embeds/embedProviders'
+import { libraryMediaNodeAttrs } from '../../Blocks/media/librarySnapshot'
+import { uploadErrorText } from '../../Blocks/media/uploadMessages'
+import { deleteBlock, pickFile, replaceBlock } from '../../Blocks/nodeViewUtils'
+import { formatTimecode, normalizeChapters, parseTimecode, resolveVideoBlockObject, VIDEO_SIZES, type VideoSize } from '../../Blocks/schema/blockAttrs'
 
 interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
   extension: Node & {
     options: {
-      activity: {
-        activity_uuid: string
-      }
+      activity: { activity_uuid: string }
       // Passed at configure() time so playback ids resolve reliably even where
       // the Org/Course React contexts aren't populated (e.g. the student page).
       orgUuid?: string
@@ -99,161 +42,89 @@ interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
   }
 }
 
+function ChaptersEditor({ value, onCommit }: { value: { start: number; title: string }[]; onCommit: (_v: { start: number; title: string }[]) => void }) {
+  const { t } = useTranslation()
+  const [rows, setRows] = React.useState(() => value.map((c) => ({ time: formatTimecode(c.start), title: c.title })))
+  const commit = (next = rows) => {
+    const cleaned = normalizeChapters(next.map((r) => ({ start: parseTimecode(r.time), title: r.title })))
+    if (JSON.stringify(cleaned) !== JSON.stringify(value)) onCommit(cleaned)
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      {rows.map((row, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <input
+            value={row.time}
+            onChange={(e) => setRows(rows.map((r, j) => (j === i ? { ...r, time: e.target.value } : r)))}
+            onBlur={() => commit()}
+            onKeyDown={(e) => e.stopPropagation()}
+            placeholder="0:00"
+            aria-label={t('editor.blocks_v2.chapter_time', 'Chapter start')}
+            className={`${FIELD_CLASS} w-16 flex-none tabular-nums ${parseTimecode(row.time) == null && row.time ? 'text-rose-600' : ''}`}
+          />
+          <input
+            value={row.title}
+            onChange={(e) => setRows(rows.map((r, j) => (j === i ? { ...r, title: e.target.value } : r)))}
+            onBlur={() => commit()}
+            onKeyDown={(e) => e.stopPropagation()}
+            placeholder={t('editor.blocks_v2.chapter_title', 'Chapter title')}
+            aria-label={t('editor.blocks_v2.chapter_title', 'Chapter title')}
+            className={FIELD_CLASS}
+          />
+          <button
+            type="button"
+            aria-label={t('common.delete', 'Delete')}
+            className="flex h-7 w-7 flex-none items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-rose-600"
+            onClick={() => {
+              const next = rows.filter((_, j) => j !== i)
+              setRows(next)
+              commit(next)
+            }}
+          >
+            <X size={12} />
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className={buttonClass('secondary', 'sm', 'self-start')}
+        onClick={() => setRows([...rows, { time: '', title: '' }])}
+      >
+        <Plus size={12} /> {t('editor.blocks_v2.add_chapter', 'Add chapter')}
+      </button>
+    </div>
+  )
+}
+
 function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const { t } = useTranslation()
   const { node, extension, updateAttributes } = props
-  const org = useOrg() as Organization | null
-  const course = useCourse() as Course | null
-  const editorState = useEditorProvider() as EditorState
-  const session = useLHSession() as Session
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const uploadZoneRef = React.useRef<HTMLDivElement>(null)
-
-  // Convert legacy block object to new format
-  const convertLegacyBlock = React.useCallback((block: LegacyVideoBlockObject): VideoBlockObject => {
-    const videoSize = getVideoSizeFromWidth(block.size?.width)
-    return {
-      ...block,
-      size: videoSize
-    }
-  }, [])
-
-  const initialBlockObject = React.useMemo(() => {
-    if (!node.attrs.blockObject) return null
-    if ('size' in node.attrs.blockObject && typeof node.attrs.blockObject.size === 'string') {
-      const block = node.attrs.blockObject as VideoBlockObject
-      if ((block.size as string) === 'full') {
-        return { ...block, size: 'large' as VideoSize }
-      }
-      return block
-    }
-    return convertLegacyBlock(node.attrs.blockObject as LegacyVideoBlockObject)
-  }, [node.attrs.blockObject, convertLegacyBlock])
-
-  // `_video` value is intentionally unused; only the setter tracks selected-file state
-  const [_video, setVideo] = React.useState<File | null>(null)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-  const [isDragging, setIsDragging] = React.useState(false)
-  const [uploadProgress, setUploadProgress] = React.useState(0)
-  const [blockObject, setBlockObject] = React.useState<VideoBlockObject | null>(initialBlockObject)
-  const [selectedSize, setSelectedSize] = React.useState<VideoSize>(initialBlockObject?.size || 'medium')
-  const [isModalOpen, setIsModalOpen] = React.useState(false)
-  // Fresh HLS transcode status for this block (the Tiptap blockObject is an
-  // upload-time snapshot and never reflects later HLS-ready updates).
-  const [hlsMeta, setHlsMeta] = React.useState<any>(
-    (initialBlockObject as any)?.content?.hls ?? null
-  )
-
-  // Update block object when size changes
-  React.useEffect(() => {
-    if (blockObject && blockObject.size !== selectedSize) {
-      const newBlockObject = {
-        ...blockObject,
-        size: selectedSize
-      }
-      setBlockObject(newBlockObject)
-      updateAttributes({ blockObject: newBlockObject })
-    }
-  }, [selectedSize])
-
+  const org = useOrg() as any
+  const course = useCourse() as any
+  const editorState = useEditorProvider() as any
+  const session = useLHSession() as any
   const isEditable = editorState?.isEditable
   const access_token = session?.data?.tokens?.access_token
+
+  // Read from the node (the shared document) so undo and collaborators show.
+  const blockObject = React.useMemo(() => resolveVideoBlockObject(node.attrs.blockObject), [node.attrs.blockObject])
+  const selectedSize: VideoSize = blockObject?.size || 'medium'
+  const caption: string = node.attrs.caption || ''
+  const startTime: number | null = parseTimecode(node.attrs.startTime) || null
+  const chapters = React.useMemo(() => normalizeChapters(node.attrs.chapters), [node.attrs.chapters])
+
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [openPopover, setOpenPopover] = React.useState<null | 'size' | 'start' | 'chapters'>(null)
+  const [hlsMeta, setHlsMeta] = React.useState<any>(blockObject?.content?.hls ?? null)
+
+  const upload = useBlockUpload({
+    kind: 'video',
+    activityUuid: extension.options.activity?.activity_uuid,
+    accessToken: access_token,
+    onUploaded: (object) => updateAttributes({ blockObject: { ...object, size: selectedSize } }),
+  })
+
   const fileId = blockObject?.content?.file_id ? `${blockObject.content.file_id}.${blockObject.content.file_format}` : null
-
-  const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setVideo(file)
-      setError(null)
-      handleUpload(file)
-    }
-  }
-
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.currentTarget === uploadZoneRef.current) {
-      setIsDragging(false)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-
-    const file = e.dataTransfer.files[0]
-    const fileExtension = file?.name.split('.').pop()?.toLowerCase()
-
-    if (file && fileExtension && ['mp4', 'webm'].includes(fileExtension)) {
-      setVideo(file)
-      setError(null)
-      handleUpload(file)
-    } else {
-      setError('Please upload a supported video format (MP4 or WebM)')
-    }
-  }
-
-  const handleUpload = async (file: File) => {
-    if (!access_token) return
-
-    try {
-      setIsLoading(true)
-      setError(null)
-      setUploadProgress(0)
-
-      // Real byte-accurate progress (XHR), same as the video-activity upload.
-      const object = await uploadNewVideoFileWithProgress(
-        file,
-        extension.options.activity.activity_uuid,
-        access_token,
-        (percent) => setUploadProgress(Math.round(percent))
-      )
-
-      setUploadProgress(100)
-
-      const newBlockObject = {
-        ...object,
-        size: selectedSize
-      }
-      setBlockObject(newBlockObject)
-      updateAttributes({ blockObject: newBlockObject })
-      setVideo(null)
-
-      setTimeout(() => {
-        setUploadProgress(0)
-      }, 1000)
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to upload video. Please try again.'
-      setError(errorMessage)
-      toast.error(errorMessage)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleRemove = () => {
-    setBlockObject(null)
-    updateAttributes({ blockObject: null })
-    setVideo(null)
-    setError(null)
-    setUploadProgress(0)
-  }
-
-  const handleSizeChange = (size: VideoSize) => {
-    setSelectedSize(size)
-  }
-
-  // Resolve ids preferring what was passed at configure() time (reliable on the
-  // student page), falling back to the Org/Course contexts. This is what makes
-  // the player actually render there (previously videoUrl went null).
   const orgUuid = extension.options.orgUuid || org?.org_uuid
   const courseUuid = extension.options.courseUuid || course?.courseStructure?.course_uuid
   const activityUuid = blockObject?.content?.activity_uuid || extension.options.activity?.activity_uuid
@@ -263,15 +134,18 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     : null
 
   // Fetch the fresh block once we have its uuid, to learn whether HLS is ready.
+  // Cached per block: the node view remounts whenever the editor or the lesson
+  // re-renders its document, and each mount used to ask again.
   const blockUuid = blockObject?.block_uuid
+  const { data: freshHls } = useQuery({
+    queryKey: ['video-block', blockUuid],
+    queryFn: async () => (await getVideoBlock(blockUuid as string, access_token))?.content?.hls ?? null,
+    enabled: !!blockUuid && !!access_token,
+    staleTime: 60_000,
+  })
   React.useEffect(() => {
-    if (!blockUuid || !access_token) return
-    let cancelled = false
-    getVideoBlock(blockUuid, access_token).then((fresh) => {
-      if (!cancelled && fresh?.content?.hls) setHlsMeta(fresh.content.hls)
-    })
-    return () => { cancelled = true }
-  }, [blockUuid, access_token])
+    if (freshHls) setHlsMeta(freshHls)
+  }, [freshHls])
 
   const hlsReady = hlsMeta?.status === 'ready'
   const hlsMasterUrl = hlsReady && blockObject && orgUuid && courseUuid && activityUuid
@@ -282,8 +156,13 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const videoUrl = hlsMasterUrl || mp4Url
   const playerProps = {
     src: videoUrl || '',
+    // No media bytes until the block scrolls into view (a lesson can hold
+    // several); the storyboard frame, when there is one, is the poster.
+    preload: 'none' as const,
     isHls: !!hlsMasterUrl,
     fallbackSrc: hlsMasterUrl && mp4Url ? mp4Url : undefined,
+    details: startTime ? { startTime } : undefined,
+    chapters: chapters.length ? chapters : undefined,
     thumbnails:
       hlsReady && hlsMeta?.thumbnails?.url && blockObject && orgUuid && courseUuid && activityUuid
         ? {
@@ -297,28 +176,39 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
         : null,
   }
 
-  const handleExpand = () => {
-    setIsModalOpen(true);
-  };
+  const playerModal = blockObject && videoUrl ? (
+    <Modal
+      isDialogOpen={isModalOpen}
+      onOpenChange={setIsModalOpen}
+      dialogTitle={caption || t('editor.blocks.video_block.player_title')}
+      minWidth="lg"
+      minHeight="lg"
+      dialogContent={
+        <div className="w-full aspect-video overflow-hidden rounded-[20px]">
+          <LearnHousePlayer
+            key={isModalOpen ? videoUrl : undefined}
+            {...playerProps}
+            details={{ ...(playerProps.details || {}), autoplay: true }}
+          />
+        </div>
+      }
+    />
+  ) : null
 
-  // If we're in preview mode and have a video, show only the video player
-  if (!isEditable && blockObject && videoUrl) {
-    const width = VIDEO_SIZES[blockObject.size].width
+  // ─── Learner view ───
+  if (!isEditable) {
+    if (!blockObject || !videoUrl) return null
+    const width = VIDEO_SIZES[selectedSize].width
     return (
       <>
         <NodeViewWrapper className="block-video w-full">
           <div className="w-full flex justify-center relative">
-            <div
-              style={{
-                maxWidth: typeof width === 'number' ? width : '100%',
-                width: '100%'
-              }}
-            >
+            <div style={{ maxWidth: width, width: '100%' }}>
               <div className="relative group w-full aspect-video overflow-hidden rounded-[20px]">
                 <LearnHousePlayer {...playerProps} />
                 <div className="absolute top-2 end-2 z-40 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={handleExpand}
+                    onClick={() => setIsModalOpen(true)}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title={t('editor.blocks.video_block.expand_video')}
                   >
@@ -326,194 +216,184 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                   </button>
                 </div>
               </div>
+              <BlockCaption value={caption} editable={false} />
             </div>
           </div>
         </NodeViewWrapper>
-
-        <Modal
-          isDialogOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          dialogTitle={t('editor.blocks.video_block.player_title')}
-          minWidth="lg"
-          minHeight="lg"
-          dialogContent={
-            <div className="w-full aspect-video overflow-hidden rounded-[20px]">
-              <LearnHousePlayer
-                key={isModalOpen ? videoUrl : undefined}
-                {...playerProps}
-                details={{ autoplay: true }}
-              />
-            </div>
-          }
-        />
+        {playerModal}
       </>
     )
   }
 
-  // If we're in preview mode but don't have a video, show nothing
-  if (!isEditable && (!blockObject || !videoUrl)) {
-    return null
+  const importFromUrl = async (input: string): Promise<string | void> => {
+    const url = normalizeUserUrl(input)
+    if (!url) return uploadErrorText(t, { code: 'url' })
+    const parsed = parseEmbedUrl(url)
+    if (parsed) {
+      // A YouTube/Vimeo/Loom link plays from its own service.
+      replaceBlock(props as any, { type: 'blockEmbed', attrs: { ...embedAttrsFor(parsed), caption } })
+      return
+    }
+    if (!looksLikeFileUrl(url, 'video')) {
+      return t('editor.blocks_v2.video_link_hint', 'Paste a YouTube, Vimeo or Loom link, or a direct link to an MP4 or WebM file.')
+    }
+    try {
+      upload.start(await fetchRemoteFile(url, 'video'))
+    } catch (err) {
+      if (err instanceof UrlImportError) return uploadErrorText(t, { code: err.code, kind: 'video', error: err.message })
+      return uploadErrorText(t, { code: 'server', error: (err as any)?.message })
+    }
   }
 
-  // Show the full editor UI when in edit mode
+  const label = <><VideoCamera size={11} weight="bold" />{t('editor.blocks.video')}</>
+  const deleteButton = (
+    <BlockToolbarButton label={t('common.delete', 'Delete')} tone="danger" onClick={() => deleteBlock(props as any)}>
+      <Trash size={14} />
+    </BlockToolbarButton>
+  )
+
+  // ─── Editor: empty (or the stored file can't be resolved) ───
+  if (!blockObject || !videoUrl) {
+    return (
+      <NodeViewWrapper className="block-video w-full">
+        <BlockChrome tone="media" selected={props.selected} label={label} toolbar={deleteButton}>
+          <MediaSourcePicker
+            kind="video"
+            icon={<VideoCamera size={20} weight="duotone" />}
+            title={t('editor.blocks_v2.video_title', 'Add a video')}
+            onFile={(f) => upload.start(f)}
+            onUrl={importFromUrl}
+            urlPlaceholder={t('editor.blocks_v2.video_link_placeholder', 'YouTube, Vimeo, Loom or an .mp4 link…')}
+            onLibrarySelect={(r) => replaceBlock(props as any, { type: 'blockLibrary', attrs: libraryMediaNodeAttrs(r) })}
+            task={upload.task}
+            rejection={upload.rejection}
+            onCancel={upload.cancel}
+            onRetry={upload.retry}
+            onDismiss={upload.dismiss}
+          />
+        </BlockChrome>
+      </NodeViewWrapper>
+    )
+  }
+
+  // ─── Editor: video ───
+  const toggle = (which: 'size' | 'start' | 'chapters') => (open: boolean) => setOpenPopover(open ? which : null)
+  const toolbar = (
+    <>
+      <BlockPopover
+        open={openPopover === 'size'}
+        onOpenChange={toggle('size')}
+        title={t('editor.blocks.common.size', 'Size')}
+        width={240}
+        trigger={<BlockToolbarButton label={t('editor.blocks.common.size', 'Size')}><ArrowsHorizontal size={14} /></BlockToolbarButton>}
+      >
+        <Segmented
+          ariaLabel={t('editor.blocks.common.size', 'Size')}
+          value={selectedSize}
+          onChange={(size) => updateAttributes({ blockObject: { ...blockObject, size } })}
+          options={[
+            { value: 'small', label: t('editor.blocks.common.small', 'Small') },
+            { value: 'medium', label: t('editor.blocks.common.medium', 'Medium') },
+            { value: 'large', label: t('editor.blocks.common.large', 'Large') },
+          ]}
+        />
+      </BlockPopover>
+      <BlockPopover
+        open={openPopover === 'start'}
+        onOpenChange={toggle('start')}
+        title={t('editor.blocks_v2.start_time', 'Start time')}
+        width={240}
+        trigger={
+          <BlockToolbarButton label={t('editor.blocks_v2.start_time', 'Start time')} active={!!startTime}>
+            <Timer size={14} />
+            {startTime ? <span className="tabular-nums">{formatTimecode(startTime)}</span> : null}
+          </BlockToolbarButton>
+        }
+      >
+        <SettingsField
+          label={t('editor.blocks_v2.start_at', 'Start playing at')}
+          hint={t('editor.blocks_v2.start_hint', 'For example 1:30. Leave empty to start at the beginning.')}
+        >
+          <CommitInput
+            value={startTime ? formatTimecode(startTime) : ''}
+            placeholder="0:00"
+            aria-label={t('editor.blocks_v2.start_time', 'Start time')}
+            onCommit={(v) => {
+              const seconds = parseTimecode(v)
+              if (v.trim() && seconds == null) {
+                toast.error(t('editor.blocks_v2.bad_time', 'Use a time like 1:30 or 1:02:03.'))
+                return
+              }
+              updateAttributes({ startTime: seconds || null })
+            }}
+          />
+        </SettingsField>
+      </BlockPopover>
+      <BlockPopover
+        open={openPopover === 'chapters'}
+        onOpenChange={toggle('chapters')}
+        title={t('editor.blocks_v2.chapters', 'Chapters')}
+        width={340}
+        trigger={
+          <BlockToolbarButton label={t('editor.blocks_v2.chapters', 'Chapters')} active={chapters.length > 0}>
+            <ListNumbers size={14} />
+            {chapters.length ? <span className="tabular-nums">{chapters.length}</span> : null}
+          </BlockToolbarButton>
+        }
+      >
+        <p className="text-[11px] leading-snug text-neutral-400">
+          {t('editor.blocks_v2.chapters_hint', 'Shown as segments on the player’s timeline.')}
+        </p>
+        <ChaptersEditor value={chapters} onCommit={(next) => updateAttributes({ chapters: next.length ? next : null })} />
+      </BlockPopover>
+      <BlockToolbarDivider />
+      <BlockToolbarButton label={t('editor.blocks_v2.replace', 'Replace')} onClick={() => pickFile(acceptFor('video'), (f) => upload.start(f))}>
+        <ArrowsClockwise size={14} />
+      </BlockToolbarButton>
+      <BlockToolbarButton label={t('editor.blocks.video_block.expand_video')} onClick={() => setIsModalOpen(true)}>
+        <ArrowsOut size={14} />
+      </BlockToolbarButton>
+      {deleteButton}
+    </>
+  )
+
   return (
     <NodeViewWrapper className="block-video w-full">
-      <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <VideoCamera weight="duotone" className="text-neutral-400" size={16} />
-            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              {t('editor.blocks.video')}
-            </span>
-          </div>
-          {blockObject && (
-            <button
-              onClick={handleRemove}
-              className="text-neutral-400 hover:text-red-500 transition-colors"
-            >
-              <X weight="duotone" size={16} />
-            </button>
-          )}
-        </div>
-
-        {/* Upload Zone */}
-        {(!blockObject || !videoUrl) && (
-          <div className="space-y-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleVideoChange}
-              accept={SUPPORTED_FILES}
-              className="hidden"
-            />
-
-            <div
-              ref={uploadZoneRef}
-              onClick={() => fileInputRef.current?.click()}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={cn(
-                "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all",
-                isDragging
-                  ? "border-blue-400 bg-blue-50"
-                  : "border-neutral-200 bg-white hover:border-blue-400 hover:bg-blue-50/50"
-              )}
-            >
-              {isLoading ? (
-                <div className="space-y-3">
-                  <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                  <p className="text-sm text-neutral-600">{t('editor.blocks.video_block.uploading')} {uploadProgress}%</p>
-                  <div className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-200"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <UploadSimple weight="duotone" className="w-8 h-8 mx-auto text-neutral-400" />
-                  <div>
-                    <p className="text-sm font-medium text-neutral-700">
-                      {t('editor.blocks.video_block.drop_or_browse')}
-                    </p>
-                    <p className="text-xs text-neutral-500 mt-1">
-                      {t('editor.blocks.video_block.supported_formats')}
-                    </p>
-                  </div>
-                </div>
-              )}
+      <BlockChrome tone="media" selected={props.selected} forceToolbar={!!openPopover} label={label} toolbar={toolbar} className="p-1">
+        <div className="flex justify-center">
+          <div style={{ maxWidth: VIDEO_SIZES[selectedSize].width, width: '100%' }}>
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black">
+              <LearnHousePlayer {...playerProps} />
             </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-                <WarningCircle weight="duotone" size={16} />
-                {error}
+            {upload.task && (
+              <div className="mt-2">
+                <MediaSourcePicker
+                  kind="video"
+                  icon={<VideoCamera size={18} />}
+                  title=""
+                  onFile={() => {}}
+                  task={upload.task}
+                  onCancel={upload.cancel}
+                  onRetry={upload.retry}
+                  onDismiss={upload.dismiss}
+                />
               </div>
             )}
+            {upload.rejection && (
+              <p role="alert" className="mt-1 text-xs text-rose-600">
+                {uploadErrorText(t, { code: upload.rejection.code, kind: 'video', fileSize: upload.rejection.fileSize })}
+              </p>
+            )}
+            <BlockCaption
+              value={caption}
+              editable
+              selected={props.selected}
+              onCommit={(value) => updateAttributes({ caption: value })}
+            />
           </div>
-        )}
-
-        {/* Video Preview with Controls */}
-        {blockObject && videoUrl && (
-          <div className="space-y-4">
-            {/* Size Controls */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
-                <ArrowsLeftRight weight="duotone" size={14} />
-                {t('editor.blocks.common.size')}:
-              </div>
-              {(Object.keys(VIDEO_SIZES) as VideoSize[]).map((size) => (
-                <button
-                  key={size}
-                  onClick={() => handleSizeChange(size)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors outline-none",
-                    selectedSize === size
-                      ? "bg-neutral-700 text-white"
-                      : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
-                  )}
-                >
-                  {size === selectedSize && <CheckCircle weight="duotone" size={14} />}
-                  {t(`editor.blocks.common.${size}`)}
-                </button>
-              ))}
-            </div>
-
-            {/* Video Player */}
-            <div className="flex justify-center">
-              <div
-                style={{
-                  maxWidth: typeof VIDEO_SIZES[selectedSize].width === 'number'
-                    ? VIDEO_SIZES[selectedSize].width
-                    : '100%',
-                  width: '100%'
-                }}
-              >
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black nice-shadow">
-                  {isLoading && (
-                    <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/10 backdrop-blur-sm">
-                      <CircleNotch weight="duotone" className="w-8 h-8 animate-spin text-white" />
-                    </div>
-                  )}
-                  <LearnHousePlayer {...playerProps} />
-                  <div className="absolute top-2 end-2 z-40 flex gap-1">
-                    <button
-                      onClick={handleExpand}
-                      className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                      title={t('editor.blocks.video_block.expand_video')}
-                    >
-                      <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {blockObject && videoUrl && (
-        <Modal
-          isDialogOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          dialogTitle={t('editor.blocks.video_block.player_title')}
-          minWidth="lg"
-          minHeight="lg"
-          dialogContent={
-            <div className="w-full aspect-video overflow-hidden rounded-[20px]">
-              <LearnHousePlayer
-                key={isModalOpen ? videoUrl : undefined}
-                {...playerProps}
-                details={{ autoplay: true }}
-              />
-            </div>
-          }
-        />
-      )}
+        </div>
+      </BlockChrome>
+      {playerModal}
     </NodeViewWrapper>
   )
 }

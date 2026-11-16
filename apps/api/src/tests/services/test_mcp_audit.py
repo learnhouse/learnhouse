@@ -2,9 +2,8 @@
 prompts are offered only to members who can carry them out."""
 
 import asyncio
-import sys
 from contextlib import asynccontextmanager
-from types import ModuleType, SimpleNamespace
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from pydantic import BaseModel
@@ -47,44 +46,34 @@ def test_record_outside_a_loop_only_logs(caplog):
     assert "code=rbac_denied" in caplog.text
 
 
-async def test_record_writes_to_the_org_log_on_enterprise():
-    queued = AsyncMock()
-    fake = ModuleType("ee.services.audit")
-    fake.queue_audit_log = queued
-    fake.is_enterprise_plan = AsyncMock(return_value=True)
-
-    @asynccontextmanager
-    async def session():
-        yield SimpleNamespace()
-
-    with patch.dict(sys.modules, {"ee.services.audit": fake}), \
-            patch("src.core.ee_hooks.is_ee_available", return_value=True), \
-            patch("src.core.events.database._async_session_factory", session):
-        audit.record(_principal(), 1, _spec(), {"course_uuid": "course_1"}, "executed")
-        await asyncio.gather(*list(audit._tasks))
-    kwargs = queued.await_args.kwargs
-    assert kwargs["action"] == "AI app: Delete course" and kwargs["resource_id"] == "course_1"
-    assert kwargs["path"] == "/mcp/tools/delete_course" and kwargs["payload"]["app"] == "Claude"
-    assert kwargs["user_id"] == 7 and kwargs["org_id"] == 1
-
-    # Not enterprise: nothing is queued. Denied calls never are.
-    queued.reset_mock()
-    fake.is_enterprise_plan = AsyncMock(return_value=False)
-    with patch.dict(sys.modules, {"ee.services.audit": fake}), \
-            patch("src.core.ee_hooks.is_ee_available", return_value=True), \
-            patch("src.core.events.database._async_session_factory", session):
-        audit.record(_principal(), 1, _spec(), {}, "executed")
+async def test_record_hands_executed_calls_to_the_org_log():
+    hook = SimpleNamespace(record_agent_audit=lambda **kw: calls.append(kw))
+    calls: list = []
+    with patch("src.core.ee_hooks.is_ee_available", return_value=True), \
+            patch("src.core.ee_hooks.get_ee_hooks", return_value=hook):
+        audit.record(_principal(), 1, _spec(), {"course_uuid": "course_1"}, "executed", approval="form")
         audit.record(_principal(), 1, _spec(), {}, "denied")
         await asyncio.gather(*list(audit._tasks))
-    queued.assert_not_awaited()
+    assert len(calls) == 1
+    call = calls[0]
+    assert call["via"] == "mcp" and call["user_id"] == 7 and call["org_id"] == 1
+    assert call["tool"] == "delete_course" and call["target_kind"] == "course"
+    assert call["target_id"] == "course_1" and call["title"] == "Delete course"
+    assert call["details"] == {"app": "Claude", "approval": "form"}
 
 
 async def test_org_log_failures_never_raise():
     with patch("src.core.ee_hooks.is_ee_available", return_value=False):
         await audit._to_org_log(_principal(), 1, _spec(), {})
-    broken = ModuleType("ee.services.audit")
-    with patch.dict(sys.modules, {"ee.services.audit": broken}), \
-            patch("src.core.ee_hooks.is_ee_available", return_value=True):
+
+    def boom(**_kw):
+        raise RuntimeError("down")
+
+    with patch("src.core.ee_hooks.is_ee_available", return_value=True), \
+            patch("src.core.ee_hooks.get_ee_hooks", return_value=SimpleNamespace(record_agent_audit=boom)):
+        await audit._to_org_log(_principal(), 1, _spec(), {})
+    with patch("src.core.ee_hooks.is_ee_available", return_value=True), \
+            patch("src.security.auth.resolve_acting_user_id", side_effect=RuntimeError):
         await audit._to_org_log(_principal(), 1, _spec(), {})
 
 

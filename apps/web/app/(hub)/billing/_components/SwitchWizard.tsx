@@ -36,6 +36,8 @@ interface SwitchWizardProps {
   /** Deep-link: pre-select this plan and open straight at the Confirm step
    *  (from an "Upgrade to X" CTA). Ignored if unknown or already the current plan. */
   initialPlanId?: string | null
+  /** The plan a running free trial unlocks: offered as "Keep <plan>". */
+  trialPlanId?: string | null
   /** Return to the Plan & Usage view. */
   onBack: () => void
   /** Invalidate cached subscription/org state after a successful change. */
@@ -50,6 +52,7 @@ export default function SwitchWizard({
   pricesLoading = false,
   planLimits,
   initialPlanId,
+  trialPlanId = null,
   onBack,
   onChanged,
 }: SwitchWizardProps) {
@@ -235,9 +238,11 @@ export default function SwitchWizard({
                   onClick={() => handlePlanSelect(plan.id, billing)}
                   className={`${cls} cursor-pointer ${isUpgradeOption ? plan.ctaStyle : 'bg-neutral-900 text-white hover:bg-neutral-800'}`}
                 >
-                  {isUpgradeOption
-                    ? t('billing.upgrade', { defaultValue: 'Upgrade' })
-                    : t('billing.downgrade', { defaultValue: 'Downgrade' })}
+                  {plan.id === trialPlanId
+                    ? t('billing.trial.keep', { plan: planName(t, plan) })
+                    : isUpgradeOption
+                      ? t('billing.upgrade', { defaultValue: 'Upgrade' })
+                      : t('billing.downgrade', { defaultValue: 'Downgrade' })}
                 </button>
               )
             }}

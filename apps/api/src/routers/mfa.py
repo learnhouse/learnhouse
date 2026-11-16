@@ -6,6 +6,7 @@ challenge deliberately lives at ``/auth/login/mfa`` so the web app's auth proxy
 needing a separate allowlist entry.
 """
 
+from src.services.audit.org_log import audit_account_event
 from datetime import datetime
 from typing import Optional, Union
 
@@ -319,6 +320,7 @@ async def api_mfa_confirm(
         db_session, user.id, secret, form.code, mfa.last_used_timestep
     )
     if not consumed:
+        audit_account_event(request, "security.mfa.verify_failed", user, outcome="failed", reason="invalid_code", details={"step": "enable"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -336,6 +338,7 @@ async def api_mfa_confirm(
     codes = await replace_backup_codes(db_session, user.id)
     tokens = _rotate_sessions(request, response, user)
     await _disconnect_ai_apps(db_session, user.id)
+    audit_account_event(request, "security.mfa.enabled", user, details={"sessions_revoked": True})
     return {"enabled": True, "backup_codes": codes, "tokens": tokens}
 
 
@@ -377,6 +380,7 @@ async def api_mfa_disable(
     if not accepted:
         accepted = await consume_backup_code(db_session, user.id, form.code)
     if not accepted:
+        audit_account_event(request, "security.mfa.verify_failed", user, outcome="failed", reason="invalid_code", details={"step": "disable"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "INVALID_CODE", "message": "That code isn't right."},
@@ -385,6 +389,7 @@ async def api_mfa_disable(
     await disable_mfa(db_session, user.id)
     tokens = _rotate_sessions(request, response, user)
     await _disconnect_ai_apps(db_session, user.id)
+    audit_account_event(request, "security.mfa.disabled", user, details={"sessions_revoked": True})
     return {"enabled": False, "tokens": tokens}
 
 
@@ -418,12 +423,14 @@ async def api_mfa_regenerate_backup_codes(
             db_session, user.id, secret, form.code, mfa.last_used_timestep
         )
     if not is_valid:
+        audit_account_event(request, "security.mfa.verify_failed", user, outcome="failed", reason="invalid_code", details={"step": "regenerate_backup_codes"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "INVALID_CODE", "message": "That code isn't right."},
         )
 
     codes = await replace_backup_codes(db_session, user.id)
+    audit_account_event(request, "security.mfa.backup_codes_regenerated", user)
     return {"backup_codes": codes}
 
 
@@ -508,6 +515,21 @@ async def api_login_mfa(
                 accepted = await consume_backup_code(db_session, user.id, form.code)
 
         if not accepted:
+            from src.core.ee_hooks import audit_event
+
+            audit_event(
+                request,
+                action="auth.mfa_challenge.failed",
+                org_id=pending_org_id,
+                actor=user.id,
+                target_type="user",
+                target_id=user.user_uuid,
+                target_name=user.username,
+                outcome="failed",
+                reason="invalid_code",
+                details={"method": pending_amr, "backup_code": bool(form.is_backup_code)},
+                require_member=True,
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
@@ -697,6 +719,7 @@ async def api_set_org_mfa_policy(
     config = dict(row.config or {})
     toggles = dict(config.get("admin_toggles") or {})
     security = dict(toggles.get("security") or {})
+    security_before = dict(security)
 
     was_enabled = bool(security.get("require_2fa", False))
 
@@ -775,6 +798,20 @@ async def api_set_org_mfa_policy(
     db_session.add(row)
     await db_session.commit()
 
+    from src.core.ee_hooks import audit_event
+
+    audit_event(
+        None,
+        action="security.policy.updated",
+        org_id=org_id,
+        actor=user,
+        target_type="organization",
+        target_id=org_id,
+        before=security_before,
+        after=security,
+        fields=[k for k in sorted(set(security_before) | set(security)) if k != "require_2fa_enabled_at"],
+        via="ui",
+    )
     return await _org_security_policy_payload(db_session, org_id)
 
 
@@ -940,4 +977,19 @@ async def api_org_reset_member_mfa(
     # signs in again and re-enrolls.
     revoke_user_sessions_before(user_id)
     await _disconnect_ai_apps(db_session, user_id)
+    from src.core.ee_hooks import audit_event
+    from src.db.users import User as _User
+
+    target = await db_session.get(_User, user_id)
+    audit_event(
+        None,
+        action="security.mfa.reset_by_admin",
+        org_id=org_id,
+        actor=admin,
+        target_type="user",
+        target_id=getattr(target, "user_uuid", user_id),
+        target_name=getattr(target, "username", None),
+        details={"had_factor": had_factor, "sessions_revoked": True},
+        via="ui",
+    )
     return {"reset": True, "user_id": user_id, "had_factor": had_factor}

@@ -1,0 +1,926 @@
+/*
+ Block themes (components/Objects/Activities/BlockTheme).
+
+ BlockThemeScope wraps rendered lesson content in `.lh-bt` and sets:
+   data-lh-bt="light|dark|tinted"   the mode picked from the host background
+   data-lh-bt-tone="dark|light"     ink direction (absent in light mode)
+   data-lh-bt-size="xs|sm|md|lg"    the scope's own width (a phone frame on a
+                                    desktop page is "xs" even at 1440px)
+   --lhb-*                          the derived palette (dark and tinted only)
+
+ 1. Semantic tokens, defined in dark and tinted scopes only. Blocks use them
+    with their original colour as fallback, so light mode changes nothing.
+ 2. Kit remap (dark/tinted). Blocks are written with Tailwind's neutral
+    palette and white cards. Like the admin soft-dark theme (components/
+    Admin/Shell/adminDark.css), the palette variables are remapped inside the
+    scope so the same classes, hover and focus states included, read right:
+      white          → the card surface
+      gray/neutral/… → the derived ramp (50–200 fills and hairlines,
+                       400 meta, 500–700 body, 900 titles; AA-checked in JS)
+      hue tints      → translucent washes with -300/-200 ink (dark tone)
+ 3. Prose, marks and per-block details that use literal colours.
+ 4. Narrow scopes (container width, not viewport): WebViews and phone frames.
+
+ Unlayered on purpose: it beats Tailwind's utilities layer without
+ !important, the same way styles/theme.css does.
+*/
+
+/* ── 1. tokens ─────────────────────────────────────────────────────────── */
+/* Defined only in dark and tinted scopes. Light mode defines none of them, so
+   every use carries the block's original colour as its fallback and light
+   mode renders exactly as before:  bg-[var(--lhb-surface,#fff)].
+
+     --lhb-host          the opaque host colour the palette came from
+     --lhb-surface       cards (what bg-white becomes)
+     --lhb-surface-2/-3  quiet fills on a card (gray-50 / gray-100)
+     --lhb-raised(-2)    cards inside grey panels, popovers, tooltips
+     --lhb-border(-strong)  hairlines
+     --lhb-text, -text-2, -muted, -faint   ink steps (AA-checked)
+     --lhb-hover, -active, -ring           interaction washes
+     --lhb-accent(-soft, -ink)             org accent, lifted for dark cards
+     --lhb-success/-danger/-warning(-soft) feedback colours
+     --lhb-code-bg       code surfaces
+     --lhb-shadow        card edge + depth                                   */
+
+.lh-bt[data-lh-bt-tone] {
+  color-scheme: light;
+  --lhb-surface: var(--lhb-n0);
+  --lhb-surface-2: var(--lhb-n50);
+  --lhb-surface-3: var(--lhb-n100);
+  --lhb-text: var(--lhb-n900);
+  --lhb-text-2: var(--lhb-n700);
+  --lhb-muted: var(--lhb-n500);
+  --lhb-faint: var(--lhb-n400);
+  /* Org accent where the org set one (styles/theme.css), else the blocks' blue. */
+  --lhb-accent: var(--lh-accent, #2563eb);
+  --lhb-accent-ink: var(--lh-accent-contrast, #ffffff);
+  --lhb-accent-soft: color-mix(in srgb, var(--lhb-accent) 16%, transparent);
+  --lhb-accent-line: color-mix(in srgb, var(--lhb-accent) 55%, transparent);
+  --lhb-success: #15803d;
+  --lhb-success-soft: color-mix(in srgb, #22c55e 14%, transparent);
+  --lhb-danger: #b91c1c;
+  --lhb-danger-soft: color-mix(in srgb, #ef4444 12%, transparent);
+  --lhb-warning: #92400e;
+  --lhb-warning-soft: color-mix(in srgb, #f59e0b 16%, transparent);
+}
+.lh-bt[data-lh-bt-tone='dark'] {
+  color-scheme: dark;
+  --lhb-success: #4ade80;
+  --lhb-success-soft: rgb(74 222 128 / 0.12);
+  --lhb-danger: #f87171;
+  --lhb-danger-soft: rgb(248 113 113 / 0.12);
+  --lhb-warning: #fbbf24;
+  --lhb-warning-soft: rgb(251 191 36 / 0.12);
+  /* Accents too dark to read on a dark card get lifted toward white. */
+  --lhb-accent: color-mix(in oklab, var(--lh-accent, #3b82f6) 72%, white);
+  --lhb-accent-ink: #0b0b0f;
+  --lhb-accent-soft: color-mix(in srgb, var(--lhb-accent) 18%, transparent);
+  --lhb-accent-line: color-mix(in srgb, var(--lhb-accent) 50%, transparent);
+}
+
+/* Static fallback for an explicit dark scope before JS fills the palette
+   (also what `data-lh-bt="dark"` alone gives in tests and server HTML). */
+.lh-bt[data-lh-bt='dark'] {
+  --lhb-host: #18181b;
+  --lhb-n0: #222225;
+  --lhb-n50: #2a2a2d;
+  --lhb-n100: #303033;
+  --lhb-n200: #3b3b3e;
+  --lhb-n300: #5a5a5d;
+  --lhb-n400: #868688;
+  --lhb-n500: #a6a6a8;
+  --lhb-n600: #b1b1b3;
+  --lhb-n700: #c7c7c8;
+  --lhb-n800: #dadadb;
+  --lhb-n900: #e7e7e8;
+  --lhb-n950: #f3f3f4;
+}
+
+/* ── 2. kit remap ──────────────────────────────────────────────────────── */
+
+.lh-bt[data-lh-bt-tone] {
+  --color-white: var(--lhb-n0);
+  --color-black: var(--lhb-n950);
+
+  --color-gray-50: var(--lhb-n50);
+  --color-gray-100: var(--lhb-n100);
+  --color-gray-200: var(--lhb-n200);
+  --color-gray-300: var(--lhb-n300);
+  --color-gray-400: var(--lhb-n400);
+  --color-gray-500: var(--lhb-n500);
+  --color-gray-600: var(--lhb-n600);
+  --color-gray-700: var(--lhb-n700);
+  --color-gray-800: var(--lhb-n800);
+  --color-gray-900: var(--lhb-n900);
+  --color-gray-950: var(--lhb-n950);
+
+  --color-neutral-50: var(--lhb-n50);
+  --color-neutral-100: var(--lhb-n100);
+  --color-neutral-200: var(--lhb-n200);
+  --color-neutral-300: var(--lhb-n300);
+  --color-neutral-400: var(--lhb-n400);
+  --color-neutral-500: var(--lhb-n500);
+  --color-neutral-600: var(--lhb-n600);
+  --color-neutral-700: var(--lhb-n700);
+  --color-neutral-800: var(--lhb-n800);
+  --color-neutral-900: var(--lhb-n900);
+  --color-neutral-950: var(--lhb-n950);
+
+  --color-zinc-50: var(--lhb-n50);
+  --color-zinc-100: var(--lhb-n100);
+  --color-zinc-200: var(--lhb-n200);
+  --color-zinc-300: var(--lhb-n300);
+  --color-zinc-400: var(--lhb-n400);
+  --color-zinc-500: var(--lhb-n500);
+  --color-zinc-600: var(--lhb-n600);
+  --color-zinc-700: var(--lhb-n700);
+  --color-zinc-800: var(--lhb-n800);
+  --color-zinc-900: var(--lhb-n900);
+  --color-zinc-950: var(--lhb-n950);
+
+  --color-slate-50: var(--lhb-n50);
+  --color-slate-100: var(--lhb-n100);
+  --color-slate-200: var(--lhb-n200);
+  --color-slate-300: var(--lhb-n300);
+  --color-slate-400: var(--lhb-n400);
+  --color-slate-500: var(--lhb-n500);
+  --color-slate-600: var(--lhb-n600);
+  --color-slate-700: var(--lhb-n700);
+  --color-slate-800: var(--lhb-n800);
+  --color-slate-900: var(--lhb-n900);
+  --color-slate-950: var(--lhb-n950);
+
+  --color-stone-50: var(--lhb-n50);
+  --color-stone-100: var(--lhb-n100);
+  --color-stone-200: var(--lhb-n200);
+  --color-stone-300: var(--lhb-n300);
+  --color-stone-400: var(--lhb-n400);
+  --color-stone-500: var(--lhb-n500);
+  --color-stone-600: var(--lhb-n600);
+  --color-stone-700: var(--lhb-n700);
+  --color-stone-800: var(--lhb-n800);
+  --color-stone-900: var(--lhb-n900);
+  --color-stone-950: var(--lhb-n950);
+}
+
+/* Hue washes (…-50/100/200), lighter accents (…-600 → 400) and ink
+   (…-700/800/900 → 300/200) on dark cards. 400 and 500 stay as they are.
+   Generated from tailwindcss/theme.css (Tailwind 4.3). */
+.lh-bt[data-lh-bt-tone='dark'] {
+  --color-red-50: oklch(70.4% 0.191 22.216 / 0.12);
+  --color-red-100: oklch(70.4% 0.191 22.216 / 0.18);
+  --color-red-200: oklch(70.4% 0.191 22.216 / 0.3);
+  --color-red-300: oklch(70.4% 0.191 22.216 / 0.55);
+  --color-red-600: oklch(70.4% 0.191 22.216);
+  --color-red-700: oklch(80.8% 0.114 19.571);
+  --color-red-800: oklch(88.5% 0.062 18.334);
+  --color-red-900: oklch(88.5% 0.062 18.334);
+  --color-red-950: oklch(93.6% 0.032 17.717);
+  --color-orange-50: oklch(75% 0.183 55.934 / 0.12);
+  --color-orange-100: oklch(75% 0.183 55.934 / 0.18);
+  --color-orange-200: oklch(75% 0.183 55.934 / 0.3);
+  --color-orange-300: oklch(75% 0.183 55.934 / 0.55);
+  --color-orange-600: oklch(75% 0.183 55.934);
+  --color-orange-700: oklch(83.7% 0.128 66.29);
+  --color-orange-800: oklch(90.1% 0.076 70.697);
+  --color-orange-900: oklch(90.1% 0.076 70.697);
+  --color-orange-950: oklch(95.4% 0.038 75.164);
+  --color-amber-50: oklch(82.8% 0.189 84.429 / 0.12);
+  --color-amber-100: oklch(82.8% 0.189 84.429 / 0.18);
+  --color-amber-200: oklch(82.8% 0.189 84.429 / 0.3);
+  --color-amber-300: oklch(82.8% 0.189 84.429 / 0.55);
+  --color-amber-600: oklch(82.8% 0.189 84.429);
+  --color-amber-700: oklch(87.9% 0.169 91.605);
+  --color-amber-800: oklch(92.4% 0.12 95.746);
+  --color-amber-900: oklch(92.4% 0.12 95.746);
+  --color-amber-950: oklch(96.2% 0.059 95.617);
+  --color-yellow-50: oklch(85.2% 0.199 91.936 / 0.12);
+  --color-yellow-100: oklch(85.2% 0.199 91.936 / 0.18);
+  --color-yellow-200: oklch(85.2% 0.199 91.936 / 0.3);
+  --color-yellow-300: oklch(85.2% 0.199 91.936 / 0.55);
+  --color-yellow-600: oklch(85.2% 0.199 91.936);
+  --color-yellow-700: oklch(90.5% 0.182 98.111);
+  --color-yellow-800: oklch(94.5% 0.129 101.54);
+  --color-yellow-900: oklch(94.5% 0.129 101.54);
+  --color-yellow-950: oklch(97.3% 0.071 103.193);
+  --color-lime-50: oklch(84.1% 0.238 128.85 / 0.12);
+  --color-lime-100: oklch(84.1% 0.238 128.85 / 0.18);
+  --color-lime-200: oklch(84.1% 0.238 128.85 / 0.3);
+  --color-lime-300: oklch(84.1% 0.238 128.85 / 0.55);
+  --color-lime-600: oklch(84.1% 0.238 128.85);
+  --color-lime-700: oklch(89.7% 0.196 126.665);
+  --color-lime-800: oklch(93.8% 0.127 124.321);
+  --color-lime-900: oklch(93.8% 0.127 124.321);
+  --color-lime-950: oklch(96.7% 0.067 122.328);
+  --color-green-50: oklch(79.2% 0.209 151.711 / 0.12);
+  --color-green-100: oklch(79.2% 0.209 151.711 / 0.18);
+  --color-green-200: oklch(79.2% 0.209 151.711 / 0.3);
+  --color-green-300: oklch(79.2% 0.209 151.711 / 0.55);
+  --color-green-600: oklch(79.2% 0.209 151.711);
+  --color-green-700: oklch(87.1% 0.15 154.449);
+  --color-green-800: oklch(92.5% 0.084 155.995);
+  --color-green-900: oklch(92.5% 0.084 155.995);
+  --color-green-950: oklch(96.2% 0.044 156.743);
+  --color-emerald-50: oklch(76.5% 0.177 163.223 / 0.12);
+  --color-emerald-100: oklch(76.5% 0.177 163.223 / 0.18);
+  --color-emerald-200: oklch(76.5% 0.177 163.223 / 0.3);
+  --color-emerald-300: oklch(76.5% 0.177 163.223 / 0.55);
+  --color-emerald-600: oklch(76.5% 0.177 163.223);
+  --color-emerald-700: oklch(84.5% 0.143 164.978);
+  --color-emerald-800: oklch(90.5% 0.093 164.15);
+  --color-emerald-900: oklch(90.5% 0.093 164.15);
+  --color-emerald-950: oklch(95% 0.052 163.051);
+  --color-teal-50: oklch(77.7% 0.152 181.912 / 0.12);
+  --color-teal-100: oklch(77.7% 0.152 181.912 / 0.18);
+  --color-teal-200: oklch(77.7% 0.152 181.912 / 0.3);
+  --color-teal-300: oklch(77.7% 0.152 181.912 / 0.55);
+  --color-teal-600: oklch(77.7% 0.152 181.912);
+  --color-teal-700: oklch(85.5% 0.138 181.071);
+  --color-teal-800: oklch(91% 0.096 180.426);
+  --color-teal-900: oklch(91% 0.096 180.426);
+  --color-teal-950: oklch(95.3% 0.051 180.801);
+  --color-cyan-50: oklch(78.9% 0.154 211.53 / 0.12);
+  --color-cyan-100: oklch(78.9% 0.154 211.53 / 0.18);
+  --color-cyan-200: oklch(78.9% 0.154 211.53 / 0.3);
+  --color-cyan-300: oklch(78.9% 0.154 211.53 / 0.55);
+  --color-cyan-600: oklch(78.9% 0.154 211.53);
+  --color-cyan-700: oklch(86.5% 0.127 207.078);
+  --color-cyan-800: oklch(91.7% 0.08 205.041);
+  --color-cyan-900: oklch(91.7% 0.08 205.041);
+  --color-cyan-950: oklch(95.6% 0.045 203.388);
+  --color-sky-50: oklch(74.6% 0.16 232.661 / 0.12);
+  --color-sky-100: oklch(74.6% 0.16 232.661 / 0.18);
+  --color-sky-200: oklch(74.6% 0.16 232.661 / 0.3);
+  --color-sky-300: oklch(74.6% 0.16 232.661 / 0.55);
+  --color-sky-600: oklch(74.6% 0.16 232.661);
+  --color-sky-700: oklch(82.8% 0.111 230.318);
+  --color-sky-800: oklch(90.1% 0.058 230.902);
+  --color-sky-900: oklch(90.1% 0.058 230.902);
+  --color-sky-950: oklch(95.1% 0.026 236.824);
+  --color-blue-50: oklch(70.7% 0.165 254.624 / 0.12);
+  --color-blue-100: oklch(70.7% 0.165 254.624 / 0.18);
+  --color-blue-200: oklch(70.7% 0.165 254.624 / 0.3);
+  --color-blue-300: oklch(70.7% 0.165 254.624 / 0.55);
+  --color-blue-600: oklch(70.7% 0.165 254.624);
+  --color-blue-700: oklch(80.9% 0.105 251.813);
+  --color-blue-800: oklch(88.2% 0.059 254.128);
+  --color-blue-900: oklch(88.2% 0.059 254.128);
+  --color-blue-950: oklch(93.2% 0.032 255.585);
+  --color-indigo-50: oklch(67.3% 0.182 276.935 / 0.12);
+  --color-indigo-100: oklch(67.3% 0.182 276.935 / 0.18);
+  --color-indigo-200: oklch(67.3% 0.182 276.935 / 0.3);
+  --color-indigo-300: oklch(67.3% 0.182 276.935 / 0.55);
+  --color-indigo-600: oklch(67.3% 0.182 276.935);
+  --color-indigo-700: oklch(78.5% 0.115 274.713);
+  --color-indigo-800: oklch(87% 0.065 274.039);
+  --color-indigo-900: oklch(87% 0.065 274.039);
+  --color-indigo-950: oklch(93% 0.034 272.788);
+  --color-violet-50: oklch(70.2% 0.183 293.541 / 0.12);
+  --color-violet-100: oklch(70.2% 0.183 293.541 / 0.18);
+  --color-violet-200: oklch(70.2% 0.183 293.541 / 0.3);
+  --color-violet-300: oklch(70.2% 0.183 293.541 / 0.55);
+  --color-violet-600: oklch(70.2% 0.183 293.541);
+  --color-violet-700: oklch(81.1% 0.111 293.571);
+  --color-violet-800: oklch(89.4% 0.057 293.283);
+  --color-violet-900: oklch(89.4% 0.057 293.283);
+  --color-violet-950: oklch(94.3% 0.029 294.588);
+  --color-purple-50: oklch(71.4% 0.203 305.504 / 0.12);
+  --color-purple-100: oklch(71.4% 0.203 305.504 / 0.18);
+  --color-purple-200: oklch(71.4% 0.203 305.504 / 0.3);
+  --color-purple-300: oklch(71.4% 0.203 305.504 / 0.55);
+  --color-purple-600: oklch(71.4% 0.203 305.504);
+  --color-purple-700: oklch(82.7% 0.119 306.383);
+  --color-purple-800: oklch(90.2% 0.063 306.703);
+  --color-purple-900: oklch(90.2% 0.063 306.703);
+  --color-purple-950: oklch(94.6% 0.033 307.174);
+  --color-fuchsia-50: oklch(74% 0.238 322.16 / 0.12);
+  --color-fuchsia-100: oklch(74% 0.238 322.16 / 0.18);
+  --color-fuchsia-200: oklch(74% 0.238 322.16 / 0.3);
+  --color-fuchsia-300: oklch(74% 0.238 322.16 / 0.55);
+  --color-fuchsia-600: oklch(74% 0.238 322.16);
+  --color-fuchsia-700: oklch(83.3% 0.145 321.434);
+  --color-fuchsia-800: oklch(90.3% 0.076 319.62);
+  --color-fuchsia-900: oklch(90.3% 0.076 319.62);
+  --color-fuchsia-950: oklch(95.2% 0.037 318.852);
+  --color-pink-50: oklch(71.8% 0.202 349.761 / 0.12);
+  --color-pink-100: oklch(71.8% 0.202 349.761 / 0.18);
+  --color-pink-200: oklch(71.8% 0.202 349.761 / 0.3);
+  --color-pink-300: oklch(71.8% 0.202 349.761 / 0.55);
+  --color-pink-600: oklch(71.8% 0.202 349.761);
+  --color-pink-700: oklch(82.3% 0.12 346.018);
+  --color-pink-800: oklch(89.9% 0.061 343.231);
+  --color-pink-900: oklch(89.9% 0.061 343.231);
+  --color-pink-950: oklch(94.8% 0.028 342.258);
+  --color-rose-50: oklch(71.2% 0.194 13.428 / 0.12);
+  --color-rose-100: oklch(71.2% 0.194 13.428 / 0.18);
+  --color-rose-200: oklch(71.2% 0.194 13.428 / 0.3);
+  --color-rose-300: oklch(71.2% 0.194 13.428 / 0.55);
+  --color-rose-600: oklch(71.2% 0.194 13.428);
+  --color-rose-700: oklch(81% 0.117 11.638);
+  --color-rose-800: oklch(89.2% 0.058 10.001);
+  --color-rose-900: oklch(89.2% 0.058 10.001);
+  --color-rose-950: oklch(94.1% 0.03 12.58);
+}
+
+/* Mid-tone coloured hosts (teal, violet…) leave little room between the page
+   and white ink (data-lh-bt-headroom="low", set when white reaches < 7.5:1):
+   hue ink and accents lean further toward the ink so they stay AA. */
+.lh-bt.lh-bt[data-lh-bt-tone][data-lh-bt-headroom='low'] {
+  --lhb-mark-mix: 12%;
+  /* Washes darken instead of lighten, so white ink keeps its contrast. */
+  --color-red-50: oklch(44.4% 0.177 26.899 / 0.28);
+  --color-red-100: oklch(44.4% 0.177 26.899 / 0.36);
+  --color-red-200: oklch(44.4% 0.177 26.899 / 0.5);
+  --color-orange-50: oklch(47% 0.157 37.304 / 0.28);
+  --color-orange-100: oklch(47% 0.157 37.304 / 0.36);
+  --color-orange-200: oklch(47% 0.157 37.304 / 0.5);
+  --color-amber-50: oklch(47.3% 0.137 46.201 / 0.28);
+  --color-amber-100: oklch(47.3% 0.137 46.201 / 0.36);
+  --color-amber-200: oklch(47.3% 0.137 46.201 / 0.5);
+  --color-yellow-50: oklch(47.6% 0.114 61.907 / 0.28);
+  --color-yellow-100: oklch(47.6% 0.114 61.907 / 0.36);
+  --color-yellow-200: oklch(47.6% 0.114 61.907 / 0.5);
+  --color-lime-50: oklch(45.3% 0.124 130.933 / 0.28);
+  --color-lime-100: oklch(45.3% 0.124 130.933 / 0.36);
+  --color-lime-200: oklch(45.3% 0.124 130.933 / 0.5);
+  --color-green-50: oklch(44.8% 0.119 151.328 / 0.28);
+  --color-green-100: oklch(44.8% 0.119 151.328 / 0.36);
+  --color-green-200: oklch(44.8% 0.119 151.328 / 0.5);
+  --color-emerald-50: oklch(43.2% 0.095 166.913 / 0.28);
+  --color-emerald-100: oklch(43.2% 0.095 166.913 / 0.36);
+  --color-emerald-200: oklch(43.2% 0.095 166.913 / 0.5);
+  --color-teal-50: oklch(43.7% 0.078 188.216 / 0.28);
+  --color-teal-100: oklch(43.7% 0.078 188.216 / 0.36);
+  --color-teal-200: oklch(43.7% 0.078 188.216 / 0.5);
+  --color-cyan-50: oklch(45% 0.085 224.283 / 0.28);
+  --color-cyan-100: oklch(45% 0.085 224.283 / 0.36);
+  --color-cyan-200: oklch(45% 0.085 224.283 / 0.5);
+  --color-sky-50: oklch(44.3% 0.11 240.79 / 0.28);
+  --color-sky-100: oklch(44.3% 0.11 240.79 / 0.36);
+  --color-sky-200: oklch(44.3% 0.11 240.79 / 0.5);
+  --color-blue-50: oklch(42.4% 0.199 265.638 / 0.28);
+  --color-blue-100: oklch(42.4% 0.199 265.638 / 0.36);
+  --color-blue-200: oklch(42.4% 0.199 265.638 / 0.5);
+  --color-indigo-50: oklch(39.8% 0.195 277.366 / 0.28);
+  --color-indigo-100: oklch(39.8% 0.195 277.366 / 0.36);
+  --color-indigo-200: oklch(39.8% 0.195 277.366 / 0.5);
+  --color-violet-50: oklch(43.2% 0.232 292.759 / 0.28);
+  --color-violet-100: oklch(43.2% 0.232 292.759 / 0.36);
+  --color-violet-200: oklch(43.2% 0.232 292.759 / 0.5);
+  --color-purple-50: oklch(43.8% 0.218 303.724 / 0.28);
+  --color-purple-100: oklch(43.8% 0.218 303.724 / 0.36);
+  --color-purple-200: oklch(43.8% 0.218 303.724 / 0.5);
+  --color-fuchsia-50: oklch(45.2% 0.211 324.591 / 0.28);
+  --color-fuchsia-100: oklch(45.2% 0.211 324.591 / 0.36);
+  --color-fuchsia-200: oklch(45.2% 0.211 324.591 / 0.5);
+  --color-pink-50: oklch(45.9% 0.187 3.815 / 0.28);
+  --color-pink-100: oklch(45.9% 0.187 3.815 / 0.36);
+  --color-pink-200: oklch(45.9% 0.187 3.815 / 0.5);
+  --color-rose-50: oklch(45.5% 0.188 13.697 / 0.28);
+  --color-rose-100: oklch(45.5% 0.188 13.697 / 0.36);
+  --color-rose-200: oklch(45.5% 0.188 13.697 / 0.5);
+  --lhb-accent: color-mix(in oklab, var(--lh-accent, #93c5fd) 15%, var(--lhb-text));
+  --color-red-600: color-mix(in oklab, oklch(80.8% 0.114 19.571) 12%, var(--lhb-text));
+  --color-red-700: color-mix(in oklab, oklch(88.5% 0.062 18.334) 12%, var(--lhb-text));
+  --color-red-800: color-mix(in oklab, oklch(93.6% 0.032 17.717) 12%, var(--lhb-text));
+  --color-red-900: color-mix(in oklab, oklch(93.6% 0.032 17.717) 12%, var(--lhb-text));
+  --color-orange-600: color-mix(in oklab, oklch(83.7% 0.128 66.29) 12%, var(--lhb-text));
+  --color-orange-700: color-mix(in oklab, oklch(90.1% 0.076 70.697) 12%, var(--lhb-text));
+  --color-orange-800: color-mix(in oklab, oklch(95.4% 0.038 75.164) 12%, var(--lhb-text));
+  --color-orange-900: color-mix(in oklab, oklch(95.4% 0.038 75.164) 12%, var(--lhb-text));
+  --color-amber-600: color-mix(in oklab, oklch(87.9% 0.169 91.605) 12%, var(--lhb-text));
+  --color-amber-700: color-mix(in oklab, oklch(92.4% 0.12 95.746) 12%, var(--lhb-text));
+  --color-amber-800: color-mix(in oklab, oklch(96.2% 0.059 95.617) 12%, var(--lhb-text));
+  --color-amber-900: color-mix(in oklab, oklch(96.2% 0.059 95.617) 12%, var(--lhb-text));
+  --color-yellow-600: color-mix(in oklab, oklch(90.5% 0.182 98.111) 12%, var(--lhb-text));
+  --color-yellow-700: color-mix(in oklab, oklch(94.5% 0.129 101.54) 12%, var(--lhb-text));
+  --color-yellow-800: color-mix(in oklab, oklch(97.3% 0.071 103.193) 12%, var(--lhb-text));
+  --color-yellow-900: color-mix(in oklab, oklch(97.3% 0.071 103.193) 12%, var(--lhb-text));
+  --color-lime-600: color-mix(in oklab, oklch(89.7% 0.196 126.665) 12%, var(--lhb-text));
+  --color-lime-700: color-mix(in oklab, oklch(93.8% 0.127 124.321) 12%, var(--lhb-text));
+  --color-lime-800: color-mix(in oklab, oklch(96.7% 0.067 122.328) 12%, var(--lhb-text));
+  --color-lime-900: color-mix(in oklab, oklch(96.7% 0.067 122.328) 12%, var(--lhb-text));
+  --color-green-600: color-mix(in oklab, oklch(87.1% 0.15 154.449) 12%, var(--lhb-text));
+  --color-green-700: color-mix(in oklab, oklch(92.5% 0.084 155.995) 12%, var(--lhb-text));
+  --color-green-800: color-mix(in oklab, oklch(96.2% 0.044 156.743) 12%, var(--lhb-text));
+  --color-green-900: color-mix(in oklab, oklch(96.2% 0.044 156.743) 12%, var(--lhb-text));
+  --color-emerald-600: color-mix(in oklab, oklch(84.5% 0.143 164.978) 12%, var(--lhb-text));
+  --color-emerald-700: color-mix(in oklab, oklch(90.5% 0.093 164.15) 12%, var(--lhb-text));
+  --color-emerald-800: color-mix(in oklab, oklch(95% 0.052 163.051) 12%, var(--lhb-text));
+  --color-emerald-900: color-mix(in oklab, oklch(95% 0.052 163.051) 12%, var(--lhb-text));
+  --color-teal-600: color-mix(in oklab, oklch(85.5% 0.138 181.071) 12%, var(--lhb-text));
+  --color-teal-700: color-mix(in oklab, oklch(91% 0.096 180.426) 12%, var(--lhb-text));
+  --color-teal-800: color-mix(in oklab, oklch(95.3% 0.051 180.801) 12%, var(--lhb-text));
+  --color-teal-900: color-mix(in oklab, oklch(95.3% 0.051 180.801) 12%, var(--lhb-text));
+  --color-cyan-600: color-mix(in oklab, oklch(86.5% 0.127 207.078) 12%, var(--lhb-text));
+  --color-cyan-700: color-mix(in oklab, oklch(91.7% 0.08 205.041) 12%, var(--lhb-text));
+  --color-cyan-800: color-mix(in oklab, oklch(95.6% 0.045 203.388) 12%, var(--lhb-text));
+  --color-cyan-900: color-mix(in oklab, oklch(95.6% 0.045 203.388) 12%, var(--lhb-text));
+  --color-sky-600: color-mix(in oklab, oklch(82.8% 0.111 230.318) 12%, var(--lhb-text));
+  --color-sky-700: color-mix(in oklab, oklch(90.1% 0.058 230.902) 12%, var(--lhb-text));
+  --color-sky-800: color-mix(in oklab, oklch(95.1% 0.026 236.824) 12%, var(--lhb-text));
+  --color-sky-900: color-mix(in oklab, oklch(95.1% 0.026 236.824) 12%, var(--lhb-text));
+  --color-blue-600: color-mix(in oklab, oklch(80.9% 0.105 251.813) 12%, var(--lhb-text));
+  --color-blue-700: color-mix(in oklab, oklch(88.2% 0.059 254.128) 12%, var(--lhb-text));
+  --color-blue-800: color-mix(in oklab, oklch(93.2% 0.032 255.585) 12%, var(--lhb-text));
+  --color-blue-900: color-mix(in oklab, oklch(93.2% 0.032 255.585) 12%, var(--lhb-text));
+  --color-indigo-600: color-mix(in oklab, oklch(78.5% 0.115 274.713) 12%, var(--lhb-text));
+  --color-indigo-700: color-mix(in oklab, oklch(87% 0.065 274.039) 12%, var(--lhb-text));
+  --color-indigo-800: color-mix(in oklab, oklch(93% 0.034 272.788) 12%, var(--lhb-text));
+  --color-indigo-900: color-mix(in oklab, oklch(93% 0.034 272.788) 12%, var(--lhb-text));
+  --color-violet-600: color-mix(in oklab, oklch(81.1% 0.111 293.571) 12%, var(--lhb-text));
+  --color-violet-700: color-mix(in oklab, oklch(89.4% 0.057 293.283) 12%, var(--lhb-text));
+  --color-violet-800: color-mix(in oklab, oklch(94.3% 0.029 294.588) 12%, var(--lhb-text));
+  --color-violet-900: color-mix(in oklab, oklch(94.3% 0.029 294.588) 12%, var(--lhb-text));
+  --color-purple-600: color-mix(in oklab, oklch(82.7% 0.119 306.383) 12%, var(--lhb-text));
+  --color-purple-700: color-mix(in oklab, oklch(90.2% 0.063 306.703) 12%, var(--lhb-text));
+  --color-purple-800: color-mix(in oklab, oklch(94.6% 0.033 307.174) 12%, var(--lhb-text));
+  --color-purple-900: color-mix(in oklab, oklch(94.6% 0.033 307.174) 12%, var(--lhb-text));
+  --color-fuchsia-600: color-mix(in oklab, oklch(83.3% 0.145 321.434) 12%, var(--lhb-text));
+  --color-fuchsia-700: color-mix(in oklab, oklch(90.3% 0.076 319.62) 12%, var(--lhb-text));
+  --color-fuchsia-800: color-mix(in oklab, oklch(95.2% 0.037 318.852) 12%, var(--lhb-text));
+  --color-fuchsia-900: color-mix(in oklab, oklch(95.2% 0.037 318.852) 12%, var(--lhb-text));
+  --color-pink-600: color-mix(in oklab, oklch(82.3% 0.12 346.018) 12%, var(--lhb-text));
+  --color-pink-700: color-mix(in oklab, oklch(89.9% 0.061 343.231) 12%, var(--lhb-text));
+  --color-pink-800: color-mix(in oklab, oklch(94.8% 0.028 342.258) 12%, var(--lhb-text));
+  --color-pink-900: color-mix(in oklab, oklch(94.8% 0.028 342.258) 12%, var(--lhb-text));
+  --color-rose-600: color-mix(in oklab, oklch(81% 0.117 11.638) 12%, var(--lhb-text));
+  --color-rose-700: color-mix(in oklab, oklch(89.2% 0.058 10.001) 12%, var(--lhb-text));
+  --color-rose-800: color-mix(in oklab, oklch(94.1% 0.03 12.58) 12%, var(--lhb-text));
+  --color-rose-900: color-mix(in oklab, oklch(94.1% 0.03 12.58) 12%, var(--lhb-text));
+}
+
+/* An explicit mode that doesn't match the page (dark asked on a white page,
+   light on a dark one): the lesson becomes its own panel, so prose, marks and
+   blocks all sit on the colour they were tuned for. */
+.lh-bt[data-lh-bt-painted] {
+  background-color: var(--lhb-host, #ffffff);
+  color: var(--lhb-text, #171717);
+  border-radius: 16px;
+  padding: 12px 16px;
+}
+
+/* ── 3. prose, marks, shared details ───────────────────────────────────── */
+
+/* Body text follows the theme unless the host's own text colour reads well
+   (BlockThemeScope then leaves `color` alone). */
+.lh-bt[data-lh-bt-tone][data-lh-bt-ink='theme'] {
+  color: var(--lhb-text);
+}
+.lh-bt[data-lh-bt-tone] ::selection {
+  background: color-mix(in srgb, var(--lhb-accent) 32%, transparent);
+}
+
+/* Cards: a lit hairline and a soft drop instead of the light grey shadow. */
+.lh-bt[data-lh-bt-tone] :is(.nice-shadow, .light-shadow) {
+  box-shadow: var(--lhb-shadow);
+  outline-color: transparent;
+}
+
+/* Grey panels holding white cards (quiz, scenario, math, user, H5P, PDF):
+   light mode lifts white cards off a grey panel. Dark keeps that depth by
+   making the panel the card surface and the inner cards a raised step,
+   instead of letting the remap sink the cards below the panel. */
+.lh-bt[data-lh-bt-tone] [data-lhb-panel] {
+  background-color: var(--lhb-surface);
+  --color-white: var(--lhb-raised);
+  --color-neutral-50: var(--lhb-raised-2);
+  --color-gray-50: var(--lhb-raised-2);
+}
+
+/* Embedded documents (magic blocks, PDFs, H5P, third-party embeds) were
+   authored for a white page: their frame stays white in every mode. */
+.lh-bt[data-lh-bt-tone] iframe.bg-white {
+  background-color: #ffffff;
+}
+
+/* Links, tables, quotes, rules, code. */
+.lh-bt[data-lh-bt-tone='dark'] .canva-content-wrapper .ProseMirror a {
+  color: var(--lhb-accent);
+}
+.lh-bt[data-lh-bt-tone='dark'] .canva-content-wrapper .ProseMirror a:hover {
+  color: color-mix(in oklab, var(--lhb-accent) 80%, white);
+}
+.lh-bt[data-lh-bt-tone] .canva-content-wrapper .ProseMirror table td,
+.lh-bt[data-lh-bt-tone] .canva-content-wrapper .ProseMirror table th {
+  border-color: var(--lhb-border-strong);
+}
+.lh-bt[data-lh-bt-tone] .canva-content-wrapper .ProseMirror table th {
+  background-color: var(--lhb-surface-3);
+  color: var(--lhb-text);
+}
+.lh-bt[data-lh-bt-tone] .canva-content-wrapper .ProseMirror table td {
+  background-color: color-mix(in srgb, var(--lhb-surface) 55%, transparent);
+}
+.lh-bt[data-lh-bt-tone] .ProseMirror blockquote {
+  border-inline-start-color: var(--lhb-border-strong);
+  color: var(--lhb-text-2);
+}
+.lh-bt[data-lh-bt-tone] .ProseMirror hr {
+  border-top-color: var(--lhb-border-strong);
+}
+.lh-bt[data-lh-bt-tone] .ProseMirror hr[data-variant='dashed'],
+.lh-bt[data-lh-bt-tone] .ProseMirror hr[data-variant='dotted'],
+.lh-bt[data-lh-bt-tone] .ProseMirror hr[data-variant='thick'] {
+  border-top-color: var(--lhb-n300) !important;
+}
+.lh-bt[data-lh-bt-tone] .ProseMirror hr[data-variant='dots'],
+.lh-bt[data-lh-bt-tone] .ProseMirror hr[data-variant='space'] {
+  border-top-color: transparent !important;
+}
+.lh-bt[data-lh-bt-tone] .ProseMirror hr[data-variant='dots']::after {
+  color: var(--lhb-faint);
+}
+.lh-bt[data-lh-bt-tone] .ProseMirror :not(pre) > code {
+  background: var(--lhb-surface-3);
+  color: var(--lhb-text);
+  box-shadow: 0 0 0 1px var(--lhb-border);
+}
+/* Code blocks are dark in every mode; on a dark host they sit a shade below
+   the cards with a hairline so they don't melt into the page. */
+.lh-bt[data-lh-bt-tone='dark'] .canva-content-wrapper .ProseMirror pre {
+  background: var(--lhb-code-bg);
+  box-shadow: 0 0 0 1px var(--lhb-border);
+}
+.lh-bt[data-lh-bt-tone] .ProseMirror li::marker {
+  color: var(--lhb-muted);
+}
+
+/* Text colours. Dark tone: the -300 step of each hue, pulled toward the ink
+   on coloured hosts so it still reads on a mid-tone page (AA-checked in the
+   matrix). Light tone: the -700 step, for pastel pages. */
+.lh-bt[data-lh-bt-tone='dark'] { --lhb-mark-mix: 82%; }
+.lh-bt[data-lh-bt='tinted'][data-lh-bt-tone='dark'] {
+  --lhb-mark-mix: 55%;
+  /* Links and accents on a coloured page lean toward the ink to stay AA. */
+  --lhb-accent: color-mix(in oklab, var(--lh-accent, #93c5fd) 50%, var(--lhb-text));
+  /* Hue ink (…-700/800/900) too: it often sits on a wash over the page colour. */
+  --color-red-700: color-mix(in oklab, oklch(80.8% 0.114 19.571) 60%, var(--lhb-text));
+  --color-red-800: color-mix(in oklab, oklch(88.5% 0.062 18.334) 60%, var(--lhb-text));
+  --color-red-900: color-mix(in oklab, oklch(88.5% 0.062 18.334) 60%, var(--lhb-text));
+  --color-orange-700: color-mix(in oklab, oklch(83.7% 0.128 66.29) 60%, var(--lhb-text));
+  --color-orange-800: color-mix(in oklab, oklch(90.1% 0.076 70.697) 60%, var(--lhb-text));
+  --color-orange-900: color-mix(in oklab, oklch(90.1% 0.076 70.697) 60%, var(--lhb-text));
+  --color-amber-700: color-mix(in oklab, oklch(87.9% 0.169 91.605) 60%, var(--lhb-text));
+  --color-amber-800: color-mix(in oklab, oklch(92.4% 0.12 95.746) 60%, var(--lhb-text));
+  --color-amber-900: color-mix(in oklab, oklch(92.4% 0.12 95.746) 60%, var(--lhb-text));
+  --color-yellow-700: color-mix(in oklab, oklch(90.5% 0.182 98.111) 60%, var(--lhb-text));
+  --color-yellow-800: color-mix(in oklab, oklch(94.5% 0.129 101.54) 60%, var(--lhb-text));
+  --color-yellow-900: color-mix(in oklab, oklch(94.5% 0.129 101.54) 60%, var(--lhb-text));
+  --color-lime-700: color-mix(in oklab, oklch(89.7% 0.196 126.665) 60%, var(--lhb-text));
+  --color-lime-800: color-mix(in oklab, oklch(93.8% 0.127 124.321) 60%, var(--lhb-text));
+  --color-lime-900: color-mix(in oklab, oklch(93.8% 0.127 124.321) 60%, var(--lhb-text));
+  --color-green-700: color-mix(in oklab, oklch(87.1% 0.15 154.449) 60%, var(--lhb-text));
+  --color-green-800: color-mix(in oklab, oklch(92.5% 0.084 155.995) 60%, var(--lhb-text));
+  --color-green-900: color-mix(in oklab, oklch(92.5% 0.084 155.995) 60%, var(--lhb-text));
+  --color-emerald-700: color-mix(in oklab, oklch(84.5% 0.143 164.978) 60%, var(--lhb-text));
+  --color-emerald-800: color-mix(in oklab, oklch(90.5% 0.093 164.15) 60%, var(--lhb-text));
+  --color-emerald-900: color-mix(in oklab, oklch(90.5% 0.093 164.15) 60%, var(--lhb-text));
+  --color-teal-700: color-mix(in oklab, oklch(85.5% 0.138 181.071) 60%, var(--lhb-text));
+  --color-teal-800: color-mix(in oklab, oklch(91% 0.096 180.426) 60%, var(--lhb-text));
+  --color-teal-900: color-mix(in oklab, oklch(91% 0.096 180.426) 60%, var(--lhb-text));
+  --color-cyan-700: color-mix(in oklab, oklch(86.5% 0.127 207.078) 60%, var(--lhb-text));
+  --color-cyan-800: color-mix(in oklab, oklch(91.7% 0.08 205.041) 60%, var(--lhb-text));
+  --color-cyan-900: color-mix(in oklab, oklch(91.7% 0.08 205.041) 60%, var(--lhb-text));
+  --color-sky-700: color-mix(in oklab, oklch(82.8% 0.111 230.318) 60%, var(--lhb-text));
+  --color-sky-800: color-mix(in oklab, oklch(90.1% 0.058 230.902) 60%, var(--lhb-text));
+  --color-sky-900: color-mix(in oklab, oklch(90.1% 0.058 230.902) 60%, var(--lhb-text));
+  --color-blue-700: color-mix(in oklab, oklch(80.9% 0.105 251.813) 60%, var(--lhb-text));
+  --color-blue-800: color-mix(in oklab, oklch(88.2% 0.059 254.128) 60%, var(--lhb-text));
+  --color-blue-900: color-mix(in oklab, oklch(88.2% 0.059 254.128) 60%, var(--lhb-text));
+  --color-indigo-700: color-mix(in oklab, oklch(78.5% 0.115 274.713) 60%, var(--lhb-text));
+  --color-indigo-800: color-mix(in oklab, oklch(87% 0.065 274.039) 60%, var(--lhb-text));
+  --color-indigo-900: color-mix(in oklab, oklch(87% 0.065 274.039) 60%, var(--lhb-text));
+  --color-violet-700: color-mix(in oklab, oklch(81.1% 0.111 293.571) 60%, var(--lhb-text));
+  --color-violet-800: color-mix(in oklab, oklch(89.4% 0.057 293.283) 60%, var(--lhb-text));
+  --color-violet-900: color-mix(in oklab, oklch(89.4% 0.057 293.283) 60%, var(--lhb-text));
+  --color-purple-700: color-mix(in oklab, oklch(82.7% 0.119 306.383) 60%, var(--lhb-text));
+  --color-purple-800: color-mix(in oklab, oklch(90.2% 0.063 306.703) 60%, var(--lhb-text));
+  --color-purple-900: color-mix(in oklab, oklch(90.2% 0.063 306.703) 60%, var(--lhb-text));
+  --color-fuchsia-700: color-mix(in oklab, oklch(83.3% 0.145 321.434) 60%, var(--lhb-text));
+  --color-fuchsia-800: color-mix(in oklab, oklch(90.3% 0.076 319.62) 60%, var(--lhb-text));
+  --color-fuchsia-900: color-mix(in oklab, oklch(90.3% 0.076 319.62) 60%, var(--lhb-text));
+  --color-pink-700: color-mix(in oklab, oklch(82.3% 0.12 346.018) 60%, var(--lhb-text));
+  --color-pink-800: color-mix(in oklab, oklch(89.9% 0.061 343.231) 60%, var(--lhb-text));
+  --color-pink-900: color-mix(in oklab, oklch(89.9% 0.061 343.231) 60%, var(--lhb-text));
+  --color-rose-700: color-mix(in oklab, oklch(81% 0.117 11.638) 60%, var(--lhb-text));
+  --color-rose-800: color-mix(in oklab, oklch(89.2% 0.058 10.001) 60%, var(--lhb-text));
+  --color-rose-900: color-mix(in oklab, oklch(89.2% 0.058 10.001) 60%, var(--lhb-text));
+}
+.lh-bt[data-lh-bt-tone] .ProseMirror .lh-text-gray { color: var(--lhb-muted); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-text-red { color: color-mix(in oklab, #fca5a5 var(--lhb-mark-mix), var(--lhb-text)); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-text-orange { color: color-mix(in oklab, #fdba74 var(--lhb-mark-mix), var(--lhb-text)); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-text-amber { color: color-mix(in oklab, #fcd34d var(--lhb-mark-mix), var(--lhb-text)); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-text-green { color: color-mix(in oklab, #86efac var(--lhb-mark-mix), var(--lhb-text)); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-text-teal { color: color-mix(in oklab, #5eead4 var(--lhb-mark-mix), var(--lhb-text)); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-text-blue { color: color-mix(in oklab, #93c5fd var(--lhb-mark-mix), var(--lhb-text)); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-text-purple { color: color-mix(in oklab, #c4b5fd var(--lhb-mark-mix), var(--lhb-text)); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-text-pink { color: color-mix(in oklab, #f9a8d4 var(--lhb-mark-mix), var(--lhb-text)); }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-text-red { color: #b91c1c; }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-text-orange { color: #c2410c; }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-text-amber { color: #92400e; }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-text-green { color: #166534; }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-text-teal { color: #115e59; }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-text-blue { color: #1d4ed8; }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-text-purple { color: #6d28d9; }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-text-pink { color: #be185d; }
+
+/* Highlights: translucent washes keep the text readable on any host. */
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-gray { background: rgb(255 255 255 / 0.12); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-red { background: rgb(248 113 113 / 0.26); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-orange { background: rgb(251 146 60 / 0.26); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-amber { background: rgb(251 191 36 / 0.26); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-green { background: rgb(74 222 128 / 0.24); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-teal { background: rgb(45 212 191 / 0.24); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-blue { background: rgb(96 165 250 / 0.26); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-purple { background: rgb(167 139 250 / 0.28); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-fill.lh-hl-pink { background: rgb(244 114 182 / 0.26); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-hl-marker { background: linear-gradient(transparent 55%, color-mix(in srgb, var(--lh-hl) 45%, transparent) 55%, color-mix(in srgb, var(--lh-hl) 45%, transparent) 92%, transparent 92%); }
+.lh-bt[data-lh-bt-tone='light'] .ProseMirror .lh-hl-fill { mix-blend-mode: multiply; }
+
+.lh-bt[data-lh-bt-headroom='low'] .ProseMirror .lh-hl-fill { background: rgb(0 0 0 / 0.24) !important; box-shadow: inset 0 -2px 0 var(--lh-hl); }
+
+/* Gradient text: the light-mode gradients are too deep for a dark card. */
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-fx-gradient-sunset { background-image: linear-gradient(90deg, #fb923c, #fb7185 55%, #c084fc); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-fx-gradient-ocean { background-image: linear-gradient(90deg, #38bdf8, #2dd4bf 60%, #4ade80); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-fx-gradient-aurora { background-image: linear-gradient(90deg, #60a5fa, #a78bfa 50%, #f472b6); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-fx-dotted { text-decoration-color: var(--lhb-muted); }
+
+.lh-bt[data-lh-bt-tone] .ProseMirror kbd.lh-kbd {
+  background: var(--lhb-surface-2);
+  color: var(--lhb-text);
+  box-shadow: inset 0 -1.5px 0 var(--lhb-border-strong), 0 0 0 1px var(--lhb-border-strong);
+}
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-spoiler { background: rgb(255 255 255 / 0.12); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-spoiler.is-revealed { background: rgb(255 255 255 / 0.06); }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-definition { text-decoration-color: #38bdf8; }
+.lh-bt[data-lh-bt-tone='dark'] .ProseMirror .lh-definition[data-note]:not([data-note=''])::after {
+  background: var(--lhb-raised);
+  color: var(--lhb-text);
+  box-shadow: var(--lhb-shadow);
+}
+
+/* Keep the original palette inside pieces that look the same in every mode:
+   surfaces that are dark by design (the code playground's editor) and solid
+   saturated fills with white or tinted ink on them (buttons, badges,
+   flipcard fronts). Mark them with data-lhb-keep. */
+.lh-bt[data-lh-bt-tone] [data-lhb-keep] {
+  --color-white: #fff;
+  --color-black: #000;
+  --color-gray-50: oklch(98.5% 0.002 247.839);
+  --color-gray-100: oklch(96.7% 0.003 264.542);
+  --color-gray-200: oklch(92.8% 0.006 264.531);
+  --color-gray-300: oklch(87.2% 0.01 258.338);
+  --color-gray-400: oklch(70.7% 0.022 261.325);
+  --color-gray-500: oklch(55.1% 0.027 264.364);
+  --color-gray-600: oklch(44.6% 0.03 256.802);
+  --color-gray-700: oklch(37.3% 0.034 259.733);
+  --color-gray-800: oklch(27.8% 0.033 256.848);
+  --color-gray-900: oklch(21% 0.034 264.665);
+  --color-gray-950: oklch(13% 0.028 261.692);
+  --color-neutral-50: oklch(98.5% 0 none);
+  --color-neutral-100: oklch(97% 0 none);
+  --color-neutral-200: oklch(92.2% 0 none);
+  --color-neutral-300: oklch(87% 0 none);
+  --color-neutral-400: oklch(70.8% 0 none);
+  --color-neutral-500: oklch(55.6% 0 none);
+  --color-neutral-600: oklch(43.9% 0 none);
+  --color-neutral-700: oklch(37.1% 0 none);
+  --color-neutral-800: oklch(26.9% 0 none);
+  --color-neutral-900: oklch(20.5% 0 none);
+  --color-neutral-950: oklch(14.5% 0 none);
+  --color-zinc-50: oklch(98.5% 0 none);
+  --color-zinc-100: oklch(96.7% 0.001 286.375);
+  --color-zinc-200: oklch(92% 0.004 286.32);
+  --color-zinc-300: oklch(87.1% 0.006 286.286);
+  --color-zinc-400: oklch(70.5% 0.015 286.067);
+  --color-zinc-500: oklch(55.2% 0.016 285.938);
+  --color-zinc-600: oklch(44.2% 0.017 285.786);
+  --color-zinc-700: oklch(37% 0.013 285.805);
+  --color-zinc-800: oklch(27.4% 0.006 286.033);
+  --color-zinc-900: oklch(21% 0.006 285.885);
+  --color-zinc-950: oklch(14.1% 0.005 285.823);
+  --color-slate-50: oklch(98.4% 0.003 247.858);
+  --color-slate-100: oklch(96.8% 0.007 247.896);
+  --color-slate-200: oklch(92.9% 0.013 255.508);
+  --color-slate-300: oklch(86.9% 0.022 252.894);
+  --color-slate-400: oklch(70.4% 0.04 256.788);
+  --color-slate-500: oklch(55.4% 0.046 257.417);
+  --color-slate-600: oklch(44.6% 0.043 257.281);
+  --color-slate-700: oklch(37.2% 0.044 257.287);
+  --color-slate-800: oklch(27.9% 0.041 260.031);
+  --color-slate-900: oklch(20.8% 0.042 265.755);
+  --color-slate-950: oklch(12.9% 0.042 264.695);
+  --color-stone-50: oklch(98.5% 0.001 106.423);
+  --color-stone-100: oklch(97% 0.001 106.424);
+  --color-stone-200: oklch(92.3% 0.003 48.717);
+  --color-stone-300: oklch(86.9% 0.005 56.366);
+  --color-stone-400: oklch(70.9% 0.01 56.259);
+  --color-stone-500: oklch(55.3% 0.013 58.071);
+  --color-stone-600: oklch(44.4% 0.011 73.639);
+  --color-stone-700: oklch(37.4% 0.01 67.558);
+  --color-stone-800: oklch(26.8% 0.007 34.298);
+  --color-stone-900: oklch(21.6% 0.006 56.043);
+  --color-stone-950: oklch(14.7% 0.004 49.25);
+  --color-red-50: oklch(97.1% 0.013 17.38);
+  --color-red-100: oklch(93.6% 0.032 17.717);
+  --color-red-200: oklch(88.5% 0.062 18.334);
+  --color-red-300: oklch(80.8% 0.114 19.571);
+  --color-red-600: oklch(57.7% 0.245 27.325);
+  --color-red-700: oklch(50.5% 0.213 27.518);
+  --color-red-800: oklch(44.4% 0.177 26.899);
+  --color-red-900: oklch(39.6% 0.141 25.723);
+  --color-red-950: oklch(25.8% 0.092 26.042);
+  --color-orange-50: oklch(98% 0.016 73.684);
+  --color-orange-100: oklch(95.4% 0.038 75.164);
+  --color-orange-200: oklch(90.1% 0.076 70.697);
+  --color-orange-300: oklch(83.7% 0.128 66.29);
+  --color-orange-600: oklch(64.6% 0.222 41.116);
+  --color-orange-700: oklch(55.3% 0.195 38.402);
+  --color-orange-800: oklch(47% 0.157 37.304);
+  --color-orange-900: oklch(40.8% 0.123 38.172);
+  --color-orange-950: oklch(26.6% 0.079 36.259);
+  --color-amber-50: oklch(98.7% 0.022 95.277);
+  --color-amber-100: oklch(96.2% 0.059 95.617);
+  --color-amber-200: oklch(92.4% 0.12 95.746);
+  --color-amber-300: oklch(87.9% 0.169 91.605);
+  --color-amber-600: oklch(66.6% 0.179 58.318);
+  --color-amber-700: oklch(55.5% 0.163 48.998);
+  --color-amber-800: oklch(47.3% 0.137 46.201);
+  --color-amber-900: oklch(41.4% 0.112 45.904);
+  --color-amber-950: oklch(27.9% 0.077 45.635);
+  --color-yellow-50: oklch(98.7% 0.026 102.212);
+  --color-yellow-100: oklch(97.3% 0.071 103.193);
+  --color-yellow-200: oklch(94.5% 0.129 101.54);
+  --color-yellow-300: oklch(90.5% 0.182 98.111);
+  --color-yellow-600: oklch(68.1% 0.162 75.834);
+  --color-yellow-700: oklch(55.4% 0.135 66.442);
+  --color-yellow-800: oklch(47.6% 0.114 61.907);
+  --color-yellow-900: oklch(42.1% 0.095 57.708);
+  --color-yellow-950: oklch(28.6% 0.066 53.813);
+  --color-lime-50: oklch(98.6% 0.031 120.757);
+  --color-lime-100: oklch(96.7% 0.067 122.328);
+  --color-lime-200: oklch(93.8% 0.127 124.321);
+  --color-lime-300: oklch(89.7% 0.196 126.665);
+  --color-lime-600: oklch(64.8% 0.2 131.684);
+  --color-lime-700: oklch(53.2% 0.157 131.589);
+  --color-lime-800: oklch(45.3% 0.124 130.933);
+  --color-lime-900: oklch(40.5% 0.101 131.063);
+  --color-lime-950: oklch(27.4% 0.072 132.109);
+  --color-green-50: oklch(98.2% 0.018 155.826);
+  --color-green-100: oklch(96.2% 0.044 156.743);
+  --color-green-200: oklch(92.5% 0.084 155.995);
+  --color-green-300: oklch(87.1% 0.15 154.449);
+  --color-green-600: oklch(62.7% 0.194 149.214);
+  --color-green-700: oklch(52.7% 0.154 150.069);
+  --color-green-800: oklch(44.8% 0.119 151.328);
+  --color-green-900: oklch(39.3% 0.095 152.535);
+  --color-green-950: oklch(26.6% 0.065 152.934);
+  --color-emerald-50: oklch(97.9% 0.021 166.113);
+  --color-emerald-100: oklch(95% 0.052 163.051);
+  --color-emerald-200: oklch(90.5% 0.093 164.15);
+  --color-emerald-300: oklch(84.5% 0.143 164.978);
+  --color-emerald-600: oklch(59.6% 0.145 163.225);
+  --color-emerald-700: oklch(50.8% 0.118 165.612);
+  --color-emerald-800: oklch(43.2% 0.095 166.913);
+  --color-emerald-900: oklch(37.8% 0.077 168.94);
+  --color-emerald-950: oklch(26.2% 0.051 172.552);
+  --color-teal-50: oklch(98.4% 0.014 180.72);
+  --color-teal-100: oklch(95.3% 0.051 180.801);
+  --color-teal-200: oklch(91% 0.096 180.426);
+  --color-teal-300: oklch(85.5% 0.138 181.071);
+  --color-teal-600: oklch(60% 0.118 184.704);
+  --color-teal-700: oklch(51.1% 0.096 186.391);
+  --color-teal-800: oklch(43.7% 0.078 188.216);
+  --color-teal-900: oklch(38.6% 0.063 188.416);
+  --color-teal-950: oklch(27.7% 0.046 192.524);
+  --color-cyan-50: oklch(98.4% 0.019 200.873);
+  --color-cyan-100: oklch(95.6% 0.045 203.388);
+  --color-cyan-200: oklch(91.7% 0.08 205.041);
+  --color-cyan-300: oklch(86.5% 0.127 207.078);
+  --color-cyan-600: oklch(60.9% 0.126 221.723);
+  --color-cyan-700: oklch(52% 0.105 223.128);
+  --color-cyan-800: oklch(45% 0.085 224.283);
+  --color-cyan-900: oklch(39.8% 0.07 227.392);
+  --color-cyan-950: oklch(30.2% 0.056 229.695);
+  --color-sky-50: oklch(97.7% 0.013 236.62);
+  --color-sky-100: oklch(95.1% 0.026 236.824);
+  --color-sky-200: oklch(90.1% 0.058 230.902);
+  --color-sky-300: oklch(82.8% 0.111 230.318);
+  --color-sky-600: oklch(58.8% 0.158 241.966);
+  --color-sky-700: oklch(50% 0.134 242.749);
+  --color-sky-800: oklch(44.3% 0.11 240.79);
+  --color-sky-900: oklch(39.1% 0.09 240.876);
+  --color-sky-950: oklch(29.3% 0.066 243.157);
+  --color-blue-50: oklch(97% 0.014 254.604);
+  --color-blue-100: oklch(93.2% 0.032 255.585);
+  --color-blue-200: oklch(88.2% 0.059 254.128);
+  --color-blue-300: oklch(80.9% 0.105 251.813);
+  --color-blue-600: oklch(54.6% 0.245 262.881);
+  --color-blue-700: oklch(48.8% 0.243 264.376);
+  --color-blue-800: oklch(42.4% 0.199 265.638);
+  --color-blue-900: oklch(37.9% 0.146 265.522);
+  --color-blue-950: oklch(28.2% 0.091 267.935);
+  --color-indigo-50: oklch(96.2% 0.018 272.314);
+  --color-indigo-100: oklch(93% 0.034 272.788);
+  --color-indigo-200: oklch(87% 0.065 274.039);
+  --color-indigo-300: oklch(78.5% 0.115 274.713);
+  --color-indigo-600: oklch(51.1% 0.262 276.966);
+  --color-indigo-700: oklch(45.7% 0.24 277.023);
+  --color-indigo-800: oklch(39.8% 0.195 277.366);
+  --color-indigo-900: oklch(35.9% 0.144 278.697);
+  --color-indigo-950: oklch(25.7% 0.09 281.288);
+  --color-violet-50: oklch(96.9% 0.016 293.756);
+  --color-violet-100: oklch(94.3% 0.029 294.588);
+  --color-violet-200: oklch(89.4% 0.057 293.283);
+  --color-violet-300: oklch(81.1% 0.111 293.571);
+  --color-violet-600: oklch(54.1% 0.281 293.009);
+  --color-violet-700: oklch(49.1% 0.27 292.581);
+  --color-violet-800: oklch(43.2% 0.232 292.759);
+  --color-violet-900: oklch(38% 0.189 293.745);
+  --color-violet-950: oklch(28.3% 0.141 291.089);
+  --color-purple-50: oklch(97.7% 0.014 308.299);
+  --color-purple-100: oklch(94.6% 0.033 307.174);
+  --color-purple-200: oklch(90.2% 0.063 306.703);
+  --color-purple-300: oklch(82.7% 0.119 306.383);
+  --color-purple-600: oklch(55.8% 0.288 302.321);
+  --color-purple-700: oklch(49.6% 0.265 301.924);
+  --color-purple-800: oklch(43.8% 0.218 303.724);
+  --color-purple-900: oklch(38.1% 0.176 304.987);
+  --color-purple-950: oklch(29.1% 0.149 302.717);
+  --color-fuchsia-50: oklch(97.7% 0.017 320.058);
+  --color-fuchsia-100: oklch(95.2% 0.037 318.852);
+  --color-fuchsia-200: oklch(90.3% 0.076 319.62);
+  --color-fuchsia-300: oklch(83.3% 0.145 321.434);
+  --color-fuchsia-600: oklch(59.1% 0.293 322.896);
+  --color-fuchsia-700: oklch(51.8% 0.253 323.949);
+  --color-fuchsia-800: oklch(45.2% 0.211 324.591);
+  --color-fuchsia-900: oklch(40.1% 0.17 325.612);
+  --color-fuchsia-950: oklch(29.3% 0.136 325.661);
+  --color-pink-50: oklch(97.1% 0.014 343.198);
+  --color-pink-100: oklch(94.8% 0.028 342.258);
+  --color-pink-200: oklch(89.9% 0.061 343.231);
+  --color-pink-300: oklch(82.3% 0.12 346.018);
+  --color-pink-600: oklch(59.2% 0.249 0.584);
+  --color-pink-700: oklch(52.5% 0.223 3.958);
+  --color-pink-800: oklch(45.9% 0.187 3.815);
+  --color-pink-900: oklch(40.8% 0.153 2.432);
+  --color-pink-950: oklch(28.4% 0.109 3.907);
+  --color-rose-50: oklch(96.9% 0.015 12.422);
+  --color-rose-100: oklch(94.1% 0.03 12.58);
+  --color-rose-200: oklch(89.2% 0.058 10.001);
+  --color-rose-300: oklch(81% 0.117 11.638);
+  --color-rose-600: oklch(58.6% 0.253 17.585);
+  --color-rose-700: oklch(51.4% 0.222 16.935);
+  --color-rose-800: oklch(45.5% 0.188 13.697);
+  --color-rose-900: oklch(41% 0.159 10.272);
+  --color-rose-950: oklch(27.1% 0.105 12.094);
+}
+
+/* ── 4. narrow scopes ──────────────────────────────────────────────────── */
+/* The scope's own width, measured by BlockThemeScope: a lesson in a phone
+   frame or a WebView narrows here even when the viewport is wide. These
+   mirror the phone rules in styles/mobile-activities.css. */
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror {
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror .tableWrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror table {
+  table-layout: auto;
+  width: auto;
+  min-width: 100% !important;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror :is(td, th) {
+  min-width: 8rem;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror pre {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  white-space: pre;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror pre code {
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror :not(pre) > code {
+  overflow-wrap: anywhere;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror :is(img, video, iframe) {
+  max-width: 100%;
+}
+/* Tables rendered without the editor's .tableWrapper (the static renderer in
+   @learnhouse/react) scroll inside themselves too. */
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) .canva-content-wrapper .ProseMirror > table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}

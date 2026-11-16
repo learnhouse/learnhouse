@@ -1,6 +1,7 @@
 import { getAPIUrl } from '@services/config/config'
 import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
 import { getAIImageMediaDirectory } from '@services/media/media'
+import { creditsUsedFromResponse } from '@services/ai/credits'
 
 // ---------------------------------------------------------------------------
 // AI generation clients (image / quiz / assignment) + durable history.
@@ -15,7 +16,8 @@ async function postJSON(path: string, data: any, access_token: string) {
     RequestBodyWithAuthHeader('POST', data, null, access_token)
   )
   const json = await res.json().catch(() => ({}))
-  return { success: res.status === 200, status: res.status, data: json }
+  // Credits the request charged ("Used N credits"), from X-AI-Credits-Used.
+  return { success: res.status === 200, status: res.status, data: json, credits: creditsUsedFromResponse(res) }
 }
 
 async function getJSON(path: string, access_token: string) {

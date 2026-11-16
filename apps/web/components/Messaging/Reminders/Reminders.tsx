@@ -7,7 +7,9 @@
 
 import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Bell, BellSimpleSlash, Clock } from '@phosphor-icons/react'
+import { IconButton } from '@components/Messaging/ui/kit'
 import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
 import { useMessaging } from '@components/Messaging/MessagingProvider'
 import { formatDue } from '@components/Messaging/Rich/MoreBlocks'
@@ -27,6 +29,7 @@ export function useReminders() {
 
 /** Bell button with upcoming and recently delivered reminders. */
 export function RemindersButton({ onOpenConversation }: { onOpenConversation?: (uuid: string) => void }) {
+  const { t } = useTranslation()
   const { token, orgId } = useMessaging()
   const qc = useQueryClient()
   const { data: reminders = [] } = useReminders()
@@ -43,29 +46,37 @@ export function RemindersButton({ onOpenConversation }: { onOpenConversation?: (
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-          title="Reminders"
-          aria-label={upcoming.length ? `Reminders, ${upcoming.length} upcoming` : 'Reminders'}
+        <IconButton
+          label={
+            upcoming.length
+              ? t('messaging.reminders_upcoming', { defaultValue: 'Reminders, {{count}} upcoming', count: upcoming.length })
+              : t('messaging.reminders', { defaultValue: 'Reminders' })
+          }
+          className="relative"
         >
-          <Bell size={18} weight="fill" />
-          {upcoming.length > 0 && (
-            <span className="absolute top-1 end-1 h-2 w-2 rounded-full bg-gray-900 ring-2 ring-white" />
-          )}
-        </button>
+          <Bell size={17} />
+          {upcoming.length > 0 && <span className="absolute top-1.5 end-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />}
+        </IconButton>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
-        <div className="border-b border-gray-100 px-4 py-3">
-          <p className="text-sm font-semibold text-gray-900">Reminders</p>
-          <p className="text-xs text-gray-500">Ask any agent to remind you, or use "Remind me" on a message.</p>
+      <PopoverContent align="end" className="w-80 overflow-hidden rounded-xl p-0">
+        <div className="border-b border-neutral-100 px-4 py-3">
+          <p className="text-sm font-semibold text-neutral-900">{t('messaging.reminders', { defaultValue: 'Reminders' })}</p>
+          <p className="text-xs text-neutral-500">
+            {t('messaging.reminders_desc', { defaultValue: 'Ask any agent to remind you, or use "Remind me" on a message.' })}
+          </p>
         </div>
         <div className="max-h-80 overflow-y-auto py-1">
           {upcoming.length === 0 && sent.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-gray-500">Nothing scheduled.</p>
+            <div className="flex flex-col items-center px-4 py-8 text-center">
+              <span className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
+                <Clock size={17} />
+              </span>
+              <p className="text-sm text-neutral-500">{t('messaging.nothing_scheduled', { defaultValue: 'Nothing scheduled.' })}</p>
+            </div>
           )}
           {upcoming.map((r) => (
-            <div key={r.reminder_uuid} className="group flex items-start gap-3 px-4 py-2 hover:bg-gray-50">
-              <Clock size={16} className="mt-0.5 shrink-0 text-gray-500" />
+            <div key={r.reminder_uuid} className="group flex items-start gap-3 px-4 py-2 hover:bg-neutral-50">
+              <Clock size={16} className="mt-0.5 shrink-0 text-neutral-500" />
               <button
                 className="min-w-0 flex-1 text-start"
                 onClick={() => {
@@ -73,13 +84,15 @@ export function RemindersButton({ onOpenConversation }: { onOpenConversation?: (
                   setOpen(false)
                 }}
               >
-                <p className="truncate text-sm font-medium text-gray-900">{r.text}</p>
-                <p className="text-xs text-gray-500">{formatDue(r.due_at)}</p>
+                <p className="truncate text-sm font-medium text-neutral-900">{r.text}</p>
+                <p className="text-xs text-neutral-500">{formatDue(r.due_at)}</p>
               </button>
               <button
+                type="button"
                 onClick={() => cancel(r.reminder_uuid)}
-                className="rounded-md p-1 text-gray-400 opacity-0 hover:bg-gray-100 hover:text-gray-700 group-hover:opacity-100"
-                title="Cancel reminder"
+                className="rounded-md p-1 text-neutral-400 opacity-0 hover:bg-neutral-100 hover:text-neutral-700 focus-visible:opacity-100 group-hover:opacity-100"
+                title={t('messaging.cancel_reminder', { defaultValue: 'Cancel reminder' })}
+                aria-label={t('messaging.cancel_reminder', { defaultValue: 'Cancel reminder' })}
               >
                 <BellSimpleSlash size={15} />
               </button>
@@ -87,13 +100,15 @@ export function RemindersButton({ onOpenConversation }: { onOpenConversation?: (
           ))}
           {sent.length > 0 && (
             <>
-              <p className="px-4 pt-3 pb-1 text-xs font-medium text-gray-400">Sent</p>
+              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+                {t('messaging.sent', { defaultValue: 'Sent' })}
+              </p>
               {sent.map((r) => (
                 <div key={r.reminder_uuid} className="flex items-start gap-3 px-4 py-2 opacity-70">
-                  <Bell size={16} className="mt-0.5 shrink-0 text-gray-400" />
+                  <Bell size={16} className="mt-0.5 shrink-0 text-neutral-400" />
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-gray-700">{r.text}</p>
-                    <p className="text-xs text-gray-400">{formatDue(r.due_at)}</p>
+                    <p className="truncate text-sm text-neutral-700">{r.text}</p>
+                    <p className="text-xs text-neutral-400">{formatDue(r.due_at)}</p>
                   </div>
                 </div>
               ))}
@@ -119,15 +134,16 @@ function nextMonday9(): Date {
   return d
 }
 
-const PRESETS: { label: string; when: () => Date }[] = [
-  { label: 'In 20 minutes', when: () => new Date(Date.now() + 20 * 60_000) },
-  { label: 'In 1 hour', when: () => new Date(Date.now() + 60 * 60_000) },
-  { label: 'Tomorrow at 9:00', when: () => at(9, 1) },
-  { label: 'Next Monday at 9:00', when: () => nextMonday9() },
+const PRESETS: { key: string; label: string; when: () => Date }[] = [
+  { key: 'in_20m', label: 'In 20 minutes', when: () => new Date(Date.now() + 20 * 60_000) },
+  { key: 'in_1h', label: 'In 1 hour', when: () => new Date(Date.now() + 60 * 60_000) },
+  { key: 'tomorrow_9', label: 'Tomorrow at 9:00', when: () => at(9, 1) },
+  { key: 'monday_9', label: 'Next Monday at 9:00', when: () => nextMonday9() },
 ]
 
 /** "Remind me about this message" with quick presets. */
 export function RemindMeMenu({ message, children }: { message: ChatMessage; children: React.ReactElement }) {
+  const { t } = useTranslation()
   const { token, orgId } = useMessaging()
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
@@ -155,22 +171,23 @@ export function RemindMeMenu({ message, children }: { message: ChatMessage; chil
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent align="end" className="w-56 p-1">
+      <PopoverContent align="end" className="w-56 rounded-xl p-1">
         {done ? (
-          <p className="px-3 py-2 text-sm text-gray-700">Reminder set for {done}</p>
+          <p className="px-3 py-2 text-sm text-neutral-700">{t('messaging.reminder_set_for', { defaultValue: 'Reminder set for {{when}}', when: done })}</p>
         ) : (
           <>
-            <p className="px-3 pt-2 pb-1 text-xs font-medium text-gray-500">Remind me</p>
+            <p className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">{t('messaging.remind_me', { defaultValue: 'Remind me' })}</p>
             {PRESETS.map((p) => (
               <button
                 key={p.label}
+                type="button"
                 onClick={() => pick(p.when())}
-                className="w-full rounded-md px-3 py-1.5 text-start text-sm text-gray-700 hover:bg-gray-100"
+                className="w-full rounded-lg px-3 py-1.5 text-start text-sm text-neutral-700 hover:bg-neutral-100"
               >
-                {p.label}
+                {t(`messaging.remind_presets.${p.key}`, { defaultValue: p.label })}
               </button>
             ))}
-            {error && <p className="px-3 py-1.5 text-xs text-red-600">{error}</p>}
+            {error && <p className="px-3 py-1.5 text-xs text-rose-600">{error}</p>}
           </>
         )}
       </PopoverContent>

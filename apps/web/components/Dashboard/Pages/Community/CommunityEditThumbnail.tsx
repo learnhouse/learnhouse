@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useRef } from 'react'
-import { UploadCloud, Image as ImageIcon, ArrowBigUpDash } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { CircleNotch, ImageSquare, UploadSimple } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -13,7 +12,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
-import { Button } from '@components/ui/button'
+import { Button, SectionCard, buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { SafeImage } from '@components/Objects/SafeImage'
 
 const MAX_FILE_SIZE = 8_000_000 // 8MB
@@ -22,11 +21,10 @@ type ValidImageMimeType = (typeof VALID_IMAGE_MIME_TYPES)[number]
 
 const CommunityEditThumbnail: React.FC = () => {
   const { t } = useTranslation()
-  const router = useRouter()
   const session = useLHSession() as any
   const org = useOrg() as any
   const communityState = useCommunity()
-  const _dispatch = useCommunityDispatch()
+  const dispatch = useCommunityDispatch()
   const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
@@ -124,12 +122,15 @@ const CommunityEditThumbnail: React.FC = () => {
       if (res.success === false) {
         showError(res.HTTPmessage)
       } else {
+        // Show the new cover in the header right away; the refetch confirms it.
+        const fileName = res?.data?.thumbnail_image
+        if (fileName && dispatch) dispatch({ type: 'setCommunity', payload: { ...community, thumbnail_image: fileName } })
         setLocalThumbnail(null)
+        queryClient.invalidateQueries({ queryKey: queryKeys.community.list(org.id) })
         toast.success(t('dashboard.courses.communities.thumbnail.toasts.update_success'), {
           duration: 3000,
           position: 'top-center',
         })
-        router.refresh()
       }
     } catch (_err) {
       showError(t('dashboard.courses.communities.thumbnail.toasts.update_error'))
@@ -155,77 +156,71 @@ const CommunityEditThumbnail: React.FC = () => {
   const thumbnailUrl = getCurrentThumbnailUrl()
 
   return (
-    <>
-      <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
-        <div className="flex flex-col gap-0">
-          <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-            <h1 className="font-bold text-xl text-gray-800">{t('dashboard.courses.communities.thumbnail.title')}</h1>
-            <h2 className="text-gray-500 text-md">
-              {t('dashboard.courses.communities.thumbnail.subtitle')}
-            </h2>
-          </div>
-
-          <div className="mx-5 my-5 space-y-6">
-            {/* Preview */}
-            <div className="aspect-video max-w-2xl bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
-              {thumbnailUrl ? (
-                <SafeImage
-                  src={thumbnailUrl}
-                  alt={t('dashboard.courses.communities.thumbnail.title')}
-                  className={`w-full h-full object-cover ${isLoading ? 'animate-pulse' : ''}`}
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                  <ImageIcon size={48} strokeWidth={1} />
-                  <p className="text-sm mt-2">{t('dashboard.courses.communities.thumbnail.no_thumbnail')}</p>
-                </div>
-              )}
+    <SectionCard
+      icon={<ImageSquare size={18} />}
+      title={t('dashboard.courses.communities.thumbnail.title')}
+      description={t('dashboard.courses.communities.thumbnail.subtitle')}
+    >
+      <div className="flex flex-col md:flex-row gap-6 md:items-start">
+        {/* Preview: also a drop-in click target for picking a file */}
+        <button
+          type="button"
+          onClick={() => !isLoading && imageInputRef.current?.click()}
+          className="group relative w-full md:max-w-md aspect-video shrink-0 rounded-xl overflow-hidden bg-neutral-100 ring-1 ring-inset ring-neutral-200 hover:ring-neutral-300 transition-shadow"
+          aria-label={t('dashboard.courses.communities.thumbnail.upload_image')}
+        >
+          {thumbnailUrl ? (
+            <SafeImage
+              src={thumbnailUrl}
+              alt={t('dashboard.courses.communities.thumbnail.title')}
+              className={`w-full h-full object-cover ${isLoading ? 'opacity-60' : ''}`}
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-neutral-400">
+              <ImageSquare size={36} weight="duotone" />
+              <p className="text-sm font-medium">{t('dashboard.courses.communities.thumbnail.no_thumbnail')}</p>
             </div>
+          )}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm">
+                <CircleNotch size={14} className="animate-spin" />
+                {t('dashboard.courses.communities.thumbnail.uploading')}
+              </span>
+            </div>
+          )}
+        </button>
 
-            {/* Upload status */}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="font-medium text-sm text-green-800 bg-green-50 rounded-full px-4 py-2 flex items-center">
-                  <ArrowBigUpDash size={16} className="me-2 animate-bounce" />
-                  {t('common.loading')}
-                </div>
-              </div>
-            )}
-
-            {/* Action buttons */}
+        <div className="flex flex-col gap-3 min-w-0">
+          <p className="text-sm text-neutral-600">{t('communities.dash.thumbnail.help')}</p>
+          <input
+            ref={imageInputRef}
+            type="file"
+            className="hidden"
+            accept=".jpg,.jpeg,.png"
+            onChange={handleFileChange}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="primary"
+              icon={<UploadSimple size={14} />}
+              disabled={isLoading}
+              onClick={() => imageInputRef.current?.click()}
+            >
+              {thumbnailUrl ? t('communities.dash.thumbnail.replace') : t('dashboard.courses.communities.thumbnail.upload_image')}
+            </Button>
             {!isLoading && (
-              <div className="flex gap-3">
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  className="hidden"
-                  accept=".jpg,.jpeg,.png"
-                  onChange={handleFileChange}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => imageInputRef.current?.click()}
-                >
-                  <UploadCloud size={16} />
-                  {t('dashboard.courses.communities.thumbnail.upload_image')}
-                </Button>
-                <AIImageButton
-                  onSelect={handleRemoteImageSelect}
-                  onSelectFile={handleAIImageFile}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors"
-                />
-              </div>
+              <AIImageButton
+                onSelect={handleRemoteImageSelect}
+                onSelectFile={handleAIImageFile}
+                className={buttonClass('secondary', 'md')}
+              />
             )}
-
-            <p className="text-xs text-gray-500">
-              {t('dashboard.courses.communities.thumbnail.supported_formats')}
-            </p>
           </div>
+          <p className="text-xs text-neutral-400">{t('dashboard.courses.communities.thumbnail.supported_formats')}</p>
         </div>
       </div>
-    </>
+    </SectionCard>
   )
 }
 

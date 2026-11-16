@@ -580,6 +580,13 @@ def send_email(
         )
         return None
 
+    # An impersonation's shadow member (role preview) can never receive mail.
+    from src.security.impersonation import is_shadow_email
+
+    if is_shadow_email(to_addr):
+        logger.info("Dropping email to a impersonation shadow member (subject=%r)", subject)
+        return None
+
     if mailing.email_provider == "smtp":
         return _send_email_smtp(sender, to_addr, subject, body, mailing, headers)
     else:

@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { scrubSentryBreadcrumb, scrubSentryEvent } from "./services/utils/ts/scrubUrl";
 import { isClientNoise } from "./lib/errors/sentryNoise";
+import { onAfterLoad } from "./lib/afterLoad";
 
 const rc = typeof window !== 'undefined' ? (window as any).__RUNTIME_CONFIG__ || {} : {};
 const SENTRY_DSN = rc.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN || process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN;
@@ -14,9 +15,7 @@ if (SENTRY_DSN) {
     tracesSampleRate: LEARNHOUSE_ENV === "dev" ? 1.0 : 0.1,
     replaysSessionSampleRate: 0.0,
     replaysOnErrorSampleRate: 0.1,
-    integrations: [
-      Sentry.replayIntegration(),
-    ],
+    // Session Replay is added below, once the page is idle (see sentryReplay.ts).
     // Errors thrown by code we don't ship. Wallet/password-manager extensions
     // inject scripts into every page, and when their own message ports die the
     // rejection is attributed to whatever page they were injected into: ours.
@@ -72,4 +71,14 @@ if (SENTRY_DSN) {
       return scrubSentryBreadcrumb(breadcrumb);
     },
   });
+
+  // Replay records in a buffer and only uploads when an error happens
+  // (replaysOnErrorSampleRate), so starting it a moment after load only
+  // misses those first seconds, while keeping its code off the critical path.
+  const addReplay = () => {
+    import('./lib/errors/sentryReplay')
+      .then(({ replayIntegration }) => Sentry.addIntegration(replayIntegration()))
+      .catch(() => {})
+  }
+  if (typeof window !== 'undefined') onAfterLoad(addReplay)
 }

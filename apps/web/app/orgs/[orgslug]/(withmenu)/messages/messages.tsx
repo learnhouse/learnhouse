@@ -6,7 +6,6 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useMediaQuery } from 'usehooks-ts'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
-import { motion } from 'motion/react'
 import { ArrowLeft, ChatsCircle, NotePencil, UsersThree } from '@phosphor-icons/react'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
@@ -20,6 +19,7 @@ import SettingsDialog from '@components/Messaging/Dialogs/SettingsDialog'
 import AgentBuilderDialog from '@components/Messaging/Agents/AgentBuilderDialog'
 import AgentAvatar from '@components/Messaging/Agents/AgentAvatar'
 import AgentsGallery from '@components/Messaging/Agents/AgentsGallery'
+import { Kbd, isTypingTarget, overlayOpen } from '@components/Messaging/ui/kit'
 import {
   Agent,
   Conversation,
@@ -41,32 +41,68 @@ function EmptyState({
   defaultAgent: Agent | undefined
 }) {
   const { t } = useTranslation()
-  const option = (icon: React.ReactNode, title: string, desc: string, onClick: () => void) => (
+  const option = (key: string, icon: React.ReactNode, title: string, desc: string, onClick: () => void) => (
     <button
+      key={key}
+      type="button"
       onClick={onClick}
-      className="flex flex-col items-center rounded-xl border border-gray-200 bg-white px-4 py-5 text-center transition-colors hover:border-gray-300 hover:bg-gray-50/60"
+      className="group flex flex-col items-center rounded-2xl bg-white px-4 py-6 text-center ring-1 ring-inset ring-neutral-200/80 transition-all hover:-translate-y-px hover:shadow-md hover:ring-neutral-300"
     >
-      <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-gray-50 text-gray-600">{icon}</span>
-      <span className="text-sm font-semibold text-gray-900">{title}</span>
-      <span className="mt-1 text-xs text-gray-500">{desc}</span>
+      <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700 transition-colors group-hover:bg-neutral-900 group-hover:text-white">
+        {icon}
+      </span>
+      <span className="text-sm font-semibold text-neutral-900">{title}</span>
+      <span className="mt-1 text-xs leading-relaxed text-neutral-500">{desc}</span>
     </button>
   )
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white nice-shadow text-gray-400">
-        <ChatsCircle size={26} weight="fill" />
+    <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-10 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-400">
+        <ChatsCircle size={28} weight="fill" />
       </div>
-      <h2 className="text-lg font-bold text-gray-700">{t('messaging.empty_title', { defaultValue: 'Your messages' })}</h2>
-      <p className="mt-1 max-w-sm text-sm text-gray-400">
+      <h2 className="text-lg font-bold tracking-tight text-neutral-900">{t('messaging.empty_title', { defaultValue: 'Your messages' })}</h2>
+      <p className="mt-1 max-w-sm text-sm text-neutral-500">
         {t('messaging.empty_desc', {
           defaultValue: 'Talk with classmates and teachers, follow course announcements, or ask an AI agent about anything you are learning.',
         })}
       </p>
-      <div className="mt-6 grid w-full max-w-xl gap-3 sm:grid-cols-3">
-        {option(<NotePencil size={20} weight="fill" />, t('messaging.new_message', { defaultValue: 'New message' }), 'Message someone or start a group', onNewMessage)}
+      <div className="mt-7 grid w-full max-w-2xl gap-3 sm:grid-cols-3">
+        {option(
+          'new',
+          <NotePencil size={20} weight="fill" />,
+          t('messaging.new_message', { defaultValue: 'New message' }),
+          t('messaging.new_message_hint', { defaultValue: 'Message someone or start a group' }),
+          onNewMessage
+        )}
         {defaultAgent &&
-          option(<AgentAvatar agent={defaultAgent} size={22} />, `Ask ${defaultAgent.name}`, 'Answers with sources from your courses', () => onAgent(defaultAgent))}
-        {option(<UsersThree size={20} weight="fill" />, 'Build an agent', 'Your own tutor, with its own style', onNewAgent)}
+          option(
+            'agent',
+            <AgentAvatar agent={defaultAgent} size={22} />,
+            t('messaging.ask_agent_title', { defaultValue: 'Ask {{name}}', name: defaultAgent.name }),
+            t('messaging.ask_agent_hint', { defaultValue: 'Answers with sources from your courses' }),
+            () => onAgent(defaultAgent)
+          )}
+        {option(
+          'build',
+          <UsersThree size={20} weight="fill" />,
+          t('messaging.build_agent', { defaultValue: 'Build an agent' }),
+          t('messaging.build_agent_hint', { defaultValue: 'Your own tutor, with its own style' }),
+          onNewAgent
+        )}
+      </div>
+      <div className="mt-8 hidden md:flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-neutral-400">
+        <span className="inline-flex items-center gap-1.5">
+          <Kbd>/</Kbd> {t('messaging.kbd_search_long', { defaultValue: 'Search' })}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Kbd>J</Kbd>
+          <Kbd>K</Kbd> {t('messaging.kbd_move_long', { defaultValue: 'Next / previous chat' })}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Kbd>Alt</Kbd>
+          <Kbd>↑</Kbd>
+          <Kbd>↓</Kbd> {t('messaging.kbd_move_anywhere', { defaultValue: 'Switch chats while typing' })}
+        </span>
       </div>
     </div>
   )
@@ -112,6 +148,7 @@ function PhoneScreen({ children }: { children: React.ReactNode }) {
 }
 
 function MessagesApp({ orgslug }: { orgslug: string }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const pathname = usePathname()
   const params = useSearchParams()
@@ -209,7 +246,20 @@ function MessagesApp({ orgslug }: { orgslug: string }) {
     if (params.get('settings') === 'notifications') setSettingsOpen(true)
   }, [params])
 
-  const defaultAgent = useMemo(() => agents.find((a) => a.is_default), [agents])
+  // Escape leaves the open chat (or the agents view) unless a field, menu or
+  // dialog owns the key.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || isTypingTarget(e.target) || overlayOpen()) return
+      if (selected) select(null)
+      else if (showAgents) setQuery({ agents: null })
+    }
+    // Capture phase: other page-level handlers stop Escape from bubbling.
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [selected, showAgents, select, setQuery])
+
+  const defaultAgent = useMemo(() => (Array.isArray(agents) ? agents : []).find((a) => a.is_default), [agents])
   const isPhone = useMediaQuery('(max-width: 767px)', { initializeWithValue: false })
   // Phones show either the list or one full-screen detail view.
   const detail = Boolean(selected || showAgents)
@@ -228,23 +278,28 @@ function MessagesApp({ orgslug }: { orgslug: string }) {
     />
   ) : showAgents ? (
     <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-8">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-start gap-3">
         <button
+          type="button"
           onClick={() => setQuery({ agents: null })}
-          className="md:hidden -ms-1.5 flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
-          aria-label="Back"
+          className="md:hidden -ms-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100"
+          aria-label={t('common.back', { defaultValue: 'Back' })}
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={18} className="rtl:rotate-180" />
         </button>
-        <div className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg bg-white nice-shadow">
-          <UsersThree size={16} weight="fill" className="text-black" />
+        <div className="hidden md:flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700">
+          <UsersThree size={18} weight="fill" />
         </div>
-        <h2 className="text-xl font-bold tracking-tight text-gray-900">Agents</h2>
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold tracking-tight text-neutral-900">{t('messaging.agents', { defaultValue: 'Agents' })}</h2>
+          <p className="mt-0.5 text-sm text-neutral-500">
+            {t('messaging.agents_desc', { defaultValue: 'Assistants that answer from your courses, each with its own style.' })}
+          </p>
+        </div>
       </div>
-      <p className="mt-2 mb-6 text-sm text-gray-500">
-        Assistants that answer from your courses, each with its own style.
-      </p>
-      <AgentsGallery orgslug={orgslug} onOpenChat={openConversation} />
+      <div className="mt-6">
+        <AgentsGallery orgslug={orgslug} onOpenChat={openConversation} />
+      </div>
     </div>
   ) : (
     <EmptyState
@@ -257,9 +312,12 @@ function MessagesApp({ orgslug }: { orgslug: string }) {
 
   return (
     // Phones: the list fills the space between the 60px header and the tab bar.
-    <div className="flex h-[calc(100dvh-60px-var(--lh-mobile-nav-h))] md:h-[calc(100dvh-72px)] w-full max-w-(--breakpoint-2xl) mx-auto px-0 sm:px-4 md:px-6 lg:px-8 gap-3 md:py-5">
+    // Desktop: one app surface, list and thread side by side.
+    <div className="flex h-[calc(100dvh-60px-var(--lh-mobile-nav-h))] md:h-[calc(100dvh-72px)] w-full md:px-6 lg:px-8 md:pt-4 md:pb-5">
+      <div className="flex min-w-0 flex-1 overflow-hidden bg-white md:rounded-2xl md:nice-shadow">
       <aside
-        className={`${detail ? 'hidden md:flex' : 'flex'} max-md:pb-[var(--lh-safe-bottom)] w-full md:w-[340px] lg:w-[360px] flex-shrink-0 flex-col bg-white md:rounded-xl md:shadow-md md:shadow-gray-300/25 md:outline md:outline-1 md:outline-gray-200/40 overflow-hidden`}
+        aria-label={t('messaging.conversations', { defaultValue: 'Conversations' })}
+        className={`${detail ? 'hidden md:flex' : 'flex'} max-md:pb-[var(--lh-safe-bottom)] w-full md:w-[320px] lg:w-[340px] flex-shrink-0 flex-col bg-white md:border-e md:border-neutral-100 overflow-hidden`}
       >
         <ConversationSidebar
           orgslug={orgslug}
@@ -279,10 +337,15 @@ function MessagesApp({ orgslug }: { orgslug: string }) {
       {isPhone && detail ? (
         <PhoneScreen>{thread}</PhoneScreen>
       ) : (
-        <section aria-label="Conversation" data-messages-thread className="hidden md:flex flex-1 min-w-0 flex-col bg-white md:rounded-xl md:shadow-md md:shadow-gray-300/25 md:outline md:outline-1 md:outline-gray-200/40 overflow-hidden">
+        <section
+          aria-label={t('messaging.conversation', { defaultValue: 'Conversation' })}
+          data-messages-thread
+          className="hidden md:flex flex-1 min-w-0 flex-col bg-white overflow-hidden"
+        >
           {thread}
         </section>
       )}
+      </div>
 
       <NewConversationDialog
         open={newOpen}

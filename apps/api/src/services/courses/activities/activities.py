@@ -1,7 +1,9 @@
 from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.ee_hooks import audit_event
 from src.core.ee_hooks import notify_ee_course_content_changed
+from src.services.courses.activities.collab_notify import notify_collab_content_changed
 from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
@@ -26,9 +28,16 @@ import logging
 from src.services.courses.activities.access import (
     redact_activity_for_reader,
 )
+from src.services.courses.activities.play_link import (
+    PLAY_SUBTYPE,
+    is_play_type,
+    play_activity_content,
+    play_is_available,
+)
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import index_activity
 from src.services.courses.activities.versioning import create_activity_version
+from src.services.courses.activities.comment_marks import strip_comment_marks
 from src.services.courses.activities.utils import track_activity_created
 from src.services.courses.activities.dynamic_content import (
     conditional_blocks,
@@ -87,6 +96,13 @@ async def create_activity(
 
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
+    # A play activity stores only a checked link to a play of this org.
+    if is_play_type(activity_object.activity_type):
+        activity_object.content = await play_activity_content(
+            request, activity_object.content, chapter.org_id, current_user, db_session
+        )
+        activity_object.activity_sub_type = PLAY_SUBTYPE
+
     # Create Activity
     activity = Activity(**activity_object.model_dump())
 
@@ -132,6 +148,12 @@ async def create_activity(
     await db_session.commit()
     await db_session.refresh(activity)
     index_activity(activity.id)
+    audit_event(
+        request, action="activity.created", org_id=activity.org_id, actor=current_user,
+        target_type="activity", target_id=activity.activity_uuid, target_name=activity.name,
+        details={"type": str(getattr(activity.activity_type, "value", activity.activity_type)),
+                 "course_uuid": course.course_uuid, "course_name": course.name},
+    )
     notify_ee_course_content_changed(chapter.course_id)
     await track_activity_created(activity, course, current_user)
 
@@ -143,6 +165,7 @@ async def get_activity(
     activity_uuid: str,
     current_user: PublicUser,
     db_session: AsyncSession,
+    lang: Optional[str] = None,
 ):
     # Activity, course, last modified user and parent chapter (the lock check
     # needs it) in a single query
@@ -170,6 +193,21 @@ async def get_activity(
     activity_read = ActivityRead.model_validate(activity)
     # Include last modified user info
     activity_read.last_modified_by_username = last_modified_user.username if last_modified_user else None
+    if is_play_type(activity.activity_type):
+        activity_read.play_available = await play_is_available(activity, db_session)
+
+    # Multilingual courses: the published translation in the learner's
+    # language replaces name and content before the reader redaction runs.
+    from src.services.courses.translations.learner import apply_activity_translation, serve_activity
+
+    translation, lang_fields = await serve_activity(
+        db_session, activity_id=activity.id, course_id=course.id,
+        default_locale=course.default_locale, lang=lang,
+    )
+    for key, value in lang_fields.items():
+        setattr(activity_read, key, value)
+    if translation is not None:
+        apply_activity_translation(activity_read, translation)
 
     return await redact_activity_for_reader(
         request, activity_read, activity, course, current_user, db_session,
@@ -308,7 +346,8 @@ async def get_dynamic_preview(
     lets the editor preview its unsaved document.
     """
     activity, course = await _load_for_editor(request, activity_uuid, current_user, db_session)
-    content = _editor_content(preview.content, activity)
+    # The preview shows what a reader gets, so no editor comment marks.
+    content = strip_comment_marks(_editor_content(preview.content, activity))
 
     persona = preview.persona
     if persona.user_uuid:
@@ -479,6 +518,14 @@ async def update_activity(
     # Using model_dump(exclude_unset=True) to get only the fields that were passed in
     update_data = activity_object.model_dump(exclude_unset=True)
 
+    # Relinking a play activity (or turning one into it) checks the new link.
+    target_type = update_data.get("activity_type") or activity.activity_type
+    if is_play_type(target_type) and ("content" in update_data or not is_play_type(activity.activity_type)):
+        update_data["content"] = await play_activity_content(
+            request, update_data.get("content", activity.content), activity.org_id, current_user, db_session
+        )
+        update_data["activity_sub_type"] = PLAY_SUBTYPE
+
     # Create a version snapshot before updating content
     # This preserves the current state for version history.
     # resolve_acting_user_id unwraps APITokenUser → the creating human's id,
@@ -502,6 +549,9 @@ async def update_activity(
         if update_data['extra_metadata'] is not None or incoming:
             update_data['extra_metadata'] = incoming
 
+    audit_fields = [f for f in update_data if f != "content"]
+    activity_before = {f: getattr(activity, f, None) for f in audit_fields}
+    was_published = activity.published
     for field, value in update_data.items():
         setattr(activity, field, value)
 
@@ -526,8 +576,21 @@ async def update_activity(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    publish_changed = "published" in update_data and activity.published != was_published
+    audit_event(
+        request,
+        action=("activity.published" if activity.published else "activity.unpublished") if publish_changed else "activity.updated",
+        org_id=activity.org_id, actor=current_user,
+        target_type="activity", target_id=activity.activity_uuid, target_name=activity.name,
+        before={k: str(v) if not isinstance(v, (str, int, float, bool, dict, list, type(None))) else v for k, v in activity_before.items()},
+        after={f: str(getattr(activity, f, None)) if not isinstance(getattr(activity, f, None), (str, int, float, bool, dict, list, type(None))) else getattr(activity, f, None) for f in audit_fields},
+        details={"course_uuid": course.course_uuid, "course_name": course.name,
+                 **({"content_changed": True, "version": activity.current_version} if "content" in update_data else {})},
+    )
     if update_data.keys() & {"name", "published"}:
         notify_ee_course_content_changed(activity.course_id)
+    if "content" in update_data:
+        notify_collab_content_changed(activity, current_user)
 
     index_activity(activity.id)
 
@@ -584,9 +647,15 @@ async def delete_activity(
             detail="Activity not found in chapter",
         )
 
+    deleted_activity = (activity.org_id, activity.activity_uuid, activity.name)
     await db_session.delete(activity_chapter)
     await db_session.delete(activity)
     await db_session.commit()
+    audit_event(
+        request, action="activity.deleted", org_id=deleted_activity[0], actor=current_user,
+        target_type="activity", target_id=deleted_activity[1], target_name=deleted_activity[2],
+        details={"course_uuid": course.course_uuid, "course_name": course.name},
+    )
     notify_ee_course_content_changed(course.id)
 
     return {"detail": "Activity deleted"}

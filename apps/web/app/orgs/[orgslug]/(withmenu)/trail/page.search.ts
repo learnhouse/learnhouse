@@ -1,4 +1,4 @@
-import { Signpost } from '@phosphor-icons/react'
+import { HouseSimple } from '@phosphor-icons/react'
 import type { SitePageMeta } from '@/lib/site-search/types'
 
 export const sitePage: SitePageMeta = {
@@ -6,7 +6,7 @@ export const sitePage: SitePageMeta = {
   titleKey: 'courses.progress',
   descriptionKey: 'search.palette.entries.trail.description',
   keywordsKey: 'search.palette.entries.trail.keywords',
-  icon: Signpost,
+  icon: HouseSimple,
   href: '/trail',
   shortcut: 'g t',
   requiresAuth: true,

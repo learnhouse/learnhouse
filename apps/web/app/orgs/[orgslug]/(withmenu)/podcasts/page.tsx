@@ -1,78 +1,19 @@
 import { Metadata } from 'next'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { buildListMetadata } from '@/lib/seo/pageMetadata'
 import { getOrgPodcasts } from '@services/podcasts/podcasts'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
-import { JsonLd } from '@components/SEO/JsonLd'
 import PodcastsClient from './podcasts'
 
 type PageParams = Promise<{
   orgslug: string
 }>
 
-export async function generateMetadata({
-  params,
-}: {
-  params: PageParams
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ orgslug: string }> }): Promise<Metadata> {
   const { orgslug } = await params
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
-
-  const seoConfig = getOrgSeoConfig(org)
-
-  const ogImageUrl = seoConfig.default_og_image
-    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
-    : null
-  const imageUrl = ogImageUrl || (org ? getOrgThumbnailMediaDirectory(org.org_uuid, org.thumbnail_image) : undefined)
-  const title = buildPageTitle('Podcasts', org?.name || 'Organization', seoConfig)
-  const description = org?.description || seoConfig.default_meta_description || `Browse podcasts from ${org?.name || 'this organization'}`
-  const canonical = await getServerCanonicalUrl(orgslug, '/podcasts')
-
-  return {
-    title,
-    description,
-    keywords: `${org?.name}, podcasts, audio, learning, education, ${org?.name} podcasts`,
-    robots: {
-      index: true,
-      follow: true,
-      nocache: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      ...(imageUrl && {
-        images: [
-          {
-            url: imageUrl,
-            width: 800,
-            height: 600,
-            alt: org?.name || 'Podcasts',
-          },
-        ],
-      }),
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      ...(imageUrl && { images: [imageUrl] }),
-      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
-    },
-  }
+  const ctx = await getSeoContext(orgslug)
+  return buildListMetadata({ ctx, name: 'Podcasts', path: '/podcasts', description: ctx.org?.description || `Browse podcasts from ${ctx.org?.name || 'this organization'}`, keywords: undefined })
 }
 
 export default async function PodcastsPage({ params }: { params: PageParams }) {
@@ -98,14 +39,9 @@ export default async function PodcastsPage({ params }: { params: PageParams }) {
     console.error('Error fetching podcasts:', error)
   }
 
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
-    { name: 'Podcasts', url: await getServerCanonicalUrl(orgslug, '/podcasts') },
-  ])
 
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd} />
       <PodcastsClient
         orgslug={orgslug}
         org_id={org?.id || 0}

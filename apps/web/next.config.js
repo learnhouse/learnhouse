@@ -50,9 +50,23 @@ const turbopackRoot =
 
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
+  // Shown at the bottom of the dashboard sidebar (lib/version.ts). Inlined at
+  // build time: the release version from package.json and the commit CI builds
+  // from (BUILD_ID, also used for generateBuildId below).
+  env: {
+    NEXT_PUBLIC_LEARNHOUSE_VERSION: require('./package.json').version,
+    NEXT_PUBLIC_LEARNHOUSE_BUILD: process.env.BUILD_ID || '',
+  },
   // Required by PostHog's reverse-proxy rewrites below so the trailing-slash
   // handling on /lhrel/* doesn't 308-redirect ingestion requests.
   skipTrailingSlashRedirect: true,
+  // SEO: crawlers, link unfurlers, AI agents and Lighthouse get the page
+  // metadata (title, description, canonical, robots, Open Graph) blocking in
+  // <head>. People keep streaming metadata, so first paint is unaffected.
+  // Next's default list leaves out Googlebot itself (it reads streamed tags
+  // after rendering, but only from <head> on its first pass) and AI agents.
+  htmlLimitedBots:
+    /Googlebot|Google-InspectionTool|GoogleOther|Storebot-Google|[\w-]+-Google|Google-[\w-]+|bingbot|BingPreview|msnbot|Chrome-Lighthouse|Lighthouse|Slurp|DuckDuckBot|DuckAssistBot|baiduspider|yandex|sogou|Applebot|facebookexternalhit|facebookcatalog|meta-externalagent|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|SkypeUriPreview|redditbot|Pinterest|Embedly|vkShare|quora link preview|bitlybot|tumblr|ia_archiver|Yeti|SeznamBot|Naver|PetalBot|GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|Claude-SearchBot|anthropic-ai|PerplexityBot|Perplexity-User|CCBot|Amazonbot|MistralAI|cohere|YouBot|ImagesiftBot|Bytespider|googleweblight/i,
   async rewrites() {
     return [
       // PostHog reverse proxy (EU cloud), served same-origin so adblockers
@@ -86,6 +100,17 @@ const nextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
           { key: 'X-Download-Options', value: 'noopen' },
         ],
+      },
+      // App chrome is never search content: dashboards, editors, auth, the
+      // superadmin console and embeds (shown inside other sites) are noindex
+      // even when a crawler ignores robots.txt or reaches them by a link.
+      {
+        source: '/:area(dash|editor|auth|admin|embed|home|billing|account|messages|notifications|trail)/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/:area(dash|editor|auth|admin|embed|home|billing|account|messages|notifications|trail)',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
       // Un-hashed files from public/. Next serves them with max-age=0, so every
       // page view revalidated each logo and icon. They can change on deploy, so

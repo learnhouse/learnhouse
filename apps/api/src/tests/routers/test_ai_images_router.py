@@ -53,8 +53,8 @@ def _patches(member=True):
     return [
         patch.object(img, "is_org_member", new=AsyncMock(return_value=member)),
         patch.object(img, "enforce_ai_rate_limit"),
-        patch.object(img, "reserve_ai_credit", new=AsyncMock()),
-        patch.object(img, "refund_ai_credit"),
+        patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()),
+        patch("src.security.features_utils.usage.refund_ai_credit"),
     ]
 
 
@@ -75,7 +75,7 @@ async def test_org_not_found_404():
 async def test_non_member_403():
     body = GenerateImageRequest(org_id=5, prompt="cat")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=False)), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()) as reserve:
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()) as reserve:
         with pytest.raises(HTTPException) as exc:
             await img.api_generate_image(body, _user(), _db_returning(_org()))
     assert exc.value.status_code == 403
@@ -87,7 +87,7 @@ async def test_happy_path():
     record = SimpleNamespace(ai_generation_uuid="aigen_1")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "generate_image", new=AsyncMock(return_value=b"IMG")), \
          patch.object(img, "upload_content", new=AsyncMock()) as upload, \
          patch.object(img, "record_generation", new=AsyncMock(return_value=record)):
@@ -106,7 +106,7 @@ async def test_refine_with_source_image():
     gen = AsyncMock(return_value=b"IMG")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "generate_image", new=gen), \
          patch.object(img, "upload_content", new=AsyncMock()), \
          patch.object(img, "record_generation", new=AsyncMock(return_value=record)):
@@ -121,7 +121,7 @@ async def test_refine_by_source_file_id_reads_storage():
     gen = AsyncMock(return_value=b"IMG")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "read_content", new=AsyncMock(return_value=b"orig-bytes")) as rc, \
          patch.object(img, "generate_image", new=gen), \
          patch.object(img, "upload_content", new=AsyncMock()), \
@@ -135,7 +135,7 @@ async def test_refine_source_file_id_missing_404():
     body = GenerateImageRequest(org_id=5, prompt="x", source_file_id="gone.png")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "read_content", new=AsyncMock(side_effect=HTTPException(status_code=404, detail="nf"))):
         with pytest.raises(HTTPException) as exc:
             await img.api_generate_image(body, _user(), _db_returning(_org()))
@@ -146,7 +146,7 @@ async def test_refine_source_file_id_traversal_400():
     body = GenerateImageRequest(org_id=5, prompt="x", source_file_id="../../other/secret.png")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "read_content", new=AsyncMock()) as rc:
         with pytest.raises(HTTPException) as exc:
             await img.api_generate_image(body, _user(), _db_returning(_org()))
@@ -160,7 +160,7 @@ async def test_invalid_source_base64_ignored():
     gen = AsyncMock(return_value=b"IMG")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "generate_image", new=gen), \
          patch.object(img, "upload_content", new=AsyncMock()), \
          patch.object(img, "record_generation", new=AsyncMock(return_value=record)):
@@ -172,9 +172,9 @@ async def test_not_configured_refunds_and_403():
     body = GenerateImageRequest(org_id=5, prompt="x")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "generate_image", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
-         patch.object(img, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await img.api_generate_image(body, _user(), _db_returning(_org()))
     assert exc.value.status_code == 403
@@ -185,9 +185,9 @@ async def test_generation_failure_refunds_and_502():
     body = GenerateImageRequest(org_id=5, prompt="x")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "generate_image", new=AsyncMock(side_effect=RuntimeError("boom"))), \
-         patch.object(img, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await img.api_generate_image(body, _user(), _db_returning(_org()))
     assert exc.value.status_code == 502
@@ -212,9 +212,9 @@ async def test_provider_quota_refunds_and_503_with_quota_message():
     body = GenerateImageRequest(org_id=5, prompt="x")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "generate_image", new=AsyncMock(side_effect=failure)), \
-         patch.object(img, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await img.api_generate_image(body, _user(), _db_returning(_org()))
     assert exc.value.status_code == 503
@@ -226,10 +226,10 @@ async def test_upload_failure_refunds_and_500():
     body = GenerateImageRequest(org_id=5, prompt="x")
     with patch.object(img, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(img, "enforce_ai_rate_limit"), \
-         patch.object(img, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(img, "generate_image", new=AsyncMock(return_value=b"IMG")), \
          patch.object(img, "upload_content", new=AsyncMock(side_effect=RuntimeError("disk"))), \
-         patch.object(img, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await img.api_generate_image(body, _user(), _db_returning(_org()))
     assert exc.value.status_code == 500
@@ -285,3 +285,9 @@ async def test_delete_history_ok_and_404():
         with pytest.raises(HTTPException) as exc:
             await img.api_delete_image_history("nope", _user(), AsyncMock())
     assert exc.value.status_code == 404
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
-import { Bell, EnvelopeSimple, Eye, Smiley, SpinnerGap } from '@phosphor-icons/react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@components/ui/dialog'
+import { Bell, EnvelopeSimple, Eye, GearSix, ShieldCheck, Smiley } from '@phosphor-icons/react'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { Button, INPUT, ToolbarSelect } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { Switch } from '@components/ui/switch'
 import { useMessaging } from '@components/Messaging/MessagingProvider'
 import EmojiPickerPopover from '@components/Messaging/ui/EmojiPicker'
@@ -38,22 +39,25 @@ function Row({ title, hint, children }: { title: string; hint?: string; children
   return (
     <div className="flex items-center justify-between gap-4 py-2.5">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-gray-800">{title}</p>
-        {hint && <p className="text-xs text-gray-500 mt-0.5">{hint}</p>}
+        <p className="text-sm font-medium text-neutral-800">{title}</p>
+        {hint && <p className="mt-0.5 text-xs text-neutral-500">{hint}</p>}
       </div>
-      <div className="flex-shrink-0">{children}</div>
+      <div className="shrink-0">{children}</div>
     </div>
   )
 }
 
-function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function Section({ icon, title, description, children }: { icon: React.ReactNode; title: string; description?: string; children: React.ReactNode }) {
   return (
-    <section className="py-4 border-t border-gray-100 first:border-t-0 first:pt-0">
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-1 [&>svg]:text-gray-400">
-        {icon}
-        {title}
-      </h3>
-      {children}
+    <section className="border-t border-neutral-100 py-5 first:border-t-0 first:pt-0 last:pb-0">
+      <div className="mb-2 flex items-start gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">{icon}</span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold leading-8 text-neutral-900">{title}</h3>
+          {description && <p className="-mt-1 text-xs text-neutral-500">{description}</p>}
+        </div>
+      </div>
+      <div className="ps-11">{children}</div>
     </section>
   )
 }
@@ -68,13 +72,15 @@ function Segmented<T extends string | number>({
   onChange: (v: T) => void
 }) {
   return (
-    <div className="inline-flex rounded-lg bg-gray-100 p-0.5">
+    <div className="inline-flex flex-wrap items-center rounded-xl bg-neutral-200/60 p-1">
       {options.map((o) => (
         <button
           key={String(o.value)}
+          type="button"
+          aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-            value === o.value ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-800'
+          className={`inline-flex h-7 items-center whitespace-nowrap rounded-lg px-2.5 text-xs font-semibold transition-colors ${
+            value === o.value ? 'bg-white text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.06)]' : 'text-neutral-500 hover:text-neutral-800'
           }`}
         >
           {o.label}
@@ -137,35 +143,49 @@ export default function SettingsDialog({ open, onOpenChange }: { open: boolean; 
     save({ desktop_notifications: on })
   }
 
+  const modal = (content: React.ReactNode) => (
+    <Modal
+      isDialogOpen={open}
+      onOpenChange={onOpenChange}
+      size="md"
+      icon={<GearSix size={16} weight="fill" />}
+      dialogTitle={t('messaging.settings', { defaultValue: 'Messages settings' })}
+      dialogDescription={t('messaging.settings_desc', { defaultValue: 'Your status, how you show up, and when we notify you.' })}
+      dialogContent={content}
+    />
+  )
+
   if (!local) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg p-10 flex justify-center">
-          <DialogTitle className="sr-only">Settings</DialogTitle>
-          <SpinnerGap className="animate-spin text-gray-400" />
-        </DialogContent>
-      </Dialog>
+    return modal(
+      <div className="space-y-6" aria-busy>
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex gap-3">
+            <div className="h-8 w-8 animate-pulse rounded-lg bg-neutral-100" />
+            <div className="flex-1 space-y-2 pt-1">
+              <div className="h-3 w-1/3 animate-pulse rounded bg-neutral-100" />
+              <div className="h-9 w-full animate-pulse rounded-xl bg-neutral-100/70" />
+            </div>
+          </div>
+        ))}
+      </div>
     )
   }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader className="px-5 py-4 border-b border-gray-100 space-y-0">
-          <DialogTitle className="text-xl font-semibold text-gray-900">
-            {t('messaging.settings', { defaultValue: 'Messages settings' })}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
-            {t('messaging.settings_desc', { defaultValue: 'Your status, how you show up, and when we notify you.' })}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="px-5 pt-4 pb-5 max-h-[70vh] overflow-y-auto">
-          <Section icon={<Smiley size={15} />} title={t('messaging.status', { defaultValue: 'Status' })}>
-            <div className="flex items-center gap-2 mt-2">
+  return modal(
+        <div>
+          <Section
+            icon={<Smiley size={16} />}
+            title={t('messaging.status', { defaultValue: 'Status' })}
+            description={t('messaging.status_desc', { defaultValue: 'Shown next to your name in chats.' })}
+          >
+            <div className="mt-1 flex items-center gap-2">
               <EmojiPickerPopover onPick={setEmoji} side="bottom" align="start">
-                <button className="h-10 w-10 rounded-lg border border-gray-200 text-lg flex items-center justify-center hover:bg-gray-50">
-                  {emoji || <Smiley size={18} className="text-gray-400" />}
+                <button
+                  type="button"
+                  aria-label={t('messaging.status_emoji', { defaultValue: 'Status emoji' })}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg ring-1 ring-inset ring-neutral-200 hover:bg-neutral-50"
+                >
+                  {emoji || <Smiley size={17} className="text-neutral-400" />}
                 </button>
               </EmojiPickerPopover>
               <input
@@ -173,83 +193,81 @@ export default function SettingsDialog({ open, onOpenChange }: { open: boolean; 
                 maxLength={100}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={t('messaging.status_placeholder', { defaultValue: "What's your status?" })}
-                className="flex-1 h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-gray-200"
+                className={INPUT}
               />
             </div>
-            <div className="flex flex-wrap gap-1.5 mt-2.5">
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
               {PRESETS.map((p) => (
                 <button
                   key={p.text}
+                  type="button"
                   onClick={() => {
                     setEmoji(p.emoji)
                     setText(p.text)
                   }}
-                  className="rounded-md border border-gray-200 px-2.5 py-1 text-xs hover:bg-gray-50"
+                  className={`rounded-full px-2.5 py-1 text-xs ring-1 ring-inset transition-colors ${
+                    text === p.text ? 'bg-neutral-900 text-white ring-neutral-900' : 'bg-white text-neutral-700 ring-neutral-200 hover:bg-neutral-50'
+                  }`}
                 >
                   {p.emoji} {p.text}
                 </button>
               ))}
             </div>
-            <div className="flex items-center justify-between gap-2 mt-3">
-              <label className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs text-neutral-500">
                 {t('messaging.clear_after', { defaultValue: 'Clear after' })}
-                <select
+                <ToolbarSelect
                   value={clearAfter}
-                  onChange={(e) => setClearAfter(e.target.value)}
-                  className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs"
-                >
-                  {CLEAR_AFTER.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="flex items-center gap-2">
+                  onChange={setClearAfter}
+                  ariaLabel={t('messaging.clear_after', { defaultValue: 'Clear after' })}
+                  options={CLEAR_AFTER.map((c) => ({ value: c.key, label: c.label }))}
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
                 {(local.status_text || local.status_emoji) && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       setEmoji('')
                       setText('')
                       saveStatus('', '', 'never')
                     }}
-                    className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1"
                   >
                     {t('messaging.clear', { defaultValue: 'Clear' })}
-                  </button>
+                  </Button>
                 )}
-                <button
-                  onClick={() => saveStatus(emoji, text.trim(), clearAfter)}
-                  disabled={saving}
-                  className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-                >
+                <Button variant="primary" size="sm" loading={saving} onClick={() => saveStatus(emoji, text.trim(), clearAfter)}>
                   {t('messaging.save_status', { defaultValue: 'Save status' })}
-                </button>
+                </Button>
               </div>
             </div>
           </Section>
 
-          <Section icon={<Eye size={15} />} title={t('messaging.availability', { defaultValue: 'Availability' })}>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+          <Section icon={<Eye size={16} />} title={t('messaging.availability', { defaultValue: 'Availability' })}>
+            <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup">
               {AVAILABILITY.map((a) => (
                 <button
                   key={a.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={local.availability === a.key}
                   onClick={() => save({ availability: a.key })}
-                  className={`text-start rounded-lg border px-3 py-2.5 transition-colors ${
-                    local.availability === a.key ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:bg-gray-50'
+                  className={`rounded-xl px-3 py-2.5 text-start transition-all ${
+                    local.availability === a.key ? 'bg-white ring-2 ring-neutral-900' : 'bg-white ring-1 ring-inset ring-neutral-200 hover:ring-neutral-300'
                   }`}
                 >
-                  <p className="text-sm font-medium flex items-center gap-2">
+                  <p className="flex items-center gap-2 text-sm font-medium text-neutral-900">
                     <span className={`h-2 w-2 rounded-full ${a.dot}`} />
                     {a.label}
                   </p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">{a.hint}</p>
+                  <p className="mt-0.5 text-[11px] text-neutral-500">{a.hint}</p>
                 </button>
               ))}
             </div>
           </Section>
 
-          <Section icon={<EnvelopeSimple size={15} />} title={t('messaging.email', { defaultValue: 'Email' })}>
+          <Section icon={<EnvelopeSimple size={16} />} title={t('messaging.email', { defaultValue: 'Email' })}>
             <Row
               title={t('messaging.email_unread', { defaultValue: 'Email me about unread messages' })}
               hint={t('messaging.email_unread_hint', { defaultValue: 'One summary email, never one per message.' })}
@@ -287,7 +305,7 @@ export default function SettingsDialog({ open, onOpenChange }: { open: boolean; 
             </div>
           </Section>
 
-          <Section icon={<Bell size={15} />} title={t('messaging.in_app', { defaultValue: 'In the app' })}>
+          <Section icon={<Bell size={16} />} title={t('messaging.in_app', { defaultValue: 'In the app' })}>
             <Row
               title={t('messaging.desktop', { defaultValue: 'Desktop notifications' })}
               hint={
@@ -309,7 +327,7 @@ export default function SettingsDialog({ open, onOpenChange }: { open: boolean; 
             </Row>
           </Section>
 
-          <Section icon={<Eye size={15} />} title={t('messaging.privacy', { defaultValue: 'Privacy' })}>
+          <Section icon={<ShieldCheck size={16} />} title={t('messaging.privacy', { defaultValue: 'Privacy' })}>
             <Row
               title={t('messaging.read_receipts', { defaultValue: 'Read receipts' })}
               hint={t('messaging.read_receipts_hint', { defaultValue: "Let people see when you've read their messages" })}
@@ -330,7 +348,5 @@ export default function SettingsDialog({ open, onOpenChange }: { open: boolean; 
             </Row>
           </Section>
         </div>
-      </DialogContent>
-    </Dialog>
   )
 }

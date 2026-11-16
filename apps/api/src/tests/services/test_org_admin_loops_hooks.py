@@ -427,7 +427,9 @@ async def test_try_send_org_created_links_to_the_new_org_dashboard():
         "src.services.email.utils.get_org_signup_base_url",
         new_callable=AsyncMock,
         return_value="https://acme.learn.test/",
-    ), patch("src.services.users.emails.send_org_created_email") as send_mock:
+    ), patch("src.services.users.emails.send_org_created_email") as send_mock, patch(
+        "src.services.plans.trial.get_active_trial", new_callable=AsyncMock, return_value=None
+    ):
         await _try_send_org_created(MagicMock(), org, user, MagicMock())
 
     assert send_mock.call_args.args[2] == "https://acme.learn.test/dash"

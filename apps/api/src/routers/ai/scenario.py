@@ -17,7 +17,7 @@ from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user, resolve_acting_user_id
-from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
+from src.services.ai import metering, pricing
 from src.security.org_auth import is_org_member, enforce_org_mfa, require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.base import chat_session_belongs_to_user
@@ -39,7 +39,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-SCENARIO_CREDIT_COST = 2
+# Published price (src/services/ai/pricing.py); the charge is metered.
+SCENARIO_CREDIT_COST = pricing.FEATURES["scenario_generation"].credits
 
 
 async def _authorize_org(org_id: int, user: PublicUser, db_session: AsyncSession) -> Organization:
@@ -120,42 +121,38 @@ async def api_generate_scenario(
         raise HTTPException(status_code=404, detail="Session not found")
 
     enforce_ai_rate_limit(current_user.id, org.id)
-    await reserve_ai_credit(org.id, db_session, amount=SCENARIO_CREDIT_COST)
+    async with metering.charge("scenario_generation", org_id=org.id, db=db_session, user_id=current_user.id):
+        model_name = await resolve_model_for_org(org.id, db_session, purpose="planning")
 
-    model_name = await resolve_model_for_org(org.id, db_session, purpose="planning")
+        try:
+            block, session_uuid = await generate_scenario(
+                org_id=org.id,
+                prompt=body.prompt,
+                model_name=model_name,
+                activity_content=activity_content,
+                num_scenarios=body.num_scenarios,
+                session_uuid=body.session_uuid,
+                user_id=acting_user_id,
+            )
+        except AINotConfiguredError as e:
+            raise HTTPException(status_code=403, detail=str(e))
+        except Exception:
+            logger.exception("Scenario generation failed")
+            raise HTTPException(status_code=502, detail="Scenario generation failed. Please try again.")
 
-    try:
-        block, session_uuid = await generate_scenario(
+        if not block.get("scenarios"):
+            raise HTTPException(status_code=502, detail="The model returned no scenarios. Try rephrasing.")
+
+        record = await record_generation(
+            db_session,
+            kind=AIGenerationKind.SCENARIO,
             org_id=org.id,
-            prompt=body.prompt,
-            model_name=model_name,
-            activity_content=activity_content,
-            num_scenarios=body.num_scenarios,
-            session_uuid=body.session_uuid,
-            user_id=acting_user_id,
+            user_id=current_user.id,
+            prompt=body.prompt.strip(),
+            result=block,
+            session_uuid=session_uuid,
+            activity_id=activity_id,
         )
-    except AINotConfiguredError as e:
-        refund_ai_credit(org.id, SCENARIO_CREDIT_COST)
-        raise HTTPException(status_code=403, detail=str(e))
-    except Exception:
-        refund_ai_credit(org.id, SCENARIO_CREDIT_COST)
-        logger.exception("Scenario generation failed")
-        raise HTTPException(status_code=502, detail="Scenario generation failed. Please try again.")
-
-    if not block.get("scenarios"):
-        refund_ai_credit(org.id, SCENARIO_CREDIT_COST)
-        raise HTTPException(status_code=502, detail="The model returned no scenarios. Try rephrasing.")
-
-    record = await record_generation(
-        db_session,
-        kind=AIGenerationKind.SCENARIO,
-        org_id=org.id,
-        user_id=current_user.id,
-        prompt=body.prompt.strip(),
-        result=block,
-        session_uuid=session_uuid,
-        activity_id=activity_id,
-    )
 
     return GenerateScenarioResponse(
         ai_generation_uuid=record.ai_generation_uuid,

@@ -1,5 +1,5 @@
 'use client';
-import { use, useEffect, type ReactNode } from "react";
+import { use, useEffect, type CSSProperties, type ReactNode } from "react";
 import '@styles/globals.css'
 import Watermark from '@components/Objects/Watermark'
 import { SessionGate } from '@components/Contexts/LHSessionContext'
@@ -11,28 +11,26 @@ import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext
 import { SiteCommandPaletteProvider } from '@components/Objects/Search/SiteCommandPaletteContext'
 import { ShortcutsProvider } from '@/lib/shortcuts/ShortcutsContext'
 import { MessagingProvider } from '@components/Messaging/MessagingProvider'
-import ChatDock from '@components/Messaging/Dock/ChatDock'
 import GlobalShortcuts from '@components/Objects/Shortcuts/GlobalShortcuts'
 import dynamic from 'next/dynamic'
+import AfterLoad from '@components/Utils/AfterLoad'
 const PodcastPlayer = dynamic(() => import('@components/Objects/Podcasts/PodcastPlayer'), { ssr: false })
 const SiteCommandPalette = dynamic(() => import('@components/Objects/Search/SiteCommandPalette'), { ssr: false })
 const ShortcutHelp = dynamic(() => import('@components/Objects/Shortcuts/ShortcutHelp'), { ssr: false })
 const LiveNowBanner = dynamic(() => import('@ee/components/LiveSessions/LiveNowBanner'), { ssr: false })
+const CompanySpaceBar = dynamic(() => import('@ee/components/Companies/CompanySpaceBar'), { ssr: false })
+// The chat dock brings the whole messaging UI (threads, markdown, code
+// highlighting, charts) and only floats over the page, so it loads once the
+// page has loaded instead of in, or alongside, its first download, and only
+// for signed-in members of an org with messaging (the gate is tiny).
+import ChatDockGate from '@components/Messaging/Dock/ChatDockGate'
 import Image from 'next/image'
 import Link from 'next/link'
 import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { getGoogleFontUrl, DEFAULT_FONT } from '@/lib/fonts'
 import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
-
-// Helper to convert hex to rgba
-const hexToRgba = (hex: string, alpha: number): string => {
-  if (!hex || hex.length < 7) return 'transparent'
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
+import { themeFontsHref, themeRootProps } from '@/lib/theme/orgTheme'
+import { useOrgTheme } from '@/lib/theme/useOrgTheme'
 
 function OrgFooter() {
   const org = useOrg() as any
@@ -40,8 +38,10 @@ function OrgFooter() {
   const showWatermark = useShowLearnHouseBranding()
 
   return (
-    <footer className="w-full py-8 mt-12">
+    <footer className="lh-org-footer w-full py-8 mt-12">
       <div className="flex flex-col items-center justify-center space-y-4">
+        {/* Shown by the "centered" footer style only (styles/theme.css). */}
+        <span className="lh-org-footer-name lh-t-heading hidden text-lg font-semibold text-gray-800">{org?.name}</span>
         {footerText && <p className="text-sm text-gray-500">{footerText}</p>}
         {showWatermark && (
           <Link href="https://learnhouse.app" target="_blank" rel="noopener noreferrer">
@@ -61,20 +61,23 @@ function OrgFooter() {
 }
 
 function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: string }) {
-  const org = useOrg() as any
-  const primaryColor = org?.config?.config?.customization?.general?.color || org?.config?.config?.general?.color || ''
-  const customFont = org?.config?.config?.customization?.general?.font || org?.config?.config?.general?.font || ''
+  // The org theme: CSS variables + data attributes on this root, consumed by
+  // the marker classes in styles/theme.css (see lib/theme/orgTheme.ts).
+  const theme = useOrgTheme()
+  const themeRoot = themeRootProps(theme)
+  const fontsHref = themeFontsHref(theme)
   const pathname = usePathname()
   const searchParams = useSearchParams()
   // chrome=none strips the org navigation/footer so this route can be embedded
   // inside another view (e.g. a Resource activity iframe) without duplicate chrome.
   const chromeless = searchParams?.get('chrome') === 'none'
 
-  // Inject Google Font stylesheet into document head
+  // Inject the org's Google Fonts stylesheet (body + heading pair, one
+  // request) into document head. Nothing loads for the default face.
   useEffect(() => {
-    if (!customFont || customFont === DEFAULT_FONT) return
+    if (!fontsHref) return
 
-    const fontId = `gfont-${customFont.replace(/\s/g, '-')}`
+    const fontId = 'lh-theme-fonts'
     if (document.getElementById(fontId)) return
 
     // Add preconnect hints
@@ -93,7 +96,7 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
     const link = document.createElement('link')
     link.id = fontId
     link.rel = 'stylesheet'
-    link.href = getGoogleFontUrl(customFont)
+    link.href = fontsHref
     document.head.appendChild(link)
 
     return () => {
@@ -102,7 +105,7 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       const existing = document.getElementById(fontId)
       if (existing) document.head.removeChild(existing)
     }
-  }, [customFont])
+  }, [fontsHref])
 
   const pathParts = pathname?.split('/').filter(Boolean) || []
 
@@ -116,17 +119,20 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       // font-family in Arabic, where Tajawal replaces the org's custom face
       // outright. An inline style beats any normal rule, so the override has to
       // target this element specifically.
-      className="lh-org-font-root flex flex-col min-h-screen"
+      className="lh-org-font-root lh-theme flex flex-col min-h-screen"
+      {...themeRoot.attrs}
       style={{
+        backgroundColor: 'transparent',
+        ...(themeRoot.style as CSSProperties),
         // Room for the phone tab bar / activity bar (0 on desktop).
         paddingBottom: 'var(--lh-mobile-nav-h)',
-        backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
-        ...(customFont ? { fontFamily: `'${customFont}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` } : {}),
       }}
     >
       <PageViewTracker />
       {!chromeless && <OrgJoinBanner />}
       {!chromeless && <OrgMenu orgslug={orgslug} />}
+      {/* A company's part of the academy: its bar, under the menu (EE). */}
+      {!chromeless && <CompanySpaceBar orgslug={orgslug} />}
       {/* Org-wide 2FA policy: renders nothing unless this user is non-compliant. */}
       {!chromeless && <OrgMFAPolicyGate />}
       <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>
@@ -134,11 +140,17 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       </div>
       {!isFullBleedPage && !chromeless && <OrgFooter />}
       {!isFullBleedPage && !chromeless && <Watermark />}
-      {!chromeless && <SiteCommandPalette />}
       {!chromeless && <GlobalShortcuts />}
-      {!chromeless && <ShortcutHelp />}
-      {!chromeless && <ChatDock orgslug={orgslug} />}
-      {!chromeless && <LiveNowBanner orgslug={orgslug} />}
+      {/* Overlays that are closed (or absent) on load: their code comes once
+          the page has loaded, not in the same burst as the page's own chunks. */}
+      {!chromeless && (
+        <AfterLoad>
+          <SiteCommandPalette />
+          <ShortcutHelp />
+          <ChatDockGate orgslug={orgslug} />
+          <LiveNowBanner orgslug={orgslug} />
+        </AfterLoad>
+      )}
     </div>
   )
 }

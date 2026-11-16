@@ -303,6 +303,8 @@ async def signWithGoogle(
 
             return user
 
+    # Grants held for this address until it was proven (EE: CRM rules).
+    newly_verified = not user.email_verified
     # Backfill signup_method for existing users who sign in with Google
     needs_update = False
     if not user.signup_method:
@@ -310,6 +312,11 @@ async def signWithGoogle(
         needs_update = True
 
     await claim_account_on_inbox_proof(user, db_session, pending_changes=needs_update)
+
+    if newly_verified and user.id is not None:
+        from src.core.ee_hooks import notify_ee_email_verified
+
+        notify_ee_email_verified(user.id)
 
     # If the caller supplied (and the router validated, via a pending invite)
     # an ``org_id``, an *existing* user signing in with Google must still be

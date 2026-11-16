@@ -230,7 +230,7 @@ FENCE_RULES = {
         + "; difficulty: easy|medium|hard; attempts: tries before the solution shows; timed: 10m; "
         "time limit: 5s per run; time complexity: / space complexity: expected), then the task, then "
         "--- starter, --- solution, --- test <label> (input: and output: lines, each followed by its "
-        "text), --- hint and --- file <name> (extra files) sections. Indentation in code is kept."
+        "text; end the label with (hidden) to hide that test's input and output from learners), --- hint and --- file <name> (extra files) sections. Indentation in code is kept."
     ),
     "scenario": (
         "Each step starts with '# <step name>', then its text, an optional image: <url>, then "

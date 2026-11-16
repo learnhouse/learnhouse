@@ -1009,7 +1009,7 @@ def inline_markdown(nodes: list, *, breaks: str = "\\\n") -> str:
     active: list[str] = []
     pending = ""
     i = 0
-    nodes = [n for n in nodes if isinstance(n, dict)]
+    nodes = [d.variable_as_text(n) for n in nodes if isinstance(n, dict)]
     while i < len(nodes):
         node = nodes[i]
         t = node.get("type")

@@ -16,9 +16,10 @@ export async function startMagicBlockSession(
   context: MagicBlockContext,
   accessToken: string,
   onChunk: (_chunk: string) => void,
-  onComplete: (_sessionUuid: string) => void,
+  onComplete: (_sessionUuid: string, _credits?: number | null) => void,
   onError: (_error: string) => void,
-  styleReference?: string | null
+  styleReference?: string | null,
+  signal?: AbortSignal
 ): Promise<void> {
   const data: Record<string, unknown> = {
     activity_uuid: activityUuid,
@@ -36,6 +37,7 @@ export async function startMagicBlockSession(
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify(data),
+      signal,
     })
 
     if (!response.ok) {
@@ -59,10 +61,11 @@ export async function iterateMagicBlock(
   message: string,
   accessToken: string,
   onChunk: (_chunk: string) => void,
-  onComplete: (_sessionUuid: string) => void,
+  onComplete: (_sessionUuid: string, _credits?: number | null) => void,
   onError: (_error: string) => void,
   currentHtml?: string | null,
-  styleReference?: string | null
+  styleReference?: string | null,
+  signal?: AbortSignal
 ): Promise<void> {
   const data: Record<string, unknown> = {
     session_uuid: sessionUuid,
@@ -81,6 +84,7 @@ export async function iterateMagicBlock(
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify(data),
+      signal,
     })
 
     if (!response.ok) {
@@ -136,7 +140,7 @@ export async function getMagicBlockSession(
 async function processStream(
   response: Response,
   onChunk: (_chunk: string) => void,
-  onComplete: (_sessionUuid: string) => void,
+  onComplete: (_sessionUuid: string, _credits?: number | null) => void,
   onError: (_error: string) => void
 ): Promise<void> {
   const reader = response.body?.getReader()
@@ -170,7 +174,7 @@ async function processStream(
             if (event.type === 'chunk' && event.content) {
               onChunk(event.content)
             } else if (event.type === 'done' && event.session_uuid) {
-              onComplete(event.session_uuid)
+              onComplete(event.session_uuid, event.credits ?? null)
             } else if (event.type === 'error' && event.message) {
               onError(event.message)
             }

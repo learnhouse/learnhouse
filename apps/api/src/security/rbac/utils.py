@@ -242,11 +242,19 @@ async def _lookup_element_organization_id(
         )).scalars().first()
 
     elif element_type == "boards":
-        from src.db.boards import Board
+        from src.core.ee_hooks import get_ee_module
+        boards = get_ee_module("ee.db.boards")  # Boards are EE-only
+        if boards is None:
+            return None
+        Board = boards.Board
         return (await db_session.execute(select(Board.org_id).where(Board.board_uuid == element_uuid))).scalars().first()
 
     elif element_type == "playgrounds":
-        from src.db.playgrounds import Playground
+        from src.core.ee_hooks import get_ee_module
+        playgrounds = get_ee_module("ee.db.playgrounds")  # Plays are EE-only
+        if playgrounds is None:
+            return None
+        Playground = playgrounds.Playground
         return (await db_session.execute(select(Playground.org_id).where(Playground.playground_uuid == element_uuid))).scalars().first()
 
     return None

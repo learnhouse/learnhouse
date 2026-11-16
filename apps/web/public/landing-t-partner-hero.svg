@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 520" role="img" aria-label="Certification badges by tier">
+<defs><radialGradient id="g" cx=".5" cy=".45" r=".55"><stop offset="0" stop-color="#4f46e5" stop-opacity=".5"/><stop offset="1" stop-color="#0b1220" stop-opacity="0"/></radialGradient></defs>
+<rect width="600" height="520" fill="url(#g)"/>
+<g stroke="#22d3ee" stroke-opacity=".25" fill="none"><circle cx="300" cy="260" r="200"/><circle cx="300" cy="260" r="150" stroke-dasharray="4 8"/></g>
+<g transform="translate(60,250)"><path d="M90 0l78 45v90l-78 45-78-45V45z" fill="#1f2a4d"/><path d="M90 16l64 37v74l-64 37-64-37V53z" fill="none" stroke="#9fb0d9" stroke-width="2"/>
+<text x="90" y="98" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="800" fill="#9fb0d9">REGISTERED</text>
+<g fill="#9fb0d9"><circle cx="90" cy="122" r="4"/></g></g>
+<g transform="translate(360,250)"><path d="M90 0l78 45v90l-78 45-78-45V45z" fill="#c9ced9"/><path d="M90 16l64 37v74l-64 37-64-37V53z" fill="none" stroke="#1f2a4d" stroke-width="2"/>
+<text x="90" y="98" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="800" fill="#1f2a4d">SILVER</text>
+<g fill="#1f2a4d"><circle cx="83" cy="122" r="4"/><circle cx="97" cy="122" r="4"/></g></g>
+<g transform="translate(210,90)"><path d="M90 0l78 45v90l-78 45-78-45V45z" fill="#e3b54c"/><path d="M90 16l64 37v74l-64 37-64-37V53z" fill="none" stroke="#3b2a06" stroke-width="2"/>
+<text x="90" y="98" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="800" fill="#3b2a06">GOLD</text>
+<g fill="#3b2a06"><circle cx="76" cy="122" r="4"/><circle cx="90" cy="122" r="4"/><circle cx="104" cy="122" r="4"/></g></g>
+</svg>

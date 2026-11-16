@@ -1,73 +1,39 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef, useEffect, lazy, Suspense } from 'react'
+import EditorBlockFrame from '../../Blocks/ui/EditorBlockFrame'
+import React, { lazy, Suspense } from 'react'
 const Picker = lazy(() => import('@emoji-mart/react'))
-import { CaretDown, CaretRight, Palette } from '@phosphor-icons/react'
+import { Palette, Smiley, SquaresFour } from '@phosphor-icons/react'
+import { BlockPopover, BlockToolbarButton } from '../../Blocks/ui/BlockChrome'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
+import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
 
 const BadgesExtension: React.FC = (props: any) => {
   const { t } = useTranslation()
-  const [color, setColor] = useState(props.node.attrs.color)
-  const [emoji, setEmoji] = useState(props.node.attrs.emoji)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [showColorPicker, setShowColorPicker] = useState(false)
-  const [showPredefinedCallouts, setShowPredefinedCallouts] = useState(false)
-  const pickerRef = useRef<HTMLDivElement>(null)
-  const colorPickerRef = useRef<HTMLDivElement>(null)
+  const { colorScheme } = useColorScheme()
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
+  // Read from node attrs so undo and collaborators' changes show.
+  const color: string = props.node.attrs.color
+  const emoji: string = props.node.attrs.emoji
+  const [open, setOpen] = React.useState<null | 'emoji' | 'color' | 'presets'>(null)
+  const pop = (which: 'emoji' | 'color' | 'presets') => (o: boolean) => setOpen(o ? which : null)
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        (pickerRef.current && !pickerRef.current.contains(event.target as Node)) ||
-        (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node))
-      ) {
-        setShowEmojiPicker(false)
-        setShowColorPicker(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  const handleEmojiSelect = (emoji: any) => {
-    setEmoji(emoji.native)
-    setShowEmojiPicker(false)
-    props.updateAttributes({
-      emoji: emoji.native,
-    })
-  }
-
-  const handleColorSelect = (selectedColor: string) => {
-    setColor(selectedColor)
-    setShowColorPicker(false)
-    props.updateAttributes({
-      color: selectedColor,
-    })
-  }
-
-  const handlePredefinedBadgeSelect = (badge: typeof predefinedBadges[0]) => {
-    setEmoji(badge.emoji)
-    setColor(badge.color)
-
-    props.updateAttributes({
-      emoji: badge.emoji,
-      color: badge.color,
-    })
-
-    // Insert the predefined content
-    const { editor } = props
-    if (editor) {
-      editor.commands.setTextSelection({ from: props.getPos() + 1, to: props.getPos() + props.node.nodeSize - 1 })
-      editor.commands.insertContent(badge.content)
-    }
-
-    setShowPredefinedCallouts(false)
+  const handlePredefinedBadgeSelect = (badge: { emoji: string; color: string; content: string }) => {
+    const pos = props.getPos()
+    if (typeof pos !== 'number') return
+    // One transaction: attrs and label together (undoes in one step).
+    props.editor
+      .chain()
+      .focus()
+      .command(({ tr }: any) => {
+        tr.setNodeMarkup(pos, undefined, { ...props.node.attrs, emoji: badge.emoji, color: badge.color })
+        tr.replaceWith(pos + 1, pos + props.node.nodeSize - 1, props.editor.schema.text(badge.content))
+        return true
+      })
+      .run()
+    setOpen(null)
   }
 
   const colors = ['sky', 'green', 'yellow', 'red', 'purple', 'teal', 'amber', 'indigo', 'neutral']
@@ -135,91 +101,75 @@ const BadgesExtension: React.FC = (props: any) => {
     }
   }
 
+
+  const pill = (
+    <div data-lhb-keep="" className={twMerge(
+      'flex space-x-1 py-1.5 items-center w-fit rounded-full outline outline-2 outline-white/20 px-3.5 font-semibold nice-shadow text-sm my-2',
+      getBadgeColor(color)
+    )}>
+      <span className='text' contentEditable={false}>{emoji}</span>
+      <NodeViewContent className="content capitalize text tracking-wide min-w-[2ch]" />
+    </div>
+  )
+
+  if (!isEditable) return <NodeViewWrapper><div className='flex space-x-2 items-center relative'>{pill}</div></NodeViewWrapper>
+
+  const tools = (
+    <>
+      <BlockPopover
+        open={open === 'presets'}
+        onOpenChange={pop('presets')}
+        title={t('editor.blocks_v2.badge.presets', 'Presets')}
+        width={320}
+        trigger={<BlockToolbarButton label={t('editor.blocks_v2.badge.presets', 'Presets')}><SquaresFour size={14} /></BlockToolbarButton>}
+      >
+        <div className="flex flex-wrap gap-1.5">
+          {predefinedBadges.map((badge) => (
+            <button
+              key={badge.content}
+              type="button"
+              onClick={() => handlePredefinedBadgeSelect(badge)}
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${getBadgeColor(badge.color)} hover:opacity-90`}
+            >
+              <span>{badge.emoji}</span>
+              <span className="capitalize">{badge.content}</span>
+            </button>
+          ))}
+        </div>
+      </BlockPopover>
+      <BlockPopover
+        open={open === 'emoji'}
+        onOpenChange={pop('emoji')}
+        width={360}
+        trigger={<BlockToolbarButton label={t('editor.blocks_v2.button.emoji', 'Emoji')}><Smiley size={14} /></BlockToolbarButton>}
+      >
+        <Suspense fallback={<div className="p-4 text-gray-400 text-sm">{t('common.loading')}</div>}>
+          <Picker searchPosition="top" theme={colorScheme} previewPosition="none" maxFrequentRows={0} autoFocus={false} onEmojiSelect={(e: any) => { props.updateAttributes({ emoji: e.native }); setOpen(null) }} />
+        </Suspense>
+      </BlockPopover>
+      <BlockPopover
+        open={open === 'color'}
+        onOpenChange={pop('color')}
+        title={t('editor.blocks_v2.color', 'Color')}
+        width={232}
+        trigger={<BlockToolbarButton label={t('editor.blocks_v2.color', 'Color')}><Palette size={14} /></BlockToolbarButton>}
+      >
+        <div className="grid grid-cols-5 gap-2">
+          {colors.map((c) => (
+            <button key={c} type="button" aria-label={c} aria-pressed={c === color} onClick={() => props.updateAttributes({ color: c })} className={`h-8 w-8 rounded-full ${getBadgeColor(c)} ${c === color ? 'ring-2 ring-neutral-900 ring-offset-2' : ''}`} />
+          ))}
+        </div>
+      </BlockPopover>
+    </>
+  )
+
   return (
     <NodeViewWrapper>
-      <div className='flex space-x-2 items-center relative'>
-        <div className={twMerge(
-          'flex space-x-1 py-1.5 items-center w-fit rounded-full outline outline-2 outline-white/20 px-3.5 font-semibold nice-shadow text-sm my-2',
-          getBadgeColor(color)
-        )}>
-          <div className="flex items-center justify-center space-x-1">
-            <span className='text'>{emoji}</span>
-            {isEditable && (
-              <button onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
-                <CaretDown weight="duotone" size={14} />
-              </button>
-            )}
-          </div>
-          <NodeViewContent
-            contentEditable={isEditable}
-            className="content capitalize text tracking-wide "
-          >
-          </NodeViewContent>
-          {isEditable && (
-            <div className="flex items-center justify-center space-x-2 relative">
-              <button onClick={() => setShowColorPicker(!showColorPicker)}>
-                <Palette weight="duotone" size={14} />
-              </button>
-              {showColorPicker && (
-                <div ref={colorPickerRef} className="absolute start-full ms-2 p-2 bg-white rounded-full nice-shadow">
-                  <div className="flex space-x-2">
-                    {colors.map((c) => (
-                      <button
-                        key={c}
-                        className={`w-8 h-8 rounded-full ${getBadgeColor(c)} hover:ring-2 hover:ring-opacity-50 focus:outline-hidden focus:ring-2 focus:ring-opacity-50`}
-                        onClick={() => handleColorSelect(c)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        
-        {isEditable && (
-          <button
-            onClick={() => setShowPredefinedCallouts(!showPredefinedCallouts)}
-            className="text-neutral-300 hover:text-neutral-400 transition-colors"
-          >
-            <CaretRight weight="duotone" size={16} data-dir-flip />
-          </button>
-        )}
-
-        {isEditable && showPredefinedCallouts && (
-          <div className='flex flex-wrap gap-2 absolute top-full mt-2 start-0 bg-white/90 backdrop-blur-md p-2 rounded-lg nice-shadow z-10'>
-            {predefinedBadges.map((badge, index) => (
-              <button
-                key={index}
-                onClick={() => handlePredefinedBadgeSelect(badge)}
-                className={`flex text-xs items-center px-3 py-1 rounded-xl space-x-2 ${getBadgeColor(badge.color)} text-gray-600 font-bold light-shadow hover:opacity-80 transition-all duration-100 ease-linear`}
-              >
-                <span className='text-xs'>{badge.emoji}</span>
-                <span className="content capitalize">{badge.content}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {isEditable && showEmojiPicker && (
-        <div ref={pickerRef}>
-          <Suspense fallback={<div className="p-4 text-gray-400 text-sm">{t('common.loading')}</div>}>
-            <Picker
-              searchPosition="top"
-              theme="light"
-              previewPosition="none"
-              maxFrequentRows={0}
-              autoFocus={false}
-              onEmojiSelect={handleEmojiSelect}
-            />
-          </Suspense>
-        </div>
-      )}
-
-
+      <EditorBlockFrame editable node={props.node} editor={props.editor} getPos={props.getPos} selected={props.selected} tone="neutral" editableContent tools={tools} className="px-2">
+        {pill}
+      </EditorBlockFrame>
     </NodeViewWrapper>
   )
 }
 
-export default BadgesExtension;
+export default BadgesExtension

@@ -536,6 +536,38 @@ class TestOrgInvitesService:
         assert result is False
 
 
+class TestSendInviteEmailPersonalLink:
+    @pytest.mark.asyncio
+    async def test_personal_link_replaces_the_code(self, mock_request, org, admin_user):
+        fake_redis = _fake_redis(
+            scan_keys=[b"invite-key"],
+            values={b"invite-key": json.dumps({"invite_code": "ABC12345", "invite_code_uuid": "invite_uuid"})},
+        )
+        with patch(
+            "src.services.orgs.invites.get_learnhouse_config",
+            return_value=_fake_config(),
+        ), patch(
+            "src.services.orgs.invites._get_redis",
+            return_value=fake_redis,
+        ), patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            new_callable=AsyncMock,
+            return_value="https://test-org.learnhouse.io",
+        ), patch(
+            "src.services.orgs.invites.send_invitation_email",
+            return_value={"id": "email"},
+        ) as send:
+            result = await send_invite_email(
+                org, "invite_uuid", admin_user, admin_user.email, mock_request, invite_link_token="tok_123"
+            )
+
+        assert result is True
+        kwargs = send.call_args.kwargs
+        # The org's own signup page with the token; no code to type.
+        assert kwargs["signup_url"] == "https://test-org.learnhouse.io/signup?invite=tok_123"
+        assert kwargs["invite_code"] is None
+
+
 class TestSendInviteEmailLangLookup:
     """Cover the branch in send_invite_email that loads the org's default
     language from OrganizationConfig and forwards it to send_invitation_email."""

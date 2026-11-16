@@ -2,6 +2,7 @@
 import { getConfig, getDeploymentMode } from '@services/config/config'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
 
 // Client-side Cloudflare Turnstile widget. Reads the PUBLIC site key from the
 // runtime config (getConfig; this is a prebuilt image, so process.env.NEXT_PUBLIC_*
@@ -109,6 +110,7 @@ interface TurnstileWidgetProps {
 const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
   function TurnstileWidget({ onToken, className }, ref) {
     const innerRef = useRef<TurnstileInstance>(null)
+    const { colorScheme } = useColorScheme()
     const siteKey = getTurnstileSiteKey()
     // Only decide after mount: getDeploymentMode() reads a cookie unavailable
     // during SSR, so rendering the widget SSR-side would hydration-mismatch.
@@ -132,7 +134,7 @@ const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
           onSuccess={(token) => onToken(token)}
           onExpire={() => onToken(null)}
           onError={() => onToken(null)}
-          options={{ theme: 'light', size: 'flexible' }}
+          options={{ theme: colorScheme, size: 'flexible' }}
         />
       </div>
     )

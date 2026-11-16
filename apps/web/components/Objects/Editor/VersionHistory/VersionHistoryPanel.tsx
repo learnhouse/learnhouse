@@ -169,6 +169,11 @@ function VersionHistoryPanel({
                       <span className="font-medium text-gray-900">
                         {t('editor.versioning.version', { number: version.version_number })}
                       </span>
+                      {version.label && (
+                        <span className="max-w-[10rem] truncate rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700 ring-1 ring-inset ring-neutral-900/5">
+                          {version.label}
+                        </span>
+                      )}
                       {index === 0 && (
                         <span className="px-1.5 py-0.5 text-xs bg-sky-100 text-sky-700 rounded">
                           {t('editor.versioning.previous')}

@@ -1,12 +1,15 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query/keys'
-import { getAPIUrl } from '@services/config/config'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { Key, X } from '@phosphor-icons/react'
+import { Key, Warning } from '@phosphor-icons/react'
 import { Trans, useTranslation } from 'react-i18next'
-import type { CreatedToken } from '@components/Admin/SuperadminAPITokens/TokenCreatedDialog'
+import { Button, FieldLabel, INPUT, Modal, TEXTAREA } from '@/design'
+import { createToken, errorMessage } from '@services/ee/platform/api'
+import { platformKeys } from '@services/ee/platform/keys'
+import { PLATFORM_ROLES, TOKEN_SCOPES, type CreatedToken, type TokenScope } from '@services/ee/platform/types'
+import { useAccessToken, usePlatformMe } from '@components/Admin/hooks'
+
+const ROLE_RANK: Record<string, number> = { owner: 0, admin: 1, support: 2, sales: 3, viewer: 4 }
 
 export default function CreateTokenModal({
   open,
@@ -17,15 +20,21 @@ export default function CreateTokenModal({
   onClose: () => void
   onCreated: (_token: CreatedToken) => void
 }) {
-  const { t } = useTranslation()
-  const session = useLHSession() as any
-  const accessToken = session?.data?.tokens?.access_token
+  const { t, i18n } = useTranslation()
+  const accessToken = useAccessToken()
+  const me = usePlatformMe()
   const queryClient = useQueryClient()
+
+  // A token can never outrank its creator.
+  const myRank = ROLE_RANK[me.role] ?? 4
+  const roles = PLATFORM_ROLES.filter((r) => ROLE_RANK[r] >= myRank)
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [neverExpires, setNeverExpires] = useState(true)
   const [expiresAt, setExpiresAt] = useState('')
+  const [role, setRole] = useState<string>(me.role)
+  const [scopes, setScopes] = useState<TokenScope[]>(['api'])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -35,162 +44,166 @@ export default function CreateTokenModal({
       setDescription('')
       setNeverExpires(true)
       setExpiresAt('')
+      setRole(roles.includes(me.role as any) ? me.role : roles[0] ?? 'viewer')
+      setScopes(['api'])
       setError('')
       setSubmitting(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  if (!open) return null
+  const toggleScope = (s: TokenScope, on: boolean) => {
+    setScopes((cur) => {
+      let next = on ? Array.from(new Set([...cur, s])) : cur.filter((x) => x !== s)
+      // mcp:write only makes sense on top of mcp.
+      if (s === 'mcp:write' && on && !next.includes('mcp')) next = [...next, 'mcp']
+      if (s === 'mcp' && !on) next = next.filter((x) => x !== 'mcp:write')
+      return TOKEN_SCOPES.filter((x) => next.includes(x))
+    })
+  }
 
-  const canSubmit = name.trim().length > 0 && !submitting && (neverExpires || expiresAt.length > 0)
+  // Viewer tokens are read-only (spec §1): no MCP writes. An expiry must be
+  // in the future, or the token would be born dead.
+  const viewerWrite = role === 'viewer' && scopes.includes('mcp:write')
+  const expiryInPast = !neverExpires && !!expiresAt && new Date(expiresAt).getTime() <= Date.now()
+  const canSubmit =
+    name.trim().length > 0 && scopes.length > 0 && !submitting && (neverExpires || expiresAt.length > 0) && !viewerWrite && !expiryInPast
 
   const handleSubmit = async () => {
     setSubmitting(true)
     setError('')
     try {
-      const body: Record<string, unknown> = { name: name.trim() }
+      const body: { name: string; description?: string; expires_at?: string; role?: string; scopes?: string[] } = {
+        name: name.trim(),
+        role,
+        scopes,
+      }
       if (description.trim()) body.description = description.trim()
       if (!neverExpires && expiresAt) {
         // <input type="datetime-local"> emits "YYYY-MM-DDTHH:mm"; send as ISO.
         body.expires_at = new Date(expiresAt).toISOString()
       }
-
-      const res = await fetch(`${getAPIUrl()}ee/superadmin/tokens/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(body),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setError(data?.detail || t('admin.tokens.failed_create', { status: res.status }))
-        return
+      const data = await createToken(accessToken, body)
+      queryClient.invalidateQueries({ queryKey: platformKeys.tokens() })
+      onCreated(data)
+    } catch (e) {
+      const msg = errorMessage(e, t('admin.tokens.failed_create', { status: (e as any)?.status ?? '' }))
+      // Rate limits come back as "… in 1891 seconds"; say it the human way.
+      const secs = /(\d+)\s*seconds?/i.exec(msg)
+      if ((e as any)?.status === 429 && secs) {
+        const minutes = Math.max(1, Math.round(Number(secs[1]) / 60))
+        setError(t('admin.tokens.rate_limited', { when: new Intl.RelativeTimeFormat(i18n.language, { numeric: 'auto' }).format(minutes, 'minute') }))
+      } else {
+        setError(msg)
       }
-      queryClient.invalidateQueries({ queryKey: queryKeys.superadmin.apiTokens() })
-      onCreated(data as CreatedToken)
-    } catch {
-      setError(t('admin.tokens.network_error'))
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md bg-[#141415] border border-white/[0.08] rounded-2xl shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <Key size={18} weight="fill" className="text-white/70" />
-            <h2 className="text-base font-semibold text-white">{t('admin.tokens.new_token')}</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-white/40 hover:text-white/80 transition-colors"
-            aria-label={t('common.close')}
-          >
-            <X size={18} weight="bold" />
-          </button>
+    <Modal
+      isDialogOpen={open}
+      onOpenChange={(o) => !o && onClose()}
+      size="md"
+      icon={<Key size={18} />}
+      dialogTitle={t('admin.tokens.new_token')}
+      preventClose={submitting}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button onClick={onClose} disabled={submitting}>
+            {t('common.cancel')}
+          </Button>
+          <Button variant="primary" loading={submitting} disabled={!canSubmit} onClick={handleSubmit}>
+            {t('admin.tokens.create_token')}
+          </Button>
         </div>
+      }
+      dialogContent={
+        <div className="flex flex-col gap-4">
+          <div>
+            <FieldLabel hint={t('admin.tokens.name_hint')}>{t('admin.tokens.name')}</FieldLabel>
+            <input autoFocus className={INPUT} value={name} onChange={(e) => setName(e.target.value)} placeholder="acme-automation" />
+          </div>
+          <div>
+            <FieldLabel hint={t('common.optional')}>{t('admin.tokens.description')}</FieldLabel>
+            <textarea className={TEXTAREA} rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('admin.tokens.description_placeholder')} />
+          </div>
 
-        <div className="px-6 py-5 space-y-4">
-          <Field label={t('admin.tokens.name')} required hint={t('admin.tokens.name_hint')}>
-            <input
-              autoFocus
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="acme-automation"
-              className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
-            />
-          </Field>
+          <div>
+            <FieldLabel hint={t('admin.tokens.role_hint')}>{t('admin.tokens.role')}</FieldLabel>
+            <select
+              className={INPUT}
+              value={role}
+              onChange={(e) => {
+                setRole(e.target.value)
+                if (e.target.value === 'viewer') setScopes((cur) => cur.filter((x) => x !== 'mcp:write'))
+              }}
+            >
+              {roles.map((r) => (
+                <option key={r} value={r}>
+                  {t(`admin.roles.${r}`)}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <Field label={t('admin.tokens.description')}>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('admin.tokens.description_placeholder')}
-              rows={2}
-              className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 resize-none"
-            />
-          </Field>
+          <div>
+            <FieldLabel>{t('admin.tokens.scopes')}</FieldLabel>
+            <div className="flex flex-col gap-2">
+              {TOKEN_SCOPES.map((s) => (
+                <label key={s} className="flex items-start gap-2.5 rounded-xl px-3 py-2.5 ring-1 ring-inset ring-neutral-200 hover:ring-neutral-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 accent-neutral-900"
+                    checked={scopes.includes(s)}
+                    onChange={(e) => toggleScope(s, e.target.checked)}
+                    disabled={s === 'mcp:write' && role === 'viewer'}
+                  />
+                  <span className="min-w-0">
+                    <code className="block text-[13px] font-semibold text-neutral-900 font-mono" dir="ltr">
+                      {s}
+                    </code>
+                    <span className="block text-xs text-neutral-500">{t(`admin.tokens.scope_desc.${s.replace(':', '_')}`)}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            {role === 'viewer' && <p className="mt-1.5 text-xs text-neutral-500">{t('admin.tokens.viewer_read_only')}</p>}
+          </div>
 
-          <Field label={t('admin.tokens.expiration')}>
-            <label className="flex items-center gap-2 text-sm text-white/80 mb-2">
-              <input
-                type="checkbox"
-                checked={neverExpires}
-                onChange={(e) => setNeverExpires(e.target.checked)}
-                className="accent-white/80"
-              />
+          <div>
+            <FieldLabel>{t('admin.tokens.expiration')}</FieldLabel>
+            <label className="flex items-center gap-2 text-sm text-neutral-700 mb-2">
+              <input type="checkbox" className="accent-neutral-900" checked={neverExpires} onChange={(e) => setNeverExpires(e.target.checked)} />
               {t('admin.tokens.never_expires')}
             </label>
             {!neverExpires && (
               <input
                 type="datetime-local"
+                className={INPUT}
                 value={expiresAt}
+                min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
                 onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
               />
             )}
-          </Field>
-
-          <div className="rounded-lg bg-amber-400/[0.06] border border-amber-400/20 px-3 py-2.5 text-xs text-amber-200/90">
-            <Trans
-              i18nKey="admin.tokens.warning"
-              components={{ em: <em />, code: <code className="font-mono" /> }}
-            />
+            {expiryInPast && <p className="mt-1.5 text-xs font-medium text-rose-600">{t('admin.tokens.expiry_past')}</p>}
           </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
-        </div>
+          <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-900 ring-1 ring-inset ring-amber-600/10">
+            <Warning size={14} weight="fill" className="mt-0.5 shrink-0 text-amber-600" />
+            <span>
+              {role === 'owner' || role === 'admin' ? (
+                <Trans i18nKey="admin.tokens.warning" components={{ em: <em />, code: <code className="font-mono" /> }} />
+              ) : (
+                t('admin.tokens.warning_role', { role: t(`admin.roles.${role}`) })
+              )}
+            </span>
+          </div>
 
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-white/[0.06]">
-          <button
-            onClick={onClose}
-            disabled={submitting}
-            className="px-3.5 py-2 text-sm text-white/60 hover:text-white/90 transition-colors disabled:opacity-40"
-          >
-            {t('common.cancel')}
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="px-3.5 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {submitting ? t('common.creating') : t('admin.tokens.create_token')}
-          </button>
+          {error && <p className="text-sm text-rose-600">{error}</p>}
         </div>
-      </div>
-    </div>
-  )
-}
-
-function Field({
-  label,
-  required,
-  hint,
-  children,
-}: {
-  label: string
-  required?: boolean
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <label className="text-xs text-white/50 uppercase tracking-wider block mb-1.5">
-        {label} {required && <span className="text-red-400/70">*</span>}
-      </label>
-      {children}
-      {hint && <p className="text-[11px] text-white/30 mt-1">{hint}</p>}
-    </div>
+      }
+    />
   )
 }

@@ -161,6 +161,16 @@ describe("POST /api/billing/delete-org", () => {
     expect(deletes()[0].token).toBe("tok_header");
   });
 
+  test("refuses an impersonation token sent as the bearer fallback", async () => {
+    cookieToken = null;
+    sessionFor.tok_imp = { ...ADMIN_SESSION, impersonation: { target_user_id: 7 } };
+    const res = await POST(request({ orgId: 4242 }, { Authorization: "Bearer tok_imp" }));
+    expect(res.status).toBe(403);
+    expect((await res.json()).code).toBe("IMPERSONATION_DENIED");
+    expect(lookups).toHaveLength(0);
+    expect(deletes()).toHaveLength(0);
+  });
+
   test("rejects a missing or non-numeric org id", async () => {
     expect((await POST(request({}))).status).toBe(400);
     expect((await POST(request({ orgId: "4242 OR 1" }))).status).toBe(400);

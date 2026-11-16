@@ -310,7 +310,7 @@ async def _create_media_activity(ctx: ToolContext, p: CreateMediaActivityParams)
     else:
         check_url(p.url)
         host = urlsplit(p.url).hostname
-        require_approval(ctx, f"Fetches a {p.kind} file from an outside link ({host}).")
+        require_approval(ctx, f"Fetches a {p.kind} file from an outside link ({host}).", person=True)
         fetched = await fetch(p.url, p.kind)
         try:
             upload = UploadFile(
@@ -348,6 +348,7 @@ async def _update_activity(ctx: ToolContext, p: UpdateActivityParams):
     patch = p.model_dump(include={"name", "published"}, exclude_none=True)
     if not patch:
         raise HTTPException(status_code=400, detail="Nothing to change: pass name or published.")
+    previous = {"name": activity.name, "published": bool(activity.published)}
     if p.published is not None and course.published:
         # Learners of a live course see the change at once. Inside a draft
         # course nobody does, so building one needs no approvals.
@@ -359,6 +360,7 @@ async def _update_activity(ctx: ToolContext, p: UpdateActivityParams):
         f"Updated activity '{updated.name}' ({', '.join(sorted(patch))}).",
         activity=await activity_ref(ctx, course.course_uuid, updated, published=bool(updated.published)),
         course=await course_ref(ctx, course),
+        undo={"tool": "update_activity", "args": {"activity_uuid": activity.activity_uuid, **{k: previous[k] for k in patch}}},
     )
 
 

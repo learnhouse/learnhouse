@@ -15,7 +15,6 @@ import pytest
 from fastapi import HTTPException
 
 from src.db.api_tokens import APIToken
-from src.db.boards import Board, BoardMember
 from src.db.custom_domains import CustomDomain, CustomDomainCreate
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import OrganizationCreate, OrganizationUpdate
@@ -224,12 +223,10 @@ async def _grants(db, org, course, user_id):
         creation_date=NOW, update_date=NOW,
     ))
     group = UserGroup(id=1, name="g", description="", org_id=org.id, usergroup_uuid="ug_1")
-    board = Board(id=1, name="b", org_id=org.id, board_uuid="board_1", created_by=user_id)
-    db.add_all([group, board])
+    db.add(group)
     await db.commit()
     db.add_all([
         UserGroupUser(usergroup_id=group.id, user_id=user_id, org_id=org.id),
-        BoardMember(board_id=board.id, user_id=user_id, role="editor"),
         APIToken(
             name="t", token_uuid="apitoken_1", token_prefix="lh_x", token_hash="h",
             org_id=org.id, created_by_user_id=user_id, is_active=True,
@@ -248,9 +245,6 @@ async def _assert_revoked(db, user_id):
     assert author.authorship_status == ResourceAuthorshipStatusEnum.INACTIVE
     assert not (await db.execute(
         select(UserGroupUser).where(UserGroupUser.user_id == user_id)
-    )).scalars().all()
-    assert not (await db.execute(
-        select(BoardMember).where(BoardMember.user_id == user_id)
     )).scalars().all()
     token = (await db.execute(select(APIToken))).scalars().one()
     await db.refresh(token)
@@ -301,10 +295,9 @@ class TestOffboarding:
         from sqlmodel import select
         from src.services.orgs.users import remove_user_from_org
 
-        await _grants(db, other_org, course, regular_user.id)  # board/group/token in other org
+        await _grants(db, other_org, course, regular_user.id)  # group/token in other org
         with patch("src.core.redis.get_redis_client", return_value=None):
             await remove_user_from_org(mock_request, org.id, regular_user.id, db, admin_user)
-        assert (await db.execute(select(BoardMember))).scalars().all()
         assert (await db.execute(select(UserGroupUser))).scalars().all()
 
     async def test_invite_cleanup_failure_does_not_block_removal(
@@ -351,30 +344,6 @@ class TestStaleGrantsIgnored:
         await db.commit()
         checker = ResourceAccessChecker(mock_request, db, regular_user)
         assert await checker._is_resource_author(course.course_uuid) is True
-
-    async def test_stale_board_member_falls_back_to_rbac(self, db, org, mock_request):
-        from src.services.boards.boards import check_board_membership
-
-        outsider = await _outsider(db)
-        board = Board(id=1, name="b", org_id=org.id, board_uuid="board_1", public=False)
-        db.add(board)
-        await db.commit()
-        db.add(BoardMember(board_id=board.id, user_id=outsider.id, role="owner"))
-        await db.commit()
-        with pytest.raises(HTTPException) as exc:
-            await check_board_membership(mock_request, "board_1", outsider, db)
-        assert exc.value.status_code == 403
-
-    async def test_board_member_in_org_keeps_role(self, db, org, regular_user, mock_request):
-        from src.services.boards.boards import check_board_membership
-
-        board = Board(id=1, name="b", org_id=org.id, board_uuid="board_1", public=False)
-        db.add(board)
-        await db.commit()
-        db.add(BoardMember(board_id=board.id, user_id=regular_user.id, role="owner"))
-        await db.commit()
-        member = await check_board_membership(mock_request, "board_1", regular_user, db)
-        assert member.role == "owner"
 
 
 # ---------------------------------------------------------------------------
@@ -521,12 +490,12 @@ class TestCsvAndKeys:
 
         assert _csv_safe(value).startswith("'")
 
-    async def test_boards_internal_key_non_ascii(self, monkeypatch):
-        from src.routers.boards.boards import verify_internal_key
+    async def test_collab_internal_key_non_ascii(self, monkeypatch):
+        from src.routers.courses.activities.collab import verify_collab_internal_key
 
         monkeypatch.setenv("COLLAB_INTERNAL_KEY", "secret")
         with pytest.raises(HTTPException) as exc:
-            await verify_internal_key("é")
+            await verify_collab_internal_key("é")
         assert exc.value.status_code == 403
 
     async def test_domains_internal_key_non_ascii(self, db, mock_request, monkeypatch):

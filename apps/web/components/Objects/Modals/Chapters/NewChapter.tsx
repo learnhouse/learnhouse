@@ -1,87 +1,78 @@
-import FormLayout, {
-  Flex,
-  FormField,
-  Input,
-  Textarea,
-  FormLabel,
-  ButtonBlack,
-} from '@components/Objects/StyledElements/Form/Form'
-import { FormMessage } from '@radix-ui/react-form'
-import * as Form from '@radix-ui/react-form'
 import React, { useState } from 'react'
-import BarLoader from 'react-spinners/BarLoader'
 import { useTranslation } from 'react-i18next'
+import { INPUT, TEXTAREA } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { ActivityField, ModalFormActions, useModalFormId } from '@components/Objects/Modals/Activities/activityFormKit'
+import { ChapterEmojiButton } from '@components/Dashboard/Pages/Course/EditCourseStructure/DraggableElements/ChapterEmojiButton'
 
-function NewChapterModal({ submitChapter, closeModal, course }: any) {
+// Name is all a chapter needs; the description is optional and can be added later.
+function NewChapterModal({ submitChapter, course }: any) {
   const { t } = useTranslation()
+  const formId = useModalFormId()
   const [chapterName, setChapterName] = useState('')
   const [chapterDescription, setChapterDescription] = useState('')
+  const [emoji, setEmoji] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleChapterNameChange = (e: any) => {
-    setChapterName(e.target.value)
-  }
-
-  const handleChapterDescriptionChange = (e: any) => {
-    setChapterDescription(e.target.value)
-  }
-
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
+    if (!chapterName.trim() || isSubmitting) return
     setIsSubmitting(true)
-    const chapter_object = {
-      name: chapterName,
-      description: chapterDescription,
-      thumbnail_image: '',
-      course_id: course.id,
-      org_id: course.org_id,
+    try {
+      await submitChapter({
+        name: chapterName.trim(),
+        description: chapterDescription.trim(),
+        thumbnail_image: '',
+        course_id: course.id,
+        org_id: course.org_id,
+        ...(emoji ? { extra_metadata: { emoji } } : {}),
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-    await submitChapter(chapter_object)
-    setIsSubmitting(false)
   }
 
   return (
-    <FormLayout onSubmit={handleSubmit}>
-      <FormField name="chapter-name">
-        <Flex className="items-baseline justify-between">
-          <FormLabel>{t('dashboard.courses.structure.modals.new_chapter.form.name_label')}</FormLabel>
-          <FormMessage match="valueMissing">
-            {t('dashboard.courses.structure.modals.new_chapter.form.name_required')}
-          </FormMessage>
-        </Flex>
-        <Form.Control asChild>
-          <Input onChange={handleChapterNameChange} type="text" required />
-        </Form.Control>
-      </FormField>
-      <FormField name="chapter-desc">
-        <Flex className="items-baseline justify-between">
-          <FormLabel>{t('dashboard.courses.structure.modals.new_chapter.form.description_label')}</FormLabel>
-          <FormMessage match="valueMissing">
-            {t('dashboard.courses.structure.modals.new_chapter.form.description_required')}
-          </FormMessage>
-        </Flex>
-        <Form.Control asChild>
-          <Textarea onChange={handleChapterDescriptionChange} required />
-        </Form.Control>
-      </FormField>
-
-      <Flex className="mt-6 justify-end">
-        <Form.Submit asChild>
-          <ButtonBlack type="submit" className="mt-2.5">
-            {isSubmitting ? (
-              <BarLoader
-                cssOverride={{ borderRadius: 60 }}
-                width={60}
-                color="#ffffff"
-              />
-            ) : (
-              t('dashboard.courses.structure.modals.new_chapter.form.submit')
-            )}
-          </ButtonBlack>
-        </Form.Submit>
-      </Flex>
-    </FormLayout>
+    <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+      <ActivityField
+        label={t('dashboard.courses.structure.modals.new_chapter.form.name_label')}
+        htmlFor="chapter-name"
+        hint={t('dashboard.courses.editor.chapter_form.name_hint')}
+      >
+        <div className="flex items-center gap-2">
+          {/* Optional emoji, shown before the chapter name everywhere. */}
+          <ChapterEmojiButton emoji={emoji} onChange={setEmoji} />
+          <input
+            id="chapter-name"
+            autoFocus
+            value={chapterName}
+            onChange={(e) => setChapterName(e.target.value)}
+            type="text"
+            required
+            placeholder={t('dashboard.courses.editor.chapter_form.name_placeholder')}
+            className={INPUT}
+          />
+        </div>
+      </ActivityField>
+      <ActivityField
+        label={t('dashboard.courses.structure.modals.new_chapter.form.description_label')}
+        htmlFor="chapter-desc"
+        aside={<span className="text-xs text-neutral-400">{t('dashboard.courses.editor.chapter_form.optional')}</span>}
+      >
+        <textarea
+          id="chapter-desc"
+          rows={3}
+          value={chapterDescription}
+          onChange={(e) => setChapterDescription(e.target.value)}
+          placeholder={t('dashboard.courses.editor.chapter_form.description_placeholder')}
+          className={TEXTAREA}
+        />
+      </ActivityField>
+      <ModalFormActions
+        submitting={isSubmitting}
+        canSubmit={!!chapterName.trim()}
+        label={t('dashboard.courses.structure.modals.new_chapter.form.submit')}
+      />
+    </form>
   )
 }
 

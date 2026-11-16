@@ -81,10 +81,31 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.courses.drip_scheduler import start_scheduler as start_drip_scheduler
         start_drip_scheduler()
 
+        # User groups: rules, nesting, scheduled starts and expiries every 15
+        # minutes, weekly manager digests (EE). Never raises.
+        from src.services.usergroups.scheduler import start_scheduler as start_usergroup_scheduler
+        start_usergroup_scheduler()
+
         # Emails about messages that stayed unread (default: after an hour).
         # Never raises.
         from src.services.messaging.scheduler import start_scheduler as start_messaging_emails
         start_messaging_emails()
+
+        # Assignment due reminders for the notification inbox and push, plus a
+        # daily prune of old rows. Never raises.
+        from src.services.notifications.scheduler import start_scheduler as start_notifications
+        start_notifications()
+
+        # SaaS trials: hourly expiry to Free and the trial email sequence.
+        # Never raises.
+        from src.services.plans.scheduler import start_scheduler as start_trial_job
+        start_trial_job()
+
+        # One-time conversion of classic landing configs into page builder
+        # home pages (batched, per-org transactions, backed up, idempotent).
+        # Background task; never raises.
+        from src.services.landing.migrate_legacy import start_on_startup as start_landing_migration
+        start_landing_migration()
 
         # Start the in-app HLS transcoding consumer (drains the Redis queue as a
         # background task; no separate worker). No-op unless LEARNHOUSE_HLS_ENABLED.
@@ -111,14 +132,24 @@ def startup_app(app: FastAPI) -> Callable:
         # mounts don't run sub-app lifespans, so the manager's run()
         # context is entered here and closed in shutdown_app — without it
         # every /mcp request fails with an uninitialized task group.
-        mcp_manager = getattr(getattr(app, "state", None), "mcp_session_manager", None)
-        if mcp_manager is not None:
+        # The platform MCP server (/mcp/platform, EE) has its own manager.
+        state = getattr(app, "state", None)
+        mcp_managers = [
+            manager
+            for manager in (
+                getattr(state, "mcp_session_manager", None),
+                getattr(state, "platform_mcp_session_manager", None),
+            )
+            if manager is not None
+        ]
+        if mcp_managers:
             from contextlib import AsyncExitStack
 
             global _mcp_lifespan_stack
             _mcp_lifespan_stack = AsyncExitStack()
-            await _mcp_lifespan_stack.enter_async_context(mcp_manager.run())
-            logger.info("Embedded MCP server started on /mcp")
+            for manager in mcp_managers:
+                await _mcp_lifespan_stack.enter_async_context(manager.run())
+            logger.info("Embedded MCP server started (%d session manager(s))", len(mcp_managers))
 
         # Start Enterprise Edition Startup tasks if available
         run_ee_startup(app)
@@ -158,8 +189,14 @@ def shutdown_app(app: FastAPI) -> Callable:
         await stop_scheduler()
         from src.services.courses.drip_scheduler import stop_scheduler as stop_drip_scheduler
         await stop_drip_scheduler()
+        from src.services.usergroups.scheduler import stop_scheduler as stop_usergroup_scheduler
+        await stop_usergroup_scheduler()
         from src.services.messaging.scheduler import stop_scheduler as stop_messaging_emails
         await stop_messaging_emails()
+        from src.services.notifications.scheduler import stop_scheduler as stop_notifications
+        await stop_notifications()
+        from src.services.plans.scheduler import stop_scheduler as stop_trial_job
+        await stop_trial_job()
         # Let EE stop its background work and write what it still holds
         # (queued analytics events). Never raises.
         await run_ee_shutdown(app)

@@ -19,6 +19,7 @@ import {
   getComments,
   getDiscussions,
 } from '@services/communities/discussions'
+import { threadSegment } from '@/lib/seo/paths'
 
 interface CommunityHoverCardProps {
   communityUuid: string
@@ -136,7 +137,7 @@ export default function CommunityHoverCard({ communityUuid, anchor, onMouseEnter
                 discussion={d}
                 expanded={open === d.discussion_uuid}
                 onToggle={() => setOpen((v) => (v === d.discussion_uuid ? null : d.discussion_uuid))}
-                discussionHref={getUriWithOrg(org?.slug, `${communityPath}/discussion/${d.discussion_uuid.replace('discussion_', '')}`)}
+                discussionHref={getUriWithOrg(org?.slug, d.id ? `${communityPath}/${threadSegment(d.id, d.title)}` : `${communityPath}/discussion/${d.discussion_uuid.replace('discussion_', '')}`)}
                 signedIn={signedIn}
                 accessToken={accessToken}
               />

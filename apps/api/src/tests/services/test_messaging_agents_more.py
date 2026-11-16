@@ -283,7 +283,7 @@ async def test_stream_reply_error_refunds(db, org, regular_user, sessions, publi
     refund = MagicMock(side_effect=RuntimeError("no redis"))
     with patch("src.services.ai.base.ask_ai_stream", new=ask_ai_stream), \
          patch("src.security.features_utils.usage.refund_ai_credit", new=refund):
-        await agents_svc._stream_reply(**_kwargs(conv, copilot, placeholder, scope, regular_user))
+        await agents_svc._stream_reply(**_kwargs(conv, copilot, placeholder, scope, regular_user, meter=_meter(org.id)))
 
     refund.assert_called_once_with(org.id, 2)
     await db.refresh(placeholder)
@@ -305,7 +305,20 @@ async def test_stream_reply_missing_placeholder(db, org, regular_user, sessions,
     refund = MagicMock()
     with patch("src.services.ai.base.ask_ai_stream", new=ask_ai_stream), \
          patch("src.security.features_utils.usage.refund_ai_credit", new=refund):
-        await agents_svc._stream_reply(**_kwargs(conv, copilot, placeholder, scope, regular_user))
+        await agents_svc._stream_reply(**_kwargs(conv, copilot, placeholder, scope, regular_user, meter=_meter(org.id)))
 
     refund.assert_called_once_with(org.id, 2)
     assert all(c.args[2]["type"] != "message.updated" for c in publish.call_args_list)
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy
+
+
+def _meter(org_id: int):
+    """The reply's open charge (the published 2 credits reserved)."""
+    from src.services.ai.metering import Meter
+
+    return Meter(feature="messaging_agent", org_id=org_id, reserved=2)

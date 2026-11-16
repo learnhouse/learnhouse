@@ -4,24 +4,27 @@ import { updatePassword } from '@services/settings/password'
 import { Formik, Form } from 'formik'
 import React from 'react'
 import {
-  AlertTriangle,
-  Monitor,
-  LogOut,
+  Warning as AlertTriangle,
+  Desktop as Monitor,
+  SignOut as LogOut,
   ShieldCheck,
-  ShieldOff,
-  ShieldAlert,
-  KeyRound,
+  ShieldSlash as ShieldOff,
+  ShieldWarning as ShieldAlert,
+  Key as KeyRound,
   Copy,
   Check,
-  Download,
-  RefreshCw,
-  Loader2,
-  Smartphone,
-} from 'lucide-react'
+  DownloadSimple as Download,
+  ArrowsClockwise as RefreshCw,
+  CircleNotch as Loader2,
+  DeviceMobile as Smartphone,
+} from '@phosphor-icons/react'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
-import { Input } from "@components/ui/input"
-import { Button } from "@components/ui/button"
-import { Label } from "@components/ui/label"
+import {
+  AccountButton as Button,
+  AccountInput as Input,
+  AccountNotice,
+} from '@components/Objects/Account/AccountSection'
+import { SectionCard } from '@/design'
 import { Checkbox } from "@components/ui/checkbox"
 import { toast } from 'react-hot-toast'
 import { signOut } from '@components/Contexts/AuthContext'
@@ -30,6 +33,20 @@ import { RequestBodyWithAuthHeader, getResponseMetadata } from '@services/utils/
 import * as Yup from 'yup'
 import { useTranslation } from 'react-i18next'
 import AccountDangerZone from '@components/Objects/Account/subpages/AccountDangerZone'
+import { SubTabPanel, SubTabs, useSubTab } from '@components/Dashboard/Shared/DashKit/SubTabs'
+import {
+  Desktop as DesktopIcon,
+  Key as KeyIcon,
+  ShieldCheck as ShieldCheckIcon,
+  Warning as WarningIcon,
+} from '@phosphor-icons/react'
+
+const SECTIONS = ['password', 'two-factor', 'session', 'delete'] as const
+type Section = (typeof SECTIONS)[number]
+
+function Label({ className = '', ...rest }: React.LabelHTMLAttributes<HTMLLabelElement>) {
+  return <label className={`block text-sm font-semibold text-neutral-800 ${className}`} {...rest} />
+}
 
 const validationSchema = Yup.object().shape({
   old_password: Yup.string().required('validation.required'),
@@ -434,7 +451,7 @@ function TwoFactorAuthSection() {
   // --- pieces -------------------------------------------------------------
 
   const errorBlock = error ? (
-    <div className="flex items-start gap-2 text-red-600 bg-red-50 p-3 rounded-md">
+    <div className="flex items-start gap-2 text-rose-600 bg-rose-50 px-3 py-2.5 rounded-xl">
       <AlertTriangle size={16} className="mt-0.5 shrink-0" />
       <span className="text-sm">
         {error}
@@ -475,7 +492,7 @@ function TwoFactorAuthSection() {
         disabled={busy}
         className="mt-1 max-w-[12rem] font-mono tracking-[0.4em] text-center"
       />
-      <p className="text-xs text-gray-500 mt-1.5">
+      <p className="text-xs text-neutral-500 mt-1.5">
         {t('user.settings.security.mfa.code_hint', {
           defaultValue: 'Enter the 6-digit code currently shown in your authenticator app.',
         })}
@@ -483,22 +500,6 @@ function TwoFactorAuthSection() {
     </div>
   )
 
-  const sectionHeader = (
-    <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-      <h1 className="font-bold text-xl text-gray-800 flex items-center gap-2">
-        <ShieldCheck size={18} className="text-gray-500" />
-        {t('user.settings.security.mfa.title', {
-          defaultValue: 'Two-factor authentication',
-        })}
-      </h1>
-      <h2 className="text-gray-500 text-md ps-7">
-        {t('user.settings.security.mfa.subtitle', {
-          defaultValue:
-            'Ask for a one-time code from your authenticator app whenever you sign in.',
-        })}
-      </h2>
-    </div>
-  )
 
   // --- render -------------------------------------------------------------
 
@@ -506,15 +507,15 @@ function TwoFactorAuthSection() {
 
   if (statusLoading) {
     body = (
-      <div className="flex items-center gap-2 rounded-lg border border-gray-200 p-4 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-sm text-neutral-500">
         <Loader2 size={16} className="animate-spin" />
         {t('common.loading', { defaultValue: 'Loading...' })}
       </div>
     )
   } else if (statusError) {
     body = (
-      <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 p-4">
-        <div className="flex items-start gap-2 text-red-600 min-w-0">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-start gap-2 text-rose-600 min-w-0">
           <AlertTriangle size={16} className="mt-0.5 shrink-0" />
           <span className="text-sm">{statusError}</span>
         </div>
@@ -534,8 +535,8 @@ function TwoFactorAuthSection() {
   } else if (step === 'codes') {
     // Step 4: the ONLY time these codes are ever visible.
     body = (
-      <div className="rounded-lg border border-gray-200 p-4 space-y-4">
-        <div className="flex items-start gap-2 text-amber-700 bg-amber-50 p-3 rounded-md">
+      <div className="space-y-4">
+        <div className="flex items-start gap-2 text-amber-700 bg-amber-50 px-3 py-2.5 rounded-xl">
           <AlertTriangle size={16} className="mt-0.5 shrink-0" />
           <div className="text-sm">
             <p className="font-semibold">
@@ -556,7 +557,7 @@ function TwoFactorAuthSection() {
           {backupCodes.map((c) => (
             <div
               key={c}
-              className="font-mono text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-center select-all"
+              className="font-mono text-sm text-neutral-800 bg-neutral-50 border border-neutral-200 rounded-md px-3 py-2 text-center select-all"
             >
               {c}
             </div>
@@ -588,7 +589,7 @@ function TwoFactorAuthSection() {
             onCheckedChange={(checked) => setCodesAcknowledged(checked === true)}
             className="mt-0.5"
           />
-          <Label htmlFor="mfa-codes-saved" className="text-sm text-gray-700 leading-snug">
+          <Label htmlFor="mfa-codes-saved" className="text-sm text-neutral-700 leading-snug">
             {t('user.settings.security.mfa.codes_ack', {
               defaultValue: 'I have saved these codes somewhere safe.',
             })}
@@ -600,7 +601,6 @@ function TwoFactorAuthSection() {
             type="button"
             onClick={finishCodes}
             disabled={!codesAcknowledged || busy}
-            className="bg-black text-white hover:bg-black/90"
           >
             {busy && <Loader2 size={14} className="animate-spin" />}
             {t('user.settings.security.mfa.done', { defaultValue: 'Done' })}
@@ -611,16 +611,16 @@ function TwoFactorAuthSection() {
   } else if (step === 'password') {
     // Step 1: confirm the password before we hand out a secret.
     body = (
-      <div className="rounded-lg border border-gray-200 p-4 space-y-4">
+      <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <KeyRound size={16} className="text-gray-400" />
-          <p className="text-sm font-medium text-gray-800">
+          <KeyRound size={16} className="text-neutral-400" />
+          <p className="text-sm font-medium text-neutral-800">
             {t('user.settings.security.mfa.step_password_title', {
               defaultValue: 'Confirm your password',
             })}
           </p>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-neutral-500">
           {t('user.settings.security.mfa.step_password_body', {
             defaultValue: 'For your security, enter your current password to continue.',
           })}
@@ -655,7 +655,6 @@ function TwoFactorAuthSection() {
             type="button"
             onClick={() => runSetup(password)}
             disabled={busy || !password}
-            className="bg-black text-white hover:bg-black/90"
           >
             {busy && <Loader2 size={14} className="animate-spin" />}
             {t('user.settings.security.mfa.continue', { defaultValue: 'Continue' })}
@@ -666,16 +665,16 @@ function TwoFactorAuthSection() {
   } else if (step === 'scan') {
     // Step 2: QR + the raw secret for desktop authenticators.
     body = (
-      <div className="rounded-lg border border-gray-200 p-4 space-y-4">
+      <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Smartphone size={16} className="text-gray-400" />
-          <p className="text-sm font-medium text-gray-800">
+          <Smartphone size={16} className="text-neutral-400" />
+          <p className="text-sm font-medium text-neutral-800">
             {t('user.settings.security.mfa.step_scan_title', {
               defaultValue: 'Scan this with your authenticator app',
             })}
           </p>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-neutral-500">
           {t('user.settings.security.mfa.step_scan_body', {
             defaultValue:
               'Open an authenticator app (1Password, Google Authenticator, Authy, …) and scan the code below.',
@@ -683,7 +682,7 @@ function TwoFactorAuthSection() {
         </p>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="flex items-center justify-center bg-white border border-gray-200 rounded-lg p-3 w-[224px] h-[224px] shrink-0">
+          <div className="flex items-center justify-center bg-white border border-neutral-200 rounded-lg p-3 w-[224px] h-[224px] shrink-0">
             {qrDataUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
@@ -695,24 +694,24 @@ function TwoFactorAuthSection() {
                 })}
               />
             ) : qrFailed ? (
-              <p className="text-xs text-gray-500 text-center px-3">
+              <p className="text-xs text-neutral-500 text-center px-3">
                 {t('user.settings.security.mfa.qr_failed', {
                   defaultValue: 'The QR code could not be drawn. Use the setup key instead.',
                 })}
               </p>
             ) : (
-              <Loader2 size={20} className="animate-spin text-gray-400" />
+              <Loader2 size={20} className="animate-spin text-neutral-400" />
             )}
           </div>
 
           <div className="min-w-0 flex-1 space-y-2">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
               {t('user.settings.security.mfa.secret_label', {
                 defaultValue: 'Or enter this setup key manually',
               })}
             </p>
             <div className="flex items-center gap-2">
-              <code className="font-mono text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 break-all select-all min-w-0 flex-1">
+              <code className="font-mono text-sm text-neutral-800 bg-neutral-50 border border-neutral-200 rounded-md px-3 py-2 break-all select-all min-w-0 flex-1">
                 {secret || '…'}
               </code>
               <Button
@@ -729,7 +728,7 @@ function TwoFactorAuthSection() {
                 {copied === 'secret' ? <Check size={14} /> : <Copy size={14} />}
               </Button>
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-neutral-500">
               {t('user.settings.security.mfa.secret_hint', {
                 defaultValue: 'Useful for desktop authenticator apps that cannot scan a QR code.',
               })}
@@ -750,7 +749,6 @@ function TwoFactorAuthSection() {
               setStep('verify')
             }}
             disabled={busy || !secret}
-            className="bg-black text-white hover:bg-black/90"
           >
             {busy && <Loader2 size={14} className="animate-spin" />}
             {t('user.settings.security.mfa.continue', { defaultValue: 'Continue' })}
@@ -761,10 +759,10 @@ function TwoFactorAuthSection() {
   } else if (step === 'verify') {
     // Step 3: prove the app is set up before we switch 2FA on.
     body = (
-      <div className="rounded-lg border border-gray-200 p-4 space-y-4">
+      <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <ShieldCheck size={16} className="text-gray-400" />
-          <p className="text-sm font-medium text-gray-800">
+          <ShieldCheck size={16} className="text-neutral-400" />
+          <p className="text-sm font-medium text-neutral-800">
             {t('user.settings.security.mfa.step_verify_title', {
               defaultValue: 'Confirm the code from your app',
             })}
@@ -789,7 +787,6 @@ function TwoFactorAuthSection() {
             type="button"
             onClick={confirmEnrollment}
             disabled={busy || code.length !== 6 || retryAfter > 0}
-            className="bg-black text-white hover:bg-black/90"
           >
             {busy && <Loader2 size={14} className="animate-spin" />}
             {retryAfter > 0
@@ -808,17 +805,17 @@ function TwoFactorAuthSection() {
     const remaining = status.backup_codes_remaining ?? 0
     const lowOnCodes = remaining <= BACKUP_CODES_LOW_THRESHOLD
     body = (
-      <div className="rounded-lg border border-gray-200 p-4 space-y-4">
+      <div className="space-y-4">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 shrink-0">
               <ShieldCheck size={18} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-800">
+              <p className="text-sm font-medium text-neutral-800">
                 {t('user.settings.security.mfa.enabled', { defaultValue: 'Enabled' })}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-neutral-500">
                 {status.confirmed_at
                   ? t('user.settings.security.mfa.enabled_since', {
                       defaultValue: 'Since {{date}}',
@@ -854,8 +851,8 @@ function TwoFactorAuthSection() {
             </Button>
             <Button
               type="button"
-              variant="outline"
-              className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+              variant="danger-ghost"
+              className="gap-1.5"
               disabled={busy}
               onClick={() => {
                 setError(null)
@@ -874,11 +871,11 @@ function TwoFactorAuthSection() {
         <div
           className={
             lowOnCodes
-              ? 'flex items-center gap-2 text-amber-700 bg-amber-50 p-3 rounded-md'
-              : 'flex items-center gap-2 text-gray-600 bg-gray-50 p-3 rounded-md'
+              ? 'flex items-center gap-2 text-amber-700 bg-amber-50 px-3 py-2.5 rounded-xl'
+              : 'flex items-center gap-2 text-neutral-600 bg-neutral-50 px-3 py-2.5 rounded-xl'
           }
         >
-          {lowOnCodes ? <ShieldAlert size={16} /> : <KeyRound size={16} className="text-gray-400" />}
+          {lowOnCodes ? <ShieldAlert size={16} /> : <KeyRound size={16} className="text-neutral-400" />}
           <span className="text-sm">
             {/* Interpolated as `remaining`, not `count`: `count` would put
                 i18next into plural mode and look for suffixed keys. */}
@@ -898,8 +895,8 @@ function TwoFactorAuthSection() {
         </div>
 
         {panel === 'regenerate' && (
-          <div className="border-t border-gray-100 pt-4 space-y-4">
-            <p className="text-sm text-gray-500">
+          <div className="border-t border-neutral-100 pt-4 space-y-4">
+            <p className="text-sm text-neutral-500">
               {t('user.settings.security.mfa.regenerate_body', {
                 defaultValue:
                   'Generating a new set immediately invalidates all of your existing backup codes.',
@@ -924,7 +921,6 @@ function TwoFactorAuthSection() {
                 type="button"
                 onClick={regenerateCodes}
                 disabled={busy || code.length !== 6 || retryAfter > 0}
-                className="bg-black text-white hover:bg-black/90"
               >
                 {busy && <Loader2 size={14} className="animate-spin" />}
                 {retryAfter > 0
@@ -941,8 +937,8 @@ function TwoFactorAuthSection() {
         )}
 
         {panel === 'disable' && (
-          <div className="border-t border-gray-100 pt-4 space-y-4">
-            <div className="flex items-start gap-2 text-amber-700 bg-amber-50 p-3 rounded-md">
+          <div className="border-t border-neutral-100 pt-4 space-y-4">
+            <div className="flex items-start gap-2 text-amber-700 bg-amber-50 px-3 py-2.5 rounded-xl">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
               <span className="text-sm">
                 {t('user.settings.security.mfa.disable_warning', {
@@ -1015,16 +1011,16 @@ function TwoFactorAuthSection() {
   } else {
     // Disabled, nothing in flight.
     body = (
-      <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 p-4 flex-wrap">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 text-gray-400 shrink-0">
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-neutral-100 text-neutral-400 shrink-0">
             <ShieldOff size={18} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-800">
+            <p className="text-sm font-medium text-neutral-800">
               {t('user.settings.security.mfa.not_enabled', { defaultValue: 'Not enabled' })}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-neutral-500">
               {t('user.settings.security.mfa.not_enabled_hint', {
                 defaultValue:
                   'Protect your account by also requiring a one-time code from your authenticator app when you sign in.',
@@ -1036,7 +1032,7 @@ function TwoFactorAuthSection() {
           type="button"
           onClick={startEnrollment}
           disabled={busy}
-          className="bg-black text-white hover:bg-black/90 shrink-0"
+          className="shrink-0"
         >
           {busy && <Loader2 size={14} className="animate-spin" />}
           {t('user.settings.security.mfa.enable', { defaultValue: 'Enable' })}
@@ -1046,10 +1042,14 @@ function TwoFactorAuthSection() {
   }
 
   return (
-    <>
-      {sectionHeader}
-      <div className="mx-5 mb-6">{body}</div>
-    </>
+    <SectionCard
+      title={t('user.settings.security.mfa.title', { defaultValue: 'Two-factor authentication' })}
+      description={t('user.settings.security.mfa.subtitle', {
+        defaultValue: 'Ask for a one-time code from your authenticator app whenever you sign in.',
+      })}
+    >
+      {body}
+    </SectionCard>
   )
 }
 
@@ -1057,6 +1057,7 @@ function AccountSecurity() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
   const { t } = useTranslation();
+  const [section, setSection] = useSubTab<Section>('password', SECTIONS, { rememberAs: 'account:security' })
 
   // Current device/browser, parsed client-side from the user agent (in an effect
   // to avoid SSR hydration mismatch).
@@ -1114,125 +1115,135 @@ function AccountSecurity() {
   }
 
   return (
-    <>
-    <div className="bg-white rounded-xl nice-shadow">
-      <div className="flex flex-col gap-0">
-        {/* Current session / device */}
-        <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mt-3 rounded-md">
-          <h1 className="font-bold text-xl text-gray-800">
-            {t('user.settings.security.current_session_title', { defaultValue: 'Current session' })}
-          </h1>
-          <h2 className="text-gray-500 text-md">
-            {t('user.settings.security.current_session_subtitle', { defaultValue: 'The device you are signed in from right now.' })}
-          </h2>
-        </div>
-        <div className="mx-5 mt-3 mb-6">
-          <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <Monitor className="text-gray-400 shrink-0" size={20} />
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">
-                  {device ? [device.browser, device.os].filter(Boolean).join(' · ') : 'n/a'}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {t('user.settings.security.this_device', { defaultValue: 'This device' })}
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/') })}
-              className="gap-1.5 shrink-0"
+    <SubTabs
+      ariaLabel={t('account.security')}
+      value={section}
+      onChange={setSection}
+      items={[
+        { key: 'password', label: t('user.settings.password.title'), icon: <KeyIcon size={15} /> },
+        {
+          key: 'two-factor',
+          label: t('user.settings.security.mfa.title', { defaultValue: 'Two-factor authentication' }),
+          icon: <ShieldCheckIcon size={15} />,
+        },
+        {
+          key: 'session',
+          label: t('user.settings.security.current_session_title', { defaultValue: 'Current session' }),
+          icon: <DesktopIcon size={15} />,
+        },
+        { key: 'delete', label: t('account.delete.title', { defaultValue: 'Delete account' }), icon: <WarningIcon size={15} /> },
+      ]}
+    >
+      <SubTabPanel tab="password">
+        <SectionCard title={t('user.settings.password.title')} description={t('user.settings.password.subtitle')}>
+          <div>
+            <Formik
+              initialValues={{ old_password: '', new_password: '' }}
+              validationSchema={validationSchema}
+              onSubmit={async (values, { setSubmitting }) => {
+                // Keep the form disabled for the WHOLE request (the old 400ms
+                // setTimeout released it before the async call even ran, allowing
+                // double-submit).
+                try {
+                  await updatePasswordUI(values)
+                } finally {
+                  setSubmitting(false)
+                }
+              }}
             >
-              <LogOut size={14} />
-              {t('user.settings.security.sign_out', { defaultValue: 'Sign out' })}
-            </Button>
+              {({ isSubmitting, handleChange, errors, touched }) => (
+                <Form className="w-full max-w-md space-y-4">
+                  <div>
+                    <Label htmlFor="old_password">{t('user.settings.password.current_password')}</Label>
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      id="old_password"
+                      name="old_password"
+                      onChange={handleChange}
+                      className="mt-1"
+                    />
+                    {touched.old_password && errors.old_password && (
+                      <p className="text-rose-600 text-xs font-medium mt-1.5">{t(errors.old_password as string)}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="new_password">{t('user.settings.password.new_password')}</Label>
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      id="new_password"
+                      name="new_password"
+                      onChange={handleChange}
+                      className="mt-1"
+                    />
+                    {touched.new_password && errors.new_password && (
+                      <p className="text-rose-600 text-xs font-medium mt-1.5">{t(errors.new_password as string)}</p>
+                    )}
+                  </div>
+
+                  <AccountNotice tone="warning" icon={<AlertTriangle size={15} weight="fill" />}>
+                    {t('user.settings.password.logout_warning')}
+                  </AccountNotice>
+
+                  <div className="flex pt-1">
+                    <Button
+                      type="submit"
+                      loading={isSubmitting}
+                    >
+                      {isSubmitting ? t('user.settings.password.updating') : t('user.settings.password.update_password')}
+                    </Button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
           </div>
-        </div>
+        </SectionCard>
+      </SubTabPanel>
 
-        <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-          <h1 className="font-bold text-xl text-gray-800">
-            {t('user.settings.password.title')}
-          </h1>
-          <h2 className="text-gray-500 text-md">
-            {t('user.settings.password.subtitle')}
-          </h2>
-        </div>
-
-        <div className="mx-5 mb-5">
-          <Formik
-            initialValues={{ old_password: '', new_password: '' }}
-            validationSchema={validationSchema}
-            onSubmit={async (values, { setSubmitting }) => {
-              // Keep the form disabled for the WHOLE request (the old 400ms
-              // setTimeout released it before the async call even ran, allowing
-              // double-submit).
-              try {
-                await updatePasswordUI(values)
-              } finally {
-                setSubmitting(false)
-              }
-            }}
-          >
-            {({ isSubmitting, handleChange, errors, touched }) => (
-              <Form className="w-full max-w-2xl mx-auto space-y-6">
-                <div>
-                  <Label htmlFor="old_password">{t('user.settings.password.current_password')}</Label>
-                  <Input
-                    type="password"
-                    autoComplete="current-password"
-                    id="old_password"
-                    name="old_password"
-                    onChange={handleChange}
-                    className="mt-1"
-                  />
-                  {touched.old_password && errors.old_password && (
-                    <p className="text-red-500 text-sm mt-1">{t(errors.old_password as string)}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="new_password">{t('user.settings.password.new_password')}</Label>
-                  <Input
-                    type="password"
-                    autoComplete="new-password"
-                    id="new_password"
-                    name="new_password"
-                    onChange={handleChange}
-                    className="mt-1"
-                  />
-                  {touched.new_password && errors.new_password && (
-                    <p className="text-red-500 text-sm mt-1">{t(errors.new_password as string)}</p>
-                  )}
-                </div>
-
-                <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-3 rounded-md">
-                  <AlertTriangle size={16} />
-                  <span className="text-sm">{t('user.settings.password.logout_warning')}</span>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-black text-white hover:bg-black/90"
-                  >
-                    {isSubmitting ? t('user.settings.password.updating') : t('user.settings.password.update_password')}
-                  </Button>
-                </div>
-              </Form>
-            )}
-          </Formik>
-        </div>
-
+      <SubTabPanel tab="two-factor">
         {/* Two-factor authentication (TOTP) */}
         <TwoFactorAuthSection />
-      </div>
-    </div>
+      </SubTabPanel>
 
-    {/* Danger zone: delete account (also deletes solely-owned orgs + content) */}
-    <AccountDangerZone />
-    </>
+      <SubTabPanel tab="session">
+        {/* Current session / device */}
+        <SectionCard
+          title={t('user.settings.security.current_session_title', { defaultValue: 'Current session' })}
+          description={t('user.settings.security.current_session_subtitle', { defaultValue: 'The device you are signed in from right now.' })}
+        >
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <Monitor className="text-neutral-400 shrink-0" size={20} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-neutral-800 truncate">
+                    {device ? [device.browser, device.os].filter(Boolean).join(' · ') : 'n/a'}
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    {t('user.settings.security.this_device', { defaultValue: 'This device' })}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/') })}
+                className="gap-1.5 shrink-0"
+              >
+                <LogOut size={14} />
+                {t('user.settings.security.sign_out', { defaultValue: 'Sign out' })}
+              </Button>
+            </div>
+          </div>
+        </SectionCard>
+      </SubTabPanel>
+
+      {/* Danger zone: delete account (also deletes solely-owned orgs + content) */}
+      <SubTabPanel tab="delete">
+        <AccountDangerZone />
+      </SubTabPanel>
+    </SubTabs>
   )
 }
 

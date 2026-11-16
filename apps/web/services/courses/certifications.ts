@@ -65,13 +65,18 @@ export async function deleteCertification(
   return res
 }
 
+// `lang` on certificate reads: the learner's content language list, so the
+// course name comes in the published language version they read.
+const langQs = (lang?: string) => (lang ? `&lang=${encodeURIComponent(lang)}` : '')
+
 export async function getUserCertificates(
   course_uuid: string,
   org_id: number,
-  access_token: string
+  access_token: string,
+  lang?: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/user/course/${course_uuid}?org_id=${org_id}`,
+    `${getAPIUrl()}certifications/user/course/${course_uuid}?org_id=${org_id}${langQs(lang)}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
@@ -80,10 +85,11 @@ export async function getUserCertificates(
 
 export async function getCertificateByUuid(
   user_certification_uuid: string,
-  org_id: number
+  org_id: number,
+  lang?: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/certificate/${user_certification_uuid}?org_id=${org_id}`,
+    `${getAPIUrl()}certifications/certificate/${user_certification_uuid}?org_id=${org_id}${langQs(lang)}`,
     {
       method: 'GET',
       headers: {
@@ -97,10 +103,11 @@ export async function getCertificateByUuid(
 
 export async function getAllUserCertificates(
   org_id: number,
-  access_token: string
+  access_token: string,
+  lang?: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/user/all?org_id=${org_id}`,
+    `${getAPIUrl()}certifications/user/all?org_id=${org_id}${langQs(lang)}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   const res = await getResponseMetadata(result)

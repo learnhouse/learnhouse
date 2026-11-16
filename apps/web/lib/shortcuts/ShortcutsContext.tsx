@@ -70,7 +70,9 @@ export function ShortcutsProvider({ children }: { children: React.ReactNode }) {
       if (e.defaultPrevented || e.repeat) return
       const token = tokenFromEvent(e)
       if (!token) return
-      const target = e.target as HTMLElement | null
+      // Some browsers (Yandex on Android) dispatch synthetic key events on the
+      // document itself, which has no getAttribute/closest.
+      const target = e.target instanceof Element ? (e.target as HTMLElement) : null
       if (isActivationKeyOnControl(token, target ? { tagName: target.tagName, role: target.getAttribute('role') } : null)) return
       const inDialog = !!target?.closest?.('[role="dialog"]')
       const ignored = isIgnoredTarget(

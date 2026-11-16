@@ -1,19 +1,19 @@
 'use client'
 import React, { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd'
-import { useQuery } from '@tanstack/react-query'
+import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import { BookCopy, Check, GripVertical, ListOrdered, Loader2, Plus, Search, X } from 'lucide-react'
+import { Medal, CheckCircle, Flag, DotsSixVertical, CircleNotch, Lock, Minus, Plus, Shuffle, Sparkle, Trophy, X } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
 import { useOrg } from '@components/Contexts/OrgContext'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Switch } from '@components/ui/switch'
-import { getOrgCourses } from '@services/courses/courses'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { Path, PathCourseCard, setPathCourses, updatePath } from '@services/paths/paths'
+import { BTN_PRIMARY_SM, Chip, SectionCard, SettingRow } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { getUriWithOrg } from '@services/config/config'
+import { Path, PathCourseCard, removePathPrefix, setPathCourses, updatePath } from '@services/paths/paths'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { usePathCache } from './usePathSave'
-import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+import PathCoursePicker, { PathCourseThumb } from './PathCoursePicker'
 
 type Row = { course_uuid: string; required: boolean; course: PathCourseCard }
 
@@ -25,15 +25,39 @@ function rowsFrom(path: Path): Row[] {
   }))
 }
 
-function CourseThumb({ course, orgUuid }: { course: PathCourseCard; orgUuid: string }) {
-  const src = course.thumbnail_image
-    ? getCourseThumbnailMediaDirectory(orgUuid, course.course_uuid, course.thumbnail_image)
-    : '/empty_thumbnail.png'
+const SPRING = { type: 'spring', stiffness: 380, damping: 30 } as const
+
+// The track column of the journey: a node with a dashed line running down to
+// the next one. `last` drops the line so the track ends on the finish node.
+function TrackColumn({ node, last, faded }: { node: React.ReactNode; last?: boolean; faded?: boolean }) {
   return (
-    <ThumbnailImage
-      src={src}
-      className="w-20 aspect-video rounded-md bg-gray-100 shrink-0 ring-1 ring-black/5"
-    />
+    <div className="flex flex-col items-center w-10 shrink-0">
+      {node}
+      {!last && (
+        <div
+          className={`flex-1 w-0 min-h-3 border-s-2 border-dashed border-neutral-200 transition-opacity ${faded ? 'opacity-0' : ''}`}
+        />
+      )}
+    </div>
+  )
+}
+
+function StepNode({ index, required, locked }: { index: number; required: boolean; locked: boolean }) {
+  return (
+    <span
+      className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold tabular-nums shrink-0 transition-colors ${
+        required
+          ? 'bg-sky-500 text-white ring-4 ring-sky-100'
+          : 'bg-violet-50 text-violet-600 outline-2 outline-dashed outline-violet-400 -outline-offset-2'
+      }`}
+    >
+      {index + 1}
+      {locked && (
+        <span className="absolute -bottom-1 -end-1 w-5 h-5 rounded-full bg-white nice-shadow text-neutral-500 flex items-center justify-center">
+          <Lock size={10} />
+        </span>
+      )}
+    </span>
   )
 }
 
@@ -43,15 +67,17 @@ function EditPathCourses({ path, orgslug }: { path: Path; orgslug: string }) {
   const { accessToken, store } = usePathCache()
   const [rows, setRows] = useState<Row[]>(() => rowsFrom(path))
   const [saving, setSaving] = useState(false)
+  const [savingRule, setSavingRule] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [electives, setElectives] = useState(path.electives_required)
+  // Optimistic values while a rule change is in flight.
+  const [pendingElectives, setPendingElectives] = useState<number | null>(null)
+  const [pendingSequential, setPendingSequential] = useState<boolean | null>(null)
 
   // Re-seed local state whenever a save hands back a fresh path.
   const [seededFrom, setSeededFrom] = useState(path)
   if (seededFrom !== path) {
     setSeededFrom(path)
     setRows(rowsFrom(path))
-    setElectives(path.electives_required)
   }
 
   const persist = async (next: Row[]) => {
@@ -74,10 +100,15 @@ function EditPathCourses({ path, orgslug }: { path: Path; orgslug: string }) {
   }
 
   const saveRules = async (body: { sequential?: boolean; electives_required?: number }) => {
+    setSavingRule(true)
     try {
       store(await updatePath(path.path_uuid, body, accessToken))
     } catch (error: any) {
       toast.error(getErrorMessage(error?.detail, t('paths.toasts.save_error')))
+    } finally {
+      setSavingRule(false)
+      setPendingElectives(null)
+      setPendingSequential(null)
     }
   }
 
@@ -92,79 +123,121 @@ function EditPathCourses({ path, orgslug }: { path: Path; orgslug: string }) {
   const excluded = useMemo(() => new Set(rows.map((r) => r.course_uuid)), [rows])
   const requiredCount = rows.filter((r) => r.required).length
   const electiveCount = rows.length - requiredCount
+  const sequential = pendingSequential ?? path.sequential
+  const electives = pendingElectives ?? Math.min(path.electives_required, electiveCount)
+  const firstRequired = rows.findIndex((r) => r.required)
+
+  const stepElectives = (delta: number) => {
+    const next = Math.max(0, Math.min(electiveCount, electives + delta))
+    if (next === electives) return
+    setPendingElectives(next)
+    saveRules({ electives_required: next })
+  }
+
+  const toggleSequential = (checked: boolean) => {
+    setPendingSequential(checked)
+    saveRules({ sequential: checked })
+  }
+
+  const certificateHref = getUriWithOrg(orgslug, `/dash/paths/path/${removePathPrefix(path.path_uuid)}/certificate`)
 
   return (
-    <div className="px-4 sm:px-10 pt-6 space-y-6">
-      <div className="bg-white rounded-xl shadow-sm px-4 py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 px-3 sm:px-5 py-3 rounded-md mb-4">
-          <div className="flex flex-col -space-y-1">
-            <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-              {t('paths.dashboard.courses.title')}
-              {saving && <Loader2 size={14} className="animate-spin text-gray-400" />}
-            </h2>
-            <p className="text-gray-500 text-xs sm:text-sm">{t('paths.dashboard.courses.subtitle')}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setPickerOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors shrink-0"
-          >
-            <Plus size={16} />
+    <div className="px-4 sm:px-10 pt-6 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-6 items-start">
+      {/* ---- The journey ---- */}
+      <SectionCard
+        title={
+          <span className="flex items-center gap-2">
+            {t('paths.dashboard.courses.title')}
+            {saving && <CircleNotch size={14} className="animate-spin text-neutral-400" />}
+          </span>
+        }
+        description={t('paths.dashboard.courses.subtitle')}
+        actions={
+          <button type="button" onClick={() => setPickerOpen(true)} className={BTN_PRIMARY_SM}>
+            <Plus size={14} />
             {t('paths.dashboard.courses.add')}
           </button>
+        }
+        bodyClassName="px-5 pb-6 pt-4"
+      >
+        {rows.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-5">
+            <Chip tone="sky" icon={<span className="w-2 h-2 rounded-full bg-sky-500" />}>
+              {t('paths.dashboard.journey.required_count', { count: requiredCount })}
+            </Chip>
+            <Chip tone="violet" icon={<span className="w-2 h-2 rounded-full outline-1 outline-dashed outline-violet-500 bg-white" />}>
+              {t('paths.dashboard.journey.elective_count', { count: electiveCount })}
+            </Chip>
+            {sequential && (
+              <Chip tone="neutral" icon={<Lock size={11} />}>
+                {t('paths.dashboard.rules.sequential')}
+              </Chip>
+            )}
+          </div>
+        )}
+
+        {/* Start */}
+        <div className="flex gap-4">
+          <TrackColumn
+            node={
+              <span className="w-10 h-10 rounded-full bg-neutral-900 text-white flex items-center justify-center shrink-0">
+                <Flag size={16} />
+              </span>
+            }
+          />
+          <div className="pt-2.5 pb-5 text-xs font-bold uppercase tracking-wider text-neutral-400">
+            {t('paths.dashboard.journey.start')}
+          </div>
         </div>
 
-        {rows.length === 0 ? (
-          <div className="bg-gray-50 border border-dashed border-gray-200 rounded-lg p-10 text-center">
-            <ListOrdered className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="font-medium text-gray-700 mb-1">{t('paths.dashboard.courses.empty_title')}</h3>
-            <p className="text-sm text-gray-500 mb-4">{t('paths.dashboard.courses.empty_description')}</p>
-            <button
-              type="button"
-              onClick={() => setPickerOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <Plus size={16} />
-              {t('paths.dashboard.courses.add')}
-            </button>
-          </div>
-        ) : (
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="path-courses">
-              {(provided) => (
-                <ol
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  aria-label={t('paths.dashboard.courses.title')}
-                  className="space-y-2"
-                >
-                  {rows.map((row, index) => (
-                    <Draggable key={row.course_uuid} draggableId={row.course_uuid} index={index}>
-                      {(drag, snapshot) => (
-                        <li
-                          ref={drag.innerRef}
-                          {...drag.draggableProps}
-                          className={`flex items-center gap-3 bg-white border rounded-lg px-3 py-2.5 transition-shadow ${
-                            snapshot.isDragging ? 'border-gray-300 shadow-lg' : 'border-gray-100 hover:border-gray-200'
+        {/* Steps */}
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="path-courses">
+            {(provided) => (
+              <ol ref={provided.innerRef} {...provided.droppableProps} aria-label={t('paths.dashboard.courses.title')}>
+                {rows.map((row, index) => (
+                  <Draggable key={row.course_uuid} draggableId={row.course_uuid} index={index}>
+                    {(drag, snapshot) => (
+                      <li ref={drag.innerRef} {...drag.draggableProps} className="flex gap-4">
+                        <TrackColumn
+                          faded={snapshot.isDragging}
+                          node={
+                            <StepNode
+                              index={index}
+                              required={row.required}
+                              locked={sequential && firstRequired !== -1 && index > firstRequired}
+                            />
+                          }
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          // Stagger only the entrance; hover reacts right away.
+                          animate={{ opacity: 1, y: 0, transition: { ...SPRING, delay: Math.min(index, 10) * 0.035 } }}
+                          transition={SPRING}
+                          whileHover={snapshot.isDragging ? undefined : { y: -2 }}
+                          className={`group flex-1 min-w-0 mb-3 flex flex-wrap sm:flex-nowrap items-center gap-3 rounded-2xl bg-white px-3 py-2.5 transition-[box-shadow,rotate,scale] duration-200 ${
+                            snapshot.isDragging
+                              ? 'shadow-2xl ring-2 ring-neutral-900/10 rotate-1 scale-[1.02]'
+                              : 'ring-1 ring-neutral-200/80 hover:ring-neutral-300 hover:shadow-md'
                           }`}
                         >
                           <span
                             {...drag.dragHandleProps}
                             aria-label={t('paths.dashboard.courses.drag')}
-                            className="text-gray-300 hover:text-gray-500 cursor-grab"
+                            className="text-neutral-300 hover:text-neutral-500 cursor-grab active:cursor-grabbing"
                           >
-                            <GripVertical size={18} />
+                            <DotsSixVertical size={18} />
                           </span>
-                          <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-xs font-bold flex items-center justify-center shrink-0">
-                            {index + 1}
-                          </span>
-                          <CourseThumb course={row.course} orgUuid={org?.org_uuid} />
+                          <PathCourseThumb course={row.course} orgUuid={org?.org_uuid} />
                           <div className="min-w-0 flex-1">
-                            <div className="font-semibold text-sm text-gray-900 truncate" dir="auto">
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                              {t('paths.dashboard.journey.step', { n: index + 1 })}
+                            </div>
+                            <div className="font-semibold text-sm text-neutral-900 truncate" dir="auto">
                               {row.course.name}
                             </div>
                             {row.course.published === false && (
-                              <span className="text-[10px] font-bold uppercase tracking-wide text-yellow-700">
+                              <span className="text-[11px] font-medium text-amber-600">
                                 {t('paths.dashboard.courses.unpublished_hint')}
                               </span>
                             )}
@@ -172,95 +245,204 @@ function EditPathCourses({ path, orgslug }: { path: Path; orgslug: string }) {
                           <div
                             role="radiogroup"
                             aria-label={t('paths.dashboard.courses.requirement')}
-                            className="flex items-center bg-gray-100 rounded-lg p-0.5 text-xs font-medium shrink-0"
+                            className="flex items-center rounded-xl bg-neutral-100 p-0.5 text-xs font-semibold shrink-0"
                           >
-                            {[true, false].map((value) => (
-                              <button
-                                key={String(value)}
-                                type="button"
-                                role="radio"
-                                aria-checked={row.required === value}
-                                onClick={() =>
-                                  row.required !== value &&
-                                  persist(rows.map((r, i) => (i === index ? { ...r, required: value } : r)))
-                                }
-                                className={`px-2.5 py-1 rounded-md transition-colors ${
-                                  row.required === value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                              >
-                                {value ? t('paths.required') : t('paths.elective')}
-                              </button>
-                            ))}
+                            {[true, false].map((value) => {
+                              const active = row.required === value
+                              return (
+                                <button
+                                  key={String(value)}
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={active}
+                                  onClick={() =>
+                                    !active && persist(rows.map((r, i) => (i === index ? { ...r, required: value } : r)))
+                                  }
+                                  className={`h-7 px-2.5 rounded-lg transition-colors ${
+                                    active
+                                      ? value
+                                        ? 'bg-white text-sky-700 shadow-sm'
+                                        : 'bg-white text-violet-700 shadow-sm'
+                                      : 'text-neutral-500 hover:text-neutral-800'
+                                  }`}
+                                >
+                                  {value ? t('paths.required') : t('paths.elective')}
+                                </button>
+                              )
+                            })}
                           </div>
                           <button
                             type="button"
                             onClick={() => persist(rows.filter((_, i) => i !== index))}
                             aria-label={t('paths.dashboard.courses.remove')}
-                            className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title={t('paths.dashboard.courses.remove')}
+                            className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-neutral-300 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                           >
                             <X size={16} />
                           </button>
-                        </li>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </ol>
-              )}
-            </Droppable>
-          </DragDropContext>
-        )}
-      </div>
+                        </motion.div>
+                      </li>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </ol>
+            )}
+          </Droppable>
+        </DragDropContext>
 
-      <div className="bg-white rounded-xl shadow-sm px-4 py-4">
-        <div className="flex flex-col -space-y-1 bg-gray-50 px-3 sm:px-5 py-3 rounded-md mb-4">
-          <h2 className="font-bold text-lg text-gray-800">{t('paths.dashboard.rules.title')}</h2>
-          <p className="text-gray-500 text-xs sm:text-sm">{t('paths.dashboard.rules.subtitle')}</p>
+        {/* Add a course */}
+        <div className="flex gap-4">
+          <TrackColumn
+            node={
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                aria-label={t('paths.dashboard.courses.add')}
+                className="w-10 h-10 rounded-full bg-white text-neutral-400 outline-2 outline-dashed outline-neutral-300 -outline-offset-2 flex items-center justify-center shrink-0 hover:text-neutral-900 hover:outline-neutral-500 transition-colors"
+              >
+                <Plus size={18} />
+              </button>
+            }
+          />
+          <motion.button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={SPRING}
+            className="flex-1 min-w-0 mb-3 rounded-2xl border-2 border-dashed border-neutral-200 px-4 py-3.5 text-start hover:border-neutral-300 hover:bg-neutral-50/70 transition-colors"
+          >
+            <span className="block text-sm font-semibold text-neutral-800">
+              {rows.length === 0 ? t('paths.dashboard.courses.empty_title') : t('paths.dashboard.courses.add')}
+            </span>
+            <span className="block text-xs text-neutral-500 mt-0.5">
+              {rows.length === 0 ? t('paths.dashboard.courses.empty_description') : t('paths.dashboard.journey.add_hint')}
+            </span>
+          </motion.button>
         </div>
-        <div className="divide-y divide-gray-100">
-          <div className="flex items-start justify-between gap-6 px-1 sm:px-2 py-4">
-            <div>
-              <div className="text-sm font-medium text-gray-900">{t('paths.dashboard.rules.sequential')}</div>
-              <p className="text-xs text-gray-500 mt-0.5 max-w-xl">{t('paths.dashboard.rules.sequential_hint')}</p>
-            </div>
-            <Switch
-              checked={path.sequential}
-              onCheckedChange={(checked) => saveRules({ sequential: checked })}
-              aria-label={t('paths.dashboard.rules.sequential')}
-            />
-          </div>
-          <div className="flex items-start justify-between gap-6 px-1 sm:px-2 py-4">
-            <div>
-              <div className="text-sm font-medium text-gray-900">{t('paths.dashboard.rules.electives')}</div>
-              <p className="text-xs text-gray-500 mt-0.5 max-w-xl">
-                {electiveCount
-                  ? t('paths.dashboard.rules.electives_hint', { count: electiveCount })
-                  : t('paths.dashboard.rules.electives_none')}
+
+        {/* Finish */}
+        <div className="flex gap-4">
+          <TrackColumn
+            last
+            node={
+              <motion.span
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0.15 }}
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  path.certificate_enabled ? 'bg-amber-400 text-white ring-4 ring-amber-100' : 'bg-neutral-100 text-neutral-500'
+                }`}
+              >
+                {path.certificate_enabled ? <Medal size={18} /> : <Trophy size={17} />}
+              </motion.span>
+            }
+          />
+          <div className="pt-1 min-w-0">
+            <div className="text-sm font-semibold text-neutral-900">{t('paths.dashboard.journey.finish')}</div>
+            {path.certificate_enabled ? (
+              <p className="text-xs text-amber-700">{t('paths.dashboard.journey.finish_certificate')}</p>
+            ) : (
+              <p className="text-xs text-neutral-500">
+                {t('paths.dashboard.journey.finish_plain')}{' '}
+                <Link href={certificateHref} className="font-semibold text-neutral-700 hover:text-neutral-900 underline underline-offset-2">
+                  {t('paths.dashboard.certificate.enable')}
+                </Link>
               </p>
-            </div>
-            <input
-              type="number"
-              min={0}
-              max={electiveCount}
-              disabled={!electiveCount}
-              value={electives}
-              onChange={(e) => setElectives(Math.max(0, Math.min(electiveCount, Number(e.target.value) || 0)))}
-              onBlur={() => electives !== path.electives_required && saveRules({ electives_required: electives })}
-              aria-label={t('paths.dashboard.rules.electives')}
-              className="w-20 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-400"
-            />
+            )}
           </div>
         </div>
-        <p className="mt-2 px-1 sm:px-2 text-xs text-gray-500 flex items-center gap-1.5">
-          <Check size={14} className="text-green-600 shrink-0" />
-          {t('paths.dashboard.rules.summary', {
-            required: requiredCount,
-            electives: Math.min(path.electives_required, electiveCount),
-          })}
-        </p>
+      </SectionCard>
+
+      {/* ---- Completion rules ---- */}
+      <div className="xl:sticky xl:top-6 flex flex-col gap-4">
+        <SectionCard
+          icon={<Sparkle size={16} />}
+          title={
+            <span className="flex items-center gap-2">
+              {t('paths.dashboard.rules.title')}
+              {savingRule && <CircleNotch size={14} className="animate-spin text-neutral-400" />}
+            </span>
+          }
+          description={t('paths.dashboard.rules.subtitle')}
+        >
+          <div className="divide-y divide-neutral-100">
+            <SettingRow
+              icon={<Lock size={16} />}
+              title={t('paths.dashboard.rules.sequential')}
+              description={t('paths.dashboard.rules.sequential_hint')}
+              control={
+                <Switch
+                  checked={sequential}
+                  disabled={savingRule}
+                  onCheckedChange={toggleSequential}
+                  aria-label={t('paths.dashboard.rules.sequential')}
+                />
+              }
+            />
+            <SettingRow
+              icon={<Shuffle size={16} />}
+              title={t('paths.dashboard.rules.electives')}
+              description={
+                electiveCount
+                  ? t('paths.dashboard.rules.electives_hint', { count: electiveCount })
+                  : t('paths.dashboard.rules.electives_none')
+              }
+              control={
+                <div
+                  className={`inline-flex items-center rounded-xl bg-neutral-100 p-0.5 ${electiveCount ? '' : 'opacity-50'}`}
+                  role="group"
+                  aria-label={t('paths.dashboard.rules.electives')}
+                >
+                  <button
+                    type="button"
+                    onClick={() => stepElectives(-1)}
+                    disabled={savingRule || electives <= 0}
+                    aria-label={t('paths.dashboard.rules.decrease')}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-neutral-600 hover:bg-white hover:shadow-sm disabled:opacity-40 disabled:pointer-events-none transition-all"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <motion.span
+                    key={electives}
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={SPRING}
+                    className="w-8 text-center text-sm font-bold text-neutral-900 tabular-nums"
+                    aria-live="polite"
+                  >
+                    {electives}
+                  </motion.span>
+                  <button
+                    type="button"
+                    onClick={() => stepElectives(1)}
+                    disabled={savingRule || electives >= electiveCount}
+                    aria-label={t('paths.dashboard.rules.increase')}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-neutral-600 hover:bg-white hover:shadow-sm disabled:opacity-40 disabled:pointer-events-none transition-all"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              }
+            />
+          </div>
+        </SectionCard>
+
+        <div className="rounded-2xl bg-emerald-50/70 ring-1 ring-inset ring-emerald-100 px-5 py-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900">
+            <CheckCircle size={16} className="text-emerald-600 shrink-0" />
+            {t('paths.dashboard.rules.summary_title')}
+          </div>
+          <p className="mt-1.5 text-sm text-emerald-900/80 leading-relaxed">
+            {t('paths.dashboard.rules.summary', { required: requiredCount, electives })}{' '}
+            {sequential ? t('paths.dashboard.rules.summary_sequential') : t('paths.dashboard.rules.summary_free')}{' '}
+            {path.certificate_enabled && t('paths.dashboard.rules.summary_certificate')}
+          </p>
+        </div>
       </div>
 
-      <CoursePicker
+      <PathCoursePicker
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         orgslug={orgslug}
@@ -271,140 +453,6 @@ function EditPathCourses({ path, orgslug }: { path: Path; orgslug: string }) {
         }
       />
     </div>
-  )
-}
-
-function CoursePicker({
-  open,
-  onClose,
-  orgslug,
-  orgUuid,
-  exclude,
-  onAdd,
-}: {
-  open: boolean
-  onClose: () => void
-  orgslug: string
-  orgUuid: string
-  exclude: Set<string>
-  onAdd: (courses: PathCourseCard[]) => void
-}) {
-  const { t } = useTranslation()
-  const { accessToken } = usePathCache()
-  const [query, setQuery] = useState('')
-  const [selected, setSelected] = useState<string[]>([])
-
-  const { data: courses, isLoading } = useQuery({
-    queryKey: ['courses', orgslug, 'all-for-paths'],
-    queryFn: () => getOrgCourses(orgslug, {}, accessToken, true),
-    enabled: open && !!accessToken,
-    staleTime: 30_000,
-  })
-
-  const close = () => {
-    setSelected([])
-    setQuery('')
-    onClose()
-  }
-
-  const available: PathCourseCard[] = (courses || []).filter(
-    (c: PathCourseCard) =>
-      !exclude.has(c.course_uuid) && (c.name || '').toLowerCase().includes(query.trim().toLowerCase())
-  )
-
-  const toggle = (uuid: string) =>
-    setSelected((prev) => (prev.includes(uuid) ? prev.filter((u) => u !== uuid) : [...prev, uuid]))
-
-  const confirm = () => {
-    // Keep the order the author picked them in.
-    const byUuid = new Map((courses || []).map((c: PathCourseCard) => [c.course_uuid, c]))
-    onAdd(selected.map((uuid) => byUuid.get(uuid)).filter(Boolean) as PathCourseCard[])
-    close()
-  }
-
-  return (
-    <Modal
-      isDialogOpen={open}
-      onOpenChange={(value) => !value && close()}
-      dialogTitle={t('paths.dashboard.picker.title')}
-      dialogDescription={t('paths.dashboard.picker.description')}
-      minWidth="md"
-      dialogContent={
-        <div className="space-y-4">
-          <div className="relative">
-            <Search size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('paths.dashboard.picker.search')}
-              className="w-full ps-9 pe-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none text-sm"
-            />
-          </div>
-          <div className="max-h-[360px] overflow-y-auto -mx-1 px-1 space-y-1">
-            {isLoading && (
-              <div className="flex justify-center py-8">
-                <Loader2 className="animate-spin text-gray-400" />
-              </div>
-            )}
-            {!isLoading && available.length === 0 && (
-              <div className="text-center py-8 text-sm text-gray-500">
-                <BookCopy className="mx-auto mb-2 text-gray-300" />
-                {t('paths.dashboard.picker.empty')}
-              </div>
-            )}
-            {available.map((course) => {
-              const index = selected.indexOf(course.course_uuid)
-              const isSelected = index !== -1
-              return (
-                <button
-                  key={course.course_uuid}
-                  type="button"
-                  onClick={() => toggle(course.course_uuid)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-lg border text-start transition-colors ${
-                    isSelected ? 'border-gray-200 bg-gray-50' : 'border-transparent hover:bg-gray-50'
-                  }`}
-                >
-                  <span
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                      isSelected ? 'bg-black border-black text-white' : 'border-gray-300'
-                    }`}
-                  >
-                    {isSelected ? index + 1 : ''}
-                  </span>
-                  <CourseThumb course={course} orgUuid={orgUuid} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-gray-900 truncate" dir="auto">{course.name}</span>
-                    {course.published === false && (
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-yellow-700">
-                        {t('paths.draft')}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={close}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="button"
-              disabled={!selected.length}
-              onClick={confirm}
-              className="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t('paths.dashboard.picker.add', { count: selected.length })}
-            </button>
-          </div>
-        </div>
-      }
-    />
   )
 }
 

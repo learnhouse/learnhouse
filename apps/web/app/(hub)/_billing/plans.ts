@@ -16,6 +16,10 @@
 // Live prices/limits come from GET /api/billing/prices and are layered on top
 // of these static values via `applyPlanLimits` / the PriceOverrides props; the
 // static catalog is only the fallback when Stripe prices are unavailable.
+//
+// Limits have ONE source: apps/api/src/security/features_utils/plans.py. The
+// numbers below are only what renders before the live limits load, and
+// tests/billing-catalog-limits.test.ts fails when they drift from plans.py.
 
 export type Billing = "monthly" | "annual";
 export type PlanId =
@@ -129,7 +133,7 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Free",
     inheritsBadge: BADGE.free,
     features: [
-      { label: "500 Members", limitKey: "members" },
+      { label: "200 Members", limitKey: "members" },
       { label: "2 Admin seats", limitKey: "admin_seats" },
       { label: "Standard AI", badge: "1,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Unlimited Courses" },
@@ -156,11 +160,11 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Standard",
     inheritsBadge: BADGE.standard,
     features: [
-      { label: "1,000 Members", limitKey: "members" },
+      { label: "500 Members", limitKey: "members" },
       { label: "10 Admin seats", limitKey: "admin_seats" },
-      { label: "Advanced AI", badge: "3,000 Credits", badgeLimitKey: "ai_credits" },
+      { label: "Advanced AI", badge: "2,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Certifications" },
-      { label: "Playgrounds" },
+      { label: "Plays" },
       { label: "Boards" },
       { label: "Custom Domains" },
       { label: "Versioning" },
@@ -188,7 +192,6 @@ export const PERSONAL_PLANS: Plan[] = [
       { label: "1 Member", limitKey: "members" },
       { label: "Standard AI", badge: "500 Credits", badgeLimitKey: "ai_credits" },
       { label: "Boards" },
-      { label: "Playgrounds" },
     ],
   },
   {

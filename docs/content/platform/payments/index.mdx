@@ -48,3 +48,13 @@ Only Stripe Checkout needs a connected Stripe account. Every other way of sellin
 
 - **Standard**: connect your own Stripe account with OAuth.
 - **Express**: LearnHouse creates a Stripe Express account for you, which makes onboarding quicker.
+
+## When checkout stops working
+
+If your payment provider refuses a checkout (for example, your Stripe account was disconnected or Stripe restricted it), LearnHouse tells you right away instead of letting learners run into errors:
+
+- Admins get a notification and an email, at most once a day, and the **Payments** pages show a banner with the number of failed checkouts and since when.
+- Learners see that checkout is temporarily unavailable rather than an error. LearnHouse tries again every 30 minutes, so a provider that recovers is picked up on its own.
+- **Check again** on the banner asks Stripe whether your account can take payments. Reconnecting your account in **Payments** → **Settings**, or the next successful checkout, clears the warning.
+
+Declined cards and learners who leave the checkout page don't count: they happen on Stripe's page and aren't a problem with your setup.

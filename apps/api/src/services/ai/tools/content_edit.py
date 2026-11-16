@@ -33,6 +33,11 @@ from src.services.ai.tools import markdown as md
 from src.services.ai.tools import refs, results
 from src.services.ai.tools.base import ActionTier, ToolContext, ToolSpec, jsonable, require_approval
 from src.services.courses.activities.activities import get_activity, update_activity
+from src.services.courses.activities.comment_marks import (
+    COMMENT_MARK,
+    comment_thread_ids,
+    strip_comment_marks,
+)
 from src.services.courses.activities.versioning import (
     get_activity_versions,
     restore_activity_version,
@@ -209,6 +214,64 @@ def _under(path: list[int], roots: list[list[int]]) -> bool:
     return any(path[: len(r)] == r for r in roots)
 
 
+COMMENTS_NOTE = (
+    "Blocks with has_comments carry editor comment threads on some of their text (the threads "
+    "themselves are not shown). Rewriting or deleting that text detaches its thread: say so "
+    "to the member before you do it."
+)
+
+
+def _commented_paths(doc: Any) -> list[list[int]]:
+    """Paths of the blocks whose own text carries a comment mark."""
+    found: list[list[int]] = []
+    stack: list[tuple[Any, list[int]]] = [(doc, [])]
+    while stack:
+        node, path = stack.pop()
+        kids = node.get("content") if isinstance(node, dict) else None
+        if not isinstance(kids, list) or len(path) > 50:
+            continue
+        if path and any(
+            isinstance(kid, dict)
+            and any(isinstance(m, dict) and m.get("type") == COMMENT_MARK for m in kid.get("marks") or [])
+            for kid in kids
+        ):
+            found.append(path)
+        stack.extend((kid, [*path, i]) for i, kid in enumerate(kids))
+    return sorted(found)
+
+
+def _flag_comments(blocks: list[dict], commented: list[list[int]]) -> None:
+    """Mark each outline entry holding commented text with has_comments; a
+    container only when none of its own listed blocks holds that text."""
+    listed = [b["path"] for b in blocks]
+    for block in blocks:
+        path = block["path"]
+        for c in commented:
+            if c[: len(path)] != path:
+                continue
+            deeper = any(len(o) > len(path) and o[: len(path)] == path and c[: len(o)] == o for o in listed)
+            if not deeper:
+                block["has_comments"] = True
+                break
+
+
+def detached_threads(before: Any, after: Any) -> int:
+    """How many comment threads lost all of their text in an edit."""
+    return len(comment_thread_ids(before) - comment_thread_ids(after))
+
+
+def note_detached(out: dict, before: Any, after: Any) -> None:
+    lost = detached_threads(before, after)
+    if lost:
+        out["detached_comments"] = lost
+        out["notes"] = [
+            *out.get("notes", []),
+            f"This edit removed the text of {lost} comment thread{'s' if lost != 1 else ''}; "
+            f"{'they are' if lost != 1 else 'it is'} now detached (still open, with no text on the page). "
+            "Tell the member.",
+        ]
+
+
 def _outline(doc: dict, p: GetContentParams) -> dict:
     entries = list(d.outline_entries(doc, BLOCK_TEXT))
     if p.paths:
@@ -344,7 +407,11 @@ async def _get_content(ctx: ToolContext, p: GetContentParams):
     # content for this reader, exactly as the page itself would.
     activity = jsonable(await get_activity(ctx.request, p.activity_uuid, ctx.user, ctx.db_session))
     page = Page(row, course)
-    doc = d.normalize_legacy(copy.deepcopy(d.ensure_doc(activity.get("content"))))
+    # Editor comment anchors are not page content: the agent neither sees nor
+    # writes them, only learns which blocks have some (has_comments).
+    raw = d.normalize_legacy(copy.deepcopy(d.ensure_doc(activity.get("content"))))
+    commented = _commented_paths(raw)
+    doc = strip_comment_marks(raw)
     out: dict[str, Any] = {
         "activity": await page.ref(ctx),
         "version": int(activity.get("current_version") or 1),
@@ -353,6 +420,8 @@ async def _get_content(ctx: ToolContext, p: GetContentParams):
     }
     if p.format == "outline":
         out.update(_outline(doc, p))
+        if commented:
+            _flag_comments(out["blocks"], commented)
     elif p.format == "markdown":
         out.update(await _in_thread(_markdown, doc, p))
     else:
@@ -366,6 +435,10 @@ async def _get_content(ctx: ToolContext, p: GetContentParams):
                 missing.append(list(path))
         if missing:
             out["missing_paths"] = missing
+    if commented:
+        if p.format != "outline":
+            out["commented_blocks"] = commented[:50]
+        out["comments_note"] = COMMENTS_NOTE
     return results.untrusted(out)
 
 
@@ -490,6 +563,7 @@ async def _write_content(ctx: ToolContext, p: WriteContentParams):
         )
     if notes:
         out["notes"] = notes
+    note_detached(out, old_doc, new_doc)
     if undo:
         out["undo"] = undo
     return out
@@ -765,6 +839,7 @@ async def _edit_content(ctx: ToolContext, p: EditContentParams):
     )
     if notes:
         out["notes"] = sorted(notes)
+    note_detached(out, original, doc)
     if undo:
         out["undo"] = undo
     return out

@@ -28,3 +28,119 @@
   pointer-events: none;
   border-image: linear-gradient(rgb(0 0 0 / 0.45), transparent) fill 0 / 0 / 0 100vmax;
 }
+
+/*
+  Focus mode (activity.tsx). The page's own wrapper turns into a fixed layer
+  (.lh-focus) with its own scroll; data-focus="dark" is the video theater,
+  "light" the reading mode. The page behind stops scrolling.
+*/
+html.lh-focus-open {
+  overflow: hidden;
+}
+
+/* Theater stage: the video as large as the viewport allows at 16:9, with
+   room for the top bar and the bottom dock. */
+.lh-focus-stage-video {
+  max-width: min(100%, calc((100dvh - 12.5rem) * 16 / 9));
+}
+
+/* Phones: the bottom activity bar replaces the dock, and the video sits in
+   the middle of the screen between the two bars, theater style. */
+@media (max-width: 767px) {
+  .lh-focus-stage-video {
+    max-width: none;
+  }
+  .lh-focus[data-focus='dark'] .lh-focus-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100dvh - 3.5rem - var(--lh-safe-top));
+  }
+}
+
+/* Chapter strip and its heading read on the dark stage. */
+.lh-focus[data-focus='dark'] .lh-focus-stage section h2 {
+  color: rgb(255 255 255 / 0.4);
+}
+
+/* The chapter outline trigger is a light pill; on the theater it goes dark. */
+.lh-focus-dark-dropdown > div > button {
+  background: rgb(255 255 255 / 0.07);
+  color: rgb(255 255 255 / 0.85);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+.lh-focus-dark-dropdown > div > button:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+.lh-focus-dark-dropdown > div > button * {
+  color: inherit !important;
+}
+
+/* Phone held sideways: the video fills the screen edge to edge; the top bar
+   floats over it on a soft shade and fades with the controls. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .lh-focus[data-focus='dark'] .lh-focus-topbar {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    background: linear-gradient(rgb(0 0 0 / 0.65), transparent);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .lh-focus[data-focus='dark'] .lh-focus-topbar > div:last-child {
+    display: none;
+  }
+  .lh-focus[data-focus='dark'] .lh-focus-dock {
+    display: none;
+  }
+  .lh-focus[data-focus='dark'] .lh-focus-body {
+    padding: 0;
+    max-width: none;
+  }
+  .lh-focus[data-focus='dark'] .lh-focus-stage-video {
+    max-width: none;
+    margin: 0;
+  }
+  .lh-focus[data-focus='dark'] .lh-video-frame {
+    aspect-ratio: auto;
+    height: 100dvh;
+  }
+  /* The bar above names the lesson already. */
+  .lh-focus[data-focus='dark'] .lh-video-frame .media-title {
+    display: none;
+  }
+  .lh-focus[data-focus='dark'] .lh-video-frame .learnhouse-player,
+  .lh-focus[data-focus='dark'] .lh-video-frame .learnhouse-player .media-skin,
+  .lh-focus[data-focus='dark'] .lh-video-frame .learnhouse-player .media-container {
+    --media-video-border-radius: 0px;
+    --media-border-radius: 0px;
+    border-radius: 0;
+  }
+}
+
+/* Entering and leaving focus cross-fade (view transitions); the activity
+   box morphs between its two places. Skipped for reduced motion in JS. */
+.lh-vt-stage {
+  view-transition-name: lh-activity-stage;
+}
+::view-transition-group(lh-activity-stage) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+}
+
+/* Focus mode is distraction-free: the floating live-session card and the chat
+   heads step aside until it's turned off (they'd sit on the bottom dock). */
+html.lh-focus-open [data-live-now-banner],
+html.lh-focus-open [data-chat-dock] {
+  display: none !important;
+}
+
+/* Bottom activity bar (ActivityNavBar): with no center control (signed out,
+   not a member), the two hairlines would sit side by side; keep one. */
+.lh-activity-nav .lh-nav-center:empty + .lh-nav-div {
+  display: none;
+}

@@ -112,3 +112,28 @@ class TestResetPool:
         redis_module._pool = None
         reset_pool()
         assert redis_module._pool is None
+
+
+class TestSharedClient:
+    def test_second_call_reuses_the_client(self):
+        redis_module._pool = MagicMock()
+        built = []
+        with patch("redis.Redis", side_effect=lambda **kw: built.append(kw) or MagicMock()):
+            first = get_redis_client()
+            second = get_redis_client()
+        assert first is second
+        assert len(built) == 1
+
+    def test_a_new_pool_gets_a_new_client(self):
+        redis_module._pool = MagicMock()
+        with patch("redis.Redis", side_effect=lambda **kw: MagicMock()):
+            first = get_redis_client()
+            redis_module._pool = MagicMock()
+            second = get_redis_client()
+        assert first is not second
+
+    def test_reset_drops_the_client(self):
+        redis_module._client = MagicMock()
+        redis_module._client_pool = MagicMock()
+        reset_pool()
+        assert redis_module._client is None and redis_module._client_pool is None

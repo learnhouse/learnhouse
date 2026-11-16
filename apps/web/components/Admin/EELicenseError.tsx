@@ -66,14 +66,14 @@ export default function EELicenseError({ error }: { error: unknown }) {
   if (!error) return null
   if (isEERequiredError(error)) {
     return (
-      <div className="rounded-2xl border border-sky-400/20 bg-sky-400/[0.06] p-5 my-4">
+      <div className="rounded-2xl bg-sky-50 ring-1 ring-inset ring-sky-600/10 p-5">
         <div className="flex items-start gap-3">
-          <Warning size={20} weight="fill" className="text-sky-300 mt-0.5 shrink-0" />
+          <Warning size={20} weight="fill" className="text-sky-600 mt-0.5 shrink-0" />
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-sky-200">
+            <div className="text-sm font-semibold text-sky-900">
               {t('admin.ee_error.required_title')}
             </div>
-            <p className="text-xs text-sky-200/80 mt-1.5 leading-relaxed">
+            <p className="text-sm text-sky-800 mt-1 leading-relaxed">
               {t('admin.ee_error.required_desc')}
             </p>
           </div>
@@ -83,25 +83,25 @@ export default function EELicenseError({ error }: { error: unknown }) {
   }
   if (isEELicenseInactiveError(error)) {
     return (
-      <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] p-5 my-4">
+      <div className="rounded-2xl bg-amber-50 ring-1 ring-inset ring-amber-600/10 p-5">
         <div className="flex items-start gap-3">
-          <Warning size={20} weight="fill" className="text-amber-300 mt-0.5 shrink-0" />
+          <Warning size={20} weight="fill" className="text-amber-600 mt-0.5 shrink-0" />
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-amber-200">
+            <div className="text-sm font-semibold text-amber-900">
               {t('admin.ee_error.inactive_title')}
             </div>
-            <p className="text-xs text-amber-200/80 mt-1.5 leading-relaxed">
+            <p className="text-sm text-amber-800 mt-1 leading-relaxed">
               <Trans
                 i18nKey="admin.ee_error.inactive_desc"
                 values={{ reason: error.detail.reason }}
                 components={{ code: <code className="font-mono" /> }}
               />
             </p>
-            <details className="mt-3 text-xs text-amber-200/70">
-              <summary className="cursor-pointer hover:text-amber-200 select-none">
+            <details className="mt-3 text-xs text-amber-800">
+              <summary className="cursor-pointer font-medium hover:text-amber-950 select-none">
                 {t('admin.ee_error.what_to_check')}
               </summary>
-              <ul className="mt-2 space-y-1 list-disc list-inside leading-relaxed">
+              <ul className="mt-2 space-y-1 list-disc ps-4 leading-relaxed">
                 {error.detail.diagnostics && (
                   <li>
                     <Trans
@@ -140,12 +140,12 @@ export default function EELicenseError({ error }: { error: unknown }) {
   // Generic error fallback
   const msg = error instanceof Error ? error.message : String(error)
   return (
-    <div className="rounded-2xl border border-red-400/20 bg-red-400/[0.06] p-5 my-4">
+    <div className="rounded-2xl bg-rose-50 ring-1 ring-inset ring-rose-600/10 p-5">
       <div className="flex items-start gap-3">
-        <Warning size={20} weight="fill" className="text-red-300 mt-0.5 shrink-0" />
+        <Warning size={20} weight="fill" className="text-rose-600 mt-0.5 shrink-0" />
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-red-200">{t('admin.ee_error.failed_to_load')}</div>
-          <p className="text-xs text-red-200/80 mt-1 leading-relaxed break-words">{msg}</p>
+          <div className="text-sm font-semibold text-rose-900">{t('admin.ee_error.failed_to_load')}</div>
+          <p className="text-sm text-rose-800 mt-1 leading-relaxed break-words">{msg}</p>
         </div>
       </div>
     </div>

@@ -1,26 +1,21 @@
 'use client'
-import FormLayout, {
-  FormField,
-  FormLabelAndMessage,
-  Input,
-  Textarea,
-} from '@components/Objects/StyledElements/Form/Form';
+import FormLayout from '@components/Objects/StyledElements/Form/Form';
 import { useFormik } from 'formik';
-import { AlertTriangle } from 'lucide-react';
 import * as Form from '@radix-ui/react-form';
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import ThumbnailUpdate from './ThumbnailUpdate';
 import { useCourseFieldSync } from '@components/Contexts/CourseContext';
 import FormTagInput from '@components/Objects/StyledElements/Form/TagInput';
 import LearningItemsList from './LearningItemsList';
-import {
-  CustomSelect,
-  CustomSelectContent,
-  CustomSelectItem,
-  CustomSelectTrigger,
-  CustomSelectValue,
-} from "./CustomSelect";
 import { useTranslation } from 'react-i18next';
+import { Image as ImageIcon, ListChecks, TextAa } from '@phosphor-icons/react';
+import { INPUT, TEXTAREA, SectionCard, SegmentedControl } from '@components/Dashboard/Shared/DashKit/DashKit';
+import { EditorPage, EditorSkeleton, ErrorNotice, FormRow } from '../courseEditorUi';
+import { SubTabPanel, SubTabs, useSubTab } from '@components/Dashboard/Shared/DashKit/SubTabs';
+
+const SECTIONS = ['details', 'learnings', 'thumbnail'] as const;
+type Section = (typeof SECTIONS)[number];
+const DETAIL_FIELDS = ['name', 'description', 'about', 'tags'];
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -69,11 +64,14 @@ const validate = (values: any, t: any) => {
 function EditCourseGeneral(props: EditCourseStructureProps) {
   const { t } = useTranslation()
   const [error, setError] = useState('');
+  const [section, setSection] = useSubTab<Section>('details', SECTIONS, { rememberAs: 'course-editor:general' });
 
   // Use the new field sync hook
   const {
     syncChanges,
     courseStructure,
+    pendingChanges,
+    unsyncedChanges,
     isLoading,
     isSaving,
   } = useCourseFieldSync('editCourseGeneral');
@@ -171,76 +169,58 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
 
   if (isLoading || !courseStructure) {
     return (
-      <div className="h-full">
-        <div className="h-6" />
-        <div className="px-4 sm:px-10 pb-10">
-          <div className="bg-white rounded-xl shadow-xs p-6">
-            <div className="animate-pulse space-y-6">
-              {/* Name field */}
-              <div className="space-y-2">
-                <div className="h-3.5 bg-gray-200 rounded w-24" />
-                <div className="h-10 bg-gray-100 rounded-lg w-full" />
-              </div>
-              {/* Description field */}
-              <div className="space-y-2">
-                <div className="h-3.5 bg-gray-200 rounded w-32" />
-                <div className="h-10 bg-gray-100 rounded-lg w-full" />
-              </div>
-              {/* About field */}
-              <div className="space-y-2">
-                <div className="h-3.5 bg-gray-200 rounded w-20" />
-                <div className="h-[200px] bg-gray-100 rounded-lg w-full" />
-              </div>
-              {/* Learnings field */}
-              <div className="space-y-2">
-                <div className="h-3.5 bg-gray-200 rounded w-36" />
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-10 bg-gray-100 rounded-lg w-full" />
-                  ))}
-                </div>
-              </div>
-              {/* Tags field */}
-              <div className="space-y-2">
-                <div className="h-3.5 bg-gray-200 rounded w-16" />
-                <div className="h-10 bg-gray-100 rounded-lg w-full" />
-              </div>
-              {/* Thumbnail type field */}
-              <div className="space-y-2">
-                <div className="h-3.5 bg-gray-200 rounded w-28" />
-                <div className="h-10 bg-gray-100 rounded-lg w-48" />
-              </div>
-              {/* Thumbnail field */}
-              <div className="space-y-2">
-                <div className="h-3.5 bg-gray-200 rounded w-24" />
-                <div className="h-40 bg-gray-100 rounded-xl w-full" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <EditorPage>
+        <EditorSkeleton sections={3} />
+      </EditorPage>
     );
   }
 
-  return (
-    <div className="h-full">
-      <div className="h-6" />
-      <div className="px-4 sm:px-10 pb-10">
-        <div className="bg-white rounded-xl shadow-xs">
-          <FormLayout onSubmit={formik.handleSubmit} className="p-6">
-            {error && (
-              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 mb-6 transition-all shadow-xs">
-                <AlertTriangle size={18} />
-                <div className="font-bold text-sm">{error}</div>
-              </div>
-            )}
+  // Edits sync into the course store (and reinitialize the form), so the
+  // store's unsaved fields are what marks a sub-tab, as in the main tab bar.
+  const unsaved = { ...pendingChanges, ...unsyncedChanges };
+  const changed = (key: string) => key in unsaved || formik.values[key] !== formik.initialValues[key];
 
-            <div className="space-y-6">
-              <FormField name="name">
-                <FormLabelAndMessage label={t('dashboard.courses.general.form.name_label')} message={formik.errors.name} />
+  return (
+    <EditorPage>
+      <FormLayout onSubmit={formik.handleSubmit} className="space-y-5">
+        {error && <ErrorNotice>{error}</ErrorNotice>}
+
+        <SubTabs
+          ariaLabel={t('dashboard.courses.settings.tabs.general')}
+          value={section}
+          onChange={setSection}
+          items={[
+            {
+              key: 'details',
+              label: t('dashboard.subtabs.details', 'Details'),
+              icon: <TextAa size={15} />,
+              dirty: DETAIL_FIELDS.some(changed),
+            },
+            {
+              key: 'learnings',
+              label: t('dashboard.courses.general.form.learnings_label'),
+              icon: <ListChecks size={15} />,
+              dirty: changed('learnings'),
+            },
+            {
+              key: 'thumbnail',
+              label: t('dashboard.courses.general.form.thumbnail_label'),
+              icon: <ImageIcon size={15} />,
+              dirty: changed('thumbnail_type'),
+            },
+          ]}
+        >
+          <SubTabPanel tab="details">
+            <SectionCard
+              icon={<TextAa size={18} />}
+              title={t('dashboard.courses.editor.general.details_title')}
+              description={t('dashboard.courses.editor.general.details_description')}
+              bodyClassName="p-5 space-y-5"
+            >
+              <FormRow name="name" label={t('dashboard.courses.general.form.name_label')} error={formik.errors.name}>
                 <Form.Control asChild>
-                  <Input
-                    style={{ backgroundColor: 'white' }}
+                  <input
+                    className={INPUT}
                     onChange={formik.handleChange}
                     value={formik.values.name}
                     type="text"
@@ -248,13 +228,12 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                     disabled={isSaving}
                   />
                 </Form.Control>
-              </FormField>
+              </FormRow>
 
-              <FormField name="description">
-                <FormLabelAndMessage label={t('dashboard.courses.general.form.description_label')} message={formik.errors.description} />
+              <FormRow name="description" label={t('dashboard.courses.general.form.description_label')} error={formik.errors.description}>
                 <Form.Control asChild>
-                  <Input
-                    style={{ backgroundColor: 'white' }}
+                  <input
+                    className={INPUT}
                     onChange={formik.handleChange}
                     value={formik.values.description}
                     type="text"
@@ -262,23 +241,44 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                     disabled={isSaving}
                   />
                 </Form.Control>
-              </FormField>
+              </FormRow>
 
-              <FormField name="about">
-                <FormLabelAndMessage label={t('dashboard.courses.general.form.about_label')} message={formik.errors.about} />
+              <FormRow name="about" label={t('dashboard.courses.general.form.about_label')} error={formik.errors.about}>
                 <Form.Control asChild>
-                  <Textarea
-                    style={{ backgroundColor: 'white', height: '200px', minHeight: '200px' }}
+                  <textarea
+                    className={`${TEXTAREA} h-[200px] min-h-[200px] resize-y`}
                     onChange={formik.handleChange}
                     value={formik.values.about}
                     required
                     disabled={isSaving}
                   />
                 </Form.Control>
-              </FormField>
+              </FormRow>
 
-              <FormField name="learnings">
-                <FormLabelAndMessage label={t('dashboard.courses.general.form.learnings_label')} message={formik.touched.learnings ? formik.errors.learnings : undefined} />
+              <FormRow
+                name="tags"
+                label={t('dashboard.courses.general.form.tags_label')}
+                error={formik.errors.tags}
+                hint={t('dashboard.courses.editor.general.tags_hint')}
+              >
+                <Form.Control asChild>
+                  <FormTagInput
+                    placeholder={t('dashboard.courses.general.form.tags_placeholder')}
+                    onChange={(value) => formik.setFieldValue('tags', value)}
+                    value={formik.values.tags}
+                  />
+                </Form.Control>
+              </FormRow>
+            </SectionCard>
+          </SubTabPanel>
+
+          <SubTabPanel tab="learnings">
+            <SectionCard
+              icon={<ListChecks size={18} />}
+              title={t('dashboard.courses.general.form.learnings_label')}
+              description={t('dashboard.courses.editor.general.learnings_description')}
+            >
+              <Form.Field name="learnings">
                 <Form.Control asChild>
                   <LearningItemsList
                     value={formik.values.learnings}
@@ -289,57 +289,41 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                     error={formik.touched.learnings ? formik.errors.learnings : undefined}
                   />
                 </Form.Control>
-              </FormField>
+              </Form.Field>
+            </SectionCard>
+          </SubTabPanel>
 
-              <FormField name="tags">
-                <FormLabelAndMessage label={t('dashboard.courses.general.form.tags_label')} message={formik.errors.tags} />
-                <Form.Control asChild>
-                  <FormTagInput
-                    placeholder={t('dashboard.courses.general.form.tags_placeholder')}
-                    onChange={(value) => formik.setFieldValue('tags', value)}
-                    value={formik.values.tags}
-                  />
-                </Form.Control>
-              </FormField>
-
-              <FormField name="thumbnail_type">
-                <FormLabelAndMessage label={t('dashboard.courses.general.form.thumbnail_type_label')} />
-                <Form.Control asChild>
-                  <CustomSelect
-                    value={formik.values.thumbnail_type}
-                    onValueChange={(value) => {
-                      if (!value) return;
-                      formik.setFieldValue('thumbnail_type', value);
-                    }}
-                    disabled={isSaving}
-                  >
-                    <CustomSelectTrigger className="w-full bg-white">
-                      <CustomSelectValue>
-                        {formik.values.thumbnail_type === 'image' ? t('dashboard.courses.general.form.thumbnail_type_image') :
-                         formik.values.thumbnail_type === 'video' ? t('dashboard.courses.general.form.thumbnail_type_video') :
-                         formik.values.thumbnail_type === 'both' ? t('dashboard.courses.general.form.thumbnail_type_both') : t('dashboard.courses.general.form.thumbnail_type_image')}
-                      </CustomSelectValue>
-                    </CustomSelectTrigger>
-                    <CustomSelectContent>
-                      <CustomSelectItem value="image">{t('dashboard.courses.general.form.thumbnail_type_image')}</CustomSelectItem>
-                      <CustomSelectItem value="video">{t('dashboard.courses.general.form.thumbnail_type_video')}</CustomSelectItem>
-                      <CustomSelectItem value="both">{t('dashboard.courses.general.form.thumbnail_type_both')}</CustomSelectItem>
-                    </CustomSelectContent>
-                  </CustomSelect>
-                </Form.Control>
-              </FormField>
-
-              <FormField name="thumbnail">
-                <FormLabelAndMessage label={t('dashboard.courses.general.form.thumbnail_label')} />
+          <SubTabPanel tab="thumbnail">
+            <SectionCard
+              icon={<ImageIcon size={18} />}
+              title={t('dashboard.courses.general.form.thumbnail_label')}
+              description={t('dashboard.courses.editor.general.thumbnail_description')}
+              actions={
+                <SegmentedControl
+                  ariaLabel={t('dashboard.courses.general.form.thumbnail_type_label')}
+                  value={formik.values.thumbnail_type as 'image' | 'video' | 'both'}
+                  options={[
+                    { key: 'image', label: t('dashboard.courses.general.form.thumbnail_type_image') },
+                    { key: 'video', label: t('dashboard.courses.general.form.thumbnail_type_video') },
+                    { key: 'both', label: t('dashboard.courses.general.form.thumbnail_type_both') },
+                  ]}
+                  onChange={(value) => {
+                    if (!value || isSaving) return;
+                    formik.setFieldValue('thumbnail_type', value);
+                  }}
+                />
+              }
+            >
+              <Form.Field name="thumbnail">
                 <Form.Control asChild>
                   <ThumbnailUpdate thumbnailType={formik.values.thumbnail_type} />
                 </Form.Control>
-              </FormField>
-            </div>
-          </FormLayout>
-        </div>
-      </div>
-    </div>
+              </Form.Field>
+            </SectionCard>
+          </SubTabPanel>
+        </SubTabs>
+      </FormLayout>
+    </EditorPage>
   );
 }
 

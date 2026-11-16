@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent API demo</title>
+    <style>
+      :root { --ink: #1c1917; --muted: #78716c; --line: #e7e5e4; --paper: #fafaf9; --card: #fff; --brand: #0f766e; --brand-soft: #ccfbf1; --warn: #b45309; --danger: #b91c1c; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; background: var(--paper); color: var(--ink); }
+      .demo { display: grid; grid-template-columns: 260px 1fr 300px; height: 100vh; }
+      .side { border-right: 1px solid var(--line); padding: 16px; overflow: auto; display: flex; flex-direction: column; gap: 14px; background: var(--card); }
+      .side h1 { font-size: 15px; margin: 0; }
+      .side small { color: var(--muted); }
+      .side button.conv { all: unset; cursor: pointer; display: block; padding: 6px 8px; border-radius: 8px; font-size: 13px; }
+      .side button.conv:hover, .side button.conv[data-active] { background: var(--brand-soft); }
+      .agent-badge { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); }
+      .agent-badge .emoji { font-size: 22px; }
+      .chat { display: flex; flex-direction: column; min-width: 0; }
+      .thread { flex: 1; overflow: auto; padding: 24px clamp(16px, 5vw, 64px); display: flex; flex-direction: column; gap: 18px; }
+      .row { display: flex; gap: 10px; align-items: flex-start; }
+      .row.user { flex-direction: row-reverse; }
+      .avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; background: var(--brand-soft); }
+      .row.user .avatar { background: #e0e7ff; }
+      .bubble { max-width: min(720px, 100%); background: var(--card); border: 1px solid var(--line); border-radius: 4px 16px 16px 16px; padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+      .row.user .bubble { background: var(--brand); color: #fff; border-color: var(--brand); border-radius: 16px 4px 16px 16px; white-space: pre-wrap; }
+      .bubble .meta { font-size: 11px; color: var(--muted); }
+      .cursor { display: inline-block; width: 7px; height: 1em; background: var(--brand); vertical-align: -2px; animation: blink 1s steps(2) infinite; }
+      @keyframes blink { 50% { opacity: 0; } }
+      .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+      .tile { border-radius: 14px; padding: 12px; color: #fff; }
+      .tile b { display: block; font-size: 26px; line-height: 1.1; }
+      .tile span { font-size: 12px; opacity: 0.9; }
+      .approval { border: 2px dashed var(--warn); border-radius: 14px; padding: 12px; background: #fffbeb; display: flex; flex-direction: column; gap: 8px; }
+      .approval.destructive { border-color: var(--danger); background: #fef2f2; }
+      .approval input { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; }
+      .approval .actions { display: flex; gap: 8px; }
+      .btn { font: inherit; font-size: 13px; font-weight: 600; border-radius: 999px; border: 1px solid var(--line); background: var(--card); padding: 6px 14px; cursor: pointer; }
+      .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+      .btn:disabled { opacity: 0.5; cursor: default; }
+      .footnotes { display: flex; flex-wrap: wrap; gap: 6px; }
+      .footnote { font-size: 12px; text-decoration: none; color: var(--brand); background: var(--brand-soft); border-radius: 999px; padding: 2px 10px; }
+      .suggest { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 clamp(16px, 5vw, 64px) 8px; }
+      .composer { display: flex; gap: 8px; padding: 12px clamp(16px, 5vw, 64px) 20px; border-top: 1px solid var(--line); background: var(--card); }
+      .composer input { flex: 1; font: inherit; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--line); }
+      .status { font-size: 12px; color: var(--muted); padding: 4px clamp(16px, 5vw, 64px); }
+      .log { border-left: 1px solid var(--line); background: #1c1917; color: #d6d3d1; font: 11px/1.45 ui-monospace, monospace; padding: 12px; overflow: auto; white-space: pre-wrap; }
+      .log h2 { font: 600 12px ui-sans-serif, system-ui; color: #fff; margin: 0 0 8px; }
+      .setup { max-width: 520px; margin: 10vh auto; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+      .setup label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; }
+      .setup input { font: inherit; font-weight: 400; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+      .error { color: var(--danger); font-size: 13px; }
+      @media (max-width: 1000px) { .demo { grid-template-columns: 1fr; height: auto; min-height: 100vh; } .side, .log { display: none; } .chat { height: 100vh; } }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- The bundled web config reads process.env at import time; Vite doesn't define it. -->
+    <script>window.process = window.process || { env: {} }</script>
+    <script type="module" src="./agent.tsx"></script>
+  </body>
+</html>

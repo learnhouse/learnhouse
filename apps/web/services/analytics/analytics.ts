@@ -1,4 +1,5 @@
 import { getAPIUrl, getDeploymentMode } from '@services/config/config'
+import { activeImpersonation } from '@/lib/auth/impersonation'
 
 /**
  * Transport for org analytics events (the backend sink of useLHAnalytics).
@@ -161,6 +162,8 @@ export function trackEvent(
     if (typeof window === 'undefined' || !orgId || !eventName) return
     // OSS has no signals endpoint.
     if (getDeploymentMode() === 'oss') return
+    // An impersonation is not the member's activity.
+    if (activeImpersonation()) return
     const key = `${orgId}|${accessToken ?? ''}`
     let queue = queues.get(key)
     if (!queue) {

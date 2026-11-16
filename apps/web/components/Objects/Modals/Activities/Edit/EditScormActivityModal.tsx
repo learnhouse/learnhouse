@@ -1,13 +1,13 @@
 'use client'
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
-import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
-import { Package } from 'lucide-react'
 import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
+import { INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { ModalFormActions, useModalFormId } from '../activityFormKit'
 
 // EE component (`@ee` resolves to a no-op stub in OSS builds), dynamically imported,
 // mirroring how the activity page lazy-loads ScormActivity.
@@ -25,6 +25,7 @@ interface EditScormActivityModalProps {
 
 function EditScormActivityModal({ activity, onClose }: EditScormActivityModalProps) {
   const { t } = useTranslation()
+  const formId = useModalFormId()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -58,52 +59,28 @@ function EditScormActivityModal({ activity, onClose }: EditScormActivityModalPro
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div
-        className="relative flex items-center justify-center h-20 rounded-xl overflow-hidden"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(186,230,253,0.3) 6px, rgba(186,230,253,0.3) 7px)',
-        }}
-      >
-        <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
-          <Package size={18} className="text-sky-500" />
-          {t('activities.edit_modal.scorm_activity')}
-        </span>
-      </div>
+    <form id={formId} onSubmit={handleSubmit} className="space-y-4">
 
-      <div className="rounded-xl nice-shadow p-4 space-y-4">
+      <div className="rounded-xl ring-1 ring-inset ring-neutral-200 p-4 space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">{t('activities.modal.activity_name')}</label>
+          <label className="text-sm font-semibold text-neutral-800">{t('activities.modal.activity_name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             type="text"
             required
             placeholder={t('activities.modal.enter_name')}
-            className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+            className={INPUT}
           />
         </div>
       </div>
 
       {/* Learner results (instructor reporting) */}
-      <div className="rounded-xl nice-shadow p-4">
+      <div className="rounded-xl ring-1 ring-inset ring-neutral-200 p-4">
         <ScormResults activityUuid={activity.activity_uuid} />
       </div>
 
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-        >
-          {isSubmitting ? (
-            <LearnHouseSpinner size={18} className="[&>div]:border-t-white" />
-          ) : (
-            t('common.save_changes')
-          )}
-        </button>
-      </div>
+      <ModalFormActions submitting={isSubmitting} canSubmit={!!name.trim()} label={t('common.save_changes')} />
     </form>
   )
 }

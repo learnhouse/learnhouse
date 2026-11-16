@@ -7,3 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## UI design system
+
+New or changed UI follows the LearnHouse V2 design system. Read `design/DESIGN.md` first and import from `@/design` (DashPage, DashPageHeader, Panel, Toolbar, Button, SubTabs, StatusPill, AIButton, tokens, recipes…). Reuse a primitive, then a recipe, then a token; don't hand-roll cards, buttons or AI branding. Tokens live in `design/tokens.ts` (run `bun scripts/design-tokens.mjs` after editing); the dev-only style guide is at `/design-system`.

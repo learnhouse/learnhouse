@@ -37,8 +37,8 @@ export default function CodeSnippetTabs({
   }
 
   return (
-    <div className="rounded-lg border border-white/[0.08] bg-black/30 overflow-hidden">
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-white/[0.06] bg-white/[0.02]">
+    <div className="rounded-xl bg-[#1d1d21] ring-1 ring-inset ring-[rgb(255_255_255/0.06)] overflow-hidden">
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-[rgb(255_255_255/0.1)]">
         <div className="flex items-center gap-0.5">
           {(['curl', 'js', 'python'] as Lang[]).map((lang) => {
             const isActive = active === lang
@@ -47,10 +47,10 @@ export default function CodeSnippetTabs({
                 key={lang}
                 onClick={() => setActive(lang)}
                 className={
-                  'px-2.5 py-1 rounded text-xs transition-colors ' +
+                  'px-2.5 py-1 rounded-md text-xs font-medium transition-colors ' +
                   (isActive
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/40 hover:text-white/70')
+                    ? 'bg-[rgb(255_255_255/0.1)] text-[rgb(255_255_255/1)]'
+                    : 'text-[rgb(255_255_255/0.4)] hover:text-[rgb(255_255_255/0.7)]')
                 }
               >
                 {LANG_LABELS[lang]}
@@ -60,11 +60,11 @@ export default function CodeSnippetTabs({
         </div>
         <button
           onClick={handleCopy}
-          className="text-xs text-white/60 hover:text-white inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-white/[0.04] transition-colors"
+          className="text-xs text-[rgb(255_255_255/0.6)] hover:text-[rgb(255_255_255/1)] inline-flex items-center gap-1 px-2 py-1 rounded-md hover:bg-[rgb(255_255_255/0.1)] transition-colors"
         >
           {copied ? (
             <>
-              <Check size={12} weight="bold" className="text-emerald-300" />
+              <Check size={12} weight="bold" className="text-emerald-400" />
               {t('admin.developers.snippets.copied')}
             </>
           ) : (
@@ -75,7 +75,7 @@ export default function CodeSnippetTabs({
           )}
         </button>
       </div>
-      <pre className="px-3 py-2.5 text-xs font-mono text-white/80 whitespace-pre overflow-x-auto leading-relaxed">
+      <pre dir="ltr" className="px-3 py-2.5 text-xs font-mono text-[rgb(255_255_255/0.85)] whitespace-pre overflow-x-auto leading-relaxed">
         {code}
       </pre>
     </div>

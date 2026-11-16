@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1680 720" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A lantern passed between hands at dusk">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f5d50"/><stop offset=".55" stop-color="#6f8f6e"/><stop offset="1" stop-color="#e3c48f"/></linearGradient>
+<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd58a" stop-opacity=".9"/><stop offset="1" stop-color="#ffd58a" stop-opacity="0"/></radialGradient></defs>
+<rect width="1680" height="720" fill="url(#sky)"/>
+<path d="M0 470c200-60 360-40 560 10s380 40 560-10 360-40 560 10v240H0z" fill="#4d6f58"/>
+<path d="M0 540c260-50 480-30 720 20s520 30 960-20v180H0z" fill="#2f5d50"/>
+<path d="M0 620c300-30 600-20 900 10s500 10 780-10v100H0z" fill="#1c3a32"/>
+<circle cx="840" cy="330" r="200" fill="url(#glow)"/>
+<path d="M560 520c60-40 140-70 230-90" stroke="#d08c34" stroke-width="44" stroke-linecap="round" fill="none"/>
+<path d="M1120 520c-60-40-140-70-230-90" stroke="#b5773a" stroke-width="44" stroke-linecap="round" fill="none"/>
+<rect x="806" y="300" width="68" height="92" rx="14" fill="#f4efe6"/>
+<rect x="818" y="314" width="44" height="64" rx="8" fill="#ffcf73"/>
+<path d="M840 300v-30m-26 30a26 26 0 0 1 52 0" stroke="#f4efe6" stroke-width="6" fill="none" stroke-linecap="round"/>
+<g fill="#f4efe6" opacity=".7"><circle cx="200" cy="120" r="2"/><circle cx="380" cy="80" r="1.5"/><circle cx="560" cy="150" r="2"/><circle cx="1100" cy="90" r="2"/><circle cx="1300" cy="140" r="1.5"/><circle cx="1500" cy="70" r="2"/><circle cx="1620" cy="180" r="1.5"/><circle cx="90" cy="200" r="1.5"/></g>
+</svg>

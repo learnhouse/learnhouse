@@ -369,6 +369,7 @@ async def api_list_dynamic_learners(
 async def api_get_activity(
     request: Request,
     activity_uuid: str,
+    lang: Optional[str] = Query(None, max_length=200, description="Preferred languages, most preferred first (e.g. fr,en). Serves the published translation."),
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> ActivityRead:
@@ -376,7 +377,7 @@ async def api_get_activity(
     Get single activity by activity_id
     """
     return await get_activity(
-        request, activity_uuid, current_user=current_user, db_session=db_session
+        request, activity_uuid, current_user=current_user, db_session=db_session, lang=lang
     )
 
 

@@ -235,6 +235,41 @@ class TestCommunitiesRouter:
         assert toggle.await_args.args[2] == "👍"
         assert toggle.await_args.kwargs == {"active": True}
 
+    async def test_activity_summary_and_answer_endpoints(self, client):
+        activity = [{"community_uuid": "community_test", "discussion_count": 2, "unanswered_count": 1, "last_activity_date": "2024-01-02"}]
+        with patch("src.routers.communities.communities.get_org_communities_activity", new_callable=AsyncMock, return_value=activity) as svc:
+            response = await client.get("/api/v1/communities/org/1/activity")
+        assert response.status_code == 200
+        assert response.json() == activity
+        assert svc.call_args.args[1] == 1
+
+        summary = [{
+            "community_uuid": "community_test",
+            "discussion_count": 2,
+            "unanswered_count": 1,
+            "participant_count": 3,
+            "new_discussions_week": 1,
+            "last_activity_date": None,
+        }]
+        with patch("src.routers.communities.communities.get_org_communities_summary", new_callable=AsyncMock, return_value=summary) as svc:
+            response = await client.get("/api/v1/communities/org/1/summary")
+        assert response.status_code == 200
+        assert response.json() == summary
+        assert svc.call_args.args[1] == 1
+
+        replies = [{"discussion_uuid": "d1", "comment_count": 4, "last_comment_date": "2024-01-03"}]
+        with patch("src.routers.communities.discussions.get_community_discussions_activity", new_callable=AsyncMock, return_value=replies) as svc:
+            response = await client.get("/api/v1/communities/community_test/discussions/activity")
+        assert response.status_code == 200
+        assert response.json() == replies
+        assert svc.call_args.args[1] == "community_test"
+
+        with patch("src.routers.communities.discussions.set_discussion_answer", new_callable=AsyncMock, return_value=_mock_discussion()) as svc:
+            response = await client.put("/api/v1/discussions/d1/answer", json={"comment_uuid": "c1"})
+        assert response.status_code == 200
+        assert response.json()["discussion_uuid"] == "d1"
+        assert svc.call_args.args[1:3] == ("d1", "c1")
+
     async def test_create_community_with_course_id_validation(self, client, db, org):
         """Covers communities router lines 68-80: when course_id is supplied on
         create, the endpoint verifies the course exists (404) and belongs to the

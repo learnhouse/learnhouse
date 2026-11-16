@@ -348,6 +348,13 @@ async def test_decide_deny_redirects_with_access_denied(db, org, admin_user, mcp
     token = await authorize(db, client["client_id"], challenge)
     location = await oauth.decide_authorization(token, admin_user, None, False, None, db)
     assert parse_qs(urlparse(location).query)["error"] == ["access_denied"]
+    # Declining for an org is recorded in that org's audit log.
+    from unittest.mock import patch as _patch
+
+    with _patch.object(oauth, "audit_event") as audit:
+        await oauth.decide_authorization(token, admin_user, org.id, False, None, db)
+    assert audit.call_args.kwargs["action"] == "integrations.mcp.grant_denied"
+    assert audit.call_args.kwargs["org_id"] == org.id and audit.call_args.kwargs["outcome"] == "denied"
 
 
 async def test_decide_requires_membership(db, org, other_org, admin_user, mcp_config, frontend):

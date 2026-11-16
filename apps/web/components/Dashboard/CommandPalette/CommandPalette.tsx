@@ -7,13 +7,19 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
   BookOpen,
   User as UserIcon,
-  ChatsCircle,
   ChatCircle,
-  Cube,
+  Lightning,
   Microphone,
+  Garage,
+  GlobeStand,
+  Moon,
+  Sun,
 } from '@phosphor-icons/react'
+import { useAtlasMini } from '@ee/components/Atlas/AtlasMiniContext'
+import { planMeetsRequirement } from '@services/plans/plans'
 
 import { useCommandPalette } from './CommandPaletteContext'
+import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
 import { dashboardPages } from '@/lib/dashboard-search/registry'
 import type { SearchMeta } from '@/lib/dashboard-search/types'
 import {
@@ -31,9 +37,9 @@ import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 const CONTENT_TYPE_ICON: Record<ContentResultType, SearchMeta['icon']> = {
   course: BookOpen,
   user: UserIcon,
-  community: ChatsCircle,
+  community: Garage,
   discussion: ChatCircle,
-  playground: Cube,
+  playground: Lightning,
   podcast: Microphone,
 }
 
@@ -87,7 +93,12 @@ function groupContentResults(results: ContentResult[]): Record<ContentResultType
 export default function CommandPalette() {
   const { t } = useTranslation()
   const { open, setOpen } = useCommandPalette()
-  const isWhiteLabel = isWhiteLabelPlan(usePlan())
+  const { colorScheme, toggleColorScheme } = useColorScheme()
+  const plan = usePlan()
+  const isWhiteLabel = isWhiteLabelPlan(plan)
+  // Atlas (EE, Pro plan): "Ask Atlas" turns what was typed into a question.
+  const atlas = useAtlasMini()
+  const canAskAtlas = atlas.available && planMeetsRequirement(plan, 'pro')
   const router = useRouter()
   const { track } = useLHAnalytics('dashboard')
   const [query, setQuery] = useState('')
@@ -292,6 +303,55 @@ export default function CommandPalette() {
                   </Command.Group>
                 )
               })}
+
+              {/* Appearance: flip Light / Dark from the keyboard. */}
+              <Command.Group heading={t('common.appearance')}>
+                <Command.Item
+                  value={`${colorScheme === 'dark' ? t('common.switch_to_light') : t('common.switch_to_dark')} ${t('common.theme')} ${t('common.theme_light')} ${t('common.theme_dark')} theme dark light`}
+                  onSelect={() => {
+                    track(AnalyticsEvent.CommandPaletteResultSelected, { result_type: 'action', result_index: 0 })
+                    toggleColorScheme()
+                    setOpen(false)
+                  }}
+                  data-testid="palette-theme-toggle"
+                  className="group/item flex cursor-pointer items-center gap-3.5 rounded-lg px-3 py-2.5 text-white/70 transition-colors aria-selected:bg-white/[0.06] aria-selected:text-white"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.04] text-white/60 group-aria-selected/item:bg-white/[0.08] group-aria-selected/item:text-white">
+                    {colorScheme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                  </span>
+                  <span className="truncate text-[14px] font-medium text-white/90 group-aria-selected/item:text-white">
+                    {colorScheme === 'dark' ? t('common.switch_to_light') : t('common.switch_to_dark')}
+                  </span>
+                </Command.Item>
+              </Command.Group>
+
+              {canAskAtlas && query.trim().length > 1 && (
+                <Command.Group heading={t('dashboard.atlas.title')} forceMount>
+                  <Command.Item
+                    forceMount
+                    value={`atlas-ask ${query}`}
+                    onSelect={() => {
+                      track(AnalyticsEvent.CommandPaletteResultSelected, { result_type: 'atlas', result_index: 0 })
+                      setOpen(false)
+                      atlas.ask(query.trim())
+                    }}
+                    className="group/item flex cursor-pointer items-center gap-3.5 rounded-lg px-3 py-2.5 text-white/70 transition-colors aria-selected:bg-white/[0.06] aria-selected:text-white"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-violet-500/80 to-indigo-500/80 text-white">
+                      <GlobeStand size={15} weight="duotone" />
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col leading-snug">
+                      <span className="truncate text-[14px] font-medium text-white/90 group-aria-selected/item:text-white">
+                        {t('dashboard.atlas2.ask.palette', { defaultValue: 'Ask Atlas: “{{query}}”', query: query.trim() })}
+                      </span>
+                      <span className="truncate text-[12.5px] text-white/40">
+                        {t('dashboard.atlas2.ask.palette_hint', { defaultValue: 'Get an answer or let Atlas do it' })}
+                      </span>
+                    </span>
+                    <span className="hidden text-white/40 group-aria-selected/item:inline">↵</span>
+                  </Command.Item>
+                </Command.Group>
+              )}
             </Command.List>
 
             {/* Footer */}

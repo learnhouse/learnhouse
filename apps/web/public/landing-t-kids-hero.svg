@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 560" role="img" aria-label="Sun, paper plane and blocks">
+<circle cx="300" cy="290" r="250" fill="#ffffff"/>
+<circle cx="430" cy="140" r="64" fill="#ffc93c"/>
+<g stroke="#ffc93c" stroke-width="8" stroke-linecap="round"><line x1="514" y1="140" x2="534" y2="140"/><line x1="489" y1="199" x2="504" y2="214"/><line x1="430" y1="224" x2="430" y2="244"/><line x1="371" y1="199" x2="356" y2="214"/><line x1="346" y1="140" x2="326" y2="140"/><line x1="371" y1="81" x2="356" y2="66"/><line x1="430" y1="56" x2="430" y2="36"/><line x1="489" y1="81" x2="504" y2="66"/></g>
+<circle cx="412" cy="134" r="7" fill="#22304f"/><circle cx="448" cy="134" r="7" fill="#22304f"/><path d="M410 156q20 18 40 0" stroke="#22304f" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M90 180l170 40-110 30z" fill="#7cc4ff"/><path d="M150 250l110-30-60 70z" fill="#4a9be0"/>
+<path d="M60 230c40 30 80 30 110 10" stroke="#22304f" stroke-width="3" fill="none" stroke-dasharray="6 8" stroke-linecap="round"/>
+<rect x="150" y="380" width="110" height="110" rx="18" fill="#ff6f61"/><text x="205" y="455" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="60" font-weight="800" fill="#fff">A</text>
+<rect x="270" y="380" width="110" height="110" rx="18" fill="#7cc4ff"/><text x="325" y="455" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="60" font-weight="800" fill="#fff">B</text>
+<rect x="210" y="262" width="110" height="110" rx="18" fill="#7ed6a5" transform="rotate(-8 265 317)"/><text x="265" y="340" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="60" font-weight="800" fill="#fff" transform="rotate(-8 265 317)">C</text>
+<rect x="390" y="420" width="70" height="70" rx="14" fill="#ffc93c"/><text x="425" y="470" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#22304f">1</text>
+<g fill="#ff6f61"><path d="M520 300l8 16 18 3-13 12 3 18-16-9-16 9 3-18-13-12 18-3z"/></g>
+<g fill="#b9a7ff"><circle cx="90" cy="400" r="14"/><circle cx="520" cy="440" r="10"/></g>
+</svg>

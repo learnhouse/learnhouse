@@ -5,7 +5,6 @@
   UserGroups restricts the item to them (media list, file reads, sub-folders).
 * The media list honours an API token's own ``media`` rights.
 * Media uploads take their size without re-reading the file into memory.
-* Boards in folders/search go through the boards service's read rule.
 * Authors may pin their own items to the library root.
 * Non-Admins can't remove members holding a role more powerful than theirs.
 * Domain verification tokens are for domain managers only; DNS proof takes
@@ -24,7 +23,6 @@ import pytest
 from fastapi import HTTPException, Request, UploadFile
 from sqlmodel import select
 
-from src.db.boards import Board, BoardMember
 from src.db.courses.certifications import CertificateUser, Certifications
 from src.db.custom_domains import CustomDomain, CustomDomainCreate
 from src.db.folders.folder_content import FolderContent
@@ -310,39 +308,6 @@ class TestFolderListings:
 
         result = await search_library(_req(), str(org.id), "folder_", anonymous_user, db)
         assert {f["folder_uuid"] for f in result["folders"]} == {"folder_o"}
-
-
-@pytest.fixture
-async def boards(db, org, admin_user, regular_user):
-    for id_, uuid in ((1, "board_private"), (2, "board_members")):
-        db.add(Board(
-            id=id_, name=uuid, public=False, org_id=org.id, board_uuid=uuid,
-            created_by=admin_user.id, creation_date=_now(), update_date=_now(),
-        ))
-        db.add(FolderContent(folder_id=None, resource_uuid=uuid, org_id=org.id, position=id_))
-    db.add(BoardMember(board_id=2, user_id=regular_user.id, creation_date=_now()))
-    await db.commit()
-
-
-class TestBoardsInLibrary:
-    @pytest.mark.asyncio
-    async def test_private_board_without_group_is_for_its_members(self, db, org, boards, regular_user):
-        from src.services.folders.folders import get_org_root_items, search_library
-
-        items = await get_org_root_items(_req(), str(org.id), regular_user, db)
-        assert [i.resource_uuid for i in items] == ["board_members"]
-        found = await search_library(_req(), str(org.id), "board_", regular_user, db)
-        assert [i["resource_uuid"] for i in found["items"]] == ["board_members"]
-
-    @pytest.mark.asyncio
-    async def test_board_check_errors_hide_the_item(self, db, org, boards, regular_user):
-        from src.services.folders.folders import get_org_root_items
-
-        with patch(
-            "src.services.boards.boards._check_board_read",
-            new=AsyncMock(side_effect=HTTPException(status_code=403, detail="2FA required")),
-        ):
-            assert await get_org_root_items(_req(), str(org.id), regular_user, db) == []
 
 
 INSTRUCTOR_RIGHTS = {

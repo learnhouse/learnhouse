@@ -72,6 +72,21 @@ async def _user_can_view_unpublished_episode(
     return False
 
 
+async def _podcasts_enabled(org_id: int, db_session: AsyncSession) -> bool:
+    """Episodes follow the podcast feature (off, or not in the plan after a
+    move to Free, means not found). An org without a config row has never had
+    one taken away, so it isn't blocked here."""
+    from src.db.organization_config import OrganizationConfig
+    from src.security.features_utils.resolve import resolve_feature
+
+    row = (
+        await db_session.execute(select(OrganizationConfig).where(OrganizationConfig.org_id == org_id))
+    ).scalars().first()
+    if row is None:
+        return True
+    return bool(resolve_feature("podcasts", row.config or {}, org_id)["enabled"])
+
+
 async def get_episode(
     request: Request,
     episode_uuid: str,
@@ -91,7 +106,7 @@ async def get_episode(
     podcast_statement = select(Podcast).where(Podcast.id == episode.podcast_id)
     podcast = (await db_session.execute(podcast_statement)).scalars().first()
 
-    if not podcast:
+    if not podcast or not await _podcasts_enabled(podcast.org_id, db_session):
         raise HTTPException(
             status_code=404,
             detail="Podcast not found",
@@ -131,6 +146,9 @@ async def get_episodes_by_podcast(
             status_code=404,
             detail="Podcast not found",
         )
+    # Same rule as the podcast itself: off (or not in the plan), not found.
+    if not await _podcasts_enabled(podcast.org_id, db_session):
+        raise HTTPException(status_code=404, detail="Podcast not found")
 
     # Check if user can view unpublished episodes
     can_view_unpublished = False

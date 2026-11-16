@@ -37,17 +37,43 @@ An admin seat is a member whose role has dashboard access. See [Users and Access
 
 The free plan always shows the "Made with LearnHouse" watermark.
 
+## Free trial
+
+Every new organization on LearnHouse Cloud starts with **14 days of Pro, free**. No card is needed. Everything in Pro is unlocked from the first minute: certificates, learning paths, live sessions, analytics, custom domains and the rest.
+
+- **Organization** → **Overview** shows the days left, what the trial unlocks and what will change when it ends. Admins also see the days left under the organization name in the sidebar.
+- Admins get a short series of emails: a welcome, a few tips halfway through, and reminders 3 days and 1 day before the end. They follow the email preferences (the unsubscribe link turns them off).
+- Choosing any plan during the trial ends it and keeps the organization on the plan you picked. Picking Pro keeps everything exactly as it is.
+- If no plan is chosen, the organization moves to the Free plan when the trial ends. See [Moving to the Free plan](#moving-to-the-free-plan).
+
+Each organization gets one trial. Organizations on a trial count toward the limit of free organizations a person can own.
+
+## Moving to the Free plan
+
+An organization moves to Free when its trial ends without a plan, when its subscription is cancelled and the paid period is over, or when its payment fails for good. Nothing is deleted:
+
+- **Features** above Free pause. Their pages show what they do and which plan brings them back. Data created with them stays and comes back on upgrade.
+- **Courses**: the Free plan allows one public course. The public course with the most learners stays public (if two have the same number, the published one, then the most recently updated one). The other courses become private: members can still open them, visitors can't. While on Free, making a second course public is refused until another one is made private.
+- **Drip schedules** are paused, so every chapter is open. The schedules are kept.
+- **Members and admins** above the Free limits keep their access. Adding more is refused with a message that names the limit.
+- Admins get an email and a notification that explain what changed.
+
+**Upgrading restores it.** Choosing a paid plan makes the courses public again and switches the drip schedules back on, exactly as they were. A course you changed yourself after the move is left as you set it.
+
+The trial and these rules only exist on LearnHouse Cloud. Self-hosted instances have no plans.
+
 ## Where you see plan limits
 
-- **Organization** → **Usage** shows your plan, your courses, members and admin seats against their limits, and your AI credits.
-- Features your plan does not include show a card with the plan they need (for example "Upgrade to Pro") and a link to upgrade.
+- **Organization** → **Overview** shows your plan and its status, your usage against the limits (courses, members, admin seats, AI credits), and every feature with the plan that includes it.
+- Features your plan does not include show a page with a preview of the feature, what it does for your learners, the plan that includes it and a button to upgrade (or to talk to us, for Enterprise).
+- **Cancel plan** on the billing page first shows what the move to Free would change, and that access continues until the end of the paid period.
 - The public menu hides links to features your plan does not include. See [Menu](/platform/organizations/settings#menu).
 
-<img src="/img/pages/organizations/org-usage.webp" alt="The Usage tab with Plan & Resource Usage for courses, members and admin seats, and AI credits" width={1600} height={900} style={{ borderRadius: 10 }} />
+<img src="/img/pages/organizations/org-usage.webp" alt="The Overview tab with the plan, and usage for courses, members and admin seats, and AI credits" width={1600} height={900} style={{ borderRadius: 10 }} />
 
 ## AI credit packs
 
-When you run low on AI credits, you can buy extra credits as an add-on pack. Use **Buy More** on the **Usage** tab. Active packs are listed there, and purchased credits add to your plan's base credits.
+When you run low on AI credits, you can buy extra credits as an add-on pack. Use **Buy More** on the **Overview** tab. Active packs are listed there, and purchased credits add to your plan's base credits.
 
 ## Self-hosted instances
 

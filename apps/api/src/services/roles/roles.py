@@ -3,6 +3,8 @@ from uuid import uuid4
 from sqlmodel import select, text
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from src.core.ee_hooks import audit_event
+from src.services.audit.org_log import snapshot
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
@@ -17,6 +19,9 @@ from fastapi import HTTPException, Request
 from datetime import datetime
 from types import SimpleNamespace
 
+
+# Fields of a role compared in its audit log entries.
+_ROLE_AUDIT_FIELDS = ("name", "description", "rights")
 
 async def create_role(
     request: Request,
@@ -155,6 +160,11 @@ async def create_role(
             # Re-raise the original exception if it's not the sequence issue
             raise e
 
+    audit_event(
+        request, action="roles.created", org_id=role.org_id, actor=current_user,
+        target_type="role", target_id=role.role_uuid, target_name=role.name,
+        before={}, after=snapshot(role, _ROLE_AUDIT_FIELDS),
+    )
     # Create RoleRead object with all required fields
     role_data = role.model_dump()
     # Ensure org_id is properly handled
@@ -349,6 +359,7 @@ async def update_role(
         db_session=db_session,
     )
 
+    role_before = snapshot(role, _ROLE_AUDIT_FIELDS)
     # Complete the role object
     role.update_date = str(datetime.now())
     for key, value in update_data.items():
@@ -360,6 +371,11 @@ async def update_role(
     db_session.add(role)
     await db_session.commit()
     await db_session.refresh(role)
+    audit_event(
+        request, action="roles.updated", org_id=role.org_id, actor=current_user,
+        target_type="role", target_id=role.role_uuid, target_name=role.name,
+        before=role_before, after=snapshot(role, _ROLE_AUDIT_FIELDS),
+    )
 
     # Invalidate session cache for all users with this role
     from src.db.user_organizations import UserOrganization
@@ -412,8 +428,14 @@ async def delete_role(
     for uid in affected_users:
         _invalidate_session_cache(uid)
 
+    deleted = (role.org_id, role.role_uuid, role.name)
     await db_session.delete(role)
     await db_session.commit()
+    audit_event(
+        request, action="roles.deleted", org_id=deleted[0], actor=current_user,
+        target_type="role", target_id=deleted[1], target_name=deleted[2],
+        details={"members_affected": len(affected_users)},
+    )
 
     return "Role deleted"
 

@@ -1,18 +1,24 @@
 'use client'
-import React, { use } from 'react'
+import React, { use, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'motion/react'
-import { ArrowLeft, Award, Info, ListOrdered, Route, Users } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { ArrowLeft, Medal, BookOpen, Book, ArrowSquareOut, Info, ListNumbers, CircleNotch, Circuitry as PathIcon, Users, MagnifyingGlass } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
+import { BTN_GHOST, BTN_PRIMARY, BTN_SECONDARY } from '@components/Dashboard/Shared/DashKit/DashKit'
 import EditPathGeneral from '@components/Dashboard/Pages/Path/EditPathGeneral'
 import EditPathCourses from '@components/Dashboard/Pages/Path/EditPathCourses'
 import EditPathCertificate from '@components/Dashboard/Pages/Path/EditPathCertificate'
 import PathLearners from '@components/Dashboard/Pages/Path/PathLearners'
+import { PathSeoTab } from '@components/Dashboard/Shared/SEO/ResourceSeoTabs'
+import { usePathCache } from '@components/Dashboard/Pages/Path/usePathSave'
+import { PathStatusChip } from '../../../_components/PathDashItems'
 import { getUriWithOrg } from '@services/config/config'
-import { Path } from '@services/paths/paths'
+import { Path, updatePath } from '@services/paths/paths'
+import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { usePath } from '@/hooks/queries/usePaths'
 
 export type PathEditorParams = {
@@ -20,6 +26,9 @@ export type PathEditorParams = {
   pathuuid: string
   subpage: string
 }
+
+// Header actions shrink a little on phones so both fit on one line.
+const HEADER_BTN = 'max-sm:h-9 max-sm:px-3'
 
 function PathEditorPage(props: { params: Promise<PathEditorParams> }) {
   const { t } = useTranslation()
@@ -29,14 +38,15 @@ function PathEditorPage(props: { params: Promise<PathEditorParams> }) {
 
   const tabs = [
     { key: 'general', label: t('paths.dashboard.tabs.general'), icon: Info },
-    { key: 'courses', label: t('paths.dashboard.tabs.courses'), icon: ListOrdered },
-    { key: 'certificate', label: t('paths.dashboard.tabs.certificate'), icon: Award },
+    { key: 'courses', label: t('paths.dashboard.tabs.courses'), icon: ListNumbers },
+    { key: 'certificate', label: t('paths.dashboard.tabs.certificate'), icon: Medal },
     { key: 'learners', label: t('paths.dashboard.tabs.learners'), icon: Users },
+    { key: 'seo', label: t('dashboard.courses.settings.tabs.seo'), icon: MagnifyingGlass },
   ]
 
   return (
     <FeatureGate feature="paths" orgslug={params.orgslug} context="dashboard">
-      <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1">
+      <div className="h-screen w-full grid grid-rows-[auto_1fr] grid-cols-1">
         <PathEditorHeader params={params} path={path} isLoading={isLoading} tabs={tabs} />
         <motion.div
           initial={{ opacity: 0 }}
@@ -51,11 +61,44 @@ function PathEditorPage(props: { params: Promise<PathEditorParams> }) {
               {params.subpage === 'courses' && <EditPathCourses path={path} orgslug={params.orgslug} />}
               {params.subpage === 'certificate' && <EditPathCertificate path={path} />}
               {params.subpage === 'learners' && <PathLearners path={path} orgslug={params.orgslug} />}
+              {params.subpage === 'seo' && <PathSeoTab path={path} orgslug={params.orgslug} />}
             </div>
           )}
         </motion.div>
       </div>
     </FeatureGate>
+  )
+}
+
+function PublishToggle({ path }: { path: Path }) {
+  const { t } = useTranslation()
+  const { accessToken, store } = usePathCache()
+  const [busy, setBusy] = useState(false)
+
+  const toggle = async () => {
+    const next = !path.published
+    setBusy(true)
+    try {
+      store(await updatePath(path.path_uuid, { published: next }, accessToken))
+      toast.success(next ? t('paths.dashboard.header.published_toast') : t('paths.dashboard.header.unpublished_toast'))
+    } catch (error: any) {
+      toast.error(getErrorMessage(error?.detail, t('paths.toasts.save_error')))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const Icon = busy ? CircleNotch : path.published ? Book : BookOpen
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={busy}
+      className={`${path.published ? BTN_SECONDARY : BTN_PRIMARY} ${HEADER_BTN}`}
+    >
+      <Icon size={16} className={busy ? 'animate-spin' : ''} />
+      {path.published ? t('paths.dashboard.header.unpublish') : t('paths.dashboard.header.publish')}
+    </button>
   )
 }
 
@@ -74,57 +117,60 @@ function PathEditorHeader({
 
   if (isLoading || !path) {
     return (
-      <div className="ps-10 pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative animate-pulse">
-        <div className="pt-6 pb-4">
-          <div className="h-4 w-40 bg-gray-200 rounded mb-4" />
-          <div className="flex items-center space-x-4 mt-4">
-            <div className="w-9 h-9 bg-gray-200 rounded-lg" />
-            <div className="h-7 w-48 bg-gray-200 rounded" />
+      <header className="bg-white nice-shadow relative z-10 px-4 sm:px-10 animate-pulse">
+        <div className="pt-4 sm:pt-6 pb-4">
+          <div className="h-4 w-40 bg-neutral-100 rounded" />
+          <div className="flex items-center gap-3 mt-4">
+            <div className="w-9 h-9 bg-neutral-100 rounded-xl" />
+            <div className="h-7 w-56 bg-neutral-100 rounded-lg" />
+            <div className="h-6 w-20 bg-neutral-100 rounded-full" />
           </div>
         </div>
-        <div className="flex space-x-3 pb-2">
+        <div className="flex gap-3 pb-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-8 w-24 bg-gray-200 rounded" />
+            <div key={i} className="h-8 w-24 bg-neutral-100 rounded-lg" />
           ))}
         </div>
-      </div>
+      </header>
     )
   }
 
   return (
-    <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
-      <div className="pt-4 pb-3 sm:pt-6 sm:pb-4">
+    <header className="bg-white nice-shadow relative z-10 px-4 sm:px-10">
+      <div className="pt-4 sm:pt-6 pb-1.5 sm:pb-2">
         <Breadcrumbs
           items={[
-            { label: t('paths.title'), href: '/dash/paths', icon: <Route size={14} /> },
+            { label: t('paths.title'), href: '/dash/paths', icon: <PathIcon size={14} /> },
             { label: path.name, href: `/dash/paths/path/${params.pathuuid}/general` },
           ]}
         />
-        <div className="flex items-center justify-between gap-3 mt-3 sm:mt-4">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <Link
               href={getUriWithOrg(params.orgslug, '/dash/paths')}
-              className="p-2 -ms-2 sm:ms-0 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
-              aria-label={t('paths.title')}
+              className="w-9 h-9 inline-flex items-center justify-center rounded-xl bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900 transition-colors shrink-0"
+              aria-label={t('paths.back_to_paths')}
             >
-              <ArrowLeft size={20} className="rtl:rotate-180" />
+              <ArrowLeft size={18} className="rtl:rotate-180" />
             </Link>
-            <h1 className="text-xl sm:text-2xl font-bold truncate min-w-0" dir="auto">{path.name}</h1>
-            <span
-              className={`shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full ${
-                path.published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-              }`}
-            >
-              {path.published ? t('paths.published') : t('paths.draft')}
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 truncate min-w-0" dir="auto">
+              {path.name}
+            </h1>
+            <span className="shrink-0">
+              <PathStatusChip published={path.published} />
             </span>
           </div>
-          <Link
-            href={getUriWithOrg(params.orgslug, `/path/${params.pathuuid}`)}
-            target="_blank"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors shrink-0 whitespace-nowrap"
-          >
-            {t('paths.dashboard.view_path')} &rarr;
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href={getUriWithOrg(params.orgslug, `/path/${params.pathuuid}`)}
+              target="_blank"
+              className={`${BTN_GHOST} ${HEADER_BTN}`}
+            >
+              <ArrowSquareOut size={16} />
+              {t('paths.dashboard.view_path')}
+            </Link>
+            <PublishToggle path={path} />
+          </div>
         </div>
       </div>
       <DashTabBar
@@ -139,7 +185,7 @@ function PathEditorHeader({
           } as DashTabItem
         })}
       />
-    </div>
+    </header>
   )
 }
 

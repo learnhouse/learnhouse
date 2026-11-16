@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import EditorPreview from '@components/Objects/Editor/EditorPreview'
+import { stripCommentMarks } from '@components/Objects/Editor/Comments/commentContent'
 import { useAuth } from '@components/Contexts/AuthContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { queryKeys } from '@/lib/query/keys'
@@ -258,9 +259,10 @@ function SaveTemplate({ editor, onClose }: TemplatesModalProps) {
 
   const content = useMemo(() => {
     if (!editor) return null
-    if (kind === 'page') return editor.getJSON()
+    // Templates are reused elsewhere, where this page's comment threads don't exist.
+    if (kind === 'page') return stripCommentMarks(editor.getJSON())
     const slice = editor.state.selection.content().content.toJSON() ?? []
-    return { type: 'doc', content: slice }
+    return stripCommentMarks({ type: 'doc', content: slice })
   }, [editor, kind])
 
   const media = useMemo(() => mediaNodeTypes(content), [content])

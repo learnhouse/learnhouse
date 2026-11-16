@@ -179,6 +179,9 @@ async def generate_image(
             )
             raise RuntimeError("Image generation failed") from e
 
+    from src.services.ai.metering import record_usage, usage_from_genai_response
+
+    record_usage(usage_from_genai_response(model, response))
     image_bytes = _extract_image_bytes(response)
     if not image_bytes:
         # Most commonly a safety block: no inline image part was returned.

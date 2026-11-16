@@ -1,12 +1,10 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { BookOpenCheck, Check, ClipboardCheck, Download, Info, MessageSquare, RotateCcw, UserCheck, X } from 'lucide-react';
+import { CaretDown, ChatCircleText, Check, ClipboardText, DownloadSimple, FloppyDisk, Lightbulb, UserCheck, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
-import UserAvatar from '@components/Objects/UserAvatar';
-import { getUserAvatarMediaDirectory } from '@services/media/media';
+import { ConfirmDialog } from '@components/Dashboard/Shared/DashKit/DashKit';
 import TaskQuizObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskQuizObject';
 import TaskFileObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskFileObject';
 import TaskFormObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskFormObject';
@@ -21,8 +19,11 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 import { sortTasksByOrder } from '@/lib/assignments/taskOrder'
-import { BTN_PRIMARY, BTN_SECONDARY, Chip, formatShortDate, formatShortTime } from '../../../_components/assignmentUi'
+import { BTN_PRIMARY, BTN_SECONDARY, Chip } from '../../../_components/assignmentUi'
+import { TEXTAREA, buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { TASK_TYPE_META } from '../../_components/Tasks'
+import { AIGradePanel, aiGradingEnabled } from '../../_components/AIGrading'
+import { AIChip } from '@components/Objects/AI/AIBrand'
 
 function pctToLetterGrade(pct: number): string {
     if (pct >= 90) return 'A';
@@ -101,11 +102,12 @@ function buildLiveGrade(gradePreview: any) {
     };
 }
 
+// The learner, attempt and status now live in the modal header (see
+// AssignmentSubmissionsSubPage), so `user`, `submission` and `statusChip`
+// are accepted for compatibility but not rendered here.
 function EvaluateAssignment({
     user_id,
-    user,
     submission,
-    statusChip,
 }: {
     user_id: any
     user?: any
@@ -244,142 +246,172 @@ function EvaluateAssignment({
         }
     }
 
-    const displayName = user?.first_name && user?.last_name
-        ? `${user.first_name} ${user.last_name}`
-        : user?.username ? `@${user.username}` : null
-    const attempt = submission?.attempt_number || 1
-    const submittedDate = formatShortDate(submission?.creation_date, i18n.language)
-    const submittedTime = formatShortTime(submission?.creation_date, i18n.language)
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+    // Bumped after an AI grade is applied so every task view reloads the
+    // score and feedback it fetched for this learner.
+    const [taskReloadKey, setTaskReloadKey] = useState(0);
+    const aiScored = new Set<string>(Array.isArray(gradePreview?.ai_scored_task_uuids) ? gradePreview.ai_scored_task_uuids : []);
+    const onAIApplied = () => {
+        setTaskReloadKey((k) => k + 1);
+        refreshGradePreview(true);
+    };
+    const [openHints, setOpenHints] = useState<Record<string, boolean>>({});
+    const [rejectOpen, setRejectOpen] = useState(false);
+    const [busy, setBusy] = useState<'finalize' | 'grade' | null>(null);
+
+    const run = async (kind: 'finalize' | 'grade', fn: () => Promise<void>) => {
+        setBusy(kind);
+        try { await fn(); } finally { setBusy(null); }
+    };
+
+    const jumpTo = (uuid: string) => {
+        const el = scrollRef.current?.querySelector<HTMLElement>(`[data-task="${uuid}"]`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const taskTone = (tb: any) =>
+        !tb || isUngraded ? 'neutral' : !tb.submitted ? 'neutral' : tb.passed ? 'emerald' : 'rose';
+    const TONE_DOT: Record<string, string> = {
+        neutral: 'bg-neutral-300',
+        emerald: 'bg-emerald-500',
+        rose: 'bg-rose-500',
+    };
+
+    const percentage = typeof liveGrade?.percentage === 'number' ? Math.max(0, Math.min(100, liveGrade.percentage)) : 0;
 
     return (
-        <div className='flex flex-col min-h-fit gap-5'>
-            {/* Learner strip */}
-            {(user || submission) && (
-                <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-neutral-50 px-4 py-3'>
-                    <div className='flex items-center gap-3 min-w-0'>
-                        <UserAvatar
-                            avatar_url={getUserAvatarMediaDirectory(user?.user_uuid, user?.avatar_image)}
-                            predefined_avatar={user?.avatar_image ? undefined : 'empty'}
-                            width={40}
-                            rounded='rounded-full'
-                        />
-                        <div className='min-w-0'>
-                            <p className='text-sm font-semibold text-neutral-900 truncate'>{displayName ?? '...'}</p>
-                            {user?.email && <p className='text-xs text-neutral-500 truncate'>{user.email}</p>}
-                        </div>
-                    </div>
-                    <div className='flex flex-wrap items-center gap-2 sm:justify-end'>
-                        {submittedDate && (
-                            <span className='text-xs text-neutral-500 tabular-nums'>
-                                {t('dashboard.assignments.submissions.evaluate_modal.submitted_at', { date: `${submittedDate}${submittedTime ? ` · ${submittedTime}` : ''}` })}
-                            </span>
-                        )}
-                        <Chip tone={attempt > 1 ? 'sky' : 'neutral'} icon={<RotateCcw size={12} />} className='tabular-nums'>
-                            {t('assignments.attempt_count', { current: attempt })}
-                        </Chip>
-                        {statusChip}
-                    </div>
-                </div>
-            )}
+        <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] lg:h-full lg:min-h-0'>
+            {/* Tasks */}
+            <div ref={scrollRef} className='min-w-0 bg-neutral-50/70 lg:overflow-y-auto lg:min-h-0'>
+                {sortedTasks.length > 1 && (
+                    <nav
+                        aria-label={t('dashboard.assignments.submissions.evaluate_modal.tasks_nav')}
+                        className='sticky top-0 z-10 flex gap-1.5 overflow-x-auto px-5 py-3 bg-neutral-50/90 backdrop-blur border-b border-neutral-100'
+                    >
+                        {sortedTasks.map((task: any, index: number) => {
+                            const tb = taskBreakdownByUuid[task.assignment_task_uuid];
+                            return (
+                                <button
+                                    key={task.assignment_task_uuid}
+                                    type='button'
+                                    onClick={() => jumpTo(task.assignment_task_uuid)}
+                                    className='inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white ring-1 ring-inset ring-neutral-200 text-xs font-semibold text-neutral-700 hover:ring-neutral-300 whitespace-nowrap transition-colors'
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${TONE_DOT[taskTone(tb)]}`} />
+                                    <span className='tabular-nums'>{index + 1}</span>
+                                    <span className='max-w-[140px] truncate font-medium text-neutral-500'>
+                                        {task.title || t('dashboard.assignments.submissions.task_label', { number: index + 1 })}
+                                    </span>
+                                    {tb?.submitted && !isUngraded && (
+                                        <span className='tabular-nums text-neutral-400'>{tb.percentage_display}</span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </nav>
+                )}
 
-            <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 items-start'>
-                {/* Tasks */}
-                <div className='flex flex-col min-w-0'>
+                <div className='flex flex-col gap-4 p-2.5 sm:p-5'>
                     {sortedTasks.map((task: any, index: number) => {
                         const tb = taskBreakdownByUuid[task.assignment_task_uuid];
-                        // Use the server's passed flag so the per-task chip uses
-                        // the same grading-type-aware threshold as the overall
-                        // grade (50% for numeric/pass-fail, 60% for alphabet/GPA).
-                        const taskPassed = tb && tb.submitted && tb.passed;
-                        const taskSubmitted = tb && tb.submitted;
                         const meta = TASK_TYPE_META[task.assignment_type]
                         const TypeIcon = meta?.Icon
+                        const hintOpen = !!openHints[task.assignment_task_uuid]
                         return (
-                        <section key={task.assignment_task_uuid} className={`flex flex-col ${index > 0 ? 'border-t border-neutral-100 pt-5 mt-5' : ''}`}>
-                            {/* Task header */}
-                            <div className='flex flex-col sm:flex-row sm:items-start justify-between gap-2 pb-3'>
-                                <div className='flex items-start gap-3 min-w-0'>
-                                    <span className='w-8 h-8 rounded-lg bg-neutral-900 text-white text-xs font-bold flex items-center justify-center shrink-0 tabular-nums'>
-                                        {index + 1}
-                                    </span>
-                                    <div className='min-w-0'>
-                                        <p className='text-sm font-semibold text-neutral-900 break-words'>
-                                            {task.title || task.description || t('dashboard.assignments.submissions.task_label', { number: index + 1 })}
-                                        </p>
-                                        <div className='mt-1 flex flex-wrap items-center gap-1.5'>
+                            <section
+                                key={task.assignment_task_uuid}
+                                data-task={task.assignment_task_uuid}
+                                className='scroll-mt-16 rounded-2xl bg-white nice-shadow overflow-hidden'
+                            >
+                                <header className='flex flex-wrap items-start justify-between gap-3 px-3.5 sm:px-5 pt-4 pb-3 border-b border-neutral-100'>
+                                    <div className='flex items-start gap-3 min-w-0'>
+                                        <span className='w-7 h-7 rounded-lg bg-neutral-900 text-white text-xs font-bold flex items-center justify-center shrink-0 tabular-nums'>
+                                            {index + 1}
+                                        </span>
+                                        <div className='min-w-0'>
+                                            <p className='text-sm font-semibold text-neutral-900 break-words leading-7'>
+                                                {task.title || task.description || t('dashboard.assignments.submissions.task_label', { number: index + 1 })}
+                                            </p>
                                             {meta && TypeIcon && (
-                                                <span className='inline-flex items-center gap-1 text-xs text-neutral-500 me-1'>
+                                                <span className='inline-flex items-center gap-1 text-xs text-neutral-500'>
                                                     <TypeIcon size={12} />
                                                     {meta.labelKey ? t(meta.labelKey) : meta.label}
                                                 </span>
                                             )}
-                                            {tb && !isUngraded && (
-                                                <Chip tone={!taskSubmitted ? 'neutral' : taskPassed ? 'emerald' : 'rose'} className='tabular-nums'>
-                                                    {taskSubmitted
-                                                        ? tb.percentage_display
-                                                        : t('dashboard.assignments.submissions.preview.not_submitted')}
-                                                </Chip>
-                                            )}
-                                            {tb?.manually_graded && (
-                                                <Chip tone='sky' icon={<UserCheck size={12} />}>
-                                                    {t('dashboard.assignments.submissions.preview.manually_graded', { defaultValue: 'Manually graded' })}
-                                                </Chip>
-                                            )}
                                         </div>
                                     </div>
-                                </div>
-                                <div className='flex items-center gap-1.5 ps-11 sm:ps-0 shrink-0'>
-                                    {task.hint && (
-                                        <button
-                                            type='button'
-                                            onClick={() => toast(task.hint, { icon: 'ℹ️' })}
-                                            className='inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-semibold text-neutral-700 bg-neutral-100 hover:bg-neutral-200 transition-colors'
-                                        >
-                                            <Info size={13} />
-                                            <span>{t('dashboard.assignments.submissions.hint')}</span>
-                                        </button>
+                                    <div className='flex flex-wrap items-center gap-1.5'>
+                                        {tb?.manually_graded && aiScored.has(task.assignment_task_uuid) && (
+                                            <AIChip tone='soft'>{t('dashboard.assignments.ai_grading.task_chip')}</AIChip>
+                                        )}
+                                        {tb?.manually_graded && !aiScored.has(task.assignment_task_uuid) && (
+                                            <Chip tone='sky' icon={<UserCheck size={12} weight='bold' />}>
+                                                {t('dashboard.assignments.submissions.preview.manually_graded', { defaultValue: 'Manually graded' })}
+                                            </Chip>
+                                        )}
+                                        {tb && !isUngraded && (
+                                            <Chip tone={taskTone(tb) as any} className='tabular-nums'>
+                                                {tb.submitted ? tb.percentage_display : t('dashboard.assignments.submissions.preview.not_submitted')}
+                                            </Chip>
+                                        )}
+                                        {task.hint && (
+                                            <button
+                                                type='button'
+                                                aria-expanded={hintOpen}
+                                                onClick={() => setOpenHints((prev) => ({ ...prev, [task.assignment_task_uuid]: !hintOpen }))}
+                                                className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-semibold transition-colors ${hintOpen ? 'bg-amber-50 text-amber-700' : 'text-neutral-600 hover:bg-neutral-100'}`}
+                                            >
+                                                <Lightbulb size={13} />
+                                                {t('dashboard.assignments.submissions.hint')}
+                                                <CaretDown size={11} className={`transition-transform ${hintOpen ? 'rotate-180' : ''}`} />
+                                            </button>
+                                        )}
+                                        {task.reference_file && (
+                                            <Link
+                                                href={getTaskRefFileDir(
+                                                    org?.org_uuid,
+                                                    assignments?.course_object.course_uuid,
+                                                    assignments?.activity_object.activity_uuid,
+                                                    assignments?.assignment_object.assignment_uuid,
+                                                    task.assignment_task_uuid,
+                                                    task.reference_file
+                                                )}
+                                                target='_blank'
+                                                download={true}
+                                                className='inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors'
+                                            >
+                                                <DownloadSimple size={13} />
+                                                {t('dashboard.assignments.submissions.reference_document')}
+                                            </Link>
+                                        )}
+                                    </div>
+                                    {hintOpen && (
+                                        <p className='basis-full rounded-xl bg-amber-50/70 px-3 py-2 text-xs text-amber-900 leading-relaxed'>{task.hint}</p>
                                     )}
-                                    {task.reference_file && (
-                                        <Link
-                                            href={getTaskRefFileDir(
-                                                org?.org_uuid,
-                                                assignments?.course_object.course_uuid,
-                                                assignments?.activity_object.activity_uuid,
-                                                assignments?.assignment_object.assignment_uuid,
-                                                task.assignment_task_uuid,
-                                                task.reference_file
-                                            )}
-                                            target='_blank'
-                                            download={true}
-                                            className='inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-semibold text-neutral-700 bg-neutral-100 hover:bg-neutral-200 transition-colors'
-                                        >
-                                            <Download size={13} />
-                                            <span>{t('dashboard.assignments.submissions.reference_document')}</span>
-                                        </Link>
-                                    )}
-                                </div>
-                            </div>
+                                </header>
 
-                            {/* Task content (rendered by the task type component) */}
-                            <div className='rounded-xl min-w-0'>
-                                {task.assignment_type === 'QUIZ' && <TaskQuizObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
-                                {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={task.assignment_task_uuid} view='custom-grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
-                                {task.assignment_type === 'FORM' && <TaskFormObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
-                                {task.assignment_type === 'CODE' && <TaskCodeObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
-                                {task.assignment_type === 'SHORT_ANSWER' && <TaskShortAnswerObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
-                                {task.assignment_type === 'NUMBER_ANSWER' && <TaskNumberAnswerObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
-                            </div>
-                        </section>
+                                {/* Task content (rendered by the task type component) */}
+                                <div className='p-2 sm:p-5 min-w-0'>
+                                    {task.assignment_type === 'QUIZ' && <TaskQuizObject key={`${task.assignment_task_uuid}-${taskReloadKey}`} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                                    {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={`${task.assignment_task_uuid}-${taskReloadKey}`} view='custom-grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                                    {task.assignment_type === 'FORM' && <TaskFormObject key={`${task.assignment_task_uuid}-${taskReloadKey}`} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                                    {task.assignment_type === 'CODE' && <TaskCodeObject key={`${task.assignment_task_uuid}-${taskReloadKey}`} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                                    {task.assignment_type === 'SHORT_ANSWER' && <TaskShortAnswerObject key={`${task.assignment_task_uuid}-${taskReloadKey}`} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                                    {task.assignment_type === 'NUMBER_ANSWER' && <TaskNumberAnswerObject key={`${task.assignment_task_uuid}-${taskReloadKey}`} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} onGraded={refreshGradePreview} />}
+                                </div>
+                            </section>
                         );
                     })}
                 </div>
+            </div>
 
-                {/* Grade panel: sticks beside the tasks on desktop, follows them on phones */}
-                <aside className='lg:sticky lg:top-0 flex flex-col gap-4 rounded-2xl border border-neutral-200/80 bg-white p-4'>
+            {/* Grading rail: its own column on desktop, follows the tasks on phones */}
+            <aside className='flex flex-col border-t lg:border-t-0 lg:border-s border-neutral-100 bg-white lg:min-h-0'>
+                <div className='flex-1 lg:overflow-y-auto p-5 flex flex-col gap-5'>
                     {isUngraded ? (
-                        <div className='flex items-start gap-3'>
-                            <span className='w-9 h-9 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center shrink-0'>
-                                <ClipboardCheck size={18} />
+                        <div className='flex items-start gap-3 rounded-2xl bg-sky-50/60 p-4'>
+                            <span className='w-9 h-9 rounded-xl bg-white text-sky-700 flex items-center justify-center shrink-0 shadow-sm'>
+                                <ClipboardText size={18} />
                             </span>
                             <div className='min-w-0'>
                                 <p className='text-sm font-semibold text-neutral-900'>
@@ -391,43 +423,88 @@ function EvaluateAssignment({
                             </div>
                         </div>
                     ) : (
-                        <div>
-                            <p className='text-xs text-neutral-500'>{t('dashboard.assignments.submissions.preview.current_grade')}</p>
+                        <div className='rounded-2xl bg-neutral-50 p-4'>
+                            <p className='text-xs font-medium text-neutral-500'>{t('dashboard.assignments.submissions.preview.current_grade')}</p>
                             {liveGrade ? (
                                 <>
-                                    <div className='mt-1.5 flex items-center gap-3'>
-                                        <span className={`inline-flex items-center justify-center min-w-[3rem] h-12 px-3 rounded-xl text-2xl font-bold tabular-nums ${liveGrade.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                    <div className='mt-2 flex items-end justify-between gap-3'>
+                                        <span className={`text-4xl font-bold tracking-tight tabular-nums leading-none ${liveGrade.passed ? 'text-emerald-600' : 'text-rose-600'}`}>
                                             {liveGrade.display_grade}
                                         </span>
-                                        <div className='min-w-0'>
-                                            <p className='text-sm font-semibold text-neutral-900 tabular-nums'>{liveGrade.points_summary}</p>
-                                            <p className='text-xs text-neutral-500 tabular-nums'>{liveGrade.percentage_display}</p>
-                                        </div>
-                                    </div>
-                                    <div className='mt-2.5'>
                                         <Chip tone={liveGrade.passed ? 'emerald' : 'rose'}>
                                             {liveGrade.passed
                                                 ? t('dashboard.assignments.submissions.preview.passing')
                                                 : t('dashboard.assignments.submissions.preview.not_passing')}
                                         </Chip>
                                     </div>
+                                    <div className='mt-3 h-2 rounded-full bg-neutral-200/70 overflow-hidden'>
+                                        <div
+                                            className={`h-full rounded-full transition-[width] duration-500 ${liveGrade.passed ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                                            style={{ width: `${percentage}%` }}
+                                        />
+                                    </div>
+                                    <div className='mt-2 flex items-center justify-between text-xs text-neutral-500 tabular-nums'>
+                                        <span>{liveGrade.points_summary}</span>
+                                        <span>{liveGrade.percentage_display}</span>
+                                    </div>
                                 </>
                             ) : (
-                                <div className='mt-1.5 h-12 w-32 rounded-xl bg-neutral-100 animate-pulse' />
+                                <div className='mt-2 space-y-2'>
+                                    <div className='h-9 w-24 rounded-lg bg-neutral-200/60 animate-pulse' />
+                                    <div className='h-2 w-full rounded-full bg-neutral-200/60 animate-pulse' />
+                                </div>
                             )}
                         </div>
+                    )}
+
+                    {!isUngraded && aiGradingEnabled(assignments?.assignment_object) && access_token && (
+                        <AIGradePanel
+                            key={`ai-${user_id}`}
+                            userId={user_id}
+                            assignment={assignments.assignment_object}
+                            accessToken={access_token}
+                            submissionStatus={submission?.submission_status}
+                            onApplied={onAIApplied}
+                        />
+                    )}
+
+                    {/* Per-task breakdown, so the score above is never a mystery */}
+                    {!isUngraded && gradePreview?.tasks?.length > 0 && (
+                        <ul className='flex flex-col gap-1'>
+                            {sortedTasks.map((task: any, index: number) => {
+                                const tb = taskBreakdownByUuid[task.assignment_task_uuid];
+                                if (!tb) return null;
+                                return (
+                                    <li key={task.assignment_task_uuid}>
+                                        <button
+                                            type='button'
+                                            onClick={() => jumpTo(task.assignment_task_uuid)}
+                                            className='w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-start hover:bg-neutral-50 transition-colors'
+                                        >
+                                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${TONE_DOT[taskTone(tb)]}`} />
+                                            <span className='flex-1 min-w-0 truncate text-xs text-neutral-600'>
+                                                {task.title || t('dashboard.assignments.submissions.task_label', { number: index + 1 })}
+                                            </span>
+                                            <span className='text-xs font-semibold text-neutral-900 tabular-nums'>
+                                                {tb.submitted ? `${tb.grade ?? 0}/${tb.max_grade ?? 0}` : '—'}
+                                            </span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     )}
 
                     {/* Overall feedback. Only the grading endpoint persists it, and that
                         endpoint refuses a formative assignment, so on one, this box
                         could never deliver anything to the learner. */}
                     {!isUngraded && (
-                        <div className='flex flex-col gap-1.5 border-t border-neutral-100 pt-4'>
+                        <div className='flex flex-col gap-1.5'>
                             <label htmlFor={`overall-feedback-${user_id}`} className='flex items-center gap-1.5 text-sm font-semibold text-neutral-900'>
-                                <MessageSquare size={14} className='text-neutral-400' />
+                                <ChatCircleText size={15} className='text-neutral-400' />
                                 {t('dashboard.assignments.submissions.feedback.label')}
                                 <span className='text-xs font-normal text-neutral-400'>
-                                    ({t('dashboard.assignments.submissions.feedback.optional')})
+                                    {t('dashboard.assignments.submissions.feedback.optional')}
                                 </span>
                             </label>
                             <textarea
@@ -435,55 +512,63 @@ function EvaluateAssignment({
                                 value={feedback ?? ''}
                                 onChange={(e) => setFeedback(e.target.value)}
                                 placeholder={t('dashboard.assignments.submissions.feedback.placeholder')}
-                                rows={4}
-                                className='w-full px-3 py-2 text-sm bg-white rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-300 placeholder:text-neutral-400 resize-y'
+                                rows={5}
+                                className={`${TEXTAREA} resize-y`}
                             />
                             <p className='text-xs text-neutral-400 leading-snug'>
                                 {t('dashboard.assignments.submissions.feedback.hint')}
                             </p>
                         </div>
                     )}
+                </div>
 
-                    {/* Actions */}
-                    <div className='flex flex-col gap-2 border-t border-neutral-100 pt-4'>
-                        {!isUngraded && (
-                            <>
-                                <button type='button' onClick={finalizeAndComplete} className={`${BTN_PRIMARY} w-full`}>
-                                    <Check size={16} />
-                                    {t('dashboard.assignments.submissions.actions.finalize')}
-                                </button>
-                                <p className='text-xs text-neutral-500 leading-snug -mt-0.5 mb-1'>
-                                    {t('dashboard.assignments.submissions.actions.finalize_description')}
-                                </p>
-                                <button type='button' onClick={gradeAssignment} className={`${BTN_SECONDARY} w-full`}>
-                                    <BookOpenCheck size={16} />
-                                    {t('dashboard.assignments.submissions.actions.set_final_grade')}
-                                </button>
-                                <p className='text-xs text-neutral-500 leading-snug -mt-0.5 mb-1'>
-                                    {t('dashboard.assignments.submissions.actions.set_final_grade_description')}
-                                </p>
-                            </>
-                        )}
-                        <ConfirmationModal
-                            confirmationButtonText={t('dashboard.assignments.submissions.actions.reject')}
-                            confirmationMessage={t('dashboard.assignments.submissions.actions.reject_description')}
-                            dialogTitle={t('dashboard.assignments.submissions.actions.reject')}
-                            functionToExecute={rejectAssignment}
-                            status='warning'
-                            dialogTrigger={
-                                <button
-                                    type='button'
-                                    title={t('dashboard.assignments.submissions.actions.reject_description')}
-                                    className='inline-flex items-center justify-center gap-1.5 w-full h-10 px-4 rounded-xl text-sm font-semibold text-rose-700 hover:bg-rose-50 transition-colors'
-                                >
-                                    <X size={16} />
-                                    {t('dashboard.assignments.submissions.actions.reject')}
-                                </button>
-                            }
-                        />
-                    </div>
-                </aside>
-            </div>
+                {/* Actions, pinned to the bottom of the rail */}
+                <div className='shrink-0 flex flex-col gap-2 p-4 border-t border-neutral-100 bg-neutral-50/60'>
+                    {!isUngraded && (
+                        <>
+                            <button
+                                type='button'
+                                onClick={() => run('finalize', finalizeAndComplete)}
+                                disabled={!!busy}
+                                title={t('dashboard.assignments.submissions.actions.finalize_description')}
+                                className={`${BTN_PRIMARY} w-full`}
+                            >
+                                <Check size={14} weight='bold' />
+                                {t('dashboard.assignments.submissions.actions.finalize')}
+                            </button>
+                            <button
+                                type='button'
+                                onClick={() => run('grade', gradeAssignment)}
+                                disabled={!!busy}
+                                title={t('dashboard.assignments.submissions.actions.set_final_grade_description')}
+                                className={`${BTN_SECONDARY} w-full`}
+                            >
+                                <FloppyDisk size={14} />
+                                {t('dashboard.assignments.submissions.actions.set_final_grade')}
+                            </button>
+                        </>
+                    )}
+                    <button
+                        type='button'
+                        onClick={() => setRejectOpen(true)}
+                        disabled={!!busy}
+                        title={t('dashboard.assignments.submissions.actions.reject_description')}
+                        className={buttonClass('danger-ghost', 'md', 'w-full')}
+                    >
+                        <X size={15} weight='bold' />
+                        {t('dashboard.assignments.submissions.actions.reject')}
+                    </button>
+                </div>
+            </aside>
+
+            <ConfirmDialog
+                open={rejectOpen}
+                onOpenChange={setRejectOpen}
+                title={t('dashboard.assignments.submissions.actions.reject')}
+                message={t('dashboard.assignments.submissions.actions.reject_description')}
+                confirmLabel={t('dashboard.assignments.submissions.actions.reject')}
+                onConfirm={rejectAssignment}
+            />
         </div>
     )
 }

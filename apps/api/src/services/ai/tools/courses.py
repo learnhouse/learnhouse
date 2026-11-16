@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlsplit
 
 from fastapi import HTTPException
@@ -31,6 +31,7 @@ from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.course_updates import CourseUpdateCreate
 from src.db.courses.courses import Course, CourseCreate, CourseUpdate, ThumbnailType
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipStatusEnum
+from src.db.trail_runs import TrailRun
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.users import AnonymousUser, APITokenUser
@@ -70,6 +71,7 @@ from src.services.courses.courses import (
     update_course,
     update_course_thumbnail,
 )
+from src.services.courses.thumbnails import thumbnail_statuses
 from src.services.courses.updates import create_update
 from src.services.orgs.auth_policy import viewer_for_org
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
@@ -82,7 +84,10 @@ MAX_TOTAL_MARKDOWN = 1_000_000
 
 # ─── field formats ───────────────────────────────────────────────────────────
 # The dashboard stores tags as "a|b|c" and learnings as a JSON list of
-# {id, text, emoji}; older courses hold learnings as "a, b, c".
+# {id, text, emoji}; older courses hold learnings as "a, b, c", and demo or
+# imported courses may hold tags as "a,b,c". A value with a "|" is
+# pipe-separated, anything else comma-separated (same rule as the web app's
+# lib/tags.ts).
 
 
 def _tags_in(tags: list[str]) -> str:
@@ -90,7 +95,9 @@ def _tags_in(tags: list[str]) -> str:
 
 
 def _tags_out(raw: str | None) -> list[str]:
-    return [t.strip() for t in (raw or "").split("|") if t.strip()]
+    raw = raw or ""
+    separator = "|" if "|" in raw else ","
+    return [t.strip() for t in raw.split(separator) if t.strip()]
 
 
 def _learnings_in(items: list[str]) -> str:
@@ -129,6 +136,8 @@ _COURSE_UUID = Field(..., max_length=100, description="The course (course_...)."
 
 
 class ListCoursesParams(Paging):
+    # Most organizations fit in one page, so "which courses..." takes one call.
+    limit: int = Field(50, ge=1, le=100, description="How many items to return (1 to 100).")
     query: str | None = Field(
         None,
         min_length=1,
@@ -137,6 +146,19 @@ class ListCoursesParams(Paging):
     )
     published: bool | None = Field(
         None, description="true: only published courses; false: only drafts. Omit for both."
+    )
+    missing_thumbnail: bool | None = Field(
+        None,
+        description=(
+            "true: only courses whose cover does not show (none set, or its file is missing from "
+            "storage); false: only courses with a working cover."
+        ),
+    )
+    empty: bool | None = Field(
+        None, description="true: only courses with no activities; false: only courses with at least one."
+    )
+    sort: Literal["newest", "updated", "name"] = Field(
+        "newest", description="newest (created), updated (last changed) or name."
     )
 
 
@@ -303,10 +325,32 @@ async def _visible(ctx: ToolContext):
     return stmt.where(or_(readable, authored))
 
 
+# Courses scanned when a filter needs storage checks (missing_thumbnail).
+MAX_SCAN = 500
+
+_SORTS = {
+    "newest": (Course.creation_date.desc(), Course.id.desc()),
+    "updated": (Course.update_date.desc(), Course.id.desc()),
+    "name": (func.lower(Course.name).asc(), Course.id.asc()),
+}
+
+
+async def _counts(ctx: ToolContext, column, key, ids: list[int]) -> dict[int, int]:
+    if not ids:
+        return {}
+    rows = await ctx.db_session.execute(
+        select(key, func.count(column)).where(key.in_(ids)).group_by(key)
+    )
+    return dict(rows.all())
+
+
 async def _list_courses(ctx: ToolContext, p: ListCoursesParams):
     stmt = await _visible(ctx)
     if p.published is not None:
         stmt = stmt.where(Course.published.is_(p.published))
+    if p.empty is not None:
+        has_activity = select(Activity.id).where(Activity.course_id == Course.id).exists()
+        stmt = stmt.where(~has_activity if p.empty else has_activity)
     if p.query:
         pattern = build_like_pattern(p.query)
         stmt = stmt.where(
@@ -317,26 +361,27 @@ async def _list_courses(ctx: ToolContext, p: ListCoursesParams):
                 )
             )
         )
-    total = (
-        await ctx.db_session.execute(select(func.count()).select_from(stmt.subquery()))
-    ).scalar_one()
     offset = offset_of(p.cursor)
-    rows = (
-        await ctx.db_session.execute(
-            stmt.order_by(Course.creation_date.desc(), Course.id.desc()).offset(offset).limit(p.limit)
-        )
-    ).scalars().all()
-    counts: dict[int, int] = {}
-    if rows:
-        counts = dict(
-            (
-                await ctx.db_session.execute(
-                    select(CourseChapter.course_id, func.count(CourseChapter.id))
-                    .where(CourseChapter.course_id.in_([c.id for c in rows]))
-                    .group_by(CourseChapter.course_id)
-                )
-            ).all()
-        )
+    stmt = stmt.order_by(*_SORTS[p.sort])
+    org_uuid = ctx.org.org_uuid
+    if p.missing_thumbnail is not None:
+        # The cover state lives in storage, not in a column: check every
+        # candidate, then page the matches.
+        scanned = (await ctx.db_session.execute(stmt.limit(MAX_SCAN))).scalars().all()
+        status = await thumbnail_statuses(org_uuid, scanned)
+        matches = [c for c in scanned if (status[c.course_uuid] != "ok") == p.missing_thumbnail]
+        total = len(matches)
+        rows = matches[offset : offset + p.limit]
+    else:
+        total = (
+            await ctx.db_session.execute(select(func.count()).select_from(stmt.subquery()))
+        ).scalar_one()
+        rows = (await ctx.db_session.execute(stmt.offset(offset).limit(p.limit))).scalars().all()
+        status = await thumbnail_statuses(org_uuid, rows)
+    ids = [c.id for c in rows]
+    chapters = await _counts(ctx, CourseChapter.id, CourseChapter.course_id, ids)
+    activities = await _counts(ctx, Activity.id, Activity.course_id, ids)
+    enrollments = await _counts(ctx, TrailRun.id, TrailRun.course_id, ids)
     items = [
         await course_ref(
             ctx,
@@ -344,7 +389,12 @@ async def _list_courses(ctx: ToolContext, p: ListCoursesParams):
             published=bool(c.published),
             public=bool(c.public),
             description=clip(c.description, LIST_TEXT) or None,
-            chapters_count=counts.get(c.id, 0),
+            chapters_count=chapters.get(c.id, 0),
+            activities_count=activities.get(c.id, 0),
+            enrollments=enrollments.get(c.id, 0),
+            thumbnail_status=status[c.course_uuid],
+            tags=_tags_out(c.tags),
+            updated_at=iso(c.update_date),
         )
         for c in rows
     ]
@@ -568,7 +618,7 @@ async def _create_course(ctx: ToolContext, p: CreateCourseParams):
 async def _set_thumbnail(ctx: ToolContext, course: Course, url: str) -> None:
     """Fetch an image from a link and store it as the course thumbnail."""
     check_url(url)
-    require_approval(ctx, f"Fetches an image from an outside link ({urlsplit(url).hostname}).")
+    require_approval(ctx, f"Fetches an image from an outside link ({urlsplit(url).hostname}).", person=True)
     fetched = await fetch(url, "image")
     try:
         upload = UploadFile(
@@ -591,8 +641,13 @@ _DRAFT_NEXT_STEP = (
 )
 
 
+# Fields an update can put back exactly as they were (see `undo` below).
+_UNDOABLE_COURSE_FIELDS = ("name", "description", "about", "open_to_contributors", "published", "public")
+
+
 async def _update_course(ctx: ToolContext, p: UpdateCourseParams):
     course = await refs.load(ctx, "course", p.course_uuid)
+    previous = {key: getattr(course, key) for key in _UNDOABLE_COURSE_FIELDS}
     patch = _course_fields(p, skip_empty=False)
     for key in ("open_to_contributors", "published", "public"):
         value = getattr(p, key)
@@ -631,11 +686,18 @@ async def _update_course(ctx: ToolContext, p: UpdateCourseParams):
     if activities_changed is not None:
         verb = "published" if p.publish_activities else "unpublished"
         fields.append(f"{activities_changed} activities {verb}")
-    return changed(
+    out = changed(
         f"Updated course '{course.name}': {', '.join(fields)}.",
         course=await course_ref(ctx, course, published=bool(course.published), public=bool(course.public)),
         activities_changed=activities_changed,
     )
+    # Undo puts the old values back when every change was a plain field.
+    if patch and set(patch) <= set(_UNDOABLE_COURSE_FIELDS) and p.thumbnail_url is None and p.publish_activities is None:
+        out["undo"] = {
+            "tool": "update_course",
+            "args": {"course_uuid": course.course_uuid, **{k: "" if previous[k] is None else previous[k] for k in patch}},
+        }
+    return out
 
 
 async def _delete_course(ctx: ToolContext, p: DeleteCourseParams):
@@ -715,9 +777,11 @@ SPECS: list[ToolSpec] = [
         name="list_courses",
         title="List courses",
         description=(
-            "List the organization's courses you can open, newest first, optionally "
-            "filtered by text or published state. Drafts appear only for people who can "
-            "edit them. Returns course refs with published/public flags and chapter counts."
+            "List the courses you can open (up to 100 per call), filtered by text, published "
+            "state, missing or broken cover (missing_thumbnail) or emptiness. Each has published/"
+            "public flags, chapter and activity counts, enrollments, thumbnail_status (ok, missing, "
+            "broken = file gone) and last update: answer 'which courses...' from it instead of "
+            "opening courses one by one. Drafts only show to their editors."
         ),
         params_model=ListCoursesParams,
         tier=ActionTier.READ,

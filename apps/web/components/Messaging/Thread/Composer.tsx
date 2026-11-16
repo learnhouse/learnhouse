@@ -4,15 +4,21 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { useTranslation } from 'react-i18next'
 import {
   ArrowBendUpLeft,
+  At,
   BookOpen,
   Lock,
   MagnifyingGlass,
   PaperPlaneRight,
   PencilSimple,
   Smiley,
+  TextAa,
   X,
 } from '@phosphor-icons/react'
 import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@components/ui/tooltip'
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import { Kbd, readDraft, writeDraft } from '@components/Messaging/ui/kit'
+import { stripMd } from '@components/Messaging/Thread/MessageItem'
 import EmojiPickerPopover from '@components/Messaging/ui/EmojiPicker'
 import { CourseThumb, PersonAvatar } from '@components/Messaging/ui/Avatars'
 import AgentAvatar from '@components/Messaging/Agents/AgentAvatar'
@@ -45,6 +51,7 @@ export default function Composer({
   onEditLast,
   onTyping,
   compact = false,
+  draftKey,
 }: {
   orgslug: string
   placeholder: string
@@ -61,9 +68,11 @@ export default function Composer({
   onEditLast: () => void
   onTyping: (typing: boolean) => void
   compact?: boolean
+  /** Keeps unsent text for this conversation in the browser. */
+  draftKey?: string
 }) {
   const { t } = useTranslation()
-  const [text, setText] = useState('')
+  const [text, setText] = useState(() => (typeof window === 'undefined' ? '' : readDraft(draftKey)))
   const [course, setCourse] = useState<CourseCard | null>(initialCourse ?? null)
   const [mentioned, setMentioned] = useState<Agent[]>([])
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
@@ -92,6 +101,13 @@ export default function Composer({
   useEffect(() => {
     if (replyTo) ref.current?.focus()
   }, [replyTo])
+
+  // Save the draft a moment after typing stops; edits are never drafts.
+  useEffect(() => {
+    if (editing) return
+    const id = setTimeout(() => writeDraft(draftKey, text), 300)
+    return () => clearTimeout(id)
+  }, [text, draftKey, editing])
 
   // Autosize.
   useLayoutEffect(() => {
@@ -166,7 +182,7 @@ export default function Composer({
     if (editing) {
       if (content && content !== editing.content) onSubmitEdit(editing, content)
       else onCancelEdit()
-      setText('')
+      setText(readDraft(draftKey))
       return
     }
     if (!content && !course) return
@@ -176,6 +192,7 @@ export default function Composer({
       .map((a) => a.agent_uuid)
     onSend({ content, course, agent_uuids })
     setText('')
+    writeDraft(draftKey, '')
     setCourse(null)
     setMentioned([])
     stopTyping()
@@ -215,10 +232,26 @@ export default function Composer({
     }
     if (e.key === 'Escape') {
       if (editing) {
-        setText('')
+        setText(readDraft(draftKey))
         onCancelEdit()
       } else if (replyTo) onCancelReply()
     }
+  }
+
+  // The @ button starts a mention at the caret, as if typed.
+  const startMention = () => {
+    const el = ref.current
+    const caret = el?.selectionStart ?? text.length
+    const before = text.slice(0, caret)
+    const insert = before && !/\s$/.test(before) ? ' @' : '@'
+    const next = before + insert + text.slice(caret)
+    setText(next)
+    requestAnimationFrame(() => {
+      el?.focus()
+      const pos = caret + insert.length
+      el?.setSelectionRange(pos, pos)
+      detectMention(next, pos)
+    })
   }
 
   const insertEmoji = (emoji: string) => {
@@ -235,11 +268,14 @@ export default function Composer({
 
   const filteredCourses = courses.filter((c: OrgCourse) => c.name.toLowerCase().includes(courseQuery.toLowerCase()))
 
+  const tool = 'flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700'
+  const canSend = Boolean(text.trim() || course)
+
   if (disabledReason) {
     return (
-      <div className={compact ? 'px-2 pb-2' : 'px-4 pb-4'}>
-        <div className="flex items-center gap-2.5 rounded-lg border border-dashed border-gray-200 bg-gray-50/70 px-4 py-3 text-sm text-gray-500">
-          <Lock size={15} />
+      <div className={compact ? 'px-2 pb-2' : 'px-3 pb-3 md:px-4 md:pb-4'}>
+        <div className="flex items-center gap-2.5 rounded-2xl bg-neutral-50 px-4 py-3 text-sm text-neutral-500 ring-1 ring-inset ring-neutral-200/70">
+          <Lock size={15} className="shrink-0" />
           {disabledReason}
         </div>
       </div>
@@ -247,67 +283,92 @@ export default function Composer({
   }
 
   return (
-    <div className={`relative ${compact ? 'px-2 pb-2' : 'px-3 md:px-4 pb-3 md:pb-4'}`}>
+    <div className={`relative ${compact ? 'px-2 pb-2' : 'px-3 pb-3 md:px-4 md:pb-4'}`}>
       {/* Mention popup */}
       {mentionOptions.length > 0 && (
-        <div className="absolute bottom-full mb-1 start-4 z-20 w-72 rounded-lg bg-white nice-shadow p-1">
+        <div
+          role="listbox"
+          className="absolute bottom-full start-4 z-20 mb-1 w-72 max-w-[calc(100%-2rem)] rounded-xl bg-white p-1 shadow-[0_8px_24px_rgba(0,0,0,0.1)] ring-1 ring-neutral-900/[0.06]"
+        >
+          <p className="px-2 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+            {t('messaging.mention', { defaultValue: 'Mention' })}
+          </p>
           {mentionOptions.map((o, i) => (
             <button
               key={o.kind === 'agent' ? o.agent.agent_uuid : o.user.user_uuid}
+              type="button"
+              role="option"
+              aria-selected={i === mentionIndex}
               onMouseDown={(e) => {
                 e.preventDefault()
                 applyMention(o)
               }}
-              className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-start ${i === mentionIndex ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+              onMouseEnter={() => setMentionIndex(i)}
+              className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-start ${i === mentionIndex ? 'bg-neutral-100' : ''}`}
             >
               {o.kind === 'agent' ? <AgentAvatar agent={o.agent} size={24} /> : <PersonAvatar user={o.user} size={24} />}
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium truncate">{o.kind === 'agent' ? o.agent.name : displayName(o.user)}</span>
-                <span className="block text-[11px] text-gray-500 truncate">
-                  {o.kind === 'agent' ? o.agent.description || 'Agent · replies in this chat' : `@${o.user.username}`}
+                <span className="block truncate text-sm font-medium text-neutral-900">{o.kind === 'agent' ? o.agent.name : displayName(o.user)}</span>
+                <span className="block truncate text-[11px] text-neutral-500">
+                  {o.kind === 'agent'
+                    ? o.agent.description || t('messaging.agent_replies_here', { defaultValue: 'Agent · replies in this chat' })
+                    : `@${o.user.username}`}
                 </span>
               </span>
-              {o.kind === 'agent' && <span className="rounded-md bg-gray-100 px-1.5 py-px text-[11px] font-medium text-gray-500">Agent</span>}
+              {o.kind === 'agent' && (
+                <span className="rounded-md bg-neutral-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                  {t('messaging.agent', { defaultValue: 'Agent' })}
+                </span>
+              )}
             </button>
           ))}
         </div>
       )}
 
-      <div className="rounded-xl bg-white nice-shadow focus-within:ring-2 focus-within:ring-gray-200 transition-shadow">
+      <div className="rounded-2xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-neutral-200 transition-shadow focus-within:shadow-[0_2px_10px_rgba(0,0,0,0.06)] focus-within:ring-neutral-300">
         {(replyTo || editing) && (
-          <div className="flex items-center gap-2 border-b border-gray-100 px-3.5 py-2 text-xs text-gray-500">
-            {editing ? <PencilSimple size={13} /> : <ArrowBendUpLeft size={13} />}
+          <div className="flex items-center gap-2 border-b border-neutral-100 px-3.5 py-2 text-xs text-neutral-500">
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${editing ? 'bg-amber-50 text-amber-600' : 'bg-neutral-100 text-neutral-500'}`}>
+              {editing ? <PencilSimple size={12} /> : <ArrowBendUpLeft size={12} />}
+            </span>
             <span className="min-w-0 flex-1 truncate">
               {editing ? (
                 t('messaging.editing', { defaultValue: 'Editing message' })
               ) : (
                 <>
                   {t('messaging.replying_to', { defaultValue: 'Replying to' })}{' '}
-                  <span className="font-semibold text-gray-700">{senderName(replyTo!)}</span>
-                  {replyTo!.content ? `: ${replyTo!.content.slice(0, 80)}` : ''}
+                  <span className="font-semibold text-neutral-700">{senderName(replyTo!)}</span>
+                  {replyTo!.content ? `: ${stripMd(replyTo!.content).slice(0, 80)}` : ''}
                 </>
               )}
             </span>
             <button
+              type="button"
               onClick={() => {
                 if (editing) {
-                  setText('')
+                  setText(readDraft(draftKey))
                   onCancelEdit()
                 } else onCancelReply()
               }}
-              className="p-0.5 rounded hover:bg-gray-100"
+              aria-label={t('common.cancel', { defaultValue: 'Cancel' })}
+              className="rounded-md p-1 hover:bg-neutral-100 hover:text-neutral-800"
             >
-              <X size={13} />
+              <X size={12} />
             </button>
           </div>
         )}
 
         {course && !editing && (
           <div className="px-3 pt-3">
-            <div className="inline-flex items-center gap-2.5 rounded-lg border border-gray-200 bg-gray-50 py-1.5 ps-1.5 pe-2">
+            <div className="inline-flex max-w-full items-center gap-2.5 rounded-xl bg-neutral-50 py-1.5 ps-1.5 pe-2 ring-1 ring-inset ring-neutral-200">
               <CourseThumb course={course} size={32} />
-              <span className="text-sm font-medium max-w-[220px] truncate">{course.name}</span>
-              <button onClick={() => setCourse(null)} className="p-0.5 rounded text-gray-400 hover:text-gray-700">
+              <span className="min-w-0 max-w-[220px] truncate text-sm font-medium text-neutral-800">{course.name}</span>
+              <button
+                type="button"
+                onClick={() => setCourse(null)}
+                aria-label={t('messaging.remove_course', { defaultValue: 'Remove course' })}
+                className="rounded-md p-0.5 text-neutral-400 hover:text-neutral-700"
+              >
                 <X size={13} />
               </button>
             </div>
@@ -331,38 +392,52 @@ export default function Composer({
           }}
           placeholder={placeholder}
           maxLength={4000}
-          className="block w-full resize-none bg-transparent px-4 pt-3 pb-1 text-base sm:text-sm leading-relaxed outline-none placeholder:text-gray-400"
+          aria-label={placeholder}
+          className={`block w-full resize-none bg-transparent px-4 pt-3 pb-1 text-base leading-relaxed outline-none placeholder:text-neutral-400 sm:text-sm ${compact ? 'max-h-32' : ''}`}
         />
 
         <div className="flex items-center gap-0.5 px-2 pb-2">
           <EmojiPickerPopover onPick={insertEmoji} open={emojiOpen} onOpenChange={setEmojiOpen} align="start">
-            <button className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Emoji">
+            <button type="button" className={tool} aria-label={t('messaging.emoji', { defaultValue: 'Emoji' })} title={t('messaging.emoji', { defaultValue: 'Emoji' })}>
               <Smiley size={18} />
             </button>
           </EmojiPickerPopover>
+          {(agents.length > 0 || members.length > 0) && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" onClick={startMention} className={tool} aria-label={t('messaging.mention_someone', { defaultValue: 'Mention someone or an agent' })}>
+                  <At size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">{t('messaging.mention_someone', { defaultValue: 'Mention someone or an agent' })}</TooltipContent>
+            </Tooltip>
+          )}
           {!editing && (
             <Popover open={courseOpen} onOpenChange={setCourseOpen}>
               <PopoverTrigger asChild>
-                <button className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Share a course">
+                <button type="button" className={tool} aria-label={t('messaging.share_course', { defaultValue: 'Share a course' })} title={t('messaging.share_course', { defaultValue: 'Share a course' })}>
                   <BookOpen size={18} />
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-80 p-1.5 rounded-lg">
-                <div className="flex items-center gap-2 rounded-md border border-gray-200 px-2.5 py-1.5 mb-1">
-                  <MagnifyingGlass size={13} className="text-gray-400" />
+              <PopoverContent side="top" align="start" className="w-80 rounded-xl p-1.5">
+                <div className="relative mb-1">
+                  <MagnifyingGlass size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
                   <input
                     autoFocus
                     value={courseQuery}
                     onChange={(e) => setCourseQuery(e.target.value)}
                     placeholder={t('messaging.find_course', { defaultValue: 'Find a course to share' })}
-                    className="flex-1 bg-transparent text-base sm:text-sm outline-none"
+                    className="h-9 w-full rounded-lg bg-neutral-50 ps-8 pe-3 text-base outline-none ring-1 ring-inset ring-neutral-200 focus:ring-neutral-300 sm:text-sm"
                   />
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {filteredCourses.length === 0 && <p className="text-xs text-gray-400 text-center py-6">No courses</p>}
+                  {filteredCourses.length === 0 && (
+                    <p className="py-6 text-center text-xs text-neutral-400">{t('messaging.no_courses', { defaultValue: 'No courses' })}</p>
+                  )}
                   {filteredCourses.map((c: OrgCourse) => (
                     <button
                       key={c.course_uuid}
+                      type="button"
                       onClick={() => {
                         setCourse({
                           course_uuid: c.course_uuid,
@@ -373,35 +448,72 @@ export default function Composer({
                         setCourseOpen(false)
                         ref.current?.focus()
                       }}
-                      className="w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-start hover:bg-gray-50"
+                      className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-start hover:bg-neutral-50"
                     >
                       <CourseThumb course={{ course_uuid: c.course_uuid, name: c.name, thumbnail_image: c.thumbnail_image || '' }} size={32} />
-                      <span className="text-sm truncate">{c.name}</span>
+                      <span className="truncate text-sm text-neutral-800">{c.name}</span>
                     </button>
                   ))}
                 </div>
               </PopoverContent>
             </Popover>
           )}
+          {!compact && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" className={`${tool} hidden sm:flex`} aria-label={t('messaging.formatting', { defaultValue: 'Formatting' })} title={t('messaging.formatting', { defaultValue: 'Formatting' })}>
+                  <TextAa size={18} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="start" className="w-64 rounded-xl p-3 text-xs text-neutral-600">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">{t('messaging.formatting', { defaultValue: 'Formatting' })}</p>
+                <ul className="space-y-1.5">
+                  <li className="flex justify-between gap-3"><code className="text-neutral-500">**bold**</code><strong className="text-neutral-900">bold</strong></li>
+                  <li className="flex justify-between gap-3"><code className="text-neutral-500">_italic_</code><em>italic</em></li>
+                  <li className="flex justify-between gap-3"><code className="text-neutral-500">`code`</code><code className="rounded bg-neutral-100 px-1">code</code></li>
+                  <li className="flex justify-between gap-3"><code className="text-neutral-500">&gt; quote</code><span className="border-s-2 border-neutral-300 ps-2">quote</span></li>
+                  <li className="flex justify-between gap-3"><code className="text-neutral-500">- list</code><span>• list</span></li>
+                </ul>
+                <div className="mt-3 space-y-1.5 border-t border-neutral-100 pt-2.5">
+                  <p className="flex items-center justify-between gap-2"><span>{t('messaging.kbd_send', { defaultValue: 'Send' })}</span><Kbd>Enter</Kbd></p>
+                  <p className="flex items-center justify-between gap-2"><span>{t('messaging.kbd_newline', { defaultValue: 'New line' })}</span><span className="flex gap-1"><Kbd>Shift</Kbd><Kbd>Enter</Kbd></span></p>
+                  <p className="flex items-center justify-between gap-2"><span>{t('messaging.kbd_edit_last', { defaultValue: 'Edit your last message' })}</span><Kbd>↑</Kbd></p>
+                  <p className="flex items-center justify-between gap-2"><span>{t('messaging.kbd_mention', { defaultValue: 'Mention' })}</span><Kbd>@</Kbd></p>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
           {mentioned.length > 0 && (
-            <span className="ms-1 flex items-center gap-1 text-[11px] text-gray-500">
+            <span className="ms-1 flex min-w-0 items-center gap-1 overflow-hidden text-[11px] text-neutral-500">
               {mentioned.map((a) => (
-                <span key={a.agent_uuid} className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5">
-                  <AgentAvatar agent={a} size={14} /> {a.name} will reply
+                <span key={a.agent_uuid} className="inline-flex shrink-0 items-center gap-1 rounded-md bg-neutral-100 px-1.5 py-0.5">
+                  <AgentAvatar agent={a} size={14} /> {t('messaging.will_reply', { defaultValue: '{{name}} will reply', name: a.name })}
                 </span>
               ))}
             </span>
           )}
-          <span className="ms-auto hidden sm:block text-[11px] text-gray-400 me-2">
-            {editing ? 'Enter to save · Esc to cancel' : 'Enter to send · Shift+Enter new line'}
-          </span>
+          {!compact && (
+            <span className="ms-auto me-2 hidden items-center gap-1 text-[11px] text-neutral-400 lg:flex">
+              {editing ? (
+                <>
+                  <Kbd>Enter</Kbd> {t('messaging.kbd_save', { defaultValue: 'save' })} <Kbd className="ms-1.5">Esc</Kbd> {t('messaging.kbd_cancel', { defaultValue: 'cancel' })}
+                </>
+              ) : (
+                <>
+                  <Kbd>Enter</Kbd> {t('messaging.kbd_send_lower', { defaultValue: 'send' })} <Kbd className="ms-1.5">Shift</Kbd>
+                  <Kbd>Enter</Kbd> {t('messaging.kbd_newline_lower', { defaultValue: 'new line' })}
+                </>
+              )}
+            </span>
+          )}
           <button
+            type="button"
             onClick={submit}
-            disabled={!text.trim() && !course}
-            className="ms-auto sm:ms-0 h-9 w-9 sm:h-8 sm:w-8 rounded-lg bg-black text-white flex items-center justify-center disabled:bg-gray-100 disabled:text-gray-300 hover:bg-gray-800 transition-colors"
-            aria-label="Send"
+            disabled={!canSend}
+            className={`${buttonClass(canSend ? 'primary' : 'secondary', 'icon')} ms-auto h-9 w-9 sm:h-8 sm:w-8 ${!compact ? 'lg:ms-0' : ''} disabled:!opacity-100 disabled:text-neutral-300`}
+            aria-label={editing ? t('messaging.save', { defaultValue: 'Save' }) : t('messaging.send', { defaultValue: 'Send' })}
           >
-            <PaperPlaneRight size={15} weight="fill" />
+            <PaperPlaneRight size={15} weight="fill" className="rtl:-scale-x-100" />
           </button>
         </div>
       </div>

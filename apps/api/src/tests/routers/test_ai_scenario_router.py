@@ -68,7 +68,7 @@ async def test_happy_path():
     record = SimpleNamespace(ai_generation_uuid="aigen_1")
     with patch.object(sc, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(sc, "enforce_ai_rate_limit"), \
-         patch.object(sc, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(sc, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(sc, "generate_scenario", new=AsyncMock(return_value=(_BLOCK, "s1"))), \
          patch.object(sc, "record_generation", new=AsyncMock(return_value=record)):
@@ -83,10 +83,10 @@ async def test_empty_scenarios_refunds_502():
     empty = {"title": "T", "currentScenarioId": "", "scenarios": []}
     with patch.object(sc, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(sc, "enforce_ai_rate_limit"), \
-         patch.object(sc, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(sc, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(sc, "generate_scenario", new=AsyncMock(return_value=(empty, "s1"))), \
-         patch.object(sc, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await sc.api_generate_scenario(SimpleNamespace(), body, _user(), _db_returning(_org()))
     assert exc.value.status_code == 502
@@ -97,10 +97,10 @@ async def test_not_configured_refunds_403():
     body = GenerateScenarioRequest(org_id=5, prompt="p")
     with patch.object(sc, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(sc, "enforce_ai_rate_limit"), \
-         patch.object(sc, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(sc, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(sc, "generate_scenario", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
-         patch.object(sc, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await sc.api_generate_scenario(SimpleNamespace(), body, _user(), _db_returning(_org()))
     assert exc.value.status_code == 403
@@ -120,3 +120,9 @@ async def test_history_and_delete():
         with pytest.raises(HTTPException) as exc:
             await sc.api_delete_scenario_history("x", _user(), AsyncMock())
     assert exc.value.status_code == 404
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

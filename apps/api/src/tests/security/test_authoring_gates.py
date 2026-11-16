@@ -2,19 +2,17 @@
 
 Members could spend an org's AI credits on authoring tools (scenario, images,
 audio, magic blocks, planning) and read or continue each other's AI sessions;
-private boards were listed to every member; comments skipped the rich-content
+comments skipped the rich-content
 validator; and a catch-all ``allowed_regexp`` opened CORS with credentials.
 """
 
 import re
-from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 
-from src.db.boards import Board
 from src.core.middleware.cors import effective_allowed_regexp, get_cors_origin_regex
 
 
@@ -49,7 +47,7 @@ class TestAIAuthoringToolsNeedAuthorRights:
         with patch.object(sc, "_authorize_org", new=AsyncMock(return_value=SimpleNamespace(id=5))), \
              patch.object(sc, "require_org_create_permission",
                           new=AsyncMock(side_effect=HTTPException(status_code=403, detail="no"))), \
-             patch.object(sc, "reserve_ai_credit", new=AsyncMock()) as reserve:
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()) as reserve:
             with pytest.raises(HTTPException) as exc:
                 await sc.api_generate_scenario(
                     SimpleNamespace(), GenerateScenarioRequest(org_id=5, prompt="p"),
@@ -66,7 +64,7 @@ class TestAIAuthoringToolsNeedAuthorRights:
              patch.object(sc, "_load_activity_content", new=AsyncMock(return_value=({}, 9, "course_x"))), \
              patch.object(sc, "check_resource_access",
                           new=AsyncMock(side_effect=HTTPException(status_code=403, detail="no"))) as rbac, \
-             patch.object(sc, "reserve_ai_credit", new=AsyncMock()) as reserve:
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()) as reserve:
             with pytest.raises(HTTPException) as exc:
                 await sc.api_generate_scenario(
                     SimpleNamespace(), GenerateScenarioRequest(org_id=5, prompt="p", activity_uuid="act"),
@@ -87,7 +85,7 @@ class TestAISessionsBelongToTheirStarter:
         )
         info = (activity, course, SimpleNamespace(id=course.org_id), "model", "text")
         with patch.object(ai_service, "_get_activity_and_course_info", new=AsyncMock(return_value=info)), \
-             patch.object(ai_service, "reserve_ai_credit", new=AsyncMock()) as reserve, \
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()) as reserve, \
              patch.object(ai_service, "chat_session_belongs_to_user", return_value=False), \
              patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
             with pytest.raises(HTTPException) as exc:
@@ -109,30 +107,6 @@ class TestAISessionsBelongToTheirStarter:
         assert exc.value.status_code == 404
 
 
-class TestBoardListingHonoursEachBoard:
-    async def test_private_boards_are_hidden_from_plain_members(self, db, org, admin_user, regular_user, mock_request):
-        from src.services.boards.boards import get_boards_by_org
-
-        for id, uuid, public in ((1, "board_pub", True), (2, "board_priv", False)):
-            db.add(Board(
-                id=id, name=uuid, public=public, org_id=org.id, board_uuid=uuid,
-                created_by=admin_user.id,
-                creation_date=str(datetime.now()), update_date=str(datetime.now()),
-            ))
-        await db.commit()
-
-        # The listing shows exactly the boards the caller could open directly.
-        from src.security.rbac.resource_access import AccessDecision
-        from src.services.boards import boards as boards_module
-
-        async def per_board(request, db_session, user, uuid, action, *a, **kw):
-            return AccessDecision(allowed=(uuid != "board_priv"), reason="")
-
-        with patch.object(boards_module, "check_resource_access", side_effect=per_board):
-            seen = {b.board_uuid for b in await get_boards_by_org(mock_request, org.id, regular_user, db)}
-        assert seen == {"board_pub"}
-
-
 class TestCommentsGoThroughTheRichContentValidator:
     async def test_validate_comment_content_calls_rich_validator(self):
         from src.services.communities import moderation
@@ -145,3 +119,9 @@ class TestCommentsGoThroughTheRichContentValidator:
             await moderation.validate_comment_content('{"type":"doc"}', 1, fake_db)
         rich.assert_called_once()
         assert rich.call_args.kwargs.get("content_type") == "reply"
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

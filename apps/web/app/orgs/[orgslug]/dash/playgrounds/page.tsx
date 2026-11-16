@@ -1,7 +1,7 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import React from 'react'
-import PlaygroundsListClient from './client'
+import PlaygroundsListClient from '@ee/components/Plays/Pages/PlaysDashPage'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string }>
@@ -16,8 +16,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   })
 
   return {
-    title: 'Playgrounds | ' + org.name,
-    description: `Interactive AI-generated playgrounds for ${org.name}`,
+    title: 'Plays | ' + org.name,
+    description: `Step-by-step lessons, quizzes and interactive plays for ${org.name}`,
     robots: {
       index: false,
       follow: false,

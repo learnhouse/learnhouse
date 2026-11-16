@@ -1,15 +1,16 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import * as Form from '@radix-ui/react-form'
-import BarLoader from 'react-spinners/BarLoader'
-import { PlayCircle, Upload, YoutubeLogo } from '@phosphor-icons/react'
+import { CaretDown, UploadSimple, YoutubeLogo } from '@phosphor-icons/react'
 import { constructAcceptValue } from '@/lib/constants'
 import CaptionsSettings, {
   type CaptionsValue,
   EMPTY_CAPTIONS,
 } from '@components/Objects/Activities/Video/CaptionsSettings'
+import { INPUT, SegmentedControl } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { ActivityField, FilePicker, ModalFormActions, nameFromFile, useModalFormId } from '../../activityFormKit'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
+const SMALL_INPUT = `${INPUT} text-center tabular-nums`
 
 interface VideoDetails {
   startTime: number
@@ -26,6 +27,8 @@ interface ExternalVideoObject {
   details: VideoDetails
 }
 
+const toParts = (total: number) => ({ minutes: Math.floor(total / 60), seconds: total % 60 })
+
 function VideoModal({
   submitFileActivity,
   submitExternalVideo,
@@ -33,38 +36,38 @@ function VideoModal({
   course,
 }: any) {
   const { t } = useTranslation()
-  const [video, setVideo] = React.useState<File | null>(null)
+  const formId = useModalFormId()
+  const [video, setVideo] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [name, setName] = React.useState('')
-  const [youtubeUrl, setYoutubeUrl] = React.useState('')
-  const [selectedView, setSelectedView] = React.useState<'file' | 'youtube'>(
-    'file'
-  )
-  const [videoDetails, setVideoDetails] = React.useState<VideoDetails>({
+  const [name, setName] = useState('')
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [source, setSource] = useState<'file' | 'youtube'>('file')
+  const [showPlayback, setShowPlayback] = useState(false)
+  const [videoDetails, setVideoDetails] = useState<VideoDetails>({
     startTime: 0,
     endTime: null,
     autoplay: false,
     muted: false,
   })
-  const [captions, setCaptions] = React.useState<CaptionsValue>(EMPTY_CAPTIONS)
+  const [captions, setCaptions] = useState<CaptionsValue>(EMPTY_CAPTIONS)
 
-  const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.[0]) {
-      setVideo(event.target.files[0])
-    }
+  const handleFile = (file: File | null) => {
+    setVideo(file)
+    if (file && !name.trim()) setName(nameFromFile(file))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
     setIsSubmitting(true)
 
     try {
-      if (selectedView === 'file' && video) {
+      if (source === 'file' && video) {
         await submitFileActivity(
           video,
           'video',
           {
-            name: name,
+            name: name.trim(),
             chapter_id: chapterId,
             activity_type: 'TYPE_VIDEO',
             activity_sub_type: 'SUBTYPE_VIDEO_HOSTED',
@@ -84,15 +87,14 @@ function VideoModal({
         )
       }
 
-      if (selectedView === 'youtube') {
+      if (source === 'youtube') {
         const external_video_object: ExternalVideoObject = {
-          name,
+          name: name.trim(),
           type: 'youtube',
-          uri: youtubeUrl,
+          uri: youtubeUrl.trim(),
           chapter_id: chapterId,
           details: videoDetails,
         }
-
         await submitExternalVideo(external_video_object, 'activity', chapterId)
       }
     } finally {
@@ -100,274 +102,150 @@ function VideoModal({
     }
   }
 
-  const convertToSeconds = (minutes: number, seconds: number) =>
-    minutes * 60 + seconds
-  const convertFromSeconds = (totalSeconds: number) => ({
-    minutes: Math.floor(totalSeconds / 60),
-    seconds: totalSeconds % 60,
-  })
+  const start = toParts(videoDetails.startTime)
+  const end = videoDetails.endTime ? toParts(videoDetails.endTime) : { minutes: 0, seconds: 0 }
+  const setStart = (minutes: number, seconds: number) =>
+    setVideoDetails({ ...videoDetails, startTime: Math.max(0, minutes) * 60 + Math.min(59, Math.max(0, seconds)) })
+  const setEnd = (minutes: number, seconds: number) => {
+    const total = Math.max(0, minutes) * 60 + Math.min(59, Math.max(0, seconds))
+    // An end before the start is ignored, as before; 0 clears it.
+    if (total === 0) setVideoDetails({ ...videoDetails, endTime: null })
+    else if (total > videoDetails.startTime) setVideoDetails({ ...videoDetails, endTime: total })
+  }
 
-  const startTimeParts = convertFromSeconds(videoDetails.startTime)
-  const endTimeParts = videoDetails.endTime
-    ? convertFromSeconds(videoDetails.endTime)
-    : { minutes: 0, seconds: 0 }
+  const canSubmit = !!name.trim() && (source === 'file' ? !!video : !!youtubeUrl.trim())
+
+  const timeInputs = (
+    value: { minutes: number; seconds: number },
+    onChange: (minutes: number, seconds: number) => void,
+    label: string
+  ) => (
+    <div className="flex items-center gap-1.5" role="group" aria-label={label}>
+      <input
+        type="number"
+        min={0}
+        value={value.minutes}
+        onChange={(e) => onChange(parseInt(e.target.value) || 0, value.seconds)}
+        className={`${SMALL_INPUT} w-16`}
+        aria-label={`${label} (${t('activities.modal.min')})`}
+      />
+      <span className="text-xs text-neutral-400">{t('activities.modal.min')}</span>
+      <input
+        type="number"
+        min={0}
+        max={59}
+        value={value.seconds}
+        onChange={(e) => onChange(value.minutes, parseInt(e.target.value) || 0)}
+        className={`${SMALL_INPUT} w-16`}
+        aria-label={`${label} (${t('activities.modal.sec')})`}
+      />
+      <span className="text-xs text-neutral-400">{t('activities.modal.sec')}</span>
+    </div>
+  )
 
   return (
-    <Form.Root onSubmit={handleSubmit} className="space-y-4">
-      <div
-        className="relative flex items-center justify-center h-20 rounded-xl overflow-hidden"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(196,181,253,0.25) 6px, rgba(196,181,253,0.25) 7px)',
-        }}
-      >
-        <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
-          <PlayCircle size={18} weight="duotone" className="text-violet-400" />
-          {t('activities.video')}
-        </span>
-      </div>
+    <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+      <ActivityField label={t('activities.modal.activity_name')} htmlFor="video-activity-name">
+        <input
+          id="video-activity-name"
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          type="text"
+          required
+          placeholder={t('activities.modal.enter_name')}
+          className={INPUT}
+        />
+      </ActivityField>
 
-      <div className="rounded-xl nice-shadow p-4 space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">
-            {t('activities.modal.activity_name')}
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            type="text"
-            required
-            placeholder={t('activities.modal.enter_name')}
-            className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+      <ActivityField
+        label={t('activities.modal.source')}
+        aside={
+          <SegmentedControl
+            ariaLabel={t('activities.modal.source')}
+            value={source}
+            onChange={(v) => v && setSource(v)}
+            options={[
+              { key: 'file', label: <><UploadSimple size={13} />{t('media.upload')}</> },
+              { key: 'youtube', label: <><YoutubeLogo size={13} />YouTube</> },
+            ]}
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">{t('activities.modal.source')}</label>
-          <div className="grid grid-cols-2 gap-0 rounded-lg overflow-hidden border border-gray-200">
-            <button
-              type="button"
-              onClick={() => setSelectedView('file')}
-              className={`flex items-center justify-center py-2.5 gap-2 text-sm font-medium transition-colors ${
-                selectedView === 'file'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'bg-white text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              <Upload size={16} weight="duotone" />
-              {t('media.upload')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedView('youtube')}
-              className={`flex items-center justify-center py-2.5 gap-2 text-sm font-medium border-s border-gray-200 transition-colors ${
-                selectedView === 'youtube'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'bg-white text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              <YoutubeLogo size={16} weight="duotone" />
-              YouTube
-            </button>
-          </div>
-        </div>
-
-        {selectedView === 'file' && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">
-              {t('activities.modal.video_file')}
-            </label>
-            <input
-              type="file"
-              accept={SUPPORTED_FILES}
-              onChange={handleVideoChange}
-              required
-              className="w-full text-sm text-gray-500 file:me-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition-colors"
-            />
-          </div>
+        }
+      >
+        {source === 'file' ? (
+          <FilePicker
+            accept={SUPPORTED_FILES}
+            file={video}
+            onChange={handleFile}
+            required
+            title={t('dashboard.courses.editor.activity_form.video_title')}
+            hint={t('dashboard.courses.editor.activity_form.video_hint')}
+          />
+        ) : (
+          <input
+            value={youtubeUrl}
+            onChange={(e) => setYoutubeUrl(e.target.value)}
+            type="url"
+            required
+            aria-label={t('activities.modal.youtube_url')}
+            placeholder="https://youtube.com/watch?v=..."
+            className={INPUT}
+          />
         )}
+      </ActivityField>
 
-        {selectedView === 'youtube' && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">
-              {t('activities.modal.youtube_url')}
-            </label>
-            <input
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              type="text"
-              required
-              placeholder="https://youtube.com/watch?v=..."
-              className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
-            />
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-xl nice-shadow p-4 space-y-4">
-        <h3 className="text-sm font-medium text-gray-700">{t('activities.modal.video_settings')}</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">
-              {t('activities.modal.start_time')}
-            </label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="0"
-                  value={startTimeParts.minutes}
-                  onChange={(e) => {
-                    const minutes = Math.max(0, parseInt(e.target.value) || 0)
-                    setVideoDetails({
-                      ...videoDetails,
-                      startTime: convertToSeconds(
-                        minutes,
-                        startTimeParts.seconds
-                      ),
-                    })
-                  }}
-                  placeholder="0"
-                  className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
-                />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  {t('activities.modal.min')}
-                </span>
-              </div>
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={startTimeParts.seconds}
-                  onChange={(e) => {
-                    const seconds = Math.max(
-                      0,
-                      Math.min(59, parseInt(e.target.value) || 0)
-                    )
-                    setVideoDetails({
-                      ...videoDetails,
-                      startTime: convertToSeconds(
-                        startTimeParts.minutes,
-                        seconds
-                      ),
-                    })
-                  }}
-                  placeholder="0"
-                  className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
-                />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  {t('activities.modal.sec')}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">
-              {t('activities.modal.end_time_optional')}
-            </label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="0"
-                  value={endTimeParts.minutes}
-                  onChange={(e) => {
-                    const minutes = Math.max(0, parseInt(e.target.value) || 0)
-                    const totalSeconds = convertToSeconds(
-                      minutes,
-                      endTimeParts.seconds
-                    )
-                    if (totalSeconds > videoDetails.startTime) {
-                      setVideoDetails({ ...videoDetails, endTime: totalSeconds })
-                    }
-                  }}
-                  placeholder="0"
-                  className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
-                />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  {t('activities.modal.min')}
-                </span>
-              </div>
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={endTimeParts.seconds}
-                  onChange={(e) => {
-                    const seconds = Math.max(
-                      0,
-                      Math.min(59, parseInt(e.target.value) || 0)
-                    )
-                    const totalSeconds = convertToSeconds(
-                      endTimeParts.minutes,
-                      seconds
-                    )
-                    if (totalSeconds > videoDetails.startTime) {
-                      setVideoDetails({ ...videoDetails, endTime: totalSeconds })
-                    }
-                  }}
-                  placeholder="0"
-                  className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
-                />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  {t('activities.modal.sec')}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-5 pt-1">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={videoDetails.autoplay}
-              onChange={(e) =>
-                setVideoDetails({ ...videoDetails, autoplay: e.target.checked })
-              }
-              className="rounded border-gray-300 text-black focus:ring-black"
-            />
-            <span className="text-sm text-gray-600">{t('activities.modal.autoplay')}</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={videoDetails.muted}
-              onChange={(e) =>
-                setVideoDetails({ ...videoDetails, muted: e.target.checked })
-              }
-              className="rounded border-gray-300 text-black focus:ring-black"
-            />
-            <span className="text-sm text-gray-600">{t('activities.modal.start_muted')}</span>
-          </label>
-        </div>
-      </div>
-
-      {selectedView === 'file' && (
-        <CaptionsSettings value={captions} onChange={setCaptions} />
-      )}
-
-      <div className="flex justify-end">
+      {/* Rarely needed, so folded away by default. */}
+      <div className="rounded-xl ring-1 ring-inset ring-neutral-200">
         <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+          type="button"
+          onClick={() => setShowPlayback((v) => !v)}
+          aria-expanded={showPlayback}
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 text-start"
         >
-          {isSubmitting ? (
-            <BarLoader
-              cssOverride={{ borderRadius: 60 }}
-              width={60}
-              color="#ffffff"
-            />
-          ) : (
-            t('activities.modal.create_activity')
-          )}
+          <span>
+            <span className="block text-sm font-semibold text-neutral-800">{t('activities.modal.video_settings')}</span>
+            <span className="block text-xs text-neutral-400">{t('dashboard.courses.editor.activity_form.playback_hint')}</span>
+          </span>
+          <CaretDown size={14} className={`text-neutral-400 transition-transform ${showPlayback ? 'rotate-180' : ''}`} />
         </button>
+        {showPlayback && (
+          <div className="border-t border-neutral-100 px-4 py-4 space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <ActivityField label={t('activities.modal.start_time')}>
+                {timeInputs(start, setStart, t('activities.modal.start_time'))}
+              </ActivityField>
+              <ActivityField label={t('activities.modal.end_time_optional')}>
+                {timeInputs(end, setEnd, t('activities.modal.end_time_optional'))}
+              </ActivityField>
+            </div>
+            <div className="flex flex-wrap items-center gap-5">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  checked={videoDetails.autoplay}
+                  onChange={(e) => setVideoDetails({ ...videoDetails, autoplay: e.target.checked })}
+                  className="accent-neutral-900"
+                />
+                {t('activities.modal.autoplay')}
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  checked={videoDetails.muted}
+                  onChange={(e) => setVideoDetails({ ...videoDetails, muted: e.target.checked })}
+                  className="accent-neutral-900"
+                />
+                {t('activities.modal.start_muted')}
+              </label>
+            </div>
+          </div>
+        )}
       </div>
-    </Form.Root>
+
+      {source === 'file' && <CaptionsSettings value={captions} onChange={setCaptions} />}
+
+      <ModalFormActions submitting={isSubmitting} canSubmit={canSubmit} label={t('activities.modal.create_activity')} />
+    </form>
   )
 }
 

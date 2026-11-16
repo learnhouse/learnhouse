@@ -58,6 +58,7 @@ async def test_activity_chat_refunds_credit_on_upstream_exception():
                 "ai text",
                 "gemini",
                 org_id=77,
+                meter=_meter(77),
             )
         )
 
@@ -94,6 +95,7 @@ async def test_activity_chat_refunds_credit_on_empty_stream():
                 "ai text",
                 "gemini",
                 org_id=77,
+                meter=_meter(77),
             )
         )
 
@@ -133,6 +135,7 @@ async def test_activity_chat_does_not_refund_on_successful_stream():
                 "ai text",
                 "gemini",
                 org_id=77,
+                meter=_meter(77),
             )
         )
 
@@ -160,6 +163,7 @@ async def test_activity_chat_refunds_on_client_disconnect():
             "ai text",
             "gemini",
             org_id=77,
+            meter=_meter(77),
         )
 
         with pytest.raises(asyncio.CancelledError):
@@ -194,6 +198,7 @@ async def test_activity_chat_does_not_refund_on_disconnect_after_content():
             "ai text",
             "gemini",
             org_id=77,
+            meter=_meter(77),
         )
 
         with pytest.raises(asyncio.CancelledError):
@@ -202,3 +207,16 @@ async def test_activity_chat_does_not_refund_on_disconnect_after_content():
 
     # Content was produced before the disconnect → credit legitimately spent.
     assert refunded == []
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy
+
+
+def _meter(org_id: int):
+    """The open ask-AI charge the router hands the stream (one credit reserved)."""
+    from src.services.ai.metering import Meter
+
+    return Meter(feature="ask_ai", org_id=org_id, reserved=1)

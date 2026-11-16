@@ -83,6 +83,41 @@ export interface APITokenRights {
     action_update: boolean
     action_delete: boolean
   }
+  // Plays authoring API (plays, steps, rules, results, analytics, import).
+  // `_own` = plays created by the token's creator. Optional: older tokens
+  // don't carry it (their reads fall back to `courses` read).
+  playgrounds?: {
+    action_create: boolean
+    action_read: boolean
+    action_read_own?: boolean
+    action_update: boolean
+    action_update_own?: boolean
+    action_delete: boolean
+    action_delete_own?: boolean
+  }
+  // Newsletter API (lists, subscribers, segments, campaigns, automations,
+  // settings). Optional: tokens created before newsletters don't carry it.
+  newsletter?: {
+    action_create: boolean
+    action_read: boolean
+    action_update: boolean
+    action_delete: boolean
+  }
+  // CRM integrations (EE): read status, errors, mapping; update starts
+  // syncs, retries and changes the mapping. Optional for older tokens.
+  crm?: {
+    action_read: boolean
+    action_update: boolean
+  }
+  // Agent API (EE): read lists/reads agents and conversations, create starts
+  // conversations and sends messages, delete removes conversations, update
+  // lets the token approve risky actions itself. Optional for older tokens.
+  agent?: {
+    action_create: boolean
+    action_read: boolean
+    action_update: boolean
+    action_delete: boolean
+  }
 }
 
 export interface APIToken {
@@ -193,6 +228,22 @@ export const getDefaultRights = (): APITokenRights => ({
     action_update: false,
     action_delete: false,
   },
+  newsletter: {
+    action_create: false,
+    action_read: false,
+    action_update: false,
+    action_delete: false,
+  },
+  crm: {
+    action_read: false,
+    action_update: false,
+  },
+  agent: {
+    action_create: false,
+    action_read: false,
+    action_update: false,
+    action_delete: false,
+  },
 })
 
 // Full permissions template
@@ -269,6 +320,33 @@ export const getFullRights = (): APITokenRights => ({
     action_update: true,
     action_delete: true,
   },
+  playgrounds: {
+    action_create: true,
+    action_read: true,
+    action_read_own: true,
+    action_update: true,
+    action_update_own: true,
+    action_delete: true,
+    action_delete_own: true,
+  },
+  newsletter: {
+    action_create: true,
+    action_read: true,
+    action_update: true,
+    action_delete: true,
+  },
+  crm: {
+    action_read: true,
+    action_update: true,
+  },
+  agent: {
+    // Self-approval (update) is left out of Full Access: a token that approves
+    // its own risky actions has to be chosen under Custom.
+    action_create: true,
+    action_read: true,
+    action_update: false,
+    action_delete: true,
+  },
 })
 
 // Read-only permissions template
@@ -340,6 +418,31 @@ export const getReadOnlyRights = (): APITokenRights => ({
     action_delete: false,
   },
   roles: {
+    action_create: false,
+    action_read: true,
+    action_update: false,
+    action_delete: false,
+  },
+  playgrounds: {
+    action_create: false,
+    action_read: true,
+    action_read_own: true,
+    action_update: false,
+    action_update_own: false,
+    action_delete: false,
+    action_delete_own: false,
+  },
+  newsletter: {
+    action_create: false,
+    action_read: true,
+    action_update: false,
+    action_delete: false,
+  },
+  crm: {
+    action_read: true,
+    action_update: false,
+  },
+  agent: {
     action_create: false,
     action_read: true,
     action_update: false,

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Code editor with passing tests">
+<rect width="640" height="480" rx="16" fill="#121212"/>
+<rect width="640" height="40" rx="16" fill="#1d1d1d"/><rect y="24" width="640" height="16" fill="#1d1d1d"/>
+<circle cx="22" cy="20" r="6" fill="#ff5f57"/><circle cx="42" cy="20" r="6" fill="#febc2e"/><circle cx="62" cy="20" r="6" fill="#28c840"/>
+<text x="100" y="25" font-family="monospace" font-size="12" fill="#8a8a85">habits.py</text>
+<g font-family="monospace" font-size="15">
+<text x="28" y="82" fill="#6d6d68">1</text><text x="58" y="82"><tspan fill="#b49cff">def</tspan><tspan fill="#ffb224"> streak</tspan><tspan fill="#eaeae5">(days):</tspan></text>
+<text x="28" y="110" fill="#6d6d68">2</text><text x="90" y="110" fill="#8a8a85"># longest run of done days</text>
+<text x="28" y="138" fill="#6d6d68">3</text><text x="90" y="138"><tspan fill="#eaeae5">best = run = </tspan><tspan fill="#7fd1a0">0</tspan></text>
+<text x="28" y="166" fill="#6d6d68">4</text><text x="90" y="166"><tspan fill="#b49cff">for</tspan><tspan fill="#eaeae5"> done </tspan><tspan fill="#b49cff">in</tspan><tspan fill="#eaeae5"> days:</tspan></text>
+<text x="28" y="194" fill="#6d6d68">5</text><text x="122" y="194"><tspan fill="#eaeae5">run = run + </tspan><tspan fill="#7fd1a0">1</tspan><tspan fill="#b49cff"> if</tspan><tspan fill="#eaeae5"> done </tspan><tspan fill="#b49cff">else</tspan><tspan fill="#7fd1a0"> 0</tspan></text>
+<text x="28" y="222" fill="#6d6d68">6</text><text x="122" y="222"><tspan fill="#eaeae5">best = </tspan><tspan fill="#ffb224">max</tspan><tspan fill="#eaeae5">(best, run)</tspan></text>
+<text x="28" y="250" fill="#6d6d68">7</text><text x="90" y="250"><tspan fill="#b49cff">return</tspan><tspan fill="#eaeae5"> best</tspan></text>
+</g>
+<rect x="58" y="210" width="290" height="20" fill="#6d4aff" opacity=".18"/>
+<rect x="24" y="290" width="592" height="166" rx="12" fill="#1b1b1b"/>
+<g font-family="monospace" font-size="13">
+<text x="44" y="320" fill="#8a8a85">$ pytest -q</text>
+<text x="44" y="348" fill="#7fd1a0">....... 7 passed in 0.08s</text>
+<text x="44" y="376" fill="#8a8a85">$ git commit -m "streak: handle empty weeks"</text>
+<text x="44" y="404" fill="#eaeae5">[main 4f2c1a9] 1 file changed</text>
+</g>
+<rect x="470" y="400" width="126" height="36" rx="18" fill="#6d4aff"/><text x="533" y="423" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">Review ✓</text>
+</svg>

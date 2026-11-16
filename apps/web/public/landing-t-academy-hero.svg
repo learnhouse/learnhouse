@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 680" role="img" aria-label="Arched window">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9dfc9"/><stop offset="1" stop-color="#f4ede0"/></linearGradient>
+<linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6a52"/><stop offset="1" stop-color="#1f4d3a"/></linearGradient>
+<clipPath id="arch"><path d="M80 680V300a200 200 0 0 1 400 0v380z"/></clipPath>
+</defs>
+<rect width="560" height="680" fill="#efe9de"/>
+<g clip-path="url(#arch)">
+<rect width="560" height="680" fill="url(#sky)"/>
+<circle cx="360" cy="250" r="64" fill="#c08a3e" opacity=".9"/>
+<path d="M0 470c90-50 170-60 260-30s170 30 300-20v260H0z" fill="#8fae8f"/>
+<path d="M0 520c110-40 200-30 290 0s180 20 270-10v170H0z" fill="url(#hill)"/>
+<g fill="#14281f"><rect x="146" y="430" width="6" height="110"/><circle cx="149" cy="420" r="34"/><rect x="398" y="450" width="5" height="90"/><circle cx="400" cy="440" r="26"/></g>
+<path d="M0 600h560v80H0z" fill="#14281f" opacity=".85"/>
+</g>
+<path d="M80 680V300a200 200 0 0 1 400 0v380" fill="none" stroke="#1c1b18" stroke-width="3"/>
+<path d="M280 100v580M80 420h400" stroke="#1c1b18" stroke-width="2" opacity=".55"/>
+<path d="M60 680V300a220 220 0 0 1 440 0v380" fill="none" stroke="#c08a3e" stroke-width="1.5" opacity=".7"/>
+</svg>

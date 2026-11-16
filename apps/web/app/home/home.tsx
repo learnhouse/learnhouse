@@ -10,7 +10,10 @@ import { apiFetch } from '@services/utils/ts/requests'
 import { signOut } from '@components/Contexts/AuthContext'
 import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { deleteOrganization, leaveOrg } from '@services/organizations/orgs'
-import { ChevronRight, Languages, Check, LogOut, Settings, LogIn, Plus, MoreVertical, CreditCard, Trash2, AlertTriangle } from 'lucide-react'
+import { ChevronRight, Languages, Check, LogOut, Settings, LogIn, Plus, MoreVertical, CreditCard, Trash2, AlertTriangle, LayoutDashboard, UserPlus } from 'lucide-react'
+import PendingInvites from '@components/Onboarding/PendingInvites'
+import { daysUntil } from '@/lib/onboarding'
+import { getHubSummary, onboardingKeys, type HubOrg } from '@services/onboarding/onboarding'
 import Link from 'next/link'
 import React, { useEffect, useState, useSyncExternalStore } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -67,6 +70,17 @@ function HomeClient() {
     }
   }, [isLoading, isAuthenticated, router])
 
+  // Role, plan, status and setup progress per org, plus invitations waiting
+  // for this user. The list renders without it; the chips appear when it lands.
+  const { data: hub, isFetched: hubFetched } = useQuery({
+    queryKey: onboardingKeys.hub(),
+    queryFn: () => getHubSummary(access_token),
+    enabled: isAuthenticated && !!access_token,
+    staleTime: 30_000,
+  })
+  const hubById = new Map<number, HubOrg>((hub?.orgs ?? []).map((o) => [o.org_id, o]))
+  const invites = hub?.invites ?? []
+
   // The hub is for people who run a LearnHouse (and prospects who only tried
   // the demo). Someone who only joined schools as a member gets a plain list of
   // them: no demo, and creating an organization is a quiet link.
@@ -75,16 +89,17 @@ function HomeClient() {
   const roles: any[] = session?.data?.roles || []
   const managesAnyOrg = roles.length === 0 || seesPlatformHubFromSession(session)
   // A user with no organization is sent to /new; show the skeleton meanwhile.
-  const leaving = isAuthenticated && Array.isArray(orgs) && orgs.length === 0
+  // ...unless invitations are waiting: joining one is the shorter path.
+  const leaving = isAuthenticated && Array.isArray(orgs) && orgs.length === 0 && hubFetched && invites.length === 0
 
   // A brand-new (org-less) user has no orgs yet, so send them straight to create
   // their first org rather than a confusing empty hub. Mirrors the platform's
   // post-signup onboarding hop.
   useEffect(() => {
-    if (isAuthenticated && Array.isArray(orgs) && orgs.length === 0) {
+    if (leaving) {
       router.replace('/new')
     }
-  }, [isAuthenticated, orgs, router])
+  }, [leaving, router])
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
@@ -195,6 +210,8 @@ function HomeClient() {
               </div>
             )}
 
+            {isAuthenticated && <PendingInvites invites={invites} unverified={hub?.email_verified === false} className="mb-4" />}
+
             {/* Org list */}
             <div className="w-full space-y-2.5">
               {(isLoading || (isAuthenticated && orgsLoading) || leaving) && (
@@ -223,7 +240,7 @@ function HomeClient() {
                 orgs &&
                 !leaving &&
                 orgs.map((org: any) => (
-                  <OrgRow key={org.id ?? org.slug} org={org} access_token={access_token} />
+                  <OrgRow key={org.id ?? org.slug} org={org} access_token={access_token} info={hubById.get(org.id)} />
                 ))}
 
               {/* Create organization: prominent entry into the hub */}
@@ -278,7 +295,31 @@ function HomeClient() {
   )
 }
 
-function OrgRow({ org, access_token }: { org: any; access_token: string }) {
+/** Role, plan, status and setup progress. Kept off the card (it read as
+ *  noise) and shown at the top of the org's menu instead. */
+function OrgDetails({ org, info }: { org: any; info?: HubOrg }) {
+  const { t } = useTranslation()
+  if (!info) return null
+  const left = daysUntil(info.poc_ends_at)
+  const parts: string[] = [t(`onb2.hub.roles.${info.role}`)]
+  if (info.plan && !org.is_demo) parts.push(t(`billing.catalog.names.${info.plan.replace('-', '_')}`))
+  if (info.status === 'poc') {
+    parts.push(left != null ? t('onb2.hub.poc_left', { count: left }) : t('dashboard.organization.plan_usage.status.poc'))
+  } else if (info.status === 'trial') {
+    parts.push(t('dashboard.organization.plan_usage.status.trial'))
+  }
+  if (info.setup) parts.push(t('onb2.hub.setup', { done: info.setup.done, total: info.setup.total }))
+  return (
+    <>
+      <DropdownMenuLabel className="text-xs font-normal text-neutral-500" data-testid="org-details">
+        {parts.join(' · ')}
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+    </>
+  )
+}
+
+function OrgRow({ org, access_token, info }: { org: any; access_token: string; info?: HubOrg }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const orgSession = useLHSession() as any
@@ -367,10 +408,12 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
               </span>
             )}
           </div>
-          {org.description ? (
-            <p className="text-xs text-black/40 truncate mt-0.5">{org.description}</p>
+          {/* One quiet line. A suspended org says so here, since it blocks
+              everything; the rest (role, plan, setup) lives in the menu. */}
+          {info?.status === 'suspended' ? (
+            <p className="text-xs text-rose-600 truncate mt-0.5">{t('dashboard.organization.plan_usage.status.suspended')}</p>
           ) : (
-            <p className="text-xs text-black/30 truncate mt-0.5">{org.slug}</p>
+            <p className="text-xs text-black/35 truncate mt-0.5">{org.slug}</p>
           )}
         </div>
 
@@ -390,12 +433,29 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
             <MoreVertical size={16} />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-52" align="end">
+        <DropdownMenuContent className="w-56" align="end">
+          <OrgDetails org={org} info={info} />
+          {canManageOrg && !org.is_demo && (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href={getUriWithOrg(org.slug, '/dash')} className="flex items-center space-x-2">
+                  <LayoutDashboard size={14} />
+                  <span>{t('onb2.hub.open_dashboard')}</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={getUriWithOrg(org.slug, '/dash/users/settings/add')} className="flex items-center space-x-2">
+                  <UserPlus size={14} />
+                  <span>{t('onb2.hub.invite_people')}</span>
+                </Link>
+              </DropdownMenuItem>
+            </>
+          )}
           {canManageOrg && (
             <DropdownMenuItem asChild>
               <Link href={`/billing?org=${org.slug}`} className="flex items-center space-x-2">
                 <CreditCard size={14} />
-                <span>{t('common.manage_upgrade', { defaultValue: 'Manage / Upgrade' })}</span>
+                <span>{t('onb2.hub.plan_billing')}</span>
               </Link>
             </DropdownMenuItem>
           )}
@@ -403,7 +463,7 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
             <>
               <DropdownMenuItem asChild>
                 <Link
-                  href={getUriWithOrg(org.slug, '/dash/org/settings/general')}
+                  href={getUriWithOrg(org.slug, '/dash/org/settings/overview')}
                   className="flex items-center space-x-2"
                 >
                   <Settings size={14} />
@@ -491,6 +551,12 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
               className="w-full px-3 py-2 text-sm rounded-xl border border-black/10 bg-white focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 transition-colors"
             />
             {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+            <p className="mt-3 text-xs text-black/40">
+              {t('onb2.hub.danger_zone_hint')}{' '}
+              <Link href={getUriWithOrg(org.slug, '/dash/org/settings/danger')} className="font-semibold text-black/60 underline underline-offset-2 hover:text-black">
+                {t('onb2.hub.danger_zone')}
+              </Link>
+            </p>
           </div>
 
           <DialogFooter className="mt-5 gap-2">

@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
+import { resourcePath } from '@/lib/seo/paths'
 
 type PropsType = {
   folder: any
@@ -50,7 +51,7 @@ function FolderThumbnail({ folder, orgslug, org_id, isDashboard = false, onChang
 
   const folderLink = isDashboard
     ? getUriWithOrg(orgslug, `/dash/library/folder/${cleanUuid}`)
-    : getUriWithOrg(orgslug, `/library/folder/${cleanUuid}`)
+    : getUriWithOrg(orgslug, resourcePath('folder', folder))
 
   const handleDelete = async () => {
     const toastId = toast.loading(t('library.deleting_folder'))
@@ -139,14 +140,7 @@ function FolderThumbnail({ folder, orgslug, org_id, isDashboard = false, onChang
         </div>
       </Link>
 
-      <Modal
-        isDialogOpen={editOpen}
-        onOpenChange={setEditOpen}
-        minHeight="no-min"
-        minWidth="md"
-        dialogTitle={t('library.edit_folder')}
-        dialogContent={<EditFolderModal folder={folder} orgslug={orgslug} closeModal={() => setEditOpen(false)} onChanged={onChanged} />}
-      />
+      <EditFolderModal open={editOpen} onOpenChange={setEditOpen} folder={folder} orgslug={orgslug} onChanged={onChanged} />
       <Modal
         isDialogOpen={accessOpen}
         onOpenChange={setAccessOpen}

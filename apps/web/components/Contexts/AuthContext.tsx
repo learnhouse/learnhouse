@@ -19,11 +19,21 @@ import { safeRedirectUrl } from '@services/auth/redirects'
 import i18n from '@/lib/i18n'
 import { safeExternalUrl } from '@services/security/url'
 import { AUTH_EXPIRED_EVENT, AUTH_REFRESHED_EVENT } from '@/lib/auth/events'
+import { buildGoogleAuthorizeBody } from '@/lib/auth/googleAuthorizeBody'
+import {
+  activeImpersonation,
+  authRefreshUrl,
+  dispatchImpersonationEnded,
+  setActiveImpersonation,
+  type ImpersonationSession,
+} from '@/lib/auth/impersonation'
 
 // Types matching NextAuth's session structure
 export interface Session {
   user: any | undefined
   roles?: string[] | undefined
+  // Set while an impersonation acts as this user (see lib/auth/impersonation).
+  impersonation?: ImpersonationSession | null
   tokens?: {
     access_token?: string | undefined
     refresh_token?: string | undefined
@@ -131,7 +141,9 @@ interface AuthContextValue {
   requestMagicLink: (_email: string, _orgSlug?: string) => Promise<MagicLinkRequestResult>
   completeMagicLink: (
     _token: string,
-    _options?: { callbackUrl?: string; redirect?: boolean }
+    // lookupSession: false skips the follow-up roles lookup, for a caller that
+    // leaves the page right after (the next page restores the session anyway).
+    _options?: { callbackUrl?: string; redirect?: boolean; lookupSession?: boolean }
   ) => Promise<SignInResult>
 }
 
@@ -196,6 +208,60 @@ function getOAuthStateCookie(): { csrf: string; timestamp: number } | null {
     /* ignore */
   }
   return null
+}
+
+/**
+ * Start the Google OAuth redirect. Shared by the context `signIn` (login page)
+ * and the standalone `signIn` export (signup pages) so both send the payload
+ * /api/auth/google/authorize validates: `state` is an object the server signs,
+ * not a pre-encoded string. Resolves with an error result instead of throwing,
+ * so callers can show it; on success it navigates away.
+ */
+export async function startGoogleOAuth(callbackUrl: string): Promise<SignInResult | void> {
+  const csrfToken = generateSecureToken()
+
+  // Store CSRF token in cookie for validation on callback
+  setOAuthStateCookie(csrfToken)
+
+  const body = buildGoogleAuthorizeBody({
+    // Always use main domain for redirect URI; only one URI registered with Google
+    redirectUri: `${window.location.protocol}//${getLEARNHOUSE_DOMAIN_VAL()}/auth/callback/google`,
+    callbackUrl,
+    csrf: csrfToken,
+    // For custom domains, ask for returnOrigin so the main domain callback can bounce back
+    returnOrigin: isCustomDomain() ? window.location.origin : undefined,
+  })
+
+  try {
+    // Get Google OAuth URL from server (client ID lives server-side only)
+    const authResponse = await fetch('/api/auth/google/authorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+    if (!authResponse.ok) {
+      const errorData = await authResponse.json().catch(() => ({}))
+      console.error('Google OAuth initiation failed:', errorData)
+      return {
+        ok: false,
+        error: errorData.error || i18n.t('auth.errors.google_not_configured'),
+        url: null,
+        status: authResponse.status,
+      }
+    }
+
+    const { url: googleAuthUrl } = await authResponse.json()
+    const safeGoogleUrl = safeExternalUrl(googleAuthUrl)
+    if (safeGoogleUrl) {
+      window.location.href = safeGoogleUrl
+      return
+    }
+    return { ok: false, error: i18n.t('auth.errors.google_not_configured'), url: null, status: 500 }
+  } catch (error) {
+    console.error('Google OAuth initiation failed:', error)
+    return { ok: false, error: i18n.t('common.something_went_wrong'), url: null, status: 0 }
+  }
 }
 
 function clearOAuthStateCookie(): void {
@@ -324,9 +390,11 @@ export function SessionProvider({
     }
 
     const data = await response.json()
+    setActiveImpersonation(data.impersonation)
     return {
       user: data.user,
       roles: data.roles,
+      impersonation: data.impersonation ?? null,
       tokens: {
         access_token: token,
         refresh_token: undefined, // Stored in httpOnly cookie
@@ -361,10 +429,17 @@ export function SessionProvider({
     refreshPromiseRef.current = (async () => {
       try {
         // Use Next.js API route to ensure cookies are set correctly
-        const response = await fetch('/api/auth/refresh', {
+        const response = await fetch(authRefreshUrl(), {
           method: 'GET',
           credentials: 'include',
         })
+
+        if (response.status === 410) {
+          // The impersonation this tab ran on is over; the superadmin's own
+          // session is untouched. The banner takes the tab back to the console.
+          dispatchImpersonationEnded('ended')
+          return { status: 'transient' } as const
+        }
 
         if (!response.ok) {
           // 401/403 are the only statuses that mean the refresh cookie itself
@@ -605,7 +680,7 @@ export function SessionProvider({
   // Shared by password login and by second-factor completion so the two cannot
   // drift apart: a session established one way must be identical to the other.
   const establishSession = useCallback(
-    async (data: any, callbackUrl: string, redirect: boolean): Promise<SignInResult> => {
+    async (data: any, callbackUrl: string, redirect: boolean, lookupSession = true): Promise<SignInResult> => {
       // A refresh still in flight for whoever was signed in before must not
       // write its (older) session over this one when it resolves.
       authEpochRef.current++
@@ -627,15 +702,18 @@ export function SessionProvider({
       // Fetch full session with roles. The sign-in already succeeded (cookies
       // are set), so a failed lookup only means the roles arrive on the next
       // session fetch; reporting it as a failed sign-in would misdescribe it.
-      try {
-        const fullSession = await fetchUserSession(data.tokens.access_token, data.tokens.expiry)
-        if (fullSession) {
-          fullSession.tokens = newSession.tokens
-          setSession(fullSession)
-          sessionCacheRef.current = { data: fullSession, timestamp: Date.now() }
+      // Skipped (lookupSession: false) when the caller navigates away next.
+      if (lookupSession) {
+        try {
+          const fullSession = await fetchUserSession(data.tokens.access_token, data.tokens.expiry)
+          if (fullSession) {
+            fullSession.tokens = newSession.tokens
+            setSession(fullSession)
+            sessionCacheRef.current = { data: fullSession, timestamp: Date.now() }
+          }
+        } catch (error) {
+          console.warn('[auth] session lookup after sign-in failed, keeping session:', error)
         }
-      } catch (error) {
-        console.warn('[auth] session lookup after sign-in failed, keeping session:', error)
       }
 
       // Notify other tabs
@@ -759,9 +837,9 @@ export function SessionProvider({
   const completeMagicLink = useCallback(
     async (
       token: string,
-      options: { callbackUrl?: string; redirect?: boolean } = {}
+      options: { callbackUrl?: string; redirect?: boolean; lookupSession?: boolean } = {}
     ): Promise<SignInResult> => {
-      const { callbackUrl = '/', redirect = true } = options
+      const { callbackUrl = '/', redirect = true, lookupSession = true } = options
 
       try {
         const response = await fetch('/api/auth/magic-link/verify', {
@@ -813,7 +891,7 @@ export function SessionProvider({
         }
 
         return {
-          ...(await establishSession(data, callbackUrl, redirect)),
+          ...(await establishSession(data, callbackUrl, redirect, lookupSession)),
           redirect_to: data.redirect_to ?? null,
         }
       } catch (error) {
@@ -969,47 +1047,9 @@ export function SessionProvider({
             }
           }
 
-          // Generate CSRF token for state parameter. The server signs the final
-          // state (with returnOrigin pinned to this request's origin) so the
-          // callback can trust where it bounces the code.
-          const csrfToken = generateSecureToken()
-          const stateData = {
-            callbackUrl,
-            csrf: csrfToken,
-            timestamp: Date.now(),
-          }
-
-          // For custom domains, ask for returnOrigin so the main domain callback can bounce back
-          const returnOrigin = isCustomDomain() ? window.location.origin : undefined
-
-          // Store CSRF token in cookie for validation on callback
-          setOAuthStateCookie(csrfToken)
-
-          // Always use main domain for redirect URI; only one URI registered with Google
-          const redirectUri = `${window.location.protocol}//${getLEARNHOUSE_DOMAIN_VAL()}/auth/callback/google`
-
-          // Get Google OAuth URL from server (client ID lives server-side only)
-          const authResponse = await fetch('/api/auth/google/authorize', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ redirect_uri: redirectUri, state: stateData, returnOrigin }),
-          })
-
-          if (!authResponse.ok) {
-            const errorData = await authResponse.json().catch(() => ({}))
-            console.error('Google OAuth initiation failed:', errorData)
-            return {
-              ok: false,
-              error: errorData.error || i18n.t('auth.errors.google_not_configured'),
-              url: null,
-              status: authResponse.status,
-            }
-          }
-
-          const { url: googleAuthUrl } = await authResponse.json()
-          const safeGoogleUrl = safeExternalUrl(googleAuthUrl)
-          if (safeGoogleUrl) window.location.href = safeGoogleUrl
-          return
+          // The server signs the final state (with returnOrigin pinned to this
+          // request's origin) so the callback can trust where it bounces the code.
+          return startGoogleOAuth(callbackUrl)
         }
 
         // Unknown provider
@@ -1035,6 +1075,12 @@ export function SessionProvider({
   // Sign out function
   const handleSignOut = useCallback(async (options: SignOutOptions = {}) => {
     const { callbackUrl = '/', redirect = true } = options
+    // "Sign out" inside an impersonation ends the session (back to the
+    // console); the superadmin behind it stays signed in.
+    if (activeImpersonation()) {
+      dispatchImpersonationEnded('ended')
+      return
+    }
 
     let logoutSuccess = false
     try {
@@ -1257,53 +1303,11 @@ export async function signIn(
   // For now, we'll handle it differently for Google OAuth which needs redirect
 
   if (provider === 'google') {
-    // Store org context from cookies if present (for compatibility)
-    // The options should contain orgSlug and orgId if needed
-
-    // Generate CSRF token for state parameter
-    const csrfToken = generateSecureToken()
-    const callbackUrl = options?.callbackUrl || '/'
-    const stateData: Record<string, any> = {
-      callbackUrl,
-      csrf: csrfToken,
-      timestamp: Date.now(),
-    }
-
-    // For custom domains, embed returnOrigin so the main domain callback can bounce back
-    if (isCustomDomain()) {
-      stateData.returnOrigin = window.location.origin
-    }
-
-    const state = btoa(JSON.stringify(stateData))
-
-    // Store CSRF token in cookie for validation on callback
-    setOAuthStateCookie(csrfToken)
-
-    // Always use main domain for redirect URI; only one URI registered with Google
-    const redirectUri = `${window.location.protocol}//${getLEARNHOUSE_DOMAIN_VAL()}/auth/callback/google`
-
-    // Get Google OAuth URL from server (client ID lives server-side only)
-    const authResponse = await fetch('/api/auth/google/authorize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ redirect_uri: redirectUri, state, scope: 'openid email profile' }),
-    })
-
-    if (!authResponse.ok) {
-      const errorData = await authResponse.json().catch(() => ({}))
-      console.error('Google OAuth initiation failed:', errorData)
-      return {
-        ok: false,
-        error: errorData.error || i18n.t('auth.errors.google_not_configured'),
-        url: null,
-        status: authResponse.status,
-      }
-    }
-
-    const { url: googleAuthUrl } = await authResponse.json()
-    const safeGoogleUrl = safeExternalUrl(googleAuthUrl)
-    if (safeGoogleUrl) window.location.href = safeGoogleUrl
-    return
+    // Org context travels in LH_oauth_* cookies the caller sets beforehand.
+    // This used to send a pre-encoded string `state`, which the authorize route
+    // rejects with 400 since it started signing state itself, so Google sign-up
+    // from the signup pages silently did nothing.
+    return startGoogleOAuth(options?.callbackUrl || '/')
   }
 
   // For credentials, we need context - this will be handled by the component
@@ -1319,6 +1323,10 @@ export async function signIn(
 // signOut function - matches NextAuth's API
 export async function signOut(options?: SignOutOptions): Promise<void> {
   const { callbackUrl = '/', redirect = true } = options || {}
+  if (activeImpersonation()) {
+    dispatchImpersonationEnded('ended')
+    return
+  }
 
   try {
     // Use Next.js API route to ensure cookies are cleared correctly

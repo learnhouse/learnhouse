@@ -69,6 +69,11 @@ _READ_ROUTES = tuple(
         # Boards the learner is a member of (the collab server checks
         # membership with the same token before opening the room).
         rf"^/boards/{_SEG}(/membership)?$",
+        # The Agent API's learner side: agents, the view catalog, their own
+        # conversations (the routes refuse Atlas and approvals to embeds).
+        rf"^/agent/agents(/{_SEG})?$",
+        r"^/agent/views/schema$",
+        rf"^/agent/conversations(/{_SEG}(/messages|/stream)?)?$",
     )
 )
 
@@ -84,10 +89,16 @@ _WRITE_ROUTES = {
             rf"^/assignments/{_SEG}/submissions/me/retry$",
             r"^/code/(execute|execute-batch)$",
             r"^/code/submissions/save$",
+            # Their own copilot conversations (Agent API).
+            r"^/agent/conversations$",
+            rf"^/agent/conversations/{_SEG}/(messages|cancel)$",
         )
     ),
     "PUT": (re.compile(rf"^/assignments/{_SEG}/tasks/{_SEG}/submissions$"),),
-    "DELETE": (re.compile(rf"^/trail/remove_activity/{_SEG}$"),),
+    "DELETE": (
+        re.compile(rf"^/trail/remove_activity/{_SEG}$"),
+        re.compile(rf"^/agent/conversations/{_SEG}$"),
+    ),
 }
 
 

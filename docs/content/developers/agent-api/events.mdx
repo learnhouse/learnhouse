@@ -1,0 +1,367 @@
+---
+title: "Agent API Streaming Events"
+description: "Every Server-Sent Event the Agent API streams, with its payload, the order events arrive in, resuming with Last-Event-ID, cancellation and non-streaming mode."
+---
+
+import { Callout } from '@/components/mdx'
+
+# Streaming events
+
+`POST /conversations/{id}/messages`, `POST /approvals/{id}/approve`, `POST /approvals/{id}/deny` and
+`POST /conversations/{id}/tool-results` answer with `Content-Type: text/event-stream` unless you send
+`"stream": false`.
+
+## Frame format
+
+```text
+id: run_8f2.4.0
+event: text.delta
+data: {"type":"text.delta","conversation_id":"agconv_123","message_id":"agmsg_9","delta":"Three courses"}
+
+```
+
+- `id` is `<run_id>.<frame>.<sub>`. Keep the last one you saw to [resume](#resuming).
+- `event` repeats the payload's `type`.
+- `data` is one line of JSON. Every payload has `type`, `conversation_id` and `message_id`.
+- Lines starting with `:` (such as `: ping`) are keep-alives. Ignore them.
+- Ignore event types you don't know. New ones may be added under the same contract version.
+
+## Events
+
+### `message.start`
+
+The assistant message begins. Always the first event.
+
+| Field | Type | |
+| --- | --- | --- |
+| `agent_id` | string | |
+| `role` | `"assistant"` | |
+| `created_at` | ISO 8601 | |
+| `continued` | boolean | `true` when an approval or tool result resumes an existing message. Append to it rather than starting a new one. |
+
+### `text.delta`
+
+| Field | Type | |
+| --- | --- | --- |
+| `delta` | string | Next piece of the answer, in Markdown. Append it. |
+
+### `tool.call`
+
+The agent calls a tool.
+
+| Field | Type | |
+| --- | --- | --- |
+| `call_id` | string | Links the call to its progress, result, view and approval |
+| `name` | string | Tool name |
+| `args` | object | Arguments |
+| `client` | boolean | `true` for a [client-side tool](/developers/agent-api/approvals#client-side-tools): your app has to run it |
+
+### `tool.progress`
+
+| Field | Type | |
+| --- | --- | --- |
+| `call_id` | string | |
+| `done`, `total` | number | Progress of a long tool |
+| `label` | string | What it is doing now |
+
+### `tool.result`
+
+| Field | Type | |
+| --- | --- | --- |
+| `call_id`, `name` | string | |
+| `ok` | boolean | Whether the tool succeeded |
+| `error` | string or null | Why it failed |
+| `detail` | any | A short summary of the result, for display. Not the full tool output. |
+
+### `plan`
+
+The agent's plan for a multi-step task. Sent again whenever a step changes; replace the previous plan.
+
+| Field | Type | |
+| --- | --- | --- |
+| `steps` | `{id, title, status}[]` | |
+
+### `view`
+
+| Field | Type | |
+| --- | --- | --- |
+| `view` | [View](/developers/agent-api/views#the-view-envelope) | A validated structured view |
+
+In `markdown` output mode no `view` events are sent: the view's Markdown fallback is streamed as `text.delta` instead.
+
+### `citation`
+
+Learner agents only.
+
+| Field | Type | |
+| --- | --- | --- |
+| `citation` | Citation | See below |
+
+```json
+{
+  "index": 1,
+  "id": "cit_…",
+  "title": "Variables and types",
+  "source_type": "dynamic_page",
+  "course_uuid": "course_…",
+  "course_name": "Python 101",
+  "chapter_name": "Basics",
+  "activity_uuid": "activity_…",
+  "activity_name": "Variables and types",
+  "url": "/course/2f1c…/activity/9ab0…",
+  "snippet": "A variable is a name bound to a value…"
+}
+```
+
+`index` matches the `[1]` markers in the text. `url` is a path on the LearnHouse site, or `null`; prefix it with the
+organization's address or map it to your own routes. `source_type` says what the source is (`dynamic_page`, `video`,
+and so on).
+
+### `approval.required`
+
+| Field | Type | |
+| --- | --- | --- |
+| `approval` | Approval | The action waiting for a decision. See [Approvals](/developers/agent-api/approvals#the-approval-object). |
+
+The run then ends with `message.done` and `status: "requires_action"`.
+
+### `approval.resolved`
+
+| Field | Type | |
+| --- | --- | --- |
+| `approval_id` | string | |
+| `decision` | `approved`, `denied`, `expired`, `superseded` | |
+| `waiting_on` | | What the run still waits for, if anything (other approvals or tool results) |
+
+### `action.applied`
+
+An approved (or automatically allowed) change was made.
+
+| Field | Type | |
+| --- | --- | --- |
+| `approval_id` | string or null | |
+| `tool` | string | |
+| `summary` | string | What changed, in one line |
+| `auto` | boolean | `true` when no approval was needed |
+| `undo_available` | boolean | Whether it can be undone in LearnHouse |
+
+### `suggestions`
+
+| Field | Type | |
+| --- | --- | --- |
+| `items` | string[] | Follow-up prompts to offer as buttons |
+
+### `text.done`
+
+| Field | Type | |
+| --- | --- | --- |
+| `text` | string | The full text written in this run. Use it to correct any drift from the deltas. |
+
+### `output`
+
+`json` output mode only. See [JSON output](/developers/agent-api/output#json).
+
+| Field | Type | |
+| --- | --- | --- |
+| `format` | `"json"` | |
+| `data` | any | The object, validated against your schema |
+| `valid` | boolean | |
+| `attempts` | number | How many tries it took (up to 3) |
+| `errors` | string[] | Validation errors of the last try |
+
+### `rendered`
+
+When the conversation has a [template](/developers/agent-api/output#templates).
+
+| Field | Type | |
+| --- | --- | --- |
+| `format` | `html`, `markdown`, `text` | |
+| `content` | string | The rendered template |
+
+### `usage`
+
+| Field | Type | |
+| --- | --- | --- |
+| `credits` | number | AI credits charged for this run |
+| `requests` | number | Model requests made |
+| `input_tokens`, `output_tokens` | number | |
+
+### `error`
+
+| Field | Type | |
+| --- | --- | --- |
+| `code` | string | See below |
+| `message` | string | |
+| `retriable` | boolean | Whether sending the message again may work |
+
+| Code | Meaning |
+| --- | --- |
+| `out_of_credits` | The organization has no AI credits left |
+| `budget_reached` | The run hit its credit budget |
+| `step_limit` | The run used its maximum number of steps |
+| `agent_error` | The model or a tool failed |
+| `run_lost` | The run stopped on the server (a restart, for example) |
+| `internal_error` | Something else went wrong |
+| `AI_DISABLED`, `AI_FEATURE_DISABLED`, `AI_STAFF_ONLY`, `AI_MONTHLY_CAP_REACHED` | AI settings, as in [Plans, AI settings and credits](/developers/agent-api#plans-ai-settings-and-credits) |
+| `output_invalid` | JSON output still failed the schema after 3 attempts |
+
+### `message.done`
+
+Always the last event of a run.
+
+| Field | Type | |
+| --- | --- | --- |
+| `status` | `completed`, `requires_action`, `cancelled`, `failed` | |
+| `text` | string | The message text so far |
+
+On `requires_action`, look at the conversation's `pending_approvals` and `pending_tool_calls` (or the events you just
+received) to see what it waits for.
+
+## Order
+
+Only two things are guaranteed: `message.start` comes first and `message.done` comes last. A typical run looks like
+this:
+
+1. `message.start`
+2. any mix of `text.delta`, `tool.call` → `tool.progress`… → `tool.result`, `plan`, `view`, `citation`
+3. `approval.required` (then straight to `message.done`) or, after a continuation, `approval.resolved` and
+   `action.applied`
+4. `suggestions`, `text.done`, `output`, `rendered`, `usage`
+5. `error`, if something failed
+6. `message.done`
+
+Events of different `call_id`s can interleave: match them by `call_id`, not by position.
+
+## A sample stream
+
+```text
+id: run_a1.0.0
+event: message.start
+data: {"type":"message.start","conversation_id":"agconv_1","message_id":"agmsg_5","agent_id":"atlas","role":"assistant","created_at":"2026-11-16T10:00:00Z","continued":false}
+
+id: run_a1.1.0
+event: tool.call
+data: {"type":"tool.call","conversation_id":"agconv_1","message_id":"agmsg_5","call_id":"call_1","name":"get_course_analytics","args":{"period":"30d"},"client":false}
+
+: ping
+
+id: run_a1.2.0
+event: tool.result
+data: {"type":"tool.result","conversation_id":"agconv_1","message_id":"agmsg_5","call_id":"call_1","name":"get_course_analytics","ok":true,"error":null,"detail":"12 courses"}
+
+id: run_a1.3.0
+event: view
+data: {"type":"view","conversation_id":"agconv_1","message_id":"agmsg_5","view":{"id":"view_1","call_id":"call_1","schema_version":1,"title":null,"layout":"stack","components":[{"type":"kpis","items":[{"label":"Active learners","value":182,"delta":12}]}],"fallback_markdown":"- **Active learners**: 182 (+12%)"}}
+
+id: run_a1.4.0
+event: text.delta
+data: {"type":"text.delta","conversation_id":"agconv_1","message_id":"agmsg_5","delta":"Activity is up 12% "}
+
+id: run_a1.4.1
+event: text.delta
+data: {"type":"text.delta","conversation_id":"agconv_1","message_id":"agmsg_5","delta":"on last month."}
+
+id: run_a1.5.0
+event: suggestions
+data: {"type":"suggestions","conversation_id":"agconv_1","message_id":"agmsg_5","items":["Which courses grew the most?"]}
+
+id: run_a1.6.0
+event: text.done
+data: {"type":"text.done","conversation_id":"agconv_1","message_id":"agmsg_5","text":"Activity is up 12% on last month."}
+
+id: run_a1.7.0
+event: usage
+data: {"type":"usage","conversation_id":"agconv_1","message_id":"agmsg_5","credits":3,"requests":2,"input_tokens":0,"output_tokens":0}
+
+id: run_a1.8.0
+event: message.done
+data: {"type":"message.done","conversation_id":"agconv_1","message_id":"agmsg_5","status":"completed","text":"Activity is up 12% on last month."}
+```
+
+## Reading the stream
+
+The browser's `EventSource` can't send an `Authorization` header or a POST body, so read the stream with `fetch`. The
+SDK does this for you (`lh.agent.streamMessage`). By hand:
+
+```ts
+const res = await fetch(`${LH}/conversations/${id}/messages`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+  body: JSON.stringify({ content }),
+})
+if (!res.ok) throw await res.json() // { detail: { code, message } }
+
+const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader()
+let buffer = ''
+let lastEventId: string | null = null
+for (;;) {
+  const { value, done } = await reader.read()
+  if (done) break
+  buffer += value
+  let end
+  while ((end = buffer.indexOf('\n\n')) !== -1) {
+    const frame = buffer.slice(0, end)
+    buffer = buffer.slice(end + 2)
+    let data = ''
+    for (const line of frame.split('\n')) {
+      if (line.startsWith('id: ')) lastEventId = line.slice(4)
+      else if (line.startsWith('data: ')) data += line.slice(6)
+      // "event:" repeats data.type; lines starting with ":" are pings
+    }
+    if (data) handle(JSON.parse(data))
+  }
+}
+```
+
+## Resuming
+
+A run keeps going on the server when your connection drops. To pick it up, reconnect to
+`GET /conversations/{id}/stream` with the last id you received:
+
+```bash
+curl -N $LH/conversations/agconv_1/stream \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Last-Event-ID: run_a1.4.0"
+```
+
+You get every event after that id, then the live tail until `message.done`. Pass `?last_event_id=` instead of the header
+if your client can't set it. Without an id you get the current run from its start. The conversation's `last_event_id`
+holds the latest id, and its `status` tells you whether a run is still going (`running`).
+
+If the run has finished, read the result from `GET /conversations/{id}/messages` instead.
+
+## Cancellation
+
+Closing the connection only stops your copy of the stream. To stop the run:
+
+```bash
+curl -X POST $LH/conversations/agconv_1/cancel -H "Authorization: Bearer $TOKEN"
+# {"cancelled": true}
+```
+
+`cancelled` is `false` when nothing was running. The stream, if still open, ends with `message.done` and
+`status: "cancelled"`. Tools that already ran keep their effect; use the dashboard's undo where `undo_available` was
+`true`.
+
+## Without streaming
+
+Send `"stream": false` to wait for the whole reply:
+
+```bash
+curl -X POST $LH/conversations/agconv_1/messages \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{ "content": "How many learners finished Python 101?", "stream": false }'
+```
+
+```json
+{ "message": { "id": "agmsg_6", "role": "assistant", "status": "completed", "text": "41 learners…", "...": "…" } }
+```
+
+The [message](/developers/agent-api#messages) holds everything the events carried: `text`, `views`, `citations`,
+`tool_calls`, `approvals`, `plan`, `suggestions`, `output`, `rendered`, `usage` and `error`. Approve, deny and tool
+results accept `"stream": false` too.
+
+<Callout type="info">
+  Long agent runs can take a while. With `stream: false`, set a generous HTTP timeout on your side, or stream and
+  ignore the events you don't need.
+</Callout>

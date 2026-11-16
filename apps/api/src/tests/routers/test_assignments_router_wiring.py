@@ -84,11 +84,11 @@ _CASES = [
     ),
     (
         "get", "/assignment_x", "read_assignment", None,
-        _ASSIGNMENT_READ, ["assignment_x", _USER, _DB], {},
+        _ASSIGNMENT_READ, ["assignment_x", _USER, _DB], {"lang": None},
     ),
     (
         "get", "/activity/activity_x", "read_assignment_from_activity_uuid", None,
-        _ASSIGNMENT_READ, ["activity_x", _USER, _DB], {},
+        _ASSIGNMENT_READ, ["activity_x", _USER, _DB], {"lang": None},
     ),
     (
         "put", "/assignment_x", "update_assignment", {"title": "New"},
@@ -108,7 +108,7 @@ _CASES = [
     ),
     (
         "get", "/assignment_x/tasks", "read_assignment_tasks", None,
-        [{"ok": 1}], ["assignment_x", _USER, _DB], {},
+        [{"ok": 1}], ["assignment_x", _USER, _DB], {"lang": None},
     ),
     (
         "get", "/task/task_x", "read_assignment_task", None,
@@ -373,3 +373,13 @@ async def test_sub_file_upload_with_file_checks_rate_limit(client):
     assert rl.call_args.kwargs["key"] == f"sub_file_upload:{_USER.id}"
     upload = mock.call_args.args[4]
     assert upload.filename == "a.pdf"
+
+
+async def test_my_assignments_forwards_org_and_graded_limit(client):
+    """/me passes the user, org and graded limit to the service and returns its list."""
+    mock = AsyncMock(return_value=[])
+    with patch(f"{_ROUTER}.get_my_assignments", mock):
+        resp = await client.get("/api/v1/assignments/me?org_id=3&graded_limit=5")
+    assert resp.status_code == 200
+    assert resp.json() == []
+    mock.assert_awaited_once_with(_USER, 3, _DB, graded_limit=5)

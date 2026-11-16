@@ -5,6 +5,7 @@ from uuid import uuid4
 from fastapi import HTTPException, Request
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.ee_hooks import audit_event
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
@@ -77,9 +78,12 @@ async def _validate_resource_exists_and_belongs_to_org(
         statement = select(Media).where(Media.media_uuid == resource_uuid)
         resource = (await db_session.execute(statement)).scalars().first()
     elif config.resource_type == "boards":
-        from src.db.boards import Board
-        statement = select(Board).where(Board.board_uuid == resource_uuid)
-        resource = (await db_session.execute(statement)).scalars().first()
+        from src.core.ee_hooks import get_ee_module
+        boards = get_ee_module("ee.db.boards")  # Boards are EE-only: unknown without it
+        resource = None
+        if boards is not None:
+            statement = select(boards.Board).where(boards.Board.board_uuid == resource_uuid)
+            resource = (await db_session.execute(statement)).scalars().first()
     else:
         raise HTTPException(
             status_code=400,
@@ -182,6 +186,10 @@ async def create_usergroup(
     db_session.add(usergroup)
     await db_session.commit()
     await db_session.refresh(usergroup)
+    audit_event(
+        request, action="groups.created", org_id=usergroup.org_id, actor=current_user,
+        target_type="usergroup", target_id=usergroup.usergroup_uuid, target_name=usergroup.name,
+    )
 
     # Feature usage
     await increase_feature_usage("usergroups", org.id, db_session)
@@ -453,14 +461,19 @@ async def update_usergroup_by_id(
         org_id=usergroup.org_id,
     )
 
+    group_before = {"name": usergroup.name, "description": usergroup.description}
     if usergroup_update.name is not None:
         usergroup.name = usergroup_update.name
     if usergroup_update.description is not None:
         usergroup.description = usergroup_update.description
     usergroup.update_date = str(datetime.now())
-
     db_session.add(usergroup)
     await db_session.commit()
+    audit_event(
+        request, action="groups.updated", org_id=usergroup.org_id, actor=current_user,
+        target_type="usergroup", target_id=usergroup.usergroup_uuid, target_name=usergroup.name,
+        before=group_before, after={"name": usergroup.name, "description": usergroup.description},
+    )
     await db_session.refresh(usergroup)
 
     usergroup = UserGroupRead.model_validate(usergroup)
@@ -500,9 +513,22 @@ async def delete_usergroup_by_id(
     usergroup_uuid_val = usergroup.usergroup_uuid
     usergroup_name_val = usergroup.name
     usergroup_org_id = usergroup.org_id
+    parent_id = usergroup.parent_id
 
     await db_session.delete(usergroup)
     await db_session.commit()
+    if parent_id:
+        # The parent inherited this group's members: recompute it (and up).
+        from src.services.usergroups.membership import recompute_inherited, refresh_ancestors
+
+        parent = await db_session.get(UserGroup, parent_id)
+        if parent is not None:
+            await recompute_inherited(db_session, parent)
+            await refresh_ancestors(db_session, parent)
+    audit_event(
+        request, action="groups.deleted", org_id=usergroup_org_id, actor=current_user,
+        target_type="usergroup", target_id=usergroup_uuid_val, target_name=usergroup_name_val,
+    )
 
     await dispatch_webhooks(
         event_name="usergroup_deleted",
@@ -599,6 +625,11 @@ async def add_users_to_usergroup(
             logging.error(f"User with id {user_id} not found")
 
     await db_session.commit()
+    audit_event(
+        request, action="groups.members_added", org_id=usergroup.org_id, actor=current_user,
+        target_type="usergroup", target_id=usergroup.usergroup_uuid, target_name=usergroup.name,
+        details={"user_ids": user_ids_array[:100], "count": len(user_ids_array)},
+    )
 
     await dispatch_webhooks(
         event_name="usergroup_users_added",
@@ -662,6 +693,12 @@ async def remove_users_from_usergroup(
             logging.error(f"User with id {user_id} not found in UserGroup")
 
     await db_session.commit()
+    removed_ids = [u for u in user_ids.split(",") if u.strip()]
+    audit_event(
+        request, action="groups.members_removed", org_id=usergroup.org_id, actor=current_user,
+        target_type="usergroup", target_id=usergroup.usergroup_uuid, target_name=usergroup.name,
+        details={"user_ids": removed_ids[:100], "count": len(removed_ids)},
+    )
 
     return "Users removed from UserGroup successfully"
 

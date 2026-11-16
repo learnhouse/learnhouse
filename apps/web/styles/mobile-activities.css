@@ -144,22 +144,6 @@
   }
 }
 
-/* Assignment status in the phone activity bar: the desktop two-line status
-   card becomes one pill that matches the Complete button. */
-.lh-assign-compact .rounded-md.nice-shadow {
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 9999px;
-  justify-content: center;
-  box-shadow: none;
-}
-.lh-assign-compact .rounded-md.nice-shadow > span:first-child {
-  display: none;
-}
-.lh-assign-compact .rounded-md.nice-shadow .text-xs {
-  font-size: 14px;
-  white-space: nowrap;
-}
 /* Tablets: a 20% outline column is too narrow to read below 1024px, so the
    lesson takes the full width there as it does on phones. */
 @media (min-width: 769px) and (max-width: 1023px) {

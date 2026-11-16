@@ -94,6 +94,7 @@ import uuid
 from typing import Any, Callable
 
 from src.services.ai.tools import doc_ops as d
+from src.services.ai.tools.embeds import parse_embed
 
 # fence language -> kind
 KINDS = {
@@ -192,14 +193,6 @@ _FRONT = re.compile(r"^(?:front|q|question)\s*:\s*(.*)$", re.I)
 _BACK = re.compile(r"^(?:back|a|answer)\s*:\s*(.*)$", re.I)
 _LINK = re.compile(r"^(\S{0,8}?)\s*\[([^\]]{1,200})\]\(<?(https?://[^\s)>]+)>?\)\s*$")
 _URL = re.compile(r"^<?(https?://\S+?)>?$")
-_YOUTUBE = re.compile(
-    r"^https?://(?:www\.|m\.)?(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/|v/)|youtu\.be/)"
-    r"([A-Za-z0-9_-]{11})"
-)
-_VIMEO = re.compile(r"^https?://(?:www\.)?vimeo\.com/(?:video/)?(\d{6,12})")
-_LOOM = re.compile(
-    r"^https?://(?:www\.)?loom\.com/(?:share|embed)/([A-Za-z0-9]{10,64})"
-)
 
 
 class FenceError(ValueError):
@@ -405,27 +398,21 @@ def _flipcards(body: str, inline: Callable[[str], list[dict]]) -> dict:
 
 def embed_url(url: str) -> str:
     """The URL a provider wants in an iframe, from the one people share."""
-    m = _YOUTUBE.match(url)
-    if m:
-        return f"https://www.youtube.com/embed/{m.group(1)}"
-    m = _VIMEO.match(url)
-    if m:
-        return f"https://player.vimeo.com/video/{m.group(1)}"
-    m = _LOOM.match(url)
-    if m:
-        return f"https://www.loom.com/embed/{m.group(1)}"
-    return url
+    parsed = parse_embed(url)
+    return parsed.embed_url if parsed is not None else url
 
 
 def _embed(body: str) -> dict:
     url: str | None = None
     height = EMBED_HEIGHT
+    height_set = False
     alignment = "center"
     for line in _lines(body):
         setting = _SETTING.match(line)
         key = setting.group(1).lower() if setting else None
         if key == "height":
             height = _number("height", setting.group(2), 100, 2000)
+            height_set = True
             continue
         if key in ("align", "alignment"):
             alignment = _choice("alignment", setting.group(2), ALIGNMENTS)
@@ -443,18 +430,33 @@ def _embed(body: str) -> dict:
         )
     if url is None:
         raise FenceError("an embed needs an http(s) URL on its own line")
-    return {
-        "type": "blockEmbed",
-        "attrs": {
-            "embedUrl": embed_url(url),
-            "embedCode": None,
-            "embedType": "url",
-            "embedHeight": height,
-            "embedAspectRatio": None,
-            "embedWidth": "100%",
-            "alignment": alignment,
-        },
+    return embed_node(url, height=height if height_set else None, alignment=alignment)
+
+
+def embed_node(url: str, *, height: int | None = None, alignment: str = "center", caption: str | None = None) -> dict:
+    """A blockEmbed for a link, framed like the editor frames a pasted link:
+    known services (YouTube, Vimeo, Loom, Figma, Google Docs/Slides/Sheets/
+    Forms/Drive/Maps, CodePen, CodeSandbox, Spotify, SoundCloud, Miro, Canva,
+    Desmos, GeoGebra) get their player URL and shape; others are framed as given."""
+    attrs: dict[str, Any] = {
+        "embedUrl": url,
+        "embedCode": None,
+        "embedType": "url",
+        "embedHeight": height or EMBED_HEIGHT,
+        "embedAspectRatio": None,
+        "embedWidth": "100%",
+        "alignment": alignment,
     }
+    parsed = parse_embed(url)
+    if parsed is not None:
+        attrs.update(parsed.attrs())
+        if height:
+            # An explicit height wins over the provider's shape.
+            attrs["embedHeight"] = height
+            attrs["embedAspectRatio"] = None
+    if caption:
+        attrs["caption"] = caption
+    return {"type": "blockEmbed", "attrs": attrs}
 
 
 # ─── button and badge ────────────────────────────────────────────────────────
@@ -566,6 +568,8 @@ _EXERCISE_SETTINGS = (
     "language", "lang", "difficulty", "attempts", "timed", "time_limit", "time_complexity", "space_complexity",
 )
 _IO = re.compile(r"^\s*(input|stdin|output|expected|expected output|stdout)\s*:\s?(.*)$", re.I)
+# "--- test Edge case (hidden)": learners see whether a hidden test passed, not its input/output.
+_HIDDEN_TEST = re.compile(r"^(.*?)\s*\(hidden\)$", re.I)
 
 
 def language(value: str) -> tuple[int, str]:
@@ -577,6 +581,9 @@ def language(value: str) -> tuple[int, str]:
 
 
 def _test(label: str, raw: list[str], number: int) -> dict:
+    hidden = _HIDDEN_TEST.match(label or "")
+    if hidden:
+        label = hidden.group(1)
     parts: dict[str, list[str]] = {}
     current: list[str] | None = None
     for line in raw:
@@ -598,12 +605,15 @@ def _test(label: str, raw: list[str], number: int) -> dict:
         current.append(line)
     if "output" not in parts:
         raise FenceError(f"test {number} has no output: line with the expected output")
-    return {
+    test = {
         "id": _short_id("test"),
         "label": label or f"Test {number}",
         "stdin": _trim(parts.get("input", [])),
         "expectedStdout": _trim(parts["output"]),
     }
+    if hidden:
+        test["hidden"] = True
+    return test
 
 
 def _duration(name: str, value: str, unit: str, low_ms: int, high_ms: int) -> int:
@@ -726,7 +736,8 @@ def _exercise_lines(node: dict) -> list[str]:
         if code:
             lines += [f"--- {name}", *code.split("\n")]
     for test in a.get("testCases") or []:
-        lines.append(f"--- test {_text_line(test.get('label'))}".rstrip())
+        hidden = " (hidden)" if test.get("hidden") is True else ""
+        lines.append(f"--- test {_text_line(test.get('label'))}{hidden}".rstrip())
         stdin = str(test.get("stdin") or "")
         if stdin:
             lines += ["input:", *stdin.split("\n")]
@@ -761,7 +772,8 @@ def _exercise_key(node: dict) -> Any:
         str(a.get("starterCode") or "").rstrip(),
         str(a.get("solutionCode") or "").rstrip(),
         [
-            (t.get("label"), str(t.get("stdin") or "").strip("\n"), str(t.get("expectedStdout") or "").strip("\n"))
+            (t.get("label"), str(t.get("stdin") or "").strip("\n"), str(t.get("expectedStdout") or "").strip("\n"),
+             t.get("hidden") is True)
             for t in a.get("testCases") or []
         ],
         list(a.get("hints") or []),
@@ -1078,9 +1090,15 @@ def render(node: dict, inline_markdown: Callable[..., str]) -> list[str]:
             )
         return _fence("flipcards", lines)
     if t == "blockEmbed":
-        lines = [str(a["embedUrl"]).strip()] + _setting_lines(
+        parsed = parse_embed(str(a.get("embedSourceUrl") or ""))
+        url, default_height = str(a["embedUrl"]).strip(), EMBED_HEIGHT
+        if parsed is not None:
+            url, default_height = parsed.source_url, parsed.height or 300
+            if a.get("embedAspectRatio") != parsed.aspect:
+                default_height = -1  # a custom frame: always write its height
+        lines = [url] + _setting_lines(
             [
-                ("height", a.get("embedHeight"), EMBED_HEIGHT),
+                ("height", a.get("embedHeight"), default_height),
                 ("align", a.get("alignment"), "center"),
             ]
         )

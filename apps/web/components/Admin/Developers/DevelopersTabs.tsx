@@ -1,67 +1,55 @@
 'use client'
-import React, { useState } from 'react'
-import { Key, BookOpen } from '@phosphor-icons/react'
+import React from 'react'
+import { BookOpen, Key, Robot } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
+import { DashPage, SubTabs, SubTabPanel, useSubTab } from '@/design'
+import { usePlatformMe } from '@components/Admin/hooks'
+import { AdminHeader, NoAccess } from '@components/Admin/Shared/AdminKit'
 import TokensTab from '@components/Admin/Developers/tabs/TokensTab'
+import McpTab from '@components/Admin/Developers/tabs/McpTab'
 import DocsPlaygroundTab from '@components/Admin/Developers/tabs/DocsPlaygroundTab'
 
-type Tab = 'tokens' | 'docs'
-
-interface TabDef {
-  key: Tab
-  labelKey: string
-  icon: React.ReactNode
-  descriptionKey: string
-}
-
-const TABS: TabDef[] = [
-  {
-    key: 'tokens',
-    labelKey: 'admin.developers.tabs.tokens_label',
-    icon: <Key size={14} weight="fill" />,
-    descriptionKey: 'admin.developers.tabs.tokens_desc',
-  },
-  {
-    key: 'docs',
-    labelKey: 'admin.developers.tabs.docs_label',
-    icon: <BookOpen size={14} weight="fill" />,
-    descriptionKey: 'admin.developers.tabs.docs_desc',
-  },
-]
+const SECTIONS = ['tokens', 'mcp', 'docs'] as const
 
 export default function DevelopersTabs() {
   const { t } = useTranslation()
-  const [active, setActive] = useState<Tab>('tokens')
-  const current = TABS.find((tab) => tab.key === active) ?? TABS[0]
+  const me = usePlatformMe()
+  const [section, setSection] = useSubTab('tokens', SECTIONS)
+
+  if (!me.isLoading && !me.can('tokens.manage')) {
+    return (
+      <DashPage>
+        <AdminHeader title={t('admin.pages.developers')} />
+        <NoAccess />
+      </DashPage>
+    )
+  }
 
   return (
-    <div>
-      <div className="flex items-center gap-1 mb-2 border-b border-white/[0.08]">
-        {TABS.map((tab) => {
-          const isActive = active === tab.key
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActive(tab.key)}
-              className={
-                'inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm border-b-2 -mb-px transition-colors ' +
-                (isActive
-                  ? 'border-white text-white'
-                  : 'border-transparent text-white/40 hover:text-white/70')
-              }
-            >
-              {tab.icon}
-              {t(tab.labelKey)}
-            </button>
-          )
-        })}
-      </div>
-      <p className="text-xs text-white/40 mb-6">{t(current.descriptionKey)}</p>
-
-      {active === 'tokens' && <TokensTab />}
-      {active === 'docs' && (
-        <DocsPlaygroundTab onGoToTokens={() => setActive('tokens')} />
-      )}
-    </div>
+    <DashPage bottom="lg">
+      <AdminHeader title={t('admin.pages.developers')} subtitle={t('admin.pages.developers_desc')} />
+      <SubTabs
+        ariaLabel={t('admin.pages.developers')}
+        value={section}
+        onChange={setSection}
+        items={[
+          { key: 'tokens', label: t('admin.developers.tabs.tokens_label'), icon: <Key size={15} /> },
+          { key: 'mcp', label: t('admin.mcp.tab'), icon: <Robot size={15} /> },
+          { key: 'docs', label: t('admin.developers.tabs.docs_label'), icon: <BookOpen size={15} /> },
+        ]}
+      >
+        <SubTabPanel tab="tokens">
+          <p className="text-sm text-neutral-500">{t('admin.developers.tabs.tokens_desc')}</p>
+          <TokensTab />
+        </SubTabPanel>
+        <SubTabPanel tab="mcp">
+          <McpTab onGoToTokens={() => setSection('tokens')} />
+        </SubTabPanel>
+        <SubTabPanel tab="docs">
+          <p className="text-sm text-neutral-500">{t('admin.developers.tabs.docs_desc')}</p>
+          <DocsPlaygroundTab onGoToTokens={() => setSection('tokens')} />
+        </SubTabPanel>
+      </SubTabs>
+    </DashPage>
   )
 }

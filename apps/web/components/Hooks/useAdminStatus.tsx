@@ -223,20 +223,6 @@ function extractRightsFromRoles(userRoles: Role[], orgId: number): Rights | null
     return mergedRights;
 }
 
-// Full-access rights object for superadmins
-const SUPERADMIN_RIGHTS: Rights = {
-    courses: { action_create: true, action_read: true, action_read_own: true, action_update: true, action_update_own: true, action_delete: true, action_delete_own: true },
-    users: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    usergroups: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    folders: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    media: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    organizations: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    coursechapters: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    activities: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    roles: { action_create: true, action_read: true, action_update: true, action_delete: true },
-    dashboard: { action_access: true },
-};
-
 function useAdminStatus(): UseAdminStatusReturn {
     const session = useLHSession() as any;
     const { org, orgslug } = useOrgMembership() as any;
@@ -245,26 +231,29 @@ function useAdminStatus(): UseAdminStatusReturn {
     const userRoles: Role[] = useMemo(() => roles || [], [roles]);
     const orgId = org?.id;
     const isAuthenticated = session.status === 'authenticated';
-    const isSuperadmin = session.data?.user?.is_superadmin === true;
 
+    // A platform superadmin's own session gets an org's rights from its real
+    // membership there, like anyone else. Acting inside an org they don't
+    // belong to goes through an impersonation (impersonation), started from
+    // the platform console: bounded, attributed and audited. The old "enter
+    // any org as yourself" elevation is gone (the API no longer lets those
+    // writes through either).
     const rights = useMemo(
         () => {
             if (!isAuthenticated || !orgId) return null;
-            // Superadmins get full access to all orgs without needing a role entry
-            if (isSuperadmin) return SUPERADMIN_RIGHTS;
             return extractRightsFromRoles(userRoles, orgId);
         },
-        [isAuthenticated, userRoles, orgId, isSuperadmin]
+        [isAuthenticated, userRoles, orgId]
     );
 
     const isAdmin = useMemo(
-        () => (isAuthenticated && orgId ? isSuperadmin || rights?.dashboard?.action_access === true : false),
-        [isAuthenticated, orgId, isSuperadmin, rights]
+        () => (isAuthenticated && orgId ? rights?.dashboard?.action_access === true : false),
+        [isAuthenticated, orgId, rights]
     );
 
     const canManageOrg = useMemo(
-        () => (isAuthenticated && orgId ? isSuperadmin || rights?.organizations?.action_update === true : false),
-        [isAuthenticated, orgId, isSuperadmin, rights]
+        () => (isAuthenticated && orgId ? rights?.organizations?.action_update === true : false),
+        [isAuthenticated, orgId, rights]
     );
 
     // Every right is derived per-org, so an unresolved org reads as "no rights"

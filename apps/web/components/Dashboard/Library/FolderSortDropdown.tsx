@@ -1,13 +1,8 @@
 'use client'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ArrowDownAZ, ArrowUpAZ, Clock, History, GripVertical } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@components/ui/dropdown-menu'
+import { ArrowsDownUp } from '@phosphor-icons/react'
+import { ToolbarSelect } from '@components/Dashboard/Shared/DashKit/DashKit'
 
 export type FolderSortMode =
   | 'name_asc'
@@ -21,48 +16,25 @@ interface FolderSortDropdownProps {
   onChange: (_value: FolderSortMode) => void
 }
 
+// The org-wide library order. Saved server-side by the caller, so it applies
+// to the public library too.
 export function FolderSortDropdown({ value, onChange }: FolderSortDropdownProps) {
   const { t } = useTranslation()
-
-  const sortOptions = [
-    { value: 'name_asc' as FolderSortMode, label: t('library.sort.name_asc', { defaultValue: 'Name (A–Z)' }), icon: ArrowDownAZ },
-    { value: 'name_desc' as FolderSortMode, label: t('library.sort.name_desc', { defaultValue: 'Name (Z–A)' }), icon: ArrowUpAZ },
-    { value: 'newest' as FolderSortMode, label: t('library.sort.newest', { defaultValue: 'Newest first' }), icon: Clock },
-    { value: 'oldest' as FolderSortMode, label: t('library.sort.oldest', { defaultValue: 'Oldest first' }), icon: History },
-    { value: 'manual' as FolderSortMode, label: t('library.sort.manual', { defaultValue: 'Manual' }), icon: GripVertical },
+  const options: { value: FolderSortMode; label: string }[] = [
+    { value: 'name_asc', label: t('library.sort.name_asc') },
+    { value: 'name_desc', label: t('library.sort.name_desc') },
+    { value: 'newest', label: t('library.sort.newest') },
+    { value: 'oldest', label: t('library.sort.oldest') },
+    { value: 'manual', label: t('library.sort.manual') },
   ]
-
-  const currentOption = sortOptions.find((opt) => opt.value === value) || sortOptions[0]
-  const CurrentIcon = currentOption.icon
-
   return (
-    // modal={false} avoids Radix's body scroll-lock, which otherwise removes the
-    // page scrollbar on open and shifts the whole layout sideways.
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1.5 px-3 py-2 h-8 text-xs bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
-          <CurrentIcon size={14} className="text-gray-400" />
-          <span className="text-gray-500">{t('library.sort.sort_by', { defaultValue: 'Sort by' })}</span>
-          <span className="font-medium text-gray-700">{currentOption.label}</span>
-          <ChevronDown size={12} className="text-gray-400" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
-        {sortOptions.map((option) => {
-          const Icon = option.icon
-          return (
-            <DropdownMenuItem
-              key={option.value}
-              onClick={() => onChange(option.value)}
-              className={`flex items-center gap-2 text-sm ${value === option.value ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}
-            >
-              <Icon size={14} />
-              <span>{option.label}</span>
-            </DropdownMenuItem>
-          )
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <ToolbarSelect
+      value={value}
+      onChange={(v) => onChange(v as FolderSortMode)}
+      ariaLabel={t('library.sort.sort_by')}
+      icon={<ArrowsDownUp size={14} />}
+      options={options}
+    />
   )
 }
 

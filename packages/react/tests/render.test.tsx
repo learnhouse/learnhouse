@@ -240,7 +240,8 @@ describe('fetching from an instance', () => {
       />,
     )
     await screen.findByText('failed: yes')
-    expect(onError).toHaveBeenCalled()
+    // onError fires from an effect, which can land just after the fallback paints.
+    await waitFor(() => expect(onError).toHaveBeenCalled())
   })
 
   it('sends the user token', async () => {

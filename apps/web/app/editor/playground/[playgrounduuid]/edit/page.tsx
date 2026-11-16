@@ -1,9 +1,10 @@
 import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
-import { getPlayground } from '@services/playgrounds/playgrounds'
-import { getOrgCourses } from '@services/courses/courses'
+import { getPlayground } from '@ee/services/plays/playgrounds'
+import { getAllOrgCourses } from '@services/courses/courses'
 import { notFound, redirect } from 'next/navigation'
-import PlaygroundEditor from '@components/Playground/PlaygroundEditor'
+// Plays are EE: without EE getPlayground throws (404) and the editor is a stub.
+import PlayEditorPage from '@ee/components/Plays/Pages/PlayEditorPage'
 
 type PageParams = Promise<{ playgrounduuid: string }>
 
@@ -36,7 +37,7 @@ export default async function EditPlaygroundPage({ params }: { params: PageParam
   let orgCourses: { course_uuid: string; name: string }[] = []
   if (playground.org_slug) {
     try {
-      const coursesRes = await getOrgCourses(playground.org_slug, null, access_token, true)
+      const coursesRes = await getAllOrgCourses(playground.org_slug, access_token, true)
       orgCourses = (Array.isArray(coursesRes) ? coursesRes : []).map((c: any) => ({
         course_uuid: c.course_uuid,
         name: c.name,
@@ -46,12 +47,5 @@ export default async function EditPlaygroundPage({ params }: { params: PageParam
     }
   }
 
-  return (
-    <PlaygroundEditor
-      playground={playground}
-      orgslug={playground.org_slug || ''}
-      accessToken={access_token}
-      orgCourses={orgCourses}
-    />
-  )
+  return <PlayEditorPage playground={playground} accessToken={access_token} orgCourses={orgCourses} />
 }

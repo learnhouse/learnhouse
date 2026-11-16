@@ -18,7 +18,7 @@ from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user, resolve_acting_user_id
-from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
+from src.services.ai import metering, pricing
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.assignment_gen import generate_assignment_plan
@@ -40,7 +40,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-ASSIGNMENT_CREDIT_COST = 3
+# Published price (src/services/ai/pricing.py); the charge is metered.
+ASSIGNMENT_CREDIT_COST = pricing.FEATURES["assignment_generation"].credits
 
 
 async def _authorize_org(org_id: int, user: PublicUser, db_session: AsyncSession) -> Organization:
@@ -101,51 +102,46 @@ async def api_generate_assignment(
         raise HTTPException(status_code=404, detail="Session not found")
 
     enforce_ai_rate_limit(current_user.id, org.id)
-    await reserve_ai_credit(org.id, db_session, amount=ASSIGNMENT_CREDIT_COST)
+    async with metering.charge("assignment_generation", org_id=org.id, db=db_session, user_id=current_user.id):
+        model_name = await resolve_model_for_org(org.id, db_session, purpose="planning")
 
-    model_name = await resolve_model_for_org(org.id, db_session, purpose="planning")
+        try:
+            plan, session_uuid = await generate_assignment_plan(
+                org_id=org.id,
+                course_id=course.id,
+                prompt=body.prompt,
+                model_name=model_name,
+                db_session=db_session,
+                num_tasks=body.num_tasks,
+                allowed_task_types=body.allowed_task_types,
+                session_uuid=body.session_uuid,
+                user_id=acting_user_id,
+            )
+        except AINotConfiguredError as e:
+            raise HTTPException(status_code=403, detail=str(e))
+        except Exception:
+            logger.exception("Assignment generation failed")
+            raise HTTPException(status_code=502, detail="Assignment generation failed. Please try again.")
 
-    try:
-        plan, session_uuid = await generate_assignment_plan(
-            org_id=org.id,
-            course_id=course.id,
-            prompt=body.prompt,
-            model_name=model_name,
-            db_session=db_session,
-            num_tasks=body.num_tasks,
-            allowed_task_types=body.allowed_task_types,
-            session_uuid=body.session_uuid,
-            user_id=acting_user_id,
-        )
-    except AINotConfiguredError as e:
-        refund_ai_credit(org.id, ASSIGNMENT_CREDIT_COST)
-        raise HTTPException(status_code=403, detail=str(e))
-    except Exception:
-        refund_ai_credit(org.id, ASSIGNMENT_CREDIT_COST)
-        logger.exception("Assignment generation failed")
-        raise HTTPException(status_code=502, detail="Assignment generation failed. Please try again.")
+        if not plan.tasks:
+            raise HTTPException(status_code=502, detail="The model returned no tasks. Try rephrasing.")
 
-    if not plan.tasks:
-        refund_ai_credit(org.id, ASSIGNMENT_CREDIT_COST)
-        raise HTTPException(status_code=502, detail="The model returned no tasks. Try rephrasing.")
-
-    try:
-        record = await record_generation(
-            db_session,
-            kind=AIGenerationKind.ASSIGNMENT,
-            org_id=org.id,
-            user_id=current_user.id,
-            prompt=body.prompt.strip(),
-            result=plan.model_dump(),
-            session_uuid=session_uuid,
-            course_id=course.id,
-        )
-    except Exception:
-        # Persisting the history record failed after the credits were reserved;
-        # refund so a DB hiccup doesn't silently charge the org for nothing.
-        refund_ai_credit(org.id, ASSIGNMENT_CREDIT_COST)
-        logger.exception("Failed to record assignment generation")
-        raise HTTPException(status_code=502, detail="Assignment generation failed. Please try again.")
+        try:
+            record = await record_generation(
+                db_session,
+                kind=AIGenerationKind.ASSIGNMENT,
+                org_id=org.id,
+                user_id=current_user.id,
+                prompt=body.prompt.strip(),
+                result=plan.model_dump(),
+                session_uuid=session_uuid,
+                course_id=course.id,
+            )
+        except Exception:
+            # Persisting the history record failed after the credits were reserved;
+            # refund so a DB hiccup doesn't silently charge the org for nothing.
+            logger.exception("Failed to record assignment generation")
+            raise HTTPException(status_code=502, detail="Assignment generation failed. Please try again.")
 
     return GenerateAssignmentResponse(
         ai_generation_uuid=record.ai_generation_uuid,

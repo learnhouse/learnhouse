@@ -21,6 +21,12 @@ from src.services.communities.communities import (
     get_community_user_rights,
 )
 from src.services.communities.thumbnails import upload_community_thumbnail
+from src.services.communities.activity import (
+    CommunityActivity,
+    CommunitySummary,
+    get_org_communities_activity,
+    get_org_communities_summary,
+)
 from src.db.communities.communities import Community
 from src.security.rbac import check_resource_access, AccessAction
 
@@ -145,6 +151,50 @@ async def api_get_communities_by_org(
     return await get_communities_by_org(
         request, org_id, current_user, db_session, page, limit
     )
+
+
+@router.get(
+    "/org/{org_id}/activity",
+    response_model=List[CommunityActivity],
+    summary="Activity summary for an organization's communities",
+    description="Return, for every community of an organization, its thread count, the number of threads without a reply and the latest activity date. For people who manage communities in the organization.",
+    responses={
+        200: {"description": "Activity per community.", "model": List[CommunityActivity]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User cannot manage this organization's communities"},
+    },
+)
+async def api_get_org_communities_activity(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> List[CommunityActivity]:
+    """
+    Thread count, unanswered threads and latest activity per community.
+    """
+    return await get_org_communities_activity(request, org_id, current_user, db_session)
+
+
+@router.get(
+    "/org/{org_id}/summary",
+    response_model=List[CommunitySummary],
+    summary="Public activity counts for an organization's communities",
+    description="Return thread, unanswered, participant and new-this-week counts plus the latest activity date for every community the caller can see. Same visibility as the community list; counts only, no names or content.",
+    responses={
+        200: {"description": "Counts per visible community.", "model": List[CommunitySummary]},
+    },
+)
+async def api_get_org_communities_summary(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> List[CommunitySummary]:
+    """
+    Activity counts per visible community.
+    """
+    return await get_org_communities_summary(request, org_id, current_user, db_session)
 
 
 @router.get(

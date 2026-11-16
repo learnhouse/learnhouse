@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import shutil
+import time
 from typing import BinaryIO, Literal, Optional, Union
 import boto3
 import botocore.config
@@ -219,6 +220,71 @@ async def read_content(
     if not os.path.exists(safe_path):
         raise HTTPException(status_code=404, detail="File not found")
     return await asyncio.to_thread(_read_file_bytes, safe_path)
+
+
+# content_exists answers are kept briefly: listing tools check many files at
+# once and ask again within the same conversation. New uploads get new names,
+# so a cached "missing" never hides a file written after the check.
+_EXISTS_TTL_SECONDS = 60.0
+_EXISTS_MAX_ENTRIES = 5000
+_exists_cache: dict[str, tuple[float, bool]] = {}
+
+
+async def content_exists(
+    directory: str,
+    type_of_dir: Literal["orgs", "users"],
+    uuid: str,
+    file_and_format: str,
+) -> bool:
+    """Whether a stored content file is actually there (filesystem or S3/R2).
+
+    A file name with separators or traversal is never there. When the
+    storage cannot answer (S3 unreachable), the file counts as present: a
+    hiccup must not make callers report working files as broken."""
+    if (
+        not file_and_format
+        or "/" in file_and_format
+        or "\\" in file_and_format
+        or ".." in file_and_format
+        or "\x00" in file_and_format
+    ):
+        return False
+    key = f"{type_of_dir}/{uuid}/{directory}/{file_and_format}"
+    now = time.monotonic()
+    hit = _exists_cache.get(key)
+    if hit is not None and now - hit[0] < _EXISTS_TTL_SECONDS:
+        return hit[1]
+
+    content_delivery = get_learnhouse_config().hosting_config.content_delivery.type
+    if content_delivery == "s3api":
+        cfg = get_learnhouse_config().hosting_config.content_delivery.s3api
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=cfg.endpoint_url,
+            config=botocore.config.Config(connect_timeout=5, read_timeout=10, retries={"max_attempts": 1}),
+        )
+        try:
+            await asyncio.to_thread(
+                s3.head_object, Bucket=cfg.bucket_name or "learnhouse-media", Key=f"content/{key}"
+            )
+            found = True
+        except ClientError as e:
+            code = str(e.response.get("Error", {}).get("Code", ""))
+            if code not in ("404", "NoSuchKey", "NotFound"):
+                return True  # unknown (permissions, throttling): do not cache
+            found = False
+        except BotoCoreError:
+            return True
+    else:
+        try:
+            found = os.path.isfile(_safe_content_path(type_of_dir, uuid, directory, file_and_format))
+        except HTTPException:
+            found = False
+
+    if len(_exists_cache) >= _EXISTS_MAX_ENTRIES:
+        _exists_cache.clear()
+    _exists_cache[key] = (now, found)
+    return found
 
 
 def _read_file_bytes(path: str) -> bytes:

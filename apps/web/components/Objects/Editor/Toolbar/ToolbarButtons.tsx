@@ -30,6 +30,8 @@ import {
   SealQuestion,
   Sigma,
   SquaresFour,
+  Layout,
+  FloppyDiskBack,
   Table,
   Tag,
   TextB,
@@ -43,6 +45,7 @@ import {
 } from '@phosphor-icons/react'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { EDITOR_EVENTS, emitEditorEvent } from '../Templates/templateContent'
 import React from 'react'
 import Image from 'next/image'
 import LinkInputTooltip from './LinkInputTooltip'
@@ -63,6 +66,8 @@ type ToolbarMenuItem = {
   color?: string
   variant?: string
   active?: boolean
+  /** Section heading shown above the first item of each section. */
+  section?: string
   onSelect: () => void
 }
 
@@ -105,12 +110,21 @@ function ToolbarMenu({ id, openMenu, setOpenMenu, label, icon, variant = '', act
       <ToolTip content={label}>
         <div
           role="button"
+          tabIndex={0}
           aria-label={label}
           aria-haspopup="menu"
           aria-expanded={isOpen}
           // Keep the editor selection so inserts land where the cursor was.
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setOpenMenu(isOpen ? null : id)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+              e.preventDefault()
+              setOpenMenu(id)
+              // Keyboard users land on the first item
+              requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('[role=menuitem]')?.focus())
+            }
+          }}
           className={`editor-tool-btn ${variant} ${isOpen || active ? 'is-active' : ''}`}
         >
           {icon}
@@ -118,15 +132,39 @@ function ToolbarMenu({ id, openMenu, setOpenMenu, label, icon, variant = '', act
         </div>
       </ToolTip>
       {isOpen && (
-        <div className="editor-menu-dropdown" role="menu">
-          {items.map((item) => (
+        <div
+          className="editor-menu-dropdown"
+          role="menu"
+          aria-label={label}
+          onKeyDown={(e) => {
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+            e.preventDefault()
+            const list = [...(ref.current?.querySelectorAll<HTMLElement>('[role=menuitem]') ?? [])]
+            const at = list.indexOf(document.activeElement as HTMLElement)
+            list[(at + (e.key === 'ArrowDown' ? 1 : list.length - 1)) % list.length]?.focus()
+          }}
+        >
+          {items.map((item, index) => (
+            <React.Fragment key={item.key}>
+            {item.section && item.section !== items[index - 1]?.section && (
+              <div role="presentation" className="px-2 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+                {item.section}
+              </div>
+            )}
             <div
-              key={item.key}
               role="menuitem"
+              tabIndex={-1}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 setOpenMenu(null)
                 item.onSelect()
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setOpenMenu(null)
+                  item.onSelect()
+                }
               }}
               className={`editor-menu-item ${item.active ? 'is-active' : ''}`}
             >
@@ -135,6 +173,7 @@ function ToolbarMenu({ id, openMenu, setOpenMenu, label, icon, variant = '', act
               </span>
               <span className="label">{item.label}</span>
             </div>
+            </React.Fragment>
           ))}
         </div>
       )}
@@ -471,9 +510,30 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
       onSelect: insertBlock({ type: 'blockUser' })
     }
   ]
+  // The {} menu holds templates and variables (it replaced the header's
+  // Templates button). The Templates modal itself is owned by Editor.tsx.
+  const templatesSection = t('editor.toolbar.templates_section', 'Templates')
+  const variablesSection = t('editor.toolbar.variables_section', 'Variables')
   const dynamicItems: ToolbarMenuItem[] = [
     {
+      key: 'templates-insert',
+      section: templatesSection,
+      label: t('editor.toolbar.templates_insert', 'Insert a template…'),
+      icon: <Layout size={15} weight="bold" />,
+      color: 'text-fuchsia-700',
+      onSelect: () => emitEditorEvent(EDITOR_EVENTS.openTemplates),
+    },
+    {
+      key: 'templates-save',
+      section: templatesSection,
+      label: t('editor.toolbar.templates_save', 'Save this page as a template…'),
+      icon: <FloppyDiskBack size={15} weight="bold" />,
+      color: 'text-fuchsia-700',
+      onSelect: () => emitEditorEvent(EDITOR_EVENTS.saveTemplate),
+    },
+    {
       key: 'variable',
+      section: variablesSection,
       label: t('editor.dynamic.toolbar.variable', { example: '{{', defaultValue: 'Insert a variable (or type {{example}})' }),
       icon: <BracketsCurly size={15} weight="bold" />,
       color: 'text-fuchsia-700',
@@ -481,6 +541,7 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
     },
     {
       key: 'conditional',
+      section: variablesSection,
       label: t('editor.dynamic.toolbar.conditional', 'Content only some learners see'),
       icon: <UsersThree size={15} weight="fill" />,
       color: 'text-fuchsia-700',
@@ -488,6 +549,7 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
     },
     {
       key: 'community',
+      section: variablesSection,
       label: t('editor.dynamic.toolbar.community', { example: '#', defaultValue: 'Link a community (or type {{example}})' }),
       icon: <Hash size={15} weight="bold" />,
       color: 'text-fuchsia-700',
@@ -672,7 +734,7 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
         id="dynamic"
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}
-        label={t('editor.dynamic.toolbar.menu_label', 'Personalize')}
+        label={t('editor.toolbar.templates_variables', 'Templates & variables')}
         icon={<BracketsCurly size={15} weight="bold" />}
         variant="editor-tool-btn-dynamic"
         active={showVariables}

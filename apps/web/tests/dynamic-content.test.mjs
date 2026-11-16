@@ -311,6 +311,13 @@ describe("slash menu order", () => {
       expect(items.map((i) => i.id)).toEqual(drawn.map((i) => i.id));
     }
   });
+  test("a title match comes first across categories", async () => {
+    const { filterCommands } = await import("../components/Objects/Editor/Extensions/SlashCommands/slashCommandsConfig.tsx");
+    expect(filterCommands("user")[0].id).toBe("user");
+    expect(filterCommands("web")[0].id).toBe("webPreview");
+    expect(filterCommands("h5p")[0].id).toBe("h5p");
+    expect(filterCommands("code playground")[0].id).toBe("codePlayground");
+  });
 });
 
 describe("round four: variables everywhere", () => {

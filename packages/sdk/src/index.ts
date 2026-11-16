@@ -74,4 +74,21 @@ export type {
 } from './models'
 export type { components, operations, paths } from './generated/schema'
 
+export { AgentStream, isAgentWaiting } from './agent/client'
+export type {
+  AgentOrgOptions,
+  AgentResource,
+  AgentStreamOptions,
+  ApproveOptions,
+  DenyOptions,
+  ListAgentsOptions,
+  ListConversationsOptions,
+  ResumeOptions,
+} from './agent/client'
+export { AgentMessageBuilder, collectMessage, emptyAssistantMessage, pendingApprovals } from './agent/collect'
+export { SSEParser, readSSE } from './agent/sse'
+export type { SSEFrame } from './agent/sse'
+export { AGENT_API_VERSION } from './agent/types'
+export type * from './agent/types'
+
 export { SDK_VERSION } from './version'

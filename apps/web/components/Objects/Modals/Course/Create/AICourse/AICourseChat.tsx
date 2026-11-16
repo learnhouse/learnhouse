@@ -1,11 +1,10 @@
 'use client'
 import React from 'react'
-import { Send, Loader2, Paperclip, X, Image as ImageIcon, Link as LinkIcon, FileText, Video } from 'lucide-react'
-import Image from 'next/image'
+import { PaperPlaneRight, CircleNotch, Paperclip, X, Image as ImageIcon, Link as LinkIcon, FileText, VideoCamera } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { CoursePlanningMessage, Attachment } from '@services/ai/courseplanning'
-import lrnaiIcon from 'public/lrnai_icon.png'
+import { AIMark, AIThinking } from '@components/Objects/AI/AIBrand'
 import { safeImageSrc } from '@services/security/url'
 
 interface AICourseChatProps {
@@ -168,12 +167,7 @@ function AICourseChat({
         {messages.length === 0 && !isLoading && (
           <div className="space-y-4 pt-8">
             <div className="flex justify-center">
-              <Image
-                className="outline outline-1 outline-neutral-200/20 rounded-lg"
-                width={28}
-                src={lrnaiIcon}
-                alt="AI"
-              />
+              <AIMark size={36} />
             </div>
             <p className="text-sm text-white/50 text-center">
               {t('courses.create.ai.chat_description')}
@@ -227,7 +221,7 @@ function AICourseChat({
           <div className="flex justify-start">
             <div className="bg-white/5 rounded-2xl rounded-es-md px-4 py-3 ring-1 ring-inset ring-white/10 max-w-[85%]">
               <div className="flex items-center gap-3">
-                <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+                <AIThinking tone="dark" showLabel={false} />
                 <div className="flex flex-col gap-1">
                   <span className="text-sm text-white/70 font-medium">
                     {currentHasVideo && loadingDuration < 10
@@ -301,7 +295,7 @@ function AICourseChat({
                       <span className="text-xs text-white/70 font-medium max-w-[100px] truncate">{attachment.name}</span>
                       {attachment.type === 'youtube' && (
                         <span className="text-[10px] text-red-400/70 flex items-center gap-1">
-                          <Video className="w-3 h-3" /> YouTube
+                          <VideoCamera className="w-3 h-3" /> YouTube
                         </span>
                       )}
                     </div>
@@ -423,7 +417,7 @@ function AICourseChat({
                             className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white/70 hover:bg-white/5 transition-colors"
                           >
                             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
-                              <Video className="w-4 h-4 text-red-400" />
+                              <VideoCamera className="w-4 h-4 text-red-400" />
                             </div>
                             <div className="text-start">
                               <span className="block font-medium">{t('courses.create.ai.attach_youtube') || 'YouTube Video'}</span>
@@ -468,12 +462,12 @@ function AICourseChat({
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <CircleNotch className="w-4 h-4 animate-spin" />
                       <span>{t('courses.create.ai.generating_short') || 'Generating...'}</span>
                     </>
                   ) : (
                     <>
-                      <Send className="w-4 h-4" />
+                      <PaperPlaneRight className="w-4 h-4" />
                       <span>{t('courses.create.ai.send') || 'Send'}</span>
                     </>
                   )}

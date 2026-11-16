@@ -26,7 +26,11 @@ import { signOut } from '@components/Contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage } from '@/lib/i18n'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
+import { ThemeIconButton, ThemeMenuSub } from '@components/Objects/Theme/ThemeSwitch'
 import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
+import AffiliateMenuItem from '@ee/components/Payments/Affiliates/AffiliateMenuItem'
+import CompanyMenuItems from '@ee/components/Companies/CompanyMenuItems'
+import GroupMenuItems from '@components/Pages/Groups/GroupMenuItems'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 
@@ -175,6 +179,9 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
         <div className="flex items-stretch grow items-center">
           <ul className="flex space-x-0.5 sm:space-x-1 items-center">
             <li>
+              <ThemeIconButton className={`h-9 w-9 ${colors.iconBtn}`} />
+            </li>
+            <li>
               <LanguageSwitcher primaryColor={primaryColor} />
             </li>
             <li>
@@ -263,6 +270,9 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                     <span>{t('account.purchases')}</span>
                   </Link>
                 </DropdownMenuItem>
+                <AffiliateMenuItem orgId={org?.id} orgslug={org?.slug} token={session?.data?.tokens?.access_token} />
+                <CompanyMenuItems orgId={org?.id} orgslug={org?.slug} token={session?.data?.tokens?.access_token} />
+                <GroupMenuItems />
                 {multiOrg && showOrgSwitcher && (
                   <>
                     <DropdownMenuSeparator />
@@ -322,6 +332,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                   </>
                 )}
                 <DropdownMenuSeparator />
+                <ThemeMenuSub />
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="flex items-center gap-2 space-x-2">
                     <Globe size={14} weight="fill" />

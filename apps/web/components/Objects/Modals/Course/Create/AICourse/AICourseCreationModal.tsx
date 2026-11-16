@@ -1,15 +1,17 @@
 'use client'
 import React from 'react'
+import { CreditCost, OutOfCreditsNotice } from '@components/Objects/AI/CreditCost'
+import { useAICreditPrices, useRefreshAICredits } from '@components/Hooks/useAICredits'
+import { isOutOfCreditsError } from '@services/ai/credits'
 import { createPortal } from 'react-dom'
-import { X, Loader2, ArrowUpRight } from 'lucide-react'
-import Image from 'next/image'
+import { X, CircleNotch, ArrowUpRight } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
-import lrnaiIcon from 'public/lrnai_icon.png'
+import { AIAccentLine, AIMark, AI_DARK_SURFACE } from '@components/Objects/AI/AIBrand'
 import AICoursePreview from './AICoursePreview'
 import AICourseChat from './AICourseChat'
 import type { CoursePlan, CoursePlanningMessage, CreatedChapter, Attachment } from '@services/ai/courseplanning'
@@ -49,6 +51,10 @@ function AICourseCreationModal({
   const [streamingContent, setStreamingContent] = React.useState('')
   const [currentPlan, setCurrentPlan] = React.useState<CoursePlan | null>(null)
   const [error, setError] = React.useState<string | null>(null)
+  // ai-credits: price of one planning turn, and what this plan used so far.
+  const { estimate: estimateCredits } = useAICreditPrices()
+  const refreshCredits = useRefreshAICredits()
+  const [creditsUsed, setCreditsUsed] = React.useState<number | null>(null)
 
   const [createdChapters, setCreatedChapters] = React.useState<CreatedChapter[]>([])
   const [courseUuid, setCourseUuid] = React.useState<string | null>(null)
@@ -96,8 +102,12 @@ function AICourseCreationModal({
       setStreamingContent((prev) => prev + chunk)
     }
 
-    const onComplete = (newSessionUuid: string) => {
+    const onComplete = (newSessionUuid: string, credits?: number | null) => {
       setSessionUuid(newSessionUuid)
+      if (typeof credits === 'number') {
+        setCreditsUsed((prev) => (prev || 0) + credits)
+        refreshCredits()
+      }
       setIterationCount((prev) => prev + 1)
 
       setTimeout(() => {
@@ -214,19 +224,15 @@ function AICourseCreationModal({
             }}
             style={{
               pointerEvents: 'auto',
-              background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)',
+              background: AI_DARK_SURFACE,
             }}
             className="relative w-[95vw] max-w-[1400px] h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-inset ring-white/10 backdrop-blur-md min-h-0"
           >
+            <AIAccentLine className="shrink-0 opacity-80" />
             {/* Header - clean, minimal */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 flex-shrink-0">
               <div className="flex items-center gap-3">
-                <Image
-                  className="outline outline-1 outline-neutral-200/20 rounded-lg"
-                  width={24}
-                  src={lrnaiIcon}
-                  alt={t('courses.create.ai.title')}
-                />
+                <AIMark size={26} alt="" />
                 <span className="text-sm font-semibold text-white/70">
                   {t('courses.create.ai.title')}
                 </span>
@@ -255,7 +261,7 @@ function AICourseCreationModal({
                   >
                     {isFinalizingPlan ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <CircleNotch className="w-4 h-4 animate-spin" />
                         {t('courses.create.ai.creating_structure')}
                       </>
                     ) : (
@@ -272,7 +278,12 @@ function AICourseCreationModal({
             </div>
 
             {/* Error banner */}
-            {error && (
+            <div className="px-6 py-1.5 flex-shrink-0 flex items-center gap-3 border-b border-white/5">
+              <CreditCost credits={estimateCredits('course_planning')} tone="dark" />
+              {creditsUsed != null && <CreditCost kind="used" credits={creditsUsed} tone="dark" />}
+            </div>
+            {error && isOutOfCreditsError(error) && <OutOfCreditsNotice tone="dark" className="mx-6 my-2 flex-shrink-0" />}
+            {error && !isOutOfCreditsError(error) && (
               <div className="px-6 py-3 bg-red-500/20 outline outline-1 outline-red-500 text-red-200 text-sm flex-shrink-0 flex items-center justify-between">
                 <span>{error}</span>
                 <button onClick={() => setError(null)} className="p-1 hover:bg-white/10 rounded">

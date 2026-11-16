@@ -77,7 +77,9 @@ function DiscussionContentEditor({
         HTMLAttributes: {
           class: 'discussion-link',
           target: '_blank',
-          rel: 'noopener noreferrer',
+          // Member-written links: marked user-generated so search engines don't
+          // treat them as the org's endorsements (spam links earn nothing).
+          rel: 'ugc nofollow noopener noreferrer',
         },
       }),
       ...(allowRichContent

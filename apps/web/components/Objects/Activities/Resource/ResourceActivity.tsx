@@ -1,15 +1,15 @@
 'use client'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { WarningCircle, SquaresFour, Microphone, UsersThree, Code, GraduationCap, ArrowSquareOut } from '@phosphor-icons/react'
+import { WarningCircle, SquaresFour, Microphone, Lightning, GraduationCap, ArrowSquareOut, Garage } from '@phosphor-icons/react'
 import { buildEmbedUrl, buildResourceUrl, type ResourceKind } from '@/lib/library/resourceEmbed'
 
 const KIND_META: Partial<Record<ResourceKind, { labelKey: string; icon: any; color: string }>> = {
   course: { labelKey: 'activities.resource.kind_course', icon: GraduationCap, color: 'text-blue-500' },
   podcast: { labelKey: 'activities.resource.kind_podcast', icon: Microphone, color: 'text-violet-500' },
-  community: { labelKey: 'activities.resource.kind_community', icon: UsersThree, color: 'text-emerald-500' },
+  community: { labelKey: 'activities.resource.kind_community', icon: Garage, color: 'text-emerald-500' },
   board: { labelKey: 'activities.resource.kind_board', icon: SquaresFour, color: 'text-indigo-500' },
-  playground: { labelKey: 'activities.resource.kind_playground', icon: Code, color: 'text-amber-500' },
+  playground: { labelKey: 'activities.resource.kind_playground', icon: Lightning, color: 'text-amber-500' },
 }
 
 interface ResourceActivityProps {

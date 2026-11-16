@@ -1,6 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
+import { AUDIO_EXTRA_ATTRS } from '../../Blocks/schema/blockAttrs'
 
 const AudioBlockComponent = dynamic(() => import('./AudioBlockComponent'), {
   ssr: false,
@@ -17,6 +18,8 @@ export default Node.create({
       blockObject: {
         default: null,
       },
+      // Added by the blocks redesign; optional, defaults keep old content as-is.
+      ...AUDIO_EXTRA_ATTRS,
     }
   },
 

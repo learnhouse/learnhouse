@@ -13,10 +13,7 @@ from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
-from src.security.features_utils.usage import (
-    reserve_ai_credit,
-    refund_ai_credit,
-)
+from src.services.ai import metering
 from src.services.ai.llm import model_for_tier
 from src.services.ai.llm.errors import ai_error_message, log_ai_failure
 from src.services.ai.magicblocks import (
@@ -41,49 +38,51 @@ logger = logging.getLogger(__name__)
 async def event_generator(
     generator,
     session_uuid: str,
-    org_id: int | None = None,
-    reserved_credits: int = 0,
+    meter: "metering.Meter | None" = None,
 ):
     """Convert async generator to SSE format.
 
-    Credits are reserved by the caller before the stream is created. If the
+    The caller opened the AI charge (``meter``) before the stream was created;
+    the model calls inside the stream are metered on it. A finished stream
+    settles before its ``done`` event (which then carries ``credits``). If the
     stream dies before producing any model output (upstream error, client
-    disconnect, cancellation) we refund the reserved credits so a flaky
-    connection doesn't silently drain the org's quota.
+    disconnect, cancellation) the charge is refunded, so a flaky connection
+    doesn't drain the org's quota; a disconnect *after* output still pays for it.
     """
     import asyncio
 
     produced_content = False
     stream_failed = False
-    try:
-        async for chunk in generator:
-            if chunk:
-                produced_content = True
-            # Send each chunk as an SSE data event
-            yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+    with metering.use_meter(meter):
+        try:
+            async for chunk in generator:
+                if chunk:
+                    produced_content = True
+                # Send each chunk as an SSE data event
+                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
 
-        # Send completion event
-        yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
-    except asyncio.CancelledError:
-        # Client disconnect / cancellation. Do NOT force a refund here: if the
-        # model already produced output the credits were legitimately spent.
-        # The finally block still refunds when nothing was produced
-        # (produced_content False), so a disconnect *after* output can't be
-        # abused to get free generations. Re-raise so Starlette observes it.
-        raise
-    except Exception as e:
-        stream_failed = True
-        # Log the full exception server-side; never leak exception/stack-trace
-        # detail to the external client (CodeQL py/stack-trace-exposure).
-        log_ai_failure(logger, e, "MagicBlock stream failed for session %s", session_uuid)
-        message = ai_error_message(e, "Generation failed. Please try again.")
-        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
-    finally:
-        if org_id is not None and reserved_credits > 0 and (stream_failed or not produced_content):
-            try:
-                refund_ai_credit(org_id, reserved_credits)
-            except Exception:
-                logger.debug("MagicBlock AI credit refund failed", exc_info=True)
+            done: dict = {"type": "done", "session_uuid": session_uuid}
+            if meter is not None:
+                done["credits"] = await meter.settle(failed=not produced_content)
+            # Send completion event
+            yield f"data: {json.dumps(done)}\n\n"
+        except asyncio.CancelledError:
+            # Client disconnect / cancellation: re-raise so Starlette observes
+            # it; the finally block settles (refund only if nothing was produced).
+            raise
+        except Exception as e:
+            stream_failed = True
+            # Log the full exception server-side; never leak exception/stack-trace
+            # detail to the external client (CodeQL py/stack-trace-exposure).
+            log_ai_failure(logger, e, "MagicBlock stream failed for session %s", session_uuid)
+            message = ai_error_message(e, "Generation failed. Please try again.")
+            yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
+        finally:
+            if meter is not None and not meter.settled:
+                try:
+                    await meter.settle(failed=stream_failed or not produced_content)
+                except Exception:
+                    logger.debug("MagicBlock AI credit settlement failed", exc_info=True)
 
 
 async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
@@ -162,30 +161,33 @@ async def start_magicblock_session(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(acting_user_id, org.id)
 
-    # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
-    await reserve_ai_credit(org.id, db_session, amount=3)
+    # Atomically check + reserve AI credits to prevent concurrent-request overdraw.
+    meter = await metering.start("magic_block", org_id=org.id, db=db_session, user_id=acting_user_id)
+    try:
+        # Get AI model
+        ai_model = await get_org_ai_model(org.id, db_session)
 
-    # Get AI model
-    ai_model = await get_org_ai_model(org.id, db_session)
+        # Create new session
+        session = create_magicblock_session(
+            block_uuid=session_request.block_uuid,
+            activity_uuid=session_request.activity_uuid,
+            context=session_request.context,
+            user_id=acting_user_id,
+        )
 
-    # Create new session
-    session = create_magicblock_session(
-        block_uuid=session_request.block_uuid,
-        activity_uuid=session_request.activity_uuid,
-        context=session_request.context,
-        user_id=acting_user_id,
-    )
-
-    # Generate with streaming
-    stream = generate_magicblock_stream(
-        prompt=session_request.prompt,
-        session=session,
-        model_name=ai_model,
-        style_reference=session_request.style_reference,
-    )
+        # Generate with streaming
+        stream = generate_magicblock_stream(
+            prompt=session_request.prompt,
+            session=session,
+            model_name=ai_model,
+            style_reference=session_request.style_reference,
+        )
+    except BaseException:
+        await meter.settle(failed=True)
+        raise
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid, org_id=org.id, reserved_credits=3),
+        event_generator(stream, session.session_uuid, meter=meter),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -278,26 +280,29 @@ async def iterate_magicblock_session(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(acting_user_id, org.id)
 
-    # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
-    await reserve_ai_credit(org.id, db_session, amount=3)
+    # Atomically check + reserve AI credits to prevent concurrent-request overdraw.
+    meter = await metering.start("magic_block", org_id=org.id, db=db_session, user_id=acting_user_id)
+    try:
+        # Get AI model
+        ai_model = await get_org_ai_model(org.id, db_session)
 
-    # Get AI model
-    ai_model = await get_org_ai_model(org.id, db_session)
+        # Use client-provided HTML or fall back to session's current_html
+        html_to_iterate = message_request.current_html or session.current_html
 
-    # Use client-provided HTML or fall back to session's current_html
-    html_to_iterate = message_request.current_html or session.current_html
-
-    # Generate with streaming
-    stream = generate_magicblock_stream(
-        prompt=message_request.message,
-        session=session,
-        model_name=ai_model,
-        current_html=html_to_iterate,
-        style_reference=message_request.style_reference,
-    )
+        # Generate with streaming
+        stream = generate_magicblock_stream(
+            prompt=message_request.message,
+            session=session,
+            model_name=ai_model,
+            current_html=html_to_iterate,
+            style_reference=message_request.style_reference,
+        )
+    except BaseException:
+        await meter.settle(failed=True)
+        raise
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid, org_id=org.id, reserved_credits=3),
+        event_generator(stream, session.session_uuid, meter=meter),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

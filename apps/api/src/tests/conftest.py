@@ -649,3 +649,63 @@ def bypass_analytics():
         new_callable=AsyncMock,
     ) as mock:
         yield mock
+
+
+class AICreditSpy:
+    """Records what AI charges reserve, refund and settle (see ``ai_credit_spy``)."""
+
+    def __init__(self):
+        self.reserved: list[tuple[int, int]] = []
+        self.refunded: list[tuple[int, int]] = []
+        self.extra: list[tuple[int, int]] = []
+        self.settled: list = []  # Meter objects, in settlement order
+        self.reserve_error: Exception | None = None
+
+    @property
+    def features(self) -> list[str]:
+        return [m.feature for m in self.settled]
+
+    @property
+    def last(self):
+        return self.settled[-1]
+
+    def charged(self, feature: str | None = None) -> int:
+        return sum(m.credits for m in self.settled if feature is None or m.feature == feature)
+
+
+@pytest.fixture
+def ai_credit_spy():
+    """Fakes the Redis credit store under ``src.services.ai.metering`` (reserve,
+    refund, settlement charge, limits, idempotency lock) and the usage ledger,
+    and records every settled charge. Set ``spy.reserve_error`` to make the
+    reservation fail (e.g. ``HTTPException(403)`` for "out of credits")."""
+    spy = AICreditSpy()
+
+    async def reserve(org_id, db_session=None, amount=1):
+        if spy.reserve_error is not None:
+            raise spy.reserve_error
+        spy.reserved.append((org_id, amount))
+        return amount
+
+    def refund(org_id, amount=1):
+        spy.refunded.append((org_id, amount))
+        return 0
+
+    def up_to(org_id, amount, limits=None):
+        spy.extra.append((org_id, amount))
+        return amount
+
+    async def limits(org_id, db_session):
+        return {"base": 0, "extra": 0, "unlimited": True}
+
+    async def ledger(meter):
+        spy.settled.append(meter)
+
+    with patch("src.security.features_utils.usage.reserve_ai_credit", reserve), \
+         patch("src.security.features_utils.usage.refund_ai_credit", refund), \
+         patch("src.security.features_utils.usage.charge_ai_credit_up_to", up_to), \
+         patch("src.security.features_utils.usage.ai_credit_limits", limits), \
+         patch("src.services.ai.metering._write_ledger", ledger), \
+         patch("src.services.ai.metering._take_lock", lambda key: None), \
+         patch("src.services.ai.metering._forget_lock", lambda key: None):
+        yield spy

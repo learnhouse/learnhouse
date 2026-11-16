@@ -1,496 +1,468 @@
+'use client'
+import React, { useState } from 'react'
+import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  ArrowsClockwise,
+  CalendarBlank,
+  CaretLeft,
+  CaretRight,
+  ClockCounterClockwise,
+  DownloadSimple,
+  ListMagnifyingGlass,
+  WarningCircle,
+  X,
+} from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import UserAvatar from '@components/Objects/UserAvatar'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { getAPIUrl } from '@services/config/config'
-import { apiFetch } from '@services/utils/ts/requests'
-import { Search, Activity, ShieldCheck, RefreshCw, Eye, Globe, Terminal, ChevronLeft, ChevronRight, Calendar, Download } from 'lucide-react'
-import React, { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query/keys'
-import dayjs from 'dayjs'
-import toast from 'react-hot-toast'
-import { Input } from '@components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@components/ui/select'
-import { useTranslation } from 'react-i18next'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { Button, Chip, EmptyState, INPUT, Panel, SearchInput, Skeleton, StatusPill, ToolbarSelect, recipes } from '@/design'
+import { queryKeys } from '@/lib/query/keys'
+import { intlLocale } from '@/lib/format'
+import {
+  exportAuditLogs,
+  getAuditFacets,
+  getAuditLogs,
+  type AuditFilters,
+} from '@services/ee/audit_logs'
+import {
+  CATEGORIES,
+  OUTCOMES,
+  VIAS,
+  actorName,
+  dateRangeBounds,
+  outcomeStatus,
+  type AuditEntry,
+} from './auditFormat'
+import { ActorAvatar, AuditSentence, targetTypeLabel, useAuditText } from './auditUi'
+import AuditLogDrawer from './AuditLogDrawer'
+import AuditRetentionDialog from './AuditRetentionDialog'
 
-const ITEMS_PER_PAGE = 20
+const PAGE_SIZE = 25
+
+// Subgrid table (as in the courses list): the panel is the grid and each row
+// spans it, so the columns line up. Below lg rows stack.
+const TABLE_GRID = 'lg:grid lg:grid-cols-[minmax(0,9rem)_minmax(0,13rem)_minmax(0,1fr)_auto_auto]'
+const ROW_GRID = 'lg:col-span-full lg:grid lg:grid-cols-subgrid lg:items-center lg:gap-x-4'
+
+type UiFilters = {
+  q: string
+  date: string
+  start: string
+  end: string
+  actor: string
+  category: string
+  target: string
+  outcome: string
+  via: string
+}
+
+const EMPTY: UiFilters = { q: '', date: 'all', start: '', end: '', actor: 'all', category: 'all', target: 'all', outcome: 'all', via: 'all' }
+
+function toApiFilters(f: UiFilters): AuditFilters {
+  let start = f.start ? new Date(`${f.start}T00:00:00`).toISOString() : undefined
+  let end = f.end ? new Date(`${f.end}T23:59:59.999`).toISOString() : undefined
+  if (f.date !== 'custom') {
+    start = dateRangeBounds(f.date).start
+    end = undefined
+  }
+  return {
+    q: f.q || undefined,
+    category: f.category,
+    target_type: f.target,
+    outcome: f.outcome,
+    via: f.via,
+    actor_id: f.actor === 'all' ? undefined : f.actor,
+    start_date: start,
+    end_date: end,
+  }
+}
+
+function RowSkeleton() {
+  return (
+    <div className={`flex items-center gap-3 px-5 py-3.5 ${ROW_GRID}`}>
+      <Skeleton className="hidden lg:block h-3.5 w-20" />
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-7 w-7 !rounded-full" />
+        <Skeleton className="h-3.5 w-24" />
+      </div>
+      <Skeleton className="h-3.5 w-full max-w-md" />
+      <Skeleton className="hidden lg:block h-6 w-16 !rounded-full" />
+      <Skeleton className="hidden lg:block h-6 w-20 !rounded-full" />
+    </div>
+  )
+}
 
 const OrgAuditLogs = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const text = useAuditText()
   const org = useOrg() as any
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
+  const token: string | undefined = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
 
+  const [filters, setFilters] = useState<UiFilters>(EMPTY)
+  const [search, setSearch] = useState('')
   const [offset, setOffset] = useState(0)
-  const [searchField, setSearchField] = useState('action')
-  const [openModalId, setOpenModalId] = useState<string | null>(null)
-  const [filters, setFilters] = useState({
-    searchValue: '',
-    action: '',
-    resource: '',
-    status_code: '',
-    date_range: 'all',
-    start_date: '',
-    end_date: '',
-  })
+  const [openId, setOpenId] = useState<number | null>(null)
+  const [retentionOpen, setRetentionOpen] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
-  const buildQuery = () => {
-    const params = new URLSearchParams()
-    if (org?.id) params.append('org_id', org.id.toString())
-    params.append('limit', ITEMS_PER_PAGE.toString())
-    params.append('offset', offset.toString())
-    
-    // Search logic based on selected field
-    if (filters.searchValue) {
-      if (searchField === 'user_id') {
-        params.append('user_id', filters.searchValue)
-      } else if (searchField === 'username') {
-        params.append('username', filters.searchValue)
-      } else if (searchField === 'name') {
-        params.append('name', filters.searchValue)
-      } else if (searchField === 'resource') {
-        params.append('resource', filters.searchValue)
-      } else if (searchField === 'ip_address') {
-        params.append('ip_address', filters.searchValue)
-      } else {
-        params.append('action', filters.searchValue)
-      }
-    }
+  // Debounce typing so each keystroke doesn't fire a request.
+  React.useEffect(() => {
+    const id = setTimeout(() => {
+      setFilters((f) => (f.q === search ? f : { ...f, q: search }))
+      setOffset(0)
+    }, 300)
+    return () => clearTimeout(id)
+  }, [search])
 
-    if (filters.resource && filters.resource !== 'all') params.append('resource', filters.resource)
-    if (filters.status_code && filters.status_code !== 'all') params.append('status_code', filters.status_code)
-    
-    let start = filters.start_date
-    let end = filters.end_date
-
-    if (filters.date_range !== 'custom' && filters.date_range !== 'all') {
-      end = dayjs().endOf('day').toISOString()
-      if (filters.date_range === 'today') start = dayjs().startOf('day').toISOString()
-      if (filters.date_range === '7d') start = dayjs().subtract(7, 'day').startOf('day').toISOString()
-      if (filters.date_range === '30d') start = dayjs().subtract(30, 'day').startOf('day').toISOString()
-    }
-
-    if (start) params.append('start_date', start)
-    if (end) params.append('end_date', end)
-
-    return params.toString()
+  const patch = (p: Partial<UiFilters>) => {
+    setFilters((f) => ({ ...f, ...p }))
+    setOffset(0)
   }
 
-  const logsQueryKey = org?.id
-    ? [...queryKeys.org.auditLogs(org.id), offset, filters, searchField]
-    : null
+  const apiFilters = toApiFilters(filters)
+  const enabled = !!(org?.id && token)
+  const listKey = [...queryKeys.org.auditLogs(org?.id ?? 0), 'list', offset, apiFilters] as const
 
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: logsQueryKey ?? ['audit_logs_disabled'],
-    queryFn: () => apiFetch(`${getAPIUrl()}ee/audit_logs/?${buildQuery()}`, access_token),
-    enabled: !!(org?.id && access_token),
-    staleTime: 60_000,
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
+    queryKey: listKey,
+    queryFn: () => getAuditLogs(org.id, token as string, apiFilters, offset, PAGE_SIZE),
+    enabled,
+    staleTime: 30_000,
+    placeholderData: (previous) => previous,
+    retry: 1,
+  })
+  const { data: facets } = useQuery({
+    queryKey: [...queryKeys.org.auditLogs(org?.id ?? 0), 'facets'],
+    queryFn: () => getAuditFacets(org.id, token as string),
+    enabled,
+    staleTime: 5 * 60_000,
   })
 
-  const logs = data?.items || []
-  const total = data?.total || 0
-  const rf = org?.config?.config?.resolved_features
+  const items: AuditEntry[] = Array.isArray(data?.items) ? data.items : []
+  const total = data?.total ?? 0
+  const activeCount = (['actor', 'category', 'target', 'outcome', 'via'] as const).filter((k) => filters[k] !== 'all').length
+    + (filters.date !== 'all' ? 1 : 0) + (filters.q ? 1 : 0)
 
-  const handleRefresh = () => {
-    if (logsQueryKey) {
-      queryClient.invalidateQueries({ queryKey: logsQueryKey })
-    }
+  const clearFilters = () => {
+    setSearch('')
+    setFilters(EMPTY)
+    setOffset(0)
   }
 
-  const handleExport = async () => {
-    if (rf?.audit_logs?.enabled !== true) {
-      toast.error(t('dashboard.organization.audit_logs.enterprise_only'))
-      return
-    }
-    const toastId = toast.loading(t('dashboard.organization.audit_logs.export_toasts.generating'))
+  const handleExport = async (format: 'csv' | 'json') => {
+    if (!enabled || exporting) return
+    setExporting(true)
+    const toastId = toast.loading(text('export.generating'))
     try {
-      const params = new URLSearchParams()
-      if (org?.id) params.append('org_id', org.id.toString())
-      if (filters.searchValue) {
-        if (searchField === 'user_id') params.append('user_id', filters.searchValue)
-        else if (searchField === 'username') params.append('username', filters.searchValue)
-        else if (searchField === 'name') params.append('name', filters.searchValue)
-        else if (searchField === 'resource') params.append('resource', filters.searchValue)
-        else if (searchField === 'ip_address') params.append('ip_address', filters.searchValue)
-        else params.append('action', filters.searchValue)
-      }
-      if (filters.resource && filters.resource !== 'all') params.append('resource', filters.resource)
-      if (filters.status_code && filters.status_code !== 'all') params.append('status_code', filters.status_code)
-      
-      let start = filters.start_date
-      let end = filters.end_date
-      if (filters.date_range !== 'custom' && filters.date_range !== 'all') {
-        end = dayjs().endOf('day').toISOString()
-        if (filters.date_range === 'today') start = dayjs().startOf('day').toISOString()
-        if (filters.date_range === '7d') start = dayjs().subtract(7, 'day').startOf('day').toISOString()
-        if (filters.date_range === '30d') start = dayjs().subtract(30, 'day').startOf('day').toISOString()
-      }
-      if (start) params.append('start_date', start)
-      if (end) params.append('end_date', end)
-
-      const url = `${getAPIUrl()}ee/audit_logs/export?${params.toString()}`
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${access_token}`
-        }
-      })
-
-      if (!response.ok) throw new Error('Export failed')
-
-      const blob = await response.blob()
-      const downloadUrl = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = downloadUrl
-      a.download = `audit_logs_${dayjs().format('YYYYMMDD_HHmmss')}.csv`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      toast.success(t('dashboard.organization.audit_logs.export_toasts.success'), { id: toastId })
-    } catch (error) {
-      console.error('Export error:', error)
-      toast.error(t('dashboard.organization.audit_logs.export_toasts.error'), { id: toastId })
+      await exportAuditLogs(org.id, token as string, apiFilters, format)
+      toast.success(text('export.done'), { id: toastId })
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.auditLogs(org.id) })
+    } catch {
+      toast.error(text('export.failed'), { id: toastId })
+    } finally {
+      setExporting(false)
     }
   }
 
-  const handlePageChange = (newOffset: number) => {
-    setOffset(newOffset)
-  }
+  const locale = intlLocale(i18n.language)
+  const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' })
+  const timeFmt = new Intl.DateTimeFormat(locale, { timeStyle: 'short' })
 
-  const getStatusColor = (code: number) => {
-    if (code >= 200 && code < 300) return 'bg-green-100 text-green-700'
-    if (code >= 400 && code < 500) return 'bg-orange-100 text-orange-700'
-    if (code >= 500) return 'bg-red-100 text-red-700'
-    return 'bg-gray-100 text-gray-700'
-  }
+  const filterSelects = (
+    <>
+      <ToolbarSelect
+        value={filters.date}
+        onChange={(v) => patch({ date: v })}
+        ariaLabel={text('filters.date')}
+        icon={<CalendarBlank size={13} />}
+        options={['all', 'today', '7d', '30d', '90d', 'custom'].map((v) => ({ value: v, label: text(`filters.date_${v}`) }))}
+      />
+      <ToolbarSelect
+        value={filters.actor}
+        onChange={(v) => patch({ actor: v })}
+        ariaLabel={text('filters.actor')}
+        options={[
+          { value: 'all', label: text('filters.actor_all') },
+          ...(facets?.actors ?? []).map((a) => ({ value: String(a.id), label: a.name || a.username || `#${a.id}` })),
+        ]}
+      />
+      <ToolbarSelect
+        value={filters.category}
+        onChange={(v) => patch({ category: v })}
+        ariaLabel={text('filters.category')}
+        options={[
+          { value: 'all', label: text('filters.category_all') },
+          ...CATEGORIES.map((c) => ({ value: c, label: text(`category.${c}`) })),
+        ]}
+      />
+      <ToolbarSelect
+        value={filters.target}
+        onChange={(v) => patch({ target: v })}
+        ariaLabel={text('filters.target')}
+        options={[
+          { value: 'all', label: text('filters.target_all') },
+          ...(facets?.target_types ?? []).map((tt) => ({ value: tt, label: targetTypeLabel(t, tt) })),
+        ]}
+      />
+      <ToolbarSelect
+        value={filters.outcome}
+        onChange={(v) => patch({ outcome: v })}
+        ariaLabel={text('filters.outcome')}
+        options={[{ value: 'all', label: text('filters.outcome_all') }, ...OUTCOMES.map((o) => ({ value: o, label: text(`outcome.${o}`) }))]}
+      />
+      <ToolbarSelect
+        value={filters.via}
+        onChange={(v) => patch({ via: v })}
+        ariaLabel={text('filters.via')}
+        options={[{ value: 'all', label: text('filters.via_all') }, ...VIAS.map((v) => ({ value: v, label: text(`via.${v}`) }))]}
+      />
+    </>
+  )
 
   return (
     <FeatureGate feature="audit_logs">
-      <>
-        <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow px-4 py-4">
-        <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-3">
-          <div className="flex flex-wrap gap-3 justify-between items-start">
-            <div>
-              <h1 className="font-bold text-xl text-gray-800 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                {t('dashboard.organization.audit_logs.title')}
-              </h1>
-              <h2 className="text-gray-500 text-md">
-                {t('dashboard.organization.audit_logs.subtitle')}
-              </h2>
-            </div>
-            <div className="flex flex-wrap gap-2 items-center">
-               <button 
-                onClick={handleRefresh}
-                className={`p-2 rounded-md hover:bg-gray-200 transition-colors ${isFetching ? 'animate-spin' : ''}`}
-                title={t('dashboard.organization.audit_logs.refresh')}
-               >
-                <RefreshCw className="w-4 h-4 text-gray-600" />
-               </button>
-
-               <button 
-                onClick={handleExport}
-                className="p-2 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm text-gray-600"
-                title={t('dashboard.organization.audit_logs.export')}
-               >
-                <Download className="w-4 h-4" />
-                <span className="hidden md:inline font-medium">{t('dashboard.organization.audit_logs.export')}</span>
-               </button>
-
-               <div className="flex items-center gap-0 border border-gray-200 rounded-md overflow-hidden bg-white">
-                <Select
-                  value={searchField}
-                  onValueChange={(val) => setSearchField(val)}
-                >
-                  <SelectTrigger className="w-[110px] h-9 text-[10px] border-none bg-gray-50 rounded-none focus:ring-0">
-                    <SelectValue placeholder={t('dashboard.organization.audit_logs.search_by')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="action">{t('dashboard.organization.audit_logs.table.path_method')}</SelectItem>
-                    <SelectItem value="resource">{t('dashboard.organization.audit_logs.filters.resource')}</SelectItem>
-                    <SelectItem value="username">{t('dashboard.organization.audit_logs.table.user')}</SelectItem>
-                    <SelectItem value="name">{t('dashboard.organization.audit_logs.table.user')}</SelectItem>
-                    <SelectItem value="user_id">{t('dashboard.organization.audit_logs.table.user')}</SelectItem>
-                    <SelectItem value="ip_address">{t('dashboard.organization.audit_logs.table.ip_address')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="relative">
-                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                  <Input
-                    placeholder={t('dashboard.organization.audit_logs.placeholders.search')}
-                    className="ps-9 w-[180px] h-9 text-xs border-none focus-visible:ring-0 rounded-none"
-                    value={filters.searchValue}
-                    onChange={(e) => {
-                      setFilters({ ...filters, searchValue: e.target.value })
-                      setOffset(0)
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <Select
-                value={filters.resource}
-                onValueChange={(val) => {
-                    setFilters({ ...filters, resource: val })
-                    setOffset(0)
-                }}
-              >
-                <SelectTrigger className="w-[120px] h-9 text-sm">
-                  <SelectValue placeholder={t('dashboard.organization.audit_logs.filters.resource')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('dashboard.organization.audit_logs.resources.all')}</SelectItem>
-                  <SelectItem value="user">{t('dashboard.organization.audit_logs.resources.user')}</SelectItem>
-                  <SelectItem value="course">{t('dashboard.organization.audit_logs.resources.course')}</SelectItem>
-                  <SelectItem value="org">{t('dashboard.organization.audit_logs.resources.org')}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filters.status_code}
-                onValueChange={(val) => {
-                    setFilters({ ...filters, status_code: val })
-                    setOffset(0)
-                }}
-              >
-                <SelectTrigger className="w-[100px] h-9 text-sm">
-                  <SelectValue placeholder={t('dashboard.organization.audit_logs.filters.status')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('common.all')}</SelectItem>
-                  <SelectItem value="200">200 OK</SelectItem>
-                  <SelectItem value="403">403</SelectItem>
-                  <SelectItem value="404">404</SelectItem>
-                  <SelectItem value="500">500</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filters.date_range}
-                onValueChange={(val) => {
-                    setFilters({ ...filters, date_range: val, start_date: '', end_date: '' })
-                    setOffset(0)
-                }}
-              >
-                <SelectTrigger className="w-[130px] h-9 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                    <SelectValue placeholder={t('dashboard.organization.audit_logs.filters.date')} />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('dashboard.organization.audit_logs.date_ranges.all')}</SelectItem>
-                  <SelectItem value="today">{t('dashboard.organization.audit_logs.date_ranges.today')}</SelectItem>
-                  <SelectItem value="7d">{t('dashboard.organization.audit_logs.date_ranges.7d')}</SelectItem>
-                  <SelectItem value="30d">{t('dashboard.organization.audit_logs.date_ranges.30d')}</SelectItem>
-                  <SelectItem value="custom">{t('dashboard.organization.audit_logs.date_ranges.custom')}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {filters.date_range === 'custom' && (
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="date"
-                    className="h-9 text-xs w-[130px]"
-                    value={filters.start_date ? dayjs(filters.start_date).format('YYYY-MM-DD') : ''}
-                    onChange={(e) => {
-                      const date = e.target.value ? dayjs(e.target.value).startOf('day').toISOString() : ''
-                      setFilters({ ...filters, start_date: date })
-                      setOffset(0)
-                    }}
-                  />
-                  <span className="text-gray-400 text-xs">{t('dashboard.organization.audit_logs.date_to')}</span>
-                  <Input
-                    type="date"
-                    className="h-9 text-xs w-[130px]"
-                    value={filters.end_date ? dayjs(filters.end_date).format('YYYY-MM-DD') : ''}
-                    onChange={(e) => {
-                      const date = e.target.value ? dayjs(e.target.value).endOf('day').toISOString() : ''
-                      setFilters({ ...filters, end_date: date })
-                      setOffset(0)
-                    }}
-                  />
-                </div>
-              )}
-            </div>
+      <div className="flex flex-col gap-3 min-w-0">
+        {/* Search and actions */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center min-w-0">
+          <SearchInput className="sm:max-w-md" value={search} onChange={setSearch} placeholder={text('search.placeholder')} />
+          <div className="flex items-center gap-2 sm:ms-auto">
+            <Button
+              variant="secondary"
+              size="icon"
+              className="!h-9 !w-9"
+              onClick={() => refetch()}
+              aria-label={text('actions.refresh')}
+              title={text('actions.refresh')}
+            >
+              <ArrowsClockwise size={14} className={isFetching ? 'animate-spin' : ''} />
+            </Button>
+            <Button variant="secondary" icon={<ClockCounterClockwise size={14} />} onClick={() => setRetentionOpen(true)}>
+              {text('actions.retention')}
+            </Button>
+            <ExportMenu disabled={!enabled || exporting} onExport={handleExport} />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-        <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
-          <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
-            <tr className="font-bolder text-[10px] tracking-wider">
-              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.timestamp')}</th>
-              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.user')}</th>
-              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.resource')}</th>
-              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.path_method')}</th>
-              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.ip_address')}</th>
-              <th className="py-3 px-4 text-end">{t('dashboard.organization.audit_logs.table.status')}</th>
-              <th className="py-3 px-4 text-end">{t('dashboard.organization.audit_logs.table.payload')}</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white relative">
-            {isLoading && !data ? (
-              <>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <tr key={i} className="animate-pulse border-b border-gray-100">
-                    <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-24" /></td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 bg-gray-100 rounded-full" />
-                        <div className="h-4 bg-gray-100 rounded w-24" />
-                      </div>
-                    </td>
-                    <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-16" /></td>
-                    <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-32" /></td>
-                    <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-20" /></td>
-                    <td className="py-3 px-4 text-end"><div className="h-5 bg-gray-100 rounded w-12 ms-auto" /></td>
-                    <td className="py-3 px-4 text-end"><div className="h-5 bg-gray-100 rounded w-6 ms-auto" /></td>
-                  </tr>
-                ))}
-              </>
-            ) : logs.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="py-10 text-center text-gray-400">
-                  {t('dashboard.organization.audit_logs.no_logs')}
-                </td>
-              </tr>
-            ) : (
-              logs.map((log: any) => (
-                <tr key={log.id} className="border-b border-gray-200 border-dashed hover:bg-gray-50/50 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="flex flex-col text-sm">
-                      <span className="font-semibold text-gray-700">{dayjs(log.created_at).format('MMM DD, YYYY')}</span>
-                      <span className="text-[10px] text-gray-400">{dayjs(log.created_at).format('HH:mm:ss')}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                        <UserAvatar 
-                            width={28} 
-                            userId={log.user_id?.toString()} 
-                            rounded="rounded-full"
-                            showProfilePopup={true}
-                        />
-                        <div className="flex flex-col">
-                            <span className="text-sm font-medium text-gray-800">
-                                @{log.username || t('dashboard.organization.audit_logs.system_user')}
-                            </span>
-                            {log.user_id && (
-                                <span className="text-[10px] text-gray-400 font-mono tracking-tighter">ID: {log.user_id}</span>
-                            )}
-                        </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <Activity className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="text-sm capitalize">{log.resource}</span>
-                      {log.resource_id && (
-                        <span className="text-[10px] bg-gray-50 border border-gray-200 px-1 rounded text-gray-400 font-mono">
-                          {log.resource_id}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1 text-[11px] text-gray-500 font-mono truncate max-w-[200px]">
-                        <Terminal className="w-3 h-3" />
-                        {log.path}
-                      </div>
-                      <span className={`w-fit text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                        log.method === 'GET' ? 'text-blue-600 bg-blue-50' :
-                        log.method === 'POST' ? 'text-green-600 bg-green-50' :
-                        log.method === 'PUT' ? 'text-amber-600 bg-amber-50' :
-                        'text-red-600 bg-red-50'
-                      }`}>
-                        {log.method}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1 text-xs text-gray-400 font-mono">
-                      <Globe className="w-3 h-3" />
-                      {log.ip_address || 'n/a'}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-end">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(log.status_code)}`}>
-                      {log.status_code}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-end">
-                      {log.payload && Object.keys(log.payload).length > 0 ? (
-                      <Modal
-                        dialogTitle={t('dashboard.organization.audit_logs.modals.payload.title')}
-                        dialogDescription={t('dashboard.organization.audit_logs.modals.payload.description', { action: log.action })}
-                        minHeight="no-min"
-                        isDialogOpen={openModalId === log.id}
-                        onOpenChange={(open) => setOpenModalId(open ? log.id : null)}
-                        dialogContent={
-                          <div className="bg-gray-900 rounded-lg p-4 mt-2 overflow-auto max-h-[400px]">
-                            <pre className="text-xs text-green-400 font-mono">
-                              {JSON.stringify(log.payload, null, 2)}
-                            </pre>
-                          </div>
-                        }
-                        dialogTrigger={
-                          <button className="p-1.5 hover:bg-gray-100 rounded-md transition-colors group">
-                            <Eye className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
-                          </button>
-                        }
-                      />
-                    ) : (
-                      <span className="text-gray-300 text-xs">n/a</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        {/* Filters: one row that scrolls inside itself on phones */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible pb-0.5 [&>*]:shrink-0">
+          {filterSelects}
+          {activeCount > 0 && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className={`shrink-0 inline-flex items-center gap-1 h-9 px-3 rounded-xl text-xs font-semibold text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors ${recipes.focusRing}`}
+            >
+              <X size={12} />
+              {text('filters.clear')}
+              <span className="tabular-nums text-neutral-400">({activeCount})</span>
+            </button>
+          )}
         </div>
 
-        {/* Pagination Controls */}
-        {total > ITEMS_PER_PAGE && (
-          <div className="mt-4 flex items-center justify-between px-2">
-            <div className="text-xs text-gray-500">
-              {t('dashboard.organization.audit_logs.pagination.showing', { 
-                start: offset + 1, 
-                end: Math.min(offset + ITEMS_PER_PAGE, total), 
-                total 
-              })}
+        {filters.date === 'custom' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="date"
+              aria-label={text('filters.from')}
+              className={`${INPUT} !w-44`}
+              value={filters.start}
+              max={filters.end || undefined}
+              onChange={(e) => patch({ start: e.target.value })}
+            />
+            <span className="text-neutral-400 text-xs">{text('filters.to')}</span>
+            <input
+              type="date"
+              aria-label={text('filters.to')}
+              className={`${INPUT} !w-44`}
+              value={filters.end}
+              min={filters.start || undefined}
+              onChange={(e) => patch({ end: e.target.value })}
+            />
+          </div>
+        )}
+
+        {/* Log */}
+        <Panel divided className={TABLE_GRID}>
+          <div className={`hidden ${ROW_GRID} ${recipes.tableHead}`}>
+            <span>{text('table.when')}</span>
+            <span>{text('table.actor')}</span>
+            <span>{text('table.event')}</span>
+            <span>{text('table.outcome')}</span>
+            <span>{text('table.via')}</span>
+          </div>
+
+          {isLoading && !data ? (
+            <div className={`divide-y divide-neutral-100 ${ROW_GRID}`} aria-busy="true">
+              {Array.from({ length: 8 }, (_, i) => <RowSkeleton key={i} />)}
             </div>
+          ) : isError && !data ? (
+            <div className="lg:col-span-full">
+              <EmptyState
+                icon={<WarningCircle size={22} />}
+                title={text('error.title')}
+                description={text('error.description')}
+                action={<Button variant="secondary" size="sm" onClick={() => refetch()}>{text('actions.retry')}</Button>}
+              />
+            </div>
+          ) : items.length === 0 ? (
+            <div className="lg:col-span-full">
+              <EmptyState
+                icon={<ListMagnifyingGlass size={22} />}
+                title={activeCount ? text('empty.filtered_title') : text('empty.title')}
+                description={activeCount ? text('empty.filtered_description') : text('empty.description')}
+                action={activeCount ? <Button variant="secondary" size="sm" onClick={clearFilters}>{text('filters.clear')}</Button> : undefined}
+              />
+            </div>
+          ) : (
+            <ul className={`divide-y divide-neutral-100 ${ROW_GRID} ${isFetching ? 'opacity-70' : ''} transition-opacity`}>
+              {items.map((entry) => {
+                const created = new Date(entry.created_at.endsWith('Z') || entry.created_at.includes('+') ? entry.created_at : `${entry.created_at}Z`)
+                const valid = !isNaN(created.getTime())
+                const name = actorName(entry, { system: text('actor.system'), unknown: text('actor.unknown'), scim: text('actor.scim'), support: text('actor.support') })
+                return (
+                  <li key={entry.id} className={ROW_GRID}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenId(entry.id)}
+                      aria-haspopup="dialog"
+                      title={text('table.open')}
+                      className={`w-full text-start flex flex-col gap-1.5 px-4 sm:px-5 py-3 hover:bg-neutral-50/70 transition-colors lg:col-span-full lg:grid lg:grid-cols-subgrid lg:items-center lg:gap-x-4 lg:gap-y-0 ${recipes.focusRing} focus-visible:ring-inset focus-visible:ring-offset-0`}
+                    >
+                      <span className="hidden lg:flex flex-col min-w-0">
+                        <span className="text-sm font-medium text-neutral-800 tabular-nums">{valid ? dateFmt.format(created) : '—'}</span>
+                        <span className="text-[11px] text-neutral-400 tabular-nums">{valid ? timeFmt.format(created) : ''}</span>
+                      </span>
+                      <span className="flex items-center gap-2 min-w-0">
+                        <ActorAvatar entry={entry} name={name} size={28} />
+                        <span className="flex flex-col min-w-0">
+                          <span className="text-sm font-medium text-neutral-800 truncate">{name}</span>
+                          {entry.actor_role && <span className="text-[11px] text-neutral-400 truncate">{entry.actor_role}</span>}
+                        </span>
+                      </span>
+                      <span className="text-sm text-neutral-600 min-w-0 break-words lg:line-clamp-2">
+                        <AuditSentence entry={entry} />
+                        {entry.reason && entry.outcome !== 'success' && (
+                          <span className="text-neutral-400"> · {entry.reason.replace(/_/g, ' ')}</span>
+                        )}
+                      </span>
+                      <span className="flex flex-wrap items-center gap-1.5 lg:contents">
+                        <span className="lg:justify-self-start">
+                          <StatusPill status={outcomeStatus(entry.outcome)} dot>{text(`outcome.${entry.outcome || 'success'}`)}</StatusPill>
+                        </span>
+                        <span className="lg:justify-self-start">
+                          <Chip tone={entry.via === 'atlas' || entry.via === 'mcp' ? 'violet' : entry.via === 'api_token' ? 'sky' : 'neutral'}>
+                            {text(`via.${entry.via || 'ui'}`)}
+                          </Chip>
+                        </span>
+                        <span className="lg:hidden text-[11px] text-neutral-400 tabular-nums">
+                          {valid ? `${dateFmt.format(created)} · ${timeFmt.format(created)}` : ''}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Panel>
+
+        {total > PAGE_SIZE && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-neutral-500 tabular-nums">
+              {text('list.showing', undefined, { start: offset + 1, end: Math.min(offset + PAGE_SIZE, total), total })}
+            </span>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(Math.max(0, offset - ITEMS_PER_PAGE))}
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
                 disabled={offset === 0}
-                className="p-1.5 rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                aria-label={text('list.previous')}
               >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
-              </button>
-              <button
-                onClick={() => handlePageChange(offset + ITEMS_PER_PAGE)}
-                disabled={offset + ITEMS_PER_PAGE >= total}
-                className="p-1.5 rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                <CaretLeft size={14} className="rtl:rotate-180" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => setOffset(offset + PAGE_SIZE)}
+                disabled={offset + PAGE_SIZE >= total}
+                aria-label={text('list.next')}
               >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
-              </button>
+                <CaretRight size={14} className="rtl:rotate-180" />
+              </Button>
             </div>
           </div>
         )}
-        </div>
-      </>
+      </div>
+
+      <AuditLogDrawer
+        orgId={org?.id}
+        token={token}
+        entryId={openId}
+        onClose={() => setOpenId(null)}
+        onOpen={(id) => setOpenId(id)}
+      />
+      {retentionOpen && (
+        <AuditRetentionDialog orgId={org?.id} token={token} open={retentionOpen} onClose={() => setRetentionOpen(false)} />
+      )}
     </FeatureGate>
+  )
+}
+
+function ExportMenu({ disabled, onExport }: { disabled: boolean; onExport: (_format: 'csv' | 'json') => void }) {
+  const text = useAuditText()
+  const [open, setOpen] = useState(false)
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div className="relative" ref={ref}>
+      <Button
+        variant="secondary"
+        icon={<DownloadSimple size={14} />}
+        onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        {text('actions.export')}
+      </Button>
+      {open && (
+        <div role="menu" className="absolute end-0 top-full mt-1.5 z-30 w-44 rounded-xl bg-white nice-shadow p-1">
+          {(['csv', 'json'] as const).map((format) => (
+            <button
+              key={format}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                onExport(format)
+              }}
+              className="w-full text-start px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-100"
+            >
+              {text(`actions.export_${format}`)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

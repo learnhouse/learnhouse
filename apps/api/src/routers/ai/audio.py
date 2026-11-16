@@ -10,6 +10,7 @@ the result identically to an upload.
 
 import io
 import logging
+import math
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from sqlmodel import select
@@ -22,11 +23,13 @@ from src.db.courses.courses import Course
 from src.db.courses.blocks import BlockRead
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
-from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
+from src.services.ai import metering, pricing
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.audio.generator import (
+    MAX_TEXT_CHARS,
     OUTPUT_EXT,
+    WORDS_PER_MINUTE,
     Speaker,
     generate_speech,
     generate_spoken_script,
@@ -44,11 +47,25 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Audio generation is more expensive than a text turn but cheaper than an image.
-AUDIO_CREDIT_COST = 3
+# Published prices (src/services/ai/pricing.py): audio is charged per started
+# minute of generated speech, a script per request; both are metered.
+AUDIO_CREDIT_COST = pricing.FEATURES["podcast_audio"].credits
+SCRIPT_CREDIT_COST = pricing.FEATURES["podcast_script"].credits
 
-# Writing a podcast script is a single cheap text turn.
-SCRIPT_CREDIT_COST = 1
+_WAV_HEADER_BYTES = 44
+_PCM_BYTES_PER_SECOND = 24000 * 2  # 24 kHz, 16-bit mono (generator output)
+
+
+def estimated_audio_minutes(text: str) -> int:
+    """Started minutes of speech ``text`` will make (reserved before generating)."""
+    words = len((text or "")[:MAX_TEXT_CHARS].split())
+    return max(1, math.ceil(words / WORDS_PER_MINUTE))
+
+
+def wav_minutes(wav_bytes: bytes) -> int:
+    """Started minutes of a generated WAV (what the request is charged for)."""
+    seconds = max(len(wav_bytes) - _WAV_HEADER_BYTES, 0) / _PCM_BYTES_PER_SECOND
+    return max(1, math.ceil(seconds / 60))
 
 
 async def _resolve_org_id_for_activity(request: Request, activity_uuid: str, current_user: PublicUser, db_session: AsyncSession) -> int:
@@ -105,8 +122,18 @@ async def api_generate_audio(
 
     # Rate limit then reserve credit (feature-enabled + quota checked inside reserve).
     enforce_ai_rate_limit(current_user.id, org_id)
-    await reserve_ai_credit(org_id, db_session, amount=AUDIO_CREDIT_COST)
+    # Reserve the estimated length; settle on the length actually generated.
+    async with metering.charge(
+        "podcast_audio",
+        org_id=org_id,
+        db=db_session,
+        user_id=current_user.id,
+        units=estimated_audio_minutes(body.text),
+    ) as meter:
+        return await _generate_audio_block(request, body, current_user, db_session, meter)
 
+
+async def _generate_audio_block(request, body, current_user, db_session, meter) -> BlockRead:
     speakers = None
     if body.mode == "podcast" and body.speakers:
         speakers = [Speaker(name=s.name, voice=s.voice) for s in body.speakers if s.name.strip()]
@@ -120,19 +147,18 @@ async def api_generate_audio(
             language=body.language,
         )
     except AINotConfiguredError as e:
-        refund_ai_credit(org_id, AUDIO_CREDIT_COST)
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
-        refund_ai_credit(org_id, AUDIO_CREDIT_COST)
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
-        refund_ai_credit(org_id, AUDIO_CREDIT_COST)
         # Do not log the traceback: the chained SDK error can embed the API key.
         logger.error("Audio generation failed")
         raise HTTPException(
             status_code=502,
             detail="Audio generation failed. Please try again or rephrase your text.",
         )
+
+    meter.units = wav_minutes(wav_bytes)
 
     # Persist + create the block through the normal audio-block pipeline so the
     # result is stored and streamed identically to an uploaded file.
@@ -147,10 +173,8 @@ async def api_generate_audio(
             request, upload, body.activity_uuid, db_session, current_user
         )
     except HTTPException:
-        refund_ai_credit(org_id, AUDIO_CREDIT_COST)
         raise
     except Exception:
-        refund_ai_credit(org_id, AUDIO_CREDIT_COST)
         logger.exception("Failed to store generated audio")
         raise HTTPException(status_code=500, detail="Failed to store generated audio")
 
@@ -184,31 +208,28 @@ async def api_generate_script(
     org_id = await _resolve_org_id_for_activity(request, body.activity_uuid, current_user, db_session)
 
     enforce_ai_rate_limit(current_user.id, org_id)
-    await reserve_ai_credit(org_id, db_session, amount=SCRIPT_CREDIT_COST)
 
     kind = "monologue" if body.mode == "speak" else "podcast"
     names = [s.name for s in (body.speakers or []) if s.name.strip()] or None
-    try:
-        transcript = await generate_spoken_script(
-            body.text,
-            kind=kind,
-            speaker_names=names,
-            language=body.language,
-            style=body.style,
-            minutes=body.minutes,
-        )
-    except AINotConfiguredError as e:
-        refund_ai_credit(org_id, SCRIPT_CREDIT_COST)
-        raise HTTPException(status_code=403, detail=str(e))
-    except ValueError as e:
-        refund_ai_credit(org_id, SCRIPT_CREDIT_COST)
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception:
-        refund_ai_credit(org_id, SCRIPT_CREDIT_COST)
-        logger.error("Script generation failed")
-        raise HTTPException(
-            status_code=502,
-            detail="Script generation failed. Please try again.",
-        )
+    async with metering.charge("podcast_script", org_id=org_id, db=db_session, user_id=current_user.id):
+        try:
+            transcript = await generate_spoken_script(
+                body.text,
+                kind=kind,
+                speaker_names=names,
+                language=body.language,
+                style=body.style,
+                minutes=body.minutes,
+            )
+        except AINotConfiguredError as e:
+            raise HTTPException(status_code=403, detail=str(e))
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception:
+            logger.error("Script generation failed")
+            raise HTTPException(
+                status_code=502,
+                detail="Script generation failed. Please try again.",
+            )
 
     return GenerateScriptResponse(transcript=transcript)

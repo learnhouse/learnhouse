@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 import json
 import os
 import secrets
+import re
+
 import redis
 from fastapi import HTTPException, Request
 from pydantic import EmailStr
@@ -59,6 +61,30 @@ def _normalize_email(email: str | None) -> str:
     return (email or "").strip().lower()
 
 
+# Where to land after verifying: a relative path on the host the link points
+# at (the page someone was trying to reach when they signed up, such as a
+# course). Anything that could leave the host is dropped.
+_NEXT_PATH_RE = re.compile(r"/(?![/\\])[A-Za-z0-9\-._~!$&'()*+,;=:@%/?#\[\]]*")
+MAX_NEXT_PATH = 512
+
+
+def safe_next_path(value: object) -> str | None:
+    """``value`` when it is a same-host relative path, else None."""
+    if not isinstance(value, str) or not value or len(value) > MAX_NEXT_PATH:
+        return None
+    return value if _NEXT_PATH_RE.fullmatch(value) else None
+
+
+def verification_next_path(user_uuid: str, org_uuid: str, token: str) -> str | None:
+    """The post-verification destination stored with a token, read before the
+    token is consumed. None when absent, unreadable or unsafe."""
+    try:
+        raw = get_redis_connection().get(f"email_verification:{user_uuid}:org:{org_uuid}:token:{token}")
+        return safe_next_path(json.loads(raw).get("next")) if raw else None
+    except Exception:
+        return None
+
+
 def generate_verification_token() -> str:
     """Generate a secure verification token."""
     return secrets.token_urlsafe(32)
@@ -69,9 +95,11 @@ async def send_verification_email(
     db_session: AsyncSession,
     user: User,
     org_id: int | None = None,
+    next_path: str | None = None,
 ) -> str:
     """
     Generate a verification token, store in Redis, and send verification email.
+    ``next_path`` (validated) is kept with the token so verifying lands there.
 
     Args:
         request: FastAPI request
@@ -133,6 +161,9 @@ async def send_verification_email(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "expires_at": (datetime.now(timezone.utc).timestamp() + TOKEN_TTL_SECONDS),
     }
+    safe_next = safe_next_path(next_path)
+    if safe_next:
+        verification_data["next"] = safe_next
 
     # Store in Redis with TTL
     redis_key = f"email_verification:{user.user_uuid}:org:{org_uuid}:token:{token}"
@@ -282,6 +313,11 @@ async def verify_email_token(
     # Delete used token
     r.delete(redis_key)
 
+    # Grants held for this address until it was proven (EE: CRM rules).
+    from src.core.ee_hooks import notify_ee_email_verified
+
+    notify_ee_email_verified(user.id)
+
     # Dispatch webhook; resolve org_id from org_uuid
     if org_uuid != NO_ORG_UUID:
         org_statement = select(Organization).where(Organization.org_uuid == org_uuid)
@@ -304,6 +340,7 @@ async def resend_verification_email(
     db_session: AsyncSession,
     email: EmailStr,
     org_id: int | None = None,
+    next_path: str | None = None,
 ) -> str:
     """
     Resend verification email with rate limiting.
@@ -338,7 +375,7 @@ async def resend_verification_email(
     user = (await db_session.execute(statement)).scalars().first()
 
     if user and not user.email_verified:
-        await send_verification_email(request, db_session, user, org_id)
+        await send_verification_email(request, db_session, user, org_id, next_path=next_path)
 
     return GENERIC_RESPONSE
 

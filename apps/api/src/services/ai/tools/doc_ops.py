@@ -69,18 +69,25 @@ SCHEMA: dict[str, Spec] = {
     "bulletList": Spec(BLOCK, "listItem+"),
     "orderedList": Spec(BLOCK, "listItem+", ("start", "type")),
     "listItem": Spec("", "paragraph block*"),
-    "codeBlock": Spec(BLOCK, "text*", ("language",), marks=False),
-    "horizontalRule": Spec(BLOCK, None),
+    "codeBlock": Spec(BLOCK, "text*", ("language", "filename"), marks=False),
+    "horizontalRule": Spec(BLOCK, None, ("variant",)),
     "table": Spec(BLOCK, "tableRow+"),
     "tableRow": Spec("", "(tableCell | tableHeader)*"),
     "tableCell": Spec("", "block+", ("colspan", "rowspan", "colwidth")),
     "tableHeader": Spec("", "block+", ("colspan", "rowspan", "colwidth")),
-    "callout": Spec(BLOCK, "(paragraph | bulletList | orderedList)+", ("type", "dismissible")),
+    "callout": Spec(BLOCK, "(paragraph | bulletList | orderedList)+", ("type", "dismissible", "icon")),
+    # Collapsible section from the editor's block menu.
+    "toggleBlock": Spec(BLOCK, "block+", ("summary", "defaultOpen")),
+    # Blocks shown only to readers matching `rules` (Extensions/Dynamic); the
+    # API drops them for everyone else (dynamic_content.py).
+    "conditionalBlock": Spec(BLOCK, "block+", ("rules", "hiddenMessage", "label", "openRules")),
+    # Inline placeholder ({{user.first_name}}) the API fills per reader.
+    "dynamicVariable": Spec(INLINE, None, ("path", "fallback", "format")),
     "calloutInfo": Spec(BLOCK, "text*", authorable=False, why_not="Use a callout with type 'info'."),
     "calloutWarning": Spec(BLOCK, "text*", authorable=False, why_not="Use a callout with type 'warning'."),
     "badge": Spec(BLOCK, "text*", ("color", "emoji")),
     "button": Spec(BLOCK, "text*", ("emoji", "link", "color", "alignment")),
-    "flipcard": Spec(BLOCK, "text*", ("question", "answer", "color", "alignment", "size")),
+    "flipcard": Spec(BLOCK, "text*", ("question", "answer", "color", "alignment", "size", "style")),
     "flipcardGrid": Spec(BLOCK, "flipcard+", ("columns",)),
     "youtube": Spec(
         BLOCK, None, ("src", "start", "width", "height"),
@@ -88,36 +95,38 @@ SCHEMA: dict[str, Spec] = {
     ),
     "blockEmbed": Spec(
         BLOCK, None,
-        ("embedUrl", "embedCode", "embedType", "embedHeight", "embedAspectRatio", "embedWidth", "alignment"),
+        ("embedUrl", "embedCode", "embedType", "embedHeight", "embedAspectRatio", "embedWidth", "alignment",
+         "embedSourceUrl", "embedProvider", "caption"),
     ),
     "blockWebPreview": Spec(
         BLOCK, None,
         ("url", "title", "description", "og_image", "favicon", "og_type", "og_url",
-         "alignment", "buttonLabel", "showButton", "openInPopup"),
+         "alignment", "buttonLabel", "showButton", "openInPopup", "layout", "customTitle", "customDescription"),
     ),
     "blockMathEquation": Spec(BLOCK, None, ("math_equation",)),
-    "blockQuiz": Spec(BLOCK, None, ("quizId", "questions")),
+    # settings: shuffle / attempts / reveal options from the editor (null = defaults).
+    "blockQuiz": Spec(BLOCK, None, ("quizId", "questions", "settings")),
     "scenarios": Spec(BLOCK, None, ("title", "scenarios", "currentScenarioId")),
     "blockCode": Spec(
         BLOCK, None,
         ("mode", "languageId", "languageName", "starterCode", "testCases", "description",
          "hints", "difficulty", "solutionCode", "maxAttemptsBeforeReveal", "timeComplexity",
          "spaceComplexity", "timeLimitMs", "sqliteDbPath", "sqliteDbName", "timedMode",
-         "timedDurationMs", "additionalFiles"),
+         "timedDurationMs", "additionalFiles", "blockUuid"),
     ),
     "blockMagic": Spec(BLOCK, None, ("blockUuid", "sessionUuid", "htmlContent", "title", "height")),
     "blockH5P": Spec(BLOCK, None, ("h5pUrl", "height", "title", "sizeMode")),
     "blockImage": Spec(
         BLOCK, None,
         ("blockObject", "size", "alignment", "unsplash_url", "unsplash_photographer_name",
-         "unsplash_photographer_url", "unsplash_photo_url"),
+         "unsplash_photographer_url", "unsplash_photo_url", "alt", "caption", "href", "lightbox"),
         authorable=False, why_not=_MEDIA,
     ),
-    "blockVideo": Spec(BLOCK, None, ("blockObject",), authorable=False, why_not=_MEDIA),
-    "blockAudio": Spec(BLOCK, None, ("blockObject",), authorable=False, why_not=_MEDIA),
-    "blockPDF": Spec(BLOCK, None, ("blockObject", "pdfHeight"), authorable=False, why_not=_MEDIA),
+    "blockVideo": Spec(BLOCK, None, ("blockObject", "caption", "startTime", "chapters"), authorable=False, why_not=_MEDIA),
+    "blockAudio": Spec(BLOCK, None, ("blockObject", "caption", "transcript"), authorable=False, why_not=_MEDIA),
+    "blockPDF": Spec(BLOCK, None, ("blockObject", "pdfHeight", "caption"), authorable=False, why_not=_MEDIA),
     "blockUser": Spec(
-        BLOCK, None, ("user_id",), authorable=False,
+        BLOCK, None, ("user_id", "layout"), authorable=False,
         why_not="Member cards are added in the editor.",
     ),
     "blockLibrary": Spec(
@@ -134,6 +143,17 @@ MARKS: dict[str, tuple[str, ...]] = {
     "code": (),
     "link": ("href", "target", "rel", "class", "title"),
     "aiStreaming": (),
+    # Editor comment anchors: kept on text the agent leaves alone, never written by it.
+    "comment": ("threadId",),
+    # Styling from the editor's selection menu: loaded and kept, never written by tools.
+    "superscript": (),
+    "subscript": (),
+    "textColor": ("color",),
+    "highlight": ("color", "style"),
+    "textEffect": ("effect",),
+    "kbd": (),
+    "spoiler": (),
+    "definition": ("note",),
 }
 _AUTHORABLE_MARKS = {"bold", "italic", "strike", "underline", "code", "link"}
 
@@ -500,6 +520,8 @@ def _scenarios(v: Any) -> str | None:
     for i, s in enumerate(v):
         if not isinstance(s, dict) or not isinstance(s.get("id"), str) or not isinstance(s.get("text"), str):
             return f"step {i} needs a string id and text"
+        if s.get("imageUrl") not in (None, "") and not is_web_url(s.get("imageUrl")):
+            return f"step {i} imageUrl must be an http(s) URL"
         options = s.get("options")
         if not isinstance(options, list):
             return f"step {i} needs an options list"
@@ -537,6 +559,7 @@ _VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
     "flipcard": {
         "question": _str(2000, null=False), "answer": _str(2000, null=False),
         "color": _str(30), "alignment": _ALIGN, "size": _one_of("small", "medium", "large"),
+        "style": _one_of(None, "solid", "soft", "outline"),
     },
     "flipcardGrid": {"columns": _int(1, 6)},
     "blockEmbed": {
@@ -547,7 +570,9 @@ _VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
         "url": _url(null=False), "title": _str(500), "description": _str(2000),
         "og_image": _url(), "favicon": _url(), "og_type": _str(100), "og_url": _url(),
         "alignment": _ALIGN, "buttonLabel": _str(100), "showButton": _bool, "openInPopup": _bool,
+        "layout": _one_of("large", "compact"), "customTitle": _str(500), "customDescription": _str(2000),
     },
+    "blockUser": {"layout": _one_of("card", "compact")},
     "blockMathEquation": {"math_equation": _str(10_000, null=False)},
     "blockQuiz": {"quizId": _str(100), "questions": _quiz_questions},
     "scenarios": {"title": _str(500), "scenarios": _scenarios, "currentScenarioId": _str(100)},
@@ -559,7 +584,69 @@ _VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
         "unsplash_photo_url": _url(),
     },
     "youtube": {"src": _url(null=False), "start": _int(0, 1_000_000, null=True)},
+    "toggleBlock": {"summary": _str(300), "defaultOpen": _bool},
+    "conditionalBlock": {
+        "rules": lambda v: _rules(v), "hiddenMessage": _str(300), "label": _str(200),
+        "openRules": _one_of(None, True),
+    },
+    "dynamicVariable": {
+        "path": lambda v: _variable_path(v), "fallback": _str(200),
+        "format": _one_of(None, "upper", "lower", "capitalize", "title"),
+    },
 }
+
+
+def _rules(v: Any, depth: int = 0) -> str | None:
+    """A conditional block's rule group, checked against the fields and
+    operators the server evaluates (dynamic_content.FIELDS); anything it does
+    not know would hide the block from everyone."""
+    from src.services.courses.activities.dynamic_content import FIELDS, MAX_RULE_DEPTH, count_conditions
+
+    if v is None:
+        return None
+    if not isinstance(v, dict) or not isinstance(v.get("conditions"), list):
+        return 'must be {"match": "all"|"any", "conditions": [{field, op, value}]}'
+    if depth > MAX_RULE_DEPTH:
+        return f"nest at most {MAX_RULE_DEPTH} groups deep"
+    if v.get("match", "all") not in ("all", "any"):
+        return "match must be all or any"
+    if depth == 0 and count_conditions(v) >= 50:
+        return "has too many conditions (at most 49)"
+    for item in v["conditions"]:
+        if isinstance(item, dict) and "conditions" in item:
+            problem = _rules(item, depth + 1)
+            if problem:
+                return problem
+            continue
+        if not isinstance(item, dict) or item.get("field") not in FIELDS:
+            known = ", ".join(sorted(FIELDS))
+            got = item.get("field") if isinstance(item, dict) else item
+            return f"condition field {got!r} is unknown; use one of {known}"
+        if item.get("op") not in RULE_OPS:
+            return f"condition op {item.get('op')!r} is unknown; use one of {', '.join(RULE_OPS)}"
+    return None
+
+
+RULE_OPS = (
+    "contains_any", "contains_all", "contains_none", "in", "not_in", "eq", "neq", "gt", "gte", "lt",
+    "lte", "between", "is_true", "is_false", "on_or_after", "on_or_before", "before", "after",
+)
+
+
+def _variable_path(v: Any) -> str | None:
+    from src.services.courses.activities.dynamic_content import CUSTOM_PREFIX, VARIABLES
+
+    if isinstance(v, str) and (v in VARIABLES or (v.startswith(CUSTOM_PREFIX) and re.fullmatch(r"custom\.[a-z0-9_]{1,60}", v))):
+        return None
+    return f"must be one of {', '.join(VARIABLES)} or custom.<key>"
+
+
+# Attributes that end up in an href or src for learners: only http(s), so no
+# javascript:, data: or vbscript: link can be written under any block type.
+URL_ATTRS = frozenset({
+    "link", "url", "href", "src", "h5pUrl", "embedUrl", "embedSourceUrl", "og_image", "og_url",
+    "favicon", "imageUrl", "unsplash_url", "unsplash_photographer_url", "unsplash_photo_url",
+})
 
 
 def attrs_problems(t: str, attrs: Any, where: tuple = ()) -> list[str]:
@@ -579,6 +666,10 @@ def attrs_problems(t: str, attrs: Any, where: tuple = ()) -> list[str]:
             problem = validators[key](value)
             if problem:
                 out.append(f"{t}.{key} {problem}.")
+    for key in URL_ATTRS & set(attrs):
+        value = attrs[key]
+        if value not in (None, "") and not is_web_url(value):
+            out.append(f"{t}.{key} must be an http(s) URL.")
     if t == "blockEmbed" and not (attrs.get("embedUrl") or attrs.get("embedCode")):
         out.append("A blockEmbed needs embedUrl or embedCode.")
     try:
@@ -804,7 +895,18 @@ def inline_text(node: dict) -> str:
             parts.append(child.get("text") or "")
         elif kind(child) == "hardBreak":
             parts.append("\n")
+        elif kind(child) == "dynamicVariable":
+            parts.append(variable_as_text(child)["text"])
     return "".join(parts)
+
+
+def variable_as_text(node: dict) -> dict:
+    """A dynamicVariable as the {{path}} text the server also fills in, so
+    reading and Markdown keep it; any other node unchanged."""
+    if kind(node) != "dynamicVariable":
+        return node
+    path = (node.get("attrs") or {}).get("path") or "user.first_name"
+    return {"type": "text", "text": "{{" + str(path) + "}}"}
 
 
 def block_text(node: Any, depth: int = 0) -> str:
@@ -853,7 +955,10 @@ def atom_text(node: dict) -> str:
     if t in ("blockEmbed",):
         return str(a.get("embedUrl") or "")
     if t == "blockWebPreview":
-        return " ".join(str(a.get(k) or "") for k in ("title", "url", "description")).strip()
+        # The author's own title/description (when set) is what learners read.
+        keys = ("customTitle" if a.get("customTitle") else "title", "url",
+                "customDescription" if a.get("customDescription") else "description")
+        return " ".join(str(a.get(k) or "") for k in keys).strip()
     if t in ("blockMagic", "blockH5P"):
         return str(a.get("title") or "")
     if t in MEDIA_TYPES:

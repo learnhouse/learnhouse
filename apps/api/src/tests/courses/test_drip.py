@@ -742,6 +742,23 @@ class TestUnlockEmails:
         stats = await run_drip_notifications(db, NOW)
         assert stats.courses == 1 and stats.emails == 0
 
+    async def test_inbox_row_without_email_opt_in(self, db, notify_course, regular_user):
+        from sqlmodel import select
+
+        from src.db.notifications import Notification
+        from src.services.courses.drip_notify import run_drip_notifications
+
+        notify_course.drip_settings = ENROLL  # email off: the inbox still hears about it
+        db.add(notify_course)
+        await db.commit()
+        with patch("src.services.users.emails.send_drip_unlocked_email") as send, \
+             patch("src.services.notifications.push.schedule_push"):
+            stats = await run_drip_notifications(db, NOW)
+        assert not send.called
+        assert stats.notified == 1 and stats.chapters == 2 and stats.emails == 0
+        row = (await db.execute(select(Notification).where(Notification.user_id == regular_user.id))).scalars().one()
+        assert row.type == "chapter_unlocked" and row.body == "2 new chapters are open: Chapter 2, Chapter 4"
+
     async def test_claim_conflict_skips(self, db, notify_course, regular_user):
         from src.services.courses.drip_notify import _claim
 
@@ -853,3 +870,14 @@ class TestDripScheduler:
 
         with patch("asyncio.create_task", side_effect=RuntimeError("no loop")):
             drip_scheduler.start_scheduler()  # never raises
+
+
+async def test_disabled_drip_settings_are_skipped_by_notifications(db, org, course):
+    """A course row that still holds settings with drip switched off is not a
+    drip course: the notifier moves on without reading its chapters."""
+    from src.services.courses.drip_notify import run_drip_notifications
+
+    course.drip_settings = {**ENROLL, "enabled": False, "notify_email": True}
+    db.add(course)
+    await db.commit()
+    assert (await run_drip_notifications(db, NOW)).courses == 0

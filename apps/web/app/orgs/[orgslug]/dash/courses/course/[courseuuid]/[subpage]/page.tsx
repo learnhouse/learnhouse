@@ -1,29 +1,47 @@
 'use client'
-import React, { use, useEffect } from 'react';
-import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
-import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
-import { motion } from 'motion/react'
-import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search, CalendarClock } from 'lucide-react'
-import { ChartBar } from '@phosphor-icons/react'
-import { useCourseRights } from '@hooks/useCourseRights'
-import { useRouter } from 'next/navigation'
-import { getUriWithOrg } from '@services/config/config';
-import { useTranslation } from 'react-i18next';
-import { PlanLevel } from '@services/plans/plans';
-import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate';
-import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar';
+import React, { use } from 'react'
 import dynamic from 'next/dynamic'
-import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
+import { useCourseRights } from '@components/Hooks/useCourseRights'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { EditorPage, EditorSkeleton } from '@components/Dashboard/Pages/Course/courseEditorUi'
+import { usePreloadOnIdle } from '@components/Dashboard/Shared/usePreloadOnIdle'
+import { useEditingLocale } from '@components/Dashboard/Pages/Course/EditCourseLanguages/useCourseLanguages'
+
+// The header, tabs and course store live in ../layout.tsx and stay mounted;
+// this page is only the tab body.
 
 // One chunk per tab: only the open tab's code (charts, editors) is loaded.
-const EditCourseStructure = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'))
-const EditCourseGeneral = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'))
-const EditCourseAccess = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'))
-const EditCourseContributors = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'))
-const EditCourseCertification = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'))
-const EditCourseSEO = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'))
-const EditCourseSchedule = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSchedule/EditCourseSchedule'))
-const CourseAnalyticsTab = dynamic(() => import('@ee/components/Analytics/Dashboard/Course/CourseAnalyticsTab'))
+// The skeleton keeps the body steady while a chunk loads for the first time.
+const tabLoading = () => (
+  <EditorPage>
+    <EditorSkeleton sections={2} />
+  </EditorPage>
+)
+const EditCourseStructure = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'), { loading: tabLoading })
+const EditCourseGeneral = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'), { loading: tabLoading })
+const EditCourseAccess = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'), { loading: tabLoading })
+const EditCourseContributors = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'), { loading: tabLoading })
+const EditCourseCertification = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'), { loading: tabLoading })
+const EditCourseSEO = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'), { loading: tabLoading })
+const EditCourseSchedule = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSchedule/EditCourseSchedule'), { loading: tabLoading })
+const EditCourseLanguages = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseLanguages/EditCourseLanguages'), { loading: tabLoading })
+// Translation mode (`?lang=fr`): the translated tabs swap their body
+const TranslateCourseGeneral = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseLanguages/TranslateCourseGeneral'), { loading: tabLoading })
+const TranslateCourseStructure = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseLanguages/TranslateCourseStructure'), { loading: tabLoading })
+const TranslateCourseSEO = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseLanguages/TranslateCourseSEO'), { loading: tabLoading })
+const CourseAnalyticsTab = dynamic(() => import('@ee/components/Analytics/Dashboard/Course/CourseAnalyticsTab'), { loading: tabLoading })
+
+// The other tabs' code, fetched while the browser is idle (see
+// usePreloadOnIdle). Not analytics: its charts are heavy and rarely opened.
+const TAB_CHUNKS = [
+  () => import('@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'),
+  () => import('@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'),
+  () => import('@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'),
+  () => import('@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'),
+  () => import('@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'),
+  () => import('@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'),
+  () => import('@components/Dashboard/Pages/Course/EditCourseSchedule/EditCourseSchedule'),
+]
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -31,202 +49,65 @@ export type CourseOverviewParams = {
   subpage: string
 }
 
-function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
-  const { t } = useTranslation()
-  const params = use(props.params);
-  const router = useRouter();
-
-  function getEntireCourseUUID(courseuuid: string) {
-    // add course_ to uuid
-    return `course_${courseuuid}`
-  }
-
-  const courseuuid = getEntireCourseUUID(params.courseuuid)
+function CourseEditorTabPage(props: { params: Promise<CourseOverviewParams> }) {
+  const params = use(props.params)
+  const courseuuid = `course_${params.courseuuid}`
+  // Same query as the layout, so this reads the cached rights.
   const { hasPermission, isLoading: rightsLoading } = useCourseRights(courseuuid)
+  usePreloadOnIdle(TAB_CHUNKS)
+  const { locale } = useEditingLocale(courseuuid)
 
-  // Define tab configurations with their required permissions
-  const allTabs = [
-    {
-      key: 'general',
-      label: t('dashboard.courses.settings.tabs.general'),
-      icon: Info,
-      href: `/dash/courses/course/${params.courseuuid}/general`,
-      requiredPermission: 'update' as const
-    },
-    {
-      key: 'content',
-      label: t('dashboard.courses.settings.tabs.content'),
-      icon: GalleryVerticalEnd,
-      href: `/dash/courses/course/${params.courseuuid}/content`,
-      requiredPermission: 'update_content' as const
-    },
-    {
-      key: 'schedule',
-      label: t('dashboard.courses.settings.tabs.schedule', 'Schedule'),
-      icon: CalendarClock,
-      href: `/dash/courses/course/${params.courseuuid}/schedule`,
-      requiredPermission: 'update' as const,
-      requiresPlan: 'standard' as PlanLevel
-    },
-    {
-      key: 'access',
-      label: t('dashboard.courses.settings.tabs.access'),
-      icon: Globe,
-      href: `/dash/courses/course/${params.courseuuid}/access`,
-      requiredPermission: 'manage_access' as const
-    },
-    {
-      key: 'contributors',
-      label: t('dashboard.courses.settings.tabs.contributors'),
-      icon: UserPen,
-      href: `/dash/courses/course/${params.courseuuid}/contributors`,
-      requiredPermission: 'manage_contributors' as const
-    },
-    {
-      key: 'seo',
-      label: t('dashboard.courses.settings.tabs.seo'),
-      icon: Search,
-      href: `/dash/courses/course/${params.courseuuid}/seo`,
-      requiredPermission: 'update' as const,
-      requiresPlan: 'standard' as PlanLevel
-    },
-    {
-      key: 'certification',
-      label: t('dashboard.courses.settings.tabs.certification'),
-      icon: Award,
-      href: `/dash/courses/course/${params.courseuuid}/certification`,
-      requiredPermission: 'create_certifications' as const,
-      requiresPlan: 'pro' as PlanLevel
-    },
-    {
-      key: 'analytics',
-      label: t('dashboard.courses.settings.tabs.analytics'),
-      icon: ChartBar,
-      href: `/dash/courses/course/${params.courseuuid}/analytics`,
-      requiredPermission: 'update' as const,
-      requiresPlan: 'pro' as PlanLevel
-    }
-  ]
-  // Course analytics ship with Enterprise Edition; the tab is hidden without it.
-  const tabs = allTabs.filter((tab) => tab.key !== 'analytics' || isOrgAnalyticsAvailable())
+  if (rightsLoading) return tabLoading()
 
-  // Filter tabs based on permissions
-  const visibleTabs = tabs.filter(tab => hasPermission(tab.requiredPermission))
-
-  // Check if current subpage is accessible
-  const currentTab = tabs.find(tab => tab.key === params.subpage)
-  const hasAccessToCurrentPage = currentTab ? hasPermission(currentTab.requiredPermission) : false
-
-  // Redirect to first available tab if current page is not accessible
-  useEffect(() => {
-    if (!rightsLoading && !hasAccessToCurrentPage && visibleTabs.length > 0) {
-      const firstAvailableTab = visibleTabs[0]
-      router.replace(getUriWithOrg(params.orgslug, '') + firstAvailableTab.href)
-    }
-  }, [rightsLoading, hasAccessToCurrentPage, visibleTabs, router, params.orgslug])
-
-  // Access denied (rights loaded but no tabs visible)
-  if (!rightsLoading && visibleTabs.length === 0) {
-    return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
-        <div className="text-center">
-          <Lock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('dashboard.courses.settings.access_denied.title')}</h3>
-          <p className="text-gray-500">{t('dashboard.courses.settings.access_denied.message')}</p>
-        </div>
-      </div>
-    )
+  if (locale && hasPermission('update')) {
+    if (params.subpage === 'general') return <TranslateCourseGeneral locale={locale} />
+    if (params.subpage === 'content') return <TranslateCourseStructure locale={locale} orgslug={params.orgslug} />
+    if (params.subpage === 'seo')
+      return (
+        <FeatureGate feature="seo">
+          <TranslateCourseSEO locale={locale} />
+        </FeatureGate>
+      )
   }
 
-  // CourseProvider is always rendered so course meta fetches IN PARALLEL with rights,
-  // no sequential waterfall. The tab content is gated by hasPermission() which returns
-  // false (safe default) until rights finish loading.
-  return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1">
-      <CourseProvider courseuuid={courseuuid} withUnpublishedActivities={true}>
-        <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative min-w-0 overflow-hidden">
-          <CourseOverviewTop params={params} />
-          <DashTabBar tabs={tabs.map((tab) => {
-            const hasAccess = hasPermission(tab.requiredPermission)
-            const IconComponent = tab.icon
-            return {
-              key: tab.key,
-              label: tab.label,
-              icon: <IconComponent size={16} />,
-              href: getUriWithOrg(params.orgslug, '') + tab.href,
-              active: params.subpage.toString() === tab.key,
-              disabled: !hasAccess,
-              disabledTooltip: !hasAccess ? (
-                <div className="text-center">
-                  <div className="font-medium text-gray-900">{t('dashboard.courses.settings.access_restricted.title')}</div>
-                  <div className="text-sm text-gray-600">
-                    {t('dashboard.courses.settings.access_restricted.message', { tab: tab.label })}
-                  </div>
-                </div>
-              ) : undefined,
-              requiresPlan: tab.requiresPlan,
-            } as DashTabItem
-          })} />
+  switch (params.subpage) {
+    case 'content':
+      return hasPermission('update_content') ? <EditCourseStructure orgslug={params.orgslug} /> : null
+    case 'general':
+      return hasPermission('update') ? <EditCourseGeneral orgslug={params.orgslug} /> : null
+    case 'schedule':
+      return hasPermission('update') ? (
+        <FeatureGate feature="drip">
+          <EditCourseSchedule orgslug={params.orgslug} />
+        </FeatureGate>
+      ) : null
+    case 'access':
+      return hasPermission('manage_access') ? <EditCourseAccess orgslug={params.orgslug} /> : null
+    case 'contributors':
+      return hasPermission('manage_contributors') ? <EditCourseContributors orgslug={params.orgslug} /> : null
+    case 'seo':
+      return hasPermission('update') ? (
+        <FeatureGate feature="seo">
+          <EditCourseSEO orgslug={params.orgslug} />
+        </FeatureGate>
+      ) : null
+    case 'languages':
+      return hasPermission('update') ? <EditCourseLanguages orgslug={params.orgslug} /> : null
+    case 'certification':
+      // Plan-gates only the certificate part; the completion screen is open to all.
+      return hasPermission('create_certifications') ? <EditCourseCertification orgslug={params.orgslug} /> : null
+    case 'analytics':
+      return hasPermission('update') ? (
+        // The analytics tab pads itself by p-6; this brings it to the page gutter.
+        <div className="sm:px-4 pt-2">
+          <FeatureGate feature="course_analytics">
+            <CourseAnalyticsTab courseUUID={courseuuid} />
+          </FeatureGate>
         </div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-          className="h-full overflow-y-auto overflow-x-hidden"
-        >
-          <div>
-            {rightsLoading ? (
-              <div className="p-10 space-y-4 animate-pulse">
-                <div className="h-6 bg-gray-200 rounded w-48" />
-                <div className="h-4 bg-gray-200 rounded w-full max-w-xl" />
-                <div className="h-4 bg-gray-200 rounded w-full max-w-md" />
-                <div className="h-32 bg-gray-200 rounded w-full max-w-2xl mt-6" />
-              </div>
-            ) : null}
-            {!rightsLoading && params.subpage == 'content' && hasPermission('update_content') ? (
-              <EditCourseStructure orgslug={params.orgslug} />
-            ) : null}
-            {!rightsLoading && params.subpage == 'general' && hasPermission('update') ? (
-              <EditCourseGeneral orgslug={params.orgslug} />
-            ) : null}
-            {!rightsLoading && params.subpage == 'schedule' && hasPermission('update') ? (
-              <FeatureGate feature="drip">
-                <EditCourseSchedule orgslug={params.orgslug} />
-              </FeatureGate>
-            ) : null}
-            {!rightsLoading && params.subpage == 'access' && hasPermission('manage_access') ? (
-              <EditCourseAccess orgslug={params.orgslug} />
-            ) : null}
-            {!rightsLoading && params.subpage == 'contributors' && hasPermission('manage_contributors') ? (
-              <EditCourseContributors orgslug={params.orgslug} />
-            ) : null}
-            {!rightsLoading && params.subpage == 'seo' && hasPermission('update') ? (
-              <>
-                <div className="h-6" />
-                <FeatureGate feature="seo">
-                  <EditCourseSEO orgslug={params.orgslug} />
-                </FeatureGate>
-              </>
-            ) : null}
-            {!rightsLoading && params.subpage == 'certification' && hasPermission('create_certifications') ? (
-              <>
-                <div className="h-6" />
-                <FeatureGate feature="certifications">
-                  <EditCourseCertification orgslug={params.orgslug} />
-                </FeatureGate>
-              </>
-            ) : null}
-            {!rightsLoading && params.subpage == 'analytics' && hasPermission('update') ? (
-              <FeatureGate feature="course_analytics">
-                <CourseAnalyticsTab courseUUID={courseuuid} />
-              </FeatureGate>
-            ) : null}
-          </div>
-        </motion.div>
-      </CourseProvider>
-    </div>
-  )
+      ) : null
+    default:
+      return null
+  }
 }
 
-export default CourseOverviewPage
+export default CourseEditorTabPage

@@ -1,11 +1,11 @@
 import React from 'react'
-import { BookCopy, SquareLibrary, Signpost, Headphones, Route } from 'lucide-react'
-import { CalendarDots, ChalkboardSimple, Cube, VideoCamera } from '@phosphor-icons/react'
+import { BookCopy, SquareLibrary, Headphones } from 'lucide-react'
+import { CalendarDots, ChalkboardSimple, HouseSimple, Circuitry, Garage, Lightning, VideoCamera } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 
 interface TypeOfContentTitleProps {
   title: string
-  type: 'col' | 'cou' | 'tra' | 'pod' | 'board' | 'pg' | 'live' | 'cal' | string
+  type: 'col' | 'com' | 'cou' | 'tra' | 'pod' | 'board' | 'pg' | 'live' | 'cal' | string
 }
 
 function TypeOfContentTitle({ title, type }: TypeOfContentTitleProps) {
@@ -15,18 +15,20 @@ function TypeOfContentTitle({ title, type }: TypeOfContentTitleProps) {
     switch (type) {
       case 'col':
         return <SquareLibrary className="w-4 h-4 text-black" />
+      case 'com':
+        return <Garage size={16} className="text-black" weight="fill" />
       case 'cou':
         return <BookCopy className="w-4 h-4 text-black" />
       case 'tra':
-        return <Signpost className="w-4 h-4 text-black" />
+        return <HouseSimple size={16} className="text-black" weight="fill" />
       case 'pod':
         return <Headphones className="w-4 h-4 text-black" />
       case 'path':
-        return <Route className="w-4 h-4 text-black" />
+        return <Circuitry className="w-4 h-4 text-black" />
       case 'board':
         return <ChalkboardSimple size={16} className="text-black" weight="fill" />
       case 'pg':
-        return <Cube size={16} className="text-black" weight="fill" />
+        return <Lightning size={16} className="text-black" weight="fill" />
       case 'live':
         return <VideoCamera size={16} className="text-black" weight="fill" />
       case 'cal':

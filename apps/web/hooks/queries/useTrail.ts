@@ -11,6 +11,15 @@ async function fetchTrail(orgId: number, accessToken?: string) {
   return apiFetch(url, accessToken)
 }
 
+// Shared with the nav prefetch so a warmed trail lands under the same key.
+export function trailQueryOptions(orgId: number, accessToken?: string) {
+  return {
+    queryKey: queryKeys.trail.org(orgId),
+    queryFn: () => fetchTrail(orgId, accessToken),
+    staleTime: 30_000,
+  }
+}
+
 export function useTrail(orgId: number | undefined) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token as string | undefined

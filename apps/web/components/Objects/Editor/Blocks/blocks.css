@@ -1,0 +1,320 @@
+/*
+ Styles for the redesigned editor blocks that can't be expressed as Tailwind
+ classes on a React element: ProseMirror decorations (drop line, upload
+ placeholders), plain renderHTML nodes (dividers) and the toggle block.
+ Applies to the editor, the learner canvas and the preview alike.
+*/
+
+/* ── File drop line between blocks ─────────────────────────────────────── */
+.lh-file-drop-indicator {
+  position: fixed;
+  height: 3px;
+  border-radius: 999px;
+  background: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+  pointer-events: none;
+  z-index: var(--z-editor-toolbar, 150);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.lh-file-drop-indicator.visible {
+  opacity: 1;
+}
+.lh-file-drop-indicator::before,
+.lh-file-drop-indicator::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #0ea5e9;
+}
+.lh-file-drop-indicator::before { inset-inline-start: -4px; }
+.lh-file-drop-indicator::after { inset-inline-end: -4px; }
+
+/* ProseMirror's own drop cursor would draw a second line inside the text. */
+body.lh-file-dragging .prosemirror-dropcursor-block,
+body.lh-file-dragging .prosemirror-dropcursor-inline {
+  display: none !important;
+}
+
+/* ── Upload placeholder (local decoration, never in the document) ──────── */
+.lh-upload-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.07), 0 1px 1px rgba(0, 0, 0, 0.03);
+  font-size: 13px;
+  color: #404040;
+  user-select: none;
+}
+.lh-upload-placeholder .lh-up-thumb {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #f5f5f5 center / cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a3a3a3;
+}
+.lh-upload-placeholder .lh-up-body {
+  flex: 1;
+  min-width: 0;
+}
+.lh-upload-placeholder .lh-up-name {
+  font-weight: 500;
+  color: #171717;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lh-upload-placeholder .lh-up-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #737373;
+  font-variant-numeric: tabular-nums;
+}
+.lh-upload-placeholder .lh-up-bar {
+  margin-top: 6px;
+  height: 4px;
+  border-radius: 999px;
+  background: #f0f0f0;
+  overflow: hidden;
+}
+.lh-upload-placeholder .lh-up-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #171717;
+  transition: width 200ms ease;
+}
+.lh-upload-placeholder.is-processing .lh-up-bar > span {
+  animation: lh-up-pulse 1.1s ease-in-out infinite;
+}
+.lh-upload-placeholder.is-error {
+  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.25);
+  background: #fff1f2;
+}
+.lh-upload-placeholder.is-error .lh-up-meta {
+  color: #be123c;
+}
+.lh-upload-placeholder .lh-up-actions {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+.lh-upload-placeholder button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #404040;
+  background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(0, 0, 0, 0.07);
+  cursor: pointer;
+}
+.lh-upload-placeholder button:hover {
+  background: #fafafa;
+  color: #171717;
+}
+@keyframes lh-up-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ── Divider styles (horizontalRule data-variant) ──────────────────────── */
+/* Only the line changes; spacing and the editor's hit area stay as styled in
+   globals.css, so a divider with no variant looks exactly as before. */
+.ProseMirror hr[data-variant='dashed'] { border-top: 2px dashed #d4d4d4 !important; }
+.ProseMirror hr[data-variant='dotted'] { border-top: 3px dotted #c7c7c7 !important; }
+.ProseMirror hr[data-variant='thick'] { border-top: 4px solid #e5e5e5 !important; }
+.ProseMirror hr[data-variant='dots'],
+.ProseMirror hr[data-variant='space'] {
+  border-top-color: transparent !important;
+  overflow: visible;
+  text-align: center;
+}
+.ProseMirror hr[data-variant='dots']::after {
+  content: '\2022\00a0\00a0\00a0\2022\00a0\00a0\00a0\2022';
+  display: block;
+  margin-top: -0.85em;
+  color: #a3a3a3;
+  font-size: 18px;
+  line-height: 1;
+}
+.ProseMirror hr[data-variant='space'] { padding-bottom: 1.5rem; }
+/* Visible in the editor only, so the author can still find and select it. */
+.activity-editor-content-wrapper .ProseMirror hr[data-variant='space'] {
+  border-top: 1px dashed #e5e5e5 !important;
+}
+.activity-editor-content-wrapper .ProseMirror hr[data-variant].ProseMirror-selectednode {
+  border-top-color: rgba(59, 130, 246, 0.6) !important;
+}
+
+/* ── Toggle block ──────────────────────────────────────────────────────── */
+.lh-toggle-body > [data-node-view-content] > * + *,
+.lh-toggle-body > div > * + * {
+  margin-top: 0.5em;
+}
+
+/* ── Drag handle "+" (block inserter) ──────────────────────────────────── */
+.editor-drag-handle .lh-add-btn {
+  width: 22px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 6px 0 0 6px;
+  transition: background 150ms, color 150ms;
+}
+.editor-drag-handle .lh-add-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+.editor-drag-handle .lh-add-btn + .drag-grip {
+  border-radius: 0;
+}
+
+/* ── Text marks (selection menu) ───────────────────────────────────────── */
+.ProseMirror .lh-text-gray { color: #737373; }
+.ProseMirror .lh-text-red { color: #dc2626; }
+.ProseMirror .lh-text-orange { color: #c2410c; } /* orange-700: orange-600 is below AA on white */
+.ProseMirror .lh-text-amber { color: #b45309; }
+.ProseMirror .lh-text-green { color: #15803d; }
+.ProseMirror .lh-text-teal { color: #0f766e; }
+.ProseMirror .lh-text-blue { color: #2563eb; }
+.ProseMirror .lh-text-purple { color: #7c3aed; }
+.ProseMirror .lh-text-pink { color: #db2777; }
+
+.ProseMirror mark.lh-hl { color: inherit; border-radius: 3px; padding: 0 1px; }
+.ProseMirror .lh-hl-fill.lh-hl-gray { background: #f1f1f1; }
+.ProseMirror .lh-hl-fill.lh-hl-red { background: #fee2e2; }
+.ProseMirror .lh-hl-fill.lh-hl-orange { background: #ffedd5; }
+.ProseMirror .lh-hl-fill.lh-hl-amber { background: #fef3c7; }
+.ProseMirror .lh-hl-fill.lh-hl-green { background: #dcfce7; }
+.ProseMirror .lh-hl-fill.lh-hl-teal { background: #ccfbf1; }
+.ProseMirror .lh-hl-fill.lh-hl-blue { background: #dbeafe; }
+.ProseMirror .lh-hl-fill.lh-hl-purple { background: #ede9fe; }
+.ProseMirror .lh-hl-fill.lh-hl-pink { background: #fce7f3; }
+/* Marker: a felt-tip stroke over the lower half of the line. */
+.ProseMirror .lh-hl-marker { --lh-hl: #fde68a; background: linear-gradient(transparent 55%, var(--lh-hl) 55%, var(--lh-hl) 92%, transparent 92%); border-radius: 0; }
+.ProseMirror .lh-hl-underline { --lh-hl: #f59e0b; background: none; text-decoration: underline; text-decoration-color: var(--lh-hl); text-decoration-thickness: 3px; text-underline-offset: 3px; }
+.ProseMirror .lh-hl-gray { --lh-hl: #d4d4d4; }
+.ProseMirror .lh-hl-red { --lh-hl: #fca5a5; }
+.ProseMirror .lh-hl-orange { --lh-hl: #fdba74; }
+.ProseMirror .lh-hl-amber { --lh-hl: #fcd34d; }
+.ProseMirror .lh-hl-green { --lh-hl: #86efac; }
+.ProseMirror .lh-hl-teal { --lh-hl: #5eead4; }
+.ProseMirror .lh-hl-blue { --lh-hl: #93c5fd; }
+.ProseMirror .lh-hl-purple { --lh-hl: #c4b5fd; }
+.ProseMirror .lh-hl-pink { --lh-hl: #f9a8d4; }
+
+/* Effects. Gradients keep a solid colour fallback for forced-colour modes. */
+.ProseMirror .lh-fx-gradient-sunset,
+.ProseMirror .lh-fx-gradient-ocean,
+.ProseMirror .lh-fx-gradient-aurora {
+  color: #c2410c;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.ProseMirror .lh-fx-gradient-sunset { background-image: linear-gradient(90deg, #f97316, #e11d48 55%, #9333ea); }
+.ProseMirror .lh-fx-gradient-ocean { color: #0369a1; background-image: linear-gradient(90deg, #0284c7, #0d9488 60%, #16a34a); }
+.ProseMirror .lh-fx-gradient-aurora { color: #6d28d9; background-image: linear-gradient(90deg, #2563eb, #7c3aed 50%, #db2777); }
+@media (forced-colors: active) {
+  .ProseMirror .lh-fx[class*='lh-fx-gradient'] { -webkit-text-fill-color: currentColor; background: none; }
+}
+.ProseMirror .lh-fx-glow { text-shadow: 0 0 10px rgba(250, 204, 21, 0.75), 0 0 2px rgba(250, 204, 21, 0.6); }
+.ProseMirror .lh-fx-wavy { text-decoration: underline wavy #f43f5e; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.ProseMirror .lh-fx-dotted { text-decoration: underline dotted #737373; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.ProseMirror .lh-fx-smallcaps { font-variant-caps: all-small-caps; letter-spacing: 0.04em; }
+.ProseMirror .lh-fx-large { font-size: 1.25em; }
+.ProseMirror .lh-fx-xlarge { font-size: 1.6em; line-height: 1.25; font-weight: 600; }
+
+.ProseMirror kbd.lh-kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 0.4em;
+  border-radius: 6px;
+  background: #fafafa;
+  box-shadow: inset 0 -1.5px 0 rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.12);
+  font: 600 0.82em/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #404040;
+  text-align: center;
+  vertical-align: 0.08em;
+}
+
+.ProseMirror .lh-spoiler {
+  border-radius: 4px;
+  background: rgba(23, 23, 23, 0.08);
+  filter: blur(5px);
+  cursor: pointer;
+  transition: filter 220ms ease, background 220ms ease;
+  user-select: none;
+}
+.ProseMirror .lh-spoiler.is-revealed { filter: none; background: rgba(23, 23, 23, 0.04); cursor: text; user-select: text; }
+.ProseMirror .lh-spoiler:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+/* Authors must read and edit what they hid. */
+.activity-editor-content-wrapper .ProseMirror .lh-spoiler {
+  filter: none;
+  user-select: text;
+  cursor: text;
+  background: repeating-linear-gradient(135deg, rgba(23, 23, 23, 0.07) 0 6px, rgba(23, 23, 23, 0.03) 6px 12px);
+  outline: 1px dashed rgba(23, 23, 23, 0.25);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ProseMirror .lh-spoiler { transition: none; }
+}
+
+.ProseMirror .lh-definition {
+  position: relative;
+  text-decoration: underline dotted #0ea5e9;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+.ProseMirror .lh-definition[data-note]:not([data-note=''])::after {
+  content: attr(data-note);
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  width: max-content;
+  max-width: min(280px, 80vw);
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #171717;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.4;
+  font-style: normal;
+  text-decoration: none;
+  white-space: normal;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.ProseMirror .lh-definition:hover::after,
+.ProseMirror .lh-definition:focus::after,
+.ProseMirror .lh-definition:focus-within::after { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ProseMirror .lh-definition::after { transition: none; transform: none; }
+}

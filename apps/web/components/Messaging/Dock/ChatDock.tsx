@@ -15,7 +15,8 @@ import { ArrowsOutSimple, ChatsCircle, MagnifyingGlass, NotePencil, Plus, X } fr
 import { messagingKeys, useMessaging, useMessagingEnabled } from '@components/Messaging/MessagingProvider'
 import { useAgents, useConversations } from '@components/Messaging/hooks'
 import Thread from '@components/Messaging/Thread/Thread'
-import { ConversationRow } from '@components/Messaging/Sidebar/ConversationSidebar'
+import { ConversationListSkeleton, ConversationRow } from '@components/Messaging/Sidebar/ConversationSidebar'
+import { IconButton } from '@components/Messaging/ui/kit'
 import NewConversationDialog from '@components/Messaging/Dialogs/NewConversationDialog'
 import AgentAvatar from '@components/Messaging/Agents/AgentAvatar'
 import { ConversationAvatar } from '@components/Messaging/ui/Avatars'
@@ -86,6 +87,7 @@ export default function ChatDock({ orgslug }: { orgslug: string }) {
 }
 
 function Dock({ orgslug, orgId }: { orgslug: string; orgId: number }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const qc = useQueryClient()
   const { token, userId, unreadTotal, subscribe } = useMessaging()
@@ -231,17 +233,24 @@ function Dock({ orgslug, orgId }: { orgslug: string; orgId: number }) {
           <ChatHead key={c.conversation_uuid} conversation={c} viewerId={userId} onOpen={() => openChat(c.conversation_uuid)} onClose={() => close(c.conversation_uuid)} />
         ))}
         <button
+          type="button"
           onClick={() => setListOpen((v) => !v)}
-          aria-label={unreadTotal ? `Chats, ${unreadTotal} unread` : 'Chats'}
+          aria-label={
+            unreadTotal
+              ? t('messaging.chats_unread', { defaultValue: 'Chats, {{count}} unread', count: unreadTotal })
+              : t('messaging.chats', { defaultValue: 'Chats' })
+          }
           aria-expanded={listOpen}
-          className={`relative flex items-center justify-center rounded-full bg-white nice-shadow transition-colors ${
-            listOpen ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
+          className={`relative flex items-center justify-center rounded-full transition-all active:scale-95 ${
+            listOpen
+              ? 'bg-neutral-900 text-white shadow-[0_6px_20px_rgba(0,0,0,0.18)]'
+              : 'bg-white text-neutral-700 shadow-[0_6px_20px_rgba(0,0,0,0.1)] ring-1 ring-neutral-900/[0.06] hover:text-neutral-900 hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)]'
           }`}
           style={{ width: LAUNCHER, height: LAUNCHER }}
         >
           {listOpen ? <X size={20} weight="bold" /> : <ChatsCircle size={24} weight="fill" />}
           {!listOpen && unreadTotal > 0 && (
-            <span className="absolute -top-0.5 -end-0.5 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold leading-5 text-center ring-2 ring-white tabular-nums">
+            <span className="absolute -top-0.5 -end-0.5 min-w-[20px] h-5 px-1 rounded-full bg-rose-500 text-white text-[11px] font-semibold leading-5 text-center ring-2 ring-white tabular-nums">
               {unreadTotal > 99 ? '99+' : unreadTotal}
             </span>
           )}
@@ -254,7 +263,7 @@ function Dock({ orgslug, orgId }: { orgslug: string; orgId: number }) {
 function DockWindow({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="pointer-events-auto flex flex-col overflow-hidden rounded-t-xl bg-white nice-shadow"
+      className="pointer-events-auto flex flex-col overflow-hidden rounded-t-2xl bg-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-neutral-900/[0.06]"
       style={{ width: WINDOW_W, height: 'min(500px, calc(100dvh - 96px))' }}
     >
       {children}
@@ -280,9 +289,10 @@ function ChatHead({
       <Tooltip>
         <TooltipTrigger asChild>
           <button
+            type="button"
             onClick={onOpen}
             aria-label={unread ? `${title}, ${unread} unread` : title}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-white nice-shadow"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_rgba(0,0,0,0.12)] ring-1 ring-neutral-900/[0.06] transition-transform hover:scale-105"
           >
             <ConversationAvatar conversation={conversation} viewerId={viewerId} size={44} />
           </button>
@@ -292,14 +302,15 @@ function ChatHead({
         </TooltipContent>
       </Tooltip>
       {unread > 0 && (
-        <span className="pointer-events-none absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold leading-[18px] text-center ring-2 ring-white tabular-nums">
+        <span className="pointer-events-none absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-semibold leading-[18px] text-center ring-2 ring-white tabular-nums">
           {unread > 99 ? '99+' : unread}
         </span>
       )}
       <button
+        type="button"
         onClick={onClose}
         aria-label={`Close ${title}`}
-        className="absolute -top-1 -start-1 hidden h-5 w-5 items-center justify-center rounded-full bg-white text-gray-500 nice-shadow hover:text-gray-900 group-hover:flex"
+        className="absolute -top-1 -start-1 hidden h-5 w-5 items-center justify-center rounded-full bg-white text-neutral-500 shadow-sm ring-1 ring-neutral-900/10 hover:text-neutral-900 group-hover:flex"
       >
         <X size={10} weight="bold" />
       </button>
@@ -338,91 +349,91 @@ function ChatList({
       .sort((a, b) => Number(b.pinned) - Number(a.pinned))
   }, [conversations, q, filter, userId])
 
-  const shownAgents = agents.slice(0, 4)
+  const shownAgents = (Array.isArray(agents) ? agents : []).slice(0, 4)
+  const unreadCount = conversations.filter((c) => !c.archived && c.unread_count > 0).length
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-12 flex-shrink-0 items-center gap-1 border-b border-gray-100 ps-3.5 pe-1">
-        <p className="flex-1 text-sm font-bold text-gray-900">{t('messaging.chats', { defaultValue: 'Chats' })}</p>
-        <button onClick={() => setNewOpen(true)} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100" aria-label="New message" title="New message">
-          <NotePencil size={16} weight="bold" />
-        </button>
-        <button
-          onClick={() => router.push(getUriWithOrg(orgslug, '/messages'))}
-          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
-          aria-label="Open Messages"
-          title="Open Messages"
-        >
-          <ArrowsOutSimple size={16} weight="bold" />
-        </button>
-        <button onClick={onClose} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100" aria-label="Close chats" title="Close">
-          <X size={16} weight="bold" />
-        </button>
+      <div className="flex h-12 shrink-0 items-center gap-0.5 border-b border-neutral-100 ps-4 pe-1.5">
+        <p className="flex-1 text-sm font-bold text-neutral-900">{t('messaging.chats', { defaultValue: 'Chats' })}</p>
+        <IconButton size="sm" label={t('messaging.new_message', { defaultValue: 'New message' })} onClick={() => setNewOpen(true)}>
+          <NotePencil size={15} weight="bold" />
+        </IconButton>
+        <IconButton size="sm" label={t('messaging.open_messages', { defaultValue: 'Open Messages' })} onClick={() => router.push(getUriWithOrg(orgslug, '/messages'))}>
+          <ArrowsOutSimple size={15} weight="bold" />
+        </IconButton>
+        <IconButton size="sm" label={t('messaging.close_chats', { defaultValue: 'Close chats' })} onClick={onClose}>
+          <X size={15} weight="bold" />
+        </IconButton>
       </div>
 
-      <div className="flex-shrink-0 space-y-2.5 px-2.5 pt-2.5">
-        <label className="flex items-center gap-2 rounded-lg bg-gray-100 px-2.5 py-1.5">
-          <MagnifyingGlass size={14} className="text-gray-400" />
+      <div className="shrink-0 space-y-2.5 px-3 pt-3">
+        <label className="relative block">
+          <MagnifyingGlass size={14} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('messaging.search_chats', { defaultValue: 'Search chats' })}
-            className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+            className="h-8 w-full rounded-lg bg-neutral-100/80 ps-8 pe-3 text-sm outline-none placeholder:text-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-900/10"
           />
         </label>
 
         {shownAgents.length > 0 && !q && (
-          <div className="flex gap-1 overflow-x-auto pb-0.5">
+          <div className="-mx-1 flex gap-0.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
             {shownAgents.map((a) => (
               <button
                 key={a.agent_uuid}
+                type="button"
                 onClick={() => onOpenAgent(a.agent_uuid)}
-                className="flex w-14 flex-shrink-0 flex-col items-center gap-1 rounded-lg py-1.5 hover:bg-gray-50"
+                className="flex w-14 shrink-0 flex-col items-center gap-1 rounded-xl py-1.5 hover:bg-neutral-50"
                 title={a.description || a.name}
               >
                 <AgentAvatar agent={a} size={34} />
-                <span className="w-full truncate px-0.5 text-center text-[11px] text-gray-600">{a.name}</span>
+                <span className="w-full truncate px-0.5 text-center text-[11px] text-neutral-600">{a.name}</span>
               </button>
             ))}
             <button
+              type="button"
               onClick={() => router.push(getUriWithOrg(orgslug, '/messages?agents=1'))}
-              className="flex w-14 flex-shrink-0 flex-col items-center gap-1 rounded-lg py-1.5 hover:bg-gray-50"
-              title="All agents"
+              className="flex w-14 shrink-0 flex-col items-center gap-1 rounded-xl py-1.5 hover:bg-neutral-50"
+              title={t('messaging.all_agents', { defaultValue: 'All agents' })}
             >
-              <span className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-dashed border-gray-300 text-gray-400">
+              <span className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-dashed border-neutral-300 text-neutral-400">
                 <Plus size={14} weight="bold" />
               </span>
-              <span className="text-[11px] text-gray-500">Agents</span>
+              <span className="text-[11px] text-neutral-500">{t('messaging.agents', { defaultValue: 'Agents' })}</span>
             </button>
           </div>
         )}
 
-        <div className="flex gap-1">
+        <div className="inline-flex items-center rounded-lg bg-neutral-100 p-0.5" role="tablist">
           {(['all', 'unread'] as ListFilter[]).map((f) => (
             <button
               key={f}
+              type="button"
+              role="tab"
+              aria-selected={filter === f}
               onClick={() => setFilter(f)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                filter === f ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'
+              className={`inline-flex h-6 items-center gap-1 rounded-md px-2.5 text-xs font-semibold transition-colors ${
+                filter === f ? 'bg-white text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)]' : 'text-neutral-500 hover:text-neutral-800'
               }`}
             >
-              {f === 'all' ? 'All' : 'Unread'}
+              {f === 'all' ? t('messaging.filters.all', { defaultValue: 'All' }) : t('messaging.filters.unread', { defaultValue: 'Unread' })}
+              {f === 'unread' && unreadCount > 0 && <span className="tabular-nums text-neutral-400">{unreadCount}</span>}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-1.5 py-1.5">
-        {isLoading &&
-          [0, 1, 2, 3].map((i) => (
-            <div key={i} className="flex animate-pulse items-center gap-3 px-2.5 py-2">
-              <div className="h-10 w-10 rounded-full bg-gray-100" />
-              <div className="h-3 flex-1 rounded bg-gray-100" />
-            </div>
-          ))}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 py-1.5">
+        {isLoading && <ConversationListSkeleton rows={4} />}
         {!isLoading && visible.length === 0 && (
-          <p className="px-4 py-10 text-center text-sm text-gray-400">
-            {q ? 'No chats match.' : filter === 'unread' ? 'You’re all caught up.' : 'No chats yet.'}
+          <p className="px-4 py-10 text-center text-sm text-neutral-400">
+            {q
+              ? t('messaging.no_chats_match', { defaultValue: 'No chats match.' })
+              : filter === 'unread'
+                ? t('messaging.all_caught_up', { defaultValue: 'You’re all caught up' })
+                : t('messaging.no_chats', { defaultValue: 'No chats yet.' })}
           </p>
         )}
         {visible.map((c) => (

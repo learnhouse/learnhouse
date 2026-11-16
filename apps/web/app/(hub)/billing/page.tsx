@@ -23,6 +23,8 @@ import {
 import { resolvePlanIdFromOrg } from './_lib/plans'
 import PlanUsage from './_components/PlanUsage'
 import SwitchWizard from './_components/SwitchWizard'
+import { getOrgTrial } from '@services/plans/trial'
+import { getPlanOverview } from '@services/orgs/planOverview'
 
 function resolveOrgActive(org: any): boolean {
   const cfg = org?.config?.config
@@ -134,6 +136,24 @@ function BillingClient() {
     refetchInterval: 60_000,
   })
 
+  // The free trial (if one is running) and what a move to Free would change,
+  // for the trial card and the cancel confirmation.
+  const { data: trialData } = useQuery({
+    queryKey: ['org', orgId, 'trial'],
+    queryFn: () => getOrgTrial(orgId, access_token),
+    enabled: isAuthenticated && !!orgId,
+    staleTime: 60_000,
+    retry: false,
+  })
+  const { data: overview } = useQuery({
+    queryKey: ['org', orgId, 'plan-overview'],
+    queryFn: () => getPlanOverview(orgId, access_token),
+    enabled: isAuthenticated && !!orgId,
+    staleTime: 60_000,
+    retry: false,
+  })
+  const trial = trialData?.trial?.active ? trialData.trial : null
+
   // Invoice data is only meaningful once the org has a subscription, so both
   // queries wait for it rather than calling Stripe for free orgs.
   const { data: upcomingInvoice } = useQuery({
@@ -160,7 +180,15 @@ function BillingClient() {
     queryClient.invalidateQueries({ queryKey: ['billing', 'upcoming', orgId] })
     queryClient.invalidateQueries({ queryKey: ['billing', 'invoices', orgId] })
     queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
+    queryClient.invalidateQueries({ queryKey: ['org', orgId] })
   }
+
+  // ?section=invoices (from Settings → Plan): scroll to the invoice history.
+  const sectionParam = searchParams?.get('section')
+  useEffect(() => {
+    if (sectionParam !== 'invoices' || !invoices) return
+    document.getElementById('billing-invoices')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [sectionParam, invoices])
 
   // React to Stripe's post-checkout redirect (success_url / cancel_url land here
   // with ?checkout=success|cancelled, ?session_id, ?pack_purchased). Refresh the
@@ -237,7 +265,10 @@ function BillingClient() {
     router.replace(qs ? `/billing?${qs}` : '/billing')
   }, [orgId, checkoutParam, packPurchased, checkoutSessionId, orgSlug, queryClient, router, searchParams, t])
 
-  const currentPlanId = resolvePlanIdFromOrg(org)
+  // Mid-trial nothing is bought yet: plans are chosen as from Free (checkout,
+  // not a subscription switch), with the trial shown on its own card.
+  const storedPlanId = resolvePlanIdFromOrg(org)
+  const currentPlanId = trial && !subscription ? 'free' : storedPlanId
   const isOrgActive = resolveOrgActive(org)
   const hasExistingSub = !!subscription
   // Billing is org-management: only admins/superadmins may view/manage it, even
@@ -249,7 +280,7 @@ function BillingClient() {
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
-      <Toaster />
+      <Toaster toastOptions={{ className: 'lh-toast' }} />
       <div className="relative min-h-screen">
         {/* Blueprint grid, fades in from bottom */}
         <div
@@ -339,7 +370,7 @@ function BillingClient() {
               view === 'plan' ? (
                 <PlanUsage
                   org={org}
-                  currentPlanId={currentPlanId}
+                  currentPlanId={storedPlanId}
                   isOrgActive={isOrgActive}
                   subscription={subscription ?? null}
                   subLoading={subLoading}
@@ -353,6 +384,8 @@ function BillingClient() {
                   priceOverrides={prices?.plans}
                   packPrices={prices?.packs}
                   planLimits={prices?.limits}
+                  trial={trial}
+                  downgradePreview={overview?.downgrade_preview ?? null}
                   onSwitch={() => setView('switch')}
                   onChanged={handleChanged}
                 />
@@ -365,6 +398,7 @@ function BillingClient() {
                   pricesLoading={isPricesLoading}
                   planLimits={prices?.limits}
                   initialPlanId={planParam}
+                  trialPlanId={trial?.plan ?? null}
                   onBack={() => setView('plan')}
                   onChanged={handleChanged}
                 />

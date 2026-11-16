@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Loader2, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { ShieldWarning, WarningCircle } from '@phosphor-icons/react'
+import { AuthStatus, AuthStatusScreen, authButtonClass } from '@components/Auth/AuthUI'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { useAuth, validateOAuthState } from '@components/Contexts/AuthContext'
@@ -281,99 +282,61 @@ export default function GoogleCallbackPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <Loader2 className="w-12 h-12 text-gray-600 animate-spin" />
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">
-            {t('auth.google_callback.completing')}
-          </h1>
-          <p className="text-gray-500">{t('auth.google_callback.please_wait')}</p>
-        </div>
-      </div>
+      <AuthStatusScreen>
+        <AuthStatus loading title={t('auth.google_callback.completing')} description={t('auth.google_callback.please_wait')} />
+      </AuthStatusScreen>
     )
   }
 
   if (status === 'csrf_error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-amber-100 rounded-full">
-              <ShieldAlert className="w-12 h-12 text-amber-600" />
-            </div>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">
-            {t('auth.google_callback.security_failed')}
-          </h1>
-          <p className="text-gray-600 mb-2">{error}</p>
-          <p className="text-gray-500 text-sm mb-6">
-            {t('auth.google_callback.security_hint')}
-          </p>
-          <div className="space-y-3">
-            <Link
-              href="/login"
-              className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-            >
-              {t('auth.google_callback.go_to_login')}
-            </Link>
-            <Link
-              href="/"
-              className="block w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              {t('auth.google_callback.go_home')}
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AuthStatusScreen>
+        <AuthStatus
+          tone="warning"
+          icon={<ShieldWarning size={22} weight="duotone" />}
+          title={t('auth.google_callback.security_failed')}
+          description={
+            <>
+              <p>{error}</p>
+              <p className="mt-2 text-[13px] text-neutral-400">{t('auth.google_callback.security_hint')}</p>
+            </>
+          }
+        >
+          <Link href="/login" className={authButtonClass('primary')}>
+            {t('auth.google_callback.go_to_login')}
+          </Link>
+          <Link href="/" className={authButtonClass('secondary')}>
+            {t('auth.google_callback.go_home')}
+          </Link>
+        </AuthStatus>
+      </AuthStatusScreen>
     )
   }
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-red-100 rounded-full">
-              <AlertTriangle className="w-12 h-12 text-red-600" />
-            </div>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">
-            {t('auth.google_callback.auth_failed')}
-          </h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <div className="space-y-3">
-            <Link
-              href="/login"
-              className="block w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-            >
-              {t('auth.google_callback.try_again')}
-            </Link>
-            <Link
-              href="/"
-              className="block w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              {t('auth.google_callback.go_home')}
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AuthStatusScreen>
+        <AuthStatus
+          tone="danger"
+          icon={<WarningCircle size={22} weight="duotone" />}
+          title={t('auth.google_callback.auth_failed')}
+          description={error}
+        >
+          <Link href="/login" className={authButtonClass('primary')}>
+            {t('auth.google_callback.try_again')}
+          </Link>
+          <Link href="/" className={authButtonClass('secondary')}>
+            {t('auth.google_callback.go_home')}
+          </Link>
+        </AuthStatus>
+      </AuthStatusScreen>
     )
   }
 
   // Success state - redirecting
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <Loader2 className="w-12 h-12 text-green-600 animate-spin" />
-        </div>
-        <h1 className="text-xl font-semibold text-gray-800 mb-2">
-          {t('auth.google_callback.success')}
-        </h1>
-        <p className="text-gray-500">{t('auth.google_callback.redirecting')}</p>
-      </div>
-    </div>
+    <AuthStatusScreen>
+      <AuthStatus tone="success" loading title={t('auth.google_callback.success')} description={t('auth.google_callback.redirecting')} />
+    </AuthStatusScreen>
   )
 }

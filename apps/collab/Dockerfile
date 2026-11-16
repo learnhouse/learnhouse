@@ -39,6 +39,10 @@ RUN addgroup -g 1001 -S collab && adduser -S collab -u 1001
 COPY package.json ./
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+# Enterprise plugin (boards), when the EE overlay put apps/collab/ee/ in the
+# build context; the wildcard copies nothing in community builds. Node runs
+# its .ts files directly (type stripping), and dist/plugins.js loads it.
+COPY ee* ./ee/
 
 ENV NODE_ENV=production
 ENV COLLAB_PORT=4000

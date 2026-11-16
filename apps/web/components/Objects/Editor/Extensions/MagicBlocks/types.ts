@@ -38,6 +38,8 @@ export interface StreamChunk {
   content?: string
   session_uuid?: string
   message?: string
+  // Credits the generation charged (done event; ai-credits).
+  credits?: number | null
 }
 
 // Generations allowed per Magic Block session; mirrors MAX_ITERATIONS in the API.

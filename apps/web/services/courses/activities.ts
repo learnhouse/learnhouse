@@ -209,10 +209,12 @@ export async function deleteActivity(activity_uuid: any, access_token: string) {
 export async function getActivityWithAuthHeader(
   activity_uuid: any,
   next: any,
-  access_token: string | null | undefined
+  access_token: string | null | undefined,
+  // Learner content language list (`fr,en`): localized name/content when published.
+  lang?: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}activities/activity_${activity_uuid}`,
+    `${getAPIUrl()}activities/activity_${activity_uuid}${lang ? `?lang=${encodeURIComponent(lang)}` : ''}`,
     RequestBodyWithAuthHeader('GET', null, next, access_token || undefined)
   )
   const res = await result.json()

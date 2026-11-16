@@ -16,6 +16,9 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from src.services.ai.tools.block_specs import BLOCK_TYPES
+from src.services.mcp.guides import GUIDES
+
 # A URI is learnhouse://<kind> or learnhouse://<kind>/<id>.
 URI = re.compile(r"^learnhouse://(?P<kind>[a-z_]{2,40})(?:/(?P<id>[A-Za-z0-9_-]{1,100}))?$")
 
@@ -34,6 +37,12 @@ class ResourceDef:
     listed_by: tuple[str, dict[str, Any]] | None = None
     # Search kind used to complete the template's id argument.
     search_kind: str | None = None
+    # Served without a tool: "static" (from `static_values`/readers below) or
+    # "branding" (the org's look, read in handlers). tool is then "".
+    reader: str | None = None
+    mime_type: str = "application/json"
+    # Fixed values the id can take (listed in resources/list, completed).
+    values: tuple[str, ...] = ()
 
     @property
     def template(self) -> str | None:
@@ -100,8 +109,78 @@ RESOURCES: dict[str, ResourceDef] = {
             description="A community's settings and recent discussions.",
             search_kind="community",
         ),
+        ResourceDef(
+            kind="activity_markdown",
+            tool="get_activity_content",
+            arg="activity_uuid",
+            title="Page as Markdown",
+            description="A page's content as plain Markdown (rich blocks as fences).",
+            extra_args={"format": "markdown"},
+            search_kind="activity",
+            mime_type="text/markdown",
+        ),
+        ResourceDef(
+            kind="blocks",
+            tool="",
+            arg=None,
+            title="Block catalog",
+            description="Every page block you can write: type, purpose, a minimal valid example; per type at learnhouse://block/{type}.",
+            reader="static",
+        ),
+        ResourceDef(
+            kind="block",
+            tool="",
+            arg="type",
+            title="Block schema",
+            description="One page block's JSON schema, a minimal valid example and notes.",
+            reader="static",
+            values=BLOCK_TYPES,
+        ),
+        ResourceDef(
+            kind="guide",
+            tool="",
+            arg="topic",
+            title="Guide",
+            description="How to build courses well: pedagogy, the build_course spec, assessments, Markdown.",
+            reader="static",
+            mime_type="text/markdown",
+            values=tuple(GUIDES),
+        ),
+        ResourceDef(
+            kind="branding",
+            tool="",
+            arg=None,
+            title="Organization branding",
+            description="The organization's name, logo, brand and accent colors and theme, to match visuals and widgets.",
+            reader="branding",
+        ),
     )
 }
+
+
+def static_text(resource: ResourceDef, ident: str | None) -> str:
+    """The text of a resource served without a tool. Raises KeyError for an
+    id it does not know."""
+    import json
+
+    from src.services.ai.tools import block_specs as bs
+
+    if resource.kind == "blocks":
+        catalog = {
+            "about": bs.catalog()["about"],
+            "blocks": [
+                {"type": t, "example": bs.EXAMPLES[t], **({"notes": bs.NOTES[t]} if t in bs.NOTES else {}),
+                 "schema": f"learnhouse://block/{t}"}
+                for t in bs.BLOCK_TYPES
+            ],
+        }
+        return json.dumps(catalog, ensure_ascii=False)
+    if resource.kind == "block":
+        if ident not in bs.BLOCK_MODELS:
+            raise KeyError(ident)
+        return json.dumps(bs.catalog(ident), ensure_ascii=False)
+    title, text = GUIDES[ident]  # guide
+    return text
 
 
 def parse_uri(uri: str) -> tuple[ResourceDef, str | None] | None:
@@ -118,6 +197,15 @@ def parse_uri(uri: str) -> tuple[ResourceDef, str | None] | None:
 
 # Template argument -> search kind, for completing resource template ids.
 TEMPLATE_ARGS: dict[str, str] = {r.arg: r.search_kind for r in RESOURCES.values() if r.arg and r.search_kind}
+# Template argument -> fixed values (block types, guide topics).
+TEMPLATE_VALUES: dict[str, tuple[str, ...]] = {r.arg: r.values for r in RESOURCES.values() if r.arg and r.values}
+
+
+def complete_static(values: tuple[str, ...], typed: str) -> list[str]:
+    typed = (typed or "").strip().lower()
+    starts = [v for v in values if v.lower().startswith(typed)]
+    within = [v for v in values if typed in v.lower() and v not in starts]
+    return (starts + within)[:MAX_COMPLETIONS]
 
 # Search kind -> list tool giving a first page when nothing is typed yet.
 FIRST_PAGE: dict[str, str] = {"course": "list_courses", "path": "list_paths", "community": "list_communities"}

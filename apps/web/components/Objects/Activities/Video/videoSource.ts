@@ -316,3 +316,20 @@ export function parseClock(text: string): number {
   if (!parts.length || parts.length > 3 || parts.some((p) => !/^\d+$/.test(p))) return NaN
   return parts.reduce((total, p) => total * 60 + Number(p), 0)
 }
+
+/** YouTube's own thumbnail for a video: `maxres` (1280px, not always present) or `hq` (480px, always). */
+export function youTubeThumbnailUrl(videoId: string, size: 'maxres' | 'hq' = 'maxres'): string {
+  const id = encodeURIComponent(videoId)
+  return `https://i.ytimg.com/vi/${id}/${size === 'maxres' ? 'maxresdefault' : 'hqdefault'}.jpg`
+}
+
+/** Origin of a URL (for preconnect hints), or null when it isn't absolute. */
+export function urlOrigin(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    const { origin } = new URL(url)
+    return origin && origin !== 'null' ? origin : null
+  } catch {
+    return null
+  }
+}

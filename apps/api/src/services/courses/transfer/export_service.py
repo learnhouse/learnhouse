@@ -27,6 +27,7 @@ from src.db.media.media import Media, MediaTypeEnum
 from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.courses.activities.comment_marks import strip_comment_marks
 
 from .library_media import library_entry_name, library_refs
 from .models import ExportManifest, ExportCourseInfo
@@ -156,7 +157,14 @@ async def _load_course_export_data(
         "extra_metadata": copy.deepcopy(course.extra_metadata),
         "creation_date": course.creation_date,
         "update_date": course.update_date,
+        "default_locale": course.default_locale,
     }
+    # Language versions (multilingual courses)
+    from src.services.courses.translations.transfer import export_translations
+
+    translations = await export_translations(db_session, course)
+    if translations:
+        course_data["translations"] = translations
 
     chapter_results = (await db_session.execute(
         select(Chapter, CourseChapter)
@@ -212,7 +220,8 @@ async def _load_course_export_data(
                 "name": activity.name,
                 "activity_type": activity.activity_type.value,
                 "activity_sub_type": activity.activity_sub_type.value if activity.activity_sub_type else None,
-                "content": copy.deepcopy(activity.content),
+                # Comment threads are not exported, so neither are their anchors.
+                "content": copy.deepcopy(strip_comment_marks(activity.content)),
                 "details": copy.deepcopy(activity.details),
                 "published": activity.published,
                 "order": ca.order,

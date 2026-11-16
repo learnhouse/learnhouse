@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 560" role="img" aria-label="Speech bubbles">
+<rect width="600" height="560" rx="40" fill="#fff0d6"/>
+<g font-family="Helvetica, Arial, sans-serif" font-weight="800">
+<path d="M60 90h260a40 40 0 0 1 40 40v70a40 40 0 0 1-40 40H140l-50 40 10-40h-40a40 40 0 0 1-40-40v-70a40 40 0 0 1 40-40z" fill="#2747d1"/>
+<text x="90" y="182" font-size="46" fill="#fffaf0">¡Hola!</text>
+<path d="M270 230h270a40 40 0 0 1 40 40v80a40 40 0 0 1-40 40h-30l12 44-60-44H270a40 40 0 0 1-40-40v-80a40 40 0 0 1 40-40z" fill="#ff6a3d"/>
+<text x="300" y="330" font-size="44" fill="#fffaf0">Bonjour</text>
+<path d="M50 330h170a36 36 0 0 1 36 36v60a36 36 0 0 1-36 36h-90l-40 34 8-34H50a36 36 0 0 1-36-36v-60a36 36 0 0 1 36-36z" fill="#ffc93c"/>
+<text x="62" y="410" font-size="40" fill="#141a33">Ciao</text>
+<path d="M330 450h190a30 30 0 0 1 30 30v26a30 30 0 0 1-30 30H330a30 30 0 0 1-30-30v-26a30 30 0 0 1 30-30z" fill="#141a33"/>
+<text x="348" y="503" font-size="28" fill="#fffaf0">Olá · Hallo</text>
+<path d="M400 60h120a30 30 0 0 1 30 30v40a30 30 0 0 1-30 30h-40l-26 22 4-22h-58a30 30 0 0 1-30-30v-40a30 30 0 0 1 30-30z" fill="#1d6b3a"/>
+<text x="402" y="125" font-size="30" fill="#fffaf0">Hej!</text>
+</g>
+<g fill="#2747d1" opacity=".25"><circle cx="540" cy="200" r="8"/><circle cx="30" cy="290" r="6"/><circle cx="260" cy="520" r="7"/></g>
+</svg>

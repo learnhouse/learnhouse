@@ -3,19 +3,13 @@ import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
-import {
-  CertificateCourseRow,
-  CertificateNotFound,
-  CertificateShowcase,
-  CertificateShowcaseSkeleton,
-  CertificateSubject,
-} from '@components/Objects/Certificates/CertificateShowcase'
+import { CertificateCourseRow, CertificateNotFound, CertificateShowcase, CertificateShowcaseSkeleton, CertificateSubject } from '@components/Objects/Certificates/CertificateShowcase'
 import { getAbsoluteUriWithOrg, getUriWithOrg } from '@services/config/config'
-import { getPathCertificate, removePathPrefix } from '@services/paths/paths'
+import { getPathCertificate } from '@services/paths/paths'
 import { queryKeys } from '@/lib/query/keys'
 import { formatDate } from '@/lib/format'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
+import { coursePath, resourcePath } from '@/lib/seo/paths'
 
 function PathCertificatePage({ orgslug, certificateUuid }: { orgslug: string; certificateUuid: string }) {
   const { t, i18n } = useTranslation()
@@ -69,13 +63,13 @@ function PathCertificatePage({ orgslug, certificateUuid }: { orgslug: string; ce
               <CertificateCourseRow
                 key={course.course_uuid}
                 name={course.name}
-                href={getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}
+                href={getUriWithOrg(orgslug, coursePath(course))}
                 tag={course.required ? undefined : t('paths.elective')}
               />
             ))}
           </div>
           <a
-            href={getUriWithOrg(orgslug, `/path/${removePathPrefix(data.path.path_uuid)}`)}
+            href={getUriWithOrg(orgslug, resourcePath('path', data.path))}
             className="inline-block mt-3 text-sm font-medium text-gray-500 hover:text-gray-900"
           >
             {t('paths.view_path')} &rarr;

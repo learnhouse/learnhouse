@@ -315,6 +315,9 @@ async def deliver_due(db: AsyncSession, now: Optional[datetime] = None) -> int:
         realtime.publish_to_users(conv.org_id, await member_ids(conv.id, db), {
             "type": "message.new", "conversation_uuid": conv.conversation_uuid, "message": payload,
         })
+        from src.services.notifications.events import notify_new_message
+
+        await notify_new_message(db, conv.id, msg.id)
         delivered += 1
     if not delivered:
         await db.commit()

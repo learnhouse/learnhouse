@@ -1,0 +1,272 @@
+---
+title: "Agent API"
+description: "Build LearnHouse's Atlas admin agent or a learner Copilot into your own UI: conversations, streamed replies, tool calls, approvals, views and citations over one REST API."
+---
+
+import { Callout } from '@/components/mdx'
+import { DevHero } from '../../../components/developers/Developers'
+
+<DevHero section="agent-api" eyebrow="Enterprise Edition" title="The Agent API">
+  The agents LearnHouse runs in its own interface, available to your app: Atlas for staff and automation, Copilot and
+  custom agents for learners. You send messages, LearnHouse streams back text, tool calls, approvals, structured views
+  and citations, and you draw them however you like.
+</DevHero>
+
+Every path starts with `/api/v1/agent`. Every response carries an `X-LearnHouse-Agent-API` header with the contract
+version (currently `2026-11-16`).
+
+| Where LearnHouse runs | Base URL |
+| --- | --- |
+| LearnHouse Cloud | `https://api.learnhouse.io/api/v1/agent` |
+| Self-hosted | `https://your-domain.com/api/v1/agent` |
+| Local development | `http://localhost:1338/api/v1/agent` |
+
+## What you get
+
+- **Conversations** that keep their history on the server, so a reload or a second device picks up where you left off.
+- **Streaming** over Server-Sent Events with typed events: text deltas, tool calls and progress, plans, views,
+  citations, approvals, usage. See [Streaming events](/developers/agent-api/events).
+- **Approvals** for risky actions. Atlas never publishes, deletes or emails on its own: it asks, and someone approves
+  or denies. See [Approvals & tools](/developers/agent-api/approvals).
+- **Views**: the 42 structured components Atlas draws in LearnHouse (tables, charts, quizzes, flashcards, timelines…),
+  as validated JSON with a Markdown fallback. See [Views](/developers/agent-api/views).
+- **Citations** for learner agents, pointing at the lesson an answer came from.
+- **Output modes**: Markdown, views, or JSON that matches a schema you provide, plus safe server-side templates. See
+  [Output modes & templates](/developers/agent-api/output).
+- **Client-side tools**: let the agent call functions that run in your app.
+- Support in [`@learnhouse/sdk`](/developers/sdk), [`@learnhouse/react`](/developers/react) and
+  [`@learnhouse/vue`](/developers/vue). See the [Quickstart](/developers/agent-api/quickstart).
+
+## Agents
+
+`GET /agents` lists the agents the caller can use, with what each one supports.
+
+| Agent id | Kind | For | What it does |
+| --- | --- | --- | --- |
+| `atlas` | `atlas` | Staff, automation | The admin agent. Reads and changes the organization through the same tools as Atlas in the dashboard: courses, members, analytics, assignments, payments and the rest. Changes that need a person's OK go through [approvals](/developers/agent-api/approvals). |
+| `copilot` | `copilot` | Learners | Answers questions about the courses, grounded in course content the learner can open, with citations. |
+| `agent_<uuid>` | `custom` | Learners | An agent built in [Messages](/platform/messages#agents), with its own instructions, tone and courses. Same grounding rules as Copilot. |
+
+```json title="GET /api/v1/agent/agents/atlas"
+{
+  "id": "atlas",
+  "kind": "atlas",
+  "name": "Atlas",
+  "description": "…",
+  "emoji": "🧭",
+  "color": "#4f46e5",
+  "audience": "staff",
+  "greeting": null,
+  "starters": ["…"],
+  "capabilities": {
+    "streaming": true, "tools": true, "approvals": true, "views": true, "citations": false,
+    "json_output": true, "templates": true, "client_tools": true
+  },
+  "output_modes": ["views", "markdown", "json"],
+  "required_scopes": ["agent.create"],
+  "available": true,
+  "unavailable_reason": null
+}
+```
+
+An agent the caller can see but not use has `available: false` and a short `unavailable_reason` (AI turned off, plan,
+missing scope). Check `capabilities` instead of assuming: learner agents have `citations: true` and `approvals: false`.
+
+`GET /agents/{agent_id}/tools` lists the tools that agent may call for this caller, with each tool's `tier` (`read`,
+`write`, `destructive`) and whether it `needs_approval`. Use the names in a conversation's
+[tool allowlist](/developers/agent-api/approvals#limit-the-tools-of-a-conversation).
+
+## Authentication
+
+Send `Authorization: Bearer <token>`. Three kinds of token work:
+
+| Credential | Acts as | Agents | Use it from |
+| --- | --- | --- | --- |
+| **API token** (`lh_…`) with the **AI agents** permission | The organization, capped by the token creator's role | All | Your server only |
+| **Member session** (the JWT from sign-in) | That member, with their role | All the member can use | The member's own app or browser |
+| **Embed session** | One learner | `copilot` and `agent_<uuid>` only | A browser, minted by your server |
+
+### API token permissions
+
+Create the token under **Developers → API Access** and turn on the **AI agents (Agent API)** row
+([how tokens work](/developers/api/authentication#api-tokens)):
+
+| Permission | Allows |
+| --- | --- |
+| **Read** | List agents and tools, list and read conversations and messages, reattach to a stream |
+| **Create** | Create conversations, send messages, cancel runs, send client tool results |
+| **Update** | Approve or deny risky actions with the token itself (self-approval) |
+| **Delete** | Delete conversations |
+
+Without **Update**, a token can still run Atlas: when Atlas asks for approval, a person approves it in your app with
+their own member session, or in LearnHouse. **Full Access** tokens do not include self-approval; turn it on under
+**Custom** when an automation really must approve its own actions.
+
+<Callout type="warning">
+  API tokens act for the whole organization. Never send one to a browser. For learners chatting in your frontend, mint
+  an [embed session](/developers/api/authentication#embed-sessions) on your server and use that.
+</Callout>
+
+### Member sessions and the org
+
+API tokens and embed sessions belong to one organization. A member session can belong to several, so pass `org_id` as
+a query parameter (or `org_id` in the body of `POST /conversations`) on `GET /agents`, `POST /conversations` and
+`GET /conversations`.
+
+### Embed sessions
+
+A learner copilot in your frontend uses an embed session minted with
+`POST /api/v1/admin/{org_slug}/auth/embed-session`, the same session the [React](/developers/react/learners) and Vue
+components use. An embed session can only talk to learner agents, sees only what that learner can open, and can never
+approve anything. See [Security & limits](/developers/agent-api/security#embed-sessions).
+
+## Endpoints
+
+| Method | Path | What it does |
+| --- | --- | --- |
+| `GET` | `/agents` | Agents this caller can use |
+| `GET` | `/agents/{agent_id}` | One agent |
+| `GET` | `/agents/{agent_id}/tools` | Tools that agent may call for this caller |
+| `GET` | `/views/schema` | JSON Schema of views and every component |
+| `POST` | `/templates/render` | Render a template with sample data, for previews |
+| `POST` | `/conversations` | Start a conversation |
+| `GET` | `/conversations` | List conversations (`agent`, `external_user_id`, `limit`) |
+| `GET` | `/conversations/{id}` | One conversation, with its pending approvals and tool calls |
+| `DELETE` | `/conversations/{id}` | Delete a conversation |
+| `GET` | `/conversations/{id}/messages` | Its messages |
+| `POST` | `/conversations/{id}/messages` | Send a message; streams the reply |
+| `GET` | `/conversations/{id}/stream` | Reattach to the current run (`Last-Event-ID`) |
+| `POST` | `/conversations/{id}/cancel` | Stop the current run |
+| `POST` | `/conversations/{id}/tool-results` | Return the results of client-side tool calls |
+| `POST` | `/approvals/{approval_id}/approve` | Approve a risky action |
+| `POST` | `/approvals/{approval_id}/deny` | Deny it |
+
+## Conversations
+
+```bash
+curl -X POST https://learn.example.com/api/v1/agent/conversations \
+  -H "Authorization: Bearer lh_…" -H "Content-Type: application/json" \
+  -d '{
+    "agent": "atlas",
+    "title": "Weekly report",
+    "instructions": "Answer in French. Keep answers short.",
+    "output": { "mode": "views" },
+    "metadata": { "workspace": "north" },
+    "external_user_id": "u_1842"
+  }'
+```
+
+| Field | | |
+| --- | --- | --- |
+| `agent` | required | `atlas`, `copilot` or `agent_<uuid>` |
+| `title` | optional | Shown in conversation lists |
+| `context` | optional | `course_uuid`, `activity_uuid`, `locale`. Learner agents focus on that course or activity. |
+| `instructions` | optional | Up to 2000 characters added to the agent's instructions. They can shape tone and focus, never override LearnHouse's own rules. |
+| `output` | optional | `mode` (`views`, `markdown`, `json`), `json_schema`, `template`. See [Output modes](/developers/agent-api/output). |
+| `tools` | optional | `allow` (tool names) and `client` (your own tools). See [Approvals & tools](/developers/agent-api/approvals). |
+| `metadata` | optional | Up to 20 keys of strings, numbers or booleans, returned as is |
+| `external_user_id` | optional | Your own id for the person behind the conversation (up to 128 characters). Filter lists with it. |
+
+The answer is a conversation object (`201`):
+
+```json
+{
+  "id": "agconv_…",
+  "object": "conversation",
+  "agent_id": "atlas",
+  "title": "Weekly report",
+  "created_at": "2026-11-16T09:12:03Z",
+  "updated_at": "2026-11-16T09:12:03Z",
+  "status": "idle",
+  "context": { "course_uuid": null, "activity_uuid": null, "locale": null },
+  "instructions": "Answer in French. Keep answers short.",
+  "output": { "mode": "views", "json_schema": null, "template": null },
+  "tools": { "allow": null, "client": [] },
+  "metadata": { "workspace": "north" },
+  "external_user_id": "u_1842",
+  "pending_approvals": [],
+  "pending_tool_calls": [],
+  "last_event_id": null
+}
+```
+
+`status` is `idle`, `running` (a reply is being written), or `requires_action` (waiting on an approval or a client tool
+result). One run at a time: sending a message while one is running answers `409 run_in_progress`.
+
+## Messages
+
+`POST /conversations/{id}/messages` takes `content` (up to 8000 characters) and streams the reply by default. Pass
+`"stream": false` to wait for the finished message instead. You can also override `output` and `context` for this one
+message.
+
+A finished assistant message:
+
+```json
+{
+  "id": "agmsg_…",
+  "role": "assistant",
+  "created_at": "2026-11-16T09:12:05Z",
+  "status": "completed",
+  "text": "Three courses are below 30% completion.",
+  "views": [{
+    "id": "view_…", "call_id": "call_1", "schema_version": 1, "title": null, "layout": "stack",
+    "components": [{ "type": "kpis", "items": [{ "label": "Below 30%", "value": 3 }] }],
+    "fallback_markdown": "- **Below 30%**: 3"
+  }],
+  "citations": [],
+  "tool_calls": [{ "call_id": "call_1", "name": "list_courses", "ok": true, "client": false }],
+  "approvals": [],
+  "plan": null,
+  "suggestions": ["Email the learners who stalled"],
+  "output": null,
+  "rendered": null,
+  "usage": { "credits": 3, "requests": 2, "input_tokens": 0, "output_tokens": 0 },
+  "error": null
+}
+```
+
+`status` is `completed`, `requires_action`, `cancelled` or `failed`. `GET /conversations/{id}/messages` returns the
+whole history in this shape, so you can render a past conversation exactly like a live one.
+
+## Plans, AI settings and credits
+
+<Callout type="info">
+  The Agent API is part of the [Enterprise Edition](/enterprise). On LearnHouse Cloud, API tokens need the **Pro** plan
+  or higher, and each agent follows the plan rules it has in the app; an agent your plan does not include answers
+  `403 plan_required`.
+</Callout>
+
+The agents obey the organization's [AI settings](/platform/ai#turning-ai-on):
+
+| Error code | Meaning |
+| --- | --- |
+| `AI_DISABLED` | AI is turned off for the organization |
+| `AI_FEATURE_DISABLED` | This agent's feature is off (learner agents need **AI Copilot**) |
+| `AI_STAFF_ONLY` | AI is limited to staff, and the caller is a learner |
+| `AI_MONTHLY_CAP_REACHED` | The organization's monthly AI cap is used up |
+| `out_of_credits` (`402`) | No AI credits left |
+
+Messages use [AI credits](/platform/ai#ai-credits) like the same agents do in LearnHouse. Each reply ends with a
+`usage` event, and each message keeps its `usage`, so you can show or log the cost.
+
+## Errors
+
+Errors outside a stream have an HTTP status and a body like:
+
+```json
+{ "detail": { "code": "run_in_progress", "message": "A reply is already being written." } }
+```
+
+| Status | Codes |
+| --- | --- |
+| `401` | `unauthorized` |
+| `402` | `out_of_credits` |
+| `403` | `missing_scope`, `forbidden`, `agent_not_available`, `plan_required`, `AI_DISABLED`, `AI_FEATURE_DISABLED`, `AI_STAFF_ONLY`, `AI_MONTHLY_CAP_REACHED` |
+| `404` | `conversation_not_found`, `approval_not_found`, `agent_not_found` |
+| `409` | `run_in_progress`, `approval_conflict`, `no_pending_tool_calls` |
+| `413` | `payload_too_large` |
+| `422` | `challenge_failed`, `invalid_request`, `invalid_schema`, `invalid_template` |
+| `429` | `rate_limited`, with `retry_after` (seconds) in the body and a `Retry-After` header |
+| `503` | `unavailable` |
+
+Errors during a stream arrive as an [`error` event](/developers/agent-api/events#error) instead.

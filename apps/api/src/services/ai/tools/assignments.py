@@ -31,7 +31,10 @@ from sqlalchemy import func
 from sqlmodel import select
 
 from src.db.courses.activities import Activity, ActivityCreate, ActivitySubTypeEnum, ActivityTypeEnum
+from src.db.courses.assignment_ai_grades import AssignmentAIGrade
 from src.db.courses.assignments import (
+    MAX_AI_GRADING_INSTRUCTIONS_CHARS,
+    AIGradingModeEnum,
     Assignment,
     AssignmentCreate,
     AssignmentTask,
@@ -88,6 +91,10 @@ CUSTOM_DATA_MAX_CHARS = 20_000
 _NESTED_QUANTIFIER = re.compile(r"\((?:[^()\\]|\\.)*(?:[+*]|\{\d*,\d*\})(?:[^()\\]|\\.)*\)(?:[+*]|\{\d*,\d*\})")
 
 GradingType = Literal["alphabet", "numeric", "percentage", "pass_fail", "gpa_scale"]
+AIGradingMode = Literal["off", "suggest", "auto"]
+_AI_FIELDS = {"ai_grading_mode": "AI grading mode", "ai_grading_instructions": "AI grading rubric"}
+# What list_submissions says about each learner's latest AI grading run.
+_AI_GRADE_STATE = {"DRAFT": "draft", "APPLIED": "applied", "FAILED": "failed"}
 SubmissionStatus = Literal["needs_grading", "pending", "submitted", "late", "graded", "not_submitted"]
 
 _STATUS_FILTER = {
@@ -688,12 +695,34 @@ class UpdateAssignmentParams(BaseModel):
         None, max_length=40, description="New ISO date or date-time; an empty string removes the deadline."
     )
     grading_type: GradingType | None = Field(None, description="How the final grade is shown.")
-    auto_grading: bool | None = Field(None, description="Grade on submit when every task is auto-gradable.")
+    auto_grading: bool | None = Field(
+        None,
+        description=(
+            "Answer-key grading (quiz and choice tasks) on submit when every task has an answer key. "
+            "Not AI grading: that is ai_grading_mode."
+        ),
+    )
     allow_retries: bool | None = Field(None, description="Let learners try again after grading.")
     max_retries: int | None = Field(None, ge=0, le=100, description="Maximum attempts; 0 means unlimited.")
     show_correct_answers: bool | None = Field(None, description="Reveal answer keys to learners once graded.")
     published: bool | None = Field(
         None, description="Publish (true) or unpublish (false) the assignment and its activity for learners."
+    )
+    ai_grading_mode: AIGradingMode | None = Field(
+        None,
+        description=(
+            "AI grading: off; suggest (a teacher asks for AI drafts and reviews them, nothing runs "
+            "on its own); auto (every hand-in is graded by AI and the grade applied, spending AI credits)."
+        ),
+    )
+    ai_grading_instructions: str | None = Field(
+        None,
+        max_length=MAX_AI_GRADING_INSTRUCTIONS_CHARS,
+        description=(
+            "The private rubric the AI grader follows: what earns full, partial or no credit. Only "
+            "teachers see it; never put a rubric in description, which learners read. An empty "
+            "string removes it."
+        ),
     )
 
     @field_validator("due_date")
@@ -907,6 +936,12 @@ async def _get_assignment(ctx: ToolContext, p: GetAssignmentParams):
             "total_points": sum(int(t.max_grade_value or 0) for t in tasks),
         }
     )
+    if instructor:
+        # Teacher-only: the private rubric is never shown to learners.
+        out["ai_grading"] = {
+            "mode": _low(assignment.ai_grading_mode) or "suggest",
+            "rubric": results.clip(assignment.ai_grading_instructions or None, results.DETAIL_TEXT),
+        }
     results.clip_field(out, "description")
     task_items = []
     for task in tasks:
@@ -1019,13 +1054,23 @@ async def _update_assignment(ctx: ToolContext, p: UpdateAssignmentParams):
     if patch.get("due_date") == "":
         # An explicit null (set, not omitted) is what clears the deadline.
         patch["due_date"] = None
+    if "ai_grading_mode" in patch:
+        patch["ai_grading_mode"] = AIGradingModeEnum(patch["ai_grading_mode"].upper())
     update = AssignmentUpdate(**patch)
     updated = await update_assignment(ctx.request, assignment.assignment_uuid, update, ctx.user, ctx.db_session)
     url = await refs.web_url(ctx, "assignment", assignment=updated.assignment_uuid)
+    ai_grading = None
+    if set(changes) & set(_AI_FIELDS):
+        ai_grading = {
+            "mode": _low(updated.ai_grading_mode) or "suggest",
+            "has_rubric": bool((updated.ai_grading_instructions or "").strip()),
+            "note": "The rubric is private: only teachers and the AI grader see it.",
+        }
     return results.changed(
-        f'Updated assignment "{updated.title}": {", ".join(changes)}.',
+        f'Updated assignment "{updated.title}": {", ".join(_AI_FIELDS.get(k, k) for k in changes)}.',
         assignment=refs.ref("assignment", updated.assignment_uuid, updated.title, url),
         published=bool(updated.published),
+        ai_grading=ai_grading,
         url=url,
     )
 
@@ -1159,6 +1204,17 @@ async def _list_submissions(ctx: ToolContext, p: ListSubmissionsParams):
             )
         ).scalars().all():
             by_user_task.setdefault(ts.user_id, {})[ts.assignment_task_id] = ts
+    ai_grades: dict[int, str] = {}
+    if instructor and user_ids:
+        for grade in (
+            await ctx.db_session.execute(
+                select(AssignmentAIGrade).where(
+                    AssignmentAIGrade.assignment_id == assignment.id,
+                    AssignmentAIGrade.user_id.in_(user_ids),  # type: ignore[attr-defined]
+                )
+            )
+        ).scalars().all():
+            ai_grades[grade.user_id] = _AI_GRADE_STATE.get(str(grade.status).upper(), "none")
     people = await member_refs(ctx, user_ids)
 
     items = []
@@ -1187,6 +1243,8 @@ async def _list_submissions(ctx: ToolContext, p: ListSubmissionsParams):
             )
         if row.overall_feedback:
             item["feedback"] = results.clip(row.overall_feedback)
+        if instructor:
+            item["ai_grade"] = ai_grades.get(row.user_id, "none")
         items.append(item)
 
     return results.untrusted(
@@ -1427,7 +1485,21 @@ async def _grade_submission(ctx: ToolContext, p: GradeSubmissionParams):
 
 
 def _fields(p: Any) -> str:
-    return ", ".join(p.changes()) or "nothing"
+    return ", ".join(_AI_FIELDS.get(k, k) for k in p.changes()) or "nothing"
+
+
+def _update_summary(p: UpdateAssignmentParams) -> str:
+    changes = p.changes()
+    if p.published is not None and len(changes) == 1:
+        return ("Publish" if p.published else "Unpublish") + " assignment"
+    if changes and set(changes) <= set(_AI_FIELDS):
+        parts = []
+        if p.ai_grading_instructions is not None:
+            parts.append("Set the AI grading rubric" if p.ai_grading_instructions.strip() else "Remove the AI grading rubric")
+        if p.ai_grading_mode is not None:
+            parts.append(f"AI grading: {p.ai_grading_mode.capitalize()}")
+        return "; ".join(parts)
+    return f"Update assignment: {_fields(p)}"
 
 
 SPECS: list[ToolSpec] = [
@@ -1482,10 +1554,11 @@ SPECS: list[ToolSpec] = [
     ToolSpec(
         name="update_assignment",
         description=(
-            "Change an assignment's title, instructions, due date, grading type, auto-grading, "
-            "retries or answer reveal, or publish or unpublish it (with its activity). Send only "
-            "the fields to change; an empty due_date removes the deadline. Publishing needs "
-            "approval only when the course is already published."
+            "Change an assignment's title, instructions, due date, grading, retries or answer "
+            "reveal, publish or unpublish it, or set AI grading: ai_grading_mode (off, suggest, "
+            "auto) and ai_grading_instructions, the private rubric learners never see. Put a "
+            "rubric only there, never in description. auto_grading is quiz auto-checking, not AI "
+            "grading. Send only fields to change; an empty due_date removes the deadline."
         ),
         params_model=UpdateAssignmentParams,
         tier=ActionTier.EDIT,
@@ -1495,11 +1568,7 @@ SPECS: list[ToolSpec] = [
         target_kind="assignment",
         approval_in_call=True,
         idempotent=True,
-        summarize=lambda p: (
-            ("Publish" if p.published else "Unpublish") + " assignment"
-            if p.published is not None and len(p.changes()) == 1
-            else f"Update assignment: {_fields(p)}"
-        ),
+        summarize=_update_summary,
         title="Update assignment",
     ),
     ToolSpec(
@@ -1570,8 +1639,9 @@ SPECS: list[ToolSpec] = [
         name="list_submissions",
         description=(
             "List learners' submissions to an assignment: learner, status, attempt, dates, final "
-            "grade and per-task scores. Filter with status (needs_grading for work waiting on a "
-            "grade). Instructors see everyone; learners only themselves."
+            "grade, per-task scores and, for instructors, ai_grade (none; draft: an AI suggestion "
+            "to review on grading_url; applied; failed). Filter with status (needs_grading for "
+            "work waiting on a grade). Instructors see everyone; learners only themselves."
         ),
         params_model=ListSubmissionsParams,
         tier=ActionTier.READ,

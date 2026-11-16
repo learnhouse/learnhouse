@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import HTTPException
@@ -176,6 +176,93 @@ class ListMembersParams(Paging):
     usergroup_uuid: str | None = Field(
         None, max_length=80, description="Only members of this user group (usergroup_...). Active members only."
     )
+    inactive_days: int | None = Field(
+        None,
+        ge=1,
+        le=3650,
+        description=(
+            "Only members with no sign-in and no course progress in this many days (never active counts), "
+            "least recently active first, each with last_active_at."
+        ),
+    )
+
+
+# Members scanned for the inactive_days filter.
+MAX_INACTIVE_SCAN = 5000
+
+
+def _when(value) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
+    return parsed.replace(tzinfo=None) if parsed.tzinfo is None else parsed.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+async def _list_inactive(ctx: ToolContext, p: ListMembersParams, role_id: int | None, usergroup_id: int | None):
+    """Members whose last sign-in and last course progress are both older
+    than inactive_days, oldest first."""
+    from src.db.roles import Role
+    from src.db.trail_steps import TrailStep
+
+    stmt = (
+        select(User, Role)
+        .join(UserOrganization, UserOrganization.user_id == User.id)
+        .join(Role, Role.id == UserOrganization.role_id)
+        .where(UserOrganization.org_id == ctx.org.id)
+    )
+    if role_id:
+        stmt = stmt.where(UserOrganization.role_id == role_id)
+    if usergroup_id:
+        stmt = stmt.where(
+            select(UserGroupUser.id)
+            .where(UserGroupUser.user_id == User.id, UserGroupUser.usergroup_id == usergroup_id)
+            .exists()
+        )
+    if p.query and p.query.strip():
+        pattern = f"%{p.query.strip()}%"
+        stmt = stmt.where(
+            User.username.ilike(pattern) | User.email.ilike(pattern) | User.first_name.ilike(pattern) | User.last_name.ilike(pattern)
+        )
+    rows = (await ctx.db_session.execute(stmt.limit(MAX_INACTIVE_SCAN))).all()
+    progress = dict(
+        (
+            await ctx.db_session.execute(
+                select(TrailStep.user_id, func.max(TrailStep.update_date))
+                .where(TrailStep.org_id == ctx.org.id, TrailStep.user_id.in_([u.id for u, _r in rows]))
+                .group_by(TrailStep.user_id)
+            )
+        ).all()
+    ) if rows else {}
+    now = datetime.utcnow()
+    cutoff = now - timedelta(days=p.inactive_days or 0)
+    found = []
+    for user, role in rows:
+        seen = [t for t in (_when(user.last_login_at), _when(progress.get(user.id))) if t is not None]
+        last = max(seen) if seen else None
+        if last is not None and last >= cutoff:
+            continue
+        found.append((last, user, role))
+    found.sort(key=lambda x: (x[0] is not None, x[0] or now))
+    offset = offset_of(p.cursor)
+    role_url = await refs.web_url(ctx, "role")
+    items = [
+        {
+            "user_uuid": user.user_uuid,
+            "name": _name(user),
+            "username": user.username,
+            "email": user.email,
+            "role": refs.ref("role", role.role_uuid, role.name, role_url),
+            "last_active_at": last.isoformat(timespec="seconds") if last else None,
+            "days_inactive": (now - last).days if last else None,
+        }
+        for last, user, role in found[offset : offset + p.limit]
+    ]
+    out = page(items, offset=offset, limit=p.limit, total=len(found))
+    out["summary"] = f"{len(found)} member(s) with no activity in the last {p.inactive_days} days."
+    return untrusted(out, "items") if items else out
 
 
 async def _list_members(ctx: ToolContext, p: ListMembersParams):
@@ -187,6 +274,9 @@ async def _list_members(ctx: ToolContext, p: ListMembersParams):
         role_id = (await refs.load(ctx, "role", p.role_uuid)).id
     if p.usergroup_uuid:
         usergroup_id = (await refs.load(ctx, "usergroup", p.usergroup_uuid)).id
+
+    if p.inactive_days:
+        return await _list_inactive(ctx, p, role_id, usergroup_id)
 
     offset = offset_of(p.cursor)
     if offset % p.limit:
@@ -678,7 +768,8 @@ SPECS: list[ToolSpec] = [
         name="list_members",
         description=(
             "List the organization's members with role, user groups, join date and email "
-            "(admins and maintainers only), filtered by name/email, role or group. "
+            "(admins and maintainers only), filtered by name/email, role or group. inactive_days lists "
+            "who has not been active (no sign-in, no course progress) for that long, in one call. "
             "status='invited' lists email invitations not yet accepted."
         ),
         params_model=ListMembersParams,

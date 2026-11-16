@@ -22,7 +22,7 @@ export const searchMetas: SearchMeta[] = [
     descriptionKey: 'dashboard.search.entries.account_profile.description',
     keywordsKey: 'dashboard.search.entries.account_profile.keywords',
     icon: IdentificationCard,
-    href: '/account/profile',
+    href: '/account/general?section=public',
     group: 'settings',
   },
   {

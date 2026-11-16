@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { ArrowsClockwise, CloudArrowUp, Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { ArrowsClockwise, CloudArrowUp } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
-import { Button } from '@components/ui/button'
+import { Button } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { queryKeys } from '@/lib/query/keys'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -65,70 +65,12 @@ export function useAssetUpload({ upload, loading, success, error }: UseAssetUplo
 /* Layout primitives                                                         */
 /* ------------------------------------------------------------------------ */
 
-interface BrandingSectionProps {
-  icon: PhosphorIcon
-  title: string
-  description: string
-  children: React.ReactNode
-  /** Vignettes showing where the asset is used. */
-  aside?: React.ReactNode
-  asideLabel?: string
-  className?: string
-}
-
-/**
- * One asset or setting: controls on the left, the places it shows up on the
- * right. Sections stack with a hairline between them so the tab reads as a
- * single sheet rather than a pile of cards.
- */
-export function BrandingSection({
-  icon: Icon,
-  title,
-  description,
-  children,
-  aside,
-  asideLabel,
-  className,
-}: BrandingSectionProps) {
-  const { t } = useTranslation()
-  return (
-    <section
-      className={cn(
-        'grid gap-8 px-5 py-7 border-b border-gray-100 last:border-b-0',
-        aside ? 'lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]' : '',
-        className
-      )}
-    >
-      <div className="min-w-0">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
-            <Icon size={16} weight="duotone" />
-          </span>
-          <div className="min-w-0">
-            <h3 className="text-[15px] font-semibold text-gray-900 leading-tight">{title}</h3>
-            <p className="mt-1 text-sm text-gray-500 leading-relaxed max-w-prose">{description}</p>
-          </div>
-        </div>
-        <div className="mt-5">{children}</div>
-      </div>
-      {aside && (
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-3">
-            {asideLabel ?? t('dashboard.organization.branding.where_it_appears')}
-          </p>
-          <div className="flex flex-wrap gap-4">{aside}</div>
-        </div>
-      )}
-    </section>
-  )
-}
-
 export function SpecList({ items }: { items: string[] }) {
   return (
-    <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
+    <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-neutral-400">
       {items.map((item) => (
         <li key={item} className="flex items-center gap-1.5">
-          <span className="h-1 w-1 rounded-full bg-gray-300" aria-hidden />
+          <span className="h-1 w-1 rounded-full bg-neutral-300" aria-hidden />
           {item}
         </li>
       ))}
@@ -136,28 +78,15 @@ export function SpecList({ items }: { items: string[] }) {
   )
 }
 
-interface SaveBarProps {
-  onSave: () => void
-  saving: boolean
-  disabled?: boolean
-  note?: string
-}
-
-export function SaveBar({ onSave, saving, disabled, note }: SaveBarProps) {
+/** A row of miniatures showing where an asset or setting shows up. */
+export function WhereItAppears({ children, label }: { children: React.ReactNode; label?: string }) {
   const { t } = useTranslation()
   return (
-    <div className="flex items-center justify-between gap-4 px-5 py-4 bg-gray-50/70 border-t border-gray-100 rounded-b-xl">
-      <p className="text-xs text-gray-400">{note}</p>
-      <Button
-        type="button"
-        onClick={onSave}
-        disabled={saving || disabled}
-        className="bg-black text-white hover:bg-black/90 rounded-lg"
-      >
-        {saving
-          ? t('dashboard.organization.settings.saving')
-          : t('dashboard.organization.settings.save_changes')}
-      </Button>
+    <div className="mt-5 pt-5 border-t border-neutral-100">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-3">
+        {label ?? t('dashboard.organization.branding.where_it_appears')}
+      </p>
+      <div className="flex flex-wrap gap-4">{children}</div>
     </div>
   )
 }
@@ -194,7 +123,7 @@ export const checkerStyle: React.CSSProperties = {
 }
 
 const SHAPE_CLASS: Record<DropzoneShape, string> = {
-  wide: 'w-[240px] h-[120px]',
+  wide: 'w-full max-w-[240px] aspect-[2/1]',
   square: 'w-[120px] h-[120px]',
   icon: 'w-[72px] h-[72px]',
 }
@@ -225,7 +154,7 @@ export function ImageDropzone({
 
   return (
     <div className={cn('flex flex-col items-start gap-3', className)}>
-      <div className="flex flex-wrap items-end gap-3 sm:gap-4">
+      <div className="flex flex-col items-start gap-2.5 w-full">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -243,10 +172,10 @@ export function ImageDropzone({
           style={currentUrl ? checkerStyle : undefined}
           className={cn(
             'group relative shrink-0 overflow-hidden rounded-xl border transition-colors',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-black/40',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/30',
             SHAPE_CLASS[shape],
-            currentUrl ? 'border-gray-200' : 'border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100',
-            dragging && 'border-black bg-gray-100',
+            currentUrl ? 'border-neutral-200' : 'border-dashed border-neutral-300 bg-neutral-50 hover:bg-neutral-100',
+            dragging && 'border-neutral-900 bg-neutral-100',
             uploading && 'opacity-60'
           )}
         >
@@ -267,7 +196,7 @@ export function ImageDropzone({
               </span>
             </>
           ) : (
-            <span className="flex h-full w-full flex-col items-center justify-center gap-1.5 px-2 text-center text-gray-400">
+            <span className="flex h-full w-full flex-col items-center justify-center gap-1.5 px-2 text-center text-neutral-400">
               <CloudArrowUp size={shape === 'icon' ? 18 : 22} weight="duotone" />
               {shape !== 'icon' && <span className="text-[11px] leading-tight">{emptyLabel}</span>}
             </span>
@@ -276,17 +205,14 @@ export function ImageDropzone({
 
         <div className="flex flex-col gap-2">
           <Button
-            type="button"
-            variant="outline"
             size="sm"
-            disabled={uploading}
+            loading={uploading}
             onClick={() => inputRef.current?.click()}
-            className="rounded-lg bg-white"
+            icon={<CloudArrowUp size={13} />}
           >
-            <CloudArrowUp size={14} weight="duotone" className="me-1.5" />
             {currentUrl ? replaceLabel : emptyLabel}
           </Button>
-          {inheritedNote && <p className="text-[11px] text-amber-700/90 max-w-[220px]">{inheritedNote}</p>}
+          {inheritedNote && <p className="text-[11px] leading-relaxed text-amber-700/90 max-w-[240px]">{inheritedNote}</p>}
         </div>
       </div>
 
@@ -371,3 +297,4 @@ export function authBackgroundStyle(
       : state.background_image
   return { backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
 }
+

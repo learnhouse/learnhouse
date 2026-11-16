@@ -36,7 +36,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "paths": "pro",
     "messaging": "free",
     "custom_domains": "pro",
-    "playgrounds": "personal",
+    "playgrounds": "pro",
     "roles": "pro",
     "versioning": "pro",
     "analytics_advanced": "pro",
@@ -44,6 +44,21 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "scorm": "enterprise",
     "sso": "enterprise",
     "lti": "enterprise",
+    "scim": "enterprise",
+    "required_training": "pro",
+    "company_seats": "pro",
+    # Newsletters and one-off emails to learners (EE). The plan limit is the
+    # monthly number of newsletter emails the org may send (0 = unlimited).
+    "newsletter": "standard",
+    # User groups beyond the basics (smart rules, nesting, group managers, the
+    # group space, messaging and manager digests). Basic groups stay on the
+    # "usergroups" gate above.
+    "usergroups_advanced": "pro",
+    # CRM integrations (EE): HubSpot on Pro, Salesforce on Enterprise (the
+    # convention for Salesforce connectors, and its API needs an edition
+    # most small teams don't run).
+    "crm": "pro",
+    "crm_salesforce": "enterprise",
 }
 
 # ============================================================================
@@ -83,6 +98,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
+            "required_training": {"enabled": False},
+            "company_seats": {"enabled": False},
+            "scim": {"enabled": False},
+            "newsletter": {"enabled": False, "limit": 0},
+            "crm": {"enabled": False},
+            "crm_salesforce": {"enabled": False},
         },
         "general": {"watermark": True},
         "cloud": {"plan": "free", "custom_domain": False},
@@ -107,7 +128,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "paths": {"enabled": False},
             "messaging": {"enabled": True},
             "communities": {"enabled": False},
-            "playgrounds": {"enabled": True, "limit": 0},
+            "playgrounds": {"enabled": False, "limit": 0},
             "roles": {"enabled": False},
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
@@ -115,6 +136,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
+            "required_training": {"enabled": False},
+            "company_seats": {"enabled": False},
+            "scim": {"enabled": False},
+            "newsletter": {"enabled": False, "limit": 0},
+            "crm": {"enabled": False},
+            "crm_salesforce": {"enabled": False},
         },
         "general": {"watermark": False},
         "cloud": {"plan": "personal", "custom_domain": False},
@@ -139,7 +166,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "paths": {"enabled": False},
             "messaging": {"enabled": True},
             "communities": {"enabled": False},
-            "playgrounds": {"enabled": True, "limit": 0},
+            "playgrounds": {"enabled": False, "limit": 0},
             "roles": {"enabled": False},
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
@@ -147,6 +174,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
+            "required_training": {"enabled": False},
+            "company_seats": {"enabled": False},
+            "scim": {"enabled": False},
+            "newsletter": {"enabled": False, "limit": 0},
+            "crm": {"enabled": False},
+            "crm_salesforce": {"enabled": False},
         },
         "general": {"watermark": False},
         "cloud": {"plan": "personal-family", "custom_domain": False},
@@ -179,6 +212,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
+            "required_training": {"enabled": False},
+            "company_seats": {"enabled": False},
+            "scim": {"enabled": False},
+            "newsletter": {"enabled": True, "limit": 10000},
+            "crm": {"enabled": False},
+            "crm_salesforce": {"enabled": False},
         },
         "general": {"watermark": False},
         "cloud": {"plan": "standard", "custom_domain": False},
@@ -211,6 +250,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
             "audit_logs": {"enabled": False},
+            "required_training": {"enabled": True},
+            "company_seats": {"enabled": True},
+            "scim": {"enabled": False},
+            "newsletter": {"enabled": True, "limit": 50000},
+            "crm": {"enabled": True},
+            "crm_salesforce": {"enabled": False},
         },
         "general": {"watermark": False},
         "cloud": {"plan": "pro", "custom_domain": True},
@@ -243,6 +288,12 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
             "audit_logs": {"enabled": True},
+            "required_training": {"enabled": True},
+            "company_seats": {"enabled": True},
+            "scim": {"enabled": True},
+            "newsletter": {"enabled": True, "limit": 250000},
+            "crm": {"enabled": True},
+            "crm_salesforce": {"enabled": True},
         },
         "general": {"watermark": False},
         "cloud": {"plan": "enterprise", "custom_domain": True},
@@ -319,16 +370,18 @@ def get_upgrade_plan(plan: str, feature: str) -> str | None:
     """
     if get_plan_feature_config(plan, feature).get("enabled", False):
         return None
-    if plan in ("personal", "personal-family"):
-        start = PLAN_HIERARCHY.index(plan) + 1
-        candidates = PLAN_HIERARCHY[start:]
-    else:
-        current = PLAN_HIERARCHY.index(plan) if plan in PLAN_HIERARCHY else 0
-        candidates = [p for p in _BUSINESS_UPGRADES if PLAN_HIERARCHY.index(p) > current]
-    for candidate in candidates:
+    for candidate in get_upgrade_candidates(plan):
         if get_plan_feature_config(candidate, feature).get("enabled", False):
             return candidate
     return None
+
+
+def get_upgrade_candidates(plan: str) -> list[str]:
+    """Plans above `plan` it can move up to, cheapest first (see _BUSINESS_UPGRADES)."""
+    if plan in ("personal", "personal-family"):
+        return PLAN_HIERARCHY[PLAN_HIERARCHY.index(plan) + 1:]
+    current = PLAN_HIERARCHY.index(plan) if plan in PLAN_HIERARCHY else 0
+    return [p for p in _BUSINESS_UPGRADES if PLAN_HIERARCHY.index(p) > current]
 
 
 def is_feature_enabled_for_plan(plan: str, feature: str) -> bool:
@@ -339,7 +392,7 @@ def is_feature_enabled_for_plan(plan: str, feature: str) -> bool:
         return True
     if mode == 'oss':
         # OSS enables all non-EE features
-        return feature not in ('analytics', 'api', 'sso', 'audit_logs', 'scorm', 'lti')
+        return feature not in ('analytics', 'api', 'sso', 'audit_logs', 'scorm', 'lti', 'scim', 'required_training', 'company_seats', 'newsletter', 'crm', 'crm_salesforce')
     return get_plan_feature_config(plan, feature).get("enabled", False)
 
 

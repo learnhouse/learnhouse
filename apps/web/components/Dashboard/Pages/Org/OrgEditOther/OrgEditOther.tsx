@@ -1,47 +1,37 @@
 'use client'
 import React from 'react'
-import { Form, Formik } from 'formik'
-import * as Yup from 'yup'
 import { updateOrganization } from '@services/settings/org'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
-import { Button } from "@components/ui/button"
-import { Label } from "@components/ui/label"
-import { Textarea } from "@components/ui/textarea"
 import { Switch } from '@components/ui/switch'
-import { Code2, Plus, Trash2, PencilLine, AlertTriangle } from "lucide-react"
+import { Code, Plus, Trash, PencilSimple, Warning, Stamp, FileCode } from '@phosphor-icons/react'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl, getDeploymentMode, getTenancy } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { useTranslation } from 'react-i18next'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import {
+  Button,
+  ConfirmDialog,
+  EmptyState,
+  FieldLabel,
+  INPUT,
+  SectionCard,
+  SettingRow,
+  TEXTAREA,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
+import { Notice } from '@components/Dashboard/Pages/Org/OrgSettingsShared/orgSettingsUi'
 
 interface Script {
   name: string
   content: string
 }
 
-interface OrganizationScripts {
-  scripts: Script[]
-}
-
-const getValidationSchema = (t: any) => Yup.object().shape({
-  name: Yup.string().required(t('dashboard.organization.scripts.script_name') + ' is required'),
-  content: Yup.string().required(t('dashboard.organization.scripts.script_content') + ' is required')
-})
-
 const OrgEditOther: React.FC = () => {
   const { t } = useTranslation()
-  const router = useRouter()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
@@ -52,9 +42,13 @@ const OrgEditOther: React.FC = () => {
   // Matches lib/orgScripts: on a multi-tenant deployment scripts only run on
   // the org's custom domain.
   const isMultiTenant = getTenancy() === 'multi'
-  const [selectedView, setSelectedView] = React.useState<'list' | 'edit'>('list')
   const [scripts, setScripts] = React.useState<Script[]>([])
-  const [currentScript, setCurrentScript] = React.useState<Script | null>(null)
+  // null: editor closed; { script: null }: adding; { script }: editing that one.
+  const [editing, setEditing] = React.useState<{ script: Script | null } | null>(null)
+  const [form, setForm] = React.useState<Script>({ name: '', content: '' })
+  const [formErrors, setFormErrors] = React.useState<{ name?: string; content?: string }>({})
+  const [savingScript, setSavingScript] = React.useState(false)
+  const [deleteTarget, setDeleteTarget] = React.useState<Script | null>(null)
 
   // Watermark state
   const [watermarkEnabled, setWatermarkEnabled] = React.useState<boolean>(
@@ -68,6 +62,7 @@ const OrgEditOther: React.FC = () => {
       return
     }
     setIsWatermarkSaving(true)
+    setWatermarkEnabled(enabled)
     const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
     try {
       const response = await fetch(`${getAPIUrl()}orgs/${org.id}/config/watermark?watermark_enabled=${enabled}`, {
@@ -78,7 +73,6 @@ const OrgEditOther: React.FC = () => {
         },
       })
       if (!response.ok) throw new Error('Failed to update watermark')
-      setWatermarkEnabled(enabled)
       await revalidateTags(['organizations'], org.slug)
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
@@ -92,264 +86,219 @@ const OrgEditOther: React.FC = () => {
 
   // Initialize scripts from org
   React.useEffect(() => {
-    if (org?.scripts?.scripts) {
-      setScripts(Array.isArray(org.scripts.scripts) ? org.scripts.scripts : [])
-    } else {
-      setScripts([])
-    }
+    const list = org?.scripts?.scripts
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setScripts(Array.isArray(list) ? list : [])
   }, [org])
 
-  const updateOrg = async (values: Script) => {
+  const persistScripts = async (updatedScripts: Script[]) => {
+    await updateOrganization(org.id, { id: org.id, scripts: { scripts: updatedScripts } }, access_token)
+    await revalidateTags(['organizations'], org.slug)
+    queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
+    setScripts(updatedScripts)
+  }
+
+  const openEditor = (script: Script | null) => {
+    setForm(script ? { ...script } : { name: '', content: '' })
+    setFormErrors({})
+    setEditing({ script })
+  }
+
+  const saveScript = async () => {
+    const errors: { name?: string; content?: string } = {}
+    if (!form.name.trim()) errors.name = t('dashboard.organization.scripts.script_name') + ' is required'
+    if (!form.content.trim()) errors.content = t('dashboard.organization.scripts.script_content') + ' is required'
+    setFormErrors(errors)
+    if (Object.keys(errors).length) return
+
+    const current = editing?.script ?? null
+    const updatedScripts = current
+      ? scripts.map((script) => (script.name === current.name ? form : script))
+      : [...scripts, form]
+    setSavingScript(true)
     const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
     try {
-      let updatedScripts: Script[]
-      
-      if (currentScript) {
-        // Edit existing script
-        updatedScripts = scripts.map(script => 
-          script.name === currentScript.name ? values : script
-        )
-      } else {
-        // Add new script
-        updatedScripts = [...scripts, values]
-      }
-
-      // Create a new organization object with scripts array wrapped in an object
-      const updateData = {
-        id: org.id,
-        scripts: {
-          scripts: updatedScripts
-        }
-      }
-      
-      await updateOrganization(org.id, updateData, access_token)
-      await revalidateTags(['organizations'], org.slug)
-      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
-      setScripts(updatedScripts)
-      setSelectedView('list')
-      setCurrentScript(null)
+      await persistScripts(updatedScripts)
+      setEditing(null)
       toast.success(t('dashboard.organization.scripts.toasts.save_success'), { id: loadingToast })
     } catch (err) {
       console.error('Error updating organization:', err)
-      toast.error(t('dashboard.organization.scripts.toasts.save_success'), { id: loadingToast })
+      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
+    } finally {
+      setSavingScript(false)
     }
   }
 
   const deleteScript = async (scriptToDelete: Script) => {
     const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
     try {
-      const updatedScripts = scripts.filter(script => script.name !== scriptToDelete.name)
-      
-      // Create a new organization object with scripts array wrapped in an object
-      const updateData = {
-        id: org.id,
-        scripts: {
-          scripts: updatedScripts
-        }
-      }
-
-      await updateOrganization(org.id, updateData, access_token)
-      await revalidateTags(['organizations'], org.slug)
-      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
-      setScripts(updatedScripts)
+      await persistScripts(scripts.filter((script) => script.name !== scriptToDelete.name))
       toast.success(t('dashboard.organization.scripts.toasts.delete_success'), { id: loadingToast })
     } catch (err) {
       console.error('Error deleting script:', err)
-      toast.error(t('dashboard.organization.scripts.toasts.delete_success'), { id: loadingToast })
+      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
     }
   }
 
   return (
-    <div className="sm:mx-10 mx-0 space-y-4">
-      {/* Watermark Toggle */}
-      <div className="bg-white rounded-xl nice-shadow p-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label className="text-base font-medium">{t('dashboard.organization.settings.watermark_label')}</Label>
-            <p className="text-sm text-gray-500">
-              {isEE
-                ? t('dashboard.organization.settings.watermark_ee')
-                : isFree
-                  ? t('dashboard.organization.settings.watermark_free_plan')
-                  : t('dashboard.organization.settings.watermark_desc')}
-            </p>
-          </div>
-          <Switch
-            checked={isEE ? false : watermarkEnabled}
-            onCheckedChange={updateWatermark}
-            disabled={isWatermarkSaving || isFree || isEE}
-          />
-        </div>
-      </div>
+    <div className="flex flex-col gap-5">
+      <SectionCard
+        icon={<Stamp size={18} />}
+        title={t('dashboard.organization.settings_ui.other.branding_title')}
+        description={t('dashboard.organization.settings_ui.other.branding_desc')}
+      >
+        <SettingRow
+          title={<label htmlFor="watermark" className="cursor-pointer">{t('dashboard.organization.settings.watermark_label')}</label>}
+          description={
+            isEE
+              ? t('dashboard.organization.settings.watermark_ee')
+              : isFree
+                ? t('dashboard.organization.settings.watermark_free_plan')
+                : t('dashboard.organization.settings.watermark_desc')
+          }
+          control={
+            <Switch
+              id="watermark"
+              checked={isEE ? false : watermarkEnabled}
+              onCheckedChange={updateWatermark}
+              disabled={isWatermarkSaving || isFree || isEE}
+            />
+          }
+        />
+      </SectionCard>
 
-      {/* Scripts Section */}
-      <div className="bg-white rounded-xl nice-shadow">
-      <div className="pt-0.5">
-        <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-bold text-xl text-gray-800 flex items-center space-x-2">
-                <Code2 className="h-5 w-5" />
-                <span>{t('dashboard.organization.scripts.title')}</span>
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <AlertTriangle className="h-4 w-4 text-orange-500 hover:text-orange-600 transition-colors" />
-                    </TooltipTrigger>
-                    <TooltipContent 
-                      className="max-w-[400px] bg-orange-50 border-orange-100 text-orange-900 [&>p]:text-orange-800 data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1"
-                      sideOffset={8}
-                    >
-                      <p className="p-2 leading-relaxed">{t('dashboard.organization.scripts.warning')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </h1>
-              <h2 className="text-gray-500 text-md">
-                {t('dashboard.organization.scripts.subtitle')}
-              </h2>
-              {isMultiTenant && (
-                <p className="text-sm text-orange-700 mt-2">
-                  {t('dashboard.organization.scripts.custom_domain_only')}
-                </p>
-              )}
+      <SectionCard
+        icon={<Code size={18} />}
+        title={t('dashboard.organization.scripts.title')}
+        description={t('dashboard.organization.scripts.subtitle')}
+        actions={
+          scripts.length > 0 ? (
+            <Button variant="primary" icon={<Plus size={14} />} onClick={() => openEditor(null)}>
+              {t('dashboard.organization.scripts.add_script')}
+            </Button>
+          ) : undefined
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <Notice tone="amber" icon={<Warning size={16} />}>
+            <p>{t('dashboard.organization.scripts.warning')}</p>
+            {isMultiTenant && <p className="mt-1 font-medium">{t('dashboard.organization.scripts.custom_domain_only')}</p>}
+          </Notice>
+
+          {scripts.length === 0 ? (
+            <div className="rounded-xl ring-1 ring-inset ring-neutral-200/70">
+              <EmptyState
+                icon={<FileCode size={22} />}
+                title={t('dashboard.organization.scripts.no_scripts')}
+                description={t('dashboard.organization.scripts.add_first_script')}
+                action={
+                  <Button variant="primary" icon={<Plus size={14} />} onClick={() => openEditor(null)}>
+                    {t('dashboard.organization.scripts.add_script')}
+                  </Button>
+                }
+              />
             </div>
-            {selectedView === 'list' && (
-              <Button
-                onClick={() => {
-                  setCurrentScript(null)
-                  setSelectedView('edit')
-                }}
-                className="bg-black text-white hover:bg-black/90"
-              >
-                <Plus className="h-4 w-4 me-2" />
-                {t('dashboard.organization.scripts.add_script')}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="p-4 pt-1">
-        {selectedView === 'list' ? (
-          <div className="space-y-4">
-            {(!scripts || scripts.length === 0) ? (
-              <div className="text-center py-8 px-4 text-gray-500 bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
-                <Code2 className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <p className="text-sm font-medium">{t('dashboard.organization.scripts.no_scripts')}</p>
-                <p className="text-xs text-gray-400 mt-1">{t('dashboard.organization.scripts.add_first_script')}</p>
-              </div>
-            ) : (
-              scripts.map((script, index) => (
-                <div
-                  key={index}
-                  className="group p-4 rounded-lg bg-gray-50/50 hover:bg-gray-100/80 transition-colors duration-150 border border-gray-200"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2 min-w-0 flex-1">
-                      <div className="flex items-baseline space-x-2">
-                        <h4 className="text-sm font-medium text-gray-800 truncate">{script.name}</h4>
-                      </div>
-                      <pre className="text-sm text-gray-600 font-mono bg-white/80 p-2 rounded border border-gray-200 overflow-x-auto">
-                        {script.content.length > 100 
-                          ? script.content.substring(0, 100) + '...' 
-                          : script.content}
-                      </pre>
-                    </div>
-                    <div className="ms-4 flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-400 hover:text-blue-500 hover:bg-blue-50"
-                        onClick={() => {
-                          setCurrentScript(script)
-                          setSelectedView('edit')
-                        }}
-                      >
-                        <PencilLine className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-400 hover:text-red-500 hover:bg-red-50"
-                        onClick={() => deleteScript(script)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+          ) : (
+            <ul className="rounded-xl ring-1 ring-inset ring-neutral-200/70 divide-y divide-neutral-100">
+              {scripts.map((script, index) => (
+                <li key={index} className="group flex items-start gap-3 px-4 py-3">
+                  <span className="mt-0.5 w-8 h-8 shrink-0 rounded-lg bg-neutral-100 text-neutral-500 flex items-center justify-center">
+                    <FileCode size={16} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-neutral-900 truncate">{script.name}</p>
+                    <pre
+                      data-ltr-content
+                      className="mt-1 text-xs text-neutral-500 font-mono truncate"
+                    >
+                      {script.content.length > 100 ? script.content.substring(0, 100) + '...' : script.content}
+                    </pre>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <Formik
-            initialValues={currentScript || { name: '', content: '' }}
-            validationSchema={getValidationSchema(t)}
-            onSubmit={(values, { setSubmitting }) => {
-              setSubmitting(false)
-              updateOrg(values)
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t('dashboard.organization.settings_ui.other.edit_script')}
+                      title={t('dashboard.organization.settings_ui.other.edit_script')}
+                      onClick={() => openEditor(script)}
+                      icon={<PencilSimple size={14} />}
+                    />
+                    <Button
+                      variant="danger-ghost"
+                      size="icon"
+                      aria-label={t('common.delete', { defaultValue: 'Delete' })}
+                      title={t('common.delete', { defaultValue: 'Delete' })}
+                      onClick={() => setDeleteTarget(script)}
+                      icon={<Trash size={14} />}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </SectionCard>
+
+      <Modal
+        isDialogOpen={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+        preventClose={savingScript}
+        size="lg"
+        icon={<Code size={16} />}
+        dialogTitle={editing?.script ? editing.script.name : t('dashboard.organization.scripts.add_script')}
+        dialogContent={
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveScript()
             }}
           >
-            {({ values, handleChange, handleSubmit, errors, touched, isSubmitting }) => (
-              <Form onSubmit={handleSubmit}>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">{t('dashboard.organization.scripts.script_name')}</Label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={values.name}
-                      onChange={handleChange}
-                      className="mt-1 w-full px-3 py-2 border rounded-md"
-                      placeholder={t('dashboard.organization.scripts.placeholders.name')}
-                    />
-                    {touched.name && errors.name && (
-                      <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="content">{t('dashboard.organization.scripts.script_content')}</Label>
-                    <Textarea
-                      id="content"
-                      name="content"
-                      value={values.content}
-                      onChange={handleChange}
-                      className="mt-1 font-mono"
-                      placeholder={t('dashboard.organization.scripts.placeholders.content')}
-                      rows={10}
-                    />
-                    {touched.content && errors.content && (
-                      <p className="text-red-500 text-sm mt-1">{errors.content}</p>
-                    )}
-                  </div>
-                  <div className="flex justify-end space-x-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedView('list')
-                        setCurrentScript(null)
-                      }}
-                    >
-                      {t('common.cancel')}
-                    </Button>
-                    <Button 
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="bg-black text-white hover:bg-black/90"
-                    >
-                      {isSubmitting ? t('dashboard.organization.settings.saving') : t('dashboard.organization.scripts.save_script')}
-                    </Button>
-                  </div>
-                </div>
-              </Form>
-            )}
-          </Formik>
-        )}
-      </div>
-    </div>
+            <label className="block">
+              <FieldLabel error={formErrors.name}>{t('dashboard.organization.scripts.script_name')}</FieldLabel>
+              <input
+                id="name"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder={t('dashboard.organization.scripts.placeholders.name')}
+                className={INPUT}
+                autoFocus
+              />
+            </label>
+            <label className="block">
+              <FieldLabel error={formErrors.content}>{t('dashboard.organization.scripts.script_content')}</FieldLabel>
+              <textarea
+                id="content"
+                value={form.content}
+                onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+                placeholder={t('dashboard.organization.scripts.placeholders.content')}
+                rows={12}
+                data-ltr-content
+                className={`${TEXTAREA} font-mono text-xs`}
+              />
+            </label>
+          </form>
+        }
+        footer={
+          <>
+            <Button onClick={() => setEditing(null)} disabled={savingScript}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="primary" onClick={saveScript} loading={savingScript}>
+              {t('dashboard.organization.scripts.save_script')}
+            </Button>
+          </>
+        }
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title={t('dashboard.organization.settings_ui.other.delete_script_title')}
+        message={deleteTarget?.name}
+        confirmLabel={t('common.delete', { defaultValue: 'Delete' })}
+        onConfirm={() => (deleteTarget ? deleteScript(deleteTarget) : undefined)}
+      />
     </div>
   )
 }

@@ -6,7 +6,7 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI'
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateSubFile } from '@services/courses/assignments';
 import { getTaskFileSubmissionDir } from '@services/media/media';
-import { Cloud, Download, File, Info, Loader, Lock, UploadCloud } from 'lucide-react'
+import { Cloud, DownloadSimple, File as FileIcon, Info, CircleNotch, Lock, CloudArrowUp } from '@phosphor-icons/react'
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
@@ -305,7 +305,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                     {/* On a formative assignment there is no grade to input, so
                         the instruction to enter one would be wrong. */}
                     <div className='flex flex-col sm:flex-row py-5 sm:py-6 text-xs sm:text-sm justify-center mx-auto space-y-2 sm:space-y-0 sm:space-x-3 text-slate-600 px-4 sm:px-2 text-center sm:text-start bg-slate-50 rounded-lg border border-slate-100'>
-                        <Download size={18} className="mx-auto sm:mx-0 text-slate-500" />
+                        <DownloadSimple size={18} className="mx-auto sm:mx-0 text-slate-500" />
                         <p>
                             {assignment?.assignment_object?.ungraded
                                 ? t('dashboard.assignments.submissions.download_to_review', { defaultValue: 'Download the file to review what the learner handed in.' })
@@ -322,7 +322,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                             </div>
 
                             <div className='flex space-x-2 mt-2 items-center'>
-                                <File size={18} className="text-emerald-500" />
+                                <FileIcon size={18} className="text-emerald-500" />
                                 <div className='font-medium text-xs sm:text-sm uppercase break-all'>
                                     {`${userSubmissions.fileUUID.slice(0, 8)}...${userSubmissions.fileUUID.slice(-4)}`}
                                 </div>
@@ -348,7 +348,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                             // Uploaded: one row with the file and a way to replace it.
                             <div className='flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3'>
                                 <span className='flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-teal-50 text-teal-600'>
-                                    <File size={18} />
+                                    <FileIcon size={18} />
                                 </span>
                                 <div className='min-w-0 flex-1'>
                                     <p className='truncate text-sm font-semibold text-neutral-900'>{fileName}</p>
@@ -367,7 +367,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                             // Handed in without a file: nothing to drop anything into any more.
                             <div className='flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-500'>
                                 <span className='flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-white text-neutral-400'>
-                                    <File size={18} />
+                                    <FileIcon size={18} />
                                 </span>
                                 {t('dashboard.assignments.editor.task_editor.file.no_file', { defaultValue: 'No file submitted' })}
                             </div>
@@ -386,7 +386,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                                 className='flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-7 text-center transition-colors enabled:hover:border-teal-400 enabled:hover:bg-teal-50/40 disabled:cursor-not-allowed'
                             >
                                 <span className='flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-500 nice-shadow'>
-                                    {isLoading ? <Loader size={18} className='animate-spin' /> : <UploadCloud size={18} />}
+                                    {isLoading ? <CircleNotch size={18} className='animate-spin' /> : <CloudArrowUp size={18} />}
                                 </span>
                                 <span className='text-sm font-semibold text-neutral-900'>
                                     {isLoading

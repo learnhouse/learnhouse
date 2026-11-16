@@ -130,13 +130,33 @@ def _embedder() -> Embedder:
     return Embedder(build_embedding_model())
 
 
+def _record_embedding_usage(embedder: Embedder, texts: list[str], result: object) -> None:
+    """Meter an embedding call for AI credits (input tokens only)."""
+    from src.services.ai.metering import record_usage
+    from src.services.ai.pricing import Usage
+
+    name = getattr(result, "model_name", None) or getattr(embedder.model, "model_name", None) or "embedding"
+    if _resolve_embedding_provider(get_learnhouse_config().ai_config) == "ollama":
+        name = f"ollama:{name}"
+    usage = getattr(result, "usage", None)
+    tokens = int(getattr(usage, "input_tokens", 0) or 0) if usage is not None else 0
+    if not tokens:
+        # Providers that don't report usage: ~4 characters per token.
+        tokens = sum(len(t or "") for t in texts) // 4 + len(texts)
+    record_usage(Usage(model=name, input_tokens=tokens))
+
+
 async def embed_documents(texts: list[str]) -> list[list[float]]:
     """Embed a batch of documents; returns one vector per input."""
-    result = await _embedder().embed(texts, input_type="document")
+    embedder = _embedder()
+    result = await embedder.embed(texts, input_type="document")
+    _record_embedding_usage(embedder, texts, result)
     return [list(v) for v in result.embeddings]
 
 
 async def embed_query(text: str) -> list[float]:
     """Embed a single query string."""
-    result = await _embedder().embed(text, input_type="query")
+    embedder = _embedder()
+    result = await embedder.embed(text, input_type="query")
+    _record_embedding_usage(embedder, [text], result)
     return list(result.embeddings[0])

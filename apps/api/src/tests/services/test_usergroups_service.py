@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi import HTTPException
 
-from src.db.boards import Board
+from src.db.folders.folders import Folder
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.users import APITokenUser, InternalUser
@@ -29,23 +29,22 @@ from src.services.users.usergroups import (
 )
 
 
-async def _make_board(db, org, admin_user, **overrides):
-    board = Board(
+async def _make_folder(db, org, admin_user, **overrides):
+    folder = Folder(
         id=overrides.pop("id", None),
         org_id=org.id,
-        name=overrides.pop("name", "Board"),
+        name=overrides.pop("name", "Folder"),
         description=overrides.pop("description", "Desc"),
         thumbnail_image=overrides.pop("thumbnail_image", ""),
         public=overrides.pop("public", True),
-        board_uuid=overrides.pop("board_uuid", "board_test"),
-        created_by=overrides.pop("created_by", admin_user.id),
+        folder_uuid=overrides.pop("folder_uuid", "folder_test"),
         creation_date=overrides.pop("creation_date", "2024-01-01"),
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
-    db.add(board)
+    db.add(folder)
     await db.commit()
-    await db.refresh(board)
-    return board
+    await db.refresh(folder)
+    return folder
 
 
 class TestUsergroupsService:
@@ -148,7 +147,7 @@ class TestUsergroupsService:
             ("podcasts", "podcast_x"),
             ("communities", "community_x"),
             ("folders", "folder_x"),
-            ("boards", "board_x"),
+            ("media", "media_x"),
         ):
             with patch(
                 "src.services.users.usergroups.get_resource_config",
@@ -174,7 +173,7 @@ class TestUsergroupsService:
 
         with patch(
             "src.services.users.usergroups.get_resource_config",
-            return_value=SimpleNamespace(resource_type="boards"),
+            return_value=SimpleNamespace(resource_type="media"),
         ):
             with pytest.raises(HTTPException) as missing_exc:
                 await _validate_resource_exists_and_belongs_to_org(
@@ -186,7 +185,7 @@ class TestUsergroupsService:
 
         with patch(
             "src.services.users.usergroups.get_resource_config",
-            return_value=SimpleNamespace(resource_type="boards"),
+            return_value=SimpleNamespace(resource_type="media"),
         ):
             with pytest.raises(HTTPException) as no_org_exc:
                 await _validate_resource_exists_and_belongs_to_org(
@@ -198,7 +197,7 @@ class TestUsergroupsService:
 
         with patch(
             "src.services.users.usergroups.get_resource_config",
-            return_value=SimpleNamespace(resource_type="boards"),
+            return_value=SimpleNamespace(resource_type="media"),
         ):
             with pytest.raises(HTTPException) as forbidden_exc:
                 await _validate_resource_exists_and_belongs_to_org(
@@ -331,11 +330,11 @@ class TestUsergroupsService:
                 )
             with pytest.raises(HTTPException) as missing_group_add_resources_exc:
                 await add_resources_to_usergroup(
-                    mock_request, db, admin_user, 999999, "board_x"
+                    mock_request, db, admin_user, 999999, "folder_x"
                 )
             with pytest.raises(HTTPException) as missing_group_remove_resources_exc:
                 await remove_resources_from_usergroup(
-                    mock_request, db, admin_user, 999999, "board_x"
+                    mock_request, db, admin_user, 999999, "folder_x"
                 )
             assert missing_group_exc.value.status_code == 404
             assert missing_group_resources_exc.value.status_code == 404
@@ -358,7 +357,7 @@ class TestUsergroupsService:
             new_callable=AsyncMock,
         ):
             empty_groups = await get_usergroups_by_resource(
-                mock_request, db, admin_user, "board_not_linked"
+                mock_request, db, admin_user, "folder_not_linked"
             )
 
         assert empty_groups == []
@@ -385,12 +384,12 @@ class TestUsergroupsService:
                 UserGroupCreate(name="UG", description="Desc", org_id=org.id),
             )
 
-        board = await _make_board(db, org, admin_user, board_uuid="board_primary")
-        board_other = await _make_board(db, org, admin_user, board_uuid="board_other")
+        folder = await _make_folder(db, org, admin_user, folder_uuid="folder_primary")
+        folder_other = await _make_folder(db, org, admin_user, folder_uuid="folder_other")
 
         existing_link = UserGroupResource(
             usergroup_id=usergroup.id,
-            resource_uuid=board.board_uuid,
+            resource_uuid=folder.folder_uuid,
             org_id=org.id,
             creation_date="2024-01-01",
             update_date="2024-01-01",
@@ -431,7 +430,7 @@ class TestUsergroupsService:
                 db,
                 admin_user,
                 usergroup.id,
-                f"{board.board_uuid},{board_other.board_uuid}",
+                f"{folder.folder_uuid},{folder_other.folder_uuid}",
             )
             remove_users_result = await remove_users_from_usergroup(
                 mock_request,
@@ -445,7 +444,7 @@ class TestUsergroupsService:
                 db,
                 admin_user,
                 usergroup.id,
-                f"{board.board_uuid},board_missing",
+                f"{folder.folder_uuid},folder_missing",
             )
 
         assert add_users_result == "Users added to UserGroup successfully"
@@ -522,7 +521,7 @@ class TestUsergroupsService:
                 mock_request, db, admin_user, usergroup.id, f"{admin_user.id},{regular_user.id}"
             )
 
-        board = await _make_board(db, org, admin_user)
+        folder = await _make_folder(db, org, admin_user)
         with patch(
             "src.services.users.usergroups.rbac_check",
             new_callable=AsyncMock,
@@ -531,7 +530,7 @@ class TestUsergroupsService:
             new_callable=AsyncMock,
         ):
             add_resources = await add_resources_to_usergroup(
-                mock_request, db, admin_user, usergroup.id, board.board_uuid
+                mock_request, db, admin_user, usergroup.id, folder.folder_uuid
             )
             users = await get_users_linked_to_usergroup(
                 mock_request, db, admin_user, usergroup.id
@@ -540,19 +539,19 @@ class TestUsergroupsService:
                 mock_request, db, admin_user, usergroup.id
             )
             groups_for_resource = await get_usergroups_by_resource(
-                mock_request, db, admin_user, board.board_uuid
+                mock_request, db, admin_user, folder.folder_uuid
             )
             remove_users = await remove_users_from_usergroup(
                 mock_request, db, admin_user, usergroup.id, str(regular_user.id)
             )
             remove_resources = await remove_resources_from_usergroup(
-                mock_request, db, admin_user, usergroup.id, board.board_uuid
+                mock_request, db, admin_user, usergroup.id, folder.folder_uuid
             )
 
         assert add_users == "Users added to UserGroup successfully"
         assert add_resources == "Resources added to UserGroup successfully"
         assert {user.id for user in users} == {admin_user.id, regular_user.id}
-        assert resources == [board.board_uuid]
+        assert resources == [folder.folder_uuid]
         assert groups_for_resource[0].id == usergroup.id
         assert remove_users == "Users removed from UserGroup successfully"
         assert remove_resources == "Resources removed from UserGroup successfully"
@@ -561,22 +560,22 @@ class TestUsergroupsService:
     async def test_validate_resource_exists_and_belongs_to_org_and_errors(
         self, mock_request, db, org, other_org, admin_user
     ):
-        board = await _make_board(db, org, admin_user, board_uuid="board_org")
-        await _make_board(
+        folder = await _make_folder(db, org, admin_user, folder_uuid="folder_org")
+        await _make_folder(
             db,
             other_org,
             admin_user,
             id=2,
-            board_uuid="board_other",
+            folder_uuid="folder_other",
         )
 
         assert (
-            await _validate_resource_exists_and_belongs_to_org(board.board_uuid, org.id, db)
+            await _validate_resource_exists_and_belongs_to_org(folder.folder_uuid, org.id, db)
             is True
         )
 
         with pytest.raises(HTTPException) as forbidden_exc:
-            await _validate_resource_exists_and_belongs_to_org("board_other", org.id, db)
+            await _validate_resource_exists_and_belongs_to_org("folder_other", org.id, db)
         assert forbidden_exc.value.status_code == 403
 
         with pytest.raises(HTTPException) as unknown_exc:

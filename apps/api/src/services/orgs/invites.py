@@ -14,6 +14,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config.config import get_learnhouse_config
+from src.core.ee_hooks import audit_event
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.usergroups import UserGroup
@@ -183,6 +184,11 @@ async def create_invite_code(
         org_id=org_id,
         user_id=resolve_acting_user_id(current_user),
         properties={"invite_method": "invite_code"},
+    )
+    audit_event(
+        request, action="members.invite_code.created", org_id=org_id, actor=current_user,
+        target_type="invite_code", target_id=inviteCodeObject.get("invite_code_uuid"),
+        details={k: inviteCodeObject.get(k) for k in ("usergroup_id", "expiration_date") if inviteCodeObject.get(k)},
     )
 
     return inviteCodeObject
@@ -374,6 +380,10 @@ async def delete_invite_code(
             status_code=404,
             detail="Invite code not found",
         )
+    audit_event(
+        request, action="members.invite_code.deleted", org_id=org_id, actor=current_user,
+        target_type="invite_code", target_id=invite_code_uuid,
+    )
 
     return keys
 
@@ -385,6 +395,7 @@ async def send_invite_email(
     email: EmailStr,
     request: Request,
     db_session=None,
+    invite_link_token: str | None = None,
 ):
     invite_code = None
 
@@ -408,7 +419,11 @@ async def send_invite_email(
         org.slug, request, db_session=db_session, org_id=org.id
     )
 
-    if invite_code:
+    if invite_link_token:
+        # Personal link: the org's signup page, address filled in, no code to
+        # type (the token stands in for it on invite-only orgs).
+        signup_url = f"{org_base_url}/signup?invite={invite_link_token}"
+    elif invite_code:
         signup_url = f"{org_base_url}/signup?inviteCode={invite_code}"
     else:
         signup_url = f"{org_base_url}/signup"
@@ -434,7 +449,8 @@ async def send_invite_email(
             email=email,
             org_name=sanitize_display_name(org.name, fallback="A LearnHouse organization"),
             inviter_username=sanitize_display_name(user.username),
-            invite_code=invite_code,
+            # The personal link replaces the code: nothing to type.
+            invite_code=None if invite_link_token else invite_code,
             signup_url=signup_url,
             **branding.as_kwargs(),
         )

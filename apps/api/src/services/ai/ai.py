@@ -5,10 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
-from src.security.features_utils.usage import (
-    refund_ai_credit,
-    reserve_ai_credit,
-)
+from src.services.ai import metering
 from src.db.courses.courses import Course, CourseRead
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
@@ -201,84 +198,82 @@ async def ai_start_activity_chat_session(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
-    await reserve_ai_credit(org.id, db_session)
+    async with metering.charge("ask_ai", org_id=org.id, db=db_session, user_id=resolve_acting_user_id(current_user)):
+        # Get Activity Content Blocks, as this reader sees them: the model must
+        # not quote a conditional block the learner can't see.
+        content = await render_for_reader(
+            request, activity.content, course=course, current_user=current_user,
+            db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+        )
 
-    # Get Activity Content Blocks, as this reader sees them: the model must
-    # not quote a conditional block the learner can't see.
-    content = await render_for_reader(
-        request, activity.content, course=course, current_user=current_user,
-        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
-    )
+        # Serialize Activity Content Blocks to a text comprehensible by the AI
+        structured = structure_activity_content_by_type(content)
 
-    # Serialize Activity Content Blocks to a text comprehensible by the AI
-    structured = structure_activity_content_by_type(content)
+        isEmpty = structured == []
 
-    isEmpty = structured == []
+        ai_friendly_text = serialize_activity_text_to_ai_comprehensible_text(
+            structured, course, activity, isActivityEmpty=isEmpty
+        )
 
-    ai_friendly_text = serialize_activity_text_to_ai_comprehensible_text(
-        structured, course, activity, isActivityEmpty=isEmpty
-    )
+        # Get Activity Organization
+        statement = select(Organization).where(Organization.id == course.org_id)
+        org = (await db_session.execute(statement)).scalars().first()
 
-    # Get Activity Organization
-    statement = select(Organization).where(Organization.id == course.org_id)
-    org = (await db_session.execute(statement)).scalars().first()
+        # Get Organization Config
+        statement = select(OrganizationConfig).where(
+            OrganizationConfig.org_id == org.id  # type: ignore
+        )
+        result = await db_session.execute(statement)
+        org_config = result.scalars().first()
 
-    # Get Organization Config
-    statement = select(OrganizationConfig).where(
-        OrganizationConfig.org_id == org.id  # type: ignore
-    )
-    result = await db_session.execute(statement)
-    org_config = result.scalars().first()
+        org_config = OrganizationConfig.model_validate(org_config)
 
-    org_config = OrganizationConfig.model_validate(org_config)
+        # Default chat model (provider-agnostic; resolved from AI config)
+        ai_model = model_for_tier("standard")
 
-    # Default chat model (provider-agnostic; resolved from AI config)
-    ai_model = model_for_tier("standard")
+        chat_session = get_chat_session_history()
 
-    chat_session = get_chat_session_history()
+        message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
+        message += "Use the course content provided to answer questions about the course material."
+        message += "For context, this is the Course name: "
+        message += course.name
+        message += " and this is the Lecture name: "
+        message += activity.name
+        message += "."
+        message += "Use your knowledge to help the student if the context is not enough."
 
-    message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
-    message += "Use the course content provided to answer questions about the course material."
-    message += "For context, this is the Course name: "
-    message += course.name
-    message += " and this is the Lecture name: "
-    message += activity.name
-    message += "."
-    message += "Use your knowledge to help the student if the context is not enough."
+        try:
+            response = await ask_ai(
+                chat_session_object.message,
+                chat_session["message_history"],
+                ai_friendly_text,
+                message,
+                ai_model,
+            )
+        except Exception as e:
+            # Raising out of the charge refunds the reserved credit.
+            (logger.warning if is_quota_error(e) else logger.error)(
+                "AI service error in ai_start_activity_chat_session: %s", e
+            )
+            raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": ai_error_message(e, "AI service is temporarily unavailable")})
 
-    try:
-        response = await ask_ai(
+        # Save the message exchange to history (and record who owns the session)
+        save_message_to_history(
+            chat_session["aichat_uuid"],
             chat_session_object.message,
-            chat_session["message_history"],
-            ai_friendly_text,
-            message,
+            response["output"],
+            user_id=resolve_acting_user_id(current_user),
+            course_uuid=course.course_uuid,
+            org_id=course.org_id,
+        )
+        await track_ai_message(
+            course.org_id,
+            resolve_acting_user_id(current_user),
+            "activity_chat",
             ai_model,
+            course_uuid=course.course_uuid,
+            activity_uuid=activity.activity_uuid,
         )
-    except Exception as e:
-        # Refund the credit we reserved up-front since the AI call failed.
-        refund_ai_credit(org.id)
-        (logger.warning if is_quota_error(e) else logger.error)(
-            "AI service error in ai_start_activity_chat_session: %s", e
-        )
-        raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": ai_error_message(e, "AI service is temporarily unavailable")})
-
-    # Save the message exchange to history (and record who owns the session)
-    save_message_to_history(
-        chat_session["aichat_uuid"],
-        chat_session_object.message,
-        response["output"],
-        user_id=resolve_acting_user_id(current_user),
-        course_uuid=course.course_uuid,
-        org_id=course.org_id,
-    )
-    await track_ai_message(
-        course.org_id,
-        resolve_acting_user_id(current_user),
-        "activity_chat",
-        ai_model,
-        course_uuid=course.course_uuid,
-        activity_uuid=activity.activity_uuid,
-    )
 
     return ActivityAIChatSessionResponse(
         aichat_uuid=chat_session["aichat_uuid"],
@@ -367,79 +362,77 @@ async def ai_send_activity_chat_message(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), course.org_id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
-    await reserve_ai_credit(course.org_id, db_session)
-
-    # Get Activity Content Blocks, as this reader sees them: the model must
-    # not quote a conditional block the learner can't see.
-    content = await render_for_reader(
-        request, activity.content, course=course, current_user=current_user,
-        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
-    )
-
-    # Serialize Activity Content Blocks to a text comprehensible by the AI
-    structured = structure_activity_content_by_type(content)
-    ai_friendly_text = serialize_activity_text_to_ai_comprehensible_text(
-        structured, course, activity
-    )
-
-    # Get Activity Organization
-    statement = select(Organization).where(Organization.id == course.org_id)
-    org = (await db_session.execute(statement)).scalars().first()
-
-    # Get Organization Config
-    statement = select(OrganizationConfig).where(
-        OrganizationConfig.org_id == org.id  # type: ignore
-    )
-    result = await db_session.execute(statement)
-    org_config = result.scalars().first()
-
-    org_config = OrganizationConfig.model_validate(org_config)
-
-    # Default chat model (provider-agnostic; resolved from AI config)
-    ai_model = model_for_tier("standard")
-
-    chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
-
-    message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
-    message += "Use the course content provided to answer questions about the course material."
-    message += "For context, this is the Course name: "
-    message += course.name
-    message += " and this is the Lecture name: "
-    message += activity.name
-    message += "."
-    message += "Use your knowledge to help the student if the context is not enough."
-
-    try:
-        response = await ask_ai(
-            chat_session_object.message,
-            chat_session["message_history"],
-            ai_friendly_text,
-            message,
-            ai_model,
+    async with metering.charge("ask_ai", org_id=course.org_id, db=db_session, user_id=resolve_acting_user_id(current_user)):
+        # Get Activity Content Blocks, as this reader sees them: the model must
+        # not quote a conditional block the learner can't see.
+        content = await render_for_reader(
+            request, activity.content, course=course, current_user=current_user,
+            db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
         )
-    except Exception as e:
-        # Refund the credit we reserved up-front since the AI call failed.
-        refund_ai_credit(course.org_id)
-        logger.error("AI service error in ai_send_activity_chat_message: %s", e)
-        raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
 
-    # Save the message exchange to history (and record who owns the session)
-    save_message_to_history(
-        chat_session["aichat_uuid"],
-        chat_session_object.message,
-        response["output"],
-        user_id=resolve_acting_user_id(current_user),
-        course_uuid=course.course_uuid,
-        org_id=course.org_id,
-    )
-    await track_ai_message(
-        course.org_id,
-        resolve_acting_user_id(current_user),
-        "activity_chat",
-        ai_model,
-        course_uuid=course.course_uuid,
-        activity_uuid=activity.activity_uuid,
-    )
+        # Serialize Activity Content Blocks to a text comprehensible by the AI
+        structured = structure_activity_content_by_type(content)
+        ai_friendly_text = serialize_activity_text_to_ai_comprehensible_text(
+            structured, course, activity
+        )
+
+        # Get Activity Organization
+        statement = select(Organization).where(Organization.id == course.org_id)
+        org = (await db_session.execute(statement)).scalars().first()
+
+        # Get Organization Config
+        statement = select(OrganizationConfig).where(
+            OrganizationConfig.org_id == org.id  # type: ignore
+        )
+        result = await db_session.execute(statement)
+        org_config = result.scalars().first()
+
+        org_config = OrganizationConfig.model_validate(org_config)
+
+        # Default chat model (provider-agnostic; resolved from AI config)
+        ai_model = model_for_tier("standard")
+
+        chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
+
+        message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
+        message += "Use the course content provided to answer questions about the course material."
+        message += "For context, this is the Course name: "
+        message += course.name
+        message += " and this is the Lecture name: "
+        message += activity.name
+        message += "."
+        message += "Use your knowledge to help the student if the context is not enough."
+
+        try:
+            response = await ask_ai(
+                chat_session_object.message,
+                chat_session["message_history"],
+                ai_friendly_text,
+                message,
+                ai_model,
+            )
+        except Exception as e:
+            # Raising out of the charge refunds the reserved credit.
+            logger.error("AI service error in ai_send_activity_chat_message: %s", e)
+            raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
+
+        # Save the message exchange to history (and record who owns the session)
+        save_message_to_history(
+            chat_session["aichat_uuid"],
+            chat_session_object.message,
+            response["output"],
+            user_id=resolve_acting_user_id(current_user),
+            course_uuid=course.course_uuid,
+            org_id=course.org_id,
+        )
+        await track_ai_message(
+            course.org_id,
+            resolve_acting_user_id(current_user),
+            "activity_chat",
+            ai_model,
+            course_uuid=course.course_uuid,
+            activity_uuid=activity.activity_uuid,
+        )
 
     return ActivityAIChatSessionResponse(
         aichat_uuid=chat_session["aichat_uuid"],
@@ -577,8 +570,11 @@ async def ai_start_activity_chat_session_stream(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
-    # Atomic credit reservation to prevent concurrent over-use.
-    await reserve_ai_credit(org.id, db_session)
+    # Atomic credit reservation to prevent concurrent over-use. The stream
+    # settles it (src/routers/ai/ai.py), refunded if it produces nothing.
+    meter = await metering.start(
+        "ask_ai", org_id=org.id, db=db_session, user_id=resolve_acting_user_id(current_user)
+    )
 
     try:
         chat_session = get_chat_session_history()
@@ -592,10 +588,11 @@ async def ai_start_activity_chat_session_stream(
         message += "."
         message += "Use your knowledge to help the student if the context is not enough."
     except Exception:
-        refund_ai_credit(org.id)
+        await meter.settle(failed=True)
         raise
 
     return {
+        "meter": meter,
         "chat_session": chat_session,
         "activity": activity,
         "course": course,
@@ -627,8 +624,11 @@ async def ai_send_activity_chat_message_stream(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
-    # Atomic credit reservation to prevent concurrent over-use.
-    await reserve_ai_credit(org.id, db_session)
+    # Atomic credit reservation to prevent concurrent over-use. The stream
+    # settles it (src/routers/ai/ai.py), refunded if it produces nothing.
+    meter = await metering.start(
+        "ask_ai", org_id=org.id, db=db_session, user_id=resolve_acting_user_id(current_user)
+    )
 
     try:
         chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
@@ -642,10 +642,11 @@ async def ai_send_activity_chat_message_stream(
         message += "."
         message += "Use your knowledge to help the student if the context is not enough."
     except Exception:
-        refund_ai_credit(org.id)
+        await meter.settle(failed=True)
         raise
 
     return {
+        "meter": meter,
         "chat_session": chat_session,
         "activity": activity,
         "course": course,

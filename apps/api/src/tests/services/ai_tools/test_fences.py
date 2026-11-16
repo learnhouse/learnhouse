@@ -143,16 +143,16 @@ def test_flipcards_fence_errors(body, problem):
     [
         (
             "https://www.youtube.com/watch?v=aqz-KE-bpKQ&t=3",
-            "https://www.youtube.com/embed/aqz-KE-bpKQ",
+            "https://www.youtube.com/embed/aqz-KE-bpKQ?rel=0&start=3",
         ),
-        ("https://youtu.be/aqz-KE-bpKQ", "https://www.youtube.com/embed/aqz-KE-bpKQ"),
+        ("https://youtu.be/aqz-KE-bpKQ", "https://www.youtube.com/embed/aqz-KE-bpKQ?rel=0"),
         (
             "https://m.youtube.com/shorts/aqz-KE-bpKQ",
-            "https://www.youtube.com/embed/aqz-KE-bpKQ",
+            "https://www.youtube.com/embed/aqz-KE-bpKQ?rel=0",
         ),
         (
             "https://www.youtube.com/embed/aqz-KE-bpKQ",
-            "https://www.youtube.com/embed/aqz-KE-bpKQ",
+            "https://www.youtube.com/embed/aqz-KE-bpKQ?rel=0",
         ),
         ("https://vimeo.com/123456789", "https://player.vimeo.com/video/123456789"),
         (
@@ -170,22 +170,25 @@ def test_embed_fence_shapes_and_errors():
     node = one(
         "```embed\n<https://youtu.be/aqz-KE-bpKQ>\nheight: 500px\nalign: left\n```"
     )
+    # Shaped like the editor frames a pasted link; an explicit height wins.
     assert node == {
         "type": "blockEmbed",
         "attrs": {
-            "embedUrl": "https://www.youtube.com/embed/aqz-KE-bpKQ",
+            "embedUrl": "https://www.youtube.com/embed/aqz-KE-bpKQ?rel=0",
             "embedCode": None,
             "embedType": "url",
             "embedHeight": 500,
             "embedAspectRatio": None,
             "embedWidth": "100%",
             "alignment": "left",
+            "embedSourceUrl": "https://youtu.be/aqz-KE-bpKQ",
+            "embedProvider": "youtube",
         },
     }
-    assert (
-        one("```video\nurl: https://vimeo.com/123456789\n```")["attrs"]["embedHeight"]
-        == fences.EMBED_HEIGHT
-    )
+    video = one("```video\nurl: https://vimeo.com/123456789\n```")["attrs"]
+    assert video["embedProvider"] == "vimeo" and video["embedAspectRatio"] == 16 / 9
+    plain = one("```embed\nhttps://example.org/tool\n```")["attrs"]
+    assert plain["embedHeight"] == fences.EMBED_HEIGHT and "embedProvider" not in plain
     for body, problem in [
         ("not a url", "give one http(s) URL"),
         ("ftp://x.test/a", "give one http(s) URL"),
@@ -530,6 +533,24 @@ def test_exercise_timing_complexity_and_files_round_trip():
     assert fences.renders(node)
     again = markdown_to_doc(doc_to_markdown({"type": "doc", "content": [node]}))["content"][0]
     assert fences._exercise_key(again) == fences._exercise_key(node)
+
+
+def test_exercise_hidden_tests_round_trip():
+    text = (
+        "```exercise\nlanguage: python\nEcho the input.\n--- test Visible\ninput: a\noutput: a\n"
+        "--- test Edge case (hidden)\ninput: b\noutput: b\n--- test (Hidden)\noutput: c\n```"
+    )
+    node = markdown_to_doc(text)["content"][0]
+    tests = node["attrs"]["testCases"]
+    assert [(t["label"], t.get("hidden")) for t in tests] == [("Visible", None), ("Edge case", True), ("Test 3", True)]
+    assert fences.renders(node)
+    written = doc_to_markdown({"type": "doc", "content": [node]})
+    assert "--- test Edge case (hidden)" in written and "--- test Visible\n" in written
+    again = markdown_to_doc(written)["content"][0]
+    assert fences._exercise_key(again) == fences._exercise_key(node)
+    # Flipping a test to hidden is a change the key sees.
+    shown = {"type": "blockCode", "attrs": {**node["attrs"], "testCases": [{**t, "hidden": False} for t in tests]}}
+    assert fences._exercise_key(shown) != fences._exercise_key(node)
 
 
 @pytest.mark.parametrize("line, error", [

@@ -551,7 +551,7 @@ async def trigger_agent_reply(
 ) -> dict:
     """Charge, scope and start an agent reply. Returns the placeholder message
     the reply streams into."""
-    from src.security.features_utils.usage import reserve_ai_credit
+    from src.services.ai import metering
     from src.services.ai.rag.access import build_rag_access_scope
     from src.services.security.rate_limiting import enforce_ai_rate_limit
 
@@ -567,8 +567,17 @@ async def trigger_agent_reply(
     if conv.kind != "agent":
         await _share_scope(request, scope, conv, user.id, db)
 
-    await reserve_ai_credit(conv.org_id, db, amount=2)
+    # Reserved here, settled by _stream_reply when the reply ends (refunded if
+    # it produced nothing).
+    meter = await metering.start("messaging_agent", org_id=conv.org_id, db=db, user_id=user.id)
+    try:
+        return await _launch_reply(conv, agent, trigger, user, db, scope, meter, tz)
+    except BaseException:
+        await meter.settle(failed=True)
+        raise
 
+
+async def _launch_reply(conv, agent, trigger, user, db, scope, meter, tz) -> dict:
     now = now_iso()
     placeholder = Message(
         message_uuid=f"message_{uuid4()}",
@@ -620,6 +629,7 @@ async def trigger_agent_reply(
         recipients=recipients,
         requester_id=user.id,
         tz=tz,
+        meter=meter,
     ))
     _running.add(task)
     task.add_done_callback(_running.discard)
@@ -671,6 +681,7 @@ async def _stream_reply(
     recipients: list[int],
     requester_id: Optional[int] = None,
     tz: Optional[str] = None,
+    meter=None,
 ) -> None:
     """Retrieve, stream and finish one agent reply.
 
@@ -680,7 +691,7 @@ async def _stream_reply(
     ``writing``, then the final ``message.updated`` carrying follow-ups.
     """
     from src.core.events.database import _async_session_factory
-    from src.security.features_utils.usage import refund_ai_credit
+    from src.services.ai import metering
     from src.services.ai.base import ask_ai_stream, generate_follow_up_suggestions
     from src.services.ai.llm import model_for_tier
     from src.services.ai.rag.query_service import query_course_rag
@@ -691,58 +702,59 @@ async def _stream_reply(
     follow_ups: list[str] = []
     search_query = question
     loop = asyncio.get_event_loop()
-    try:
-        async with _async_session_factory() as db:
-            agent = (await db.execute(select(Agent).where(Agent.id == agent_id))).scalars().first()
-            history = await _history(conv_id, placeholder_id, agent_id, db)
-            # The question is already the last history entry; pass it as the prompt.
-            if history and history[-1]["role"] == "user":
-                history = history[:-1]
+    with metering.use_meter(meter):
+        try:
+            async with _async_session_factory() as db:
+                agent = (await db.execute(select(Agent).where(Agent.id == agent_id))).scalars().first()
+                history = await _history(conv_id, placeholder_id, agent_id, db)
+                # The question is already the last history entry; pass it as the prompt.
+                if history and history[-1]["role"] == "user":
+                    history = history[:-1]
 
-            context = ""
-            catalog = await _catalog(scope, db)
-            if scope.course_ids:
-                _status(org_id, recipients, conversation_uuid, placeholder_id, "searching", courses=len(scope.course_ids))
-                search_query = await _standalone_question(question, history)
-                rag = await query_course_rag(question=search_query, org_id=org_id, db_session=db, scope=scope)
-                context, sources = rag["context"], rag["sources"]
-            _status(org_id, recipients, conversation_uuid, placeholder_id, "found", sources=sources, query=search_query)
+                context = ""
+                catalog = await _catalog(scope, db)
+                if scope.course_ids:
+                    _status(org_id, recipients, conversation_uuid, placeholder_id, "searching", courses=len(scope.course_ids))
+                    search_query = await _standalone_question(question, history)
+                    rag = await query_course_rag(question=search_query, org_id=org_id, db_session=db, scope=scope)
+                    context, sources = rag["context"], rag["sources"]
+                _status(org_id, recipients, conversation_uuid, placeholder_id, "found", sources=sources, query=search_query)
 
-            _status(org_id, recipients, conversation_uuid, placeholder_id, "writing")
-            pending = ""
-            last_flush = loop.time()
-            async for chunk in ask_ai_stream(
-                question=question,
-                message_history=history,
-                text_reference="",
-                message_for_the_prompt=_system_prompt(agent, context, catalog, tz),
-                model_name=model_for_tier("standard"),
-            ):
-                full += chunk
-                pending += chunk
-                if loop.time() - last_flush >= DELTA_FLUSH_SECONDS:
+                _status(org_id, recipients, conversation_uuid, placeholder_id, "writing")
+                pending = ""
+                last_flush = loop.time()
+                async for chunk in ask_ai_stream(
+                    question=question,
+                    message_history=history,
+                    text_reference="",
+                    message_for_the_prompt=_system_prompt(agent, context, catalog, tz),
+                    model_name=model_for_tier("standard"),
+                ):
+                    full += chunk
+                    pending += chunk
+                    if loop.time() - last_flush >= DELTA_FLUSH_SECONDS:
+                        realtime.publish_to_users(org_id, recipients, {
+                            "type": "message.delta",
+                            "conversation_uuid": conversation_uuid,
+                            "message_id": placeholder_id,
+                            "delta": pending,
+                        })
+                        pending = ""
+                        last_flush = loop.time()
+                if pending:
                     realtime.publish_to_users(org_id, recipients, {
                         "type": "message.delta",
                         "conversation_uuid": conversation_uuid,
                         "message_id": placeholder_id,
                         "delta": pending,
                     })
-                    pending = ""
-                    last_flush = loop.time()
-            if pending:
-                realtime.publish_to_users(org_id, recipients, {
-                    "type": "message.delta",
-                    "conversation_uuid": conversation_uuid,
-                    "message_id": placeholder_id,
-                    "delta": pending,
-                })
-            if full.strip():
-                follow_ups = await generate_follow_up_suggestions(
-                    full, context[:1000], model_for_tier("fast"), question
-                )
-    except Exception:
-        failed = True
-        logger.exception("Agent reply failed")
+                if full.strip():
+                    follow_ups = await generate_follow_up_suggestions(
+                        full, context[:1000], model_for_tier("fast"), question
+                    )
+        except Exception:
+            failed = True
+            logger.exception("Agent reply failed")
 
     try:
         async with _async_session_factory() as db:
@@ -783,12 +795,16 @@ async def _stream_reply(
             await db.refresh(msg)
             payload = await serialize_message(msg, conversation_uuid, None, db)
             realtime.publish_to_users(org_id, recipients, {"type": "message.updated", "conversation_uuid": conversation_uuid, "message": payload})
+            if msg.status == "complete":
+                from src.services.notifications.events import notify_new_message
+
+                await notify_new_message(db, conv_id, msg.id)
     finally:
-        if failed or not full:
+        if meter is not None and not meter.settled:
             try:
-                refund_ai_credit(org_id, 2)
+                await meter.settle(failed=failed or not full)
             except Exception:
-                logger.debug("agent credit refund failed", exc_info=True)
+                logger.debug("agent credit settlement failed", exc_info=True)
 
 
 _COURSE_BLOCK = re.compile(r"```course\s*(\{.*?\})\s*```", re.DOTALL)

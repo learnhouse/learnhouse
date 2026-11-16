@@ -126,7 +126,13 @@ interface StreamErrorEvent {
   message: string
 }
 
-type StreamEvent = StreamStartEvent | StreamChunkEvent | StreamDoneEvent | StreamFollowUpsEvent | StreamSourcesEvent | StreamSessionTitleEvent | StreamErrorEvent
+// Credits the message charged, sent last (after the follow-ups; ai-credits).
+interface StreamCreditsEvent {
+  type: 'credits'
+  credits: number
+}
+
+type StreamEvent = StreamStartEvent | StreamChunkEvent | StreamDoneEvent | StreamFollowUpsEvent | StreamSourcesEvent | StreamSessionTitleEvent | StreamErrorEvent | StreamCreditsEvent
 
 export interface StreamSourceData {
   sources: CopilotSource[]
@@ -140,6 +146,8 @@ export interface StreamCallbacks {
   onSources?: (data: StreamSourceData) => void
   onSessionTitle?: (title: string) => void
   onError: (error: string) => void
+  /** Credits the message charged ("Used N credits"). */
+  onCredits?: (credits: number) => void
 }
 
 /**
@@ -196,6 +204,9 @@ async function processStream(
                 break
               case 'session_title':
                 callbacks.onSessionTitle?.(event.title)
+                break
+              case 'credits':
+                callbacks.onCredits?.(event.credits)
                 break
               case 'error':
                 callbacks.onError(event.message)
@@ -313,10 +324,13 @@ export interface EditorStreamCallbacks {
   onComplete: (data: { aichat_uuid: string; activity_uuid: string }) => void
   onFollowUps?: (suggestions: string[]) => void
   onError: (error: string) => void
+  /** Credits the message charged ("Used N credits"). */
+  onCredits?: (credits: number) => void
 }
 
 interface EditorStreamEvent {
-  type: 'start' | 'chat_chunk' | 'content_start' | 'content_chunk' | 'content_end' | 'done' | 'follow_ups' | 'error'
+  type: 'start' | 'chat_chunk' | 'content_start' | 'content_chunk' | 'content_end' | 'done' | 'follow_ups' | 'error' | 'credits'
+  credits?: number
   content?: string
   full_content?: string
   aichat_uuid?: string
@@ -378,6 +392,9 @@ async function processEditorStream(
                 break
               case 'follow_ups':
                 callbacks.onFollowUps?.(event.follow_up_suggestions || [])
+                break
+              case 'credits':
+                if (typeof event.credits === 'number') callbacks.onCredits?.(event.credits)
                 break
               case 'error':
                 callbacks.onError(event.message || 'Unknown error')

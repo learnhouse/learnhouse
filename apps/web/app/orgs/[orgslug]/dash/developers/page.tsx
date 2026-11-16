@@ -1,7 +1,8 @@
-import { redirect } from 'next/navigation'
+'use client'
+import DevelopersHome from '@components/Dashboard/Pages/Org/Developers/DevelopersHome'
 
-// Bare /dash/developers → the first section. Browser-relative path only (the proxy
-// adds the /orgs/{slug} prefix); a slug-prefixed path would be double-prefixed.
+// /dash/developers: the Developers landing hub. The header and tabs come from
+// ./layout.tsx.
 export default function DevelopersIndex() {
-  redirect('/dash/developers/api')
+  return <DevelopersHome />
 }

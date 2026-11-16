@@ -4,7 +4,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.organizations import Organization
-from src.security.features_utils.usage import reserve_ai_credit
+from src.services.ai import metering
 from src.db.courses.courses import Course, CourseRead
 from src.db.users import PublicUser
 from src.security.auth import resolve_acting_user_id
@@ -255,9 +255,6 @@ async def editor_ai_start_chat_session_stream(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
-    # Atomic credit reservation to prevent concurrent over-use.
-    await reserve_ai_credit(org.id, db_session)
-
     # Serialize current content to text for AI context
     content_text = _serialize_tiptap_content_to_text(chat_session_object.current_content)
 
@@ -280,7 +277,14 @@ async def editor_ai_start_chat_session_stream(
     # Default editor model (provider-agnostic; resolved from AI config)
     ai_model = model_for_tier("standard")
 
+    # Atomic credit reservation (last, so nothing above needs a refund); the
+    # stream settles it in src/routers/ai/ai.py, refunded if it produces nothing.
+    meter = await metering.start(
+        "editor_ai", org_id=org.id, db=db_session, user_id=resolve_acting_user_id(current_user)
+    )
+
     return {
+        "meter": meter,
         "chat_session": chat_session,
         "activity": activity,
         "course": course,
@@ -377,9 +381,6 @@ async def editor_ai_send_message_stream(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
-    # Atomic credit reservation to prevent concurrent over-use.
-    await reserve_ai_credit(org.id, db_session)
-
     # Serialize current content to text for AI context
     content_text = _serialize_tiptap_content_to_text(chat_session_object.current_content)
 
@@ -402,7 +403,14 @@ async def editor_ai_send_message_stream(
     # Default editor model (provider-agnostic; resolved from AI config)
     ai_model = model_for_tier("standard")
 
+    # Atomic credit reservation (last, so nothing above needs a refund); the
+    # stream settles it in src/routers/ai/ai.py, refunded if it produces nothing.
+    meter = await metering.start(
+        "editor_ai", org_id=org.id, db=db_session, user_id=resolve_acting_user_id(current_user)
+    )
+
     return {
+        "meter": meter,
         "chat_session": chat_session,
         "activity": activity,
         "course": course,

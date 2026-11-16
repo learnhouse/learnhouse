@@ -1,7 +1,10 @@
 'use client'
 
 import React from 'react'
-import OrgScripts from '@/components/OrgScripts/OrgScripts'
+import dynamic from 'next/dynamic'
+// Client-only (it renders nothing and injects in an effect) and it brings the
+// HTML sanitizer, so it loads after the page rather than in its first download.
+const OrgScripts = dynamic(() => import('@/components/OrgScripts/OrgScripts'), { ssr: false })
 import { usePathname } from 'next/navigation'
 
 // allowOrgScripts comes from the server (lib/orgScripts): org scripts never run

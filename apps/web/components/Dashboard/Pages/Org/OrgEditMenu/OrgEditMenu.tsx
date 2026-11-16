@@ -16,24 +16,28 @@ import { usePlan } from '@components/Hooks/usePlan'
 import { Switch } from '@components/ui/switch'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import {
-  Books, FolderSimple, Headphones, ChatsCircle, Cube, ShoppingBag, Steps, VideoCamera,
-  DotsSixVertical, Lock, Trash, Plus, FloppyDisk, CaretDown,
+  Books, FolderSimple, Headphones, Lightning, ShoppingBag, Circuitry, VideoCamera,
+  DotsSixVertical, Lock, Trash, Plus, CaretDown, LinkSimple, List as ListIcon, ShieldWarning,
+  Garage, ChalkboardSimple,
 } from '@phosphor-icons/react'
+import { Button, INPUT, SectionCard, StickySaveBar } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { Notice } from '@components/Dashboard/Pages/Org/OrgSettingsShared/orgSettingsUi'
 import { MENU_ICONS, MENU_ICON_NAMES, menuIcon, DEFAULT_MENU_ICON } from '@components/Objects/Menus/menuIcons'
 
 type BuiltinMeta = { feature: string; link: string; labelKey: string; Icon: any }
 
 const BUILTIN_META: Record<string, BuiltinMeta> = {
   courses: { feature: 'courses', link: '/courses', labelKey: 'courses.courses', Icon: Books },
-  paths: { feature: 'paths', link: '/paths', labelKey: 'paths.title', Icon: Steps },
+  paths: { feature: 'paths', link: '/paths', labelKey: 'paths.title', Icon: Circuitry },
   library: { feature: 'folders', link: '/library', labelKey: 'library.library', Icon: FolderSimple },
   podcasts: { feature: 'podcasts', link: '/podcasts', labelKey: 'podcasts.podcasts', Icon: Headphones },
   live: { feature: 'live_sessions', link: '/live', labelKey: 'live_sessions.nav', Icon: VideoCamera },
-  communities: { feature: 'communities', link: '/communities', labelKey: 'communities.title', Icon: ChatsCircle },
-  playgrounds: { feature: 'playgrounds', link: '/playgrounds', labelKey: 'common.playgrounds', Icon: Cube },
+  communities: { feature: 'communities', link: '/communities', labelKey: 'communities.title', Icon: Garage },
+  playgrounds: { feature: 'playgrounds', link: '/playgrounds', labelKey: 'common.playgrounds', Icon: Lightning },
+  boards: { feature: 'boards', link: '/boards', labelKey: 'common.boards', Icon: ChalkboardSimple },
   store: { feature: 'payments', link: '/store', labelKey: 'common.store', Icon: ShoppingBag },
 }
-const BUILTIN_ORDER = ['courses', 'paths', 'library', 'podcasts', 'live', 'communities', 'playgrounds', 'store']
+const BUILTIN_ORDER = ['courses', 'paths', 'library', 'podcasts', 'live', 'communities', 'playgrounds', 'boards', 'store']
 
 function defaultLabel(type: string, t: any): string {
   return BUILTIN_META[type] ? t(BUILTIN_META[type].labelKey) : ''
@@ -113,11 +117,11 @@ function IconPicker({
         onClick={toggle}
         aria-label={t('dashboard.organization.menu.change_icon')}
         title={t('dashboard.organization.menu.change_icon')}
-        className={`relative p-2 bg-white rounded-lg nice-shadow hover:bg-gray-50 transition-colors disabled:opacity-50 ${open ? 'ring-2 ring-black/10' : ''}`}
+        className={`relative w-9 h-9 flex items-center justify-center bg-white rounded-lg ring-1 ring-inset ring-neutral-200 hover:bg-neutral-50 transition-colors disabled:opacity-50 ${open ? 'ring-2 ring-neutral-900/15' : ''}`}
       >
         {/* eslint-disable-next-line react-hooks/static-components */}
-        <Current size={18} weight="fill" className="text-gray-600" />
-        <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full bg-black flex items-center justify-center ring-2 ring-white">
+        <Current size={18} weight="fill" className="text-neutral-600" />
+        <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full bg-neutral-900 flex items-center justify-center ring-2 ring-white">
           <CaretDown size={7} weight="bold" className="text-white" />
         </span>
       </button>
@@ -126,7 +130,7 @@ function IconPicker({
           <div
             ref={popRef}
             style={{ position: 'fixed', left: coords.left, top: coords.top, width: ICON_POPOVER_W }}
-            className="z-[100] p-2 bg-white rounded-xl shadow-2xl ring-1 ring-black/5 border border-gray-100 grid grid-cols-6 gap-1"
+            className="z-[100] p-2 bg-white rounded-xl shadow-2xl ring-1 ring-black/5 grid grid-cols-6 gap-1"
           >
             {MENU_ICON_NAMES.map((name) => {
               const IconOpt = MENU_ICONS[name]
@@ -140,7 +144,7 @@ function IconPicker({
                     setOpen(false)
                   }}
                   title={name}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${selected ? 'bg-black text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${selected ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'}`}
                 >
                   <IconOpt size={16} weight="fill" />
                 </button>
@@ -257,140 +261,208 @@ const OrgEditMenu: React.FC = () => {
     }
   }
 
-  return (
-    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
-      <div className="pt-0.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 px-4 sm:px-5 py-3 mx-3 my-3 rounded-md">
-          <div className="flex flex-col -space-y-1">
-            <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.menu.title')}</h1>
-            <h2 className="text-gray-500 text-md">{t('dashboard.organization.menu.subtitle')}</h2>
-          </div>
-          <button
-            onClick={save}
-            disabled={!canEdit || saving || !dirty}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-black px-4 py-2.5 sm:py-2 text-sm font-semibold text-white nice-shadow hover:bg-neutral-800 transition-colors disabled:opacity-40"
-          >
-            <FloppyDisk size={16} weight="bold" />
-            <span>{t('dashboard.organization.menu.save')}</span>
-          </button>
-        </div>
-      </div>
+  const discard = () => {
+    setItems(buildInitialItems(storedMenu))
+  }
 
-      <div className="p-4 pt-1 space-y-4">
-        {/* Add custom link */}
-        <div className="rounded-lg border-2 border-dashed border-gray-200 p-3">
-          <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">{t('dashboard.organization.menu.add_custom')}</p>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+  // What the public header will show, in order: enabled links whose feature
+  // is on (custom links are always shown when enabled).
+  const previewItems = items.filter((item) => {
+    if (!item.enabled) return false
+    if (item.type === 'custom') return true
+    const { planAllowed, featureEnabled } = featureState(item.type)
+    return planAllowed && featureEnabled
+  })
+
+  return (
+    <>
+      <div className="flex flex-col gap-5">
+        {!canEdit && (
+          <Notice tone="amber" icon={<ShieldWarning size={16} />}>
+            {t('dashboard.organization.features.toasts.admin_only')}
+          </Notice>
+        )}
+
+        <SectionCard
+          icon={<ListIcon size={18} />}
+          title={t('dashboard.organization.menu.title')}
+          description={t('dashboard.organization.menu.subtitle')}
+          bodyClassName="px-5 pb-5 pt-4"
+        >
+          {/* Live strip of the public navigation. */}
+          <div className="mb-4 flex items-center gap-1.5 overflow-x-auto rounded-xl bg-neutral-50 px-3 py-2.5 ring-1 ring-inset ring-neutral-200/70 scrollbar-hide">
+            <span className="me-2 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+              {t('dashboard.organization.settings_ui.menu.preview')}
+            </span>
+            {previewItems.length === 0 ? (
+              <span className="text-xs text-neutral-400">{t('dashboard.organization.settings_ui.menu.preview_empty')}</span>
+            ) : (
+              previewItems.map((item, i) => {
+                const meta = BUILTIN_META[item.type]
+                const Icon = meta?.Icon || menuIcon(item.icon)
+                return (
+                  <span
+                    key={`${item.type}-${i}`}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-neutral-700 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.05)]"
+                  >
+                    <Icon size={13} weight="fill" className="text-neutral-500" />
+                    {item.label || defaultLabel(item.type, t) || item.url}
+                  </span>
+                )
+              })
+            )}
+          </div>
+
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="menu-items">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="rounded-xl ring-1 ring-inset ring-neutral-200/80 divide-y divide-neutral-100 overflow-hidden"
+                >
+                  {items.map((item, index) => {
+                    const meta = BUILTIN_META[item.type]
+                    const { requiredPlan, planAllowed, featureEnabled } = featureState(item.type)
+                    const isCustom = item.type === 'custom'
+                    const Icon = meta?.Icon || menuIcon(item.icon)
+                    // Gray out built-in links whose feature is plan-locked or turned off.
+                    const grayed = !isCustom && (!planAllowed || !featureEnabled)
+                    const toggleDisabled = !canEdit || grayed
+                    return (
+                      <Draggable key={`${item.type}-${index}`} draggableId={`${item.type}-${index}`} index={index}>
+                        {(prov, snap) => (
+                          <div
+                            ref={prov.innerRef}
+                            {...prov.draggableProps}
+                            className={`flex items-center gap-3 bg-white px-3 py-2.5 ${snap.isDragging ? 'shadow-lg ring-1 ring-neutral-200 rounded-xl' : ''}`}
+                          >
+                            <button
+                              type="button"
+                              {...prov.dragHandleProps}
+                              className="text-neutral-300 hover:text-neutral-500 cursor-grab active:cursor-grabbing"
+                              aria-label={t('dashboard.organization.menu.reorder')}
+                            >
+                              <DotsSixVertical size={18} weight="bold" />
+                            </button>
+                            <div className={`flex flex-1 min-w-0 items-center gap-3 ${grayed ? 'opacity-55 grayscale' : ''}`}>
+                              {isCustom ? (
+                                <IconPicker
+                                  value={item.icon}
+                                  onChange={(name) => setItem(index, { icon: name })}
+                                  disabled={!canEdit}
+                                />
+                              ) : (
+                                <div className="w-9 h-9 bg-neutral-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Icon size={18} weight="fill" className="text-neutral-600" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={item.label || ''}
+                                    placeholder={isCustom ? t('dashboard.organization.menu.label_placeholder') : defaultLabel(item.type, t)}
+                                    onChange={(e) => setItem(index, { label: e.target.value })}
+                                    disabled={!canEdit}
+                                    aria-label={t('dashboard.organization.menu.label_placeholder')}
+                                    className="text-sm font-semibold text-neutral-900 placeholder:text-neutral-700 bg-transparent rounded-md px-1.5 -ms-1.5 py-0.5 w-48 max-w-full hover:bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+                                  />
+                                  {requiredPlan && (
+                                    <PlanBadge currentPlan={currentPlan} requiredPlan={requiredPlan as PlanLevel} />
+                                  )}
+                                </div>
+                                {isCustom ? (
+                                  <input
+                                    type="text"
+                                    value={item.url || ''}
+                                    placeholder="https://"
+                                    onChange={(e) => setItem(index, { url: e.target.value })}
+                                    disabled={!canEdit}
+                                    data-ltr-content
+                                    className="text-xs text-neutral-500 bg-transparent rounded-md px-1.5 -ms-1.5 py-0.5 w-full hover:bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+                                  />
+                                ) : (
+                                  <p className="text-xs text-neutral-400 truncate">
+                                    <span data-ltr-content>{meta?.link}</span>
+                                    {!planAllowed && requiredPlan && (
+                                      <span className="text-amber-600 inline-flex items-center gap-1 ms-2"><Lock size={10} />{t('dashboard.organization.menu.plan_locked', { plan: requiredPlan })}</span>
+                                    )}
+                                    {planAllowed && !featureEnabled && (
+                                      <span className="text-neutral-400 ms-2">· {t('dashboard.organization.menu.feature_off')}</span>
+                                    )}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {isCustom && (
+                              <Button
+                                variant="danger-ghost"
+                                size="icon"
+                                onClick={() => removeItem(index)}
+                                disabled={!canEdit}
+                                aria-label={t('dashboard.organization.menu.remove')}
+                                title={t('dashboard.organization.menu.remove')}
+                                icon={<Trash size={14} />}
+                              />
+                            )}
+                            <Switch
+                              checked={item.enabled && (isCustom || planAllowed)}
+                              onCheckedChange={(v) => setItem(index, { enabled: v })}
+                              disabled={toggleDisabled}
+                              aria-label={item.label || defaultLabel(item.type, t) || item.url}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    )
+                  })}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </SectionCard>
+
+        <SectionCard
+          icon={<LinkSimple size={18} />}
+          title={t('dashboard.organization.menu.add_custom')}
+          description={t('dashboard.organization.settings_ui.menu.add_desc')}
+        >
+          <form
+            className="flex flex-col sm:flex-row sm:items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              addCustom()
+            }}
+          >
             <IconPicker value={newIcon} onChange={setNewIcon} disabled={!canEdit} />
             <input
               type="text"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
               placeholder={t('dashboard.organization.menu.label_placeholder')}
-              className="flex-1 px-3 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5"
+              disabled={!canEdit}
+              className={`${INPUT} sm:!w-56`}
             />
             <input
               type="text"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
               placeholder="https://example.com"
-              className="flex-1 px-3 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5"
+              disabled={!canEdit}
+              data-ltr-content
+              className={`${INPUT} flex-1`}
             />
-            <button onClick={addCustom} disabled={!canEdit} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-medium text-gray-700 nice-shadow hover:bg-gray-50 transition-colors disabled:opacity-40">
-              <Plus size={16} /> {t('dashboard.organization.menu.add')}
-            </button>
-          </div>
-        </div>
-
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="menu-items">
-            {(provided) => (
-              <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
-                {items.map((item, index) => {
-                  const meta = BUILTIN_META[item.type]
-                  const { requiredPlan, planAllowed, featureEnabled } = featureState(item.type)
-                  const isCustom = item.type === 'custom'
-                  const Icon = meta?.Icon || menuIcon(item.icon)
-                  // Gray out built-in links whose feature is plan-locked or turned off.
-                  const grayed = !isCustom && (!planAllowed || !featureEnabled)
-                  const toggleDisabled = !canEdit || grayed
-                  return (
-                    <Draggable key={`${item.type}-${index}`} draggableId={`${item.type}-${index}`} index={index}>
-                      {(prov, snap) => (
-                        <div
-                          ref={prov.innerRef}
-                          {...prov.draggableProps}
-                          className={`flex items-center gap-3 bg-gray-50/60 rounded-lg p-3 nice-shadow ${snap.isDragging ? 'bg-white shadow-lg' : ''} ${grayed ? 'opacity-60 grayscale' : ''}`}
-                        >
-                          <button {...prov.dragHandleProps} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing" aria-label={t('dashboard.organization.menu.reorder')}>
-                            <DotsSixVertical size={18} weight="bold" />
-                          </button>
-                          {isCustom ? (
-                            <IconPicker
-                              value={item.icon}
-                              onChange={(name) => setItem(index, { icon: name })}
-                              disabled={!canEdit}
-                            />
-                          ) : (
-                            <div className="p-2 bg-white rounded-lg nice-shadow flex-shrink-0">
-                              <Icon size={18} weight="fill" className="text-gray-600" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                value={item.label || ''}
-                                placeholder={isCustom ? t('dashboard.organization.menu.label_placeholder') : defaultLabel(item.type, t)}
-                                onChange={(e) => setItem(index, { label: e.target.value })}
-                                className="text-sm font-semibold text-gray-800 bg-transparent border-0 border-b border-transparent hover:border-gray-200 focus:border-gray-400 focus:outline-none w-40 px-0 py-0.5"
-                              />
-                              {requiredPlan && (
-                                <PlanBadge currentPlan={currentPlan} requiredPlan={requiredPlan as PlanLevel} />
-                              )}
-                            </div>
-                            {isCustom ? (
-                              <input
-                                type="text"
-                                value={item.url || ''}
-                                placeholder="https://"
-                                onChange={(e) => setItem(index, { url: e.target.value })}
-                                className="text-xs text-gray-500 bg-transparent border-0 focus:outline-none w-full px-0 py-0.5"
-                              />
-                            ) : (
-                              <p className="text-xs text-gray-400">
-                                {meta?.link}
-                                {!planAllowed && requiredPlan && (
-                                  <span className="text-amber-600 inline-flex items-center gap-1 ms-2"><Lock size={10} />{t('dashboard.organization.menu.plan_locked', { plan: requiredPlan })}</span>
-                                )}
-                                {planAllowed && !featureEnabled && (
-                                  <span className="text-gray-400 ms-2">· {t('dashboard.organization.menu.feature_off')}</span>
-                                )}
-                              </p>
-                            )}
-                          </div>
-                          {isCustom && (
-                            <button onClick={() => removeItem(index)} className="text-gray-400 hover:text-rose-600 p-1" aria-label={t('dashboard.organization.menu.remove')}>
-                              <Trash size={16} />
-                            </button>
-                          )}
-                          <Switch
-                            checked={item.enabled && (isCustom || planAllowed)}
-                            onCheckedChange={(v) => setItem(index, { enabled: v })}
-                            disabled={toggleDisabled}
-                          />
-                        </div>
-                      )}
-                    </Draggable>
-                  )
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+            <Button type="submit" disabled={!canEdit} icon={<Plus size={14} />}>
+              {t('dashboard.organization.menu.add')}
+            </Button>
+          </form>
+        </SectionCard>
       </div>
-    </div>
+
+      <StickySaveBar visible={dirty || saving} saving={saving} onSave={save} onDiscard={discard} disabled={!canEdit} />
+    </>
   )
 }
 

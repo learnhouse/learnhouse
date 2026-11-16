@@ -9,6 +9,7 @@
   "vue": "Vue Component",
   "sdk": "JavaScript SDK",
   "api": "REST API",
+  "agent-api": "Agent API",
   "versioning": "Versions & Releases",
   "-- Internals": {
     "type": "separator",

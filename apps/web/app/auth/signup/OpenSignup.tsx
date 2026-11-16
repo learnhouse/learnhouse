@@ -1,20 +1,19 @@
 'use client'
 import { useFormik } from 'formik'
-import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
-import FormLayout, {
-  FormField,
-} from '@components/Objects/StyledElements/Form/Form'
+import React from 'react'
+import FormLayout from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { AlertTriangle, Info, Mail, User } from 'lucide-react'
+import { EnvelopeSimple, SignIn } from '@phosphor-icons/react'
+import { AUTH_INPUT, AUTH_LINK, AuthButton, AuthDivider, AuthFootnote, AuthHeading, AuthLabel, AuthNotice, AuthProviderButton, authButtonClass, GoogleMark } from '@components/Auth/AuthUI'
 import Link from 'next/link'
-import { signup, resendVerificationEmail } from '@services/auth/auth'
+import { signup, signUpWithInviteCode, resendVerificationEmail } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, isOnCustomDomain } from '@services/config/config'
 import { getErrorMessage, getFieldErrors } from '@services/utils/ts/errorMessage'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
+import PasswordInput from '@components/Auth/PasswordInput'
 import TurnstileWidget, { useTurnstileRequired, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getAllowedAuthMethods } from '@services/auth/authMethods'
@@ -24,32 +23,29 @@ import CustomSignupFields, {
   validateCustomFields,
 } from '@components/Auth/CustomSignupFields'
 import { readSignupFields, type SignupFieldItem } from '@services/settings/org'
+import { rememberPostAuthNext, splitFullName, usernameFromEmail } from '@/lib/auth/signup'
+import { readNextParam, useForwardedNextHref } from '@/lib/auth/nextParam'
 
+export { usernameFromEmail }
+
+// One screen, as few fields as possible: email, password (with a show toggle
+// and the rules ticking inline), an optional name, and only the extra fields
+// the org itself requires. No username (made from the email) and no bio (the
+// profile can be filled in later).
 const validate = (values: any, t: any, customFields: SignupFieldItem[]) => {
   const errors: any = {}
 
   if (!values.email) {
     errors.email = t('validation.required')
-  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email.trim())) {
     errors.email = t('validation.invalid_email')
   }
 
   if (!values.password) {
     errors.password = t('validation.required')
-  } else {
-    const passwordValidation = validatePasswordStrength(values.password)
-    if (!passwordValidation.isValid) {
-      errors.password = t('auth.password_requirements_not_met')
-    }
+  } else if (!validatePasswordStrength(values.password).isValid) {
+    errors.password = t('auth.password_requirements_not_met')
   }
-
-  if (!values.username) {
-    errors.username = t('validation.required')
-  } else if (values.username.length < 4) {
-    errors.username = t('validation.username_min_length')
-  }
-
-  // Bio is optional - no validation required
 
   // The org's admin-defined fields. Client-side only; the server revalidates.
   const customFieldErrors = validateCustomFields(customFields, values.custom_fields, t)
@@ -65,15 +61,18 @@ interface OpenSignUpComponentProps {
   // the instance default org server-side and passes it down here. Prefer it over
   // the (possibly null) context so the POST always targets a real org_id.
   org?: any
+  /** Invite-only org: the code from the invite link or the code screen. */
+  inviteCode?: string
 }
 
-function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
+function OpenSignUpComponent({ org: propOrg, inviteCode }: OpenSignUpComponentProps = {}) {
   const { t } = useTranslation()
   const { track } = useLHAnalytics('public')
+  // Keep ?next when switching to login (e.g. back to the course they tried to start).
+  const loginHref = useForwardedNextHref('/login')
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const contextOrg = useOrg() as any
   const org = (contextOrg && (contextOrg.id || contextOrg.slug)) ? contextOrg : propOrg
-  const _router = useRouter()
   const [error, setError] = React.useState('')
   const [message, setMessage] = React.useState<{ email_verified: boolean } | null>(null)
   const [resendState, setResendState] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -101,10 +100,7 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       org_id: org?.id,
       email: '',
       password: '',
-      username: '',
-      bio: '',
-      first_name: '',
-      last_name: '',
+      name: '',
       custom_fields: initialCustomFieldValues(customFields),
       turnstileToken: null as string | null,
     },
@@ -114,24 +110,30 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       setError('')
       setMessage(null)
       setIsSubmitting(true)
-      track(AnalyticsEvent.SignupSubmitted, { invite_code_present: false, has_bio: !!values.bio })
+      track(AnalyticsEvent.SignupSubmitted, { invite_code_present: !!inviteCode, has_bio: false })
+      const { name, ...rest } = values
+      const email = values.email.trim()
+      // Keep where they were headed (a course they tried to start) through the
+      // verification email: sent with the signup (stored with the token) and
+      // remembered on this host as a fallback.
+      const next = readNextParam(window.location.search)
+      rememberPostAuthNext(next)
+      const body = { ...rest, ...splitFullName(name), email, username: usernameFromEmail(email), next }
       try {
-        let res = await signup(values)
-        let message = await res.json().catch(() => ({}))
+        const res = inviteCode ? await signUpWithInviteCode(body, inviteCode) : await signup(body)
+        const data = await res.json().catch(() => ({}))
         if (res.status == 200) {
-          track(AnalyticsEvent.SignupSucceeded, { email_verified: message.email_verified })
-          setMessage(message)
+          track(AnalyticsEvent.SignupSucceeded, { email_verified: data.email_verified })
+          setMessage(data)
         } else {
           // Surface the backend's actual error detail for ANY non-2xx (incl. 409
           // already-exists, 422 validation, 503 email-service-down) instead of
-          // masking everything past the handful of hardcoded statuses behind a
-          // generic message. Fall back to a generic string only when the backend
-          // gave us nothing readable.
+          // masking everything behind a generic message.
           track(AnalyticsEvent.SignupFailed, { status_code: res.status })
-          setError(getErrorMessage(message?.detail, t('common.something_went_wrong'), t))
-          // Point at the inputs the server rejected (e.g. an email address
-          // autofilled into the username field) next to the field itself.
-          for (const [field, fieldError] of Object.entries(getFieldErrors(message?.detail, t))) {
+          setError(getErrorMessage(data?.detail, t('common.something_went_wrong'), t))
+          // Point at the inputs the server rejected next to the field itself.
+          for (const [field, fieldError] of Object.entries(getFieldErrors(data?.detail, t))) {
+            if (!(field in formik.values)) continue
             setFieldTouched(field, true, false)
             setFieldError(field, fieldError)
           }
@@ -147,8 +149,6 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       }
     },
   })
-
-  useEffect(() => { }, [org])
 
   // Honor a sanitized ?next / ?redirect destination through the
   // cross-domain /redirect_from_auth handoff; default to the org's home (or the
@@ -173,38 +173,45 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       const domainAttr = (topDomain === 'localhost' || isOnCustomDomain()) ? '' : `; domain=.${topDomain}`;
       document.cookie = `LH_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `LH_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
+      // Invite-only orgs need the invite code itself, not just the org: the
+      // OAuth callback joins through /users/{org_id}/invite/{code}. Without it
+      // a Google sign-up through an invite link is refused.
+      if (inviteCode) {
+        document.cookie = `LH_oauth_invite_code=${encodeURIComponent(inviteCode)}${baseAttributes}${domainAttr}`;
+      }
     }
-    // Use absolute URL with current origin for custom domain support
-    signIn('google', { callbackUrl: buildCallbackUrl() });
+    // Use absolute URL with current origin for custom domain support. On
+    // success this navigates to Google; a failure used to be swallowed, which
+    // left people clicking a button that did nothing.
+    setError('')
+    signIn('google', { callbackUrl: buildCallbackUrl() }).then((res) => {
+      if (res && !res.ok) {
+        track(AnalyticsEvent.SignupFailed, { method: 'google', status_code: res.status })
+        setError(res.error || t('common.something_went_wrong'))
+      }
+    });
   };
 
-  return (
-    <div className="w-full max-w-[420px] py-10">
-      {/* Header */}
-      <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.create_account')}</h1>
-      <p className="mt-2 text-black/45 text-[15px] font-medium">{t('auth.fill_in_details')}</p>
-
-      <div className="mt-8">
-        {/* Error/Success Messages */}
-        {error && (
-          <div className="flex justify-center bg-red-50 rounded-xl text-red-600 space-x-2 items-center p-4 mb-6 border border-red-100">
-            <AlertTriangle size={18} className="shrink-0" />
-            <div className="font-medium text-sm">{error}</div>
-          </div>
-        )}
-
-        {message && message.email_verified === false && (
-          <div className="flex flex-col gap-4 bg-green-50 rounded-xl text-green-700 p-4 mb-6 border border-green-100">
-            <div className="flex items-center gap-2">
-              <Mail size={18} />
-              <div className="font-semibold text-sm">{t('auth.check_email_for_verification')}</div>
-            </div>
-            <p className="text-xs text-green-600">
-              {t('auth.verification_email_sent_message')}
-            </p>
-            {/* Resend, so a user whose email doesn't arrive isn't stuck. */}
+  // Account created, inbox to confirm: the form steps aside for one clear
+  // next step instead of a notice stacked above a used-up form.
+  if (message) {
+    const verified = message.email_verified !== false
+    return (
+      <div className="w-full" data-testid="signup-done">
+        <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+          <EnvelopeSimple size={22} weight="duotone" aria-hidden="true" />
+        </div>
+        <AuthHeading
+          title={verified ? t('auth.account_created_success') : t('auth.check_email_for_verification')}
+          description={verified ? undefined : t('auth.verification_sent_to', {
+            email: formik.values.email.trim(),
+            defaultValue: 'We sent a confirmation link to {{email}}. Open it to start using your account.',
+          })}
+        />
+        {!verified && (
+          <div className="mt-4 text-[13px] text-neutral-500">
             {resendState === 'sent' ? (
-              <p className="text-xs font-medium text-green-700">
+              <p className="font-medium text-emerald-700">
                 {t('auth.verification_email_resent', { defaultValue: 'Verification email sent again. Check your inbox.' })}
               </p>
             ) : (
@@ -215,10 +222,10 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
                   setResendState('sending')
                   // org?.id is undefined on the org-less apex; that's fine, the
                   // backend resends by email without an org.
-                  const res = await resendVerificationEmail(formik.values.email, org?.id)
+                  const res = await resendVerificationEmail(formik.values.email.trim(), org?.id, readNextParam(window.location.search))
                   setResendState(res.success ? 'sent' : 'error')
                 }}
-                className="text-xs font-semibold text-green-800 hover:underline disabled:opacity-50 text-start w-fit"
+                className="font-medium text-neutral-700 underline underline-offset-2 hover:no-underline disabled:opacity-50 text-start"
               >
                 {resendState === 'sending'
                   ? t('common.loading', { defaultValue: 'Sending…' })
@@ -226,231 +233,123 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
               </button>
             )}
             {resendState === 'error' && (
-              <p className="text-xs text-red-500">{t('auth.resend_verification_failed', { defaultValue: 'Could not resend. Please try again shortly.' })}</p>
+              <p className="mt-1 text-xs text-rose-600">{t('auth.resend_verification_failed', { defaultValue: 'Could not resend. Please try again shortly.' })}</p>
             )}
-            <hr className="border-green-100" />
-            <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
-              <User size={14} />
-              <span>{t('auth.login')}</span>
-            </Link>
           </div>
+        )}
+        <Link href={loginHref} className={authButtonClass(verified ? 'primary' : 'secondary', 'mt-6')}>
+          <SignIn size={16} aria-hidden="true" />
+          <span>{t('auth.login')}</span>
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      <AuthHeading title={t('auth.create_account')} description={t('auth.signup_one_step', { defaultValue: 'It takes less than a minute.' })} />
+
+      <div className="mt-7">
+        {error && (
+          <AuthNotice tone="danger" className="mb-6">
+            {error}
+          </AuthNotice>
         )}
 
-        {message && message.email_verified && (
-          <div className="flex flex-col gap-4 bg-green-50 rounded-xl text-green-700 p-4 mb-6 border border-green-100">
-            <div className="flex items-center gap-2">
-              <Mail size={18} />
-              <div className="font-semibold text-sm">{t('auth.account_created_success')}</div>
-            </div>
-            <hr className="border-green-100" />
-            <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
-              <User size={14} />
-              <span>{t('auth.login')}</span>
-            </Link>
-          </div>
+        {/* Google first: one click, nothing to type. */}
+        {googleAllowed && (
+          <AuthProviderButton onClick={handleGoogleSignIn} disabled={isSubmitting} icon={<GoogleMark />}>
+            {t('auth.sign_in_with_google')}
+          </AuthProviderButton>
         )}
+
+        {passwordAllowed && googleAllowed && <AuthDivider />}
 
         {passwordAllowed && (
-        <FormLayout onSubmit={formik.handleSubmit}>
-          <FormField name="email">
-            <div className="flex items-center space-x-2 mb-1.5">
-              <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.email')}</Form.Label>
-              {formik.touched.email && formik.errors.email && (
-                <span className="text-red-500 text-xs flex items-center space-x-1">
-                  <Info size={11} />
-                  <span>{formik.errors.email}</span>
-                </span>
-              )}
-            </div>
-            <Form.Control asChild>
-              <input
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.email}
-                autoComplete="email"
-                type="email"
-                required
-                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-              />
-            </Form.Control>
-          </FormField>
-
-          <div className="flex flex-row space-x-2">
-            <FormField name="first_name">
-              <div className="flex items-center space-x-2 mb-1.5">
-                <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('user.first_name')}</Form.Label>
-                {formik.touched.first_name && formik.errors.first_name && (
-                  <span className="text-red-500 text-xs flex items-center space-x-1">
-                    <Info size={11} />
-                    <span>{formik.errors.first_name}</span>
-                  </span>
-                )}
-              </div>
+          <FormLayout onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
+            <Form.Field name="email" className="grid min-w-0">
+              <AuthLabel error={formik.touched.email && formik.errors.email}>{t('auth.email')}</AuthLabel>
               <Form.Control asChild>
                 <input
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  value={formik.values.first_name}
-                  autoComplete="given-name"
-                  type="text"
-                  className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
+                  value={formik.values.email}
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  required
+                  autoFocus
+                  aria-invalid={formik.touched.email && formik.errors.email ? true : undefined}
+                  className={AUTH_INPUT}
                 />
               </Form.Control>
-            </FormField>
-            <FormField name="last_name">
-              <div className="flex items-center space-x-2 mb-1.5">
-                <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('user.last_name')}</Form.Label>
-                {formik.touched.last_name && formik.errors.last_name && (
-                  <span className="text-red-500 text-xs flex items-center space-x-1">
-                    <Info size={11} />
-                    <span>{formik.errors.last_name}</span>
-                  </span>
-                )}
-              </div>
+            </Form.Field>
+
+            <Form.Field name="password" className="grid min-w-0">
+              <AuthLabel error={formik.touched.password && formik.errors.password}>{t('auth.password')}</AuthLabel>
+              <Form.Control asChild>
+                <PasswordInput
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.password}
+                  autoComplete="new-password"
+                  required
+                  aria-invalid={formik.touched.password && formik.errors.password ? true : undefined}
+                />
+              </Form.Control>
+              <PasswordStrengthIndicator password={formik.values.password} />
+            </Form.Field>
+
+            <Form.Field name="name" className="grid min-w-0">
+              <AuthLabel>{`${t('auth.your_name', { defaultValue: 'Your name' })} (${t('common.optional')})`}</AuthLabel>
               <Form.Control asChild>
                 <input
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  value={formik.values.last_name}
-                  autoComplete="family-name"
+                  value={formik.values.name}
                   type="text"
-                  className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
+                  autoComplete="name"
+                  maxLength={100}
+                  className={AUTH_INPUT}
                 />
               </Form.Control>
-            </FormField>
-          </div>
+            </Form.Field>
 
-          <FormField name="password">
-            <div className="flex items-center space-x-2 mb-1.5">
-              <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.password')}</Form.Label>
-              {formik.touched.password && formik.errors.password && (
-                <span className="text-red-500 text-xs flex items-center space-x-1">
-                  <Info size={11} />
-                  <span>{formik.errors.password}</span>
-                </span>
-              )}
-            </div>
-            <Form.Control asChild>
-              <input
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.password}
-                type="password"
-                autoComplete="new-password"
-                required
-                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-              />
-            </Form.Control>
-            <PasswordStrengthIndicator password={formik.values.password} />
-          </FormField>
+            <CustomSignupFields fields={customFields} formik={formik} />
 
-          <FormField name="username">
-            <div className="flex items-center space-x-2 mb-1.5">
-              <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('user.username')}</Form.Label>
-              {formik.touched.username && formik.errors.username && (
-                <span className="text-red-500 text-xs flex items-center space-x-1">
-                  <Info size={11} />
-                  <span>{formik.errors.username}</span>
-                </span>
-              )}
-            </div>
-            <Form.Control asChild>
-              <input
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.username}
-                autoComplete="nickname"
-                type="text"
-                required
-                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-              />
-            </Form.Control>
-          </FormField>
+            <TurnstileWidget
+              ref={turnstileRef}
+              onToken={(token) => formik.setFieldValue('turnstileToken', token)}
+              className="flex justify-center empty:hidden"
+            />
 
-          <FormField name="bio">
-            <div className="flex items-center space-x-2 mb-1.5">
-              <Form.Label className="grow text-[13px] font-semibold text-black/70">{`${t('user.bio')} (${t('common.optional')})`}</Form.Label>
-            </div>
-            <Form.Control asChild>
-              <textarea
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.bio}
-                placeholder={t('user.bio_placeholder')}
-                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 py-3 border border-neutral-200 appearance-none focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm resize-none min-h-[80px]"
-              />
-            </Form.Control>
-          </FormField>
-
-          <CustomSignupFields fields={customFields} formik={formik} />
-
-          <TurnstileWidget
-            ref={turnstileRef}
-            onToken={(token) => formik.setFieldValue('turnstileToken', token)}
-            className="mt-2 flex justify-center"
-          />
-
-          <Form.Submit asChild>
-            <button
-              disabled={isSubmitting || !!message || (turnstileRequired && !formik.values.turnstileToken)}
-              className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-2 transition-all disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <span className="flex items-center space-x-2">
-                  <span className="w-4 h-4 border-t-2 border-white rounded-full animate-spin" />
-                  <span>{t('common.loading')}</span>
-                </span>
-              ) : (
-                t('auth.create_account')
-              )}
-            </button>
-          </Form.Submit>
-        </FormLayout>
-        )}
-
-        {/* Divider: only earns its place between two sets of options. */}
-        {passwordAllowed && googleAllowed && (
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-neutral-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-3 text-black/30 bg-white text-xs font-medium">{t('common.or')}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Google Sign In */}
-        {googleAllowed && (
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={isSubmitting}
-          className="flex justify-center items-center w-full bg-white hover:bg-neutral-50 text-black space-x-3 font-medium p-3 rounded-lg border border-neutral-200 transition-all text-sm disabled:opacity-50"
-        >
-          <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
-          <span>{t('auth.sign_in_with_google')}</span>
-        </button>
+            <Form.Submit asChild>
+              <AuthButton
+                loading={isSubmitting}
+                disabled={turnstileRequired && !formik.values.turnstileToken}
+                className="mt-1"
+              >
+                {t('auth.create_account')}
+              </AuthButton>
+            </Form.Submit>
+          </FormLayout>
         )}
 
         {!passwordAllowed && !googleAllowed && (
-          <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 flex items-start gap-3">
-            <Info size={16} className="shrink-0 mt-0.5 text-black/40" />
-            <p className="text-sm text-black/60">
-              {t('auth.no_sign_up_method_available', {
-                defaultValue:
-                  'This organization has restricted how members sign in, so accounts can’t be created here. Contact an administrator.',
-              })}
-            </p>
-          </div>
+          <AuthNotice tone="info">
+            {t('auth.no_sign_up_method_available', {
+              defaultValue:
+                'This organization has restricted how members sign in, so accounts can’t be created here. Contact an administrator.',
+            })}
+          </AuthNotice>
         )}
 
-        {/* Login Link */}
-        <p className="text-center text-sm text-black/35 mt-6">
+        <AuthFootnote>
           {t('auth.already_have_account')}{' '}
-          <Link href="/login" className="text-black font-semibold hover:underline">
+          <Link href={loginHref} className={AUTH_LINK}>
             {t('auth.login')}
           </Link>
-        </p>
+        </AuthFootnote>
       </div>
     </div>
   )

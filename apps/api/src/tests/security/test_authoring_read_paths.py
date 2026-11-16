@@ -128,7 +128,7 @@ class TestScenarioGroundingRequiresUpdate:
         )
         reserve = AsyncMock()
         with patch.object(sc, "enforce_org_mfa", new=AsyncMock()), \
-             patch.object(sc, "reserve_ai_credit", new=reserve), \
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve), \
              patch.object(sc, "enforce_ai_rate_limit"):
             with pytest.raises(HTTPException) as exc:
                 await sc.api_generate_scenario(mock_request, body, regular_user, db)
@@ -142,7 +142,7 @@ class TestScenarioGroundingRequiresUpdate:
         block = {"title": "T", "currentScenarioId": "1", "scenarios": [{"id": "1"}]}
         gen = AsyncMock(return_value=(block, "s1"))
         with patch.object(sc, "enforce_org_mfa", new=AsyncMock()), \
-             patch.object(sc, "reserve_ai_credit", new=AsyncMock()), \
+             patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
              patch.object(sc, "enforce_ai_rate_limit"), \
              patch.object(sc, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
              patch.object(sc, "generate_scenario", new=gen), \
@@ -231,3 +231,9 @@ class TestLockUsergroupOrgScope:
                 mock_request, activity.activity_uuid, foreign_group.usergroup_uuid, admin_user, db
             )
         assert exc.value.status_code == 404
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

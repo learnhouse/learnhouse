@@ -5,15 +5,16 @@ import {
   Users,
   CurrencyCircleDollar,
   Buildings,
-  ChatsCircle,
   ChalkboardSimple,
-  Cube,
+  Lightning,
   FolderSimple,
   Headphones,
   VideoCamera,
   ChartBar,
   Code,
-  Steps,
+  Circuitry,
+  Garage,
+  Newspaper,
 } from '@phosphor-icons/react'
 import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 
@@ -52,7 +53,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
   {
     id: 'paths',
     href: '/dash/paths',
-    icon: Steps,
+    icon: Circuitry,
     labelKey: 'paths.title',
     featureKey: 'paths',
   },
@@ -66,7 +67,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
   {
     id: 'communities',
     href: '/dash/communities',
-    icon: ChatsCircle,
+    icon: Garage,
     labelKey: 'communities.title',
     featureKey: 'communities',
   },
@@ -85,6 +86,13 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     featureKey: 'live_sessions',
   },
   {
+    id: 'newsletter',
+    href: '/dash/newsletter/overview',
+    icon: Newspaper,
+    labelKey: 'newsletter.common.title',
+    featureKey: 'newsletter',
+  },
+  {
     id: 'boards',
     href: '/dash/boards',
     icon: ChalkboardSimple,
@@ -95,7 +103,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
   {
     id: 'playgrounds',
     href: '/dash/playgrounds',
-    icon: Cube,
+    icon: Lightning,
     labelKey: 'common.playgrounds',
     featureKey: 'playgrounds',
     defaultDisabled: true,
@@ -115,7 +123,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
   },
   {
     id: 'organization',
-    href: '/dash/org/settings/general',
+    href: '/dash/org/settings/overview',
     icon: Buildings,
     labelKey: 'common.organization',
   },
@@ -128,7 +136,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
   },
   {
     id: 'developers',
-    href: '/dash/developers/api',
+    href: '/dash/developers',
     icon: Code,
     labelKey: 'dashboard.developers.breadcrumb',
   },

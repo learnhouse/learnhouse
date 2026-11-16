@@ -1,7 +1,10 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import { CreditsIcon } from '@components/Objects/AI/CreditCost'
+import { useAICreditPrices } from '@components/Hooks/useAICredits'
 import BarLoader from 'react-spinners/BarLoader'
-import { PlayCircle, Upload, YoutubeLogo, Sparkle } from '@phosphor-icons/react'
+import { YoutubeLogo } from '@phosphor-icons/react'
+import { AIButton } from '@components/Objects/AI/AIBrand'
 import { constructAcceptValue } from '@/lib/constants'
 import CaptionsSettings, {
   type CaptionsValue,
@@ -18,6 +21,8 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
+import { Button, INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { FilePicker, ModalFormActions, useModalFormId } from '../activityFormKit'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
@@ -37,6 +42,8 @@ interface EditVideoActivityModalProps {
 
 function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalProps) {
   const { t } = useTranslation()
+  const { estimate: estimateCredits } = useAICreditPrices()
+  const formId = useModalFormId()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const isYouTube = activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE'
@@ -180,37 +187,25 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div
-        className="relative flex items-center justify-center h-20 rounded-xl overflow-hidden"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(196,181,253,0.25) 6px, rgba(196,181,253,0.25) 7px)',
-        }}
-      >
-        <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
-          <PlayCircle size={18} weight="duotone" className="text-violet-400" />
-          {isYouTube ? t('activities.edit_modal.youtube_video') : t('activities.edit_modal.hosted_video')}
-        </span>
-      </div>
+    <form id={formId} onSubmit={handleSubmit} className="space-y-4">
 
-      <div className="rounded-xl nice-shadow p-4 space-y-4">
+      <div className="rounded-xl ring-1 ring-inset ring-neutral-200 p-4 space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">{t('activities.modal.activity_name')}</label>
+          <label className="text-sm font-semibold text-neutral-800">{t('activities.modal.activity_name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             type="text"
             required
             placeholder={t('activities.modal.enter_name')}
-            className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+            className={INPUT}
           />
         </div>
 
         {isYouTube ? (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">{t('activities.modal.youtube_url')}</label>
-            <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+            <label className="text-sm font-semibold text-neutral-800">{t('activities.modal.youtube_url')}</label>
+            <div className="flex items-center gap-2 text-xs text-neutral-400 mb-1">
               <YoutubeLogo size={14} weight="duotone" />
               <span>{t('activities.edit_modal.update_youtube_hint')}</span>
             </div>
@@ -220,31 +215,28 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
               type="text"
               required
               placeholder="https://youtube.com/watch?v=..."
-              className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+              className={INPUT}
             />
           </div>
         ) : (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">{t('activities.edit_modal.replace_video')}</label>
-            <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
-              <Upload size={14} weight="duotone" />
-              <span>{t('activities.edit_modal.keep_current_video')}</span>
-            </div>
-            <input
-              type="file"
+            <label className="text-sm font-semibold text-neutral-800">{t('activities.edit_modal.replace_video')}</label>
+            <FilePicker
               accept={SUPPORTED_FILES}
-              onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
-              className="w-full text-sm text-gray-500 file:me-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition-colors"
+              file={videoFile}
+              onChange={setVideoFile}
+              title={t('dashboard.courses.editor.activity_form.video_title')}
+              hint={t('activities.edit_modal.keep_current_video')}
             />
           </div>
         )}
       </div>
 
-      <div className="rounded-xl nice-shadow p-4 space-y-4">
-        <h3 className="text-sm font-medium text-gray-700">{t('activities.modal.video_settings')}</h3>
+      <div className="rounded-xl ring-1 ring-inset ring-neutral-200 p-4 space-y-4">
+        <h3 className="text-sm font-semibold text-neutral-800">{t('activities.modal.video_settings')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">{t('activities.modal.start_time')}</label>
+            <label className="text-xs font-medium text-neutral-500">{t('activities.modal.start_time')}</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <input
@@ -256,9 +248,9 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                     setVideoDetails({ ...videoDetails, startTime: convertToSeconds(minutes, startTimeParts.seconds) })
                   }}
                   placeholder="0"
-                  className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+                  className={INPUT}
                 />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">{t('activities.modal.min')}</span>
+                <span className="text-[11px] text-neutral-400 mt-0.5 block">{t('activities.modal.min')}</span>
               </div>
               <div className="flex-1">
                 <input
@@ -271,15 +263,15 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                     setVideoDetails({ ...videoDetails, startTime: convertToSeconds(startTimeParts.minutes, seconds) })
                   }}
                   placeholder="0"
-                  className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+                  className={INPUT}
                 />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">{t('activities.modal.sec')}</span>
+                <span className="text-[11px] text-neutral-400 mt-0.5 block">{t('activities.modal.sec')}</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">{t('activities.modal.end_time_optional')}</label>
+            <label className="text-xs font-medium text-neutral-500">{t('activities.modal.end_time_optional')}</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <input
@@ -294,9 +286,9 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                     }
                   }}
                   placeholder="0"
-                  className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+                  className={INPUT}
                 />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">{t('activities.modal.min')}</span>
+                <span className="text-[11px] text-neutral-400 mt-0.5 block">{t('activities.modal.min')}</span>
               </div>
               <div className="flex-1">
                 <input
@@ -312,9 +304,9 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                     }
                   }}
                   placeholder="0"
-                  className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+                  className={INPUT}
                 />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">{t('activities.modal.sec')}</span>
+                <span className="text-[11px] text-neutral-400 mt-0.5 block">{t('activities.modal.sec')}</span>
               </div>
             </div>
           </div>
@@ -326,18 +318,18 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
               type="checkbox"
               checked={videoDetails.autoplay}
               onChange={(e) => setVideoDetails({ ...videoDetails, autoplay: e.target.checked })}
-              className="rounded border-gray-300 text-black focus:ring-black"
+              className="accent-neutral-900"
             />
-            <span className="text-sm text-gray-600">{t('activities.modal.autoplay')}</span>
+            <span className="text-sm text-neutral-600">{t('activities.modal.autoplay')}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={videoDetails.muted}
               onChange={(e) => setVideoDetails({ ...videoDetails, muted: e.target.checked })}
-              className="rounded border-gray-300 text-black focus:ring-black"
+              className="accent-neutral-900"
             />
-            <span className="text-sm text-gray-600">{t('activities.modal.start_muted')}</span>
+            <span className="text-sm text-neutral-600">{t('activities.modal.start_muted')}</span>
           </label>
         </div>
       </div>
@@ -345,21 +337,25 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
       {!isYouTube && (
         <div className="space-y-2">
           <CaptionsSettings value={captions} onChange={setCaptions} status={capStatus} />
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={saveCaptions}
-              disabled={isSavingCaptions}
-              className="inline-flex items-center gap-1.5 h-8 px-4 text-xs font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50"
-            >
-              {isSavingCaptions ? (
-                <BarLoader cssOverride={{ borderRadius: 60 }} width={40} color="#ffffff" />
-              ) : (
-                <>
-                  <Sparkle size={14} weight="duotone" /> {captions.enabled ? t('activities.edit_modal.generate_captions') : t('common.save')}
-                </>
-              )}
-            </button>
+          <div className="flex items-center justify-end gap-3">
+            {captions.enabled && estimateCredits('captions') != null && (
+              <span className="inline-flex items-center gap-1 text-[12px] text-neutral-500">
+                <CreditsIcon size={11} />
+                {t('ai_credits.captions.per_minute', {
+                  count: estimateCredits('captions') ?? 0,
+                  defaultValue: 'About {{count}} credits per minute of video, plus each translation',
+                })}
+              </span>
+            )}
+            {captions.enabled ? (
+              <AIButton size="sm" onClick={saveCaptions} loading={isSavingCaptions}>
+                {t('activities.edit_modal.generate_captions')}
+              </AIButton>
+            ) : (
+              <Button variant="primary" size="sm" onClick={saveCaptions} loading={isSavingCaptions}>
+                {t('common.save')}
+              </Button>
+            )}
           </div>
           <ChaptersSettings
             activityUuid={activity.activity_uuid}
@@ -370,19 +366,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
         </div>
       )}
 
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-        >
-          {isSubmitting ? (
-            <BarLoader cssOverride={{ borderRadius: 60 }} width={60} color="#ffffff" />
-          ) : (
-            t('common.save_changes')
-          )}
-        </button>
-      </div>
+      <ModalFormActions submitting={isSubmitting} canSubmit={!!name.trim()} label={t('common.save_changes')} />
     </form>
   )
 }

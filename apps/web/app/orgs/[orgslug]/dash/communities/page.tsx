@@ -1,8 +1,6 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import React from 'react'
-import { getServerSession } from '@/lib/auth/server'
-import { getCommunities } from '@services/communities/communities'
 import CommunitiesDashClient from './client'
 
 type MetadataProps = {
@@ -27,36 +25,17 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   }
 }
 
+// The list loads on the client (React Query), not here: a server fetch made
+// every visit wait on the API before the page could even start to show, and
+// its result could not be reused across visits.
 async function CommunitiesDashPage(params: any) {
   const orgslug = (await params.params).orgslug
   const org = await getOrganizationContextInfo(orgslug, {
     revalidate: 120,
     tags: ['organizations'],
   })
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
 
-  let communities = []
-  try {
-    communities = await getCommunities(
-      org.id,
-      1,
-      100,
-      { revalidate: 0, tags: ['communities'] },
-      access_token ? access_token : undefined
-    )
-  } catch (error) {
-    console.error('Failed to fetch communities:', error)
-    communities = []
-  }
-
-  return (
-    <CommunitiesDashClient
-      org_id={org.id}
-      orgslug={orgslug}
-      communities={communities || []}
-    />
-  )
+  return <CommunitiesDashClient org_id={org.id} orgslug={orgslug} />
 }
 
 export default CommunitiesDashPage

@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowElbowDownLeft, ArrowRight, CircleNotch, ClockCounterClockwise, GitBranch, MagicWand, Sparkle, Trash } from '@phosphor-icons/react'
+import { ArrowElbowDownLeft, ArrowRight, ClockCounterClockwise, GitBranch, Trash } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import { AIAccentLine, AIButton, AIMark, AIShimmer, AIThinking, aiSurface } from './AIBrand'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
@@ -145,15 +147,16 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
 
   const modalContent = (
     <div className="flex flex-col h-full">
+      <AIAccentLine />
       {/* Tabs */}
-      <div className="flex items-center gap-1 px-4 pt-3">
+      <div className={`flex items-center gap-1 px-4 pt-3 ${aiSurface.header}`}>
         <button
           onClick={() => setTab('generate')}
           className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-colors ${
             tab === 'generate' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <MagicWand weight="duotone" size={15} /> {t('ai.scenario_generator.generate')}
+          <AIMark size={16} alt="" /> {t('ai.scenario_generator.generate')}
         </button>
         <button
           onClick={() => setTab('history')}
@@ -177,7 +180,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                   ? t('ai.scenario_generator.placeholder_grounded')
                   : t('ai.scenario_generator.placeholder')
               }
-              className="w-full p-3 border border-neutral-200 rounded-xl resize-none focus:outline-hidden focus:ring-2 focus:ring-neutral-900/10 text-sm"
+              className={`w-full p-3 resize-none focus:outline-hidden text-sm placeholder:text-neutral-400 ${aiSurface.prompt}`}
             />
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-1.5 text-xs text-neutral-500">
@@ -192,14 +195,9 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                 />
               </label>
               <div className="grow" />
-              <button
-                onClick={handleGenerate}
-                disabled={generating || !prompt.trim()}
-                className="px-3 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow disabled:opacity-40 transition-opacity"
-              >
-                {generating ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <Sparkle weight="duotone" size={15} />}
+              <AIButton onClick={handleGenerate} disabled={!prompt.trim()} loading={generating}>
                 {block ? t('ai.scenario_generator.regenerate') : generating ? t('ai.scenario_generator.generating') : t('ai.scenario_generator.generate')}
-              </button>
+              </AIButton>
             </div>
             {error && <p className="text-xs text-rose-500">{error}</p>}
             <p className="text-[11px] text-neutral-400">{t('ai.scenario_generator.credits_note')}</p>
@@ -212,7 +210,12 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                 {t('ai.scenario_generator.empty_preview')}
               </p>
             )}
-            {generating && <div className="w-full h-24 rounded-xl bg-neutral-100 animate-pulse" />}
+            {generating && (
+              <div className="bg-white rounded-xl p-4 nice-shadow space-y-3">
+                <AIThinking label={t('ai.scenario_generator.generating')} />
+                <AIShimmer lines={3} />
+              </div>
+            )}
             {block && (
               <div className="space-y-4">
                 <p className="text-sm font-semibold text-neutral-700 flex items-center gap-1.5">
@@ -255,7 +258,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
             <div className="border-t border-neutral-100 p-3 flex justify-end">
               <button
                 onClick={handleInsert}
-                className="px-4 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow"
+                className={buttonClass('primary', 'md')}
               >
                 <ArrowElbowDownLeft weight="duotone" size={15} data-dir-flip /> {t('ai.scenario_generator.insert')}
               </button>
@@ -305,6 +308,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
   return (
     <Modal
       dialogTitle={t('ai.scenario_generator.dialog_title')}
+      icon={<AIMark size={32} alt="" />}
       dialogContent={modalContent}
       onOpenChange={onClose}
       isDialogOpen={isOpen}

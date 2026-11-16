@@ -1,4 +1,4 @@
-import { Cube } from '@phosphor-icons/react'
+import { Lightning } from '@phosphor-icons/react'
 import type { SearchMeta } from '@/lib/dashboard-search/types'
 
 export const searchMeta: SearchMeta = {
@@ -6,7 +6,7 @@ export const searchMeta: SearchMeta = {
   titleKey: 'common.playgrounds',
   descriptionKey: 'dashboard.search.entries.playgrounds.description',
   keywordsKey: 'dashboard.search.entries.playgrounds.keywords',
-  icon: Cube,
+  icon: Lightning,
   href: '/dash/playgrounds',
   group: 'navigation',
   featureKey: 'playgrounds',

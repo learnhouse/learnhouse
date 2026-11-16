@@ -1,4 +1,4 @@
-"""Agent tools for communities, the library, playgrounds and boards.
+"""Agent tools for communities and the library (Plays and boards: ee/tests).
 
 Every call goes through `run_tool` with a registry holding just these
 modules' SPECS, so argument validation, the token gate, the RBAC pre-flight,
@@ -11,7 +11,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from sqlmodel import select
 
-from src.db.boards import Board, BoardMember
 from src.db.communities.communities import Community
 from src.db.communities.discussion_comments import DiscussionComment
 from src.db.communities.discussions import Discussion
@@ -19,7 +18,6 @@ from src.db.courses.courses import Course
 from src.db.folders.folder_content import FolderContent
 from src.db.folders.folders import Folder
 from src.db.media.media import Media
-from src.db.playgrounds import Playground
 from src.db.usergroups import UserGroup
 from src.db.users import APITokenUser
 from src.services.ai.tools import (
@@ -28,7 +26,7 @@ from src.services.ai.tools import (
     make_synthetic_request,
     run_tool,
 )
-from src.services.ai.tools import boards, communities, library, playgrounds
+from src.services.ai.tools import communities, library
 from src.services.ai.tools.results import UNTRUSTED_NOTE
 
 NOW = str(datetime(2026, 1, 1, 12, 0, 0))
@@ -42,8 +40,6 @@ def quiet_side_effects():
         "src.services.communities.discussions.track",
         "src.services.communities.comments.dispatch_webhooks",
         "src.services.folders.folders.dispatch_webhooks",
-        "src.services.boards.boards.dispatch_webhooks",
-        "src.services.playgrounds.playgrounds.dispatch_webhooks",
     ]
     patches = [patch(t, new_callable=AsyncMock) for t in targets]
     for p in patches:
@@ -56,7 +52,7 @@ def quiet_side_effects():
 @pytest.fixture
 def registry():
     r = ToolRegistry()
-    for module in (communities, library, playgrounds, boards):
+    for module in (communities, library):
         r.register_all(module.SPECS)
     return r
 
@@ -197,41 +193,6 @@ async def usergroup(db, org):
 async def foreign_usergroup(db, other_org):
     return await add(db, UserGroup(
         id=2, name="Theirs", description="", org_id=other_org.id, usergroup_uuid="usergroup_theirs",
-        creation_date=NOW, update_date=NOW,
-    ))
-
-
-@pytest.fixture
-async def playground(db, org, admin_user):
-    return await add(db, Playground(
-        id=1, name="Physics sim", description="Falling balls", html_content="<p>" + "x" * 40000 + "</p>",
-        published=True, org_id=org.id, playground_uuid="0b0e1a52-1111-4c3e-9a55-000000000001",
-        created_by=admin_user.id, creation_date=NOW, update_date=NOW,
-    ))
-
-
-@pytest.fixture
-async def foreign_playground(db, other_org):
-    return await add(db, Playground(
-        id=2, name="Not yours", published=True, org_id=other_org.id,
-        playground_uuid="0b0e1a52-2222-4c3e-9a55-000000000002", creation_date=NOW, update_date=NOW,
-    ))
-
-
-@pytest.fixture
-async def board(db, org, admin_user):
-    b = await add(db, Board(
-        id=1, name="Planning", description="Roadmap", public=False, org_id=org.id,
-        board_uuid="board_plan", created_by=admin_user.id, creation_date=NOW, update_date=NOW,
-    ))
-    await add(db, BoardMember(board_id=b.id, user_id=admin_user.id, role="owner", creation_date=NOW))
-    return b
-
-
-@pytest.fixture
-async def foreign_board(db, other_org):
-    return await add(db, Board(
-        id=2, name="Theirs", public=True, org_id=other_org.id, board_uuid="board_theirs",
         creation_date=NOW, update_date=NOW,
     ))
 
@@ -513,128 +474,6 @@ async def test_list_media(db, org, other_org, admin_user, registry):
     one = ok(await call(registry, db, org, admin_user, "list_media", {"media_uuid": "media_1"}))
     assert one["items"][0]["name"] == "Syllabus" and one["items"][0]["type"] == "upload"
     denied(await call(registry, db, org, admin_user, "list_media", {"media_uuid": "media_foreign"}))
-
-
-# ─── playgrounds ─────────────────────────────────────────────────────────────
-
-
-async def test_playgrounds_refuse_api_tokens(db, org, registry, playground):
-    denied(await call(registry, db, org, _token(org.id), "list_playgrounds", {}), "not_for_api_tokens")
-    denied(await call(registry, db, org, _token(org.id), "create_playground", {"name": "x"}), "not_for_api_tokens")
-
-
-async def test_list_and_get_playground(db, org, admin_user, registry, playground):
-    page = ok(await call(registry, db, org, admin_user, "list_playgrounds", {}))
-    item = page["items"][0]
-    assert item["uuid"] == playground.playground_uuid and item["access"] == "authenticated"
-    assert "html" not in str(page) and "<p>" not in str(page)
-    out = ok(await call(registry, db, org, admin_user, "get_playground", {"playground_uuid": playground.playground_uuid}))
-    assert "html" not in out and out["html_chars"] > 40000 and "note" not in out
-    out = ok(await call(registry, db, org, admin_user, "get_playground", {"playground_uuid": playground.playground_uuid, "include_html": True}))
-    assert len(out["html"]) <= 30000 and "html" in out["truncated"] and out["note"] == UNTRUSTED_NOTE
-
-
-async def test_playground_other_org_refused(db, org, admin_user, registry, foreign_playground):
-    denied(await call(registry, db, org, admin_user, "get_playground", {"playground_uuid": foreign_playground.playground_uuid}), "http_404")
-
-
-async def test_create_playground_draft_and_caps(db, org, admin_user, registry, course):
-    out = ok(await call(registry, db, org, admin_user, "create_playground", {"name": "New", "html": "<b>hi</b>", "course_uuid": "course_test"}))
-    row = (await db.execute(select(Playground).where(Playground.playground_uuid == out["playground"]["uuid"]))).scalars().one()
-    assert row.published is False and row.created_by == admin_user.id and row.course_id == course.id
-    denied(await call(registry, db, org, admin_user, "create_playground", {"name": "Big", "html": "x" * 200001}), "invalid_args")
-    denied(await call(registry, db, org, admin_user, "create_playground", {}), "invalid_args")
-
-
-async def test_copy_playground(db, org, admin_user, registry, playground):
-    out = ok(await call(registry, db, org, admin_user, "create_playground", {
-        "copy_from_playground_uuid": playground.playground_uuid, "name": "Copied",
-    }))
-    row = (await db.execute(select(Playground).where(Playground.playground_uuid == out["playground"]["uuid"]))).scalars().one()
-    assert row.name == "Copied" and row.published is False and row.html_content == playground.html_content
-
-
-async def test_update_playground_publish_needs_approval(db, org, admin_user, regular_user, registry, playground):
-    args = {"playground_uuid": playground.playground_uuid, "published": False}
-    denied(await call(registry, db, org, admin_user, "update_playground", args), "approval_required")
-    ok(await call(registry, db, org, admin_user, "update_playground", args, approved=True))
-    ok(await call(registry, db, org, admin_user, "update_playground", {"playground_uuid": playground.playground_uuid, "name": "Renamed"}))
-    denied(await call(registry, db, org, regular_user, "update_playground", {"playground_uuid": playground.playground_uuid, "name": "Mine"}), "http_403")
-
-
-async def test_set_playground_access(db, org, admin_user, registry, playground, usergroup, foreign_usergroup):
-    args = {"playground_uuid": playground.playground_uuid, "usergroup_uuid": "usergroup_a", "grant": True}
-    denied(await call(registry, db, org, admin_user, "set_playground_access", args), "approval_required")
-    out = ok(await call(registry, db, org, admin_user, "set_playground_access", args, approved=True))
-    assert out["usergroup"]["uuid"] == "usergroup_a" and out["note"]
-    out = ok(await call(registry, db, org, admin_user, "set_playground_access", {**args, "grant": False}, approved=True))
-    out = ok(await call(registry, db, org, admin_user, "set_playground_access", {**args, "grant": False}, approved=True))
-    assert "nothing changed" in out["summary"]
-    denied(await call(registry, db, org, admin_user, "set_playground_access", {**args, "usergroup_uuid": "usergroup_theirs"}, approved=True), "http_404")
-
-
-async def test_delete_playground(db, org, admin_user, registry, playground):
-    ok(await call(registry, db, org, admin_user, "delete_playground", {"playground_uuid": playground.playground_uuid}, approved=True))
-    assert await db.get(Playground, playground.id) is None
-
-
-# ─── boards ──────────────────────────────────────────────────────────────────
-
-
-async def test_boards_refuse_api_tokens(db, org, registry):
-    denied(await call(registry, db, org, _token(org.id), "create_board", {"name": "x"}), "not_for_api_tokens")
-    assert (await db.execute(select(Board))).scalars().first() is None
-
-
-async def test_create_board_owner_is_the_person(db, org, admin_user, registry):
-    out = ok(await call(registry, db, org, admin_user, "create_board", {"name": "Sketch"}))
-    row = (await db.execute(select(Board).where(Board.board_uuid == out["board"]["uuid"]))).scalars().one()
-    member = (await db.execute(select(BoardMember).where(BoardMember.board_id == row.id))).scalars().one()
-    assert row.public is False and member.user_id == admin_user.id and member.role == "owner"
-    denied(await call(registry, db, org, admin_user, "create_board", {"name": "Open", "public": True}), "approval_required")
-
-
-async def test_copy_board_is_private_unless_asked(db, org, admin_user, registry, board):
-    board.public = True
-    await add(db, board)
-    out = ok(await call(registry, db, org, admin_user, "create_board", {"copy_from_board_uuid": "board_plan"}))
-    row = (await db.execute(select(Board).where(Board.board_uuid == out["board"]["uuid"]))).scalars().one()
-    assert row.public is False and out["copied_from"]["uuid"] == "board_plan"
-
-
-async def test_list_and_get_board(db, org, admin_user, regular_user, registry, board, foreign_board):
-    page = ok(await call(registry, db, org, admin_user, "list_boards", {}))
-    assert [b["uuid"] for b in page["items"]] == ["board_plan"] and page["items"][0]["members"] == 1
-    out = ok(await call(registry, db, org, admin_user, "get_board", {"board_uuid": "board_plan"}))
-    assert out["members"] == [{"user": {"kind": "user", "uuid": "user_admin", "name": "admin"}, "role": "owner"}]
-    assert "@" not in str(out)
-    # Private board: a learner who is not a member cannot open it.
-    denied(await call(registry, db, org, regular_user, "get_board", {"board_uuid": "board_plan"}))
-    denied(await call(registry, db, org, admin_user, "get_board", {"board_uuid": "board_theirs"}))
-
-
-async def test_manage_board_members(db, org, admin_user, regular_user, registry, board):
-    args = {"board_uuid": "board_plan", "add": [{"member": "regular", "role": "viewer"}]}
-    denied(await call(registry, db, org, admin_user, "manage_board_members", args), "approval_required")
-    out = ok(await call(registry, db, org, admin_user, "manage_board_members", args, approved=True))
-    assert out["members"][0]["result"] == "added" and out["members"][0]["user"]["uuid"] == "user_regular"
-    out = ok(await call(registry, db, org, admin_user, "manage_board_members", args, approved=True))
-    assert out["members"][0]["result"] == "already_member"
-    out = ok(await call(registry, db, org, admin_user, "manage_board_members", {"board_uuid": "board_plan", "remove": ["regular@test.com"]}, approved=True))
-    assert out["members"][0]["result"] == "removed"
-    out = ok(await call(registry, db, org, admin_user, "manage_board_members", {"board_uuid": "board_plan", "remove": ["admin"]}, approved=True))
-    assert out["members"][0]["result"] == "not_removed"
-    denied(await call(registry, db, org, admin_user, "manage_board_members", {"board_uuid": "board_plan", "add": [{"member": "nobody@x.com"}]}, approved=True), "http_404")
-    denied(await call(registry, db, org, admin_user, "manage_board_members", {"board_uuid": "board_plan"}), "invalid_args")
-
-
-async def test_update_and_delete_board(db, org, admin_user, regular_user, registry, board):
-    denied(await call(registry, db, org, admin_user, "update_board", {"board_uuid": "board_plan", "public": True}), "approval_required")
-    out = ok(await call(registry, db, org, admin_user, "update_board", {"board_uuid": "board_plan", "name": "Roadmap"}))
-    assert out["board"]["name"] == "Roadmap"
-    denied(await call(registry, db, org, regular_user, "delete_board", {"board_uuid": "board_plan"}, approved=True))
-    ok(await call(registry, db, org, admin_user, "delete_board", {"board_uuid": "board_plan"}, approved=True))
-    assert await db.get(Board, board.id) is None
 
 
 async def test_moderator_editing_someone_elses_post_needs_approval(db, org, admin_user):

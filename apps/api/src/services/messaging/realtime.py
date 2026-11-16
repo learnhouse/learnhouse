@@ -166,6 +166,23 @@ def _sse(event: dict) -> str:
     return f"data: {json.dumps(event, default=str)}\n\n"
 
 
+# Strong references to in-flight offline tasks so they aren't garbage
+# collected before they finish.
+_offline_tasks: set[asyncio.Task] = set()
+
+
+async def _go_offline(r, org_id: int, user_id: int, on_offline, presence_payload) -> None:
+    try:
+        went_offline = await _disconnect(r, org_id, user_id)
+        if went_offline:
+            await on_offline()
+            event = await presence_payload(False)
+            if event:
+                await r.publish(_org_channel(org_id), json.dumps(event, default=str))
+    except Exception:
+        logger.debug("presence disconnect failed", exc_info=True)
+
+
 async def event_stream(
     org_id: int,
     user_id: int,
@@ -229,12 +246,17 @@ async def event_stream(
             await pubsub.aclose()
         except Exception:
             pass
+        # A closed tab cancels this generator, and the request's cancel scope
+        # keeps cancelling every await in here: the offline bookkeeping (a DB
+        # write) was interrupted mid-query, which left the pool terminating
+        # the connection and logging an error. Run it as its own task, outside
+        # that scope, so it always completes.
+        task = asyncio.create_task(_go_offline(r, org_id, user_id, on_offline, presence_payload))
+        _offline_tasks.add(task)
+        task.add_done_callback(_offline_tasks.discard)
         try:
-            went_offline = await _disconnect(r, org_id, user_id)
-            if went_offline:
-                await on_offline()
-                event = await presence_payload(False)
-                if event:
-                    await r.publish(_org_channel(org_id), json.dumps(event, default=str))
-        except Exception:
-            logger.debug("presence disconnect failed", exc_info=True)
+            # Wait for it when we can; if we are cancelled again, the shielded
+            # task carries on by itself.
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            pass

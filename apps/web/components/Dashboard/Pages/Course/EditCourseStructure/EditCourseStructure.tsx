@@ -12,12 +12,16 @@ import {
   useCourse,
   useCourseDispatch,
 } from '@components/Contexts/CourseContext'
-import { Hexagon } from 'lucide-react'
+import { Hexagon, Plus } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import NewChapterModal from '@components/Objects/Modals/Chapters/NewChapter'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import toast from 'react-hot-toast'
+import { Button, EmptyState } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { useModalFormHost } from '@components/Objects/Modals/Activities/activityFormKit'
+import { EditorPage } from '../courseEditorUi'
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -79,9 +83,16 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
     setNewChapterModal(false)
   }
 
+  const chapterHost = useModalFormHost()
+
   // Submit new chapter
   const submitChapter = async (chapter: any) => {
-    await createChapter(chapter,access_token)
+    try {
+      await createChapter(chapter, access_token)
+    } catch (error: any) {
+      toast.error(error?.message || t('dashboard.courses.editor.chapter_form.create_error'))
+      return
+    }
     track(AnalyticsEvent.ChapterCreated, {
       chapter_count_after: (course_structure?.chapters?.length ?? 0) + 1,
     })
@@ -138,20 +149,34 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
 
   if (!course) return <PageLoading></PageLoading>
 
+  const chapters: any[] = course_structure.chapters || []
+  const activityCount = chapters.reduce((sum, ch) => sum + (ch.activities?.length || 0), 0)
+
   return (
-    <div className="flex flex-col">
-      <div className="h-6"></div>
+    <EditorPage>
       {winReady ? (
         <DragDropContext onDragEnd={updateStructure}>
+          {chapters.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-neutral-500 tabular-nums">
+                {t('dashboard.courses.editor.content.chapter_count', { count: chapters.length })}
+                <span className="mx-1.5 text-neutral-300">·</span>
+                {t('dashboard.courses.editor.content.activity_count', { count: activityCount })}
+              </p>
+              <Button variant="primary" icon={<Plus size={14} />} onClick={() => setNewChapterModal(true)}>
+                {t('dashboard.courses.structure.actions.add_chapter')}
+              </Button>
+            </div>
+          )}
+
           <Droppable type="chapter" droppableId="chapters" direction="vertical">
             {(provided, snapshot) => (
               <div
-                className={`space-y-4 ${snapshot.isDraggingOver ? 'bg-gray-50/50' : ''}`}
+                className={`space-y-4 rounded-2xl transition-colors ${snapshot.isDraggingOver ? 'bg-neutral-100/60' : ''}`}
                 {...provided.droppableProps}
                 ref={provided.innerRef}
               >
-                {course_structure.chapters &&
-                  course_structure.chapters.map((chapter: any, index: any) => {
+                {chapters.map((chapter: any, index: any) => {
                     return (
                       <ChapterElement
                         key={chapter.chapter_uuid}
@@ -168,38 +193,53 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
             )}
           </Droppable>
 
+          {chapters.length === 0 ? (
+            <div className="bg-white rounded-2xl nice-shadow">
+              <EmptyState
+                icon={<Hexagon size={22} />}
+                title={t('dashboard.courses.editor.content.empty_title')}
+                description={t('dashboard.courses.editor.content.empty_description')}
+                action={
+                  <Button variant="primary" icon={<Plus size={14} />} onClick={() => setNewChapterModal(true)}>
+                    {t('dashboard.courses.structure.actions.add_chapter')}
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setNewChapterModal(true)}
+              className="w-full h-12 flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-neutral-200 text-[13px] font-medium text-neutral-500 hover:text-neutral-900 hover:border-neutral-300 hover:bg-white transition-colors"
+            >
+              <Hexagon size={16} />
+              {t('dashboard.courses.structure.actions.add_chapter')}
+            </button>
+          )}
+
           {/* New Chapter Modal */}
           <Modal
             isDialogOpen={newChapterModal}
             onOpenChange={setNewChapterModal}
-            minHeight="sm"
-            dialogContent={
+            size="sm"
+            preventClose={chapterHost.submitting}
+            icon={<Hexagon size={16} />}
+            dialogTitle={t('dashboard.courses.structure.modals.new_chapter.title')}
+            dialogDescription={t('dashboard.courses.structure.modals.new_chapter.description')}
+            footer={chapterHost.footer(closeNewChapterModal, t('common.cancel'))}
+            dialogContent={chapterHost.wrap(
               <NewChapterModal
                 course={course ? course.courseStructure : null}
                 closeModal={closeNewChapterModal}
                 submitChapter={submitChapter}
-              ></NewChapterModal>
-            }
-            dialogTitle={t('dashboard.courses.structure.modals.new_chapter.title')}
-            dialogDescription={t('dashboard.courses.structure.modals.new_chapter.description')}
-            dialogTrigger={
-              <div className="w-44 my-16 py-5 max-w-(--breakpoint-2xl) mx-auto bg-cyan-800 text-white rounded-xl shadow-xs px-6 items-center flex flex-row h-10">
-                <div className="mx-auto flex space-x-2 items-center hover:cursor-pointer">
-                  <Hexagon
-                    strokeWidth={3}
-                    size={16}
-                    className="text-white text-sm "
-                  />
-                  <div className="font-bold text-sm">{t('dashboard.courses.structure.actions.add_chapter')}</div>
-                </div>
-              </div>
-            }
+              />
+            )}
           />
         </DragDropContext>
       ) : (
         <></>
       )}
-    </div>
+    </EditorPage>
   )
 }
 

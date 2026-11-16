@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useCallback } from 'react'
-import { ChevronUp } from 'lucide-react'
+import { CaretUp } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -77,24 +77,25 @@ export function CommentUpvoteButton({
       onClick={handleVote}
       disabled={!canVote || isLoading}
       className={cn(
-        'flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-200 text-xs',
+        'flex flex-col items-center justify-center gap-0.5 min-w-10 px-2 py-1.5 rounded-xl ring-1 ring-inset transition-colors duration-150 text-xs',
         hasVoted
-          ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-          : 'bg-gray-50 text-gray-500 hover:bg-gray-100',
+          ? 'bg-neutral-900 text-white ring-neutral-900'
+          : 'bg-white text-neutral-500 ring-neutral-200 hover:ring-neutral-300 hover:text-neutral-900',
         !canVote && 'opacity-50 cursor-not-allowed',
         isLoading && 'opacity-70'
       )}
       title={canVote ? (hasVoted ? t('communities.remove_upvote') : t('communities.upvote_reply')) : t('communities.join_to_vote')}
     >
-      <ChevronUp
+      <CaretUp
         size={14}
+        weight="bold"
         className={cn(
           'transition-transform',
-          hasVoted && 'text-indigo-600',
+          hasVoted && 'text-white',
           isLoading && 'animate-pulse'
         )}
       />
-      <span className="font-medium">{voteCount}</span>
+      <span className="font-semibold tabular-nums">{voteCount}</span>
     </button>
   )
 }

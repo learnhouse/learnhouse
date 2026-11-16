@@ -57,7 +57,6 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
 
     install_package("src.routers")
     install_package("src.routers.ai")
-    install_package("src.routers.boards")
     install_package("src.routers.orgs")
     install_package("src.routers.courses")
     install_package("src.routers.folders")
@@ -67,7 +66,6 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     install_package("src.routers.courses.activities")
     install_package("src.routers.communities")
     install_package("src.routers.podcasts")
-    install_package("src.routers.playgrounds")
     install_package("src.routers.integrations")
     install_package("src.services")
     install_package("src.services.dev")
@@ -85,6 +83,7 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "monitoring",
         "plans",
         "usergroups",
+        "usergroups_manage",
         "dev",
         "trail",
         "users",
@@ -133,19 +132,6 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "src.routers.ai.assignment_gen"
     ]
     sys.modules["src.routers.ai"].scenario = sys.modules["src.routers.ai.scenario"]
-
-    install_router_module("src.routers.boards.boards", "src.routers.boards.boards")
-    install_router_module(
-        "src.routers.boards.boards_playground",
-        "src.routers.boards.boards_playground",
-    )
-    sys.modules["src.routers.boards"].boards = sys.modules["src.routers.boards.boards"]
-    sys.modules["src.routers.boards"].boards_playground = sys.modules[
-        "src.routers.boards.boards_playground"
-    ]
-    sys.modules["src.routers.boards.boards"].internal_router = _named_router(
-        "src.routers.boards.boards.internal_router"
-    )
 
     install_router_module("src.routers.orgs.ai_credits", "src.routers.orgs.ai_credits")
     install_router_module(
@@ -258,20 +244,6 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "src.routers.podcasts.episodes"
     ]
 
-    install_router_module(
-        "src.routers.playgrounds.playgrounds", "src.routers.playgrounds.playgrounds"
-    )
-    install_router_module(
-        "src.routers.playgrounds.playgrounds_generator",
-        "src.routers.playgrounds.playgrounds_generator",
-    )
-    sys.modules["src.routers.playgrounds"].playgrounds = sys.modules[
-        "src.routers.playgrounds.playgrounds"
-    ]
-    sys.modules["src.routers.playgrounds"].playgrounds_generator = sys.modules[
-        "src.routers.playgrounds.playgrounds_generator"
-    ]
-
     install(
         "src.core.ee_hooks",
         register_ee_routers=lambda _router: None,
@@ -301,11 +273,9 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     plan_module = _module(
         "src.security.features_utils.plan_check",
         require_plan=_plan_factory("require_plan"),
-        require_plan_for_boards=_plan_factory("require_plan_for_boards"),
         require_plan_for_certifications=_plan_factory("require_plan_for_certifications"),
         require_plan_for_community=_plan_factory("require_plan_for_community"),
         require_plan_for_usergroups=_plan_factory("require_plan_for_usergroups"),
-        require_plan_for_playgrounds=_plan_factory("require_plan_for_playgrounds"),
         require_plan_for_paths=_plan_factory("require_plan_for_paths"),
     )
     monkeypatch.setitem(sys.modules, "src.security.features_utils.plan_check", plan_module)
@@ -405,23 +375,8 @@ class TestRootRouter:
         assert packs_internal["prefix"] == "/internal/packs"
         assert packs_internal["tags"] == ["packs-internal"]
 
-        boards = next(call for call in calls if call["router_name"] == "src.routers.boards.boards")
-        assert boards["prefix"] == "/boards"
-        assert boards["tags"] == ["boards"]
-        # boards has some public-ish endpoints (board preview) so it keeps the
-        # permissive dep; the strict dep is applied on boards_playground below.
-        assert _dependency_names(boards) == [
-            "get_non_api_token_user",
-            "require_plan_for_boards_personal_boards",
-        ]
-
-        boards_internal = next(
-            call
-            for call in calls
-            if call["router_name"] == "src.routers.boards.boards.internal_router"
-            and call["tags"] == ["boards-internal"]
-        )
-        assert boards_internal["prefix"] == "/boards"
+        # Boards are mounted by EE (ee/hooks.py), never by core.
+        assert not any("boards" in str(call["router_name"]) for call in calls)
 
         dev = next(call for call in calls if call["router_name"] == "src.routers.dev")
         assert dev["prefix"] == "/dev"

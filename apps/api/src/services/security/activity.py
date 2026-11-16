@@ -40,6 +40,19 @@ def _activity_tracking_enabled() -> bool:
 # Cache org slug/uuid -> id for a day; org identity is effectively immutable.
 _ORG_ID_CACHE_TTL = 86400
 
+# Day keys this process has already seen written (or found existing). Every
+# signed-in request schedules a recording, and each one used to cost a
+# blocking Redis round trip before it could stop; the answer can't change
+# until the date in the key does. Bounded: cleared when it grows too large.
+_TOUCHED_LOCAL: set[str] = set()
+_TOUCHED_LOCAL_MAX = 50_000
+
+
+def _remember_touched(key: str) -> None:
+    if len(_TOUCHED_LOCAL) >= _TOUCHED_LOCAL_MAX:
+        _TOUCHED_LOCAL.clear()
+    _TOUCHED_LOCAL.add(key)
+
 
 def _seconds_until_utc_midnight() -> int:
     """Seconds remaining until the next UTC midnight (>=1)."""
@@ -167,17 +180,29 @@ async def record_user_activity(
 
         today = datetime.now(timezone.utc).date()
 
-        r = get_redis_client()
         key = f"activity_touched:{org_id}:{user_id}:{today.isoformat()}"
+        r = get_redis_client()
+        # The local memo mirrors the Redis day-guard, so it only applies when
+        # that guard is in use; without Redis every call still writes (the
+        # insert is idempotent).
+        if r is not None and key in _TOUCHED_LOCAL:
+            return
         if r is not None:
             try:
                 # If the key already exists we've written today's row -> skip DB.
                 if not r.set(key, "1", nx=True, ex=_seconds_until_utc_midnight()):
+                    # Set by this or another pod: today's row exists, unless the
+                    # key holds a recent "not a member" answer, which is
+                    # rechecked once it expires and so is not remembered here.
+                    if r.get(key) not in (b"0", "0"):
+                        _remember_touched(key)
                     return
             except Exception:
                 logger.debug("activity Redis guard failed; falling through to DB", exc_info=True)
 
-        if not await _insert_activity_row(org_id, user_id, today) and r is not None:
+        if await _insert_activity_row(org_id, user_id, today):
+            _remember_touched(key)
+        elif r is not None:
             try:
                 # Not a member: shorten the guard so a same-day join still counts.
                 r.set(key, "0", ex=_NON_MEMBER_RECHECK_SECONDS)

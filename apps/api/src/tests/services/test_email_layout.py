@@ -119,3 +119,44 @@ class TestUnreadMessagesEmail:
         assert "background-color: #ff5500;" in body
         assert "https://acme.test/messages?settings=notifications" in body
         assert "LearnHouse" not in body
+
+
+class TestButtonStyle:
+    """The CTA button tinted with the org's brand color."""
+
+    def test_dark_brand_gets_white_text(self):
+        from src.services.users.emails import _button_style
+
+        style = _button_style("#1d4ed8")
+        assert "background-color: #1d4ed8;" in style
+        assert " color: #ffffff;" in style
+
+    def test_light_brand_gets_black_text(self):
+        from src.services.users.emails import _button_style
+
+        style = _button_style("#fbbf24")
+        assert "background-color: #fbbf24;" in style
+        assert " color: #000000;" in style
+
+    def test_white_brand_keeps_a_visible_default_button(self):
+        # A white brand used to come out black-on-black: replacing
+        # "color: #ffffff;" also hit "background-color: #ffffff;".
+        from src.services.users.emails import STYLES, _button_style
+
+        assert _button_style("#ffffff") == STYLES["button"]
+        assert _button_style("#fafafa") == STYLES["button"]
+
+    def test_no_or_invalid_brand_keeps_default(self):
+        from src.services.users.emails import STYLES, _button_style
+
+        assert _button_style(None) == STYLES["button"]
+        assert _button_style("red; display:none") == STYLES["button"]
+
+    def test_background_and_text_never_match(self):
+        from src.services.users.emails import _button_style
+
+        for color in ("#000000", "#ffffff", "#808080", "#c9a85c", "#00ff00", "#0f172a"):
+            style = _button_style(color)
+            bg = style.split("background-color: ")[1].split(";")[0]
+            fg = style.split(" color: ")[1].split(";")[0]
+            assert bg != fg, color

@@ -128,11 +128,20 @@ async def evaluate_org_auth(
 
     result: Optional[Dict[str, Any]] = None
     try:
+        from src.security.impersonation import current_impersonation
         from src.security.superadmin import is_user_superadmin
 
+        impersonation = current_impersonation()
+        if impersonation is not None and impersonation.target_user_id == user_id:
+            # An impersonation: started by staff under their own
+            # sign-in, so the org's sign-in method policy doesn't apply, but it
+            # is held to the one org it was opened for, whatever the sharing
+            # setting says.
+            if impersonation.org_id != org_id:
+                result = {"code": SESSION_NOT_BOUND_CODE}
         # Superadmins operate across tenants and must never be locked out of one
         # by that tenant's own policy.
-        if not await is_user_superadmin(user_id, db_session):
+        elif not await is_user_superadmin(user_id, db_session):
             policy = await get_org_auth_policy(db_session, org_id)
             provenance = get_session_provenance() or SessionProvenance()
             # A session signed in on an org's custom domain went through a host

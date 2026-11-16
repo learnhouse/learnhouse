@@ -40,6 +40,9 @@ class Discussion(DiscussionBase, table=True):
     edit_count: int = 0
     is_pinned: bool = Field(default=False, sa_column=Column(Boolean, default=False))
     is_locked: bool = Field(default=False, sa_column=Column(Boolean, default=False))
+    # The reply marked as the answer. Not a foreign key (comments already
+    # reference discussions); deleting that reply clears it in the service.
+    answer_comment_id: Optional[int] = Field(default=None, sa_column=Column(Integer, nullable=True))
     creation_date: str = ""
     update_date: str = ""
 
@@ -69,6 +72,11 @@ class DiscussionLockUpdate(SQLModel):
     is_locked: bool
 
 
+class DiscussionAnswerUpdate(SQLModel):
+    # None clears the answer.
+    comment_uuid: Optional[str] = None
+
+
 class DiscussionRead(SQLModel):
     id: int
     title: str
@@ -83,6 +91,7 @@ class DiscussionRead(SQLModel):
     edit_count: int = 0
     is_pinned: bool = False
     is_locked: bool = False
+    answer_comment_id: Optional[int] = None
     creation_date: str
     update_date: str
 

@@ -25,7 +25,7 @@ from src.db.ai.generations import AIGenerationKind
 from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
-from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
+from src.services.ai import metering, pricing
 from src.security.org_auth import is_org_member, enforce_org_mfa, require_org_create_permission
 from src.services.ai.generations import (
     delete_generation,
@@ -48,7 +48,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Generating an image is markedly more expensive than a text turn.
-IMAGE_CREDIT_COST = 5
+# Published price (src/services/ai/pricing.py); the charge is metered.
+IMAGE_CREDIT_COST = pricing.FEATURES["image_generation"].credits
 
 AI_IMAGE_DIR = "ai_images"
 
@@ -112,84 +113,80 @@ async def api_generate_image(
 
     # Rate limit then reserve credit (feature-enabled + quota checked inside reserve).
     enforce_ai_rate_limit(current_user.id, org.id)
-    await reserve_ai_credit(org.id, db_session, amount=IMAGE_CREDIT_COST)
-
-    # Resolve an optional source image for iterative refinement / editing.
-    # Prefer reading it from our own storage by file_id (reliable, no CORS);
-    # fall back to a client-supplied base64 data URL.
-    input_images: list[bytes] = []
-    if body.source_file_id:
-        _validate_file_id(body.source_file_id)
-        try:
-            input_images.append(
-                await read_content(
-                    directory=AI_IMAGE_DIR,
-                    type_of_dir="orgs",
-                    uuid=org.org_uuid,
-                    file_and_format=body.source_file_id,
+    async with metering.charge("image_generation", org_id=org.id, db=db_session, user_id=current_user.id):
+        # Resolve an optional source image for iterative refinement / editing.
+        # Prefer reading it from our own storage by file_id (reliable, no CORS);
+        # fall back to a client-supplied base64 data URL.
+        input_images: list[bytes] = []
+        if body.source_file_id:
+            _validate_file_id(body.source_file_id)
+            try:
+                input_images.append(
+                    await read_content(
+                        directory=AI_IMAGE_DIR,
+                        type_of_dir="orgs",
+                        uuid=org.org_uuid,
+                        file_and_format=body.source_file_id,
+                    )
                 )
-            )
-        except HTTPException:
-            raise HTTPException(
-                status_code=404,
-                detail="Source image to refine was not found.",
-            )
-    elif body.source_image_base64:
-        raw = body.source_image_base64
-        if "," in raw and raw.strip().startswith("data:"):
-            raw = raw.split(",", 1)[1]  # strip a data: URL prefix if present
+            except HTTPException:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Source image to refine was not found.",
+                )
+        elif body.source_image_base64:
+            raw = body.source_image_base64
+            if "," in raw and raw.strip().startswith("data:"):
+                raw = raw.split(",", 1)[1]  # strip a data: URL prefix if present
+            try:
+                input_images.append(base64.b64decode(raw))
+            except Exception:
+                logger.warning("Ignoring invalid source_image_base64 on image refine")
+
         try:
-            input_images.append(base64.b64decode(raw))
+            image_bytes = await generate_image(body.prompt, input_images=input_images or None)
+        except AINotConfiguredError as e:
+            raise HTTPException(status_code=403, detail=str(e))
+        except Exception as e:
+            # Do not log the traceback: the chained SDK error can embed the API key.
+            # generate_image already logs the sanitized exception type.
+            if is_quota_error(e):
+                logger.warning("Image generation failed: AI provider quota reached")
+                raise HTTPException(status_code=503, detail=AI_QUOTA_MESSAGE)
+            logger.error("Image generation failed")
+            raise HTTPException(
+                status_code=502,
+                detail="Image generation failed. Please try again or rephrase your prompt.",
+            )
+
+        # Persist the bytes through the shared storage abstraction (filesystem or S3/R2).
+        file_id = f"{uuid4()}_ai_generated.{OUTPUT_EXT}"
+        try:
+            await upload_content(
+                directory=AI_IMAGE_DIR,
+                type_of_dir="orgs",
+                uuid=org.org_uuid,
+                file_binary=image_bytes,
+                file_and_format=file_id,
+                allowed_formats=[OUTPUT_EXT],
+            )
         except Exception:
-            logger.warning("Ignoring invalid source_image_base64 on image refine")
+            logger.exception("Failed to store generated image")
+            raise HTTPException(status_code=500, detail="Failed to store generated image")
 
-    try:
-        image_bytes = await generate_image(body.prompt, input_images=input_images or None)
-    except AINotConfiguredError as e:
-        refund_ai_credit(org.id, IMAGE_CREDIT_COST)
-        raise HTTPException(status_code=403, detail=str(e))
-    except Exception as e:
-        refund_ai_credit(org.id, IMAGE_CREDIT_COST)
-        # Do not log the traceback: the chained SDK error can embed the API key.
-        # generate_image already logs the sanitized exception type.
-        if is_quota_error(e):
-            logger.warning("Image generation failed: AI provider quota reached")
-            raise HTTPException(status_code=503, detail=AI_QUOTA_MESSAGE)
-        logger.error("Image generation failed")
-        raise HTTPException(
-            status_code=502,
-            detail="Image generation failed. Please try again or rephrase your prompt.",
+        session_uuid = body.session_uuid or f"aiimg_{uuid4()}"
+        media_path = _media_path(org.org_uuid, file_id)
+        record = await record_generation(
+            db_session,
+            kind=AIGenerationKind.IMAGE,
+            org_id=org.id,
+            user_id=current_user.id,
+            prompt=body.prompt.strip(),
+            result={"file_id": file_id, "media_url": media_path, "source": "ai_generated"},
+            session_uuid=session_uuid,
+            course_id=body.course_id,
+            activity_id=body.activity_id,
         )
-
-    # Persist the bytes through the shared storage abstraction (filesystem or S3/R2).
-    file_id = f"{uuid4()}_ai_generated.{OUTPUT_EXT}"
-    try:
-        await upload_content(
-            directory=AI_IMAGE_DIR,
-            type_of_dir="orgs",
-            uuid=org.org_uuid,
-            file_binary=image_bytes,
-            file_and_format=file_id,
-            allowed_formats=[OUTPUT_EXT],
-        )
-    except Exception:
-        refund_ai_credit(org.id, IMAGE_CREDIT_COST)
-        logger.exception("Failed to store generated image")
-        raise HTTPException(status_code=500, detail="Failed to store generated image")
-
-    session_uuid = body.session_uuid or f"aiimg_{uuid4()}"
-    media_path = _media_path(org.org_uuid, file_id)
-    record = await record_generation(
-        db_session,
-        kind=AIGenerationKind.IMAGE,
-        org_id=org.id,
-        user_id=current_user.id,
-        prompt=body.prompt.strip(),
-        result={"file_id": file_id, "media_url": media_path, "source": "ai_generated"},
-        session_uuid=session_uuid,
-        course_id=body.course_id,
-        activity_id=body.activity_id,
-    )
 
     return GenerateImageResponse(
         ai_generation_uuid=record.ai_generation_uuid,

@@ -19,14 +19,14 @@ const PRIVACY_URL = getPlatformUrl('/privacy') || 'https://www.learnhouse.io/pri
 export function AuthFooter({ className = '' }: { className?: string }) {
   const { t } = useTranslation()
   return (
-    <div className={`pb-8 pt-6 text-center px-6 ${className}`}>
-      <p className="text-[13px] text-black/30 font-medium">
+    <div className={`pb-6 pt-4 text-center px-4 sm:px-8 ${className}`}>
+      <p className="text-xs text-neutral-400 leading-relaxed">
         {t('auth.terms_text', { defaultValue: "By continuing, you agree to LearnHouse's" })}{' '}
         <Link
           href={TERMS_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-black/50 hover:text-black/70 transition-colors"
+          className="text-neutral-500 underline-offset-2 hover:text-neutral-800 hover:underline transition-colors"
         >
           {t('auth.terms_of_service', { defaultValue: 'Terms of Service' })}
         </Link>{' '}
@@ -35,7 +35,7 @@ export function AuthFooter({ className = '' }: { className?: string }) {
           href={PRIVACY_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-black/50 hover:text-black/70 transition-colors"
+          className="text-neutral-500 underline-offset-2 hover:text-neutral-800 hover:underline transition-colors"
         >
           {t('auth.privacy_policy', { defaultValue: 'Privacy Policy' })}
         </Link>

@@ -15,7 +15,7 @@ import {
   handleAssignmentTaskSubmission,
   updateAssignmentTask,
 } from '@services/courses/assignments'
-import { CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle, XCircle } from '@phosphor-icons/react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -438,7 +438,7 @@ function TaskNumberAnswerObject({
             {revealAnswerKey && (
               <div className={answerKeyPanelClass}>
                 <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-700">
-                  <CheckCircle2 size={13} />
+                  <CheckCircle size={13} />
                   <span>{t('dashboard.assignments.editor.task_editor.number_answer.accepted_range_label')}</span>
                 </div>
                 <div className="text-sm font-mono text-emerald-800">{acceptedRange}</div>
@@ -488,7 +488,7 @@ function TaskNumberAnswerObject({
                   : 'bg-rose-50 text-rose-700 border border-rose-200'
               }`}
             >
-              {gradedPassed ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+              {gradedPassed ? <CheckCircle size={14} /> : <XCircle size={14} />}
               <span>
                 {gradedPassed
                   ? t('dashboard.assignments.editor.task_editor.number_answer.correct')

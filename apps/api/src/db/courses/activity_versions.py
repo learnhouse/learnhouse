@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import JSON, Column, ForeignKey, Integer, DateTime
+from sqlalchemy import JSON, Column, ForeignKey, Integer, DateTime, String
 from sqlmodel import Field, SQLModel
 from datetime import datetime
 
@@ -12,6 +12,9 @@ class ActivityVersionBase(SQLModel):
         default=None,
         sa_column=Column(Integer, ForeignKey("user.id", ondelete="SET NULL"))
     )
+    # Name given to a version saved on purpose ("Save version" while editing
+    # collaboratively); automatic snapshots have none.
+    label: Optional[str] = Field(default=None, sa_column=Column(String(120), nullable=True))
 
 
 class ActivityVersion(ActivityVersionBase, table=True):

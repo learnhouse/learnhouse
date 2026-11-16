@@ -1,15 +1,14 @@
 'use client'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, KeyRound, Loader2 } from 'lucide-react'
+import { Buildings, EnvelopeSimple, Globe, GoogleLogo, Info, Key, Password } from '@phosphor-icons/react'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
-import { Checkbox } from '@components/ui/checkbox'
-import { Button } from '@components/ui/button'
-import { Label } from '@components/ui/label'
+import { Chip, SectionCard, SettingRow, StickySaveBar } from '@components/Dashboard/Shared/DashKit/DashKit'
 import {
   ALL_AUTH_METHODS,
   AUTH_METHOD_OPTIONS,
+  Notice,
   ReadOnlyNotice,
   SecuritySkeleton,
   sameMethodSet,
@@ -25,6 +24,13 @@ import {
  * refuses a session whose method is no longer allowed). Checking every box is
  * the unrestricted default.
  */
+const METHOD_ICONS: Record<string, React.ElementType> = {
+  password: Password,
+  magic_login: EnvelopeSimple,
+  google: GoogleLogo,
+  sso: Buildings,
+}
+
 const OrgSignInMethods: React.FC = () => {
   const { t } = useTranslation()
   const { canManageOrg } = useAdminStatus()
@@ -71,145 +77,128 @@ const OrgSignInMethods: React.FC = () => {
   const readOnly = canManageOrg !== true
   const controlsDisabled = saving || readOnly
 
-  return (
-    <div className="sm:mx-10 mx-0 space-y-4 pb-10">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-gray-100 text-gray-700">
-          <KeyRound className="w-5 h-5" />
-        </div>
-        <div>
-          <h1 className="font-bold text-lg text-gray-800">
-            {t('dashboard.organization.security.methods_title', {
-              defaultValue: 'Allowed sign-in methods',
-            })}
-          </h1>
-          <p className="text-sm text-gray-500">
-            {t('dashboard.organization.security.methods_description', {
-              defaultValue:
-                'Choose how members are allowed to sign in to this organization. Leave every method checked to keep sign-in unrestricted.',
-            })}
-          </p>
-        </div>
-      </div>
+  const discard = () => {
+    setDraftMethods(policy.allowed_auth_methods)
+    setDraftSharing(policy.allow_central_session_sharing)
+    setSaveError(null)
+    setNeedsOwnMfa(false)
+  }
 
+  return (
+    <div className="flex flex-col gap-5">
       {readOnly && <ReadOnlyNotice />}
 
-      <div className="bg-white rounded-xl nice-shadow p-5 space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <SectionCard
+        icon={<Key size={18} />}
+        title={t('dashboard.organization.security.methods_title', {
+          defaultValue: 'Allowed sign-in methods',
+        })}
+        description={t('dashboard.organization.security.methods_description', {
+          defaultValue:
+            'Choose how members are allowed to sign in to this organization. Leave every method checked to keep sign-in unrestricted.',
+        })}
+        actions={
+          <Chip tone={restricted ? 'amber' : 'emerald'}>
+            {restricted
+              ? t('dashboard.users.dash.security.restricted', { count: draftMethods.length, total: ALL_AUTH_METHODS.length })
+              : t('dashboard.users.dash.security.unrestricted')}
+          </Chip>
+        }
+      >
+        <div className="divide-y divide-neutral-100">
           {AUTH_METHOD_OPTIONS.map((m) => {
-            const checked = draftMethods.includes(m.key)
+            const Icon = METHOD_ICONS[m.key] || Key
+            const label = t(m.labelKey, { defaultValue: m.labelDefault })
             return (
-              <div key={m.key} className="flex items-start gap-3">
-                <Checkbox
-                  id={`auth-method-${m.key}`}
-                  checked={checked}
-                  onCheckedChange={(value) => toggleMethod(m.key, value === true)}
-                  disabled={controlsDisabled}
-                  className="mt-0.5"
-                />
-                <div className="space-y-0.5">
-                  <Label htmlFor={`auth-method-${m.key}`} className="cursor-pointer">
-                    {t(m.labelKey, { defaultValue: m.labelDefault })}
-                  </Label>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    {t(m.hintKey, { defaultValue: m.hintDefault })}
-                  </p>
-                </div>
-              </div>
+              <SettingRow
+                key={m.key}
+                icon={<Icon size={18} />}
+                title={<label htmlFor={`auth-method-${m.key}`} className="cursor-pointer">{label}</label>}
+                description={t(m.hintKey, { defaultValue: m.hintDefault })}
+                control={
+                  <Switch
+                    id={`auth-method-${m.key}`}
+                    checked={draftMethods.includes(m.key)}
+                    onCheckedChange={(value) => toggleMethod(m.key, value === true)}
+                    disabled={controlsDisabled}
+                    aria-label={label}
+                  />
+                }
+              />
             )
           })}
         </div>
 
-        {draftMethods.length === 0 && (
-          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2">
-            {t('dashboard.organization.security.methods_empty_warning', {
-              defaultValue:
-                'With no method selected, no one could sign in to this organization. Pick at least one.',
-            })}
-          </p>
+        {(draftMethods.length === 0 || restricted) && (
+          <div className="mt-4">
+            {draftMethods.length === 0 ? (
+              <Notice tone="amber">
+                {t('dashboard.organization.security.methods_empty_warning', {
+                  defaultValue:
+                    'With no method selected, no one could sign in to this organization. Pick at least one.',
+                })}
+              </Notice>
+            ) : (
+              <Notice tone="neutral" icon={<Info size={16} className="shrink-0 mt-0.5 text-neutral-400" />}>
+                {t('dashboard.organization.security.methods_effect', {
+                  defaultValue:
+                    'Unchecked methods disappear from this organization’s login page, and members already signed in with one are asked to sign in again with an allowed method.',
+                })}
+              </Notice>
+            )}
+          </div>
         )}
+      </SectionCard>
 
-        {restricted && (
-          <p className="text-xs text-gray-500 leading-relaxed">
-            {t('dashboard.organization.security.methods_effect', {
-              defaultValue:
-                'Unchecked methods disappear from this organization’s login page, and members already signed in with one are asked to sign in again with an allowed method.',
-            })}
-          </p>
-        )}
-
-        {/* Central session sharing */}
-        <div className="flex items-start justify-between gap-4 pt-1 border-t border-gray-100">
-          <div className="min-w-0 pt-4">
-            <Label htmlFor="central-session-sharing" className="cursor-pointer">
+      <SectionCard
+        icon={<Globe size={18} />}
+        title={t('dashboard.users.dash.security.sessions_title')}
+        description={t('dashboard.users.dash.security.sessions_description')}
+      >
+        <SettingRow
+          title={
+            <label htmlFor="central-session-sharing" className="cursor-pointer">
               {t('dashboard.organization.security.session_sharing_label', {
                 defaultValue: 'Allow sharing sessions with learnhouse.io',
               })}
-            </Label>
-            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed max-w-xl">
-              {t('dashboard.organization.security.session_sharing_hint', {
-                defaultValue:
-                  'When off, signing in at learnhouse.io won’t let members into this org; they must sign in again from this org’s login page using an allowed method.',
-              })}
-            </p>
-          </div>
-          <Switch
-            id="central-session-sharing"
-            checked={draftSharing}
-            onCheckedChange={(checked) => {
-              setDraftSharing(checked)
-              setSaveError(null)
-              setNeedsOwnMfa(false)
-            }}
-            disabled={controlsDisabled}
-            className="shrink-0 mt-5"
-            aria-label={t('dashboard.organization.security.session_sharing_label', {
-              defaultValue: 'Allow sharing sessions with learnhouse.io',
-            })}
-          />
-        </div>
-
-        {saveError && (
-          <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200/80 px-4 py-3">
-            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{saveError}</p>
-          </div>
-        )}
-
-        <div className="flex flex-row-reverse items-center gap-3 pt-1">
-          <Button
-            type="button"
-            onClick={() =>
-              savePolicy({
-                allowed_auth_methods: draftMethods,
-                allow_central_session_sharing: draftSharing,
-              })
-            }
-            disabled={controlsDisabled || !isDirty || draftMethods.length === 0}
-            className="bg-black text-white hover:bg-black/90"
-          >
-            {saving && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
-            {saving
-              ? t('dashboard.organization.security.saving_short', { defaultValue: 'Saving…' })
-              : t('dashboard.organization.security.save', { defaultValue: 'Save changes' })}
-          </Button>
-          {isDirty && !saving && (
-            <button
-              type="button"
-              onClick={() => {
-                setDraftMethods(policy.allowed_auth_methods)
-                setDraftSharing(policy.allow_central_session_sharing)
+            </label>
+          }
+          description={t('dashboard.organization.security.session_sharing_hint', {
+            defaultValue:
+              'When off, signing in at learnhouse.io won’t let members into this org; they must sign in again from this org’s login page using an allowed method.',
+          })}
+          control={
+            <Switch
+              id="central-session-sharing"
+              checked={draftSharing}
+              onCheckedChange={(checked) => {
+                setDraftSharing(checked)
                 setSaveError(null)
                 setNeedsOwnMfa(false)
               }}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              {t('dashboard.organization.security.cancel', { defaultValue: 'Cancel' })}
-            </button>
-          )}
-        </div>
-      </div>
+              disabled={controlsDisabled}
+              aria-label={t('dashboard.organization.security.session_sharing_label', {
+                defaultValue: 'Allow sharing sessions with learnhouse.io',
+              })}
+            />
+          }
+        />
+      </SectionCard>
+
+      {saveError && <Notice tone="rose">{saveError}</Notice>}
+
+      <StickySaveBar
+        visible={isDirty && !readOnly}
+        saving={saving}
+        disabled={draftMethods.length === 0}
+        onSave={() =>
+          savePolicy({
+            allowed_auth_methods: draftMethods,
+            allow_central_session_sharing: draftSharing,
+          })
+        }
+        onDiscard={discard}
+      />
     </div>
   )
 }

@@ -320,7 +320,7 @@ class TestActivityChat:
         await _activity(
             db, org, course, chapter, 60, "act_chat", published=published, lock_type=lock_type
         )
-        with patch.object(ai_service, "reserve_ai_credit", new_callable=AsyncMock) as reserve:
+        with patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock) as reserve:
             with pytest.raises(HTTPException) as exc:
                 await ai_service._get_activity_and_course_info(
                     "act_chat", db, mock_request, regular_user
@@ -353,8 +353,7 @@ class TestActivityChat:
             ai_service, "_get_activity_and_course_info", new=AsyncMock(return_value=info)
         ), patch.object(
             ai_service, "chat_session_belongs_to_user", return_value=False
-        ) as belongs, patch.object(
-            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ) as belongs, patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock
         ) as reserve:
             with pytest.raises(HTTPException) as exc:
                 await ai_service.ai_send_activity_chat_message_stream(
@@ -363,3 +362,9 @@ class TestActivityChat:
         assert exc.value.status_code == 404
         belongs.assert_called_once_with("chat_other", regular_user.id)
         reserve.assert_not_awaited()
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

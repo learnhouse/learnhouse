@@ -11,13 +11,11 @@ from datetime import datetime
 import pytest
 from fastapi import HTTPException
 
-from src.db.boards import BoardCreate
 from src.db.folders.folders import FolderCreate
 from src.db.roles import Role, RoleTypeEnum
 from src.db.user_organizations import UserOrganization
 from src.db.users import PublicUser, User, UserUpdate
 from src.security.rbac.rbac import authorization_verify_based_on_roles
-from src.services.boards.boards import create_board
 from src.services.folders.folders import create_folder
 from src.services.users.users import update_user
 from src.tests.conftest import ADMIN_RIGHTS
@@ -112,12 +110,6 @@ class TestPlaceholderCreate:
         self, db, org, outsider_admin, mock_request
     ):
         with pytest.raises(HTTPException) as exc:
-            await create_board(
-                mock_request, org.id, BoardCreate(name="b", description=""), outsider_admin, db
-            )
-        assert exc.value.status_code == 403
-
-        with pytest.raises(HTTPException) as exc:
             await create_folder(
                 mock_request, FolderCreate(name="f", org_id=org.id), outsider_admin, db
             )
@@ -126,10 +118,10 @@ class TestPlaceholderCreate:
     async def test_admin_elsewhere_can_create_in_their_own_org(
         self, db, other_org, outsider_admin, mock_request
     ):
-        board = await create_board(
-            mock_request, other_org.id, BoardCreate(name="b", description=""), outsider_admin, db
+        folder = await create_folder(
+            mock_request, FolderCreate(name="f", org_id=other_org.id), outsider_admin, db
         )
-        assert board.org_id == other_org.id
+        assert folder.org_id == other_org.id
 
     async def test_org_admin_can_create(self, db, org, admin_user, mock_request):
         folder = await create_folder(

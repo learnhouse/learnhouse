@@ -36,7 +36,7 @@ async def api_stream(
     db_session: AsyncSession = Depends(get_db_session),
 ):
     await service.require_messaging(org_id, current_user.id, db_session)
-    me = await service.get_my_status(org_id, current_user, db_session)
+    me = await service.get_my_status(org_id, current_user, db_session, gated=True)
     hello = {
         "type": "hello",
         "user_id": current_user.id,

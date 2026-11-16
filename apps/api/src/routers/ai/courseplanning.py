@@ -23,8 +23,9 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
-    reserve_ai_credit,
 )
+from src.services.ai import metering
+from src.services.courses.activities.collab_notify import notify_collab_content_changed
 from src.services.analytics import events as analytics_events
 from src.services.analytics.analytics import track
 from src.services.ai.llm import resolve_model_for_org, model_for_tier
@@ -56,33 +57,63 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def event_generator(generator, session_uuid: str):
+async def _metered_sse(generator, session_uuid: str, meter, *, error_text: str, log_label: str, log_arg: str):
+    """Stream ``generator`` as SSE with its model calls metered on ``meter``:
+    settled before ``done`` (which carries ``credits``), refunded when the
+    stream fails or produces nothing."""
+    produced = False
+    failed = False
+    with metering.use_meter(meter):
+        try:
+            async for chunk in generator:
+                produced = produced or bool(chunk)
+                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+            done: dict = {"type": "done", "session_uuid": session_uuid}
+            if meter is not None:
+                done["credits"] = await meter.settle(failed=not produced)
+            yield f"data: {json.dumps(done)}\n\n"
+        except Exception as e:
+            failed = True
+            log_ai_failure(logger, e, log_label, log_arg)
+            message = ai_error_message(e, error_text)
+            yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
+        finally:
+            if meter is not None and not meter.settled:
+                try:
+                    await meter.settle(failed=failed or not produced)
+                except Exception:
+                    logger.debug("Course planning credit settlement failed", exc_info=True)
+
+
+async def event_generator(generator, session_uuid: str, meter=None):
     """Convert async generator to SSE format"""
-    try:
-        async for chunk in generator:
-            yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
-        yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
-    except Exception as e:
-        log_ai_failure(logger, e, "Error in event_generator for session %s", session_uuid)
-        message = ai_error_message(e, "An internal error occurred while generating the stream.")
-        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
+    async for frame in _metered_sse(
+        generator, session_uuid, meter,
+        error_text="An internal error occurred while generating the stream.",
+        log_label="Error in event_generator for session %s", log_arg=session_uuid,
+    ):
+        yield frame
 
 
-async def event_generator_with_save(generator, session_uuid: str, activity_uuid: str):
+async def event_generator_with_save(generator, session_uuid: str, activity_uuid: str, meter=None):
     """Convert async generator to SSE format.
     Note: Content saving is handled by the dedicated /save-activity-content endpoint
     called from the frontend after parsing the stream."""
-    try:
-        async for chunk in generator:
-            yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+    async for frame in _metered_sse(
+        generator, session_uuid, meter,
+        error_text="An internal error occurred while generating activity content.",
+        log_label="Error in event_generator_with_save for activity %s", log_arg=activity_uuid,
+    ):
+        yield frame
 
-        # Content is saved via the dedicated save endpoint called from frontend
-        logger.info(f"[AI Content] Streaming complete for activity {activity_uuid}, content will be saved via explicit API call")
-        yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
-    except Exception as e:
-        log_ai_failure(logger, e, "Error in event_generator_with_save for activity %s", activity_uuid)
-        message = ai_error_message(e, "An internal error occurred while generating activity content.")
-        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
+
+async def _start_planning_charge(org_id: int, ai_model: str, db_session: AsyncSession, current_user):
+    """Reserve a planning request (pro-tier models count as 3 units)."""
+    units = 3 if ai_model == model_for_tier("pro") else 1
+    return await metering.start(
+        "course_planning", org_id=org_id, db=db_session,
+        user_id=resolve_acting_user_id(current_user), units=units,
+    )
 
 
 def _load_owned_session(session_uuid: str, current_user) -> CoursePlanningSessionData:
@@ -172,30 +203,32 @@ async def start_course_planning_session(
 
     # Get AI model; pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
-    credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
-    # Atomic check+deduct via Redis Lua so concurrent streams can't race past
+    # Atomic check+reserve via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
-    await reserve_ai_credit(org.id, db_session, amount=credit_cost)
+    meter = await _start_planning_charge(org.id, ai_model, db_session, current_user)
+    try:
+        # Create new session with language
+        session = create_course_planning_session(
+            org_id=org.id, language=session_request.language,
+            user_id=resolve_acting_user_id(current_user),
+        )
 
-    # Create new session with language
-    session = create_course_planning_session(
-        org_id=org.id, language=session_request.language,
-        user_id=resolve_acting_user_id(current_user),
-    )
-
-    # Generate with streaming (include attachments if provided)
-    stream = generate_course_plan_stream(
-        prompt=session_request.prompt,
-        session=session,
-        model_name=ai_model,
-        attachments=session_request.attachments
-    )
+        # Generate with streaming (include attachments if provided)
+        stream = generate_course_plan_stream(
+            prompt=session_request.prompt,
+            session=session,
+            model_name=ai_model,
+            attachments=session_request.attachments
+        )
+    except BaseException:
+        await meter.settle(failed=True)
+        raise
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid),
+        event_generator(stream, session.session_uuid, meter=meter),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -256,28 +289,30 @@ async def iterate_course_planning_session(
 
     # Get AI model; pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
-    credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
-    # Atomic check+deduct via Redis Lua so concurrent streams can't race past
+    # Atomic check+reserve via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
-    await reserve_ai_credit(org.id, db_session, amount=credit_cost)
+    meter = await _start_planning_charge(org.id, ai_model, db_session, current_user)
+    try:
+        # Use provided plan or session's current plan
+        current_plan = message_request.current_plan or session.current_plan
 
-    # Use provided plan or session's current plan
-    current_plan = message_request.current_plan or session.current_plan
-
-    # Generate with streaming (include attachments if provided)
-    stream = generate_course_plan_stream(
-        prompt=message_request.message,
-        session=session,
-        model_name=ai_model,
-        current_plan=current_plan,
-        attachments=message_request.attachments
-    )
+        # Generate with streaming (include attachments if provided)
+        stream = generate_course_plan_stream(
+            prompt=message_request.message,
+            session=session,
+            model_name=ai_model,
+            current_plan=current_plan,
+            attachments=message_request.attachments
+        )
+    except BaseException:
+        await meter.settle(failed=True)
+        raise
 
     return StreamingResponse(
-        event_generator(stream, session.session_uuid),
+        event_generator(stream, session.session_uuid, meter=meter),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -550,36 +585,38 @@ async def generate_activity_content(
 
     # Get AI model; pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
-    credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
-    # Atomic check+deduct via Redis Lua so concurrent streams can't race past
+    # Atomic check+reserve via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
-    await reserve_ai_credit(org.id, db_session, amount=credit_cost)
+    meter = await _start_planning_charge(org.id, ai_model, db_session, current_user)
+    try:
+        # Get current content if iterating
+        current_content = None
+        if activity.content and iteration_count > 0:
+            current_content = json.dumps(activity.content)
 
-    # Get current content if iterating
-    current_content = None
-    if activity.content and iteration_count > 0:
-        current_content = json.dumps(activity.content)
-
-    # Generate with streaming
-    stream = generate_activity_content_stream(
-        session=session,
-        activity_uuid=activity_uuid,
-        activity_name=content_request.activity_name,
-        activity_description=content_request.activity_description,
-        chapter_name=content_request.chapter_name,
-        course_name=content_request.course_name,
-        course_description=content_request.course_description,
-        model_name=ai_model,
-        prompt=content_request.prompt,
-        current_content=current_content
-    )
+        # Generate with streaming
+        stream = generate_activity_content_stream(
+            session=session,
+            activity_uuid=activity_uuid,
+            activity_name=content_request.activity_name,
+            activity_description=content_request.activity_description,
+            chapter_name=content_request.chapter_name,
+            course_name=content_request.course_name,
+            course_description=content_request.course_description,
+            model_name=ai_model,
+            prompt=content_request.prompt,
+            current_content=current_content
+        )
+    except BaseException:
+        await meter.settle(failed=True)
+        raise
 
     # Use event_generator_with_save to automatically save content to database when streaming completes
     return StreamingResponse(
-        event_generator_with_save(stream, session.session_uuid, activity_uuid),
+        event_generator_with_save(stream, session.session_uuid, activity_uuid, meter=meter),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -728,9 +765,11 @@ async def save_activity_content(
         # Update activity directly - ensure fresh reference
         logger.info("[Save Activity Content] Updating activity.content...")
 
-        # Set content directly on the model
+        # Set content directly on the model. The version moves so a collab
+        # room (and an editor open in the legacy mode) sees the change.
         activity.content = content
         activity.update_date = str(datetime.now())
+        activity.current_version = (activity.current_version or 1) + 1
 
         # Explicitly mark as modified to ensure SQLAlchemy tracks the change
         from sqlalchemy.orm.attributes import flag_modified
@@ -747,6 +786,8 @@ async def save_activity_content(
         statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
         verified_activity = (await db_session.execute(statement)).scalars().first()
 
+        if verified_activity:
+            notify_collab_content_changed(verified_activity, current_user)
         if verified_activity and verified_activity.content:
             content_keys = list(verified_activity.content.keys()) if isinstance(verified_activity.content, dict) else 'N/A'
             content_size = len(json.dumps(verified_activity.content)) if verified_activity.content else 0

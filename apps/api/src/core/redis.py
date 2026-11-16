@@ -17,6 +17,11 @@ from config.config import get_learnhouse_config
 logger = logging.getLogger(__name__)
 
 _pool: Optional[redis.ConnectionPool] = None
+# One client over the pool. redis.Redis is safe to share (each command checks a
+# connection out of the pool), and building one per call re-created its ~170
+# response callbacks every time, several times per request.
+_client: Optional[redis.Redis] = None
+_client_pool: Optional[redis.ConnectionPool] = None
 
 
 def _build_pool() -> Optional[redis.ConnectionPool]:
@@ -43,13 +48,17 @@ def get_redis_client() -> Optional[redis.Redis]:
 
     All cache operations should call this instead of creating their own clients.
     """
-    global _pool
+    global _pool, _client, _client_pool
     if _pool is None:
         _pool = _build_pool()
     if _pool is None:
         return None
+    if _client is not None and _client_pool is _pool:
+        return _client
     try:
-        return redis.Redis(connection_pool=_pool)
+        _client = redis.Redis(connection_pool=_pool)
+        _client_pool = _pool
+        return _client
     except Exception:
         logger.debug("Failed to get Redis client from pool", exc_info=True)
         return None
@@ -57,5 +66,7 @@ def get_redis_client() -> Optional[redis.Redis]:
 
 def reset_pool() -> None:
     """Reset the connection pool (used in tests)."""
-    global _pool
+    global _pool, _client, _client_pool
     _pool = None
+    _client = None
+    _client_pool = None

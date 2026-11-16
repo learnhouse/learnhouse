@@ -5,6 +5,7 @@ import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import TableOfContents from './TableOfContents'
 import { getActivityExtensions, normalizeActivityContent } from './activityExtensions'
 import AICanvaToolkit from './AI/AICanvaToolkit'
+import BlockThemeScope, { type BlockThemeRequest } from '@components/Objects/Activities/BlockTheme/BlockThemeScope'
 
 interface Editor {
   content: string
@@ -14,6 +15,9 @@ interface Editor {
   // stream URLs even where the Org/Course React contexts aren't populated.
   courseUuid?: string
   orgUuid?: string
+  /** Block theme: 'auto' (default) adapts to the background behind the lesson;
+   *  'light' / 'dark' force one (see BlockTheme/blockTheme.ts). */
+  theme?: BlockThemeRequest
 }
 
 function Canva(props: Editor) {
@@ -47,13 +51,13 @@ function Canva(props: Editor) {
 
   return (
     <EditorOptionsProvider options={{ isEditable: false }}>
-      <div className="w-full mx-auto">
+      <BlockThemeScope theme={props.theme} className="w-full mx-auto">
         <AICanvaToolkit activity={props.activity} editor={editor} />
-        <div className="canva-content-wrapper">
+        <div className="canva-content-wrapper" data-lesson-content="">
           {!props.hideTableOfContents && <TableOfContents editor={editor} />}
           <EditorContent editor={editor} />
         </div>
-      </div>
+      </BlockThemeScope>
     </EditorOptionsProvider>
   )
 }

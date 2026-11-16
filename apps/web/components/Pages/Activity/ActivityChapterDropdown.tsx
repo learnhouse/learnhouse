@@ -1,11 +1,12 @@
 'use client'
 import { useMediaQuery } from 'usehooks-ts'
-import { Check, FileText, ListTree, Video, X, StickyNote, Backpack, ArrowRight, Package, Puzzle, Globe, Radio } from 'lucide-react'
+import { Check, FileText, ListTree, Video, X, StickyNote, Backpack, ArrowRight, Package, Puzzle, Globe, Radio, Zap } from 'lucide-react'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { ChapterEmoji } from '@components/Objects/Courses/ChapterEmoji/ChapterEmoji'
 
 interface ActivityChapterDropdownProps {
   course: any
@@ -72,6 +73,8 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         return <Package size={10} />;
       case 'TYPE_LIVE_SESSION':
         return <Radio size={10} />;
+      case 'TYPE_PLAY':
+        return <Zap size={10} />;
       case 'TYPE_CUSTOM':
         return <Puzzle size={10} />;
       default:
@@ -95,6 +98,8 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         return t('activities.scorm');
       case 'TYPE_LIVE_SESSION':
         return t('activities.live_session');
+      case 'TYPE_PLAY':
+        return t('activities.play', 'Play');
       case 'TYPE_CUSTOM':
         return t('activities.custom');
       default:
@@ -136,7 +141,7 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
                     <div className="bg-gray-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                       {index + 1}
                     </div>
-                    <span>{chapter.name}</span>
+                    <span><ChapterEmoji chapter={chapter} />{chapter.name}</span>
                   </div>
                 </div>
                 <div className="py-0.5">

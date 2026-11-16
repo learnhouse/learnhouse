@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Transit map visualisation">
+<rect width="400" height="300" fill="#121212"/>
+<g fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M30 230L120 140 230 140 300 70 370 70" stroke="#6d4aff"/>
+<path d="M40 60L120 140 160 220 290 220 360 250" stroke="#ffb224"/>
+<path d="M200 30L230 140 260 260" stroke="#7fd1a0"/>
+</g>
+<g fill="#fafaf7" stroke="#121212" stroke-width="3"><circle cx="120" cy="140" r="9"/><circle cx="230" cy="140" r="9"/><circle cx="300" cy="70" r="7"/><circle cx="160" cy="220" r="7"/><circle cx="290" cy="220" r="7"/><circle cx="250" cy="226" r="7"/></g>
+</svg>

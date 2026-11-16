@@ -29,6 +29,10 @@ export default Node.create({
       size: {
         default: 'medium',
       },
+      // Card style preset (flipcardStyles.ts): 'solid' is the original look.
+      style: {
+        default: 'solid',
+      },
     };
   },
 

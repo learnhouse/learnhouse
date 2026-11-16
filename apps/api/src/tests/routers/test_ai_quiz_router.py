@@ -73,7 +73,7 @@ async def test_happy_path_no_activity():
     record = SimpleNamespace(ai_generation_uuid="aigen_1")
     with patch.object(qz, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(qz, "enforce_ai_rate_limit"), \
-         patch.object(qz, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(qz, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(qz, "generate_quiz", new=AsyncMock(return_value=(_QUIZ, "s1"))), \
          patch.object(qz, "record_generation", new=AsyncMock(return_value=record)):
@@ -91,7 +91,7 @@ async def test_happy_path_with_activity_grounding():
     rec = AsyncMock(return_value=record)
     with patch.object(qz, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(qz, "enforce_ai_rate_limit"), \
-         patch.object(qz, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(qz, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(qz, "generate_quiz", new=AsyncMock(return_value=(_QUIZ, "s1"))), \
          patch.object(qz, "record_generation", new=rec):
@@ -109,7 +109,7 @@ async def test_activity_grounding_denied_by_rbac():
     with patch.object(qz, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(qz, "check_resource_access",
                       new=AsyncMock(side_effect=HTTPException(status_code=403, detail="denied"))), \
-         patch.object(qz, "reserve_ai_credit", new=reserve):
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=reserve):
         with pytest.raises(HTTPException) as exc:
             await qz.api_generate_quiz(body, _http_req(), _user(), _db_returning(_org(), activity, course))
     assert exc.value.status_code == 403
@@ -120,7 +120,7 @@ async def test_activity_missing_is_404_not_ungated():
     """An activity uuid that doesn't resolve must not skip both gates."""
     with patch.object(qz, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(qz, "_load_activity_content", new=AsyncMock(return_value=(None, None, None))), \
-         patch.object(qz, "reserve_ai_credit", new=AsyncMock()) as reserve:
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()) as reserve:
         with pytest.raises(HTTPException) as exc:
             await qz.api_generate_quiz(GenerateQuizRequest(org_id=5, prompt="p", activity_uuid="act_missing"), MagicMock(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 404
@@ -131,10 +131,10 @@ async def test_empty_quiz_refunds_and_502():
     body = GenerateQuizRequest(org_id=5, prompt="p")
     with patch.object(qz, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(qz, "enforce_ai_rate_limit"), \
-         patch.object(qz, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(qz, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(qz, "generate_quiz", new=AsyncMock(return_value=({"quizId": "q", "questions": []}, "s1"))), \
-         patch.object(qz, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await qz.api_generate_quiz(body, _http_req(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 502
@@ -145,10 +145,10 @@ async def test_not_configured_refunds_and_403():
     body = GenerateQuizRequest(org_id=5, prompt="p")
     with patch.object(qz, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(qz, "enforce_ai_rate_limit"), \
-         patch.object(qz, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(qz, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(qz, "generate_quiz", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
-         patch.object(qz, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await qz.api_generate_quiz(body, _http_req(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 403
@@ -159,10 +159,10 @@ async def test_generation_error_refunds_and_502():
     body = GenerateQuizRequest(org_id=5, prompt="p")
     with patch.object(qz, "is_org_member", new=AsyncMock(return_value=True)), \
          patch.object(qz, "enforce_ai_rate_limit"), \
-         patch.object(qz, "reserve_ai_credit", new=AsyncMock()), \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(qz, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
          patch.object(qz, "generate_quiz", new=AsyncMock(side_effect=RuntimeError("boom"))), \
-         patch.object(qz, "refund_ai_credit") as refund:
+         patch("src.security.features_utils.usage.refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as exc:
             await qz.api_generate_quiz(body, _http_req(), _user(), _db_returning(_org()))
     assert exc.value.status_code == 502
@@ -196,3 +196,9 @@ def _skip_org_mfa_policy():
     """
     with patch.object(qz, "enforce_org_mfa", new=AsyncMock(return_value=None)):
         yield
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

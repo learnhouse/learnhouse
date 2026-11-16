@@ -14,7 +14,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
 from src.db.users import APITokenUser
-from src.security.superadmin import is_user_superadmin
+from src.security.superadmin import is_user_superadmin, superadmin_org_bypass_blocked
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ async def holds_admin_or_maintainer_role(user_id: int, org_id: int, db_session: 
 
 async def is_org_member(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """Check if user is a member of the org (or a superadmin)."""
-    if await is_user_superadmin(user_id, db_session):
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
         logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
         return True
     return await get_user_org(user_id, org_id, db_session) is not None
@@ -72,7 +72,7 @@ async def is_org_member(user_id: int, org_id: int, db_session: AsyncSession) -> 
 
 async def is_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """Check if user is an admin/maintainer of the org (or a superadmin)."""
-    if await is_user_superadmin(user_id, db_session):
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
         logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
         return True
     user_org = await get_user_org(user_id, org_id, db_session)
@@ -141,7 +141,7 @@ async def verify_org_membership(user_id: int, org_id: int, db_session: AsyncSess
     Prevents cross-org data access (IDOR) by ensuring the requesting user
     actually belongs to the org whose data they are querying.
     """
-    if await is_user_superadmin(user_id, db_session):
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
         return
 
     membership = (await db_session.execute(
@@ -162,7 +162,7 @@ async def verify_org_admin(user_id: int, org_id: int, db_session: AsyncSession) 
 
     Scoped to the org being accessed, not any org the user belongs to.
     """
-    if await is_user_superadmin(user_id, db_session):
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
         return
 
     membership = (await db_session.execute(
@@ -209,7 +209,7 @@ async def require_org_role_permission(
         action: e.g. 'action_create', 'action_read'
         fallback_role_ids: allowed role IDs when rights dict is absent
     """
-    if await is_user_superadmin(user_id, db_session):
+    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
         logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
         return
 

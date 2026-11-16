@@ -31,9 +31,8 @@ def no_redis():
 def ai_gates():
     """Rate limit and credit reservation pass; refunds are observed."""
     refund = MagicMock()
-    with patch.object(mig, "enforce_ai_rate_limit"), patch.object(
-        mig, "reserve_ai_credit", new=AsyncMock()
-    ), patch.object(mig, "refund_ai_credit", new=refund):
+    with patch.object(mig, "enforce_ai_rate_limit"), patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()
+    ), patch("src.security.features_utils.usage.refund_ai_credit", new=refund):
         yield refund
 
 
@@ -89,7 +88,7 @@ class TestSuggestRefunds:
                     mock_request, org.id, self._body(), admin_user, db
                 )
 
-        ai_gates.assert_called_once_with(org.id)
+        ai_gates.assert_called_once_with(org.id, 1)
 
     async def test_failing_refund_does_not_mask_the_original_error(
         self, db, org, admin_role, admin_user, no_redis, mock_request, ai_gates
@@ -106,7 +105,7 @@ class TestSuggestRefunds:
                 )
 
         assert exc.value.status_code == 404
-        ai_gates.assert_called_once_with(org.id)
+        ai_gates.assert_called_once_with(org.id, 1)
 
 
 class TestCreate:
@@ -152,3 +151,9 @@ class TestCreate:
 
         assert exc.value.status_code == 400
         assert exc.value.detail == "Invalid structure: no chapters"
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

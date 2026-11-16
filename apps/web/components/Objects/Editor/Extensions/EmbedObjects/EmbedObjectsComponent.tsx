@@ -1,262 +1,146 @@
-import { NodeViewWrapper } from '@tiptap/react'
+import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect, useMemo } from 'react'
-import { Link as LinkIcon, DotsSixVertical, DotsSix, TextAlignCenter, Code, X, Palette } from '@phosphor-icons/react'
+import {
+  Link as LinkIcon, DotsSixVertical, DotsSix, TextAlignCenter, TextAlignLeft, Code, Trash, PencilSimple, Cube, Crop, ArrowSquareOut,
+} from '@phosphor-icons/react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
-import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiNotion, SiGoogledocs, SiX, SiFigma, SiGiphy, SiYoutube } from '@icons-pack/react-simple-icons'
-import DOMPurify from 'dompurify'
 import { sanitizeEmbedCode, urlEmbedSandboxFor } from '@/lib/media/embedSanitize'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import {
+  BlockChrome, BlockPopover, BlockToolbarButton, BlockToolbarDivider, FIELD_CLASS, Segmented, TEXTAREA_CLASS,
+} from '../../Blocks/ui/BlockChrome'
+import BlockCaption from '../../Blocks/ui/BlockCaption'
+import {
+  ASPECT_PRESETS, aspectPresetFor, embedAttrsFor, normalizeUserUrl, parseEmbedUrl,
+} from '../../Blocks/embeds/embedProviders'
+import { deleteBlock } from '../../Blocks/nodeViewUtils'
+import { resolveEmbedSrc } from '../../Blocks/embeds/embedRender'
 
 // Matches the embedHeight default in the EmbedObjects node
-const DEFAULT_EMBED_HEIGHT = 300;
+const DEFAULT_EMBED_HEIGHT = 300
 
-// Add new type for script-based embeds
 const SCRIPT_BASED_EMBEDS = {
   twitter: { src: 'https://platform.twitter.com/widgets.js', identifier: 'twitter-tweet' },
   instagram: { src: 'https://www.instagram.com/embed.js', identifier: 'instagram-media' },
   tiktok: { src: 'https://www.tiktok.com/embed.js', identifier: 'tiktok-embed' },
-};
+}
 
-// Helper function to convert YouTube URLs to embed format
-const getYouTubeEmbedUrl = (url: string): string => {
-  try {
-    const parsedUrl = new URL(url);
+const PROVIDER_HINTS = ['YouTube', 'Vimeo', 'Loom', 'Figma', 'Google Docs', 'Slides', 'Sheets', 'Forms', 'CodePen', 'CodeSandbox', 'Spotify', 'Miro', 'Canva', 'Desmos', 'GeoGebra']
 
-    const isYoutubeHostname =
-      parsedUrl.hostname === 'youtube.com' ||
-      parsedUrl.hostname === 'www.youtube.com' ||
-      parsedUrl.hostname === 'youtu.be' ||
-      parsedUrl.hostname === 'www.youtu.be';
-
-    if (!isYoutubeHostname) {
-      return url;
-    }
-
-    const youtubeRegex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
-    const match = url.match(youtubeRegex);
-
-    if (match && match[1]) {
-      const videoId = match[1];
-      if (videoId.length === 11) {
-        return `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`;
-      }
-    }
-
-    return url;
-  } catch {
-    return url;
-  }
-};
-
-// Memoized component for the embed content
-const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType }: {
-  embedUrl: string;
-  sanitizedEmbedCode: string;
-  embedType: 'url' | 'code';
+const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType, provider, title }: {
+  embedUrl: string
+  sanitizedEmbedCode: string
+  embedType: 'url' | 'code'
+  provider: string | null
+  title?: string
 }) => {
   useEffect(() => {
     if (embedType === 'code' && sanitizedEmbedCode) {
-      const matchingPlatform = Object.entries(SCRIPT_BASED_EMBEDS).find(([_, config]) =>
+      const matchingPlatform = Object.entries(SCRIPT_BASED_EMBEDS).find(([, config]) =>
         sanitizedEmbedCode.includes(config.identifier)
-      );
-
+      )
       if (matchingPlatform) {
-        const [_, config] = matchingPlatform;
-        const script = document.createElement('script');
-        script.src = config.src;
-        script.async = true;
-        script.charset = 'utf-8';
-        document.body.appendChild(script);
-
+        const [, config] = matchingPlatform
+        const script = document.createElement('script')
+        script.src = config.src
+        script.async = true
+        script.charset = 'utf-8'
+        document.body.appendChild(script)
         return () => {
-          document.body.removeChild(script);
-        };
+          document.body.removeChild(script)
+        }
       }
     }
-  }, [embedType, sanitizedEmbedCode]);
+  }, [embedType, sanitizedEmbedCode])
 
   if (embedType === 'url' && embedUrl) {
-    let isYoutubeUrl = false;
-
-    try {
-      const url = new URL(embedUrl);
-      isYoutubeUrl = url.hostname === 'youtube.com' ||
-        url.hostname === 'www.youtube.com' ||
-        url.hostname === 'youtu.be' ||
-        url.hostname === 'www.youtu.be';
-    } catch {
-      isYoutubeUrl = false;
-    }
-
-    const processedUrl = isYoutubeUrl ? getYouTubeEmbedUrl(embedUrl) : embedUrl;
-
+    const processedUrl = resolveEmbedSrc(embedUrl, provider)
     return (
       <iframe
         src={processedUrl}
+        title={title}
+        // Inline height: the editor's global `iframe { height: 440px }` outranks h-full.
+        style={{ height: '100%' }}
         className="w-full h-full rounded-lg"
         frameBorder="0"
         allowFullScreen
-        sandbox={urlEmbedSandboxFor(
-          processedUrl,
-          typeof window !== 'undefined' ? window.location.origin : undefined,
-        )}
+        allow={provider ? 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture' : undefined}
+        sandbox={urlEmbedSandboxFor(processedUrl, typeof window !== 'undefined' ? window.location.origin : undefined)}
       />
-    );
+    )
   }
 
   if (embedType === 'code' && sanitizedEmbedCode) {
-    return <div dangerouslySetInnerHTML={{ __html: sanitizedEmbedCode }} className="w-full h-full" />;
+    return <div dangerouslySetInnerHTML={{ __html: sanitizedEmbedCode }} className="w-full h-full" />
   }
 
-  return null;
-});
-MemoizedEmbed.displayName = 'MemoizedEmbed';
+  return null
+})
+MemoizedEmbed.displayName = 'MemoizedEmbed'
 
-function EmbedObjectsComponent(props: any) {
+function EmbedObjectsComponent(props: NodeViewProps) {
   const { t } = useTranslation()
-  const [embedType, setEmbedType] = useState<'url' | 'code'>(props.node.attrs.embedType || 'url')
-  const [embedUrl, setEmbedUrl] = useState(props.node.attrs.embedUrl || '')
-  const [embedCode, setEmbedCode] = useState(props.node.attrs.embedCode || '')
-  const [embedHeight, setEmbedHeight] = useState(props.node.attrs.embedHeight || DEFAULT_EMBED_HEIGHT)
-  const [embedWidth, setEmbedWidth] = useState(props.node.attrs.embedWidth || '100%')
-  const [aspectRatio, setAspectRatio] = useState<number | null>(props.node.attrs.embedAspectRatio || null)
-  const [alignment, setAlignment] = useState(props.node.attrs.alignment || 'left')
+  const attrs = props.node.attrs
+  const editorState = useEditorProvider() as any
+  const isEditable = editorState.isEditable
+
+  // Stored values come straight from the node (the shared document).
+  const embedType: 'url' | 'code' = attrs.embedType === 'code' ? 'code' : 'url'
+  const embedUrl: string = attrs.embedUrl || ''
+  const embedCode: string = attrs.embedCode || ''
+  const embedHeight = attrs.embedHeight || DEFAULT_EMBED_HEIGHT
+  const embedWidth = attrs.embedWidth || '100%'
+  const alignment: string = attrs.alignment || 'left'
+  const provider: string | null = attrs.embedProvider || null
+  const caption: string = attrs.caption || ''
+
   const [isResizing, setIsResizing] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  // Legacy blocks without a stored ratio get one derived for display only.
+  const [derivedRatio, setDerivedRatio] = useState<number | null>(null)
+  const aspectRatio: number | null = attrs.embedAspectRatio || derivedRatio
 
   const resizeRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const editorState = useEditorProvider() as any
-  const isEditable = editorState.isEditable
 
   // Only track the breakpoint here. Sizing itself is handled in CSS
   // (percentage width + aspect-ratio), so the observer never writes node
   // attributes; that used to fire on every window resize.
   useEffect(() => {
-    const parentElement = containerRef.current?.parentElement;
-    if (!parentElement) return;
-
-    const updateDimensions = () => {
-      setIsMobile(parentElement.offsetWidth < 640);
-    };
-
-    updateDimensions();
-
-    const resizeObserver = new ResizeObserver(updateDimensions);
-    resizeObserver.observe(parentElement);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
+    const parentElement = containerRef.current?.parentElement
+    if (!parentElement) return
+    const updateDimensions = () => setIsMobile(parentElement.offsetWidth < 640)
+    updateDimensions()
+    const resizeObserver = new ResizeObserver(updateDimensions)
+    resizeObserver.observe(parentElement)
+    return () => resizeObserver.disconnect()
+  }, [])
 
   // Blocks saved before the aspect-ratio attribute existed only have a pixel
   // height, which kept the frame at a fixed size while the window (and the
   // video inside it) shrank. Give them a ratio so they scale too. URL embeds
-  // only: script embeds (tweets, TikTok) need their height, shrinking it clips
-  // the content.
-  const derivedRatioRef = useRef(false)
-
+  // only: script embeds (tweets, TikTok) need their height.
   useEffect(() => {
-    if (derivedRatioRef.current || aspectRatio) return;
-    if (embedType !== 'url' || !embedUrl) return;
-
-    const height = parseInt(String(embedHeight), 10);
-    const renderedWidth = resizeRef.current?.offsetWidth || 0;
-
-    if (!height) return;
-
+    if (attrs.embedAspectRatio || derivedRatio) return
+    if (embedType !== 'url' || !embedUrl || provider) return
+    const height = parseInt(String(embedHeight), 10)
+    const renderedWidth = resizeRef.current?.offsetWidth || 0
+    if (!height) return
     // Never resized by hand, so the 300px is just the attribute default;
     // 16:9 fits video, which is what most URL embeds are.
     if (height === DEFAULT_EMBED_HEIGHT) {
-      setAspectRatio(16 / 9);
-      derivedRatioRef.current = true;
-      return;
+      setDerivedRatio(16 / 9)
+      return
     }
+    if (!renderedWidth) return
+    setDerivedRatio(renderedWidth / height)
+  }, [attrs.embedAspectRatio, derivedRatio, embedType, embedUrl, embedHeight, provider])
 
-    if (!renderedWidth) return;
-
-    setAspectRatio(renderedWidth / height);
-    derivedRatioRef.current = true;
-  }, [aspectRatio, embedType, embedUrl, embedHeight]);
-
-  const supportedProducts = [
-    { name: 'YouTube', icon: SiYoutube, color: '#FF0000', guide: 'https://support.google.com/youtube/answer/171780?hl=en' },
-    { name: 'GitHub', icon: SiGithub, color: '#181717', guide: 'https://emgithub.com/' },
-    { name: 'Replit', icon: SiReplit, color: '#F26207', guide: 'https://docs.replit.com/hosting/embedding-repls' },
-    { name: 'Spotify', icon: SiSpotify, color: '#1DB954', guide: 'https://developer.spotify.com/documentation/embeds' },
-    { name: 'Loom', icon: SiLoom, color: '#625DF5', guide: 'https://support.loom.com/hc/en-us/articles/360002208317-How-to-embed-your-video-into-a-webpage' },
-    { name: 'GMaps', icon: SiGooglemaps, color: '#4285F4', guide: 'https://developers.google.com/maps/documentation/embed/get-started' },
-    { name: 'CodePen', icon: Code, color: '#000000', guide: 'https://blog.codepen.io/documentation/embedded-pens/' },
-    { name: 'Canva', icon: Palette, color: '#00C4CC', guide: 'https://www.canva.com/help/article/embed-designs' },
-    { name: 'Notion', icon: SiNotion, color: '#878787', guide: 'https://www.notion.so/help/embed-and-connect-other-apps#7a70ac4b5c5f4ec889e69d262e0de9e7' },
-    { name: 'G Docs', icon: SiGoogledocs, color: '#4285F4', guide: 'https://support.google.com/docs/answer/183965?hl=en&co=GENIE.Platform%3DDesktop' },
-    { name: 'X', icon: SiX, color: '#000000', guide: 'https://help.twitter.com/en/using-twitter/how-to-embed-a-tweet' },
-    { name: 'Figma', icon: SiFigma, color: '#F24E1E', guide: 'https://help.figma.com/hc/en-us/articles/360041057214-Embed-files-and-prototypes' },
-    { name: 'Giphy', icon: SiGiphy, color: '#FF6666', guide: 'https://developers.giphy.com/docs/embed/' },
-  ]
-
-  // Derive the sanitized embed code during render instead of via an effect that
-  // called setState (which triggered cascading renders). DOMPurify runs only
-  // when there is embed code; the `embedType === 'code'` gating is applied at
-  // render time (in MemoizedEmbed and the surrounding conditionals), matching
-  // the original behavior where the sanitized value was populated whenever code
-  // had been entered.
-  const sanitizedEmbedCode = useMemo(() => {
-    if (!embedCode) {
-      return ''
-    }
-    return sanitizeEmbedCode(embedCode)
-  }, [embedCode])
-
-  const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newUrl = event.target.value;
-    const trimmedUrl = newUrl.trim();
-
-    if (newUrl === '' || trimmedUrl) {
-      const sanitizedUrl = DOMPurify.sanitize(newUrl);
-      let validatedUrl = sanitizedUrl;
-
-      if (sanitizedUrl) {
-        try {
-          const url = new URL(sanitizedUrl);
-          if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-            url.protocol = 'https:';
-            validatedUrl = url.toString();
-          }
-        } catch {
-          if (sanitizedUrl && !sanitizedUrl.match(/^[a-zA-Z]+:\/\//)) {
-            validatedUrl = `https://${sanitizedUrl}`;
-          }
-        }
-      }
-
-      setEmbedUrl(validatedUrl);
-      props.updateAttributes({
-        embedUrl: validatedUrl,
-        embedType: 'url',
-      });
-    }
-  };
-
-  const handleCodeChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newCode = event.target.value;
-    const trimmedCode = newCode.trim();
-    if (newCode === '' || trimmedCode) {
-      setEmbedCode(newCode);
-      props.updateAttributes({
-        embedCode: newCode,
-        embedType: 'code',
-      });
-    }
-  };
-
-  const dimensionsRef = useRef({
-    width: props.node.attrs.embedWidth || '100%',
-    height: props.node.attrs.embedHeight || DEFAULT_EMBED_HEIGHT,
-    ratio: props.node.attrs.embedAspectRatio || null as number | null
-  })
+  const sanitizedEmbedCode = useMemo(() => (embedCode ? sanitizeEmbedCode(embedCode) : ''), [embedCode])
+  // Same test the block always used, so stored embeds keep their frame.
+  const hasContent = !!(embedUrl || sanitizedEmbedCode)
 
   const handleResizeStart = (event: React.MouseEvent<HTMLDivElement>, direction: 'horizontal' | 'vertical') => {
     event.preventDefault()
@@ -265,42 +149,33 @@ function EmbedObjectsComponent(props: any) {
     const startY = event.clientY
     const startWidth = resizeRef.current?.offsetWidth || 0
     const startHeight = resizeRef.current?.offsetHeight || 0
-    dimensionsRef.current.ratio = aspectRatio
+    const dims = { width: embedWidth, height: embedHeight, ratio: aspectRatio as number | null }
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (resizeRef.current) {
-        if (direction === 'horizontal') {
-          const newWidth = startWidth + e.clientX - startX
-          const parentWidth = resizeRef.current.parentElement?.offsetWidth || 1
-          const widthPercentage = Math.min(100, Math.max(10, (newWidth / parentWidth) * 100))
-          const newWidthValue = `${widthPercentage}%`
-          dimensionsRef.current.width = newWidthValue
-          resizeRef.current.style.width = newWidthValue
-        } else {
-          const newHeight = Math.max(100, startHeight + e.clientY - startY)
-          dimensionsRef.current.height = newHeight
-          // Drop the ratio while dragging so the height follows the cursor,
-          // then re-derive it from the box the user settled on.
-          resizeRef.current.style.aspectRatio = 'auto'
-          resizeRef.current.style.height = `${newHeight}px`
-          const currentWidth = resizeRef.current.offsetWidth
-          dimensionsRef.current.ratio = embedType === 'url' && currentWidth
-            ? currentWidth / newHeight
-            : null
-        }
+      if (!resizeRef.current) return
+      if (direction === 'horizontal') {
+        // In RTL the handle sits on the left, so dragging left grows the frame.
+        const rtl = getComputedStyle(resizeRef.current).direction === 'rtl'
+        const newWidth = startWidth + (rtl ? startX - e.clientX : e.clientX - startX)
+        const parentWidth = resizeRef.current.parentElement?.offsetWidth || 1
+        const widthPercentage = Math.min(100, Math.max(10, (newWidth / parentWidth) * 100))
+        dims.width = `${widthPercentage}%`
+        resizeRef.current.style.width = dims.width
+      } else {
+        const newHeight = Math.max(100, startHeight + e.clientY - startY)
+        dims.height = newHeight
+        // Drop the ratio while dragging so the height follows the cursor,
+        // then re-derive it from the box the user settled on.
+        resizeRef.current.style.aspectRatio = 'auto'
+        resizeRef.current.style.height = `${newHeight}px`
+        const currentWidth = resizeRef.current.offsetWidth
+        dims.ratio = embedType === 'url' && currentWidth ? currentWidth / newHeight : null
       }
     }
 
     const handleMouseUp = () => {
       setIsResizing(false)
-      setEmbedWidth(dimensionsRef.current.width)
-      setEmbedHeight(dimensionsRef.current.height)
-      setAspectRatio(dimensionsRef.current.ratio)
-      props.updateAttributes({
-        embedWidth: dimensionsRef.current.width,
-        embedHeight: dimensionsRef.current.height,
-        embedAspectRatio: dimensionsRef.current.ratio
-      })
+      props.updateAttributes({ embedWidth: dims.width, embedHeight: dims.height, embedAspectRatio: dims.ratio })
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
@@ -309,299 +184,283 @@ function EmbedObjectsComponent(props: any) {
     document.addEventListener('mouseup', handleMouseUp)
   }
 
-  const handleCenterBlock = () => {
-    const newAlignment = alignment === 'center' ? 'left' : 'center'
-    setAlignment(newAlignment)
-    props.updateAttributes({ alignment: newAlignment })
-  }
-
-  const getResponsiveStyles = () => {
-    const styles: React.CSSProperties = {
-      width: isMobile ? '100%' : embedWidth,
-      maxWidth: '100%',
-    };
-
+  const frameStyle = (): React.CSSProperties => {
+    const styles: React.CSSProperties = { width: isMobile ? '100%' : embedWidth, maxWidth: '100%' }
     // An aspect ratio lets the frame shrink with its container instead of
     // keeping a pixel height the content no longer fills.
-    if (aspectRatio) {
-      styles.aspectRatio = String(aspectRatio);
-    } else {
-      styles.height = `${embedHeight}px`;
-    }
-
-    return styles;
-  };
+    if (aspectRatio) styles.aspectRatio = String(aspectRatio)
+    else styles.height = `${embedHeight}px`
+    return styles
+  }
 
   const embedContent = useMemo(() => (
-    !isResizing && (embedUrl || sanitizedEmbedCode) ? (
+    !isResizing && hasContent ? (
       <MemoizedEmbed
         embedUrl={embedUrl}
         sanitizedEmbedCode={sanitizedEmbedCode}
         embedType={embedType}
+        provider={provider}
+        title={caption || provider || undefined}
       />
     ) : (
       <div className="w-full h-full bg-neutral-100 rounded-lg" />
     )
-  ), [embedUrl, sanitizedEmbedCode, embedType, isResizing]);
+  ), [embedUrl, sanitizedEmbedCode, embedType, isResizing, hasContent, provider, caption])
 
-  const [activeInput, setActiveInput] = useState<'none' | 'url' | 'code'>('none');
-  const [selectedProduct, setSelectedProduct] = useState<typeof supportedProducts[0] | null>(null);
-  const urlInputRef = useRef<HTMLInputElement>(null);
-  const codeInputRef = useRef<HTMLTextAreaElement>(null);
+  // ─── Editing state (local until applied) ───
+  const [editing, setEditing] = useState<false | 'url' | 'code'>(false)
+  const [draftUrl, setDraftUrl] = useState('')
+  const [draftCode, setDraftCode] = useState('')
+  const [draftError, setDraftError] = useState<string | null>(null)
+  const [aspectOpen, setAspectOpen] = useState(false)
+  const draftParsed = useMemo(() => (draftUrl.trim() ? parseEmbedUrl(draftUrl) : null), [draftUrl])
 
-  const handleProductSelection = (product: typeof supportedProducts[0]) => {
-    setEmbedType('url');
-    setActiveInput('url');
-    setSelectedProduct(product);
+  const startEditing = (mode: 'url' | 'code') => {
+    setDraftUrl(mode === 'url' ? attrs.embedSourceUrl || embedUrl : '')
+    setDraftCode(mode === 'code' ? embedCode : '')
+    setDraftError(null)
+    setEditing(mode)
+  }
 
-    setTimeout(() => {
-      if (urlInputRef.current) {
-        urlInputRef.current.focus();
+  const applyDraft = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (editing === 'url') {
+      const url = normalizeUserUrl(draftUrl)
+      if (!url) {
+        setDraftError(t('editor.blocks_v2.errors.url', 'That doesn’t look like a web link.'))
+        return
       }
-    }, 50);
-  };
-
-  const handleInputSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setActiveInput('none');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setActiveInput('none');
+      const parsed = parseEmbedUrl(url)
+      // One attr write with the final values; known services get their player
+      // URL and frame shape, any other page is framed as-is.
+      props.updateAttributes(
+        parsed
+          ? { ...embedAttrsFor(parsed), embedCode: null, embedWidth: '100%' }
+          : { embedType: 'url', embedUrl: url, embedSourceUrl: url, embedProvider: null, embedCode: null, embedAspectRatio: 16 / 9 }
+      )
+    } else if (editing === 'code') {
+      if (!draftCode.trim()) return
+      props.updateAttributes({ embedType: 'code', embedCode: draftCode, embedUrl: null, embedSourceUrl: null, embedProvider: null, embedAspectRatio: null })
     }
-  };
+    setEditing(false)
+  }
 
-  const handleOpenDocs = (guide: string) => {
-    window.open(guide, '_blank', 'noopener,noreferrer');
-  };
+  const editorForm = editing && (
+    <form
+      onSubmit={applyDraft}
+      className="flex flex-col gap-2"
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') setEditing(false)
+      }}
+    >
+      {editing === 'url' ? (
+        <>
+          <div className="relative">
+            <LinkIcon size={14} className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <input
+              autoFocus
+              type="url"
+              inputMode="url"
+              value={draftUrl}
+              onChange={(e) => { setDraftUrl(e.target.value); setDraftError(null) }}
+              placeholder={t('editor.blocks.embed_block.paste_any_url', 'Paste any URL…')}
+              aria-label={t('editor.blocks.embed_block.add_embed_url', 'Embed a URL')}
+              className={cn(FIELD_CLASS, 'ps-8')}
+            />
+          </div>
+          <p className="text-[11px] text-neutral-500">
+            {draftParsed
+              ? t('editor.blocks_v2.embed_detected', 'Recognized: {{provider}}. It will play right in the lesson.', { provider: draftParsed.label })
+              : t('editor.blocks_v2.embed_any', 'Links from {{providers}} and more are recognized automatically. Other pages are shown as they are, if the site allows it.', { providers: PROVIDER_HINTS.slice(0, 6).join(', ') })}
+          </p>
+        </>
+      ) : (
+        <>
+          <textarea
+            autoFocus
+            rows={5}
+            value={draftCode}
+            onChange={(e) => setDraftCode(e.target.value)}
+            placeholder={t('editor.blocks.embed_block.paste_code', 'Paste your embed code…')}
+            aria-label={t('editor.blocks.embed_block.add_embed_code', 'Embed code')}
+            className={cn(TEXTAREA_CLASS, 'font-mono text-xs')}
+          />
+          <p className="text-[11px] text-neutral-500">{t('editor.blocks.embed_block.paste_iframe')}</p>
+        </>
+      )}
+      {draftError && <p role="alert" className="text-xs text-rose-600">{draftError}</p>}
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          className="text-xs font-medium text-neutral-500 hover:text-neutral-800"
+          onClick={() => startEditing(editing === 'url' ? 'code' : 'url')}
+        >
+          {editing === 'url' ? t('editor.blocks_v2.use_code', 'Use embed code instead') : t('editor.blocks_v2.use_link', 'Use a link instead')}
+        </button>
+        <div className="flex items-center gap-1.5">
+          {hasContent && (
+            <button type="button" className={buttonClass('ghost', 'sm')} onClick={() => setEditing(false)}>
+              {t('editor.blocks.common.cancel', 'Cancel')}
+            </button>
+          )}
+          <button
+            type="submit"
+            className={buttonClass('primary', 'sm')}
+            disabled={editing === 'url' ? !draftUrl.trim() : !draftCode.trim()}
+          >
+            {t('editor.blocks_v2.embed', 'Embed')}
+          </button>
+        </div>
+      </div>
+    </form>
+  )
 
-  const handleRemove = () => {
-    setEmbedUrl('');
-    setEmbedCode('');
-    props.updateAttributes({
-      embedUrl: '',
-      embedCode: ''
-    });
-  };
+  // ─── Learner view (unchanged markup for existing embeds) ───
+  if (!isEditable) {
+    return (
+      <NodeViewWrapper className="embed-block w-full" ref={containerRef}>
+        <div
+          ref={resizeRef}
+          className={cn('relative bg-white rounded-xl overflow-hidden nice-shadow', alignment === 'center' && 'mx-auto')}
+          style={hasContent ? frameStyle() : { width: '100%' }}
+        >
+          {hasContent ? embedContent : null}
+        </div>
+        <BlockCaption
+          value={caption}
+          editable={false}
+          align={alignment === 'center' ? 'center' : 'start'}
+          style={hasContent && !isMobile ? { width: embedWidth, maxWidth: '100%', marginInline: alignment === 'center' ? 'auto' : undefined } : undefined}
+        />
+      </NodeViewWrapper>
+    )
+  }
+
+  const label = <><Cube size={11} weight="bold" />{provider ? parseEmbedUrl(attrs.embedSourceUrl || '')?.label || t('editor.blocks.embed') : t('editor.blocks.embed')}</>
+  const deleteButton = (
+    <BlockToolbarButton label={t('common.delete', 'Delete')} tone="danger" onClick={() => deleteBlock(props)}>
+      <Trash size={14} />
+    </BlockToolbarButton>
+  )
+
+  // ─── Editor: empty ───
+  if (!hasContent || (editing && !hasContent)) {
+    return (
+      <NodeViewWrapper className="embed-block w-full" ref={containerRef}>
+        <BlockChrome tone="embed" selected={props.selected} label={label} toolbar={deleteButton}>
+          <div className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50/60 p-4">
+            {editing ? (
+              editorForm
+            ) : (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                    <Cube size={20} weight="duotone" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-medium text-neutral-800">{t('editor.blocks_v2.embed_title', 'Embed anything with a link')}</div>
+                    <div className="truncate text-[11px] text-neutral-400">{PROVIDER_HINTS.join(' · ')}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button type="button" className={buttonClass('primary', 'sm')} onClick={() => startEditing('url')}>
+                    <LinkIcon size={13} /> {t('editor.blocks_v2.paste_link_button', 'Paste link')}
+                  </button>
+                  <button type="button" className={buttonClass('secondary', 'sm')} onClick={() => startEditing('code')}>
+                    <Code size={13} /> {t('editor.blocks.embed_block.code', 'Code')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </BlockChrome>
+      </NodeViewWrapper>
+    )
+  }
+
+  // ─── Editor: embed ───
+  const aspectId = aspectPresetFor(attrs.embedAspectRatio)
+  const toolbar = (
+    <>
+      <BlockToolbarButton label={t('editor.blocks.embed_block.edit_embed', 'Edit embed')} onClick={() => startEditing(embedType)}>
+        <PencilSimple size={14} />
+      </BlockToolbarButton>
+      {embedType === 'url' && (
+        <BlockPopover
+          open={aspectOpen}
+          onOpenChange={setAspectOpen}
+          title={t('editor.blocks_v2.frame_shape', 'Frame shape')}
+          width={300}
+          trigger={<BlockToolbarButton label={t('editor.blocks_v2.frame_shape', 'Frame shape')}><Crop size={14} /></BlockToolbarButton>}
+        >
+          <Segmented
+            ariaLabel={t('editor.blocks_v2.frame_shape', 'Frame shape')}
+            value={aspectId}
+            onChange={(id) => {
+              const preset = ASPECT_PRESETS.find((p) => p.id === id)
+              if (preset) props.updateAttributes({ embedAspectRatio: preset.value, embedWidth: preset.value < 1 ? '45%' : embedWidth })
+            }}
+            options={ASPECT_PRESETS.map((p) => ({ value: p.id, label: p.id }))}
+          />
+          <p className="text-[11px] text-neutral-400">{t('editor.blocks_v2.frame_hint', 'Or drag the frame’s edges for a custom size.')}</p>
+        </BlockPopover>
+      )}
+      <BlockToolbarButton
+        label={alignment === 'center' ? t('editor.blocks.common.align_left') : t('editor.blocks.common.align_center')}
+        onClick={() => props.updateAttributes({ alignment: alignment === 'center' ? 'left' : 'center' })}
+      >
+        {alignment === 'center' ? <TextAlignLeft size={14} /> : <TextAlignCenter size={14} />}
+      </BlockToolbarButton>
+      {embedType === 'url' && (attrs.embedSourceUrl || embedUrl) && (
+        <BlockToolbarButton
+          label={t('editor.blocks_v2.open_original', 'Open original')}
+          onClick={() => window.open(attrs.embedSourceUrl || embedUrl, '_blank', 'noopener,noreferrer')}
+        >
+          <ArrowSquareOut size={14} />
+        </BlockToolbarButton>
+      )}
+      <BlockToolbarDivider />
+      {deleteButton}
+    </>
+  )
 
   return (
     <NodeViewWrapper className="embed-block w-full" ref={containerRef}>
-      {/* Embed Container */}
-      <div
-        ref={resizeRef}
-        className={cn(
-          "relative bg-white rounded-xl overflow-hidden nice-shadow",
-          alignment === 'center' && "mx-auto"
-        )}
-        style={(embedUrl || sanitizedEmbedCode) ? getResponsiveStyles() : { width: '100%' }}
-      >
-          {(embedUrl || sanitizedEmbedCode) ? (
-            <>
-              {embedContent}
-
-              {/* Toolbar for existing embeds */}
-              {isEditable && (
-                <div className="absolute top-2 end-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => setActiveInput(embedType)}
-                    className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
-                    title={t('editor.blocks.embed_block.edit_embed')}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"></path>
-                    </svg>
-                  </button>
-                  <button
-                    onClick={handleCenterBlock}
-                    className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
-                    title={alignment === 'center' ? t('editor.blocks.common.align_left') : t('editor.blocks.common.align_center')}
-                  >
-                    <TextAlignCenter weight="duotone" size={16} />
-                  </button>
-                  <button
-                    onClick={handleRemove}
-                    className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600 hover:text-red-500 transition-colors"
-                    title={t('editor.blocks.embed_block.remove_embed')}
-                  >
-                    <X weight="duotone" size={16} />
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="w-full flex flex-col items-center justify-center p-4 sm:p-6">
-              <p className="text-neutral-500 mb-4 font-medium text-base text-center">{t('editor.blocks.embed_block.add_embed_from')}</p>
-              <div className="flex flex-wrap gap-3 sm:gap-4 justify-center mb-4">
-                {supportedProducts.map((product) => (
-                  <button
-                    key={product.name}
-                    className="flex flex-col items-center group transition-transform hover:scale-110"
-                    onClick={() => handleProductSelection(product)}
-                    title={t('editor.blocks.embed_block.add_embed', { name: product.name })}
-                  >
-                    <div
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow"
-                      style={{ backgroundColor: product.color }}
-                    >
-                      <product.icon size={isMobile ? 18 : 22} color="#FFFFFF" />
-                    </div>
-                    <span className="text-xs mt-1.5 text-neutral-600 group-hover:text-neutral-900 font-medium">{product.name}</span>
-                  </button>
-                ))}
-              </div>
-
-              <p className="text-xs text-neutral-500 mb-3 text-center">
-                {t('editor.blocks.embed_block.click_service')}
-              </p>
-
-              {isEditable && (
-                <div className="flex gap-2 justify-center">
-                  <button
-                    onClick={() => {
-                      setEmbedType('url');
-                      setActiveInput('url');
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 rounded-lg text-sm text-neutral-700 transition-colors"
-                  >
-                    <LinkIcon weight="duotone" size={14} />
-                    <span>URL</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEmbedType('code');
-                      setActiveInput('code');
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 rounded-lg text-sm text-neutral-700 transition-colors"
-                  >
-                    <Code weight="duotone" size={14} />
-                    <span>{t('editor.blocks.embed_block.code')}</span>
-                  </button>
-                </div>
-              )}
+      <BlockChrome tone="embed" selected={props.selected} forceToolbar={aspectOpen || !!editing} label={label} toolbar={toolbar} className="p-1">
+        <div
+          ref={resizeRef}
+          className={cn('relative bg-white rounded-xl overflow-hidden nice-shadow', alignment === 'center' && 'mx-auto')}
+          style={frameStyle()}
+        >
+          {embedContent}
+          {editing && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 p-4">
+              <div className="w-full max-w-lg">{editorForm}</div>
             </div>
           )}
-
-          {/* Input Overlay */}
-          {isEditable && activeInput !== 'none' && (
-            <div className="absolute inset-0 bg-neutral-50/95 backdrop-blur-sm flex items-center justify-center p-4 z-10">
-              <form
-                onSubmit={handleInputSubmit}
-                className="w-full max-w-lg bg-white rounded-xl nice-shadow p-4"
-                onKeyDown={handleKeyDown}
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2">
-                    {selectedProduct && activeInput === 'url' && (
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: selectedProduct.color }}
-                      >
-                        <selectedProduct.icon size={18} color="#FFFFFF" />
-                      </div>
-                    )}
-                    <h3 className="text-base font-semibold text-neutral-800">
-                      {activeInput === 'url'
-                        ? (selectedProduct ? t('editor.blocks.embed_block.add_embed', { name: selectedProduct.name }) : t('editor.blocks.embed_block.add_embed_url'))
-                        : t('editor.blocks.embed_block.add_embed_code')}
-                    </h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveInput('none')}
-                    className="p-1 rounded-full hover:bg-neutral-100 text-neutral-500"
-                  >
-                    <X weight="duotone" size={20} />
-                  </button>
-                </div>
-
-                {activeInput === 'url' ? (
-                  <>
-                    <div className="relative mb-2">
-                      <div className="absolute start-3 top-1/2 transform -translate-y-1/2 text-neutral-500">
-                        <LinkIcon weight="duotone" size={16} />
-                      </div>
-                      <input
-                        ref={urlInputRef}
-                        type="text"
-                        value={embedUrl}
-                        onChange={handleUrlChange}
-                        className="w-full ps-10 pe-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 outline-none transition-all text-sm"
-                        placeholder={selectedProduct ? t('editor.blocks.embed_block.paste_url', { name: selectedProduct.name }) : t('editor.blocks.embed_block.paste_any_url')}
-                        autoFocus
-                      />
-                    </div>
-                    <div className="flex justify-between items-center mb-4">
-                      <p className="text-xs text-neutral-500">
-                        {t('editor.blocks.embed_block.paste_directly')}
-                      </p>
-                      {selectedProduct && (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenDocs(selectedProduct.guide)}
-                          className="text-xs text-neutral-500 hover:text-neutral-700 flex items-center gap-1"
-                        >
-                          {t('editor.blocks.embed_block.how_to_embed', { name: selectedProduct.name })}
-                        </button>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="relative mb-2">
-                      <textarea
-                        ref={codeInputRef}
-                        value={embedCode}
-                        onChange={handleCodeChange}
-                        className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-lg h-32 focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 outline-none transition-all font-mono text-sm"
-                        placeholder={t('editor.blocks.embed_block.paste_code')}
-                        autoFocus
-                      />
-                    </div>
-                    <p className="text-xs text-neutral-500 mb-4">
-                      {t('editor.blocks.embed_block.paste_iframe')}
-                    </p>
-                  </>
-                )}
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveInput('none')}
-                    className="px-4 py-2 text-sm text-neutral-600 hover:text-neutral-800 rounded-lg transition-colors"
-                  >
-                    {t('editor.blocks.common.cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-neutral-700 hover:bg-neutral-800 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                    disabled={(activeInput === 'url' && !embedUrl) || (activeInput === 'code' && !embedCode)}
-                  >
-                    {t('editor.blocks.common.apply')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Resize handles */}
-          {isEditable && (embedUrl || sanitizedEmbedCode) && (
-            <>
-              <div
-                className="absolute end-0 top-0 bottom-0 w-4 cursor-ew-resize flex items-center justify-center bg-white/70 hover:bg-white/90 transition-opacity"
-                onMouseDown={(e) => handleResizeStart(e, 'horizontal')}
-              >
-                <DotsSixVertical weight="duotone" size={16} className="text-neutral-500" />
-              </div>
-              <div
-                className="absolute start-0 end-0 bottom-0 h-4 cursor-ns-resize flex items-center justify-center bg-white/70 hover:bg-white/90 transition-opacity"
-                onMouseDown={(e) => handleResizeStart(e, 'vertical')}
-              >
-                <DotsSix weight="duotone" size={16} className="text-neutral-500" />
-              </div>
-            </>
-          )}
-      </div>
+          <div
+            className="absolute end-0 top-0 bottom-0 w-4 cursor-ew-resize flex items-center justify-center bg-white/70 opacity-0 group-hover/block:opacity-100 hover:bg-white/90 transition-opacity"
+            onMouseDown={(e) => handleResizeStart(e, 'horizontal')}
+          >
+            <DotsSixVertical weight="duotone" size={16} className="text-neutral-500" />
+          </div>
+          <div
+            className="absolute start-0 end-0 bottom-0 h-4 cursor-ns-resize flex items-center justify-center bg-white/70 opacity-0 group-hover/block:opacity-100 hover:bg-white/90 transition-opacity"
+            onMouseDown={(e) => handleResizeStart(e, 'vertical')}
+          >
+            <DotsSix weight="duotone" size={16} className="text-neutral-500" />
+          </div>
+        </div>
+        <BlockCaption
+          value={caption}
+          editable
+          selected={props.selected}
+          align={alignment === 'center' ? 'center' : 'start'}
+          onCommit={(value) => props.updateAttributes({ caption: value })}
+          style={isMobile ? undefined : { width: embedWidth, maxWidth: '100%', marginInline: alignment === 'center' ? 'auto' : undefined }}
+        />
+      </BlockChrome>
     </NodeViewWrapper>
   )
 }

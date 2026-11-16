@@ -18,6 +18,8 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
 import { formatDate } from '@/lib/format'
+import { coursePath } from '@/lib/seo/paths'
+import { useContentLanguage } from '@/hooks/useContentLanguage'
 
 function CertificateVerificationPage({ certificateUuid }: { certificateUuid: string }) {
   const { t, i18n } = useTranslation()
@@ -25,10 +27,12 @@ function CertificateVerificationPage({ certificateUuid }: { certificateUuid: str
   const session = useLHSession() as any
   const orgslug = org?.slug || ''
 
+  // Course name in the viewer's content language when a translation is published.
+  const contentLang = useContentLanguage()
   const { data, isLoading } = useQuery({
-    queryKey: ['certificate', 'verify', certificateUuid, org?.id],
-    queryFn: () => getCertificateByUuid(certificateUuid, org.id),
-    enabled: !!org?.id,
+    queryKey: ['certificate', 'verify', certificateUuid, org?.id, contentLang.lang],
+    queryFn: () => getCertificateByUuid(certificateUuid, org.id, contentLang.lang || undefined),
+    enabled: !!org?.id && contentLang.ready,
     retry: false,
   })
   const record = data?.success ? data.data : null
@@ -60,7 +64,7 @@ function CertificateVerificationPage({ certificateUuid }: { certificateUuid: str
   const holder = record.user || {}
   const learnerName = [holder.first_name, holder.last_name].map((part) => part?.trim()).filter(Boolean).join(' ') || holder.username || ''
   const course = record.course
-  const courseHref = getUriWithOrg(orgslug, `/course/${course.course_uuid.replace('course_', '')}`)
+  const courseHref = getUriWithOrg(orgslug, coursePath(course))
 
   return (
     <CertificateShowcase

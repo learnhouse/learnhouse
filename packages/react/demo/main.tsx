@@ -56,6 +56,7 @@ function App() {
           <h1>&lt;LearnHouseActivity&gt;</h1>
           <small>@learnhouse/react, built from apps/web</small>
         </div>
+        <a href="./agent.html">Agent API demo (custom copilot UI) →</a>
         <label>
           Source
           <select value={source} onChange={(e) => setSource(e.target.value as any)}>

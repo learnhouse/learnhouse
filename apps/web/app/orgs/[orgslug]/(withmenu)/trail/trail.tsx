@@ -1,151 +1,149 @@
 'use client'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import TrailCourseCard from '@components/Pages/Trail/TrailCourseCard'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import UserCertificates from '@components/Pages/Trail/UserCertificates'
 import UserPaths from '@components/Pages/Trail/UserPaths'
-import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
+import TrailOverview, { type TrailStats } from '@components/Pages/Trail/TrailOverview'
+import ActivityHeatmap from '@components/Pages/Trail/ActivityHeatmap'
+import MyCourses from '@components/Pages/Trail/MyCourses'
+import MyAssignments from '@components/Pages/Trail/MyAssignments'
+import { getMyAssignments } from '@services/courses/assignments'
+import { activityByDay, learningStreak, summarizeRuns } from '@components/Pages/Trail/trailStats'
+import { useNextActivities } from '@components/Pages/Trail/useNextActivity'
 import { useTrail } from '@/hooks/queries/useTrail'
-import React, { useEffect, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import React, { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { removeCourse } from '@services/courses/activity'
-import { revalidateTags } from '@services/utils/ts/requests'
-import { useRouter } from 'next/navigation'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { BookOpen } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import { getAllUserCertificates } from '@services/courses/certifications'
+import { useContentLanguage } from '@/hooks/useContentLanguage'
+import { asArray } from '@services/utils/ts/requests'
+import { usePlayTrail } from '@ee/components/Plays/Trail/PlayTrail'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
+// The learner's home for progress: where to pick up, headline numbers,
+// activity over time, their courses, paths and achievements. Everything is
+// derived from data the page already had (trail runs and steps, certificates,
+// paths), plus Play badges and streak when the org has Plays.
 function Trail(params: any) {
-  const { t } = useTranslation()
-  let orgslug = params.orgslug
+  const orgslug = params.orgslug
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
+  const user = session?.data?.user
   const org = useOrg() as any
   const orgID = org?.id
-  const router = useRouter()
-  const [isQuittingAll, setIsQuittingAll] = useState(false)
-  const [quittingProgress, setQuittingProgress] = useState(0)
-  const queryClient = useQueryClient()
+  const features = org?.config?.config?.resolved_features ?? {}
 
   // Check if courses feature is enabled
-  const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
+  const isCoursesEnabled = features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
+  const playsEnabled = features?.playgrounds?.enabled === true
 
   // Only fetch trail data if courses feature is enabled; shares cache with course/activity pages
   const { data: trail } = useTrail(isCoursesEnabled ? orgID : undefined)
-
   useTrackView(AnalyticsEvent.TrailViewed, { runs_count: trail?.runs?.length ?? 0 }, !!trail)
 
-  const handleQuitAllCourses = async () => {
-    if (!trail?.runs?.length || isQuittingAll) return;
+  const summaries = useMemo(() => summarizeRuns(trail), [trail])
+  const byDay = useMemo(() => activityByDay(trail), [trail])
+  const streak = useMemo(() => learningStreak(byDay), [byDay])
 
-    setIsQuittingAll(true)
-    const totalCourses = trail.runs.length;
+  // Next activity per course, most recently active first so the courses the
+  // learner is likely to continue stay within the fetch cap.
+  const byRecent = useMemo(
+    () => [...summaries].sort((a, b) => (b.lastActive?.getTime() ?? 0) - (a.lastActive?.getTime() ?? 0)),
+    [summaries]
+  )
+  const nextByCourse = useNextActivities(byRecent)
 
-    try {
-      for (let i = 0; i < trail.runs.length; i++) {
-        const run = trail.runs[i];
-        await removeCourse(run.course.course_uuid, orgslug, access_token);
-        setQuittingProgress(Math.round(((i + 1) / totalCourses) * 100));
+  // Learner assignments, when the org has the feature.
+  // Not a plan-gated FeatureKey: read the org toggle directly (on by default).
+  const assignmentsEnabled =
+    !!org && (features?.assignments?.enabled ?? org?.config?.config?.features?.assignments?.enabled) !== false
+  const { data: myAssignments, isPending: assignmentsPending, isError: assignmentsError } = useQuery({
+    queryKey: queryKeys.assignments.mine(orgID ?? 0),
+    queryFn: () => getMyAssignments(orgID, access_token),
+    enabled: assignmentsEnabled && !!access_token && !!orgID,
+    staleTime: 30_000,
+    retry: false,
+  })
+  const weekAhead = Date.now() + 7 * 24 * 3600 * 1000
+  // An API without the endpoint (or any failure) just hides the section.
+  const showAssignments = assignmentsEnabled && !assignmentsError
+  const dueThisWeek = Array.isArray(myAssignments)
+    ? myAssignments.filter((a) => {
+        if (a.status === 'graded' || a.status === 'submitted' || a.status === 'late') return false
+        if (a.overdue) return true
+        if (!a.due_date) return false
+        const d = new Date(a.due_date.length === 10 ? `${a.due_date}T23:59:59` : a.due_date)
+        return !isNaN(d.getTime()) && d.getTime() <= weekAhead
+      }).length
+    : null
+
+  const contentLang = useContentLanguage()
+  // Same query (and cache) as the certificates section below.
+  const { data: certificates } = useQuery({
+    // Course names in the learner's content language (same key as the other list).
+    queryKey: [...queryKeys.certifications.detail(`user_all_${orgID}`), contentLang.lang],
+    queryFn: () => getAllUserCertificates(orgID, access_token, contentLang.lang || undefined),
+    select: (res: any) => asArray(res),
+    enabled: !!access_token && !!orgID && contentLang.ready,
+    staleTime: 60_000,
+  })
+
+  // Plays (EE) are optional: without them, or on any failure, the Play
+  // numbers stay hidden.
+  const { badges: badgeList, streakDays: playStreakDays } = usePlayTrail({
+    userId: user?.id,
+    orgId: orgID,
+    accessToken: access_token,
+    enabled: playsEnabled,
+  })
+
+  const stats: TrailStats | null = trail
+    ? {
+        inProgress: summaries.filter((s) => !s.completed).length,
+        completed: summaries.filter((s) => s.completed).length,
+        activitiesDone: summaries.reduce((sum, s) => sum + s.done, 0),
+        certificates: Array.isArray(certificates) ? certificates.length : null,
+        streak,
+        playBadges: badgeList ? badgeList.length : null,
+        playStreak: playStreakDays,
+        dueThisWeek: showAssignments ? dueThisWeek : null,
       }
-
-      await revalidateTags(['courses'], orgslug);
-      router.refresh();
-      await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(orgID) });
-    } catch (error) {
-      console.error('Error quitting courses:', error);
-    } finally {
-      setIsQuittingAll(false)
-      setQuittingProgress(0)
-    }
-  }
-
-  useEffect(() => { }, [trail, org])
+    : null
 
   return (
     <FeatureGate feature="courses" orgslug={orgslug} context="public">
-    <GeneralWrapperStyled>
-      <ListShortcuts />
-      <div className="flex flex-col space-y-2 mb-6">
-        <div className="flex items-center justify-between">
-          <TypeOfContentTitle title={t('courses.progress')} type="tra" />
-          {trail?.runs?.length > 0 && (
-            <ConfirmationModal
-              confirmationButtonText={isQuittingAll ? t('courses.quitting_courses', { progress: quittingProgress }) : t('courses.quit_all_courses')}
-              confirmationMessage={t('courses.quit_all_courses_confirm')}
-              dialogTitle={t('courses.quit_all_courses_title')}
-              dialogTrigger={
-                <button
-                  disabled={isQuittingAll}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors
-                    ${isQuittingAll
-                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                      : 'bg-red-50 text-red-700 hover:bg-red-100'
-                    }`}
-                >
-                  {isQuittingAll
-                    ? t('courses.quitting_courses', { progress: quittingProgress })
-                    : t('courses.quit_all_courses')
-                  }
-                </button>
-              }
-              functionToExecute={handleQuitAllCourses}
-              status="warning"
-            />
+      <GeneralWrapperStyled>
+        <ListShortcuts />
+        {/* Compact first screen: greeting + numbers, then the courses,
+            then assignments beside the activity graph. */}
+        <div className="space-y-10 sm:space-y-14 pt-2 pb-16">
+          <TrailOverview firstName={user?.first_name || user?.username} stats={stats} />
+
+          <MyCourses
+            orgslug={orgslug}
+            orgId={orgID}
+            accessToken={access_token}
+            summaries={summaries}
+            nextByCourse={nextByCourse}
+            loading={!trail}
+          />
+
+          {(showAssignments || (trail && summaries.length > 0)) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-start">
+              {showAssignments && (
+                <MyAssignments items={myAssignments} loading={assignmentsPending} orgslug={orgslug} />
+              )}
+              {trail && summaries.length > 0 && <ActivityHeatmap byDay={byDay} streak={streak} />}
+            </div>
           )}
+
+          <UserPaths orgslug={orgslug} />
+          <UserCertificates orgslug={orgslug} badges={badgeList} />
         </div>
-
-        {!trail ? (
-          <div className="animate-pulse">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-xl overflow-hidden">
-                  {/* Progress thumbnail */}
-                  <div className="bg-gray-200 w-full h-40 rounded-xl" />
-                  {/* Card body */}
-                  <div className="pt-3 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    {/* Progress bar */}
-                    <div className="h-2 bg-gray-200 rounded-full w-full" />
-                    <div className="h-3 bg-gray-200 rounded w-1/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : trail.runs.length === 0 ? (
-          <div className="col-span-full flex flex-col justify-center items-center py-12 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
-            <div className="p-4 bg-white rounded-full nice-shadow mb-4">
-              <BookOpen className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
-            </div>
-            <h1 className="text-xl font-bold text-gray-600 mb-2">
-              {t('user.no_courses_in_progress')}
-            </h1>
-            <p className="text-md text-gray-400 mb-6 text-center max-w-xs">
-              {t('user.start_course_to_see_progress')}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {trail.runs.map((run: any) => (
-              <TrailCourseCard
-                key={run.course.course_uuid}
-                run={run}
-                course={run.course}
-                orgslug={orgslug}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <UserPaths orgslug={orgslug} />
-      <UserCertificates orgslug={orgslug} />
-    </GeneralWrapperStyled>
+      </GeneralWrapperStyled>
     </FeatureGate>
   )
 }

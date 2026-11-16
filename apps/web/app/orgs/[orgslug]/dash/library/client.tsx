@@ -1,13 +1,15 @@
 'use client'
-import LibraryGrid from '@components/Dashboard/Library/LibraryGrid'
-import LibraryHeader, { filterLibrary, sortLibrary, type FilterKey } from '@components/Dashboard/Library/LibraryHeader'
+import LibraryHeader, { type LibraryDialog } from '@components/Dashboard/Library/LibraryHeader'
+import LibraryBrowser from '@components/Dashboard/Library/LibraryBrowser'
 import { type FolderSortMode } from '@components/Dashboard/Library/FolderSortDropdown'
-import LibrarySearchResults from '@components/Dashboard/Library/LibrarySearchResults'
+import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
+import { Button } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
-import { getOrgFolders, getOrgRootItems, removeOrgRootContent, reorderFolders, searchLibrary } from '@services/folders/folders'
+import { deleteFolder, getOrgFolders, getOrgRootItems, removeOrgRootContent, reorderFolders } from '@services/folders/folders'
 import { updateOrgFoldersSort } from '@services/organizations/orgs'
+import { FolderSimple, FolderSimplePlus } from '@phosphor-icons/react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
@@ -17,23 +19,18 @@ import { asArray } from '@services/utils/ts/requests'
 type Props = {
   orgslug: string
   org_id: number
-  initialFolders: any[]
 }
 
-function LibraryHome({ orgslug, org_id, initialFolders }: Props) {
+function LibraryHome({ orgslug, org_id }: Props) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-
-  const [query, setQuery] = React.useState('')
-  const [filter, setFilter] = React.useState<FilterKey>('all')
-  const searching = query.trim().length > 0
+  const [dialog, setDialog] = React.useState<LibraryDialog>(null)
 
   // Sort mode is persisted server-side in the org config; seed local state from
   // it and keep it in sync as the org config loads.
-  const configSortMode: FolderSortMode =
-    org?.config?.config?.general?.folders?.sort_mode ?? 'name_asc'
+  const configSortMode: FolderSortMode = org?.config?.config?.general?.folders?.sort_mode ?? 'name_asc'
   const [sortMode, setSortMode] = React.useState<FolderSortMode>(configSortMode)
   React.useEffect(() => {
     setSortMode(configSortMode)
@@ -45,47 +42,47 @@ function LibraryHome({ orgslug, org_id, initialFolders }: Props) {
   const canReorder = rights?.folders?.action_update === true
   const isManual = sortMode === 'manual' && canReorder
 
-  const { data: folders, mutate: mutateFolders } = useSWR(
+  const { data: folders, error: foldersError, mutate: mutateFolders } = useSWR(
     org_id ? ['folders', org_id, 'root'] : null,
-    () => getOrgFolders(org_id, access_token, { revalidate: 60, tags: ['folders'] }),
-    { fallbackData: initialFolders }
+    () => getOrgFolders(org_id, access_token, { revalidate: 60, tags: ['folders'] })
   )
   const { data: rootItems, mutate: mutateItems } = useSWR(
     org_id && access_token ? ['library-root-items', org_id] : null,
     () => getOrgRootItems(org_id, access_token)
   )
-  const { data: searchData, isLoading: searchLoading, mutate: mutateSearch } = useSWR(
-    searching && org_id ? ['library-search', org_id, query.trim()] : null,
-    () => searchLibrary(org_id, query.trim(), access_token)
-  )
 
   const refresh = () => {
     mutateFolders()
     mutateItems()
-    if (searching) mutateSearch()
   }
 
   const folderList: any[] = asArray(folders)
   const itemList: any[] = asArray(rootItems)
-  const filtered = filterLibrary(folderList, itemList, '', filter)
-  // Sort the visible content (folders + courses + media) client-side so the
-  // chosen mode reorders everything instantly, not just server-side folders.
-  const { folders: visibleFolders, items: visibleItems } = sortLibrary(
-    filtered.visibleFolders, filtered.visibleItems, sortMode
-  )
 
-  // Apply the active filter pill to search results too.
-  const filteredSearch = searchData
-    ? filterLibrary(searchData.folders || [], searchData.items || [], '', filter)
-    : null
-
-  const handleRemove = async (resourceUuid: string) => {
+  // Optimistic: the card leaves at once and comes back if the API refuses.
+  const handleRemove = async (item: any) => {
+    const previous = itemList
+    mutateItems(itemList.filter((i) => i.resource_uuid !== item.resource_uuid), false)
     try {
-      await removeOrgRootContent(org_id, resourceUuid, access_token)
+      await removeOrgRootContent(org_id, item.resource_uuid, access_token)
       toast.success(t('library.content_removed'))
-      refresh()
+      mutateItems()
     } catch (error: any) {
+      mutateItems(previous, false)
       toast.error(error?.message || t('library.content_remove_error'))
+    }
+  }
+
+  const handleDeleteFolder = async (folder: any) => {
+    const previous = folderList
+    mutateFolders(folderList.filter((f) => f.folder_uuid !== folder.folder_uuid), false)
+    try {
+      await deleteFolder(folder.folder_uuid, access_token)
+      toast.success(t('library.folder_deleted_success'))
+      mutateFolders()
+    } catch {
+      mutateFolders(previous, false)
+      toast.error(t('library.folder_deleted_error'))
     }
   }
 
@@ -99,7 +96,7 @@ function LibraryHome({ orgslug, org_id, initialFolders }: Props) {
       mutateFolders()
     } catch (error: any) {
       setSortMode(previous)
-      toast.error(error?.message || t('library.sort.sort_error', { defaultValue: 'Could not update sort order' }))
+      toast.error(error?.message || t('library.sort.sort_error'))
     }
   }
 
@@ -116,48 +113,47 @@ function LibraryHome({ orgslug, org_id, initialFolders }: Props) {
       mutateFolders()
     } catch (error: any) {
       mutateFolders()
-      toast.error(error?.message || t('library.sort.reorder_error', { defaultValue: 'Could not save the new order' }))
+      toast.error(error?.message || t('library.sort.reorder_error'))
     }
   }
 
   return (
     <div className="flex w-full">
-      <div className="ps-4 sm:ps-10 me-4 sm:me-10 tracking-tight flex flex-col space-y-5 w-full">
+      <div className="px-4 sm:px-10 pb-16 flex flex-col gap-5 w-full min-w-0">
         <LibraryHeader
           orgslug={orgslug}
           org_id={org_id}
-          query={query}
-          setQuery={setQuery}
-          filter={filter}
-          setFilter={setFilter}
-          sortMode={sortMode}
-          setSortMode={handleSortChange}
+          breadcrumbs={[{ label: t('library.library'), href: '/dash/library', icon: <FolderSimple size={14} /> }]}
+          title={t('library.library')}
+          subtitle={t('library.dash.subtitle')}
           onChanged={refresh}
+          dialog={dialog}
+          setDialog={setDialog}
         />
 
-        {searching ? (
-          <LibrarySearchResults
-            results={filteredSearch ? { folders: filteredSearch.visibleFolders, items: filteredSearch.visibleItems } : null}
-            isLoading={searchLoading}
-            orgslug={orgslug}
-            org_id={org_id}
-            onChanged={refresh}
-          />
-        ) : (
-          <LibraryGrid
-            folders={visibleFolders}
-            items={visibleItems}
-            orgslug={orgslug}
-            org_id={org_id}
-            onChanged={refresh}
-            onRemoveItem={handleRemove}
-            isManual={isManual}
-            onReorderFolders={handleReorderFolders}
-            emptyTitle={filter !== 'all' ? t('library.no_results') : t('library.no_items')}
-            emptyDescription={filter !== 'all' ? undefined : t('library.no_items_description')}
-            emptyAction={undefined}
-          />
-        )}
+        <LibraryBrowser
+          orgslug={orgslug}
+          org_id={org_id}
+          folders={folderList}
+          items={itemList}
+          loading={!!access_token && (rootItems === undefined || (folders === undefined && !foldersError))}
+          sortMode={sortMode}
+          onSortChange={handleSortChange}
+          isManual={isManual}
+          onChanged={refresh}
+          onRemoveItem={handleRemove}
+          onDeleteFolder={handleDeleteFolder}
+          onReorderFolders={handleReorderFolders}
+          emptyTitle={t('library.no_items')}
+          emptyDescription={t('library.no_items_description')}
+          emptyAction={
+            <AuthenticatedClientElement checkMethod="roles" action="create" ressourceType={'folders' as any} orgId={org_id}>
+              <Button variant="primary" className="mt-1" icon={<FolderSimplePlus size={14} />} onClick={() => setDialog('folder')}>
+                {t('library.new_folder')}
+              </Button>
+            </AuthenticatedClientElement>
+          }
+        />
       </div>
     </div>
   )

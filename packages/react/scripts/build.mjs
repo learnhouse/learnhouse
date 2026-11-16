@@ -297,7 +297,9 @@ async function buildCss() {
   const input = globals
     .replace(/@import ['"]tailwindcss['"];/, `@import 'tailwindcss' source(none);\n${sources.join('\n')}\n@source '${path.join(pkgDir, 'src')}';`)
     .replace(/@source ['"]\.\.\/ee['"];/, '')
-    .replace(/@import ["']\.\/(mobile[^"']*\.css)["'];/g, (_m, file) => `@import '${path.join(webDir, 'styles', file)}';`)
+    // Sibling stylesheets (mobile, theme, block theme, dark mode) resolve
+    // from apps/web/styles, not from the cache directory.
+    .replace(/@import ["']\.\/([^"']+\.css)["'];/g, (_m, file) => `@import '${path.join(webDir, 'styles', file)}';`)
   await mkdir(cacheDir, { recursive: true })
   const from = path.join(cacheDir, 'globals.css')
   await writeFile(from, input)

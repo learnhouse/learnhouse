@@ -5,11 +5,11 @@ import { useTranslation } from 'react-i18next'
 import { ENDPOINTS, CATEGORIES, type EndpointDoc, type HttpMethod } from '@components/Admin/Developers/catalog'
 
 const METHOD_CLS: Record<HttpMethod, string> = {
-  GET: 'bg-emerald-400/10 text-emerald-300 border-emerald-400/20',
-  POST: 'bg-sky-400/10 text-sky-300 border-sky-400/20',
-  PUT: 'bg-amber-400/10 text-amber-300 border-amber-400/20',
-  PATCH: 'bg-violet-400/10 text-violet-300 border-violet-400/20',
-  DELETE: 'bg-red-400/10 text-red-300 border-red-400/20',
+  GET: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15',
+  POST: 'bg-sky-50 text-sky-700 ring-sky-600/15',
+  PUT: 'bg-amber-50 text-amber-800 ring-amber-600/15',
+  PATCH: 'bg-neutral-100 text-neutral-700 ring-neutral-900/10',
+  DELETE: 'bg-rose-50 text-rose-700 ring-rose-600/15',
 }
 
 export default function EndpointList({
@@ -46,18 +46,18 @@ export default function EndpointList({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="relative p-3 border-b border-white/[0.06]">
+      <div className="relative p-3 border-b border-neutral-100">
         <MagnifyingGlass
           size={14}
           weight="bold"
-          className="absolute start-6 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+          className="absolute start-6 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
         />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('admin.developers.endpoint_list.search')}
-          className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg ps-8 pe-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+          className="w-full h-9 bg-white rounded-xl ring-1 ring-inset ring-neutral-200 ps-8 pe-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15"
         />
       </div>
 
@@ -67,21 +67,21 @@ export default function EndpointList({
           if (items.length === 0) return null
           const isCollapsed = collapsed[cat]
           return (
-            <section key={cat} className="border-b border-white/[0.04] last:border-b-0">
+            <section key={cat} className="border-b border-neutral-100 last:border-b-0">
               <button
                 onClick={() => toggleCategory(cat)}
-                className="w-full flex items-center justify-between px-3 py-2.5 text-start hover:bg-white/[0.02] transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2.5 text-start hover:bg-neutral-50 transition-colors"
               >
-                <span className="text-xs uppercase tracking-wider text-white/50 font-semibold">
+                <span className="text-[11px] uppercase tracking-wide text-neutral-400 font-semibold">
                   {cat}
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="text-[10px] text-white/40 tabular-nums">{items.length}</span>
+                  <span className="text-[10px] text-neutral-400 tabular-nums">{items.length}</span>
                   <CaretDown
                     size={12}
                     weight="bold"
                     className={
-                      'text-white/40 transition-transform ' + (isCollapsed ? '-rotate-90' : '')
+                      'text-neutral-400 transition-transform ' + (isCollapsed ? '-rotate-90 rtl:rotate-90' : '')
                     }
                   />
                 </span>
@@ -97,21 +97,21 @@ export default function EndpointList({
                           className={
                             'w-full flex items-start gap-2.5 px-3 py-2 text-start border-s-2 transition-colors ' +
                             (isActive
-                              ? 'bg-white/[0.06] border-white'
-                              : 'border-transparent hover:bg-white/[0.03]')
+                              ? 'bg-neutral-100 border-neutral-900'
+                              : 'border-transparent hover:bg-neutral-50')
                           }
                         >
                           <span
                             className={
-                              'shrink-0 mt-0.5 inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border font-mono w-12 ' +
+                              'shrink-0 mt-0.5 inline-flex items-center justify-center px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ring-1 ring-inset font-mono w-12 ' +
                               METHOD_CLS[e.method]
                             }
                           >
                             {e.method}
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-sm text-white truncate">{e.title}</span>
-                            <span className="block text-[11px] text-white/40 font-mono truncate">
+                            <span className="block text-sm text-neutral-900 truncate">{e.title}</span>
+                            <span className="block text-[11px] text-neutral-400 font-mono truncate" dir="ltr">
                               /{e.pathTemplate}
                             </span>
                           </span>
@@ -126,7 +126,7 @@ export default function EndpointList({
         })}
 
         {Object.values(byCategory).every((v) => v.length === 0) && (
-          <div className="px-3 py-10 text-center text-xs text-white/40">
+          <div className="px-3 py-10 text-center text-xs text-neutral-400">
             {t('admin.developers.endpoint_list.no_match', { query })}
           </div>
         )}

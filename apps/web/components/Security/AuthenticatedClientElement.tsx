@@ -70,10 +70,8 @@ export const AuthenticatedClientElement = (
       return status === 'authenticated'
     }
     if (checkMethod === 'roles') {
-      // Superadmins bypass all role checks
-      if (sessionData?.user?.is_superadmin === true) {
-        return true
-      }
+      // Roles in this org decide, superadmins included: acting in an org you
+      // don't belong to is an impersonation started from the console.
       return isUserAllowed(sessionData?.roles, action!, ressourceType!, orgUuid)
     }
     return false

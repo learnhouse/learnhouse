@@ -6,6 +6,7 @@ import {
   REFRESH_TOKEN_COOKIE,
   ACCESS_TOKEN_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
+  IMPERSONATION_COOKIE,
   getDomainFromRequest,
   getCookieOptions,
 } from '@services/auth/cookies'
@@ -67,7 +68,8 @@ const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
 // LH_default_org): those describe the deployment, are non-sensitive, are needed
 // by anonymous visitors, and the proxy re-sets them on the very next request, so
 // clearing them is both pointless and would briefly break tenancy resolution.
-const CLEAR_HTTPONLY = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, 'LH_custom_domain']
+// LH_imp: an impersonation ends with its superadmin's sign-out.
+const CLEAR_HTTPONLY = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, 'LH_custom_domain', IMPERSONATION_COOKIE]
 const CLEAR_MARKERS = ['LH_session', 'LH_org']
 
 // A refresh failure only justifies destroying the session when the backend
@@ -180,6 +182,43 @@ function withoutRefreshToken(data: unknown): unknown {
   return stripped
 }
 
+async function impersonationRefresh(request: NextRequest, token: string): Promise<NextResponse> {
+  let res: Response | null = null
+  try {
+    res = await fetch(`${BACKEND_URL}/api/v1/auth/impersonation/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    })
+  } catch {
+    res = null
+  }
+  if (!res || res.status >= 500) {
+    return NextResponse.json({ error: 'Impersonation check unavailable' }, { status: 503 })
+  }
+  if (!res.ok) {
+    const response = NextResponse.json({ code: 'impersonation_ended' }, { status: 410 })
+    clearImpersonationCookie(response, request)
+    return response
+  }
+  return NextResponse.json({
+    access_token: token,
+    expiry: decodeJwtExpiryMs(token) ?? undefined,
+    impersonation: true,
+  })
+}
+
+function clearImpersonationCookie(response: NextResponse, request: NextRequest) {
+  const securePart = request.nextUrl.protocol === 'https:' ? '; Secure' : ''
+  const host = request.headers.get('host') || ''
+  const { topDomain } = getDomainFromRequest(request)
+  const base = `${IMPERSONATION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`
+  response.headers.append('Set-Cookie', base)
+  if (!isLocalhost(host) && topDomain && topDomain !== 'localhost') {
+    response.headers.append('Set-Cookie', `${base}; Domain=.${topDomain}`)
+  }
+}
+
 async function proxyRequest(
   request: NextRequest,
   method: string
@@ -241,6 +280,21 @@ async function proxyRequest(
   // Forward cookies to backend
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)
+
+  // An impersonation is open: org pages get its
+  // token instead of the superadmin's own, checked against the server-side
+  // record on every refresh. It is never refreshed or traded for a session; a
+  // spent one answers 410 (and drops the cookie) so the client goes back to the
+  // console, never falls back to the superadmin. The console itself asks with
+  // ?scope=platform and keeps the superadmin's session.
+  const impersonationToken = cookieStore.get(IMPERSONATION_COOKIE)?.value
+  if (
+    pathSegments === 'refresh'
+    && impersonationToken
+    && request.nextUrl.searchParams.get('scope') !== 'platform'
+  ) {
+    return impersonationRefresh(request, impersonationToken)
+  }
 
   // Short-circuit: no refresh token cookie means nothing to refresh. Clear the
   // stale LH_session marker (and any orphaned cookies) too; otherwise the

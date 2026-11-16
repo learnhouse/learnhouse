@@ -1,6 +1,7 @@
 import { Editor, Range } from '@tiptap/react'
 import { ReactNode } from 'react'
 import { PlanLevel } from '@services/plans/plans'
+import type { AIFeatureKey } from '@/lib/ai/aiFeatures'
 
 export interface SlashCommandItem {
   id: string
@@ -13,6 +14,8 @@ export interface SlashCommandItem {
   keywords: string[]
   command: (editor: Editor) => void
   requiredPlan?: PlanLevel
+  /** Hidden when this AI switch is off in Settings > AI. */
+  aiFeature?: AIFeatureKey
 }
 
 export type SlashCommandCategory =

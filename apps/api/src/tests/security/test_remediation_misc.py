@@ -138,18 +138,6 @@ def test_documented_example_jwt_secret_warns_but_boots(monkeypatch, caplog):
     assert caplog.text.count("example value from the docs") == 1
 
 
-@pytest.mark.asyncio
-async def test_collab_internal_key_left_at_example_value_opens_nothing(monkeypatch):
-    from fastapi import HTTPException
-
-    from src.routers.boards.boards import verify_internal_key
-
-    monkeypatch.setenv("COLLAB_INTERNAL_KEY", "replace-with-random-shared-secret")
-    with pytest.raises(HTTPException) as exc:
-        await verify_internal_key("replace-with-random-shared-secret")
-    assert exc.value.status_code == 403
-
-
 def test_shared_secret_from_env_ignores_example_values(monkeypatch):
     from config.config import shared_secret_from_env
 

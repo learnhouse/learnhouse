@@ -1,82 +1,68 @@
-import React, { useState, Dispatch, SetStateAction, useEffect } from 'react'
+import React, { useState, Dispatch, SetStateAction, useEffect, useRef } from 'react'
 import { Tag, TagInput } from 'emblor'
+import { parseTags, serializeTags } from '@/lib/tags'
 
 interface FormTagInputProps {
   value: string
   onChange: (value: string) => void
+  /** @deprecated Tags are always read as "|" or "," lists and written with "|" (see lib/tags). */
   separator?: string
   error?: string
-	placeholder?: string
+  placeholder?: string
 }
 
-const FormTagInput = ({
-  value,
-  onChange,
-  separator = '|',
-  error,
-	placeholder,
-}: FormTagInputProps) => {
-  const [tags, setTags] = useState<Tag[]>(() =>
-    value && typeof value === 'string'
-      ? value.split(separator).filter(text => text.trim()).map((text, i) => ({
-          id: i.toString(),
-          text: text.trim(),
-        }))
-      : []
-  );
+const toTags = (value: unknown): Tag[] =>
+  parseTags(value).map((text, i) => ({ id: `${i}-${text}`, text }))
 
+// Tag field for course and podcast tags. Reads both "a|b" and the older
+// "a,b" form and always writes "a|b", so a comma list stored by an import no
+// longer shows up as one long chip.
+const FormTagInput = ({ value, onChange, error, placeholder }: FormTagInputProps) => {
+  const [tags, setTags] = useState<Tag[]>(() => toTags(value))
+  const lastEmitted = useRef<string | null>(null)
+
+  // Follow outside changes (form reset, server data) but not our own echo.
   useEffect(() => {
-    if (value && typeof value === 'string') {
-      const newTags = value.split(separator)
-        .filter(text => text.trim())
-        .map((text, i) => ({
-          id: i.toString(),
-          text: text.trim(),
-        }));
-      setTags(newTags);
-    } else {
-      setTags([]);
-    }
-  }, [value, separator]);
+    if (value === lastEmitted.current) return
+    setTags(toTags(value))
+  }, [value])
 
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null)
 
-  const handleTagsChange: Dispatch<SetStateAction<Tag[]>> = (
-    newTagsOrUpdater
-  ) => {
-    const newTags =
-      typeof newTagsOrUpdater === 'function'
-        ? newTagsOrUpdater(tags)
-        : newTagsOrUpdater
-
-    setTags(newTags)
-    onChange(newTags.map((tag) => tag.text).join(separator))
+  const handleTagsChange: Dispatch<SetStateAction<Tag[]>> = (newTagsOrUpdater) => {
+    const next = typeof newTagsOrUpdater === 'function' ? newTagsOrUpdater(tags) : newTagsOrUpdater
+    // A pasted "a|b" or "a, b" becomes separate tags; duplicates are dropped.
+    const texts = parseTags(serializeTags(next.flatMap((tag) => tag.text.split(/[|,]/))))
+    const normalized = texts.map((text, i) => ({ id: `${i}-${text}`, text }))
+    setTags(normalized)
+    const serialized = serializeTags(texts)
+    lastEmitted.current = serialized
+    onChange(serialized)
   }
 
   return (
-		<div>
-			<div className="space-y-2">
-				<TagInput
-					tags={tags}
-					setTags={handleTagsChange}
-					placeholder={placeholder}
-					styleClasses={{
-						inlineTagsContainer:
-							'border-input rounded-lg bg-background shadow-2xs transition-shadow focus-within:border-ring/40 focus-within:outline-hidden focus-within:ring-[3px] ring-ring/8 dark:ring-ring/12 p-1 gap-1',
-						input:
-							'w-full min-w-[80px] focus-visible:outline-hidden shadow-none px-2 h-7',
-						tag: {
-							body: 'h-7 relative bg-background border border-input hover:bg-background rounded-md font-medium text-xs ps-2 pe-7',
-							closeButton:
-								'absolute -inset-y-px -end-px p-0 rounded-e-lg flex size-7 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring/30 dark:focus-visible:ring-ring/40 text-muted-foreground/80 hover:text-foreground',
-						},
-					}}
-					activeTagIndex={activeTagIndex}
-					setActiveTagIndex={setActiveTagIndex}
-				/>
-				{error && <p className="text-sm font-medium text-destructive">{error}</p>}
-			</div>
-		</div>
+    <div className="space-y-2">
+      <TagInput
+        tags={tags}
+        setTags={handleTagsChange}
+        placeholder={placeholder}
+        addOnPaste
+        addTagsOnBlur
+        styleClasses={{
+          inlineTagsContainer:
+            'min-h-9 rounded-lg bg-white ring-1 ring-inset ring-neutral-200 border-0 shadow-none transition-shadow focus-within:ring-2 focus-within:ring-neutral-900/15 p-1 gap-1',
+          input: 'w-full min-w-[80px] text-sm shadow-none focus-visible:outline-hidden px-2 h-7 placeholder:text-neutral-400',
+          tag: {
+            body: 'h-7 relative bg-neutral-100/80 ring-1 ring-inset ring-neutral-900/5 border-0 hover:bg-neutral-50 rounded-md font-medium text-xs text-neutral-700 ps-2 pe-7',
+            closeButton:
+              'absolute -inset-y-px -end-px p-0 rounded-e-md flex size-7 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-neutral-900/20 text-neutral-400 hover:text-neutral-900',
+          },
+        }}
+        activeTagIndex={activeTagIndex}
+        setActiveTagIndex={setActiveTagIndex}
+      />
+      {error && <p className="text-xs font-medium text-rose-600">{error}</p>}
+    </div>
   )
 }
 

@@ -1,0 +1,210 @@
+---
+title: "Agent API Output Modes & Templates"
+description: "Choose how Agent API replies come back: Markdown, structured views, or JSON validated against your schema with automatic retries, and render them with safe server-side templates."
+---
+
+import { Callout } from '@/components/mdx'
+
+# Output modes and templates
+
+Set the output once on the conversation, or for one message:
+
+```json
+{
+  "agent": "atlas",
+  "output": {
+    "mode": "json",
+    "json_schema": { "type": "object", "properties": { "summary": { "type": "string" } }, "required": ["summary"] },
+    "template": { "source": "<p>{{output.summary}}</p>", "format": "html" }
+  }
+}
+```
+
+`POST /conversations/{id}/messages` accepts the same `output` object to override it for that message only.
+
+| `mode` | You get |
+| --- | --- |
+| `views` | Text deltas plus [`view` events](/developers/agent-api/views) for structured data. The default when the agent supports views. |
+| `markdown` | Text only. Views are turned into their Markdown fallback and streamed as text. Good for chat apps, email, Slack. |
+| `json` | Text while the agent works, then an `output` event with an object that matches your `json_schema`. |
+
+An agent's supported modes are in its `output_modes`; asking for another one is refused.
+
+## JSON
+
+In `json` mode the agent answers as usual (it can still call tools and ask for approvals), then the server turns its
+answer into an object that must validate against your schema.
+
+1. The answer is converted to JSON and validated.
+2. If it fails, the model gets the validation errors and tries again.
+3. After 3 attempts the server stops and sends what it has.
+
+The `output` event, and the message's `output`, tell you how it went:
+
+```json
+{
+  "type": "output",
+  "conversation_id": "agconv_1",
+  "message_id": "agmsg_5",
+  "format": "json",
+  "data": { "summary": "3 courses are below 30% completion", "courses": [{ "uuid": "course_x", "rate": 22 }] },
+  "valid": true,
+  "attempts": 1,
+  "errors": []
+}
+```
+
+When `valid` is `false`, `errors` lists what was still wrong after the last attempt, and an
+[`error` event](/developers/agent-api/events#error) with code `output_invalid` comes before `message.done`. Always
+check `valid` before using `data`.
+
+### Supported schema keywords
+
+The schema is a subset of JSON Schema:
+
+| Keyword | Notes |
+| --- | --- |
+| `type` | `object`, `array`, `string`, `number`, `integer`, `boolean`, `null`, or a list of these |
+| `properties`, `required`, `additionalProperties` | `additionalProperties` is a boolean |
+| `items` | One schema for every item |
+| `enum`, `const` | |
+| `minLength`, `maxLength`, `pattern` | |
+| `minimum`, `maximum` | |
+| `minItems`, `maxItems` | |
+| `anyOf` | |
+| `$defs` and local `$ref` | `"$ref": "#/$defs/Course"` |
+| `description`, `title`, `default` | Descriptions are shown to the model: use them to explain fields |
+
+A schema over 16 KB, nested deeper than 8 levels, or using another keyword is refused with `422 invalid_schema`.
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "courses"],
+  "properties": {
+    "summary": { "type": "string", "maxLength": 280, "description": "One sentence for a dashboard tile" },
+    "courses": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/Course" }
+    }
+  },
+  "$defs": {
+    "Course": {
+      "type": "object",
+      "required": ["uuid", "rate"],
+      "properties": {
+        "uuid": { "type": "string", "pattern": "^course_" },
+        "rate": { "type": "number", "minimum": 0, "maximum": 100 },
+        "risk": { "enum": ["low", "medium", "high"] }
+      }
+    }
+  }
+}
+```
+
+## Templates
+
+A template turns a reply into HTML, Markdown or plain text on the server, so you can drop it into an email, a widget or
+a CMS without writing a renderer. The result comes as a `rendered` event and in the message's `rendered`.
+
+```json
+{ "source": "<h2>{{conversation.title}}</h2>{{#output.courses}}<p>{{uuid}}: {{rate}}%</p>{{/output.courses}}", "format": "html" }
+```
+
+### Syntax
+
+Templates use a small part of Mustache. Nothing in a template can run code.
+
+| Tag | Does |
+| --- | --- |
+| `{{name}}` | The value, escaped for the format |
+| `{{a.b.c}}` | A nested value |
+| `{{.}}` | The current item inside a section |
+| `{{#list}}…{{/list}}` | Repeats for each item of a list. With an object, renders once with it as context. With any other truthy value, renders once. |
+| `{{^x}}…{{/x}}` | Renders when `x` is missing, false or an empty list |
+| `{{! note }}` | A comment, not rendered |
+
+There are no partials, no lambdas, and no unescaped output: `{{{x}}}` and `{{&x}}` are refused with
+`422 invalid_template`.
+
+### Escaping
+
+Every value is escaped for the template's `format`:
+
+| `format` | Escaping |
+| --- | --- |
+| `html` | HTML entities (`<`, `>`, `&` and quotes) |
+| `markdown` | Markdown special characters are backslash-escaped, so a value can't add links, images or formatting |
+| `text` | None |
+
+Only the template's own text is trusted. Text the model wrote (or a learner typed) can't inject tags. A `text` result is
+not escaped at all: don't put it into HTML yourself.
+
+### Data
+
+| Variable | |
+| --- | --- |
+| `text` | The reply's text (Markdown) |
+| `views` | The views, as in [Views](/developers/agent-api/views) |
+| `citations` | The citations |
+| `output` | The JSON output in `json` mode, else `null` |
+| `plan` | The plan steps, or `null` |
+| `suggestions` | Follow-up prompts |
+| `conversation` | `id`, `title`, `metadata`, `external_user_id` |
+| `message` | `id`, `status` |
+
+### Limits
+
+The source can be up to 20 KB, the result up to 200 KB, and sections can nest 8 deep.
+
+### HTML example
+
+```html
+<div class="lh-answer">
+  <p>{{text}}</p>
+  {{#citations}}
+    <a href="https://learn.your-school.com{{url}}">[{{index}}] {{title}}</a>
+  {{/citations}}
+  {{^citations}}<p>No sources.</p>{{/citations}}
+</div>
+```
+
+`text` is inserted as escaped text, not as rendered Markdown. If you want formatting in HTML, render `text` with your
+own Markdown renderer instead, or use `json` mode with fields you lay out yourself.
+
+### Markdown example
+
+```markdown
+## Weekly report for {{conversation.metadata.workspace}}
+
+{{output.summary}}
+
+{{#output.courses}}
+- {{uuid}}: {{rate}}% ({{risk}})
+{{/output.courses}}
+```
+
+Values like a course name with `*` or `[` in it stay literal: they are escaped.
+
+### Previewing
+
+`POST /templates/render` renders a template with data you pass, without calling the agent and without using credits.
+Use it to build and test templates:
+
+```bash
+curl -X POST $LH/templates/render \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{
+    "template": { "source": "Hello {{name}}!", "format": "html" },
+    "data": { "name": "<Ana>" }
+  }'
+# {"format": "html", "content": "Hello &lt;Ana&gt;!"}
+```
+
+Errors in the template answer `422 invalid_template` with the reason in `message`.
+
+<Callout type="info">
+  The same template can be set on the conversation and changed per message through `output.template`.
+</Callout>

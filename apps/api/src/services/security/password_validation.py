@@ -1,14 +1,15 @@
 """
-Password validation service for enforcing strong password requirements.
+Password validation service.
 
-Requirements:
+Lenient but safe: length does most of the work, composition rules mostly add
+friction (and push people to "Password1!"). Requirements:
 - Minimum 8 characters
-- At least 1 uppercase letter
-- At least 1 lowercase letter
-- At least 1 number
-- At least 1 special character
+- At least one letter
+- At least one number or symbol (not all letters)
+- Not one of the passwords people reach for first
+
+The web checklist mirrors these (components/Auth/PasswordStrengthIndicator.tsx).
 """
-import re
 from typing import List
 from pydantic import BaseModel
 
@@ -20,70 +21,44 @@ class PasswordValidationResult(BaseModel):
     requirements: dict
 
 
-# Special characters allowed in passwords
-SPECIAL_CHARACTERS = "!@#$%^&*()_+-=[]{}|;':\",./<>?"
+MIN_LENGTH = 8
+
+# Lower-cased. Mirrors COMMON_PASSWORDS in the web checklist.
+COMMON_PASSWORDS = frozenset({
+    "password1", "password12", "password123", "passw0rd", "p@ssw0rd", "p@ssword1",
+    "qwerty123", "qwerty12", "qwertyuiop1", "1q2w3e4r", "1qaz2wsx", "zaq12wsx", "q1w2e3r4",
+    "abc12345", "abcd1234", "abcdef12", "test1234", "letmein1", "welcome1", "welcome123",
+    "iloveyou1", "admin123", "admin1234", "administrator1", "changeme1", "12345678a", "a12345678",
+    "football1", "baseball1", "monkey123", "dragon123", "sunshine1", "princess1", "trustno1",
+    "master123", "shadow123", "superman1", "computer1", "learnhouse1",
+})
 
 
 def validate_password_complexity(password: str) -> PasswordValidationResult:
-    """
-    Validate password against complexity requirements.
-
-    Requirements:
-    - Minimum 8 characters
-    - At least 1 uppercase letter
-    - At least 1 lowercase letter
-    - At least 1 number
-    - At least 1 special character
-
-    Returns:
-        PasswordValidationResult with validation status and any errors
-    """
+    """Validate a password against the policy above."""
     errors: List[str] = []
 
     requirements = {
-        "min_length": False,
-        "has_uppercase": False,
-        "has_lowercase": False,
-        "has_number": False,
-        "has_special": False,
+        "min_length": len(password) >= MIN_LENGTH,
+        # Any script's letters count, not only A-Z.
+        "has_letter": any(ch.isalpha() for ch in password),
+        "has_number_or_symbol": any(not ch.isalpha() and not ch.isspace() for ch in password),
+        "not_common": password.lower() not in COMMON_PASSWORDS,
     }
 
-    # Check minimum length (8 characters)
-    if len(password) >= 8:
-        requirements["min_length"] = True
-    else:
-        errors.append("Password must be at least 8 characters long")
-
-    # Check for uppercase letter
-    if re.search(r'[A-Z]', password):
-        requirements["has_uppercase"] = True
-    else:
-        errors.append("Password must contain at least one uppercase letter")
-
-    # Check for lowercase letter
-    if re.search(r'[a-z]', password):
-        requirements["has_lowercase"] = True
-    else:
-        errors.append("Password must contain at least one lowercase letter")
-
-    # Check for number
-    if re.search(r'[0-9]', password):
-        requirements["has_number"] = True
-    else:
-        errors.append("Password must contain at least one number")
-
-    # Check for special character
-    if re.search(r'[!@#$%^&*()_+\-=\[\]{}|;\':",./<>?]', password):
-        requirements["has_special"] = True
-    else:
-        errors.append("Password must contain at least one special character (!@#$%^&*...)")
-
-    is_valid = all(requirements.values())
+    if not requirements["min_length"]:
+        errors.append(f"Password must be at least {MIN_LENGTH} characters long")
+    if not requirements["has_letter"]:
+        errors.append("Password must contain at least one letter")
+    if not requirements["has_number_or_symbol"]:
+        errors.append("Password must contain at least one number or symbol")
+    if not requirements["not_common"]:
+        errors.append("This password is too common. Pick something less predictable")
 
     return PasswordValidationResult(
-        is_valid=is_valid,
+        is_valid=all(requirements.values()),
         errors=errors,
-        requirements=requirements
+        requirements=requirements,
     )
 
 
@@ -95,9 +70,8 @@ def get_password_requirements() -> List[dict]:
         List of requirement descriptions
     """
     return [
-        {"id": "min_length", "description": "At least 8 characters"},
-        {"id": "has_uppercase", "description": "At least one uppercase letter (A-Z)"},
-        {"id": "has_lowercase", "description": "At least one lowercase letter (a-z)"},
-        {"id": "has_number", "description": "At least one number (0-9)"},
-        {"id": "has_special", "description": "At least one special character (!@#$%^&*...)"},
+        {"id": "min_length", "description": f"At least {MIN_LENGTH} characters"},
+        {"id": "has_letter", "description": "At least one letter"},
+        {"id": "has_number_or_symbol", "description": "At least one number or symbol"},
+        {"id": "not_common", "description": "Not a commonly used password"},
     ]

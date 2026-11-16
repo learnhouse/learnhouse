@@ -1,5 +1,6 @@
 """
-Coverage for the media_/board_/playground_ resource-type resolution branches.
+Coverage for the media_/board_/playground_ resource-type resolution branches
+(boards and playgrounds are EE: without it they resolve to nothing).
 
 Targets:
 - src/security/rbac/utils.py            26, 96, 154, 155
@@ -7,7 +8,7 @@ Targets:
 - src/security/rbac/rbac.py             158-163
 
 These tests exercise the real RBAC resolution functions (no RBAC bypass) with
-Media, Board and Playground rows inserted directly via their model classes.
+Media rows inserted directly via their model class.
 """
 
 import pytest
@@ -23,8 +24,6 @@ from src.security.rbac.rbac import authorization_verify_if_element_is_public
 from src.security.rbac.resource_access import ResourceAccessChecker
 from src.security.rbac.types import ResourceConfig
 from src.db.media.media import Media, MediaTypeEnum
-from src.db.boards import Board
-from src.db.playgrounds import Playground
 from src.db.users import AnonymousUser
 
 
@@ -45,32 +44,6 @@ async def _insert_media(db, org, uuid="media_test", public=True):
     await db.commit()
     await db.refresh(m)
     return m
-
-
-async def _insert_board(db, org, uuid="board_test", public=True):
-    b = Board(
-        name="Test Board",
-        public=public,
-        org_id=org.id,
-        board_uuid=uuid,
-        created_by=None,
-    )
-    db.add(b)
-    await db.commit()
-    await db.refresh(b)
-    return b
-
-
-async def _insert_playground(db, org, uuid="playground_test"):
-    p = Playground(
-        name="Test Playground",
-        org_id=org.id,
-        playground_uuid=uuid,
-    )
-    db.add(p)
-    await db.commit()
-    await db.refresh(p)
-    return p
 
 
 # ---------------------------------------------------------------------------
@@ -130,41 +103,17 @@ class TestGetResourceMediaBoardPlayground:
         assert resource is not None
         assert resource.media_uuid == "media_load"
 
-    @pytest.mark.asyncio
-    async def test_get_resource_board(self, db, org):
-        """Covers resource_access.py:850-852, where a board resource resolves by uuid."""
-        await _insert_board(db, org, uuid="board_load")
-        checker = self._checker(db)
-        config = ResourceConfig(
-            resource_type="boards",
-            uuid_prefix="board_",
-            has_published_field=False,
-            supports_usergroups=True,
-            supports_authorship=True,
-            model_name="Board",
-            uuid_field="board_uuid",
-        )
-        resource = await checker._get_resource("board_load", config)
-        assert resource is not None
-        assert resource.board_uuid == "board_load"
+    def test_board_resource_model_needs_ee(self):
+        """Boards are EE-only: without EE a board uuid resolves to no model."""
+        from src.security.rbac.resource_access import _resource_model
 
-    @pytest.mark.asyncio
-    async def test_get_resource_playground(self, db, org):
-        """Covers resource_access.py:855-856, where a playground resource resolves by uuid."""
-        await _insert_playground(db, org, uuid="playground_load")
-        checker = self._checker(db)
-        config = ResourceConfig(
-            resource_type="playgrounds",
-            uuid_prefix="playground_",
-            has_published_field=False,
-            supports_usergroups=True,
-            supports_authorship=True,
-            model_name="Playground",
-            uuid_field="playground_uuid",
-        )
-        resource = await checker._get_resource("playground_load", config)
-        assert resource is not None
-        assert resource.playground_uuid == "playground_load"
+        assert _resource_model("boards") is None
+
+    def test_playground_resource_model_needs_ee(self):
+        """Plays are EE-only: without EE a playground uuid resolves to no model."""
+        from src.security.rbac.resource_access import _resource_model
+
+        assert _resource_model("playgrounds") is None
 
 
 # ---------------------------------------------------------------------------

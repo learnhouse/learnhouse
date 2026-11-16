@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, Circle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface PasswordRule {
@@ -9,10 +9,22 @@ interface PasswordRule {
     labelKey: string
     /** English message returned by validatePasswordStrength. */
     error: string
-    test: (password: string) => boolean
+    test: (_password: string) => boolean
 }
 
-// Mirrors the API's password policy (password_validation.py).
+// The passwords people reach for first. Mirrors COMMON_PASSWORDS in the API's
+// password_validation.py, which is the real check.
+export const COMMON_PASSWORDS = new Set([
+    'password1', 'password12', 'password123', 'passw0rd', 'p@ssw0rd', 'p@ssword1',
+    'qwerty123', 'qwerty12', 'qwertyuiop1', '1q2w3e4r', '1qaz2wsx', 'zaq12wsx', 'q1w2e3r4',
+    'abc12345', 'abcd1234', 'abcdef12', 'test1234', 'letmein1', 'welcome1', 'welcome123',
+    'iloveyou1', 'admin123', 'admin1234', 'administrator1', 'changeme1', '12345678a', 'a12345678',
+    'football1', 'baseball1', 'monkey123', 'dragon123', 'sunshine1', 'princess1', 'trustno1',
+    'master123', 'shadow123', 'superman1', 'computer1', 'learnhouse1',
+])
+
+// Mirrors the API's password policy (password_validation.py): long enough,
+// not all one kind of character, and not one of the usual suspects.
 const PASSWORD_RULES: PasswordRule[] = [
     {
         id: 'minLength',
@@ -21,28 +33,22 @@ const PASSWORD_RULES: PasswordRule[] = [
         test: (pwd) => pwd.length >= 8,
     },
     {
-        id: 'uppercase',
-        labelKey: 'auth.password_req_uppercase',
-        error: 'Password must contain at least one uppercase letter',
-        test: (pwd) => /[A-Z]/.test(pwd),
+        id: 'letter',
+        labelKey: 'auth.password_req_letter',
+        error: 'Password must contain at least one letter',
+        test: (pwd) => /\p{L}/u.test(pwd),
     },
     {
-        id: 'lowercase',
-        labelKey: 'auth.password_req_lowercase',
-        error: 'Password must contain at least one lowercase letter',
-        test: (pwd) => /[a-z]/.test(pwd),
+        id: 'numberOrSymbol',
+        labelKey: 'auth.password_req_number_or_symbol',
+        error: 'Password must contain at least one number or symbol',
+        test: (pwd) => /[^\p{L}\s]/u.test(pwd),
     },
     {
-        id: 'number',
-        labelKey: 'auth.password_req_number',
-        error: 'Password must contain at least one number',
-        test: (pwd) => /[0-9]/.test(pwd),
-    },
-    {
-        id: 'special',
-        labelKey: 'auth.password_req_special',
-        error: 'Password must contain at least one special character',
-        test: (pwd) => /[!@#$%^&*()_+\-=[\]{}|;':",./<>?]/.test(pwd),
+        id: 'notCommon',
+        labelKey: 'auth.password_req_not_common',
+        error: 'This password is too common',
+        test: (pwd) => pwd.length > 0 && !COMMON_PASSWORDS.has(pwd.toLowerCase()),
     },
 ]
 
@@ -51,85 +57,40 @@ interface PasswordStrengthIndicatorProps {
     showRequirements?: boolean
 }
 
+/** The password rules as a quiet inline checklist that ticks as you type. */
 export function PasswordStrengthIndicator({
     password,
     showRequirements = true,
 }: PasswordStrengthIndicatorProps) {
     const { t } = useTranslation()
 
-    // Labels are translated during render rather than memoized on `t`, so they
-    // always follow the active language, including when its bundle loads late.
-    const validCount = PASSWORD_RULES.filter((rule) => rule.test(password)).length
-    const strengthPercentage = (validCount / PASSWORD_RULES.length) * 100
-
-    const getStrengthColor = () => {
-        if (strengthPercentage === 0) return 'bg-gray-200'
-        if (strengthPercentage <= 40) return 'bg-red-500'
-        if (strengthPercentage <= 60) return 'bg-orange-500'
-        if (strengthPercentage <= 80) return 'bg-yellow-500'
-        return 'bg-green-500'
-    }
-
-    const getStrengthLabel = () => {
-        if (strengthPercentage === 0) return ''
-        if (strengthPercentage <= 40) return t('auth.password_strength_weak')
-        if (strengthPercentage <= 60) return t('auth.password_strength_fair')
-        if (strengthPercentage <= 80) return t('auth.password_strength_good')
-        return t('auth.password_strength_strong')
-    }
-
-    // Don't show anything if password is empty
-    if (!password) {
+    if (!password || !showRequirements) {
         return null
     }
 
+    // Labels are translated during render rather than memoized on `t`, so they
+    // always follow the active language, including when its bundle loads late.
     return (
-        <div className="mt-2 space-y-2">
-            {/* Strength bar */}
-            <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">{t('auth.password_strength')}</span>
-                    <span className={`font-medium ${
-                        strengthPercentage <= 40 ? 'text-red-600' :
-                        strengthPercentage <= 60 ? 'text-orange-600' :
-                        strengthPercentage <= 80 ? 'text-yellow-600' :
-                        'text-green-600'
-                    }`}>
-                        {getStrengthLabel()}
-                    </span>
-                </div>
-                <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                        className={`h-full transition-all duration-300 ${getStrengthColor()}`}
-                        style={{ width: `${strengthPercentage}%` }}
-                    />
-                </div>
-            </div>
-
-            {/* Requirements list */}
-            {showRequirements && (
-                <ul className="text-xs space-y-1">
-                    {PASSWORD_RULES.map((rule) => {
-                        const isValid = rule.test(password)
-                        return (
-                            <li
-                                key={rule.id}
-                                className={`flex items-center gap-1.5 ${
-                                    isValid ? 'text-green-600' : 'text-gray-500'
-                                }`}
-                            >
-                                {isValid ? (
-                                    <Check className="h-3.5 w-3.5" />
-                                ) : (
-                                    <X className="h-3.5 w-3.5" />
-                                )}
-                                <span>{t(rule.labelKey)}</span>
-                            </li>
-                        )
-                    })}
-                </ul>
-            )}
-        </div>
+        <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs" data-testid="password-rules">
+            {PASSWORD_RULES.map((rule) => {
+                const isValid = rule.test(password)
+                return (
+                    <li
+                        key={rule.id}
+                        className={`flex items-center gap-1 ${
+                            isValid ? 'text-emerald-600' : 'text-neutral-500'
+                        }`}
+                    >
+                        {isValid ? (
+                            <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : (
+                            <Circle className="h-2.5 w-2.5 mx-0.5" aria-hidden="true" />
+                        )}
+                        <span>{t(rule.labelKey)}</span>
+                    </li>
+                )
+            })}
+        </ul>
     )
 }
 

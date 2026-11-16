@@ -1,0 +1,90 @@
+[
+ {
+  "activity_uuid": "activity_fb2fa751-1063-4a26-bed3-b108edaef9a4",
+  "name": "Practice: refund math",
+  "nodes": [
+   {
+    "type": "blockMagic",
+    "attrs": {
+     "blockUuid": "magic_523c11ff-96da-4d16-ad74-ef26d2cccea4",
+     "sessionUuid": "mb_c2848292-a3cf-4433-836f-4222f4f212cd",
+     "htmlContent": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n    <script src=\"https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js\"></script>\n</head>\n<body class=\"bg-gray-50 p-4 font-sans text-gray-800\">\n\n<div class=\"max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200\">\n    <div class=\"bg-blue-600 p-4 text-white\">\n        <h2 class=\"text-lg font-bold\">Refund Calculator</h2>\n        <p class=\"text-blue-100 text-sm\">Calculate refund totals for partial returns.</p>\n    </div>\n\n    <div class=\"p-6\">\n        <!-- Input Section -->\n        <div class=\"space-y-4\">\n            <div>\n                <label class=\"block text-sm font-medium text-gray-700 mb-1\">Item Price ($)</label>\n                <input type=\"number\" id=\"price\" placeholder=\"0.00\" \n                    class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none\">\n            </div>\n\n            <div>\n                <label class=\"block text-sm font-medium text-gray-700 mb-1\">Condition</label>\n                <select id=\"condition\" class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none\">\n                    <option value=\"unopened\">Unopened (0% fee)</option>\n                    <option value=\"opened\">Opened (10% restocking fee)</option>\n                </select>\n            </div>\n\n            <button id=\"calculateBtn\" class=\"w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md transition duration-200\">\n                Calculate Refund\n            </button>\n        </div>\n\n        <!-- Result Section -->\n        <div id=\"resultBox\" class=\"mt-6 p-4 bg-gray-50 rounded-lg hidden\">\n            <div class=\"flex justify-between items-center mb-2\">\n                <span class=\"text-sm text-gray-600\">Restocking Fee:</span>\n                <span id=\"feeDisplay\" class=\"font-semibold text-red-600\">$0.00</span>\n            </div>\n            <div class=\"flex justify-between items-center border-t border-gray-200 pt-2 mb-4\">\n                <span class=\"text-md font-bold text-gray-800\">Total Refund:</span>\n                <span id=\"totalDisplay\" class=\"text-xl font-bold text-blue-600\">$0.00</span>\n            </div>\n            <!-- Math Steps -->\n            <div id=\"mathSteps\" class=\"text-xs text-gray-500 bg-white p-3 rounded border border-gray-200 italic\">\n                <!-- Dynamically injected -->\n            </div>\n        </div>\n    </div>\n</div>\n\n<script>\n    const priceInput = document.getElementById('price');\n    const conditionSelect = document.getElementById('condition');\n    const calculateBtn = document.getElementById('calculateBtn');\n    const resultBox = document.getElementById('resultBox');\n    const feeDisplay = document.getElementById('feeDisplay');\n    const totalDisplay = document.getElementById('totalDisplay');\n    const mathSteps = document.getElementById('mathSteps');\n\n    calculateBtn.addEventListener('click', () => {\n        const price = parseFloat(priceInput.value);\n        \n        if (isNaN(price) || price < 0) {\n            alert('Please enter a valid price.');\n            return;\n        }\n\n        const condition = conditionSelect.value;\n        const feeRate = condition === 'opened' ? 0.10 : 0;\n        const fee = price * feeRate;\n        const total = price - fee;\n\n        // Update UI\n        feeDisplay.textContent = `$${fee.toFixed(2)}`;\n        totalDisplay.textContent = `$${total.toFixed(2)}`;\n        mathSteps.innerHTML = `\n            Calculation:<br>\n            Price: $${price.toFixed(2)}<br>\n            Fee: $${price.toFixed(2)} × ${feeRate * 100}% = $${fee.toFixed(2)}<br>\n            Result: $${price.toFixed(2)} - $${fee.toFixed(2)} = <strong>$${total.toFixed(2)}</strong>\n        `;\n        \n        resultBox.classList.remove('hidden');\n\n        // Animation\n        resultBox.classList.add('animate-pulse');\n        setTimeout(() => resultBox.classList.remove('animate-pulse'), 500);\n\n        // Fun celebration if there's no fee\n        if (fee === 0 && price > 0) {\n            confetti({\n                particleCount: 50,\n                spread: 60,\n                origin: { y: 0.7 }\n            });\n        }\n    });\n</script>\n\n</body>\n</html>",
+     "iterationCount": 2,
+     "title": "Interactive Element",
+     "height": 400
+    }
+   }
+  ]
+ },
+ {
+  "activity_uuid": "activity_4958800b-46c4-4b10-8533-4d35bf228d4e",
+  "name": "Block gallery",
+  "nodes": [
+   {
+    "type": "scenarios",
+    "attrs": {
+     "title": "Interactive Scenario",
+     "scenarios": [
+      {
+       "id": "1",
+       "text": "A customer asks for a refund after 40 days. What do you do?",
+       "imageUrl": "",
+       "options": [
+        {
+         "id": "o1",
+         "text": "Explain the 30-day policy",
+         "nextScenarioId": "2"
+        },
+        {
+         "id": "o2",
+         "text": "Refund anyway",
+         "nextScenarioId": null
+        }
+       ]
+      },
+      {
+       "id": "2",
+       "text": "They accept a store credit. Well done.",
+       "imageUrl": "",
+       "options": []
+      }
+     ],
+     "currentScenarioId": "1"
+    }
+   },
+   {
+    "type": "blockMagic",
+    "attrs": {
+     "blockUuid": "magic_4f0fc176-6c8b-44e3-8907-09551f644647",
+     "sessionUuid": null,
+     "htmlContent": null,
+     "title": "Interactive Element",
+     "height": 400
+    }
+   },
+   {
+    "type": "conditionalBlock",
+    "attrs": {
+     "rules": {
+      "match": "all",
+      "conditions": []
+     },
+     "hiddenMessage": "",
+     "openRules": null,
+     "label": ""
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Only some learners see this."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]
