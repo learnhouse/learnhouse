@@ -93,6 +93,8 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
   if (peeked && !info) phase = 'invalid'
   else if (info && sessionStatus !== 'loading') {
     if (sessionStatus === 'authenticated') phase = sessionEmail === info.email.toLowerCase() ? 'joining' : 'wrong_account'
+    // A copied link doesn't say whether the address has an account: offer
+    // signup, with a way to sign in instead.
     else phase = info.account_exists ? 'signin' : 'signup'
   }
   if (phase === 'joining' && error) phase = 'error'
@@ -419,6 +421,15 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
         <AuthNotice tone="info" className="mt-5">
           {t('auth.no_sign_up_method_available')}
         </AuthNotice>
+      )}
+
+      {/* A copied link doesn't say whether the address has an account. */}
+      {info.account_exists === undefined && (
+        <p className="mt-5 text-center text-[13px] text-neutral-500">
+          <a href={inviteSignInHref(token)} onClick={() => setLoginHint(info.email)} className="font-semibold text-neutral-800 hover:underline">
+            {t('auth.invite_link.signin_cta', { defaultValue: 'Sign in to join' })}
+          </a>
+        </p>
       )}
     </div>
   )

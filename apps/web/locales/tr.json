@@ -806,7 +806,9 @@
     "login_failed_forgot": "Şifrenizi mi unuttunuz?",
     "login_failed_reset": "Sıfırlayın",
     "login_failed_magic": "Bunun yerine giriş bağlantısı gönder",
-    "login_failed_google_hint": "Google ile mi kaydoldunuz? Aşağıdan Google ile devam edin."
+    "login_failed_google_hint": "Google ile mi kaydoldunuz? Aşağıdan Google ile devam edin.",
+    "email_verified_set_password": "E-postanız doğrulandı. Güvenliğiniz için daha önce belirlenen şifre kaldırıldı: şifreyle giriş yapmak için yeni bir şifre seçin.",
+    "set_new_password": "Yeni şifre belirle"
   },
   "validation": {
     "required": "Gerekli",
@@ -8056,7 +8058,8 @@
           "audit_logs": "Denetim Kayıtları",
           "analytics": "Analitik",
           "sign_in": "Oturum açma",
-          "two_factor": "İki adımlı doğrulama"
+          "two_factor": "İki adımlı doğrulama",
+          "signups_invite": "Kayıtlar & Davetler"
         },
         "pages": {
           "users": {
@@ -8094,6 +8097,10 @@
           "sign_in": {
             "title": "Oturum açma",
             "subtitle": "Üyelerin bu organizasyonda nasıl oturum açabileceğini seçin"
+          },
+          "signups_invite": {
+            "title": "Kayıtlar & Davetler",
+            "subtitle": "Kişileri davet edin, nasıl katılabileceklerini seçin ve davet kodlarını paylaşın"
           }
         },
         "mobile": {
@@ -9599,10 +9606,23 @@
           "uses_of": "{{count}} / {{max}} kullanım",
           "uses_title": "Bu kodla kaç kez katılım yapıldığı"
         },
-        "codes_card": {
-          "title": "Davet kodları",
-          "description": "Bütün bir sınıfla tek bir bağlantı veya kod paylaşın. Rolünü, gruplarını, kurslarını, kullanım sayısını ve geçerlilik süresini belirleyin.",
-          "manage": "Davet kodlarını yönet"
+        "page": {
+          "join_title": "Kişiler nasıl katılabilir",
+          "join_description": "Herkesin mi kaydolabileceğini yoksa yalnızca davet ettiğiniz kişilerin mi katılabileceğini seçin.",
+          "mode_open": "Açık",
+          "mode_open_description": "Akademinizin bağlantısına sahip herkes hesap oluşturup katılabilir.",
+          "mode_invite_only": "Sadece davetle",
+          "mode_invite_only_description": "Yalnızca e-postayla davet ettiğiniz veya davet kodu olan kişiler katılabilir.",
+          "confirm_open_title": "Herkesin katılmasına izin verilsin mi?",
+          "confirm_invite_only_title": "Katılım sadece davetle mi olsun?",
+          "confirm_open": "Açık olarak değiştir",
+          "confirm_invite_only": "Sadece davetle olarak değiştir",
+          "codes_description": "Bütün bir grup için tek bir bağlantı veya kod. Bununla katılan herkes onun rolünü, gruplarını ve kurslarını alır.",
+          "codes_need_invite_only": "Davet kodları sadece davetle katılım içindir. Kod oluşturmak için yukarıdan Sadece davetle seçeneğine geçin.",
+          "edit_fields": "Alanları düzenle",
+          "code_expired": "Süresi doldu",
+          "code_used_up": "Tükendi",
+          "code_revoked": "Silindi"
         }
       }
     },

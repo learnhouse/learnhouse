@@ -805,7 +805,9 @@
     "login_failed_forgot": "パスワードをお忘れですか？",
     "login_failed_reset": "再設定する",
     "login_failed_magic": "代わりにログインリンクをメールで受け取る",
-    "login_failed_google_hint": "Google で登録しましたか？下の「Google で続行」を使ってください。"
+    "login_failed_google_hint": "Google で登録しましたか？下の「Google で続行」を使ってください。",
+    "email_verified_set_password": "メールアドレスが確認されました。セキュリティのため、確認前に設定されていたパスワードは削除されました。パスワードでログインするには、新しいパスワードを設定してください。",
+    "set_new_password": "新しいパスワードを設定"
   },
   "validation": {
     "required": "必須項目です",
@@ -8028,7 +8030,8 @@
           "audit_logs": "監査ログ",
           "analytics": "アナリティクス",
           "sign_in": "ログイン",
-          "two_factor": "2段階認証"
+          "two_factor": "2段階認証",
+          "signups_invite": "登録と招待"
         },
         "pages": {
           "users": {
@@ -8066,6 +8069,10 @@
           "sign_in": {
             "title": "ログイン",
             "subtitle": "メンバーがこの組織にログインできる方法を選択します"
+          },
+          "signups_invite": {
+            "title": "登録と招待",
+            "subtitle": "メンバーを招待し、参加方法を選び、招待コードを共有します"
           }
         },
         "mobile": {
@@ -9571,10 +9578,23 @@
           "uses_of": "{{count}} / {{max}}回使用",
           "uses_title": "このコードで参加した回数"
         },
-        "codes_card": {
-          "title": "招待コード",
-          "description": "1つのリンクやコードをクラス全体で共有できます。ロール、グループ、コース、使用回数、有効期限を設定します。",
-          "manage": "招待コードを管理"
+        "page": {
+          "join_title": "参加方法",
+          "join_description": "誰でも登録できるようにするか、招待した人だけにするかを選びます。",
+          "mode_open": "オープン",
+          "mode_open_description": "アカデミーのリンクを知っていれば、誰でもアカウントを作成して参加できます。",
+          "mode_invite_only": "招待制",
+          "mode_invite_only_description": "メールで招待した人か、招待コードを持っている人だけが参加できます。",
+          "confirm_open_title": "誰でも参加できるようにしますか？",
+          "confirm_invite_only_title": "参加を招待制にしますか？",
+          "confirm_open": "オープンに切り替え",
+          "confirm_invite_only": "招待制に切り替え",
+          "codes_description": "1つのリンクやコードをグループ全体で使えます。参加した全員にそのロール、グループ、コースが適用されます。",
+          "codes_need_invite_only": "招待コードは招待制の参加用です。作成するには、上で「招待制」に切り替えてください。",
+          "edit_fields": "項目を編集",
+          "code_expired": "期限切れ",
+          "code_used_up": "上限到達",
+          "code_revoked": "削除済み"
         }
       }
     },

@@ -805,7 +805,9 @@
     "login_failed_forgot": "忘记密码？",
     "login_failed_reset": "重置密码",
     "login_failed_magic": "改为通过邮件发送登录链接",
-    "login_failed_google_hint": "使用 Google 注册的？请使用下方的「使用 Google 继续」。"
+    "login_failed_google_hint": "使用 Google 注册的？请使用下方的「使用 Google 继续」。",
+    "email_verified_set_password": "您的邮箱已验证。为了您的安全，此前设置的密码已被移除：请设置新密码以使用密码登录。",
+    "set_new_password": "设置新密码"
   },
   "validation": {
     "required": "必填",
@@ -8028,7 +8030,8 @@
           "audit_logs": "审计日志",
           "analytics": "分析",
           "sign_in": "登录",
-          "two_factor": "两步验证"
+          "two_factor": "两步验证",
+          "signups_invite": "注册与邀请"
         },
         "pages": {
           "users": {
@@ -8066,6 +8069,10 @@
           "sign_in": {
             "title": "登录",
             "subtitle": "选择允许成员以哪些方式登录此组织"
+          },
+          "signups_invite": {
+            "title": "注册与邀请",
+            "subtitle": "邀请成员、选择加入方式并分享邀请码"
           }
         },
         "mobile": {
@@ -9571,10 +9578,23 @@
           "uses_of": "已使用 {{count}} / {{max}} 次",
           "uses_title": "通过此邀请码加入的次数"
         },
-        "codes_card": {
-          "title": "邀请码",
-          "description": "与整个班级共享一个链接或邀请码。可设置角色、用户组、课程、使用次数和有效期。",
-          "manage": "管理邀请码"
+        "page": {
+          "join_title": "加入方式",
+          "join_description": "选择允许任何人注册，还是仅限你邀请的人加入。",
+          "mode_open": "开放",
+          "mode_open_description": "任何拥有学院链接的人都可以创建账号并加入。",
+          "mode_invite_only": "仅限邀请",
+          "mode_invite_only_description": "只有你通过邮件邀请的人或持有邀请码的人才能加入。",
+          "confirm_open_title": "允许任何人加入？",
+          "confirm_invite_only_title": "改为仅限邀请加入？",
+          "confirm_open": "切换为开放",
+          "confirm_invite_only": "切换为仅限邀请",
+          "codes_description": "一个链接或邀请码，整个群体共用。凡是通过它加入的人都会获得其角色、用户组和课程。",
+          "codes_need_invite_only": "邀请码用于仅限邀请的加入方式。请先在上方切换为“仅限邀请”再创建。",
+          "edit_fields": "编辑字段",
+          "code_expired": "已过期",
+          "code_used_up": "已用完",
+          "code_revoked": "已删除"
         }
       }
     },

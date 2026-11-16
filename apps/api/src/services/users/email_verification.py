@@ -35,6 +35,11 @@ TOKEN_TTL_SECONDS = 60 * 60
 NO_ORG_UUID = "none"
 
 
+# The message when verifying proved a previously unproven inbox and dropped a
+# password set before that: the caller tells the person to set a new one.
+INBOX_CLAIMED = "Email verified. Set a new password to sign in with one."
+
+
 def get_redis_connection() -> redis.Redis:
     """Get Redis connection from config."""
     LH_CONFIG = get_learnhouse_config()
@@ -292,20 +297,21 @@ async def verify_email_token(
         )
 
     # Check if already verified
-    from src.services.users.users import clear_inbox_unproven, inbox_unproven
+    from src.services.users.users import inbox_unproven
 
     if user.email_verified:
         r.delete(redis_key)
         if inbox_unproven(user):
-            # A self-hosted account marked verified without proof: this mailed
-            # token is the proof (links made before it go, as below).
-            from src.services.auth.utils import _drop_unverified_sso_links
+            # A self-hosted or admin-provisioned account marked verified
+            # without proof: this mailed token is the proof. Whoever set the
+            # password never proved the inbox, so it goes (and the sessions it
+            # opened), like on a first Google or magic-link sign-in; the owner
+            # sets a new one. SSO links made before go too.
+            from src.services.auth.utils import claim_account_on_inbox_proof
 
-            await _drop_unverified_sso_links(user.id, db_session)
-            clear_inbox_unproven(user)
-            db_session.add(user)
-            await db_session.commit()
-            await db_session.refresh(user)
+            had_password = bool(user.password)
+            await claim_account_on_inbox_proof(user, db_session)
+            return user, (INBOX_CLAIMED if had_password else "Email verified")
         return user, "Email already verified"
 
     # Identity-provider links made while the address was unproven go first.

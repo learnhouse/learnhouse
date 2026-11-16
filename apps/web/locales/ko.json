@@ -805,7 +805,9 @@
     "login_failed_forgot": "비밀번호를 잊으셨나요?",
     "login_failed_reset": "재설정하기",
     "login_failed_magic": "대신 로그인 링크를 이메일로 받기",
-    "login_failed_google_hint": "Google로 가입하셨나요? 아래의 Google로 계속하기를 사용하세요."
+    "login_failed_google_hint": "Google로 가입하셨나요? 아래의 Google로 계속하기를 사용하세요.",
+    "email_verified_set_password": "이메일이 인증되었습니다. 보안을 위해 인증 전에 설정된 비밀번호가 삭제되었습니다. 비밀번호로 로그인하려면 새 비밀번호를 설정하세요.",
+    "set_new_password": "새 비밀번호 설정"
   },
   "validation": {
     "required": "필수 항목입니다",
@@ -8026,7 +8028,8 @@
           "audit_logs": "감사 로그",
           "analytics": "분석",
           "sign_in": "로그인",
-          "two_factor": "2단계 인증"
+          "two_factor": "2단계 인증",
+          "signups_invite": "가입 및 초대"
         },
         "pages": {
           "users": {
@@ -8064,6 +8067,10 @@
           "sign_in": {
             "title": "로그인",
             "subtitle": "멤버가 이 조직에 로그인할 수 있는 방법을 선택하세요"
+          },
+          "signups_invite": {
+            "title": "가입 및 초대",
+            "subtitle": "사람들을 초대하고, 참여 방식을 선택하고, 초대 코드를 공유하세요"
           }
         },
         "mobile": {
@@ -9569,10 +9576,23 @@
           "uses_of": "{{count}} / {{max}}회 사용",
           "uses_title": "이 코드로 참여한 횟수"
         },
-        "codes_card": {
-          "title": "초대 코드",
-          "description": "하나의 링크나 코드를 반 전체와 공유하세요. 역할, 그룹, 코스, 사용 횟수, 만료일을 설정할 수 있어요.",
-          "manage": "초대 코드 관리"
+        "page": {
+          "join_title": "참여 방식",
+          "join_description": "누구나 가입할 수 있게 할지, 초대한 사람만 참여할 수 있게 할지 선택하세요.",
+          "mode_open": "공개",
+          "mode_open_description": "아카데미 링크가 있는 사람은 누구나 계정을 만들고 참여할 수 있어요.",
+          "mode_invite_only": "초대 전용",
+          "mode_invite_only_description": "이메일로 초대한 사람이나 초대 코드가 있는 사람만 참여할 수 있어요.",
+          "confirm_open_title": "누구나 참여할 수 있게 할까요?",
+          "confirm_invite_only_title": "초대 전용으로 바꿀까요?",
+          "confirm_open": "공개로 전환",
+          "confirm_invite_only": "초대 전용으로 전환",
+          "codes_description": "하나의 링크나 코드를 그룹 전체가 사용해요. 이 코드로 참여한 모든 사람에게 해당 역할, 그룹, 코스가 적용돼요.",
+          "codes_need_invite_only": "초대 코드는 초대 전용 참여에 사용해요. 코드를 만들려면 위에서 초대 전용으로 전환하세요.",
+          "edit_fields": "필드 편집",
+          "code_expired": "만료됨",
+          "code_used_up": "모두 사용됨",
+          "code_revoked": "삭제됨"
         }
       }
     },

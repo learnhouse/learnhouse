@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowClockwise,
-  BookOpen,
   DotsThree,
   EnvelopeSimple,
   LinkSimple,
@@ -13,14 +12,12 @@ import {
   PencilSimple,
   Prohibit,
   UserPlus,
-  UsersThree,
   WarningCircle,
 } from '@phosphor-icons/react'
 import {
   BulkActionBar,
   BulkActionButton,
   Button,
-  Chip,
   ConfirmDialog,
   EmptyState,
   SegmentedControl,
@@ -251,7 +248,7 @@ export default function InvitationsPanel({
             return (
               <li
                 key={inv.invitation_uuid}
-                className="group grid grid-cols-[28px_minmax(0,1fr)_36px] md:grid-cols-[28px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_140px_36px] items-center gap-x-3 gap-y-2 px-4 sm:px-5 py-3 hover:bg-neutral-50/70 transition-colors"
+                className="group grid grid-cols-[28px_minmax(0,1fr)_36px] md:grid-cols-[28px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_140px_36px] items-center gap-x-3 gap-y-1.5 px-4 sm:px-5 py-2.5 hover:bg-neutral-50/70 transition-colors"
               >
                 <span className={canAct ? '' : 'invisible'}>
                   <CheckBox
@@ -286,18 +283,23 @@ export default function InvitationsPanel({
                 <div className="hidden md:block min-w-0">
                   <RoleChip name={roleName} />
                 </div>
-                <div className="hidden md:flex flex-wrap items-center gap-1.5 min-w-0">
-                  {inv.usergroups.length > 0 && (
-                    <Chip tone="sky" icon={<UsersThree size={11} />} title={inv.usergroups.map((g) => g.name).join(', ')}>
-                      {inv.usergroups.length === 1 ? inv.usergroups[0].name : t('dashboard.users.invitations.list.groups', { count: inv.usergroups.length })}
-                    </Chip>
-                  )}
-                  {inv.courses.length > 0 && (
-                    <Chip tone="teal" icon={<BookOpen size={11} />} title={inv.courses.map((c) => c.name).join(', ')}>
-                      {t('dashboard.users.invitations.list.courses', { count: inv.courses.length })}
-                    </Chip>
-                  )}
-                  {!inv.usergroups.length && !inv.courses.length && <span className="text-xs text-neutral-400">—</span>}
+                <div className="hidden md:block min-w-0">
+                  {/* Plain text, not chips: the row stays quiet. */}
+                  <p
+                    className="text-xs text-neutral-600 truncate"
+                    title={[...inv.usergroups.map((g) => g.name), ...inv.courses.map((c) => c.name)].join(', ')}
+                  >
+                    {[
+                      inv.usergroups.length === 1
+                        ? inv.usergroups[0].name
+                        : inv.usergroups.length > 1
+                          ? t('dashboard.users.invitations.list.groups', { count: inv.usergroups.length })
+                          : null,
+                      inv.courses.length ? t('dashboard.users.invitations.list.courses', { count: inv.courses.length }) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || '—'}
+                  </p>
                 </div>
                 <div className="hidden md:block min-w-0">
                   <InvitationStatusChip status={inv.status} />

@@ -805,7 +805,9 @@
     "login_failed_forgot": "Quên mật khẩu?",
     "login_failed_reset": "Đặt lại",
     "login_failed_magic": "Gửi cho tôi liên kết đăng nhập",
-    "login_failed_google_hint": "Đã đăng ký bằng Google? Hãy dùng Tiếp tục với Google bên dưới."
+    "login_failed_google_hint": "Đã đăng ký bằng Google? Hãy dùng Tiếp tục với Google bên dưới.",
+    "email_verified_set_password": "Email của bạn đã được xác minh. Vì lý do bảo mật, mật khẩu được đặt trước đó đã bị xóa: hãy chọn mật khẩu mới để đăng nhập bằng mật khẩu.",
+    "set_new_password": "Đặt mật khẩu mới"
   },
   "validation": {
     "required": "Bắt buộc",
@@ -8026,7 +8028,8 @@
           "audit_logs": "Nhật ký kiểm tra",
           "analytics": "Phân tích",
           "sign_in": "Đăng nhập",
-          "two_factor": "Xác thực hai yếu tố"
+          "two_factor": "Xác thực hai yếu tố",
+          "signups_invite": "Đăng ký & Lời mời"
         },
         "pages": {
           "users": {
@@ -8064,6 +8067,10 @@
           "sign_in": {
             "title": "Đăng nhập",
             "subtitle": "Chọn cách thành viên được phép đăng nhập vào tổ chức này"
+          },
+          "signups_invite": {
+            "title": "Đăng ký & Lời mời",
+            "subtitle": "Mời mọi người, chọn cách họ có thể tham gia và chia sẻ mã mời"
           }
         },
         "mobile": {
@@ -9569,10 +9576,23 @@
           "uses_of": "{{count}} / {{max}} lượt dùng",
           "uses_title": "Số lần mã này được dùng để tham gia"
         },
-        "codes_card": {
-          "title": "Mã mời",
-          "description": "Chia sẻ một liên kết hoặc mã với cả lớp. Đặt vai trò, nhóm, khóa học, số lượt dùng và thời hạn.",
-          "manage": "Quản lý mã mời"
+        "page": {
+          "join_title": "Cách mọi người tham gia",
+          "join_description": "Chọn cho phép bất kỳ ai đăng ký hay chỉ những người bạn mời.",
+          "mode_open": "Mở",
+          "mode_open_description": "Bất kỳ ai có liên kết học viện của bạn đều có thể tạo tài khoản và tham gia.",
+          "mode_invite_only": "Chỉ mời",
+          "mode_invite_only_description": "Chỉ những người bạn mời qua email hoặc có mã mời mới có thể tham gia.",
+          "confirm_open_title": "Cho phép bất kỳ ai tham gia?",
+          "confirm_invite_only_title": "Chỉ cho phép tham gia qua lời mời?",
+          "confirm_open": "Chuyển sang mở",
+          "confirm_invite_only": "Chuyển sang chỉ mời",
+          "codes_description": "Một liên kết hoặc mã cho cả nhóm. Ai tham gia bằng mã này đều nhận vai trò, nhóm và khóa học của mã.",
+          "codes_need_invite_only": "Mã mời dùng cho chế độ chỉ mời. Chuyển sang Chỉ mời ở trên để tạo mã.",
+          "edit_fields": "Sửa trường",
+          "code_expired": "Hết hạn",
+          "code_used_up": "Đã dùng hết",
+          "code_revoked": "Đã xóa"
         }
       }
     },

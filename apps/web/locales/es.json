@@ -806,7 +806,9 @@
     "login_failed_forgot": "¿Olvidaste tu contraseña?",
     "login_failed_reset": "Restablécela",
     "login_failed_magic": "Envíame un enlace de acceso",
-    "login_failed_google_hint": "¿Te registraste con Google? Usa Continuar con Google abajo."
+    "login_failed_google_hint": "¿Te registraste con Google? Usa Continuar con Google abajo.",
+    "email_verified_set_password": "Tu correo electrónico ha sido verificado. Por tu seguridad, se eliminó la contraseña establecida anteriormente: elige una nueva para iniciar sesión con contraseña.",
+    "set_new_password": "Establecer nueva contraseña"
   },
   "validation": {
     "required": "Obligatorio",
@@ -8167,7 +8169,8 @@
           "audit_logs": "Registros de auditoría",
           "analytics": "Analíticas",
           "sign_in": "Inicio de sesión",
-          "two_factor": "Dos factores"
+          "two_factor": "Dos factores",
+          "signups_invite": "Inscripciones e invitaciones"
         },
         "pages": {
           "users": {
@@ -8205,6 +8208,10 @@
           "sign_in": {
             "title": "Inicio de sesión",
             "subtitle": "Elige cómo pueden iniciar sesión los miembros en esta organización"
+          },
+          "signups_invite": {
+            "title": "Inscripciones e invitaciones",
+            "subtitle": "Invita a personas, elige cómo pueden unirse y comparte códigos de invitación"
           }
         },
         "mobile": {
@@ -9781,10 +9788,23 @@
           "uses_of": "{{count}} / {{max}} usos",
           "uses_title": "Veces que se usó este código para unirse"
         },
-        "codes_card": {
-          "title": "Códigos de invitación",
-          "description": "Comparte un enlace o código con toda una clase. Define su rol, grupos, cursos, usos y caducidad.",
-          "manage": "Gestionar códigos de invitación"
+        "page": {
+          "join_title": "Cómo pueden unirse las personas",
+          "join_description": "Elige si cualquiera puede inscribirse o solo las personas que invites.",
+          "mode_open": "Abierto",
+          "mode_open_description": "Cualquiera con el enlace de tu academia puede crear una cuenta y unirse.",
+          "mode_invite_only": "Solo por invitación",
+          "mode_invite_only_description": "Solo pueden unirse las personas que invites por correo o que tengan un código de invitación.",
+          "confirm_open_title": "¿Permitir que cualquiera se una?",
+          "confirm_invite_only_title": "¿Hacer que unirse sea solo por invitación?",
+          "confirm_open": "Cambiar a abierto",
+          "confirm_invite_only": "Cambiar a solo por invitación",
+          "codes_description": "Un enlace o código para todo un grupo. Quien se una con él recibe su rol, grupos y cursos.",
+          "codes_need_invite_only": "Los códigos de invitación son para unirse solo por invitación. Cambia a Solo por invitación arriba para crear uno.",
+          "edit_fields": "Editar campos",
+          "code_expired": "Caducado",
+          "code_used_up": "Agotado",
+          "code_revoked": "Eliminado"
         }
       }
     },

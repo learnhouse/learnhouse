@@ -102,7 +102,9 @@ def quiet():
         "src.services.security.rate_limiting.enforce_invite_rate_limit"
     ) as rate, patch("src.services.webhooks.dispatch.dispatch_webhooks", new_callable=AsyncMock) as hooks, patch(
         "src.core.redis.get_redis_client", return_value=None
-    ), patch("src.routers.users._invalidate_session_cache"), patch(
+    ), patch("src.services.orgs.cache.get_redis_client", return_value=None), patch(
+        "src.routers.users._invalidate_session_cache"
+    ), patch(
         "src.services.orgs.join_notifications.notify_user_joined_org", new_callable=AsyncMock
     ) as joined, patch("src.services.users.usergroups.dispatch_webhooks", new_callable=AsyncMock), patch(
         "src.services.orgs.users.dispatch_webhooks", new_callable=AsyncMock

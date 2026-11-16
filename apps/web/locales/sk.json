@@ -808,7 +808,9 @@
     "login_failed_forgot": "Zabudli ste heslo?",
     "login_failed_reset": "Obnoviť",
     "login_failed_magic": "Poslať mi radšej prihlasovací odkaz",
-    "login_failed_google_hint": "Registrovali ste sa cez Google? Použite nižšie Pokračovať cez Google."
+    "login_failed_google_hint": "Registrovali ste sa cez Google? Použite nižšie Pokračovať cez Google.",
+    "email_verified_set_password": "Váš e-mail bol overený. Z bezpečnostných dôvodov bolo predtým nastavené heslo odstránené: zvoľte si nové, aby ste sa mohli prihlasovať heslom.",
+    "set_new_password": "Nastaviť nové heslo"
   },
   "validation": {
     "required": "Povinné",
@@ -8308,7 +8310,8 @@
           "audit_logs": "Auditné záznamy",
           "analytics": "Analytika",
           "sign_in": "Prihlásenie",
-          "two_factor": "Dvojfaktorové"
+          "two_factor": "Dvojfaktorové",
+          "signups_invite": "Registrácie a pozývanie"
         },
         "pages": {
           "users": {
@@ -8346,6 +8349,10 @@
           "sign_in": {
             "title": "Prihlásenie",
             "subtitle": "Vyberte, ako sa členovia môžu do tejto organizácie prihlasovať"
+          },
+          "signups_invite": {
+            "title": "Registrácie a pozývanie",
+            "subtitle": "Pozývajte ľudí, vyberte, ako sa môžu pripojiť, a zdieľajte kódy pozvánok"
           }
         },
         "mobile": {
@@ -9993,10 +10000,23 @@
           "uses_of": "{{count}} / {{max}} použití",
           "uses_title": "Koľkokrát sa s týmto kódom niekto pripojil"
         },
-        "codes_card": {
-          "title": "Pozývacie kódy",
-          "description": "Zdieľajte jeden odkaz alebo kód s celou triedou. Nastavte rolu, skupiny, kurzy, počet použití a platnosť.",
-          "manage": "Spravovať pozývacie kódy"
+        "page": {
+          "join_title": "Ako sa môžu ľudia pripojiť",
+          "join_description": "Vyberte, či sa môže zaregistrovať ktokoľvek, alebo len ľudia, ktorých pozvete.",
+          "mode_open": "Otvorený",
+          "mode_open_description": "Ktokoľvek s odkazom na vašu akadémiu si môže vytvoriť účet a pripojiť sa.",
+          "mode_invite_only": "Len na pozvánku",
+          "mode_invite_only_description": "Pripojiť sa môžu len ľudia, ktorých pozvete e-mailom alebo ktorí majú kód pozvánky.",
+          "confirm_open_title": "Povoliť pripojenie komukoľvek?",
+          "confirm_invite_only_title": "Povoliť pripojenie len na pozvánku?",
+          "confirm_open": "Prepnúť na otvorený",
+          "confirm_invite_only": "Prepnúť na „Len na pozvánku“",
+          "codes_description": "Jeden odkaz alebo kód pre celú skupinu. Každý, kto sa s ním pripojí, dostane jeho rolu, skupiny a kurzy.",
+          "codes_need_invite_only": "Kódy pozvánok slúžia na pripojenie len na pozvánku. Ak chcete vytvoriť kód, prepnite vyššie na „Len na pozvánku“.",
+          "edit_fields": "Upraviť polia",
+          "code_expired": "Platnosť vypršala",
+          "code_used_up": "Vyčerpaný",
+          "code_revoked": "Odstránený"
         }
       }
     },

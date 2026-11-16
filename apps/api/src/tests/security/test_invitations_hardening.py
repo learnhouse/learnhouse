@@ -365,9 +365,9 @@ async def test_joining_another_way_closes_pending_invitations(world, mock_reques
     # The signup hasn't proven the address yet, so the invitation stays.
     assert (await _row(db, "new@test.com")).status == "pending"
     assert await apply.close_pending_invitations(mock_request, db, world.org.id, "new@test.com", owner_proven=False) == 0
-    assert await apply.close_pending_invitations(mock_request, db, world.org.id, "new@test.com") == 1
+    assert await apply.close_pending_invitations(mock_request, db, world.org.id, "new@test.com", owner_proven=True) == 1
     assert (await _row(db, "new@test.com")).status == "revoked"
-    assert await apply.close_pending_invitations(mock_request, db, world.org.id, "") == 0
+    assert await apply.close_pending_invitations(mock_request, db, world.org.id, "", owner_proven=True) == 0
 
 
 async def test_admin_api_provisioning_closes_pending_invitations(world, mock_request, db):
@@ -445,3 +445,116 @@ async def test_hub_rows_carry_the_role_uuid_for_translation(world, mock_request,
     await db.commit()
     rows = await hub_invites.list_pending_invites(db, 86)
     assert rows[0]["role_uuid"] == "role_user"
+
+
+# ---------------------------------------------------------------------------
+# Re-review: provisioning, verification, probing, third-party sign-in, roles
+# ---------------------------------------------------------------------------
+
+
+async def test_admin_provisioned_accounts_cannot_claim_other_orgs_invitations(world, mock_request, db):
+    from src.db.users import APITokenUser
+    from src.services.admin import admin
+    from src.services.users.users import inbox_proven
+    from src.tests.conftest import ADMIN_RIGHTS
+
+    # Another org (the "victim") invited the address as a Maintainer.
+    now = policy.utcnow()
+    db.add(OrgInvitation(
+        invitation_uuid="invitation_ceo", org_id=world.other_org.id, email="ceo@corp.com", role_id=2,
+        expires_at=now + timedelta(days=3), created_at=now, updated_at=now, token_delivery="email",
+    ))
+    await db.commit()
+    token = APITokenUser(org_id=world.org.id, rights=ADMIN_RIGHTS.model_dump(), created_by_user_id=world.admin.id)
+    with patch("src.services.admin.admin.increase_feature_usage", new=AsyncMock()), patch(
+        "src.services.admin.admin.dispatch_webhooks", new=AsyncMock()
+    ), patch("src.services.admin.admin.check_limits_with_usage", new=AsyncMock()), patch(
+        "src.services.admin.admin.track", new=AsyncMock()
+    ):
+        created = await admin.provision_user(token, "ceo@corp.com", "ceouser", "", "", "blue river 42 X!", 4, mock_request, db)
+        # Attaching an existing account is refused, so nobody else's state changes.
+        with pytest.raises(HTTPException) as exc:
+            await admin.provision_user(token, "admin@test.com", "dupe", "", "", None, 4, mock_request, db)
+        assert exc.value.status_code == 409
+    user = await db.get(User, created.id)
+    # Signs in to the provisioning org (verified), but the inbox isn't proven.
+    assert user.email_verified is True and inbox_proven(user) is False
+    assert (await _membership(db, user.id, world.org.id)).role_id == 4
+    assert await hub_invites.list_pending_invites(db, user.id) == []
+    with pytest.raises(HTTPException) as refused:
+        await hub_invites.accept_invite(mock_request, db, user.id, world.other_org.org_uuid)
+    assert refused.value.status_code == 403
+    admin_row = await db.get(User, world.admin.id)
+    assert admin_row.email_verified_at != ""
+
+
+async def test_verification_drops_a_password_set_before_the_proof(world, mock_request, db):
+    import json
+
+    from src.services.users.email_verification import INBOX_CLAIMED, verify_email_token
+
+    await _user(db, 90, "newhire@test.com")
+    user = await _unproven(db, 90)
+    assert user.password  # chosen by whoever registered the address
+    redis = fakeredis.FakeRedis()
+    redis.set(
+        f"email_verification:{user.user_uuid}:org:none:token:tok",
+        json.dumps({"user_uuid": user.user_uuid, "email": user.email, "expires_at": policy.utcnow().timestamp() + 600}),
+    )
+    with patch("src.services.users.email_verification.get_redis_connection", return_value=redis), patch(
+        "src.security.auth.revoke_user_sessions_before"
+    ) as revoke:
+        verified, message = await verify_email_token(mock_request, db, "tok", user.user_uuid, "none")
+    assert message == INBOX_CLAIMED
+    assert verified.password == "" and verified.email_verified_at != ""
+    revoke.assert_called_once_with(90)
+
+    # No password to drop: plainly verified.
+    await _user(db, 91, "nopass@test.com")
+    other = await _unproven(db, 91)
+    other.password = ""
+    db.add(other)
+    await db.commit()
+    redis.set(
+        f"email_verification:{other.user_uuid}:org:none:token:tok2",
+        json.dumps({"user_uuid": other.user_uuid, "email": other.email, "expires_at": policy.utcnow().timestamp() + 600}),
+    )
+    with patch("src.services.users.email_verification.get_redis_connection", return_value=redis):
+        _u, message = await verify_email_token(mock_request, db, "tok2", other.user_uuid, "none")
+    assert message == "Email verified"
+
+
+async def test_copied_link_peek_does_not_reveal_accounts(world, mock_request, db):
+    await _user(db, 93, "outside@test.com")  # has an account, not in the org
+    token, _inv = await _token_for(world, mock_request, db, "outside@test.com", delivery="copied")
+    body = (await _post(_app(db), f"{LINKS}/peek", {"token": token})).json()
+    assert "account_exists" not in body and body["email"] == "outside@test.com"
+    emailed, _inv2 = await _token_for(world, mock_request, db, "someone@test.com")
+    assert (await _post(_app(db), f"{LINKS}/peek", {"token": emailed})).json()["account_exists"] is False
+
+
+async def test_unproven_third_party_sign_in_cannot_close_invitations(world, mock_request, db):
+    from src.routers.auth import _apply_oauth_invites
+
+    sam = await _user(db, 92, "sam@test.com", world.org, 4, verified=False)
+    db.add(_pending(world, "sam@test.com", role_id=3))
+    await db.commit()
+    # No Google vouching for the address and an unproven account: nothing closes.
+    await _apply_oauth_invites(mock_request, db, sam.id, world.org.id, None, google_verified_email=None, was_member=False)
+    assert (await _row(db, "sam@test.com")).status == "pending"
+    # The closing helper needs every caller to say whether the owner is proven.
+    with pytest.raises(TypeError):
+        await apply.close_pending_invitations(mock_request, db, world.org.id, "sam@test.com")
+
+
+async def test_a_missing_or_foreign_current_role_is_never_upgraded_blind(world, mock_request, db):
+    from src.db.roles import Role
+
+    # Current role from another org: not an upgrade.
+    assert await apply._role_is_upgrade(db, world.org.id, 10, await db.get(Role, 3)) is False
+    # Current role gone: only a role within the User role may fill the gap.
+    assert await apply._role_is_upgrade(db, world.org.id, 999, await db.get(Role, 3)) is False
+    assert await apply._role_is_upgrade(db, world.org.id, 999, await db.get(Role, 9)) is True
+    assert await apply._role_is_upgrade(db, world.org.id, None, await db.get(Role, 4)) is True
+    # Same org, more rights: an upgrade.
+    assert await apply._role_is_upgrade(db, world.org.id, 4, await db.get(Role, 3)) is True

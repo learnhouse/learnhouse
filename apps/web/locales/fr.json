@@ -806,7 +806,9 @@
     "login_failed_forgot": "Mot de passe oublié ?",
     "login_failed_reset": "Le réinitialiser",
     "login_failed_magic": "M'envoyer plutôt un lien de connexion",
-    "login_failed_google_hint": "Inscrit avec Google ? Utilisez Continuer avec Google ci-dessous."
+    "login_failed_google_hint": "Inscrit avec Google ? Utilisez Continuer avec Google ci-dessous.",
+    "email_verified_set_password": "Votre e-mail a été vérifié. Pour votre sécurité, le mot de passe défini auparavant a été supprimé : choisissez-en un nouveau pour vous connecter avec un mot de passe.",
+    "set_new_password": "Définir un nouveau mot de passe"
   },
   "validation": {
     "required": "Requis",
@@ -8167,7 +8169,8 @@
           "audit_logs": "Journal d'audit",
           "analytics": "Analytique",
           "sign_in": "Connexion",
-          "two_factor": "Deux facteurs"
+          "two_factor": "Deux facteurs",
+          "signups_invite": "Inscriptions et invitations"
         },
         "pages": {
           "users": {
@@ -8205,6 +8208,10 @@
           "sign_in": {
             "title": "Connexion",
             "subtitle": "Choisissez comment les membres peuvent se connecter à cette organisation"
+          },
+          "signups_invite": {
+            "title": "Inscriptions et invitations",
+            "subtitle": "Invitez des personnes, choisissez comment elles peuvent rejoindre et partagez des codes d'invitation"
           }
         },
         "mobile": {
@@ -9781,10 +9788,23 @@
           "uses_of": "{{count}} / {{max}} utilisations",
           "uses_title": "Nombre de fois où ce code a servi à rejoindre l'organisation"
         },
-        "codes_card": {
-          "title": "Codes d'invitation",
-          "description": "Partagez un seul lien ou code avec toute une classe. Définissez son rôle, ses groupes, ses cours, ses utilisations et son expiration.",
-          "manage": "Gérer les codes d'invitation"
+        "page": {
+          "join_title": "Qui peut rejoindre",
+          "join_description": "Choisissez si tout le monde peut s'inscrire ou seulement les personnes que vous invitez.",
+          "mode_open": "Ouvert",
+          "mode_open_description": "Toute personne disposant du lien de votre académie peut créer un compte et la rejoindre.",
+          "mode_invite_only": "Sur invitation",
+          "mode_invite_only_description": "Seules les personnes que vous invitez par e-mail ou qui ont un code d'invitation peuvent rejoindre.",
+          "confirm_open_title": "Permettre à tout le monde de rejoindre ?",
+          "confirm_invite_only_title": "Passer à l'accès sur invitation ?",
+          "confirm_open": "Passer en ouvert",
+          "confirm_invite_only": "Passer sur invitation",
+          "codes_description": "Un seul lien ou code pour tout un groupe. Toute personne qui l'utilise reçoit son rôle, ses groupes et ses cours.",
+          "codes_need_invite_only": "Les codes d'invitation servent à l'accès sur invitation. Choisissez Sur invitation ci-dessus pour en créer un.",
+          "edit_fields": "Modifier les champs",
+          "code_expired": "Expiré",
+          "code_used_up": "Épuisé",
+          "code_revoked": "Supprimé"
         }
       }
     },

@@ -806,7 +806,9 @@
     "login_failed_forgot": "Esqueceu sua senha?",
     "login_failed_reset": "Redefinir",
     "login_failed_magic": "Enviar um link de acesso por e-mail",
-    "login_failed_google_hint": "Cadastrou-se com o Google? Use Continuar com o Google abaixo."
+    "login_failed_google_hint": "Cadastrou-se com o Google? Use Continuar com o Google abaixo.",
+    "email_verified_set_password": "Seu e-mail foi verificado. Para sua segurança, a senha definida anteriormente foi removida: escolha uma nova para fazer login com senha.",
+    "set_new_password": "Definir nova senha"
   },
   "validation": {
     "required": "Obrigatório",
@@ -8167,7 +8169,8 @@
           "audit_logs": "Logs de Auditoria",
           "analytics": "Análises",
           "sign_in": "Login",
-          "two_factor": "Dois fatores"
+          "two_factor": "Dois fatores",
+          "signups_invite": "Cadastros e Convites"
         },
         "pages": {
           "users": {
@@ -8205,6 +8208,10 @@
           "sign_in": {
             "title": "Login",
             "subtitle": "Escolha como os membros podem entrar nesta organização"
+          },
+          "signups_invite": {
+            "title": "Cadastros e Convites",
+            "subtitle": "Convide pessoas, escolha como elas podem entrar e compartilhe códigos de convite"
           }
         },
         "mobile": {
@@ -9781,10 +9788,23 @@
           "uses_of": "{{count}} / {{max}} usos",
           "uses_title": "Vezes que este código foi usado para entrar"
         },
-        "codes_card": {
-          "title": "Códigos de convite",
-          "description": "Compartilhe um link ou código com uma turma inteira. Defina a função, os grupos, os cursos, os usos e a expiração.",
-          "manage": "Gerenciar códigos de convite"
+        "page": {
+          "join_title": "Como as pessoas podem entrar",
+          "join_description": "Escolha se qualquer pessoa pode se cadastrar ou apenas quem você convidar.",
+          "mode_open": "Aberto",
+          "mode_open_description": "Qualquer pessoa com o link da sua academia pode criar uma conta e entrar.",
+          "mode_invite_only": "Somente por convite",
+          "mode_invite_only_description": "Só podem entrar as pessoas que você convidar por e-mail ou que tiverem um código de convite.",
+          "confirm_open_title": "Permitir que qualquer pessoa entre?",
+          "confirm_invite_only_title": "Tornar a entrada somente por convite?",
+          "confirm_open": "Mudar para aberto",
+          "confirm_invite_only": "Mudar para somente por convite",
+          "codes_description": "Um link ou código para um grupo inteiro. Quem entrar com ele recebe a função, os grupos e os cursos dele.",
+          "codes_need_invite_only": "Códigos de convite são para entrada somente por convite. Mude para Somente por convite acima para criar um.",
+          "edit_fields": "Editar campos",
+          "code_expired": "Expirado",
+          "code_used_up": "Esgotado",
+          "code_revoked": "Excluído"
         }
       }
     },

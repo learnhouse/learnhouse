@@ -808,7 +808,9 @@
     "login_failed_forgot": "Nie pamiętasz hasła?",
     "login_failed_reset": "Zresetuj je",
     "login_failed_magic": "Wyślij mi link do logowania",
-    "login_failed_google_hint": "Rejestracja przez Google? Użyj poniżej opcji Kontynuuj z Google."
+    "login_failed_google_hint": "Rejestracja przez Google? Użyj poniżej opcji Kontynuuj z Google.",
+    "email_verified_set_password": "Twój e-mail został zweryfikowany. Ze względów bezpieczeństwa hasło ustawione wcześniej zostało usunięte: wybierz nowe, aby logować się za pomocą hasła.",
+    "set_new_password": "Ustaw nowe hasło"
   },
   "validation": {
     "required": "Wymagane",
@@ -8308,7 +8310,8 @@
           "audit_logs": "Dzienniki audytu",
           "analytics": "Analityka",
           "sign_in": "Logowanie",
-          "two_factor": "Dwuskładnikowe"
+          "two_factor": "Dwuskładnikowe",
+          "signups_invite": "Rejestracje i zaproszenia"
         },
         "pages": {
           "users": {
@@ -8346,6 +8349,10 @@
           "sign_in": {
             "title": "Logowanie",
             "subtitle": "Wybierz, w jaki sposób członkowie mogą logować się do tej organizacji"
+          },
+          "signups_invite": {
+            "title": "Rejestracje i zaproszenia",
+            "subtitle": "Zapraszaj osoby, wybierz, jak mogą dołączyć, i udostępniaj kody zaproszeń"
           }
         },
         "mobile": {
@@ -9993,10 +10000,23 @@
           "uses_of": "Użycia: {{count}} / {{max}}",
           "uses_title": "Ile razy ten kod posłużył do dołączenia"
         },
-        "codes_card": {
-          "title": "Kody zaproszeń",
-          "description": "Udostępnij jeden link lub kod całej klasie. Ustaw jego rolę, grupy, kursy, liczbę użyć i datę wygaśnięcia.",
-          "manage": "Zarządzaj kodami zaproszeń"
+        "page": {
+          "join_title": "Jak można dołączyć",
+          "join_description": "Wybierz, czy każdy może się zarejestrować, czy tylko osoby, które zaprosisz.",
+          "mode_open": "Otwarta",
+          "mode_open_description": "Każdy, kto ma link do twojej akademii, może założyć konto i dołączyć.",
+          "mode_invite_only": "Tylko na zaproszenie",
+          "mode_invite_only_description": "Dołączyć mogą tylko osoby zaproszone przez ciebie e-mailem lub mające kod zaproszenia.",
+          "confirm_open_title": "Pozwolić każdemu dołączyć?",
+          "confirm_invite_only_title": "Dołączanie tylko na zaproszenie?",
+          "confirm_open": "Otwórz dołączanie",
+          "confirm_invite_only": "Ogranicz do zaproszeń",
+          "codes_description": "Jeden link lub kod dla całej grupy. Każdy, kto dołączy za jego pomocą, otrzyma przypisaną do niego rolę, grupy i kursy.",
+          "codes_need_invite_only": "Kody zaproszeń służą do dołączania tylko na zaproszenie. Aby utworzyć kod, przełącz powyżej na „Tylko na zaproszenie”.",
+          "edit_fields": "Edytuj pola",
+          "code_expired": "Wygasł",
+          "code_used_up": "Wykorzystany",
+          "code_revoked": "Usunięty"
         }
       }
     },

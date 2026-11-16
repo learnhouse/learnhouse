@@ -67,7 +67,8 @@ class TestOrgInvitesService:
         from sqlmodel import select
 
         usergroup = _make_usergroup(db, org, id=11)
-        with patch(
+        # No legacy Redis codes in play, whatever Redis the machine has.
+        with patch("src.core.redis.get_redis_client", return_value=None), patch(
             "src.services.analytics.analytics.track", new_callable=AsyncMock
         ) as mock_track:
             result = await create_invite_code(
@@ -95,14 +96,16 @@ class TestOrgInvitesService:
     async def test_create_invite_code_validation_and_limit_guards(
         self, mock_request, db, org, admin_user, user_role
     ):
-        with patch("src.services.analytics.analytics.track", new_callable=AsyncMock):
+        with patch("src.core.redis.get_redis_client", return_value=None), patch(
+            "src.services.analytics.analytics.track", new_callable=AsyncMock
+        ):
             for _ in range(6):
                 await create_invite_code(mock_request, org.id, admin_user, db)
             with pytest.raises(HTTPException) as limit_exc:
                 await create_invite_code(mock_request, org.id, admin_user, db)
         assert limit_exc.value.status_code == 400
 
-        with pytest.raises(HTTPException) as group_exc:
+        with patch("src.core.redis.get_redis_client", return_value=None), pytest.raises(HTTPException) as group_exc:
             await create_invite_code(
                 mock_request,
                 org.id,
@@ -254,6 +257,22 @@ class TestOrgInvitesService:
                     db,
                 )
         assert delete_missing_keys_exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_legacy_code_lookup_with_redis_errors_is_not_found(
+        self, mock_request, db, org, admin_user
+    ):
+        import redis as redis_lib
+
+        broken = _fake_redis()
+        broken.scan_iter = Mock(side_effect=redis_lib.RedisError("down"))
+        with patch(
+            "src.services.orgs.invites.get_learnhouse_config",
+            return_value=_fake_config(),
+        ), patch("src.services.orgs.invites._get_redis", return_value=broken):
+            with pytest.raises(HTTPException) as exc:
+                await get_invite_code(mock_request, org.id, "ABC12345", admin_user, db)
+        assert exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_invite_codes_enriches_usergroup_name(

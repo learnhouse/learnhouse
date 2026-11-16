@@ -806,7 +806,9 @@
     "login_failed_forgot": "Forgot your password?",
     "login_failed_reset": "Reset it",
     "login_failed_magic": "Email me a login link instead",
-    "login_failed_google_hint": "Signed up with Google? Use Continue with Google below."
+    "login_failed_google_hint": "Signed up with Google? Use Continue with Google below.",
+    "email_verified_set_password": "Your email is verified. For your security, the password set before this was removed: choose a new one to sign in with a password.",
+    "set_new_password": "Set a new password"
   },
   "validation": {
     "required": "Required",
@@ -8046,7 +8048,8 @@
           "audit_logs": "Audit Logs",
           "analytics": "Analytics",
           "sign_in": "Sign-in",
-          "two_factor": "Two-factor"
+          "two_factor": "Two-factor",
+          "signups_invite": "Signups and Invite"
         },
         "pages": {
           "users": {
@@ -8084,6 +8087,10 @@
           "sign_in": {
             "title": "Sign-in",
             "subtitle": "Choose how members are allowed to sign in to this organization"
+          },
+          "signups_invite": {
+            "title": "Signups and Invite",
+            "subtitle": "Invite people, choose how they can join and share invite codes"
           }
         },
         "mobile": {
@@ -9589,10 +9596,23 @@
           "uses_of": "{{count}} / {{max}} uses",
           "uses_title": "Times this code was used to join"
         },
-        "codes_card": {
-          "title": "Invite codes",
-          "description": "Share one link or code with a whole class. Set its role, groups, courses, uses and expiry.",
-          "manage": "Manage invite codes"
+        "page": {
+          "join_title": "How people can join",
+          "join_description": "Choose whether anyone can sign up or only the people you invite.",
+          "mode_open": "Open",
+          "mode_open_description": "Anyone with your academy's link can create an account and join.",
+          "mode_invite_only": "Invite only",
+          "mode_invite_only_description": "Only people you invite by email or who have an invite code can join.",
+          "confirm_open_title": "Let anyone join?",
+          "confirm_invite_only_title": "Make joining invite only?",
+          "confirm_open": "Switch to open",
+          "confirm_invite_only": "Switch to invite only",
+          "codes_description": "One link or code for a whole group. Everyone who joins with it gets its role, groups and courses.",
+          "codes_need_invite_only": "Invite codes are for invite-only joining. Switch to Invite only above to create one.",
+          "edit_fields": "Edit fields",
+          "code_expired": "Expired",
+          "code_used_up": "Used up",
+          "code_revoked": "Deleted"
         }
       }
     },

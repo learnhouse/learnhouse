@@ -806,7 +806,9 @@
     "login_failed_forgot": "Wachtwoord vergeten?",
     "login_failed_reset": "Opnieuw instellen",
     "login_failed_magic": "Stuur me liever een inloglink",
-    "login_failed_google_hint": "Aangemeld met Google? Gebruik hieronder Doorgaan met Google."
+    "login_failed_google_hint": "Aangemeld met Google? Gebruik hieronder Doorgaan met Google.",
+    "email_verified_set_password": "Je e-mail is geverifieerd. Voor je veiligheid is het eerder ingestelde wachtwoord verwijderd: kies een nieuw wachtwoord om met een wachtwoord in te loggen.",
+    "set_new_password": "Nieuw wachtwoord instellen"
   },
   "validation": {
     "required": "Verplicht",
@@ -8056,7 +8058,8 @@
           "audit_logs": "Auditlogboeken",
           "analytics": "Analyses",
           "sign_in": "Inloggen",
-          "two_factor": "Tweefactorauthenticatie"
+          "two_factor": "Tweefactorauthenticatie",
+          "signups_invite": "Aanmeldingen & Uitnodigingen"
         },
         "pages": {
           "users": {
@@ -8094,6 +8097,10 @@
           "sign_in": {
             "title": "Inloggen",
             "subtitle": "Kies hoe leden zich bij deze organisatie mogen aanmelden"
+          },
+          "signups_invite": {
+            "title": "Aanmeldingen & Uitnodigingen",
+            "subtitle": "Nodig mensen uit, kies hoe ze lid kunnen worden en deel uitnodigingscodes"
           }
         },
         "mobile": {
@@ -9599,10 +9606,23 @@
           "uses_of": "{{count}} / {{max}} keer gebruikt",
           "uses_title": "Aantal keer dat iemand met deze code lid werd"
         },
-        "codes_card": {
-          "title": "Uitnodigingscodes",
-          "description": "Deel één link of code met een hele klas. Stel de rol, groepen, cursussen, het aantal keer en de vervaldatum in.",
-          "manage": "Uitnodigingscodes beheren"
+        "page": {
+          "join_title": "Hoe mensen lid kunnen worden",
+          "join_description": "Kies of iedereen zich kan aanmelden of alleen de mensen die je uitnodigt.",
+          "mode_open": "Open",
+          "mode_open_description": "Iedereen met de link van je academie kan een account aanmaken en lid worden.",
+          "mode_invite_only": "Alleen op uitnodiging",
+          "mode_invite_only_description": "Alleen mensen die je per e-mail uitnodigt of die een uitnodigingscode hebben, kunnen lid worden.",
+          "confirm_open_title": "Iedereen lid laten worden?",
+          "confirm_invite_only_title": "Lid worden alleen op uitnodiging?",
+          "confirm_open": "Overschakelen naar open",
+          "confirm_invite_only": "Overschakelen naar alleen op uitnodiging",
+          "codes_description": "Eén link of code voor een hele groep. Iedereen die ermee lid wordt, krijgt de bijbehorende rol, groepen en cursussen.",
+          "codes_need_invite_only": "Uitnodigingscodes zijn voor lid worden op uitnodiging. Schakel hierboven over naar Alleen op uitnodiging om er een te maken.",
+          "edit_fields": "Velden bewerken",
+          "code_expired": "Verlopen",
+          "code_used_up": "Opgebruikt",
+          "code_revoked": "Verwijderd"
         }
       }
     },

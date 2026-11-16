@@ -805,7 +805,9 @@
     "login_failed_forgot": "Lupa kata sandi?",
     "login_failed_reset": "Atur ulang",
     "login_failed_magic": "Kirimi saya tautan masuk saja",
-    "login_failed_google_hint": "Mendaftar dengan Google? Gunakan Lanjutkan dengan Google di bawah."
+    "login_failed_google_hint": "Mendaftar dengan Google? Gunakan Lanjutkan dengan Google di bawah.",
+    "email_verified_set_password": "Email Anda telah diverifikasi. Demi keamanan Anda, kata sandi yang ditetapkan sebelumnya telah dihapus: pilih kata sandi baru untuk masuk dengan kata sandi.",
+    "set_new_password": "Atur kata sandi baru"
   },
   "validation": {
     "required": "Wajib isi",
@@ -8026,7 +8028,8 @@
           "audit_logs": "Log Audit",
           "analytics": "Analitik",
           "sign_in": "Masuk",
-          "two_factor": "Dua faktor"
+          "two_factor": "Dua faktor",
+          "signups_invite": "Pendaftaran & Undangan"
         },
         "pages": {
           "users": {
@@ -8064,6 +8067,10 @@
           "sign_in": {
             "title": "Masuk",
             "subtitle": "Pilih cara anggota diizinkan masuk ke organisasi ini"
+          },
+          "signups_invite": {
+            "title": "Pendaftaran & Undangan",
+            "subtitle": "Undang orang, pilih cara mereka bergabung, dan bagikan kode undangan"
           }
         },
         "mobile": {
@@ -9569,10 +9576,23 @@
           "uses_of": "{{count}} / {{max}} penggunaan",
           "uses_title": "Berapa kali kode ini dipakai untuk bergabung"
         },
-        "codes_card": {
-          "title": "Kode undangan",
-          "description": "Bagikan satu tautan atau kode ke seluruh kelas. Atur peran, grup, kursus, jumlah penggunaan, dan masa berlakunya.",
-          "manage": "Kelola kode undangan"
+        "page": {
+          "join_title": "Cara orang bergabung",
+          "join_description": "Pilih apakah siapa pun bisa mendaftar atau hanya orang yang Anda undang.",
+          "mode_open": "Terbuka",
+          "mode_open_description": "Siapa pun yang memiliki tautan akademi Anda dapat membuat akun dan bergabung.",
+          "mode_invite_only": "Hanya undangan",
+          "mode_invite_only_description": "Hanya orang yang Anda undang lewat email atau yang memiliki kode undangan yang dapat bergabung.",
+          "confirm_open_title": "Izinkan siapa pun bergabung?",
+          "confirm_invite_only_title": "Jadikan bergabung hanya lewat undangan?",
+          "confirm_open": "Ubah ke terbuka",
+          "confirm_invite_only": "Ubah ke hanya undangan",
+          "codes_description": "Satu tautan atau kode untuk seluruh grup. Semua yang bergabung dengannya mendapat peran, grup, dan kursusnya.",
+          "codes_need_invite_only": "Kode undangan untuk bergabung lewat undangan saja. Ubah ke Hanya undangan di atas untuk membuatnya.",
+          "edit_fields": "Edit kolom",
+          "code_expired": "Kedaluwarsa",
+          "code_used_up": "Habis terpakai",
+          "code_revoked": "Dihapus"
         }
       }
     },

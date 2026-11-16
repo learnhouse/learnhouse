@@ -806,7 +806,9 @@
     "login_failed_forgot": "Passwort vergessen?",
     "login_failed_reset": "Zurücksetzen",
     "login_failed_magic": "Stattdessen einen Anmeldelink senden",
-    "login_failed_google_hint": "Mit Google registriert? Nutze unten „Mit Google fortfahren“."
+    "login_failed_google_hint": "Mit Google registriert? Nutze unten „Mit Google fortfahren“.",
+    "email_verified_set_password": "Ihre E-Mail wurde bestätigt. Zu Ihrer Sicherheit wurde das zuvor festgelegte Passwort entfernt: Wählen Sie ein neues, um sich mit einem Passwort anzumelden.",
+    "set_new_password": "Neues Passwort festlegen"
   },
   "validation": {
     "required": "Erforderlich",
@@ -8056,7 +8058,8 @@
           "audit_logs": "Audit-Protokolle",
           "analytics": "Analysen",
           "sign_in": "Anmeldung",
-          "two_factor": "Zwei-Faktor"
+          "two_factor": "Zwei-Faktor",
+          "signups_invite": "Anmeldungen & Einladungen"
         },
         "pages": {
           "users": {
@@ -8094,6 +8097,10 @@
           "sign_in": {
             "title": "Anmeldung",
             "subtitle": "Legen Sie fest, wie sich Mitglieder bei dieser Organisation anmelden dürfen"
+          },
+          "signups_invite": {
+            "title": "Anmeldungen & Einladungen",
+            "subtitle": "Lade Personen ein, lege fest, wie sie beitreten können, und teile Einladungscodes"
           }
         },
         "mobile": {
@@ -9599,10 +9606,23 @@
           "uses_of": "{{count}} / {{max}} Nutzungen",
           "uses_title": "So oft wurde mit diesem Code beigetreten"
         },
-        "codes_card": {
-          "title": "Einladungscodes",
-          "description": "Teile einen Link oder Code mit einer ganzen Klasse. Lege Rolle, Gruppen, Kurse, Nutzungen und Ablauf fest.",
-          "manage": "Einladungscodes verwalten"
+        "page": {
+          "join_title": "Wie Personen beitreten können",
+          "join_description": "Lege fest, ob sich jeder registrieren kann oder nur die Personen, die du einlädst.",
+          "mode_open": "Offen",
+          "mode_open_description": "Jeder mit dem Link zu deiner Akademie kann ein Konto erstellen und beitreten.",
+          "mode_invite_only": "Nur auf Einladung",
+          "mode_invite_only_description": "Nur Personen, die du per E-Mail einlädst oder die einen Einladungscode haben, können beitreten.",
+          "confirm_open_title": "Allen den Beitritt erlauben?",
+          "confirm_invite_only_title": "Beitritt nur auf Einladung?",
+          "confirm_open": "Auf offen umstellen",
+          "confirm_invite_only": "Auf „Nur auf Einladung“ umstellen",
+          "codes_description": "Ein Link oder Code für eine ganze Gruppe. Alle, die damit beitreten, erhalten seine Rolle, Gruppen und Kurse.",
+          "codes_need_invite_only": "Einladungscodes sind für den Beitritt nur auf Einladung gedacht. Stelle oben auf „Nur auf Einladung“ um, um einen zu erstellen.",
+          "edit_fields": "Felder bearbeiten",
+          "code_expired": "Abgelaufen",
+          "code_used_up": "Aufgebraucht",
+          "code_revoked": "Gelöscht"
         }
       }
     },

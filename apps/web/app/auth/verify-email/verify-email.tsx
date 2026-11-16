@@ -28,6 +28,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
     const [isVerifying, setIsVerifying] = useState(true)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
+    const [setPassword, setSetPassword] = useState(false)
     // Where they were headed when they signed up (kept with the token, or on
     // this host as a fallback); the school's home otherwise.
     const [landing, setLanding] = useState<string | null>(null)
@@ -68,6 +69,11 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                     // distinguishes this from a credentials login.
                     track(AnalyticsEvent.LoginSucceeded, { method: 'email_verification' })
                     setSuccess(true)
+                    if (res.setPassword) {
+                        // The old password went: stay here and ask for a new one.
+                        setSetPassword(true)
+                        return
+                    }
                     // Verification also signs the user in (session cookies were
                     // set via the auth proxy). Send them into their school's home
                     // page, or the hub when verifying on the org-less apex (whose
@@ -123,7 +129,23 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                     </AuthStatus>
                 )}
 
-                {!isVerifying && success && (
+                {!isVerifying && success && setPassword && (
+                    <AuthStatus
+                        tone="success"
+                        icon={<CheckCircle size={22} weight="duotone" />}
+                        title={t('auth.email_verified_success')}
+                        description={t('auth.email_verified_set_password')}
+                    >
+                        <Link href="/forgot" className={authButtonClass('primary')}>
+                            {t('auth.set_new_password')}
+                        </Link>
+                        <Link href={destination} className={authButtonClass('secondary', 'mt-2')}>
+                            {t('auth.continue_to_dashboard', { defaultValue: 'Continue to your dashboard' })}
+                        </Link>
+                    </AuthStatus>
+                )}
+
+                {!isVerifying && success && !setPassword && (
                     <AuthStatus
                         tone="success"
                         icon={<CheckCircle size={22} weight="duotone" />}

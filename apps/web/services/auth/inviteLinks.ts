@@ -17,7 +17,9 @@ export type InviteLinkDetails = {
 }
 // `invitation` is there for invitations sent from the dashboard since they
 // moved to the database (older links carry no details).
-export type InviteLinkInfo = { email: string; org: InviteLinkOrg; account_exists: boolean; invitation?: InviteLinkDetails }
+// `account_exists` is left out for a link an admin copied (it would let them
+// probe accounts); the page then offers signup with a sign-in option.
+export type InviteLinkInfo = { email: string; org: InviteLinkOrg; account_exists?: boolean; invitation?: InviteLinkDetails }
 export type InviteLinkResult<T> = { ok: true; data: T } | { ok: false; status: number; detail: any }
 
 async function post<T>(path: string, body: unknown, accessToken?: string): Promise<InviteLinkResult<T>> {

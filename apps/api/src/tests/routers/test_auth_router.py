@@ -888,6 +888,19 @@ class TestVerifyEmailLandsWhereSignupStarted:
             res = await client.post("/api/v1/auth/verify-email", json={"token": "t", "user_uuid": "user_auth", "org_uuid": "org_test"})
         assert res.json() == {"message": "Email verified", "next": "/course/abc"}
 
+    async def test_a_dropped_password_is_flagged(self, client, auth_user):
+        # Verifying proved an unproven inbox and dropped the password set
+        # before: the page is told to ask for a new one.
+        from src.services.users.email_verification import INBOX_CLAIMED
+
+        with patch("src.routers.auth.check_email_verification_rate_limit", return_value=(True, None)), patch(
+            "src.services.users.email_verification.verification_next_path", return_value=None
+        ), patch("src.routers.auth.verify_email_token", new_callable=AsyncMock, return_value=(auth_user, INBOX_CLAIMED)), patch(
+            "src.routers.auth.set_auth_cookies"
+        ):
+            res = await client.post("/api/v1/auth/verify-email", json={"token": "t", "user_uuid": "user_auth", "org_uuid": "org_test"})
+        assert res.json()["set_password"] is True and res.json()["message"] == INBOX_CLAIMED
+
     async def test_no_next_no_key_and_resend_forwards_it(self, client, auth_user):
         with patch("src.routers.auth.check_email_verification_rate_limit", return_value=(True, None)), patch(
             "src.services.users.email_verification.verification_next_path", return_value=None

@@ -197,15 +197,24 @@ async def notify_inviter(db_session: AsyncSession, inv: OrgInvitation, user: Use
     )
 
 
-async def _role_is_upgrade(db_session: AsyncSession, current_role_id: Optional[int], new_role: Role) -> bool:
+async def _role_is_upgrade(db_session: AsyncSession, org_id: int, current_role_id: Optional[int], new_role: Role) -> bool:
     """Moving to ``new_role`` takes no permission away (and an Admin stays
-    an Admin)."""
+    an Admin). Fails closed: a current role that is missing or belongs to
+    another org never makes any role an upgrade (except, for a missing one, a
+    role within the built-in User role)."""
     from src.services.orgs.invitations.policy import rights_within
 
     if current_role_id == ADMIN_ROLE_ID:
         return False
     current = await db_session.get(Role, current_role_id) if current_role_id else None
-    return current is None or rights_within(current.rights, new_role.rights)
+    if current is None:
+        # The member's role is gone: only a role within the built-in User
+        # role may fill the gap (an invitation can't hand out more blind).
+        user_role = await db_session.get(Role, USER_ROLE_ID)
+        return user_role is not None and rights_within(new_role.rights, user_role.rights)
+    if current.org_id is not None and current.org_id != org_id:
+        return False
+    return rights_within(current.rights, new_role.rights)
 
 
 async def close_pending_invitations(
@@ -215,7 +224,7 @@ async def close_pending_invitations(
     email: Optional[str],
     actor=None,
     *,
-    owner_proven: bool = True,
+    owner_proven: bool,
 ) -> int:
     """Someone with this address just became a member another way (an invite
     code, an open join, a signup, an admin adding them): their pending
@@ -225,7 +234,8 @@ async def close_pending_invitations(
     ``owner_proven`` is False when the new member hasn't proven they own the
     address: anyone can sign up with an invited address, so closing the
     invitation then would let them cancel the real person's invite. It stays
-    pending; explicit acceptance only ever upgrades a role."""
+    pending; explicit acceptance only ever upgrades a role. Required, so every
+    caller says which case it is."""
     if not owner_proven:
         return 0
     email = normalize_email(email or "")
@@ -334,7 +344,7 @@ async def accept_invitation(
         )
         db_session.add(membership)
     elif membership.role_id != role.id and (
-        joined_now or (may_change_role and await _role_is_upgrade(db_session, membership.role_id, role))
+        joined_now or (may_change_role and await _role_is_upgrade(db_session, org.id, membership.role_id, role))
     ):
         membership.role_id = role.id
         membership.update_date = str(datetime.now())

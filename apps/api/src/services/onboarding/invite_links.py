@@ -205,19 +205,23 @@ async def _invitation_summary(db_session: AsyncSession, inv) -> dict:
 
 
 async def peek_invite_link(db_session: AsyncSession, token: str) -> dict:
-    """What the org's signup page needs to greet the invitee. Only the holder
-    of the token (the invited inbox) can ask, so it may name the address and
-    say whether an account exists for it."""
+    """What the org's signup page needs to greet the invitee. The holder of an
+    emailed token is the invited inbox, so it may learn whether an account
+    exists for the address; a copied link doesn't say."""
     found = await _db_invitation(db_session, token)
     if found is not None:
         inv, org = found
-        existing = await _user_by_email(db_session, inv.email)
-        return {
+        out = {
             "email": inv.email,
             "org": _public_org(org),
-            "account_exists": existing is not None,
             "invitation": await _invitation_summary(db_session, inv),
         }
+        # Only the inbox's owner (who received the emailed link) is told
+        # whether the address has an account. A copied link went through an
+        # org admin, who must not be able to probe that.
+        if _emailed(inv):
+            out["account_exists"] = await _user_by_email(db_session, inv.email) is not None
+        return out
     r = _require_redis()
     _digest, record, _key, _invite = _load(r, token)
     org = await _org(db_session, record)

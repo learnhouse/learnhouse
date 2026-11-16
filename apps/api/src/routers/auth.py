@@ -845,7 +845,13 @@ async def _apply_oauth_invites(
             )
         elif code_data:
             await apply_invite_code(request, db_session, user, org, code_data, claimed=code_claimed)
-        await close_pending_invitations(request, db_session, org_id, user.email, actor=user)
+        # Only an owner who proved the address may close its invitations
+        # (Google vouching for it, or an already proven account).
+        from src.services.users.users import inbox_proven
+
+        await close_pending_invitations(
+            request, db_session, org_id, user.email, actor=user, owner_proven=proven or inbox_proven(user),
+        )
     except Exception:
         logging.getLogger(__name__).warning("Could not apply the invitation after Google sign-in", exc_info=True)
 
@@ -1095,7 +1101,8 @@ async def third_party_login(
         # verified, so that address is proven.
         await _apply_oauth_invites(
             request, db_session, user.id, org_id, _invite_code_data,
-            google_verified_email=_google_verified_email or (user.email or "").strip().lower(),
+            google_verified_email=_google_verified_email
+            or ((user.email or "").strip().lower() if body.provider == "google" else None),
             was_member=_was_member or not _google_outcome.get("joined", False),
             code_claimed=_code_claimed,
         )
@@ -1546,6 +1553,12 @@ async def api_verify_email(
         user_uuid=body.user_uuid,
         org_uuid=body.org_uuid,
     )
+    # A password set before the inbox was proven was dropped: say so, so the
+    # page asks the person to set a new one.
+    from src.services.users.email_verification import INBOX_CLAIMED
+
+    if message == INBOX_CLAIMED:
+        landing = {**landing, "set_password": True}
 
     # Auto sign-in: issue a session exactly like /login (sub = email), and go
     # through the same second-factor gate. A brand-new user cannot have MFA yet,

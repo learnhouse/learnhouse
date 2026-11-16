@@ -806,7 +806,9 @@
     "login_failed_forgot": "Password dimenticata?",
     "login_failed_reset": "Reimpostala",
     "login_failed_magic": "Inviami invece un link di accesso",
-    "login_failed_google_hint": "Registrato con Google? Usa Continua con Google qui sotto."
+    "login_failed_google_hint": "Registrato con Google? Usa Continua con Google qui sotto.",
+    "email_verified_set_password": "La tua email è stata verificata. Per la tua sicurezza, la password impostata in precedenza è stata rimossa: scegline una nuova per accedere con una password.",
+    "set_new_password": "Imposta una nuova password"
   },
   "validation": {
     "required": "Obbligatorio",
@@ -8167,7 +8169,8 @@
           "audit_logs": "Registri di audit",
           "analytics": "Analisi",
           "sign_in": "Accesso",
-          "two_factor": "Due fattori"
+          "two_factor": "Due fattori",
+          "signups_invite": "Iscrizioni e inviti"
         },
         "pages": {
           "users": {
@@ -8205,6 +8208,10 @@
           "sign_in": {
             "title": "Accesso",
             "subtitle": "Scegli come i membri possono accedere a questa organizzazione"
+          },
+          "signups_invite": {
+            "title": "Iscrizioni e inviti",
+            "subtitle": "Invita persone, scegli come possono unirsi e condividi i codici invito"
           }
         },
         "mobile": {
@@ -9781,10 +9788,23 @@
           "uses_of": "{{count}} / {{max}} utilizzi",
           "uses_title": "Volte in cui questo codice è stato usato per entrare"
         },
-        "codes_card": {
-          "title": "Codici invito",
-          "description": "Condividi un solo link o codice con un'intera classe. Imposta ruolo, gruppi, corsi, utilizzi e scadenza.",
-          "manage": "Gestisci codici invito"
+        "page": {
+          "join_title": "Come si può entrare",
+          "join_description": "Scegli se chiunque può iscriversi o solo le persone che inviti.",
+          "mode_open": "Aperto",
+          "mode_open_description": "Chiunque abbia il link della tua accademia può creare un account e unirsi.",
+          "mode_invite_only": "Solo su invito",
+          "mode_invite_only_description": "Possono unirsi solo le persone che inviti via email o che hanno un codice invito.",
+          "confirm_open_title": "Permettere a chiunque di unirsi?",
+          "confirm_invite_only_title": "Rendere l'accesso solo su invito?",
+          "confirm_open": "Passa ad aperto",
+          "confirm_invite_only": "Passa a solo su invito",
+          "codes_description": "Un solo link o codice per un intero gruppo. Chiunque entri con esso riceve il suo ruolo, i gruppi e i corsi.",
+          "codes_need_invite_only": "I codici invito servono per l'accesso solo su invito. Passa a Solo su invito qui sopra per crearne uno.",
+          "edit_fields": "Modifica campi",
+          "code_expired": "Scaduto",
+          "code_used_up": "Esaurito",
+          "code_revoked": "Eliminato"
         }
       }
     },
