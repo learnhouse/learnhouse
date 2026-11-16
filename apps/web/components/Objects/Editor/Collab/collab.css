@@ -68,3 +68,58 @@
     animation-duration: 0s;
   }
 }
+
+/* Other editors' mouse pointers (RemotePointers). The layer covers the
+   editor body and clips, so a pointer near an edge never adds a scrollbar;
+   positions are written by the animation loop. */
+.lh-collab-pointers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.lh-collab-pointer {
+  position: absolute;
+  top: 0;
+  left: 0; /* rtl-ok: positioned by transform from the layer's origin. */
+  /* Puts the arrow's tip (not the box corner) on the shared point. */
+  margin: -1.5px 0 0 -2px; /* rtl-ok: matches the arrow, which never flips. */
+  display: flex;
+  align-items: flex-start;
+  /* The arrow's tip is the origin: keep it first in RTL pages too. */
+  direction: ltr;
+  will-change: transform;
+  transition: opacity 0.3s ease-out;
+}
+
+.lh-collab-pointer__arrow {
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.25));
+}
+
+.lh-collab-pointer__label {
+  margin-top: 14px;
+  margin-inline-start: -4px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border-start-start-radius: 2px;
+  background: var(--lh-caret);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  user-select: none;
+  box-shadow: 0 2px 6px -1px rgb(0 0 0 / 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-collab-pointer {
+    transition: none;
+  }
+}

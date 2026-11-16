@@ -13,7 +13,6 @@ import {
   type CollabSnapshot,
   type CollabUser,
   INITIAL_SNAPSHOT,
-  createThrottle,
   editsSaved,
   initials,
   presenceList,
@@ -21,9 +20,8 @@ import {
   terminalCloseOf,
 } from './collabStatus'
 import { activityRoomName } from '../Translation/translationEditorModel'
+import { CARET_INTERVAL_MS, POINTER_INTERVAL_MS, type PointerAnchor, createPresenceBatcher } from './pointerPresence'
 
-// Most caret updates per second sent to the others
-const CARET_INTERVAL_MS = 100
 const CHECKPOINT_TIMEOUT_MS = 10_000
 
 export interface ExternalUpdate {
@@ -41,6 +39,11 @@ export interface CollabSession {
   getSnapshot(): CollabSnapshot
   /** Saves now and records a named version. */
   saveVersion(_label: string): Promise<{ ok: boolean; version: number | null }>
+  /**
+   * Shares this user's mouse pointer (null hides it). Batched with the caret
+   * into at most ~15 awareness updates a second.
+   */
+  setPointer(_pointer: PointerAnchor | null): void
   /** Scrolls the editor to a user's caret; false when they have none. */
   scrollToUser(_userId: number): boolean
   onExternalUpdate(_listener: (_update: ExternalUpdate) => void): () => void
@@ -201,11 +204,20 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
   ydoc.on('update', onUpdate)
 
   const awareness = provider.awareness!
-  // At most CARET_INTERVAL_MS between caret broadcasts; the latest position wins
+  // The caret (from CollaborationCaret) and the mouse pointer go out together:
+  // one awareness update carries both, at most every POINTER_INTERVAL_MS while
+  // the pointer moves and every CARET_INTERVAL_MS for the caret alone. The
+  // latest value wins; clearing either is sent at once.
   const setField = awareness.setLocalStateField.bind(awareness)
-  const throttledCaret = createThrottle((value: unknown) => setField('cursor', value), CARET_INTERVAL_MS)
+  const presence = createPresenceBatcher(
+    (patch) => {
+      if (destroyed) return
+      awareness.setLocalState({ ...(awareness.getLocalState() ?? {}), ...patch })
+    },
+    { cursor: CARET_INTERVAL_MS, pointer: POINTER_INTERVAL_MS },
+  )
   awareness.setLocalStateField = (field: string, value: any) => {
-    if (field === 'cursor' && value !== null) throttledCaret(value)
+    if (field === 'cursor') presence.set('cursor', value, value === null)
     else setField(field, value)
   }
 
@@ -217,13 +229,21 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
 
   // A caret's name shows while its owner is active and fades when they stop
   // (CSS). ProseMirror reuses the caret element when it moves, so restart the
-  // label's animation whenever that person's presence changes.
-  const wakeLabels = ({ added, updated }: { added: number[]; updated: number[] }) => {
+  // label's animation whenever that person's caret changes (not when only
+  // their mouse pointer moves).
+  const lastCarets = new Map<number, string>()
+  const wakeLabels = ({ added, updated, removed }: { added: number[]; updated: number[]; removed: number[] }) => {
     const ids = new Set<number>()
     const states = awareness.getStates() as Map<number, Record<string, any>>
+    for (const clientId of removed) lastCarets.delete(clientId)
     for (const clientId of [...added, ...updated]) {
-      const userId = states.get(clientId)?.user?.id
-      if (clientId !== ydoc.clientID && typeof userId === 'number') ids.add(userId)
+      const state = states.get(clientId)
+      const userId = state?.user?.id
+      if (clientId === ydoc.clientID || typeof userId !== 'number') continue
+      const caret = JSON.stringify(state?.cursor ?? null)
+      if (lastCarets.get(clientId) === caret) continue
+      lastCarets.set(clientId, caret)
+      ids.add(userId)
     }
     if (ids.size === 0) return
     requestAnimationFrame(() => {
@@ -282,6 +302,9 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
         provider.sendStateless(JSON.stringify({ type: 'checkpoint', label, requestId }))
       })
     },
+    setPointer(pointer) {
+      if (!destroyed) presence.set('pointer', pointer, pointer === null)
+    },
     scrollToUser(userId) {
       const caret = document.querySelector<HTMLElement>(`.lh-collab-caret[data-collab-user="${userId}"]`)
       if (!caret) return false
@@ -300,7 +323,7 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
     destroy() {
       if (destroyed) return
       destroyed = true
-      throttledCaret.cancel()
+      presence.cancel()
       document.removeEventListener('visibilitychange', onVisibility)
       awareness.off('change', refreshPeers)
       awareness.off('change', wakeLabels)
