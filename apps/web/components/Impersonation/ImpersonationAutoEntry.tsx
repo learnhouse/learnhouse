@@ -54,12 +54,17 @@ function Entry({ slug, token, switching = false }: { slug: string; token?: strin
   const startedRef = React.useRef(false)
 
   const orgQ = useQuery({
-    queryKey: ['impersonation-entry', 'org', slug],
+    queryKey: ['impersonation-entry', 'org', slug, switching],
     queryFn: async () => {
-      const res = await fetch(`${getAPIUrl()}orgs/slug/${encodeURIComponent(slug)}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        credentials: 'include',
-      })
+      // Switching: the current token is the impersonation's, which the API
+      // scopes to the org being impersonated, so it can't read this one.
+      // The org's public record is enough to get its id.
+      const res = await fetch(
+        `${getAPIUrl()}orgs/slug/${encodeURIComponent(slug)}`,
+        switching
+          ? { credentials: 'omit' }
+          : { headers: token ? { Authorization: `Bearer ${token}` } : {}, credentials: 'include' },
+      )
       if (!res.ok) throw new Error(String(res.status))
       return res.json()
     },
