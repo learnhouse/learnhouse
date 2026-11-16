@@ -13485,6 +13485,7 @@
     "collab": {
       "no_cursor": "{{name}} tidak memiliki kursor di halaman saat ini",
       "jump_to": "Buka {{name}}",
+      "is_editing": "{{name}} sedang mengedit",
       "status": {
         "live": "Langsung",
         "saving": "Menyimpan…",
@@ -13505,6 +13506,7 @@
       "too_large": "Halaman ini terlalu besar untuk diedit bersama. Pecah menjadi halaman yang lebih kecil.",
       "title": {
         "live": "Terhubung. Perubahan disimpan otomatis.",
+        "live_sync": "Langsung: perubahan semua orang disinkronkan dan disimpan otomatis",
         "save_retry": "Gagal menyimpan; mencoba lagi.",
         "saving": "Menyimpan perubahan Anda…",
         "saved": "Semua perubahan tersimpan",

@@ -90,6 +90,14 @@ describe("presence list", () => {
     expect(initials("  grace  ")).toBe("G");
     expect(initials("")).toBe("?");
     expect(initials("Jean Luc Picard")).toBe("JP");
+    // Labels in brackets and punctuation never show up as initials
+    expect(initials("Elizabeth (Support)")).toBe("E");
+    expect(initials("Ada Lovelace (Support)")).toBe("AL");
+    expect(initials("(Support)")).toBe("?");
+    expect(initials("“Bob” O'Neil")).toBe("BO");
+    expect(initials("élodie dupont")).toBe("ÉD");
+    expect(initials("李 小龙")).toBe("李小");
+    expect(initials("- -")).toBe("?");
   });
 });
 

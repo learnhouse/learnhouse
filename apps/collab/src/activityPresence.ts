@@ -3,7 +3,8 @@
 // Awareness states are client-supplied and relayed as-is by default. In an
 // activity room a state may only carry who the user is (stamped from the
 // authenticated connection, never from the client), where their caret is,
-// where their mouse pointer is and a couple of small UI flags. Anything else
+// where their mouse pointer is, which block they are working in and a couple
+// of small UI flags. Anything else
 // is dropped, so presence can't be used to spoof another member or to relay
 // arbitrary data to every editor.
 //
@@ -163,6 +164,11 @@ export function sanitizeActivityAwareness<C extends ActivityPresenceConnection>(
     if (cursor) clean.cursor = cursor
     const pointer = connection.readOnly ? null : sanitizePointer(state?.pointer)
     if (pointer) clean.pointer = pointer
+    // The block an editor has selected or is editing inside: {b: index}
+    const block = state?.block
+    if (!connection.readOnly && block && typeof block === 'object' && Number.isInteger(block.b) && block.b >= 0 && block.b <= POINTER_LIMITS.maxBlock) {
+      clean.block = { b: block.b }
+    }
     for (const flag of ALLOWED_FLAGS) {
       if (typeof state?.[flag] === 'boolean') clean[flag] = state[flag]
     }

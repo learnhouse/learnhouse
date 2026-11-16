@@ -42,6 +42,8 @@ export const POINTER_INTERVAL_MS = 66
 export const CARET_INTERVAL_MS = 100
 /** Smallest move, in screen pixels, worth telling the others about. */
 export const POINTER_MIN_MOVE_PX = 3
+/** Most often the selected/edited block goes out (it changes on clicks, not moves). */
+export const BLOCK_INTERVAL_MS = 150
 /** A pointer that stops moving fades out after this long. */
 export const POINTER_IDLE_MS = 5000
 
@@ -135,6 +137,47 @@ export function parsePointer(v: unknown): PointerAnchor | null {
   return out
 }
 
+/** The top-level block someone has selected or is editing inside. */
+export interface BlockFocus {
+  b: number
+}
+
+export function parseBlockFocus(v: unknown): BlockFocus | null {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null
+  const { b } = v as Record<string, unknown>
+  return typeof b === 'number' && Number.isInteger(b) && b >= 0 && b <= LIMITS.maxBlock ? { b } : null
+}
+
+export interface RemoteBlock {
+  clientId: number
+  userId: number
+  name: string
+  color: string
+  b: number
+}
+
+/** Blocks other people have selected or are editing (my own tabs left out). */
+export function remoteBlocks(states: Map<number, Record<string, any>>, selfClientId: number, selfUserId: number): RemoteBlock[] {
+  const out: RemoteBlock[] = []
+  for (const [clientId, state] of states) {
+    if (clientId === selfClientId) continue
+    const user = state?.user
+    if (!user || typeof user.id !== 'number' || user.id <= 0 || user.id === selfUserId) continue
+    const block = parseBlockFocus(state.block)
+    if (!block) continue
+    out.push({
+      clientId,
+      userId: user.id,
+      name: typeof user.name === 'string' ? user.name : '',
+      color: safeColor(user.color),
+      b: block.b,
+    })
+  }
+  return out.sort((a, b) => a.clientId - b.clientId)
+}
+
+const safeColor = (c: unknown) => (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c) ? c : '#64748b')
+
 export interface RemotePointer {
   clientId: number
   userId: number
@@ -163,7 +206,7 @@ export function remotePointers(
       clientId,
       userId: user.id,
       name: typeof user.name === 'string' ? user.name : '',
-      color: typeof user.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(user.color) ? user.color : '#64748b',
+      color: safeColor(user.color),
       pointer,
     })
   }

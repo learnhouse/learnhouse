@@ -13485,6 +13485,7 @@
     "collab": {
       "no_cursor": "Hiện {{name}} không có con trỏ nào trong trang",
       "jump_to": "Đi đến {{name}}",
+      "is_editing": "{{name}} đang chỉnh sửa",
       "status": {
         "live": "Trực tiếp",
         "saving": "Đang lưu…",
@@ -13505,6 +13506,7 @@
       "too_large": "Trang này quá lớn để tiếp tục chỉnh sửa cùng nhau. Hãy chia thành các trang nhỏ hơn.",
       "title": {
         "live": "Đã kết nối. Các thay đổi được lưu tự động.",
+        "live_sync": "Trực tiếp: thay đổi của mọi người được đồng bộ và tự động lưu",
         "save_retry": "Lưu thất bại; đang thử lại.",
         "saving": "Đang lưu các thay đổi của bạn…",
         "saved": "Đã lưu tất cả thay đổi",

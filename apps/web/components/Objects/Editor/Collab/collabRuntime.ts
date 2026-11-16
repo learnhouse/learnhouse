@@ -20,7 +20,14 @@ import {
   terminalCloseOf,
 } from './collabStatus'
 import { activityRoomName } from '../Translation/translationEditorModel'
-import { CARET_INTERVAL_MS, POINTER_INTERVAL_MS, type PointerAnchor, createPresenceBatcher } from './pointerPresence'
+import {
+  BLOCK_INTERVAL_MS,
+  CARET_INTERVAL_MS,
+  POINTER_INTERVAL_MS,
+  type BlockFocus,
+  type PointerAnchor,
+  createPresenceBatcher,
+} from './pointerPresence'
 
 const CHECKPOINT_TIMEOUT_MS = 10_000
 
@@ -44,9 +51,18 @@ export interface CollabSession {
    * into at most ~15 awareness updates a second.
    */
   setPointer(_pointer: PointerAnchor | null): void
+  /** Shares the block this user has selected or is editing inside (null: none). */
+  setBlock(_block: BlockFocus | null): void
   /** Scrolls the editor to a user's caret; false when they have none. */
   scrollToUser(_userId: number): boolean
   onExternalUpdate(_listener: (_update: ExternalUpdate) => void): () => void
+  /**
+   * Tells the room's other editors that data kept outside the document
+   * (REST, e.g. comments) changed, so they refetch. Relayed by the collab
+   * server, never stored; a no-op for read-only sessions.
+   */
+  signal(_topic: 'comments'): void
+  onSignal(_topic: 'comments', _listener: (_by: number | null) => void): () => void
   /** The room's content as ProseMirror JSON. */
   contentJSON(): unknown
   destroy(): void
@@ -106,6 +122,7 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
   let snapshot: CollabSnapshot = { ...INITIAL_SNAPSHOT }
   const listeners = new Set<() => void>()
   const externalListeners = new Set<(_u: ExternalUpdate) => void>()
+  const signalListeners = new Map<string, Set<(_by: number | null) => void>>()
   const pendingCheckpoints = new Map<string, (_r: { ok: boolean; version: number | null }) => void>()
   let destroyed = false
   let everSynced = false
@@ -189,6 +206,9 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
         const update: ExternalUpdate = { by: message.by ?? null, version: Number(message.version) || 0 }
         set({ version: update.version })
         externalListeners.forEach((l) => l(update))
+      } else if (message?.type === 'signal' && typeof message.topic === 'string') {
+        const by = typeof message.by === 'number' ? message.by : null
+        signalListeners.get(message.topic)?.forEach((l) => l(by))
       } else if (message?.type === 'checkpoint' && typeof message.requestId === 'string') {
         const resolve = pendingCheckpoints.get(message.requestId)
         pendingCheckpoints.delete(message.requestId)
@@ -214,7 +234,7 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
       if (destroyed) return
       awareness.setLocalState({ ...(awareness.getLocalState() ?? {}), ...patch })
     },
-    { cursor: CARET_INTERVAL_MS, pointer: POINTER_INTERVAL_MS },
+    { cursor: CARET_INTERVAL_MS, pointer: POINTER_INTERVAL_MS, block: BLOCK_INTERVAL_MS },
   )
   awareness.setLocalStateField = (field: string, value: any) => {
     if (field === 'cursor') presence.set('cursor', value, value === null)
@@ -305,6 +325,9 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
     setPointer(pointer) {
       if (!destroyed) presence.set('pointer', pointer, pointer === null)
     },
+    setBlock(block) {
+      if (!destroyed) presence.set('block', block)
+    },
     scrollToUser(userId) {
       const caret = document.querySelector<HTMLElement>(`.lh-collab-caret[data-collab-user="${userId}"]`)
       if (!caret) return false
@@ -318,6 +341,16 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
     onExternalUpdate(listener) {
       externalListeners.add(listener)
       return () => externalListeners.delete(listener)
+    },
+    signal(topic) {
+      if (destroyed || snapshot.readOnly) return
+      provider.sendStateless(JSON.stringify({ type: 'signal', topic }))
+    },
+    onSignal(topic, listener) {
+      let set = signalListeners.get(topic)
+      if (!set) signalListeners.set(topic, (set = new Set()))
+      set.add(listener)
+      return () => set!.delete(listener)
     },
     contentJSON: () => yXmlFragmentToProsemirrorJSON(ydoc.getXmlFragment('default')),
     destroy() {
@@ -334,6 +367,7 @@ export function startCollabSession(opts: StartOptions): { session: CollabSession
       ydoc.destroy()
       listeners.clear()
       externalListeners.clear()
+      signalListeners.clear()
     },
   }
 

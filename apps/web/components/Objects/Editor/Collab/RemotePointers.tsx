@@ -12,13 +12,20 @@
 // impersonation; the server drops theirs too). Awareness is relayed in memory
 // by the collab server and never stored, so this never triggers a save.
 //
+// Block focus: the top-level block this user has selected (a node selection)
+// or is editing inside (focus in a block's own fields, like a quiz question)
+// is shared too, and others see that block outlined in the user's colour
+// with a name chip. It changes on clicks, so it costs a message per click.
+//
 // Showing: each pointer is re-anchored to the block it points at every frame
 // (so it follows reflow and scrolling), chased by a spring for smooth motion
 // (snapped when reduced motion is on) and faded out after a few idle seconds.
 // The animation loop only runs while a pointer is visible.
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Editor } from '@tiptap/core'
+import { NodeSelection } from '@tiptap/pm/state'
 import type { EditorView } from '@tiptap/pm/view'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import type { CollabSession } from './collabRuntime'
@@ -26,9 +33,11 @@ import {
   type Box,
   type PointerAnchor,
   POINTER_IDLE_MS,
+  type RemoteBlock,
   fromAnchor,
   fromTextAnchor,
   movedEnough,
+  remoteBlocks,
   remotePointers,
   stepSpring,
   toAnchor,
@@ -121,6 +130,28 @@ function targetOf(view: EditorView, anchor: PointerAnchor, content: Box): { x: n
   return block ? fromAnchor(anchor, content, block) : null
 }
 
+/**
+ * The top-level block this user is working in, when it is more than plain
+ * text editing (the caret shows that): a selected block, or focus inside a
+ * block's own fields.
+ */
+function focusedBlock(view: EditorView): number | null {
+  const { selection, doc } = view.state
+  if (selection instanceof NodeSelection && selection.node.isBlock) {
+    return doc.resolve(selection.from).index(0)
+  }
+  const active = document.activeElement
+  if (!active || active === view.dom || !view.dom.contains(active)) return null
+  // Inside ProseMirror's own editable text: the caret already shows it
+  if ((active as HTMLElement).isContentEditable) return null
+  try {
+    const pos = view.posAtDOM(active, 0)
+    return doc.childCount ? Math.min(doc.resolve(pos).index(0), doc.childCount - 1) : null
+  } catch {
+    return null
+  }
+}
+
 interface Track {
   anchor: PointerAnchor | null
   spring: Spring
@@ -165,6 +196,10 @@ export default function RemotePointers({
   const els = React.useRef(new Map<number, HTMLDivElement>())
   const tracks = React.useRef(new Map<number, Track>())
   const [peers, setPeers] = React.useState<PeerLabel[]>([])
+  const [blocks, setBlocks] = React.useState<RemoteBlock[]>([])
+  const blockEls = React.useRef(new Map<number, HTMLDivElement>())
+  const blocksRef = React.useRef<RemoteBlock[]>([])
+  const { t } = useTranslation()
   const reducedMotion = usePrefersReducedMotion()
   const startLoop = React.useRef<() => void>(() => {})
 
@@ -226,6 +261,40 @@ export default function RemotePointers({
     }
   }, [editor, session, canBroadcast])
 
+  // Block focus (selected block, or focus in a block's own fields)
+  React.useEffect(() => {
+    if (!canBroadcast || editor.isDestroyed) return
+    const view = editor.view
+    let sent: number | null = null
+    let timer = 0
+    const publish = () => {
+      timer = 0
+      if (editor.isDestroyed) return
+      const b = session.getSnapshot().readOnly || document.visibilityState === 'hidden' ? null : focusedBlock(view)
+      if (b === sent) return
+      sent = b
+      session.setBlock(b === null ? null : { b })
+    }
+    // focusout fires before the next focusin: settle first
+    const schedule = () => {
+      if (!timer) timer = window.setTimeout(publish, 50)
+    }
+    editor.on('selectionUpdate', schedule)
+    editor.on('update', schedule)
+    view.dom.addEventListener('focusin', schedule)
+    view.dom.addEventListener('focusout', schedule)
+    document.addEventListener('visibilitychange', schedule)
+    return () => {
+      editor.off('selectionUpdate', schedule)
+      editor.off('update', schedule)
+      view.dom.removeEventListener('focusin', schedule)
+      view.dom.removeEventListener('focusout', schedule)
+      document.removeEventListener('visibilitychange', schedule)
+      if (timer) window.clearTimeout(timer)
+      if (sent !== null) session.setBlock(null)
+    }
+  }, [editor, session, canBroadcast])
+
   // ── Receiving ──────────────────────────────────────────────────────────
   React.useEffect(() => {
     const awareness = session.provider.awareness
@@ -262,6 +331,11 @@ export default function RemotePointers({
       }
       labels.sort((a, b) => a.clientId - b.clientId)
       setPeers((prev) => (samePeerLabels(prev, labels) ? prev : labels))
+      const nextBlocks = remoteBlocks(states, awareness.clientID, session.user.id)
+      if (JSON.stringify(nextBlocks) !== JSON.stringify(blocksRef.current)) {
+        blocksRef.current = nextBlocks
+        setBlocks(nextBlocks)
+      }
       startLoop.current()
     }
     awareness.on('change', read)
@@ -304,6 +378,25 @@ export default function RemotePointers({
         const opacity = visible ? '1' : '0'
         if (el.style.opacity !== opacity) el.style.opacity = opacity
       }
+      // Outlines around the blocks others are working in (several people on
+      // one block: their chips line up)
+      const perBlock = new Map<number, number>()
+      for (const rb of blocksRef.current) {
+        const el = blockEls.current.get(rb.clientId)
+        if (!el) continue
+        const box = blockBox(editor.view, rb.b)
+        if (!box || rb.b >= editor.view.state.doc.childCount) {
+          el.style.opacity = '0'
+          continue
+        }
+        const nth = perBlock.get(rb.b) ?? 0
+        perBlock.set(rb.b, nth + 1)
+        el.style.transform = `translate3d(${box.left - origin.left}px, ${box.top - origin.top}px, 0)`
+        el.style.width = `${box.width}px`
+        el.style.height = `${box.height}px`
+        el.style.setProperty('--lh-chip-offset', `${nth * 22}px`)
+        el.style.opacity = '1'
+      }
       if (active) raf = requestAnimationFrame(tick)
     }
     startLoop.current = () => {
@@ -313,19 +406,42 @@ export default function RemotePointers({
       }
     }
     startLoop.current()
+    // Blocks move when the document or the layout changes
+    const relayout = () => startLoop.current()
+    editor.on('update', relayout)
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(relayout) : null
+    if (!editor.isDestroyed) ro?.observe(editor.view.dom)
     return () => {
       if (raf) cancelAnimationFrame(raf)
       startLoop.current = () => {}
+      editor.off('update', relayout)
+      ro?.disconnect()
     }
   }, [editor, reducedMotion])
 
   // New elements get positioned on the next frame
   React.useEffect(() => {
     startLoop.current()
-  }, [peers])
+  }, [peers, blocks])
 
   return (
     <div ref={overlayRef} className="lh-collab-pointers" aria-hidden>
+      {blocks.map((rb) => (
+        <div
+          key={`block-${rb.clientId}`}
+          ref={(el) => {
+            if (el) blockEls.current.set(rb.clientId, el)
+            else blockEls.current.delete(rb.clientId)
+          }}
+          className="lh-collab-block"
+          data-collab-block={rb.b}
+          style={{ ['--lh-caret' as string]: rb.color, opacity: 0 }}
+        >
+          <span className="lh-collab-block__chip" dir="auto">
+            {t('editor.collab.is_editing', '{{name}} is editing', { name: rb.name })}
+          </span>
+        </div>
+      ))}
       {peers.map((p) => (
         <div
           key={p.clientId}

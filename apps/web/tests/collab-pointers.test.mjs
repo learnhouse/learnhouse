@@ -7,7 +7,9 @@ const {
   fromAnchor,
   fromTextAnchor,
   movedEnough,
+  parseBlockFocus,
   parsePointer,
+  remoteBlocks,
   remotePointers,
   stepSpring,
   toAnchor,
@@ -87,6 +89,20 @@ describe("pointer anchoring", () => {
     expect(list.map((p) => p.clientId)).toEqual([4, 5]);
     expect(list[0].color).toBe("#64748b"); // unsafe colour replaced
     expect(list[1]).toEqual({ clientId: 5, userId: 9, name: "Bo", color: "#22aa33", pointer: { b: 1, x: 0.3, y: 0.3 } });
+  });
+});
+
+describe("block focus", () => {
+  test("lists the blocks other people are working in", () => {
+    const states = new Map([
+      [1, { user: { id: 7, name: "Me", color: "#111111" }, block: { b: 2 } }],
+      [3, { user: { id: 9, name: "Lea", color: "#22aa33" }, block: { b: 4 } }],
+      [4, { user: { id: 10, name: "Sam", color: "#3355ff" }, block: { b: -2 } }],
+      [5, { user: { id: 11, name: "Yuki", color: "#3355ff" } }],
+    ]);
+    expect(remoteBlocks(states, 1, 7)).toEqual([{ clientId: 3, userId: 9, name: "Lea", color: "#22aa33", b: 4 }]);
+    expect(parseBlockFocus({ b: 0 })).toEqual({ b: 0 });
+    for (const bad of [null, { b: 1.5 }, { b: "1" }, { b: 1e9 }, []]) expect(parseBlockFocus(bad)).toBe(null);
   });
 });
 

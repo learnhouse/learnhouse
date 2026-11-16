@@ -13519,6 +13519,7 @@
     "collab": {
       "no_cursor": "{{name}} şu anda sayfada imleç kullanmıyor",
       "jump_to": "{{name}} konumuna git",
+      "is_editing": "{{name}} düzenliyor",
       "status": {
         "live": "Canlı",
         "saving": "Kaydediliyor…",
@@ -13539,6 +13540,7 @@
       "too_large": "Bu sayfa birlikte düzenlemeye devam etmek için çok büyük. Daha küçük sayfalara bölün.",
       "title": {
         "live": "Bağlı. Değişiklikler otomatik kaydedilir.",
+        "live_sync": "Canlı: herkesin değişiklikleri eşitlenir ve otomatik kaydedilir",
         "save_retry": "Kaydetme başarısız oldu; yeniden deneniyor.",
         "saving": "Değişiklikleriniz kaydediliyor…",
         "saved": "Tüm değişiklikler kaydedildi",

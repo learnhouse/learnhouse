@@ -87,6 +87,12 @@ const mathSymbols = [
 function MathEquationBlockComponent(props: any) {
   const { t } = useTranslation()
   const [equation, setEquation] = React.useState(props.node.attrs.math_equation)
+  const stored = props.node.attrs.math_equation
+  // Follow the stored equation (a collaborator's edit, undo) unless this
+  // user is typing in the field right now.
+  React.useEffect(() => {
+    if (document.activeElement !== inputRef.current) setEquation(stored)
+  }, [stored])
   const [isEditing] = React.useState(true)
   const [showTemplates, setShowTemplates] = React.useState(false)
   const [showSymbols, setShowSymbols] = React.useState(false)

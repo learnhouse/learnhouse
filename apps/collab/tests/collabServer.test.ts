@@ -270,6 +270,34 @@ describe('collab server: activity rooms', () => {
     await waitFor(() => !server.collab.server.hocuspocus.documents.has(ROOM), 3000, 'unload')
   })
 
+  it('relays change signals to the other editors only, for known topics, rate limited', async () => {
+    const a = await connect(server, 1)
+    const b = await connect(server, 2)
+    const viewer = await connect(server, 3)
+    const putsBefore = server.mem.puts.length
+    a.provider.sendStateless(JSON.stringify({ type: 'signal', topic: 'comments', extra: 'dropped' }))
+    await waitFor(() => b.stateless.some((m) => m.type === 'signal'), 3000, 'signal relayed')
+    assert.deepEqual(b.stateless.find((m) => m.type === 'signal'), { type: 'signal', topic: 'comments', by: 1 })
+    await waitFor(() => viewer.stateless.some((m) => m.type === 'signal'), 3000, 'viewers hear it too')
+    assert.equal(a.stateless.some((m) => m.type === 'signal'), false, 'not echoed to the sender')
+    // A burst collapses to one relay at the end of the interval; unknown
+    // topics and viewers are ignored
+    const count = () => b.stateless.filter((m) => m.type === 'signal').length
+    for (let i = 0; i < 10; i++) a.provider.sendStateless(JSON.stringify({ type: 'signal', topic: 'comments' }))
+    a.provider.sendStateless(JSON.stringify({ type: 'signal', topic: 'anything' }))
+    viewer.provider.sendStateless(JSON.stringify({ type: 'signal', topic: 'comments' }))
+    await new Promise((r) => setTimeout(r, 100))
+    assert.equal(count(), 1, 'nothing more within the interval')
+    await waitFor(() => count() === 2, 3000, 'one trailing relay for the burst')
+    await new Promise((r) => setTimeout(r, 400))
+    assert.equal(count(), 2, 'the burst cost one message, junk ignored')
+    assert.equal(server.mem.puts.length, putsBefore, 'signals never save the document')
+    a.provider.destroy()
+    b.provider.destroy()
+    viewer.provider.destroy()
+    await waitFor(() => !server.collab.server.hocuspocus.documents.has(ROOM), 3000, 'unload')
+  })
+
   it('applies an external write to connected clients and tells them who made it', async () => {
     const a = await connect(server, 1)
     const version = server.mem.activities.get(UUID)!.version

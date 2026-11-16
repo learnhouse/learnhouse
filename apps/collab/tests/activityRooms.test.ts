@@ -95,10 +95,18 @@ describe('activity presence', () => {
     sanitizeActivityAwareness(ada, badPos, new Set(), new Map(), [ada])
     assert.deepEqual(badPos.get(1)!.pointer, { b: 3, x: 0.5, y: 0.25 })
 
+    const withBlock = new Map<number, Record<string, any>>([[1, { block: { b: 4, extra: 1 } }], [2, { block: { b: -1 } }], [3, { block: 'x' }]])
+    sanitizeActivityAwareness(ada, withBlock, new Set(), new Map(), [ada])
+    assert.deepEqual(withBlock.get(1)!.block, { b: 4 })
+    assert.equal('block' in withBlock.get(2)!, false)
+    assert.equal('block' in withBlock.get(3)!, false)
+
     const viewer = conn({ id: 3, name: 'Viewer' }, true)
     const fromViewer = new Map<number, Record<string, any>>([[2, { pointer: { b: 0, x: 0.1, y: 0.1 } }]])
+    fromViewer.get(2)!.block = { b: 1 }
     sanitizeActivityAwareness(viewer, fromViewer, new Set(), new Map(), [viewer])
     assert.equal('pointer' in fromViewer.get(2)!, false)
+    assert.equal('block' in fromViewer.get(2)!, false)
 
     for (const pointer of [
       null,

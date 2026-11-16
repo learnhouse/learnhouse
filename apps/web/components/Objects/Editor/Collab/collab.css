@@ -123,3 +123,41 @@
     transition: none;
   }
 }
+
+/* The gap ring around collaborator avatars follows the header surface. */
+html[data-theme='dark'] .activity-editor-top {
+  --lh-collab-avatar-gap: rgb(18 18 20);
+}
+
+/* A block someone else has selected or is editing inside (RemotePointers). */
+.lh-collab-block {
+  position: absolute;
+  top: 0;
+  left: 0; /* rtl-ok: positioned by transform from the layer's origin. */
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px var(--lh-caret);
+  transition: opacity 0.2s ease-out;
+}
+
+.lh-collab-block__chip {
+  position: absolute;
+  top: calc(-20px - var(--lh-chip-offset, 0px));
+  inset-inline-end: 8px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 7px;
+  border-radius: 6px 6px 0 0;
+  background: var(--lh-caret);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-collab-block {
+    transition: none;
+  }
+}

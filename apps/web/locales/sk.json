@@ -13995,6 +13995,7 @@
     "collab": {
       "no_cursor": "{{name}} teraz nemá na stránke kurzor",
       "jump_to": "Prejsť na {{name}}",
+      "is_editing": "{{name}} upravuje",
       "status": {
         "live": "Naživo",
         "saving": "Ukladá sa…",
@@ -14015,6 +14016,7 @@
       "too_large": "Táto stránka je príliš veľká na spoločné úpravy. Rozdeľte ju na menšie stránky.",
       "title": {
         "live": "Pripojené. Zmeny sa ukladajú automaticky.",
+        "live_sync": "Naživo: zmeny všetkých sa synchronizujú a ukladajú automaticky",
         "save_retry": "Ukladanie zlyhalo; skúša sa znova.",
         "saving": "Ukladajú sa vaše zmeny…",
         "saved": "Všetky zmeny uložené",

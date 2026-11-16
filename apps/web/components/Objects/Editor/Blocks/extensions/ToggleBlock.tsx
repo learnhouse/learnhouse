@@ -35,7 +35,11 @@ function ToggleBlockView(props: NodeViewProps) {
   const defaultOpen = !!props.node.attrs.defaultOpen
   const [open, setOpen] = React.useState(isEditable ? true : defaultOpen)
   const [draft, setDraft] = React.useState(summary)
-  React.useEffect(() => setDraft(summary), [summary])
+  // Follow the stored title (collaborators, undo) unless it is being typed in
+  const typing = React.useRef(false)
+  React.useEffect(() => {
+    if (!typing.current) setDraft(summary)
+  }, [summary])
   const bodyId = React.useId()
 
   const commit = () => {
@@ -67,7 +71,11 @@ function ToggleBlockView(props: NodeViewProps) {
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
+            onFocus={() => (typing.current = true)}
+            onBlur={() => {
+              typing.current = false
+              commit()
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
