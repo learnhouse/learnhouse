@@ -126,7 +126,6 @@ class TestOrgAdminById:
 class TestRolesWithMemberships:
     async def test_roles_come_with_the_membership_rows(self, db, org, regular_user, user_role):
         db._user_org_cache = {}
-        db._user_org_role_cache = {}
         rows = await get_user_org_rows(regular_user.id, org.id, db)
         statements, stop = _count_queries(db)
         try:
@@ -139,7 +138,6 @@ class TestRolesWithMemberships:
 
     async def test_changed_role_is_queried_again(self, db, org, regular_user, admin_role):
         db._user_org_cache = {}
-        db._user_org_role_cache = {}
         rows = await get_user_org_rows(regular_user.id, org.id, db)
         rows[0].role_id = admin_role.id
         assert roles_of_memberships(db, regular_user.id, org.id, rows) is None
@@ -148,9 +146,35 @@ class TestRolesWithMemberships:
 
     async def test_missing_role_row_and_unloaded_cache(self, db, org):
         membership = SimpleNamespace(role_id=99)
-        db._user_org_role_cache = {(5, org.id): {99: None}}
+        session_memo(db)[("org_roles", 5, org.id)] = {99: None}
         assert roles_of_memberships(db, 5, org.id, [membership]) == []
         assert roles_of_memberships(db, 6, org.id, [membership]) is None
+        # A role the memo didn't load with the membership: query again.
+        assert roles_of_memberships(db, 5, org.id, [SimpleNamespace(role_id=100)]) is None
+
+    async def test_rollback_drops_the_loaded_roles(self, db, org, regular_user):
+        db._user_org_cache = {}
+        user_id, org_id = regular_user.id, org.id
+        rows = await get_user_org_rows(user_id, org_id, db)
+        await db.rollback()
+        # Expired rows are never read: the caller queries roles again.
+        assert roles_of_memberships(db, user_id, org_id, rows) is None
+
+    async def test_commit_after_removal_drops_the_loaded_roles(self, db, org, regular_user):
+        db._user_org_cache = {}
+        user_id, org_id = regular_user.id, org.id
+        rows = await get_user_org_rows(user_id, org_id, db)
+        await db.delete(rows[0])
+        await db.commit()
+        assert roles_of_memberships(db, user_id, org_id, rows) is None
+
+
+class TestMemoLifetime:
+    async def test_close_drops_the_memo(self, db):
+        await db.execute(text("SELECT 1"))
+        session_memo(db)["k"] = 1
+        await db.close()
+        assert "k" not in session_memo(db)
 
 
 class TestTranslationsFlag:

@@ -43,6 +43,14 @@ def _forget(session, *_):
     session.info.pop(_INFO_KEY, None)
 
 
+@event.listens_for(Session, "after_transaction_end")
+def _forget_on_close(session, transaction):
+    # close() ends the outer transaction without a rollback event; a session
+    # reused after that (a background task) must not see the old answers.
+    if transaction.parent is None:
+        session.info.pop(_INFO_KEY, None)
+
+
 @event.listens_for(Session, "do_orm_execute")
 def _forget_on_bulk_write(orm_execute_state):
     # update()/delete()/insert() statements write without a flush.

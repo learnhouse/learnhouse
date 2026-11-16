@@ -307,6 +307,8 @@ class TestRBAC:
             membership = Mock(role_id=mock_role.id)
             mock_db_session.execute.return_value.all.return_value = [(membership, mock_role)]
             mock_db_session.execute.return_value.scalars.return_value.first.return_value = None
+            # A mock session has no memo, so roles come from the follow-up query.
+            mock_db_session.execute.return_value.scalars.return_value.all.return_value = [mock_role]
 
             with patch('src.security.rbac.rbac.get_element_organization_id', new=AsyncMock(return_value=1)):
                 result = await authorization_verify_based_on_roles(

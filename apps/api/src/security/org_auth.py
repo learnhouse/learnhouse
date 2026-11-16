@@ -14,6 +14,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
 from src.db.users import APITokenUser
+from src.core.session_memo import session_memo
 from src.security.superadmin import is_user_superadmin, superadmin_org_bypass_blocked
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
@@ -52,13 +53,14 @@ async def get_user_org_rows(user_id: int, org_id: int, db_session: AsyncSession)
     # access. Positive rows are safe to memoize for the request's lifetime.
     if rows:
         _cache[key] = rows
-        role_cache = getattr(db_session, "_user_org_role_cache", None)
-        if not isinstance(role_cache, dict):
-            role_cache = {}
-            db_session._user_org_role_cache = role_cache
-        role_cache[key] = {
-            getattr(membership, "role_id", None): role for membership, role in pairs
-        }
+        # The roles go in the session memo, which a write, commit or rollback
+        # clears: after any of those the caller queries roles afresh instead
+        # of reading expired (or deleted) membership rows.
+        memo = session_memo(db_session)
+        if memo is not None:
+            memo[("org_roles", user_id, org_id)] = {
+                membership.role_id: role for membership, role in pairs
+            }
     return rows
 
 
@@ -68,7 +70,8 @@ def roles_of_memberships(
     """The roles held through ``memberships``, as loaded with them by
     ``get_user_org_rows``. None when they weren't loaded together, or a
     membership's role changed since (the caller then queries)."""
-    by_role_id = getattr(db_session, "_user_org_role_cache", {}).get((user_id, org_id))
+    memo = session_memo(db_session)
+    by_role_id = memo.get(("org_roles", user_id, org_id)) if memo is not None else None
     if not isinstance(by_role_id, dict):
         return None
     role_ids = [getattr(m, "role_id", None) for m in memberships]
