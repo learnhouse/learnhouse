@@ -1,31 +1,32 @@
 {
   "_meta": {
-    "status": "Measured on the local stack 2026-11-09 (real Gemini usage from ai_usage_event / direct generator calls) for: ask_ai, assignment_generation, atlas_chat, course_planning, editor_ai, image_generation, magic_block, podcast_audio, podcast_script, quiz_generation, rag_indexing, scenario_generation, seo_generation, thumbnail, translation. Other features keep modelled estimates (metered features hold the floor by construction).",
+    "status": "Measured on the local stack 2026-11-09 (real Gemini usage from ai_usage_event / direct generator calls) for: ask_ai, assignment_generation, atlas_chat, course_planning, editor_ai, image_generation, magic_block, podcast_audio, podcast_script, quiz_generation, rag_indexing, scenario_generation, seo_generation, thumbnail, translation. Other features keep modelled estimates (metered features hold the floor by construction). atlas_chat re-measured 2026-11-16 after tools became on-demand (see its note).",
     "schema": "{feature: {units, p50_usage: [Usage kwargs per provider call or per model], p90_usage: [...]}}",
     "podcast_audio": "per minute: 25 audio tokens/s x 60 s = 1500 tokens; measured 207 tokens for 8.3 s"
   },
   "atlas_chat": {
     "units": 1,
     "measured": true,
-    "samples": 22,
+    "samples": 2,
+    "note": "Measured live 2026-11-16 (gemini-3.5-flash served as 3.6-flash, thinking low) with tools loaded on demand. p50: 'How many AI credits do I have left?' (get_ai_credits, 2 calls). p90: a four-call analytics answer (search, list_course_learners, get_course_stats, render_view). Before on-demand tools the same question read 121,267 input tokens over 2 calls.",
     "p50_usage": [
       {
         "model": "gemini-3.6-flash",
-        "input_tokens": 56694,
-        "output_tokens": 41,
-        "cached_input_tokens": 0,
+        "input_tokens": 19406,
+        "output_tokens": 189,
+        "cached_input_tokens": 7599,
         "audio_input_tokens": 0,
         "image_output_tokens": 0,
         "audio_output_tokens": 0,
-        "requests": 1
+        "requests": 2
       }
     ],
     "p90_usage": [
       {
         "model": "gemini-3.6-flash",
-        "input_tokens": 233741,
-        "output_tokens": 799,
-        "cached_input_tokens": 168132,
+        "input_tokens": 49545,
+        "output_tokens": 1646,
+        "cached_input_tokens": 29944,
         "audio_input_tokens": 0,
         "image_output_tokens": 0,
         "audio_output_tokens": 0,

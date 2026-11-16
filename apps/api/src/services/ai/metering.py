@@ -11,7 +11,11 @@ generators or the embedder, and each records its provider usage here. A
 ``charge`` reserves the published estimate up front (so an org that can't
 afford it is refused before any model runs), meters actual usage, and settles
 at the end: it charges ``max(minimum, provider cost x MARGIN_FLOOR / credit
-value)`` rounded up, refunding the difference or charging the extra. A request
+value)`` rounded up once for the whole request (a multi-step run is not
+rounded per model call), refunding the difference or charging the extra. The
+provider cost is what the provider bills on the day of the request (cached
+input at its cached rate), not a price announced for later: an announced
+increase applies from its date on its own. A request
 that fails is refunded in full. Long agent runs (Atlas) call
 ``meter.top_up()`` before each model request: the reservation grows with the
 run, and an org that runs out of credits (or a run that hits its budget) stops
@@ -106,7 +110,8 @@ class Meter:
 
     @property
     def planning_cost_usd(self) -> float:
-        """Cost at the highest announced price: what credits are computed from."""
+        """Cost at the highest announced price (what published flat prices are
+        checked against; metered requests are charged on ``cost_usd``)."""
         return pricing.total_cost_usd(self.usages, planning=True)
 
     @property
@@ -116,7 +121,10 @@ class Meter:
         return pricing.estimate_credits(self.feature, self.units)
 
     def credits_due(self) -> int:
-        due = pricing.settle_credits(self.feature, self.planning_cost_usd, minimum=self.floor_credits)
+        # The provider's price today: charging a later announced price on top of
+        # the floor would take the margin past MARGIN_FLOOR (4x on Gemini 3.6
+        # Flash until its 2027 increase).
+        due = pricing.settle_credits(self.feature, self.cost_usd, minimum=self.floor_credits)
         if self.max_credits is not None:
             due = min(due, self.max_credits)
         return due
@@ -137,7 +145,7 @@ class Meter:
             return
         # The published minimum already pays for the first call(s); only real
         # usage plus the next call's headroom above it needs more reserved.
-        need = max(self.floor_credits, pricing.credits_for_cost(self.planning_cost_usd) + max(headroom, 0))
+        need = max(self.floor_credits, pricing.credits_for_cost(self.cost_usd) + max(headroom, 0))
         if self.max_credits is not None and self.produced and need > self.max_credits:
             # The next call would take the run past its budget: stop before it.
             raise BudgetReached(f"Reached the budget of {self.max_credits} credits.")
@@ -153,7 +161,7 @@ class Meter:
         the floor (a run's calls grow as its history grows), at least 1."""
         if not self.usages:
             return 1
-        last = pricing.cost_usd(self.usages[-1], planning=True)
+        last = pricing.cost_usd(self.usages[-1])
         return max(1, pricing.credits_for_cost(last))
 
     # ── settlement ─────────────────────────────────────────────────────────

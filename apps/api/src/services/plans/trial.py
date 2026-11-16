@@ -32,7 +32,7 @@ TRIAL_DAYS = 14
 # AI credits a trial gets in all, instead of the trial plan's monthly
 # allowance: enough to try Atlas and the AI tools, not to run on for free.
 # Buying any plan lifts it to that plan's allowance at once.
-TRIAL_AI_CREDITS = 30
+TRIAL_AI_CREDITS = 200
 
 
 def _utc(value: datetime) -> datetime:
