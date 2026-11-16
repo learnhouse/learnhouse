@@ -30,6 +30,7 @@ import { errorMessage, recomputeHealth, updateOrgProfile } from '@services/ee/pl
 import type { OrgProfile } from '@services/ee/platform/types'
 import { useAccessToken, useFrontendDomain, usePlatformMe } from '@components/Admin/hooks'
 import { Avatar, CopyLinkButton, HealthBadge, LifecycleChip, OrgLogo, PlanChip, TagList, adminPath, orgDisplayName } from '@components/Admin/Shared/AdminKit'
+import { StatusPill } from '@/design'
 import { useInvalidateOrg, useTeamMembers } from './orgQueries'
 // One Follow control across the console (levels, custom events, delivery).
 import FollowButton from '@components/Admin/Following/FollowButton'
@@ -161,6 +162,8 @@ export default function OrgHeader({
   const canNote = me.can('notes.write')
   const [emailOpen, setEmailOpen] = React.useState(false)
   const { impersonate } = useImpersonate()
+  const trial = profile?.trial
+  const canImpersonate = me.can('impersonation.readonly')
 
   // One primary action, picked by what this org most likely needs.
   const primary: HeaderAction | null = inPoc && canPoc ? 'extend_poc' : canPlan ? 'plan' : canNote ? 'note' : null
@@ -210,7 +213,20 @@ export default function OrgHeader({
               <span className="ms-2 font-mono text-xs text-neutral-400">#{org.id}</span>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-              {isSaaS && <PlanChip plan={org.plan} />}
+              {isSaaS &&
+                (trial?.active ? (
+                  // A free trial unlocks the plan without paying for it: say so.
+                  <span
+                    className="inline-flex items-center gap-1.5"
+                    title={`${t(`admin.plans.${trial.plan}`, { defaultValue: trial.plan })} · ${new Date(trial.ends_at).toLocaleDateString()}`}
+                    data-testid="org-trial-chip"
+                  >
+                    <StatusPill status="info">{t('admin.lifecycle.trial')}</StatusPill>
+                    <span className="text-xs text-neutral-500">{t('admin.pocs.days_left', { count: trial.days_left })}</span>
+                  </span>
+                ) : (
+                  <PlanChip plan={org.plan} />
+                ))}
               <LifecycleChip lifecycle={lifecycle} />
               {health !== undefined && health !== null && <HealthBadge score={health} />}
               <TagList tags={tags} max={4} />
@@ -223,6 +239,17 @@ export default function OrgHeader({
           {canPlan && btn('plan', <CreditCard size={14} />, t('admin.org.change_plan'))}
           {canPoc && inPoc && btn('extend_poc', <CalendarPlus size={14} />, t('admin.pocs.extend'))}
           {canPoc && !inPoc && !closed && btn('start_poc', <Handshake size={14} />, t('admin.pocs.start'))}
+          {canImpersonate && (
+            // Opens the org as its owner (switch member or role from the badge).
+            <Button
+              variant="secondary"
+              icon={<UserSwitch size={14} />}
+              onClick={() => void impersonate({ orgId: org.id, slug: org.slug })}
+              data-testid="org-impersonate"
+            >
+              {t('admin.impersonation.impersonate')}
+            </Button>
+          )}
           {canNote && btn('note', <NotePencil size={14} />, t('admin.org.add_note'))}
           <FollowButton orgId={org.id} orgName={org.name} />
           <CopyLinkButton label="" />
@@ -232,13 +259,6 @@ export default function OrgHeader({
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content align="end" sideOffset={6} collisionPadding={12} className={MENU_SURFACE} style={{ zIndex: 'var(--z-dropdown)' as any }}>
-                {/* Opens the org as its owner, impersonating (switch member or role from the badge). */}
-                {me.can('impersonation.readonly') && (
-                  <DropdownMenu.Item className={MENU_ITEM} onSelect={() => void impersonate({ orgId: org.id, slug: org.slug })} data-testid="org-impersonate">
-                    <UserSwitch size={15} />
-                    {t('admin.impersonation.impersonate')}
-                  </DropdownMenu.Item>
-                )}
                 <DropdownMenu.Item className={MENU_ITEM} onSelect={() => window.open(safeHref(siteUrl), '_blank', 'noopener,noreferrer')}>
                   <ArrowSquareOut size={15} />
                   {t('admin.org.open_site')}
