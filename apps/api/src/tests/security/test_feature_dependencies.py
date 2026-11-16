@@ -207,7 +207,8 @@ class TestFeatureDependencies:
         mock_check.assert_called_once_with("courses", 44, db_session)
 
     async def test_require_courses_feature_prefers_course_uuid(self):
-        db_session = _make_async_session(5)
+        # The course's org id comes with its org config row (pinned for the check).
+        db_session = _make_row_session((5, None))
         request = _request({"course_uuid": "course-1"})
 
         with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check:
@@ -217,7 +218,7 @@ class TestFeatureDependencies:
         mock_check.assert_called_once_with("courses", 5, db_session)
 
     async def test_require_courses_feature_rejects_missing_course_uuid(self):
-        db_session = _make_async_session(None)
+        db_session = _make_row_session(None)
         request = _request({"course_uuid": "course-1"})
 
         with pytest.raises(HTTPException) as exc_info:

@@ -34,11 +34,17 @@ async def get_user_org_rows(user_id: int, org_id: int, db_session: AsyncSession)
     key = (user_id, org_id)
     if key in _cache:
         return _cache[key]
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == user_id,
-        UserOrganization.org_id == org_id,
+    # Each row's role comes along: the role check that usually follows needs it.
+    statement = (
+        select(UserOrganization, Role)
+        .outerjoin(Role, Role.id == UserOrganization.role_id)  # type: ignore[arg-type]
+        .where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
     )
-    rows = list((await db_session.execute(statement)).scalars().all())
+    pairs = (await db_session.execute(statement)).all()
+    rows = [membership for membership, _ in pairs]
     # Only cache positive memberships. Caching a "not a member" result is
     # unsafe: a membership granted later within the same request/session
     # (e.g. add-to-org immediately followed by an authz check) would otherwise
@@ -46,7 +52,29 @@ async def get_user_org_rows(user_id: int, org_id: int, db_session: AsyncSession)
     # access. Positive rows are safe to memoize for the request's lifetime.
     if rows:
         _cache[key] = rows
+        role_cache = getattr(db_session, "_user_org_role_cache", None)
+        if not isinstance(role_cache, dict):
+            role_cache = {}
+            db_session._user_org_role_cache = role_cache
+        role_cache[key] = {
+            getattr(membership, "role_id", None): role for membership, role in pairs
+        }
     return rows
+
+
+def roles_of_memberships(
+    db_session: AsyncSession, user_id: int, org_id: int, memberships: list[UserOrganization]
+) -> Optional[list[Role]]:
+    """The roles held through ``memberships``, as loaded with them by
+    ``get_user_org_rows``. None when they weren't loaded together, or a
+    membership's role changed since (the caller then queries)."""
+    by_role_id = getattr(db_session, "_user_org_role_cache", {}).get((user_id, org_id))
+    if not isinstance(by_role_id, dict):
+        return None
+    role_ids = [getattr(m, "role_id", None) for m in memberships]
+    if any(role_id not in by_role_id for role_id in role_ids):
+        return None
+    return [by_role_id[role_id] for role_id in role_ids if by_role_id[role_id] is not None]
 
 
 async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> Optional[UserOrganization]:

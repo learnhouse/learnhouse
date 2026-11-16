@@ -234,11 +234,21 @@ async def require_courses_feature(
     # Try course_uuid first
     if "course_uuid" in path_params:
         # Only the org is needed here; the endpoint loads the course itself.
+        # The org's config comes along: the feature check reads it next.
+        from src.db.organization_config import OrganizationConfig
+        from src.services.orgs.org_config_lookup import remember_org_config
+
         course_uuid = path_params["course_uuid"]
-        statement = select(Course.org_id).where(Course.course_uuid == course_uuid)
-        course_org_id = (await db_session.execute(statement)).scalars().first()
-        if course_org_id is None:
+        statement = (
+            select(Course.org_id, OrganizationConfig)
+            .outerjoin(OrganizationConfig, OrganizationConfig.org_id == Course.org_id)  # type: ignore[arg-type]
+            .where(Course.course_uuid == course_uuid)
+        )
+        row = (await db_session.execute(statement)).first()
+        if row is None:
             raise HTTPException(status_code=404, detail="Course not found")
+        course_org_id, org_config = row
+        remember_org_config(db_session, course_org_id, org_config)
         return await _check_feature_enabled("courses", course_org_id, db_session)
 
     # Try activity_uuid

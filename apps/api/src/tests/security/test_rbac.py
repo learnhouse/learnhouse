@@ -303,16 +303,19 @@ class TestRBAC:
              patch('src.security.rbac.rbac.is_user_superadmin', return_value=False):
             mock_check_type.return_value = "courses"
 
-            # Mock database query
-            mock_db_session.execute.return_value.scalars.return_value.all.return_value = [mock_role]
+            # The membership lookup returns each membership row with its role.
+            membership = Mock(role_id=mock_role.id)
+            mock_db_session.execute.return_value.all.return_value = [(membership, mock_role)]
+            mock_db_session.execute.return_value.scalars.return_value.first.return_value = None
 
-            result = await authorization_verify_based_on_roles(
-                request=mock_request,
-                user_id=1,
-                action="read",
-                element_uuid="course_123",
-                db_session=mock_db_session
-            )
+            with patch('src.security.rbac.rbac.get_element_organization_id', new=AsyncMock(return_value=1)):
+                result = await authorization_verify_based_on_roles(
+                    request=mock_request,
+                    user_id=1,
+                    action="read",
+                    element_uuid="course_123",
+                    db_session=mock_db_session
+                )
 
             assert result is True
 
@@ -354,9 +357,8 @@ class TestRBAC:
             mock_user_org.org_id = 1
             mock_user_org.role_id = 1  # Admin role
 
-            # Mock database query - implementation uses .first()
-            mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_user_org
-            mock_db_session.execute.return_value.scalars.return_value.all.return_value = [mock_user_org]
+            # The membership lookup returns each membership row with its role.
+            mock_db_session.execute.return_value.all.return_value = [(mock_user_org, None)]
 
             result = await authorization_verify_based_on_org_admin_status(
                 request=mock_request,

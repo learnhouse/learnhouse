@@ -904,26 +904,10 @@ class ResourceAccessChecker:
         if cached is not None:
             return cached
 
-        statement = select(ResourceAuthor).where(
-            ResourceAuthor.resource_uuid == resource_uuid,
-            ResourceAuthor.user_id == user_id
-        )
-        resource_author = (await self.db_session.execute(statement)).scalars().first()
+        # Shared with the paywall's manager check and the role fallback.
+        from src.security.rbac.rbac import user_is_active_author
 
-        if not resource_author:
-            self._author_cache[resource_uuid] = False
-            return False
-
-        valid_authorships = [
-            ResourceAuthorshipEnum.CREATOR,
-            ResourceAuthorshipEnum.MAINTAINER,
-            ResourceAuthorshipEnum.CONTRIBUTOR,
-        ]
-
-        is_valid = (
-            resource_author.authorship in valid_authorships and
-            resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
-        )
+        is_valid = await user_is_active_author(user_id, resource_uuid, self.db_session)
         # Authorship is an org-scoped grant: someone removed from the org must
         # not keep editing its content through a leftover author row.
         if is_valid:

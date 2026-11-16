@@ -18,6 +18,7 @@ from typing import Any, Iterable, Optional
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.core.session_memo import session_memo
 from src.db.courses.translations import (
     ActivityTranslation,
     ChapterTranslation,
@@ -43,7 +44,27 @@ def _get(obj: Any, key: str, default: Any = None) -> Any:
     return getattr(obj, key, default)
 
 
+def has_published_translation(course_id_column: Any) -> Any:
+    """SQL: whether the course has a published language version. Select it
+    with the course and pass it to ``note_published_translations`` so a course
+    without any skips the language lookup."""
+    return (
+        select(CourseTranslation.id)
+        .where(CourseTranslation.course_id == course_id_column, CourseTranslation.status == PUBLISHED)
+        .exists()
+    )
+
+
+def note_published_translations(db: AsyncSession, course_id: int, has_any: bool) -> None:
+    memo = session_memo(db)
+    if memo is not None:
+        memo[("course_has_translations", course_id)] = bool(has_any)
+
+
 async def _published_languages(db: AsyncSession, course_id: int) -> dict[str, CourseTranslation]:
+    memo = session_memo(db)
+    if memo is not None and memo.get(("course_has_translations", course_id)) is False:
+        return {}
     rows = (await db.execute(
         select(CourseTranslation).where(CourseTranslation.course_id == course_id, CourseTranslation.status == PUBLISHED)
     )).scalars().all()

@@ -28,6 +28,8 @@ def _session_with_firsts(*results: object) -> AsyncMock:
         result = results[idx] if idx < len(results) else None
         result_mock.scalars.return_value.first.return_value = result
         result_mock.scalars.return_value.all.return_value = [] if result is None else [result]
+        # The membership lookup selects each row with its role.
+        result_mock.all.return_value = [] if result is None else [(result, None)]
         return result_mock
 
     session.execute.side_effect = _execute

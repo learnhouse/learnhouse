@@ -828,6 +828,7 @@ async def _resolve_current_user(
             superadmin_memo = {}
             db_session._superadmin_cache = superadmin_memo
         superadmin_memo[user.id] = bool(getattr(user, "is_superadmin", False))
+        remember_user_email(db_session, user)
         if superadmin_memo[user.id]:
             # Outside the platform console a superadmin's own session is an
             # ordinary user's; org access is an impersonation (see
@@ -851,6 +852,25 @@ async def _resolve_current_user(
         return public_user
     else:
         return AnonymousUser()
+
+
+def remember_user_email(db_session: AsyncSession, user) -> None:
+    """Note the signed-in user's email and whether it is verified, read from
+    the row just loaded, for checks later in the request (claiming access
+    granted to that email) that would otherwise load the row again."""
+    from src.core.session_memo import session_memo
+
+    memo = session_memo(db_session)
+    if memo is not None and getattr(user, "id", None):
+        memo[("user_email", user.id)] = (getattr(user, "email", None), bool(getattr(user, "email_verified", False)))
+
+
+def remembered_user_email(db_session: AsyncSession, user_id: int) -> Optional[tuple[str, bool]]:
+    """``(email, email_verified)`` noted by ``remember_user_email``, or None."""
+    from src.core.session_memo import session_memo
+
+    memo = session_memo(db_session)
+    return memo.get(("user_email", user_id)) if memo is not None else None
 
 
 def _impersonation_ended_exception() -> HTTPException:

@@ -235,7 +235,7 @@ class TestGetCourseMeta:
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
         )
-        fake_rows = [(course, None, None, org)]
+        fake_rows = [(course, None, None, org, False)]
         execute_result = MagicMock()
         execute_result.all.return_value = fake_rows
         fake_db = MagicMock()
