@@ -60,37 +60,29 @@ if is_testing:
         echo=False,
     )
 else:
-    sql_url = str(learnhouse_config.database_config.sql_connection_string)  # type: ignore
+    from src.core.db_driver import (
+        PSYCOPG,
+        async_connect_args,
+        async_database_url,
+        db_driver,
+        ping,
+        warn_if_server_timezone_not_utc,
+    )
 
-    # Ensure we use the asyncpg driver for PostgreSQL
-    if sql_url.startswith("postgresql+psycopg2://"):
-        sql_url = sql_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
-    elif sql_url.startswith("postgresql://"):
-        sql_url = sql_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    elif sql_url.startswith("postgres://"):
-        sql_url = sql_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    # LEARNHOUSE_DB_DRIVER picks asyncpg (default) or psycopg 3, whatever
+    # driver the connection string names. See src/core/db_driver.py for why
+    # psycopg is faster behind a transaction-mode pooler.
+    _driver = db_driver()
+    sql_url = async_database_url(
+        str(learnhouse_config.database_config.sql_connection_string),  # type: ignore
+        _driver,
+    )
 
-    # PgBouncer/Supavisor in transaction pool mode recycles backend connections
-    # between client requests, which breaks asyncpg's named prepared statements:
-    # two asyncpg connections independently generate __asyncpg_stmt_N__ and when
-    # PgBouncer routes them to the same backend, the second prepare fails with
-    # DuplicatePreparedStatementError.
-    #
-    # Root cause: asyncpg._prepare() does `named=True if name is None else name`.
-    # When SQLAlchemy calls prepare(query, name=None) (its default), asyncpg
-    # generates named statements (__asyncpg_stmt_N__) even when statement_cache_size=0.
-    # Passing name="" makes named="" (falsy) → asyncpg uses stmt_name='' (unnamed slot).
-    #
-    # All three connect_args are popped by SQLAlchemy's asyncpg dialect before
-    # forwarding to asyncpg.connect(), so they do NOT reach asyncpg as raw kwargs:
-    #   statement_cache_size=0           → disable asyncpg's own per-connection LRU
-    #   prepared_statement_name_func=""  → force unnamed prepared statements
-    #   prepared_statement_cache_size=0  → disable SQLAlchemy's adapter-level LRU
-    _connect_args = {
-        "statement_cache_size": 0,
-        "prepared_statement_name_func": lambda: "",
-        "prepared_statement_cache_size": 0,
-    }
+    # Both drivers are configured so no named prepared statement outlives its
+    # query: PgBouncer/Supavisor in transaction mode hands consecutive
+    # transactions to different backends, where a named statement is either
+    # missing or already taken by another client.
+    _connect_args = async_connect_args(_driver)
 
     # Detect connection poolers (Supavisor, PgBouncer) to use a smaller
     # client-side pool so we don't overwhelm the pooler's upstream limit.
@@ -112,7 +104,7 @@ else:
             pool_timeout=30,
             connect_args=_connect_args,
         )
-        logging.info("DB engine: detected connection pooler, using small client-side pool.")
+        logging.info("DB engine (%s): detected connection pooler, using small client-side pool.", _driver)
     else:
         engine_kwargs = dict(
             pool_pre_ping=False,
@@ -125,6 +117,12 @@ else:
 
     engine = create_async_engine(sql_url, echo=False, **engine_kwargs)  # type: ignore
 
+    if _driver == PSYCOPG:
+
+        @event.listens_for(engine.sync_engine, "connect")
+        def check_server_timezone(dbapi_connection, connection_record):
+            warn_if_server_timezone_not_utc(dbapi_connection)
+
     _PING_AFTER_IDLE_SECONDS = float(os.getenv("LEARNHOUSE_DB_PING_AFTER_IDLE_SECONDS", "10"))
 
     @event.listens_for(engine.sync_engine, "checkin")
@@ -133,9 +131,10 @@ else:
 
     # SQLAlchemy's pool_pre_ping pings on every checkout, and on asyncpg a ping
     # is BEGIN + a prepared ";" + ROLLBACK: four round trips to the database
-    # before each request does any work. A connection that was in use a moment
-    # ago is alive, so only ping the ones that sat idle long enough for the
-    # pooler or a database restart to have dropped them. A failed ping raises
+    # before each request does any work (on psycopg one autocommit SELECT 1).
+    # A connection that was in use a moment ago is alive, so only ping the ones
+    # that sat idle long enough for the pooler or a database restart to have
+    # dropped them. A failed ping raises
     # InvalidatePoolError: the pool hands out a fresh connection and recycles
     # the others, exactly like pool_pre_ping.
     @event.listens_for(engine.sync_engine, "checkout")
@@ -144,7 +143,7 @@ else:
         if checked_in_at is None or time.monotonic() - checked_in_at < _PING_AFTER_IDLE_SECONDS:
             return
         try:
-            engine.dialect.do_ping(dbapi_connection)
+            ping(engine.dialect, dbapi_connection, _driver)
         except Exception as error:
             raise sa_exc.InvalidatePoolError() from error
 

@@ -183,6 +183,7 @@ class TestHelpers:
     @pytest.mark.parametrize("url,expected", [
         ("postgresql+asyncpg://u:p@h/db", "postgresql://u:p@h/db"),
         ("postgresql+psycopg2://u:p@h/db", "postgresql://u:p@h/db"),
+        ("postgresql+psycopg://u:p@h/db", "postgresql://u:p@h/db"),
         ("postgres://u:p@h/db", "postgresql://u:p@h/db"),
         ("postgresql://u:p@h/db", "postgresql://u:p@h/db"),
         ("sqlite:///x.db", "sqlite:///x.db"),

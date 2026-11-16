@@ -20,7 +20,7 @@ LearnHouse relies on several supporting services that run alongside the main app
 - Library folders, trails, and progress tracking
 - AI vector embeddings (via the pgvector extension)
 
-The backend connects to PostgreSQL through SQLModel (asyncpg for the application, psycopg2 for Alembic migrations). PgBouncer and Supavisor poolers are detected from the connection string, or forced with `LEARNHOUSE_PGBOUNCER=true`.
+The backend connects to PostgreSQL through SQLModel (asyncpg for the application by default, or psycopg 3 with `LEARNHOUSE_DB_DRIVER=psycopg`; psycopg2 for Alembic migrations). PgBouncer and Supavisor poolers are detected from the connection string, or forced with `LEARNHOUSE_PGBOUNCER=true`.
 
 **Default port:** `5432`
 
