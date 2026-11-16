@@ -46,7 +46,7 @@ function VideoModal({
   const [videoDetails, setVideoDetails] = useState<VideoDetails>({
     startTime: 0,
     endTime: null,
-    autoplay: false,
+    autoplay: true,
     muted: false,
   })
   const [captions, setCaptions] = useState<CaptionsValue>(EMPTY_CAPTIONS)

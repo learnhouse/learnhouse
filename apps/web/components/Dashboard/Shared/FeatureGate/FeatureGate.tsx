@@ -346,10 +346,28 @@ function GateShell({
   feature: FeatureKey
   wide?: boolean
 }) {
+  // Fill the rest of the viewport below wherever the gate starts (under a
+  // page header or straight below the top), so the card sits centred in what
+  // is visible instead of hugging the top.
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [minHeight, setMinHeight] = React.useState<number | null>(null)
+  React.useLayoutEffect(() => {
+    const measure = () => {
+      const el = ref.current
+      if (!el) return
+      const top = el.getBoundingClientRect().top + window.scrollY
+      setMinHeight(Math.max(320, Math.round(window.innerHeight - top)))
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
   return (
     <div
+      ref={ref}
       data-feature-gate={variant}
       data-feature={feature}
+      style={minHeight ? { minHeight } : undefined}
       className="flex items-center justify-center min-h-[60vh] w-full p-4 sm:p-6 bg-[#f8f8f8]"
     >
       <div className={`w-full ${wide ? 'max-w-xl' : 'max-w-lg'}`}>{children}</div>

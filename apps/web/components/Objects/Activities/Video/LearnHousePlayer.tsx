@@ -126,19 +126,15 @@ const HLS_ENGINE = {
 
 // Fill the aspect-video parent with 20px corners (the skin's default is 28px).
 // `contain` letterboxes non-16:9 uploads instead of cropping them (the skin's
-// default is `cover`). Dark chrome: the frosted control bar and menus sit on a
-// near-black tint under the blur, so they read the same over bright footage,
-// on the dark theater band and in focus mode.
+// default is `cover`). The frosted control bar stays see-through; menus get a
+// light dark tint under the blur so they stay legible over bright footage.
 const SKIN_STYLE = {
   width: '100%',
   height: '100%',
   '--media-border-radius': '20px',
-  '--media-border-color': 'oklch(100% 0 0 / 0.08)',
+  '--media-border-color': 'oklch(100% 0 0 / 0.1)',
   '--media-object-fit': 'contain',
-  '--media-background': 'oklch(9% 0 0)',
-  '--media-controls': 'oklch(12% 0 0 / 0.62)',
-  '--media-popover': 'oklch(14% 0 0 / 0.82)',
-  '--media-muted': 'oklch(100% 0 0 / 0.18)',
+  '--media-popover': 'oklch(0% 0 0 / 0.35)',
 } as React.CSSProperties
 
 /**
@@ -484,6 +480,27 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
     }
   }, [ambient, mediaEl])
 
+  // Autoplay: browsers refuse to start a video with sound before the viewer
+  // has interacted with the page (a fresh load, say). Then it starts muted
+  // instead of not at all, and the volume button turns the sound on.
+  const autoplay = !!details?.autoplay
+  useEffect(() => {
+    if (!autoplay || !mediaEl) return
+    let done = false
+    const kick = () => {
+      if (done || !mediaEl.paused) return
+      done = true
+      mediaEl.play().catch((err: unknown) => {
+        if ((err as { name?: string })?.name !== 'NotAllowedError') return
+        mediaEl.muted = true
+        mediaEl.play().catch(() => {})
+      })
+    }
+    if (mediaEl.readyState >= 2) kick()
+    mediaEl.addEventListener('canplay', kick)
+    return () => mediaEl.removeEventListener('canplay', kick)
+  }, [autoplay, mediaEl])
+
   // Casual-download deterrent (cosmetic; segments are AES-128 encrypted
   // server-side). Picture-in-picture stays enabled.
   useEffect(() => {
@@ -524,7 +541,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
 
   // Poster: the caller's frame, else a storyboard frame, else a blurred image.
   const posterFrame = posterStyle ?? (thumbnails?.url ? spriteFrameStyle(thumbnails, 0.1) : null)
-  const showPosterLayer = preload === 'none' && !poster
+  const showPosterLayer = !poster
 
   // Tracks go onto the <video> imperatively rather than as React children:
   // the player manages the media element's track list itself, and React
