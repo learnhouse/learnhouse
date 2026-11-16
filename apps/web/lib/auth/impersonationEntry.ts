@@ -12,7 +12,7 @@ export type EntrySession = {
   data?: {
     user?: { is_superadmin?: boolean } | null
     roles?: unknown
-    impersonation?: { org?: { slug?: string | null } | null } | null
+    impersonation?: { scope?: string | null; org?: { slug?: string | null } | null } | null
   } | null
 }
 
@@ -25,6 +25,8 @@ export function autoEntryMode(session: EntrySession | null | undefined, where: E
   const data = session.data
   const impersonatedSlug = data?.impersonation?.org?.slug ?? null
   if (data?.impersonation) {
+    // An org admin's "view as" never follows them into another org.
+    if (data.impersonation.scope === 'org') return null
     return impersonatedSlug && impersonatedSlug !== where.slug ? 'switch' : null
   }
   const roles: any[] = Array.isArray(data?.roles) ? (data!.roles as any[]) : []

@@ -9309,7 +9309,9 @@
           "export_done": "Export ready",
           "export_error": "The export failed. Try again.",
           "copy_profile": "Copy profile link",
-          "profile_copied": "Profile link copied"
+          "profile_copied": "Profile link copied",
+          "view_as": "View as {{name}}",
+          "view_as_error": "Couldn't open the view. Try again."
         },
         "atlas": {
           "prompt": "Summarize {{name}}'s progress in this organization and suggest next steps to help them."
@@ -29142,7 +29144,8 @@
     "no_access_title": "You don't have access to {{org}}",
     "no_access_desc": "Ask a LearnHouse admin for impersonation access.",
     "back_to_console": "Back to console",
-    "retry": "Try again"
+    "retry": "Try again",
+    "refused_private": "A learner's private messages stay private, even when you view as them."
   },
   "mobile_app": {
     "title": "Get the mobile app",

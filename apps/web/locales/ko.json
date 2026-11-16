@@ -9289,7 +9289,9 @@
           "export_done": "내보내기 준비 완료",
           "export_error": "내보내기에 실패했습니다. 다시 시도해 주세요.",
           "copy_profile": "프로필 링크 복사",
-          "profile_copied": "프로필 링크를 복사했습니다"
+          "profile_copied": "프로필 링크를 복사했습니다",
+          "view_as": "{{name}}(으)로 보기",
+          "view_as_error": "보기를 열 수 없습니다. 다시 시도하세요."
         },
         "atlas": {
           "prompt": "이 조직에서 {{name}}님의 진행 상황을 요약하고, 도움이 될 다음 단계를 제안해 주세요."
@@ -29118,7 +29120,8 @@
     "no_access_title": "{{org}}에 접근할 권한이 없어요",
     "no_access_desc": "LearnHouse 관리자에게 대리 접속 권한을 요청하세요.",
     "back_to_console": "콘솔로 돌아가기",
-    "retry": "다시 시도"
+    "retry": "다시 시도",
+    "refused_private": "학습자의 개인 메시지는 학습자로 볼 때도 비공개로 유지됩니다."
   },
   "mobile_app": {
     "title": "모바일 앱 받기",

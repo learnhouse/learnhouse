@@ -9319,7 +9319,9 @@
           "export_done": "Export bereit",
           "export_error": "Der Export ist fehlgeschlagen. Versuche es erneut.",
           "copy_profile": "Profillink kopieren",
-          "profile_copied": "Profillink kopiert"
+          "profile_copied": "Profillink kopiert",
+          "view_as": "Ansicht als {{name}}",
+          "view_as_error": "Die Ansicht ließ sich nicht öffnen. Bitte erneut versuchen."
         },
         "atlas": {
           "prompt": "Fasse den Fortschritt von {{name}} in dieser Organisation zusammen und schlage nächste Schritte vor, um zu helfen."
@@ -29162,7 +29164,8 @@
     "no_access_title": "Sie haben keinen Zugriff auf {{org}}",
     "no_access_desc": "Bitten Sie einen LearnHouse-Admin um Zugriff auf die Identitätsübernahme.",
     "back_to_console": "Zurück zur Konsole",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "refused_private": "Private Nachrichten eines Lernenden bleiben privat, auch in seiner Ansicht."
   },
   "mobile_app": {
     "title": "Mobile App holen",

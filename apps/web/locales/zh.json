@@ -9291,7 +9291,9 @@
           "export_done": "导出已就绪",
           "export_error": "导出失败,请重试。",
           "copy_profile": "复制个人资料链接",
-          "profile_copied": "已复制个人资料链接"
+          "profile_copied": "已复制个人资料链接",
+          "view_as": "以 {{name}} 的身份查看",
+          "view_as_error": "无法打开该视图，请重试。"
         },
         "atlas": {
           "prompt": "总结 {{name}} 在此组织中的学习进度,并给出帮助其进步的后续建议。"
@@ -29120,7 +29122,8 @@
     "no_access_title": "你无权访问 {{org}}",
     "no_access_desc": "请向 LearnHouse 管理员申请模拟权限。",
     "back_to_console": "返回控制台",
-    "retry": "重试"
+    "retry": "重试",
+    "refused_private": "即使以学员身份查看，学员的私信也保持私密。"
   },
   "mobile_app": {
     "title": "获取移动应用",

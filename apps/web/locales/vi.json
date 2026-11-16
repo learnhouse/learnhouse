@@ -9289,7 +9289,9 @@
           "export_done": "Bản xuất đã sẵn sàng",
           "export_error": "Xuất thất bại. Hãy thử lại.",
           "copy_profile": "Sao chép liên kết hồ sơ",
-          "profile_copied": "Đã sao chép liên kết hồ sơ"
+          "profile_copied": "Đã sao chép liên kết hồ sơ",
+          "view_as": "Xem với tư cách {{name}}",
+          "view_as_error": "Không mở được chế độ xem. Hãy thử lại."
         },
         "atlas": {
           "prompt": "Tóm tắt tiến độ của {{name}} trong tổ chức này và đề xuất các bước tiếp theo để hỗ trợ họ."
@@ -29118,7 +29120,8 @@
     "no_access_title": "Bạn không có quyền truy cập {{org}}",
     "no_access_desc": "Hãy xin quyền đóng vai từ quản trị viên LearnHouse.",
     "back_to_console": "Quay lại bảng điều khiển",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "refused_private": "Tin nhắn riêng của học viên vẫn riêng tư, kể cả khi bạn xem với tư cách họ."
   },
   "mobile_app": {
     "title": "Tải ứng dụng di động",
