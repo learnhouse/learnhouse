@@ -8,6 +8,9 @@ import type { Root } from 'react-dom/client'
 import { LearnHouseActivity } from './LearnHouseActivity'
 import { LearnHouseProvider } from './provider'
 import type { LearnHouseActivityProps, LearnHouseEvent, LearnHouseProviderProps } from './types'
+import { defineLearnHouseAgentChat } from './agent/element'
+
+export { AGENT_CHAT_TAG_NAME, LearnHouseAgentChatElement, defineLearnHouseAgentChat } from './agent/element'
 
 export const TAG_NAME = 'learnhouse-activity'
 
@@ -218,3 +221,5 @@ export function defineLearnHouseActivity(tagName: string = TAG_NAME) {
 }
 
 defineLearnHouseActivity()
+// <learnhouse-agent-chat>: the Agent API chat (<AgentChat>) as an element.
+defineLearnHouseAgentChat()

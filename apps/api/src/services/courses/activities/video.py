@@ -431,6 +431,8 @@ async def configure_captions(
         from src.services.security.rate_limiting import enforce_ai_rate_limit
 
         await check_feature_enabled("ai", activity.org_id, db_session)
+        from src.security.features_utils.ai_features import require_ai_feature
+        await require_ai_feature("video_ai", activity.org_id, db_session, include_master=False)
         # Each enabled save can enqueue a paid transcription job
         enforce_ai_rate_limit(resolve_acting_user_id(current_user), activity.org_id)
         summary = await get_ai_credits_summary(activity.org_id, db_session)
@@ -542,6 +544,8 @@ async def request_chapters_generation(
     from src.services.security.rate_limiting import enforce_ai_rate_limit
 
     await check_feature_enabled("ai", activity.org_id, db_session)
+    from src.security.features_utils.ai_features import require_ai_feature
+    await require_ai_feature("video_ai", activity.org_id, db_session, include_master=False)
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), activity.org_id)
     summary = await get_ai_credits_summary(activity.org_id, db_session)
     remaining = summary.get("remaining_credits")

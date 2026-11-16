@@ -10,6 +10,8 @@ import { usePlan } from '@components/Hooks/usePlan'
 import { BTN_GHOST, BTN_PRIMARY, DashPageHeader } from '@components/Dashboard/Shared/DashKit/DashKit'
 import OnboardingHomeCard from '@components/Dashboard/Onboarding/OnboardingHomeCard'
 import WelcomeTourCard from '@components/Dashboard/Onboarding/WelcomeTourCard'
+import FirstCourseHero from '@components/Dashboard/Onboarding/FirstCourseHero'
+import { useHomeCourses } from './homeData'
 import QuickStats from '@ee/components/Analytics/Home/QuickStats'
 import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 import RecentCourses from './RecentCourses'
@@ -25,6 +27,10 @@ export default function DashboardHome() {
   const session = useLHSession() as any
   const org = useOrg() as any
   const plan = usePlan()
+  // Until the school has a course, that is the one thing the page asks for:
+  // analytics, members and settings step back from the header.
+  const { data: courses } = useHomeCourses()
+  const firstRun = Array.isArray(courses) && courses.length === 0
 
   // The first name's first word; never a username with digits (accounts made
   // on the platform page get a generated one), else just "Welcome back".
@@ -65,20 +71,24 @@ export default function DashboardHome() {
           }
           actions={
             <>
-              {isOrgAnalyticsAvailable() && (
+              {!firstRun && isOrgAnalyticsAvailable() && (
                 <Link href="/dash/analytics" className={BTN_GHOST}>
                   <ChartBar size={16} />
                   {t('dashboard.home.analytics')}
                 </Link>
               )}
-              <Link href="/dash/users/settings/users" className={BTN_GHOST}>
-                <Users size={16} />
-                {t('dashboard.home.members')}
-              </Link>
-              <Link href="/dash/org/settings/overview" className={BTN_GHOST}>
-                <GearSix size={16} />
-                {t('dashboard.home.settings')}
-              </Link>
+              {!firstRun && (
+                <>
+                  <Link href="/dash/users/settings/users" className={BTN_GHOST}>
+                    <Users size={16} />
+                    {t('dashboard.home.members')}
+                  </Link>
+                  <Link href="/dash/org/settings/overview" className={BTN_GHOST}>
+                    <GearSix size={16} />
+                    {t('dashboard.home.settings')}
+                  </Link>
+                </>
+              )}
               <Link href="/dash/courses?new=true" className={BTN_PRIMARY}>
                 <Plus size={16} weight="bold" />
                 {t('dashboard.home.create_course')}
@@ -92,7 +102,9 @@ export default function DashboardHome() {
 
         <AdminAuthorization authorizationMode="component">
           <div className="flex flex-col gap-5">
-            {/* First run: the welcome tour, then the launch plan until setup is done */}
+            {/* No course yet: the first course leads. Then the welcome tour and
+                the launch plan until setup is done. */}
+            <FirstCourseHero />
             <WelcomeTourCard />
             <OnboardingHomeCard />
 

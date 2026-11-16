@@ -77,6 +77,9 @@ const RESOURCES: { key: keyof APITokenRights; labelKey: string; actions: readonl
   { key: 'playgrounds', labelKey: 'common.playgrounds', actions: ACTIONS },
   { key: 'newsletter', labelKey: 'dashboard.organization.api_access.resources.newsletter', actions: ACTIONS },
   { key: 'crm', labelKey: 'dashboard.organization.api_access.resources.crm', actions: ['action_read', 'action_update'] },
+  // Agent API: read = list/read conversations, create = start and message,
+  // delete = delete conversations, update = approve risky actions itself.
+  { key: 'agent', labelKey: 'dashboard.organization.api_access.resources.agent', actions: ACTIONS },
   { key: 'users', labelKey: 'dashboard.organization.api_access.resources.users_admin', actions: ACTIONS },
   { key: 'roles', labelKey: 'dashboard.organization.api_access.resources.roles_admin', actions: ACTIONS },
   { key: 'search', labelKey: 'common.search', actions: ['action_read'] },
@@ -86,10 +89,10 @@ const has = (rights: APITokenRights | null | undefined, res: keyof APITokenRight
   !!(rights as any)?.[res]?.[action]
 
 // Whether `rights` grants exactly what `template` grants. Tokens created
-// before the users/roles/playgrounds/newsletter/crm buckets existed lack them; those are skipped.
+// before the users/roles/playgrounds/newsletter/crm/agent buckets existed lack them; those are skipped.
 function matchesTemplate(rights: APITokenRights, template: APITokenRights) {
   return RESOURCES.every(({ key, actions }) => {
-    if ((rights as any)[key] === undefined && (key === 'users' || key === 'roles' || key === 'playgrounds' || key === 'newsletter' || key === 'crm')) return true
+    if ((rights as any)[key] === undefined && (key === 'users' || key === 'roles' || key === 'playgrounds' || key === 'newsletter' || key === 'crm' || key === 'agent')) return true
     return actions.every((a) => has(rights, key, a) === has(template, key, a))
   })
 }

@@ -13,7 +13,7 @@ import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
-import React, { useEffect, useRef, useMemo, lazy, Suspense } from 'react'
+import React, { useEffect, useRef, useMemo, Suspense } from 'react'
 import { flushSync, preconnect } from 'react-dom'
 import { getAssignmentFromActivityUUID } from '@services/courses/assignments'
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
@@ -56,34 +56,82 @@ import { useTranslation } from 'react-i18next'
 import { useDirection } from '@hooks/useDirection'
 import { formatDate } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { willCompleteCourse } from '@/lib/courses/completion'
 import NotesButton from '@components/Objects/Activities/Notes/NotesButton'
 import NotesHost from '@components/Objects/Activities/Notes/NotesHost'
 
-// Lazy load heavy components
-const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
-const loadVideoActivity = () => import('@components/Objects/Activities/Video/Video')
-const VideoActivity = lazy(loadVideoActivity)
-const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/DocumentPdf/DocumentPdf'))
-const AssignmentStudentActivity = lazy(() => import('@components/Objects/Activities/Assignment/AssignmentStudentActivity'))
+// Heavy parts load on demand, but each can be started early (lazyPreload):
+// the lesson preloads the one it is about to show while its data loads, so
+// nothing suspends after the page has painted.
 import { coursePath } from '@/lib/seo/paths'
-const AIActivityAsk = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk'))
-const AISidePanelContentWrapper = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk').then(mod => ({ default: mod.AISidePanelContentWrapper })))
-const AISidePanelInline = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk').then(mod => ({ default: mod.AISidePanelInline })))
-const AIChatBotProvider = lazy(() => import('@components/Contexts/AI/AIChatBotContext'))
-const ScormActivity = lazy(() => import('@ee/components/Activities/ScormActivity'))
-const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
-const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
-const ResourceActivity = lazy(() => import('@components/Objects/Activities/Resource/ResourceActivity'))
-const LiveSessionActivity = lazy(() => import('@ee/components/LiveSessions/LiveSessionActivity'))
-const PlayActivity = lazy(() => import('@ee/components/Plays/course/PlayActivity'))
+import { lazyPreload } from '@/lib/lazyPreload'
+// A tiny context provider around the whole page: loaded with it, never lazily
+// (as a lazy boundary it swapped the loaded page for a spinner).
+import AIChatBotProvider from '@components/Contexts/AI/AIChatBotContext'
+const Canva = lazyPreload(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
+const loadVideoActivity = () => import('@components/Objects/Activities/Video/Video')
+const VideoActivity = lazyPreload(loadVideoActivity)
+const DocumentPdfActivity = lazyPreload(() => import('@components/Objects/Activities/DocumentPdf/DocumentPdf'))
+const AssignmentStudentActivity = lazyPreload(() => import('@components/Objects/Activities/Assignment/AssignmentStudentActivity'))
+const loadAIActivityAsk = () => import('@components/Objects/Activities/AI/AIActivityAsk')
+const AIActivityAsk = lazyPreload(loadAIActivityAsk)
+const AISidePanelContentWrapper = lazyPreload(() => loadAIActivityAsk().then(mod => ({ default: mod.AISidePanelContentWrapper })))
+const AISidePanelInline = lazyPreload(() => loadAIActivityAsk().then(mod => ({ default: mod.AISidePanelInline })))
+const ScormActivity = lazyPreload(() => import('@ee/components/Activities/ScormActivity'))
+const MarkdownActivity = lazyPreload(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
+const EmbedActivity = lazyPreload(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
+const ResourceActivity = lazyPreload(() => import('@components/Objects/Activities/Resource/ResourceActivity'))
+const LiveSessionActivity = lazyPreload(() => import('@ee/components/LiveSessions/LiveSessionActivity'))
+const PlayActivity = lazyPreload(() => import('@ee/components/Plays/course/PlayActivity'))
 
-// Loading fallback component
+// Every lesson renders the AI panel wrapper around its whole page: fetch its
+// code with this page's code instead of after the course has loaded.
+if (typeof window !== 'undefined') {
+  void AISidePanelContentWrapper.preload().catch(() => {})
+  void AIActivityAsk.preload().catch(() => {})
+  void AISidePanelInline.preload().catch(() => {})
+}
+
+/** The chunk an activity of this type renders, started ahead of its data. */
+function preloadActivityChunk(type?: string, subType?: string) {
+  const preload = (() => {
+    switch (type) {
+      case 'TYPE_DYNAMIC':
+        if (subType === 'SUBTYPE_DYNAMIC_MARKDOWN') return MarkdownActivity.preload
+        if (subType === 'SUBTYPE_DYNAMIC_EMBED') return EmbedActivity.preload
+        if (subType === 'SUBTYPE_DYNAMIC_RESOURCE') return ResourceActivity.preload
+        return Canva.preload
+      case 'TYPE_VIDEO':
+        return VideoActivity.preload
+      case 'TYPE_DOCUMENT':
+        return DocumentPdfActivity.preload
+      case 'TYPE_ASSIGNMENT':
+        return AssignmentStudentActivity.preload
+      case 'TYPE_SCORM':
+        return ScormActivity.preload
+      case 'TYPE_LIVE_SESSION':
+        return LiveSessionActivity.preload
+      case 'TYPE_PLAY':
+        return PlayActivity.preload
+      default:
+        return null
+    }
+  })()
+  if (preload) void preload().catch(() => {})
+}
+
+// In-card placeholder while an activity's code arrives: the same lines as the
+// content skeleton, so the card never shows a spinner on white in between.
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-64">
-    <div className="relative w-6 h-6">
-      <div className="absolute top-0 start-0 w-full h-full border-2 border-gray-100 rounded-full"></div>
-      <div className="absolute top-0 start-0 w-full h-full border-2 border-gray-400 rounded-full animate-spin border-t-transparent"></div>
-    </div>
+  <div className="animate-pulse space-y-4" aria-busy="true" style={{ minHeight: '360px' }}>
+    <div className="h-7 bg-gray-100 rounded w-2/5 mb-2" />
+    <div className="h-4 bg-gray-100 rounded w-full" />
+    <div className="h-4 bg-gray-100 rounded w-[92%]" />
+    <div className="h-4 bg-gray-100 rounded w-full" />
+    <div className="h-4 bg-gray-100 rounded w-[86%]" />
+    <div className="h-5 bg-gray-100 rounded w-1/3 mt-6" />
+    <div className="h-4 bg-gray-100 rounded w-full" />
+    <div className="h-4 bg-gray-100 rounded w-[96%]" />
   </div>
 );
 
@@ -183,6 +231,58 @@ function ActivityContentSkeleton({ activityType }: { activityType?: string }) {
       <div className="h-4 bg-gray-100 rounded w-[88%]" />
       <div className="h-4 bg-gray-100 rounded w-[72%]" />
     </div>
+  )
+}
+
+/**
+ * The lesson page before its course has loaded. Also the fallback of the
+ * page-wide Suspense boundary, so a late chunk keeps this skeleton on screen
+ * instead of swapping it for a blank page or a spinner.
+ */
+function ActivityPageSkeleton() {
+  return (
+    <GeneralWrapperStyled>
+      <div className="animate-pulse pt-6 space-y-5">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 pb-1">
+          <div className="h-3 bg-gray-200 rounded w-14" />
+          <div className="h-3 bg-gray-200 rounded w-2" />
+          <div className="h-3 bg-gray-200 rounded w-24" />
+          <div className="h-3 bg-gray-200 rounded w-2" />
+          <div className="h-3 bg-gray-200 rounded w-28" />
+        </div>
+        {/* Course header: thumbnail + name */}
+        <div className="flex items-center gap-4">
+          <div className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] bg-gray-200 rounded-md shrink-0" />
+          <div className="space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-10" />
+            <div className="h-7 bg-gray-200 rounded w-52" />
+          </div>
+        </div>
+        {/* Progress bar */}
+        <div className="h-2 bg-gray-200 rounded-full w-full" />
+        {/* Activity title row */}
+        <div className="space-y-2">
+          <div className="h-3 bg-gray-200 rounded w-28" />
+          <div className="h-8 bg-gray-200 rounded w-2/3" />
+          <div className="flex items-center gap-2 pt-0.5">
+            <div className="w-6 h-6 bg-gray-200 rounded-full shrink-0" />
+            <div className="h-3 bg-gray-200 rounded w-24" />
+          </div>
+        </div>
+        {/* Content box placeholder */}
+        <div className="bg-white nice-shadow rounded-lg p-3 sm:p-7 animate-pulse space-y-4" style={{ minHeight: '420px' }}>
+          <div className="h-7 bg-gray-100 rounded w-2/5 mb-2" />
+          <div className="h-4 bg-gray-100 rounded w-full" />
+          <div className="h-4 bg-gray-100 rounded w-[92%]" />
+          <div className="h-4 bg-gray-100 rounded w-full" />
+          <div className="h-4 bg-gray-100 rounded w-[86%]" />
+          <div className="h-5 bg-gray-100 rounded w-1/3 mt-6" />
+          <div className="h-4 bg-gray-100 rounded w-full" />
+          <div className="h-4 bg-gray-100 rounded w-[96%]" />
+        </div>
+      </div>
+    </GeneralWrapperStyled>
   )
 }
 
@@ -642,11 +742,18 @@ function ActivityClient(props: ActivityClientProps) {
     onPrev: () => { if (prevActivity) navigateToActivity(prevActivity) },
   })
 
-  // A video lesson: fetch the player's code while the activity itself loads,
-  // and open the connection its media will stream from.
+  // The course outline names this lesson's type before the activity itself
+  // arrives: fetch the code that renders it meanwhile, so the content shows
+  // as soon as its data does (a lesson used to wait for the editor's chunk
+  // only after that, behind a spinner).
+  const upcomingSubType: string | undefined = allActivities[currentIndex]?.activity_sub_type
+  useEffect(() => {
+    preloadActivityChunk(upcomingType, upcomingSubType)
+  }, [upcomingType, upcomingSubType])
+
+  // A video lesson: also open the connection its media will stream from.
   useEffect(() => {
     if (upcomingType !== 'TYPE_VIDEO') return
-    void loadVideoActivity()
     try {
       const origin = new URL(getActivityHlsThumbnailsUrl('o', 'c', 'a', 's'), window.location.href).origin
       if (origin !== window.location.origin) preconnect(origin, { crossOrigin: 'use-credentials' })
@@ -714,50 +821,7 @@ function ActivityClient(props: ActivityClientProps) {
   }
 
   if (courseLoading || !course) {
-    return (
-      <GeneralWrapperStyled>
-        <div className="animate-pulse pt-6 space-y-5">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 pb-1">
-            <div className="h-3 bg-gray-200 rounded w-14" />
-            <div className="h-3 bg-gray-200 rounded w-2" />
-            <div className="h-3 bg-gray-200 rounded w-24" />
-            <div className="h-3 bg-gray-200 rounded w-2" />
-            <div className="h-3 bg-gray-200 rounded w-28" />
-          </div>
-          {/* Course header: thumbnail + name */}
-          <div className="flex items-center gap-4">
-            <div className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] bg-gray-200 rounded-md shrink-0" />
-            <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-10" />
-              <div className="h-7 bg-gray-200 rounded w-52" />
-            </div>
-          </div>
-          {/* Progress bar */}
-          <div className="h-2 bg-gray-200 rounded-full w-full" />
-          {/* Activity title row */}
-          <div className="space-y-2">
-            <div className="h-3 bg-gray-200 rounded w-28" />
-            <div className="h-8 bg-gray-200 rounded w-2/3" />
-            <div className="flex items-center gap-2 pt-0.5">
-              <div className="w-6 h-6 bg-gray-200 rounded-full shrink-0" />
-              <div className="h-3 bg-gray-200 rounded w-24" />
-            </div>
-          </div>
-          {/* Content box placeholder */}
-          <div className="bg-white nice-shadow rounded-lg p-3 sm:p-7 animate-pulse space-y-4" style={{ minHeight: '420px' }}>
-            <div className="h-7 bg-gray-100 rounded w-2/5 mb-2" />
-            <div className="h-4 bg-gray-100 rounded w-full" />
-            <div className="h-4 bg-gray-100 rounded w-[92%]" />
-            <div className="h-4 bg-gray-100 rounded w-full" />
-            <div className="h-4 bg-gray-100 rounded w-[86%]" />
-            <div className="h-5 bg-gray-100 rounded w-1/3 mt-6" />
-            <div className="h-4 bg-gray-100 rounded w-full" />
-            <div className="h-4 bg-gray-100 rounded w-[96%]" />
-          </div>
-        </div>
-      </GeneralWrapperStyled>
-    )
+    return <ActivityPageSkeleton />
   }
 
   const activityNameFromCourse = allActivities[currentIndex]?.name ?? ''
@@ -819,9 +883,10 @@ function ActivityClient(props: ActivityClientProps) {
             live in disjoint AssignmentSubmissionProvider subtrees. Lets Submit
             flush unsaved task answers before grading (avoids silent 0%). */}
         <AssignmentDirtyTasksProvider>
-        <Suspense fallback={<LoadingFallback />}>
-          <AIChatBotProvider>
-            <Suspense fallback={null}>
+        <AIChatBotProvider>
+          {/* The AI panel wrapper's code is preloaded with the page; if it is
+              still on its way, the lesson skeleton stays (never a blank page). */}
+          <Suspense fallback={<ActivityPageSkeleton />}>
               <AISidePanelContentWrapper>
             {/* One tree for both layouts. In focus mode this wrapper becomes a
                 fixed full-screen layer with its own scroll; everything inside
@@ -1082,7 +1147,9 @@ function ActivityClient(props: ActivityClientProps) {
                                 {activity.activity_type != 'TYPE_ASSIGNMENT' && (
                                   <>
                                     {/* The chapter outline lives in the progress strip above. */}
-                                    <AIActivityAsk activity={activity} />
+                                    <Suspense fallback={null}>
+                                      <AIActivityAsk activity={activity} />
+                                    </Suspense>
                                     {/* Private notes on this lesson (n). */}
                                     <NotesButton activityUuid={activity.activity_uuid} />
                                     {contributorStatus === 'ACTIVE' && activity.activity_type == 'TYPE_DYNAMIC' && (
@@ -1248,9 +1315,8 @@ function ActivityClient(props: ActivityClientProps) {
                 )}
             </div>
               </AISidePanelContentWrapper>
-            </Suspense>
-          </AIChatBotProvider>
-        </Suspense>
+          </Suspense>
+        </AIChatBotProvider>
         </AssignmentDirtyTasksProvider>
       </CourseProvider>
     </>
@@ -1281,29 +1347,8 @@ export function MarkStatus(props: {
   const _isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const areAllActivitiesCompleted = () => {
-    const run = props.trailData?.runs?.find(
-      (run: any) => run.course_uuid === props.course.course_uuid
-    );
-    if (!run) return false;
-
-    let totalActivities = 0;
-    let completedActivities = 0;
-
-    props.course.chapters.forEach((chapter: any) => {
-      chapter.activities.forEach((activity: any) => {
-        totalActivities++;
-        const isCompleted = run.steps.find(
-          (step: any) => step.activity_uuid === activity.activity_uuid && step.complete === true
-        );
-        if (isCompleted) {
-          completedActivities++;
-        }
-      });
-    });
-
-    return completedActivities >= totalActivities - 1;
-  };
+  const areAllActivitiesCompleted = () =>
+    willCompleteCourse(props.trailData, props.course, props.activity.id);
 
   const findNextActivity = () => {
     const flat: any[] = [];

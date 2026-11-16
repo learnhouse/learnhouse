@@ -39,6 +39,8 @@ API_TOKEN_TAGS = {
     # CRM integrations (EE: ee/routers/crm.py; absent without EE). Routes
     # that need a signed-in admin lead with "crm-admin" and stay out.
     "crm",
+    # Agent API (EE: ee/routers/agent_api.py; absent without EE).
+    "agent",
 }
 # Tag prefix of the tools API routes (normalized "tools/courses" -> "toolscourses").
 TOOLS_TAG_PREFIX = "tools"
@@ -66,6 +68,15 @@ TAG_DOCS = {
         "**update**: change the field mapping, start a sync or backfill, retry failed records, pause or resume. "
         "Connecting a CRM, consent, settings, inbound rules and creating CRM properties need an org admin in the dashboard. "
         "Access tokens of the CRM are never returned. HubSpot needs the Pro plan, Salesforce Enterprise."
+    ),
+    "agent": (
+        "Scope `agent` (token rights: read, create, update, delete). "
+        "**read**: list agents, their tools, the view catalog, your conversations and messages; follow a stream. "
+        "**create**: start conversations, send messages (streamed as server-sent events), cancel, deny an "
+        "action, return client tool results. **update**: approve the agent's risky actions through the API "
+        "(without it a person approves). **delete**: delete conversations. "
+        "Atlas needs the Pro plan; every turn uses AI credits and follows the organization's AI switches. "
+        "Conversations belong to the token that started them."
     ),
 }
 SCHEMA_REF_PREFIX = "#/components/schemas/"

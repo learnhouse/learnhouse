@@ -16,7 +16,11 @@ import {
   GoogleLogo,
   Heartbeat,
   Image as ImageIcon,
+  Lightning,
+  ListChecks,
   Robot,
+  Rss,
+  Sparkle,
   SealCheck,
   ShareNetwork,
   SlidersHorizontal,
@@ -28,6 +32,9 @@ import {
 import { useAbsoluteUrl } from '@/lib/seo/useAbsoluteUrl'
 import { useSeoT } from '@/lib/seo/i18n'
 import { buildPageTitle } from '@/lib/seo/utils'
+
+// Sections with their own indexing switch (communities map to noindex_communities).
+const SEO_FEATURES = ['courses', 'activities', 'paths', 'podcasts', 'communities', 'library', 'live', 'newsletters', 'pages', 'store'] as const
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { Button, FieldLabel, INPUT, SectionCard, SettingRow, StickySaveBar, TEXTAREA, buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { SubTabPanel, SubTabs, useSubTab, type SubTabItem } from '@components/Dashboard/Shared/DashKit/SubTabs'
@@ -67,11 +74,22 @@ const OrgEditSEO: React.FC = () => {
     indexing_disabled: seoConfig.indexing_disabled || false,
     robots_extra_rules: seoConfig.robots_extra_rules || '',
     organization_type: seoConfig.organization_type || '',
+    ai_crawler_policy: seoConfig.ai_crawler_policy || 'allow',
+    ai_crawlers_blocked: seoConfig.ai_crawlers_blocked || [],
+    indexable_features: seoConfig.indexable_features || {},
+    thin_thread_noindex_days: seoConfig.thin_thread_noindex_days ?? 90,
+    feeds_enabled: seoConfig.feeds_enabled !== false,
+    llms_txt_enabled: seoConfig.llms_txt_enabled !== false,
+    indexnow_enabled: !!seoConfig.indexnow_enabled,
+    indexnow_key: seoConfig.indexnow_key || '',
   }
 
   // Absolute: these are handed to Google Search Console, not clicked in-app
   const sitemapUrl = useAbsoluteUrl(org?.slug, '/sitemap.xml')
   const robotsUrl = useAbsoluteUrl(org?.slug, '/robots.txt')
+  const llmsUrl = useAbsoluteUrl(org?.slug, '/llms.txt')
+  const feedUrl = useAbsoluteUrl(org?.slug, '/feed.xml')
+  const indexNowKeyUrl = useAbsoluteUrl(org?.slug, `/${seoConfig.indexnow_key || 'key'}.txt`)
 
   const handleOgImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -264,6 +282,8 @@ const OrgEditSEO: React.FC = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     <UrlRow label={t('dashboard.organization.seo.org_seo.sitemap')} url={sitemapUrl} />
                     <UrlRow label={t('dashboard.organization.seo.org_seo.robots_txt')} url={robotsUrl} />
+                    {values.llms_txt_enabled && values.ai_crawler_policy !== 'block_all' && <UrlRow label={st('org.links_llms')} url={llmsUrl} />}
+                    {values.feeds_enabled && <UrlRow label={st('org.links_feed')} url={feedUrl} />}
                   </div>
                 </SectionCard>
                 <SectionCard icon={<Robot size={18} />} title={st('org.indexing_title')} description={st('org.indexing_subtitle')} bodyClassName="px-5 pb-5 pt-4 divide-y divide-neutral-100">
@@ -278,17 +298,124 @@ const OrgEditSEO: React.FC = () => {
                       />
                     }
                   />
+                </SectionCard>
+                <SectionCard
+                  icon={<ListChecks size={18} />}
+                  title={st('org.features_title')}
+                  description={st('org.features_subtitle')}
+                  bodyClassName="px-5 pb-5 pt-4 divide-y divide-neutral-100"
+                >
+                  {SEO_FEATURES.map((feature) => {
+                    const on = feature === 'communities' ? !values.noindex_communities : values.indexable_features?.[feature] !== false
+                    return (
+                      <SettingRow
+                        key={feature}
+                        title={st(`org.feature.${feature}`)}
+                        control={
+                          <Switch
+                            checked={on && !values.indexing_disabled}
+                            disabled={values.indexing_disabled}
+                            onCheckedChange={(checked) =>
+                              feature === 'communities'
+                                ? setFieldValue('noindex_communities', !checked)
+                                : setFieldValue('indexable_features', { ...(values.indexable_features || {}), [feature]: checked })
+                            }
+                            aria-label={st(`org.feature.${feature}`)}
+                          />
+                        }
+                      />
+                    )
+                  })}
+                  <div className="pt-4">
+                    <label className="block">
+                      <FieldLabel>{st('org.thin_threads')}</FieldLabel>
+                      <div className="flex items-center gap-2">
+                        <input
+                          id="thin_thread_noindex_days"
+                          name="thin_thread_noindex_days"
+                          type="number"
+                          min={0}
+                          max={3650}
+                          inputMode="numeric"
+                          className={`${INPUT} w-28`}
+                          value={values.thin_thread_noindex_days}
+                          onChange={(e) => setFieldValue('thin_thread_noindex_days', Math.max(0, Math.min(3650, parseInt(e.target.value || '0', 10) || 0)))}
+                        />
+                        <span className="text-sm text-neutral-500">{st('org.days')}</span>
+                      </div>
+                      <p className="mt-1.5 text-xs text-neutral-500">{st('org.thin_threads_hint')}</p>
+                    </label>
+                  </div>
+                </SectionCard>
+                <SectionCard icon={<Sparkle size={18} />} title={st('org.ai_title')} description={st('org.ai_subtitle')}>
+                  <div className="flex flex-col gap-4">
+                    <fieldset className="flex flex-col gap-2">
+                      <legend className="sr-only">{st('org.ai_policy')}</legend>
+                      {(['allow', 'block_training', 'block_all'] as const).map((policy) => (
+                        <label
+                          key={policy}
+                          className={`flex items-start gap-3 rounded-xl p-3 ring-1 ring-inset cursor-pointer transition-colors ${
+                            values.ai_crawler_policy === policy ? 'ring-neutral-900 bg-neutral-50' : 'ring-neutral-200 hover:ring-neutral-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="ai_crawler_policy"
+                            value={policy}
+                            checked={values.ai_crawler_policy === policy}
+                            onChange={() => setFieldValue('ai_crawler_policy', policy)}
+                            className="mt-1"
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold text-neutral-900">{st(`org.ai_${policy}`)}</span>
+                            <span className="block text-xs text-neutral-500 mt-0.5">{st(`org.ai_${policy}_hint`)}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </fieldset>
+                    <label className="block">
+                      <FieldLabel>{st('org.ai_blocked_extra')}</FieldLabel>
+                      <CrawlerListField value={values.ai_crawlers_blocked || []} onChange={(list) => setFieldValue('ai_crawlers_blocked', list)} />
+                      <p className="mt-1.5 text-xs text-neutral-500">{st('org.ai_blocked_extra_hint')}</p>
+                    </label>
+                    <SettingRow
+                      title={st('org.llms_enabled')}
+                      description={st('org.llms_enabled_hint')}
+                      control={
+                        <Switch
+                          checked={values.llms_txt_enabled && values.ai_crawler_policy !== 'block_all'}
+                          disabled={values.ai_crawler_policy === 'block_all'}
+                          onCheckedChange={(checked) => setFieldValue('llms_txt_enabled', checked)}
+                          aria-label={st('org.llms_enabled')}
+                        />
+                      }
+                    />
+                  </div>
+                </SectionCard>
+                <SectionCard icon={<Rss size={18} />} title={st('org.feeds_title')} description={st('org.feeds_enabled_hint')} bodyClassName="px-5 pb-5 pt-4 divide-y divide-neutral-100">
                   <SettingRow
-                    title={t('dashboard.organization.seo.org_seo.hide_communities')}
-                    description={t('dashboard.organization.seo.org_seo.hide_communities_hint')}
+                    title={st('org.feeds_enabled')}
+                    control={<Switch checked={values.feeds_enabled} onCheckedChange={(checked) => setFieldValue('feeds_enabled', checked)} aria-label={st('org.feeds_enabled')} />}
+                  />
+                </SectionCard>
+                <SectionCard icon={<Lightning size={18} />} title={st('org.indexnow_title')} description={st('org.indexnow_subtitle')} bodyClassName="px-5 pb-5 pt-4 divide-y divide-neutral-100">
+                  <SettingRow
+                    title={st('org.indexnow_enabled')}
+                    description={st('org.indexnow_enabled_hint')}
                     control={
                       <Switch
-                        checked={values.noindex_communities}
-                        onCheckedChange={(checked) => setFieldValue('noindex_communities', checked)}
-                        aria-label={t('dashboard.organization.seo.org_seo.hide_communities')}
+                        checked={values.indexnow_enabled}
+                        disabled={values.indexing_disabled}
+                        onCheckedChange={(checked) => setFieldValue('indexnow_enabled', checked)}
+                        aria-label={st('org.indexnow_enabled')}
                       />
                     }
                   />
+                  {values.indexnow_enabled && seoConfig.indexnow_key ? (
+                    <div className="pt-4">
+                      <UrlRow label={st('org.indexnow_key')} url={indexNowKeyUrl} />
+                    </div>
+                  ) : null}
                 </SectionCard>
                 <SectionCard icon={<SlidersHorizontal size={18} />} title={st('org.robots_extra')} description={st('org.robots_extra_hint')}>
                   <textarea
@@ -344,6 +471,37 @@ const OrgEditSEO: React.FC = () => {
       </Formik>
     </FeatureGate>
   )
+}
+
+/** One crawler name per line; the raw text is kept while typing (blank lines included). */
+function CrawlerListField({ value, onChange }: { value: string[]; onChange: (_list: string[]) => void }) {
+  const [text, setText] = useState(value.join('\n'))
+  const joined = value.join('\n')
+  const [last, setLast] = useState(joined)
+  // A reset (discard) from outside replaces the text.
+  if (joined !== last) {
+    setLast(joined)
+    if (parseCrawlers(text).join('\n') !== joined) setText(joined)
+  }
+  return (
+    <textarea
+      id="ai_crawlers_blocked"
+      className={`${TEXTAREA} h-20 font-mono text-[12.5px]`}
+      dir="ltr"
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value)
+        const list = parseCrawlers(e.target.value)
+        setLast(list.join('\n'))
+        onChange(list)
+      }}
+      placeholder="Bytespider"
+    />
+  )
+}
+
+function parseCrawlers(text: string): string[] {
+  return Array.from(new Set(text.split(/[\r\n,]+/).map((l) => l.trim()).filter((l) => /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(l)))).slice(0, 40)
 }
 
 function UrlRow({ label, url }: { label: string; url: string }) {

@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Fitur Pro",
-          "description": "Jadikan perusahaan sebagai pelanggan dengan ruang bermerek sendiri, kursus eksklusif, dan kursi yang mereka kelola sendiri."
+          "description": "Latih perusahaan: beri orang-orangnya akses ke kursus Anda, ruang dengan merek mereka, dan progres yang bisa Anda pantau. Menjual kursi bersifat opsional."
         },
         "scim": {
           "title": "Fitur Enterprise",
@@ -176,6 +176,210 @@
         "newsletter": {
           "title": "Fitur Standard",
           "description": "Newsletter tersedia di paket Standard dan yang lebih tinggi. Tingkatkan paket untuk mengirim kampanye, rangkaian sambutan, dan pembaruan kursus ke pelajar Anda lewat email."
+        }
+      },
+      "gate": {
+        "upgrade": "Upgrade ke {{plan}}",
+        "talk_to_us": "Hubungi kami",
+        "ask_admin": "Minta admin organisasi Anda untuk pindah ke {{plan}}.",
+        "current": "Paket Anda: {{plan}}",
+        "preview_label": "Pratinjau",
+        "preview": {
+          "completion": "Penyelesaian",
+          "certificate": "Sertifikat penyelesaian",
+          "live": "Live",
+          "role_editor": "Editor",
+          "role_reviewer": "Peninjau",
+          "role_viewer": "Pemirsa",
+          "week_other": "Minggu {{count}}",
+          "enroll": "Daftar",
+          "sso": "Lanjutkan dengan akun perusahaan Anda",
+          "sent": "terkirim",
+          "opened": "dibuka",
+          "clicked": "diklik"
+        },
+        "communities": {
+          "title": "Beri pelajar tempat untuk saling membantu",
+          "b1": "Diskusi di samping kursus Anda, dengan balasan dan voting",
+          "b2": "Pelajar mendapat jawaban dari sesama, bukan hanya dari Anda",
+          "b3": "Kenali pertanyaan umum sebelum menjadi tiket dukungan"
+        },
+        "messaging": {
+          "title": "Bicara langsung dengan pelajar",
+          "b1": "Percakapan pribadi dan grup di dalam akademi Anda",
+          "b2": "Jawab pertanyaan di tempat pelajar sudah berada",
+          "b3": "Ringkasan email untuk pesan yang belum dibaca"
+        },
+        "analytics": {
+          "title": "Lihat perkembangan akademi Anda",
+          "b1": "Pendaftaran, penyelesaian, dan aktivitas dari waktu ke waktu",
+          "b2": "Temukan kursus dan pelajaran tempat pelajar berhenti",
+          "b3": "Bagikan progres dengan tim di satu tempat"
+        },
+        "course_analytics": {
+          "title": "Ketahui di mana setiap kursus kehilangan pelajar",
+          "b1": "Penyelesaian per bab dan pelajaran",
+          "b2": "Progres dan waktu belajar per pelajar",
+          "b3": "Perbaiki pelajaran yang paling penting"
+        },
+        "certifications": {
+          "title": "Beri penghargaan kepada pelajar yang selesai",
+          "b1": "Sertifikat terbit otomatis saat kursus selesai",
+          "b2": "Pelajar membagikan tautan yang bisa diverifikasi di LinkedIn",
+          "b3": "Merek Anda di setiap sertifikat"
+        },
+        "paths": {
+          "title": "Tunjukkan kursus berikutnya kepada pelajar",
+          "b1": "Kelompokkan kursus menjadi jalur belajar terpandu",
+          "b2": "Progres di seluruh jalur, bukan hanya satu kursus",
+          "b3": "Sertifikat saat jalur selesai"
+        },
+        "required_training": {
+          "title": "Pastikan orang yang tepat menyelesaikan pelatihan yang tepat",
+          "b1": "Tugaskan kursus dengan tenggat ke tim atau peran",
+          "b2": "Pengingat otomatis sebelum dan sesudah tenggat",
+          "b3": "Manajer melihat sekilas siapa yang sesuai jadwal"
+        },
+        "live_sessions": {
+          "title": "Mengajar live, tanpa alat lain",
+          "b1": "Jadwalkan sesi yang diikuti pelajar dari akademi Anda",
+          "b2": "Pengingat terkirim otomatis",
+          "b3": "Rekaman tersimpan di samping kursus"
+        },
+        "podcasts": {
+          "title": "Jangkau pelajar di mana saja",
+          "b1": "Terbitkan episode audio di samping kursus Anda",
+          "b2": "Pemutar yang mengingat posisi terakhir setiap pendengar",
+          "b3": "Ubah pelajaran menjadi episode dengan AI"
+        },
+        "usergroups": {
+          "title": "Atur pelajar dalam grup",
+          "b1": "Beri grup akses ke kursus yang ditujukan untuknya",
+          "b2": "Angkatan, tim, atau kelas dengan ruangnya sendiri",
+          "b3": "Pantau progres per grup"
+        },
+        "custom_domains": {
+          "title": "Mengajar di domain Anda sendiri",
+          "b1": "learn.yourschool.com, bukan alamat LearnHouse",
+          "b2": "Sertifikat SSL disertakan dan diperpanjang untuk Anda",
+          "b3": "Pelajar tetap masuk di domain Anda"
+        },
+        "api_access": {
+          "title": "Hubungkan akademi Anda ke alat yang Anda pakai",
+          "b1": "Buat kursus, daftarkan pelajar, dan baca progres lewat API",
+          "b2": "Token dengan cakupan terbatas yang bisa dicabut kapan saja",
+          "b3": "API yang sama dengan yang dipakai dasbor kami"
+        },
+        "webhooks": {
+          "title": "Tanggapi apa yang terjadi di akademi Anda",
+          "b1": "Dapatkan notifikasi saat pelajar mendaftar, selesai, atau membayar",
+          "b2": "Kirim event ke Zapier, CRM Anda, atau kode Anda sendiri",
+          "b3": "Permintaan bertanda tangan dan percobaan ulang otomatis"
+        },
+        "roles": {
+          "title": "Beri setiap orang akses yang mereka butuhkan",
+          "b1": "Peran kustom selain admin dan anggota",
+          "b2": "Tentukan siapa yang bisa membuat, mengedit, atau hanya meninjau",
+          "b3": "Lebih sedikit admin, lebih sedikit kekeliruan"
+        },
+        "seo": {
+          "title": "Buat kursus Anda mudah ditemukan",
+          "b1": "Judul, deskripsi, dan pratinjau untuk pencarian dan media sosial",
+          "b2": "Sitemap yang bisa dibaca mesin pencari",
+          "b3": "Halaman kursus yang siap bersaing di peringkat"
+        },
+        "drip": {
+          "title": "Rilis pelajaran dengan tempo yang pas",
+          "b1": "Buka bab pada tanggal tertentu atau beberapa hari setelah pendaftaran",
+          "b2": "Pelajar menerima email saat bab dibuka",
+          "b3": "Jaga angkatan tetap bergerak bersama"
+        },
+        "payments": {
+          "title": "Dapatkan penghasilan dari apa yang Anda ajarkan",
+          "b1": "Jual kursus sekali bayar atau berlangganan",
+          "b2": "Pembayaran langsung ke akun Stripe Anda, tanpa biaya tambahan",
+          "b3": "Kupon, paket bundel, dan akses gratis kapan pun Anda mau"
+        },
+        "boards": {
+          "title": "Berpikir bersama di kanvas bersama",
+          "b1": "Papan tulis untuk workshop, kelas, dan perencanaan",
+          "b2": "Semua orang mengedit langsung, dari perangkat apa pun",
+          "b3": "Simpan papan di samping kursus"
+        },
+        "playgrounds": {
+          "title": "Biarkan pelajar berlatih, bukan hanya membaca",
+          "b1": "Latihan interaktif yang dibuat dengan AI",
+          "b2": "Umpan balik langsung di setiap percobaan",
+          "b3": "Bagikan Play ke seluruh akademi Anda"
+        },
+        "company_seats": {
+          "title": "Latih perusahaan, bukan hanya perorangan",
+          "b1": "Beri orang-orang di sebuah perusahaan akses ke kursus Anda dalam beberapa klik",
+          "b2": "Ruang bermerek untuk setiap perusahaan, dengan kursusnya sendiri",
+          "b3": "Pantau progres mereka, dan jual kursi hanya jika Anda mau"
+        },
+        "newsletter": {
+          "title": "Buat pelajar terus kembali",
+          "b1": "Kirim kabar terbaru dan kursus baru ke pelajar lewat email",
+          "b2": "Jumlah dibuka dan klik untuk setiap kampanye",
+          "b3": "Berhenti langganan dan email gagal terkirim ditangani untuk Anda"
+        },
+        "audit_logs": {
+          "title": "Ketahui siapa mengubah apa",
+          "b1": "Setiap tindakan admin dicatat: siapa, apa, dan kapan",
+          "b2": "Cari dan ekspor untuk audit",
+          "b3": "Penuhi persyaratan kepatuhan Anda"
+        },
+        "sso": {
+          "title": "Satu login untuk seluruh organisasi Anda",
+          "b1": "Anggota masuk dengan penyedia identitas Anda",
+          "b2": "Akses berakhir saat seseorang keluar dari perusahaan Anda",
+          "b3": "Tidak ada kata sandi tambahan yang perlu dikelola"
+        },
+        "scim": {
+          "title": "Sinkronkan anggota secara otomatis",
+          "b1": "Anggota ditambahkan dan dihapus dari direktori Anda",
+          "b2": "Grup mengikuti penyedia identitas Anda",
+          "b3": "Tidak perlu offboarding manual"
+        },
+        "lti": {
+          "title": "Sambungkan kursus Anda ke LMS Anda",
+          "b1": "LTI 1.3 untuk Moodle, Canvas, Blackboard, dan lainnya",
+          "b2": "Nilai dikirim balik secara otomatis",
+          "b3": "Pelajar tidak perlu akun lain"
+        },
+        "scorm": {
+          "title": "Bawa e-learning yang sudah Anda miliki",
+          "b1": "Impor paket SCORM sebagai pelajaran",
+          "b2": "Skor dan penyelesaian tercatat",
+          "b3": "Tidak perlu membuat ulang konten lama"
+        },
+        "compare": "Bandingkan paket",
+        "sample": {
+          "discussion_1": "Bagaimana Anda menilai proyek kelompok?",
+          "discussion_2": "Catatan saya dari minggu ke-2",
+          "discussion_3": "Tips untuk kuis akhir",
+          "course_name": "Pengantar analisis data",
+          "path_1": "Memulai",
+          "path_2": "Keterampilan inti",
+          "path_3": "Proyek akhir",
+          "session_1": "Jam konsultasi",
+          "session_2": "Tanya jawab: modul 3",
+          "today": "Hari ini",
+          "thursday": "Kam",
+          "episode": "Episode 4: Kebiasaan belajar yang bertahan",
+          "seo_snippet": "Pelajari cara membersihkan, menjelajahi, dan menyajikan data dalam enam minggu praktik. Termasuk sertifikat.",
+          "drip_1": "Selamat datang dan persiapan",
+          "drip_2": "Dataset pertama Anda",
+          "drip_3": "Grafik yang bercerita",
+          "drip_4": "Proyek akhir",
+          "one_time": "Pembayaran sekali",
+          "newsletter_subject": "Bulan ini di akademi",
+          "note_1": "Ide untuk lokakarya",
+          "note_2": "Pertanyaan dari kelompok",
+          "note_3": "Langkah berikutnya untuk Jumat",
+          "play_title": "Latihan",
+          "play_question": "Berapa jumlah sisi segi lima?"
         }
       }
     },
@@ -561,7 +765,35 @@
       "go_to_login": "Ke Halaman Login",
       "signing_in": "Memasukkan Anda...",
       "setting_up": "Harap tunggu sementara kami menyiapkan sesi Anda."
-    }
+    },
+    "show_password": "Tampilkan kata sandi",
+    "hide_password": "Sembunyikan kata sandi",
+    "password_req_letter": "Sebuah huruf",
+    "password_req_number_or_symbol": "Sebuah angka atau simbol",
+    "password_req_not_common": "Bukan kata sandi umum",
+    "your_name": "Nama Anda",
+    "signup_one_step": "Hanya butuh kurang dari semenit.",
+    "verification_sent_to": "Kami mengirim tautan konfirmasi ke {{email}}. Buka untuk mulai menggunakan akun Anda.",
+    "invite_link": {
+      "joining": "Bergabung ke {{org}}…",
+      "invalid_title": "Tautan undangan ini sudah kedaluwarsa",
+      "invalid_desc": "Tautan sudah digunakan, ditarik, atau diganti undangan yang lebih baru. Minta orang yang mengundang Anda mengirim yang baru.",
+      "go_to_org": "Buka {{org}}",
+      "wrong_account_title": "Undangan ini untuk alamat lain",
+      "wrong_account_desc": "Anda masuk sebagai {{current}}, tetapi undangan dikirim ke {{email}}.",
+      "switch_account": "Keluar dan lanjutkan",
+      "signin_title": "Bergabung dengan {{org}}",
+      "signin_desc": "Anda sudah punya akun. Masuk dan Anda langsung bergabung.",
+      "signin_cta": "Masuk untuk bergabung",
+      "signup_title": "Bergabung dengan {{org}}",
+      "signup_desc": "Anda diundang. Pilih kata sandi dan Anda langsung masuk.",
+      "choose_password": "Pilih kata sandi",
+      "create_and_join": "Bergabung dengan {{org}}"
+    },
+    "login_failed_forgot": "Lupa kata sandi?",
+    "login_failed_reset": "Atur ulang",
+    "login_failed_magic": "Kirimi saya tautan masuk saja",
+    "login_failed_google_hint": "Mendaftar dengan Google? Gunakan Lanjutkan dengan Google di bawah."
   },
   "validation": {
     "required": "Wajib isi",
@@ -1518,7 +1750,8 @@
       },
       "thread_actions": "Tindakan utas",
       "threads_one": "{{count}} utas",
-      "threads_other": "{{count}} utas"
+      "threads_other": "{{count}} utas",
+      "newer_discussions": "Diskusi lebih baru"
     }
   },
   "boards": {
@@ -4150,7 +4383,9 @@
       "unavailable_body": "Organisasi ini belum mengaktifkan tokonya.",
       "unavailable_title": "Toko tidak tersedia",
       "view_content": "Lihat konten"
-    }
+    },
+    "checkout_paused": "Pembayaran untuk produk ini sementara tidak tersedia. Organisasi sudah diberi tahu; silakan coba lagi nanti.",
+    "checkout_paused_short": "Sementara tidak tersedia"
   },
   "account": {
     "title": "Pengaturan akun",
@@ -4638,7 +4873,8 @@
       "section_people": "Orang & bisnis",
       "section_settings": "Pengaturan",
       "resize_sidebar": "Ubah ukuran bilah sisi",
-      "open_account_menu": "Buka menu akun"
+      "open_account_menu": "Buka menu akun",
+      "trial_caption_other": "Uji coba {{plan}} · sisa {{count}} hari"
     },
     "home": {
       "cards": {
@@ -6669,7 +6905,138 @@
         "ai_copilot_description": "Biarkan pelajar mengajukan pertanyaan tentang konten kursus. Menggunakan materi terindeks untuk memberikan jawaban berdasar dengan kutipan sumber.",
         "feature_editor_description": "Bantuan penyuntingan konten berbasis AI untuk pembuat kursus.",
         "feature_activity_description": "Asisten AI yang tersedia dalam aktivitas untuk membantu pelajar.",
-        "always_on": "Selalu aktif"
+        "always_on": "Selalu aktif",
+        "platform_disabled": "AI dinonaktifkan untuk organisasi ini oleh platform. Hubungi dukungan untuk mengaktifkannya kembali.",
+        "enabled_count": "{{on}} dari {{total}} fitur AI aktif",
+        "group_all_on": "Aktifkan semua",
+        "group_all_off": "Nonaktifkan semua",
+        "ask_ai_audience": "Siapa yang bisa memakai Tanya AI",
+        "audience_everyone": "Semua orang",
+        "audience_staff": "Hanya staf kursus",
+        "limits_title": "Batas kredit bulanan",
+        "limits_description": "AI berhenti hingga akhir bulan setelah organisasi memakai kredit sebanyak ini. Kosongkan jika tanpa batas.",
+        "cap_placeholder": "Tanpa batas",
+        "cap_unit": "kredit / bulan",
+        "save_cap": "Simpan",
+        "cap_invalid": "Masukkan bilangan bulat atau kosongkan.",
+        "off_by_admin": "Dinonaktifkan oleh admin Anda",
+        "off_by_admin_description": "{{feature}} tidak tersedia di organisasi ini. Tanyakan administrator jika Anda membutuhkannya.",
+        "groups": {
+          "assistants": {
+            "title": "Asisten",
+            "description": "Agen yang mengobrol dengan tim Anda dan menyelesaikan pekerjaan."
+          },
+          "authoring": {
+            "title": "Penyusunan",
+            "description": "Bantuan bagi penulis saat membuat kursus."
+          },
+          "learners": {
+            "title": "Pelajar",
+            "description": "AI yang dipakai pelajar saat belajar."
+          },
+          "content": {
+            "title": "Pembuatan konten",
+            "description": "Media, suara, dan terjemahan yang dibuat dengan AI."
+          },
+          "integrations": {
+            "title": "Integrasi",
+            "description": "AI di situs web, email, dan aplikasi yang terhubung."
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "Asisten dasbor yang menjawab pertanyaan dan mengerjakan tugas di seluruh organisasi Anda."
+          },
+          "atlas_scheduled": {
+            "title": "Agen terjadwal",
+            "description": "Tugas Atlas yang berjalan sesuai jadwal, seperti laporan mingguan."
+          },
+          "ai_editor": {
+            "title": "Editor AI",
+            "description": "Panel AI di editor halaman yang menulis dan menyunting bersama penulis."
+          },
+          "course_builder": {
+            "title": "Pembuat kursus AI",
+            "description": "Buat draf rencana kursus dan pelajarannya dari ringkasan singkat."
+          },
+          "editor_ai": {
+            "title": "Aksi menulis AI",
+            "description": "Tulis ulang, persingkat, perbaiki, atau ubah nada teks yang dipilih."
+          },
+          "magic_blocks": {
+            "title": "Blok ajaib",
+            "description": "Blok interaktif yang dibuat dari perintah."
+          },
+          "quiz_generation": {
+            "title": "Pembuatan kuis dan kartu belajar",
+            "description": "Buat kuis dan kartu belajar dari isi pelajaran."
+          },
+          "assignment_generation": {
+            "title": "Pembuatan tugas dan skenario",
+            "description": "Buat draf tugas dan skenario bercabang dengan AI."
+          },
+          "course_import": {
+            "title": "Impor kursus AI",
+            "description": "Ubah dokumen dan ekspor dari platform lain menjadi kursus."
+          },
+          "seo": {
+            "title": "Saran SEO",
+            "description": "Tulis judul dan deskripsi pencarian untuk halaman Anda."
+          },
+          "ask_ai": {
+            "title": "Tanya AI",
+            "description": "Pelajar bertanya tentang pelajaran dan mendapat jawaban beserta sumbernya."
+          },
+          "ai_grading": {
+            "title": "Penilaian AI",
+            "description": "Nilai kiriman dan buat draf umpan balik untuk tugas."
+          },
+          "messaging_agents": {
+            "title": "Agen AI di Pesan",
+            "description": "Asisten yang bisa diajak mengobrol anggota di Pesan."
+          },
+          "plays": {
+            "title": "AI di Plays",
+            "description": "Buat Plays dan jalankan langkah AI-nya untuk pelajar."
+          },
+          "translations": {
+            "title": "Terjemahan AI",
+            "description": "Terjemahkan kursus dan SEO-nya ke bahasa lain."
+          },
+          "image_generation": {
+            "title": "Pembuatan gambar",
+            "description": "Buat thumbnail dan gambar dengan AI."
+          },
+          "voice": {
+            "title": "Suara dan podcast",
+            "description": "Tulis naskah podcast dan buat audio lisan."
+          },
+          "video_ai": {
+            "title": "Teks dan bab video",
+            "description": "Transkripsikan video dan bagi menjadi bab."
+          },
+          "live_session_summary": {
+            "title": "Ringkasan sesi langsung",
+            "description": "Ringkas rekaman sesi langsung."
+          },
+          "boards": {
+            "title": "AI di papan",
+            "description": "Buat playground dan konten di papan."
+          },
+          "landing_builder": {
+            "title": "Desain situs dengan AI",
+            "description": "Buat halaman landing dan tulis ulang teksnya."
+          },
+          "newsletter": {
+            "title": "Penulisan buletin dengan AI",
+            "description": "Buat draf baris subjek dan isi buletin."
+          },
+          "mcp_tools": {
+            "title": "Alat AI melalui MCP",
+            "description": "Alat yang memakai AI saat aplikasi terhubung ke organisasi Anda melalui MCP."
+          }
+        }
       },
       "sso": {
         "title": "Single Sign-On (SSO)",
@@ -7096,7 +7463,8 @@
           "users_admin": "Pengguna (API Admin)",
           "roles_admin": "Peran (API Admin)",
           "newsletter": "Newsletter",
-          "crm": "Integrasi CRM"
+          "crm": "Integrasi CRM",
+          "agent": "Agen AI (Agent API)"
         },
         "resource": "Sumber Daya",
         "perm_create": "Buat",
@@ -7456,7 +7824,8 @@
           "suspended": "Akses dibatasi. Hubungi LearnHouse untuk memulihkannya.",
           "licensed": "Di-host sendiri dengan lisensi Enterprise Edition, tanpa batas paket",
           "community": "Community Edition yang di-host sendiri, tanpa batas paket",
-          "billing_page": "Faktur dan detail pembayaran ada di halaman tagihan"
+          "billing_page": "Faktur dan detail pembayaran ada di halaman tagihan",
+          "free_trial_other": "Uji coba gratis, sisa {{count}} hari. Tanpa kartu."
         },
         "next_invoice": "{{amount}} pada {{date}}",
         "seats_of": "{{used}} dari {{limit}}",
@@ -7520,7 +7889,8 @@
             "addon": "Add-on",
             "locked": "Perlu {{plan}}",
             "locked_none": "Tidak tersedia",
-            "edition": "Enterprise Edition"
+            "edition": "Enterprise Edition",
+            "trial": "Uji coba"
           },
           "on": "Aktif",
           "off": "Nonaktif",
@@ -7556,7 +7926,7 @@
             "usergroups": "Grup pengguna",
             "roles": "Peran kustom",
             "required_training": "Pelatihan wajib",
-            "company_seats": "Kursi perusahaan",
+            "company_seats": "Perusahaan",
             "payments": "Pembayaran",
             "ai": "Fitur AI",
             "analytics": "Analitik",
@@ -7573,7 +7943,19 @@
           }
         },
         "next_invoice_label": "Faktur berikutnya",
-        "seats_no_limit": "{{used}}, tanpa batas"
+        "seats_no_limit": "{{used}}, tanpa batas",
+        "invoices": "Faktur",
+        "trial": {
+          "title_other": "Uji coba {{plan}}: sisa {{count}} hari",
+          "desc_other": "Semua yang ada di {{plan}} bisa Anda pakai sampai {{date}}, termasuk {{count}} fitur yang tidak ada di paket Gratis. Pilih paket kapan saja untuk mempertahankannya; tidak ada yang dihapus saat uji coba berakhir.",
+          "choose": "Pertahankan {{plan}}",
+          "what_happens": "Apa yang terjadi jika uji coba berakhir tanpa paket",
+          "ended_title_trial": "Uji coba {{plan}} Anda berakhir pada {{date}}",
+          "ended_title": "Anda pindah dari {{plan}} ke paket Gratis pada {{date}}",
+          "ended_courses_other": "{{count}} kursus menjadi privat dan fitur {{plan}} dijeda. Upgrade, dan semuanya kembali seperti semula.",
+          "ended_no_courses": "Fitur {{plan}} dijeda. Upgrade, dan semuanya kembali seperti semula.",
+          "restore": "Pulihkan {{plan}}"
+        }
       },
       "overview": {
         "created": "Dibuat {{date}}",
@@ -14858,7 +15240,7 @@
     "done": "Selesai, saya sudah siap!",
     "steps": {
       "create_course": {
-        "title": "Buat kursus pertama Anda",
+        "title": "Kursus pertama Anda mulai terbentuk",
         "description": "Buat kursus, atau edit draf yang kami siapkan untuk Anda.",
         "action": "Buat kursus"
       },
@@ -14905,42 +15287,42 @@
         "university_desc": "Panduan, tips, dan praktik terbaik"
       },
       "add_content": {
-        "title": "Tambahkan pelajaran pertama Anda",
+        "title": "Pelajaran yang layak untuk diikuti",
         "description": "Tambahkan video, halaman, atau kuis: beri pelajar alasan nyata untuk mendaftar.",
         "action": "Tambah konten"
       },
       "brand_school": {
-        "title": "Tambahkan logo dan warna Anda",
+        "title": "Sekolah yang dipercaya pelajar",
         "description": "Tambahkan logo dan warna Anda agar terlihat seperti sekolah yang kredibel dan profesional.",
         "action": "Beri merek"
       },
       "share_grow": {
-        "title": "Terbitkan halaman beranda Anda",
+        "title": "Pintu depan sekolah Anda",
         "description": "Pilih templat, sesuaikan, lalu terbitkan halaman yang pertama dilihat peserta.",
         "action": "Buka Situs"
       },
       "invite_learners": {
-        "title": "Undang peserta pertama Anda",
+        "title": "Sambut pelajar pertama Anda",
         "description": "Bagikan tautan gabung Anda atau undang orang: bawa pelajar pertama itu masuk.",
         "action": "Undang pelajar"
       },
       "build_community": {
-        "title": "Buka ruang komunitas",
+        "title": "Buat pelajar terus kembali",
         "description": "Buka ruang komunitas agar pelajar Anda tetap aktif dan membawa teman-teman mereka.",
         "action": "Buka komunitas"
       },
       "publish_course": {
-        "title": "Terbitkan kursus pertama Anda",
+        "title": "Kursus pertama Anda telah aktif",
         "description": "Terbitkan kursus agar peserta punya sesuatu yang nyata untuk diikuti.",
         "action": "Terbitkan kursus"
       },
       "create_group": {
-        "title": "Buat grup pertama Anda",
+        "title": "Angkatan pertama Anda",
         "description": "Kelompokkan orang berdasarkan tim, kelas, atau angkatan untuk menetapkan kursus sekaligus.",
         "action": "Buat grup"
       },
       "setup_payments": {
-        "title": "Atur pembayaran",
+        "title": "Dapatkan penghasilan dari mengajar",
         "description": "Hubungkan Stripe dan beri harga pada kursus Anda.",
         "action": "Hubungkan Stripe"
       }
@@ -15622,7 +16004,33 @@
       "checkout_note": "Setelah membuat organisasi Anda, Anda akan diarahkan ke checkout yang aman."
     },
     "add_pack": "Tambah {{pack}}",
-    "cancels_on": "Langganan Anda akan dibatalkan pada {{periodEnd}}. Akses berlanjut hingga saat itu."
+    "cancels_on": "Langganan Anda akan dibatalkan pada {{periodEnd}}. Akses berlanjut hingga saat itu.",
+    "trial": {
+      "title_other": "Uji coba {{plan}} · sisa {{count}} hari",
+      "desc": "Tidak perlu kartu. Pilih paket agar semuanya tetap seperti sekarang.",
+      "choose": "Pilih paket",
+      "what_happens": "Apa yang berubah jika uji coba berakhir tanpa paket",
+      "keep": "Pertahankan {{plan}}"
+    },
+    "downgrade_preview": {
+      "intro": "Di paket Gratis:",
+      "course_kept": "“{{course}}” tetap publik.",
+      "courses_private_other": "{{count}} kursus lain menjadi privat (anggota masih bisa membukanya).",
+      "drip_paused_other": "Jadwal konten bertahap dari {{count}} kursus dijeda, sehingga semua babnya terbuka.",
+      "features_pause": "Fitur berikut dijeda sampai Anda upgrade:",
+      "more_other": "dan {{count}} lainnya",
+      "members_over": "{{count}} anggota tetap ada, melebihi batas {{limit}} di paket Gratis. Anggota baru tidak bisa bergabung sampai Anda upgrade.",
+      "admins_over": "{{count}} admin tetap ada, melebihi batas {{limit}} di paket Gratis. Admin baru tidak bisa ditambahkan.",
+      "nothing_deleted": "Tidak ada yang dihapus. Upgrade lagi, dan semuanya kembali seperti semula."
+    },
+    "cancel_flow": {
+      "title": "Batalkan {{plan}}?",
+      "until": "Paket Anda tetap aktif sampai {{date}}. Setelah itu, organisasi Anda pindah ke paket Gratis.",
+      "until_unknown": "Paket Anda tetap aktif sampai periode yang sudah dibayar berakhir. Setelah itu, organisasi Anda pindah ke paket Gratis.",
+      "restore": "Anda bisa upgrade lagi kapan saja: visibilitas kursus dan fitur yang dijeda kembali otomatis.",
+      "keep": "Pertahankan {{plan}}",
+      "confirm": "Batalkan paket"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16288,6 +16696,12 @@
       "resource_plural": "Sumber daya",
       "newsletter": "Newsletter",
       "newsletter_plural": "Newsletter"
+    },
+    "health": {
+      "title": "Pelajar tidak bisa membeli saat ini",
+      "body_other": "Penyedia pembayaran Anda menolak {{count}} pembayaran sejak {{date}}. Akun Stripe Anda mungkin terputus atau perlu diperiksa. Sampai masalah ini diperbaiki, pelajar akan melihat bahwa pembayaran sementara tidak tersedia.",
+      "recheck": "Periksa lagi",
+      "fix": "Buka pengaturan pembayaran"
     }
   },
   "lti": {
@@ -23057,7 +23471,47 @@
         "podcast": "Podcast",
         "community": "Komunitas",
         "folder": "Folder"
-      }
+      },
+      "features_title": "Apa yang bisa diindeks mesin pencari",
+      "features_subtitle": "Matikan satu bagian agar tidak muncul di Google, Bing, dan pencarian AI. Halamannya tetap terbuka untuk pengunjung.",
+      "feature": {
+        "courses": "Kursus",
+        "activities": "Pelajaran gratis",
+        "paths": "Jalur belajar",
+        "podcasts": "Podcast",
+        "communities": "Komunitas",
+        "library": "Perpustakaan",
+        "live": "Sesi langsung",
+        "newsletters": "Arsip newsletter",
+        "pages": "Halaman situs",
+        "store": "Penawaran toko"
+      },
+      "thin_threads": "Sembunyikan thread tanpa jawaban setelah",
+      "thin_threads_hint": "Thread yang tidak dibalas disembunyikan dari mesin pencari setelah mencapai usia ini, agar halaman kosong tidak membebani komunitas. 0 mempertahankan semuanya.",
+      "days": "hari",
+      "ai_title": "Pencarian AI dan crawler",
+      "ai_subtitle": "Bagaimana ChatGPT, Claude, Perplexity, Gemini, dan alat AI lain boleh memakai konten publik Anda.",
+      "ai_policy": "Kebijakan crawler AI",
+      "ai_allow": "Izinkan semua crawler AI",
+      "ai_allow_hint": "Jawaban AI dapat mengutip halaman Anda, dan model dapat belajar darinya.",
+      "ai_block_training": "Izinkan jawaban AI, blokir pelatihan",
+      "ai_block_training_hint": "Asisten tetap bisa menemukan dan mengutip halaman Anda; crawler pelatihan (GPTBot, Google-Extended, CCBot…) diblokir.",
+      "ai_block_all": "Blokir semua crawler AI",
+      "ai_block_all_hint": "Semua agen AI yang dikenal diblokir di robots.txt dan llms.txt dinonaktifkan. Pencarian web tidak terpengaruh.",
+      "ai_blocked_extra": "Blokir juga user agent ini",
+      "ai_blocked_extra_hint": "Satu nama crawler per baris, mis. Bytespider.",
+      "llms_enabled": "Publikasikan llms.txt dan halaman Markdown",
+      "llms_enabled_hint": "Peta konten publik Anda di /llms.txt dan salinan Markdown dari setiap halaman publik, agar alat AI mengutip Anda dengan akurat.",
+      "feeds_title": "Feed",
+      "feeds_enabled": "Publikasikan feed RSS, Atom, dan JSON",
+      "feeds_enabled_hint": "Kursus baru, thread komunitas, dan sesi langsung muncul di pembaca feed dan agregator. Feed podcast selalu aktif.",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "Beri tahu Bing, Yandex, dan mesin pencari IndexNow lainnya tentang halaman baru dan yang diperbarui secara langsung.",
+      "indexnow_enabled": "Ping mesin pencari saat Anda memublikasikan",
+      "indexnow_enabled_hint": "Kunci verifikasi dibuat untuk situs Anda saat Anda menyimpan.",
+      "indexnow_key": "Kunci verifikasi",
+      "links_llms": "llms.txt",
+      "links_feed": "Feed RSS"
     },
     "save_failed": "Tidak dapat menyimpan pengaturan SEO.",
     "saved": "Pengaturan SEO disimpan."
@@ -23542,8 +23996,8 @@
     }
   },
   "companies": {
-    "title": "Pelanggan",
-    "subtitle": "Perusahaan yang Anda latih, orang-orangnya, kursus, dan kursi",
+    "title": "Perusahaan",
+    "subtitle": "Perusahaan yang Anda latih: beri orang-orangnya akses ke kursus Anda, atau jual kursi kepada mereka",
     "tabs": {
       "companies": "Perusahaan",
       "offers": "Penawaran kursi",
@@ -23553,7 +24007,7 @@
       "tab": "Perusahaan",
       "title": "Perusahaan",
       "subtitle": "Kursi yang terjual ke perusahaan, dan penawaran yang mereka beli",
-      "open_customers": "Buka profil pelanggan"
+      "open_customers": "Buka profil perusahaan"
     },
     "menu": {
       "manage_team": "Kelola tim"
@@ -23634,7 +24088,8 @@
       "auto_assign": "Beri kursi gratis kepada yang bergabung",
       "company_admins": "Admin perusahaan",
       "billing_email": "Email penagihan",
-      "tags": "Tag"
+      "tags": "Tag",
+      "member_limit": "Batas anggota"
     },
     "list": {
       "new": "Perusahaan baru",
@@ -23663,7 +24118,7 @@
       "no_match": "Tidak ada perusahaan yang cocok dengan filter ini",
       "clear_filters": "Hapus filter",
       "empty_title": "Belum ada perusahaan",
-      "empty_body": "Tambahkan perusahaan untuk memberinya ruang bermerek, kursus sendiri, dan kursi yang dikelolanya sendiri."
+      "empty_body": "Tambahkan perusahaan untuk memberi orang-orangnya akses ke kursus Anda, ruang dengan merek mereka, dan progres yang bisa Anda pantau. Menjual kursi bersifat opsional."
     },
     "onboard": {
       "title": "Tambahkan perusahaan",
@@ -23716,7 +24171,7 @@
       "remove_member_title": "Hapus anggota ini?",
       "remove_member_body": "{{name}} kehilangan akses ke ruang perusahaan dan kursus eksklusifnya. Progresnya tetap tersimpan.",
       "member_removed": "Anggota dihapus",
-      "courses_intro": "Kursus bersama tampil di ruang perusahaan. Kursus eksklusif hanya terlihat oleh anggota perusahaan.",
+      "courses_intro": "Beri perusahaan akses ke kursus: kursus eksklusif hanya terlihat oleh orang-orangnya, kursus bersama tetap terlihat seperti biasa dan muncul di ruang perusahaan.",
       "link_course": "Tautkan kursus",
       "create_course": "Buat kursus",
       "no_courses": "Tidak ada kursus tertaut",
@@ -23743,7 +24198,7 @@
       "grant_seats_hint": "Untuk kesepakatan yang ditagih di luar Stripe: faktur, uji coba, mitra.",
       "cancel_company": "Batalkan kursi",
       "no_seats": "Tidak ada kursi",
-      "no_seats_body": "Perusahaan ini belum membeli kursi. Anda bisa memberikan beberapa.",
+      "no_seats_body": "Perusahaan ini tidak punya kursi. Orang-orangnya tetap bisa mendapatkan kursus secara langsung; kursi digunakan untuk menjual atau memberikan jumlah tertentu.",
       "comped_n_one": "{{count}} gratis",
       "comped_n_other": "{{count}} gratis",
       "renews": "Diperpanjang",
@@ -23769,7 +24224,14 @@
       "no_activity": "Belum ada aktivitas",
       "notes": "Catatan",
       "notes_hint": "Hanya untuk admin akademi Anda.",
-      "notes_placeholder": "Kontak, rencana perpanjangan, hal yang penting bagi mereka…"
+      "notes_placeholder": "Kontak, rencana perpanjangan, hal yang penting bagi mereka…",
+      "access_hint": "Siapa yang bisa bergabung dengan perusahaan ini dan mendapatkan kursusnya. Tidak perlu pembayaran.",
+      "member_limit_hint": "Batas opsional untuk orang yang ditambahkan lewat email atau domain",
+      "no_limit": "Tanpa batas",
+      "over_limit": "Batas anggota sudah tercapai, jadi orang berikut tidak ditambahkan: {{list}}",
+      "or_folder": "Atau satu folder penuh",
+      "folder_hint": "Memberi perusahaan semua kursus di dalamnya",
+      "pick_folder": "Pilih folder"
     },
     "offers": {
       "intro": "Penawaran kursi menetapkan harga kursi untuk perusahaan: tingkat volume, jumlah minimum, sekali bayar atau berulang.",
@@ -28335,7 +28797,11 @@
       "ai_credits_low": "Kredit AI menipis",
       "org_payment_failed": "Pembayaran langganan gagal",
       "agent_run_finished": "Eksekusi agen selesai",
-      "agent_run_failed": "Eksekusi agen gagal"
+      "agent_run_failed": "Eksekusi agen gagal",
+      "trial_ending": "Uji coba segera berakhir",
+      "plan_downgraded": "Pindah ke Gratis",
+      "plan_restored": "Paket dipulihkan",
+      "payments_checkout_failing": "Pembayaran gagal"
     },
     "copy": {
       "assignment_graded": "Dinilai: {{assignment}}",
@@ -28393,7 +28859,11 @@
       "ai_credits_low": "Kredit AI menipis (sisa {{remaining}})",
       "org_payment_failed": "Pembayaran langgananmu gagal",
       "agent_run_finished": "{{agent}} selesai menjalankan jadwalnya",
-      "agent_run_failed": "Eksekusi terjadwal {{agent}} gagal"
+      "agent_run_failed": "Eksekusi terjadwal {{agent}} gagal",
+      "trial_ending": "Uji coba {{plan}} Anda berakhir dalam {{days}} hari",
+      "plan_downgraded": "Anda sekarang di paket Gratis. Tidak ada yang dihapus",
+      "plan_restored": "Selamat datang kembali di {{plan}}",
+      "payments_checkout_failing": "Pelajar tidak bisa membeli saat ini ({{count}} pembayaran gagal)"
     },
     "routing": {
       "short": "Siapa yang diberi tahu",
@@ -28456,7 +28926,9 @@
       "start_template": "Mulai dari templat",
       "start_template_desc": "Kami menerbitkan situs {{template}} dengan nama Anda dan menambahkan draf kursus pertama yang bisa Anda edit.",
       "start_blank": "Mulai kosong",
-      "start_blank_desc": "Akademi kosong. Daftar pengaturan memandu sisanya."
+      "start_blank_desc": "Akademi kosong. Daftar pengaturan memandu sisanya.",
+      "trial_note_after": "Tanpa kartu. Setelahnya, pertahankan paket ini, pilih paket lain, atau tetap di paket Gratis.",
+      "trial_note": "Anda mendapatkan {{plan}} selama {{days}} hari, gratis."
     },
     "checklist": {
       "full_guide": "Panduan lengkap",
@@ -28493,7 +28965,10 @@
         "ai_credits_one": "Kredit AI: {{formatted}}",
         "ai_credits_other": "Kredit AI: {{formatted}}"
       },
-      "compare": "Bandingkan paket"
+      "compare": "Bandingkan paket",
+      "your_trial": "Uji coba Anda",
+      "keep_plan": "Pertahankan {{plan}}",
+      "subtitle_trial": "Anda sedang mencoba {{plan}} secara gratis. Pilih paket yang sesuai; tidak ada yang berubah sampai Anda memilih."
     },
     "invite": {
       "title": "Undang orang",
@@ -28529,7 +29004,10 @@
       "import_one": "Undang peserta: {{count}}",
       "import_other": "Undang peserta: {{count}}",
       "sent_toast_one": "Undangan terkirim: {{count}}",
-      "sent_toast_other": "Undangan terkirim: {{count}}"
+      "sent_toast_other": "Undangan terkirim: {{count}}",
+      "invite_only_create": "Sekolah Anda hanya dengan undangan. Buat tautan bergabung agar orang dapat mendaftar.",
+      "create_link": "Buat tautan bergabung",
+      "invite_only_hint": "Tautan ini berisi kode bergabung: siapa pun yang memilikinya dapat mendaftar."
     },
     "invites": {
       "title": "Undangan",
@@ -28588,6 +29066,17 @@
       },
       "desc_one": "Akun yang dibuat dalam {{count}} hari terakhir dan sejauh mana mereka melangkah",
       "desc_other": "Akun yang dibuat dalam {{count}} hari terakhir dan sejauh mana mereka melangkah"
+    },
+    "first_course": {
+      "title": "Buat kursus pertama Anda",
+      "subtitle": "Yang lain bisa menunggu. Pilih cara memulai, setiap kata bisa diubah nanti.",
+      "template": "Mulai dari templat",
+      "template_desc": "Draf siap pakai dengan bab dan pelajaran, langsung terbuka di editor.",
+      "ai": "Buat dengan AI",
+      "ai_desc": "Jelaskan topik Anda dan dapatkan kerangka kursus lengkap dalam hitungan menit.",
+      "blank": "Atau mulai dari kursus kosong",
+      "template_short": "Mulai dari templat",
+      "ai_short": "Buat dengan AI"
     }
   },
   "impersonation": {
@@ -28615,5 +29104,19 @@
     "no_access_desc": "Minta akses impersonasi ke admin LearnHouse.",
     "back_to_console": "Kembali ke konsol",
     "retry": "Coba lagi"
+  },
+  "mobile_app": {
+    "title": "Dapatkan aplikasi seluler",
+    "heading": "Belajar dari ponsel",
+    "body": "Buka aplikasi LearnHouse dan pindai kode ini untuk terhubung ke sekolah ini.",
+    "qr_alt": "Kode QR untuk membuka sekolah ini di aplikasi LearnHouse",
+    "qr_actions": "Klik kanan untuk menyimpan atau menyalin kode QR",
+    "copy_image": "Salin gambar",
+    "download_png": "Unduh PNG",
+    "copy_link": "Salin tautan aplikasi",
+    "copied_image": "Kode QR disalin",
+    "copied_link": "Tautan aplikasi disalin",
+    "copy_failed": "Gambar tidak dapat disalin. Coba Unduh.",
+    "download_failed": "Gambar tidak dapat disimpan."
   }
 }

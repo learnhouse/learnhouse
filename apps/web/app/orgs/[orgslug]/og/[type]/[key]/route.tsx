@@ -8,7 +8,9 @@ import { orgThemeColors } from '@/lib/theme/orgTheme'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { resolvePublicKey } from '@/lib/seo/resolve.server'
 import { OG_SIZE, PAGE_CARDS, brandColor, clampText, readableOn, titleFontSize } from '@/lib/seo/ogCard'
-import type { SeoResourceType } from '@/lib/seo/paths'
+import { THREAD_SEGMENT_RE, type SeoResourceType } from '@/lib/seo/paths'
+import { fetchThreadJsonLd } from '@/lib/seo/publicData.server'
+import { prosemirrorText } from '@/lib/seo/meta'
 
 /**
  * Generated social card for a resource without its own image:
@@ -105,6 +107,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orgslug
     if (page) {
       const orgDescription = ctx.org?.description && ctx.org.description !== ctx.org?.name ? ctx.org.description : ''
       card = { kind: '', title: key === 'home' ? ctx.org?.name || page : page, description: orgDescription, meta: [] }
+    }
+  } else if (type === 'thread') {
+    // `{communityKey}~{id-slug}`: drawn only for indexable threads (anonymous
+    // view), so a private or sold thread's title never reaches an image.
+    const [communityKey, segment] = decodeURIComponent(key).split('~')
+    const t = communityKey && segment && THREAD_SEGMENT_RE.test(segment) ? await fetchThreadJsonLd(orgslug, communityKey, segment) : null
+    if (t?.indexable) {
+      card = {
+        kind: t.community_name || KIND_LABEL.community,
+        title: t.title,
+        description: prosemirrorText(t.content, 300),
+        meta: [`${t.reply_count} ${t.reply_count === 1 ? 'reply' : 'replies'}`, `${t.upvotes} upvotes`],
+      }
     }
   } else if (type in KIND_LABEL) {
     const resolved = await resolvePublicKey(orgslug, type as SeoResourceType, key)

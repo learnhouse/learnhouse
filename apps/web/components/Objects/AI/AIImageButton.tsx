@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import AIImagePicker from './AIImagePicker'
 import { AIMark, aiButtonClass } from './AIBrand'
+import useAIFeature from '@components/Hooks/useAIFeature'
 
 // Drop-in trigger for the shared AI image generator. Place next to an existing
 // Unsplash button on any image-upload surface; it manages its own modal state,
@@ -27,10 +28,13 @@ const AIImageButton: React.FC<AIImageButtonProps> = ({
 }) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  // Settings > AI: image generation can be turned off for the org.
+  const enabled = useAIFeature('image_generation')
 
   // Callers usually pass their own className to sit in a row of sibling
   // buttons; the AI mark is what brands it either way.
   const base = variant === 'chip' ? aiButtonClass('soft', 'sm') : aiButtonClass('solid', 'md')
+  if (!enabled) return null
 
   return (
     <>

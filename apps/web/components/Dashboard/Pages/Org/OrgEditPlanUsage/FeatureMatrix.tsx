@@ -4,7 +4,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle, Handshake, LockSimple, PlusCircle, SquaresFour } from '@phosphor-icons/react'
+import { CheckCircle, Handshake, HourglassMedium, LockSimple, PlusCircle, SquaresFour } from '@phosphor-icons/react'
 import { SectionCard, SegmentedControl, StatusPill, type Status } from '@/design'
 import { planNameById } from '@/app/(hub)/_billing/planText'
 import {
@@ -19,6 +19,7 @@ const P = 'dashboard.organization.plan_usage.features'
 const STATE_STATUS: Record<PlanFeature['state'], Status> = {
   included: 'success',
   poc: 'info',
+  trial: 'info',
   addon: 'info',
   locked: 'neutral',
   edition: 'neutral',
@@ -27,6 +28,7 @@ const STATE_STATUS: Record<PlanFeature['state'], Status> = {
 const STATE_ICON: Record<PlanFeature['state'], React.ReactNode> = {
   included: <CheckCircle size={12} weight="fill" />,
   poc: <Handshake size={12} weight="fill" />,
+  trial: <HourglassMedium size={12} weight="fill" />,
   addon: <PlusCircle size={12} weight="fill" />,
   locked: <LockSimple size={12} weight="fill" />,
   edition: <LockSimple size={12} weight="fill" />,

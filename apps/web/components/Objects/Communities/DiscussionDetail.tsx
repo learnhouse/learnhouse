@@ -132,7 +132,7 @@ export function ThreadActions({
   }
   const share = () =>
     shareLink(
-      threadHref(orgslug, communityUuid, discussion.discussion_uuid),
+      threadHref(orgslug, communityUuid, discussion.discussion_uuid, discussion),
       discussion.title,
       t('communities.learner.link_copied'),
       t('communities.learner.link_failed')

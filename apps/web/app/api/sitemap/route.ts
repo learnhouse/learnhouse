@@ -7,6 +7,7 @@ import {
   getPodcastThumbnailMediaDirectory,
 } from '@services/media/media'
 import { getServerAPIUrl } from '@services/config/config'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import {
   SITEMAP_TYPES,
   buildSitemapIndex,
@@ -45,6 +46,24 @@ async function fetchSitemapData(orgSlug: string): Promise<SitemapData | null> {
   }
 }
 
+/** Public, not cancelled live sessions (EE; empty without it or on failure). */
+async function fetchPublicLiveSessions(orgSlug: string): Promise<NonNullable<SitemapData['live']>> {
+  try {
+    const org = await getOrganizationContextInfo(orgSlug, { revalidate: 300, tags: ['organizations'] })
+    if (!org?.id) return []
+    const res = await fetch(`${getServerAPIUrl()}live_sessions/org/${org.id}?scope=all&limit=100`, {
+      next: { revalidate: 600 },
+      signal: AbortSignal.timeout(5000),
+    })
+    const sessions = res.ok ? await res.json() : []
+    return (Array.isArray(sessions) ? sessions : [])
+      .filter((s: any) => s?.access === 'public' && s.status !== 'cancelled' && s.live_session_uuid)
+      .map((s: any) => ({ key: String(s.live_session_uuid).replace(/^livesession_/, ''), name: s.title, lastmod: s.update_date || s.creation_date || '' }))
+  } catch {
+    return []
+  }
+}
+
 function imageUrl(orgUuid: string) {
   return (type: 'course' | 'path' | 'podcast' | 'community' | 'folder', e: SitemapEntry): string => {
     if (!e.image || e.image.includes('/')) return ''
@@ -78,6 +97,10 @@ export async function GET(request: NextRequest) {
   if (!data) {
     // Don't cache an outage as an empty sitemap.
     return new NextResponse('Sitemap temporarily unavailable', { status: 503, headers: { 'Retry-After': '300' } })
+  }
+
+  if (data.org.features?.live !== false && (!sitemapType || sitemapType === 'live' || sitemapType === 'pages')) {
+    data.live = await fetchPublicLiveSessions(orgSlug)
   }
 
   // The index lists only non-empty child sitemaps, with their latest lastmod.

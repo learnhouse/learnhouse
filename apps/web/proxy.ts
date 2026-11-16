@@ -3,7 +3,8 @@ import { NextResponse, userAgent } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
 import { isThirdPartyRelayPath, withoutCredentialHeaders } from './lib/thirdPartyRelay'
-import { landingDecision } from './lib/seo/legacyRedirect'
+import { landingDecision, threadRedirect } from './lib/seo/legacyRedirect'
+import { seoRouteFor } from './lib/seo/publicRoutes'
 
 // =============================================================================
 // Tenancy
@@ -264,7 +265,7 @@ function tenantRequestHeaders(
 
 // Org-context headers the per-org metadata route handlers trust. Only the proxy
 // may set them; incoming copies are stripped before forwarding.
-const ORGSLUG_HEADERS = ['x-feed-orgslug', 'x-sitemap-orgslug', 'x-robots-orgslug']
+const ORGSLUG_HEADERS = ['x-feed-orgslug', 'x-sitemap-orgslug', 'x-robots-orgslug', 'x-seo-orgslug', 'x-seo-params']
 
 // =============================================================================
 // Middleware
@@ -293,6 +294,9 @@ export const config = {
     '/monitoring/:path*',
     '/sitemap.xml',
     '/robots.txt',
+    // Per-org feeds, llms.txt, manifest, IndexNow key, Markdown home (see lib/seo/publicRoutes).
+    '/(feed\\.xml|feed\\.atom|feed\\.json|rss\\.xml|llms\\.txt|llms-full\\.txt|manifest\\.webmanifest|index\\.md)',
+    '/:indexnow([A-Za-z0-9-]{8,64})\\.txt',
     '/payments/stripe/connect/oauth',
     '/podcast/:path*/feed',
     '/course/:path*/updates/feed',
@@ -460,7 +464,8 @@ export default async function proxy(req: NextRequest) {
         instance.tenancy === 'single'
         || resolved.source === 'subdomain'
         || resolved.source === 'custom-domain'
-      const hasInviteCode = !!req.nextUrl.searchParams.get('inviteCode')
+      // An invitation email's personal link (?invite=) is also a join.
+      const hasInviteCode = !!req.nextUrl.searchParams.get('inviteCode') || !!req.nextUrl.searchParams.get('invite')
       if (!onOrgHost && !hasInviteCode) {
         // /new is part of the SaaS-only hub; elsewhere the picker is the hub.
         return NextResponse.redirect(new URL(instance.mode === 'saas' ? '/new' : '/home', req.url))
@@ -604,10 +609,8 @@ export default async function proxy(req: NextRequest) {
     headers.set(name, slug)
     return { request: { headers } }
   }
-  if (
-    pathname.match(/^\/podcast\/([^/]+)\/feed$/) ||
-    pathname.match(/^\/course\/([^/]+)\/updates\/feed$/)
-  ) {
+  // Podcast feeds moved to the shared feed handler (seoRouteFor, below).
+  if (pathname.match(/^\/course\/([^/]+)\/updates\/feed$/)) {
     const resolved = await resolveTenant(req, instance)
     const feedUrl = new URL(`/api${pathname}`, req.url)
     return NextResponse.rewrite(feedUrl, orgslugRequestHeaders('X-Feed-Orgslug', resolved.slug))
@@ -616,6 +619,17 @@ export default async function proxy(req: NextRequest) {
     const resolved = await resolveTenant(req, instance)
     const sitemapUrl = new URL(`/api/sitemap${search}`, req.url)
     return NextResponse.rewrite(sitemapUrl, orgslugRequestHeaders('X-Sitemap-Orgslug', resolved.slug))
+  }
+  // Feeds (RSS/Atom/JSON), llms.txt, Markdown alternates, manifest, IndexNow key.
+  const seoRoute = seoRouteFor(pathname, search)
+  if (seoRoute) {
+    const resolved = await resolveTenant(req, instance)
+    const target = new URL(seoRoute, req.url)
+    const init = orgslugRequestHeaders('X-Seo-Orgslug', resolved.slug)
+    // Route handlers see the original URL's query on a rewrite, so the
+    // handler's parameters travel in a header only the proxy may set.
+    init.request.headers.set('X-Seo-Params', target.search.replace(/^\?/, ''))
+    return NextResponse.rewrite(target, init)
   }
   if (pathname === '/robots.txt') {
     const resolved = await resolveTenant(req, instance)
@@ -661,6 +675,11 @@ export default async function proxy(req: NextRequest) {
   const resolved = await resolveTenant(req, instance)
   // SEO: uuid URLs of resources with a slug (and, for crawlers, old slugs)
   // 308 to the slug URL; crawlers get a real 404 for missing resources.
+  // Old uuid thread URLs: 301 to the readable /community/{key}/{id}-{slug}.
+  const thread = await threadRedirect(getAPIUrl(), resolved.slug, pathname, fetch, Date.now(), { isBot: userAgent(req).isBot })
+  if (thread) {
+    return NextResponse.redirect(new URL(`${thread}${search}`, req.url), 301)
+  }
   const landing = await landingDecision(getAPIUrl(), resolved.slug, pathname, { isBot: userAgent(req).isBot })
   if (landing && 'redirect' in landing) {
     return NextResponse.redirect(new URL(`${landing.redirect}${search}`, req.url), 308)

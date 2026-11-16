@@ -193,6 +193,27 @@ async def api_apply_starter(
     return await starter_service.apply_starter(db_session, org, current_user, user_id, website=body.website, course=body.course)
 
 
+@router.post(
+    "/orgs/{org_id}/first-course",
+    summary="Create a first course from the template",
+    description="One click from the launch plan or the dashboard: adds a private, editable course shaped by the organization's goal (no AI, free on every plan) and returns it.",
+    responses={
+        200: {"description": "The new course."},
+        403: {"description": "Not an administrator, or the plan has no room for another course"},
+    },
+)
+async def api_first_course(
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    user_id, org = await _admin_org(org_id, current_user, db_session)
+    enforce_limit("starter", user_id)
+    row = await state_service.get_or_create(db_session, org)
+    course = await starter_service.create_starter_course(db_session, org, user_id, row.goal)
+    return {"course_uuid": course.course_uuid}
+
+
 @router.get(
     "/orgs/{org_id}",
     summary="Get the setup checklist",
@@ -267,9 +288,12 @@ async def api_plan_picker(
     _user_id, org = await _admin_org(org_id, current_user, db_session)
     if deployment_mode.get_deployment_mode() != "saas":
         raise HTTPException(status_code=404, detail="Plans are only sold on LearnHouse Cloud")
+    from src.services.plans.trial import get_active_trial
+
     row = await state_service.get_or_create(db_session, org)
     config = await state_service._config(db_session, org.id)
-    return plan_service.picker(_get_plan_from_config(config), row.goal)
+    trial = await get_active_trial(db_session, org.id)
+    return plan_service.picker(_get_plan_from_config(config), row.goal, trial.plan if trial else None)
 
 
 @router.get(

@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Proの機能",
-          "description": "企業を顧客として迎え、専用のブランドスペース、限定コース、企業自身が管理するシートを提供します。"
+          "description": "企業の研修を担当できます。その社員にコースへのアクセス、ブランド付きのスペース、確認できる進捗を提供します。シートの販売は任意です。"
         },
         "scim": {
           "title": "Enterprise機能",
@@ -176,6 +176,210 @@
         "newsletter": {
           "title": "Standard プランの機能",
           "description": "ニュースレターは Standard プラン以上でご利用いただけます。アップグレードすると、キャンペーン、ウェルカムシリーズ、コースの最新情報を学習者にメールで送信できます。"
+        }
+      },
+      "gate": {
+        "upgrade": "{{plan}}にアップグレード",
+        "talk_to_us": "お問い合わせ",
+        "ask_admin": "{{plan}}への移行を組織の管理者に依頼してください。",
+        "current": "現在のプラン：{{plan}}",
+        "preview_label": "プレビュー",
+        "preview": {
+          "completion": "修了率",
+          "certificate": "修了証",
+          "live": "ライブ",
+          "role_editor": "編集者",
+          "role_reviewer": "レビュアー",
+          "role_viewer": "閲覧者",
+          "week_other": "第{{count}}週",
+          "enroll": "受講登録",
+          "sso": "会社のアカウントで続行",
+          "sent": "送信済み",
+          "opened": "開封済み",
+          "clicked": "クリック済み"
+        },
+        "communities": {
+          "title": "学習者同士が助け合える場所を",
+          "b1": "コースの隣にディスカッション。返信と投票もできます",
+          "b2": "学習者はあなただけでなく、仲間からも答えを得られます",
+          "b3": "よくある質問を、問い合わせになる前に把握できます"
+        },
+        "messaging": {
+          "title": "学習者と直接やりとり",
+          "b1": "アカデミー内で1対1やグループの会話",
+          "b2": "学習者がすでにいる場所で質問に答えられます",
+          "b3": "未読のままのものはメールのまとめでお知らせ"
+        },
+        "analytics": {
+          "title": "アカデミーの状況を把握",
+          "b1": "受講登録、修了、アクティビティの推移",
+          "b2": "学習者が離脱するコースやレッスンを見つける",
+          "b3": "進捗をチームと一か所で共有"
+        },
+        "course_analytics": {
+          "title": "各コースで学習者が離れる箇所を知る",
+          "b1": "チャプターとレッスンごとの修了率",
+          "b2": "学習者ごとの進捗と学習時間",
+          "b3": "いちばん大切なレッスンを改善"
+        },
+        "certifications": {
+          "title": "最後まで学んだ学習者に修了証を",
+          "b1": "コースを修了すると修了証が自動で発行されます",
+          "b2": "学習者は検証できるリンクをLinkedInで共有できます",
+          "b3": "すべての修了証にあなたのブランドを"
+        },
+        "paths": {
+          "title": "次に受講するコースを示す",
+          "b1": "コースをまとめてガイド付きの学習パスに",
+          "b2": "1つのコースだけでなく、パス全体の進捗",
+          "b3": "パスを修了すると修了証を発行"
+        },
+        "required_training": {
+          "title": "必要な人が必要な研修を確実に修了",
+          "b1": "期限付きのコースをチームやロールに割り当て",
+          "b2": "期限の前後に自動でリマインダー",
+          "b3": "マネージャーは誰が順調かをひと目で確認"
+        },
+        "live_sessions": {
+          "title": "別のツールなしでライブ授業",
+          "b1": "学習者がアカデミーから参加できるセッションを予定",
+          "b2": "リマインダーは自動で送信",
+          "b3": "録画はコースの隣に保存"
+        },
+        "podcasts": {
+          "title": "移動中の学習者にも届ける",
+          "b1": "コースと並べて音声エピソードを公開",
+          "b2": "リスナーごとに再生位置を覚えているプレーヤー",
+          "b3": "AIでレッスンをエピソードに"
+        },
+        "usergroups": {
+          "title": "学習者をグループに分ける",
+          "b1": "グループ向けのコースへのアクセスを付与",
+          "b2": "コホート、チーム、クラスごとに専用のスペース",
+          "b3": "グループごとに進捗を確認"
+        },
+        "custom_domains": {
+          "title": "独自ドメインで教える",
+          "b1": "LearnHouseのアドレスではなくlearn.yourschool.com",
+          "b2": "SSL証明書が付属し、自動で更新",
+          "b3": "学習者はあなたのドメインでログインしたまま"
+        },
+        "api_access": {
+          "title": "アカデミーをお使いのツールと連携",
+          "b1": "APIでコースの作成、学習者の登録、進捗の取得",
+          "b2": "いつでも取り消せる、範囲を限定したトークン",
+          "b3": "ダッシュボードと同じAPI"
+        },
+        "webhooks": {
+          "title": "アカデミーでの出来事に対応",
+          "b1": "学習者の受講登録、修了、支払いを通知",
+          "b2": "イベントをZapier、CRM、独自のコードに送信",
+          "b3": "署名付きリクエストと自動リトライ"
+        },
+        "roles": {
+          "title": "一人ひとりに必要なアクセスを",
+          "b1": "管理者とメンバー以外のカスタムロール",
+          "b2": "作成、編集、レビューのみなど、できることを決められます",
+          "b3": "管理者が減れば、事故も減ります"
+        },
+        "seo": {
+          "title": "コースを見つけてもらう",
+          "b1": "検索とSNS向けのタイトル、説明、プレビュー",
+          "b2": "検索エンジンが読めるサイトマップ",
+          "b3": "検索上位を狙えるコースページ"
+        },
+        "drip": {
+          "title": "ちょうどよいペースでレッスンを公開",
+          "b1": "日付または受講登録からの日数でチャプターを公開",
+          "b2": "チャプターが公開されると学習者にメールが届きます",
+          "b3": "コホートの足並みをそろえる"
+        },
+        "payments": {
+          "title": "教えることで収益を",
+          "b1": "コースを買い切りまたはサブスクリプションで販売",
+          "b2": "追加手数料なしで、Stripeアカウントに直接入金",
+          "b3": "クーポン、バンドル、無料アクセスも必要に応じて"
+        },
+        "boards": {
+          "title": "共有キャンバスで一緒に考える",
+          "b1": "ワークショップ、授業、計画のためのホワイトボード",
+          "b2": "どのデバイスからでも全員がリアルタイムで編集",
+          "b3": "ボードをコースの隣に"
+        },
+        "playgrounds": {
+          "title": "読むだけでなく、練習できるように",
+          "b1": "AIで生成するインタラクティブな演習",
+          "b2": "解答ごとにすぐフィードバック",
+          "b3": "Playをアカデミー全体で共有"
+        },
+        "company_seats": {
+          "title": "個人だけでなく、企業の研修も",
+          "b1": "数クリックで企業の社員にコースへのアクセスを付与",
+          "b2": "企業ごとに独自のコースを持つブランド付きスペース",
+          "b3": "進捗を確認。シートの販売は必要な場合だけ"
+        },
+        "newsletter": {
+          "title": "学習者に戻ってきてもらう",
+          "b1": "お知らせや新しいコースを学習者にメールで送信",
+          "b2": "キャンペーンごとの開封数とクリック数",
+          "b3": "配信停止とバウンスは自動で処理"
+        },
+        "audit_logs": {
+          "title": "誰が何を変えたかを把握",
+          "b1": "管理者の操作をすべて、誰が・何を・いつで記録",
+          "b2": "監査のための検索とエクスポート",
+          "b3": "コンプライアンス要件に対応"
+        },
+        "sso": {
+          "title": "組織全体で1つのサインイン",
+          "b1": "メンバーはお使いのIDプロバイダーでサインイン",
+          "b2": "退職するとアクセスも終了",
+          "b3": "管理するパスワードが増えません"
+        },
+        "scim": {
+          "title": "メンバーを自動で同期",
+          "b1": "ディレクトリに合わせてメンバーを追加・削除",
+          "b2": "グループはIDプロバイダーに連動",
+          "b3": "手動でのオフボーディングは不要"
+        },
+        "lti": {
+          "title": "コースをLMSにつなぐ",
+          "b1": "Moodle、Canvas、BlackboardなどにLTI 1.3で対応",
+          "b2": "成績は自動で戻ります",
+          "b3": "学習者に別のアカウントは不要"
+        },
+        "scorm": {
+          "title": "既存のeラーニングをそのまま",
+          "b1": "SCORMパッケージをレッスンとしてインポート",
+          "b2": "スコアと修了を記録",
+          "b3": "古いコンテンツを作り直す必要はありません"
+        },
+        "compare": "プランを比較",
+        "sample": {
+          "discussion_1": "グループ課題はどう評価していますか？",
+          "discussion_2": "第2週のノート",
+          "discussion_3": "期末クイズのコツ",
+          "course_name": "データ分析入門",
+          "path_1": "はじめに",
+          "path_2": "基本スキル",
+          "path_3": "最終プロジェクト",
+          "session_1": "オフィスアワー",
+          "session_2": "Q&A：モジュール3",
+          "today": "今日",
+          "thursday": "木",
+          "episode": "第4回：続けられる勉強習慣",
+          "seo_snippet": "6週間の実践でデータの整理、探索、発表を学びます。修了証付き。",
+          "drip_1": "ようこそ・セットアップ",
+          "drip_2": "はじめてのデータセット",
+          "drip_3": "伝わるグラフの作り方",
+          "drip_4": "最終プロジェクト",
+          "one_time": "一括払い",
+          "newsletter_subject": "今月のアカデミー",
+          "note_1": "ワークショップのアイデア",
+          "note_2": "グループからの質問",
+          "note_3": "金曜日に向けた次のステップ",
+          "play_title": "練習",
+          "play_question": "五角形の辺はいくつありますか？"
         }
       }
     },
@@ -561,7 +765,35 @@
       "go_to_login": "ログインへ",
       "signing_in": "ログインしています...",
       "setting_up": "セッションを準備しています。しばらくお待ちください。"
-    }
+    },
+    "show_password": "パスワードを表示",
+    "hide_password": "パスワードを隠す",
+    "password_req_letter": "文字を1つ",
+    "password_req_number_or_symbol": "数字または記号を1つ",
+    "password_req_not_common": "よく使われるパスワードではない",
+    "your_name": "お名前",
+    "signup_one_step": "1分もかかりません。",
+    "verification_sent_to": "{{email}} に確認リンクを送信しました。開くとアカウントを使い始められます。",
+    "invite_link": {
+      "joining": "{{org}} に参加しています…",
+      "invalid_title": "この招待リンクは期限切れです",
+      "invalid_desc": "すでに使用された、取り消された、または新しい招待に置き換えられました。招待した方に新しい招待を依頼してください。",
+      "go_to_org": "{{org}} へ移動",
+      "wrong_account_title": "この招待は別のアドレス宛てです",
+      "wrong_account_desc": "{{current}} でサインインしていますが、招待は {{email}} に送られています。",
+      "switch_account": "サインアウトして続ける",
+      "signin_title": "{{org}} に参加",
+      "signin_desc": "すでにアカウントをお持ちです。サインインするとすぐに参加できます。",
+      "signin_cta": "サインインして参加",
+      "signup_title": "{{org}} に参加",
+      "signup_desc": "招待されています。パスワードを決めればすぐに参加できます。",
+      "choose_password": "パスワードを決める",
+      "create_and_join": "{{org}} に参加"
+    },
+    "login_failed_forgot": "パスワードをお忘れですか？",
+    "login_failed_reset": "再設定する",
+    "login_failed_magic": "代わりにログインリンクをメールで受け取る",
+    "login_failed_google_hint": "Google で登録しましたか？下の「Google で続行」を使ってください。"
   },
   "validation": {
     "required": "必須項目です",
@@ -1518,7 +1750,8 @@
       },
       "thread_actions": "スレッド操作",
       "threads_one": "スレッド {{count}} 件",
-      "threads_other": "スレッド {{count}} 件"
+      "threads_other": "スレッド {{count}} 件",
+      "newer_discussions": "新しいディスカッション"
     }
   },
   "boards": {
@@ -4152,7 +4385,9 @@
       "unavailable_body": "この組織はまだストアを有効にしていません。",
       "unavailable_title": "ストアは利用できません",
       "view_content": "コンテンツを見る"
-    }
+    },
+    "checkout_paused": "この商品のチェックアウトは一時的に利用できません。組織には通知済みです。しばらくしてからもう一度お試しください。",
+    "checkout_paused_short": "一時的に利用できません"
   },
   "account": {
     "title": "アカウント設定",
@@ -4640,7 +4875,8 @@
       "section_people": "ユーザーとビジネス",
       "section_settings": "設定",
       "resize_sidebar": "サイドバーのサイズを変更",
-      "open_account_menu": "アカウントメニューを開く"
+      "open_account_menu": "アカウントメニューを開く",
+      "trial_caption_other": "{{plan}}トライアル · 残り{{count}}日"
     },
     "home": {
       "cards": {
@@ -6671,7 +6907,138 @@
         "ai_copilot_description": "学習者がコースの内容について質問できるようにします。インデックス化された教材をもとに、出典付きで根拠のある回答を提供します。",
         "feature_editor_description": "コース作成者向けの、AIによるコンテンツ編集サポートです。",
         "feature_activity_description": "学習者を支援する、アクティビティ内で使えるAIアシスタントです。",
-        "always_on": "常にオン"
+        "always_on": "常にオン",
+        "platform_disabled": "この組織のAIはプラットフォームによりオフにされています。再度オンにするにはサポートにお問い合わせください。",
+        "enabled_count": "{{total}}個中{{on}}個のAI機能がオン",
+        "group_all_on": "すべてオン",
+        "group_all_off": "すべてオフ",
+        "ask_ai_audience": "AIに質問を使えるユーザー",
+        "audience_everyone": "全員",
+        "audience_staff": "コーススタッフのみ",
+        "limits_title": "月間クレジット上限",
+        "limits_description": "組織がこのクレジット数を使い切ると、その月の残りはAIが停止します。上限なしにするには空欄のままにします。",
+        "cap_placeholder": "上限なし",
+        "cap_unit": "クレジット / 月",
+        "save_cap": "保存",
+        "cap_invalid": "整数を入力するか、空欄のままにしてください。",
+        "off_by_admin": "管理者によりオフになっています",
+        "off_by_admin_description": "{{feature}}はこの組織では利用できません。必要な場合は管理者にお問い合わせください。",
+        "groups": {
+          "assistants": {
+            "title": "アシスタント",
+            "description": "チームと会話し、作業をこなすエージェント。"
+          },
+          "authoring": {
+            "title": "作成",
+            "description": "コース作成中の作成者をサポートします。"
+          },
+          "learners": {
+            "title": "学習者",
+            "description": "学習者が学習中に使うAI。"
+          },
+          "content": {
+            "title": "コンテンツ生成",
+            "description": "AIで作るメディア、音声、翻訳。"
+          },
+          "integrations": {
+            "title": "連携",
+            "description": "ウェブサイト、メール、接続アプリでのAI。"
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "質問に答え、組織全体で作業を行うダッシュボードのアシスタント。"
+          },
+          "atlas_scheduled": {
+            "title": "スケジュールエージェント",
+            "description": "週次レポートなど、スケジュールで実行されるAtlasのタスク。"
+          },
+          "ai_editor": {
+            "title": "AIエディター",
+            "description": "ページエディターで作成者と一緒に書いて編集するAIパネル。"
+          },
+          "course_builder": {
+            "title": "AIコースビルダー",
+            "description": "短い説明からコースの構成とレッスンの下書きを作成します。"
+          },
+          "editor_ai": {
+            "title": "AIライティング操作",
+            "description": "選択したテキストの書き直し、短縮、修正、トーン変更。"
+          },
+          "magic_blocks": {
+            "title": "マジックブロック",
+            "description": "プロンプトから生成されるインタラクティブなブロック。"
+          },
+          "quiz_generation": {
+            "title": "クイズとフラッシュカードの生成",
+            "description": "レッスン内容からクイズとフラッシュカードを作成します。"
+          },
+          "assignment_generation": {
+            "title": "課題とシナリオの生成",
+            "description": "AIで課題と分岐シナリオの下書きを作成します。"
+          },
+          "course_import": {
+            "title": "AIコースインポート",
+            "description": "ドキュメントや他プラットフォームのエクスポートをコースに変換します。"
+          },
+          "seo": {
+            "title": "SEOの提案",
+            "description": "ページの検索用タイトルと説明文を作成します。"
+          },
+          "ask_ai": {
+            "title": "AIに質問",
+            "description": "学習者がレッスンについて質問し、出典付きの回答を得られます。"
+          },
+          "ai_grading": {
+            "title": "AI採点",
+            "description": "提出物を採点し、課題へのフィードバックを下書きします。"
+          },
+          "messaging_agents": {
+            "title": "メッセージのAIエージェント",
+            "description": "メンバーがメッセージでチャットできるアシスタント。"
+          },
+          "plays": {
+            "title": "PlaysのAI",
+            "description": "Playsを生成し、学習者向けにAIステップを実行します。"
+          },
+          "translations": {
+            "title": "AI翻訳",
+            "description": "コースとそのSEOを他の言語に翻訳します。"
+          },
+          "image_generation": {
+            "title": "画像生成",
+            "description": "AIでサムネイルや画像を作成します。"
+          },
+          "voice": {
+            "title": "音声とポッドキャスト",
+            "description": "ポッドキャストの台本を書き、音声を生成します。"
+          },
+          "video_ai": {
+            "title": "動画の字幕とチャプター",
+            "description": "動画を文字起こしし、チャプターに分割します。"
+          },
+          "live_session_summary": {
+            "title": "ライブセッションの要約",
+            "description": "ライブセッションの録画を要約します。"
+          },
+          "boards": {
+            "title": "ボードのAI",
+            "description": "ボード上でプレイグラウンドやコンテンツを生成します。"
+          },
+          "landing_builder": {
+            "title": "AIウェブサイトデザイン",
+            "description": "ランディングページを生成し、文章を書き直します。"
+          },
+          "newsletter": {
+            "title": "AIニュースレター作成",
+            "description": "件名とニュースレターの本文を下書きします。"
+          },
+          "mcp_tools": {
+            "title": "MCP経由のAIツール",
+            "description": "アプリがMCPで組織に接続したときにAIを使うツール。"
+          }
+        }
       },
       "sso": {
         "title": "シングルサインオン（SSO）",
@@ -7098,7 +7465,8 @@
           "users_admin": "ユーザー（管理API）",
           "roles_admin": "ロール（管理API）",
           "newsletter": "ニュースレター",
-          "crm": "CRM 連携"
+          "crm": "CRM 連携",
+          "agent": "AI エージェント（Agent API）"
         },
         "resource": "リソース",
         "perm_create": "作成",
@@ -7458,7 +7826,8 @@
           "suspended": "アクセスが制限されています。復旧するには LearnHouse にお問い合わせください。",
           "licensed": "Enterprise Edition ライセンスでセルフホスト、プランの制限なし",
           "community": "セルフホストの Community Edition、プランの制限なし",
-          "billing_page": "請求書と支払い情報は請求ページで確認できます"
+          "billing_page": "請求書と支払い情報は請求ページで確認できます",
+          "free_trial_other": "無料トライアル、残り{{count}}日。カードは不要です。"
         },
         "next_invoice": "{{date}} に {{amount}}",
         "seats_of": "{{used}} / {{limit}}",
@@ -7522,7 +7891,8 @@
             "addon": "アドオン",
             "locked": "{{plan}} が必要",
             "locked_none": "利用不可",
-            "edition": "Enterprise Edition"
+            "edition": "Enterprise Edition",
+            "trial": "トライアル"
           },
           "on": "オン",
           "off": "オフ",
@@ -7558,7 +7928,7 @@
             "usergroups": "ユーザーグループ",
             "roles": "カスタムロール",
             "required_training": "必須研修",
-            "company_seats": "企業シート",
+            "company_seats": "企業",
             "payments": "決済",
             "ai": "AI 機能",
             "analytics": "分析",
@@ -7575,7 +7945,19 @@
           }
         },
         "next_invoice_label": "次回の請求書",
-        "seats_no_limit": "{{used}}、制限なし"
+        "seats_no_limit": "{{used}}、制限なし",
+        "invoices": "請求書",
+        "trial": {
+          "title_other": "{{plan}}トライアル：残り{{count}}日",
+          "desc_other": "{{date}}まで、Freeにはない{{count}}個の機能を含め、{{plan}}のすべてをご利用いただけます。いつでもプランを選べば、そのまま使い続けられます。トライアルが終了しても、何も削除されません。",
+          "choose": "{{plan}}を継続",
+          "what_happens": "プランを選ばずにトライアルが終了した場合",
+          "ended_title_trial": "{{plan}}トライアルは{{date}}に終了しました",
+          "ended_title": "{{date}}に{{plan}}からFreeに移行しました",
+          "ended_courses_other": "{{count}}件のコースが非公開になり、{{plan}}の機能は一時停止しています。アップグレードすると、すべて元どおりに戻ります。",
+          "ended_no_courses": "{{plan}}の機能は一時停止しています。アップグレードすると、すべて元どおりに戻ります。",
+          "restore": "{{plan}}を復元"
+        }
       },
       "overview": {
         "created": "{{date}} に作成",
@@ -14860,7 +15242,7 @@
     "done": "完了、準備万端です！",
     "steps": {
       "create_course": {
-        "title": "最初のコースを作成",
+        "title": "最初のコースが形になる",
         "description": "コースを作成するか、用意した下書きを編集しましょう。",
         "action": "コースを作成"
       },
@@ -14907,42 +15289,42 @@
         "university_desc": "ガイド、ヒント、ベストプラクティス"
       },
       "add_content": {
-        "title": "最初のレッスンを追加",
+        "title": "参加する価値のあるレッスン",
         "description": "動画、ページ、クイズを追加して、学習者に登録する確かな理由を提供しましょう。",
         "action": "コンテンツを追加"
       },
       "brand_school": {
-        "title": "ロゴとカラーを追加",
+        "title": "学習者が信頼する学校",
         "description": "ロゴと色を追加して、信頼できるプロフェッショナルな学校に見せましょう。",
         "action": "ブランディング"
       },
       "share_grow": {
-        "title": "ホームページを公開",
+        "title": "あなたの学校の入口",
         "description": "テンプレートを選んで自分らしく整え、受講者が最初に見るページを公開しましょう。",
         "action": "ウェブサイトを開く"
       },
       "invite_learners": {
-        "title": "最初の受講者を招待",
+        "title": "最初の学習者を迎えましょう",
         "description": "参加リンクを共有するか、人を招待して、最初の学習者を迎え入れましょう。",
         "action": "学習者を招待"
       },
       "build_community": {
-        "title": "コミュニティスペースを開く",
+        "title": "学習者に再び戻ってもらう",
         "description": "コミュニティスペースを開設して、学習者が活発に、そして友達を連れてくるように。",
         "action": "コミュニティを開く"
       },
       "publish_course": {
-        "title": "最初のコースを公開",
+        "title": "最初のコースが公開されました",
         "description": "受講者が実際に登録できるようにコースを公開しましょう。",
         "action": "コースを公開"
       },
       "create_group": {
-        "title": "最初のグループを作成",
+        "title": "最初のクラス",
         "description": "チーム・クラス・コホートでまとめて、コースを一度に割り当てます。",
         "action": "グループを作成"
       },
       "setup_payments": {
-        "title": "支払いを設定",
+        "title": "教えることで収益を得る",
         "description": "Stripeを接続してコースに価格を設定しましょう。",
         "action": "Stripeを接続"
       }
@@ -15624,7 +16006,33 @@
       "checkout_note": "組織の作成後、安全なチェックアウトに進みます。"
     },
     "add_pack": "{{pack}}を追加",
-    "cancels_on": "サブスクリプションは{{periodEnd}}にキャンセルされます。それまでは引き続きご利用いただけます。"
+    "cancels_on": "サブスクリプションは{{periodEnd}}にキャンセルされます。それまでは引き続きご利用いただけます。",
+    "trial": {
+      "title_other": "{{plan}}トライアル · 残り{{count}}日",
+      "desc": "カードは不要でした。プランを選ぶと、すべてそのまま使い続けられます。",
+      "choose": "プランを選ぶ",
+      "what_happens": "プランを選ばずにトライアルが終了すると変わること",
+      "keep": "{{plan}}を継続"
+    },
+    "downgrade_preview": {
+      "intro": "Freeプランでは：",
+      "course_kept": "「{{course}}」は公開のままです。",
+      "courses_private_other": "ほかの{{count}}件のコースは非公開になります（メンバーは引き続き開けます）。",
+      "drip_paused_other": "{{count}}件のコースのドリップ配信スケジュールが停止し、すべてのチャプターが開きます。",
+      "features_pause": "次の機能はアップグレードするまで一時停止します：",
+      "more_other": "ほか{{count}}件",
+      "members_over": "{{count}}人のメンバーはそのまま残ります（Freeの上限は{{limit}}人）。アップグレードするまで新しいメンバーは参加できません。",
+      "admins_over": "{{count}}人の管理者はそのまま残ります（Freeの上限は{{limit}}人）。新しい管理者は追加できません。",
+      "nothing_deleted": "何も削除されません。再度アップグレードすると、すべて元どおりに戻ります。"
+    },
+    "cancel_flow": {
+      "title": "{{plan}}を解約しますか？",
+      "until": "プランは{{date}}まで有効です。その後、組織はFreeに移行します。",
+      "until_unknown": "プランはお支払い済みの期間が終わるまで有効です。その後、組織はFreeに移行します。",
+      "restore": "いつでも再度アップグレードできます。コースの公開設定と一時停止した機能は自動的に戻ります。",
+      "keep": "{{plan}}を継続",
+      "confirm": "プランを解約"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16290,6 +16698,12 @@
       "resource_plural": "リソース",
       "newsletter": "ニュースレター",
       "newsletter_plural": "ニュースレター"
+    },
+    "health": {
+      "title": "学習者が現在購入できません",
+      "body_other": "{{date}}以降、決済プロバイダーが{{count}}件のチェックアウトを拒否しました。Stripeアカウントの接続が切れているか、対応が必要な可能性があります。解決するまで、学習者にはチェックアウトが一時的に利用できないと表示されます。",
+      "recheck": "再確認",
+      "fix": "支払い設定を開く"
     }
   },
   "lti": {
@@ -23059,7 +23473,47 @@
         "podcast": "ポッドキャスト",
         "community": "コミュニティ",
         "folder": "フォルダー"
-      }
+      },
+      "features_title": "検索エンジンがインデックスできる内容",
+      "features_subtitle": "セクションをオフにすると、Google、Bing、AI検索に表示されなくなります。ページ自体は訪問者に公開されたままです。",
+      "feature": {
+        "courses": "コース",
+        "activities": "無料レッスン",
+        "paths": "ラーニングパス",
+        "podcasts": "ポッドキャスト",
+        "communities": "コミュニティ",
+        "library": "ライブラリ",
+        "live": "ライブセッション",
+        "newsletters": "ニュースレターのアーカイブ",
+        "pages": "ウェブサイトのページ",
+        "store": "ストアのオファー"
+      },
+      "thin_threads": "未回答のスレッドを非表示にするまで",
+      "thin_threads_hint": "返信のないスレッドは、この期間が過ぎると検索から非表示になり、空のページがコミュニティの評価を下げるのを防ぎます。0にするとすべて残します。",
+      "days": "日",
+      "ai_title": "AI検索とクローラー",
+      "ai_subtitle": "ChatGPT、Claude、Perplexity、Gemini などのAIツールが公開コンテンツをどう利用できるかを設定します。",
+      "ai_policy": "AIクローラーのポリシー",
+      "ai_allow": "すべてのAIクローラーを許可",
+      "ai_allow_hint": "AIの回答でページが引用され、モデルがページから学習することもあります。",
+      "ai_block_training": "AIの回答は許可し、学習はブロック",
+      "ai_block_training_hint": "アシスタントはページを見つけて引用できます。学習用クローラー（GPTBot、Google-Extended、CCBot など）はブロックされます。",
+      "ai_block_all": "すべてのAIクローラーをブロック",
+      "ai_block_all_hint": "既知のAIエージェントはすべてrobots.txtでブロックされ、llms.txtはオフになります。ウェブ検索には影響しません。",
+      "ai_blocked_extra": "次のユーザーエージェントもブロック",
+      "ai_blocked_extra_hint": "1行につきクローラー名を1つ。例：Bytespider。",
+      "llms_enabled": "llms.txtとMarkdownページを公開",
+      "llms_enabled_hint": "/llms.txt に公開コンテンツのマップを置き、各公開ページのMarkdown版も提供することで、AIツールが正確に引用できるようにします。",
+      "feeds_title": "フィード",
+      "feeds_enabled": "RSS、Atom、JSONフィードを公開",
+      "feeds_enabled_hint": "新しいコース、コミュニティのスレッド、ライブセッションをフィードリーダーやアグリゲーターに配信します。ポッドキャストのフィードは常にオンです。",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "新規ページや更新したページを、Bing、Yandex、その他のIndexNow対応検索エンジンにすぐ通知します。",
+      "indexnow_enabled": "公開時に検索エンジンへ通知",
+      "indexnow_enabled_hint": "保存すると、サイト用の確認キーが作成されます。",
+      "indexnow_key": "確認キー",
+      "links_llms": "llms.txt",
+      "links_feed": "RSSフィード"
     },
     "save_failed": "SEO設定を保存できませんでした。",
     "saved": "SEO設定を保存しました。"
@@ -23544,8 +23998,8 @@
     }
   },
   "companies": {
-    "title": "顧客",
-    "subtitle": "研修を提供する企業、そのメンバー、コース、シート",
+    "title": "企業",
+    "subtitle": "研修を提供する企業。その社員にコースへのアクセスを付与するか、シートを販売します",
     "tabs": {
       "companies": "企業",
       "offers": "シートプラン",
@@ -23555,7 +24009,7 @@
       "tab": "企業",
       "title": "企業",
       "subtitle": "企業に販売したシートと、購入されたプラン",
-      "open_customers": "顧客プロフィールを開く"
+      "open_customers": "企業プロフィールを開く"
     },
     "menu": {
       "manage_team": "チームを管理"
@@ -23636,7 +24090,8 @@
       "auto_assign": "参加者に無料シートを付与",
       "company_admins": "企業管理者",
       "billing_email": "請求先メールアドレス",
-      "tags": "タグ"
+      "tags": "タグ",
+      "member_limit": "メンバー上限"
     },
     "list": {
       "new": "新しい企業",
@@ -23665,7 +24120,7 @@
       "no_match": "条件に一致する企業はありません",
       "clear_filters": "フィルターをクリア",
       "empty_title": "企業はまだありません",
-      "empty_body": "企業を登録すると、ブランドスペース、専用コース、企業が管理するシートを提供できます。"
+      "empty_body": "企業を追加すると、その社員にコースへのアクセス、ブランド付きのスペース、確認できる進捗を提供できます。シートの販売は任意です。"
     },
     "onboard": {
       "title": "企業を登録",
@@ -23718,7 +24173,7 @@
       "remove_member_title": "このメンバーを削除しますか？",
       "remove_member_body": "{{name}}は企業スペースと限定コースにアクセスできなくなります。進捗は保持されます。",
       "member_removed": "メンバーを削除しました",
-      "courses_intro": "共有コースは企業スペースに表示されます。限定コースは企業のメンバーにのみ表示されます。",
+      "courses_intro": "企業にコースへのアクセスを付与します。限定コースはその企業の人だけに表示されます。共有コースは通常どおり表示されたまま、企業のスペースにも表示されます。",
       "link_course": "コースをリンク",
       "create_course": "コースを作成",
       "no_courses": "リンクされたコースはありません",
@@ -23745,7 +24200,7 @@
       "grant_seats_hint": "Stripe以外で請求する契約向け: 請求書払い、試験導入、パートナー。",
       "cancel_company": "シートをキャンセル",
       "no_seats": "シートなし",
-      "no_seats_body": "この企業はシートを購入していません。シートを付与できます。",
+      "no_seats_body": "この企業にはシートがありません。社員は引き続きコースを直接受講できます。シートは、決まった数を販売または付与するためのものです。",
       "comped_n_one": "{{count}}件を無償付与",
       "comped_n_other": "{{count}}件を無償付与",
       "renews": "更新日",
@@ -23771,7 +24226,14 @@
       "no_activity": "まだアクティビティはありません",
       "notes": "メモ",
       "notes_hint": "アカデミーの管理者のみ閲覧できます。",
-      "notes_placeholder": "連絡先、更新の予定、重視していること…"
+      "notes_placeholder": "連絡先、更新の予定、重視していること…",
+      "access_hint": "この企業に参加してコースを受講できる人。支払いは不要です。",
+      "member_limit_hint": "メールまたはドメインで追加する人数の上限（任意）",
+      "no_limit": "上限なし",
+      "over_limit": "メンバー上限に達したため、次の人は追加されませんでした：{{list}}",
+      "or_folder": "またはフォルダー全体",
+      "folder_hint": "フォルダー内のすべてのコースを企業に付与します",
+      "pick_folder": "フォルダーを選択"
     },
     "offers": {
       "intro": "シートプランでは企業向けのシート価格を設定します。ボリューム階層、最小数、買い切りまたは定期払いを選べます。",
@@ -28337,7 +28799,11 @@
       "ai_credits_low": "AIクレジット残りわずか",
       "org_payment_failed": "サブスクリプションの支払い失敗",
       "agent_run_finished": "エージェントの実行完了",
-      "agent_run_failed": "エージェントの実行失敗"
+      "agent_run_failed": "エージェントの実行失敗",
+      "trial_ending": "トライアル終了間近",
+      "plan_downgraded": "Freeに移行",
+      "plan_restored": "プランを復元しました",
+      "payments_checkout_failing": "チェックアウトの失敗"
     },
     "copy": {
       "assignment_graded": "採点されました：{{assignment}}",
@@ -28395,7 +28861,11 @@
       "ai_credits_low": "AIクレジットが残りわずかです（残り{{remaining}}）",
       "org_payment_failed": "サブスクリプションの支払いに失敗しました",
       "agent_run_finished": "{{agent}}の定期実行が完了しました",
-      "agent_run_failed": "{{agent}}の定期実行に失敗しました"
+      "agent_run_failed": "{{agent}}の定期実行に失敗しました",
+      "trial_ending": "{{plan}}トライアルはあと{{days}}日で終了します",
+      "plan_downgraded": "現在はFreeです。何も削除されていません",
+      "plan_restored": "{{plan}}へおかえりなさい",
+      "payments_checkout_failing": "学習者が現在購入できません（失敗したチェックアウト: {{count}}件）"
     },
     "routing": {
       "short": "通知先",
@@ -28458,7 +28928,9 @@
       "start_template": "テンプレートから始める",
       "start_template_desc": "あなたの名前で {{template}} のウェブサイトを公開し、編集できる最初のコースの下書きを追加します。",
       "start_blank": "白紙から始める",
-      "start_blank_desc": "空のアカデミーです。セットアップのチェックリストが残りを案内します。"
+      "start_blank_desc": "空のアカデミーです。セットアップのチェックリストが残りを案内します。",
+      "trial_note_after": "カードは不要です。終了後は、そのまま継続するか、別のプランを選ぶか、Freeのまま使い続けられます。",
+      "trial_note": "{{plan}}を{{days}}日間、無料でお使いいただけます。"
     },
     "checklist": {
       "full_guide": "詳しいガイド",
@@ -28495,7 +28967,10 @@
         "ai_credits_one": "AIクレジット：{{formatted}}",
         "ai_credits_other": "AIクレジット：{{formatted}}"
       },
-      "compare": "プランを比較"
+      "compare": "プランを比較",
+      "your_trial": "ご利用中のトライアル",
+      "keep_plan": "{{plan}}を継続",
+      "subtitle_trial": "{{plan}}を無料でお試し中です。合うプランを選んでください。選ぶまで何も変わりません。"
     },
     "invite": {
       "title": "メンバーを招待",
@@ -28531,7 +29006,10 @@
       "import_one": "受講者を招待（{{count}}人）",
       "import_other": "受講者を招待（{{count}}人）",
       "sent_toast_one": "招待を送信しました（{{count}}件）",
-      "sent_toast_other": "招待を送信しました（{{count}}件）"
+      "sent_toast_other": "招待を送信しました（{{count}}件）",
+      "invite_only_create": "あなたの学校は招待制です。参加用リンクを作成すると、そのリンクから登録できます。",
+      "create_link": "参加用リンクを作成",
+      "invite_only_hint": "このリンクには参加コードが含まれているため、持っている人は誰でも登録できます。"
     },
     "invites": {
       "title": "招待",
@@ -28590,6 +29068,17 @@
       },
       "desc_one": "過去{{count}}日間に作成されたアカウントと到達段階",
       "desc_other": "過去{{count}}日間に作成されたアカウントと到達段階"
+    },
+    "first_course": {
+      "title": "最初のコースを作成",
+      "subtitle": "ほかのことは後回しで大丈夫。始め方を選んでください。言葉はあとから自由に変えられます。",
+      "template": "テンプレートから始める",
+      "template_desc": "章とレッスンがそろった下書きを、エディターで開きます。",
+      "ai": "AIで作成",
+      "ai_desc": "テーマを伝えるだけで、数分でコースの全体構成ができます。",
+      "blank": "または空のコースから始める",
+      "template_short": "テンプレートで始める",
+      "ai_short": "AIで作成"
     }
   },
   "impersonation": {
@@ -28617,5 +29106,19 @@
     "no_access_desc": "LearnHouseの管理者になりすましの権限を依頼してください。",
     "back_to_console": "コンソールに戻る",
     "retry": "再試行"
+  },
+  "mobile_app": {
+    "title": "モバイルアプリを入手",
+    "heading": "スマホで学ぶ",
+    "body": "LearnHouse アプリを開き、このコードをスキャンしてこのスクールに接続します。",
+    "qr_alt": "LearnHouse アプリでこのスクールを開く QR コード",
+    "qr_actions": "右クリックで QR コードを保存またはコピー",
+    "copy_image": "画像をコピー",
+    "download_png": "PNG をダウンロード",
+    "copy_link": "アプリのリンクをコピー",
+    "copied_image": "QR コードをコピーしました",
+    "copied_link": "アプリのリンクをコピーしました",
+    "copy_failed": "画像をコピーできませんでした。ダウンロードをお試しください。",
+    "download_failed": "画像を保存できませんでした。"
   }
 }

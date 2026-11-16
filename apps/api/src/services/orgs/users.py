@@ -1436,6 +1436,12 @@ async def invite_batch_users(
         org = OrganizationRead.model_validate(org)
         user = UserRead.model_validate(user)
 
+        # The email's button is a personal, single-use link to the org's own
+        # signup page with this address filled in (see onboarding/invite_links).
+        from src.services.onboarding.invite_links import create_invite_link
+
+        link_token, link_hash = create_invite_link(r, email, org.id, org.org_uuid, invite_code_uuid, ttl)
+
         isEmailSent = await send_invite_email(
             org,
             invite_code_uuid,
@@ -1443,6 +1449,7 @@ async def invite_batch_users(
             email,
             request,
             db_session=db_session,
+            invite_link_token=link_token,
         )
 
         invited_user_object = {
@@ -1454,6 +1461,7 @@ async def invite_batch_users(
             "expires": ttl,
             "created_at": datetime.now().isoformat(),
             "created_by": user.user_uuid,
+            "link_hash": link_hash,
         }
 
         r.set(

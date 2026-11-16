@@ -85,6 +85,7 @@ export const slashCommands: SlashCommandItem[] = [
     keywords: ['ai', 'assistant', 'atlas', 'write', 'help', 'ask'],
     command: () => requestAIEditor({ action: 'open', compose: true }),
     requiredPlan: 'standard',
+    aiFeature: 'ai_editor',
   },
   {
     id: 'aiContinue',
@@ -97,6 +98,7 @@ export const slashCommands: SlashCommandItem[] = [
     keywords: ['ai', 'continue', 'write', 'generate', 'draft'],
     command: () => requestAIEditor({ action: 'continue' }),
     requiredPlan: 'standard',
+    aiFeature: 'ai_editor',
   },
   // Text category
   {
@@ -338,6 +340,7 @@ export const slashCommands: SlashCommandItem[] = [
       editor.chain().focus().insertContent({ type: 'blockMagic' }).run()
     },
     requiredPlan: 'standard',
+    aiFeature: 'magic_blocks',
   },
   {
     id: 'quiz',

@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle, Circle, CircleNotch, ClipboardText, Hourglass } from '@phosphor-icons/react'
 import { queryKeys } from '@/lib/query/keys'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
+import { isCourseComplete, willCompleteCourse } from '@/lib/courses/completion'
 import { getFinalGrade, submitAssignmentForGrading } from '@services/courses/assignments'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
@@ -70,17 +71,23 @@ export function CompletionToggle({
           : [...runs, { course: { course_uuid: course.course_uuid }, course_id: course.id, steps: [step] }],
       }
     })
+    // Read before the optimistic write above lands in a refetch.
+    const finishesCourse = willCompleteCourse(previous, course, activity.id)
     try {
       const trail = await markActivityAsComplete(orgslug, course.course_uuid, activity.activity_uuid, token)
       if (trail?.runs) queryClient.setQueryData(trailKey, trail)
       else await queryClient.invalidateQueries({ queryKey: trailKey })
+      const completedCourse = trail?.runs ? isCourseComplete(trail, course) : finishesCourse
       track(AnalyticsEvent.ActivityMarkedComplete, {
         activity_uuid: activity.activity_uuid,
         course_uuid: course.course_uuid,
         activity_type: activity.activity_type,
-        will_complete_course: false,
+        will_complete_course: completedCourse,
         has_next_activity: true,
       })
+      if (completedCourse) {
+        track(AnalyticsEvent.CourseCompleted, { course_uuid: course.course_uuid })
+      }
       onChange?.(true)
     } catch {
       queryClient.setQueryData(trailKey, previous)

@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Funkcia Pro",
-          "description": "Pridajte firmy ako zákazníkov s vlastným značkovým priestorom, exkluzívnymi kurzami a miestami, ktoré si spravujú sami."
+          "description": "Školte firmy: dajte ich ľuďom prístup k vašim kurzom, priestor s ich značkou a pokrok, ktorý môžete sledovať. Predaj miest je voliteľný."
         },
         "scim": {
           "title": "Funkcia Enterprise",
@@ -176,6 +176,213 @@
         "newsletter": {
           "title": "Funkcia plánu Standard",
           "description": "Newsletter je dostupný v pláne Standard a vyšších. Prejdite na vyšší plán a posielajte študentom e-mailom kampane, uvítacie série a novinky z kurzov."
+        }
+      },
+      "gate": {
+        "upgrade": "Navýšiť na {{plan}}",
+        "talk_to_us": "Kontaktujte nás",
+        "ask_admin": "Požiadajte správcu vašej organizácie o prechod na {{plan}}.",
+        "current": "Váš plán: {{plan}}",
+        "preview_label": "Náhľad",
+        "preview": {
+          "completion": "Dokončenie",
+          "certificate": "Certifikát o absolvovaní",
+          "live": "Naživo",
+          "role_editor": "Editor",
+          "role_reviewer": "Recenzent",
+          "role_viewer": "Pozorovateľ",
+          "week_one": "Týždeň {{count}}",
+          "week_few": "Týždeň {{count}}",
+          "week_many": "Týždeň {{count}}",
+          "week_other": "Týždeň {{count}}",
+          "enroll": "Prihlásiť sa",
+          "sso": "Pokračovať s firemným účtom",
+          "sent": "odoslané",
+          "opened": "otvorené",
+          "clicked": "kliknutia"
+        },
+        "communities": {
+          "title": "Dajte študentom miesto, kde si navzájom pomáhajú",
+          "b1": "Diskusie priamo pri vašich kurzoch, s odpoveďami a hlasovaním",
+          "b2": "Študenti dostávajú odpovede od seba navzájom, nielen od vás",
+          "b3": "Odhaľte časté otázky skôr, než z nich budú požiadavky na podporu"
+        },
+        "messaging": {
+          "title": "Komunikujte so študentmi priamo",
+          "b1": "Súkromné aj skupinové konverzácie priamo vo vašej akadémii",
+          "b2": "Odpovedajte na otázky tam, kde študenti už sú",
+          "b3": "E-mailové súhrny všetkého neprečítaného"
+        },
+        "analytics": {
+          "title": "Pozrite sa, ako sa vašej akadémii darí",
+          "b1": "Zápisy, dokončenia a aktivita v čase",
+          "b2": "Nájdite kurzy a lekcie, pri ktorých študenti končia",
+          "b3": "Zdieľajte pokrok s tímom na jednom mieste"
+        },
+        "course_analytics": {
+          "title": "Zistite, kde každý kurz stráca študentov",
+          "b1": "Dokončenie podľa kapitol a lekcií",
+          "b2": "Pokrok a strávený čas každého študenta",
+          "b3": "Zlepšujte lekcie, na ktorých záleží najviac"
+        },
+        "certifications": {
+          "title": "Odmeňte študentov, ktorí kurz dokončia",
+          "b1": "Po dokončení kurzu sa certifikát vydá automaticky",
+          "b2": "Študenti zdieľajú overiteľný odkaz na LinkedIn",
+          "b3": "Vaša značka na každom certifikáte"
+        },
+        "paths": {
+          "title": "Ukážte študentom, čo absolvovať ďalej",
+          "b1": "Spojte kurzy do vzdelávacej cesty",
+          "b2": "Pokrok v celej ceste, nielen v jednom kurze",
+          "b3": "Certifikát po dokončení cesty"
+        },
+        "required_training": {
+          "title": "Správni ľudia dokončia správne školenia",
+          "b1": "Priraďujte kurzy s termínmi tímom alebo rolám",
+          "b2": "Automatické pripomienky pred termínom aj po ňom",
+          "b3": "Manažéri hneď vidia, kto stíha"
+        },
+        "live_sessions": {
+          "title": "Učte naživo bez ďalšieho nástroja",
+          "b1": "Plánujte relácie, ku ktorým sa študenti pripoja z vašej akadémie",
+          "b2": "Pripomienky sa odosielajú automaticky",
+          "b3": "Záznamy zostávajú pri kurze"
+        },
+        "podcasts": {
+          "title": "Buďte so študentmi aj na cestách",
+          "b1": "Zverejňujte audio epizódy popri kurzoch",
+          "b2": "Prehrávač si pamätá, kde každý poslucháč skončil",
+          "b3": "Premeňte lekcie na epizódy pomocou AI"
+        },
+        "usergroups": {
+          "title": "Rozdeľte študentov do skupín",
+          "b1": "Dajte skupine prístup ku kurzom, ktoré sú pre ňu určené",
+          "b2": "Kohorty, tímy alebo triedy s vlastným priestorom",
+          "b3": "Sledujte pokrok skupinu po skupine"
+        },
+        "custom_domains": {
+          "title": "Učte na vlastnej doméne",
+          "b1": "learn.yourschool.com namiesto adresy LearnHouse",
+          "b2": "SSL certifikát je v cene a obnovuje sa za vás",
+          "b3": "Študenti zostávajú prihlásení na vašej doméne"
+        },
+        "api_access": {
+          "title": "Prepojte akadémiu so svojimi nástrojmi",
+          "b1": "Vytvárajte kurzy, zapisujte študentov a čítajte pokrok cez API",
+          "b2": "Tokeny s obmedzeným rozsahom, ktoré môžete kedykoľvek zrušiť",
+          "b3": "Rovnaké API, aké používa naša nástenka"
+        },
+        "webhooks": {
+          "title": "Reagujte na to, čo sa deje vo vašej akadémii",
+          "b1": "Dostanete upozornenie, keď sa študent zapíše, dokončí kurz alebo zaplatí",
+          "b2": "Posielajte udalosti do Zapieru, vášho CRM alebo vlastného kódu",
+          "b3": "Podpísané požiadavky a automatické opakovanie"
+        },
+        "roles": {
+          "title": "Dajte každému taký prístup, aký potrebuje",
+          "b1": "Vlastné roly okrem správcu a člena",
+          "b2": "Rozhodnite, kto môže vytvárať, upravovať alebo len kontrolovať",
+          "b3": "Menej správcov, menej nehôd"
+        },
+        "seo": {
+          "title": "Nech ľudia vaše kurzy nájdu",
+          "b1": "Názvy, popisy a náhľady pre vyhľadávače a sociálne siete",
+          "b2": "Mapa stránok, ktorú vyhľadávače vedia prečítať",
+          "b3": "Stránky kurzov pripravené na dobré umiestnenie"
+        },
+        "drip": {
+          "title": "Sprístupňujte lekcie správnym tempom",
+          "b1": "Otvárajte kapitoly k dátumu alebo po určitom počte dní od zápisu",
+          "b2": "Študenti dostanú e-mail, keď sa kapitola otvorí",
+          "b3": "Kohorty postupujú spolu"
+        },
+        "payments": {
+          "title": "Nechajte si zaplatiť za to, čo učíte",
+          "b1": "Predávajte kurzy jednorazovo alebo formou predplatného",
+          "b2": "Výplaty priamo na váš účet Stripe, bez ďalších poplatkov",
+          "b3": "Kupóny, balíky a bezplatný prístup, keď chcete"
+        },
+        "boards": {
+          "title": "Premýšľajte spolu na spoločnom plátne",
+          "b1": "Tabule pre workshopy, hodiny a plánovanie",
+          "b2": "Všetci upravujú naživo z akéhokoľvek zariadenia",
+          "b3": "Tabuľa zostáva pri kurze"
+        },
+        "playgrounds": {
+          "title": "Nech študenti cvičia, nielen čítajú",
+          "b1": "Interaktívne cvičenia vytvorené pomocou AI",
+          "b2": "Okamžitá spätná väzba na každý pokus",
+          "b3": "Zdieľajte Plays s celou akadémiou"
+        },
+        "company_seats": {
+          "title": "Školte firmy, nielen jednotlivcov",
+          "b1": "Dajte ľuďom z firmy prístup k vašim kurzom na pár kliknutí",
+          "b2": "Priestor so značkou každej firmy, s jej vlastnými kurzami",
+          "b3": "Sledujte ich pokrok a miesta predávajte, len ak chcete"
+        },
+        "newsletter": {
+          "title": "Nech sa študenti vracajú",
+          "b1": "Posielajte študentom novinky a nové kurzy e-mailom",
+          "b2": "Otvorenia a kliknutia pre každú kampaň",
+          "b3": "Odhlásenia a nedoručené e-maily vybavíme za vás"
+        },
+        "audit_logs": {
+          "title": "Vedzte, kto čo zmenil",
+          "b1": "Každá akcia správcu je zaznamenaná: kto, čo a kedy",
+          "b2": "Vyhľadávanie a export pre audity",
+          "b3": "Splňte požiadavky na súlad s predpismi"
+        },
+        "sso": {
+          "title": "Jedno prihlásenie pre celú organizáciu",
+          "b1": "Členovia sa prihlasujú cez vášho poskytovateľa identity",
+          "b2": "Prístup skončí, keď niekto z firmy odíde",
+          "b3": "Žiadne ďalšie heslá na správu"
+        },
+        "scim": {
+          "title": "Členovia zostávajú automaticky synchronizovaní",
+          "b1": "Členovia sa pridávajú a odoberajú podľa vášho adresára",
+          "b2": "Skupiny sa riadia vaším poskytovateľom identity",
+          "b3": "Žiadne ručné odoberanie prístupov"
+        },
+        "lti": {
+          "title": "Pripojte kurzy k svojmu LMS",
+          "b1": "LTI 1.3 pre Moodle, Canvas, Blackboard a ďalšie",
+          "b2": "Známky sa automaticky prenášajú späť",
+          "b3": "Študenti nepotrebujú ďalší účet"
+        },
+        "scorm": {
+          "title": "Preneste svoj existujúci e-learning",
+          "b1": "Importujte balíky SCORM ako lekcie",
+          "b2": "Skóre a dokončenie sa sledujú",
+          "b3": "Starý obsah netreba vytvárať odznova"
+        },
+        "compare": "Porovnať plány",
+        "sample": {
+          "discussion_1": "Ako hodnotíte skupinové projekty?",
+          "discussion_2": "Moje poznámky z 2. týždňa",
+          "discussion_3": "Tipy na záverečný kvíz",
+          "course_name": "Úvod do analýzy dát",
+          "path_1": "Začíname",
+          "path_2": "Základné zručnosti",
+          "path_3": "Záverečný projekt",
+          "session_1": "Konzultačné hodiny",
+          "session_2": "Otázky a odpovede: modul 3",
+          "today": "Dnes",
+          "thursday": "št",
+          "episode": "Epizóda 4: Študijné návyky, ktoré vydržia",
+          "seo_snippet": "Naučte sa čistiť, skúmať a prezentovať dáta počas šiestich praktických týždňov. Certifikát v cene.",
+          "drip_1": "Privítanie a nastavenie",
+          "drip_2": "Vaša prvá dátová sada",
+          "drip_3": "Grafy, ktoré rozprávajú príbeh",
+          "drip_4": "Záverečný projekt",
+          "one_time": "Jednorazová platba",
+          "newsletter_subject": "Tento mesiac v akadémii",
+          "note_1": "Nápady na workshop",
+          "note_2": "Otázky zo skupiny",
+          "note_3": "Ďalšie kroky na piatok",
+          "play_title": "Precvičovanie",
+          "play_question": "Koľko strán má päťuholník?"
         }
       }
     },
@@ -561,7 +768,35 @@
       "go_to_login": "Prejsť na prihlásenie",
       "signing_in": "Prihlasujeme vás...",
       "setting_up": "Počkajte, kým nastavíme vašu reláciu."
-    }
+    },
+    "show_password": "Zobraziť heslo",
+    "hide_password": "Skryť heslo",
+    "password_req_letter": "Písmeno",
+    "password_req_number_or_symbol": "Číslica alebo symbol",
+    "password_req_not_common": "Nie bežné heslo",
+    "your_name": "Vaše meno",
+    "signup_one_step": "Trvá to menej ako minútu.",
+    "verification_sent_to": "Na {{email}} sme poslali potvrdzovací odkaz. Otvorte ho a začnite používať účet.",
+    "invite_link": {
+      "joining": "Pripájate sa k {{org}}…",
+      "invalid_title": "Platnosť tohto pozývacieho odkazu vypršala",
+      "invalid_desc": "Už bol použitý, stiahnutý alebo nahradený novšou pozvánkou. Požiadajte toho, kto vás pozval, o novú.",
+      "go_to_org": "Prejsť na {{org}}",
+      "wrong_account_title": "Táto pozvánka je pre inú adresu",
+      "wrong_account_desc": "Ste prihlásený ako {{current}}, ale pozvánka bola poslaná na {{email}}.",
+      "switch_account": "Odhlásiť sa a pokračovať",
+      "signin_title": "Pridajte sa k {{org}}",
+      "signin_desc": "Už máte účet. Prihláste sa a hneď sa pridáte.",
+      "signin_cta": "Prihlásiť sa a pridať sa",
+      "signup_title": "Pridajte sa k {{org}}",
+      "signup_desc": "Dostali ste pozvánku. Zvoľte heslo a ste dnu.",
+      "choose_password": "Zvoľte heslo",
+      "create_and_join": "Pridať sa k {{org}}"
+    },
+    "login_failed_forgot": "Zabudli ste heslo?",
+    "login_failed_reset": "Obnoviť",
+    "login_failed_magic": "Poslať mi radšej prihlasovací odkaz",
+    "login_failed_google_hint": "Registrovali ste sa cez Google? Použite nižšie Pokračovať cez Google."
   },
   "validation": {
     "required": "Povinné",
@@ -1582,7 +1817,8 @@
       "threads_one": "{{count}} vlákno",
       "threads_other": "{{count}} vlákna",
       "threads_few": "{{count}} vlákien",
-      "threads_many": "{{count}} vlákna"
+      "threads_many": "{{count}} vlákna",
+      "newer_discussions": "Novšie diskusie"
     }
   },
   "boards": {
@@ -4344,7 +4580,9 @@
       "unavailable_body": "Táto organizácia ešte nezapla svoj obchod.",
       "unavailable_title": "Obchod nie je k dispozícii",
       "view_content": "Zobraziť obsah"
-    }
+    },
+    "checkout_paused": "Platba za tento produkt je dočasne nedostupná. Organizácia už bola upozornená, skúste to neskôr.",
+    "checkout_paused_short": "Dočasne nedostupné"
   },
   "account": {
     "title": "Nastavenia účtu",
@@ -4832,7 +5070,11 @@
       "section_people": "Ľudia a biznis",
       "section_settings": "Nastavenia",
       "resize_sidebar": "Zmeniť veľkosť bočného panela",
-      "open_account_menu": "Otvoriť ponuku účtu"
+      "open_account_menu": "Otvoriť ponuku účtu",
+      "trial_caption_one": "Skúšobná verzia {{plan}} · zostáva {{count}} deň",
+      "trial_caption_few": "Skúšobná verzia {{plan}} · zostávajú {{count}} dni",
+      "trial_caption_many": "Skúšobná verzia {{plan}} · zostáva {{count}} dňa",
+      "trial_caption_other": "Skúšobná verzia {{plan}} · zostáva {{count}} dní"
     },
     "home": {
       "cards": {
@@ -6909,7 +7151,138 @@
         "ai_copilot_description": "Umožnite študentom klásť otázky o obsahu kurzu. Používa indexovaný materiál na poskytovanie odpovedí s citáciami zdrojov.",
         "feature_editor_description": "AI asistencia pri úprave obsahu pre tvorcov kurzov.",
         "feature_activity_description": "AI asistent dostupný v rámci aktivít na pomoc študentom.",
-        "always_on": "Vždy zapnuté"
+        "always_on": "Vždy zapnuté",
+        "platform_disabled": "Platforma vypla AI pre túto organizáciu. Ak ju chcete znova zapnúť, kontaktujte podporu.",
+        "enabled_count": "Zapnuté funkcie AI: {{on}} z {{total}}",
+        "group_all_on": "Zapnúť všetko",
+        "group_all_off": "Vypnúť všetko",
+        "ask_ai_audience": "Kto môže používať Opýtať sa AI",
+        "audience_everyone": "Všetci",
+        "audience_staff": "Iba tím kurzu",
+        "limits_title": "Mesačný limit kreditov",
+        "limits_description": "AI sa do konca mesiaca zastaví, keď organizácia minie toľko kreditov. Nechajte prázdne pre žiadny limit.",
+        "cap_placeholder": "Bez limitu",
+        "cap_unit": "kreditov / mesiac",
+        "save_cap": "Uložiť",
+        "cap_invalid": "Zadajte celé číslo alebo nechajte prázdne.",
+        "off_by_admin": "Vypnuté vaším správcom",
+        "off_by_admin_description": "{{feature}} nie je v tejto organizácii dostupné. Ak to potrebujete, požiadajte správcu.",
+        "groups": {
+          "assistants": {
+            "title": "Asistenti",
+            "description": "Agenti, ktorí sa rozprávajú s vaším tímom a robia prácu."
+          },
+          "authoring": {
+            "title": "Tvorba",
+            "description": "Pomoc pre autorov pri tvorbe kurzov."
+          },
+          "learners": {
+            "title": "Študenti",
+            "description": "AI, ktorú vaši študenti používajú pri učení."
+          },
+          "content": {
+            "title": "Generovanie obsahu",
+            "description": "Médiá, hlas a preklady vytvorené pomocou AI."
+          },
+          "integrations": {
+            "title": "Integrácie",
+            "description": "AI na vašom webe, v e-mailoch a pripojených aplikáciách."
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "Asistent na nástenke, ktorý odpovedá na otázky a vykonáva prácu v celej organizácii."
+          },
+          "atlas_scheduled": {
+            "title": "Plánovaní agenti",
+            "description": "Úlohy Atlasu, ktoré bežia podľa plánu, napríklad týždenné prehľady."
+          },
+          "ai_editor": {
+            "title": "AI editor",
+            "description": "Panel AI v editore stránok, ktorý píše a upravuje spolu s autormi."
+          },
+          "course_builder": {
+            "title": "AI tvorca kurzov",
+            "description": "Pripravte návrh plánu kurzu a jeho lekcií z krátkeho zadania."
+          },
+          "editor_ai": {
+            "title": "AI akcie písania",
+            "description": "Prepíšte, skráťte, opravte alebo zmeňte tón vybraného textu."
+          },
+          "magic_blocks": {
+            "title": "Magické bloky",
+            "description": "Interaktívne bloky vygenerované z pokynu."
+          },
+          "quiz_generation": {
+            "title": "Generovanie kvízov a kartičiek",
+            "description": "Vytvárajte kvízy a kartičky z obsahu lekcií."
+          },
+          "assignment_generation": {
+            "title": "Generovanie úloh a scenárov",
+            "description": "Pripravte úlohy a vetvené scenáre pomocou AI."
+          },
+          "course_import": {
+            "title": "AI import kurzov",
+            "description": "Premeňte dokumenty a exporty z iných platforiem na kurzy."
+          },
+          "seo": {
+            "title": "Návrhy SEO",
+            "description": "Píšte vyhľadávacie názvy a popisy pre svoje stránky."
+          },
+          "ask_ai": {
+            "title": "Opýtať sa AI",
+            "description": "Študenti sa pýtajú na lekciu a dostávajú odpovede so zdrojmi."
+          },
+          "ai_grading": {
+            "title": "Hodnotenie AI",
+            "description": "Hodnoťte odovzdané práce a pripravte spätnú väzbu k úlohám."
+          },
+          "messaging_agents": {
+            "title": "AI agenti v Správach",
+            "description": "Asistenti, s ktorými môžu členovia četovať v Správach."
+          },
+          "plays": {
+            "title": "AI v Plays",
+            "description": "Generujte Plays a spúšťajte ich kroky AI pre študentov."
+          },
+          "translations": {
+            "title": "AI preklady",
+            "description": "Prekladajte kurzy a ich SEO do iných jazykov."
+          },
+          "image_generation": {
+            "title": "Generovanie obrázkov",
+            "description": "Vytvárajte miniatúry a obrázky pomocou AI."
+          },
+          "voice": {
+            "title": "Hlas a podcasty",
+            "description": "Píšte scenáre podcastov a generujte hovorený zvuk."
+          },
+          "video_ai": {
+            "title": "Titulky a kapitoly videa",
+            "description": "Prepisujte videá a rozdeľte ich na kapitoly."
+          },
+          "live_session_summary": {
+            "title": "Zhrnutia živých relácií",
+            "description": "Zhrňte záznamy živých relácií."
+          },
+          "boards": {
+            "title": "AI na tabuliach",
+            "description": "Generujte playgroundy a obsah na tabuliach."
+          },
+          "landing_builder": {
+            "title": "Návrh webu s AI",
+            "description": "Generujte vstupné stránky a prepisujte ich texty."
+          },
+          "newsletter": {
+            "title": "Písanie newslettera s AI",
+            "description": "Pripravte predmety a obsah newsletterov."
+          },
+          "mcp_tools": {
+            "title": "AI nástroje cez MCP",
+            "description": "Nástroje, ktoré používajú AI, keď sa aplikácie pripoja k vašej organizácii cez MCP."
+          }
+        }
       },
       "sso": {
         "title": "Jednotné prihlásenie (SSO)",
@@ -7342,7 +7715,8 @@
           "users_admin": "Používatelia (Admin API)",
           "roles_admin": "Roly (Admin API)",
           "newsletter": "Newsletter",
-          "crm": "Integrácie CRM"
+          "crm": "Integrácie CRM",
+          "agent": "AI agenti (Agent API)"
         },
         "resource": "Zdroj",
         "perm_create": "Vytvoriť",
@@ -7708,7 +8082,11 @@
           "suspended": "Prístup je obmedzený. Kontaktujte LearnHouse a obnovte ho.",
           "licensed": "Vlastný hosting s licenciou Enterprise Edition, bez limitov plánu",
           "community": "Community Edition na vlastnom hostingu, bez limitov plánu",
-          "billing_page": "Faktúry a platobné údaje nájdete na stránke fakturácie"
+          "billing_page": "Faktúry a platobné údaje nájdete na stránke fakturácie",
+          "free_trial_one": "Bezplatná skúšobná verzia, zostáva {{count}} deň. Karta nie je potrebná.",
+          "free_trial_few": "Bezplatná skúšobná verzia, zostávajú {{count}} dni. Karta nie je potrebná.",
+          "free_trial_many": "Bezplatná skúšobná verzia, zostáva {{count}} dňa. Karta nie je potrebná.",
+          "free_trial_other": "Bezplatná skúšobná verzia, zostáva {{count}} dní. Karta nie je potrebná."
         },
         "next_invoice": "{{amount}} dňa {{date}}",
         "seats_of": "{{used}} z {{limit}}",
@@ -7781,7 +8159,8 @@
             "addon": "Doplnok",
             "locked": "Vyžaduje {{plan}}",
             "locked_none": "Nedostupné",
-            "edition": "Enterprise Edition"
+            "edition": "Enterprise Edition",
+            "trial": "Skúšobná verzia"
           },
           "on": "Zapnuté",
           "off": "Vypnuté",
@@ -7817,7 +8196,7 @@
             "usergroups": "Skupiny používateľov",
             "roles": "Vlastné roly",
             "required_training": "Povinné školenia",
-            "company_seats": "Firemné miesta",
+            "company_seats": "Firmy",
             "payments": "Platby",
             "ai": "AI funkcie",
             "analytics": "Analytika",
@@ -7834,7 +8213,28 @@
           }
         },
         "next_invoice_label": "Ďalšia faktúra",
-        "seats_no_limit": "{{used}}, bez limitu"
+        "seats_no_limit": "{{used}}, bez limitu",
+        "invoices": "Faktúry",
+        "trial": {
+          "title_one": "Skúšobná verzia {{plan}}: zostáva {{count}} deň",
+          "title_few": "Skúšobná verzia {{plan}}: zostávajú {{count}} dni",
+          "title_many": "Skúšobná verzia {{plan}}: zostáva {{count}} dňa",
+          "title_other": "Skúšobná verzia {{plan}}: zostáva {{count}} dní",
+          "desc_one": "Všetko z plánu {{plan}} máte k dispozícii do {{date}}, vrátane {{count}} funkcie nad rámec Free. Plán si môžete kedykoľvek vybrať a ponechať si ho; po skončení skúšobnej verzie sa nič nevymaže.",
+          "desc_few": "Všetko z plánu {{plan}} máte k dispozícii do {{date}}, vrátane {{count}} funkcií nad rámec Free. Plán si môžete kedykoľvek vybrať a ponechať si ho; po skončení skúšobnej verzie sa nič nevymaže.",
+          "desc_many": "Všetko z plánu {{plan}} máte k dispozícii do {{date}}, vrátane {{count}} funkcie nad rámec Free. Plán si môžete kedykoľvek vybrať a ponechať si ho; po skončení skúšobnej verzie sa nič nevymaže.",
+          "desc_other": "Všetko z plánu {{plan}} máte k dispozícii do {{date}}, vrátane {{count}} funkcií nad rámec Free. Plán si môžete kedykoľvek vybrať a ponechať si ho; po skončení skúšobnej verzie sa nič nevymaže.",
+          "choose": "Ponechať {{plan}}",
+          "what_happens": "Čo sa stane, ak skúšobná verzia skončí bez plánu",
+          "ended_title_trial": "Vaša skúšobná verzia {{plan}} skončila {{date}}",
+          "ended_title": "{{date}} ste prešli z {{plan}} na Free",
+          "ended_courses_one": "{{count}} kurz sa stal súkromným a funkcie {{plan}} sú pozastavené. Navýšte si plán a všetko sa vráti tak, ako bolo.",
+          "ended_courses_few": "{{count}} kurzy sa stali súkromnými a funkcie {{plan}} sú pozastavené. Navýšte si plán a všetko sa vráti tak, ako bolo.",
+          "ended_courses_many": "{{count}} kurzu sa stalo súkromnými a funkcie {{plan}} sú pozastavené. Navýšte si plán a všetko sa vráti tak, ako bolo.",
+          "ended_courses_other": "{{count}} kurzov sa stalo súkromnými a funkcie {{plan}} sú pozastavené. Navýšte si plán a všetko sa vráti tak, ako bolo.",
+          "ended_no_courses": "Funkcie {{plan}} sú pozastavené. Navýšte si plán a všetko sa vráti tak, ako bolo.",
+          "restore": "Obnoviť {{plan}}"
+        }
       },
       "overview": {
         "created": "Vytvorené {{date}}",
@@ -15417,7 +15817,7 @@
     "done": "Hotovo, som pripravený!",
     "steps": {
       "create_course": {
-        "title": "Vytvorte prvý kurz",
+        "title": "Váš prvý kurz naberá tvar",
         "description": "Vytvorte kurz alebo upravte koncept, ktorý sme pre vás pripravili.",
         "action": "Vytvoriť kurz"
       },
@@ -15464,42 +15864,42 @@
         "university_desc": "Príručky, tipy a osvedčené postupy"
       },
       "add_content": {
-        "title": "Pridajte prvú lekciu",
+        "title": "Lekcia, kvôli ktorej sa oplatí prísť",
         "description": "Pridajte video, stránku alebo kvíz. Dajte študentom skutočný dôvod sa zapísať.",
         "action": "Pridať obsah"
       },
       "brand_school": {
-        "title": "Pridajte logo a farby",
+        "title": "Škola, ktorej študenti dôverujú",
         "description": "Pridajte svoje logo a farby, aby pôsobila ako dôveryhodná, profesionálna škola.",
         "action": "Pridať značku"
       },
       "share_grow": {
-        "title": "Zverejnite domovskú stránku",
+        "title": "Vstupné dvere vašej školy",
         "description": "Vyberte šablónu, prispôsobte ju a zverejnite stránku, ktorú študenti uvidia ako prvú.",
         "action": "Otvoriť web"
       },
       "invite_learners": {
-        "title": "Pozvite prvých študentov",
+        "title": "Privítajte svojho prvého študenta",
         "description": "Zdieľajte odkaz na pripojenie alebo pozvite ľudí. Dostaňte prvého študenta dnu.",
         "action": "Pozvať študentov"
       },
       "build_community": {
-        "title": "Otvorte priestor pre komunitu",
+        "title": "Udržte študentov, aby sa vracali",
         "description": "Otvorte komunitný priestor, aby vaši študenti zostali aktívni a priviedli aj svojich priateľov.",
         "action": "Otvoriť komunitu"
       },
       "publish_course": {
-        "title": "Zverejnite prvý kurz",
+        "title": "Váš prvý kurz je spustený",
         "description": "Zverejnite kurz, aby sa študenti mali kam zapísať.",
         "action": "Zverejniť kurz"
       },
       "create_group": {
-        "title": "Vytvorte prvú skupinu",
+        "title": "Vaša prvá skupina",
         "description": "Zoskupte ľudí podľa tímu, triedy alebo skupiny a priraďte kurzy naraz.",
         "action": "Vytvoriť skupinu"
       },
       "setup_payments": {
-        "title": "Nastaviť platby",
+        "title": "Zarábajte na tom, čo učíte",
         "description": "Prepojte Stripe a nastavte cenu kurzu.",
         "action": "Prepojiť Stripe"
       }
@@ -16199,7 +16599,45 @@
       "checkout_note": "Po vytvorení organizácie sa dostanete k zabezpečenej platbe."
     },
     "add_pack": "Pridať {{pack}}",
-    "cancels_on": "Vaše predplatné sa zruší {{periodEnd}}. Dovtedy prístup pokračuje."
+    "cancels_on": "Vaše predplatné sa zruší {{periodEnd}}. Dovtedy prístup pokračuje.",
+    "trial": {
+      "title_one": "Skúšobná verzia {{plan}} · zostáva {{count}} deň",
+      "title_few": "Skúšobná verzia {{plan}} · zostávajú {{count}} dni",
+      "title_many": "Skúšobná verzia {{plan}} · zostáva {{count}} dňa",
+      "title_other": "Skúšobná verzia {{plan}} · zostáva {{count}} dní",
+      "desc": "Karta nebola potrebná. Vyberte si plán a všetko zostane tak, ako je.",
+      "choose": "Vybrať plán",
+      "what_happens": "Čo sa zmení, ak skúšobná verzia skončí bez plánu",
+      "keep": "Ponechať {{plan}}"
+    },
+    "downgrade_preview": {
+      "intro": "Na pláne Free:",
+      "course_kept": "„{{course}}“ zostane verejný.",
+      "courses_private_one": "{{count}} ďalší kurz sa stane súkromným (členovia ho môžu stále otvoriť).",
+      "courses_private_few": "{{count}} ďalšie kurzy sa stanú súkromnými (členovia ich môžu stále otvoriť).",
+      "courses_private_many": "{{count}} ďalšieho kurzu sa stane súkromnými (členovia ich môžu stále otvoriť).",
+      "courses_private_other": "{{count}} ďalších kurzov sa stane súkromnými (členovia ich môžu stále otvoriť).",
+      "drip_paused_one": "Postupné sprístupňovanie v {{count}} kurze sa pozastaví, takže sa otvoria všetky jeho kapitoly.",
+      "drip_paused_few": "Postupné sprístupňovanie v {{count}} kurzoch sa pozastaví, takže sa otvoria všetky ich kapitoly.",
+      "drip_paused_many": "Postupné sprístupňovanie v {{count}} kurzu sa pozastaví, takže sa otvoria všetky ich kapitoly.",
+      "drip_paused_other": "Postupné sprístupňovanie v {{count}} kurzoch sa pozastaví, takže sa otvoria všetky ich kapitoly.",
+      "features_pause": "Tieto funkcie sa pozastavia, kým si plán nenavýšite:",
+      "more_one": "a {{count}} ďalšia",
+      "more_few": "a {{count}} ďalšie",
+      "more_many": "a {{count}} ďalšej",
+      "more_other": "a {{count}} ďalších",
+      "members_over": "Všetci členovia ({{count}}) zostávajú, hoci limit Free je {{limit}}. Kým si plán nenavýšite, noví členovia sa nemôžu pridať.",
+      "admins_over": "Všetci správcovia ({{count}}) zostávajú, hoci limit Free je {{limit}}. Nových správcov nebude možné pridať.",
+      "nothing_deleted": "Nič sa nevymaže. Znova si navýšte plán a všetko sa vráti tak, ako bolo."
+    },
+    "cancel_flow": {
+      "title": "Zrušiť {{plan}}?",
+      "until": "Váš plán zostane aktívny do {{date}}. Potom vaša organizácia prejde na Free.",
+      "until_unknown": "Váš plán zostane aktívny do konca zaplateného obdobia. Potom vaša organizácia prejde na Free.",
+      "restore": "Plán si môžete kedykoľvek znova navýšiť: viditeľnosť kurzov a pozastavené funkcie sa vrátia automaticky.",
+      "keep": "Ponechať {{plan}}",
+      "confirm": "Zrušiť plán"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16894,6 +17332,15 @@
       "resource_plural": "Zdroje",
       "newsletter": "Newsletter",
       "newsletter_plural": "Newslettery"
+    },
+    "health": {
+      "title": "Študenti teraz nemôžu nakupovať",
+      "body_one": "Od {{date}} váš poskytovateľ platieb odmietol {{count}} platbu. Váš účet Stripe môže byť odpojený alebo vyžaduje pozornosť. Kým sa to nevyrieši, študenti vidia, že platba je dočasne nedostupná.",
+      "body_few": "Od {{date}} váš poskytovateľ platieb odmietol {{count}} platby. Váš účet Stripe môže byť odpojený alebo vyžaduje pozornosť. Kým sa to nevyrieši, študenti vidia, že platba je dočasne nedostupná.",
+      "body_many": "Od {{date}} váš poskytovateľ platieb odmietol {{count}} platby. Váš účet Stripe môže byť odpojený alebo vyžaduje pozornosť. Kým sa to nevyrieši, študenti vidia, že platba je dočasne nedostupná.",
+      "body_other": "Od {{date}} váš poskytovateľ platieb odmietol {{count}} platieb. Váš účet Stripe môže byť odpojený alebo vyžaduje pozornosť. Kým sa to nevyrieši, študenti vidia, že platba je dočasne nedostupná.",
+      "recheck": "Skontrolovať znova",
+      "fix": "Otvoriť nastavenia platieb"
     }
   },
   "lti": {
@@ -24079,7 +24526,47 @@
         "podcast": "Podcast",
         "community": "Komunita",
         "folder": "Priečinok"
-      }
+      },
+      "features_title": "Čo môžu vyhľadávače indexovať",
+      "features_subtitle": "Vypnite sekciu, aby sa nezobrazovala v Google, Bingu ani vo vyhľadávaní s AI. Jej stránky zostávajú otvorené pre návštevníkov.",
+      "feature": {
+        "courses": "Kurzy",
+        "activities": "Bezplatné lekcie",
+        "paths": "Vzdelávacie cesty",
+        "podcasts": "Podcasty",
+        "communities": "Komunity",
+        "library": "Knižnica",
+        "live": "Živé relácie",
+        "newsletters": "Archívy newslettera",
+        "pages": "Stránky webu",
+        "store": "Ponuky obchodu"
+      },
+      "thin_threads": "Skryť nezodpovedané vlákna po",
+      "thin_threads_hint": "Vlákna bez odpovede sa skryjú pred vyhľadávačmi, keď dosiahnu tento vek, aby prázdne stránky nezaťažovali komunitu. Hodnota 0 ponechá všetky.",
+      "days": "dňoch",
+      "ai_title": "Vyhľadávanie s AI a prehľadávače",
+      "ai_subtitle": "Ako môžu ChatGPT, Claude, Perplexity, Gemini a ďalšie nástroje AI používať váš verejný obsah.",
+      "ai_policy": "Pravidlá pre prehľadávače AI",
+      "ai_allow": "Povoliť všetky prehľadávače AI",
+      "ai_allow_hint": "Odpovede AI môžu citovať vaše stránky a modely sa z nich môžu učiť.",
+      "ai_block_training": "Povoliť odpovede AI, blokovať trénovanie",
+      "ai_block_training_hint": "Asistenti môžu vaše stránky stále nájsť a citovať; trénovacie prehľadávače (GPTBot, Google-Extended, CCBot…) sú blokované.",
+      "ai_block_all": "Blokovať všetky prehľadávače AI",
+      "ai_block_all_hint": "Všetci známi agenti AI sú blokovaní v robots.txt a llms.txt je vypnutý. Vyhľadávanie na webe to neovplyvní.",
+      "ai_blocked_extra": "Blokovať aj tieto user agenty",
+      "ai_blocked_extra_hint": "Jeden názov prehľadávača na riadok, napr. Bytespider.",
+      "llms_enabled": "Zverejniť llms.txt a stránky Markdown",
+      "llms_enabled_hint": "Mapa vášho verejného obsahu na /llms.txt a kópia každej verejnej stránky v Markdown, aby vás nástroje AI citovali presne.",
+      "feeds_title": "Kanály",
+      "feeds_enabled": "Zverejniť kanály RSS, Atom a JSON",
+      "feeds_enabled_hint": "Nové kurzy, vlákna komunity a živé relácie v čítačkách kanálov a agregátoroch. Kanály podcastov zostávajú vždy zapnuté.",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "Okamžite informujte Bing, Yandex a ďalšie vyhľadávače s IndexNow o nových a aktualizovaných stránkach.",
+      "indexnow_enabled": "Upozorniť vyhľadávače pri zverejnení",
+      "indexnow_enabled_hint": "Pri uložení sa pre váš web vytvorí overovací kľúč.",
+      "indexnow_key": "Overovací kľúč",
+      "links_llms": "llms.txt",
+      "links_feed": "Kanál RSS"
     },
     "save_failed": "Nepodarilo sa uložiť nastavenia SEO.",
     "saved": "Nastavenia SEO boli uložené."
@@ -24620,8 +25107,8 @@
     }
   },
   "companies": {
-    "title": "Zákazníci",
-    "subtitle": "Firmy, ktoré školíte, ich ľudia, kurzy a miesta",
+    "title": "Firmy",
+    "subtitle": "Firmy, ktoré školíte: dajte ich ľuďom prístup k vašim kurzom alebo im predajte miesta",
     "tabs": {
       "companies": "Firmy",
       "offers": "Ponuky miest",
@@ -24631,7 +25118,7 @@
       "tab": "Firmy",
       "title": "Firmy",
       "subtitle": "Miesta predané firmám a ponuky, ktoré kupujú",
-      "open_customers": "Otvoriť profily zákazníkov"
+      "open_customers": "Otvoriť profily firiem"
     },
     "menu": {
       "manage_team": "Spravovať tím"
@@ -24712,7 +25199,8 @@
       "auto_assign": "Dať novým členom miesto zadarmo",
       "company_admins": "Administrátori firmy",
       "billing_email": "Fakturačný e-mail",
-      "tags": "Štítky"
+      "tags": "Štítky",
+      "member_limit": "Limit členov"
     },
     "list": {
       "new": "Nová firma",
@@ -24741,7 +25229,7 @@
       "no_match": "Týmto filtrom nezodpovedá žiadna firma",
       "clear_filters": "Zrušiť filtre",
       "empty_title": "Zatiaľ žiadne firmy",
-      "empty_body": "Pridajte firmu a dajte jej značkový priestor, vlastné kurzy a miesta, ktoré si spravuje sama."
+      "empty_body": "Pridajte firmu a dajte jej ľuďom prístup k vašim kurzom, priestor s jej značkou a pokrok, ktorý môžete sledovať. Predaj miest je voliteľný."
     },
     "onboard": {
       "title": "Pridať firmu",
@@ -24796,7 +25284,7 @@
       "remove_member_title": "Odstrániť tohto člena?",
       "remove_member_body": "{{name}} stratí prístup k priestoru firmy a jej exkluzívnym kurzom. Pokrok zostane zachovaný.",
       "member_removed": "Člen odstránený",
-      "courses_intro": "Zdieľané kurzy sa zobrazujú v priestore firmy. Exkluzívne kurzy vidia iba členovia firmy.",
+      "courses_intro": "Dajte firme prístup ku kurzom: exkluzívne kurzy vidia len jej ľudia, zdieľané kurzy zostávajú viditeľné ako zvyčajne a zobrazia sa v jej priestore.",
       "link_course": "Prepojiť kurz",
       "create_course": "Vytvoriť kurz",
       "no_courses": "Žiadne prepojené kurzy",
@@ -24823,7 +25311,7 @@
       "grant_seats_hint": "Pre obchody fakturované mimo Stripe: faktúry, piloty, partneri.",
       "cancel_company": "Zrušiť miesta",
       "no_seats": "Žiadne miesta",
-      "no_seats_body": "Táto firma si nekúpila žiadne miesta. Môžete jej nejaké udeliť.",
+      "no_seats_body": "Táto firma nemá žiadne miesta. Jej ľudia môžu stále dostávať kurzy priamo; miesta slúžia na predaj alebo pridelenie určitého počtu.",
       "comped_n_one": "{{count}} zadarmo",
       "comped_n_few": "{{count}} zadarmo",
       "comped_n_many": "{{count}} zadarmo",
@@ -24853,7 +25341,14 @@
       "no_activity": "Zatiaľ sa nič nestalo",
       "notes": "Poznámky",
       "notes_hint": "Viditeľné iba pre administrátorov vašej akadémie.",
-      "notes_placeholder": "Kontakty, plány obnovenia, na čom im záleží…"
+      "notes_placeholder": "Kontakty, plány obnovenia, na čom im záleží…",
+      "access_hint": "Kto sa môže pridať k tejto firme a získať jej kurzy. Platba nie je potrebná.",
+      "member_limit_hint": "Voliteľný strop pre ľudí pridaných podľa e-mailu alebo domény",
+      "no_limit": "Bez limitu",
+      "over_limit": "Limit členov je dosiahnutý, preto títo ľudia neboli pridaní: {{list}}",
+      "or_folder": "Alebo celý priečinok",
+      "folder_hint": "Firma dostane všetky kurzy v ňom",
+      "pick_folder": "Vyberte priečinok"
     },
     "offers": {
       "intro": "Ponuky miest určujú ceny miest pre firmy: objemové pásma, minimum, jednorazovo alebo opakovane.",
@@ -29657,7 +30152,11 @@
       "ai_credits_low": "Dochádzajú AI kredity",
       "org_payment_failed": "Platba za predplatné zlyhala",
       "agent_run_finished": "Spustenie agenta skončilo",
-      "agent_run_failed": "Spustenie agenta zlyhalo"
+      "agent_run_failed": "Spustenie agenta zlyhalo",
+      "trial_ending": "Skúšobná verzia končí",
+      "plan_downgraded": "Prechod na Free",
+      "plan_restored": "Plán obnovený",
+      "payments_checkout_failing": "Zlyhávajúce platby"
     },
     "copy": {
       "assignment_graded": "Ohodnotené: {{assignment}}",
@@ -29715,7 +30214,11 @@
       "ai_credits_low": "Dochádzajú AI kredity (zostáva {{remaining}})",
       "org_payment_failed": "Platba za vaše predplatné zlyhala",
       "agent_run_finished": "{{agent}} dokončil(a) plánované spustenie",
-      "agent_run_failed": "Plánované spustenie agenta {{agent}} zlyhalo"
+      "agent_run_failed": "Plánované spustenie agenta {{agent}} zlyhalo",
+      "trial_ending": "Vaša skúšobná verzia {{plan}} končí o {{days}} d.",
+      "plan_downgraded": "Teraz máte Free. Nič sa nevymazalo",
+      "plan_restored": "Vitajte späť v pláne {{plan}}",
+      "payments_checkout_failing": "Študenti teraz nemôžu nakupovať (neúspešné platby: {{count}})"
     },
     "routing": {
       "short": "Koho upozorniť",
@@ -29781,7 +30284,9 @@
       "start_template": "Začať zo šablóny",
       "start_template_desc": "Zverejníme web {{template}} s vaším názvom a pridáme koncept prvého kurzu na úpravu.",
       "start_blank": "Začať načisto",
-      "start_blank_desc": "Prázdna akadémia. Zoznam nastavenia vás prevedie zvyškom."
+      "start_blank_desc": "Prázdna akadémia. Zoznam nastavenia vás prevedie zvyškom.",
+      "trial_note_after": "Karta nie je potrebná. Potom si plán ponecháte, vyberiete iný alebo zostanete na Free.",
+      "trial_note": "Získavate {{plan}} na {{days}} dní zadarmo."
     },
     "checklist": {
       "full_guide": "Celý sprievodca",
@@ -29818,7 +30323,10 @@
         "ai_credits_one": "AI kredity: {{formatted}}",
         "ai_credits_other": "AI kredity: {{formatted}}"
       },
-      "compare": "Porovnať plány"
+      "compare": "Porovnať plány",
+      "your_trial": "Vaša skúšobná verzia",
+      "keep_plan": "Ponechať {{plan}}",
+      "subtitle_trial": "Skúšate {{plan}} zadarmo. Vyberte si plán, ktorý vám vyhovuje; kým to neurobíte, nič sa nezmení."
     },
     "invite": {
       "title": "Pozvať ľudí",
@@ -29854,7 +30362,10 @@
       "import_one": "Pozvať študentov: {{count}}",
       "import_other": "Pozvať študentov: {{count}}",
       "sent_toast_one": "Odoslané pozvánky: {{count}}",
-      "sent_toast_other": "Odoslané pozvánky: {{count}}"
+      "sent_toast_other": "Odoslané pozvánky: {{count}}",
+      "invite_only_create": "Vaša škola je len na pozvanie. Vytvorte odkaz na pripojenie, aby sa ľudia mohli zaregistrovať.",
+      "create_link": "Vytvoriť odkaz na pripojenie",
+      "invite_only_hint": "Tento odkaz obsahuje kód na pripojenie: zaregistrovať sa môže ktokoľvek, kto ho má."
     },
     "invites": {
       "title": "Pozvánky",
@@ -29913,6 +30424,17 @@
       },
       "desc_one": "Účty za posledné dni ({{count}}) a kam sa dostali",
       "desc_other": "Účty za posledné dni ({{count}}) a kam sa dostali"
+    },
+    "first_course": {
+      "title": "Vytvorte svoj prvý kurz",
+      "subtitle": "Všetko ostatné počká. Vyberte si začiatok, každé slovo môžete neskôr zmeniť.",
+      "template": "Začať so šablónou",
+      "template_desc": "Hotový koncept s kapitolami a lekciami, otvorený v editore.",
+      "ai": "Vytvoriť s AI",
+      "ai_desc": "Opíšte tému a za pár minút získate kompletnú osnovu kurzu.",
+      "blank": "Alebo začnite s prázdnym kurzom",
+      "template_short": "Začať so šablónou",
+      "ai_short": "Vytvoriť s AI"
     }
   },
   "impersonation": {
@@ -29940,5 +30462,19 @@
     "no_access_desc": "Požiadajte správcu LearnHouse o prístup ku konaniu za členov.",
     "back_to_console": "Späť do konzoly",
     "retry": "Skúsiť znova"
+  },
+  "mobile_app": {
+    "title": "Stiahnuť mobilnú aplikáciu",
+    "heading": "Učte sa v telefóne",
+    "body": "Otvorte aplikáciu LearnHouse a naskenujte tento kód, aby ste sa pripojili k tejto škole.",
+    "qr_alt": "QR kód na otvorenie tejto školy v aplikácii LearnHouse",
+    "qr_actions": "Kliknite pravým tlačidlom a uložte alebo skopírujte QR kód",
+    "copy_image": "Kopírovať obrázok",
+    "download_png": "Stiahnuť PNG",
+    "copy_link": "Kopírovať odkaz na aplikáciu",
+    "copied_image": "QR kód skopírovaný",
+    "copied_link": "Odkaz na aplikáciu skopírovaný",
+    "copy_failed": "Obrázok sa nepodarilo skopírovať. Skúste Stiahnuť.",
+    "download_failed": "Obrázok sa nepodarilo uložiť."
   }
 }

@@ -27,6 +27,7 @@ import OnboardingVideo from './OnboardingVideo'
 import LaunchFinale from './LaunchFinale'
 import { whyKey } from './onboardingCopy'
 import { openInviteDialog } from '@components/Onboarding/onboardingEvents'
+import FirstCourseActions from './FirstCourseActions'
 
 export const STEP_ICON: Record<string, React.ElementType> = {
   create_course: BookOpen,
@@ -212,7 +213,12 @@ function StepPanel({
 
   const btn =
     'inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-xs font-bold text-white nice-shadow transition-colors hover:bg-gray-800'
-  const cta = step.completeOnClick ? (
+  const cta = step.id === 'create_course' ? (
+    // One click to a first course: a template draft or the AI builder.
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <FirstCourseActions onStart={() => track(AnalyticsEvent.OnboardingStepActionClicked, { step_id: step.id })} />
+    </span>
+  ) : step.completeOnClick ? (
     <a href={target} target="_blank" rel="noopener noreferrer" onClick={onAction} className={btn}>
       {action}
       <ArrowUpRight size={13} weight="bold" data-dir-flip />

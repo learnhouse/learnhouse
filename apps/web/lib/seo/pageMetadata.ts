@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { buildPageTitle } from './utils'
-import { clipDescription, keywordList, ogLocale, robotsMetadata, seoImageUrl, type ResourceSeo } from './meta'
+import { clipDescription, feedsEnabled, keywordList, llmsEnabled, ogLocale, robotsMetadata, seoImageUrl, type ResourceSeo } from './meta'
 import type { SeoContext } from './context.server'
 import { toIsoDate } from './jsonld'
 import { PAGE_CARDS } from './ogCard'
@@ -32,6 +32,8 @@ export function buildResourceMetadata(opts: {
   alternateLocales?: string[]
   /** hreflang → absolute URL, incl. `x-default` (multilingual courses). */
   languages?: Record<string, string>
+  /** `<link rel="alternate" type=...>`: feeds and the Markdown copy (see seoAlternates). */
+  alternateTypes?: Record<string, string>
 }): Metadata {
   const { ctx } = opts
   const seo = opts.seo || {}
@@ -50,7 +52,11 @@ export function buildResourceMetadata(opts: {
     description,
     keywords: keywordList(seo.keywords || opts.keywords),
     robots: robotsMetadata({ orgSeo: ctx.seo, seo, indexable: opts.indexable }),
-    alternates: opts.languages ? { canonical, languages: opts.languages } : { canonical },
+    alternates: {
+      canonical,
+      ...(opts.languages ? { languages: opts.languages } : {}),
+      ...(opts.alternateTypes && Object.keys(opts.alternateTypes).length ? { types: opts.alternateTypes } : {}),
+    },
     openGraph: {
       title: ogTitle,
       description: ogDescription,
@@ -93,6 +99,7 @@ export async function buildListMetadata(opts: {
   noindex?: boolean
   /** A page's own social image (builder pages): an absolute URL or a site path. */
   image?: string | null
+  alternateTypes?: Record<string, string>
 }): Promise<Metadata> {
   const { ctx } = opts
   const title = buildPageTitle(opts.name, ctx.org?.name || '', ctx.seo)
@@ -107,7 +114,7 @@ export async function buildListMetadata(opts: {
     description,
     keywords: keywordList(opts.keywords),
     robots: robotsMetadata({ orgSeo: ctx.seo, indexable: !opts.noindex }),
-    alternates: { canonical },
+    alternates: { canonical, ...(opts.alternateTypes && Object.keys(opts.alternateTypes).length ? { types: opts.alternateTypes } : {}) },
     openGraph: {
       title,
       description,
@@ -125,4 +132,25 @@ export async function buildListMetadata(opts: {
       ...(ctx.seo.twitter_handle ? { site: ctx.seo.twitter_handle } : {}),
     },
   }
+}
+
+/**
+ * Discovery links of a public page: its Markdown copy (AI search) and the
+ * feeds that follow it. Only for indexable pages, and only what the org has
+ * turned on, so a noindexed page never advertises a copy of itself.
+ */
+export async function seoAlternates(
+  ctx: SeoContext,
+  opts: { indexable: boolean; markdown?: string; feed?: string; podcastFeed?: string },
+): Promise<Record<string, string>> {
+  const types: Record<string, string> = {}
+  if (!opts.indexable || ctx.seo.indexing_disabled) return types
+  if (opts.markdown && llmsEnabled(ctx.seo)) types['text/markdown'] = await ctx.url(opts.markdown)
+  if (opts.podcastFeed) types['application/rss+xml'] = await ctx.url(opts.podcastFeed)
+  else if (opts.feed && feedsEnabled(ctx.seo)) {
+    types['application/rss+xml'] = await ctx.url(`${opts.feed}feed.xml`)
+    types['application/atom+xml'] = await ctx.url(`${opts.feed}feed.atom`)
+    types['application/feed+json'] = await ctx.url(`${opts.feed}feed.json`)
+  }
+  return types
 }

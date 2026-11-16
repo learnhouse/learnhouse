@@ -107,6 +107,8 @@ const ALLOWED_API_TAGS = [
   'newsletter',
   // CRM integrations (EE): status, mapping, syncs. Absent without EE.
   'crm',
+  // Agent API (EE): Atlas and learner agents, conversations, approvals.
+  'agent',
 ]
 
 const APIDocumentation: React.FC = () => {

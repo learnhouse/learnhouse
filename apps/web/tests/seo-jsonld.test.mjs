@@ -142,8 +142,8 @@ describe("other entities", () => {
       episodes: [{ name: "Ep 1", durationSeconds: 1830, episodeNumber: 1, datePublished: "2026-01-01 00:00:00" }, { name: "Ep 2" }],
     });
     expect(p.webFeed).toBe("https://a/podcast/x/feed");
-    expect(p.episode[0]).toMatchObject({ "@type": "PodcastEpisode", timeRequired: "PT31M", episodeNumber: 1 });
-    expect(p.episode[1]).toEqual({ "@type": "PodcastEpisode", name: "Ep 2" });
+    expect(p.hasPart[0]).toMatchObject({ "@type": "PodcastEpisode", timeRequired: "PT31M", episodeNumber: 1 });
+    expect(p.hasPart[1]).toEqual({ "@type": "PodcastEpisode", name: "Ep 2" });
   });
   test("community and discussion", () => {
     const c = communityJsonLd({ name: "Club", url: "https://a/community/club", org, threads: [{ name: "Hi", url: "https://a/t/1" }] });

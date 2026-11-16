@@ -17,7 +17,8 @@ import {
 import { calcPrice, findPlan, getCurrencySymbol, type Billing, type PricesResponse } from '@/app/(hub)/_billing/plans'
 
 // Where "Talk to us" goes for the plans sold through a conversation.
-export const CONTACT_SALES_URL = 'https://learnhouse.app/contact?subject=business'
+export { CONTACT_SALES_URL } from '@services/plans/contact'
+import { CONTACT_SALES_URL } from '@services/plans/contact'
 
 const nameKey = (id: string) => `billing.catalog.names.${id.replace('-', '_')}`
 const taglineKey = (id: string) => `billing.catalog.taglines.${id.replace('-', '_')}`
@@ -97,7 +98,9 @@ export default function PlanPicker({
   const body = (
     <div className="flex flex-col gap-5 p-1">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-neutral-500 max-w-md">{t('onb2.plans.subtitle')}</p>
+        <p className="text-sm text-neutral-500 max-w-md">
+          {data?.trial_plan ? t('onb2.plans.subtitle_trial', { plan: t(nameKey(data.trial_plan)) }) : t('onb2.plans.subtitle')}
+        </p>
         <SegmentedControl<Billing>
           value={billing}
           onChange={setBilling}
@@ -129,6 +132,8 @@ export default function PlanPicker({
                 <span className="text-sm font-semibold text-neutral-900">{t(nameKey(plan.id))}</span>
                 {plan.current ? (
                   <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">{t('onb2.plans.current')}</span>
+                ) : plan.trial ? (
+                  <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700" data-testid="picker-trial">{t('onb2.plans.your_trial')}</span>
                 ) : plan.recommended ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-0.5 text-[11px] font-medium text-white">
                     <Sparkle size={10} weight="fill" />
@@ -188,11 +193,13 @@ export default function PlanPicker({
                 ) : (
                   <Button
                     size="sm"
-                    variant={plan.recommended ? 'primary' : 'secondary'}
+                    variant={plan.recommended || plan.trial ? 'primary' : 'secondary'}
                     className="w-full justify-center"
                     onClick={() => choose(plan)}
                   >
-                    {t('billing.pricing.choose_plan', { plan: t(nameKey(plan.id)) })}
+                    {plan.trial
+                      ? t('onb2.plans.keep_plan', { plan: t(nameKey(plan.id)) })
+                      : t('billing.pricing.choose_plan', { plan: t(nameKey(plan.id)) })}
                   </Button>
                 )}
               </div>

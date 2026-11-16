@@ -1,10 +1,10 @@
 'use client'
 import React, { useState } from 'react'
-import { Cube, ArrowSquareOut, X, Plus, BookOpen, Users, UserCheck, ShieldCheck, Lightning } from '@phosphor-icons/react'
+import { Cube, ArrowSquareOut, X, Plus, BookOpen, Users, UserCheck, ShieldCheck, Lightning, HourglassMedium } from '@phosphor-icons/react'
 import { AIMark } from '@components/Objects/AI/AIBrand'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { planName, planNameByLabel, featureLabel, featureBadge, packLabel } from '../../_billing/planText'
+import { planName, planNameById, planNameByLabel, featureLabel, featureBadge, packLabel } from '../../_billing/planText'
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,9 @@ import type { OrgUsageResponse, ActiveUsersSummary } from '@services/orgs/usage'
 import UsageBar from './UsageBar'
 import BillingSummary from './BillingSummary'
 import InvoiceHistory from './InvoiceHistory'
+import DowngradePreview from '@components/Billing/DowngradePreview'
+import type { DowngradePreview as DowngradePreviewData } from '@services/orgs/planOverview'
+import { trialProgress, type OrgTrial } from '@services/plans/trial'
 
 interface PlanUsageProps {
   org: any
@@ -54,6 +57,10 @@ interface PlanUsageProps {
   priceOverrides?: PriceOverrides
   packPrices?: PackPrices
   planLimits?: PlanLimits
+  /** The free trial, when one is running (SaaS). */
+  trial?: OrgTrial | null
+  /** What a move to Free would change (shown before cancelling). */
+  downgradePreview?: DowngradePreviewData | null
   /** Open the plan-switch wizard. */
   onSwitch: () => void
   /** Re-fetch subscription/usage after a change. */
@@ -76,6 +83,8 @@ export default function PlanUsage({
   priceOverrides,
   packPrices,
   planLimits,
+  trial,
+  downgradePreview,
   onSwitch,
   onChanged,
 }: PlanUsageProps) {
@@ -84,6 +93,7 @@ export default function PlanUsage({
   const plan = rawPlan ? applyPlanLimits(rawPlan, planLimits) : undefined
 
   const [cancelLoading, setCancelLoading] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
   const [packLoading, setPackLoading] = useState<string | null>(null)
   const [disclaimerPack, setDisclaimerPack] = useState<PackCatalogEntry | null>(null)
 
@@ -151,6 +161,7 @@ export default function PlanUsage({
     if (!org?.id) return
     setCancelLoading(true)
     try {
+      setConfirmCancel(false)
       await billingCancel({ orgId: org.id })
       toast.success(t('billing.cancel_success', { defaultValue: 'Subscription will be canceled at the end of the billing period.' }))
       onChanged()
@@ -221,8 +232,45 @@ export default function PlanUsage({
         </div>
       )}
 
+      {/* Free trial: days left, one action */}
+      {trial && !subscription && (
+        <div className="bg-white rounded-2xl nice-shadow overflow-hidden" data-testid="billing-trial">
+          <div className="px-6 py-6 flex items-center justify-between gap-6 flex-wrap">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+                <HourglassMedium size={20} weight="duotone" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[15px] font-bold text-black">
+                  {t('billing.trial.title', { plan: planNameById(t, trial.plan, trial.plan), count: trial.days_left })}
+                </p>
+                <p className="text-[13px] text-black/40 mt-0.5">{t('billing.trial.desc')}</p>
+                <div className="mt-2.5 h-1 w-48 max-w-full overflow-hidden rounded-full bg-black/[0.06]">
+                  <div className="h-full rounded-full bg-violet-500/80" style={{ width: `${trialProgress(trial)}%` }} />
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={onSwitch}
+              className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[13px] font-semibold hover:bg-black/80 transition-colors flex-shrink-0"
+            >
+              <Cube size={14} />
+              {t('billing.trial.choose')}
+            </button>
+          </div>
+          {downgradePreview && (
+            <details className="border-t border-black/[0.05] px-6 py-4 group">
+              <summary className="cursor-pointer text-[13px] font-semibold text-black/60 hover:text-black">
+                {t('billing.trial.what_happens')}
+              </summary>
+              <DowngradePreview preview={downgradePreview} className="mt-3" />
+            </details>
+          )}
+        </div>
+      )}
+
       {/* Free plan upgrade prompt */}
-      {!subscription && !subLoading && currentPlanId === 'free' && (
+      {!trial && !subscription && !subLoading && currentPlanId === 'free' && (
         <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
           <div className="px-6 py-6 flex items-center justify-between gap-6 flex-wrap">
             <div className="flex items-center gap-4">
@@ -252,7 +300,7 @@ export default function PlanUsage({
       )}
 
       {/* Non-Stripe managed plan (e.g. enterprise) */}
-      {!subscription && !subLoading && currentPlanId !== 'free' && (
+      {!trial && !subscription && !subLoading && currentPlanId !== 'free' && (
         <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
           <div className="px-6 py-6 flex items-center justify-between gap-6 flex-wrap">
             <div className="flex items-center gap-4">
@@ -339,8 +387,9 @@ export default function PlanUsage({
               </button>
               {!subscription.cancelAtPeriodEnd && currentPlanId !== 'free' && (
                 <button
-                  onClick={handleCancelSubscription}
+                  onClick={() => setConfirmCancel(true)}
                   disabled={cancelLoading}
+                  data-testid="billing-cancel-plan"
                   className="flex items-center gap-1.5 text-[12px] font-medium text-red-400 hover:text-red-600 transition-colors"
                 >
                   <X size={12} />
@@ -708,7 +757,49 @@ export default function PlanUsage({
       )}
 
       {/* Invoice history */}
-      <InvoiceHistory invoices={invoices ?? []} />
+      <div id="billing-invoices" className="scroll-mt-6">
+        <InvoiceHistory invoices={invoices ?? []} />
+      </div>
+
+      {/* Cancel: what changes, before it happens */}
+      <Dialog open={confirmCancel} onOpenChange={(o) => !cancelLoading && setConfirmCancel(o)}>
+        <DialogContent className="max-w-lg p-0">
+          <div className="px-6 py-5 space-y-4" data-testid="cancel-dialog">
+            <DialogTitle asChild>
+              <p className="text-[15px] font-bold text-black">
+                {t('billing.cancel_flow.title', { plan: plan ? planName(t, plan) : currentPlanId })}
+              </p>
+            </DialogTitle>
+            <p className="text-[13px] text-black/50">
+              {periodEnd
+                ? t('billing.cancel_flow.until', { date: periodEnd })
+                : t('billing.cancel_flow.until_unknown')}
+            </p>
+            {downgradePreview ? (
+              <DowngradePreview preview={downgradePreview} />
+            ) : (
+              <p className="text-[13px] text-black/50">{t('billing.downgrade_preview.nothing_deleted')}</p>
+            )}
+            <p className="text-[12px] text-black/40">{t('billing.cancel_flow.restore')}</p>
+          </div>
+          <div className="px-6 py-4 border-t border-black/[0.05] flex flex-wrap justify-end gap-2">
+            <button
+              onClick={() => setConfirmCancel(false)}
+              className="px-4 py-2 rounded-xl text-[13px] font-semibold bg-black text-white hover:bg-black/80 transition-colors"
+            >
+              {t('billing.cancel_flow.keep', { plan: plan ? planName(t, plan) : currentPlanId })}
+            </button>
+            <button
+              onClick={handleCancelSubscription}
+              disabled={cancelLoading}
+              className="px-4 py-2 rounded-xl text-[13px] font-semibold text-red-600 hover:bg-red-50 transition-colors"
+              data-testid="cancel-confirm"
+            >
+              {cancelLoading ? t('billing.canceling_ellipsis', { defaultValue: 'Canceling...' }) : t('billing.cancel_flow.confirm')}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Disclaimer modal */}
       <Dialog open={!!disclaimerPack} onOpenChange={(o) => !o && setDisclaimerPack(null)}>

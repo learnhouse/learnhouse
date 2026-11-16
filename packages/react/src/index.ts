@@ -15,4 +15,9 @@ export type {
   MarkOverrideProps,
   ThemeMode,
 } from './types'
+export { useAgentConversation } from './agent/useAgentConversation'
+export { AgentChat, AgentView, ApprovalCard, CitationList, DEFAULT_AGENT_LABELS } from './agent/AgentChat'
+export { defaultViewRenderers, formatCell } from './agent/renderers'
+export { Markdown as AgentMarkdown } from './agent/markdown'
+export type * from './agent/types'
 export { VERSION } from './version'

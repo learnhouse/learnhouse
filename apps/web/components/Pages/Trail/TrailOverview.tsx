@@ -18,7 +18,7 @@ export type TrailStats = {
 
 function MiniStat({ icon, tone, label, value }: { icon: React.ReactNode; tone: string; label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 bg-white rounded-xl nice-shadow ps-2 pe-3.5 h-12 min-w-0 shrink-0 max-sm:min-w-[132px]">
+    <div className="flex items-center gap-2.5 bg-white rounded-xl nice-shadow ps-2 pe-3.5 h-12 min-w-0 shrink-0 max-sm:min-w-[132px] lg:flex-1 lg:basis-0">
       <span className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center ${tone}`}>{icon}</span>
       <span className="min-w-0 leading-tight">
         <span className="block text-base font-bold tabular-nums text-neutral-900">{value}</span>
@@ -50,7 +50,7 @@ export default function TrailOverview({ firstName, stats }: { firstName?: string
         <p className="mt-1 text-sm text-neutral-500">{t('trail.subtitle', 'Your courses, progress and achievements in one place.')}</p>
       </div>
       {/* Phones: one swipeable row, so the courses stay near the top. */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 py-1 -my-1 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-4 sm:overflow-visible lg:flex lg:flex-wrap">
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 py-1 -my-1 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-4 sm:overflow-visible lg:flex">
         <MiniStat icon={<BookOpen size={16} />} tone="bg-sky-50 text-sky-600" label={t('trail.stats.in_progress', 'In progress')} value={v(stats?.inProgress)} />
         <MiniStat icon={<CheckCircle size={16} />} tone="bg-emerald-50 text-emerald-600" label={t('trail.stats.completed', 'Completed')} value={v(stats?.completed)} />
         {stats?.dueThisWeek !== null && stats?.dueThisWeek !== undefined && (

@@ -47,11 +47,14 @@ export type PickerPlan = {
   unlocks: string[]
   contact_sales: boolean
   current: boolean
+  /** The plan a running free trial unlocks (the org hasn't bought it yet). */
+  trial?: boolean
   recommended: boolean
 }
 
 export type PlanPickerData = {
   current_plan: string | null
+  trial_plan?: string | null
   recommended_plan: string
   goal: OnboardingGoal | null
   can_continue_free: boolean
@@ -168,3 +171,7 @@ export const onboardingKeys = {
   plans: (orgId: number | string | undefined) => ['onboarding', 'plans', String(orgId ?? '')] as const,
   hub: () => ['onboarding', 'hub'] as const,
 }
+
+/** One click: a private, editable course shaped by the org's goal (no AI). */
+export const createFirstCourse = (token: string | undefined, orgId: number) =>
+  request<{ course_uuid: string }>(`/orgs/${orgId}/first-course`, token, { method: 'POST' })

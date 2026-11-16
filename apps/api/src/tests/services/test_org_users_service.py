@@ -665,7 +665,12 @@ class TestOrgUsersService:
             "already_invited",
             "email_failed",
         ]
-        assert fake_redis.set.call_count == 2
+        # Per sent invite: its personal link record, then the invite record
+        # carrying that link's hash (only the newest link for it works).
+        assert fake_redis.set.call_count == 4
+        keys = [c.args[0] for c in fake_redis.set.call_args_list]
+        assert keys[0].startswith("invite_link:") and keys[1] == f"invited_user:new@test.com:org:{org.org_uuid}"
+        assert json.loads(fake_redis.set.call_args_list[1].args[1])["link_hash"] == keys[0].split(":", 1)[1]
         dispatch_mock.assert_awaited_once()
         # One event for the whole batch; the already-pending address is not
         # counted, the failed email is (its invite is recorded).

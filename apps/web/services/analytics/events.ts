@@ -42,6 +42,7 @@ export enum AnalyticsEvent {
   LoginSucceeded = 'login_succeeded',
   LoginFailed = 'login_failed',
   LoginGoogleClicked = 'login_google_clicked',
+  LoginRecoveryClicked = 'login_recovery_clicked',
   SignupGoogleClicked = 'signup_google_clicked',
   LoginSsoClicked = 'login_sso_clicked',
   GoogleOauthCallbackCompleted = 'google_oauth_callback_completed',
@@ -198,9 +199,14 @@ export enum AnalyticsEvent {
   PaywallGetAccessClicked = 'paywall_get_access_clicked',
 
   // ── Course management (creator) ──────────────────────────────────────────
+  CourseCreateModalOpened = 'course_create_modal_opened',
   CourseCreationTypeSelected = 'course_creation_type_selected',
   CourseCreated = 'course_created',
   AiCourseCreated = 'ai_course_created',
+  // Migration wizard (/dash/courses/migrate). A finished migration also sends
+  // course_created with creation_type 'migrate'.
+  CourseMigrationOrganized = 'course_migration_organized',
+  CourseMigrationFailed = 'course_migration_failed',
   CoursePublishedToggled = 'course_published_toggled',
   CourseChangesSaved = 'course_changes_saved',
   ChapterCreated = 'chapter_created',

@@ -44,7 +44,9 @@ import {
   CourseRow,
   CourseRowSkeleton,
 } from './_components/courseItems'
-import CourseCreationModals from './_components/CourseCreationModals'
+import CourseCreationModals, { type CreationType } from './_components/CourseCreationModals'
+import CourseCreationTypeSelector from '@components/Objects/Modals/Course/Create/CourseCreationTypeSelector'
+import { usePlan } from '@components/Hooks/usePlan'
 
 type StatusFilter = 'all' | 'published' | 'drafts'
 type VisibilityFilter = 'all' | 'public' | 'private'
@@ -296,6 +298,9 @@ function CoursesHome({ orgslug }: { orgslug: string }) {
 
   // ---- creation modals ----
   const [createOpen, setCreateOpen] = useState(() => !!searchParams.get('new'))
+  // Start options shown right on the empty page (see the empty state below).
+  const [startRequest, setStartRequest] = useState<{ type: CreationType; id: number } | null>(null)
+  const currentPlan = usePlan()
 
   const newCourseButton = (
     <button
@@ -330,6 +335,7 @@ function CoursesHome({ orgslug }: { orgslug: string }) {
                   limit={courseLimit}
                   onCreated={refresh}
                   newCourseButton={newCourseButton}
+                  startRequest={startRequest}
                 />
               </AuthenticatedClientElement>
             }
@@ -480,7 +486,15 @@ function CoursesHome({ orgslug }: { orgslug: string }) {
                   action={
                     isAdmin && !courseLimitReached ? (
                       <AuthenticatedClientElement checkMethod="roles" action="create" ressourceType="courses" orgId={orgId!}>
-                        <div className="mt-1">{newCourseButton}</div>
+                        {/* New admins mostly looked at an empty list, opened
+                            nothing and left. Put the three ways to start here
+                            instead of behind a button and a chooser. */}
+                        <div className="mt-2 w-full max-w-3xl overflow-x-auto" data-testid="courses-empty-start">
+                          <CourseCreationTypeSelector
+                            currentPlan={currentPlan}
+                            onSelectType={(type) => setStartRequest({ type, id: Date.now() })}
+                          />
+                        </div>
                       </AuthenticatedClientElement>
                     ) : undefined
                   }

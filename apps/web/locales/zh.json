@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Pro 功能",
-          "description": "将企业作为客户接入，为其提供专属品牌空间、独家课程以及由企业自行管理的席位。"
+          "description": "为企业提供培训：让其员工访问你的课程，拥有品牌专属空间，并可跟进学习进度。销售席位是可选的。"
         },
         "scim": {
           "title": "企业版功能",
@@ -176,6 +176,210 @@
         "newsletter": {
           "title": "Standard 功能",
           "description": "新闻通讯适用于 Standard 及更高方案。升级后即可通过邮件向学员发送营销活动、欢迎系列和课程更新。"
+        }
+      },
+      "gate": {
+        "upgrade": "升级到 {{plan}}",
+        "talk_to_us": "联系我们",
+        "ask_admin": "请联系你所在组织的管理员升级到 {{plan}}。",
+        "current": "你的方案：{{plan}}",
+        "preview_label": "预览",
+        "preview": {
+          "completion": "完成率",
+          "certificate": "结业证书",
+          "live": "直播",
+          "role_editor": "编辑者",
+          "role_reviewer": "审阅者",
+          "role_viewer": "查看者",
+          "week_other": "第 {{count}} 周",
+          "enroll": "报名",
+          "sso": "使用公司账号继续",
+          "sent": "已发送",
+          "opened": "已打开",
+          "clicked": "已点击"
+        },
+        "communities": {
+          "title": "给学员一个互相帮助的地方",
+          "b1": "课程旁的讨论区，支持回复和投票",
+          "b2": "学员不只能从你这里得到解答，也能从同伴那里得到",
+          "b3": "在常见问题变成支持工单之前发现它们"
+        },
+        "messaging": {
+          "title": "直接与学员交流",
+          "b1": "在学院内进行一对一和群组对话",
+          "b2": "在学员所在的地方回答问题",
+          "b3": "未读内容通过邮件摘要提醒"
+        },
+        "analytics": {
+          "title": "了解学院的整体情况",
+          "b1": "报名、完成和活跃度随时间的变化",
+          "b2": "找出学员中途停下的课程和课时",
+          "b3": "在同一处与团队共享进度"
+        },
+        "course_analytics": {
+          "title": "了解每门课程在哪里流失学员",
+          "b1": "按章节和课时统计完成率",
+          "b2": "每位学员的进度和学习时长",
+          "b3": "改进最关键的课时"
+        },
+        "certifications": {
+          "title": "为完成课程的学员颁发证书",
+          "b1": "课程完成后自动颁发证书",
+          "b2": "学员可在 LinkedIn 上分享可验证的链接",
+          "b3": "每张证书都带有你的品牌"
+        },
+        "paths": {
+          "title": "告诉学员接下来学什么",
+          "b1": "将课程组合成有引导的学习路径",
+          "b2": "查看整条路径的进度，而不只是单门课程",
+          "b3": "完成路径后颁发证书"
+        },
+        "required_training": {
+          "title": "确保合适的人完成合适的培训",
+          "b1": "为团队或角色分配带截止日期的课程",
+          "b2": "截止日期前后自动提醒",
+          "b3": "管理者一眼看出谁进度正常"
+        },
+        "live_sessions": {
+          "title": "无需其他工具即可直播授课",
+          "b1": "安排学员从你的学院加入的直播课",
+          "b2": "自动发送提醒",
+          "b3": "回放保存在课程旁边"
+        },
+        "podcasts": {
+          "title": "让学员随时随地学习",
+          "b1": "在课程旁发布音频节目",
+          "b2": "播放器会记住每位听众停在哪里",
+          "b3": "用 AI 把课时变成节目"
+        },
+        "usergroups": {
+          "title": "将学员分组管理",
+          "b1": "为小组开放专属课程",
+          "b2": "班级、团队或学习小组各有自己的空间",
+          "b3": "按小组跟进进度"
+        },
+        "custom_domains": {
+          "title": "在你自己的域名上授课",
+          "b1": "使用 learn.yourschool.com，而不是 LearnHouse 地址",
+          "b2": "包含 SSL 证书并自动续期",
+          "b3": "学员在你的域名上保持登录"
+        },
+        "api_access": {
+          "title": "把学院连接到你的工具",
+          "b1": "通过 API 创建课程、为学员报名并读取进度",
+          "b2": "限定权限的令牌，随时可撤销",
+          "b3": "与我们的后台使用同一套 API"
+        },
+        "webhooks": {
+          "title": "及时响应学院中发生的事",
+          "b1": "学员报名、完成或付款时收到通知",
+          "b2": "将事件发送到 Zapier、你的 CRM 或你自己的代码",
+          "b3": "请求已签名，并自动重试"
+        },
+        "roles": {
+          "title": "给每个人恰好需要的权限",
+          "b1": "管理员和成员之外的自定义角色",
+          "b2": "决定谁可以创建、编辑或仅审阅",
+          "b3": "管理员更少，失误更少"
+        },
+        "seo": {
+          "title": "让你的课程被找到",
+          "b1": "为搜索和社交平台设置标题、描述和预览",
+          "b2": "搜索引擎可读取的站点地图",
+          "b3": "为搜索排名做好准备的课程页面"
+        },
+        "drip": {
+          "title": "按合适的节奏发布课时",
+          "b1": "按日期或报名后的天数开放章节",
+          "b2": "章节开放时，学员会收到邮件",
+          "b3": "让同期学员保持同步"
+        },
+        "payments": {
+          "title": "让你的教学获得收入",
+          "b1": "一次性购买或订阅方式销售课程",
+          "b2": "款项直接进入你的 Stripe 账户，无额外费用",
+          "b3": "按需提供优惠券、课程套餐和免费访问"
+        },
+        "boards": {
+          "title": "在共享画布上一起思考",
+          "b1": "用于工作坊、课堂和规划的白板",
+          "b2": "每个人都能在任何设备上实时编辑",
+          "b3": "白板就放在课程旁边"
+        },
+        "playgrounds": {
+          "title": "让学员动手练习，而不只是阅读",
+          "b1": "用 AI 生成的互动练习",
+          "b2": "每次作答都能立即获得反馈",
+          "b3": "与整个学院分享 Play"
+        },
+        "company_seats": {
+          "title": "不只培训个人，也培训企业",
+          "b1": "几次点击，就能让企业员工访问你的课程",
+          "b2": "每家企业都有品牌专属空间和自己的课程",
+          "b3": "跟进他们的进度，需要时再销售席位"
+        },
+        "newsletter": {
+          "title": "让学员持续回来",
+          "b1": "通过邮件向学员发送动态和新课程",
+          "b2": "每次推送的打开和点击数据",
+          "b3": "退订和退信自动处理"
+        },
+        "audit_logs": {
+          "title": "清楚谁改了什么",
+          "b1": "记录每一次管理员操作：谁、做了什么、何时",
+          "b2": "可搜索并导出，便于审计",
+          "b3": "满足合规要求"
+        },
+        "sso": {
+          "title": "整个组织统一登录",
+          "b1": "成员通过你的身份提供商登录",
+          "b2": "有人离职时访问权限随之结束",
+          "b3": "无需管理额外的密码"
+        },
+        "scim": {
+          "title": "自动同步成员",
+          "b1": "根据你的目录自动添加和移除成员",
+          "b2": "群组与身份提供商保持一致",
+          "b3": "无需手动办理离职"
+        },
+        "lti": {
+          "title": "将课程接入你的 LMS",
+          "b1": "通过 LTI 1.3 支持 Moodle、Canvas、Blackboard 等平台",
+          "b2": "成绩自动回传",
+          "b3": "学员无需再注册账号"
+        },
+        "scorm": {
+          "title": "沿用现有的在线课程",
+          "b1": "将 SCORM 课件包导入为课时",
+          "b2": "记录分数和完成情况",
+          "b3": "无需重做旧内容"
+        },
+        "compare": "比较方案",
+        "sample": {
+          "discussion_1": "大家怎么给小组项目打分？",
+          "discussion_2": "第 2 周学习笔记",
+          "discussion_3": "期末测验小贴士",
+          "course_name": "数据分析入门",
+          "path_1": "入门",
+          "path_2": "核心技能",
+          "path_3": "结课项目",
+          "session_1": "答疑时间",
+          "session_2": "问答：第 3 单元",
+          "today": "今天",
+          "thursday": "周四",
+          "episode": "第 4 集：能坚持下去的学习习惯",
+          "seo_snippet": "用六周实践课程学会清洗、探索和展示数据。含结业证书。",
+          "drip_1": "欢迎与准备",
+          "drip_2": "你的第一个数据集",
+          "drip_3": "会讲故事的图表",
+          "drip_4": "结课项目",
+          "one_time": "一次性付款",
+          "newsletter_subject": "本月学院动态",
+          "note_1": "工作坊点子",
+          "note_2": "小组提出的问题",
+          "note_3": "周五的下一步安排",
+          "play_title": "练习",
+          "play_question": "五边形有几条边？"
         }
       }
     },
@@ -561,7 +765,35 @@
       "go_to_login": "前往登录",
       "signing_in": "正在为您登录...",
       "setting_up": "正在为您设置会话，请稍候。"
-    }
+    },
+    "show_password": "显示密码",
+    "hide_password": "隐藏密码",
+    "password_req_letter": "一个字母",
+    "password_req_number_or_symbol": "一个数字或符号",
+    "password_req_not_common": "不是常见密码",
+    "your_name": "你的名字",
+    "signup_one_step": "不到一分钟即可完成。",
+    "verification_sent_to": "我们已向 {{email}} 发送确认链接。打开它即可开始使用你的账户。",
+    "invite_link": {
+      "joining": "正在加入 {{org}}…",
+      "invalid_title": "此邀请链接已失效",
+      "invalid_desc": "它已被使用、撤回或被更新的邀请取代。请让邀请你的人重新发送。",
+      "go_to_org": "前往 {{org}}",
+      "wrong_account_title": "此邀请发给的是另一个地址",
+      "wrong_account_desc": "你当前登录的是 {{current}}，但邀请发送到了 {{email}}。",
+      "switch_account": "退出并继续",
+      "signin_title": "加入 {{org}}",
+      "signin_desc": "你已经有账户。登录后即可立即加入。",
+      "signin_cta": "登录并加入",
+      "signup_title": "加入 {{org}}",
+      "signup_desc": "你已受邀。设置密码即可加入。",
+      "choose_password": "设置密码",
+      "create_and_join": "加入 {{org}}"
+    },
+    "login_failed_forgot": "忘记密码？",
+    "login_failed_reset": "重置密码",
+    "login_failed_magic": "改为通过邮件发送登录链接",
+    "login_failed_google_hint": "使用 Google 注册的？请使用下方的「使用 Google 继续」。"
   },
   "validation": {
     "required": "必填",
@@ -1518,7 +1750,8 @@
       },
       "thread_actions": "帖子操作",
       "threads_one": "{{count}} 个帖子",
-      "threads_other": "{{count}} 个帖子"
+      "threads_other": "{{count}} 个帖子",
+      "newer_discussions": "较新的讨论"
     }
   },
   "boards": {
@@ -4152,7 +4385,9 @@
       "unavailable_body": "此组织尚未启用商店。",
       "unavailable_title": "商店不可用",
       "view_content": "查看内容"
-    }
+    },
+    "checkout_paused": "该商品暂时无法结账。已通知该组织，请稍后再试。",
+    "checkout_paused_short": "暂时不可用"
   },
   "account": {
     "title": "账户设置",
@@ -4640,7 +4875,8 @@
       "section_people": "人员与业务",
       "section_settings": "设置",
       "resize_sidebar": "调整侧边栏大小",
-      "open_account_menu": "打开账号菜单"
+      "open_account_menu": "打开账号菜单",
+      "trial_caption_other": "{{plan}} 试用 · 剩余 {{count}} 天"
     },
     "home": {
       "cards": {
@@ -6671,7 +6907,138 @@
         "ai_copilot_description": "允许学习者就课程内容提问。基于已建立索引的资料提供有据可依的回答，并附来源引用。",
         "feature_editor_description": "为课程创建者提供 AI 驱动的内容编辑辅助。",
         "feature_activity_description": "活动中提供 AI 助手，帮助学习者。",
-        "always_on": "始终开启"
+        "always_on": "始终开启",
+        "platform_disabled": "平台已为此组织关闭 AI。如需重新开启，请联系支持团队。",
+        "enabled_count": "已开启 {{on}}/{{total}} 项 AI 功能",
+        "group_all_on": "全部开启",
+        "group_all_off": "全部关闭",
+        "ask_ai_audience": "谁可以使用“问 AI”",
+        "audience_everyone": "所有人",
+        "audience_staff": "仅课程团队",
+        "limits_title": "每月积分上限",
+        "limits_description": "组织用完这些积分后，AI 将在本月剩余时间内停止。留空表示不设上限。",
+        "cap_placeholder": "不设上限",
+        "cap_unit": "积分 / 月",
+        "save_cap": "保存",
+        "cap_invalid": "请输入整数，或留空。",
+        "off_by_admin": "已被管理员关闭",
+        "off_by_admin_description": "{{feature}} 在此组织中不可用。如有需要，请联系管理员。",
+        "groups": {
+          "assistants": {
+            "title": "助手",
+            "description": "与团队对话并完成工作的智能体。"
+          },
+          "authoring": {
+            "title": "创作",
+            "description": "在作者构建课程时提供帮助。"
+          },
+          "learners": {
+            "title": "学员",
+            "description": "学员在学习时使用的 AI。"
+          },
+          "content": {
+            "title": "内容生成",
+            "description": "用 AI 制作媒体、语音和翻译。"
+          },
+          "integrations": {
+            "title": "集成",
+            "description": "网站、邮件和已连接应用中的 AI。"
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "在仪表板中回答问题并在整个组织中完成工作的助手。"
+          },
+          "atlas_scheduled": {
+            "title": "定时智能体",
+            "description": "按计划运行的 Atlas 任务，例如每周报告。"
+          },
+          "ai_editor": {
+            "title": "AI 编辑器",
+            "description": "页面编辑器中与作者一起写作和编辑的 AI 面板。"
+          },
+          "course_builder": {
+            "title": "AI 课程构建器",
+            "description": "根据简短说明起草课程计划及其课时。"
+          },
+          "editor_ai": {
+            "title": "AI 写作操作",
+            "description": "改写、缩短、修正所选文本或调整其语气。"
+          },
+          "magic_blocks": {
+            "title": "魔法块",
+            "description": "根据提示生成的互动块。"
+          },
+          "quiz_generation": {
+            "title": "测验和抽认卡生成",
+            "description": "根据课时内容创建测验和抽认卡。"
+          },
+          "assignment_generation": {
+            "title": "作业和情景生成",
+            "description": "用 AI 起草作业和分支情景。"
+          },
+          "course_import": {
+            "title": "AI 课程导入",
+            "description": "将文档和其他平台的导出文件转换为课程。"
+          },
+          "seo": {
+            "title": "SEO 建议",
+            "description": "为页面撰写搜索标题和描述。"
+          },
+          "ask_ai": {
+            "title": "问 AI",
+            "description": "学员就课时提问，并获得附带来源的回答。"
+          },
+          "ai_grading": {
+            "title": "AI 评分",
+            "description": "为提交内容评分并起草作业反馈。"
+          },
+          "messaging_agents": {
+            "title": "消息中的 AI 智能体",
+            "description": "成员可以在消息中与之聊天的助手。"
+          },
+          "plays": {
+            "title": "Plays 中的 AI",
+            "description": "生成 Plays 并为学员运行其 AI 步骤。"
+          },
+          "translations": {
+            "title": "AI 翻译",
+            "description": "将课程及其 SEO 翻译成其他语言。"
+          },
+          "image_generation": {
+            "title": "图像生成",
+            "description": "用 AI 创建缩略图和图像。"
+          },
+          "voice": {
+            "title": "语音和播客",
+            "description": "撰写播客脚本并生成语音音频。"
+          },
+          "video_ai": {
+            "title": "视频字幕和章节",
+            "description": "转录视频并将其分成章节。"
+          },
+          "live_session_summary": {
+            "title": "直播课摘要",
+            "description": "总结直播课的录像。"
+          },
+          "boards": {
+            "title": "看板中的 AI",
+            "description": "在看板上生成练习场和内容。"
+          },
+          "landing_builder": {
+            "title": "AI 网站设计",
+            "description": "生成落地页并改写其文案。"
+          },
+          "newsletter": {
+            "title": "AI 新闻通讯写作",
+            "description": "起草邮件主题和新闻通讯内容。"
+          },
+          "mcp_tools": {
+            "title": "通过 MCP 的 AI 工具",
+            "description": "应用通过 MCP 连接到组织时使用 AI 的工具。"
+          }
+        }
       },
       "sso": {
         "title": "单点登录 (SSO)",
@@ -7098,7 +7465,8 @@
           "users_admin": "用户（管理 API）",
           "roles_admin": "角色（管理 API）",
           "newsletter": "新闻通讯",
-          "crm": "CRM 集成"
+          "crm": "CRM 集成",
+          "agent": "AI 智能体（Agent API）"
         },
         "resource": "资源",
         "perm_create": "创建",
@@ -7458,7 +7826,8 @@
           "suspended": "访问受限。请联系 LearnHouse 恢复访问。",
           "licensed": "使用企业版许可证自托管，无方案限制",
           "community": "自托管社区版，无方案限制",
-          "billing_page": "发票和付款信息位于账单页面"
+          "billing_page": "发票和付款信息位于账单页面",
+          "free_trial_other": "免费试用，剩余 {{count}} 天。无需绑卡。"
         },
         "next_invoice": "{{date}} 支付 {{amount}}",
         "seats_of": "{{used}} / {{limit}}",
@@ -7522,7 +7891,8 @@
             "addon": "附加组件",
             "locked": "需要 {{plan}}",
             "locked_none": "不可用",
-            "edition": "企业版"
+            "edition": "企业版",
+            "trial": "试用"
           },
           "on": "开启",
           "off": "关闭",
@@ -7558,7 +7928,7 @@
             "usergroups": "用户组",
             "roles": "自定义角色",
             "required_training": "必修培训",
-            "company_seats": "企业席位",
+            "company_seats": "企业",
             "payments": "支付",
             "ai": "AI 功能",
             "analytics": "分析",
@@ -7575,7 +7945,19 @@
           }
         },
         "next_invoice_label": "下一张账单",
-        "seats_no_limit": "{{used}}，不设限额"
+        "seats_no_limit": "{{used}}，不设限额",
+        "invoices": "发票",
+        "trial": {
+          "title_other": "{{plan}} 试用：剩余 {{count}} 天",
+          "desc_other": "在 {{date}} 之前，{{plan}} 的全部功能都归你使用，包括免费版没有的 {{count}} 项功能。随时选择方案即可保留；试用结束时不会删除任何内容。",
+          "choose": "保留 {{plan}}",
+          "what_happens": "试用结束且未选择方案会怎样",
+          "ended_title_trial": "你的 {{plan}} 试用已于 {{date}} 结束",
+          "ended_title": "你已于 {{date}} 从 {{plan}} 转为免费版",
+          "ended_courses_other": "{{count}} 门课程已设为私有，{{plan}} 功能已暂停。升级后，一切都会恢复原样。",
+          "ended_no_courses": "{{plan}} 功能已暂停。升级后，一切都会恢复原样。",
+          "restore": "恢复 {{plan}}"
+        }
       },
       "overview": {
         "created": "创建于 {{date}}",
@@ -14860,7 +15242,7 @@
     "done": "完成，一切准备就绪！",
     "steps": {
       "create_course": {
-        "title": "创建你的第一门课程",
+        "title": "你的第一门课程初具雏形",
         "description": "创建一门课程，或编辑我们为你准备的草稿。",
         "action": "创建课程"
       },
@@ -14907,42 +15289,42 @@
         "university_desc": "指南、技巧和最佳实践"
       },
       "add_content": {
-        "title": "添加你的第一节课",
+        "title": "一节值得专程来上的课",
         "description": "添加视频、页面或测验，给学员一个报名的真实理由。",
         "action": "添加内容"
       },
       "brand_school": {
-        "title": "添加你的徽标和颜色",
+        "title": "一所让学员信赖的学校",
         "description": "添加你的徽标和配色，让它看起来像一所可信、专业的学校。",
         "action": "品牌化"
       },
       "share_grow": {
-        "title": "发布你的首页",
+        "title": "你学校的大门",
         "description": "选择一个模板，按你的需要调整，然后发布学员首先看到的页面。",
         "action": "打开网站"
       },
       "invite_learners": {
-        "title": "邀请你的第一批学员",
+        "title": "迎接你的第一位学员",
         "description": "分享你的加入链接或邀请他人，让第一位学员走进门来。",
         "action": "邀请学员"
       },
       "build_community": {
-        "title": "开设社区空间",
+        "title": "让学员持续回访",
         "description": "开设一个社区空间，让你的学员保持活跃，并带上他们的朋友。",
         "action": "打开社区"
       },
       "publish_course": {
-        "title": "发布你的第一门课程",
+        "title": "你的第一门课程已上线",
         "description": "发布一门课程，让学员有真正可以报名的内容。",
         "action": "发布课程"
       },
       "create_group": {
-        "title": "创建你的第一个小组",
+        "title": "你的第一个学员班",
         "description": "按团队、班级或批次分组，一次性分配课程。",
         "action": "创建小组"
       },
       "setup_payments": {
-        "title": "设置付款",
+        "title": "让你的教学获得回报",
         "description": "连接 Stripe 并为课程定价。",
         "action": "连接 Stripe"
       }
@@ -15624,7 +16006,33 @@
       "checkout_note": "创建组织后，您将进入安全结账页面。"
     },
     "add_pack": "添加{{pack}}",
-    "cancels_on": "您的订阅将于 {{periodEnd}} 取消。在此之前仍可继续访问。"
+    "cancels_on": "您的订阅将于 {{periodEnd}} 取消。在此之前仍可继续访问。",
+    "trial": {
+      "title_other": "{{plan}} 试用 · 剩余 {{count}} 天",
+      "desc": "无需绑卡。选择一个方案，即可保持一切不变。",
+      "choose": "选择方案",
+      "what_happens": "试用结束且未选择方案时会有哪些变化",
+      "keep": "保留 {{plan}}"
+    },
+    "downgrade_preview": {
+      "intro": "使用免费版时：",
+      "course_kept": "“{{course}}”保持公开。",
+      "courses_private_other": "其他 {{count}} 门课程将设为私有（成员仍可打开）。",
+      "drip_paused_other": "{{count}} 门课程的分阶段发布计划将暂停，所有章节都会开放。",
+      "features_pause": "以下功能将暂停，直到你升级：",
+      "more_other": "以及另外 {{count}} 项",
+      "members_over": "{{count}} 名成员会保留，超出免费版的 {{limit}} 名上限。升级前无法加入新成员。",
+      "admins_over": "{{count}} 名管理员会保留，超出免费版的 {{limit}} 名上限。无法再添加新管理员。",
+      "nothing_deleted": "不会删除任何内容。再次升级后，一切都会恢复原样。"
+    },
+    "cancel_flow": {
+      "title": "取消 {{plan}}？",
+      "until": "你的方案在 {{date}} 前保持有效。之后，你的组织将转为免费版。",
+      "until_unknown": "你的方案在当前付费周期结束前保持有效。之后，你的组织将转为免费版。",
+      "restore": "你随时可以再次升级：课程可见性和已暂停的功能会自动恢复。",
+      "keep": "保留 {{plan}}",
+      "confirm": "取消方案"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16290,6 +16698,12 @@
       "resource_plural": "资源",
       "newsletter": "新闻通讯",
       "newsletter_plural": "新闻通讯"
+    },
+    "health": {
+      "title": "学员目前无法购买",
+      "body_other": "自 {{date}} 起，你的支付提供商拒绝了 {{count}} 次结账。你的 Stripe 账户可能已断开连接或需要处理。在问题解决前，学员会看到结账暂时不可用。",
+      "recheck": "重新检查",
+      "fix": "打开支付设置"
     }
   },
   "lti": {
@@ -23059,7 +23473,47 @@
         "podcast": "播客",
         "community": "社区",
         "folder": "文件夹"
-      }
+      },
+      "features_title": "搜索引擎可以索引的内容",
+      "features_subtitle": "关闭某个板块，即可让它不出现在 Google、Bing 和 AI 搜索中。其页面仍对访客开放。",
+      "feature": {
+        "courses": "课程",
+        "activities": "免费课时",
+        "paths": "学习路径",
+        "podcasts": "播客",
+        "communities": "社区",
+        "library": "资料库",
+        "live": "直播课程",
+        "newsletters": "简报存档",
+        "pages": "网站页面",
+        "store": "商店优惠"
+      },
+      "thin_threads": "隐藏无人回复的帖子，时间为",
+      "thin_threads_hint": "无人回复的帖子达到该时长后会对搜索引擎隐藏，避免空白页面拖累社区。设为 0 则全部保留。",
+      "days": "天",
+      "ai_title": "AI 搜索和爬虫",
+      "ai_subtitle": "设置 ChatGPT、Claude、Perplexity、Gemini 等 AI 工具如何使用你的公开内容。",
+      "ai_policy": "AI 爬虫策略",
+      "ai_allow": "允许所有 AI 爬虫",
+      "ai_allow_hint": "AI 回答可以引用你的页面，模型也可能从中学习。",
+      "ai_block_training": "允许 AI 回答，禁止训练",
+      "ai_block_training_hint": "助手仍可找到并引用你的页面；训练类爬虫（GPTBot、Google-Extended、CCBot 等）会被屏蔽。",
+      "ai_block_all": "屏蔽所有 AI 爬虫",
+      "ai_block_all_hint": "所有已知的 AI 代理都会在 robots.txt 中被屏蔽，llms.txt 也会关闭。网页搜索不受影响。",
+      "ai_blocked_extra": "同时屏蔽这些 User-Agent",
+      "ai_blocked_extra_hint": "每行一个爬虫名称，例如 Bytespider。",
+      "llms_enabled": "发布 llms.txt 和 Markdown 页面",
+      "llms_enabled_hint": "在 /llms.txt 提供公开内容的索引，并为每个公开页面提供 Markdown 副本，让 AI 工具准确引用你。",
+      "feeds_title": "订阅源",
+      "feeds_enabled": "发布 RSS、Atom 和 JSON 订阅源",
+      "feeds_enabled_hint": "新课程、社区帖子和直播课程会出现在订阅阅读器和聚合器中。播客订阅源始终开启。",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "第一时间向 Bing、Yandex 及其他支持 IndexNow 的搜索引擎通知新增和更新的页面。",
+      "indexnow_enabled": "发布时通知搜索引擎",
+      "indexnow_enabled_hint": "保存时会为你的站点创建验证密钥。",
+      "indexnow_key": "验证密钥",
+      "links_llms": "llms.txt",
+      "links_feed": "RSS 订阅源"
     },
     "save_failed": "无法保存 SEO 设置。",
     "saved": "SEO 设置已保存。"
@@ -23544,8 +23998,8 @@
     }
   },
   "companies": {
-    "title": "客户",
-    "subtitle": "你培训的企业及其成员、课程和席位",
+    "title": "企业",
+    "subtitle": "你培训的企业：让其员工访问你的课程，或向他们销售席位",
     "tabs": {
       "companies": "企业",
       "offers": "席位方案",
@@ -23555,7 +24009,7 @@
       "tab": "企业",
       "title": "企业",
       "subtitle": "售给企业的席位及其购买的方案",
-      "open_customers": "打开客户资料"
+      "open_customers": "打开企业资料"
     },
     "menu": {
       "manage_team": "管理团队"
@@ -23636,7 +24090,8 @@
       "auto_assign": "为加入者赠送免费席位",
       "company_admins": "企业管理员",
       "billing_email": "账单邮箱",
-      "tags": "标签"
+      "tags": "标签",
+      "member_limit": "成员上限"
     },
     "list": {
       "new": "新建企业",
@@ -23665,7 +24120,7 @@
       "no_match": "没有符合这些筛选条件的企业",
       "clear_filters": "清除筛选",
       "empty_title": "还没有企业",
-      "empty_body": "接入一家企业，为其提供品牌空间、专属课程和由其自行管理的席位。"
+      "empty_body": "添加企业后，即可让其员工访问你的课程，拥有品牌专属空间，并可跟进学习进度。销售席位是可选的。"
     },
     "onboard": {
       "title": "接入企业",
@@ -23718,7 +24173,7 @@
       "remove_member_title": "移除此成员？",
       "remove_member_body": "{{name}} 将无法访问企业空间及其独家课程。学习进度会保留。",
       "member_removed": "已移除成员",
-      "courses_intro": "共享课程会显示在企业空间中。独家课程仅对该企业的成员可见。",
+      "courses_intro": "为企业开放课程：独家课程仅对其员工可见；共享课程照常可见，并会出现在企业空间中。",
       "link_course": "关联课程",
       "create_course": "创建课程",
       "no_courses": "没有关联的课程",
@@ -23745,7 +24200,7 @@
       "grant_seats_hint": "适用于在 Stripe 之外结算的合作：发票、试点、合作伙伴。",
       "cancel_company": "取消席位",
       "no_seats": "没有席位",
-      "no_seats_body": "该企业尚未购买席位。你可以赠送一些。",
+      "no_seats_body": "这家企业没有席位。其员工仍可直接获得课程；席位用于销售或发放固定数量的名额。",
       "comped_n_one": "已赠送 {{count}} 个",
       "comped_n_other": "已赠送 {{count}} 个",
       "renews": "续订日期",
@@ -23771,7 +24226,14 @@
       "no_activity": "暂无动态",
       "notes": "备注",
       "notes_hint": "仅你学院的管理员可见。",
-      "notes_placeholder": "联系人、续订计划、他们关心的事…"
+      "notes_placeholder": "联系人、续订计划、他们关心的事…",
+      "access_hint": "谁可以加入这家企业并获得其课程。无需付款。",
+      "member_limit_hint": "可选：限制通过邮箱或域名添加的人数",
+      "no_limit": "不限",
+      "over_limit": "已达到成员上限，以下人员未添加：{{list}}",
+      "or_folder": "或整个文件夹",
+      "folder_hint": "将文件夹中的所有课程开放给该企业",
+      "pick_folder": "选择文件夹"
     },
     "offers": {
       "intro": "席位方案为企业设定席位价格：阶梯价格、最低数量、一次性或周期性付费。",
@@ -28337,7 +28799,11 @@
       "ai_credits_low": "AI 额度不足",
       "org_payment_failed": "订阅支付失败",
       "agent_run_finished": "智能体运行完成",
-      "agent_run_failed": "智能体运行失败"
+      "agent_run_failed": "智能体运行失败",
+      "trial_ending": "试用即将结束",
+      "plan_downgraded": "已转为免费版",
+      "plan_restored": "方案已恢复",
+      "payments_checkout_failing": "结账失败"
     },
     "copy": {
       "assignment_graded": "已批改：{{assignment}}",
@@ -28395,7 +28861,11 @@
       "ai_credits_low": "AI 额度即将用完（剩余 {{remaining}}）",
       "org_payment_failed": "你的订阅支付失败",
       "agent_run_finished": "{{agent}} 已完成定时运行",
-      "agent_run_failed": "{{agent}} 的定时运行失败"
+      "agent_run_failed": "{{agent}} 的定时运行失败",
+      "trial_ending": "你的 {{plan}} 试用将在 {{days}} 天后结束",
+      "plan_downgraded": "你现在使用的是免费版，没有删除任何内容",
+      "plan_restored": "欢迎回到 {{plan}}",
+      "payments_checkout_failing": "学员目前无法购买（{{count}} 次结账失败）"
     },
     "routing": {
       "short": "通知对象",
@@ -28458,7 +28928,9 @@
       "start_template": "从模板开始",
       "start_template_desc": "我们会以你的名称发布 {{template}} 网站，并添加一门可编辑的首门课程草稿。",
       "start_blank": "从空白开始",
-      "start_blank_desc": "一个空白学院。设置清单会引导你完成其余部分。"
+      "start_blank_desc": "一个空白学院。设置清单会引导你完成其余部分。",
+      "trial_note_after": "无需绑卡。之后可以保留它、选择其他方案，或继续使用免费版。",
+      "trial_note": "你将免费使用 {{plan}} {{days}} 天。"
     },
     "checklist": {
       "full_guide": "完整指南",
@@ -28495,7 +28967,10 @@
         "ai_credits_one": "AI 点数：{{formatted}}",
         "ai_credits_other": "AI 点数：{{formatted}}"
       },
-      "compare": "比较套餐"
+      "compare": "比较套餐",
+      "your_trial": "你的试用",
+      "keep_plan": "保留 {{plan}}",
+      "subtitle_trial": "你正在免费试用 {{plan}}。选择适合你的方案；在你选择之前，一切保持不变。"
     },
     "invite": {
       "title": "邀请成员",
@@ -28531,7 +29006,10 @@
       "import_one": "邀请学员（{{count}}）",
       "import_other": "邀请学员（{{count}}）",
       "sent_toast_one": "已发送邀请：{{count}}",
-      "sent_toast_other": "已发送邀请：{{count}}"
+      "sent_toast_other": "已发送邀请：{{count}}",
+      "invite_only_create": "你的学校仅限邀请加入。创建一个加入链接，大家就能用它注册。",
+      "create_link": "创建加入链接",
+      "invite_only_hint": "此链接包含加入码，任何拿到它的人都可以注册。"
     },
     "invites": {
       "title": "邀请",
@@ -28590,6 +29068,17 @@
       },
       "desc_one": "过去 {{count}} 天创建的账号及其进展",
       "desc_other": "过去 {{count}} 天创建的账号及其进展"
+    },
+    "first_course": {
+      "title": "创建你的第一门课程",
+      "subtitle": "其他事都可以先放一放。选一种开始方式，之后每个字都能改。",
+      "template": "从模板开始",
+      "template_desc": "一份含章节和课时的现成草稿，直接在编辑器中打开。",
+      "ai": "用 AI 创建",
+      "ai_desc": "描述你的主题，几分钟内得到完整的课程大纲。",
+      "blank": "或从空白课程开始",
+      "template_short": "从模板开始",
+      "ai_short": "用 AI 创建"
     }
   },
   "impersonation": {
@@ -28617,5 +29106,19 @@
     "no_access_desc": "请向 LearnHouse 管理员申请模拟权限。",
     "back_to_console": "返回控制台",
     "retry": "重试"
+  },
+  "mobile_app": {
+    "title": "获取移动应用",
+    "heading": "在手机上学习",
+    "body": "打开 LearnHouse 应用并扫描此二维码以连接到这所学校。",
+    "qr_alt": "在 LearnHouse 应用中打开这所学校的二维码",
+    "qr_actions": "右键单击以保存或复制二维码",
+    "copy_image": "复制图片",
+    "download_png": "下载 PNG",
+    "copy_link": "复制应用链接",
+    "copied_image": "二维码已复制",
+    "copied_link": "应用链接已复制",
+    "copy_failed": "无法复制图片，请改用下载。",
+    "download_failed": "无法保存图片。"
   }
 }

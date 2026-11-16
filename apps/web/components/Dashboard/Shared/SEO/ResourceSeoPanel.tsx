@@ -17,6 +17,7 @@ import { Switch } from '@components/ui/switch'
 import { Button, INPUT, SectionCard, SegmentedControl, SettingRow, TEXTAREA } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { SubTabPanel, SubTabs, useSubTab, type SubTabItem } from '@components/Dashboard/Shared/DashKit/SubTabs'
 import { AIButton } from '@components/Objects/AI/AIBrand'
+import useAIFeature from '@components/Hooks/useAIFeature'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { aiSuggestSeo, uploadSeoImage } from '@services/seo/seo'
 import { getOrgFaviconMediaDirectory, getOrgLogoMediaDirectory } from '@services/media/media'
@@ -81,6 +82,7 @@ function Field({ id, label, hint, aside, children }: { id: string; label: React.
 export function ResourceSeoPanel(props: ResourceSeoPanelProps) {
   const st = useSeoT()
   const org = useOrg() as any
+  const seoAI = useAIFeature('seo')
   const { value, onChange } = props
   const set = (patch: Partial<ResourceSeo>) => onChange({ ...value, ...patch })
   const showRich = props.type === 'course' || props.type === 'path'
@@ -190,9 +192,11 @@ export function ResourceSeoPanel(props: ResourceSeoPanelProps) {
               title={st('search.title')}
               description={st('search.subtitle')}
               actions={
-                <AIButton variant="soft" size="sm" onClick={runAi} loading={aiBusy}>
-                  {aiBusy ? st('search.ai_working') : st('search.ai')}
-                </AIButton>
+                seoAI ? (
+                  <AIButton variant="soft" size="sm" onClick={runAi} loading={aiBusy}>
+                    {aiBusy ? st('search.ai_working') : st('search.ai')}
+                  </AIButton>
+                ) : undefined
               }
               bodyClassName="p-5 space-y-5"
             >

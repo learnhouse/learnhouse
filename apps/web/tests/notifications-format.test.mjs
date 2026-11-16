@@ -82,7 +82,7 @@ describe('headline', () => {
     expect(resolveHeadline(item(), template, () => '{{assignment}}')).toBe('Graded: Essay')
   })
   test('every copy template names only known variables and every type has a label', () => {
-    const known = new Set(['actor', 'count', 'assignment', 'course', 'update', 'chapter', 'path', 'play', 'title', 'discussion', 'activity', 'group', 'product', 'company', 'board', 'provider', 'campaign', 'limit', 'days', 'remaining', 'agent'])
+    const known = new Set(['actor', 'count', 'assignment', 'course', 'update', 'chapter', 'path', 'play', 'title', 'discussion', 'activity', 'group', 'product', 'company', 'board', 'provider', 'campaign', 'limit', 'days', 'remaining', 'agent', 'plan'])
     for (const [key, value] of Object.entries(en.notifications.copy)) {
       for (const p of placeholders(value)) expect(known.has(p) ? p : `${key}:${p}`).toBe(p)
       const type = key.replace(/_(many|24h|15m|live)$/, '')

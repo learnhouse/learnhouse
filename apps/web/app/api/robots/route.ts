@@ -3,7 +3,7 @@ import { getServerAPIUrl } from '@services/config/config'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgSeoConfig } from '@/lib/seo/utils'
 import { buildRobotsTxt } from '@/lib/seo/robots'
-import type { OrgSeoConfig } from '@/lib/seo/meta'
+import { llmsEnabled, type OrgSeoConfig } from '@/lib/seo/meta'
 
 /**
  * Whether `slug` is the shared demo organization, according to the API.
@@ -60,9 +60,11 @@ export async function GET(request: NextRequest) {
   }
 
   const org = await getOrganizationContextInfo(orgSlug, { revalidate: 300, tags: ['organizations'] }).catch(() => null)
+  const seo = getOrgSeoConfig(org) as OrgSeoConfig
   const robotsTxt = buildRobotsTxt({
     sitemapUrl: `${baseUrl}sitemap.xml`,
-    seo: getOrgSeoConfig(org) as OrgSeoConfig,
+    seo,
+    llmsUrl: llmsEnabled(seo) ? `${baseUrl}llms.txt` : undefined,
   })
 
   return new NextResponse(robotsTxt, {

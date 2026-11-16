@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Tính năng Pro",
-          "description": "Tiếp nhận công ty làm khách hàng với không gian mang thương hiệu riêng, khóa học độc quyền và suất học do chính họ quản lý."
+          "description": "Đào tạo cho công ty: cho nhân sự của họ truy cập khóa học của bạn, có không gian mang thương hiệu riêng và tiến độ bạn theo dõi được. Bán suất học là tùy chọn."
         },
         "scim": {
           "title": "Tính năng Enterprise",
@@ -176,6 +176,210 @@
         "newsletter": {
           "title": "Tính năng gói Standard",
           "description": "Bản tin có sẵn trên gói Standard trở lên. Hãy nâng cấp để gửi chiến dịch, chuỗi email chào mừng và cập nhật khóa học cho học viên qua email."
+        }
+      },
+      "gate": {
+        "upgrade": "Nâng cấp lên {{plan}}",
+        "talk_to_us": "Liên hệ chúng tôi",
+        "ask_admin": "Hãy nhờ quản trị viên của tổ chức chuyển sang {{plan}}.",
+        "current": "Gói của bạn: {{plan}}",
+        "preview_label": "Xem trước",
+        "preview": {
+          "completion": "Hoàn thành",
+          "certificate": "Chứng chỉ hoàn thành",
+          "live": "Trực tiếp",
+          "role_editor": "Biên tập viên",
+          "role_reviewer": "Người duyệt",
+          "role_viewer": "Người xem",
+          "week_other": "Tuần {{count}}",
+          "enroll": "Ghi danh",
+          "sso": "Tiếp tục với tài khoản công ty",
+          "sent": "đã gửi",
+          "opened": "đã mở",
+          "clicked": "đã nhấp"
+        },
+        "communities": {
+          "title": "Cho học viên một nơi để giúp đỡ nhau",
+          "b1": "Thảo luận ngay cạnh khóa học, có trả lời và bình chọn",
+          "b2": "Học viên nhận câu trả lời từ bạn học, không chỉ từ bạn",
+          "b3": "Nhận ra câu hỏi thường gặp trước khi chúng thành yêu cầu hỗ trợ"
+        },
+        "messaging": {
+          "title": "Trò chuyện trực tiếp với học viên",
+          "b1": "Trò chuyện riêng và theo nhóm ngay trong học viện",
+          "b2": "Trả lời câu hỏi ở nơi học viên đang có mặt",
+          "b3": "Email tóm tắt cho những gì chưa đọc"
+        },
+        "analytics": {
+          "title": "Nắm tình hình học viện của bạn",
+          "b1": "Lượt ghi danh, hoàn thành và hoạt động theo thời gian",
+          "b2": "Tìm khóa học và bài học nơi học viên dừng lại",
+          "b3": "Chia sẻ tiến độ với nhóm ở cùng một nơi"
+        },
+        "course_analytics": {
+          "title": "Biết mỗi khóa học mất học viên ở đâu",
+          "b1": "Tỷ lệ hoàn thành theo chương và bài học",
+          "b2": "Tiến độ và thời gian học của từng học viên",
+          "b3": "Cải thiện những bài học quan trọng nhất"
+        },
+        "certifications": {
+          "title": "Ghi nhận học viên đã học xong",
+          "b1": "Chứng chỉ được cấp tự động khi hoàn thành khóa học",
+          "b2": "Học viên chia sẻ đường dẫn xác minh được trên LinkedIn",
+          "b3": "Thương hiệu của bạn trên mọi chứng chỉ"
+        },
+        "paths": {
+          "title": "Gợi ý học viên nên học gì tiếp theo",
+          "b1": "Gom các khóa học thành một lộ trình có hướng dẫn",
+          "b2": "Tiến độ trên cả lộ trình, không chỉ một khóa học",
+          "b3": "Chứng chỉ khi hoàn thành lộ trình"
+        },
+        "required_training": {
+          "title": "Đảm bảo đúng người hoàn thành đúng khóa đào tạo",
+          "b1": "Giao khóa học kèm hạn chót cho nhóm hoặc vai trò",
+          "b2": "Nhắc nhở tự động trước và sau hạn chót",
+          "b3": "Quản lý thấy ngay ai đang theo kịp"
+        },
+        "live_sessions": {
+          "title": "Dạy trực tiếp mà không cần thêm công cụ",
+          "b1": "Lên lịch buổi học để học viên tham gia từ học viện của bạn",
+          "b2": "Lời nhắc được gửi tự động",
+          "b3": "Bản ghi nằm ngay cạnh khóa học"
+        },
+        "podcasts": {
+          "title": "Đến với học viên mọi lúc mọi nơi",
+          "b1": "Đăng các tập âm thanh bên cạnh khóa học",
+          "b2": "Trình phát nhớ chỗ mỗi người nghe đã dừng",
+          "b3": "Biến bài học thành tập podcast bằng AI"
+        },
+        "usergroups": {
+          "title": "Sắp xếp học viên theo nhóm",
+          "b1": "Cho mỗi nhóm truy cập các khóa học dành cho nhóm đó",
+          "b2": "Khóa, nhóm hoặc lớp có không gian riêng",
+          "b3": "Theo dõi tiến độ theo từng nhóm"
+        },
+        "custom_domains": {
+          "title": "Dạy trên tên miền của riêng bạn",
+          "b1": "learn.yourschool.com thay cho địa chỉ LearnHouse",
+          "b2": "Có sẵn chứng chỉ SSL và được gia hạn giúp bạn",
+          "b3": "Học viên luôn đăng nhập trên tên miền của bạn"
+        },
+        "api_access": {
+          "title": "Kết nối học viện với các công cụ của bạn",
+          "b1": "Tạo khóa học, ghi danh học viên và đọc tiến độ qua API",
+          "b2": "Token giới hạn quyền, có thể thu hồi bất cứ lúc nào",
+          "b3": "Cùng API mà bảng điều khiển của chúng tôi dùng"
+        },
+        "webhooks": {
+          "title": "Phản hồi những gì diễn ra trong học viện",
+          "b1": "Nhận thông báo khi học viên ghi danh, hoàn thành hoặc thanh toán",
+          "b2": "Gửi sự kiện tới Zapier, CRM hoặc mã của riêng bạn",
+          "b3": "Yêu cầu có chữ ký và tự động thử lại"
+        },
+        "roles": {
+          "title": "Cho mỗi người đúng quyền họ cần",
+          "b1": "Vai trò tùy chỉnh ngoài quản trị viên và thành viên",
+          "b2": "Quyết định ai được tạo, chỉnh sửa hay chỉ xem duyệt",
+          "b3": "Ít quản trị viên hơn, ít sự cố hơn"
+        },
+        "seo": {
+          "title": "Giúp khóa học của bạn được tìm thấy",
+          "b1": "Tiêu đề, mô tả và ảnh xem trước cho tìm kiếm và mạng xã hội",
+          "b2": "Sơ đồ trang mà công cụ tìm kiếm đọc được",
+          "b3": "Trang khóa học sẵn sàng lên thứ hạng"
+        },
+        "drip": {
+          "title": "Mở bài học theo nhịp phù hợp",
+          "b1": "Mở chương theo ngày hoặc theo số ngày sau khi ghi danh",
+          "b2": "Học viên nhận email khi một chương được mở",
+          "b3": "Giữ cả khóa học viên cùng tiến bước"
+        },
+        "payments": {
+          "title": "Có thu nhập từ những gì bạn dạy",
+          "b1": "Bán khóa học theo lần mua hoặc theo gói thuê bao",
+          "b2": "Tiền về thẳng tài khoản Stripe của bạn, không thêm phí",
+          "b3": "Mã giảm giá, gói combo và quyền truy cập miễn phí khi bạn muốn"
+        },
+        "boards": {
+          "title": "Cùng suy nghĩ trên một bảng vẽ chung",
+          "b1": "Bảng trắng cho workshop, lớp học và lập kế hoạch",
+          "b2": "Mọi người cùng chỉnh sửa trực tiếp, trên mọi thiết bị",
+          "b3": "Giữ bảng ngay cạnh khóa học"
+        },
+        "playgrounds": {
+          "title": "Cho học viên thực hành, không chỉ đọc",
+          "b1": "Bài tập tương tác được tạo bằng AI",
+          "b2": "Phản hồi ngay sau mỗi lần làm",
+          "b3": "Chia sẻ Play với cả học viện"
+        },
+        "company_seats": {
+          "title": "Đào tạo cho công ty, không chỉ cá nhân",
+          "b1": "Cho nhân sự của một công ty truy cập khóa học chỉ với vài cú nhấp",
+          "b2": "Mỗi công ty có không gian mang thương hiệu riêng, với khóa học riêng",
+          "b3": "Theo dõi tiến độ của họ, và chỉ bán suất học nếu bạn muốn"
+        },
+        "newsletter": {
+          "title": "Giữ học viên quay lại",
+          "b1": "Gửi tin cập nhật và khóa học mới tới học viên qua email",
+          "b2": "Lượt mở và lượt nhấp cho từng chiến dịch",
+          "b3": "Hủy đăng ký và thư bị trả lại được xử lý giúp bạn"
+        },
+        "audit_logs": {
+          "title": "Biết ai đã thay đổi gì",
+          "b1": "Mọi thao tác quản trị được ghi lại: ai, làm gì và khi nào",
+          "b2": "Tìm kiếm và xuất dữ liệu để kiểm toán",
+          "b3": "Đáp ứng yêu cầu tuân thủ của bạn"
+        },
+        "sso": {
+          "title": "Một lần đăng nhập cho cả tổ chức",
+          "b1": "Thành viên đăng nhập bằng nhà cung cấp danh tính của bạn",
+          "b2": "Quyền truy cập kết thúc khi ai đó rời công ty",
+          "b3": "Không thêm mật khẩu nào phải quản lý"
+        },
+        "scim": {
+          "title": "Tự động đồng bộ thành viên",
+          "b1": "Thành viên được thêm và xóa theo thư mục của bạn",
+          "b2": "Nhóm theo sát nhà cung cấp danh tính",
+          "b3": "Không cần xử lý nghỉ việc thủ công"
+        },
+        "lti": {
+          "title": "Đưa khóa học vào LMS của bạn",
+          "b1": "LTI 1.3 cho Moodle, Canvas, Blackboard và các nền tảng khác",
+          "b2": "Điểm số tự động được gửi về",
+          "b3": "Học viên không cần thêm tài khoản"
+        },
+        "scorm": {
+          "title": "Mang nội dung e-learning sẵn có vào",
+          "b1": "Nhập gói SCORM thành bài học",
+          "b2": "Theo dõi điểm số và mức hoàn thành",
+          "b3": "Không cần làm lại nội dung cũ"
+        },
+        "compare": "So sánh các gói",
+        "sample": {
+          "discussion_1": "Bạn chấm điểm dự án nhóm như thế nào?",
+          "discussion_2": "Ghi chép của mình tuần 2",
+          "discussion_3": "Mẹo cho bài kiểm tra cuối khóa",
+          "course_name": "Nhập môn phân tích dữ liệu",
+          "path_1": "Bắt đầu",
+          "path_2": "Kỹ năng cốt lõi",
+          "path_3": "Dự án cuối khóa",
+          "session_1": "Giờ hỗ trợ",
+          "session_2": "Hỏi đáp: học phần 3",
+          "today": "Hôm nay",
+          "thursday": "Th 5",
+          "episode": "Tập 4: Thói quen học tập bền vững",
+          "seo_snippet": "Học cách làm sạch, khám phá và trình bày dữ liệu trong sáu tuần thực hành. Có cấp chứng chỉ.",
+          "drip_1": "Chào mừng và thiết lập",
+          "drip_2": "Bộ dữ liệu đầu tiên của bạn",
+          "drip_3": "Biểu đồ biết kể chuyện",
+          "drip_4": "Dự án cuối khóa",
+          "one_time": "Thanh toán một lần",
+          "newsletter_subject": "Tháng này tại học viện",
+          "note_1": "Ý tưởng cho buổi workshop",
+          "note_2": "Câu hỏi từ nhóm",
+          "note_3": "Việc cần làm cho thứ Sáu",
+          "play_title": "Luyện tập",
+          "play_question": "Hình ngũ giác có bao nhiêu cạnh?"
         }
       }
     },
@@ -561,7 +765,35 @@
       "go_to_login": "Đến trang đăng nhập",
       "signing_in": "Đang đăng nhập cho bạn...",
       "setting_up": "Vui lòng đợi trong khi chúng tôi thiết lập phiên của bạn."
-    }
+    },
+    "show_password": "Hiện mật khẩu",
+    "hide_password": "Ẩn mật khẩu",
+    "password_req_letter": "Một chữ cái",
+    "password_req_number_or_symbol": "Một chữ số hoặc ký hiệu",
+    "password_req_not_common": "Không phải mật khẩu phổ biến",
+    "your_name": "Tên của bạn",
+    "signup_one_step": "Chưa tới một phút.",
+    "verification_sent_to": "Chúng tôi đã gửi liên kết xác nhận tới {{email}}. Mở liên kết để bắt đầu dùng tài khoản.",
+    "invite_link": {
+      "joining": "Đang tham gia {{org}}…",
+      "invalid_title": "Liên kết mời này đã hết hạn",
+      "invalid_desc": "Liên kết đã được dùng, bị thu hồi hoặc thay bằng lời mời mới hơn. Hãy nhờ người mời bạn gửi lời mời mới.",
+      "go_to_org": "Đến {{org}}",
+      "wrong_account_title": "Lời mời này dành cho địa chỉ khác",
+      "wrong_account_desc": "Bạn đang đăng nhập bằng {{current}}, nhưng lời mời được gửi tới {{email}}.",
+      "switch_account": "Đăng xuất và tiếp tục",
+      "signin_title": "Tham gia {{org}}",
+      "signin_desc": "Bạn đã có tài khoản. Đăng nhập là tham gia ngay.",
+      "signin_cta": "Đăng nhập để tham gia",
+      "signup_title": "Tham gia {{org}}",
+      "signup_desc": "Bạn đã được mời. Chọn mật khẩu là xong.",
+      "choose_password": "Chọn mật khẩu",
+      "create_and_join": "Tham gia {{org}}"
+    },
+    "login_failed_forgot": "Quên mật khẩu?",
+    "login_failed_reset": "Đặt lại",
+    "login_failed_magic": "Gửi cho tôi liên kết đăng nhập",
+    "login_failed_google_hint": "Đã đăng ký bằng Google? Hãy dùng Tiếp tục với Google bên dưới."
   },
   "validation": {
     "required": "Bắt buộc",
@@ -1518,7 +1750,8 @@
       },
       "thread_actions": "Thao tác với chủ đề",
       "threads_one": "{{count}} chủ đề",
-      "threads_other": "{{count}} chủ đề"
+      "threads_other": "{{count}} chủ đề",
+      "newer_discussions": "Thảo luận mới hơn"
     }
   },
   "boards": {
@@ -4150,7 +4383,9 @@
       "unavailable_body": "Tổ chức này chưa bật cửa hàng.",
       "unavailable_title": "Cửa hàng không khả dụng",
       "view_content": "Xem nội dung"
-    }
+    },
+    "checkout_paused": "Thanh toán cho sản phẩm này tạm thời không khả dụng. Tổ chức đã được thông báo, vui lòng thử lại sau.",
+    "checkout_paused_short": "Tạm thời không khả dụng"
   },
   "account": {
     "title": "Cài đặt tài khoản",
@@ -4638,7 +4873,8 @@
       "section_people": "Con người & kinh doanh",
       "section_settings": "Cài đặt",
       "resize_sidebar": "Đổi kích thước thanh bên",
-      "open_account_menu": "Mở menu tài khoản"
+      "open_account_menu": "Mở menu tài khoản",
+      "trial_caption_other": "Dùng thử {{plan}} · còn {{count}} ngày"
     },
     "home": {
       "cards": {
@@ -6669,7 +6905,138 @@
         "ai_copilot_description": "Cho phép học viên đặt câu hỏi về nội dung khóa học. Dùng tài liệu đã lập chỉ mục để đưa ra câu trả lời có căn cứ kèm trích dẫn nguồn.",
         "feature_editor_description": "Hỗ trợ chỉnh sửa nội dung bằng AI cho người tạo khóa học.",
         "feature_activity_description": "Trợ lý AI có sẵn trong các hoạt động để hỗ trợ học viên.",
-        "always_on": "Luôn bật"
+        "always_on": "Luôn bật",
+        "platform_disabled": "Nền tảng đã tắt AI cho tổ chức này. Hãy liên hệ bộ phận hỗ trợ để bật lại.",
+        "enabled_count": "Đã bật {{on}}/{{total}} tính năng AI",
+        "group_all_on": "Bật tất cả",
+        "group_all_off": "Tắt tất cả",
+        "ask_ai_audience": "Ai được dùng Hỏi AI",
+        "audience_everyone": "Mọi người",
+        "audience_staff": "Chỉ đội ngũ khóa học",
+        "limits_title": "Giới hạn tín dụng hằng tháng",
+        "limits_description": "AI sẽ dừng đến hết tháng khi tổ chức đã dùng hết số tín dụng này. Để trống nếu không giới hạn.",
+        "cap_placeholder": "Không giới hạn",
+        "cap_unit": "tín dụng / tháng",
+        "save_cap": "Lưu",
+        "cap_invalid": "Nhập một số nguyên hoặc để trống.",
+        "off_by_admin": "Đã bị quản trị viên tắt",
+        "off_by_admin_description": "{{feature}} không khả dụng trong tổ chức này. Hãy hỏi quản trị viên nếu bạn cần.",
+        "groups": {
+          "assistants": {
+            "title": "Trợ lý",
+            "description": "Các tác tử trò chuyện với đội ngũ của bạn và hoàn thành công việc."
+          },
+          "authoring": {
+            "title": "Biên soạn",
+            "description": "Hỗ trợ tác giả khi xây dựng khóa học."
+          },
+          "learners": {
+            "title": "Học viên",
+            "description": "AI mà học viên dùng trong khi học."
+          },
+          "content": {
+            "title": "Tạo nội dung",
+            "description": "Phương tiện, giọng nói và bản dịch tạo bằng AI."
+          },
+          "integrations": {
+            "title": "Tích hợp",
+            "description": "AI trên trang web, email và các ứng dụng được kết nối."
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "Trợ lý bảng điều khiển trả lời câu hỏi và làm việc trong toàn tổ chức."
+          },
+          "atlas_scheduled": {
+            "title": "Tác tử theo lịch",
+            "description": "Các tác vụ Atlas chạy theo lịch, như báo cáo hằng tuần."
+          },
+          "ai_editor": {
+            "title": "Trình soạn thảo AI",
+            "description": "Bảng AI trong trình soạn thảo trang, cùng viết và chỉnh sửa với tác giả."
+          },
+          "course_builder": {
+            "title": "Trình tạo khóa học AI",
+            "description": "Soạn kế hoạch khóa học và các bài học từ một mô tả ngắn."
+          },
+          "editor_ai": {
+            "title": "Thao tác viết AI",
+            "description": "Viết lại, rút gọn, sửa hoặc đổi giọng văn của đoạn đã chọn."
+          },
+          "magic_blocks": {
+            "title": "Khối kỳ diệu",
+            "description": "Các khối tương tác được tạo từ một câu lệnh."
+          },
+          "quiz_generation": {
+            "title": "Tạo câu đố và thẻ ghi nhớ",
+            "description": "Tạo câu đố và thẻ ghi nhớ từ nội dung bài học."
+          },
+          "assignment_generation": {
+            "title": "Tạo bài tập và kịch bản",
+            "description": "Soạn bài tập và kịch bản phân nhánh bằng AI."
+          },
+          "course_import": {
+            "title": "Nhập khóa học bằng AI",
+            "description": "Biến tài liệu và bản xuất từ nền tảng khác thành khóa học."
+          },
+          "seo": {
+            "title": "Gợi ý SEO",
+            "description": "Viết tiêu đề và mô tả tìm kiếm cho các trang của bạn."
+          },
+          "ask_ai": {
+            "title": "Hỏi AI",
+            "description": "Học viên đặt câu hỏi về bài học và nhận câu trả lời kèm nguồn."
+          },
+          "ai_grading": {
+            "title": "Chấm điểm bằng AI",
+            "description": "Chấm bài nộp và soạn nhận xét cho bài tập."
+          },
+          "messaging_agents": {
+            "title": "Tác tử AI trong Tin nhắn",
+            "description": "Các trợ lý mà thành viên có thể trò chuyện trong Tin nhắn."
+          },
+          "plays": {
+            "title": "AI trong Plays",
+            "description": "Tạo Plays và chạy các bước AI của chúng cho học viên."
+          },
+          "translations": {
+            "title": "Dịch bằng AI",
+            "description": "Dịch khóa học và SEO của chúng sang ngôn ngữ khác."
+          },
+          "image_generation": {
+            "title": "Tạo hình ảnh",
+            "description": "Tạo ảnh thu nhỏ và hình ảnh bằng AI."
+          },
+          "voice": {
+            "title": "Giọng nói và podcast",
+            "description": "Viết kịch bản podcast và tạo âm thanh giọng nói."
+          },
+          "video_ai": {
+            "title": "Phụ đề và chương video",
+            "description": "Phiên âm video và chia chúng thành các chương."
+          },
+          "live_session_summary": {
+            "title": "Tóm tắt buổi học trực tiếp",
+            "description": "Tóm tắt bản ghi của các buổi học trực tiếp."
+          },
+          "boards": {
+            "title": "AI trên bảng",
+            "description": "Tạo playground và nội dung trên bảng."
+          },
+          "landing_builder": {
+            "title": "Thiết kế trang web bằng AI",
+            "description": "Tạo trang đích và viết lại nội dung của chúng."
+          },
+          "newsletter": {
+            "title": "Viết bản tin bằng AI",
+            "description": "Soạn tiêu đề và nội dung bản tin."
+          },
+          "mcp_tools": {
+            "title": "Công cụ AI qua MCP",
+            "description": "Các công cụ dùng AI khi ứng dụng kết nối với tổ chức của bạn qua MCP."
+          }
+        }
       },
       "sso": {
         "title": "Đăng nhập một lần (SSO)",
@@ -7096,7 +7463,8 @@
           "users_admin": "Người dùng (API quản trị)",
           "roles_admin": "Vai trò (API quản trị)",
           "newsletter": "Bản tin",
-          "crm": "Tích hợp CRM"
+          "crm": "Tích hợp CRM",
+          "agent": "Tác tử AI (Agent API)"
         },
         "resource": "Tài nguyên",
         "perm_create": "Tạo",
@@ -7456,7 +7824,8 @@
           "suspended": "Quyền truy cập bị giới hạn. Hãy liên hệ LearnHouse để khôi phục.",
           "licensed": "Tự lưu trữ với giấy phép Phiên bản Enterprise, không giới hạn gói",
           "community": "Phiên bản Community tự lưu trữ, không giới hạn gói",
-          "billing_page": "Hóa đơn và thông tin thanh toán có trên trang thanh toán"
+          "billing_page": "Hóa đơn và thông tin thanh toán có trên trang thanh toán",
+          "free_trial_other": "Dùng thử miễn phí, còn {{count}} ngày. Không cần thẻ."
         },
         "next_invoice": "{{amount}} vào {{date}}",
         "seats_of": "{{used}} / {{limit}}",
@@ -7520,7 +7889,8 @@
             "addon": "Tiện ích bổ sung",
             "locked": "Cần {{plan}}",
             "locked_none": "Không khả dụng",
-            "edition": "Phiên bản Enterprise"
+            "edition": "Phiên bản Enterprise",
+            "trial": "Dùng thử"
           },
           "on": "Bật",
           "off": "Tắt",
@@ -7556,7 +7926,7 @@
             "usergroups": "Nhóm người dùng",
             "roles": "Vai trò tùy chỉnh",
             "required_training": "Đào tạo bắt buộc",
-            "company_seats": "Suất học cho công ty",
+            "company_seats": "Công ty",
             "payments": "Thanh toán",
             "ai": "Tính năng AI",
             "analytics": "Phân tích",
@@ -7573,7 +7943,19 @@
           }
         },
         "next_invoice_label": "Hóa đơn tiếp theo",
-        "seats_no_limit": "{{used}}, không giới hạn"
+        "seats_no_limit": "{{used}}, không giới hạn",
+        "invoices": "Hóa đơn",
+        "trial": {
+          "title_other": "Dùng thử {{plan}}: còn {{count}} ngày",
+          "desc_other": "Bạn được dùng mọi thứ trong {{plan}} đến {{date}}, gồm cả {{count}} tính năng không có ở gói Miễn phí. Chọn một gói bất cứ lúc nào để giữ lại; không có gì bị xóa khi hết thời gian dùng thử.",
+          "choose": "Giữ {{plan}}",
+          "what_happens": "Điều gì xảy ra nếu hết dùng thử mà chưa chọn gói",
+          "ended_title_trial": "Thời gian dùng thử {{plan}} đã kết thúc vào {{date}}",
+          "ended_title": "Bạn đã chuyển từ {{plan}} sang gói Miễn phí vào {{date}}",
+          "ended_courses_other": "{{count}} khóa học đã chuyển sang riêng tư và các tính năng của {{plan}} đang tạm dừng. Nâng cấp là mọi thứ trở lại như cũ.",
+          "ended_no_courses": "Các tính năng của {{plan}} đang tạm dừng. Nâng cấp là mọi thứ trở lại như cũ.",
+          "restore": "Khôi phục {{plan}}"
+        }
       },
       "overview": {
         "created": "Tạo ngày {{date}}",
@@ -14858,7 +15240,7 @@
     "done": "Xong, tôi đã sẵn sàng!",
     "steps": {
       "create_course": {
-        "title": "Tạo khóa học đầu tiên",
+        "title": "Khóa học đầu tiên đang thành hình",
         "description": "Tạo khóa học, hoặc chỉnh sửa bản nháp chúng tôi đã chuẩn bị cho bạn.",
         "action": "Tạo khóa học"
       },
@@ -14905,42 +15287,42 @@
         "university_desc": "Hướng dẫn, mẹo và thực hành tốt nhất"
       },
       "add_content": {
-        "title": "Thêm bài học đầu tiên",
+        "title": "Một bài học đáng để học viên ghé thăm",
         "description": "Thêm video, trang nội dung hoặc bài kiểm tra; cho học viên một lý do thực sự để đăng ký.",
         "action": "Thêm nội dung"
       },
       "brand_school": {
-        "title": "Thêm logo và màu sắc",
+        "title": "Một ngôi trường được học viên tin tưởng",
         "description": "Thêm logo và màu sắc của bạn để trông giống một ngôi trường chuyên nghiệp, đáng tin cậy.",
         "action": "Tạo thương hiệu"
       },
       "share_grow": {
-        "title": "Xuất bản trang chủ",
+        "title": "Cánh cửa chính của ngôi trường",
         "description": "Chọn một mẫu, tùy chỉnh và xuất bản trang học viên thấy đầu tiên.",
         "action": "Mở trang web"
       },
       "invite_learners": {
-        "title": "Mời những học viên đầu tiên",
+        "title": "Chào đón học viên đầu tiên của bạn",
         "description": "Chia sẻ liên kết tham gia hoặc mời mọi người; đưa học viên đầu tiên bước qua cửa.",
         "action": "Mời học viên"
       },
       "build_community": {
-        "title": "Mở không gian cộng đồng",
+        "title": "Giữ chân học viên quay lại",
         "description": "Mở một không gian cộng đồng để học viên luôn năng động và rủ thêm bạn bè.",
         "action": "Mở cộng đồng"
       },
       "publish_course": {
-        "title": "Xuất bản khóa học đầu tiên",
+        "title": "Khóa học đầu tiên của bạn đã hoạt động",
         "description": "Xuất bản một khóa học để học viên có thứ thật sự để đăng ký.",
         "action": "Xuất bản khóa học"
       },
       "create_group": {
-        "title": "Tạo nhóm đầu tiên",
+        "title": "Lớp học viên đầu tiên",
         "description": "Nhóm mọi người theo đội, lớp hoặc khóa để giao khóa học một lần.",
         "action": "Tạo nhóm"
       },
       "setup_payments": {
-        "title": "Thiết lập thanh toán",
+        "title": "Kiếm tiền từ những gì bạn dạy",
         "description": "Kết nối Stripe và đặt giá cho khóa học.",
         "action": "Kết nối Stripe"
       }
@@ -15622,7 +16004,33 @@
       "checkout_note": "Sau khi tạo tổ chức, bạn sẽ được chuyển đến trang thanh toán bảo mật."
     },
     "add_pack": "Thêm {{pack}}",
-    "cancels_on": "Gói đăng ký của bạn sẽ bị hủy vào {{periodEnd}}. Bạn vẫn có quyền truy cập cho đến lúc đó."
+    "cancels_on": "Gói đăng ký của bạn sẽ bị hủy vào {{periodEnd}}. Bạn vẫn có quyền truy cập cho đến lúc đó.",
+    "trial": {
+      "title_other": "Dùng thử {{plan}} · còn {{count}} ngày",
+      "desc": "Bạn không cần thẻ để bắt đầu. Chọn một gói để giữ mọi thứ như hiện tại.",
+      "choose": "Chọn gói",
+      "what_happens": "Những gì thay đổi nếu hết dùng thử mà chưa chọn gói",
+      "keep": "Giữ {{plan}}"
+    },
+    "downgrade_preview": {
+      "intro": "Với gói Miễn phí:",
+      "course_kept": "“{{course}}” vẫn công khai.",
+      "courses_private_other": "{{count}} khóa học khác chuyển sang riêng tư (thành viên vẫn mở được).",
+      "drip_paused_other": "Lịch phát hành của {{count}} khóa học tạm dừng, nên mọi chương đều được mở.",
+      "features_pause": "Các tính năng này tạm dừng cho đến khi bạn nâng cấp:",
+      "more_other": "và {{count}} mục khác",
+      "members_over": "{{count}} thành viên vẫn được giữ, vượt mức {{limit}} của gói Miễn phí. Không thể thêm thành viên mới cho đến khi bạn nâng cấp.",
+      "admins_over": "{{count}} quản trị viên vẫn được giữ, vượt mức {{limit}} của gói Miễn phí. Không thể thêm quản trị viên mới.",
+      "nothing_deleted": "Không có gì bị xóa. Nâng cấp lại là mọi thứ trở lại như cũ."
+    },
+    "cancel_flow": {
+      "title": "Hủy {{plan}}?",
+      "until": "Gói của bạn vẫn hoạt động đến {{date}}. Sau đó, tổ chức của bạn chuyển sang gói Miễn phí.",
+      "until_unknown": "Gói của bạn vẫn hoạt động đến hết kỳ đã thanh toán. Sau đó, tổ chức của bạn chuyển sang gói Miễn phí.",
+      "restore": "Bạn có thể nâng cấp lại bất cứ lúc nào: chế độ hiển thị khóa học và các tính năng tạm dừng sẽ tự động trở lại.",
+      "keep": "Giữ {{plan}}",
+      "confirm": "Hủy gói"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16288,6 +16696,12 @@
       "resource_plural": "Tài nguyên",
       "newsletter": "Bản tin",
       "newsletter_plural": "Bản tin"
+    },
+    "health": {
+      "title": "Học viên hiện không thể mua",
+      "body_other": "Nhà cung cấp thanh toán của bạn đã từ chối {{count}} lượt thanh toán kể từ {{date}}. Tài khoản Stripe của bạn có thể đã bị ngắt kết nối hoặc cần được xử lý. Cho đến khi khắc phục xong, học viên sẽ thấy thanh toán tạm thời không khả dụng.",
+      "recheck": "Kiểm tra lại",
+      "fix": "Mở cài đặt thanh toán"
     }
   },
   "lti": {
@@ -23057,7 +23471,47 @@
         "podcast": "Podcast",
         "community": "Cộng đồng",
         "folder": "Thư mục"
-      }
+      },
+      "features_title": "Những gì công cụ tìm kiếm có thể lập chỉ mục",
+      "features_subtitle": "Tắt một mục để giữ nó khỏi Google, Bing và tìm kiếm AI. Các trang của mục vẫn mở cho khách truy cập.",
+      "feature": {
+        "courses": "Khóa học",
+        "activities": "Bài học miễn phí",
+        "paths": "Lộ trình học",
+        "podcasts": "Podcast",
+        "communities": "Cộng đồng",
+        "library": "Thư viện",
+        "live": "Buổi học trực tiếp",
+        "newsletters": "Kho bản tin",
+        "pages": "Trang web",
+        "store": "Ưu đãi cửa hàng"
+      },
+      "thin_threads": "Ẩn chủ đề chưa có trả lời sau",
+      "thin_threads_hint": "Chủ đề không ai trả lời sẽ bị ẩn khỏi công cụ tìm kiếm khi đạt độ tuổi này, để các trang trống không làm nặng cộng đồng. Đặt 0 để giữ tất cả.",
+      "days": "ngày",
+      "ai_title": "Tìm kiếm AI và trình thu thập dữ liệu",
+      "ai_subtitle": "Cách ChatGPT, Claude, Perplexity, Gemini và các công cụ AI khác được dùng nội dung công khai của bạn.",
+      "ai_policy": "Chính sách trình thu thập AI",
+      "ai_allow": "Cho phép mọi trình thu thập AI",
+      "ai_allow_hint": "Câu trả lời của AI có thể trích dẫn trang của bạn, và mô hình có thể học từ đó.",
+      "ai_block_training": "Cho phép câu trả lời AI, chặn huấn luyện",
+      "ai_block_training_hint": "Trợ lý vẫn có thể tìm và trích dẫn trang của bạn; các trình thu thập huấn luyện (GPTBot, Google-Extended, CCBot…) bị chặn.",
+      "ai_block_all": "Chặn mọi trình thu thập AI",
+      "ai_block_all_hint": "Mọi tác nhân AI đã biết bị chặn trong robots.txt và llms.txt bị tắt. Tìm kiếm web không bị ảnh hưởng.",
+      "ai_blocked_extra": "Chặn thêm các user agent này",
+      "ai_blocked_extra_hint": "Mỗi dòng một tên trình thu thập, ví dụ Bytespider.",
+      "llms_enabled": "Xuất bản llms.txt và các trang Markdown",
+      "llms_enabled_hint": "Bản đồ nội dung công khai của bạn tại /llms.txt và bản sao Markdown của từng trang công khai, để các công cụ AI trích dẫn bạn chính xác.",
+      "feeds_title": "Nguồn cấp",
+      "feeds_enabled": "Xuất bản nguồn cấp RSS, Atom và JSON",
+      "feeds_enabled_hint": "Khóa học mới, chủ đề cộng đồng và buổi học trực tiếp xuất hiện trong trình đọc nguồn cấp và trang tổng hợp. Nguồn cấp podcast luôn bật.",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "Báo ngay cho Bing, Yandex và các công cụ tìm kiếm IndexNow khác về trang mới và trang vừa cập nhật.",
+      "indexnow_enabled": "Báo cho công cụ tìm kiếm khi bạn xuất bản",
+      "indexnow_enabled_hint": "Khóa xác minh được tạo cho trang web của bạn khi bạn lưu.",
+      "indexnow_key": "Khóa xác minh",
+      "links_llms": "llms.txt",
+      "links_feed": "Nguồn cấp RSS"
     },
     "save_failed": "Không thể lưu cài đặt SEO.",
     "saved": "Đã lưu cài đặt SEO."
@@ -23542,8 +23996,8 @@
     }
   },
   "companies": {
-    "title": "Khách hàng",
-    "subtitle": "Các công ty bạn đào tạo, nhân sự, khóa học và suất học của họ",
+    "title": "Công ty",
+    "subtitle": "Các công ty bạn đào tạo: cho nhân sự của họ truy cập khóa học của bạn, hoặc bán suất học cho họ",
     "tabs": {
       "companies": "Công ty",
       "offers": "Gói suất học",
@@ -23553,7 +24007,7 @@
       "tab": "Công ty",
       "title": "Công ty",
       "subtitle": "Suất học đã bán cho công ty và các gói họ mua",
-      "open_customers": "Mở hồ sơ khách hàng"
+      "open_customers": "Mở hồ sơ công ty"
     },
     "menu": {
       "manage_team": "Quản lý nhóm"
@@ -23634,7 +24088,8 @@
       "auto_assign": "Tặng suất miễn phí cho người tham gia",
       "company_admins": "Quản trị viên công ty",
       "billing_email": "Email thanh toán",
-      "tags": "Thẻ"
+      "tags": "Thẻ",
+      "member_limit": "Giới hạn thành viên"
     },
     "list": {
       "new": "Công ty mới",
@@ -23663,7 +24118,7 @@
       "no_match": "Không có công ty nào khớp bộ lọc",
       "clear_filters": "Xóa bộ lọc",
       "empty_title": "Chưa có công ty nào",
-      "empty_body": "Tiếp nhận một công ty để cấp cho họ không gian mang thương hiệu, khóa học riêng và suất học do họ tự quản lý."
+      "empty_body": "Thêm một công ty để cho nhân sự của họ truy cập khóa học của bạn, có không gian mang thương hiệu riêng và tiến độ bạn theo dõi được. Bán suất học là tùy chọn."
     },
     "onboard": {
       "title": "Tiếp nhận công ty",
@@ -23716,7 +24171,7 @@
       "remove_member_title": "Gỡ thành viên này?",
       "remove_member_body": "{{name}} sẽ mất quyền truy cập không gian công ty và các khóa học độc quyền. Tiến độ học vẫn được giữ.",
       "member_removed": "Đã gỡ thành viên",
-      "courses_intro": "Khóa học chia sẻ hiển thị trong không gian công ty. Khóa học độc quyền chỉ thành viên của công ty mới thấy.",
+      "courses_intro": "Cho công ty truy cập khóa học: khóa học độc quyền chỉ hiển thị với nhân sự của công ty, khóa học dùng chung vẫn hiển thị như bình thường và xuất hiện trong không gian của công ty.",
       "link_course": "Liên kết khóa học",
       "create_course": "Tạo khóa học",
       "no_courses": "Chưa liên kết khóa học nào",
@@ -23743,7 +24198,7 @@
       "grant_seats_hint": "Dành cho thỏa thuận thanh toán ngoài Stripe: hóa đơn, thử nghiệm, đối tác.",
       "cancel_company": "Hủy suất học",
       "no_seats": "Không có suất",
-      "no_seats_body": "Công ty này chưa mua suất. Bạn có thể cấp một số suất.",
+      "no_seats_body": "Công ty này chưa có suất học. Nhân sự vẫn có thể nhận khóa học trực tiếp; suất học dùng để bán hoặc cấp một số lượng cố định.",
       "comped_n_one": "{{count}} suất tặng",
       "comped_n_other": "{{count}} suất tặng",
       "renews": "Gia hạn",
@@ -23769,7 +24224,14 @@
       "no_activity": "Chưa có hoạt động nào",
       "notes": "Ghi chú",
       "notes_hint": "Chỉ quản trị viên học viện của bạn mới xem được.",
-      "notes_placeholder": "Người liên hệ, kế hoạch gia hạn, điều họ quan tâm…"
+      "notes_placeholder": "Người liên hệ, kế hoạch gia hạn, điều họ quan tâm…",
+      "access_hint": "Ai có thể tham gia công ty này và nhận khóa học của công ty. Không cần thanh toán.",
+      "member_limit_hint": "Giới hạn tùy chọn cho số người được thêm qua email hoặc tên miền",
+      "no_limit": "Không giới hạn",
+      "over_limit": "Đã đạt giới hạn thành viên nên những người này chưa được thêm: {{list}}",
+      "or_folder": "Hoặc cả một thư mục",
+      "folder_hint": "Cấp cho công ty mọi khóa học trong thư mục",
+      "pick_folder": "Chọn thư mục"
     },
     "offers": {
       "intro": "Gói suất học định giá suất cho công ty: bậc theo số lượng, mức tối thiểu, mua một lần hoặc định kỳ.",
@@ -28335,7 +28797,11 @@
       "ai_credits_low": "Tín dụng AI sắp hết",
       "org_payment_failed": "Thanh toán đăng ký thất bại",
       "agent_run_finished": "Tác nhân đã chạy xong",
-      "agent_run_failed": "Tác nhân chạy thất bại"
+      "agent_run_failed": "Tác nhân chạy thất bại",
+      "trial_ending": "Sắp hết dùng thử",
+      "plan_downgraded": "Đã chuyển sang Miễn phí",
+      "plan_restored": "Đã khôi phục gói",
+      "payments_checkout_failing": "Thanh toán thất bại"
     },
     "copy": {
       "assignment_graded": "Đã chấm điểm: {{assignment}}",
@@ -28393,7 +28859,11 @@
       "ai_credits_low": "Tín dụng AI sắp hết (còn {{remaining}})",
       "org_payment_failed": "Thanh toán đăng ký của bạn thất bại",
       "agent_run_finished": "{{agent}} đã chạy xong theo lịch",
-      "agent_run_failed": "{{agent}} chạy theo lịch thất bại"
+      "agent_run_failed": "{{agent}} chạy theo lịch thất bại",
+      "trial_ending": "Thời gian dùng thử {{plan}} sẽ kết thúc sau {{days}} ngày",
+      "plan_downgraded": "Bạn đang dùng gói Miễn phí. Không có gì bị xóa",
+      "plan_restored": "Chào mừng bạn quay lại {{plan}}",
+      "payments_checkout_failing": "Học viên hiện không thể mua ({{count}} lượt thanh toán thất bại)"
     },
     "routing": {
       "short": "Ai nhận thông báo",
@@ -28456,7 +28926,9 @@
       "start_template": "Bắt đầu từ mẫu",
       "start_template_desc": "Chúng tôi xuất bản trang web {{template}} mang tên bạn và thêm bản nháp khóa học đầu tiên để bạn chỉnh sửa.",
       "start_blank": "Bắt đầu trống",
-      "start_blank_desc": "Một học viện trống. Danh sách thiết lập sẽ hướng dẫn phần còn lại."
+      "start_blank_desc": "Một học viện trống. Danh sách thiết lập sẽ hướng dẫn phần còn lại.",
+      "trial_note_after": "Không cần thẻ. Sau đó, bạn có thể giữ gói này, chọn gói khác hoặc ở lại gói Miễn phí.",
+      "trial_note": "Bạn được dùng {{plan}} miễn phí trong {{days}} ngày."
     },
     "checklist": {
       "full_guide": "Hướng dẫn đầy đủ",
@@ -28493,7 +28965,10 @@
         "ai_credits_one": "Tín dụng AI: {{formatted}}",
         "ai_credits_other": "Tín dụng AI: {{formatted}}"
       },
-      "compare": "So sánh các gói"
+      "compare": "So sánh các gói",
+      "your_trial": "Bản dùng thử của bạn",
+      "keep_plan": "Giữ {{plan}}",
+      "subtitle_trial": "Bạn đang dùng thử {{plan}} miễn phí. Hãy chọn gói phù hợp; mọi thứ giữ nguyên cho đến khi bạn chọn."
     },
     "invite": {
       "title": "Mời mọi người",
@@ -28529,7 +29004,10 @@
       "import_one": "Mời học viên: {{count}}",
       "import_other": "Mời học viên: {{count}}",
       "sent_toast_one": "Đã gửi lời mời: {{count}}",
-      "sent_toast_other": "Đã gửi lời mời: {{count}}"
+      "sent_toast_other": "Đã gửi lời mời: {{count}}",
+      "invite_only_create": "Trường của bạn chỉ nhận theo lời mời. Hãy tạo liên kết tham gia để mọi người đăng ký.",
+      "create_link": "Tạo liên kết tham gia",
+      "invite_only_hint": "Liên kết này có mã tham gia: ai có liên kết đều có thể đăng ký."
     },
     "invites": {
       "title": "Lời mời",
@@ -28588,6 +29066,17 @@
       },
       "desc_one": "Tài khoản tạo trong {{count}} ngày qua và họ đi được bao xa",
       "desc_other": "Tài khoản tạo trong {{count}} ngày qua và họ đi được bao xa"
+    },
+    "first_course": {
+      "title": "Tạo khóa học đầu tiên",
+      "subtitle": "Mọi thứ khác có thể đợi. Chọn cách bắt đầu, bạn có thể sửa từng chữ sau.",
+      "template": "Bắt đầu từ mẫu",
+      "template_desc": "Bản nháp có sẵn chương và bài học, mở ngay trong trình soạn thảo.",
+      "ai": "Tạo bằng AI",
+      "ai_desc": "Mô tả chủ đề và nhận dàn ý khóa học đầy đủ trong vài phút.",
+      "blank": "Hoặc bắt đầu với khóa học trống",
+      "template_short": "Bắt đầu từ mẫu",
+      "ai_short": "Tạo bằng AI"
     }
   },
   "impersonation": {
@@ -28615,5 +29104,19 @@
     "no_access_desc": "Hãy xin quyền đóng vai từ quản trị viên LearnHouse.",
     "back_to_console": "Quay lại bảng điều khiển",
     "retry": "Thử lại"
+  },
+  "mobile_app": {
+    "title": "Tải ứng dụng di động",
+    "heading": "Học trên điện thoại",
+    "body": "Mở ứng dụng LearnHouse và quét mã này để kết nối với trường này.",
+    "qr_alt": "Mã QR để mở trường này trong ứng dụng LearnHouse",
+    "qr_actions": "Nhấp chuột phải để lưu hoặc sao chép mã QR",
+    "copy_image": "Sao chép hình ảnh",
+    "download_png": "Tải PNG",
+    "copy_link": "Sao chép liên kết ứng dụng",
+    "copied_image": "Đã sao chép mã QR",
+    "copied_link": "Đã sao chép liên kết ứng dụng",
+    "copy_failed": "Không thể sao chép hình ảnh. Hãy thử Tải xuống.",
+    "download_failed": "Không thể lưu hình ảnh."
   }
 }

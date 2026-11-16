@@ -155,6 +155,21 @@ class TestChecklist:
         assert res.status_code == 409
 
 
+    async def test_first_course_in_one_click_even_after_the_starter(self, make_app, admin_user, regular_user, org, db):
+        from src.db.courses.courses import Course
+
+        db.add(OrganizationConfig(org_id=org.id, config={"config_version": "2.0", "plan": "free"}, creation_date=str(datetime.now()), update_date=str(datetime.now())))
+        await db.commit()
+        app = make_app(admin_user)
+        # Not "once per org" like the starter: the launch plan can always make one.
+        first = await call(app, "POST", f"/orgs/{org.id}/first-course")
+        second = await call(app, "POST", f"/orgs/{org.id}/first-course")
+        assert first.status_code == 200 and second.status_code == 200
+        uuids = {first.json()["course_uuid"], second.json()["course_uuid"]}
+        made = (await db.execute(select(Course).where(Course.course_uuid.in_(uuids)))).scalars().all()
+        assert len(made) == 2 and all(c.org_id == org.id and not c.public for c in made)
+        assert (await call(make_app(regular_user), "POST", f"/orgs/{org.id}/first-course")).status_code == 403
+
 class TestPlanPicker:
     async def test_saas_only(self, make_app, admin_user, org, db):
         assert (await call(make_app(admin_user), "GET", f"/orgs/{org.id}/plans")).status_code == 404

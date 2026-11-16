@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { ChatCircle, Lightbulb, Megaphone, Question, Star } from '@phosphor-icons/react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { getUriWithOrg } from '@services/config/config'
+import { threadPath } from '@/lib/seo/paths'
 import { getLabelInfo, type DiscussionAuthor } from '@services/communities/discussions'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 
@@ -16,8 +17,22 @@ export const discussionId = (uuid: string) => uuid.replace('discussion_', '')
 export const communityHref = (orgslug: string, communityUuid: string) =>
   getUriWithOrg(orgslug, `/community/${communityId(communityUuid)}`)
 
-export const threadHref = (orgslug: string, communityUuid: string, discussionUuid: string) =>
-  getUriWithOrg(orgslug, `/community/${communityId(communityUuid)}/discussion/${discussionId(discussionUuid)}`)
+/**
+ * A thread's URL: the readable `/community/{key}/{id}-{slug}` when the
+ * thread's id is known, else the uuid URL (which redirects to it).
+ */
+export const threadHref = (
+  orgslug: string,
+  communityUuid: string,
+  discussionUuid: string,
+  discussion?: { id?: number | null; title?: string | null } | null,
+) =>
+  getUriWithOrg(
+    orgslug,
+    discussion?.id
+      ? threadPath(communityId(communityUuid), { id: discussion.id, title: discussion.title })
+      : `/community/${communityId(communityUuid)}/discussion/${discussionId(discussionUuid)}`,
+  )
 
 export function authorDisplayName(author: DiscussionAuthor | null | undefined, fallback: string) {
   if (!author) return fallback

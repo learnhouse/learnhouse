@@ -21,10 +21,17 @@ import {
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { planMeetsRequirement } from '@services/plans/plans'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useAISettings } from '@components/Hooks/useAIFeature'
 
 const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProps>(
-  ({ items, command, currentPlan = 'free' }, ref) => {
+  ({ items: allItems, command, currentPlan = 'free' }, ref) => {
     const { t } = useTranslation()
+    // AI items whose switch is off in Settings > AI are left out.
+    const ai = useAISettings()
+    const items = React.useMemo(
+      () => (ai ? allItems.filter((item) => !item.aiFeature || ai.features[item.aiFeature]) : allItems),
+      [ai, allItems]
+    )
     const { track } = useLHAnalytics('editor')
     const [selectedIndex, setSelectedIndex] = useState(0)
     const containerRef = useRef<HTMLDivElement>(null)

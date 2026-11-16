@@ -25,6 +25,7 @@ import { activityQueryOptions } from '@/hooks/queries/useActivity'
 import { useContentLanguage } from '@/hooks/useContentLanguage'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { withNextParam } from '@/lib/auth/nextParam'
 
 interface CourseRun {
   status: string
@@ -176,13 +177,15 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
         reason: 'unauthenticated',
         intended_action: isStarted ? 'leave_course' : 'start_course',
       })
-      router.push(getUriWithOrg(orgslug, '/signup'))
+      // Come back to this course after signing up or logging in; it used to
+      // drop people on the org home, and most never found the course again.
+      router.push(getUriWithOrg(orgslug, withNextParam('/signup', `/course/${cleanCourseUuid}`)))
       return
     }
 
     // Check if user is part of the organization
     if (!isUserPartOfTheOrg) {
-      router.push(getUriWithOrg(orgslug, '/signup'))
+      router.push(getUriWithOrg(orgslug, withNextParam('/signup', `/course/${cleanCourseUuid}`)))
       return
     }
 

@@ -282,12 +282,21 @@ def _entry(resource_type: str, row: Any, image: Optional[str] = None, name: Opti
     }
 
 
-async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
+async def sitemap_data(db_session: AsyncSession, org_slug: str, request: Optional[Request] = None) -> dict:
     """Everything the public sitemap lists for an org, in one round trip.
 
     Only content an anonymous visitor can open and that may be indexed:
-    public + published, not marked noindex, not canonicalized elsewhere.
+    public + published, not marked noindex, not canonicalized elsewhere, in a
+    section the org lets search engines index, and never content sold behind
+    a paywall (lessons of sold courses, threads of sold communities). Threads
+    nobody answered past the org's thin-thread age are left out too.
     """
+    from src.core.ee_hooks import get_ee_paid_locked_activity_ids
+    from src.services.seo.indexnow import thread_segment
+    from src.services.seo.public import _anon_locked, _comment_counts, feature_indexable, is_thin_thread
+
+    if request is None:
+        request = Request({"type": "http", "method": "GET", "path": "/", "headers": [], "query_string": b""})
     org = await _get_org_by_slug(db_session, org_slug)
     seo_config = await org_seo_config(db_session, org.id)
     result: dict[str, Any] = {
@@ -297,9 +306,11 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
             "name": org.name,
             "indexing_disabled": bool(seo_config.get("indexing_disabled")),
             "noindex_communities": bool(seo_config.get("noindex_communities")),
+            # Sections the web app adds itself (EE live sessions, newsletters, store).
+            "features": {f: feature_indexable(seo_config, f) for f in ("live", "newsletters", "pages", "store")},
         },
         "courses": [], "activities": [], "paths": [], "podcasts": [],
-        "communities": [], "discussions": [], "folders": [],
+        "communities": [], "discussions": [], "folders": [], "pages": [],
     }
     if result["org"]["indexing_disabled"]:
         return result
@@ -311,7 +322,7 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
             .order_by(Course.id)
             .limit(SITEMAP_MAX_ITEMS)
         )
-    ).scalars().all()
+    ).scalars().all() if feature_indexable(seo_config, "courses") else []
     listed = {c.id: c for c in courses if not _noindexed(c.seo)}
     result["courses"] = [_entry("course", c, c.thumbnail_image) for c in listed.values()]
     # Language versions (multilingual courses): hreflang alternates.
@@ -322,10 +333,10 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
         entry["default_locale"] = course.default_locale
         entry["available_locales"] = locales.get(course.id, [])
 
-    if listed:
+    if listed and feature_indexable(seo_config, "activities"):
         activities = (
             await db_session.execute(
-                select(Activity.activity_uuid, Activity.course_id, Activity.update_date, Activity.creation_date)
+                select(Activity.id, Activity.activity_uuid, Activity.course_id, Activity.update_date, Activity.creation_date)
                 .where(
                     Activity.course_id.in_(list(listed)),
                     Activity.published == True,  # noqa: E712
@@ -335,6 +346,13 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
                 .limit(SITEMAP_MAX_ITEMS * 2)
             )
         ).all()
+        # Lessons sold behind a paywall show the offer, not the lesson: skip them.
+        locked_by_course: dict[int, Any] = {}
+        for course_id in {row[2] for row in activities}:
+            locked = await get_ee_paid_locked_activity_ids(request, course_id, AnonymousUser(), db_session)
+            if locked is None:
+                locked = "all" if await _anon_locked(request, db_session, listed[course_id].course_uuid) else set()
+            locked_by_course[course_id] = locked
         result["activities"] = [
             {
                 "course_key": public_key("course", listed[course_id]),
@@ -343,7 +361,8 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
                 "default_locale": listed[course_id].default_locale,
                 "available_locales": locales.get(course_id, []),
             }
-            for activity_uuid, course_id, update_date, creation_date in activities
+            for activity_id, activity_uuid, course_id, update_date, creation_date in activities
+            if locked_by_course[course_id] != "all" and activity_id not in locked_by_course[course_id]
         ]
 
     paths = (
@@ -353,7 +372,7 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
             .order_by(Path.id)
             .limit(SITEMAP_MAX_ITEMS)
         )
-    ).scalars().all()
+    ).scalars().all() if feature_indexable(seo_config, "paths") else []
     result["paths"] = [_entry("path", p, p.thumbnail_image) for p in paths if not _noindexed(p.seo)]
 
     podcasts = (
@@ -363,7 +382,7 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
             .order_by(Podcast.id)
             .limit(SITEMAP_MAX_ITEMS)
         )
-    ).scalars().all()
+    ).scalars().all() if feature_indexable(seo_config, "podcasts") else []
     result["podcasts"] = [_entry("podcast", p, p.thumbnail_image) for p in podcasts if not _noindexed(p.seo)]
 
     if not result["org"]["noindex_communities"]:
@@ -377,24 +396,31 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
         ).scalars().all()
         listed_communities = {c.id: c for c in communities if not _noindexed(c.seo)}
         result["communities"] = [_entry("community", c, c.thumbnail_image) for c in listed_communities.values()]
-        if listed_communities:
+        # Threads of sold communities are behind the paywall: not listed.
+        open_communities = {
+            cid: c for cid, c in listed_communities.items() if not await _anon_locked(request, db_session, c.community_uuid)
+        }
+        if open_communities:
             discussions = (
                 await db_session.execute(
-                    select(Discussion.discussion_uuid, Discussion.community_id, Discussion.title,
+                    select(Discussion.id, Discussion.community_id, Discussion.title,
                            Discussion.update_date, Discussion.creation_date)
-                    .where(Discussion.community_id.in_(list(listed_communities)))
+                    .where(Discussion.community_id.in_(list(open_communities)))
                     .order_by(Discussion.id.desc())
                     .limit(SITEMAP_MAX_ITEMS)
                 )
             ).all()
+            counts = await _comment_counts(db_session, [row[0] for row in discussions])
             result["discussions"] = [
                 {
-                    "community_key": public_key("community", listed_communities[community_id]),
-                    "key": discussion_uuid.replace("discussion_", "", 1),
+                    "community_key": public_key("community", open_communities[community_id]),
+                    "key": thread_segment(discussion_id, title),
                     "name": title,
+                    "replies": counts.get(discussion_id, 0),
                     "lastmod": update_date or creation_date or "",
                 }
-                for discussion_uuid, community_id, title, update_date, creation_date in discussions
+                for discussion_id, community_id, title, update_date, creation_date in discussions
+                if not is_thin_thread(seo_config, counts.get(discussion_id, 0), creation_date)
             ]
 
     folders = (
@@ -404,8 +430,22 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str) -> dict:
             .order_by(Folder.id)
             .limit(SITEMAP_MAX_ITEMS)
         )
-    ).scalars().all()
+    ).scalars().all() if feature_indexable(seo_config, "library") else []
     result["folders"] = [_entry("folder", f, f.thumbnail_image) for f in folders if not _noindexed(f.seo)]
+
+    if feature_indexable(seo_config, "pages"):
+        from src.db.landing_pages import LandingPage
+
+        pages = (
+            await db_session.execute(
+                select(LandingPage).where(LandingPage.org_id == org.id, LandingPage.slug != "").order_by(LandingPage.id).limit(500)
+            )
+        ).scalars().all()
+        result["pages"] = [
+            {"key": p.slug, "name": p.title or p.slug, "lastmod": p.published_at or ""}
+            for p in pages
+            if isinstance(p.published, dict) and not ((p.published.get("page") or {}).get("noindex"))
+        ]
     return result
 
 

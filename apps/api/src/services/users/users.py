@@ -186,7 +186,12 @@ async def create_user(
     org_id: int,
     is_oauth: bool = False,
     signup_provider: str = "email",
+    email_verified_by_link: bool = False,
+    next_path: str | None = None,
 ):
+    # ``email_verified_by_link``: the account comes from a personal invitation
+    # link mailed to this address, so the inbox is already proven; it starts
+    # verified and gets the welcome email instead of a verification one.
     # Validate password complexity (skip for OAuth users who have empty passwords)
     if user_object.password and not is_oauth:
         validation_result = validate_password_complexity(user_object.password)
@@ -217,8 +222,8 @@ async def create_user(
     user.user_uuid = f"user_{uuid4()}"
     user.password = security_hash_password(user_object.password) if user_object.password else ""
 
-    # OAuth users and OSS mode get auto-verified email
-    if is_oauth or get_deployment_mode() != 'saas':
+    # OAuth users, invitation-link signups and OSS mode get auto-verified email
+    if is_oauth or email_verified_by_link or get_deployment_mode() != 'saas':
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
         user.signup_method = signup_provider if is_oauth else "email"
@@ -342,8 +347,9 @@ async def create_user(
         },
     )
 
-    # Send verification email for non-OAuth users, account creation email for OAuth users
-    if is_oauth:
+    # Send verification email for non-OAuth users, account creation email for
+    # OAuth users and invitation-link signups (both arrive with a proven inbox)
+    if is_oauth or email_verified_by_link:
         org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
         org_config = (await db_session.execute(org_config_stmt)).scalars().first()
         # White-label the welcome email to the org: name it in the subject/body,
@@ -361,7 +367,7 @@ async def create_user(
     elif get_deployment_mode() == 'saas':
         # Import here to avoid circular imports
         from src.services.users.email_verification import send_verification_email
-        await send_verification_email(request, db_session, user, org_id)
+        await send_verification_email(request, db_session, user, org_id, next_path=next_path)
 
     # Answers the org maps to people data (department, manager...) land on
     # the member's profile too (EE; never fails the signup). Last, so nothing
@@ -381,6 +387,7 @@ async def create_user_with_invite(
     user_object: UserCreate,
     org_id: int,
     invite_code: str,
+    next_path: str | None = None,
 ):
 
     # Check if invite code exists
@@ -397,7 +404,7 @@ async def create_user_with_invite(
     # Usage check
     await check_limits_with_usage("members", org_id, db_session)
 
-    user = await create_user(request, db_session, current_user, user_object, org_id, signup_provider="invite")
+    user = await create_user(request, db_session, current_user, user_object, org_id, signup_provider="invite", next_path=next_path)
 
     # Check if invite code contains UserGroup
     if inviteCode.get("usergroup_id"): # type: ignore
@@ -456,6 +463,7 @@ async def create_user_without_org(
     user_object: UserCreate,
     is_oauth: bool = False,
     signup_provider: str = "email",
+    next_path: str | None = None,
 ):
     # Validate password complexity (skip for OAuth users who have empty passwords)
     if user_object.password and not is_oauth:
@@ -551,7 +559,7 @@ async def create_user_without_org(
         )
     else:
         from src.services.users.email_verification import send_verification_email
-        await send_verification_email(request, db_session, user, org_id=None)
+        await send_verification_email(request, db_session, user, org_id=None, next_path=next_path)
 
     return user_read
 

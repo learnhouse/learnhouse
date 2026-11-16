@@ -1,3 +1,4 @@
+import { headers } from 'next/headers'
 import { SeoScripts } from '@components/SEO/SeoScripts'
 import { getCourseMetadata } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -36,9 +37,23 @@ export default async function CourseSeo({
     slim: true,
     lang: requestedLang ?? undefined,
   }).catch(() => null)
-  if (!course || !course.public || !course.published) return null
+  // The thumbnail is the course page's largest paint, but the client-rendered
+  // page learns its URL only after hydrating and fetching the course. This slot
+  // is in the server HTML, so the hint lets the browser fetch it alongside the JS.
+  // A real <link> (React hoists it): a ReactDOM.preload() hint here only
+  // reached the client with the RSC payload, after the JavaScript.
+  const heroPreload =
+    course?.thumbnail_image && course.thumbnail_type !== 'video' && ctx.org?.org_uuid && (await isDocumentRequest()) ? (
+      <link
+        rel="preload"
+        as="image"
+        href={getCourseThumbnailMediaDirectory(ctx.org.org_uuid, course.course_uuid, course.thumbnail_image)}
+        fetchPriority="high"
+      />
+    ) : null
+  if (!course || !course.public || !course.published) return heroPreload
   const seo = course.seo || {}
-  if (seo.enable_jsonld === false || seo.robots_noindex) return null
+  if (seo.enable_jsonld === false || seo.robots_noindex) return heroPreload
 
   const lang = courseLanguageSeo({
     baseUrl: await ctx.url(`/course/${resolved.canonical_key}`),
@@ -58,6 +73,8 @@ export default async function CourseSeo({
   const isPaid = !!paywall?.data?.is_paid && offers.some((o) => o.price > 0)
 
   return (
+    <>
+    {heroPreload}
     <SeoScripts
       items={[
         courseJsonLd({
@@ -96,5 +113,16 @@ export default async function CourseSeo({
         faqJsonLd(seo.faq || []),
       ]}
     />
+    </>
   )
+}
+
+/**
+ * A full page load, not a client navigation or a link prefetch (both RSC
+ * requests). The hero preload only helps the first paint of a document; in a
+ * prefetched payload it made every page download the target page's hero.
+ */
+async function isDocumentRequest(): Promise<boolean> {
+  const h = await headers()
+  return !h.get('rsc') && !h.get('next-router-prefetch')
 }

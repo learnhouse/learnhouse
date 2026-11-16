@@ -5,7 +5,8 @@ import { getPathThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { resolveForPage } from '@/lib/seo/resolve.server'
-import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
+import { buildResourceMetadata, noindexMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
+import { featureIndexable } from '@/lib/seo/meta'
 import PathClient from './path'
 
 type PageParams = Promise<{ orgslug: string; pathuuid: string }>
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
     return noindexMetadata(ctx.org?.name || 'Path')
   }
   const key = path.slug || uuid
+  const indexable = !!path.public && !!path.published && !resolved?.restricted && featureIndexable(ctx.seo, 'paths')
   return buildResourceMetadata({
     ctx,
     name: path.name,
@@ -35,7 +37,8 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
     seo: path.seo,
     thumbnail: path.thumbnail_image ? getPathThumbnailMediaDirectory(ctx.org?.org_uuid, path.path_uuid, path.thumbnail_image) : undefined,
     generatedImage: await ctx.url(`/og/path/${key}`),
-    indexable: !!path.public && !!path.published && !resolved?.restricted,
+    indexable,
+    alternateTypes: await seoAlternates(ctx, { indexable, markdown: `/path/${key}.md`, feed: '/' }),
     modifiedTime: path.update_date,
   })
 }

@@ -408,11 +408,17 @@ async def start(
         charge_key=charge_key or f"{feature}:{uuid.uuid4().hex}",
         keep_on_failure=keep_on_failure,
     )
-    if charge_key:
-        _take_lock(meter.charge_key)
     amount = max(meter.floor_credits, int(estimate or 0))
     if max_credits is not None:
         amount = min(amount, max_credits)
+    # The org's per-feature AI switches, staff-only Ask AI and monthly cap
+    # (Settings > AI). Every model call opens a meter, so this covers routes,
+    # jobs and tools alike.
+    from src.security.features_utils.ai_features import gate_metered_call
+
+    await gate_metered_call(feature, meter.org_id, db, user_id=meter.user_id, amount=amount)
+    if charge_key:
+        _take_lock(meter.charge_key)
     if amount > 0:
         try:
             await reserve_ai_credit(meter.org_id, db, amount=amount)

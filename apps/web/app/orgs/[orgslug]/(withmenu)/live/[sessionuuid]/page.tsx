@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import { getLiveSession } from '@ee/services/live_sessions/live_sessions'
 import { getSeoContext } from '@/lib/seo/context.server'
-import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
+import { buildResourceMetadata, noindexMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
+import { featureIndexable } from '@/lib/seo/meta'
 import { buildPageTitle } from '@/lib/seo/utils'
 import LiveSessionPage from '@ee/components/LiveSessions/Pages/LiveSessionPage'
 
@@ -20,7 +21,8 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
     name: session.title,
     description: session.description || `Live session from ${ctx.org?.name}`,
     canonical: await ctx.url(`/live/${sessionuuid.replace(/^livesession_/, '')}`),
-    indexable: session.status !== 'cancelled',
+    indexable: session.status !== 'cancelled' && featureIndexable(ctx.seo, 'live'),
+    alternateTypes: await seoAlternates(ctx, { indexable: session.status !== 'cancelled' && featureIndexable(ctx.seo, 'live'), feed: '/live/' }),
   })
 }
 

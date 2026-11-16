@@ -351,6 +351,15 @@ export interface SeoOrgConfig {
   indexing_disabled?: boolean
   robots_extra_rules?: string
   organization_type?: string
+  ai_crawler_policy?: 'allow' | 'block_training' | 'block_all'
+  ai_crawlers_blocked?: string[]
+  indexable_features?: Record<string, boolean>
+  thin_thread_noindex_days?: number
+  feeds_enabled?: boolean
+  llms_txt_enabled?: boolean
+  indexnow_enabled?: boolean
+  /** Server-managed (read only): generated on opt-in, ignored when sent. */
+  indexnow_key?: string
 }
 
 export async function updateOrgSeoConfig(

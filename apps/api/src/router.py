@@ -468,6 +468,17 @@ v1_router.include_router(
     dependencies=[Depends(require_authenticated_user)],
 )
 
+# Personal invitation links from invitation emails: public (the invitee may
+# have no account yet); API tokens refused.
+from src.routers import invite_links as invite_links_router_module  # noqa: E402
+
+v1_router.include_router(
+    invite_links_router_module.router,
+    prefix="/invite-links",
+    tags=["onboarding"],
+    dependencies=[Depends(get_non_api_token_user)],
+)
+
 # Register EE Routers if available
 register_ee_routers(v1_router)
 

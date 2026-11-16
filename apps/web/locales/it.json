@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Funzione Pro",
-          "description": "Accogli aziende come clienti, con uno spazio personalizzato, corsi esclusivi e posti che gestiscono in autonomia."
+          "description": "Forma le aziende: dai alle loro persone accesso ai tuoi corsi, uno spazio con il loro marchio e progressi che puoi seguire. Vendere posti è facoltativo."
         },
         "scim": {
           "title": "Funzionalità Enterprise",
@@ -176,6 +176,211 @@
         "newsletter": {
           "title": "Funzionalità Standard",
           "description": "La newsletter è disponibile dal piano Standard in su. Esegui l'upgrade per inviare via email campagne, serie di benvenuto e aggiornamenti dei corsi ai tuoi studenti."
+        }
+      },
+      "gate": {
+        "upgrade": "Passa a {{plan}}",
+        "talk_to_us": "Parla con noi",
+        "ask_admin": "Chiedi a un amministratore della tua organizzazione di passare a {{plan}}.",
+        "current": "Il tuo piano: {{plan}}",
+        "preview_label": "Anteprima",
+        "preview": {
+          "completion": "Completamento",
+          "certificate": "Certificato di completamento",
+          "live": "Live",
+          "role_editor": "Editor",
+          "role_reviewer": "Revisore",
+          "role_viewer": "Visualizzatore",
+          "week_one": "Settimana {{count}}",
+          "week_other": "Settimana {{count}}",
+          "enroll": "Iscriviti",
+          "sso": "Continua con l’account aziendale",
+          "sent": "inviate",
+          "opened": "aperte",
+          "clicked": "clic"
+        },
+        "communities": {
+          "title": "Un posto dove i tuoi studenti si aiutano a vicenda",
+          "b1": "Discussioni accanto ai tuoi corsi, con risposte e voti",
+          "b2": "Gli studenti ricevono risposte dagli altri, non solo da te",
+          "b3": "Individua le domande ricorrenti prima che diventino richieste di supporto"
+        },
+        "messaging": {
+          "title": "Parla direttamente con i tuoi studenti",
+          "b1": "Conversazioni individuali e di gruppo nella tua accademia",
+          "b2": "Rispondi alle domande dove gli studenti sono già",
+          "b3": "Riepiloghi via email per tutto ciò che resta da leggere"
+        },
+        "analytics": {
+          "title": "Scopri come va la tua accademia",
+          "b1": "Iscrizioni, completamenti e attività nel tempo",
+          "b2": "Trova i corsi e le lezioni in cui gli studenti si fermano",
+          "b3": "Condividi i progressi con il tuo team in un unico posto"
+        },
+        "course_analytics": {
+          "title": "Scopri dove ogni corso perde studenti",
+          "b1": "Completamento per capitolo e lezione",
+          "b2": "Progressi e tempo impiegato da ogni studente",
+          "b3": "Migliora le lezioni che contano di più"
+        },
+        "certifications": {
+          "title": "Premia chi arriva in fondo",
+          "b1": "Al completamento di un corso viene rilasciato automaticamente un certificato",
+          "b2": "Gli studenti condividono un link verificabile su LinkedIn",
+          "b3": "Il tuo marchio su ogni certificato"
+        },
+        "paths": {
+          "title": "Mostra agli studenti cosa seguire dopo",
+          "b1": "Raggruppa i corsi in un percorso di apprendimento guidato",
+          "b2": "Progressi sull’intero percorso, non solo su un corso",
+          "b3": "Un certificato al termine del percorso"
+        },
+        "required_training": {
+          "title": "Fai in modo che le persone giuste completino la formazione giusta",
+          "b1": "Assegna corsi con scadenza a team o ruoli",
+          "b2": "Promemoria automatici prima e dopo la scadenza",
+          "b3": "I responsabili vedono a colpo d’occhio chi è in pari"
+        },
+        "live_sessions": {
+          "title": "Insegna dal vivo, senza un altro strumento",
+          "b1": "Pianifica sessioni a cui gli studenti partecipano dalla tua accademia",
+          "b2": "I promemoria partono in automatico",
+          "b3": "Le registrazioni restano accanto al corso"
+        },
+        "podcasts": {
+          "title": "Raggiungi gli studenti ovunque si trovino",
+          "b1": "Pubblica episodi audio accanto ai tuoi corsi",
+          "b2": "Un player che ricorda dove si è fermato ogni ascoltatore",
+          "b3": "Trasforma le lezioni in episodi con l’AI"
+        },
+        "usergroups": {
+          "title": "Organizza gli studenti in gruppi",
+          "b1": "Dai a un gruppo accesso ai corsi pensati per lui",
+          "b2": "Coorti, team o classi con il proprio spazio",
+          "b3": "Segui i progressi gruppo per gruppo"
+        },
+        "custom_domains": {
+          "title": "Insegna sul tuo dominio",
+          "b1": "learn.tuascuola.it invece di un indirizzo LearnHouse",
+          "b2": "Certificato SSL incluso e rinnovato per te",
+          "b3": "Gli studenti restano connessi sul tuo dominio"
+        },
+        "api_access": {
+          "title": "Collega la tua accademia ai tuoi strumenti",
+          "b1": "Crea corsi, iscrivi studenti e leggi i progressi tramite l’API",
+          "b2": "Token con permessi limitati, revocabili in qualsiasi momento",
+          "b3": "La stessa API usata dalla nostra dashboard"
+        },
+        "webhooks": {
+          "title": "Reagisci a ciò che succede nella tua accademia",
+          "b1": "Ricevi una notifica quando uno studente si iscrive, completa o paga",
+          "b2": "Invia eventi a Zapier, al tuo CRM o al tuo codice",
+          "b3": "Richieste firmate e nuovi tentativi automatici"
+        },
+        "roles": {
+          "title": "Dai a ogni persona l’accesso di cui ha bisogno",
+          "b1": "Ruoli personalizzati oltre ad amministratore e membro",
+          "b2": "Decidi chi può creare, modificare o solo revisionare",
+          "b3": "Meno amministratori, meno incidenti"
+        },
+        "seo": {
+          "title": "Fai trovare i tuoi corsi",
+          "b1": "Titoli, descrizioni e anteprime per motori di ricerca e social",
+          "b2": "Una sitemap leggibile dai motori di ricerca",
+          "b3": "Pagine dei corsi pronte per posizionarsi"
+        },
+        "drip": {
+          "title": "Rilascia le lezioni al ritmo giusto",
+          "b1": "Apri i capitoli in date precise o qualche giorno dopo l’iscrizione",
+          "b2": "Gli studenti ricevono un’email quando si apre un capitolo",
+          "b3": "Fai avanzare le coorti insieme"
+        },
+        "payments": {
+          "title": "Fatti pagare per ciò che insegni",
+          "b1": "Vendi corsi con pagamento unico o in abbonamento",
+          "b2": "Pagamenti direttamente sul tuo account Stripe, senza costi aggiuntivi",
+          "b3": "Coupon, pacchetti e accesso gratuito quando vuoi"
+        },
+        "boards": {
+          "title": "Ragiona in gruppo su una lavagna condivisa",
+          "b1": "Lavagne per workshop, lezioni e pianificazione",
+          "b2": "Tutti modificano dal vivo, da qualsiasi dispositivo",
+          "b3": "Tieni la lavagna accanto al corso"
+        },
+        "playgrounds": {
+          "title": "Fai esercitare gli studenti, non solo leggere",
+          "b1": "Esercizi interattivi generati con l’AI",
+          "b2": "Feedback immediato a ogni tentativo",
+          "b3": "Condividi i plays con tutta la tua accademia"
+        },
+        "company_seats": {
+          "title": "Forma le aziende, non solo i singoli",
+          "b1": "Dai alle persone di un’azienda accesso ai tuoi corsi in pochi clic",
+          "b2": "Uno spazio con il suo marchio per ogni azienda, con corsi propri",
+          "b3": "Segui i loro progressi e vendi posti solo se vuoi"
+        },
+        "newsletter": {
+          "title": "Fai tornare i tuoi studenti",
+          "b1": "Invia aggiornamenti e nuovi corsi ai tuoi studenti via email",
+          "b2": "Aperture e clic per ogni campagna",
+          "b3": "Disiscrizioni e mancati recapiti gestiti per te"
+        },
+        "audit_logs": {
+          "title": "Sai sempre chi ha cambiato cosa",
+          "b1": "Ogni azione amministrativa registrata con chi, cosa e quando",
+          "b2": "Ricerca ed esportazione per gli audit",
+          "b3": "Rispetta i tuoi requisiti di conformità"
+        },
+        "sso": {
+          "title": "Un unico accesso per tutta l’organizzazione",
+          "b1": "I membri accedono con il tuo provider di identità",
+          "b2": "L’accesso termina quando qualcuno lascia l’azienda",
+          "b3": "Nessuna password in più da gestire"
+        },
+        "scim": {
+          "title": "Membri sempre sincronizzati, in automatico",
+          "b1": "I membri vengono aggiunti e rimossi dalla tua directory",
+          "b2": "I gruppi seguono il tuo provider di identità",
+          "b3": "Niente offboarding manuale"
+        },
+        "lti": {
+          "title": "Collega i tuoi corsi al tuo LMS",
+          "b1": "LTI 1.3 per Moodle, Canvas, Blackboard e altri",
+          "b2": "I voti tornano indietro automaticamente",
+          "b3": "Gli studenti non hanno bisogno di un altro account"
+        },
+        "scorm": {
+          "title": "Porta i tuoi contenuti e-learning esistenti",
+          "b1": "Importa pacchetti SCORM come lezioni",
+          "b2": "Punteggi e completamento vengono registrati",
+          "b3": "Non serve ricostruire i vecchi contenuti"
+        },
+        "compare": "Confronta i piani",
+        "sample": {
+          "discussion_1": "Come valutate i progetti di gruppo?",
+          "discussion_2": "I miei appunti della settimana 2",
+          "discussion_3": "Consigli per il quiz finale",
+          "course_name": "Introduzione all'analisi dei dati",
+          "path_1": "Primi passi",
+          "path_2": "Competenze di base",
+          "path_3": "Progetto finale",
+          "session_1": "Ricevimento",
+          "session_2": "Domande e risposte: modulo 3",
+          "today": "Oggi",
+          "thursday": "gio",
+          "episode": "Episodio 4: Abitudini di studio che durano",
+          "seo_snippet": "Impara a pulire, esplorare e presentare i dati in sei settimane pratiche. Certificato incluso.",
+          "drip_1": "Benvenuto e configurazione",
+          "drip_2": "Il tuo primo dataset",
+          "drip_3": "Grafici che raccontano una storia",
+          "drip_4": "Progetto finale",
+          "one_time": "Pagamento unico",
+          "newsletter_subject": "Questo mese all'accademia",
+          "note_1": "Idee per il workshop",
+          "note_2": "Domande dal gruppo",
+          "note_3": "Prossimi passi per venerdì",
+          "play_title": "Esercitazione",
+          "play_question": "Quanti lati ha un pentagono?"
         }
       }
     },
@@ -561,7 +766,35 @@
       "go_to_login": "Vai all'accesso",
       "signing_in": "Accesso in corso...",
       "setting_up": "Attendi mentre configuriamo la tua sessione."
-    }
+    },
+    "show_password": "Mostra password",
+    "hide_password": "Nascondi password",
+    "password_req_letter": "Una lettera",
+    "password_req_number_or_symbol": "Un numero o un simbolo",
+    "password_req_not_common": "Non una password comune",
+    "your_name": "Il tuo nome",
+    "signup_one_step": "Ci vuole meno di un minuto.",
+    "verification_sent_to": "Abbiamo inviato un link di conferma a {{email}}. Aprilo per iniziare a usare il tuo account.",
+    "invite_link": {
+      "joining": "Accesso a {{org}}…",
+      "invalid_title": "Questo link di invito è scaduto",
+      "invalid_desc": "È già stato usato, ritirato o sostituito da un invito più recente. Chiedi a chi ti ha invitato di inviarne uno nuovo.",
+      "go_to_org": "Vai a {{org}}",
+      "wrong_account_title": "Questo invito è per un altro indirizzo",
+      "wrong_account_desc": "Hai effettuato l'accesso come {{current}}, ma l'invito è stato inviato a {{email}}.",
+      "switch_account": "Esci e continua",
+      "signin_title": "Unisciti a {{org}}",
+      "signin_desc": "Hai già un account. Accedi e ti unirai subito.",
+      "signin_cta": "Accedi per unirti",
+      "signup_title": "Unisciti a {{org}}",
+      "signup_desc": "Sei stato invitato. Scegli una password ed è fatta.",
+      "choose_password": "Scegli una password",
+      "create_and_join": "Unisciti a {{org}}"
+    },
+    "login_failed_forgot": "Password dimenticata?",
+    "login_failed_reset": "Reimpostala",
+    "login_failed_magic": "Inviami invece un link di accesso",
+    "login_failed_google_hint": "Registrato con Google? Usa Continua con Google qui sotto."
   },
   "validation": {
     "required": "Obbligatorio",
@@ -1550,7 +1783,8 @@
       "new_this_week_many": "{{count}} nuove questa settimana",
       "participants_many": "{{count}} partecipanti",
       "replies_many": "{{count}} risposte",
-      "threads_many": "{{count}} thread"
+      "threads_many": "{{count}} thread",
+      "newer_discussions": "Discussioni più recenti"
     }
   },
   "boards": {
@@ -4249,7 +4483,9 @@
       "includes_items_many": "Include {{count}} elementi",
       "includes_type_many": "Include {{count}} {{type}}",
       "owned_count_many": "Possiedi {{count}} offerte"
-    }
+    },
+    "checkout_paused": "Il checkout non è temporaneamente disponibile per questo prodotto. L'organizzazione è stata avvisata; riprova più tardi.",
+    "checkout_paused_short": "Temporaneamente non disponibile"
   },
   "account": {
     "title": "Impostazioni account",
@@ -4737,7 +4973,9 @@
       "section_people": "Persone e attività",
       "section_settings": "Impostazioni",
       "resize_sidebar": "Ridimensiona la barra laterale",
-      "open_account_menu": "Apri il menu dell'account"
+      "open_account_menu": "Apri il menu dell'account",
+      "trial_caption_one": "Prova {{plan}} · {{count}} giorno rimasto",
+      "trial_caption_other": "Prova {{plan}} · {{count}} giorni rimasti"
     },
     "home": {
       "cards": {
@@ -6790,7 +7028,138 @@
         "ai_copilot_description": "Permetti agli studenti di fare domande sul contenuto dei corsi. Usa il materiale indicizzato per fornire risposte fondate con citazione delle fonti.",
         "feature_editor_description": "Assistenza IA alla modifica dei contenuti per i creatori di corsi.",
         "feature_activity_description": "Assistente IA disponibile all'interno delle attività per aiutare gli studenti.",
-        "always_on": "Sempre attivo"
+        "always_on": "Sempre attivo",
+        "platform_disabled": "La piattaforma ha disattivato l'IA per questa organizzazione. Contatta l'assistenza per riattivarla.",
+        "enabled_count": "{{on}} di {{total}} funzioni IA attive",
+        "group_all_on": "Attiva tutto",
+        "group_all_off": "Disattiva tutto",
+        "ask_ai_audience": "Chi può usare Chiedi all'IA",
+        "audience_everyone": "Tutti",
+        "audience_staff": "Solo lo staff del corso",
+        "limits_title": "Limite mensile di crediti",
+        "limits_description": "L'IA si ferma per il resto del mese quando l'organizzazione ha usato questi crediti. Lascia vuoto per nessun limite.",
+        "cap_placeholder": "Nessun limite",
+        "cap_unit": "crediti / mese",
+        "save_cap": "Salva",
+        "cap_invalid": "Inserisci un numero intero o lascia vuoto.",
+        "off_by_admin": "Disattivato dal tuo amministratore",
+        "off_by_admin_description": "{{feature}} non è disponibile in questa organizzazione. Chiedi a un amministratore se ti serve.",
+        "groups": {
+          "assistants": {
+            "title": "Assistenti",
+            "description": "Agenti che parlano con il tuo team e portano a termine il lavoro."
+          },
+          "authoring": {
+            "title": "Creazione",
+            "description": "Aiuto per gli autori mentre creano i corsi."
+          },
+          "learners": {
+            "title": "Studenti",
+            "description": "L'IA che i tuoi studenti usano mentre studiano."
+          },
+          "content": {
+            "title": "Generazione di contenuti",
+            "description": "Media, voce e traduzioni create con l'IA."
+          },
+          "integrations": {
+            "title": "Integrazioni",
+            "description": "IA nel tuo sito, nelle email e nelle app collegate."
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "L'assistente della dashboard che risponde alle domande e lavora in tutta l'organizzazione."
+          },
+          "atlas_scheduled": {
+            "title": "Agenti pianificati",
+            "description": "Attività di Atlas che vengono eseguite secondo un calendario, come i report settimanali."
+          },
+          "ai_editor": {
+            "title": "Editor IA",
+            "description": "Il pannello IA dell'editor di pagine che scrive e modifica con gli autori."
+          },
+          "course_builder": {
+            "title": "Creatore di corsi IA",
+            "description": "Prepara la bozza del piano di un corso e delle sue lezioni da una breve descrizione."
+          },
+          "editor_ai": {
+            "title": "Azioni di scrittura IA",
+            "description": "Riscrivi, accorcia, correggi o cambia il tono del testo selezionato."
+          },
+          "magic_blocks": {
+            "title": "Blocchi magici",
+            "description": "Blocchi interattivi generati da un prompt."
+          },
+          "quiz_generation": {
+            "title": "Generazione di quiz e flashcard",
+            "description": "Crea quiz e flashcard dal contenuto delle lezioni."
+          },
+          "assignment_generation": {
+            "title": "Generazione di compiti e scenari",
+            "description": "Prepara compiti e scenari ramificati con l'IA."
+          },
+          "course_import": {
+            "title": "Importazione corsi IA",
+            "description": "Trasforma documenti ed esportazioni di altre piattaforme in corsi."
+          },
+          "seo": {
+            "title": "Suggerimenti SEO",
+            "description": "Scrivi titoli e descrizioni per i motori di ricerca delle tue pagine."
+          },
+          "ask_ai": {
+            "title": "Chiedi all'IA",
+            "description": "Gli studenti fanno domande su una lezione e ricevono risposte con le fonti."
+          },
+          "ai_grading": {
+            "title": "Valutazione IA",
+            "description": "Valuta le consegne e prepara feedback sui compiti."
+          },
+          "messaging_agents": {
+            "title": "Agenti IA nei Messaggi",
+            "description": "Assistenti con cui i membri possono chattare nei Messaggi."
+          },
+          "plays": {
+            "title": "IA nei Plays",
+            "description": "Genera Plays ed esegui i loro passaggi IA per gli studenti."
+          },
+          "translations": {
+            "title": "Traduzioni IA",
+            "description": "Traduci i corsi e il loro SEO in altre lingue."
+          },
+          "image_generation": {
+            "title": "Generazione di immagini",
+            "description": "Crea miniature e immagini con l'IA."
+          },
+          "voice": {
+            "title": "Voce e podcast",
+            "description": "Scrivi copioni di podcast e genera audio parlato."
+          },
+          "video_ai": {
+            "title": "Sottotitoli e capitoli video",
+            "description": "Trascrivi i video e dividili in capitoli."
+          },
+          "live_session_summary": {
+            "title": "Riepiloghi delle sessioni live",
+            "description": "Riassumi le registrazioni delle sessioni live."
+          },
+          "boards": {
+            "title": "IA nelle bacheche",
+            "description": "Genera playground e contenuti nelle bacheche."
+          },
+          "landing_builder": {
+            "title": "Design del sito con IA",
+            "description": "Genera landing page e riscrivi i loro testi."
+          },
+          "newsletter": {
+            "title": "Scrittura newsletter con IA",
+            "description": "Prepara oggetti e contenuti delle newsletter."
+          },
+          "mcp_tools": {
+            "title": "Strumenti IA via MCP",
+            "description": "Strumenti che usano l'IA quando le app si collegano alla tua organizzazione via MCP."
+          }
+        }
       },
       "sso": {
         "title": "Single Sign-On (SSO)",
@@ -7220,7 +7589,8 @@
           "users_admin": "Utenti (API Admin)",
           "roles_admin": "Ruoli (API Admin)",
           "newsletter": "Newsletter",
-          "crm": "Integrazioni CRM"
+          "crm": "Integrazioni CRM",
+          "agent": "Agenti IA (Agent API)"
         },
         "resource": "Risorsa",
         "perm_create": "Crea",
@@ -7583,7 +7953,9 @@
           "suspended": "L'accesso è limitato. Contatta LearnHouse per ripristinarlo.",
           "licensed": "Self-hosted con licenza Enterprise Edition, senza limiti di piano",
           "community": "Community Edition self-hosted, senza limiti di piano",
-          "billing_page": "Fatture e dati di pagamento sono nella pagina di fatturazione"
+          "billing_page": "Fatture e dati di pagamento sono nella pagina di fatturazione",
+          "free_trial_one": "Prova gratuita, {{count}} giorno rimasto. Nessuna carta richiesta.",
+          "free_trial_other": "Prova gratuita, {{count}} giorni rimasti. Nessuna carta richiesta."
         },
         "next_invoice": "{{amount}} il {{date}}",
         "seats_of": "{{used}} su {{limit}}",
@@ -7653,7 +8025,8 @@
             "addon": "Add-on",
             "locked": "Richiede {{plan}}",
             "locked_none": "Non disponibile",
-            "edition": "Enterprise Edition"
+            "edition": "Enterprise Edition",
+            "trial": "Prova"
           },
           "on": "Attivo",
           "off": "Disattivo",
@@ -7689,7 +8062,7 @@
             "usergroups": "Gruppi utenti",
             "roles": "Ruoli personalizzati",
             "required_training": "Formazione obbligatoria",
-            "company_seats": "Posti aziendali",
+            "company_seats": "Aziende",
             "payments": "Pagamenti",
             "ai": "Funzionalità IA",
             "analytics": "Analisi",
@@ -7706,7 +8079,22 @@
           }
         },
         "next_invoice_label": "Prossima fattura",
-        "seats_no_limit": "{{used}}, nessun limite"
+        "seats_no_limit": "{{used}}, nessun limite",
+        "invoices": "Fatture",
+        "trial": {
+          "title_one": "Prova {{plan}}: {{count}} giorno rimasto",
+          "title_other": "Prova {{plan}}: {{count}} giorni rimasti",
+          "desc_one": "Tutto {{plan}} è tuo fino al {{date}}, inclusa {{count}} funzionalità in più rispetto a Gratuito. Scegli un piano quando vuoi per mantenerlo; alla fine della prova non viene eliminato nulla.",
+          "desc_other": "Tutto {{plan}} è tuo fino al {{date}}, incluse {{count}} funzionalità in più rispetto a Gratuito. Scegli un piano quando vuoi per mantenerlo; alla fine della prova non viene eliminato nulla.",
+          "choose": "Mantieni {{plan}}",
+          "what_happens": "Cosa succede se la prova finisce senza un piano",
+          "ended_title_trial": "La tua prova {{plan}} è terminata il {{date}}",
+          "ended_title": "Sei passato da {{plan}} a Gratuito il {{date}}",
+          "ended_courses_one": "{{count}} corso è diventato privato e le funzionalità {{plan}} sono in pausa. Passa a un piano superiore e tutto torna com’era.",
+          "ended_courses_other": "{{count}} corsi sono diventati privati e le funzionalità {{plan}} sono in pausa. Passa a un piano superiore e tutto torna com’era.",
+          "ended_no_courses": "Le funzionalità {{plan}} sono in pausa. Passa a un piano superiore e tutto torna com’era.",
+          "restore": "Ripristina {{plan}}"
+        }
       },
       "overview": {
         "created": "Creata il {{date}}",
@@ -15143,7 +15531,7 @@
     "done": "Fatto, sono pronto!",
     "steps": {
       "create_course": {
-        "title": "Crea il tuo primo corso",
+        "title": "Il tuo primo corso prende forma",
         "description": "Crea un corso o modifica la bozza che abbiamo preparato per te.",
         "action": "Crea un corso"
       },
@@ -15190,42 +15578,42 @@
         "university_desc": "Guide, suggerimenti e buone pratiche"
       },
       "add_content": {
-        "title": "Aggiungi la tua prima lezione",
+        "title": "Una lezione per cui vale la pena esserci",
         "description": "Aggiungi un video, una pagina o un quiz: dai agli studenti un motivo concreto per iscriversi.",
         "action": "Aggiungi contenuti"
       },
       "brand_school": {
-        "title": "Aggiungi logo e colori",
+        "title": "Una scuola di cui gli studenti si fidano",
         "description": "Aggiungi il tuo logo e i tuoi colori così sembrerà una scuola credibile e professionale.",
         "action": "Personalizza il brand"
       },
       "share_grow": {
-        "title": "Pubblica la tua home page",
+        "title": "La porta d’ingresso della tua scuola",
         "description": "Scegli un modello, personalizzalo e pubblica la pagina che gli studenti vedono per prima.",
         "action": "Apri il sito"
       },
       "invite_learners": {
-        "title": "Invita i tuoi primi studenti",
+        "title": "Dai il benvenuto al tuo primo studente",
         "description": "Condividi il tuo link di iscrizione o invita le persone: fai entrare quel primo studente.",
         "action": "Invita studenti"
       },
       "build_community": {
-        "title": "Apri uno spazio community",
+        "title": "Fai tornare gli studenti",
         "description": "Apri uno spazio comunità così i tuoi studenti restano attivi, e portano i loro amici.",
         "action": "Apri la comunità"
       },
       "publish_course": {
-        "title": "Pubblica il tuo primo corso",
+        "title": "Il tuo primo corso è online",
         "description": "Pubblica un corso così gli studenti hanno qualcosa di concreto a cui iscriversi.",
         "action": "Pubblica un corso"
       },
       "create_group": {
-        "title": "Crea il tuo primo gruppo",
+        "title": "Il tuo primo gruppo",
         "description": "Raggruppa le persone per team, classe o coorte per assegnare i corsi in un colpo solo.",
         "action": "Crea un gruppo"
       },
       "setup_payments": {
-        "title": "Configura i pagamenti",
+        "title": "Fatti pagare per ciò che insegni",
         "description": "Collega Stripe e dai un prezzo al tuo corso.",
         "action": "Collega Stripe"
       }
@@ -15916,7 +16304,37 @@
       "checkout_note": "Dopo aver creato la tua organizzazione verrai portato al checkout sicuro."
     },
     "add_pack": "Aggiungi {{pack}}",
-    "cancels_on": "Il tuo abbonamento verrà annullato il {{periodEnd}}. L'accesso continua fino ad allora."
+    "cancels_on": "Il tuo abbonamento verrà annullato il {{periodEnd}}. L'accesso continua fino ad allora.",
+    "trial": {
+      "title_one": "Prova {{plan}} · {{count}} giorno rimasto",
+      "title_other": "Prova {{plan}} · {{count}} giorni rimasti",
+      "desc": "Non è stata richiesta nessuna carta. Scegli un piano per mantenere tutto com’è.",
+      "choose": "Scegli un piano",
+      "what_happens": "Cosa cambia se la prova finisce senza un piano",
+      "keep": "Mantieni {{plan}}"
+    },
+    "downgrade_preview": {
+      "intro": "Con il piano Gratuito:",
+      "course_kept": "“{{course}}” resta pubblico.",
+      "courses_private_one": "{{count}} altro corso diventa privato (i membri possono ancora aprirlo).",
+      "courses_private_other": "{{count}} altri corsi diventano privati (i membri possono ancora aprirli).",
+      "drip_paused_one": "I contenuti progressivi di {{count}} corso vanno in pausa, quindi tutti i suoi capitoli si aprono.",
+      "drip_paused_other": "I contenuti progressivi di {{count}} corsi vanno in pausa, quindi tutti i loro capitoli si aprono.",
+      "features_pause": "Queste funzionalità restano in pausa finché non passi a un piano superiore:",
+      "more_one": "e {{count}} in più",
+      "more_other": "e {{count}} in più",
+      "members_over": "I {{count}} membri restano, oltre il limite di {{limit}} del piano Gratuito. Nessun nuovo membro può unirsi finché non passi a un piano superiore.",
+      "admins_over": "I {{count}} amministratori restano, oltre il limite di {{limit}} del piano Gratuito. Non è possibile aggiungere nuovi amministratori.",
+      "nothing_deleted": "Non viene eliminato nulla. Passa di nuovo a un piano superiore e tutto torna com’era."
+    },
+    "cancel_flow": {
+      "title": "Annullare {{plan}}?",
+      "until": "Il tuo piano resta attivo fino al {{date}}. Dopo, la tua organizzazione passa a Gratuito.",
+      "until_unknown": "Il tuo piano resta attivo fino alla fine del periodo pagato. Dopo, la tua organizzazione passa a Gratuito.",
+      "restore": "Puoi passare di nuovo a un piano superiore quando vuoi: la visibilità dei corsi e le funzionalità in pausa tornano automaticamente.",
+      "keep": "Mantieni {{plan}}",
+      "confirm": "Annulla piano"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16597,6 +17015,13 @@
       "resource_plural": "Risorse",
       "newsletter": "Newsletter",
       "newsletter_plural": "Newsletter"
+    },
+    "health": {
+      "title": "Gli studenti non possono acquistare in questo momento",
+      "body_one": "Il tuo provider di pagamento ha rifiutato {{count}} checkout dal {{date}}. Il tuo account Stripe potrebbe essere scollegato o richiedere attenzione. Finché non viene risolto, gli studenti vedono che il checkout non è temporaneamente disponibile.",
+      "body_other": "Il tuo provider di pagamento ha rifiutato {{count}} checkout dal {{date}}. Il tuo account Stripe potrebbe essere scollegato o richiedere attenzione. Finché non viene risolto, gli studenti vedono che il checkout non è temporaneamente disponibile.",
+      "recheck": "Controlla di nuovo",
+      "fix": "Apri impostazioni pagamenti"
     }
   },
   "lti": {
@@ -23573,7 +23998,47 @@
         "podcast": "Podcast",
         "community": "Community",
         "folder": "Cartella"
-      }
+      },
+      "features_title": "Cosa possono indicizzare i motori di ricerca",
+      "features_subtitle": "Disattiva una sezione per tenerla fuori da Google, Bing e dalla ricerca con IA. Le sue pagine restano aperte ai visitatori.",
+      "feature": {
+        "courses": "Corsi",
+        "activities": "Lezioni gratuite",
+        "paths": "Percorsi di apprendimento",
+        "podcasts": "Podcast",
+        "communities": "Community",
+        "library": "Libreria",
+        "live": "Sessioni live",
+        "newsletters": "Archivi della newsletter",
+        "pages": "Pagine del sito",
+        "store": "Offerte dello store"
+      },
+      "thin_threads": "Nascondi le discussioni senza risposta dopo",
+      "thin_threads_hint": "Le discussioni senza risposte vengono nascoste ai motori di ricerca una volta raggiunta questa età, così le pagine vuote non appesantiscono la community. Con 0 restano tutte.",
+      "days": "giorni",
+      "ai_title": "Ricerca IA e crawler",
+      "ai_subtitle": "Come ChatGPT, Claude, Perplexity, Gemini e altri strumenti di IA possono usare i tuoi contenuti pubblici.",
+      "ai_policy": "Criterio per i crawler IA",
+      "ai_allow": "Consenti tutti i crawler IA",
+      "ai_allow_hint": "Le risposte dell'IA possono citare le tue pagine e i modelli possono imparare da esse.",
+      "ai_block_training": "Consenti le risposte IA, blocca l'addestramento",
+      "ai_block_training_hint": "Gli assistenti possono ancora trovare e citare le tue pagine; i crawler di addestramento (GPTBot, Google-Extended, CCBot…) sono bloccati.",
+      "ai_block_all": "Blocca tutti i crawler IA",
+      "ai_block_all_hint": "Tutti gli agenti IA noti sono bloccati in robots.txt e llms.txt è disattivato. La ricerca sul web non è interessata.",
+      "ai_blocked_extra": "Blocca anche questi user agent",
+      "ai_blocked_extra_hint": "Un nome di crawler per riga, ad es. Bytespider.",
+      "llms_enabled": "Pubblica llms.txt e pagine Markdown",
+      "llms_enabled_hint": "Una mappa dei tuoi contenuti pubblici su /llms.txt e una copia Markdown di ogni pagina pubblica, perché gli strumenti di IA ti citino in modo corretto.",
+      "feeds_title": "Feed",
+      "feeds_enabled": "Pubblica feed RSS, Atom e JSON",
+      "feeds_enabled_hint": "Nuovi corsi, discussioni della community e sessioni live nei lettori di feed e negli aggregatori. I feed dei podcast restano sempre attivi.",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "Avvisa subito Bing, Yandex e gli altri motori IndexNow delle pagine nuove e aggiornate.",
+      "indexnow_enabled": "Avvisa i motori di ricerca alla pubblicazione",
+      "indexnow_enabled_hint": "Al salvataggio viene creata una chiave di verifica per il tuo sito.",
+      "indexnow_key": "Chiave di verifica",
+      "links_llms": "llms.txt",
+      "links_feed": "Feed RSS"
     },
     "save_failed": "Impossibile salvare le impostazioni SEO.",
     "saved": "Impostazioni SEO salvate."
@@ -24086,8 +24551,8 @@
     }
   },
   "companies": {
-    "title": "Clienti",
-    "subtitle": "Le aziende che formi, le loro persone, i corsi e i posti",
+    "title": "Aziende",
+    "subtitle": "Le aziende che formi: dai alle loro persone accesso ai tuoi corsi o vendi loro dei posti",
     "tabs": {
       "companies": "Aziende",
       "offers": "Offerte di posti",
@@ -24097,7 +24562,7 @@
       "tab": "Aziende",
       "title": "Aziende",
       "subtitle": "Posti venduti alle aziende e le offerte che acquistano",
-      "open_customers": "Apri i profili clienti"
+      "open_customers": "Apri le schede aziende"
     },
     "menu": {
       "manage_team": "Gestisci team"
@@ -24178,7 +24643,8 @@
       "auto_assign": "Dai un posto gratuito a chi si unisce",
       "company_admins": "Admin dell’azienda",
       "billing_email": "Email di fatturazione",
-      "tags": "Tag"
+      "tags": "Tag",
+      "member_limit": "Limite membri"
     },
     "list": {
       "new": "Nuova azienda",
@@ -24207,7 +24673,7 @@
       "no_match": "Nessuna azienda corrisponde a questi filtri",
       "clear_filters": "Cancella filtri",
       "empty_title": "Ancora nessuna azienda",
-      "empty_body": "Accogli un’azienda per darle uno spazio personalizzato, corsi propri e posti che gestisce da sola."
+      "empty_body": "Aggiungi un’azienda per dare alle sue persone accesso ai tuoi corsi, uno spazio con il suo marchio e progressi che puoi seguire. Vendere posti è facoltativo."
     },
     "onboard": {
       "title": "Accogli un’azienda",
@@ -24261,7 +24727,7 @@
       "remove_member_title": "Rimuovere questo membro?",
       "remove_member_body": "{{name}} perde l’accesso allo spazio dell’azienda e ai suoi corsi esclusivi. I progressi vengono conservati.",
       "member_removed": "Membro rimosso",
-      "courses_intro": "I corsi condivisi compaiono nello spazio dell’azienda. I corsi esclusivi sono visibili solo ai suoi membri.",
+      "courses_intro": "Dai all’azienda accesso ai corsi: i corsi esclusivi sono visibili solo alle sue persone, quelli condivisi restano visibili come sempre e compaiono nel suo spazio.",
       "link_course": "Collega un corso",
       "create_course": "Crea corso",
       "no_courses": "Nessun corso collegato",
@@ -24288,7 +24754,7 @@
       "grant_seats_hint": "Per accordi fatturati fuori da Stripe: fatture, progetti pilota, partner.",
       "cancel_company": "Annulla posti",
       "no_seats": "Nessun posto",
-      "no_seats_body": "Questa azienda non ha acquistato posti. Puoi concedergliene alcuni.",
+      "no_seats_body": "Questa azienda non ha posti. Le sue persone possono comunque ricevere corsi direttamente; i posti servono per vendere o assegnare un numero definito di accessi.",
       "comped_n_one": "{{count}} in omaggio",
       "comped_n_many": "{{count}} in omaggio",
       "comped_n_other": "{{count}} in omaggio",
@@ -24316,7 +24782,14 @@
       "no_activity": "Non è ancora successo nulla",
       "notes": "Note",
       "notes_hint": "Visibili solo agli admin della tua accademia.",
-      "notes_placeholder": "Contatti, piani di rinnovo, cosa conta per loro…"
+      "notes_placeholder": "Contatti, piani di rinnovo, cosa conta per loro…",
+      "access_hint": "Chi può unirsi a questa azienda e ricevere i suoi corsi. Nessun pagamento richiesto.",
+      "member_limit_hint": "Limite facoltativo per le persone aggiunte tramite email o dominio",
+      "no_limit": "Nessun limite",
+      "over_limit": "Il limite di membri è stato raggiunto, quindi queste persone non sono state aggiunte: {{list}}",
+      "or_folder": "Oppure un’intera cartella",
+      "folder_hint": "Dà all’azienda tutti i corsi al suo interno",
+      "pick_folder": "Scegli una cartella"
     },
     "offers": {
       "intro": "Le offerte di posti stabiliscono il prezzo dei posti per le aziende: fasce di volume, un minimo, pagamento unico o ricorrente.",
@@ -28961,7 +29434,11 @@
       "ai_credits_low": "Crediti IA in esaurimento",
       "org_payment_failed": "Pagamento dell'abbonamento non riuscito",
       "agent_run_finished": "Esecuzione dell'agente terminata",
-      "agent_run_failed": "Esecuzione dell'agente non riuscita"
+      "agent_run_failed": "Esecuzione dell'agente non riuscita",
+      "trial_ending": "Prova in scadenza",
+      "plan_downgraded": "Passaggio a Gratuito",
+      "plan_restored": "Piano ripristinato",
+      "payments_checkout_failing": "Checkout non riusciti"
     },
     "copy": {
       "assignment_graded": "Valutato: {{assignment}}",
@@ -29019,7 +29496,11 @@
       "ai_credits_low": "I crediti IA stanno finendo ({{remaining}} rimasti)",
       "org_payment_failed": "Il pagamento del tuo abbonamento non è riuscito",
       "agent_run_finished": "{{agent}} ha terminato l'esecuzione pianificata",
-      "agent_run_failed": "L'esecuzione pianificata di {{agent}} non è riuscita"
+      "agent_run_failed": "L'esecuzione pianificata di {{agent}} non è riuscita",
+      "trial_ending": "La tua prova {{plan}} termina tra {{days}} giorni",
+      "plan_downgraded": "Ora sei su Gratuito. Non è stato eliminato nulla",
+      "plan_restored": "Bentornato su {{plan}}",
+      "payments_checkout_failing": "Gli studenti non possono acquistare in questo momento ({{count}} checkout non riusciti)"
     },
     "routing": {
       "short": "Chi riceve le notifiche",
@@ -29083,7 +29564,9 @@
       "start_template": "Parti da un modello",
       "start_template_desc": "Pubblichiamo il sito {{template}} con il tuo nome e aggiungiamo una bozza del primo corso da modificare.",
       "start_blank": "Parti da zero",
-      "start_blank_desc": "Un'accademia vuota. La checklist di configurazione ti guida nel resto."
+      "start_blank_desc": "Un'accademia vuota. La checklist di configurazione ti guida nel resto.",
+      "trial_note_after": "Nessuna carta richiesta. Poi puoi tenerlo, scegliere un altro piano o restare su Gratuito.",
+      "trial_note": "Hai {{days}} giorni di {{plan}}, gratis."
     },
     "checklist": {
       "full_guide": "Guida completa",
@@ -29120,7 +29603,10 @@
         "ai_credits_one": "Crediti IA: {{formatted}}",
         "ai_credits_other": "Crediti IA: {{formatted}}"
       },
-      "compare": "Confronta i piani"
+      "compare": "Confronta i piani",
+      "your_trial": "La tua prova",
+      "keep_plan": "Mantieni {{plan}}",
+      "subtitle_trial": "Stai provando {{plan}} gratis. Scegli il piano più adatto a te; finché non lo fai, non cambia nulla."
     },
     "invite": {
       "title": "Invita persone",
@@ -29156,7 +29642,10 @@
       "import_one": "Invita studenti: {{count}}",
       "import_other": "Invita studenti: {{count}}",
       "sent_toast_one": "Inviti inviati: {{count}}",
-      "sent_toast_other": "Inviti inviati: {{count}}"
+      "sent_toast_other": "Inviti inviati: {{count}}",
+      "invite_only_create": "La tua scuola è solo su invito. Crea un link di iscrizione perché le persone possano registrarsi.",
+      "create_link": "Crea link di iscrizione",
+      "invite_only_hint": "Questo link include un codice di accesso: chiunque lo abbia può registrarsi."
     },
     "invites": {
       "title": "Inviti",
@@ -29215,6 +29704,17 @@
       },
       "desc_one": "Account creati negli ultimi {{count}} giorni e fin dove sono arrivati",
       "desc_other": "Account creati negli ultimi {{count}} giorni e fin dove sono arrivati"
+    },
+    "first_course": {
+      "title": "Crea il tuo primo corso",
+      "subtitle": "Tutto il resto può aspettare. Scegli da dove partire, potrai cambiare ogni parola dopo.",
+      "template": "Parti da un modello",
+      "template_desc": "Una bozza pronta con capitoli e lezioni, aperta nell’editor.",
+      "ai": "Crealo con l’IA",
+      "ai_desc": "Descrivi il tuo argomento e ottieni lo schema completo di un corso in pochi minuti.",
+      "blank": "Oppure parti da un corso vuoto",
+      "template_short": "Parti da un modello",
+      "ai_short": "Crea con l’IA"
     }
   },
   "impersonation": {
@@ -29242,5 +29742,19 @@
     "no_access_desc": "Chiedi a un amministratore LearnHouse l'accesso all'impersonificazione.",
     "back_to_console": "Torna alla console",
     "retry": "Riprova"
+  },
+  "mobile_app": {
+    "title": "Scarica l'app mobile",
+    "heading": "Impara dal telefono",
+    "body": "Apri l'app LearnHouse e scansiona questo codice per collegarti a questa scuola.",
+    "qr_alt": "Codice QR per aprire questa scuola nell'app LearnHouse",
+    "qr_actions": "Clic destro per salvare o copiare il codice QR",
+    "copy_image": "Copia immagine",
+    "download_png": "Scarica PNG",
+    "copy_link": "Copia link dell'app",
+    "copied_image": "Codice QR copiato",
+    "copied_link": "Link dell'app copiato",
+    "copy_failed": "Impossibile copiare l'immagine. Prova Scarica.",
+    "download_failed": "Impossibile salvare l'immagine."
   }
 }

@@ -463,11 +463,20 @@ def send_org_created_email(
     org_name: str,
     dashboard_url: str,
     lang: str = "en",
+    trial_plan: str | None = None,
+    trial_days: int = 0,
 ):
-    """Confirmation email when a user creates a new organization."""
+    """Confirmation email when a user creates a new organization. On SaaS a
+    new org starts with a free trial, which the body mentions."""
     safe_name = html.escape(email_org_name(org_name))
     heading = t(lang, "org_created.heading", org_name=safe_name)
-    body_text = t(lang, "org_created.body")
+    if trial_plan:
+        body_text = t(
+            lang, "org_created.body_trial",
+            plan=html.escape(trial_plan.replace("-", " ").title()), days=trial_days,
+        )
+    else:
+        body_text = t(lang, "org_created.body")
     cta = t(lang, "org_created.cta")
 
     body_content = f"""
@@ -1232,4 +1241,63 @@ def send_unread_messages_email(
             lang=lang,
         ),
         sender_name=sender_name,
+    )
+
+
+def send_plan_email(
+    stage: str,
+    email: EmailStr,
+    org_name: str,
+    cta_url: str,
+    lang: str = "en",
+    unsubscribe_url: str = "",
+    **copy_vars,
+):
+    """Mail from LearnHouse to an org's admins about its own plan: the trial
+    sequence, and the notice when the org moves to the Free plan.
+
+    Platform-branded on purpose (LearnHouse mark, LearnHouse sender): it is the
+    platform talking to its customer about their subscription, not the academy
+    talking to its learners. Copy lives under ``plan_email.<stage>.*``.
+
+    ``unsubscribe_url`` is set for the optional trial sequence (welcome, tips,
+    reminders) and left empty for account notices, which report a change to
+    the account and can't be opted out of.
+    """
+    raw_vars = {key: str(value) for key, value in copy_vars.items() if value is not None}
+    raw_vars["org_name"] = email_org_name(org_name)
+    safe_vars = {key: html.escape(value) for key, value in raw_vars.items()}
+
+    heading = t(lang, f"plan_email.{stage}.heading", **safe_vars)
+    body_text = t(lang, f"plan_email.{stage}.body", **safe_vars)
+    cta = t(lang, f"plan_email.{stage}.cta", **safe_vars)
+    subject = t(lang, f"plan_email.{stage}.subject", **raw_vars)
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">{body_text}</p>
+        <a href="{html.escape(cta_url)}" style="{STYLES['button']}">{cta}</a>
+    """
+
+    headers: dict[str, str] = {}
+    if unsubscribe_url:
+        headers["List-Unsubscribe"] = f"<{unsubscribe_url}>"
+        headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+    reply_to = _reply_to_address()
+    if reply_to:
+        headers["Reply-To"] = reply_to
+
+    return _send_notification_email(
+        to=email,
+        subject=subject,
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "plan_email.common.footer", org_name=safe_vars["org_name"]),
+            unsubscribe_url=unsubscribe_url,
+            unsubscribe_label=t(lang, "nudge.common.unsubscribe"),
+            preheader=_first_sentence(t(lang, f"plan_email.{stage}.body", **raw_vars)),
+            lang=lang,
+        ),
+        headers=headers or None,
     )

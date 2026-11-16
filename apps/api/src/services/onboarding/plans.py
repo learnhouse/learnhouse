@@ -34,7 +34,12 @@ def _features(plan: str) -> set[str]:
     return {key for keys in FEATURE_AREAS.values() for key in keys if _plan_has(plan, key)}
 
 
-def picker(current_plan: Optional[str], goal: Optional[str]) -> dict:
+def picker(current_plan: Optional[str], goal: Optional[str], trial_plan: Optional[str] = None) -> dict:
+    """``trial_plan``: the plan a running free trial unlocks. Mid-trial the org
+    hasn't bought anything, so it picks like a free org, with the trial's plan
+    marked (``trial``) so the picker can offer to keep it."""
+    if trial_plan:
+        current_plan = "free"
     shown = [p for p in PLAN_HIERARCHY if p in PICKER_PLANS or p == current_plan]
     recommended = goal_defs.recommended_plan(goal)
     plans = []
@@ -48,6 +53,7 @@ def picker(current_plan: Optional[str], goal: Optional[str]) -> dict:
             "unlocks": [k for keys in FEATURE_AREAS.values() for k in keys if k in have and k not in previous],
             "contact_sales": plan in CONTACT_PLANS,
             "current": plan == current_plan,
+            "trial": plan == trial_plan,
             "recommended": plan == recommended and plan != current_plan,
         })
         previous = have
@@ -56,6 +62,7 @@ def picker(current_plan: Optional[str], goal: Optional[str]) -> dict:
         "current_plan": current_plan,
         "recommended_plan": recommended,
         "goal": goal,
+        "trial_plan": trial_plan,
         "can_continue_free": current_plan in (None, "free"),
         "upgrades": [p["id"] for p in plans if PLAN_HIERARCHY.index(p["id"]) > current_rank],
         "plans": plans,

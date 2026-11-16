@@ -34,11 +34,26 @@ interface DiscussionListProps {
   onCreateClick?: () => void
   initialDiscussions?: DiscussionWithAuthor[]
   allowRichContent?: boolean
+  /** From the URL (`?sort=`, `?label=`, `?page=`): shareable, crawlable feed views. */
+  initialSort?: FeedSort
+  initialLabel?: string | null
+  initialPage?: number
 }
 
-type FeedSort = 'latest' | 'top' | 'hot' | 'unanswered'
+export type FeedSort = 'latest' | 'top' | 'hot' | 'unanswered'
+export const FEED_SORTS: FeedSort[] = ['latest', 'top', 'hot', 'unanswered']
 const API_SORT: Record<FeedSort, DiscussionSortBy> = { latest: 'recent', top: 'upvotes', hot: 'hot', unanswered: 'recent' }
-const PAGE_SIZE = 20
+export const PAGE_SIZE = 20
+
+/** `?sort=&label=&page=` for a feed view; defaults are left out (canonical URLs). */
+export function feedQuery(sort: FeedSort, label: string | null, page = 1): string {
+  const q = new URLSearchParams()
+  if (sort !== 'latest') q.set('sort', sort)
+  if (label) q.set('label', label)
+  if (page > 1) q.set('page', String(page))
+  const s = q.toString()
+  return s ? `?${s}` : ''
+}
 
 // Feed keys live under ['community', uuid, 'discussions'] so every existing
 // "discussions changed" invalidation refreshes them too.
@@ -62,6 +77,9 @@ export function DiscussionList({
   onCreateClick,
   initialDiscussions = [],
   allowRichContent = false,
+  initialSort = 'latest',
+  initialLabel = null,
+  initialPage = 1,
 }: DiscussionListProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
@@ -72,18 +90,20 @@ export function DiscussionList({
   const canCreateDiscussion = hasCreatePermission && isUserPartOfTheOrg
   const { track } = useLHAnalytics('learner')
 
-  const [sort, setSort] = useState<FeedSort>('latest')
-  const [label, setLabel] = useState<string | null>(null)
+  const [sort, setSort] = useState<FeedSort>(initialSort)
+  const [label, setLabel] = useState<string | null>(initialLabel)
+  // A deep page (?page=3) only applies to the view it was opened with.
+  const startPage = sort === initialSort && label === initialLabel ? Math.max(1, initialPage) : 1
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
 
-  const feedKey = ['community', communityUuid, 'discussions', 'feed', API_SORT[sort], label ?? null]
+  const feedKey = ['community', communityUuid, 'discussions', 'feed', API_SORT[sort], label ?? null, startPage]
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: feedKey,
     queryFn: ({ pageParam }) =>
       getDiscussions(communityUuid, API_SORT[sort], pageParam, PAGE_SIZE, null, accessToken, label ?? undefined),
-    initialPageParam: 1,
-    getNextPageParam: (last, pages) => (Array.isArray(last) && last.length >= PAGE_SIZE ? pages.length + 1 : undefined),
+    initialPageParam: startPage,
+    getNextPageParam: (last, pages) => (Array.isArray(last) && last.length >= PAGE_SIZE ? startPage + pages.length : undefined),
     enabled: !!communityUuid && session?.status !== 'loading',
     staleTime: 30_000,
     refetchOnWindowFocus: false,
@@ -95,13 +115,28 @@ export function DiscussionList({
   // Server-rendered first page shows until the client feed arrives.
   const loaded: DiscussionWithAuthor[] = useMemo(() => {
     const seen = new Set<string>()
-    const list = data ? data.pages.flat() : sort === 'latest' && !label ? initialDiscussions : []
+    const list = data ? data.pages.flat() : sort === initialSort && label === initialLabel ? initialDiscussions : []
     return (Array.isArray(list) ? list : []).filter((d) => {
       if (!d || seen.has(d.discussion_uuid)) return false
       seen.add(d.discussion_uuid)
       return true
     })
-  }, [data, sort, label, initialDiscussions])
+  }, [data, sort, label, initialDiscussions, initialSort, initialLabel])
+
+  // Sort and label live in the URL (replaced, not pushed) so a view can be
+  // shared and crawled; changing either starts again from the first page.
+  const urlSynced = useRef(false)
+  useEffect(() => {
+    if (!urlSynced.current) {
+      urlSynced.current = true
+      return
+    }
+    const url = new URL(window.location.href)
+    const thread = url.searchParams.get('thread')
+    url.search = feedQuery(sort, label)
+    if (thread) url.searchParams.set('thread', thread)
+    window.history.replaceState(window.history.state, '', url.toString())
+  }, [sort, label])
 
   const visible = useMemo(() => {
     let list = loaded
@@ -353,11 +388,30 @@ export function DiscussionList({
             })}
           </div>
         )}
-        {hasNextPage && !showSkeleton && (
+        {(hasNextPage || (!data && loaded.length >= PAGE_SIZE)) && !showSkeleton && (
           <div className="border-t border-neutral-100 p-3 flex justify-center">
-            <Button onClick={() => fetchNextPage()} loading={isFetchingNextPage}>
+            {/* A real link to the next page, for crawlers and new tabs; a
+                plain click loads it in place. */}
+            <a
+              href={feedQuery(sort, label, startPage + (data?.pages.length ?? 1))}
+              rel="next"
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+                e.preventDefault()
+                fetchNextPage()
+              }}
+              aria-busy={isFetchingNextPage || undefined}
+              className="inline-flex items-center justify-center h-9 px-4 rounded-lg text-sm font-semibold bg-white text-neutral-800 ring-1 ring-inset ring-neutral-900/10 hover:ring-neutral-900/20 transition-colors"
+            >
               {t('communities.learner.load_more')}
-            </Button>
+            </a>
+          </div>
+        )}
+        {startPage > 1 && (
+          <div className="border-t border-neutral-100 p-3 flex justify-center">
+            <a href={feedQuery(sort, label, startPage - 1)} rel="prev" className="text-sm font-semibold text-neutral-600 hover:text-neutral-900">
+              {t('communities.learner.newer_discussions', { defaultValue: 'Newer discussions' })}
+            </a>
           </div>
         )}
       </div>

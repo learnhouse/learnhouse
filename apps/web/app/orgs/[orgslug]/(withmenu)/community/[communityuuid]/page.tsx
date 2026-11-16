@@ -8,6 +8,7 @@ import { getSeoContext } from '@/lib/seo/context.server'
 import { resolveForPage } from '@/lib/seo/resolve.server'
 import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
 import CommunityClient from './community'
+import { communityFeedView, communityViewMetadata } from '@/lib/seo/communityView'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; communityuuid: string }>
@@ -24,7 +25,9 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   ])
   if (!community) return noindexMetadata(ctx.org?.name || 'Community')
   const key = community.slug || uuid
-  return buildResourceMetadata({
+  const view = communityFeedView(await props.searchParams)
+  const indexable = !!community.public && !ctx.seo.noindex_communities && !resolved?.restricted
+  const base = buildResourceMetadata({
     ctx,
     name: community.name,
     description: community.description || `Community discussions from ${ctx.org?.name}`,
@@ -34,13 +37,17 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       ? getCommunityThumbnailMediaDirectory(ctx.org?.org_uuid, community.community_uuid, community.thumbnail_image)
       : undefined,
     generatedImage: await ctx.url(`/og/community/${key}`),
-    indexable: !!community.public && !ctx.seo.noindex_communities && !resolved?.restricted,
+    indexable,
     modifiedTime: community.update_date,
   })
+  // Label pages and ?page=N get their own canonical; re-sorted views point
+  // to the default order (noindex), feeds and the Markdown copy are linked.
+  return communityViewMetadata(base, { ctx, key, view, indexable, name: community.name })
 }
 
 const CommunityPage = async (props: MetadataProps) => {
   const { orgslug, communityuuid } = await props.params
+  const view = communityFeedView(await props.searchParams)
   const { uuid } = await resolveForPage(orgslug, 'community', communityuuid, (k) => `/community/${k}`)
   const communityUuid = `community_${uuid}`
 
@@ -61,7 +68,7 @@ const CommunityPage = async (props: MetadataProps) => {
         return null
       },
     ),
-    getDiscussions(communityUuid, 'recent', 1, 10, { revalidate: 120, tags: ['discussions'] }, access_token ? access_token : undefined).catch(
+    getDiscussions(communityUuid, view.apiSort, view.page, 20, { revalidate: 120, tags: ['discussions'] }, access_token ? access_token : undefined, view.label ?? undefined).catch(
       (error) => {
         discussionsError = error
         return [] as DiscussionWithAuthor[]
@@ -93,7 +100,17 @@ const CommunityPage = async (props: MetadataProps) => {
     )
   }
 
-  return <CommunityClient community={community} initialDiscussions={discussions || []} orgslug={orgslug} org_id={org_id} />
+  return (
+    <CommunityClient
+      community={community}
+      initialDiscussions={discussions || []}
+      orgslug={orgslug}
+      org_id={org_id}
+      initialSort={view.sort}
+      initialLabel={view.label}
+      initialPage={view.page}
+    />
+  )
 }
 
 export default CommunityPage

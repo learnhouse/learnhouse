@@ -57,7 +57,7 @@ const SelectionBubble = dynamic(() => import('./Blocks/bubble/SelectionBubble'),
 import AIStreamingMark from './Extensions/AIStreaming/AIStreamingMark'
 import AISelectionHighlight from './Extensions/AISelectionHighlight/AISelectionHighlight'
 import CommentMark from './Comments/CommentMark'
-import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
+import useAIFeature from '@components/Hooks/useAIFeature'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
@@ -173,7 +173,6 @@ function Editor(props: EditorProps) {
   const { track } = useLHAnalytics('editor')
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
-  const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [editorReady, setEditorReady] = React.useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
   const hasUnsavedChangesRef = React.useRef(false)
@@ -222,7 +221,10 @@ function Editor(props: EditorProps) {
   const rf = orgContext?.config?.config?.resolved_features
   const canUseAI = rf?.ai?.enabled === true
   const canUseVersioning = rf?.versioning?.enabled === true
-  const isButtonAvailable = is_ai_feature_enabled
+  // Settings > AI: the AI Editor panel has its own switch; the plan upsell
+  // only shows when the plan lacks AI (not when an admin turned it off).
+  const aiEditorOn = useAIFeature('ai_editor')
+  const aiPlanLocked = rf?.ai?.available === false
 
   // remove course_ from course_uuid
   const course_uuid = props.course.course_uuid.substring(7)
@@ -672,8 +674,9 @@ function Editor(props: EditorProps) {
               <div className="flex items-center gap-2">
                 <div>
                   <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer">
-                    {isButtonAvailable && canUseAI && (
+                    {aiEditorOn && canUseAI && (
                       <AIButton
+                        data-testid="ai-editor-button"
                         size="md"
                         aria-pressed={aiEditorState.isSidePanelOpen}
                         onClick={() => {
@@ -691,7 +694,7 @@ function Editor(props: EditorProps) {
                         {t('editor.ai_editor')}
                       </AIButton>
                     )}
-                    {isButtonAvailable && !canUseAI && (
+                    {aiPlanLocked && (
                       <div
                         className="h-9 ps-2 pe-3 rounded-lg flex items-center gap-2 text-sm font-semibold text-neutral-400 bg-neutral-100 ring-1 ring-inset ring-neutral-200 cursor-not-allowed"
                       >
@@ -838,7 +841,7 @@ function Editor(props: EditorProps) {
           {editorReady && <ActivityComments editor={editor} activity={props.activity} />}
 
           {/* AI Editor Side Panel */}
-          {editorReady && canUseAI && (
+          {editorReady && canUseAI && aiEditorOn && (
             <AIEditorSidePanel
               editor={editor}
               activity={props.activity}

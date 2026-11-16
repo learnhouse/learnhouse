@@ -36,3 +36,32 @@ async def api_get_plan_overview(
 ) -> dict:
     await require_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
     return await get_plan_overview(org_id, db_session)
+
+
+@router.get(
+    "/{org_id}/trial",
+    summary="Get the organization's trial",
+    description=(
+        "The organization's free trial (SaaS): its plan, status (active, converted, "
+        "expired, ended), dates and whole days left. `trial` is null when the "
+        "organization never had one, including on self-hosted installs. Admins and "
+        "maintainers only."
+    ),
+    responses={
+        200: {"description": "The trial, or null."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an administrator or maintainer of the organization"},
+    },
+)
+async def api_get_trial(
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    from src.core.deployment_mode import get_deployment_mode
+    from src.services.plans.trial import get_trial, trial_state
+
+    await require_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
+    if get_deployment_mode() != "saas":
+        return {"trial": None}
+    return {"trial": trial_state(await get_trial(db_session, org_id))}

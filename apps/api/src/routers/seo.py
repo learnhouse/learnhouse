@@ -17,6 +17,7 @@ from src.security.api_token_utils import reject_api_token_access
 from src.security.auth import get_authenticated_user, get_current_user
 from src.services.ai import metering
 from src.services.security.rate_limiting import enforce_ai_rate_limit
+from src.services.seo import public as public_seo
 from src.services.seo import seo as seo_service
 from src.services.seo.slugs import check_slug, register_slug_listeners, suggest_slug
 
@@ -54,8 +55,106 @@ async def api_resolve(
     summary="Public sitemap data for an organization",
     description="Indexable public content of the org (public, published, not noindex), with slugs and last-modified dates.",
 )
-async def api_sitemap_data(org_slug: str, db_session: AsyncSession = Depends(get_db_session)) -> dict:
-    return await seo_service.sitemap_data(db_session, org_slug)
+async def api_sitemap_data(request: Request, org_slug: str, db_session: AsyncSession = Depends(get_db_session)) -> dict:
+    return await seo_service.sitemap_data(db_session, org_slug, request)
+
+
+@router.get(
+    "/thread/{org_slug}/{community_key}/{ref}",
+    summary="Resolve a community thread URL",
+    description=(
+        "Maps `<id>-<slug>` (or a legacy discussion uuid) inside a community to the thread, with its "
+        "readable `segment`, whether this caller is shut out (`restricted`) and whether search engines may "
+        "index it (`indexable`: public, not sold, org/community switches, thin-thread rule)."
+    ),
+)
+async def api_thread_lookup(
+    request: Request,
+    org_slug: str,
+    community_key: str,
+    ref: str,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser] = Depends(get_current_user),
+) -> dict:
+    return await public_seo.thread_lookup(request, db_session, current_user, org_slug, community_key, ref)
+
+
+@router.get(
+    "/thread-jsonld/{org_slug}/{community_key}/{ref}",
+    summary="Structured data facts of an indexable thread",
+    description="Thread, author and top replies as an anonymous visitor sees them; 404 unless the thread is indexable.",
+)
+async def api_thread_jsonld(
+    request: Request,
+    org_slug: str,
+    community_key: str,
+    ref: str,
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    return await public_seo.thread_jsonld_data(request, db_session, org_slug, community_key, ref)
+
+
+@router.get(
+    "/feed/{org_slug}",
+    summary="Public feed items",
+    description=(
+        "Items of a public feed (`kind`: org, courses, communities, community, podcast, course_updates) as an "
+        "anonymous visitor sees them. 404 when the org turned feeds off or the resource isn't public."
+    ),
+)
+async def api_feed_data(
+    request: Request,
+    org_slug: str,
+    kind: str = Query(..., max_length=32),
+    key: str | None = Query(default=None, max_length=200),
+    sort: str = Query(default="new", max_length=8),
+    label: str | None = Query(default=None, max_length=50),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    return await public_seo.feed_data(request, db_session, org_slug, kind, key, sort, label)
+
+
+@router.get(
+    "/llms/{org_slug}",
+    summary="Public content summary for llms.txt",
+    description="The org and its indexable public content; `full=true` adds outlines. 404 when AI access is off.",
+)
+async def api_llms_data(
+    request: Request,
+    org_slug: str,
+    full: bool = False,
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    return await public_seo.llms_data(request, db_session, org_slug, full)
+
+
+@router.get(
+    "/markdown/{org_slug}/{resource_type}/{key}",
+    summary="One public page as data for its Markdown alternate",
+    description="`sub` is the lesson key (activity) or the thread segment (thread). 404 unless the page is indexable.",
+)
+async def api_markdown_data(
+    request: Request,
+    org_slug: str,
+    resource_type: str,
+    key: str,
+    sub: str | None = Query(default=None, max_length=200),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    return await public_seo.markdown_data(request, db_session, org_slug, resource_type, key, sub)
+
+
+@router.get(
+    "/indexnow-key/{org_slug}",
+    summary="The org's IndexNow key (when IndexNow is on)",
+    description="Served by the web app at `/{key}.txt` so search engines can verify submissions. 404 when off.",
+)
+async def api_indexnow_key(org_slug: str, db_session: AsyncSession = Depends(get_db_session)) -> dict:
+    org = await seo_service._get_org_by_slug(db_session, org_slug)
+    seo = await seo_service.org_seo_config(db_session, org.id)
+    if not seo.get("indexnow_enabled") or not seo.get("indexnow_key"):
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"key": seo["indexnow_key"]}
 
 
 @router.get("/slug/check", summary="Check whether a slug is available")

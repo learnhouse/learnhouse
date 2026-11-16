@@ -6,6 +6,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import OpenSignUpComponent from './OpenSignup'
 import InviteOnlySignUpComponent from './InviteOnlySignUp'
+import InviteLinkSignup from './InviteLinkSignup'
+import { inviteTokenFrom } from '@/lib/auth/signup'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { validateInviteCode } from '@services/organizations/invites'
 import { joinOrg } from '@services/organizations/orgs'
@@ -29,6 +31,9 @@ function SignUpClient(props: SignUpClientProps) {
   const [inviteCode, setInviteCode] = React.useState('')
   const searchParams = useSearchParams()
   const inviteCodeParam = searchParams.get('inviteCode')
+  // The personal link from an invitation email (`?invite=`): its own flow on
+  // this org's page, whatever the org's signup mode.
+  const inviteLinkToken = inviteTokenFrom(searchParams.get('invite'))
 
   const isAuthenticated = session.status === 'authenticated'
   // There is only an org to JOIN when we actually resolved one (a subdomain or an
@@ -38,12 +43,12 @@ function SignUpClient(props: SignUpClientProps) {
   const hasOrgToJoin = !!props.org
 
   useEffect(() => {
-    if (isAuthenticated && !hasOrgToJoin) {
+    if (isAuthenticated && !hasOrgToJoin && !inviteLinkToken) {
       // /new only exists in SaaS; an invite code means they came to join, and
       // the hub forwards them to their school.
       router.replace(getDeploymentMode() === 'saas' && !inviteCodeParam ? '/new' : '/home')
     }
-  }, [isAuthenticated, hasOrgToJoin, inviteCodeParam, router])
+  }, [isAuthenticated, hasOrgToJoin, inviteCodeParam, inviteLinkToken, router])
 
   useEffect(() => {
     // On the org-less apex (learn.io/signup) props.org is null; guard it and
@@ -70,14 +75,15 @@ function SignUpClient(props: SignUpClientProps) {
         defaultValue: 'Create your account and launch your first course in minutes.',
       })}
     >
-      {session.status === 'loading' && (
+      {inviteLinkToken && <InviteLinkSignup token={inviteLinkToken} org={props.org} />}
+      {!inviteLinkToken && session.status === 'loading' && (
         // Don't flash the open/invite signup form while the session is still
         // resolving; a logged-in user would otherwise briefly see it.
         <div className="flex justify-center py-16" role="status" aria-label={t('common.loading')}>
           <CircleNotch size={22} className="animate-spin text-neutral-400" />
         </div>
       )}
-      {session.status !== 'loading' && joinMethod == 'open' &&
+      {!inviteLinkToken && session.status !== 'loading' && joinMethod == 'open' &&
         (isAuthenticated ? (
           hasOrgToJoin ? (
             <LoggedInJoinScreen inviteCode={inviteCode} org={props.org} />
@@ -90,7 +96,7 @@ function SignUpClient(props: SignUpClientProps) {
         ) : (
           <OpenSignUpComponent org={props.org} />
         ))}
-      {session.status !== 'loading' && joinMethod == 'inviteOnly' &&
+      {!inviteLinkToken && session.status !== 'loading' && joinMethod == 'inviteOnly' &&
         (inviteCode ? (
           session.status == 'authenticated' ? (
             <LoggedInJoinScreen inviteCode={inviteCode} org={props.org} />

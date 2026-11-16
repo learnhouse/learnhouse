@@ -15,6 +15,7 @@ import { ChatCircleText, Check, DotsSixVertical, Lightbulb, Plus, Question as Qu
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { AIButton } from '@components/Objects/AI/AIBrand'
+import { useAISettings } from '@components/Hooks/useAIFeature'
 import { DraftText, type DraftTextHandle } from '../../Blocks/ui/DraftText'
 import { dropEdge, usePointerReorder } from '../../Blocks/ui/usePointerReorder'
 import { QUIZ_RESPONSE_MULTIPLE, QUIZ_RESPONSE_SINGLE, type QuizResponseType } from '@/lib/quiz/modes'
@@ -73,6 +74,9 @@ const ICON_BTN =
 
 export function QuizEditor({ questions, settings, commit, commitSettings, onGenerate }: EditorProps) {
   const { t } = useTranslation()
+  // Settings > AI (unknown org: shown, the API decides).
+  const ai = useAISettings()
+  const quizAI = !ai || ai.features.quiz_generation
   const listRef = React.useRef<HTMLDivElement>(null)
   const { focus, register } = useFieldFocus()
   const { drag, gripProps } = usePointerReorder({
@@ -96,9 +100,11 @@ export function QuizEditor({ questions, settings, commit, commitSettings, onGene
           <span className="text-[12px] font-semibold text-neutral-500">{t('editor.blocks.quiz')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <AIButton size="sm" onClick={onGenerate}>
-            {t('editor.blocks.quiz_block.generate_with_ai', 'Generate with AI')}
-          </AIButton>
+          {quizAI && (
+            <AIButton size="sm" onClick={onGenerate}>
+              {t('editor.blocks.quiz_block.generate_with_ai', 'Generate with AI')}
+            </AIButton>
+          )}
           <QuizSettingsPopover settings={settings} onChange={commitSettings} />
           <button
             type="button"

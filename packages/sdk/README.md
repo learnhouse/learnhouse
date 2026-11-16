@@ -156,6 +156,63 @@ It checks the `X-Webhook-Signature` HMAC with Web Crypto and throws a
 returns a boolean instead. The signature carries no timestamp of its own, so
 store each `deliveryId` and ignore repeats; retries reuse it.
 
+## Agent API
+
+`client.agent` talks to the Agent API (`/api/v1/agent`), the public side of
+Atlas and the learner copilot: build your own chat UI with conversations,
+streamed turns (text, views, citations, approvals, tool calls) and resumable
+streams. These routes are part of LearnHouse EE, so they are not in the
+generated OSS schema; their types are written by hand in `src/agent/types.ts`
+and exported from the package root (`Agent`, `Conversation`, `Message`, `View`,
+`AgentEvent`, ...).
+
+```ts
+const lh = createClient({ baseUrl, token }) // org API token (server), member JWT or embed session
+
+const conversation = await lh.agent.createConversation({ agent: 'copilot', context: { course_uuid: 'course_...' } })
+
+// Streamed: an AsyncIterable of typed events, parsed from SSE over fetch.
+const stream = lh.agent.streamMessage(conversation.id, 'What should I study next?')
+for await (const event of stream) {
+  if (event.type === 'text.delta') process.stdout.write(event.delta)
+  if (event.type === 'view') render(event.view)
+  if (event.type === 'approval.required') ask(event.approval)
+}
+
+// Or fold a whole turn into a Message (same shape as listMessages()):
+const message = await lh.agent.streamMessage(conversation.id, 'Summarize chapter 2').finalMessage()
+const same = await lh.agent.sendMessage(conversation.id, 'Summarize chapter 2') // stream: false
+```
+
+- Dropped connections are resumed automatically from the last event id
+  (`reconnect`, default 3 attempts; `onReconnect` reports them). Pick a turn up
+  later with `lh.agent.resume(id, { lastEventId: stream.lastEventId })`; every
+  event also carries its SSE `id`.
+- Approvals: `lh.agent.approve(approvalId, { confirmationPhrase })` and
+  `lh.agent.deny(approvalId, { reason })` stream the continuation (same
+  `message_id`), or pass `stream: false` to get the finished Message. While
+  other approvals or tool results of the step are still due, the answer is
+  short: a stream of `approval.resolved` + `message.done` (`requires_action`,
+  empty text, a `note`), or `{ waiting_on, events }` with `stream: false`
+  (`isAgentWaiting(result)`).
+- Member sessions (a user JWT) must name the org: `orgId` on `listAgents`,
+  `getAgent`, `listTools`, `listConversations`, and `org_id` in
+  `createConversation`. API tokens and embed sessions carry their org.
+- View components arrive in the wire shape of `GET /views/schema` (table rows
+  are flat `{ <column key>: value, _link? }` objects; links are `{ kind, uuid }`
+  or a relative `path`).
+- Client tools: answer `tool.call` events with `client: true` through
+  `lh.agent.submitToolResults(id, [{ call_id, output }])`.
+- Also: `listAgents`, `getAgent`, `listTools`, `getViewsSchema`,
+  `renderTemplate`, `listConversations`, `getConversation`,
+  `deleteConversation`, `listMessages`, `cancel`.
+- `collectMessage(events, seed?)` and `AgentMessageBuilder` fold events into a
+  Message yourself; `SSEParser` / `readSSE` are the SSE parser underneath.
+- Errors are `LearnHouseError`s with the API's `code` (`agent_not_available`,
+  `out_of_credits`, `rate_limited` with `retryAfterMs`, ...). A stream that ends
+  before `message.done` and can't be resumed throws `STREAM_INTERRUPTED`.
+  `error` events inside a turn are events, not exceptions.
+
 ## Development
 
 ```sh

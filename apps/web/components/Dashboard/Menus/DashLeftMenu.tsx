@@ -99,6 +99,8 @@ import {
   getOptionalFeatureState,
 } from '@services/features/optionalFeatures'
 import { usePlan } from '@components/Hooks/usePlan'
+import { useOrgTrial } from '@components/Hooks/useOrgTrial'
+import { planNameById } from '@/app/(hub)/_billing/planText'
 import { planMeetsRequirement } from '@services/plans/plans'
 import useAdminStatus, { seesPlatformHubFromSession } from '@components/Hooks/useAdminStatus'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
@@ -175,6 +177,9 @@ function DashLeftMenu() {
   const onboarding = useOnboarding()
   const showOnboarding =
     !isCollapsed && onboarding.welcomeSeen && !onboarding.dismissed && !onboarding.allCompleted
+  // Until the first course exists, settings and developer tools stay in the
+  // background so a new school's first stop is a course, not configuration.
+  const noCourseYet = onboarding.loaded && onboarding.steps.some((s) => s.id === 'create_course' && !s.completed)
   // The checklist is still running for this org (known, not put away, not done).
   const setupOpen = onboarding.loaded && !onboarding.dismissed && !onboarding.allCompleted
   const { available: atlasAvailable } = useAtlasMini()
@@ -245,11 +250,14 @@ function DashLeftMenu() {
   // Only org managers (admins/superadmins) see billing surfaces; non-admins
   // shouldn't manage the plan/subscription.
   const { canManageOrg } = useAdminStatus()
+  // A running free trial shows as a quiet caption under the org name (admins only).
+  const trial = useOrgTrial(org?.id, canManageOrg)
 
   if (!org || !session) return null
   const planLabel =
     mode === 'ee' ? t('dashboard.nav.enterprise_edition') :
     mode === 'oss' ? 'OSS' :
+    trial?.active ? t('dashboard.nav.trial_caption', { plan: planNameById(t, trial.plan, trial.plan), count: trial.days_left }) :
     plan  // SaaS: show actual plan name
 
   // Multi-org (SaaS) hub: the apex /home, /new, /billing routes only exist in
@@ -305,7 +313,7 @@ function DashLeftMenu() {
   const showPlaygrounds = isOn('playgrounds')
   const showPayments = isOn('payments')
   const showNewsletter = isOn('newsletter')
-  // Companies (customers with their own spaces): EE, Pro plan.
+  // Companies (organizations the academy trains, with their own spaces): EE, Pro plan.
   const showCustomers = getDeploymentMode() !== 'oss' && rf?.company_seats?.enabled === true
   // Org analytics ship with Enterprise Edition.
   const showAnalytics = isOrgAnalyticsAvailable()
@@ -422,7 +430,7 @@ function DashLeftMenu() {
               </span>
               <span className="mt-0.5 flex items-center gap-1.5 min-w-0 text-[11px] text-white/40">
                 <span aria-hidden="true" className={cn("size-1.5 rounded-full shrink-0", planDotColor)} />
-                <span className="truncate capitalize">{planLabel}</span>
+                <span className={cn("truncate", !trial?.active && "capitalize")} data-testid={trial?.active ? 'sidebar-trial' : undefined}>{planLabel}</span>
               </span>
             </div>
           )}
@@ -457,13 +465,19 @@ function DashLeftMenu() {
           </button>
         )}
 
-        {/* Onboarding progress along the header's bottom edge: a quiet
-            neutral line (colored gradients are reserved for AI). */}
+        {/* Onboarding progress runs along the header's bottom edge, a neon
+            purple gradient that glows out from it. */}
         {showOnboarding && (
           <>
-            <div className="absolute -bottom-px start-0 end-0 h-px bg-white/[0.06]" />
+            {/* faint full-width track so the edge reads as purple even at 0% */}
+            <div className="absolute -bottom-px start-0 end-0 h-[2px] bg-indigo-500/15" />
             <motion.div
-              className="absolute -bottom-px start-0 h-px bg-white/40"
+              className="absolute -bottom-px start-0 h-[2px] rounded-e-full"
+              style={{
+                background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 55%, #a855f7 100%)',
+                boxShadow:
+                  '0 0 6px rgba(139,92,246,0.85), 0 0 14px rgba(168,85,247,0.55), 0 0 2px rgba(99,102,241,0.9)',
+              }}
               initial={false}
               animate={{ width: `${Math.max(onboarding.progress * 100, 6)}%` }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -758,12 +772,12 @@ function DashLeftMenu() {
 
             {showCustomers && (
               <NavRow
-                href="/dash/customers"
+                href="/dash/companies"
                 icon={Buildings}
                 label={t('companies.title')}
                 collapsed={isCollapsed}
                 tooltipSide={tooltipSide}
-                active={isActivePath('/dash/customers')}
+                active={isActivePath('/dash/companies')}
               />
             )}
 
@@ -802,7 +816,7 @@ function DashLeftMenu() {
             )}
           </NavSection>
 
-          <NavSection label={t('dashboard.nav.section_settings', { defaultValue: 'Settings' })} collapsed={isCollapsed}>
+          <NavSection label={t('dashboard.nav.section_settings', { defaultValue: 'Settings' })} collapsed={isCollapsed} quiet={noCourseYet}>
             {/* Organization with hover menu */}
             <HoverMenu
               anchorRef={navRef}
@@ -1419,13 +1433,20 @@ function DashLeftMenu() {
 }
 
 /** A titled group of rows. Collapsed, the title becomes a short divider. */
-function NavSection({ label, collapsed, children }: {
+function NavSection({ label, collapsed, children, quiet = false }: {
   label: string
   collapsed: boolean
   children: React.ReactNode
+  /** Visually secondary (still fully usable): dimmed until hovered or focused. */
+  quiet?: boolean
 }) {
   return (
-    <div role="group" aria-label={label} className="flex flex-col gap-px">
+    <div
+      role="group"
+      aria-label={label}
+      data-quiet={quiet || undefined}
+      className={cn('flex flex-col gap-px', quiet && 'opacity-50 transition-opacity hover:opacity-100 focus-within:opacity-100')}
+    >
       {collapsed ? (
         <div aria-hidden="true" className="mx-auto my-2 h-px w-6 bg-white/[0.08]" />
       ) : (

@@ -31,6 +31,8 @@ interface SignupBody {
   custom_fields?: Record<string, unknown>
   turnstileToken?: string | null
   inviteCode?: string
+  /** Page to land on after verifying the email; kept with the token. */
+  next?: string | null
 }
 
 export async function POST(request: NextRequest) {
@@ -53,6 +55,7 @@ export async function POST(request: NextRequest) {
     last_name,
     bio,
     custom_fields,
+    next,
   } = body
 
   if (!email || !password || !username) {
@@ -134,6 +137,12 @@ export async function POST(request: NextRequest) {
     // Org-less apex: create a standalone account (POST /users/), unattached to
     // any org, exactly like the platform. The user creates their org next.
     url = `${base}users/`
+  }
+
+  // Where to land after verifying (a course they tried to start). Only a
+  // same-host relative path; the backend validates it again.
+  if (typeof next === 'string' && next.length <= 512 && /^\/(?![/\\])[^\s\\]*$/.test(next)) {
+    url += `${url.includes('?') ? '&' : '?'}next=${encodeURIComponent(next)}`
   }
 
   // Relay the caller's IP. This is a server-to-server call, so without it the

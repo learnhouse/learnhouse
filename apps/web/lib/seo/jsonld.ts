@@ -264,9 +264,10 @@ export function pathJsonLd(input: {
     description: plainText(input.description, 1000),
     image: input.image || undefined,
     provider: orgRef(input.org),
-    educationalLevel: input.educationalLevel || undefined,
-    inLanguage: input.inLanguage,
-    hasCourse: input.courses.map((c) => ({ '@type': 'Course', name: c.name, url: c.url })),
+    // A program is not a CreativeWork: level and language live on its courses.
+    hasCourse: input.courses.map((c) =>
+      compact({ '@type': 'Course', name: c.name, url: c.url, educationalLevel: input.educationalLevel || undefined, inLanguage: input.inLanguage }),
+    ),
   })
 }
 
@@ -292,7 +293,9 @@ export function podcastSeriesJsonLd(input: {
     inLanguage: input.inLanguage,
     publisher: orgRef(input.org),
     author: (input.authors || []).map((a) => personJsonLd(a)),
-    episode: input.episodes.map((ep) =>
+    // schema.org's `episode` belongs to radio/TV series; a PodcastSeries
+    // lists its episodes as parts.
+    hasPart: input.episodes.map((ep) =>
       compact({
         '@type': 'PodcastEpisode',
         name: ep.name,
@@ -429,5 +432,106 @@ export function collectionJsonLd(input: {
     mainEntity: input.items.length
       ? { '@type': 'ItemList', itemListElement: input.items.map((t, i) => ({ '@type': 'ListItem', position: i + 1, url: t.url, name: t.name })) }
       : undefined,
+  })
+}
+
+/**
+ * A question thread with answers (Google Q&A rich result): QAPage whose main
+ * entity is the Question, with the accepted answer (when the author picked
+ * one) and the other replies as suggested answers.
+ */
+export function qaPageJsonLd(input: {
+  name: string
+  url: string
+  text?: string | null
+  author: string
+  datePublished?: string | null
+  upvotes?: number
+  answers: { text: string; author: string; datePublished?: string | null; upvotes?: number; accepted?: boolean; url?: string }[]
+}): JsonLdObject {
+  const answer = (a: (typeof input.answers)[number]) =>
+    compact({
+      '@type': 'Answer',
+      text: plainText(a.text, 2000) || '…',
+      author: { '@type': 'Person', name: a.author || 'Member' },
+      datePublished: toIsoDate(a.datePublished),
+      upvoteCount: a.upvotes ?? 0,
+      url: a.url,
+    })
+  const accepted = input.answers.find((a) => a.accepted)
+  const suggested = input.answers.filter((a) => !a.accepted)
+  return compact({
+    '@context': CONTEXT,
+    '@type': 'QAPage',
+    url: input.url,
+    mainEntity: compact({
+      '@type': 'Question',
+      name: input.name.slice(0, 200),
+      text: plainText(input.text, 5000) || input.name,
+      answerCount: input.answers.length,
+      upvoteCount: input.upvotes ?? 0,
+      datePublished: toIsoDate(input.datePublished),
+      author: { '@type': 'Person', name: input.author || 'Member' },
+      acceptedAnswer: accepted ? answer(accepted) : undefined,
+      suggestedAnswer: suggested.slice(0, 20).map(answer),
+    }),
+  })
+}
+
+/** A certificate's public verification page: the credential it proves. */
+export function credentialJsonLd(input: {
+  name: string
+  url: string
+  description?: string | null
+  recipient?: string | null
+  issuedOn?: string | null
+  org: Pick<OrgInput, 'name' | 'url' | 'logo'>
+  courseName?: string | null
+  courseUrl?: string | null
+  credentialId?: string | null
+}): JsonLdObject {
+  return compact({
+    '@context': CONTEXT,
+    '@type': 'EducationalOccupationalCredential',
+    name: input.name,
+    url: input.url,
+    description: plainText(input.description, 500),
+    credentialCategory: 'certificate',
+    identifier: input.credentialId || undefined,
+    dateCreated: toIsoDate(input.issuedOn),
+    recognizedBy: orgRef(input.org),
+    about: input.courseName ? compact({ '@type': 'Course', name: input.courseName, url: input.courseUrl || undefined }) : undefined,
+  })
+}
+
+/** A store offer: Product with its Offer (price, currency, availability). */
+export function productJsonLd(input: {
+  name: string
+  url: string
+  description?: string | null
+  image?: string | null
+  price?: number | null
+  currency?: string | null
+  org: Pick<OrgInput, 'name' | 'url' | 'logo'>
+}): JsonLdObject {
+  return compact({
+    '@context': CONTEXT,
+    '@type': 'Product',
+    name: input.name,
+    url: input.url,
+    description: plainText(input.description, 1000),
+    image: input.image || undefined,
+    brand: { '@type': 'Brand', name: input.org.name },
+    offers:
+      input.price != null && input.currency
+        ? {
+            '@type': 'Offer',
+            price: Number(input.price).toFixed(2),
+            priceCurrency: String(input.currency).toUpperCase(),
+            availability: 'https://schema.org/InStock',
+            url: input.url,
+            seller: orgRef(input.org),
+          }
+        : undefined,
   })
 }

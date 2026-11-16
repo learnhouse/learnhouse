@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { PencilSimpleLine } from '@phosphor-icons/react'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { CommunityAbout, CommunityHero } from '@components/Objects/Communities/CommunityHero'
-import { DiscussionList } from '@components/Objects/Communities/DiscussionList'
+import { DiscussionList, type FeedSort } from '@components/Objects/Communities/DiscussionList'
 import { Community, getCommunitiesSummary } from '@services/communities/communities'
 import { isRichContentAllowed } from '@components/Objects/Communities/richContent'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
@@ -30,9 +30,12 @@ interface CommunityClientProps {
   initialDiscussions: DiscussionWithAuthor[]
   orgslug: string
   org_id: number
+  initialSort?: FeedSort
+  initialLabel?: string | null
+  initialPage?: number
 }
 
-const CommunityClient = ({ community, initialDiscussions, orgslug, org_id }: CommunityClientProps) => {
+const CommunityClient = ({ community, initialDiscussions, orgslug, org_id, initialSort, initialLabel, initialPage }: CommunityClientProps) => {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
@@ -99,6 +102,9 @@ const CommunityClient = ({ community, initialDiscussions, orgslug, org_id }: Com
                 onCreateClick={openCreateDiscussion}
                 initialDiscussions={initialDiscussions}
                 allowRichContent={isRichContentAllowed(community)}
+                initialSort={initialSort}
+                initialLabel={initialLabel}
+                initialPage={initialPage}
               />
             </ResourcePaywall>
             <aside className="lg:sticky lg:top-[calc(6rem+var(--lh-company-bar-h,0px))]">

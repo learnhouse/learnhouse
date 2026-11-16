@@ -226,6 +226,7 @@ async def api_create_user_with_orgid(
     current_user: PublicUser = Depends(get_current_user),
     user_object: UserCreate,
     org_id: int,
+    next: Optional[str] = Query(default=None, max_length=512, description="Page to land on after verifying the email (relative path)."),
 ) -> UserRead:
     """
     Create User with Org ID
@@ -245,7 +246,7 @@ async def api_create_user_with_orgid(
             detail="You need an invite to join this organization",
         )
     else:
-        return await create_user(request, db_session, current_user, user_object, org_id)
+        return await create_user(request, db_session, current_user, user_object, org_id, next_path=next)
 
 
 @router.post(
@@ -267,6 +268,7 @@ async def api_create_user_with_orgid_and_invite(
     user_object: UserCreate,
     invite_code: str,
     org_id: int,
+    next: Optional[str] = Query(default=None, max_length=512, description="Page to land on after verifying the email (relative path)."),
 ) -> UserRead:
     """
     Create User with Org ID and invite code
@@ -295,7 +297,7 @@ async def api_create_user_with_orgid_and_invite(
         == "inviteOnly"
     ):
         return await create_user_with_invite(
-            request, db_session, current_user, user_object, org_id, invite_code
+            request, db_session, current_user, user_object, org_id, invite_code, next_path=next
         )
     else:
         raise HTTPException(
@@ -321,12 +323,13 @@ async def api_create_user_without_org(
     db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_object: UserCreate,
+    next: Optional[str] = Query(default=None, max_length=512, description="Page to land on after verifying the email (relative path)."),
 ) -> UserRead:
     """
     Create User
     """
     _enforce_signup_rate_limit(request)
-    return await create_user_without_org(request, db_session, current_user, user_object)
+    return await create_user_without_org(request, db_session, current_user, user_object, next_path=next)
 
 
 @router.get(

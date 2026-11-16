@@ -3,7 +3,7 @@ import logging
 from datetime import timedelta, datetime, timezone
 from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import func
 from sqlmodel import select
 from src.db.users import AnonymousUser, APITokenUser, User, UserRead
@@ -1455,6 +1455,13 @@ async def api_verify_email(
 
     # On invalid/expired/mismatched tokens this raises (4xx) and no session is
     # issued; only a fresh, valid verification reaches the token-minting below.
+    # Where they were headed when they signed up (a course, a checkout), kept
+    # with the token. Read first: verifying consumes the token.
+    from src.services.users.email_verification import verification_next_path
+
+    next_path = verification_next_path(body.user_uuid, body.org_uuid, body.token)
+    landing = {"next": next_path} if next_path else {}
+
     user, message = await verify_email_token(
         request=request,
         db_session=db_session,
@@ -1493,11 +1500,11 @@ async def api_verify_email(
             AUTH_METHOD_MAGIC_LOGIN,
         )
     except HTTPException:
-        return {"message": message}
+        return {"message": message, **landing}
     if check_account_locked(user)[0] or not await is_login_method_allowed(
         db_session, session_org_id, AUTH_METHOD_MAGIC_LOGIN
     ):
-        return {"message": message}
+        return {"message": message, **landing}
 
     issue = await issue_session_or_challenge(
         db_session,
@@ -1509,6 +1516,7 @@ async def api_verify_email(
     if issue.mfa_required:  # pragma: no cover - same 2FA branch as /login, exercised there
         return {
             "message": message,
+            **landing,
             "mfa_required": True,
             "mfa_token": issue.mfa_token,
         }
@@ -1517,6 +1525,7 @@ async def api_verify_email(
 
     return {
         "message": message,
+        **landing,
         "user": UserRead.model_validate(user),
         "tokens": {
             "access_token": issue.access_token,
@@ -1529,6 +1538,8 @@ async def api_verify_email(
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
     org_id: Optional[int] = None
+    # Page to land on after verifying (relative path; validated server-side).
+    next: Optional[str] = Field(default=None, max_length=512)
 
 
 @router.post(
@@ -1557,6 +1568,7 @@ async def api_resend_verification_email(
         db_session=db_session,
         email=body.email,
         org_id=body.org_id,
+        next_path=body.next,
     )
     return {"message": result}
 

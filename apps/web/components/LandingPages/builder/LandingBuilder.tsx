@@ -19,6 +19,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Button } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { AIButton } from '@components/Objects/AI/AIBrand'
+import useAIFeature from '@components/Hooks/useAIFeature'
 import LandingAskAtlas from '@ee/components/Atlas/LandingAskAtlas'
 import { getUriWithOrg } from '@services/config/config'
 import {
@@ -99,6 +100,8 @@ function IconBtn({ label, onClick, disabled, active, children, testid }: { label
 function Editor({ page, site, onReload }: { page: LandingPageDetail; site: NonNullable<ReturnType<typeof useSite>['data']>; onReload: (detail?: LandingPageDetail) => void }) {
   const { t } = useTranslation()
   const org = useOrg() as any
+  // Settings > AI: AI website design can be turned off for the org.
+  const landingAI = useAIFeature('landing_builder')
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
   const router = useRouter()
@@ -544,7 +547,7 @@ function Editor({ page, site, onReload }: { page: LandingPageDetail; site: NonNu
           <span className="hidden sm:inline-flex"><IconBtn label={t('landingBuilder.toolbar.preview')} onClick={openPreview} testid="open-preview"><Eye size={15} /></IconBtn></span>
         </div>
         <div className="hidden items-center gap-1.5 lg:flex">
-          <AIButton size="sm" variant="soft" onClick={() => setDialog('ai')}>{t('landingBuilder.toolbar.ai')}</AIButton>
+          {landingAI && <AIButton size="sm" variant="soft" onClick={() => setDialog('ai')}>{t('landingBuilder.toolbar.ai')}</AIButton>}
           <LandingAskAtlas pageUuid={page.page_uuid} pageTitle={pageName} />
         </div>
         <Button variant="primary" size="sm" icon={<Rocket size={13} />} onClick={async () => { await flush(); setDialog('publish') }} data-testid="open-publish">

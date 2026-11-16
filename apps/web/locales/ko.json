@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Pro 기능",
-          "description": "회사를 고객사로 등록하고 전용 브랜드 공간, 독점 강좌, 회사가 직접 관리하는 좌석을 제공하세요."
+          "description": "회사를 교육하세요. 구성원에게 코스 이용 권한, 브랜드 공간, 확인할 수 있는 진도를 제공합니다. 좌석 판매는 선택 사항입니다."
         },
         "scim": {
           "title": "Enterprise 기능",
@@ -176,6 +176,210 @@
         "newsletter": {
           "title": "Standard 기능",
           "description": "뉴스레터는 Standard 플랜 이상에서 사용할 수 있습니다. 업그레이드하면 학습자에게 캠페인, 환영 시리즈, 코스 업데이트를 이메일로 보낼 수 있습니다."
+        }
+      },
+      "gate": {
+        "upgrade": "{{plan}}(으)로 업그레이드",
+        "talk_to_us": "문의하기",
+        "ask_admin": "조직 관리자에게 {{plan}}(으)로 변경해 달라고 요청하세요.",
+        "current": "현재 플랜: {{plan}}",
+        "preview_label": "미리보기",
+        "preview": {
+          "completion": "완료율",
+          "certificate": "수료증",
+          "live": "라이브",
+          "role_editor": "편집자",
+          "role_reviewer": "검토자",
+          "role_viewer": "뷰어",
+          "week_other": "{{count}}주차",
+          "enroll": "수강 신청",
+          "sso": "회사 계정으로 계속",
+          "sent": "발송됨",
+          "opened": "열람함",
+          "clicked": "클릭함"
+        },
+        "communities": {
+          "title": "학습자끼리 서로 돕는 공간",
+          "b1": "코스 옆에서 나누는 토론, 답글과 투표 지원",
+          "b2": "강사뿐 아니라 동료에게서도 답을 얻는 학습자",
+          "b3": "문의가 쌓이기 전에 자주 묻는 질문 파악"
+        },
+        "messaging": {
+          "title": "학습자와 직접 대화하세요",
+          "b1": "아카데미 안에서 1:1 대화와 그룹 대화",
+          "b2": "학습자가 이미 있는 곳에서 질문에 답변",
+          "b3": "읽지 않은 내용은 이메일 요약으로 안내"
+        },
+        "analytics": {
+          "title": "아카데미 현황을 한눈에",
+          "b1": "기간별 수강 신청, 완료, 활동",
+          "b2": "학습자가 멈추는 코스와 레슨 찾기",
+          "b3": "한곳에서 팀과 진도 공유"
+        },
+        "course_analytics": {
+          "title": "코스마다 학습자가 이탈하는 지점 파악",
+          "b1": "챕터와 레슨별 완료율",
+          "b2": "학습자별 진도와 학습 시간",
+          "b3": "가장 중요한 레슨부터 개선"
+        },
+        "certifications": {
+          "title": "끝까지 마친 학습자에게 보상을",
+          "b1": "코스를 완료하면 수료증이 자동으로 발급",
+          "b2": "학습자는 검증 가능한 링크를 LinkedIn에 공유",
+          "b3": "모든 수료증에 내 브랜드 적용"
+        },
+        "paths": {
+          "title": "다음에 들을 코스를 안내하세요",
+          "b1": "코스를 묶어 안내형 학습 경로로 구성",
+          "b2": "코스 하나가 아닌 경로 전체의 진도",
+          "b3": "경로를 마치면 수료증 발급"
+        },
+        "required_training": {
+          "title": "필요한 사람이 필요한 교육을 마치도록",
+          "b1": "팀이나 역할에 마감일이 있는 코스 배정",
+          "b2": "마감 전후 자동 알림",
+          "b3": "관리자는 누가 잘 따라오는지 한눈에 확인"
+        },
+        "live_sessions": {
+          "title": "다른 도구 없이 라이브 수업",
+          "b1": "학습자가 아카데미에서 바로 참여하는 세션 예약",
+          "b2": "알림은 자동으로 발송",
+          "b3": "녹화본은 코스 옆에 보관"
+        },
+        "podcasts": {
+          "title": "이동 중인 학습자에게도 닿도록",
+          "b1": "코스와 함께 오디오 에피소드 게시",
+          "b2": "청취자마다 멈춘 위치를 기억하는 플레이어",
+          "b3": "AI로 레슨을 에피소드로 변환"
+        },
+        "usergroups": {
+          "title": "학습자를 그룹으로 관리",
+          "b1": "그룹에 맞는 코스 이용 권한 부여",
+          "b2": "기수, 팀, 반마다 별도 공간",
+          "b3": "그룹별 진도 확인"
+        },
+        "custom_domains": {
+          "title": "내 도메인에서 가르치세요",
+          "b1": "LearnHouse 주소 대신 learn.yourschool.com",
+          "b2": "SSL 인증서 포함, 자동 갱신",
+          "b3": "학습자는 내 도메인에서 로그인 유지"
+        },
+        "api_access": {
+          "title": "아카데미를 사용 중인 도구와 연결",
+          "b1": "API로 코스 생성, 학습자 등록, 진도 조회",
+          "b2": "언제든 취소할 수 있는 범위 지정 토큰",
+          "b3": "대시보드와 같은 API"
+        },
+        "webhooks": {
+          "title": "아카데미에서 일어나는 일에 바로 대응",
+          "b1": "학습자가 수강 신청, 완료, 결제하면 알림",
+          "b2": "Zapier, CRM, 직접 작성한 코드로 이벤트 전송",
+          "b3": "서명된 요청과 자동 재시도"
+        },
+        "roles": {
+          "title": "사람마다 필요한 권한만",
+          "b1": "관리자와 멤버 외의 맞춤 역할",
+          "b2": "누가 만들고, 편집하고, 검토만 할지 결정",
+          "b3": "관리자가 적을수록 실수도 적습니다"
+        },
+        "seo": {
+          "title": "코스가 검색되도록",
+          "b1": "검색과 소셜용 제목, 설명, 미리보기",
+          "b2": "검색 엔진이 읽을 수 있는 사이트맵",
+          "b3": "검색 노출에 맞춘 코스 페이지"
+        },
+        "drip": {
+          "title": "알맞은 속도로 레슨 공개",
+          "b1": "지정한 날짜나 수강 신청 후 일수에 따라 챕터 공개",
+          "b2": "챕터가 열리면 학습자에게 이메일 발송",
+          "b3": "기수 전체가 함께 진도를 맞추도록"
+        },
+        "payments": {
+          "title": "가르친 만큼 수익을",
+          "b1": "단건 구매 또는 구독으로 코스 판매",
+          "b2": "추가 수수료 없이 Stripe 계정으로 바로 정산",
+          "b3": "원할 때 쿠폰, 묶음 상품, 무료 이용 제공"
+        },
+        "boards": {
+          "title": "공유 캔버스에서 함께 생각하기",
+          "b1": "워크숍, 수업, 기획을 위한 화이트보드",
+          "b2": "어떤 기기에서든 모두가 실시간 편집",
+          "b3": "보드를 코스 옆에 보관"
+        },
+        "playgrounds": {
+          "title": "읽기만이 아니라 직접 연습하도록",
+          "b1": "AI로 만드는 인터랙티브 연습 문제",
+          "b2": "시도할 때마다 즉시 피드백",
+          "b3": "아카데미 전체에 Play 공유"
+        },
+        "company_seats": {
+          "title": "개인뿐 아니라 회사도 교육하세요",
+          "b1": "클릭 몇 번으로 회사 구성원에게 코스 이용 권한 부여",
+          "b2": "회사마다 자체 코스가 있는 브랜드 공간",
+          "b3": "진도를 확인하고, 원할 때만 좌석 판매"
+        },
+        "newsletter": {
+          "title": "학습자가 다시 찾아오도록",
+          "b1": "소식과 새 코스를 이메일로 학습자에게 발송",
+          "b2": "캠페인별 열람 수와 클릭 수",
+          "b3": "수신 거부와 반송은 자동 처리"
+        },
+        "audit_logs": {
+          "title": "누가 무엇을 바꿨는지 파악",
+          "b1": "모든 관리자 작업을 누가, 무엇을, 언제 했는지 기록",
+          "b2": "감사를 위한 검색과 내보내기",
+          "b3": "컴플라이언스 요건 충족"
+        },
+        "sso": {
+          "title": "조직 전체를 위한 하나의 로그인",
+          "b1": "멤버는 사용 중인 ID 공급자로 로그인",
+          "b2": "퇴사하면 접근 권한도 종료",
+          "b3": "따로 관리할 비밀번호 없음"
+        },
+        "scim": {
+          "title": "멤버를 자동으로 동기화",
+          "b1": "디렉터리에 따라 멤버 추가 및 제거",
+          "b2": "그룹은 ID 공급자를 따라감",
+          "b3": "수동 퇴사 처리 불필요"
+        },
+        "lti": {
+          "title": "코스를 LMS에 연결하세요",
+          "b1": "Moodle, Canvas, Blackboard 등을 위한 LTI 1.3",
+          "b2": "성적은 자동으로 반영",
+          "b3": "학습자는 계정을 새로 만들 필요 없음"
+        },
+        "scorm": {
+          "title": "기존 이러닝 콘텐츠를 그대로",
+          "b1": "SCORM 패키지를 레슨으로 가져오기",
+          "b2": "점수와 완료 여부 기록",
+          "b3": "예전 콘텐츠를 다시 만들 필요 없음"
+        },
+        "compare": "플랜 비교",
+        "sample": {
+          "discussion_1": "조별 과제는 어떻게 평가하시나요?",
+          "discussion_2": "2주 차 정리 노트",
+          "discussion_3": "기말 퀴즈 준비 팁",
+          "course_name": "데이터 분석 입문",
+          "path_1": "시작하기",
+          "path_2": "핵심 역량",
+          "path_3": "최종 프로젝트",
+          "session_1": "오피스 아워",
+          "session_2": "Q&A: 모듈 3",
+          "today": "오늘",
+          "thursday": "목",
+          "episode": "에피소드 4: 오래가는 공부 습관",
+          "seo_snippet": "6주간의 실습으로 데이터를 정리하고 탐색하고 발표하는 법을 배웁니다. 수료증 포함.",
+          "drip_1": "환영 및 설정",
+          "drip_2": "첫 번째 데이터셋",
+          "drip_3": "이야기가 있는 차트",
+          "drip_4": "최종 프로젝트",
+          "one_time": "일회성 결제",
+          "newsletter_subject": "이번 달 아카데미 소식",
+          "note_1": "워크숍 아이디어",
+          "note_2": "그룹 질문",
+          "note_3": "금요일까지 할 일",
+          "play_title": "연습",
+          "play_question": "오각형의 변은 몇 개인가요?"
         }
       }
     },
@@ -561,7 +765,35 @@
       "go_to_login": "로그인으로 이동",
       "signing_in": "로그인하는 중...",
       "setting_up": "세션을 설정하는 동안 잠시 기다려 주세요."
-    }
+    },
+    "show_password": "비밀번호 표시",
+    "hide_password": "비밀번호 숨기기",
+    "password_req_letter": "문자 1개",
+    "password_req_number_or_symbol": "숫자 또는 기호 1개",
+    "password_req_not_common": "흔한 비밀번호가 아님",
+    "your_name": "이름",
+    "signup_one_step": "1분도 걸리지 않아요.",
+    "verification_sent_to": "{{email}}(으)로 확인 링크를 보냈어요. 링크를 열면 계정을 사용할 수 있어요.",
+    "invite_link": {
+      "joining": "{{org}}에 참여하는 중…",
+      "invalid_title": "이 초대 링크가 만료되었어요",
+      "invalid_desc": "이미 사용되었거나 철회되었거나 새 초대로 대체되었어요. 초대한 분께 새 초대를 요청하세요.",
+      "go_to_org": "{{org}}(으)로 이동",
+      "wrong_account_title": "다른 주소로 보낸 초대예요",
+      "wrong_account_desc": "{{current}}(으)로 로그인되어 있지만 초대는 {{email}}(으)로 보내졌어요.",
+      "switch_account": "로그아웃하고 계속",
+      "signin_title": "{{org}}에 참여하기",
+      "signin_desc": "이미 계정이 있어요. 로그인하면 바로 참여돼요.",
+      "signin_cta": "로그인하고 참여",
+      "signup_title": "{{org}}에 참여하기",
+      "signup_desc": "초대받으셨어요. 비밀번호만 정하면 바로 참여돼요.",
+      "choose_password": "비밀번호 정하기",
+      "create_and_join": "{{org}}에 참여"
+    },
+    "login_failed_forgot": "비밀번호를 잊으셨나요?",
+    "login_failed_reset": "재설정하기",
+    "login_failed_magic": "대신 로그인 링크를 이메일로 받기",
+    "login_failed_google_hint": "Google로 가입하셨나요? 아래의 Google로 계속하기를 사용하세요."
   },
   "validation": {
     "required": "필수 항목입니다",
@@ -1518,7 +1750,8 @@
       },
       "thread_actions": "스레드 작업",
       "threads_one": "스레드 {{count}}개",
-      "threads_other": "스레드 {{count}}개"
+      "threads_other": "스레드 {{count}}개",
+      "newer_discussions": "최신 토론"
     }
   },
   "boards": {
@@ -4150,7 +4383,9 @@
       "unavailable_body": "이 조직은 아직 스토어를 활성화하지 않았습니다.",
       "unavailable_title": "스토어를 이용할 수 없습니다",
       "view_content": "콘텐츠 보기"
-    }
+    },
+    "checkout_paused": "이 상품은 일시적으로 결제할 수 없습니다. 조직에 알렸으니 나중에 다시 시도해 주세요.",
+    "checkout_paused_short": "일시적으로 이용 불가"
   },
   "account": {
     "title": "계정 설정",
@@ -4638,7 +4873,8 @@
       "section_people": "사람 및 비즈니스",
       "section_settings": "설정",
       "resize_sidebar": "사이드바 크기 조절",
-      "open_account_menu": "계정 메뉴 열기"
+      "open_account_menu": "계정 메뉴 열기",
+      "trial_caption_other": "{{plan}} 체험 · {{count}}일 남음"
     },
     "home": {
       "cards": {
@@ -6669,7 +6905,138 @@
         "ai_copilot_description": "학습자가 코스 콘텐츠에 대해 질문할 수 있게 합니다. 인덱싱된 자료를 활용하여 출처가 포함된 근거 기반 답변을 제공합니다.",
         "feature_editor_description": "코스 제작자를 위한 AI 기반 콘텐츠 편집 지원입니다.",
         "feature_activity_description": "학습자를 돕기 위해 활동 내에서 사용할 수 있는 AI 어시스턴트입니다.",
-        "always_on": "항상 켜짐"
+        "always_on": "항상 켜짐",
+        "platform_disabled": "플랫폼에서 이 조직의 AI를 껐습니다. 다시 켜려면 지원팀에 문의하세요.",
+        "enabled_count": "AI 기능 {{total}}개 중 {{on}}개 켜짐",
+        "group_all_on": "모두 켜기",
+        "group_all_off": "모두 끄기",
+        "ask_ai_audience": "AI에게 묻기를 사용할 수 있는 사람",
+        "audience_everyone": "모두",
+        "audience_staff": "코스 스태프만",
+        "limits_title": "월간 크레딧 한도",
+        "limits_description": "조직이 이만큼의 크레딧을 사용하면 그 달의 남은 기간 동안 AI가 중지됩니다. 한도를 두지 않으려면 비워 두세요.",
+        "cap_placeholder": "한도 없음",
+        "cap_unit": "크레딧 / 월",
+        "save_cap": "저장",
+        "cap_invalid": "정수를 입력하거나 비워 두세요.",
+        "off_by_admin": "관리자가 끈 기능",
+        "off_by_admin_description": "{{feature}}은(는) 이 조직에서 사용할 수 없습니다. 필요하면 관리자에게 문의하세요.",
+        "groups": {
+          "assistants": {
+            "title": "어시스턴트",
+            "description": "팀과 대화하며 일을 처리하는 에이전트."
+          },
+          "authoring": {
+            "title": "제작",
+            "description": "작성자가 코스를 만들 때 돕는 기능."
+          },
+          "learners": {
+            "title": "학습자",
+            "description": "학습자가 공부하면서 쓰는 AI."
+          },
+          "content": {
+            "title": "콘텐츠 생성",
+            "description": "AI로 만드는 미디어, 음성, 번역."
+          },
+          "integrations": {
+            "title": "통합",
+            "description": "웹사이트, 이메일, 연결된 앱의 AI."
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "질문에 답하고 조직 전반에서 작업하는 대시보드 어시스턴트."
+          },
+          "atlas_scheduled": {
+            "title": "예약 에이전트",
+            "description": "주간 보고서처럼 일정에 따라 실행되는 Atlas 작업."
+          },
+          "ai_editor": {
+            "title": "AI 편집기",
+            "description": "페이지 편집기에서 작성자와 함께 쓰고 편집하는 AI 패널."
+          },
+          "course_builder": {
+            "title": "AI 코스 빌더",
+            "description": "짧은 설명으로 코스 계획과 레슨 초안을 만듭니다."
+          },
+          "editor_ai": {
+            "title": "AI 글쓰기 작업",
+            "description": "선택한 텍스트를 다시 쓰거나 줄이거나 고치거나 어조를 바꿉니다."
+          },
+          "magic_blocks": {
+            "title": "매직 블록",
+            "description": "프롬프트로 생성하는 인터랙티브 블록."
+          },
+          "quiz_generation": {
+            "title": "퀴즈 및 플래시카드 생성",
+            "description": "레슨 내용으로 퀴즈와 플래시카드를 만듭니다."
+          },
+          "assignment_generation": {
+            "title": "과제 및 시나리오 생성",
+            "description": "AI로 과제와 분기 시나리오 초안을 만듭니다."
+          },
+          "course_import": {
+            "title": "AI 코스 가져오기",
+            "description": "문서와 다른 플랫폼의 내보내기 파일을 코스로 바꿉니다."
+          },
+          "seo": {
+            "title": "SEO 제안",
+            "description": "페이지의 검색 제목과 설명을 작성합니다."
+          },
+          "ask_ai": {
+            "title": "AI에게 묻기",
+            "description": "학습자가 레슨에 대해 질문하고 출처가 포함된 답을 받습니다."
+          },
+          "ai_grading": {
+            "title": "AI 채점",
+            "description": "제출물을 채점하고 과제 피드백 초안을 작성합니다."
+          },
+          "messaging_agents": {
+            "title": "메시지의 AI 에이전트",
+            "description": "멤버가 메시지에서 대화할 수 있는 어시스턴트."
+          },
+          "plays": {
+            "title": "Plays의 AI",
+            "description": "Plays를 생성하고 학습자를 위한 AI 단계를 실행합니다."
+          },
+          "translations": {
+            "title": "AI 번역",
+            "description": "코스와 SEO를 다른 언어로 번역합니다."
+          },
+          "image_generation": {
+            "title": "이미지 생성",
+            "description": "AI로 썸네일과 이미지를 만듭니다."
+          },
+          "voice": {
+            "title": "음성 및 팟캐스트",
+            "description": "팟캐스트 대본을 쓰고 음성 오디오를 생성합니다."
+          },
+          "video_ai": {
+            "title": "동영상 자막 및 챕터",
+            "description": "동영상을 전사하고 챕터로 나눕니다."
+          },
+          "live_session_summary": {
+            "title": "라이브 세션 요약",
+            "description": "라이브 세션 녹화본을 요약합니다."
+          },
+          "boards": {
+            "title": "보드의 AI",
+            "description": "보드에서 플레이그라운드와 콘텐츠를 생성합니다."
+          },
+          "landing_builder": {
+            "title": "AI 웹사이트 디자인",
+            "description": "랜딩 페이지를 생성하고 문구를 다시 씁니다."
+          },
+          "newsletter": {
+            "title": "AI 뉴스레터 작성",
+            "description": "제목과 뉴스레터 본문 초안을 작성합니다."
+          },
+          "mcp_tools": {
+            "title": "MCP를 통한 AI 도구",
+            "description": "앱이 MCP로 조직에 연결될 때 AI를 사용하는 도구."
+          }
+        }
       },
       "sso": {
         "title": "싱글 사인온 (SSO)",
@@ -7096,7 +7463,8 @@
           "users_admin": "사용자 (관리자 API)",
           "roles_admin": "역할 (관리자 API)",
           "newsletter": "뉴스레터",
-          "crm": "CRM 연동"
+          "crm": "CRM 연동",
+          "agent": "AI 에이전트 (Agent API)"
         },
         "resource": "리소스",
         "perm_create": "생성",
@@ -7456,7 +7824,8 @@
           "suspended": "접근이 제한되었습니다. 복구하려면 LearnHouse에 문의하세요.",
           "licensed": "Enterprise Edition 라이선스로 자체 호스팅, 플랜 제한 없음",
           "community": "자체 호스팅 Community Edition, 플랜 제한 없음",
-          "billing_page": "청구서와 결제 정보는 결제 페이지에서 확인할 수 있습니다"
+          "billing_page": "청구서와 결제 정보는 결제 페이지에서 확인할 수 있습니다",
+          "free_trial_other": "무료 체험, {{count}}일 남음. 카드는 필요 없습니다."
         },
         "next_invoice": "{{date}}에 {{amount}}",
         "seats_of": "{{used}} / {{limit}}",
@@ -7520,7 +7889,8 @@
             "addon": "애드온",
             "locked": "{{plan}} 필요",
             "locked_none": "사용 불가",
-            "edition": "Enterprise Edition"
+            "edition": "Enterprise Edition",
+            "trial": "체험"
           },
           "on": "켜짐",
           "off": "꺼짐",
@@ -7556,7 +7926,7 @@
             "usergroups": "사용자 그룹",
             "roles": "사용자 지정 역할",
             "required_training": "필수 교육",
-            "company_seats": "회사 좌석",
+            "company_seats": "고객사",
             "payments": "결제",
             "ai": "AI 기능",
             "analytics": "분석",
@@ -7573,7 +7943,19 @@
           }
         },
         "next_invoice_label": "다음 청구서",
-        "seats_no_limit": "{{used}}, 한도 없음"
+        "seats_no_limit": "{{used}}, 한도 없음",
+        "invoices": "인보이스",
+        "trial": {
+          "title_other": "{{plan}} 체험: {{count}}일 남음",
+          "desc_other": "{{date}}까지 무료 플랜에 없는 기능 {{count}}개를 포함해 {{plan}}의 모든 기능을 사용할 수 있습니다. 언제든 플랜을 선택하면 계속 이용할 수 있으며, 체험이 끝나도 삭제되는 것은 없습니다.",
+          "choose": "{{plan}} 계속 사용",
+          "what_happens": "플랜 없이 체험이 끝나면 어떻게 되나요",
+          "ended_title_trial": "{{plan}} 체험이 {{date}}에 종료되었습니다",
+          "ended_title": "{{date}}에 {{plan}}에서 무료 플랜으로 변경되었습니다",
+          "ended_courses_other": "코스 {{count}}개가 비공개로 바뀌었고 {{plan}} 기능은 일시 중지되었습니다. 업그레이드하면 모든 것이 그대로 돌아옵니다.",
+          "ended_no_courses": "{{plan}} 기능이 일시 중지되었습니다. 업그레이드하면 모든 것이 그대로 돌아옵니다.",
+          "restore": "{{plan}} 복원"
+        }
       },
       "overview": {
         "created": "{{date}}에 생성됨",
@@ -14858,7 +15240,7 @@
     "done": "완료, 준비됐습니다!",
     "steps": {
       "create_course": {
-        "title": "첫 코스 만들기",
+        "title": "첫 코스가 모습을 갖춥니다",
         "description": "코스를 만들거나 준비해 둔 초안을 편집하세요.",
         "action": "코스 만들기"
       },
@@ -14905,42 +15287,42 @@
         "university_desc": "가이드, 팁 및 모범 사례"
       },
       "add_content": {
-        "title": "첫 레슨 추가하기",
+        "title": "찾아올 만한 가치가 있는 레슨",
         "description": "영상, 페이지 또는 퀴즈를 추가하세요. 학습자에게 등록할 진짜 이유를 주세요.",
         "action": "콘텐츠 추가"
       },
       "brand_school": {
-        "title": "로고와 색상 추가하기",
+        "title": "학습자가 신뢰하는 학교",
         "description": "로고와 색상을 추가해 믿을 수 있는 전문적인 학교처럼 보이게 하세요.",
         "action": "브랜딩하기"
       },
       "share_grow": {
-        "title": "홈페이지 게시하기",
+        "title": "학교의 현관문",
         "description": "템플릿을 골라 내 것으로 다듬고 학습자가 가장 먼저 보는 페이지를 게시하세요.",
         "action": "웹사이트 열기"
       },
       "invite_learners": {
-        "title": "첫 학습자 초대하기",
+        "title": "첫 학습자를 맞이하세요",
         "description": "참여 링크를 공유하거나 사람들을 초대하세요. 첫 학습자가 들어오게 하세요.",
         "action": "학습자 초대"
       },
       "build_community": {
-        "title": "커뮤니티 공간 열기",
+        "title": "학습자가 계속 돌아오게 하세요",
         "description": "커뮤니티 공간을 열어 학습자가 계속 활동하고 친구를 초대하게 하세요.",
         "action": "커뮤니티 열기"
       },
       "publish_course": {
-        "title": "첫 코스 공개하기",
+        "title": "첫 코스가 공개되었습니다",
         "description": "학습자가 실제로 등록할 수 있도록 코스를 공개하세요.",
         "action": "코스 공개"
       },
       "create_group": {
-        "title": "첫 그룹 만들기",
+        "title": "첫 기수",
         "description": "팀, 반, 기수별로 묶어 코스를 한 번에 배정하세요.",
         "action": "그룹 만들기"
       },
       "setup_payments": {
-        "title": "결제 설정",
+        "title": "가르치는 만큼 수익을 얻으세요",
         "description": "Stripe를 연결하고 코스 가격을 정하세요.",
         "action": "Stripe 연결"
       }
@@ -15622,7 +16004,33 @@
       "checkout_note": "조직을 만든 후 보안 결제 페이지로 이동합니다."
     },
     "add_pack": "{{pack}} 추가",
-    "cancels_on": "구독이 {{periodEnd}}에 취소됩니다. 그때까지 계속 이용할 수 있습니다."
+    "cancels_on": "구독이 {{periodEnd}}에 취소됩니다. 그때까지 계속 이용할 수 있습니다.",
+    "trial": {
+      "title_other": "{{plan}} 체험 · {{count}}일 남음",
+      "desc": "카드 없이 시작했습니다. 플랜을 선택하면 모든 것을 지금처럼 유지할 수 있습니다.",
+      "choose": "플랜 선택",
+      "what_happens": "플랜 없이 체험이 끝나면 달라지는 점",
+      "keep": "{{plan}} 계속 사용"
+    },
+    "downgrade_preview": {
+      "intro": "무료 플랜에서는:",
+      "course_kept": "“{{course}}”은(는) 공개 상태로 유지됩니다.",
+      "courses_private_other": "다른 코스 {{count}}개가 비공개로 바뀝니다(멤버는 계속 열 수 있습니다).",
+      "drip_paused_other": "코스 {{count}}개의 순차 공개 일정이 일시 중지되어 모든 챕터가 열립니다.",
+      "features_pause": "다음 기능은 업그레이드할 때까지 일시 중지됩니다:",
+      "more_other": "외 {{count}}개",
+      "members_over": "멤버 {{count}}명은 무료 플랜 한도 {{limit}}명을 넘지만 그대로 유지됩니다. 업그레이드하기 전까지 새 멤버는 참여할 수 없습니다.",
+      "admins_over": "관리자 {{count}}명은 무료 플랜 한도 {{limit}}명을 넘지만 그대로 유지됩니다. 새 관리자는 추가할 수 없습니다.",
+      "nothing_deleted": "삭제되는 것은 없습니다. 다시 업그레이드하면 모든 것이 그대로 돌아옵니다."
+    },
+    "cancel_flow": {
+      "title": "{{plan}}을(를) 취소할까요?",
+      "until": "플랜은 {{date}}까지 유지됩니다. 그 후 조직은 무료 플랜으로 변경됩니다.",
+      "until_unknown": "플랜은 결제한 기간이 끝날 때까지 유지됩니다. 그 후 조직은 무료 플랜으로 변경됩니다.",
+      "restore": "언제든 다시 업그레이드할 수 있습니다. 코스 공개 설정과 일시 중지된 기능은 자동으로 돌아옵니다.",
+      "keep": "{{plan}} 계속 사용",
+      "confirm": "플랜 취소"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16288,6 +16696,12 @@
       "resource_plural": "리소스",
       "newsletter": "뉴스레터",
       "newsletter_plural": "뉴스레터"
+    },
+    "health": {
+      "title": "지금 학습자가 구매할 수 없습니다",
+      "body_other": "{{date}} 이후 결제 제공업체가 결제 {{count}}건을 거부했습니다. Stripe 계정 연결이 끊겼거나 확인이 필요할 수 있습니다. 해결될 때까지 학습자에게는 결제를 일시적으로 이용할 수 없다고 표시됩니다.",
+      "recheck": "다시 확인",
+      "fix": "결제 설정 열기"
     }
   },
   "lti": {
@@ -23057,7 +23471,47 @@
         "podcast": "팟캐스트",
         "community": "커뮤니티",
         "folder": "폴더"
-      }
+      },
+      "features_title": "검색 엔진이 색인할 수 있는 항목",
+      "features_subtitle": "섹션을 끄면 Google, Bing, AI 검색에서 제외됩니다. 해당 페이지는 방문자에게 계속 공개됩니다.",
+      "feature": {
+        "courses": "강좌",
+        "activities": "무료 레슨",
+        "paths": "학습 경로",
+        "podcasts": "팟캐스트",
+        "communities": "커뮤니티",
+        "library": "라이브러리",
+        "live": "라이브 세션",
+        "newsletters": "뉴스레터 보관함",
+        "pages": "웹사이트 페이지",
+        "store": "스토어 상품"
+      },
+      "thin_threads": "답변 없는 스레드 숨기기 기준",
+      "thin_threads_hint": "답글이 없는 스레드는 이 기간이 지나면 검색에서 숨겨져, 빈 페이지가 커뮤니티에 부담을 주지 않습니다. 0이면 모두 유지합니다.",
+      "days": "일",
+      "ai_title": "AI 검색 및 크롤러",
+      "ai_subtitle": "ChatGPT, Claude, Perplexity, Gemini 등 AI 도구가 공개 콘텐츠를 어떻게 사용할 수 있는지 설정합니다.",
+      "ai_policy": "AI 크롤러 정책",
+      "ai_allow": "모든 AI 크롤러 허용",
+      "ai_allow_hint": "AI 답변이 페이지를 인용할 수 있고, 모델이 페이지로 학습할 수도 있습니다.",
+      "ai_block_training": "AI 답변은 허용하고 학습은 차단",
+      "ai_block_training_hint": "어시스턴트는 페이지를 찾아 인용할 수 있습니다. 학습용 크롤러(GPTBot, Google-Extended, CCBot 등)는 차단됩니다.",
+      "ai_block_all": "모든 AI 크롤러 차단",
+      "ai_block_all_hint": "알려진 모든 AI 에이전트가 robots.txt에서 차단되고 llms.txt는 꺼집니다. 웹 검색에는 영향이 없습니다.",
+      "ai_blocked_extra": "다음 사용자 에이전트도 차단",
+      "ai_blocked_extra_hint": "한 줄에 크롤러 이름 하나. 예: Bytespider.",
+      "llms_enabled": "llms.txt와 Markdown 페이지 게시",
+      "llms_enabled_hint": "/llms.txt에 공개 콘텐츠 지도를 두고 각 공개 페이지의 Markdown 사본을 제공해, AI 도구가 정확하게 인용하도록 합니다.",
+      "feeds_title": "피드",
+      "feeds_enabled": "RSS, Atom, JSON 피드 게시",
+      "feeds_enabled_hint": "새 강좌, 커뮤니티 스레드, 라이브 세션이 피드 리더와 애그리게이터에 표시됩니다. 팟캐스트 피드는 항상 켜져 있습니다.",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "새 페이지와 업데이트된 페이지를 Bing, Yandex 등 IndexNow 검색 엔진에 바로 알립니다.",
+      "indexnow_enabled": "게시할 때 검색 엔진에 알림",
+      "indexnow_enabled_hint": "저장하면 사이트용 인증 키가 생성됩니다.",
+      "indexnow_key": "인증 키",
+      "links_llms": "llms.txt",
+      "links_feed": "RSS 피드"
     },
     "save_failed": "SEO 설정을 저장하지 못했습니다.",
     "saved": "SEO 설정이 저장되었습니다."
@@ -23543,7 +23997,7 @@
   },
   "companies": {
     "title": "고객사",
-    "subtitle": "교육하는 회사와 구성원, 강좌, 좌석",
+    "subtitle": "교육하는 회사들: 구성원에게 코스 이용 권한을 주거나 좌석을 판매하세요",
     "tabs": {
       "companies": "회사",
       "offers": "좌석 상품",
@@ -23634,7 +24088,8 @@
       "auto_assign": "참여자에게 무료 좌석 제공",
       "company_admins": "회사 관리자",
       "billing_email": "청구 이메일",
-      "tags": "태그"
+      "tags": "태그",
+      "member_limit": "멤버 한도"
     },
     "list": {
       "new": "새 회사",
@@ -23663,7 +24118,7 @@
       "no_match": "필터와 일치하는 회사가 없습니다",
       "clear_filters": "필터 지우기",
       "empty_title": "아직 회사가 없습니다",
-      "empty_body": "회사를 등록하면 브랜드 공간, 전용 강좌, 회사가 관리하는 좌석을 제공할 수 있습니다."
+      "empty_body": "회사를 추가해 구성원에게 코스 이용 권한, 브랜드 공간, 확인할 수 있는 진도를 제공하세요. 좌석 판매는 선택 사항입니다."
     },
     "onboard": {
       "title": "회사 등록",
@@ -23716,7 +24171,7 @@
       "remove_member_title": "이 구성원을 삭제할까요?",
       "remove_member_body": "{{name}}님은 회사 공간과 독점 강좌에 접근할 수 없게 됩니다. 학습 진도는 유지됩니다.",
       "member_removed": "구성원이 삭제되었습니다",
-      "courses_intro": "공유 강좌는 회사 공간에 표시됩니다. 독점 강좌는 회사 구성원에게만 보입니다.",
+      "courses_intro": "회사에 코스 이용 권한을 주세요. 독점 코스는 해당 회사 구성원에게만 보이고, 공유 코스는 평소처럼 보이면서 회사 공간에도 표시됩니다.",
       "link_course": "강좌 연결",
       "create_course": "강좌 만들기",
       "no_courses": "연결된 강좌가 없습니다",
@@ -23743,7 +24198,7 @@
       "grant_seats_hint": "Stripe 외부에서 청구하는 계약용: 인보이스, 시범 도입, 파트너.",
       "cancel_company": "좌석 취소",
       "no_seats": "좌석 없음",
-      "no_seats_body": "이 회사는 좌석을 구매하지 않았습니다. 좌석을 제공할 수 있습니다.",
+      "no_seats_body": "이 회사에는 좌석이 없습니다. 구성원은 여전히 코스를 직접 받을 수 있습니다. 좌석은 정해진 수량을 판매하거나 제공할 때 사용합니다.",
       "comped_n_one": "{{count}}개 무상 제공",
       "comped_n_other": "{{count}}개 무상 제공",
       "renews": "갱신일",
@@ -23769,7 +24224,14 @@
       "no_activity": "아직 활동이 없습니다",
       "notes": "메모",
       "notes_hint": "아카데미 관리자만 볼 수 있습니다.",
-      "notes_placeholder": "연락처, 갱신 계획, 중요하게 여기는 점…"
+      "notes_placeholder": "연락처, 갱신 계획, 중요하게 여기는 점…",
+      "access_hint": "이 회사에 참여해 코스를 받을 수 있는 사람입니다. 결제는 필요 없습니다.",
+      "member_limit_hint": "이메일이나 도메인으로 추가하는 인원의 상한(선택)",
+      "no_limit": "한도 없음",
+      "over_limit": "멤버 한도에 도달해 다음 사람은 추가되지 않았습니다: {{list}}",
+      "or_folder": "또는 폴더 전체",
+      "folder_hint": "폴더 안의 모든 코스를 회사에 제공합니다",
+      "pick_folder": "폴더 선택"
     },
     "offers": {
       "intro": "좌석 상품으로 회사용 좌석 가격을 정합니다. 수량별 구간, 최소 수량, 일회성 또는 정기 결제를 설정할 수 있습니다.",
@@ -28335,7 +28797,11 @@
       "ai_credits_low": "AI 크레딧 부족",
       "org_payment_failed": "구독 결제 실패",
       "agent_run_finished": "에이전트 실행 완료",
-      "agent_run_failed": "에이전트 실행 실패"
+      "agent_run_failed": "에이전트 실행 실패",
+      "trial_ending": "체험 종료 예정",
+      "plan_downgraded": "무료 플랜으로 변경됨",
+      "plan_restored": "플랜 복원됨",
+      "payments_checkout_failing": "결제 실패"
     },
     "copy": {
       "assignment_graded": "채점 완료: {{assignment}}",
@@ -28393,7 +28859,11 @@
       "ai_credits_low": "AI 크레딧이 부족해요 ({{remaining}} 남음)",
       "org_payment_failed": "구독 결제에 실패했어요",
       "agent_run_finished": "{{agent}}의 예약 실행이 끝났어요",
-      "agent_run_failed": "{{agent}}의 예약 실행에 실패했어요"
+      "agent_run_failed": "{{agent}}의 예약 실행에 실패했어요",
+      "trial_ending": "{{plan}} 체험이 {{days}}일 후 종료됩니다",
+      "plan_downgraded": "이제 무료 플랜을 사용 중입니다. 삭제된 것은 없습니다",
+      "plan_restored": "{{plan}}에 다시 오신 것을 환영합니다",
+      "payments_checkout_failing": "지금 학습자가 구매할 수 없습니다 (실패한 결제 {{count}}건)"
     },
     "routing": {
       "short": "알림 대상",
@@ -28456,7 +28926,9 @@
       "start_template": "템플릿으로 시작",
       "start_template_desc": "이름을 넣은 {{template}} 웹사이트를 게시하고 편집할 수 있는 첫 코스 초안을 추가합니다.",
       "start_blank": "빈 상태로 시작",
-      "start_blank_desc": "빈 아카데미입니다. 설정 체크리스트가 나머지를 안내합니다."
+      "start_blank_desc": "빈 아카데미입니다. 설정 체크리스트가 나머지를 안내합니다.",
+      "trial_note_after": "카드는 필요 없습니다. 체험이 끝나면 계속 사용하거나, 다른 플랜을 고르거나, 무료 플랜을 그대로 쓸 수 있습니다.",
+      "trial_note": "{{plan}}을(를) {{days}}일 동안 무료로 사용할 수 있습니다."
     },
     "checklist": {
       "full_guide": "전체 가이드",
@@ -28493,7 +28965,10 @@
         "ai_credits_one": "AI 크레딧: {{formatted}}",
         "ai_credits_other": "AI 크레딧: {{formatted}}"
       },
-      "compare": "플랜 비교"
+      "compare": "플랜 비교",
+      "your_trial": "내 체험",
+      "keep_plan": "{{plan}} 계속 사용",
+      "subtitle_trial": "{{plan}}을(를) 무료로 체험하고 있습니다. 맞는 플랜을 선택하세요. 선택하기 전까지는 아무것도 바뀌지 않습니다."
     },
     "invite": {
       "title": "사람 초대",
@@ -28529,7 +29004,10 @@
       "import_one": "학습자 초대: {{count}}",
       "import_other": "학습자 초대: {{count}}",
       "sent_toast_one": "보낸 초대: {{count}}",
-      "sent_toast_other": "보낸 초대: {{count}}"
+      "sent_toast_other": "보낸 초대: {{count}}",
+      "invite_only_create": "학교가 초대 전용이에요. 참여 링크를 만들면 그 링크로 가입할 수 있어요.",
+      "create_link": "참여 링크 만들기",
+      "invite_only_hint": "이 링크에는 참여 코드가 포함되어 있어 링크가 있는 누구나 가입할 수 있어요."
     },
     "invites": {
       "title": "초대",
@@ -28588,6 +29066,17 @@
       },
       "desc_one": "최근 {{count}}일 동안 만든 계정과 진행 정도",
       "desc_other": "최근 {{count}}일 동안 만든 계정과 진행 정도"
+    },
+    "first_course": {
+      "title": "첫 코스 만들기",
+      "subtitle": "나머지는 나중에 해도 돼요. 시작 방법을 고르세요. 모든 문구는 나중에 바꿀 수 있어요.",
+      "template": "템플릿으로 시작",
+      "template_desc": "챕터와 레슨이 갖춰진 초안을 편집기에서 바로 열어요.",
+      "ai": "AI로 만들기",
+      "ai_desc": "주제를 설명하면 몇 분 만에 전체 코스 개요가 완성돼요.",
+      "blank": "또는 빈 코스로 시작",
+      "template_short": "템플릿으로 시작",
+      "ai_short": "AI로 만들기"
     }
   },
   "impersonation": {
@@ -28615,5 +29104,19 @@
     "no_access_desc": "LearnHouse 관리자에게 대리 접속 권한을 요청하세요.",
     "back_to_console": "콘솔로 돌아가기",
     "retry": "다시 시도"
+  },
+  "mobile_app": {
+    "title": "모바일 앱 받기",
+    "heading": "휴대폰으로 배우기",
+    "body": "LearnHouse 앱을 열고 이 코드를 스캔해 이 학교에 연결하세요.",
+    "qr_alt": "LearnHouse 앱에서 이 학교를 여는 QR 코드",
+    "qr_actions": "마우스 오른쪽 버튼으로 QR 코드를 저장하거나 복사하세요",
+    "copy_image": "이미지 복사",
+    "download_png": "PNG 다운로드",
+    "copy_link": "앱 링크 복사",
+    "copied_image": "QR 코드를 복사했어요",
+    "copied_link": "앱 링크를 복사했어요",
+    "copy_failed": "이미지를 복사하지 못했어요. 다운로드를 시도해 보세요.",
+    "download_failed": "이미지를 저장하지 못했어요."
   }
 }

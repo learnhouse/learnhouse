@@ -30,6 +30,7 @@ import { useLHAnalytics } from '@services/analytics/useLHAnalytics'
 import { AnalyticsEvent } from '@services/analytics/events'
 import {
   getCustomDomainFromContext,
+  getDeploymentMode,
   getLEARNHOUSE_DOMAIN_VAL,
   getUpgradeUrl,
   getUriWithOrg,
@@ -46,6 +47,8 @@ import {
   type SlugCheck,
 } from '@services/onboarding/onboarding'
 import { Button, INPUT } from '@/design'
+import { planNameById } from '@/app/(hub)/_billing/planText'
+import { TRIAL_DAYS, TRIAL_PLAN } from '@services/plans/trial'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -297,10 +300,21 @@ function NameStep({
           {submitting ? t('onb2.new.creating') : t('onb2.new.create')}
           {!submitting && <ArrowRight size={15} weight="bold" className="rtl:rotate-180" />}
         </Button>
-        <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-neutral-400">
-          <Check size={12} weight="bold" className="text-emerald-600" />
-          {t('onb2.new.free_note')}
-        </p>
+        {getDeploymentMode() === 'saas' ? (
+          // SaaS: every new academy starts with a free trial of the full plan.
+          <div className="mt-3 flex items-start justify-center gap-2 rounded-xl bg-violet-50/70 px-3 py-2.5 text-center text-xs text-violet-900" data-testid="trial-note">
+            <Sparkle size={13} weight="fill" className="mt-0.5 shrink-0 text-violet-500" />
+            <span>
+              <span className="font-semibold">{t('onb2.new.trial_note', { plan: planNameById(t, TRIAL_PLAN, TRIAL_PLAN), days: TRIAL_DAYS })}</span>{' '}
+              <span className="text-violet-800/70">{t('onb2.new.trial_note_after')}</span>
+            </span>
+          </div>
+        ) : (
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-neutral-400">
+            <Check size={12} weight="bold" className="text-emerald-600" />
+            {t('onb2.new.free_note')}
+          </p>
+        )}
       </div>
       <button type="button" onClick={onBack} className="inline-flex w-fit items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800">
         <ArrowLeft size={14} className="rtl:rotate-180" />
@@ -459,7 +473,11 @@ export default function CreateNewOrgPage() {
       /* the shared session cookie still carries over */
     }
     const paid = planIntent && planIntent !== 'free' ? getUpgradeUrl(created.slug, planIntent) : null
-    window.location.href = paid || orgUrl(created.slug, '/dash')
+    // Land on the first course: sellers and teachers go straight into the AI
+    // course builder (when the plan has it), everyone else on the first-course
+    // panel that leads the dashboard until a course exists.
+    const first = goal === 'sell' || goal === 'school' ? 'ai' : 'course'
+    window.location.href = paid || orgUrl(created.slug, `/dash?first=${first}`)
   }
 
   const start = async (kind: 'template' | 'blank') => {

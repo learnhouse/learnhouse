@@ -1,6 +1,5 @@
 'use client'
 import React, { use } from 'react'
-import { motion } from 'motion/react'
 import dynamic from 'next/dynamic'
 import { redirect } from 'next/navigation'
 import { EditorSkeleton } from '@components/Dashboard/Pages/Course/courseEditorUi'
@@ -10,7 +9,36 @@ import { usePreloadOnIdle } from '@components/Dashboard/Shared/usePreloadOnIdle'
 // the body's shape while a tab's chunk arrives; the header lives in the
 // layout and never unmounts.
 const loading = () => <EditorSkeleton sections={1} rows={4} />
-const OrgUsers = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'), { loading })
+// The Users tab is a list, not a form: its placeholder has the tab's own shape
+// (stat cards, search, rows), so the tab replaces it without a jump.
+const listLoading = () => (
+  <div className="flex flex-col gap-5 animate-pulse" aria-busy="true">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 bg-white nice-shadow rounded-2xl px-4 py-3.5">
+          <div className="w-9 h-9 rounded-xl bg-neutral-100 shrink-0" />
+          <div className="space-y-1.5 min-w-0">
+            <div className="h-3 w-16 rounded bg-neutral-100" />
+            <div className="h-5 w-8 rounded bg-neutral-200" />
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="h-9 w-full sm:w-72 rounded-lg bg-white nice-shadow" />
+    <div className="bg-white nice-shadow rounded-2xl divide-y divide-neutral-100">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 px-4 sm:px-5 py-3.5">
+          <div className="w-9 h-9 rounded-full bg-neutral-100 shrink-0" />
+          <div className="flex-1 space-y-1.5 min-w-0">
+            <div className="h-3.5 w-40 max-w-full rounded bg-neutral-100" />
+            <div className="h-3 w-56 max-w-full rounded bg-neutral-100/70" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)
+const OrgUsers = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'), { loading: listLoading })
 const OrgAccess = dynamic(() => import('@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'), { loading })
 const OrgUsersAdd = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'), { loading })
 const OrgUserGroups = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'), { loading })
@@ -57,15 +85,11 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   if (params.subpage === 'people') redirect('/dash/users/settings/users')
 
   return (
-    <motion.div
-      key={params.subpage}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.12 }}
-      className="px-4 sm:px-10 pt-6 sm:pt-8 pb-16"
-    >
+    // No fade-in from transparent: on arrival it blanked the pane between the
+    // route skeleton and the tab's own placeholder.
+    <div key={params.subpage} className="px-4 sm:px-10 pt-6 sm:pt-8 pb-16">
       {Page ? <Page /> : null}
-    </motion.div>
+    </div>
   )
 }
 

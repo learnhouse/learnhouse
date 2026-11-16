@@ -21,6 +21,7 @@ import {
   MigrationCreateResult,
 } from '@services/courses/migration'
 import toast from 'react-hot-toast'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type WizardStep = 'upload' | 'organize' | 'creating' | 'complete'
 
@@ -30,6 +31,7 @@ interface MigrationClientProps {
 
 export default function MigrationClient({ orgslug }: MigrationClientProps) {
   const { t } = useTranslation()
+  const { track } = useLHAnalytics('dashboard')
   const router = useRouter()
   const session = useLHSession() as any
   const org = useOrg() as any
@@ -100,6 +102,7 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
           )
           setStructure(suggested)
         } catch {
+          track(AnalyticsEvent.CourseMigrationFailed, { stage: 'ai_structure', file_count: uploadResult.files.length })
           toast.error(t('migration.ai_failed'))
           setStructure({
             course_name: courseName,
@@ -122,7 +125,13 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
       }
 
       setStep('organize')
+      track(AnalyticsEvent.CourseMigrationOrganized, {
+        file_count: uploadResult.files.length,
+        skipped_count: uploadResult.skipped.length,
+        used_ai: useAI,
+      })
     } catch (err: any) {
+      track(AnalyticsEvent.CourseMigrationFailed, { stage: 'upload', file_count: files.length })
       toast.error(err.message || t('migration.upload_failed'))
     } finally {
       setUploading(false)
@@ -143,14 +152,21 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
         access_token
       )
       if (result.success) {
+        track(AnalyticsEvent.CourseCreated, {
+          creation_type: 'migrate',
+          chapters_created: result.chapters_created,
+          activities_created: result.activities_created,
+        })
         setCreateStatus('success')
         setCreateResult(result)
         setStep('complete')
       } else {
+        track(AnalyticsEvent.CourseMigrationFailed, { stage: 'create' })
         setCreateStatus('error')
         setCreateResult(result)
       }
     } catch (err: any) {
+      track(AnalyticsEvent.CourseMigrationFailed, { stage: 'create' })
       setCreateStatus('error')
       setCreateResult({
         course_uuid: '',

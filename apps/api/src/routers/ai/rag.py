@@ -149,6 +149,11 @@ async def _open_rag(
     blocked = ai_block_reason(org_config.config if org_config else None, org_id)
     if blocked:
         raise HTTPException(status_code=403, detail=blocked)
+    # Ask AI may be limited to course staff (Settings > AI).
+    from src.security.features_utils.ai_features import require_ai_feature
+    await require_ai_feature(
+        "ask_ai", org_id, db_session, user_id=resolve_acting_user_id(current_user), include_master=False
+    )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     # Resolve API tokens to creator so rate-limit buckets per creator, not 0.

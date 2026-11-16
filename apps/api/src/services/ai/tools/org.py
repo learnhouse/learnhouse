@@ -27,6 +27,7 @@ from src.db.organization_config import (
 )
 from src.db.organizations import OrganizationUpdate
 from src.security.auth import resolve_acting_user_id
+from src.security.features_utils.ai_features import AI_FEATURE_KEYS
 from src.security.features_utils.resolve import resolve_all_features
 from src.security.rbac import AccessAction
 from src.services.ai.tools import refs
@@ -36,7 +37,7 @@ from src.services.orgs.orgs import (
     get_organization_by_slug,
     is_org_admin_role,
     update_org,
-    update_org_ai_config,
+    update_org_ai_settings,
     update_org_auth_branding_config,
     update_org_boards_config,
     update_org_color_config,
@@ -183,17 +184,20 @@ class GetOrgSettingsParams(BaseModel):
     pass
 
 
-def _ai_state(cfg: dict) -> dict:
-    if _is_v2(cfg):
-        toggle = _obj(_obj(cfg.get("admin_toggles")).get("ai"))
-        return {
-            "enabled": not toggle.get("disabled", False),
-            "copilot_enabled": bool(toggle.get("copilot_enabled", True)),
-        }
-    entry = _obj(_obj(cfg.get("features")).get("ai"))
+def _ai_state(cfg: dict, org_id: int = 0) -> dict:
+    from src.security.features_utils.ai_features import AI_FEATURES, resolve_ai_settings
+
+    settings = resolve_ai_settings(cfg, org_id)
     return {
-        "enabled": bool(entry.get("enabled", True)),
-        "copilot_enabled": bool(entry.get("copilot_enabled", True)),
+        "enabled": settings["enabled"],
+        # Learner Ask AI (kept under its historical name).
+        "copilot_enabled": settings["switches"]["ask_ai"],
+        "features": {
+            f.group: {f2.key: settings["switches"][f2.key] for f2 in AI_FEATURES if f2.group == f.group}
+            for f in AI_FEATURES
+        },
+        "ask_ai_staff_only": settings["ask_ai_staff_only"],
+        "monthly_credit_cap": settings["monthly_credit_cap"] or None,
     }
 
 
@@ -238,7 +242,7 @@ async def _get_org_settings(ctx: ToolContext, _p: GetOrgSettingsParams):
         },
         "plan": _plan(cfg),
         "signup": {"mode": _signup_mode(cfg)},
-        "ai": _ai_state(cfg),
+        "ai": _ai_state(cfg, ctx.org.id),
         "features": {
             name: {
                 "switched_on": _toggle_on(cfg, name) is not False,
@@ -369,8 +373,22 @@ class SignupSettings(_Strict):
 
 class AiSettings(_Strict):
     section: Literal["ai"]
-    enabled: bool | None = Field(None, description="AI features for the whole organization.")
-    copilot_enabled: bool | None = Field(None, description="The AI writing assistant in editors.")
+    enabled: bool | None = Field(None, description="AI for the whole organization (master switch).")
+    copilot_enabled: bool | None = Field(None, description="Ask AI for learners (same as features.ask_ai).")
+    features: dict[Literal[AI_FEATURE_KEYS], bool] | None = Field(  # type: ignore[valid-type]
+        None,
+        description=(
+            "One switch per AI feature, merged into the current ones: "
+            + ", ".join(AI_FEATURE_KEYS)
+            + ". get_org_settings lists them by group."
+        ),
+    )
+    ask_ai_staff_only: bool | None = Field(
+        None, description="Limit Ask AI to members whose role opens the dashboard."
+    )
+    monthly_credit_cap: int | None = Field(
+        None, ge=0, le=10_000_000, description="AI credits the organization may spend per month; 0 removes the cap."
+    )
 
 
 class FeatureSettings(_Strict):
@@ -525,7 +543,16 @@ async def _apply_settings(ctx: ToolContext, s: BaseModel) -> list[str]:
         raise HTTPException(status_code=400, detail="Nothing to change: pass at least one field of the section.")
 
     if isinstance(s, AiSettings):
-        await update_org_ai_config(req, s.enabled, org_id, user, db, copilot_enabled=s.copilot_enabled)
+        features = dict(s.features or {})
+        if s.copilot_enabled is not None:
+            features.setdefault("ask_ai", s.copilot_enabled)
+        await update_org_ai_settings(
+            req, org_id, user, db,
+            ai_enabled=s.enabled,
+            features=features,
+            ask_ai_staff_only=s.ask_ai_staff_only,
+            monthly_credit_cap=s.monthly_credit_cap,
+        )
     elif isinstance(s, FeatureSettings):
         for name, value in fields.items():
             await _TOGGLE_SERVICES[name](req, value, org_id, user, db)

@@ -1,0 +1,44 @@
+---
+description: "Train companies on LearnHouse: give a company's people access to your courses directly, cap how many can join, give them a branded space, and optionally sell them seats."
+---
+
+import { Callout } from '@/components/mdx'
+
+# Companies
+
+**Companies** are the organizations you train: a client whose staff take your courses, a partner, a school group. Each company has its people, the courses they can open, a branded space and the progress you can follow. Open it from **Companies** in the dashboard sidebar.
+
+Selling seats is one way to work with a company, not the only one. Most academies start by simply giving a company access.
+
+<Callout type="info">
+Companies is available on the Pro and Enterprise plans on LearnHouse Cloud, and with the Enterprise Edition when self-hosting.
+</Callout>
+
+## Give a company access
+
+1. Click **New company**, give it a name, a logo and a color for its space.
+2. In **Members**, add its people by email (they need an account in your academy), or turn on **Auto-join by email domain** so anyone who signs up with a verified `@company.com` address joins on their own.
+3. In **Courses**, link the courses they should get:
+   - **Exclusive**: only the company's people can see and open the course. Use this for training made for them.
+   - **Shared**: the course stays visible as usual and is also listed in the company's space.
+   - **A whole folder**: pick a folder to give the company every course in it at once.
+
+No payment is involved. Paid lessons in an exclusive course open for the company's people too.
+
+### Cap how many people can join
+
+Set **Member limit** in the company's **Access** settings to cap how many people can join the company directly (added by email or by email domain). Leave it empty for no limit. When the limit is reached, new people aren't added and you're told who was left out. Seats sold through a seat offer have their own quantity and don't count toward this limit.
+
+## The company space
+
+Each company gets a space at `/company/{address}` with its logo and color, a welcome message, its courses (featured ones first), announcements and events. Company admins (people you choose from the company) can edit the welcome text and post announcements, and follow their people's progress.
+
+## Sell seats (optional)
+
+If you sell to companies, create a **seat offer** in the **Seat offers** tab: per-seat pricing with volume tiers, a minimum number of seats, one-time or recurring. A company buys seats at checkout, and its admins hand them out by email. For deals billed outside LearnHouse (invoices, pilots, partners), use **Grant seats** on the company. Seat offers need payments to be turned on.
+
+Seat holders get the courses of the offer. A company can have both: direct access to some courses and seats for others.
+
+## Required training
+
+A company is backed by a user group, so [required training](/enterprise) rules can target it like any other group.

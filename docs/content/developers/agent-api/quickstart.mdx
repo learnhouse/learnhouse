@@ -1,0 +1,237 @@
+---
+title: "Agent API Quickstart"
+description: "Start a conversation with Atlas or Copilot, stream the reply and approve a risky action, with curl, @learnhouse/sdk, React or Vue."
+---
+
+import { Callout, Steps, Tabs } from '@/components/mdx'
+
+# Agent API quickstart
+
+You need a LearnHouse organization with AI turned on, and either an API token with the **AI agents (Agent API)**
+permission (Read and Create, plus Update to approve with the token) or a member session. See
+[Authentication](/developers/agent-api#authentication).
+
+<CloudCta variant="developer">A free Cloud organization is enough to try Copilot with your own courses.</CloudCta>
+
+## With curl
+
+<Steps>
+
+### Start a conversation
+
+```bash
+export LH=https://learn.example.com/api/v1/agent
+export TOKEN=lh_…   # server side only
+
+curl -s -X POST $LH/conversations \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{ "agent": "atlas", "output": { "mode": "views" } }'
+```
+
+Keep the `id` (`agconv_…`) from the answer.
+
+### Send a message and stream the reply
+
+`-N` turns off curl's buffering so events print as they arrive:
+
+```bash
+curl -N -X POST $LH/conversations/agconv_123/messages \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{ "content": "Publish the course Intro to Python" }'
+```
+
+```text
+id: run_8f2.0.0
+event: message.start
+data: {"type":"message.start","conversation_id":"agconv_123","message_id":"agmsg_9","agent_id":"atlas","role":"assistant","created_at":"2026-11-16T09:12:04Z","continued":false}
+
+id: run_8f2.1.0
+event: tool.call
+data: {"type":"tool.call","conversation_id":"agconv_123","message_id":"agmsg_9","call_id":"call_1","name":"update_course","args":{"published":true},"client":false}
+
+id: run_8f2.2.0
+event: approval.required
+data: {"type":"approval.required","conversation_id":"agconv_123","message_id":"agmsg_9","approval":{"id":"pnd_77","tool":"update_course","summary":"Publish \"Intro to Python\"","risk":"write","reason":"ask_first","target":{"kind":"course","uuid":"course_42","name":"Intro to Python"},"args":{"published":true},"estimate_credits":null,"confirmation":null,"status":"pending","can_approve":true}}
+
+id: run_8f2.3.0
+event: message.done
+data: {"type":"message.done","conversation_id":"agconv_123","message_id":"agmsg_9","status":"requires_action","text":"I can publish it once you approve."}
+```
+
+The run stops at `requires_action`: publishing needs a person's OK.
+
+### Approve
+
+```bash
+curl -N -X POST $LH/approvals/pnd_77/approve \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
+```
+
+The same message continues (`message.start` with `"continued": true`), then `approval.resolved`, `action.applied` and
+the rest of the reply. To refuse, call `POST $LH/approvals/pnd_77/deny` with an optional `reason`.
+
+Approving with the token needs its **Update** permission. Without it, a member approves with their own session. See
+[Approvals](/developers/agent-api/approvals).
+
+</Steps>
+
+Add `"stream": false` to the message body to get the finished message as JSON instead of a stream.
+
+## With the SDK
+
+`@learnhouse/sdk` parses the stream into typed events you read with `for await`, in Node, Bun, Deno, edge workers and
+browsers.
+
+```bash
+npm install @learnhouse/sdk
+```
+
+<Tabs items={['Server (API token)', 'Browser (embed session)']}>
+  <Tabs.Tab>
+    ```ts
+    import { createClient } from '@learnhouse/sdk'
+
+    const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL!, token: process.env.LEARNHOUSE_TOKEN! })
+
+    const conversation = await lh.agent.createConversation({ agent: 'atlas', output: { mode: 'views' } })
+
+    for await (const event of lh.agent.streamMessage(conversation.id, { content: 'Which courses lose the most learners?' })) {
+      switch (event.type) {
+        case 'text.delta':
+          process.stdout.write(event.delta)
+          break
+        case 'view':
+          console.log('\n[view]', event.view.components.map((c) => c.type))
+          break
+        case 'approval.required':
+          console.log('\nNeeds approval:', event.approval.summary)
+          break
+        case 'error':
+          console.error(event.code, event.message)
+          break
+      }
+    }
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ts
+    import { createClient } from '@learnhouse/sdk'
+
+    // Your server mints the embed session (see Signed-in learners). Never ship an lh_ token.
+    const lh = createClient({
+      baseUrl: 'https://learn.your-school.com',
+      getSession: () => fetch('/api/learnhouse-session', { method: 'POST' }).then((r) => r.json()),
+    })
+
+    const conversation = await lh.agent.createConversation({
+      agent: 'copilot',
+      context: { course_uuid: 'course_…' },
+    })
+
+    let answer = ''
+    for await (const event of lh.agent.streamMessage(conversation.id, { content: 'Summarize chapter 2' })) {
+      if (event.type === 'text.delta') answer += event.delta
+      if (event.type === 'citation') console.log(event.citation.index, event.citation.title, event.citation.url)
+    }
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+Approving continues the same message, so it streams too:
+
+```ts
+for await (const event of lh.agent.approve(approval.id)) {
+  if (event.type === 'action.applied') console.log('Done:', event.summary)
+}
+```
+
+If the connection drops mid-reply, the stream reconnects on its own (3 times by default, `reconnect` option) and
+resumes from the last event. Breaking out of the loop only closes your connection; call
+`lh.agent.cancel(conversation.id)` to stop the run itself. See [Cancellation](/developers/agent-api/events#cancellation).
+
+For a destructive action, pass what the person typed: `lh.agent.approve(id, { confirmationPhrase })`. Refuse with
+`lh.agent.deny(id, { reason })`. `lh.agent.sendMessage(...)` waits for the finished message instead of streaming.
+
+## With React
+
+`@learnhouse/react` has a ready chat component and a hook for building your own. Both run under
+`LearnHouseProvider`, which gets an embed session from your server
+([how to mint one](/developers/react/learners)).
+
+```tsx
+import { LearnHouseProvider, AgentChat } from '@learnhouse/react'
+import '@learnhouse/react/styles.css'
+
+export function CourseHelp({ courseUuid }: { courseUuid: string }) {
+  return (
+    <LearnHouseProvider
+      baseUrl="https://learn.your-school.com"
+      getSession={() => fetch('/api/learnhouse-session', { method: 'POST' }).then((r) => r.json())}
+    >
+      <AgentChat agent="copilot" create={{ context: { course_uuid: courseUuid } }} />
+    </LearnHouseProvider>
+  )
+}
+```
+
+`<AgentChat />` renders text, views, citations, suggestions and, for staff with the right to approve, approval
+cards. `create` takes the [conversation options](/developers/agent-api#conversations) (`context`, `instructions`,
+`output`, `tools`…). Replace how one component type is drawn with `renderers={{ table: MyTable }}`, and pass `siteUrl`
+(your LearnHouse site's address) so citations and view links become links.
+
+For your own UI, use the hook:
+
+```tsx
+import { useAgentConversation } from '@learnhouse/react'
+
+function MyChat() {
+  const { messages, status, send, cancel, approve, deny } = useAgentConversation({ agent: 'copilot' })
+
+  return (
+    <div>
+      {messages.map((m) => (
+        <p key={m.id} className={m.role}>{m.text}</p>
+      ))}
+      <form onSubmit={(e) => { e.preventDefault(); send(new FormData(e.currentTarget).get('q') as string) }}>
+        <input name="q" disabled={status === 'streaming'} />
+      </form>
+      {status === 'streaming' && <button onClick={cancel}>Stop</button>}
+    </div>
+  )
+}
+```
+
+The hook folds the stream into message objects with the same shape as `GET /conversations/{id}/messages`, so live
+and past messages render the same way. It also returns `pendingApprovals`, `pendingToolCalls`, `suggestions`,
+`submitToolResults` and `error`; `status` is `idle`, `loading`, `streaming`, `requires_action` or `error`. Pass
+`conversationId` to reopen an existing conversation: its messages load and a running reply is reattached.
+
+## With Vue
+
+`@learnhouse/vue` wraps the same chat for Vue 3 and Nuxt:
+
+```vue
+<script setup lang="ts">
+import { LearnHouseProvider, AgentChat } from '@learnhouse/vue'
+import '@learnhouse/vue/styles.css'
+
+const getSession = () => fetch('/api/learnhouse-session', { method: 'POST' }).then((r) => r.json())
+</script>
+
+<template>
+  <LearnHouseProvider base-url="https://learn.your-school.com" :get-session="getSession">
+    <AgentChat agent="copilot" :create="{ context: { course_uuid: 'course_…' } }" />
+  </LearnHouseProvider>
+</template>
+```
+
+<Callout type="info">
+  Install the package versions that match your LearnHouse instance. See [Versions & releases](/developers/versioning).
+</Callout>
+
+## Next
+
+- [Streaming events](/developers/agent-api/events): every event and how to resume a stream.
+- [Views](/developers/agent-api/views): render the structured components.
+- [Approvals & tools](/developers/agent-api/approvals): approvals, tool allowlists and client-side tools.
+- [Security & limits](/developers/agent-api/security): what each kind of token can reach.

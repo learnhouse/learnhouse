@@ -109,6 +109,15 @@ export interface APITokenRights {
     action_read: boolean
     action_update: boolean
   }
+  // Agent API (EE): read lists/reads agents and conversations, create starts
+  // conversations and sends messages, delete removes conversations, update
+  // lets the token approve risky actions itself. Optional for older tokens.
+  agent?: {
+    action_create: boolean
+    action_read: boolean
+    action_update: boolean
+    action_delete: boolean
+  }
 }
 
 export interface APIToken {
@@ -229,6 +238,12 @@ export const getDefaultRights = (): APITokenRights => ({
     action_read: false,
     action_update: false,
   },
+  agent: {
+    action_create: false,
+    action_read: false,
+    action_update: false,
+    action_delete: false,
+  },
 })
 
 // Full permissions template
@@ -324,6 +339,14 @@ export const getFullRights = (): APITokenRights => ({
     action_read: true,
     action_update: true,
   },
+  agent: {
+    // Self-approval (update) is left out of Full Access: a token that approves
+    // its own risky actions has to be chosen under Custom.
+    action_create: true,
+    action_read: true,
+    action_update: false,
+    action_delete: true,
+  },
 })
 
 // Read-only permissions template
@@ -418,6 +441,12 @@ export const getReadOnlyRights = (): APITokenRights => ({
   crm: {
     action_read: true,
     action_update: false,
+  },
+  agent: {
+    action_create: false,
+    action_read: true,
+    action_update: false,
+    action_delete: false,
   },
 })
 

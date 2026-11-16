@@ -6,7 +6,8 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { resolvePublicKey } from '@/lib/seo/resolve.server'
-import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
+import { buildResourceMetadata, noindexMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
+import { featureIndexable } from '@/lib/seo/meta'
 import { prosemirrorText } from '@/lib/seo/meta'
 import { courseLanguageSeo } from '@/lib/seo/alternates'
 import { parseLangParam } from '@/lib/contentLanguage'
@@ -68,7 +69,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   const excerpt = prosemirrorText(activity.content, 400)
   const indexable =
-    !!course.public && !!course.published && !resolved?.restricted && activity.published !== false && (activity.lock_type ?? 'public') === 'public'
+    !!course.public && !!course.published && !resolved?.restricted && activity.published !== false && (activity.lock_type ?? 'public') === 'public' &&
+    featureIndexable(ctx.seo, 'courses') && featureIndexable(ctx.seo, 'activities')
   // An untranslated lesson (shown in the original) is the default version:
   // its canonical is the plain URL.
   const lang = courseLanguageSeo({
@@ -94,6 +96,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     generatedImage: await ctx.url(`/og/course/${key}`),
     ogType: 'article',
     indexable,
+    alternateTypes: await seoAlternates(ctx, { indexable, markdown: `/course/${key}/activity/${params.activityid}.md` }),
     keywords: course.seo?.keywords || course.tags,
     publishedTime: activity.creation_date,
     modifiedTime: activity.update_date,

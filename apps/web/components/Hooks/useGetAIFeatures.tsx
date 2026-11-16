@@ -1,29 +1,17 @@
-import { useOrg } from '@components/Contexts/OrgContext'
-import React from 'react'
+import { useAskAIAvailable, useAISettings } from '@components/Hooks/useAIFeature'
 
 interface UseGetAIFeatures {
   feature: 'editor' | 'activity_ask' | 'course_ask' | 'global_ai_ask'
 }
 
+// Older entry points ask by surface name; each maps to its switch in
+// Settings > AI (see useAIFeature).
 function useGetAIFeatures(props: UseGetAIFeatures) {
-  const org = useOrg() as any
-
-  return React.useMemo(() => {
-    if (!org) return false
-
-    const config = org?.config?.config
-    const isV2 = config?.config_version?.startsWith('2')
-
-    if (isV2) {
-      // v2: prefer resolved_features, then admin_toggles
-      if (config?.resolved_features?.ai) {
-        return config.resolved_features.ai.enabled
-      }
-      return !config?.admin_toggles?.ai?.disabled
-    }
-    // v1 fallback
-    return config?.features?.ai?.enabled ?? false
-  }, [org, props.feature])
+  const settings = useAISettings()
+  const askAI = useAskAIAvailable()
+  if (!settings) return false
+  if (props.feature === 'editor') return settings.features.editor_ai
+  return askAI
 }
 
 export default useGetAIFeatures

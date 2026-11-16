@@ -114,9 +114,47 @@ class OrgFeatureConfig(BaseModel):
 # v2 Admin Toggle models
 # ============================================================================
 
+class AIFeatureToggles(BaseModel):
+    """One switch per AI surface (Settings > AI); missing keys mean on. The
+    keys mirror src.security.features_utils.ai_features.AI_FEATURES."""
+
+    atlas: bool = True
+    atlas_scheduled: bool = True
+    ai_editor: bool = True
+    course_builder: bool = True
+    editor_ai: bool = True
+    magic_blocks: bool = True
+    quiz_generation: bool = True
+    assignment_generation: bool = True
+    course_import: bool = True
+    seo: bool = True
+    ask_ai: bool = True
+    ai_grading: bool = True
+    messaging_agents: bool = True
+    plays: bool = True
+    translations: bool = True
+    image_generation: bool = True
+    voice: bool = True
+    video_ai: bool = True
+    live_session_summary: bool = True
+    boards: bool = True
+    landing_builder: bool = True
+    newsletter: bool = True
+    mcp_tools: bool = True
+
+
 class AIAdminToggle(BaseModel):
+    # Platform kill switch (superadmin); see resolve_feature().
     disabled: bool = False
+    # The organization's own master switch (Settings > AI).
+    org_disabled: bool = False
+    # Learner Ask AI (historical name; features.ask_ai is the same switch).
     copilot_enabled: bool = True
+    features: AIFeatureToggles = AIFeatureToggles()
+    # Ask AI only for members whose role opens the dashboard.
+    ask_ai_staff_only: bool = False
+    # Credits the org may spend per calendar month (UTC); 0 = no cap.
+    monthly_credit_cap: int = Field(default=0, ge=0, le=10_000_000)
 
 
 class MembersAdminToggle(BaseModel):
@@ -245,6 +283,14 @@ class GeneralCustomization(BaseModel):
 
 _VERIFICATION_RE = re.compile(r"^[A-Za-z0-9_\-=:.]*$")
 _ORG_SCHEMA_TYPES = ("", "EducationalOrganization", "Organization", "CollegeOrUniversity", "School", "OnlineBusiness", "Corporation")
+_CRAWLER_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+# IndexNow keys: 8-128 chars of a-z, A-Z, 0-9 and dashes (we generate 32 hex).
+_INDEXNOW_KEY_RE = re.compile(r"^[A-Za-z0-9-]{8,64}$")
+# Public sections an org can keep out of search engines one by one.
+SEO_INDEXABLE_FEATURES = (
+    "courses", "activities", "paths", "podcasts", "library", "live",
+    "newsletters", "pages", "store",
+)
 
 
 class SeoOrgConfig(BaseModel):
@@ -286,11 +332,61 @@ class SeoOrgConfig(BaseModel):
             raise ValueError("The title template must contain %s")
         return value
 
+    # AI crawlers (robots.txt + llms.txt): "allow" everything public,
+    # "block_training" keeps AI answer engines (search/citation bots) but blocks
+    # model-training crawlers, "block_all" blocks every known AI agent.
+    ai_crawler_policy: Literal["allow", "block_training", "block_all"] = "allow"
+    # Extra user agents to block, on top of the policy (one token each).
+    ai_crawlers_blocked: list[str] = Field(default_factory=list, max_length=40)
+    # Per-feature indexing switch; a missing key means indexable. Keys are the
+    # public sections (see SEO_INDEXABLE_FEATURES). Communities keep their own
+    # long-standing switch, ``noindex_communities``.
+    indexable_features: dict[str, bool] = Field(default_factory=dict)
+    # Spam/low-value control: community threads with no replies are noindexed
+    # (and left out of the sitemap) once they are this many days old. 0 = never.
+    thin_thread_noindex_days: int = Field(default=90, ge=0, le=3650)
+    # RSS/Atom/JSON feeds and llms.txt / Markdown alternates for AI search.
+    feeds_enabled: bool = True
+    llms_txt_enabled: bool = True
+    # IndexNow (Bing, Yandex, Seznam, Naver): ping on publish/update. Opt-in.
+    indexnow_enabled: bool = False
+    # Server-managed: generated on opt-in, kept across saves (see
+    # ``update_org_seo_config``). Public by design: it's served at /{key}.txt.
+    indexnow_key: str = Field(default="", max_length=64)
+
     @field_validator("organization_type")
     @classmethod
     def _org_type(cls, value: str) -> str:
         if value not in _ORG_SCHEMA_TYPES:
             raise ValueError("Unsupported organization type")
+        return value
+
+    @field_validator("ai_crawlers_blocked")
+    @classmethod
+    def _crawler_names(cls, value: list[str]) -> list[str]:
+        out: list[str] = []
+        for name in value or []:
+            name = (name or "").strip()
+            if not name:
+                continue
+            if not _CRAWLER_NAME_RE.match(name):
+                raise ValueError("Crawler names may only contain letters, digits, dots and dashes")
+            if name not in out:
+                out.append(name)
+        return out
+
+    @field_validator("indexable_features")
+    @classmethod
+    def _features(cls, value: dict) -> dict[str, bool]:
+        # Unknown keys are dropped so a stale client can't grow the config.
+        return {k: bool(v) for k, v in (value or {}).items() if k in SEO_INDEXABLE_FEATURES}
+
+    @field_validator("indexnow_key")
+    @classmethod
+    def _indexnow_key(cls, value: str) -> str:
+        value = (value or "").strip()
+        if value and not _INDEXNOW_KEY_RE.match(value):
+            raise ValueError("Invalid IndexNow key")
         return value
 
 

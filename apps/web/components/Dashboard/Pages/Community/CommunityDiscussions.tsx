@@ -62,6 +62,7 @@ import {
 } from 'app/orgs/[orgslug]/dash/communities/_components/communityActivity'
 import DiscussionReader from './DiscussionReader'
 import { AuthorAvatar, LabelChip, authorName } from './discussionUi'
+import { threadPath } from '@/lib/seo/paths'
 
 type Filter = 'all' | 'unanswered' | 'pinned' | 'locked'
 type SortKey = 'activity' | 'newest' | 'replies' | 'votes'
@@ -281,7 +282,7 @@ export default function CommunityDiscussions({ orgslug }: { orgslug: string }) {
   const reader = rows.find((r) => r.discussion_uuid === readerUuid) ?? null
 
   const publicThreadHref = (d: DiscussionWithAuthor) =>
-    getUriWithOrg(orgslug, `/community/${communityUuid.replace('community_', '')}/discussion/${d.discussion_uuid.replace('discussion_', '')}`)
+    getUriWithOrg(orgslug, d.id ? threadPath(communityUuid.replace('community_', ''), d) : `/community/${communityUuid.replace('community_', '')}/discussion/${d.discussion_uuid.replace('discussion_', '')}`)
 
   if (!community) return null
 

@@ -1,0 +1,959 @@
+---
+title: "Agent API Views"
+description: "The structured views Atlas returns: the view envelope, the schema endpoint, how to render them, and all 42 component types with their props and an example."
+---
+
+import { Callout } from '@/components/mdx'
+
+# Views
+
+When Atlas has numbers, a list, a plan or a quiz to show, it doesn't only write prose: it returns a **view**, a small
+JSON document of typed components that LearnHouse draws as tables, charts, timelines, flashcards and so on. The Agent
+API hands you the same views, validated on the server, so you can draw them with your own components.
+
+Views are sent in the `views` output mode (the default for agents that support them) as
+[`view` events](/developers/agent-api/events#view), and kept in each message's `views`. In `markdown` mode you get
+each view's Markdown fallback in the text instead.
+
+## The view envelope
+
+```json
+{
+  "id": "view_…",
+  "call_id": "call_1",
+  "schema_version": 1,
+  "title": "Course completion",
+  "layout": "stack",
+  "components": [
+    { "type": "kpis", "items": [{ "label": "Learners", "value": 1240, "delta": 4.5 }] },
+    {
+      "type": "table",
+      "columns": [{ "key": "name", "label": "Course" }, { "key": "rate", "label": "Completion", "format": "percent" }],
+      "rows": [{ "name": "Python 101", "rate": 62, "_link": { "kind": "course", "uuid": "course_x" } }]
+    }
+  ],
+  "fallback_markdown": "- **Learners**: 1240 (+4.5%)\n\n| Course | Completion |\n| --- | --- |\n| Python 101 | 62% |"
+}
+```
+
+| Field | | |
+| --- | --- | --- |
+| `id` | string | |
+| `call_id` | string or null | The tool call that produced it, when there is one |
+| `schema_version` | number | Version of the component schemas (currently `1`) |
+| `title` | string or null | Heading over the whole view |
+| `layout` | `stack` or `grid` | `grid` puts small components side by side on wide screens |
+| `components` | Component[] | 1 to 12 components, each with a `type` |
+| `fallback_markdown` | string | The same data as Markdown |
+
+A view is at most 64 KB of JSON. Tables and charts hold up to 200 rows; most other lists are capped lower (see each
+type below).
+
+## Rendering views
+
+- Switch on `type` and draw each component with your own UI.
+- For a `type` you don't support (or don't support yet), render `fallback_markdown` for the whole view, or the
+  component's own text. Never fail on an unknown type: new types can be added in a later `schema_version`.
+- Components are validated and cleaned on the server: strings are length-limited and control characters removed,
+  enums are normalized, links are checked. Still treat every string as text, not HTML.
+- `<AgentChat />` in `@learnhouse/react` (and the Vue wrapper) has built-in renderers for the common types (kpis, table,
+  chart, cards, timeline, steps, callout, text, checklist, progress, comparison, code, quiz, choices, glossary) and shows
+  `fallback_markdown` for the rest. Override any type with your own component through `renderers`.
+
+### Links
+
+Items that point somewhere carry a link:
+
+```json
+{ "kind": "course", "uuid": "course_x" }
+{ "path": "/dash/courses" }
+```
+
+`kind` is one of `course`, `chapter`, `activity`, `user`, `member`, `path`, `community`, `discussion`, `board`,
+`assignment`, `submission`, `usergroup`, `live_session`, `podcast`, `playground`, `play`, `folder`, `scheduled_agent`,
+`offer`. Map `kind` + `uuid` to a page in your app. `path` is a relative path on the LearnHouse site. Table rows use a
+`_link` cell with the same shape.
+
+### Fields the server fills in
+
+Some fields come from LearnHouse, not from the model, and are only there for display: `image` (a cover or avatar URL on
+`gallery`, `cards`, `leaderboard` and `profile` items), `doc`, `course_uuid` and `truncated` on `page` (the lesson
+content as LearnHouse editor JSON, read from the real activity), `scale` on `gantt` and `calendar_start` on
+`heatmap`.
+
+### Practice components
+
+`quiz`, `flashcards`, `matching`, `ordering`, `fill_blanks` and `whatif` are interactive. The answers are in the
+props (`correct`, the order of `ordering.items`, the `[[answers]]` in `fill_blanks.text`): shuffle and hide them in
+your UI, and check answers in the browser. Nothing is sent back to LearnHouse.
+
+`choices` holds next-step buttons: when one is clicked, send its `prompt` as the next user message.
+
+## The schema endpoint
+
+`GET /api/v1/agent/views/schema` returns the exact JSON Schema of a view and of every component. Use it to generate
+types or to validate views in your tests.
+
+```json
+{
+  "version": "2026-11-16",
+  "schema_version": 1,
+  "view_schema": { "...": "JSON Schema of the view envelope" },
+  "components": {
+    "kpis": {
+      "group": "data",
+      "description": "1-8 headline numbers with optional % change.",
+      "json_schema": { "...": "JSON Schema of the component" },
+      "example": { "type": "kpis", "items": [{ "label": "Learners", "value": 1240, "delta": 4.5 }] }
+    }
+  },
+  "types": ["kpis", "table", "chart", "..."]
+}
+```
+
+<Callout type="info">
+  The tables below are generated from the same models. Types are written TypeScript-style: `field?` is optional,
+  `a|b` is one of the values, `str`, `num`, `int` and `bool` are JSON types.
+</Callout>
+
+## Component catalog
+
+The 42 types, in four groups:
+
+- **Data**: `kpis`, `table`, `chart`, `funnel`, `heatmap`, `cohort`, `radar`, `gauge`, `leaderboard`, `sparklines`,
+  `geo`, `matrix`, `progress`, `comparison`
+- **Structure**: `timeline`, `steps`, `flow`, `tree`, `mindmap`, `gantt`, `kanban`, `checklist`, `outline`
+- **Content**: `page`, `diff`, `math`, `code`, `email`, `profile`, `rubric`, `glossary`, `gallery`, `cards`,
+  `callout`, `text`
+- **Practice**: `quiz`, `flashcards`, `matching`, `ordering`, `fill_blanks`, `whatif`, `choices`
+
+Every component except `text` also takes an optional `title`, a heading over that component.
+
+### Data
+
+#### `kpis`
+
+1-8 headline numbers with optional % change.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"kpis"` | yes | |
+| `title` | `str` | no |  |
+| `items` | `{label: str, value: num \| int \| str, unit?: str, delta?: num, hint?: str, tone?: neutral\|info\|success\|warning\|danger\|accent}[]` | yes | 1 to 8 items |
+
+```json
+{"type": "kpis", "items": [{"label": "Learners", "value": 1240, "delta": 4.5}]}
+```
+
+#### `table`
+
+Rows to scan, sort or export; link rows with _link \{kind, uuid\}.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"table"` | yes | |
+| `title` | `str` | no |  |
+| `columns` | `{key: str, label: str, format?: text\|number\|percent\|duration\|date\|currency, unit?: str}[]` | yes | 1 to 10 items |
+| `rows` | `{key: value}[]` | yes | Cells by column key; optional `_link` \{kind, uuid\} makes the row open that item; up to 200 items |
+| `caption` | `str` | no |  |
+
+```json
+{
+  "type": "table",
+  "columns": [
+    {"key": "name", "label": "Course"},
+    {"key": "rate", "label": "Completion", "format": "percent"}
+  ],
+  "rows": [{"name": "Python 101", "rate": 62, "_link": {"kind": "course", "uuid": "course_x"}}]
+}
+```
+
+#### `chart`
+
+Trends over time (line/area), comparisons (bar), shares (pie/donut).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"chart"` | yes | |
+| `title` | `str` | no |  |
+| `kind` | `bar\|line\|area\|pie\|donut\|funnel` | yes |  |
+| `x_key` | `str` | yes | min length 1 |
+| `series` | `{key: str, label: str}[]` | yes | 1 to 6 items |
+| `data` | `{key: value}[]` | yes | 1 to 200 items |
+| `unit` | `str` | no |  |
+| `stacked` | `bool` | no | default `false` |
+
+```json
+{
+  "type": "chart",
+  "kind": "line",
+  "x_key": "day",
+  "series": [{"key": "active", "label": "Active"}],
+  "data": [{"day": "2026-11-01", "active": 12}, {"day": "2026-11-02", "active": 18}]
+}
+```
+
+#### `comparison`
+
+2-4 options side by side (plans, approaches).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"comparison"` | yes | |
+| `title` | `str` | no |  |
+| `columns` | `{title: str, subtitle?: str, badge?: str, highlight?: bool, items?: str[]}[]` | yes | 2 to 4 items |
+
+```json
+{
+  "type": "comparison",
+  "columns": [
+    {"title": "Drip", "items": ["Paced"]},
+    {"title": "Open", "items": ["All at once"]}
+  ]
+}
+```
+
+#### `progress`
+
+Bars toward a goal per item.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"progress"` | yes | |
+| `title` | `str` | no |  |
+| `items` | `{label: str, value: num, max?: num, unit?: str, tone?: neutral\|info\|success\|warning\|danger\|accent, link?: {kind?: str, uuid?: str, path?: str}}[]` | yes | 1 to 40 items |
+
+```json
+{"type": "progress", "items": [{"label": "Chapters written", "value": 3, "max": 4}]}
+```
+
+#### `heatmap`
+
+When things happen: weekday x hour activity, or a calendar from days[\{date,value\}].
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"heatmap"` | yes | |
+| `title` | `str` | no |  |
+| `x_labels` | `str[]` | yes | 1 to 53 items |
+| `y_labels` | `str[]` | yes | 1 to 31 items |
+| `values` | `num[][]` | yes | One row per y label, one value per x label; 1 to 31 items |
+| `unit` | `str` | no |  |
+| `tone` | `neutral\|info\|success\|warning\|danger\|accent` | no | default `"accent"` |
+| `y_weekdays` | `bool` | no | y labels are ISO weekdays 1-7 (Mon-Sun); the client shows localized names; default `false` |
+| `calendar_start` | `str` | no | Set by the server for a calendar: the Monday of the first week; max 10 chars |
+| `caption` | `str` | no |  |
+
+```json
+{
+  "type": "heatmap",
+  "x_labels": ["9", "12", "18"],
+  "y_labels": ["1", "2"],
+  "y_weekdays": true,
+  "values": [[3, 8, 12], [1, 5, 9]]
+}
+```
+
+#### `funnel`
+
+Drop-off between ordered stages (visited, enrolled, completed); shows the share kept and lost.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"funnel"` | yes | |
+| `title` | `str` | no |  |
+| `stages` | `{label: str, value: num, detail?: str}[]` | yes | 2 to 10 items |
+| `unit` | `str` | no |  |
+
+```json
+{
+  "type": "funnel",
+  "stages": [
+    {"label": "Viewed", "value": 1200},
+    {"label": "Enrolled", "value": 310},
+    {"label": "Completed", "value": 96}
+  ]
+}
+```
+
+#### `cohort`
+
+Retention by signup group: % still active per period since joining.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"cohort"` | yes | |
+| `title` | `str` | no |  |
+| `periods` | `str[]` | yes | 1 to 16 items |
+| `rows` | `{label: str, size?: int, values?: num[]}[]` | yes | 1 to 30 items |
+| `caption` | `str` | no |  |
+
+```json
+{
+  "type": "cohort",
+  "periods": ["Week 1", "Week 2", "Week 4"],
+  "rows": [{"label": "Oct 6", "size": 40, "values": [65, 48, 30]}]
+}
+```
+
+#### `radar`
+
+Strengths across 3-12 dimensions (skills, rubric areas); up to 4 overlaid series.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"radar"` | yes | |
+| `title` | `str` | no |  |
+| `axes` | `str[]` | yes | 3 to 12 items |
+| `series` | `{label: str, values: num[]}[]` | yes | 1 to 4 items |
+| `max` | `num` | no |  |
+| `unit` | `str` | no |  |
+
+```json
+{
+  "type": "radar",
+  "axes": ["Syntax", "Testing", "Debugging"],
+  "series": [{"label": "Ana", "values": [80, 55, 70]}],
+  "max": 100
+}
+```
+
+#### `gauge`
+
+One score against a range or target (compliance rate, average grade, audit score).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"gauge"` | yes | |
+| `title` | `str` | no |  |
+| `label` | `str` | no |  |
+| `value` | `num` | yes |  |
+| `min` | `num` | no | default `0` |
+| `max` | `num` | no | default `100` |
+| `unit` | `str` | no |  |
+| `target` | `num` | no |  |
+| `bands` | `{to: num, tone?: neutral\|info\|success\|warning\|danger\|accent}[]` | no | up to 5 items |
+| `detail` | `str` | no |  |
+
+```json
+{
+  "type": "gauge",
+  "label": "Training compliance",
+  "value": 82,
+  "max": 100,
+  "unit": "%",
+  "target": 90,
+  "bands": [
+    {"to": 60, "tone": "danger"},
+    {"to": 85, "tone": "warning"},
+    {"to": 100, "tone": "success"}
+  ]
+}
+```
+
+#### `leaderboard`
+
+A ranking, best first (top learners, most viewed courses); link members to show avatars.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"leaderboard"` | yes | |
+| `title` | `str` | no |  |
+| `entries` | `{name: str, value: num, detail?: str, delta?: int, link?: {kind?: str, uuid?: str, path?: str}}[]` | yes | 1 to 50 items |
+| `value_label` | `str` | no |  |
+| `format` | `text\|number\|percent\|duration\|date\|currency` | no | default `"number"` |
+| `unit` | `str` | no |  |
+
+Items also carry `image`, filled in by the server (a picture URL to show), not by the model.
+
+```json
+{
+  "type": "leaderboard",
+  "value_label": "Completions",
+  "entries": [
+    {"name": "Ana Silva", "value": 42, "link": {"kind": "user", "uuid": "user_x"}},
+    {"name": "Li Wei", "value": 37}
+  ]
+}
+```
+
+#### `sparklines`
+
+Several metrics, each with its value and a small trend line.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"sparklines"` | yes | |
+| `title` | `str` | no |  |
+| `items` | `{label: str, value: num \| int \| str, unit?: str, points: num[], delta?: num, better?: up\|down, link?: {kind?: str, uuid?: str, path?: str}}[]` | yes | 1 to 12 items |
+
+```json
+{
+  "type": "sparklines",
+  "items": [
+    {"label": "Daily active", "value": 182, "points": [120, 140, 135, 182], "delta": 12}
+  ]
+}
+```
+
+#### `geo`
+
+Where people are: countries (ISO 3166 alpha-2) ranked, with flags and shares.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"geo"` | yes | |
+| `title` | `str` | no |  |
+| `items` | `{country?: str, label?: str, value: num}[]` | yes | 1 to 60 items |
+| `unit` | `str` | no |  |
+| `value_label` | `str` | no |  |
+
+```json
+{
+  "type": "geo",
+  "value_label": "Visits",
+  "items": [{"country": "FR", "value": 420}, {"country": "US", "value": 310}]
+}
+```
+
+#### `matrix`
+
+Prioritize on two axes (impact vs effort); x and y from 0 (low) to 1 (high).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"matrix"` | yes | |
+| `title` | `str` | no |  |
+| `x_label` | `str` | yes | min length 1 |
+| `y_label` | `str` | yes | min length 1 |
+| `x_low` | `str` | no |  |
+| `x_high` | `str` | no |  |
+| `y_low` | `str` | no |  |
+| `y_high` | `str` | no |  |
+| `quadrants` | `str[]` | no | Names: top-left, top-right, bottom-left, bottom-right; up to 4 items |
+| `items` | `{label: str, x: num, y: num, tone?: neutral\|info\|success\|warning\|danger\|accent, detail?: str}[]` | yes | 1 to 30 items |
+
+```json
+{
+  "type": "matrix",
+  "x_label": "Effort",
+  "y_label": "Impact",
+  "quadrants": ["Quick wins", "Big bets", "Fill-ins", "Money pits"],
+  "items": [{"label": "Add captions", "x": 0.2, "y": 0.8}]
+}
+```
+
+### Structure
+
+#### `timeline`
+
+Dated events in order.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"timeline"` | yes | |
+| `title` | `str` | no |  |
+| `items` | `{time: str, title: str, detail?: str, tone?: neutral\|info\|success\|warning\|danger\|accent}[]` | yes | 1 to 40 items |
+
+```json
+{"type": "timeline", "items": [{"time": "Mon 9:00", "title": "Kickoff"}]}
+```
+
+#### `steps`
+
+How a process works, or progress through steps (status done/current/upcoming).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"steps"` | yes | |
+| `title` | `str` | no |  |
+| `items` | `{title: str, detail?: str, status?: done\|current\|upcoming\|failed\|skipped}[]` | yes | 1 to 16 items |
+
+```json
+{
+  "type": "steps",
+  "items": [{"title": "Enroll"}, {"title": "Unlock chapter 2", "detail": "7 days later"}]
+}
+```
+
+#### `checklist`
+
+Done / to-do items.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"checklist"` | yes | |
+| `title` | `str` | no |  |
+| `items` | `{label: str, checked?: bool, detail?: str}[]` | yes | 1 to 40 items |
+
+```json
+{
+  "type": "checklist",
+  "items": [{"label": "Cover image", "checked": true}, {"label": "SEO description"}]
+}
+```
+
+#### `kanban`
+
+Items by status column.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"kanban"` | yes | |
+| `title` | `str` | no |  |
+| `columns` | `{title: str, tone?: neutral\|info\|success\|warning\|danger\|accent, cards?: {title: str, detail?: str, badge?: str, tone?: neutral\|info\|success\|warning\|danger\|accent, link?: {kind?: str, uuid?: str, path?: str}}[]}[]` | yes | 1 to 6 items |
+
+```json
+{"type": "kanban", "columns": [{"title": "To review", "cards": [{"title": "Essay 3"}]}]}
+```
+
+#### `flow`
+
+A process with branches or loops (decision shapes).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"flow"` | yes | |
+| `title` | `str` | no |  |
+| `direction` | `down\|right` | no | default `"down"` |
+| `nodes` | `{id: str, label: str, detail?: str, tone?: neutral\|info\|success\|warning\|danger\|accent, shape?: box\|decision\|start\|end}[]` | yes | 1 to 24 items |
+| `edges` | `{from: str, to: str, label?: str}[]` | no | up to 40 items |
+
+```json
+{
+  "type": "flow",
+  "nodes": [
+    {"id": "a", "label": "Submit", "shape": "start"},
+    {"id": "b", "label": "Passed?", "shape": "decision"}
+  ],
+  "edges": [{"from": "a", "to": "b"}]
+}
+```
+
+#### `outline`
+
+A course plan (chapters and activities) before creating it.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"outline"` | yes | |
+| `title` | `str` | no |  |
+| `description` | `str` | no |  |
+| `chapters` | `{name: str, detail?: str, activities?: {name: str, type?: str, detail?: str}[]}[]` | yes | 1 to 20 items |
+| `link` | `{kind?: str, uuid?: str, path?: str}` | no |  |
+
+```json
+{
+  "type": "outline",
+  "chapters": [{"name": "Basics", "activities": [{"name": "Intro", "type": "page"}]}]
+}
+```
+
+#### `tree`
+
+A hierarchy: course &gt; chapters &gt; lessons, a topic breakdown, an org chart.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"tree"` | yes | |
+| `title` | `str` | no |  |
+| `nodes` | `{label: str, detail?: str, badge?: str, tone?: neutral\|info\|success\|warning\|danger\|accent, link?: {kind?: str, uuid?: str, path?: str}, children?: tree…[]}[]` | yes | Top-level nodes, each with nested children; 1 to 20 items |
+
+```json
+{
+  "type": "tree",
+  "nodes": [
+    {
+      "label": "Python 101",
+      "children": [{"label": "Basics", "children": [{"label": "Variables", "badge": "page"}]}]
+    }
+  ]
+}
+```
+
+#### `mindmap`
+
+How ideas connect around one central concept (learner explanations, brainstorming).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"mindmap"` | yes | |
+| `title` | `str` | no |  |
+| `center` | `str` | yes | min length 1 |
+| `branches` | `{label: str, tone?: neutral\|info\|success\|warning\|danger\|accent, children?: str[]}[]` | yes | 1 to 8 items |
+
+```json
+{
+  "type": "mindmap",
+  "center": "Photosynthesis",
+  "branches": [
+    {"label": "Inputs", "children": ["Light", "Water", "CO2"]},
+    {"label": "Outputs", "children": ["Glucose", "Oxygen"]}
+  ]
+}
+```
+
+#### `gantt`
+
+Schedules and roadmaps: bars on a time axis (dates, or numbers with a unit such as week).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"gantt"` | yes | |
+| `title` | `str` | no |  |
+| `tasks` | `{label: str, start: num \| str, end?: num \| str, group?: str, tone?: neutral\|info\|success\|warning\|danger\|accent, progress?: num, detail?: str}[]` | yes | 1 to 40 items |
+| `unit` | `str` | no | For number scales: what one step is (week, day, session) |
+| `scale` | `date\|number` | no | Set by the server from the task values; default `"date"` |
+
+```json
+{
+  "type": "gantt",
+  "unit": "week",
+  "tasks": [{"label": "Write chapters", "start": 1, "end": 4}, {"label": "Launch", "start": 5}]
+}
+```
+
+### Content
+
+#### `page`
+
+A lesson rendered read-only: activity_uuid for a real page, or markdown for a draft.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"page"` | yes | |
+| `title` | `str` | no |  |
+| `activity_uuid` | `str` | no | max 120 chars |
+| `markdown` | `str` | no |  |
+| `course_uuid` | `str` | no | Filled in by the server. |
+| `doc` | `{key: value}` | no | Filled in by the server. |
+| `truncated` | `bool` | no | Filled in by the server. |
+
+```json
+{"type": "page", "markdown": "# Draft lesson\n\nText"}
+```
+
+#### `diff`
+
+Before/after of a change.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"diff"` | yes | |
+| `title` | `str` | no |  |
+| `before` | `str` | no |  |
+| `after` | `str` | no |  |
+| `fields` | `{field: str, before?: str, after?: str}[]` | no | up to 30 items |
+
+```json
+{"type": "diff", "before": "Old title", "after": "New title"}
+```
+
+#### `gallery`
+
+Course covers or member avatars by uuid (the server fills the pictures).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"gallery"` | yes | |
+| `title` | `str` | no |  |
+| `images` | `{kind: course\|user, uuid: str, caption?: str}[]` | yes | 1 to 40 items |
+
+Items also carry `image`, filled in by the server (a picture URL to show), not by the model.
+
+```json
+{"type": "gallery", "images": [{"kind": "course", "uuid": "course_x"}]}
+```
+
+#### `callout`
+
+One key caveat or tip (tone info/success/warning/danger/accent).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"callout"` | yes | |
+| `tone` | `neutral\|info\|success\|warning\|danger\|accent` | no | default `"info"` |
+| `title` | `str` | no |  |
+| `text` | `str` | yes |  |
+
+```json
+{"type": "callout", "tone": "warning", "text": "Learners already enrolled keep their access."}
+```
+
+#### `cards`
+
+Items (courses, members, paths) as linked cards.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"cards"` | yes | |
+| `title` | `str` | no |  |
+| `items` | `{kind: str, uuid?: str, name: str, subtitle?: str, badges?: str[]}[]` | yes | 1 to 24 items |
+
+Items also carry `image`, filled in by the server (a picture URL to show), not by the model.
+
+```json
+{"type": "cards", "items": [{"kind": "course", "uuid": "course_x", "name": "Python 101"}]}
+```
+
+#### `text`
+
+A short Markdown paragraph between components.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"text"` | yes | |
+| `markdown` | `str` | yes | min length 1 |
+
+```json
+{"type": "text", "markdown": "Some **context**."}
+```
+
+#### `math`
+
+Formulas in LaTeX, typeset, with optional captions.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"math"` | yes | |
+| `title` | `str` | no |  |
+| `blocks` | `{latex: str, caption?: str}[]` | yes | 1 to 12 items |
+
+```json
+{"type": "math", "blocks": [{"latex": "E = mc^2", "caption": "Mass-energy equivalence"}]}
+```
+
+#### `code`
+
+A code sample with highlighting and, optionally, its output.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"code"` | yes | |
+| `title` | `str` | no |  |
+| `language` | `str` | no |  |
+| `filename` | `str` | no |  |
+| `code` | `str` | yes | min length 1 |
+| `output` | `str` | no |  |
+| `output_tone` | `neutral\|success\|danger` | no | default `"neutral"` |
+| `highlight` | `int[]` | no | 1-based line numbers to emphasize; up to 50 items |
+
+```json
+{"type": "code", "language": "python", "code": "print(2 + 2)", "output": "4"}
+```
+
+#### `email`
+
+A drafted email or announcement as the reader will see it (before sending).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"email"` | yes | |
+| `title` | `str` | no |  |
+| `subject` | `str` | yes | min length 1 |
+| `from_name` | `str` | no |  |
+| `to` | `str` | no | Who receives it, in words (e.g. 'Learners of Python 101') |
+| `preheader` | `str` | no |  |
+| `body` | `str` | yes | Markdown; min length 1 |
+| `cta_label` | `str` | no |  |
+| `cta_path` | `str` | no |  |
+
+```json
+{
+  "type": "email",
+  "subject": "Week 2 is open",
+  "to": "Learners of Python 101",
+  "body": "Hi,\n\nChapter 2 is now available.",
+  "cta_label": "Continue"
+}
+```
+
+#### `profile`
+
+One learner or member at a glance: stats, badges, course progress.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"profile"` | yes | |
+| `title` | `str` | no |  |
+| `name` | `str` | yes | min length 1 |
+| `user_uuid` | `str` | no | max 120 chars |
+| `subtitle` | `str` | no |  |
+| `badges` | `str[]` | no | up to 6 items |
+| `stats` | `{label: str, value: num \| int \| str, unit?: str}[]` | no | up to 8 items |
+| `courses` | `{name: str, progress?: num, link?: {kind?: str, uuid?: str, path?: str}}[]` | no | up to 10 items |
+| `note` | `str` | no |  |
+| `image` | `str` | no | Filled in by the server. |
+
+```json
+{
+  "type": "profile",
+  "name": "Ana Silva",
+  "user_uuid": "user_x",
+  "subtitle": "Learner",
+  "stats": [{"label": "Courses", "value": 3}],
+  "courses": [{"name": "Python 101", "progress": 64}]
+}
+```
+
+#### `rubric`
+
+Grading criteria by performance level, with points.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"rubric"` | yes | |
+| `title` | `str` | no |  |
+| `levels` | `{label: str, points?: num}[]` | yes | 2 to 6 items |
+| `criteria` | `{label: str, weight?: num, descriptions?: str[]}[]` | yes | 1 to 12 items |
+
+```json
+{
+  "type": "rubric",
+  "levels": [{"label": "Excellent", "points": 4}, {"label": "Needs work", "points": 1}],
+  "criteria": [
+    {"label": "Clarity", "descriptions": ["Clear and well organized", "Hard to follow"]}
+  ]
+}
+```
+
+#### `glossary`
+
+Key terms and definitions.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"glossary"` | yes | |
+| `title` | `str` | no |  |
+| `terms` | `{term: str, definition: str, example?: str}[]` | yes | 1 to 60 items |
+
+```json
+{
+  "type": "glossary",
+  "terms": [{"term": "Latency", "definition": "The delay before data starts to move."}]
+}
+```
+
+### Practice
+
+#### `quiz`
+
+Multiple-choice questions to try in the chat.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"quiz"` | yes | |
+| `title` | `str` | no |  |
+| `questions` | `{text: str, options: {text: str, correct?: bool}[], explanation?: str}[]` | yes | 1 to 20 items |
+
+```json
+{
+  "type": "quiz",
+  "questions": [{"text": "2 + 2?", "options": [{"text": "4", "correct": true}, {"text": "5"}]}]
+}
+```
+
+#### `flashcards`
+
+Cards to flip (term / answer).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"flashcards"` | yes | |
+| `title` | `str` | no |  |
+| `cards` | `{front: str, back: str}[]` | yes | 1 to 40 items |
+
+```json
+{"type": "flashcards", "cards": [{"front": "TTL", "back": "Time to live"}]}
+```
+
+#### `choices`
+
+Next-step buttons; each sends its prompt as the member's next message.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"choices"` | yes | |
+| `title` | `str` | no |  |
+| `options` | `{label: str, prompt: str}[]` | yes | 1 to 6 items |
+
+```json
+{
+  "type": "choices",
+  "options": [{"label": "Apply to all", "prompt": "Apply it to every course"}]
+}
+```
+
+#### `matching`
+
+Match pairs (term to definition); the right side is shuffled for the learner.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"matching"` | yes | |
+| `title` | `str` | no |  |
+| `instruction` | `str` | no |  |
+| `pairs` | `{left: str, right: str}[]` | yes | 2 to 10 items |
+
+```json
+{
+  "type": "matching",
+  "pairs": [{"left": "H2O", "right": "Water"}, {"left": "NaCl", "right": "Salt"}]
+}
+```
+
+#### `ordering`
+
+Put items in order; give them in the CORRECT order (shuffled for the learner).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"ordering"` | yes | |
+| `title` | `str` | no |  |
+| `instruction` | `str` | no |  |
+| `items` | `str[]` | yes | 2 to 10 items |
+
+```json
+{"type": "ordering", "instruction": "Order the steps", "items": ["Plan", "Write", "Review"]}
+```
+
+#### `fill_blanks`
+
+A text with gaps: mark each answer as [[answer]] (alternatives [[colour\|color]]).
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"fill_blanks"` | yes | |
+| `title` | `str` | no |  |
+| `instruction` | `str` | no |  |
+| `text` | `str` | yes | min length 1 |
+| `bank` | `bool` | no | Show the answers as a shuffled word bank; default `false` |
+
+```json
+{"type": "fill_blanks", "text": "Water boils at [[100]] degrees [[Celsius|C]].", "bank": true}
+```
+
+#### `whatif`
+
+Sliders and live results from formulas (pricing, pacing, scores). Formulas: numbers, variable keys, + - * / % ^, min max round abs sqrt floor ceil.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `"whatif"` | yes | |
+| `title` | `str` | no |  |
+| `variables` | `{key: str, label: str, min: num, max: num, step?: num, value?: num, unit?: str}[]` | yes | 1 to 6 items |
+| `outputs` | `{label: str, formula: str, unit?: str, format?: text\|number\|percent\|duration\|date\|currency}[]` | yes | 1 to 4 items |
+| `note` | `str` | no |  |
+
+```json
+{
+  "type": "whatif",
+  "variables": [
+    {"key": "price", "label": "Price", "min": 10, "max": 200, "value": 49, "unit": "USD"},
+    {"key": "buyers", "label": "Buyers", "min": 0, "max": 500, "value": 120}
+  ],
+  "outputs": [
+    {"label": "Revenue", "formula": "price * buyers", "format": "currency", "unit": "USD"}
+  ]
+}
+```

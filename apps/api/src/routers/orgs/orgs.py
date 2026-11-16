@@ -1,5 +1,6 @@
 from typing import List, Literal, Optional, Union
 from fastapi import APIRouter, Depends, Request, UploadFile, Query, Path, HTTPException
+from pydantic import BaseModel, ConfigDict, Field as PydanticField
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.services.orgs.invites import (
     create_invite_code,
@@ -46,6 +47,7 @@ from src.services.orgs.orgs import (
     update_org_preview,
     update_org_signup_mechanism,
     update_org_ai_config,
+    update_org_ai_settings,
     update_org_communities_config,
     update_org_payments_config,
     update_org_folders_config,
@@ -534,6 +536,77 @@ async def api_update_org_ai_config(
     """
     return await update_org_ai_config(
         request, ai_enabled, org_id, current_user, db_session, copilot_enabled=copilot_enabled
+    )
+
+
+class AISettingsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ai_enabled: Optional[bool] = None
+    features: dict[str, bool] = PydanticField(default_factory=dict)
+    ask_ai_staff_only: Optional[bool] = None
+    monthly_credit_cap: Optional[int] = PydanticField(default=None, ge=0, le=10_000_000)
+
+
+@feature_config_router.get(
+    "/{org_id}/config/ai/settings",
+    summary="Get organization AI settings",
+    description="The AI master switch, one switch per AI feature (with its group), who may use Ask AI and the monthly credit cap. Admin only.",
+    responses={
+        200: {"description": "AI settings."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_get_org_ai_settings(
+    org_id: int,
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    # Admin only: feature_config_router depends on require_org_admin (401 for
+    # anonymous callers, 403 for non-admins and other orgs, acting user for
+    # impersonation). Members get only the booleans in the org payload
+    # (config.resolved_ai, see public_ai_state).
+    from src.security.features_utils.ai_features import AI_FEATURES, resolve_ai_settings
+    from src.services.orgs.org_config_lookup import get_session_org_config
+
+    row = await get_session_org_config(db_session, org_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+    return {
+        **resolve_ai_settings(row.config or {}, org_id),
+        "catalog": [{"key": f.key, "group": f.group, "edition": f.edition} for f in AI_FEATURES],
+    }
+
+
+@feature_config_router.put(
+    "/{org_id}/config/ai/settings",
+    summary="Update organization AI settings",
+    description=(
+        "Turn AI or single AI features on or off, limit Ask AI to course staff and set a "
+        "monthly credit cap (0 = none). Omitted fields keep their value. Admin only."
+    ),
+    responses={
+        200: {"description": "The updated AI settings."},
+        400: {"description": "Unknown feature or invalid value"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_ai_settings(
+    request: Request,
+    org_id: int,
+    body: AISettingsUpdate,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    return await update_org_ai_settings(
+        request, org_id, current_user, db_session,
+        ai_enabled=body.ai_enabled,
+        features=body.features,
+        ask_ai_staff_only=body.ask_ai_staff_only,
+        monthly_credit_cap=body.monthly_credit_cap,
     )
 
 

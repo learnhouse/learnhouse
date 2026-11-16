@@ -422,7 +422,7 @@ async def test_sitemap_lists_only_indexable_public_content(db, org):
     assert [p["key"] for p in data["paths"]] == ["path"]
     assert [p["key"] for p in data["podcasts"]] == ["pod"]
     assert [c["key"] for c in data["communities"]] == ["club"]
-    assert data["discussions"][0]["community_key"] == "club" and data["discussions"][0]["key"] == "d1"
+    assert data["discussions"][0]["community_key"] == "club" and data["discussions"][0]["key"].endswith("-hello")
     assert [f["key"] for f in data["folders"]] == ["shelf"]
 
 
@@ -472,7 +472,7 @@ async def test_seo_health_requires_org_update_for_every_caller(db, org, mock_req
 async def test_router_endpoints(db, org, mock_request, admin_user, anonymous_user):
     await _add(db, _course())
     assert (await seo_router.api_resolve(mock_request, org.slug, "course", "intro-to-python", db, anonymous_user))["match"] == "slug"
-    assert (await seo_router.api_sitemap_data(org.slug, db))["courses"][0]["key"] == "intro-to-python"
+    assert (await seo_router.api_sitemap_data(mock_request, org.slug, db))["courses"][0]["key"] == "intro-to-python"
     with patch.object(seo_service, "require_author", new=AsyncMock()):
         assert (await seo_router.api_check_slug(mock_request, org.id, "intro-to-python", "course", None, db, admin_user))["available"] is False
         assert await seo_router.api_suggest_slug(mock_request, org.id, "Intro to Python", "course", None, db, admin_user) == {"slug": "intro-to-python-2"}

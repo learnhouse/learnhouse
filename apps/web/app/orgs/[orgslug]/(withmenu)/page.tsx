@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { getSeoContext } from '@/lib/seo/context.server'
-import { buildListMetadata } from '@/lib/seo/pageMetadata'
+import { buildListMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
 import { verificationMetadata } from '@/lib/seo/meta'
 import { getServerAPIUrl } from '@services/config/config'
 
@@ -28,7 +28,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const { orgslug } = await props.params
   const ctx = await getSeoContext(orgslug)
   const own = await homeSettings(orgslug)
-  const metadata = await buildListMetadata({ ctx, name: own?.title || 'Home', path: '/', description: own?.description, image: own?.image, noindex: !!own?.noindex })
+  const alternateTypes = await seoAlternates(ctx, { indexable: !own?.noindex, markdown: '/index.md', feed: '/' })
+  const metadata = await buildListMetadata({ ctx, name: own?.title || 'Home', path: '/', description: own?.description, image: own?.image, noindex: !!own?.noindex, alternateTypes })
   const verification = verificationMetadata(ctx.seo)
   return verification ? { ...metadata, verification } : metadata
 }

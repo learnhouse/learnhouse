@@ -81,7 +81,9 @@ export default function MagicLinkConsumePage() {
     if (!token) return
     setState('loading')
 
-    const res = await completeMagicLink(token, { callbackUrl: '/', redirect: false })
+    // This page leaves for /redirect_from_auth on success, which restores the
+    // session itself: skip the extra roles lookup (one round trip) before it.
+    const res = await completeMagicLink(token, { callbackUrl: '/', redirect: false, lookupSession: false })
 
     // Honor a sanitized ?next (else the link's own redirect_to) through the
     // cross-domain handoff, the same rule the login page applies (internal

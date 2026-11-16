@@ -41,20 +41,15 @@
 }
 
 /* Full-page loader entrance (replaces motion in PageLoading, which sits in the
-   root bundle): opacity 0 -> 0.5 -> 1 over 0.6s, then a soft scale-in. */
-@keyframes page-loading-opacity {
-  0% { opacity: 0; }
-  60% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
+   root bundle): a soft scale-in. It used to fade in from opacity 0 as well,
+   which kept Chrome from counting the first paint as contentful (FCP/LCP
+   waited for the page behind it), so it now shows at once. */
 @keyframes page-loading-scale {
   from { transform: scale(0.95); }
   to { transform: scale(1); }
 }
 .animate-page-loading-in {
-  animation:
-    page-loading-opacity 0.6s linear both,
-    page-loading-scale 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  animation: page-loading-scale 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Board load animations */
@@ -423,6 +418,30 @@
 
   * {
     box-sizing: border-box;
+  }
+
+  /* The light page canvas: #fbfbfb under the white header. It used to come
+     only from an OS-dark media query; it is now the light canvas for everyone,
+     since nothing follows the OS. Manual dark mode (html[data-theme='dark'] in
+     styles/dark.css, unlayered) outranks it. */
+  body {
+    background: #fbfbfb;
+  }
+
+  /* A media block's size before its view renders (components/Objects/Editor/
+     core/nodeView.ts reservedSpaceAttrs): only while the wrapper is empty. */
+  .ProseMirror .react-renderer[data-lh-reserve]:empty {
+    display: block;
+    width: 100%;
+    margin-block: 0.75rem;
+  }
+  .ProseMirror .react-renderer[data-lh-reserve='ratio']:empty {
+    max-width: var(--lh-reserve-max, 100%);
+    margin-inline: auto;
+    aspect-ratio: var(--lh-reserve-ratio, 16 / 9);
+  }
+  .ProseMirror .react-renderer[data-lh-reserve='height']:empty {
+    height: var(--lh-reserve-h);
   }
 
   /* Basic editor styles */

@@ -45,17 +45,11 @@ type AIActivityAskProps = {
 
 function AIActivityAsk(props: AIActivityAskProps) {
   const { t } = useTranslation()
-  const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' })
-  const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
+  // Settings > AI (Ask AI, possibly limited to course staff); follows the switch both ways.
+  const isButtonAvailable = useGetAIFeatures({ feature: 'activity_ask' })
   const dispatchAIChatBot = useAIChatBotDispatch() as any
   const { mode } = useAIPanelMode()
   const { track } = useLHAnalytics('learner')
-
-  useEffect(() => {
-    if (is_ai_feature_enabled) {
-      setIsButtonAvailable(true)
-    }
-  }, [is_ai_feature_enabled])
 
   const handleOpenAI = () => {
     track(AnalyticsEvent.AiAssistantOpened, { surface: 'activity' })
@@ -73,7 +67,7 @@ function AIActivityAsk(props: AIActivityAskProps) {
           <ActivityChatMessageBox activity={props.activity} />
           {/* The Ask AI pill from the shared AI kit: one soft violet ramp,
               the bare AI mark, a 1px inner ring and a soft shadow. */}
-          <AIButton onClick={handleOpenAI}>{t('ai.ask_ai')}</AIButton>
+          <AIButton data-testid="ask-ai-button" onClick={handleOpenAI}>{t('ai.ask_ai')}</AIButton>
         </div>
       )}
     </>

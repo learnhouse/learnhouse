@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Pro-functie",
-          "description": "Neem bedrijven aan als klant, met hun eigen huisstijlomgeving, exclusieve cursussen en plaatsen die ze zelf beheren."
+          "description": "Train bedrijven: geef hun mensen toegang tot je cursussen, een eigen omgeving in hun huisstijl en voortgang die je kunt volgen. Plaatsen verkopen is optioneel."
         },
         "scim": {
           "title": "Enterprise-functie",
@@ -176,6 +176,211 @@
         "newsletter": {
           "title": "Standard-functie",
           "description": "De nieuwsbrief is beschikbaar vanaf het Standard-abonnement. Upgrade om campagnes, welkomstreeksen en cursusupdates per e-mail naar je cursisten te sturen."
+        }
+      },
+      "gate": {
+        "upgrade": "Upgraden naar {{plan}}",
+        "talk_to_us": "Neem contact op",
+        "ask_admin": "Vraag een beheerder van je organisatie om over te stappen naar {{plan}}.",
+        "current": "Je abonnement: {{plan}}",
+        "preview_label": "Voorbeeld",
+        "preview": {
+          "completion": "Voltooiing",
+          "certificate": "Certificaat van voltooiing",
+          "live": "Live",
+          "role_editor": "Bewerker",
+          "role_reviewer": "Beoordelaar",
+          "role_viewer": "Kijker",
+          "week_one": "Week {{count}}",
+          "week_other": "Week {{count}}",
+          "enroll": "Inschrijven",
+          "sso": "Doorgaan met je bedrijfsaccount",
+          "sent": "verzonden",
+          "opened": "geopend",
+          "clicked": "geklikt"
+        },
+        "communities": {
+          "title": "Een plek waar je cursisten elkaar helpen",
+          "b1": "Discussies naast je cursussen, met reacties en stemmen",
+          "b2": "Cursisten krijgen antwoord van elkaar, niet alleen van jou",
+          "b3": "Zie veelgestelde vragen voordat het supporttickets worden"
+        },
+        "messaging": {
+          "title": "Praat direct met je cursisten",
+          "b1": "Een-op-een- en groepsgesprekken in je academie",
+          "b2": "Beantwoord vragen waar cursisten al zijn",
+          "b3": "E-mailoverzichten voor alles wat ongelezen blijft"
+        },
+        "analytics": {
+          "title": "Zie hoe je academie ervoor staat",
+          "b1": "Inschrijvingen, voltooiing en activiteit door de tijd",
+          "b2": "Vind de cursussen en lessen waar cursisten afhaken",
+          "b3": "Deel de voortgang met je team op één plek"
+        },
+        "course_analytics": {
+          "title": "Weet waar elke cursus cursisten verliest",
+          "b1": "Voltooiing per hoofdstuk en les",
+          "b2": "Voortgang en bestede tijd per cursist",
+          "b3": "Verbeter de lessen die het meest uitmaken"
+        },
+        "certifications": {
+          "title": "Beloon cursisten die het afmaken",
+          "b1": "Een certificaat wordt automatisch uitgereikt als een cursus is voltooid",
+          "b2": "Cursisten delen een verifieerbare link op LinkedIn",
+          "b3": "Je eigen huisstijl op elk certificaat"
+        },
+        "paths": {
+          "title": "Laat cursisten zien wat ze hierna kunnen volgen",
+          "b1": "Bundel cursussen in een begeleid leerpad",
+          "b2": "Voortgang over het hele pad, niet alleen over één cursus",
+          "b3": "Een certificaat als het pad is afgerond"
+        },
+        "required_training": {
+          "title": "Zorg dat de juiste mensen de juiste training afronden",
+          "b1": "Wijs cursussen met een deadline toe aan teams of rollen",
+          "b2": "Automatische herinneringen voor en na de deadline",
+          "b3": "Managers zien in één oogopslag wie op schema ligt"
+        },
+        "live_sessions": {
+          "title": "Geef live les, zonder extra tool",
+          "b1": "Plan sessies waar cursisten vanuit je academie aan deelnemen",
+          "b2": "Herinneringen gaan automatisch de deur uit",
+          "b3": "Opnames blijven bij de cursus"
+        },
+        "podcasts": {
+          "title": "Bereik cursisten onderweg",
+          "b1": "Publiceer audioafleveringen naast je cursussen",
+          "b2": "Een speler die onthoudt waar elke luisteraar was gebleven",
+          "b3": "Maak met AI afleveringen van lessen"
+        },
+        "usergroups": {
+          "title": "Deel cursisten in groepen in",
+          "b1": "Geef een groep toegang tot de cursussen die ervoor bedoeld zijn",
+          "b2": "Cohorten, teams of klassen met een eigen omgeving",
+          "b3": "Volg de voortgang per groep"
+        },
+        "custom_domains": {
+          "title": "Geef les op je eigen domein",
+          "b1": "leren.jouwschool.nl in plaats van een LearnHouse-adres",
+          "b2": "SSL-certificaat inbegrepen en automatisch vernieuwd",
+          "b3": "Cursisten blijven ingelogd op je domein"
+        },
+        "api_access": {
+          "title": "Koppel je academie aan je tools",
+          "b1": "Maak cursussen, schrijf cursisten in en lees voortgang uit via de API",
+          "b2": "Tokens met beperkte rechten die je altijd kunt intrekken",
+          "b3": "Dezelfde API die ons dashboard gebruikt"
+        },
+        "webhooks": {
+          "title": "Reageer op wat er in je academie gebeurt",
+          "b1": "Krijg een melding als een cursist zich inschrijft, een cursus afrondt of betaalt",
+          "b2": "Stuur events naar Zapier, je CRM of je eigen code",
+          "b3": "Ondertekende verzoeken en automatische nieuwe pogingen"
+        },
+        "roles": {
+          "title": "Geef iedereen precies de toegang die nodig is",
+          "b1": "Aangepaste rollen naast beheerder en lid",
+          "b2": "Bepaal wie mag maken, bewerken of alleen beoordelen",
+          "b3": "Minder beheerders, minder ongelukken"
+        },
+        "seo": {
+          "title": "Zorg dat je cursussen gevonden worden",
+          "b1": "Titels, beschrijvingen en voorbeelden voor zoekmachines en social media",
+          "b2": "Een sitemap die zoekmachines kunnen lezen",
+          "b3": "Cursuspagina's klaar om goed gevonden te worden"
+        },
+        "drip": {
+          "title": "Geef lessen vrij in het juiste tempo",
+          "b1": "Open hoofdstukken op vaste datums of een aantal dagen na inschrijving",
+          "b2": "Cursisten krijgen een e-mail als een hoofdstuk opengaat",
+          "b3": "Houd cohorten samen in beweging"
+        },
+        "payments": {
+          "title": "Word betaald voor wat je onderwijst",
+          "b1": "Verkoop cursussen eenmalig of als abonnement",
+          "b2": "Uitbetalingen direct op je Stripe-account, zonder extra kosten",
+          "b3": "Kortingscodes, bundels en gratis toegang wanneer je wilt"
+        },
+        "boards": {
+          "title": "Denk samen na op een gedeeld canvas",
+          "b1": "Whiteboards voor workshops, lessen en planning",
+          "b2": "Iedereen bewerkt live, vanaf elk apparaat",
+          "b3": "Houd het bord bij de cursus"
+        },
+        "playgrounds": {
+          "title": "Laat cursisten oefenen, niet alleen lezen",
+          "b1": "Interactieve oefeningen, gemaakt met AI",
+          "b2": "Direct feedback bij elke poging",
+          "b3": "Deel plays met je hele academie"
+        },
+        "company_seats": {
+          "title": "Train bedrijven, niet alleen individuen",
+          "b1": "Geef de mensen van een bedrijf in een paar klikken toegang tot je cursussen",
+          "b2": "Een eigen omgeving in huisstijl voor elk bedrijf, met eigen cursussen",
+          "b3": "Volg hun voortgang en verkoop alleen plaatsen als je dat wilt"
+        },
+        "newsletter": {
+          "title": "Zorg dat cursisten terugkomen",
+          "b1": "Stuur updates en nieuwe cursussen per e-mail naar je cursisten",
+          "b2": "Opens en klikken voor elke campagne",
+          "b3": "Afmeldingen en bounces worden voor je afgehandeld"
+        },
+        "audit_logs": {
+          "title": "Weet wie wat heeft gewijzigd",
+          "b1": "Elke beheeractie vastgelegd met wie, wat en wanneer",
+          "b2": "Zoeken en exporteren voor audits",
+          "b3": "Voldoe aan je compliance-eisen"
+        },
+        "sso": {
+          "title": "Eén keer inloggen voor je hele organisatie",
+          "b1": "Leden loggen in via je identiteitsprovider",
+          "b2": "Toegang stopt als iemand je bedrijf verlaat",
+          "b3": "Geen extra wachtwoorden om te beheren"
+        },
+        "scim": {
+          "title": "Houd leden automatisch gesynchroniseerd",
+          "b1": "Leden worden toegevoegd en verwijderd vanuit je directory",
+          "b2": "Groepen volgen je identiteitsprovider",
+          "b3": "Geen handmatige offboarding"
+        },
+        "lti": {
+          "title": "Koppel je cursussen aan je LMS",
+          "b1": "LTI 1.3 voor Moodle, Canvas, Blackboard en meer",
+          "b2": "Cijfers komen automatisch terug",
+          "b3": "Cursisten hebben geen extra account nodig"
+        },
+        "scorm": {
+          "title": "Neem je bestaande e-learning mee",
+          "b1": "Importeer SCORM-pakketten als lessen",
+          "b2": "Scores en voltooiing worden bijgehouden",
+          "b3": "Oude content hoef je niet opnieuw te bouwen"
+        },
+        "compare": "Plannen vergelijken",
+        "sample": {
+          "discussion_1": "Hoe beoordelen jullie groepsprojecten?",
+          "discussion_2": "Mijn aantekeningen van week 2",
+          "discussion_3": "Tips voor de eindquiz",
+          "course_name": "Inleiding tot data-analyse",
+          "path_1": "Aan de slag",
+          "path_2": "Basisvaardigheden",
+          "path_3": "Eindproject",
+          "session_1": "Spreekuur",
+          "session_2": "Vragenuur: module 3",
+          "today": "Vandaag",
+          "thursday": "do",
+          "episode": "Aflevering 4: Studiegewoonten die blijven hangen",
+          "seo_snippet": "Leer in zes praktische weken data opschonen, verkennen en presenteren. Inclusief certificaat.",
+          "drip_1": "Welkom en installatie",
+          "drip_2": "Je eerste dataset",
+          "drip_3": "Grafieken die een verhaal vertellen",
+          "drip_4": "Eindproject",
+          "one_time": "Eenmalige betaling",
+          "newsletter_subject": "Deze maand op de academie",
+          "note_1": "Ideeën voor de workshop",
+          "note_2": "Vragen uit de groep",
+          "note_3": "Volgende stappen voor vrijdag",
+          "play_title": "Oefenen",
+          "play_question": "Hoeveel zijden heeft een vijfhoek?"
         }
       }
     },
@@ -561,7 +766,35 @@
       "go_to_login": "Naar inloggen",
       "signing_in": "Je wordt ingelogd...",
       "setting_up": "Even geduld terwijl we je sessie instellen."
-    }
+    },
+    "show_password": "Wachtwoord tonen",
+    "hide_password": "Wachtwoord verbergen",
+    "password_req_letter": "Een letter",
+    "password_req_number_or_symbol": "Een cijfer of symbool",
+    "password_req_not_common": "Geen veelgebruikt wachtwoord",
+    "your_name": "Je naam",
+    "signup_one_step": "Het duurt minder dan een minuut.",
+    "verification_sent_to": "We hebben een bevestigingslink naar {{email}} gestuurd. Open die om je account te gebruiken.",
+    "invite_link": {
+      "joining": "Je wordt lid van {{org}}…",
+      "invalid_title": "Deze uitnodigingslink is verlopen",
+      "invalid_desc": "Hij is al gebruikt, ingetrokken of vervangen door een nieuwere uitnodiging. Vraag degene die je uitnodigde om een nieuwe.",
+      "go_to_org": "Naar {{org}}",
+      "wrong_account_title": "Deze uitnodiging is voor een ander adres",
+      "wrong_account_desc": "Je bent ingelogd als {{current}}, maar de uitnodiging is naar {{email}} gestuurd.",
+      "switch_account": "Uitloggen en doorgaan",
+      "signin_title": "Word lid van {{org}}",
+      "signin_desc": "Je hebt al een account. Log in en je bent meteen lid.",
+      "signin_cta": "Inloggen om lid te worden",
+      "signup_title": "Word lid van {{org}}",
+      "signup_desc": "Je bent uitgenodigd. Kies een wachtwoord en je bent binnen.",
+      "choose_password": "Kies een wachtwoord",
+      "create_and_join": "Lid worden van {{org}}"
+    },
+    "login_failed_forgot": "Wachtwoord vergeten?",
+    "login_failed_reset": "Opnieuw instellen",
+    "login_failed_magic": "Stuur me liever een inloglink",
+    "login_failed_google_hint": "Aangemeld met Google? Gebruik hieronder Doorgaan met Google."
   },
   "validation": {
     "required": "Verplicht",
@@ -1518,7 +1751,8 @@
       },
       "thread_actions": "Threadacties",
       "threads_one": "{{count}} thread",
-      "threads_other": "{{count}} threads"
+      "threads_other": "{{count}} threads",
+      "newer_discussions": "Nieuwere discussies"
     }
   },
   "boards": {
@@ -4170,7 +4404,9 @@
       "unavailable_body": "Deze organisatie heeft haar winkel nog niet ingeschakeld.",
       "unavailable_title": "Winkel niet beschikbaar",
       "view_content": "Inhoud bekijken"
-    }
+    },
+    "checkout_paused": "Afrekenen is tijdelijk niet mogelijk voor dit product. De organisatie is op de hoogte gebracht; probeer het later opnieuw.",
+    "checkout_paused_short": "Tijdelijk niet beschikbaar"
   },
   "account": {
     "title": "Accountinstellingen",
@@ -4658,7 +4894,9 @@
       "section_people": "Mensen & business",
       "section_settings": "Instellingen",
       "resize_sidebar": "Zijbalk vergroten of verkleinen",
-      "open_account_menu": "Accountmenu openen"
+      "open_account_menu": "Accountmenu openen",
+      "trial_caption_one": "{{plan}}-proefperiode · nog {{count}} dag",
+      "trial_caption_other": "{{plan}}-proefperiode · nog {{count}} dagen"
     },
     "home": {
       "cards": {
@@ -6689,7 +6927,138 @@
         "ai_copilot_description": "Laat leerlingen vragen stellen over cursusinhoud. Gebruikt geïndexeerd materiaal om onderbouwde antwoorden met bronvermelding te geven.",
         "feature_editor_description": "AI-ondersteuning bij het bewerken van content voor cursusmakers.",
         "feature_activity_description": "AI-assistent binnen activiteiten om leerlingen te helpen.",
-        "always_on": "Altijd aan"
+        "always_on": "Altijd aan",
+        "platform_disabled": "AI is door het platform uitgeschakeld voor deze organisatie. Neem contact op met support om het weer aan te zetten.",
+        "enabled_count": "{{on}} van {{total}} AI-functies aan",
+        "group_all_on": "Alles aanzetten",
+        "group_all_off": "Alles uitzetten",
+        "ask_ai_audience": "Wie Vraag het AI mag gebruiken",
+        "audience_everyone": "Iedereen",
+        "audience_staff": "Alleen cursusteam",
+        "limits_title": "Maandelijks creditlimiet",
+        "limits_description": "AI stopt voor de rest van de maand zodra de organisatie zoveel credits heeft gebruikt. Laat leeg voor geen limiet.",
+        "cap_placeholder": "Geen limiet",
+        "cap_unit": "credits / maand",
+        "save_cap": "Opslaan",
+        "cap_invalid": "Vul een geheel getal in of laat leeg.",
+        "off_by_admin": "Uitgezet door je beheerder",
+        "off_by_admin_description": "{{feature}} is niet beschikbaar in deze organisatie. Vraag een beheerder als je het nodig hebt.",
+        "groups": {
+          "assistants": {
+            "title": "Assistenten",
+            "description": "Agents die met je team chatten en werk gedaan krijgen."
+          },
+          "authoring": {
+            "title": "Ontwerpen",
+            "description": "Hulp voor auteurs terwijl ze cursussen bouwen."
+          },
+          "learners": {
+            "title": "Cursisten",
+            "description": "AI die je cursisten gebruiken tijdens het leren."
+          },
+          "content": {
+            "title": "Contentcreatie",
+            "description": "Media, stem en vertalingen gemaakt met AI."
+          },
+          "integrations": {
+            "title": "Integraties",
+            "description": "AI in je website, e-mails en gekoppelde apps."
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "De dashboardassistent die vragen beantwoordt en werk doet in je hele organisatie."
+          },
+          "atlas_scheduled": {
+            "title": "Geplande agents",
+            "description": "Atlas-taken die volgens een schema draaien, zoals wekelijkse rapporten."
+          },
+          "ai_editor": {
+            "title": "AI-editor",
+            "description": "Het AI-paneel in de pagina-editor dat samen met auteurs schrijft en bewerkt."
+          },
+          "course_builder": {
+            "title": "AI-cursusbouwer",
+            "description": "Maak een opzet van een cursus en de lessen op basis van een korte briefing."
+          },
+          "editor_ai": {
+            "title": "AI-schrijfacties",
+            "description": "Herschrijf, verkort, corrigeer of verander de toon van geselecteerde tekst."
+          },
+          "magic_blocks": {
+            "title": "Magische blokken",
+            "description": "Interactieve blokken gegenereerd uit een prompt."
+          },
+          "quiz_generation": {
+            "title": "Quizzen en flashcards genereren",
+            "description": "Maak quizzen en flashcards van lesinhoud."
+          },
+          "assignment_generation": {
+            "title": "Opdrachten en scenario's genereren",
+            "description": "Maak opdrachten en vertakte scenario's met AI."
+          },
+          "course_import": {
+            "title": "AI-cursusimport",
+            "description": "Zet documenten en exports van andere platforms om in cursussen."
+          },
+          "seo": {
+            "title": "SEO-suggesties",
+            "description": "Schrijf zoektitels en -beschrijvingen voor je pagina's."
+          },
+          "ask_ai": {
+            "title": "Vraag het AI",
+            "description": "Cursisten stellen vragen over een les en krijgen antwoorden met bronnen."
+          },
+          "ai_grading": {
+            "title": "AI-beoordeling",
+            "description": "Beoordeel inzendingen en schrijf feedback op opdrachten."
+          },
+          "messaging_agents": {
+            "title": "AI-agents in Berichten",
+            "description": "Assistenten waarmee leden kunnen chatten in Berichten."
+          },
+          "plays": {
+            "title": "AI in Plays",
+            "description": "Genereer Plays en voer hun AI-stappen uit voor cursisten."
+          },
+          "translations": {
+            "title": "AI-vertalingen",
+            "description": "Vertaal cursussen en hun SEO naar andere talen."
+          },
+          "image_generation": {
+            "title": "Afbeeldingen genereren",
+            "description": "Maak miniaturen en afbeeldingen met AI."
+          },
+          "voice": {
+            "title": "Stem en podcasts",
+            "description": "Schrijf podcastscripts en genereer gesproken audio."
+          },
+          "video_ai": {
+            "title": "Video-ondertitels en hoofdstukken",
+            "description": "Transcribeer video's en verdeel ze in hoofdstukken."
+          },
+          "live_session_summary": {
+            "title": "Samenvattingen van livesessies",
+            "description": "Vat de opnames van livesessies samen."
+          },
+          "boards": {
+            "title": "AI in borden",
+            "description": "Genereer playgrounds en content op borden."
+          },
+          "landing_builder": {
+            "title": "AI-websiteontwerp",
+            "description": "Genereer landingspagina's en herschrijf hun teksten."
+          },
+          "newsletter": {
+            "title": "AI-nieuwsbriefteksten",
+            "description": "Schrijf onderwerpregels en inhoud voor nieuwsbrieven."
+          },
+          "mcp_tools": {
+            "title": "AI-tools via MCP",
+            "description": "Tools die AI gebruiken wanneer apps via MCP met je organisatie verbinden."
+          }
+        }
       },
       "sso": {
         "title": "Single Sign-On (SSO)",
@@ -7116,7 +7485,8 @@
           "users_admin": "Gebruikers (Admin-API)",
           "roles_admin": "Rollen (Admin-API)",
           "newsletter": "Nieuwsbrief",
-          "crm": "CRM-integraties"
+          "crm": "CRM-integraties",
+          "agent": "AI-agents (Agent API)"
         },
         "resource": "Bron",
         "perm_create": "Aanmaken",
@@ -7476,7 +7846,9 @@
           "suspended": "De toegang is beperkt. Neem contact op met LearnHouse om die te herstellen.",
           "licensed": "Zelf gehost met een Enterprise Edition-licentie, zonder abonnementslimieten",
           "community": "Zelf gehoste Community Edition, zonder abonnementslimieten",
-          "billing_page": "Facturen en betaalgegevens vind je op de factuurpagina"
+          "billing_page": "Facturen en betaalgegevens vind je op de factuurpagina",
+          "free_trial_one": "Gratis proefperiode, nog {{count}} dag. Geen kaart nodig.",
+          "free_trial_other": "Gratis proefperiode, nog {{count}} dagen. Geen kaart nodig."
         },
         "next_invoice": "{{amount}} op {{date}}",
         "seats_of": "{{used}} van {{limit}}",
@@ -7543,7 +7915,8 @@
             "addon": "Add-on",
             "locked": "Vereist {{plan}}",
             "locked_none": "Niet beschikbaar",
-            "edition": "Enterprise Edition"
+            "edition": "Enterprise Edition",
+            "trial": "Proefperiode"
           },
           "on": "Aan",
           "off": "Uit",
@@ -7579,7 +7952,7 @@
             "usergroups": "Gebruikersgroepen",
             "roles": "Aangepaste rollen",
             "required_training": "Verplichte training",
-            "company_seats": "Bedrijfsplaatsen",
+            "company_seats": "Bedrijven",
             "payments": "Betalingen",
             "ai": "AI-functies",
             "analytics": "Analyses",
@@ -7596,7 +7969,22 @@
           }
         },
         "next_invoice_label": "Volgende factuur",
-        "seats_no_limit": "{{used}}, geen limiet"
+        "seats_no_limit": "{{used}}, geen limiet",
+        "invoices": "Facturen",
+        "trial": {
+          "title_one": "{{plan}}-proefperiode: nog {{count}} dag",
+          "title_other": "{{plan}}-proefperiode: nog {{count}} dagen",
+          "desc_one": "Alles uit {{plan}} is van jou tot {{date}}, inclusief {{count}} functie die Gratis niet heeft. Kies wanneer je wilt een abonnement om dat te houden; er wordt niets verwijderd als de proefperiode afloopt.",
+          "desc_other": "Alles uit {{plan}} is van jou tot {{date}}, inclusief {{count}} functies die Gratis niet heeft. Kies wanneer je wilt een abonnement om dat te houden; er wordt niets verwijderd als de proefperiode afloopt.",
+          "choose": "{{plan}} behouden",
+          "what_happens": "Wat er gebeurt als de proefperiode afloopt zonder abonnement",
+          "ended_title_trial": "Je {{plan}}-proefperiode is op {{date}} afgelopen",
+          "ended_title": "Je bent op {{date}} van {{plan}} naar Gratis gegaan",
+          "ended_courses_one": "{{count}} cursus is privé geworden en {{plan}}-functies zijn gepauzeerd. Upgrade en alles is weer zoals het was.",
+          "ended_courses_other": "{{count}} cursussen zijn privé geworden en {{plan}}-functies zijn gepauzeerd. Upgrade en alles is weer zoals het was.",
+          "ended_no_courses": "{{plan}}-functies zijn gepauzeerd. Upgrade en alles is weer zoals het was.",
+          "restore": "{{plan}} herstellen"
+        }
       },
       "overview": {
         "created": "Aangemaakt op {{date}}",
@@ -14887,7 +15275,7 @@
     "done": "Klaar, ik ben er helemaal klaar voor!",
     "steps": {
       "create_course": {
-        "title": "Maak je eerste cursus",
+        "title": "Je eerste cursus krijgt vorm",
         "description": "Maak een cursus of bewerk het concept dat we voor je klaarzetten.",
         "action": "Een cursus aanmaken"
       },
@@ -14934,42 +15322,42 @@
         "university_desc": "Handleidingen, tips en best practices"
       },
       "add_content": {
-        "title": "Voeg je eerste les toe",
+        "title": "Een les die de moeite waard is",
         "description": "Voeg een video, pagina of quiz toe. Geef cursisten een echte reden om zich in te schrijven.",
         "action": "Inhoud toevoegen"
       },
       "brand_school": {
-        "title": "Voeg je logo en kleuren toe",
+        "title": "Een school die cursisten vertrouwen",
         "description": "Voeg je logo en kleuren toe zodat het eruitziet als een geloofwaardige, professionele school.",
         "action": "Geef het je merk"
       },
       "share_grow": {
-        "title": "Publiceer je homepage",
+        "title": "De voordeur van je school",
         "description": "Kies een sjabloon, maak het eigen en publiceer de pagina die cursisten als eerste zien.",
         "action": "Website openen"
       },
       "invite_learners": {
-        "title": "Nodig je eerste cursisten uit",
+        "title": "Verwelkom je eerste cursist",
         "description": "Deel je deelnamelink of nodig mensen uit. Krijg die eerste cursist binnen.",
         "action": "Cursisten uitnodigen"
       },
       "build_community": {
-        "title": "Open een communityruimte",
+        "title": "Laat cursisten terugkomen",
         "description": "Open een communityruimte zodat je cursisten actief blijven en hun vrienden meebrengen.",
         "action": "Community openen"
       },
       "publish_course": {
-        "title": "Publiceer je eerste cursus",
+        "title": "Je eerste cursus staat live",
         "description": "Publiceer een cursus zodat cursisten zich echt kunnen inschrijven.",
         "action": "Cursus publiceren"
       },
       "create_group": {
-        "title": "Maak je eerste groep",
+        "title": "Je eerste groep",
         "description": "Groepeer mensen per team, klas of cohort om in één keer cursussen toe te wijzen.",
         "action": "Groep maken"
       },
       "setup_payments": {
-        "title": "Betalingen instellen",
+        "title": "Verdien aan wat je onderwijst",
         "description": "Koppel Stripe en zet een prijs op je cursus.",
         "action": "Stripe koppelen"
       }
@@ -15651,7 +16039,37 @@
       "checkout_note": "Nadat je je organisatie hebt aangemaakt, ga je naar de beveiligde kassa."
     },
     "add_pack": "{{pack}} toevoegen",
-    "cancels_on": "Je abonnement wordt opgezegd op {{periodEnd}}. Tot dan blijft je toegang behouden."
+    "cancels_on": "Je abonnement wordt opgezegd op {{periodEnd}}. Tot dan blijft je toegang behouden.",
+    "trial": {
+      "title_one": "{{plan}}-proefperiode · nog {{count}} dag",
+      "title_other": "{{plan}}-proefperiode · nog {{count}} dagen",
+      "desc": "Er was geen kaart nodig. Kies een abonnement om alles te houden zoals het is.",
+      "choose": "Kies een abonnement",
+      "what_happens": "Wat er verandert als de proefperiode afloopt zonder abonnement",
+      "keep": "{{plan}} behouden"
+    },
+    "downgrade_preview": {
+      "intro": "Met het Gratis-abonnement:",
+      "course_kept": "“{{course}}” blijft openbaar.",
+      "courses_private_one": "{{count}} andere cursus wordt privé (leden kunnen hem nog steeds openen).",
+      "courses_private_other": "{{count}} andere cursussen worden privé (leden kunnen ze nog steeds openen).",
+      "drip_paused_one": "De gefaseerde planning van {{count}} cursus wordt gepauzeerd, dus alle hoofdstukken gaan open.",
+      "drip_paused_other": "De gefaseerde planning van {{count}} cursussen wordt gepauzeerd, dus alle hoofdstukken gaan open.",
+      "features_pause": "Deze functies worden gepauzeerd tot je upgradet:",
+      "more_one": "en nog {{count}}",
+      "more_other": "en nog {{count}}",
+      "members_over": "{{count}} leden blijven, meer dan de {{limit}} van Gratis. Er kunnen geen nieuwe leden bij komen tot je upgradet.",
+      "admins_over": "{{count}} beheerders blijven, meer dan de {{limit}} van Gratis. Er kunnen geen nieuwe beheerders worden toegevoegd.",
+      "nothing_deleted": "Er wordt niets verwijderd. Upgrade opnieuw en alles is weer zoals het was."
+    },
+    "cancel_flow": {
+      "title": "{{plan}} opzeggen?",
+      "until": "Je abonnement blijft actief tot {{date}}. Daarna gaat je organisatie over naar Gratis.",
+      "until_unknown": "Je abonnement blijft actief tot het einde van de betaalde periode. Daarna gaat je organisatie over naar Gratis.",
+      "restore": "Je kunt altijd opnieuw upgraden: de zichtbaarheid van cursussen en gepauzeerde functies komen automatisch terug.",
+      "keep": "{{plan}} behouden",
+      "confirm": "Abonnement opzeggen"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16318,6 +16736,13 @@
       "resource_plural": "Bronnen",
       "newsletter": "Nieuwsbrief",
       "newsletter_plural": "Nieuwsbrieven"
+    },
+    "health": {
+      "title": "Cursisten kunnen nu niets kopen",
+      "body_one": "Je betalingsprovider heeft sinds {{date}} {{count}} betaling geweigerd. Je Stripe-account is mogelijk ontkoppeld of heeft aandacht nodig. Tot dit is opgelost, zien cursisten dat afrekenen tijdelijk niet beschikbaar is.",
+      "body_other": "Je betalingsprovider heeft sinds {{date}} {{count}} betalingen geweigerd. Je Stripe-account is mogelijk ontkoppeld of heeft aandacht nodig. Tot dit is opgelost, zien cursisten dat afrekenen tijdelijk niet beschikbaar is.",
+      "recheck": "Opnieuw controleren",
+      "fix": "Betalingsinstellingen openen"
     }
   },
   "lti": {
@@ -23087,7 +23512,47 @@
         "podcast": "Podcast",
         "community": "Community",
         "folder": "Map"
-      }
+      },
+      "features_title": "Wat zoekmachines mogen indexeren",
+      "features_subtitle": "Zet een onderdeel uit om het buiten Google, Bing en AI-zoekopdrachten te houden. De pagina's blijven open voor bezoekers.",
+      "feature": {
+        "courses": "Cursussen",
+        "activities": "Gratis lessen",
+        "paths": "Leerpaden",
+        "podcasts": "Podcasts",
+        "communities": "Communities",
+        "library": "Bibliotheek",
+        "live": "Live sessies",
+        "newsletters": "Nieuwsbriefarchieven",
+        "pages": "Websitepagina's",
+        "store": "Winkelaanbiedingen"
+      },
+      "thin_threads": "Onbeantwoorde threads verbergen na",
+      "thin_threads_hint": "Threads zonder reacties worden voor zoekmachines verborgen zodra ze zo oud zijn, zodat lege pagina's de community niet belasten. Bij 0 blijven ze allemaal zichtbaar.",
+      "days": "dagen",
+      "ai_title": "AI-zoekopdrachten en crawlers",
+      "ai_subtitle": "Hoe ChatGPT, Claude, Perplexity, Gemini en andere AI-tools je openbare content mogen gebruiken.",
+      "ai_policy": "Beleid voor AI-crawlers",
+      "ai_allow": "Alle AI-crawlers toestaan",
+      "ai_allow_hint": "AI-antwoorden kunnen je pagina's citeren en modellen kunnen ervan leren.",
+      "ai_block_training": "AI-antwoorden toestaan, training blokkeren",
+      "ai_block_training_hint": "Assistenten kunnen je pagina's nog steeds vinden en citeren; trainingscrawlers (GPTBot, Google-Extended, CCBot…) worden geblokkeerd.",
+      "ai_block_all": "Alle AI-crawlers blokkeren",
+      "ai_block_all_hint": "Elke bekende AI-agent wordt geblokkeerd in robots.txt en llms.txt wordt uitgeschakeld. Zoeken op het web blijft werken.",
+      "ai_blocked_extra": "Ook deze user agents blokkeren",
+      "ai_blocked_extra_hint": "Eén crawlernaam per regel, bijv. Bytespider.",
+      "llms_enabled": "llms.txt en Markdown-pagina's publiceren",
+      "llms_enabled_hint": "Een overzicht van je openbare content op /llms.txt en een Markdown-kopie van elke openbare pagina, zodat AI-tools je correct citeren.",
+      "feeds_title": "Feeds",
+      "feeds_enabled": "RSS-, Atom- en JSON-feeds publiceren",
+      "feeds_enabled_hint": "Nieuwe cursussen, communitythreads en live sessies in feedreaders en aggregators. Podcastfeeds blijven altijd aan.",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "Laat Bing, Yandex en andere IndexNow-zoekmachines meteen weten welke pagina's nieuw of bijgewerkt zijn.",
+      "indexnow_enabled": "Zoekmachines pingen bij publiceren",
+      "indexnow_enabled_hint": "Bij het opslaan wordt een verificatiesleutel voor je site aangemaakt.",
+      "indexnow_key": "Verificatiesleutel",
+      "links_llms": "llms.txt",
+      "links_feed": "RSS-feed"
     },
     "save_failed": "De SEO-instellingen konden niet worden opgeslagen.",
     "saved": "SEO-instellingen opgeslagen."
@@ -23572,8 +24037,8 @@
     }
   },
   "companies": {
-    "title": "Klanten",
-    "subtitle": "Bedrijven die je traint, hun mensen, cursussen en plaatsen",
+    "title": "Bedrijven",
+    "subtitle": "De bedrijven die je traint: geef hun mensen toegang tot je cursussen of verkoop ze plaatsen",
     "tabs": {
       "companies": "Bedrijven",
       "offers": "Plaatsaanbiedingen",
@@ -23583,7 +24048,7 @@
       "tab": "Bedrijven",
       "title": "Bedrijven",
       "subtitle": "Plaatsen verkocht aan bedrijven en de aanbiedingen die ze kopen",
-      "open_customers": "Klantprofielen openen"
+      "open_customers": "Bedrijfsprofielen openen"
     },
     "menu": {
       "manage_team": "Team beheren"
@@ -23664,7 +24129,8 @@
       "auto_assign": "Nieuwe leden een gratis plaats geven",
       "company_admins": "Bedrijfsbeheerders",
       "billing_email": "Factuur-e-mail",
-      "tags": "Tags"
+      "tags": "Tags",
+      "member_limit": "Ledenlimiet"
     },
     "list": {
       "new": "Nieuw bedrijf",
@@ -23693,7 +24159,7 @@
       "no_match": "Geen bedrijf voldoet aan deze filters",
       "clear_filters": "Filters wissen",
       "empty_title": "Nog geen bedrijven",
-      "empty_body": "Neem een bedrijf aan om het een eigen huisstijlomgeving, eigen cursussen en zelf beheerde plaatsen te geven."
+      "empty_body": "Voeg een bedrijf toe om de mensen ervan toegang te geven tot je cursussen, een eigen omgeving in huisstijl en voortgang die je kunt volgen. Plaatsen verkopen is optioneel."
     },
     "onboard": {
       "title": "Een bedrijf aannemen",
@@ -23746,7 +24212,7 @@
       "remove_member_title": "Dit lid verwijderen?",
       "remove_member_body": "{{name}} verliest toegang tot de bedrijfsomgeving en de exclusieve cursussen. De voortgang blijft bewaard.",
       "member_removed": "Lid verwijderd",
-      "courses_intro": "Gedeelde cursussen verschijnen in de bedrijfsomgeving. Exclusieve cursussen zijn alleen zichtbaar voor de leden van het bedrijf.",
+      "courses_intro": "Geef het bedrijf toegang tot cursussen: exclusieve cursussen zijn alleen zichtbaar voor de mensen van het bedrijf, gedeelde cursussen blijven zoals gewoonlijk zichtbaar en verschijnen in de omgeving van het bedrijf.",
       "link_course": "Cursus koppelen",
       "create_course": "Cursus maken",
       "no_courses": "Geen gekoppelde cursussen",
@@ -23773,7 +24239,7 @@
       "grant_seats_hint": "Voor deals die buiten Stripe worden gefactureerd: facturen, pilots, partners.",
       "cancel_company": "Plaatsen opzeggen",
       "no_seats": "Geen plaatsen",
-      "no_seats_body": "Dit bedrijf heeft geen plaatsen gekocht. Je kunt er een paar toekennen.",
+      "no_seats_body": "Dit bedrijf heeft geen plaatsen. De mensen ervan kunnen nog steeds direct cursussen krijgen; plaatsen zijn om een vast aantal te verkopen of toe te kennen.",
       "comped_n_one": "{{count}} gratis",
       "comped_n_other": "{{count}} gratis",
       "renews": "Verlengt op",
@@ -23799,7 +24265,14 @@
       "no_activity": "Nog niets gebeurd",
       "notes": "Notities",
       "notes_hint": "Alleen zichtbaar voor de beheerders van je academy.",
-      "notes_placeholder": "Contactpersonen, verlengingsplannen, wat voor hen belangrijk is…"
+      "notes_placeholder": "Contactpersonen, verlengingsplannen, wat voor hen belangrijk is…",
+      "access_hint": "Wie lid kan worden van dit bedrijf en de cursussen ervan krijgt. Geen betaling nodig.",
+      "member_limit_hint": "Optioneel maximum voor mensen die via e-mail of domein worden toegevoegd",
+      "no_limit": "Geen limiet",
+      "over_limit": "De ledenlimiet is bereikt, dus deze zijn niet toegevoegd: {{list}}",
+      "or_folder": "Of een hele map",
+      "folder_hint": "Geeft het bedrijf alle cursussen in deze map",
+      "pick_folder": "Kies een map"
     },
     "offers": {
       "intro": "Plaatsaanbiedingen bepalen de prijs van plaatsen voor bedrijven: volumestaffels, een minimum, eenmalig of terugkerend.",
@@ -28367,7 +28840,11 @@
       "ai_credits_low": "AI-tegoed bijna op",
       "org_payment_failed": "Abonnementsbetaling mislukt",
       "agent_run_finished": "Agent-run voltooid",
-      "agent_run_failed": "Agent-run mislukt"
+      "agent_run_failed": "Agent-run mislukt",
+      "trial_ending": "Proefperiode loopt af",
+      "plan_downgraded": "Overgestapt naar Gratis",
+      "plan_restored": "Abonnement hersteld",
+      "payments_checkout_failing": "Afrekenen mislukt"
     },
     "copy": {
       "assignment_graded": "Beoordeeld: {{assignment}}",
@@ -28425,7 +28902,11 @@
       "ai_credits_low": "Je AI-tegoed raakt op ({{remaining}} over)",
       "org_payment_failed": "De betaling van je abonnement is mislukt",
       "agent_run_finished": "{{agent}} heeft de geplande run afgerond",
-      "agent_run_failed": "De geplande run van {{agent}} is mislukt"
+      "agent_run_failed": "De geplande run van {{agent}} is mislukt",
+      "trial_ending": "Je {{plan}}-proefperiode eindigt over {{days}} dagen",
+      "plan_downgraded": "Je zit nu op Gratis. Er is niets verwijderd",
+      "plan_restored": "Welkom terug bij {{plan}}",
+      "payments_checkout_failing": "Cursisten kunnen nu niets kopen ({{count}} mislukte betalingen)"
     },
     "routing": {
       "short": "Wie een melding krijgt",
@@ -28489,7 +28970,9 @@
       "start_template": "Beginnen met een sjabloon",
       "start_template_desc": "We publiceren de website {{template}} met jouw naam en voegen een concept van je eerste cursus toe om te bewerken.",
       "start_blank": "Leeg beginnen",
-      "start_blank_desc": "Een lege academie. De inrichtingschecklist helpt je met de rest."
+      "start_blank_desc": "Een lege academie. De inrichtingschecklist helpt je met de rest.",
+      "trial_note_after": "Geen kaart nodig. Houd het daarna, kies een ander abonnement of blijf op Gratis.",
+      "trial_note": "Je krijgt {{days}} dagen {{plan}}, gratis."
     },
     "checklist": {
       "full_guide": "Volledige gids",
@@ -28526,7 +29009,10 @@
         "ai_credits_one": "AI-credits: {{formatted}}",
         "ai_credits_other": "AI-credits: {{formatted}}"
       },
-      "compare": "Abonnementen vergelijken"
+      "compare": "Abonnementen vergelijken",
+      "your_trial": "Je proefperiode",
+      "keep_plan": "{{plan}} behouden",
+      "subtitle_trial": "Je probeert {{plan}} gratis uit. Kies het abonnement dat bij je past; tot je dat doet, verandert er niets."
     },
     "invite": {
       "title": "Mensen uitnodigen",
@@ -28562,7 +29048,10 @@
       "import_one": "Cursisten uitnodigen: {{count}}",
       "import_other": "Cursisten uitnodigen: {{count}}",
       "sent_toast_one": "Uitnodigingen verstuurd: {{count}}",
-      "sent_toast_other": "Uitnodigingen verstuurd: {{count}}"
+      "sent_toast_other": "Uitnodigingen verstuurd: {{count}}",
+      "invite_only_create": "Je school is alleen op uitnodiging. Maak een deelnamelink zodat mensen zich ermee kunnen aanmelden.",
+      "create_link": "Deelnamelink maken",
+      "invite_only_hint": "Deze link bevat een deelnamecode: iedereen die hem heeft kan zich aanmelden."
     },
     "invites": {
       "title": "Uitnodigingen",
@@ -28621,6 +29110,17 @@
       },
       "desc_one": "Accounts van de afgelopen {{count}} dagen en hoe ver ze kwamen",
       "desc_other": "Accounts van de afgelopen {{count}} dagen en hoe ver ze kwamen"
+    },
+    "first_course": {
+      "title": "Maak je eerste cursus",
+      "subtitle": "De rest kan wachten. Kies een begin, je kunt later elk woord aanpassen.",
+      "template": "Begin met een sjabloon",
+      "template_desc": "Een kant-en-klaar concept met hoofdstukken en lessen, geopend in de editor.",
+      "ai": "Maak hem met AI",
+      "ai_desc": "Beschrijf je onderwerp en krijg binnen enkele minuten een volledige cursusopzet.",
+      "blank": "Of begin met een lege cursus",
+      "template_short": "Begin met sjabloon",
+      "ai_short": "Maken met AI"
     }
   },
   "impersonation": {
@@ -28648,5 +29148,19 @@
     "no_access_desc": "Vraag een LearnHouse-beheerder om toegang tot impersonatie.",
     "back_to_console": "Terug naar de console",
     "retry": "Opnieuw proberen"
+  },
+  "mobile_app": {
+    "title": "Download de mobiele app",
+    "heading": "Leer op je telefoon",
+    "body": "Open de LearnHouse-app en scan deze code om verbinding te maken met deze school.",
+    "qr_alt": "QR-code om deze school te openen in de LearnHouse-app",
+    "qr_actions": "Klik met rechts om de QR-code op te slaan of te kopiëren",
+    "copy_image": "Afbeelding kopiëren",
+    "download_png": "PNG downloaden",
+    "copy_link": "App-link kopiëren",
+    "copied_image": "QR-code gekopieerd",
+    "copied_link": "App-link gekopieerd",
+    "copy_failed": "Kon de afbeelding niet kopiëren. Probeer Downloaden.",
+    "download_failed": "Kon de afbeelding niet opslaan."
   }
 }

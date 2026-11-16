@@ -622,7 +622,9 @@ async def test_org_settings_v1_layout(registry, db, org, admin_user, people):
     await add(db, row)
     out = ok(await call(registry, "get_org_settings", {}, _ctx(db, org, admin_user)))
     assert out["plan"] == "pro" and out["signup"]["mode"] == "invite_only"
-    assert out["ai"] == {"enabled": False, "copilot_enabled": False}
+    assert out["ai"]["enabled"] is False and out["ai"]["copilot_enabled"] is False
+    assert out["ai"]["features"]["learners"]["ask_ai"] is False and out["ai"]["features"]["assistants"]["atlas"] is True
+    assert out["ai"]["ask_ai_staff_only"] is False and out["ai"]["monthly_credit_cap"] is None
     assert out["branding"]["color"] == "#222222"
     assert out["seo"] == {"twitter_handle": "@acme"}
     assert out["menu"]["items"][0]["type"] == "courses"

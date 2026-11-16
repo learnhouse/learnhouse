@@ -100,7 +100,7 @@ export function DiscussionCard({
   const headerRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const href = threadHref(orgslug, communityUuid, discussion.discussion_uuid)
+  const href = threadHref(orgslug, communityUuid, discussion.discussion_uuid, discussion)
   const excerpt = plainTextOf(discussion.content, 180)
   const posted = formatRelative(discussion.creation_date, i18n.language)
   const active =

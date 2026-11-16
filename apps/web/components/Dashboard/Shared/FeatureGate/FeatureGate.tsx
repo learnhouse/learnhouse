@@ -20,6 +20,11 @@ import {
 import type { DisabledBy } from '@lib/features/gateReason'
 import type { PlanLevel } from '@services/plans/plans'
 import Link from 'next/link'
+import { CheckCircle, CircleNotch } from '@phosphor-icons/react'
+import { billingCheckout, fetchSubscription } from '@/app/(hub)/billing/_lib/billingClient'
+import { planNameById } from '@/app/(hub)/_billing/planText'
+import { CONTACT_SALES_URL } from '@services/plans/contact'
+import FeaturePreview, { accentFor, hasPreview } from './FeaturePreview'
 import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics'
 
 export interface FeatureGateProps {
@@ -46,14 +51,6 @@ export interface FeatureGateProps {
   allowWhenDisabled?: boolean
   /** Content rendered when the feature is granted. */
   children: React.ReactNode
-}
-
-const PLAN_GRADIENT: Record<string, string> = {
-  personal: 'from-gray-50/80',
-  family: 'from-gray-50/80',
-  standard: 'from-blue-50/80',
-  pro: 'from-purple-50/80',
-  enterprise: 'from-amber-50/80',
 }
 
 /**
@@ -119,12 +116,45 @@ function UpgradeCard({
 }) {
   const meta = getFeatureMeta(feature)
   const Icon = meta.Icon
+  const { canManageOrg } = useAdminStatus()
   // The backend knows which plan includes the feature; the catalog tier is
   // only a fallback (it can name a plan that does not include it).
   const upsellPlan = resolvedUpsellPlan ?? meta.upsellPlan
+  const contactSales = upsellPlan === 'enterprise'
   // Deep-link straight to the Confirm step for the plan this feature needs.
-  const upgradeUrl = getUpgradeUrl(orgSlug, upsellPlan)
-  const gradient = PLAN_GRADIENT[upsellPlan] ?? 'from-gray-50/80'
+  const upgradeUrl = contactSales ? CONTACT_SALES_URL : getUpgradeUrl(orgSlug, upsellPlan)
+  const planLabel = planNameById(t, upsellPlan, upsellPlan)
+  const gate = `common.plans.gate.${feature}`
+  const headline = t(`${gate}.title`, { defaultValue: '' })
+  const benefits = (['b1', 'b2', 'b3'] as const)
+    .map((k) => t(`${gate}.${k}`, { defaultValue: '' }))
+    .filter(Boolean)
+
+  const org = useOrg() as any
+  const compareUrl = getUpgradeUrl(orgSlug)
+  const [busy, setBusy] = React.useState(false)
+  // One click from the gate: an org without a subscription goes straight to
+  // Stripe checkout for the plan that unlocks this feature (Stripe's page is
+  // the confirmation). An existing subscriber changes plan on the billing
+  // page's confirm step instead, so a plan change is never made blind; and
+  // when billing isn't reachable from here, that page is the fallback too.
+  const startUpgrade = async () => {
+    setBusy(true)
+    try {
+      const orgId = org?.id
+      if (orgId && (await fetchSubscription(orgId)) === null) {
+        const session = await billingCheckout({ plan: upsellPlan as any, billing: 'monthly', orgId, orgSlug })
+        if (session?.url) {
+          window.location.href = session.url
+          return
+        }
+      }
+    } catch {
+      // fall through to the billing page
+    }
+    if (upgradeUrl) window.location.href = upgradeUrl
+    setBusy(false)
+  }
 
   // Impression: fires once per mount everywhere a feature is gated by plan, which
   // distinguishes "feature locked behind upgrade" across the whole app.
@@ -136,55 +166,107 @@ function UpgradeCard({
     'dashboard',
   )
 
+  const accent = accentFor(feature)
   const badge = (
-    <PlanBadge
-      currentPlan={currentPlan}
-      requiredPlan={upsellPlan}
-      size="md"
-      alwaysShow
-      noMargin
-    />
+    <PlanBadge currentPlan={currentPlan} requiredPlan={upsellPlan} size="md" alwaysShow noMargin />
   )
 
   return (
-    <GateShell variant="upgrade" feature={feature}>
-      <GateCard gradient={gradient}>
-        <IconBubble>
-          <Icon size={32} weight="duotone" className="text-gray-500" />
-        </IconBubble>
-
-        <p className="text-gray-500 max-w-md mx-auto mb-8 leading-relaxed text-sm">
-          {t(meta.descriptionKey)}
-        </p>
-
-        {upgradeUrl ? (
-          <a
-            href={upgradeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              track(AnalyticsEvent.FeatureGateUpgradeClicked, {
-                feature,
-                upsell_plan: upsellPlan,
-              })
-            }
-            className="bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors nice-shadow flex items-center gap-2"
-          >
-            <span>{t('common.plans.upgrade_to')}</span>
-            {badge}
-          </a>
-        ) : (
-          <div className="bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold nice-shadow flex items-center gap-2">
-            <span>{t('common.plans.upgrade_to')}</span>
-            {badge}
+    <GateShell variant="upgrade" feature={feature} wide>
+      <div className="overflow-hidden rounded-2xl bg-white nice-shadow">
+        {/* The feature itself, in its own color: a small mock of the real screen. */}
+        <div className={`relative bg-gradient-to-b ${accent.wash} to-white px-6 pt-8 pb-12 sm:px-12`}>
+          {/* A dotted field in the feature's color, fading out toward the copy. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(rgba(${accent.dots},0.22) 1px, transparent 1px)`,
+              backgroundSize: '14px 14px',
+              maskImage: 'linear-gradient(to bottom, black, transparent 85%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black, transparent 85%)',
+            }}
+          />
+          {hasPreview(feature) ? (
+            <div className="relative mx-auto max-w-sm" data-testid="gate-preview">
+              <FeaturePreview feature={feature} />
+            </div>
+          ) : (
+            <div className="h-10" />
+          )}
+        </div>
+        <div className="relative flex flex-col items-center px-6 pb-10 text-center sm:px-12">
+          <div className="-mt-8 mb-5 inline-flex rounded-xl bg-white p-3.5 nice-shadow">
+            <Icon size={28} weight="duotone" className={accent.icon} />
           </div>
-        )}
-
-        <p className="mt-6 text-xs text-gray-400">
-          {t('common.plans.current_plan')}:{' '}
-          <span className="font-medium text-gray-500 capitalize">{currentPlan}</span>
-        </p>
-      </GateCard>
+          <h2 className="max-w-md text-lg font-semibold leading-snug tracking-tight text-neutral-900" data-testid="gate-title">
+            {headline || t(meta.titleKey)}
+          </h2>
+          {benefits.length > 0 ? (
+            <ul className="mt-4 flex max-w-sm flex-col gap-2.5 text-start" data-testid="gate-benefits">
+              {benefits.map((b) => (
+                <li key={b} className="flex items-start gap-2.5 text-sm text-neutral-600">
+                  <CheckCircle size={17} weight="fill" className={`mt-px shrink-0 ${accent.icon}`} />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-neutral-500">{t(meta.descriptionKey)}</p>
+          )}
+          <div className="mt-8 flex flex-col items-center gap-3">
+            {canManageOrg && upgradeUrl ? (
+              <a
+                href={upgradeUrl}
+                target={contactSales ? '_blank' : undefined}
+                rel={contactSales ? 'noopener noreferrer' : undefined}
+                onClick={(e) => {
+                  track(AnalyticsEvent.FeatureGateUpgradeClicked, {
+                    feature,
+                    upsell_plan: upsellPlan,
+                    mode: contactSales ? 'contact' : 'checkout',
+                  })
+                  if (!contactSales) {
+                    e.preventDefault()
+                    startUpgrade()
+                  }
+                }}
+                aria-busy={busy}
+                className={`flex items-center gap-2 rounded-lg bg-white px-6 py-2.5 font-semibold text-neutral-700 nice-shadow transition-colors hover:bg-neutral-50 ${busy ? 'pointer-events-none opacity-70' : ''}`}
+                data-testid="gate-upgrade"
+              >
+                {busy && <CircleNotch size={14} className="animate-spin" />}
+                {contactSales ? (
+                  <span>{t('common.plans.gate.talk_to_us')}</span>
+                ) : (
+                  <>
+                    <span>{t('common.plans.upgrade_to')}</span>
+                    {badge}
+                  </>
+                )}
+              </a>
+            ) : (
+              <p className="flex items-center gap-2 text-sm text-neutral-500">
+                {t('common.plans.gate.ask_admin', { plan: planLabel })}
+              </p>
+            )}
+            <p className="flex flex-wrap items-center justify-center gap-x-2 text-xs text-neutral-400">
+              <span>
+                {t('common.plans.current_plan')}:{' '}
+                <span className="font-medium capitalize text-neutral-500">{planNameById(t, currentPlan, currentPlan)}</span>
+              </span>
+              {canManageOrg && !contactSales && compareUrl && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <a href={compareUrl} className="font-medium text-neutral-500 underline-offset-2 hover:text-neutral-800 hover:underline">
+                    {t('common.plans.gate.compare')}
+                  </a>
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
     </GateShell>
   )
 }
@@ -257,18 +339,20 @@ function GateShell({
   children,
   variant,
   feature,
+  wide = false,
 }: {
   children: React.ReactNode
   variant: 'upgrade' | 'disabled'
   feature: FeatureKey
+  wide?: boolean
 }) {
   return (
     <div
       data-feature-gate={variant}
       data-feature={feature}
-      className="flex items-center justify-center min-h-[60vh] w-full p-6 bg-[#f8f8f8]"
+      className="flex items-center justify-center min-h-[60vh] w-full p-4 sm:p-6 bg-[#f8f8f8]"
     >
-      <div className="w-full max-w-lg">{children}</div>
+      <div className={`w-full ${wide ? 'max-w-xl' : 'max-w-lg'}`}>{children}</div>
     </div>
   )
 }

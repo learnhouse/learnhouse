@@ -1021,6 +1021,38 @@ async def update_course_thumbnail(
     return course
 
 
+async def _enforce_public_course_cap(course: Course, db_session: AsyncSession) -> None:
+    """Refuse making ``course`` public when its org already has as many public
+    courses as its plan allows (SaaS; the Free plan allows one)."""
+    from src.security.features_utils.plan_check import get_org_plan
+    from src.security.features_utils.plans import get_plan_limit
+
+    cap = get_plan_limit(await get_org_plan(course.org_id, db_session), "courses")
+    if not cap:
+        return
+    public = (
+        await db_session.execute(
+            select(func.count(Course.id)).where(
+                Course.org_id == course.org_id,
+                Course.public == True,  # noqa: E712
+                Course.id != course.id,
+            )
+        )
+    ).scalar_one()
+    if public >= cap:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "PUBLIC_COURSE_LIMIT",
+                "message": (
+                    f"Your plan allows {cap} public course{'s' if cap != 1 else ''}. "
+                    "Make another course private first, or upgrade to make every course public."
+                ),
+                "limit": cap,
+            },
+        )
+
+
 async def update_course(
     request: Request,
     course_object: CourseUpdate,
@@ -1112,6 +1144,11 @@ async def update_course(
     )
     if course_object.seo is not None:
         course_object.seo = _validate_course_seo(course_object.seo)
+
+    # The Free plan allows one public course; a downgraded org keeps its
+    # other courses, privately, until it upgrades.
+    if course_object.public and not course.public:
+        await _enforce_public_course_cap(course, db_session)
 
     # Track published state before update for webhook
     old_published = course.published

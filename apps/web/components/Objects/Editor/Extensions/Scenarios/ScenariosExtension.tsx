@@ -19,6 +19,7 @@ import { ArrowsIn, ArrowsOut, CheckCircle, GitBranch, ListBullets, Play, Plus, T
 import EditorBlockFrame from '../../Blocks/ui/EditorBlockFrame'
 import { BlockPopover, CommitInput, Segmented } from '../../Blocks/ui/BlockChrome'
 import { AIButton } from '@components/Objects/AI/AIBrand'
+import { useAISettings } from '@components/Hooks/useAIFeature'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
 import { cn } from '@/lib/utils'
@@ -70,6 +71,9 @@ function ScenarioEditor(props: NodeViewProps & { data: ScenarioData }) {
   const [focusId, setFocusId] = React.useState<string | null>(null)
   const [issuesOpen, setIssuesOpen] = React.useState(false)
   const [showAI, setShowAI] = React.useState(false)
+  // Settings > AI (unknown org: shown, the API decides).
+  const ai = useAISettings()
+  const scenarioAI = !ai || ai.features.assignment_generation
   const rootRef = React.useRef<HTMLDivElement>(null)
   const start = startIdOf(data)
   const activityUuid = (props.extension as any)?.options?.activity?.activity_uuid
@@ -208,9 +212,11 @@ function ScenarioEditor(props: NodeViewProps & { data: ScenarioData }) {
           ]}
         />
       </div>
-      <AIButton size="sm" onClick={() => setShowAI(true)}>
-        {t('editor.scenarios.generate_with_ai')}
-      </AIButton>
+      {scenarioAI && (
+        <AIButton size="sm" onClick={() => setShowAI(true)}>
+          {t('editor.scenarios.generate_with_ai')}
+        </AIButton>
+      )}
     </div>
   )
 

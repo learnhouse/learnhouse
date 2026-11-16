@@ -861,3 +861,41 @@ class TestRefreshOutcomeTelemetry:
                 )
         assert response.status_code == 200
         assert any(getattr(r, "outcome", None) == "ok" for r in caplog.records)
+
+
+class TestVerifyEmailLandsWhereSignupStarted:
+    """The page someone signed up from (kept with the token) comes back from
+    /verify-email, whether or not the automatic sign-in goes through."""
+
+    async def test_next_comes_back_with_the_session(self, client, auth_user):
+        with patch("src.routers.auth.check_email_verification_rate_limit", return_value=(True, None)), patch(
+            "src.services.users.email_verification.verification_next_path", return_value="/course/abc"
+        ), patch("src.routers.auth.verify_email_token", new_callable=AsyncMock, return_value=(auth_user, "Email verified")), patch(
+            "src.routers.auth.set_auth_cookies"
+        ):
+            res = await client.post("/api/v1/auth/verify-email", json={"token": "t", "user_uuid": "user_auth", "org_uuid": "org_test"})
+        assert res.status_code == 200
+        assert res.json()["next"] == "/course/abc" and res.json()["tokens"]["access_token"]
+
+    async def test_next_comes_back_when_sign_in_is_refused(self, client, auth_user):
+        from fastapi import HTTPException
+
+        with patch("src.routers.auth.check_email_verification_rate_limit", return_value=(True, None)), patch(
+            "src.services.users.email_verification.verification_next_path", return_value="/course/abc"
+        ), patch("src.routers.auth.verify_email_token", new_callable=AsyncMock, return_value=(auth_user, "Email verified")), patch(
+            "src.routers.auth._bind_session_to_custom_domain", new_callable=AsyncMock, side_effect=HTTPException(403)
+        ):
+            res = await client.post("/api/v1/auth/verify-email", json={"token": "t", "user_uuid": "user_auth", "org_uuid": "org_test"})
+        assert res.json() == {"message": "Email verified", "next": "/course/abc"}
+
+    async def test_no_next_no_key_and_resend_forwards_it(self, client, auth_user):
+        with patch("src.routers.auth.check_email_verification_rate_limit", return_value=(True, None)), patch(
+            "src.services.users.email_verification.verification_next_path", return_value=None
+        ), patch("src.routers.auth.verify_email_token", new_callable=AsyncMock, return_value=(auth_user, "Email verified")), patch(
+            "src.routers.auth.set_auth_cookies"
+        ):
+            res = await client.post("/api/v1/auth/verify-email", json={"token": "t", "user_uuid": "user_auth", "org_uuid": "org_test"})
+        assert "next" not in res.json()
+        with patch("src.routers.auth.resend_verification_email", new_callable=AsyncMock, return_value="Sent") as resend:
+            await client.post("/api/v1/auth/resend-verification", json={"email": auth_user.email, "org_id": 1, "next": "/course/abc"})
+        assert resend.await_args.kwargs["next_path"] == "/course/abc"

@@ -208,7 +208,7 @@ export function CreateDiscussionModal({
                     {similar.map((d) => (
                       <li key={d.discussion_uuid}>
                         <Link
-                          href={threadHref(orgSlug || ctxSlug, communityUuid, d.discussion_uuid)}
+                          href={threadHref(orgSlug || ctxSlug, communityUuid, d.discussion_uuid, d as any)}
                           target="_blank"
                           className="group flex items-center gap-2 text-sm text-neutral-700 hover:text-neutral-900"
                         >

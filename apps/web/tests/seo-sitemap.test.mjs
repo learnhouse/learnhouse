@@ -45,7 +45,7 @@ describe("urlset", () => {
   });
   test("activities and discussions nest under their parent slug", () => {
     expect(sitemapUrls("activities", data, ctx)[0].loc).toBe("https://learn.acme.com/course/intro-to-python/activity/a1");
-    expect(sitemapUrls("discussions", data, ctx)[0].loc).toBe("https://learn.acme.com/community/club/discussion/d1");
+    expect(sitemapUrls("discussions", data, ctx)[0].loc).toBe("https://learn.acme.com/community/club/d1");
     expect(sitemapUrls("folders", { ...data, folders: [{ key: "f", uuid: "folder_1", name: "F", lastmod: "", image: "" }] }, ctx)[0].loc).toBe(
       "https://learn.acme.com/library/folder/f",
     );
@@ -78,7 +78,7 @@ describe("index", () => {
 describe("robots.txt", () => {
   test("default rules + sitemap", () => {
     const txt = buildRobotsTxt({ sitemapUrl: "https://a/sitemap.xml" });
-    expect(txt.startsWith("User-agent: *\nAllow: /\n")).toBe(true);
+    expect(txt).toContain("\nUser-agent: *\nAllow: /\n");
     for (const p of ROBOTS_DISALLOW) expect(txt).toContain(`Disallow: ${p}\n`);
     expect(txt.trim().endsWith("Sitemap: https://a/sitemap.xml")).toBe(true);
   });
@@ -95,3 +95,31 @@ describe("robots.txt", () => {
     expect(buildRobotsTxt({ sitemapUrl: "x", seo: { robots_extra_rules: "User-agent: GPTBot\nDisallow: /" } })).toContain("# Custom rules\nUser-agent: GPTBot\nDisallow: /\n");
   });
 });
+
+describe("readable threads, builder pages and live sessions", () => {
+  const more = {
+    ...data,
+    discussions: [
+      { community_key: "club", key: "12-how-do-payouts-work", name: "Q", lastmod: "2026-11-07 00:00:00", replies: 3 },
+      { community_key: "club", key: "13-new", name: "N", lastmod: "2026-11-08 00:00:00", replies: 0 },
+    ],
+    pages: [{ key: "about us", name: "About", lastmod: "2026-11-01T00:00:00+00:00" }],
+    live: [{ key: "abc", name: "AMA", lastmod: "2026-11-09 00:00:00" }],
+  };
+  test("threads use /community/{key}/{id}-{slug}; answered threads rank higher", () => {
+    const urls = sitemapUrls("discussions", more, ctx);
+    expect(urls.map((u) => [u.loc, u.priority])).toEqual([
+      ["https://learn.acme.com/community/club/12-how-do-payouts-work", 0.6],
+      ["https://learn.acme.com/community/club/13-new", 0.4],
+    ]);
+  });
+  test("pages list builder pages and the live listing; live sessions get their own sitemap", () => {
+    const locs = sitemapUrls("pages", more, ctx).map((u) => u.loc);
+    expect(locs).toContain("https://learn.acme.com/live");
+    expect(locs).toContain("https://learn.acme.com/p/about%20us");
+    expect(sitemapUrls("live", more, ctx)).toEqual([{ loc: "https://learn.acme.com/live/abc", lastmod: "2026-11-09 00:00:00", priority: 0.6 }]);
+    expect(sitemapUrls("live", data, ctx)).toEqual([]);
+    expect(sitemapIndexEntries(more, "https://learn.acme.com").map((e) => e.loc.split("type=")[1])).toContain("live");
+  });
+});
+

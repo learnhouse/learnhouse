@@ -395,6 +395,7 @@ async def send_invite_email(
     email: EmailStr,
     request: Request,
     db_session=None,
+    invite_link_token: str | None = None,
 ):
     invite_code = None
 
@@ -418,7 +419,11 @@ async def send_invite_email(
         org.slug, request, db_session=db_session, org_id=org.id
     )
 
-    if invite_code:
+    if invite_link_token:
+        # Personal link: the org's signup page, address filled in, no code to
+        # type (the token stands in for it on invite-only orgs).
+        signup_url = f"{org_base_url}/signup?invite={invite_link_token}"
+    elif invite_code:
         signup_url = f"{org_base_url}/signup?inviteCode={invite_code}"
     else:
         signup_url = f"{org_base_url}/signup"
@@ -444,7 +449,8 @@ async def send_invite_email(
             email=email,
             org_name=sanitize_display_name(org.name, fallback="A LearnHouse organization"),
             inviter_username=sanitize_display_name(user.username),
-            invite_code=invite_code,
+            # The personal link replaces the code: nothing to type.
+            invite_code=None if invite_link_token else invite_code,
             signup_url=signup_url,
             **branding.as_kwargs(),
         )

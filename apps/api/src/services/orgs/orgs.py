@@ -75,6 +75,15 @@ def _build_org_read_with_resolved(org, org_config) -> OrganizationRead:
         # Inject into the config dict so it's returned in the response
         config_dict = org_config.config.copy() if org_config.config else {}
         config_dict["resolved_features"] = resolved
+        # Per-feature AI state, so every AI entry point can hide itself. This
+        # payload is public (slug reads): only the booleans the UI needs. The
+        # monthly credit cap stays with the admin-only AI settings route.
+        from src.security.features_utils.ai_features import public_ai_state
+        config_dict["resolved_ai"] = public_ai_state(org_config.config, org.id or 0)
+        toggles = config_dict.get("admin_toggles")
+        if isinstance(toggles, dict) and isinstance(toggles.get("ai"), dict) and "monthly_credit_cap" in toggles["ai"]:
+            ai_toggle = {k: v for k, v in toggles["ai"].items() if k != "monthly_credit_cap"}
+            config_dict["admin_toggles"] = {**toggles, "ai": ai_toggle}
         org_read.config = OrganizationConfig(
             id=org_config.id,
             org_id=org_config.org_id,
@@ -220,17 +229,25 @@ async def _enforce_free_org_cap(
 
     configs = (
         await db_session.execute(
-            select(OrganizationConfig.config).where(
+            select(OrganizationConfig.org_id, OrganizationConfig.config).where(
                 OrganizationConfig.org_id.in_(admin_org_ids)
             )
         )
-    ).scalars().all()
+    ).all()
 
     def _plan_of(cfg: dict | None) -> str:
         cfg = cfg or {}
         return cfg.get("plan") or (cfg.get("cloud") or {}).get("plan") or "free"
 
-    if any(_plan_of(c) not in ("free", "oss", None) for c in configs):
+    # A plan only counts as paid once it is paid for: an org mid-trial runs on
+    # the trial plan but is still a free org for this cap.
+    from src.services.plans.trial import active_trial_org_ids
+
+    trialing = await active_trial_org_ids(db_session, list(admin_org_ids))
+    if any(
+        _plan_of(c) not in ("free", "oss", None) and org_id not in trialing
+        for org_id, c in configs
+    ):
         return
 
     raise HTTPException(
@@ -263,7 +280,13 @@ async def _try_send_org_created(request: Request, org, current_user, db_session)
         # Deliberately platform-branded: the org was created seconds ago, so it
         # has no configured sender name yet, and this mail is the platform
         # confirming an action taken on the platform.
-        send_org_created_email(email, org.name, f"{base.rstrip('/')}/dash")
+        from src.services.plans.trial import TRIAL_DAYS, get_active_trial
+
+        trial = await get_active_trial(db_session, org.id)
+        send_org_created_email(
+            email, org.name, f"{base.rstrip('/')}/dash",
+            trial_plan=trial.plan if trial else None, trial_days=TRIAL_DAYS,
+        )
     except Exception:
         logging.exception("send_org_created_email failed")
 
@@ -347,9 +370,14 @@ async def create_org(
     _invalidate_session_cache(int(current_user.id))
 
     from src.db.organization_config import OrganizationConfigV2Base
+    from src.services.plans import trial as trial_service
+
+    # SaaS: a new org starts with a free trial of a paid plan (no card); the
+    # trial row below records it. Elsewhere there are no plans or trials.
+    trial_plan = trial_service.plan_for_new_org()
     org_config = OrganizationConfigV2Base(
         config_version="2.0",
-        plan="free",
+        plan=trial_plan or "free",
     )
 
     org_config = json.loads(org_config.model_dump_json())
@@ -365,6 +393,9 @@ async def create_org(
     db_session.add(org_settings)
     await db_session.commit()
     await db_session.refresh(org_settings)
+
+    if trial_plan:
+        await trial_service.begin_trial(db_session, int(org.id), int(current_user.id))
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
@@ -626,12 +657,9 @@ async def update_org_with_config_no_auth(
     from src.security.features_utils.usage import _plan_from_config_dict
     from src.services.orgs.plan_history import record_plan_change
 
-    await record_plan_change(
-        org.id,
-        _plan_from_config_dict(org_config.config or {}),
-        _plan_from_config_dict(config_dict),
-        db_session,
-    )
+    old_plan = _plan_from_config_dict(org_config.config or {})
+    new_plan = _plan_from_config_dict(config_dict)
+    await record_plan_change(org.id, old_plan, new_plan, db_session)
 
     # Update the database
     org_config.config = config_dict
@@ -640,6 +668,12 @@ async def update_org_with_config_no_auth(
     db_session.add(org_config)
     await db_session.commit()
     await db_session.refresh(org_config)
+
+    # Trial bookkeeping, and the Free plan's content rules on a downgrade (or
+    # their undo on an upgrade). SaaS-only; never raises.
+    from src.services.plans.transitions import on_plan_changed
+
+    await on_plan_changed(db_session, org.id, old_plan, new_plan, reason="billing")
 
     return {"detail": "Organization updated"}
 
@@ -1242,10 +1276,18 @@ async def update_org_ai_config(
 
     if _is_v2_config(updated_config):
         updated_config.setdefault("admin_toggles", {}).setdefault("ai", {})
+        toggle = updated_config["admin_toggles"]["ai"]
         if ai_enabled is not None:
-            updated_config["admin_toggles"]["ai"]["disabled"] = not ai_enabled
+            # The org's own switch (honoured on every plan). Turning AI back on
+            # also clears "disabled", which this endpoint used to write.
+            toggle["org_disabled"] = not ai_enabled
+            if ai_enabled:
+                toggle["disabled"] = False
         if copilot_enabled is not None:
-            updated_config["admin_toggles"]["ai"]["copilot_enabled"] = copilot_enabled
+            toggle["copilot_enabled"] = copilot_enabled
+            # One switch for learner Ask AI, whichever name set it.
+            if isinstance(toggle.get("features"), dict):
+                toggle["features"]["ask_ai"] = copilot_enabled
     else:
         updated_config.setdefault("features", {}).setdefault("ai", {"enabled": True, "limit": 10})
         if ai_enabled is not None:
@@ -1271,6 +1313,87 @@ async def update_org_ai_config(
     )
 
     return {"detail": "AI configuration updated"}
+
+
+async def update_org_ai_settings(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+    *,
+    ai_enabled: Optional[bool] = None,
+    features: Optional[dict[str, bool]] = None,
+    ask_ai_staff_only: Optional[bool] = None,
+    monthly_credit_cap: Optional[int] = None,
+) -> dict:
+    """The AI settings page: master switch, one switch per AI surface, who may
+    use Ask AI and an optional monthly credit cap. Fields left None keep their
+    value. Returns the resolved settings (see resolve_ai_settings)."""
+    from src.security.features_utils.ai_features import (
+        AI_FEATURE_KEYS,
+        MAX_MONTHLY_CREDIT_CAP,
+        resolve_ai_settings,
+    )
+
+    features = features or {}
+    unknown = sorted(set(features) - set(AI_FEATURE_KEYS))
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"Unknown AI feature: {', '.join(unknown)}")
+    if any(not isinstance(v, bool) for v in features.values()):
+        raise HTTPException(status_code=400, detail="AI feature switches must be true or false")
+    if monthly_credit_cap is not None and not 0 <= monthly_credit_cap <= MAX_MONTHLY_CREDIT_CAP:
+        raise HTTPException(status_code=400, detail=f"The monthly credit cap must be between 0 and {MAX_MONTHLY_CREDIT_CAP}")
+
+    org = (await db_session.execute(select(Organization).where(Organization.id == org_id))).scalars().first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+    org_config = (await db_session.execute(
+        select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    )).scalars().first()
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+
+    updated_config = _deep_copy_config(org_config)
+    if _is_v2_config(updated_config):
+        toggle = updated_config.setdefault("admin_toggles", {}).setdefault("ai", {})
+    else:
+        toggle = updated_config.setdefault("features", {}).setdefault("ai", {"enabled": True, "limit": 10})
+    if ai_enabled is not None:
+        if _is_v2_config(updated_config):
+            toggle["org_disabled"] = not ai_enabled
+            if ai_enabled:
+                toggle["disabled"] = False
+        else:
+            toggle["enabled"] = ai_enabled
+    if features:
+        stored = toggle.get("features") if isinstance(toggle.get("features"), dict) else {}
+        toggle["features"] = {**stored, **features}
+        if "ask_ai" in features:
+            toggle["copilot_enabled"] = features["ask_ai"]
+    if ask_ai_staff_only is not None:
+        toggle["ask_ai_staff_only"] = ask_ai_staff_only
+    if monthly_credit_cap is not None:
+        toggle["monthly_credit_cap"] = int(monthly_credit_cap)
+
+    config_before = org_config.config
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+    db_session.add(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
+    _audit_config_change(request, "org.ai.updated", org_config.org_id, current_user, config_before, updated_config)
+
+    from src.services.orgs.cache import invalidate_org_cache
+    invalidate_org_cache(org.slug)
+
+    settings = resolve_ai_settings(updated_config, org.id)
+    await dispatch_webhooks(
+        event_name="org_ai_config_changed",
+        org_id=org_id,
+        data={"ai_enabled": settings["enabled"], "copilot_enabled": settings["switches"]["ask_ai"]},
+    )
+    return settings
 
 
 async def _update_feature_toggle(
@@ -2270,6 +2393,11 @@ async def update_org_seo_config(
 
     updated_config = _deep_copy_config(org_config)
     seo_data = json.loads(seo_config.model_dump_json())
+    # The IndexNow key is server-managed: kept across saves, made on opt-in.
+    from src.services.seo.indexnow import merge_server_managed
+
+    previous_seo = (updated_config.get("customization") or {}).get("seo") or updated_config.get("seo") or {}
+    seo_data = merge_server_managed(previous_seo if isinstance(previous_seo, dict) else {}, seo_data)
 
     if _is_v2_config(updated_config):
         updated_config.setdefault("customization", {})

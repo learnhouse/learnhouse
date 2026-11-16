@@ -94,8 +94,57 @@ export declare class LearnHouseActivityElement extends HTMLElement {
 export declare const TAG_NAME: 'learnhouse-activity'
 export declare function defineLearnHouseActivity(tagName?: string): void
 
+/** DOM events of <learnhouse-agent-chat>. */
+export interface LearnHouseAgentChatElementEventMap {
+  'lh-agent-event': CustomEvent<import('@learnhouse/sdk').AgentEvent>
+  'lh-agent-conversation': CustomEvent<import('@learnhouse/sdk').Conversation>
+  'lh-agent-error': CustomEvent<Error>
+}
+
+/** <learnhouse-agent-chat>: the Agent API chat as a custom element. */
+export declare class LearnHouseAgentChatElement extends HTMLElement {
+  baseUrl?: string
+  /** A member session JWT or an embed session token. Never an `lh_` API token. */
+  token?: string
+  session?: LearnHouseSessionInput | null
+  client?: LearnHouseClient
+  /** `atlas`, `copilot` or `agent_<uuid>`. Default `copilot`. */
+  agent?: string
+  /** Organization id (`org-id` attribute); required with a member session. */
+  orgId?: number | string
+  conversationId?: string
+  /** Options for the conversation created on the first message. */
+  create?: Omit<import('@learnhouse/sdk').CreateConversationInput, 'agent'>
+  siteUrl?: string
+  placeholder?: string
+  theme?: 'light' | 'dark' | 'auto'
+  linkTarget?: '_blank' | '_self' | '_parent' | '_top'
+  starters?: string[]
+  greeting?: string
+  labels?: Record<string, string>
+  /** Per component type renderers (React components). */
+  renderers?: Record<string, unknown>
+  reconnect?: number | false
+  addEventListener<K extends keyof LearnHouseAgentChatElementEventMap>(
+    type: K,
+    listener: (this: LearnHouseAgentChatElement, event: LearnHouseAgentChatElementEventMap[K]) => any,
+    options?: boolean | AddEventListenerOptions,
+  ): void
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void
+  removeEventListener<K extends keyof LearnHouseAgentChatElementEventMap>(
+    type: K,
+    listener: (this: LearnHouseAgentChatElement, event: LearnHouseAgentChatElementEventMap[K]) => any,
+    options?: boolean | EventListenerOptions,
+  ): void
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void
+}
+
+export declare const AGENT_CHAT_TAG_NAME: 'learnhouse-agent-chat'
+export declare function defineLearnHouseAgentChat(tagName?: string): void
+
 declare global {
   interface HTMLElementTagNameMap {
     'learnhouse-activity': LearnHouseActivityElement
+    'learnhouse-agent-chat': LearnHouseAgentChatElement
   }
 }

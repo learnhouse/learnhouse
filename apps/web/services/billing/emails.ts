@@ -21,12 +21,12 @@ export async function sendPlanSwitchMail(args: {
   isDowngrade: boolean;
 }): Promise<void> {
   const { email, oldPlan, newPlan, isDowngrade } = args;
-  await send(email, `Your plan changed to ${prettyPlan(newPlan)}`, {
+  await send(email, `You're on ${prettyPlan(newPlan)} now`, {
     accentColor: planColor(newPlan),
-    heading: isDowngrade ? "Your plan was changed" : "Your plan is upgraded 🎉",
+    heading: isDowngrade ? `You're on ${prettyPlan(newPlan)} now` : `${prettyPlan(newPlan)} is ready for your learners`,
     subtitle: isDowngrade
-      ? `You're now on the ${prettyPlan(newPlan)} plan.`
-      : `You now have access to everything in ${prettyPlan(newPlan)}.`,
+      ? `The change is done. Anything your new plan doesn't include is paused, not deleted, and comes back if you upgrade.`
+      : `Everything in ${prettyPlan(newPlan)} is unlocked for your academy, starting now.`,
     transition: {
       fromLabel: "Previous",
       fromValue: prettyPlan(oldPlan),
@@ -44,11 +44,11 @@ export async function sendSubscriptionCanceledMail(args: {
   orgSlug?: string;
 }): Promise<void> {
   const { email, planName, orgSlug } = args;
-  await send(email, "Your subscription was canceled", {
+  await send(email, `Your ${prettyPlan(planName)} plan won't renew`, {
     accentColor: "#ef4444",
-    heading: "Your subscription was canceled",
-    subtitle: `Your ${prettyPlan(planName)} subscription won't renew. You keep access until the end of the current billing period.`,
-    body: "Changed your mind? You can resubscribe any time from your billing settings.",
+    heading: "Your plan won't renew",
+    subtitle: `Your ${prettyPlan(planName)} plan stays active until the end of the current billing period. After that, your academy moves to Free. Nothing is deleted.`,
+    body: "If you change your mind, pick a plan again from your billing settings and everything comes back as it was.",
     card: orgSlug
       ? { label: "Organization", title: orgSlug, color: "#ef4444" }
       : undefined,
@@ -61,10 +61,10 @@ export async function sendPurchaseCompleteMail(args: {
   orgSlug?: string;
 }): Promise<void> {
   const { email, plan, orgSlug } = args;
-  await send(email, `Welcome to ${prettyPlan(plan)} 🎉`, {
+  await send(email, `Your ${prettyPlan(plan)} plan is active`, {
     accentColor: planColor(plan),
-    heading: "Payment received. You're all set!",
-    subtitle: `Your ${prettyPlan(plan)} plan is now active. Thanks for supporting LearnHouse.`,
+    heading: `${prettyPlan(plan)} is active`,
+    subtitle: `Your payment went through and every ${prettyPlan(plan)} feature is available to your academy now.`,
     card: {
       label: "Your plan",
       title: prettyPlan(plan),
@@ -72,8 +72,8 @@ export async function sendPurchaseCompleteMail(args: {
       color: planColor(plan),
     },
     bulletPoints: [
-      "All your new plan features are unlocked right away.",
-      "Manage or change your plan any time from billing settings.",
+      "Anything paused on the Free plan, like private courses, is back as it was.",
+      "Invoices and plan changes are in your billing settings.",
     ],
   });
 }
@@ -86,8 +86,8 @@ export async function sendPackActivatedMail(args: {
   const { email, packId, orgSlug } = args;
   await send(email, "Your add-on is active", {
     accentColor: "#7c3aed",
-    heading: "Add-on activated ⚡",
-    subtitle: "Your add-on pack is now active and ready to use.",
+    heading: "Your add-on is active",
+    subtitle: "The extra capacity is available to your academy now.",
     card: {
       label: "Add-on",
       title: packId || "Pack",
@@ -103,11 +103,11 @@ export async function sendPaymentFailedMail(args: {
   orgSlug?: string;
 }): Promise<void> {
   const { email, planName, orgSlug } = args;
-  await send(email, "Action needed: payment failed", {
+  await send(email, `Your ${prettyPlan(planName)} payment didn't go through`, {
     accentColor: "#ef4444",
-    heading: "We couldn't process your payment",
-    subtitle: `A payment for your ${prettyPlan(planName)} plan didn't go through. Your access continues for a short grace period.`,
-    body: "Please update your payment method to avoid losing access to your plan features.",
+    heading: "Your payment didn't go through",
+    subtitle: `We couldn't charge your card for ${prettyPlan(planName)}. Your learners keep full access for now.`,
+    body: "Update your payment method in your billing settings and nothing changes for them.",
     card: orgSlug
       ? { label: "Organization", title: orgSlug, color: "#ef4444" }
       : undefined,

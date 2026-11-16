@@ -8,6 +8,7 @@ import { useAuth } from '@components/Contexts/AuthContext'
 import { localeName, localeNativeName, seedActivityTranslation, type ActivityTranslation } from '@services/courses/translations'
 import { Button, buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import AtlasTranslateButton from '@ee/components/Atlas/Translations/AtlasTranslateButton'
+import { useAISettings } from '@components/Hooks/useAIFeature'
 import EditorPreview from '../EditorPreview'
 
 function sourceHref() {
@@ -69,6 +70,9 @@ export default function TranslationStartScreen({
   const { getAccessToken } = useAuth()
   const [pending, setPending] = React.useState<'source' | 'empty' | null>(null)
   const display = i18n.language || 'en'
+  // Settings > AI can turn AI translations off (unknown org: shown, the API decides).
+  const ai = useAISettings()
+  const translationsAI = !ai || ai.features.translations
 
   const seed = async (from: 'source' | 'empty') => {
     setPending(from)
@@ -123,6 +127,7 @@ export default function TranslationStartScreen({
               testId="translation-start-copy"
               primary
             />
+            {translationsAI && (
             <div className="rounded-xl ring-1 ring-inset ring-neutral-200 p-4 flex flex-col gap-3">
               <div>
                 <div className="text-sm font-semibold text-neutral-900">{t('editor.translation.start.atlas', 'Translate with Atlas')}</div>
@@ -142,6 +147,7 @@ export default function TranslationStartScreen({
                 />
               </div>
             </div>
+            )}
             <StartOption
               icon={<FileDashed size={18} />}
               title={t('editor.translation.start.empty', 'Start empty')}

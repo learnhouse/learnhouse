@@ -7,8 +7,11 @@ import { Button, SegmentedControl, TEXTAREA, INPUT } from '@/design'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
-import { getUriWithOrg } from '@services/config/config'
-import { inviteBatchUsers } from '@services/organizations/invites'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { createInviteCode, inviteBatchUsers } from '@services/organizations/invites'
+import { apiFetch } from '@services/utils/ts/requests'
+import { useQuery } from '@tanstack/react-query'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { recordOnboardingEvent } from '@services/onboarding/onboarding'
 import { extractEmails } from '@/lib/onboarding'
 
@@ -63,7 +66,36 @@ export default function InviteDialog({
     }
   }, [open, initialTab])
 
-  const joinUrl = absolute(getUriWithOrg(orgSlug, '/signup'))
+  // An invite-only school's bare /signup asks for a code, a dead end for a
+  // shared link. There the link carries one of the org's join codes (made on
+  // demand), so it opens the org's own signup form directly.
+  const org = useOrg() as any
+  const orgConfig = org?.config?.config
+  const inviteOnly =
+    (orgConfig?.config_version?.startsWith('2')
+      ? orgConfig?.admin_toggles?.members?.signup_mode
+      : orgConfig?.features?.members?.signup_mode) === 'inviteOnly'
+  const codes = useQuery({
+    queryKey: ['org-invite-codes', orgId],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/invites`, token),
+    enabled: open && inviteOnly && !!token,
+    staleTime: 60_000,
+  })
+  const joinCode: string | undefined = (Array.isArray(codes.data) ? codes.data : []).find((c: any) => !c?.usergroup_id)?.invite_code
+  const [creatingCode, setCreatingCode] = useState(false)
+  const createJoinCode = async () => {
+    setCreatingCode(true)
+    const res = await createInviteCode(orgId, token).catch(() => null)
+    setCreatingCode(false)
+    if (!res?.success) {
+      const detail = res?.data?.detail
+      toast.error(typeof detail === 'string' ? detail : detail?.message ?? t('common.something_went_wrong'))
+      return
+    }
+    await codes.refetch()
+  }
+  const needsCode = inviteOnly && !joinCode
+  const joinUrl = absolute(getUriWithOrg(orgSlug, joinCode ? `/signup?inviteCode=${encodeURIComponent(joinCode)}` : '/signup'))
   const typed = useMemo(() => extractEmails(text), [text])
   const gated = !!gate?.gated
   const unlockDate = gate?.unlocks_at
@@ -161,6 +193,14 @@ export default function InviteDialog({
       {tab === 'link' && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-neutral-500">{t('onb2.invite.link_desc')}</p>
+          {needsCode ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-neutral-50 px-3.5 py-3 ring-1 ring-inset ring-neutral-200/70">
+              <p className="min-w-0 flex-1 text-xs leading-relaxed text-neutral-600">{t('onb2.invite.invite_only_create')}</p>
+              <Button variant="primary" icon={<LinkSimple size={14} />} loading={creatingCode || codes.isLoading} onClick={createJoinCode}>
+                {t('onb2.invite.create_link')}
+              </Button>
+            </div>
+          ) : (
           <div className="flex items-center gap-2">
             <div className="relative min-w-0 flex-1">
               <LinkSimple size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
@@ -170,7 +210,8 @@ export default function InviteDialog({
               {copied ? t('onb2.invite.copied') : t('onb2.invite.copy')}
             </Button>
           </div>
-          <p className="text-xs text-neutral-400">{t('onb2.invite.link_hint')}</p>
+          )}
+          <p className="text-xs text-neutral-400">{inviteOnly ? t('onb2.invite.invite_only_hint') : t('onb2.invite.link_hint')}</p>
         </div>
       )}
 

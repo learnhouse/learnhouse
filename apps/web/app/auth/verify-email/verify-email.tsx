@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { verifyEmail } from '@services/auth/auth'
 import { defaultPostAuthPath } from '@services/auth/redirects'
+import { isSafeNextPath, takePostAuthNext } from '@/lib/auth/signup'
+import { withNextParam } from '@/lib/auth/nextParam'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
 import { AuthStatus, authButtonClass } from '@components/Auth/AuthUI'
@@ -26,6 +28,10 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
     const [isVerifying, setIsVerifying] = useState(true)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
+    // Where they were headed when they signed up (kept with the token, or on
+    // this host as a fallback); the school's home otherwise.
+    const [landing, setLanding] = useState<string | null>(null)
+    const destination = landing || homePath
 
     // The verification token is single-use: the backend consumes (deletes) it the
     // moment it succeeds and auto-signs the user in. So this request must fire
@@ -50,6 +56,9 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
 
             try {
                 const res = await verifyEmail(token, userUuid, orgUuid)
+                const stored = takePostAuthNext()
+                const next = isSafeNextPath(res.next) ? res.next : stored
+                if (next) setLanding(next)
                 if (res.success) {
                     track(AnalyticsEvent.EmailVerificationCompleted, { result: 'success' })
                     // Verification auto-signs the user in (session cookies were set
@@ -65,7 +74,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                     // '/' is the login page). A full navigation lets auth
                     // bootstrap from the new cookies.
                     setTimeout(() => {
-                        window.location.assign(homePath)
+                        window.location.assign(next || homePath)
                     }, 1200)
                 } else {
                     track(AnalyticsEvent.EmailVerificationCompleted, { result: 'fail' })
@@ -108,7 +117,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                         description={error}
                     >
                         <p className="text-[13px] text-neutral-500">{t('auth.verification_trouble')}</p>
-                        <Link href="/login" className={authButtonClass('primary', 'mt-2')}>
+                        <Link href={withNextParam('/login', landing)} className={authButtonClass('primary', 'mt-2')}>
                             {t('auth.back_to_login')}
                         </Link>
                     </AuthStatus>
@@ -121,7 +130,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                         title={t('auth.email_verified_success')}
                         description={t('auth.email_verified_message')}
                     >
-                        <Link href={homePath} className={authButtonClass('primary')}>
+                        <Link href={destination} className={authButtonClass('primary')}>
                             {t('auth.continue_to_dashboard', { defaultValue: 'Continue to your dashboard' })}
                         </Link>
                     </AuthStatus>

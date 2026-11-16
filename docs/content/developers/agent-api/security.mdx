@@ -1,0 +1,154 @@
+---
+title: "Agent API Security & Limits"
+description: "What each Agent API credential can reach, how learner agents stay inside the courses a learner can open, AI switches and credits, rate and size limits, prompt-injection safeguards, audit logs and CORS."
+---
+
+import { Callout } from '@/components/mdx'
+
+# Security and limits
+
+The agents behind this API are the ones LearnHouse runs in its own interface, with the same rules. Nothing in a request
+can widen what the caller is allowed to do.
+
+## Organization isolation
+
+API tokens and embed sessions belong to one organization; member sessions name it with `org_id`. Conversations,
+approvals, tool calls and retrieved course content never cross organizations: another organization's conversation is
+simply not found (`404 conversation_not_found`).
+
+## What each credential reaches
+
+| | API token | Member session | Embed session |
+| --- | --- | --- | --- |
+| Agents | All the token's rights allow | All the member's role allows | `copilot`, `agent_<uuid>` |
+| Conversations | Those it created | Their own | That learner's own |
+| Tools | Capped by the token's rights and its creator's current role | The member's role | Learner tools only |
+| Approve risky actions | With **AI agents: Update** | Yes, in their own conversations | No |
+
+A token can never do more than the user who created it: its rights are capped by that user's current role on every
+request, and it stops working when they leave the organization. See [API tokens](/developers/api/authentication#api-tokens).
+
+The token's **AI agents** permission only opens the Agent API. What Atlas can then read or change still depends on the
+token's other permissions: a token without **Courses: Update** can't have Atlas edit a course.
+
+### Embed sessions
+
+An [embed session](/developers/api/authentication#embed-sessions) acts as one learner:
+
+- only `copilot` and custom learner agents; Atlas answers `403 agent_not_available`;
+- only that learner's conversations;
+- never approvals, and none of the staff tools;
+- the same limits as any embed session: short-lived, no refresh, one organization, refused for admins and maintainers.
+
+## Learner content filtering
+
+Learner agents answer from course content (pages, PDFs and documents, assignments, video and audio transcripts) of
+courses [indexed for AI](/platform/ai#indexing-courses-for-ai). Retrieval is filtered by what the learner can open in
+LearnHouse right now, with the same access checks as the course pages. A lesson they can't open is never retrieved, so
+it can't be quoted or cited. A custom agent is
+further limited to the courses it was given.
+
+`context.course_uuid` and `context.activity_uuid` focus the agent; they don't grant access. Pointing at a course the
+learner can't open gives them nothing from it.
+
+## AI settings and credits
+
+Every message is checked against the organization's AI settings:
+
+- **Enable AI Features** off: `AI_DISABLED`.
+- **AI Copilot** off: learner agents answer `AI_FEATURE_DISABLED`.
+- AI limited to staff: learners get `AI_STAFF_ONLY`.
+- Monthly AI cap reached: `AI_MONTHLY_CAP_REACHED`.
+- No credits left: `402 out_of_credits`.
+
+Before a run they are HTTP errors; during a run they arrive as an [`error` event](/developers/agent-api/events#error).
+Credits are reserved before a run and given back if it fails, like every AI action in LearnHouse. See
+[AI credits](/platform/ai#ai-credits).
+
+## Rate limits
+
+Every model turn (a message, an approval or denial that resumes the agent, client tool results) counts against three
+limits, each over a rolling minute:
+
+| Limit | Default |
+| --- | --- |
+| Per API token | 60 turns (`AGENT_API_TOKEN_PER_MINUTE` on self-hosted instances) |
+| Per member or embedded learner | 30 turns, shared with every other AI feature they use |
+| Per organization | 120 turns, shared with every other AI feature |
+| Per conversation | 20 turns (`AGENT_API_CONVERSATION_PER_MINUTE`) |
+
+Reading (agents, conversations, messages, streams, the view schema) is not counted. Over a limit, the API answers:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 12
+
+{"detail": {"code": "rate_limited", "message": "Too many agent requests. Slow down and retry.", "retry_after": 12}}
+```
+
+Wait `Retry-After` seconds before trying again. A conversation also runs one reply at a time: a message sent while one
+is running answers `409 run_in_progress`. Wait for `message.done`, or [cancel](/developers/agent-api/events#cancellation).
+
+## Size limits
+
+| What | Limit |
+| --- | --- |
+| Message `content` | 8000 characters |
+| `instructions` | 2000 characters |
+| `metadata` | 20 keys; values are strings, numbers or booleans |
+| `external_user_id` | 128 characters |
+| `tools.allow` | 100 tool names |
+| `tools.client` | 8 tools; `name` matches `^[a-z][a-z0-9_]{1,47}$`; `description` up to 500 characters |
+| Deny `reason` | 1000 characters |
+| `json_schema` | 16 KB, 8 levels deep |
+| Template | 20 KB source, 200 KB output, 8 levels of nesting |
+| JSON output | 3 attempts |
+| View | 12 components, 64 KB |
+
+Bodies over the limits answer `413 payload_too_large` or `422 invalid_request`.
+
+## Prompt injection
+
+Agents read text other people wrote: course content, learner messages, tool results, your `instructions`. LearnHouse
+assumes any of it may try to steer the agent, and doesn't rely on the model to say no:
+
+- **Developer `instructions` are an overlay.** They are added after LearnHouse's own system rules and can change tone,
+  language and focus. They can't turn off a safety rule, unlock a tool or change who the agent acts for.
+- **Permissions are checked by the server, not the model.** Every tool call is checked against the caller's rights
+  when it runs, whatever the model was told.
+- **Risky tools always need approval.** No prompt, instruction or allowlist turns an approval off. Only an approver
+  with the right to approve can let it through.
+- **No personal data of the token's creator.** A conversation started with an API token runs as the organization, not
+  as a person: it gets none of the creator's Atlas memory, inbox or private conversations.
+- **Views and templates are data.** Views are validated against fixed schemas and cleaned; templates can't run code and
+  escape every value.
+
+On your side:
+
+- Treat the agent's text, views and tool arguments as untrusted input. Escape them when you render them, and validate
+  client-tool `args` before acting on them.
+- Don't put secrets in `instructions`, `metadata` or client tool results. The model can repeat them.
+- Keep humans on approvals for anything you can't undo.
+
+## Audit log
+
+Every change an agent makes is recorded in the organization's [audit log](/enterprise/audit-logs) as an Atlas
+action, with the approval that let it through and the conversation id. For API tokens the entry's actor is the member who
+created the token and its details carry `api_token_id`; token activity on the API itself is logged too: conversations
+created and deleted (`ai.agent_api_conversation_created`, `ai.agent_api_conversation_deleted`) and every approval
+decision (`ai.agent_api_approval_decided`, with the tool and the decision). Changes made with a member session are logged
+under the member, as in LearnHouse.
+
+## Browsers and CORS
+
+<Callout type="warning">
+  API tokens (`lh_…`) must stay on your server. Anyone who has one can act for your organization within its rights.
+</Callout>
+
+- **Learner chat in your frontend**: mint an [embed session](/developers/api/authentication#embed-sessions) on your
+  server and use it from the browser. It only reaches learner agents.
+- **Staff tools in your frontend**: call your own backend, which holds the token and decides who may do what, or use the
+  member's own LearnHouse session.
+
+LearnHouse answers cross-origin browser requests that carry a bearer token and no cookies, so embed sessions work from
+your own domain, streaming included. Self-hosters can turn this off with `LEARNHOUSE_BEARER_CORS=false`.

@@ -25,12 +25,10 @@ def ai_block_reason(config: Optional[dict], org_id: int) -> Optional[str]:
 
     if not resolve_feature("ai", config, org_id)["enabled"]:
         return "AI features are disabled for this organization"
-    # copilot_enabled lives in admin toggles (v2) or features.ai (v1).
-    if config.get("config_version", "1.0").startswith("2"):
-        copilot_enabled = config.get("admin_toggles", {}).get("ai", {}).get("copilot_enabled", True)
-    else:
-        copilot_enabled = config.get("features", {}).get("ai", {}).get("copilot_enabled", True)
-    if not copilot_enabled:
+    # Learner Ask AI: copilot_enabled (historical) or features.ask_ai.
+    from src.security.features_utils.ai_features import ai_feature_switches
+
+    if not ai_feature_switches(config)["ask_ai"]:
         return "Copilot is disabled for this organization"
     return None
 

@@ -25,6 +25,7 @@ import {
 import { Button, Chip, ConfirmDialog, EmptyState, INPUT, SectionCard, SegmentedControl, Skeleton, TEXTAREA, formatRelative } from '@/design'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import { OPTIONAL_FEATURES } from '@services/features/optionalFeatures'
+import { AI_FEATURE_GROUPS, AI_GROUP_ORDER, type AIFeatureKey } from '@/lib/ai/aiFeatures'
 import { errorMessage, getOrgConfigHistory, updateOrgConfig, updateOrgConfigSection } from '@services/ee/platform/api'
 import { platformKeys } from '@services/ee/platform/keys'
 import type { OrgConfiguration, OrgMenuItem } from '@services/ee/platform/types'
@@ -33,6 +34,7 @@ import { QueryError, Switch } from '@components/Admin/Shared/AdminKit'
 import { changeRows, isHttpUrl, isMenuUrl, MAX_LINKS, moveItem, sameValue, SOCIAL_KEYS, sortedMenu } from '../orgConfig'
 import { useInvalidateOrg } from '../orgQueries'
 import { CardSaveBar, ConfigRow, useConfigWrite, useDraft, useOrgConfiguration } from './configKit'
+import { useSeoT } from '@/lib/seo/i18n'
 
 // The rest of the org's settings, grouped like the org's own settings pages.
 // Profile, language, sign-up mode, features, AI, menu and SEO are editable;
@@ -370,7 +372,17 @@ function FeaturesCard({ cfg, orgId, canEdit, onOpenPlan }: Props & { onOpenPlan?
   const write = useConfigWrite(orgId)
   const [busy, setBusy] = React.useState<string | null>(null)
   const toggles = cfg.admin_toggles || {}
-  const ai = (toggles.ai || {}) as { disabled?: boolean; copilot_enabled?: boolean }
+  const ai = (toggles.ai || {}) as {
+    disabled?: boolean
+    org_disabled?: boolean
+    copilot_enabled?: boolean
+    features?: Partial<Record<AIFeatureKey, boolean>>
+    ask_ai_staff_only?: boolean
+    monthly_credit_cap?: number
+  }
+  // Off by either switch: the platform's or the org's own (Settings > AI).
+  const aiOff = !!ai.disabled || !!ai.org_disabled
+  const aiSwitchOn = (key: AIFeatureKey) => ai.features?.[key] !== false && !(key === 'ask_ai' && ai.copilot_enabled === false)
 
   const run = async (key: string, fn: () => Promise<unknown>) => {
     setBusy(key)
@@ -436,7 +448,7 @@ function FeaturesCard({ cfg, orgId, canEdit, onOpenPlan }: Props & { onOpenPlan?
               <p className="text-xs text-neutral-500">{t('admin.org_detail.features.ai.description')}</p>
             </div>
             <Switch
-              checked={!ai.disabled}
+              checked={!aiOff}
               disabled={!canEdit || busy === 'ai'}
               label={t('admin.org_detail.features.ai.label')}
               onChange={(v) => run('ai', () => write(() => updateOrgConfigSection(token, orgId, 'ai', { ai_enabled: v })))}
@@ -449,12 +461,51 @@ function FeaturesCard({ cfg, orgId, canEdit, onOpenPlan }: Props & { onOpenPlan?
             </div>
             <Switch
               checked={ai.copilot_enabled !== false}
-              disabled={!canEdit || busy === 'copilot' || !!ai.disabled}
+              disabled={!canEdit || busy === 'copilot' || aiOff}
               label={t('admin.org_detail.ai_copilot')}
               onChange={(v) => run('copilot', () => write(() => updateOrgConfigSection(token, orgId, 'ai', { copilot_enabled: v })))}
             />
           </div>
         </div>
+        {/* The org's per-feature AI switches (same as its Settings > AI). */}
+        {cfg.is_v2 && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2" data-testid="admin-ai-features">
+            {AI_GROUP_ORDER.map((group) => (
+              <div key={group} className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  {t(`dashboard.organization.ai.groups.${group}.title`)}
+                </p>
+                <ul className="mt-1 divide-y divide-neutral-100">
+                  {AI_FEATURE_GROUPS[group].map((key) => (
+                    <li key={key} className="flex items-center justify-between gap-3 py-2">
+                      <span className="min-w-0 truncate text-sm text-neutral-800">
+                        {t(`dashboard.organization.ai.features.${key}.title`)}
+                      </span>
+                      <Switch
+                        checked={aiSwitchOn(key)}
+                        disabled={!canEdit || busy === `ai:${key}` || aiOff}
+                        label={t(`dashboard.organization.ai.features.${key}.title`)}
+                        onChange={(v) =>
+                          run(`ai:${key}`, () => write(() => updateOrgConfigSection(token, orgId, 'ai', { features: { [key]: v } })))
+                        }
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div className="min-w-0 sm:col-span-2 flex flex-wrap gap-2 text-xs text-neutral-500">
+              <Chip>
+                {t('dashboard.organization.ai.ask_ai_audience')}:{' '}
+                {ai.ask_ai_staff_only ? t('dashboard.organization.ai.audience_staff') : t('dashboard.organization.ai.audience_everyone')}
+              </Chip>
+              <Chip>
+                {t('dashboard.organization.ai.limits_title')}:{' '}
+                {ai.monthly_credit_cap ? ai.monthly_credit_cap : t('dashboard.organization.ai.cap_placeholder')}
+              </Chip>
+            </div>
+          </div>
+        )}
       </div>
     </SectionCard>
   )
@@ -556,6 +607,7 @@ const SEO_TEXT = ['default_meta_title_suffix', 'default_title_template', 'defaul
 
 function SeoCard({ cfg, orgId, canEdit }: Props) {
   const { t } = useTranslation()
+  const st = useSeoT()
   const token = useAccessToken()
   const write = useConfigWrite(orgId)
   const saved = React.useMemo(() => {
@@ -566,6 +618,10 @@ function SeoCard({ cfg, orgId, canEdit }: Props) {
       robots_extra_rules: String(seo.robots_extra_rules ?? ''),
       noindex_communities: !!seo.noindex_communities,
       indexing_disabled: !!seo.indexing_disabled,
+      ai_crawler_policy: String(seo.ai_crawler_policy || 'allow'),
+      llms_txt_enabled: seo.llms_txt_enabled !== false,
+      feeds_enabled: seo.feeds_enabled !== false,
+      indexnow_enabled: !!seo.indexnow_enabled,
     } as Record<string, string | boolean>
   }, [cfg])
   const [draft, setDraft, discard] = useDraft(saved)
@@ -614,6 +670,23 @@ function SeoCard({ cfg, orgId, canEdit }: Props) {
         <ConfigRow label={label('indexing_disabled')} hint={t('admin.org_cfg.seo.indexing_disabled_hint')}>
           <Switch checked={!!draft.indexing_disabled} disabled={!canEdit} label={label('indexing_disabled')} onChange={(v) => setDraft((d) => ({ ...d, indexing_disabled: v }))} />
         </ConfigRow>
+        <ConfigRow label={st('org.ai_policy')}>
+          <select className={`${INPUT} max-w-xs`} value={String(draft.ai_crawler_policy)} disabled={!canEdit} onChange={(e) => setDraft((d) => ({ ...d, ai_crawler_policy: e.target.value }))}>
+            {(['allow', 'block_training', 'block_all'] as const).map((p) => (
+              <option key={p} value={p}>
+                {st(`org.ai_${p}`)}
+              </option>
+            ))}
+          </select>
+        </ConfigRow>
+        {(['llms_txt_enabled', 'feeds_enabled', 'indexnow_enabled'] as const).map((k) => {
+          const text = st(k === 'llms_txt_enabled' ? 'org.llms_enabled' : `org.${k}`)
+          return (
+            <ConfigRow key={k} label={text}>
+              <Switch checked={!!draft[k]} disabled={!canEdit} label={text} onChange={(v) => setDraft((d) => ({ ...d, [k]: v }))} />
+            </ConfigRow>
+          )
+        })}
         <ConfigRow label={label('robots_extra_rules')}>
           <textarea
             rows={3}

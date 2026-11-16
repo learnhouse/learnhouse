@@ -212,6 +212,13 @@ async def get_collab_access(
 
         await require_language(db_session, course, require_locale(locale))
 
+    # Realtime co-editing is a plan feature: a downgraded org edits and saves
+    # on its own, without a room.
+    from src.security.features_utils.plan_check import check_org_plan
+    from src.security.features_utils.plans import FEATURE_PLAN_REQUIREMENTS
+
+    await check_org_plan(course.org_id, FEATURE_PLAN_REQUIREMENTS["collaboration"], "Collaboration", db_session)
+
     # Turned off for the org or this activity: no room, manual saving
     from src.services.courses.activities.collab_settings import live_editing_enabled
     if not await live_editing_enabled(activity, db_session):

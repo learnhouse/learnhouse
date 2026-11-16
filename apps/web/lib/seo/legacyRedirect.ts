@@ -98,3 +98,55 @@ export async function landingDecision(
 export function clearLandingCache() {
   cache.clear()
 }
+
+const THREAD_UUID_RE = /^\/community\/([^/]+)\/discussion\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/?$/i
+const threadCache = new Map<string, { target: string | null; ts: number }>()
+
+/**
+ * Old thread URLs (`/community/{key}/discussion/{uuid}`) → a real 301 to the
+ * readable `/community/{key}/{id}-{slug}`, for threads an anonymous visitor
+ * can read. Anything else (private, sold, missing, API down) returns null
+ * and the page decides with the visitor's own session.
+ */
+const THREAD_SEGMENT_PATH_RE = /^\/community\/([^/]+)\/(\d{1,18}(?:-[a-z0-9-]*)?)\/?$/
+
+export async function threadRedirect(
+  apiUrl: string,
+  orgslug: string,
+  pathname: string,
+  fetcher: typeof fetch = fetch,
+  now: number = Date.now(),
+  opts: { isBot?: boolean } = {},
+): Promise<string | null> {
+  // Readable URLs with a stale slug or community key: the page redirects
+  // too, but behind its streaming shell that is a client-side redirect, so
+  // crawlers get the real 301 here. People skip this lookup.
+  let m = pathname.match(THREAD_UUID_RE)
+  if (!m && opts.isBot) {
+    m = pathname.match(THREAD_SEGMENT_PATH_RE)
+  }
+  if (!m) return null
+  const cacheKey = `${orgslug}|${m[1]}|${m[2].toLowerCase()}`
+  const hit = threadCache.get(cacheKey)
+  if (hit && now - hit.ts < FOUND_TTL_MS) return hit.target
+  let target: string | null = null
+  try {
+    const res = await fetcher(
+      `${apiUrl}seo/thread/${encodeURIComponent(orgslug)}/${encodeURIComponent(m[1])}/${encodeURIComponent(m[2].toLowerCase())}`,
+      { signal: AbortSignal.timeout(1500), cache: 'no-store' },
+    )
+    if (res.ok) {
+      const data = await res.json()
+      if (data?.segment && data?.community_key && !data.locked) target = `/community/${encodeURIComponent(data.community_key)}/${data.segment}`
+      // Already canonical: nothing to do.
+      if (target && target === pathname.replace(/\/$/, '')) target = null
+    } else if (res.status !== 404) {
+      return null
+    }
+  } catch {
+    return null
+  }
+  if (threadCache.size >= MAX_ENTRIES) threadCache.delete(threadCache.keys().next().value as string)
+  threadCache.set(cacheKey, { target, ts: now })
+  return target
+}

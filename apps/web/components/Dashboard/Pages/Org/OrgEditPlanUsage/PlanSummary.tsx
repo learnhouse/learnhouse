@@ -90,6 +90,8 @@ export function PlanSummaryCard({
   let line: string
   if (overview.status === 'poc' && overview.poc?.state === 'active') {
     line = t(`${P}.line.poc`, { date: date(overview.poc.ends_at), plan: planNameById(t, overview.poc.returns_to, overview.poc.returns_to) })
+  } else if (overview.trial?.active) {
+    line = t(`${P}.line.free_trial`, { count: overview.trial.days_left })
   } else if (overview.status === 'trial' || overview.status === 'suspended') {
     line = t(`${P}.line.${overview.status}`)
   } else if (!saas) {
@@ -142,6 +144,11 @@ export function PlanSummaryCard({
         </div>
         {saas && canManage && (manageUrl || (upgradeUrl && nextPlan)) && (
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {manageUrl && overview.billing === 'stripe' && (
+              <a href={`${manageUrl}${manageUrl.includes('?') ? '&' : '?'}section=invoices`} className={buttonClass('ghost', 'md')} data-testid="plan-invoices">
+                {t(`${P}.invoices`)}
+              </a>
+            )}
             {manageUrl && overview.billing !== 'none' && (
               <a href={manageUrl} className={buttonClass('secondary', 'md')} data-testid="plan-manage-billing">
                 {t(`${P}.manage_billing`)}

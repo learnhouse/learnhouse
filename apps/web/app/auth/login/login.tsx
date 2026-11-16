@@ -33,6 +33,8 @@ import {
 import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getAllowedAuthMethods } from '@services/auth/authMethods'
+import { peekPostAuthNext, takeLoginHint, takePostAuthNext } from '@/lib/auth/signup'
+import { useForwardedNextHref } from '@/lib/auth/nextParam'
 
 interface LoginClientProps {
   org: any
@@ -41,6 +43,8 @@ interface LoginClientProps {
 const LoginClient = (props: LoginClientProps) => {
   const { t } = useTranslation()
   const { signIn, completeMfaLogin, requestMagicLink } = useAuth()
+  // Keep ?next when switching to sign-up.
+  const signupHref = useForwardedNextHref('/signup')
   const { track } = useLHAnalytics('public')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [ssoEnabled, setSsoEnabled] = useState(false)
@@ -160,7 +164,9 @@ const LoginClient = (props: LoginClientProps) => {
     // `redirect_to` is what the magic-link consume endpoint forwards when it
     // bounces a 2FA-enabled user here instead of signing them straight in.
     const raw = params.get('next') ?? params.get('redirect') ?? params.get('redirect_to')
-    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : defaultPostAuthPath(props.org)
+    // No ?next: the page they signed up from on this host (a course they tried
+    // to start), so a first sign-in after signup still lands there.
+    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : peekPostAuthNext() || defaultPostAuthPath(props.org)
     return `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(dest)}`
   }
 
@@ -183,6 +189,7 @@ const LoginClient = (props: LoginClientProps) => {
 
     if (res.ok) {
       track(AnalyticsEvent.LoginSucceeded, { method: 'credentials_mfa' })
+      takePostAuthNext()
       window.location.href = callbackUrl
       return
     }
@@ -457,10 +464,18 @@ const LoginClient = (props: LoginClientProps) => {
       } else {
         track(AnalyticsEvent.LoginSucceeded, { method: 'credentials' })
         // First signIn already authenticated and set cookies, so just redirect
+        takePostAuthNext()
         window.location.href = callbackUrl;
       }
     },
   })
+
+  // Coming from an invitation link: the invited address is handed over in
+  // sessionStorage (never the URL) so the person only types their password.
+  useEffect(() => {
+    const hint = takeLoginHint()
+    if (hint) formik.setFieldValue('email', hint, false)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const retryMinutes = retryAfter ? Math.max(1, Math.ceil(retryAfter / 60)) : null
   const isGenericError =
@@ -510,6 +525,42 @@ const LoginClient = (props: LoginClientProps) => {
           ) : isGenericError ? (
             <AuthNotice tone="danger" onDismiss={dismissError}>
               {error}
+              {/* Only ~3 in 10 people who hit a wrong password ever got in.
+                  The API can't say why it failed (no account enumeration), so
+                  offer every way back in right here. */}
+              {errorType === 'INVALID_CREDENTIALS' && (
+                <span className="mt-1.5 block" data-testid="login-recovery">
+                  {t('auth.login_failed_forgot', { defaultValue: 'Forgot your password?' })}{' '}
+                  <Link
+                    href="/forgot"
+                    onClick={() => track(AnalyticsEvent.LoginRecoveryClicked, { action: 'reset_password' })}
+                    className="font-semibold underline underline-offset-2 hover:no-underline"
+                  >
+                    {t('auth.login_failed_reset', { defaultValue: 'Reset it' })}
+                  </Link>
+                  {magicLoginAllowed && (
+                    <>
+                      {' · '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          track(AnalyticsEvent.LoginRecoveryClicked, { action: 'magic_link' })
+                          dismissError()
+                          openMagicMode()
+                        }}
+                        className="font-semibold underline underline-offset-2 hover:no-underline text-start"
+                      >
+                        {t('auth.login_failed_magic', { defaultValue: 'Email me a login link instead' })}
+                      </button>
+                    </>
+                  )}
+                  {googleAllowed && (
+                    <span className="mt-1 block opacity-80">
+                      {t('auth.login_failed_google_hint', { defaultValue: 'Signed up with Google? Use Continue with Google below.' })}
+                    </span>
+                  )}
+                </span>
+              )}
             </AuthNotice>
           ) : null}
         </div>
@@ -797,7 +848,7 @@ const LoginClient = (props: LoginClientProps) => {
 
             <AuthFootnote>
               {t('auth.no_account')}{' '}
-              <Link href="/signup" className={AUTH_LINK}>
+              <Link href={signupHref} className={AUTH_LINK}>
                 {t('auth.sign_up')}
               </Link>
             </AuthFootnote>

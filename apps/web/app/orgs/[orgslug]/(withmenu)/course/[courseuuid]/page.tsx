@@ -7,7 +7,8 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { resolveForPage } from '@/lib/seo/resolve.server'
-import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
+import { buildResourceMetadata, noindexMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
+import { featureIndexable } from '@/lib/seo/meta'
 import { parseLearnings } from '@/lib/seo/meta'
 import { courseLanguageSeo } from '@/lib/seo/alternates'
 import { parseLangParam } from '@/lib/contentLanguage'
@@ -61,6 +62,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     available: course.available_locales,
   })
   const multilingual = !!lang.languages
+  const indexable = !!course.public && !!course.published && !resolved?.restricted && featureIndexable(ctx.seo, 'courses')
   return buildResourceMetadata({
     ctx,
     name: course.name,
@@ -75,7 +77,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       : undefined,
     generatedImage: await ctx.url(`/og/course/${key}`),
     ogType: 'article',
-    indexable: !!course.public && !!course.published && !resolved?.restricted,
+    indexable,
+    alternateTypes: await seoAlternates(ctx, { indexable, markdown: `/course/${key}.md`, feed: '/courses/' }),
     keywords: course.tags || learnings.slice(0, 8),
     publishedTime: course.creation_date,
     modifiedTime: course.update_date,

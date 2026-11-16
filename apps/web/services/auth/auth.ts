@@ -190,6 +190,8 @@ interface NewAccountBody {
   // Cloudflare Turnstile token collected by the signup form. Optional so OSS /
   // Turnstile-disabled deployments keep working.
   turnstileToken?: string | null
+  /** Page to land on after verifying the email (a relative path). */
+  next?: string | null
 }
 
 // Signup goes through the same-origin gateway (app/api/signup/route.ts), which
@@ -228,7 +230,7 @@ export async function verifyEmail(
   token: string,
   userUuid: string,
   orgUuid: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; next?: string | null }> {
   try {
     const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
 
@@ -249,7 +251,8 @@ export async function verifyEmail(
     const data = await response.json()
 
     if (response.ok) {
-      return { success: true }
+      // Where they were headed when they signed up, kept with the token.
+      return { success: true, next: typeof data?.next === 'string' ? data.next : null }
     } else {
       return {
         success: false,
@@ -266,7 +269,8 @@ export async function verifyEmail(
 
 export async function resendVerificationEmail(
   email: string,
-  orgId?: number
+  orgId?: number,
+  next?: string | null
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
@@ -276,7 +280,7 @@ export async function resendVerificationEmail(
     const requestOptions: RequestInit = {
       method: 'POST',
       headers: HeadersConfig,
-      body: JSON.stringify(orgId != null ? { email, org_id: orgId } : { email }),
+      body: JSON.stringify({ email, ...(orgId != null ? { org_id: orgId } : {}), ...(next ? { next } : {}) }),
     }
 
     const response = await fetch(`${getAPIUrl()}auth/resend-verification`, requestOptions)

@@ -5,7 +5,8 @@ import { getPodcastThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { resolveForPage } from '@/lib/seo/resolve.server'
-import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
+import { buildResourceMetadata, noindexMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
+import { featureIndexable } from '@/lib/seo/meta'
 import PodcastClient from './podcast'
 
 type PageParams = Promise<{
@@ -31,6 +32,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
   const podcast = meta?.podcast
   if (!podcast) return noindexMetadata(ctx.org?.name || 'Podcast')
   const key = podcast.slug || uuid
+  const indexable = !!podcast.public && !!podcast.published && !resolved?.restricted && featureIndexable(ctx.seo, 'podcasts')
   return buildResourceMetadata({
     ctx,
     name: podcast.name,
@@ -42,7 +44,12 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
       : undefined,
     generatedImage: await ctx.url(`/og/podcast/${key}`),
     ogType: 'music.playlist',
-    indexable: !!podcast.public && !!podcast.published && !resolved?.restricted,
+    indexable,
+    // The RSS feed is linked even when the page isn't indexed: podcast apps need it.
+    alternateTypes: {
+      ...(await seoAlternates(ctx, { indexable, markdown: `/podcast/${key}.md` })),
+      ...(podcast.public && podcast.published && !resolved?.restricted ? { 'application/rss+xml': await ctx.url(`/podcast/${key}/feed`) } : {}),
+    },
     keywords: podcast.tags || `${ctx.org?.name}, podcast, audio, learning`,
     modifiedTime: podcast.update_date,
   })

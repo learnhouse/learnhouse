@@ -27,6 +27,7 @@ import {
   CalendarDots,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
+import MobileAppButton from './MobileAppButton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -213,6 +214,14 @@ export const OrgMenu = (props: any) => {
                 </TooltipProvider>
               </div>
             </AuthenticatedClientElement>
+            {/* Mobile app: org details and a QR code the LearnHouse app scans to connect */}
+            <div className="hidden lg:flex">
+              <MobileAppButton
+                org={org}
+                orgslug={orgslug}
+                className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+              />
+            </div>
             {/* Inbox: notifications and messages behind one button, one badge */}
             <AuthenticatedClientElement checkMethod="authentication">
               <div className="hidden lg:flex">

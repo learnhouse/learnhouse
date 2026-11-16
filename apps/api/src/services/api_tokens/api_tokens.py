@@ -683,6 +683,9 @@ _TOKEN_BUCKET_CAPS = {
     "newsletter": "organizations",
     # CRM integrations (EE): status, mapping, syncs. Org-level data.
     "crm": "organizations",
+    # Agent API (EE): conversations with Atlas and the copilot; "update" lets
+    # the token approve the agent's risky actions itself. Org-level.
+    "agent": "organizations",
 }
 
 

@@ -94,7 +94,11 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <Providers>
           <ImageFallbackGuard />
-          <main className="animate-fade-in">
+          {/* No fade-in from opacity 0 here: Chrome does not count content
+              painted at opacity 0 as contentful, and a compositor-only fade
+              never re-reports it, so every page's FCP/LCP waited for the next
+              React render (on the sign-in link pages, the redirect: 5-10 s). */}
+          <main>
             {children}
           </main>
         </Providers>

@@ -1,19 +1,19 @@
 'use client'
 import { useFormik } from 'formik'
-import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import React from 'react'
 import FormLayout from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { EnvelopeSimple, User } from '@phosphor-icons/react'
-import { AUTH_INPUT, AUTH_LINK, AUTH_TEXTAREA, AuthButton, AuthDivider, AuthFootnote, AuthHeading, AuthLabel, AuthNotice, AuthProviderButton, GoogleMark } from '@components/Auth/AuthUI'
+import { EnvelopeSimple, SignIn } from '@phosphor-icons/react'
+import { AUTH_INPUT, AUTH_LINK, AuthButton, AuthDivider, AuthFootnote, AuthHeading, AuthLabel, AuthNotice, AuthProviderButton, authButtonClass, GoogleMark } from '@components/Auth/AuthUI'
 import Link from 'next/link'
-import { signup, resendVerificationEmail } from '@services/auth/auth'
+import { signup, signUpWithInviteCode, resendVerificationEmail } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, isOnCustomDomain } from '@services/config/config'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
+import PasswordInput from '@components/Auth/PasswordInput'
 import TurnstileWidget, { useTurnstileRequired, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getAllowedAuthMethods } from '@services/auth/authMethods'
@@ -23,43 +23,29 @@ import CustomSignupFields, {
   validateCustomFields,
 } from '@components/Auth/CustomSignupFields'
 import { readSignupFields, type SignupFieldItem } from '@services/settings/org'
+import { rememberPostAuthNext, splitFullName, usernameFromEmail } from '@/lib/auth/signup'
+import { readNextParam, useForwardedNextHref } from '@/lib/auth/nextParam'
 
-// On the platform's own signup page (no org: someone starting their own
-// LearnHouse) the username and bio are not asked: the username is made from
-// the email, and the profile can be filled in later.
-export function usernameFromEmail(email: string): string {
-  const base = (email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20)
-  const padded = base.length >= 4 ? base : `${base}user`.slice(0, 8)
-  return `${padded}${Math.floor(1000 + Math.random() * 9000)}`
-}
+export { usernameFromEmail }
 
-const validate = (values: any, t: any, customFields: SignupFieldItem[], platformSignup = false) => {
+// One screen, as few fields as possible: email, password (with a show toggle
+// and the rules ticking inline), an optional name, and only the extra fields
+// the org itself requires. No username (made from the email) and no bio (the
+// profile can be filled in later).
+const validate = (values: any, t: any, customFields: SignupFieldItem[]) => {
   const errors: any = {}
 
   if (!values.email) {
     errors.email = t('validation.required')
-  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email.trim())) {
     errors.email = t('validation.invalid_email')
   }
 
   if (!values.password) {
     errors.password = t('validation.required')
-  } else {
-    const passwordValidation = validatePasswordStrength(values.password)
-    if (!passwordValidation.isValid) {
-      errors.password = t('auth.password_requirements_not_met')
-    }
+  } else if (!validatePasswordStrength(values.password).isValid) {
+    errors.password = t('auth.password_requirements_not_met')
   }
-
-  if (platformSignup) {
-    // Made from the email at submit.
-  } else if (!values.username) {
-    errors.username = t('validation.required')
-  } else if (values.username.length < 4) {
-    errors.username = t('validation.username_min_length')
-  }
-
-  // Bio is optional - no validation required
 
   // The org's admin-defined fields. Client-side only; the server revalidates.
   const customFieldErrors = validateCustomFields(customFields, values.custom_fields, t)
@@ -75,15 +61,18 @@ interface OpenSignUpComponentProps {
   // the instance default org server-side and passes it down here. Prefer it over
   // the (possibly null) context so the POST always targets a real org_id.
   org?: any
+  /** Invite-only org: the code from the invite link or the code screen. */
+  inviteCode?: string
 }
 
-function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
+function OpenSignUpComponent({ org: propOrg, inviteCode }: OpenSignUpComponentProps = {}) {
   const { t } = useTranslation()
   const { track } = useLHAnalytics('public')
+  // Keep ?next when switching to login (e.g. back to the course they tried to start).
+  const loginHref = useForwardedNextHref('/login')
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const contextOrg = useOrg() as any
   const org = (contextOrg && (contextOrg.id || contextOrg.slug)) ? contextOrg : propOrg
-  const _router = useRouter()
   const [error, setError] = React.useState('')
   const [message, setMessage] = React.useState<{ email_verified: boolean } | null>(null)
   const [resendState, setResendState] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -95,7 +84,6 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
   // sign-in produces an account that can never be used. The backend refuses
   // both, so offering them here would only surface a 403.
   const allowedMethods = React.useMemo(() => getAllowedAuthMethods(org), [org])
-  const platformSignup = !org
   const passwordAllowed = allowedMethods.has('password')
   const googleAllowed = allowedMethods.has('google')
 
@@ -112,34 +100,37 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       org_id: org?.id,
       email: '',
       password: '',
-      username: '',
-      bio: '',
-      first_name: '',
-      last_name: '',
+      name: '',
       custom_fields: initialCustomFieldValues(customFields),
       turnstileToken: null as string | null,
     },
-    validate: (values) => validate(values, t, customFields, platformSignup),
+    validate: (values) => validate(values, t, customFields),
     enableReinitialize: true,
     onSubmit: async (values) => {
       setError('')
       setMessage(null)
       setIsSubmitting(true)
-      track(AnalyticsEvent.SignupSubmitted, { invite_code_present: false, has_bio: !!values.bio })
+      track(AnalyticsEvent.SignupSubmitted, { invite_code_present: !!inviteCode, has_bio: false })
+      const { name, ...rest } = values
+      const email = values.email.trim()
+      // Keep where they were headed (a course they tried to start) through the
+      // verification email: sent with the signup (stored with the token) and
+      // remembered on this host as a fallback.
+      const next = readNextParam(window.location.search)
+      rememberPostAuthNext(next)
+      const body = { ...rest, ...splitFullName(name), email, username: usernameFromEmail(email), next }
       try {
-        let res = await signup(platformSignup && !values.username ? { ...values, username: usernameFromEmail(values.email) } : values)
-        let message = await res.json().catch(() => ({}))
+        const res = inviteCode ? await signUpWithInviteCode(body, inviteCode) : await signup(body)
+        const data = await res.json().catch(() => ({}))
         if (res.status == 200) {
-          track(AnalyticsEvent.SignupSucceeded, { email_verified: message.email_verified })
-          setMessage(message)
+          track(AnalyticsEvent.SignupSucceeded, { email_verified: data.email_verified })
+          setMessage(data)
         } else {
           // Surface the backend's actual error detail for ANY non-2xx (incl. 409
           // already-exists, 422 validation, 503 email-service-down) instead of
-          // masking everything past the handful of hardcoded statuses behind a
-          // generic message. Fall back to a generic string only when the backend
-          // gave us nothing readable.
+          // masking everything behind a generic message.
           track(AnalyticsEvent.SignupFailed, { status_code: res.status })
-          setError(getErrorMessage(message?.detail, t('common.something_went_wrong')))
+          setError(getErrorMessage(data?.detail, t('common.something_went_wrong')))
           // Turnstile tokens are single-use, so fetch a fresh one for the retry.
           turnstileRef.current?.reset()
         }
@@ -152,8 +143,6 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       }
     },
   })
-
-  useEffect(() => { }, [org])
 
   // Honor a sanitized ?next / ?redirect destination through the
   // cross-domain /redirect_from_auth handoff; default to the org's home (or the
@@ -178,74 +167,100 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       const domainAttr = (topDomain === 'localhost' || isOnCustomDomain()) ? '' : `; domain=.${topDomain}`;
       document.cookie = `LH_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `LH_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
+      // Invite-only orgs need the invite code itself, not just the org: the
+      // OAuth callback joins through /users/{org_id}/invite/{code}. Without it
+      // a Google sign-up through an invite link is refused.
+      if (inviteCode) {
+        document.cookie = `LH_oauth_invite_code=${encodeURIComponent(inviteCode)}${baseAttributes}${domainAttr}`;
+      }
     }
-    // Use absolute URL with current origin for custom domain support
-    signIn('google', { callbackUrl: buildCallbackUrl() });
+    // Use absolute URL with current origin for custom domain support. On
+    // success this navigates to Google; a failure used to be swallowed, which
+    // left people clicking a button that did nothing.
+    setError('')
+    signIn('google', { callbackUrl: buildCallbackUrl() }).then((res) => {
+      if (res && !res.ok) {
+        track(AnalyticsEvent.SignupFailed, { method: 'google', status_code: res.status })
+        setError(res.error || t('common.something_went_wrong'))
+      }
+    });
   };
+
+  // Account created, inbox to confirm: the form steps aside for one clear
+  // next step instead of a notice stacked above a used-up form.
+  if (message) {
+    const verified = message.email_verified !== false
+    return (
+      <div className="w-full" data-testid="signup-done">
+        <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+          <EnvelopeSimple size={22} weight="duotone" aria-hidden="true" />
+        </div>
+        <AuthHeading
+          title={verified ? t('auth.account_created_success') : t('auth.check_email_for_verification')}
+          description={verified ? undefined : t('auth.verification_sent_to', {
+            email: formik.values.email.trim(),
+            defaultValue: 'We sent a confirmation link to {{email}}. Open it to start using your account.',
+          })}
+        />
+        {!verified && (
+          <div className="mt-4 text-[13px] text-neutral-500">
+            {resendState === 'sent' ? (
+              <p className="font-medium text-emerald-700">
+                {t('auth.verification_email_resent', { defaultValue: 'Verification email sent again. Check your inbox.' })}
+              </p>
+            ) : (
+              <button
+                type="button"
+                disabled={resendState === 'sending'}
+                onClick={async () => {
+                  setResendState('sending')
+                  // org?.id is undefined on the org-less apex; that's fine, the
+                  // backend resends by email without an org.
+                  const res = await resendVerificationEmail(formik.values.email.trim(), org?.id, readNextParam(window.location.search))
+                  setResendState(res.success ? 'sent' : 'error')
+                }}
+                className="font-medium text-neutral-700 underline underline-offset-2 hover:no-underline disabled:opacity-50 text-start"
+              >
+                {resendState === 'sending'
+                  ? t('common.loading', { defaultValue: 'Sending…' })
+                  : t('auth.resend_verification', { defaultValue: "Didn't get it? Resend email" })}
+              </button>
+            )}
+            {resendState === 'error' && (
+              <p className="mt-1 text-xs text-rose-600">{t('auth.resend_verification_failed', { defaultValue: 'Could not resend. Please try again shortly.' })}</p>
+            )}
+          </div>
+        )}
+        <Link href={loginHref} className={authButtonClass(verified ? 'primary' : 'secondary', 'mt-6')}>
+          <SignIn size={16} aria-hidden="true" />
+          <span>{t('auth.login')}</span>
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full">
-      <AuthHeading title={t('auth.create_account')} description={t('auth.fill_in_details')} />
+      <AuthHeading title={t('auth.create_account')} description={t('auth.signup_one_step', { defaultValue: 'It takes less than a minute.' })} />
 
       <div className="mt-7">
-      {error && (
-        <AuthNotice tone="danger" className="mb-6">
-          {error}
-        </AuthNotice>
-      )}
+        {error && (
+          <AuthNotice tone="danger" className="mb-6">
+            {error}
+          </AuthNotice>
+        )}
 
-      {message && message.email_verified === false && (
-        <AuthNotice tone="success" icon={<EnvelopeSimple size={16} weight="fill" />} title={t('auth.check_email_for_verification')} className="mb-6">
-          <p>{t('auth.verification_email_sent_message')}</p>
-            {/* Resend, so a user whose email doesn't arrive isn't stuck. */}
-            <div className="mt-2">
-              {resendState === 'sent' ? (
-                <p className="text-xs font-medium">
-                  {t('auth.verification_email_resent', { defaultValue: 'Verification email sent again. Check your inbox.' })}
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  disabled={resendState === 'sending'}
-                  onClick={async () => {
-                    setResendState('sending')
-                    // org?.id is undefined on the org-less apex; that's fine, the
-                    // backend resends by email without an org.
-                    const res = await resendVerificationEmail(formik.values.email, org?.id)
-                    setResendState(res.success ? 'sent' : 'error')
-                  }}
-                  className="text-xs font-semibold underline underline-offset-2 hover:no-underline disabled:opacity-50 text-start"
-                >
-                  {resendState === 'sending'
-                    ? t('common.loading', { defaultValue: 'Sending…' })
-                    : t('auth.resend_verification', { defaultValue: "Didn't get it? Resend email" })}
-                </button>
-              )}
-              {resendState === 'error' && (
-                <p className="mt-1 text-xs text-rose-600">{t('auth.resend_verification_failed', { defaultValue: 'Could not resend. Please try again shortly.' })}</p>
-              )}
-            </div>
-          <div className="mt-3 pt-3 border-t border-emerald-600/10">
-            <Link className="inline-flex items-center gap-1.5 font-semibold underline-offset-2 hover:underline" href="/login">
-              <User size={14} aria-hidden="true" />
-              <span>{t('auth.login')}</span>
-            </Link>
-          </div>
-        </AuthNotice>
-      )}
+        {/* Google first: one click, nothing to type. */}
+        {googleAllowed && (
+          <AuthProviderButton onClick={handleGoogleSignIn} disabled={isSubmitting} icon={<GoogleMark />}>
+            {t('auth.sign_in_with_google')}
+          </AuthProviderButton>
+        )}
 
-      {message && message.email_verified && (
-        <AuthNotice tone="success" icon={<EnvelopeSimple size={16} weight="fill" />} title={t('auth.account_created_success')} className="mb-6">
-          <div className="mt-1">
-            <Link className="inline-flex items-center gap-1.5 font-semibold underline-offset-2 hover:underline" href="/login">
-              <User size={14} aria-hidden="true" />
-              <span>{t('auth.login')}</span>
-            </Link>
-          </div>
-        </AuthNotice>
-      )}
+        {passwordAllowed && googleAllowed && <AuthDivider />}
+
         {passwordAllowed && (
-        <FormLayout onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
+          <FormLayout onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
             <Form.Field name="email" className="grid min-w-0">
               <AuthLabel error={formik.touched.email && formik.errors.email}>{t('auth.email')}</AuthLabel>
               <Form.Control asChild>
@@ -255,94 +270,44 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
                   value={formik.values.email}
                   type="email"
                   autoComplete="email"
+                  inputMode="email"
                   required
+                  autoFocus
                   aria-invalid={formik.touched.email && formik.errors.email ? true : undefined}
                   className={AUTH_INPUT}
                 />
               </Form.Control>
             </Form.Field>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Form.Field name="first_name" className="grid min-w-0">
-              <AuthLabel error={formik.touched.first_name && formik.errors.first_name}>{t('user.first_name')}</AuthLabel>
-              <Form.Control asChild>
-                <input
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.first_name}
-                  type="text"
-                  autoComplete="given-name"
-                  aria-invalid={formik.touched.first_name && formik.errors.first_name ? true : undefined}
-                  className={AUTH_INPUT}
-                />
-              </Form.Control>
-            </Form.Field>
-            <Form.Field name="last_name" className="grid min-w-0">
-              <AuthLabel error={formik.touched.last_name && formik.errors.last_name}>{t('user.last_name')}</AuthLabel>
-              <Form.Control asChild>
-                <input
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.last_name}
-                  type="text"
-                  autoComplete="family-name"
-                  aria-invalid={formik.touched.last_name && formik.errors.last_name ? true : undefined}
-                  className={AUTH_INPUT}
-                />
-              </Form.Control>
-            </Form.Field>
-          </div>
-
             <Form.Field name="password" className="grid min-w-0">
               <AuthLabel error={formik.touched.password && formik.errors.password}>{t('auth.password')}</AuthLabel>
               <Form.Control asChild>
-                <input
+                <PasswordInput
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.password}
-                  type="password"
                   autoComplete="new-password"
                   required
                   aria-invalid={formik.touched.password && formik.errors.password ? true : undefined}
-                  className={AUTH_INPUT}
                 />
               </Form.Control>
               <PasswordStrengthIndicator password={formik.values.password} />
             </Form.Field>
 
-            {!platformSignup && (
-            <Form.Field name="username" className="grid min-w-0">
-              <AuthLabel error={formik.touched.username && formik.errors.username}>{t('user.username')}</AuthLabel>
+            <Form.Field name="name" className="grid min-w-0">
+              <AuthLabel>{`${t('auth.your_name', { defaultValue: 'Your name' })} (${t('common.optional')})`}</AuthLabel>
               <Form.Control asChild>
                 <input
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  value={formik.values.username}
+                  value={formik.values.name}
                   type="text"
-                  autoComplete="username"
-                  required
-                  aria-invalid={formik.touched.username && formik.errors.username ? true : undefined}
+                  autoComplete="name"
+                  maxLength={100}
                   className={AUTH_INPUT}
                 />
               </Form.Control>
             </Form.Field>
-
-            )}
-
-            {!platformSignup && (
-            <Form.Field name="bio" className="grid">
-              <AuthLabel>{`${t('user.bio')} (${t('common.optional')})`}</AuthLabel>
-              <Form.Control asChild>
-                <textarea
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.bio}
-                  placeholder={t('user.bio_placeholder')}
-                  className={AUTH_TEXTAREA}
-                />
-              </Form.Control>
-            </Form.Field>
-            )}
 
             <CustomSignupFields fields={customFields} formik={formik} />
 
@@ -355,22 +320,13 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
             <Form.Submit asChild>
               <AuthButton
                 loading={isSubmitting}
-                disabled={!!message || (turnstileRequired && !formik.values.turnstileToken)}
+                disabled={turnstileRequired && !formik.values.turnstileToken}
                 className="mt-1"
               >
                 {t('auth.create_account')}
               </AuthButton>
             </Form.Submit>
           </FormLayout>
-        )}
-
-        {/* Divider: only earns its place between two sets of options. */}
-        {passwordAllowed && googleAllowed && <AuthDivider />}
-
-        {googleAllowed && (
-          <AuthProviderButton onClick={handleGoogleSignIn} disabled={isSubmitting} icon={<GoogleMark />}>
-            {t('auth.sign_in_with_google')}
-          </AuthProviderButton>
         )}
 
         {!passwordAllowed && !googleAllowed && (
@@ -382,12 +338,12 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
           </AuthNotice>
         )}
 
-      <AuthFootnote>
-        {t('auth.already_have_account')}{' '}
-        <Link href="/login" className={AUTH_LINK}>
-          {t('auth.login')}
-        </Link>
-      </AuthFootnote>
+        <AuthFootnote>
+          {t('auth.already_have_account')}{' '}
+          <Link href={loginHref} className={AUTH_LINK}>
+            {t('auth.login')}
+          </Link>
+        </AuthFootnote>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import ClientAdminLayout from './ClientAdminLayout'
 
 export const metadata: Metadata = {
   title: 'LearnHouse Dashboard',
+  robots: { index: false, follow: false },
 }
 
 async function DashboardLayout(

@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'motion/react'
 import dynamic from 'next/dynamic'
 import { EditorSkeleton } from '@components/Dashboard/Pages/Course/courseEditorUi'
 import { usePreloadOnIdle } from '@components/Dashboard/Shared/usePreloadOnIdle'
@@ -73,15 +72,11 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
   const Page = PAGES[params.subpage]
 
   return (
-    <motion.div
-      key={params.subpage}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.12 }}
-      className="px-4 sm:px-10 pt-6 sm:pt-8 pb-16"
-    >
+    // No fade-in from transparent: on arrival it blanked the pane between the
+    // route skeleton and the tab's own placeholder.
+    <div key={params.subpage} className="px-4 sm:px-10 pt-6 sm:pt-8 pb-16">
       {Page ? <Page /> : null}
-    </motion.div>
+    </div>
   )
 }
 

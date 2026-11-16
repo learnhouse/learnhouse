@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'motion/react'
 import { ArrowRight, Check, Play, X, UserPlus, FileCsv } from '@phosphor-icons/react'
@@ -13,8 +13,73 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { openInviteDialog } from '@components/Onboarding/onboardingEvents'
 import { STEP_ICON } from './LaunchPlan'
 import LaunchFinale from './LaunchFinale'
+import FirstCourseActions from './FirstCourseActions'
 import OnboardingVideo from './OnboardingVideo'
 import { onboardingVideo, WELCOME_VIDEO } from './onboardingMedia'
+
+// The card's last rendered height per org (this browser only), so the home
+// page can hold its place while the onboarding state loads.
+const HEIGHT_KEY = 'lh:home-launch-card-h:'
+
+function readHeight(key: string | null): number {
+  if (!key) return 0
+  try {
+    return Number(localStorage.getItem(key)) || 0
+  } catch {
+    return 0
+  }
+}
+
+function writeHeight(key: string | null, height: number) {
+  if (!key) return
+  try {
+    if (height > 0) localStorage.setItem(key, String(Math.round(height)))
+    else localStorage.removeItem(key)
+  } catch {
+    /* storage blocked: the card just pops in */
+  }
+}
+
+/**
+ * The launch plan on the dashboard home, without the layout jump: it sits
+ * above everything else on the page, so appearing only once the onboarding
+ * state had loaded pushed the whole page down. While that state loads, a
+ * placeholder of the card's last height (when it was showing last time) holds
+ * its place; once it has loaded the real card, or nothing, takes over.
+ */
+export default function OnboardingHomeCard() {
+  const org = useOrg() as any
+  const { loaded, dismissed, allCompleted, currentStep } = useOnboarding()
+  const key = org?.id ? `${HEIGHT_KEY}${org.id}` : null
+  const shown = loaded && !dismissed && (allCompleted || !!currentStep)
+  const boxRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!loaded) return
+    if (!shown) {
+      writeHeight(key, 0)
+      return
+    }
+    const el = boxRef.current
+    if (!el) return
+    const save = () => writeHeight(key, el.offsetHeight)
+    save()
+    const ro = new ResizeObserver(save)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [loaded, shown, key])
+
+  if (!loaded) {
+    const height = readHeight(key)
+    return height ? <Panel aria-hidden="true" className="animate-pulse" style={{ height }} /> : null
+  }
+  if (!shown) return null
+  return (
+    <div ref={boxRef}>
+      <LaunchPlanHomeCard />
+    </div>
+  )
+}
 
 /**
  * The launch plan on the dashboard home: progress, the next step with its
@@ -22,7 +87,7 @@ import { onboardingVideo, WELCOME_VIDEO } from './onboardingMedia'
  * its own video one tap away. Steps tick off from the org's real data; when
  * the last one is done, the finale takes the card's place.
  */
-export default function OnboardingHomeCard() {
+function LaunchPlanHomeCard() {
   const { t } = useTranslation()
   const org = useOrg() as any
   const { track } = useLHAnalytics('dashboard')
@@ -131,15 +196,20 @@ export default function OnboardingHomeCard() {
           <p className="mt-0.5 text-base font-semibold text-neutral-900">{t(`onboarding.steps.${next.id}.title`)}</p>
           <p className="mt-0.5 text-sm text-neutral-500">{t(`onboarding.steps.${next.id}.description`)}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Link
-              href={hrefOf(next)}
-              target={next.hrefType === 'root' ? '_blank' : undefined}
-              onClick={(e) => doIt(next, e)}
-              className={buttonClass('primary', 'sm')}
-            >
-              {t('onb2.checklist.do_it')}
-              <ArrowRight size={12} weight="bold" data-dir-flip />
-            </Link>
+            {next.id === 'create_course' ? (
+              // One click to a first course (template draft or AI), not a chooser.
+              <FirstCourseActions onStart={() => track(AnalyticsEvent.OnboardingStepActionClicked, { step_id: next.id, surface: 'home' })} />
+            ) : (
+              <Link
+                href={hrefOf(next)}
+                target={next.hrefType === 'root' ? '_blank' : undefined}
+                onClick={(e) => doIt(next, e)}
+                className={buttonClass('primary', 'sm')}
+              >
+                {t('onb2.checklist.do_it')}
+                <ArrowRight size={12} weight="bold" data-dir-flip />
+              </Link>
+            )}
             <button type="button" onClick={() => watch(next)} className={buttonClass('secondary', 'sm')}>
               <Play size={11} weight="fill" />
               {t('onb2.checklist.watch', { count: next.minutes })}

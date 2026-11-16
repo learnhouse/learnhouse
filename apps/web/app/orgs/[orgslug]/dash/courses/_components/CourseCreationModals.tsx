@@ -32,6 +32,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type CreationStep = 'select' | 'scratch'
+export type CreationType = 'scratch' | 'ai' | 'migrate'
 type ImportStep = 'select' | 'scorm' | 'learnhouse' | 'lms'
 
 // The header actions of the courses page: Import + New course, and every
@@ -46,6 +47,7 @@ export default function CourseCreationModals({
   limit,
   onCreated,
   newCourseButton,
+  startRequest,
 }: {
   orgslug: string
   orgId: number
@@ -55,6 +57,9 @@ export default function CourseCreationModals({
   limit: number | string
   onCreated: () => void
   newCourseButton: React.ReactNode
+  /** A start option picked outside the chooser (the empty courses page);
+   *  a new `id` starts that flow. */
+  startRequest?: { type: CreationType; id: number } | null
 }) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -68,6 +73,15 @@ export default function CourseCreationModals({
   const [importOpen, setImportOpen] = React.useState(false)
   const [importStep, setImportStep] = React.useState<ImportStep>('select')
 
+  // Opening the chooser is the step between visiting /dash/courses and picking
+  // a type; without it that drop can't be measured.
+  // Starts false so a page opened with ?new=1 (chooser already open) counts.
+  const wasOpen = React.useRef(false)
+  React.useEffect(() => {
+    if (open && !wasOpen.current) track(AnalyticsEvent.CourseCreateModalOpened, { limit_reached: limitReached })
+    wasOpen.current = open
+  }, [open, limitReached, track])
+
   const closeCreate = () => {
     onOpenChange(false)
     setCreationStep('select')
@@ -79,8 +93,8 @@ export default function CourseCreationModals({
     onCreated()
   }
 
-  const onSelectCreation = (type: 'scratch' | 'ai' | 'migrate') => {
-    track(AnalyticsEvent.CourseCreationTypeSelected, { creation_type: type })
+  const onSelectCreation = (type: CreationType, source: 'chooser' | 'empty_state' = 'chooser') => {
+    track(AnalyticsEvent.CourseCreationTypeSelected, { creation_type: type, source })
     if (type === 'ai') {
       onOpenChange(false)
       setAiOpen(true)
@@ -89,8 +103,19 @@ export default function CourseCreationModals({
       router.push(getUriWithOrg(orgslug, '/dash/courses/migrate'))
     } else {
       setCreationStep('scratch')
+      // From the empty page the chooser isn't open yet: go straight to the form.
+      if (source === 'empty_state') onOpenChange(true)
     }
   }
+
+  const handledStart = React.useRef<number | null>(null)
+  React.useEffect(() => {
+    if (!startRequest || limitReached || handledStart.current === startRequest.id) return
+    handledStart.current = startRequest.id
+    onSelectCreation(startRequest.type, 'empty_state')
+    // onSelectCreation is recreated each render; the request id gates re-runs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startRequest, limitReached])
 
   const importTitles: Record<ImportStep, string> = {
     select: t('dashboard.courses.import_course'),

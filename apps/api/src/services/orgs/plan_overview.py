@@ -117,7 +117,7 @@ def build_feature_matrix(config: dict, org_id: int, mode: str, plan: str, poc_ba
     """Every feature on the page with its state for this org.
 
     state: included (in the plan) · poc (unlocked by the running POC, goes away
-    when it ends) · addon (granted on top of the plan) · locked (not in the
+    when it ends) · trial (unlocked by the running trial, the same way) · addon (granted on top of the plan) · locked (not in the
     plan; upgrade_plan names the cheapest plan that has it) · edition (needs the
     Enterprise Edition, self-hosted community installs only).
     """
@@ -180,9 +180,30 @@ async def get_plan_overview(org_id: int, db_session: AsyncSession) -> dict:
     extras = await _ee_extras(org_id, db_session, mode, newsletter)
 
     poc = extras["poc"]
-    status = _status(mode, plan, extras["lifecycle"])
+    lifecycle = extras["lifecycle"]
+    trial = downgrade_preview = last_downgrade = None
+    if mode == "saas":
+        from src.services.plans import downgrade as downgrade_service
+        from src.services.plans import trial as trial_service
+
+        trial = trial_service.trial_state(await trial_service.get_trial(db_session, org_id))
+        if trial and trial["active"]:
+            lifecycle = "trial"
+        if plan != "free":
+            downgrade_preview = await downgrade_service.preview_downgrade(db_session, org_id, plan, "free")
+        else:
+            last_downgrade = downgrade_service.downgrade_state(
+                await downgrade_service.latest_downgrade(db_session, org_id)
+            )
+    status = _status(mode, plan, lifecycle)
     poc_base = poc["returns_to"] if poc and poc["state"] == "active" else None
-    features = build_feature_matrix(config, org_id, mode, plan, poc_base)
+    # A running trial unlocks everything above Free, shown like a POC's extras.
+    trial_base = "free" if trial and trial["active"] and not poc_base else None
+    features = build_feature_matrix(config, org_id, mode, plan, poc_base or trial_base)
+    if trial_base:
+        for feature in features:
+            if feature["state"] == "poc":
+                feature["state"] = "trial"
     if poc:
         poc = {**poc, "unlocks": [f["key"] for f in features if f["state"] == "poc"]}
 
@@ -200,6 +221,9 @@ async def get_plan_overview(org_id: int, db_session: AsyncSession) -> dict:
         "billing": _billing(mode, plan, status),
         "next_plan": candidates[0] if candidates else None,
         "poc": poc,
+        "trial": trial,
+        "downgrade_preview": downgrade_preview,
+        "last_downgrade": last_downgrade,
         "license": extras["license"],
         "features": features,
         "usage": usage,

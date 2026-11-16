@@ -9,7 +9,7 @@ import '@styles/globals.css'
 import Footer from '@components/Footer/Footer'
 import CompleteSignupFields from '@components/Auth/CompleteSignupFields'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgFaviconMediaDirectory } from '@services/media/media'
+import { getOrgFaviconMediaDirectory, getOrgSquareLogoMediaDirectory } from '@services/media/media'
 import { orgScriptsAllowedOnRequest } from '@/lib/orgScripts'
 import AffiliateRefCapture from '@ee/components/Payments/Affiliates/AffiliateRefCapture'
 import DemoInstanceBar from '@ee/components/DemoInstance/DemoInstanceBar'
@@ -25,16 +25,22 @@ export async function generateMetadata({
       revalidate: 86400,
       tags: ['organizations'],
     })
-    const faviconImage = org?.config?.config?.customization?.general?.favicon_image || org?.config?.config?.general?.favicon_image
-    if (faviconImage) {
-      return {
-        icons: { icon: getOrgFaviconMediaDirectory(org.org_uuid, faviconImage) },
-      }
+    const general = org?.config?.config?.customization?.general || org?.config?.config?.general || {}
+    const faviconImage = general.favicon_image
+    const squareLogo = general.square_logo_image
+    const favicon = faviconImage ? getOrgFaviconMediaDirectory(org.org_uuid, faviconImage) : undefined
+    // Home-screen icon: the square logo, else the favicon.
+    const apple = squareLogo ? getOrgSquareLogoMediaDirectory(org.org_uuid, squareLogo) : favicon
+    return {
+      // Per-org web app manifest (name, colors, icons) served at the org's host.
+      manifest: '/manifest.webmanifest',
+      ...(org?.name ? { appleWebApp: { capable: true, title: org.name, statusBarStyle: 'default' } } : {}),
+      ...(favicon || apple ? { icons: { ...(favicon ? { icon: favicon } : {}), ...(apple ? { apple } : {}) } } : {}),
     }
   } catch {
     // A favicon lookup failure must not break the page's metadata.
   }
-  return {}
+  return { manifest: '/manifest.webmanifest' }
 }
 
 export default async function RootLayout(props: {

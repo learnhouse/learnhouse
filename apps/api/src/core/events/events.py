@@ -96,6 +96,11 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.notifications.scheduler import start_scheduler as start_notifications
         start_notifications()
 
+        # SaaS trials: hourly expiry to Free and the trial email sequence.
+        # Never raises.
+        from src.services.plans.scheduler import start_scheduler as start_trial_job
+        start_trial_job()
+
         # The shared demo organization refreshes itself on an interval, so the
         # feature needs no external scheduler. No-op unless
         # LEARNHOUSE_DEMO_ENABLED; never raises.
@@ -196,6 +201,8 @@ def shutdown_app(app: FastAPI) -> Callable:
         await stop_messaging_emails()
         from src.services.notifications.scheduler import stop_scheduler as stop_notifications
         await stop_notifications()
+        from src.services.plans.scheduler import stop_scheduler as stop_trial_job
+        await stop_trial_job()
         # Stop the demo refresh tick.
         from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
         await stop_demo_scheduler()

@@ -163,7 +163,7 @@
         },
         "company_seats": {
           "title": "Pro özelliği",
-          "description": "Şirketleri müşteri olarak ekleyin: kendi markalı alanları, özel kursları ve kendilerinin yönettiği koltuklarla."
+          "description": "Şirketlere eğitim verin: çalışanlarına kurslarınıza erişim, markalı bir alan ve takip edebileceğiniz ilerleme sağlayın. Koltuk satmak isteğe bağlıdır."
         },
         "scim": {
           "title": "Enterprise özelliği",
@@ -176,6 +176,211 @@
         "newsletter": {
           "title": "Standard Özelliği",
           "description": "Bülten, Standard ve üzeri planlarda kullanılabilir. Öğrencilerinize e-postayla kampanyalar, hoş geldin serileri ve kurs güncellemeleri göndermek için planınızı yükseltin."
+        }
+      },
+      "gate": {
+        "upgrade": "{{plan}} planına yükselt",
+        "talk_to_us": "Bize ulaşın",
+        "ask_admin": "Organizasyonunuzun bir yöneticisinden {{plan}} planına geçmesini isteyin.",
+        "current": "Planınız: {{plan}}",
+        "preview_label": "Önizleme",
+        "preview": {
+          "completion": "Tamamlanma",
+          "certificate": "Tamamlama sertifikası",
+          "live": "Canlı",
+          "role_editor": "Düzenleyici",
+          "role_reviewer": "İnceleyici",
+          "role_viewer": "Görüntüleyici",
+          "week_one": "{{count}}. hafta",
+          "week_other": "{{count}}. hafta",
+          "enroll": "Kaydol",
+          "sso": "Şirket hesabınızla devam edin",
+          "sent": "gönderildi",
+          "opened": "açıldı",
+          "clicked": "tıklandı"
+        },
+        "communities": {
+          "title": "Öğrencilerinize birbirine yardım edebilecekleri bir yer verin",
+          "b1": "Kurslarınızın yanında, yanıt ve oylamalı tartışmalar",
+          "b2": "Öğrenciler yalnızca sizden değil, birbirlerinden de yanıt alır",
+          "b3": "Sık sorulan soruları destek talebine dönüşmeden fark edin"
+        },
+        "messaging": {
+          "title": "Öğrencilerinizle doğrudan konuşun",
+          "b1": "Akademinizin içinde bire bir ve grup sohbetleri",
+          "b2": "Soruları öğrencilerin zaten bulunduğu yerde yanıtlayın",
+          "b3": "Okunmamış her şey için e-posta özetleri"
+        },
+        "analytics": {
+          "title": "Akademinizin nasıl gittiğini görün",
+          "b1": "Zaman içindeki kayıtlar, tamamlamalar ve etkinlik",
+          "b2": "Öğrencilerin bıraktığı kursları ve dersleri bulun",
+          "b3": "İlerlemeyi ekibinizle tek bir yerde paylaşın"
+        },
+        "course_analytics": {
+          "title": "Her kursun öğrencileri nerede kaybettiğini bilin",
+          "b1": "Bölüm ve ders bazında tamamlanma",
+          "b2": "Öğrenci bazında ilerleme ve harcanan süre",
+          "b3": "En önemli dersleri iyileştirin"
+        },
+        "certifications": {
+          "title": "Bitiren öğrencileri ödüllendirin",
+          "b1": "Kurs tamamlandığında sertifika otomatik olarak verilir",
+          "b2": "Öğrenciler doğrulanabilir bir bağlantıyı LinkedIn'de paylaşır",
+          "b3": "Her sertifikada sizin markanız"
+        },
+        "paths": {
+          "title": "Öğrencilere sırada ne olduğunu gösterin",
+          "b1": "Kursları rehberli bir öğrenme yolunda birleştirin",
+          "b2": "Tek bir kursta değil, yolun tamamında ilerleme",
+          "b3": "Yol tamamlandığında bir sertifika"
+        },
+        "required_training": {
+          "title": "Doğru kişilerin doğru eğitimi tamamladığından emin olun",
+          "b1": "Kursları son tarihleriyle ekiplere veya rollere atayın",
+          "b2": "Son tarihten önce ve sonra otomatik hatırlatmalar",
+          "b3": "Amirler kimin yolunda olduğunu bir bakışta görür"
+        },
+        "live_sessions": {
+          "title": "Başka bir araca gerek kalmadan canlı ders verin",
+          "b1": "Öğrencilerin akademinizden katıldığı oturumlar planlayın",
+          "b2": "Hatırlatmalar otomatik olarak gönderilir",
+          "b3": "Kayıtlar kursun yanında kalır"
+        },
+        "podcasts": {
+          "title": "Öğrencilere hareket halindeyken ulaşın",
+          "b1": "Kurslarınızın yanında sesli bölümler yayınlayın",
+          "b2": "Her dinleyicinin nerede kaldığını hatırlayan bir oynatıcı",
+          "b3": "Dersleri yapay zekâyla bölümlere dönüştürün"
+        },
+        "usergroups": {
+          "title": "Öğrencileri gruplara ayırın",
+          "b1": "Bir gruba kendisi için hazırlanan kurslara erişim verin",
+          "b2": "Kendi alanı olan kohortlar, ekipler veya sınıflar",
+          "b3": "İlerlemeyi grup grup takip edin"
+        },
+        "custom_domains": {
+          "title": "Kendi alan adınızda ders verin",
+          "b1": "LearnHouse adresi yerine learn.yourschool.com",
+          "b2": "SSL sertifikası dahil ve sizin için yenilenir",
+          "b3": "Öğrenciler alan adınızda oturum açık kalır"
+        },
+        "api_access": {
+          "title": "Akademinizi araçlarınıza bağlayın",
+          "b1": "API üzerinden kurs oluşturun, öğrenci kaydedin ve ilerlemeyi okuyun",
+          "b2": "İstediğiniz zaman iptal edebileceğiniz kapsamlı token'lar",
+          "b3": "Panelimizin kullandığı API'nin aynısı"
+        },
+        "webhooks": {
+          "title": "Akademinizde olanlara tepki verin",
+          "b1": "Bir öğrenci kaydolduğunda, tamamladığında veya ödeme yaptığında bildirim alın",
+          "b2": "Olayları Zapier'e, CRM'inize veya kendi kodunuza gönderin",
+          "b3": "İmzalı istekler ve otomatik yeniden denemeler"
+        },
+        "roles": {
+          "title": "Herkese ihtiyaç duyduğu erişimi verin",
+          "b1": "Yönetici ve üyenin ötesinde özel roller",
+          "b2": "Kimin oluşturabileceğine, düzenleyebileceğine veya yalnızca inceleyebileceğine karar verin",
+          "b3": "Daha az yönetici, daha az kaza"
+        },
+        "seo": {
+          "title": "Kurslarınızın bulunmasını sağlayın",
+          "b1": "Arama ve sosyal medya için başlıklar, açıklamalar ve önizlemeler",
+          "b2": "Arama motorlarının okuyabildiği bir site haritası",
+          "b3": "Sıralamaya hazır kurs sayfaları"
+        },
+        "drip": {
+          "title": "Dersleri doğru hızda yayınlayın",
+          "b1": "Bölümleri belirli tarihlerde veya kayıttan belirli gün sonra açın",
+          "b2": "Bir bölüm açıldığında öğrenciler e-posta alır",
+          "b3": "Kohortların birlikte ilerlemesini sağlayın"
+        },
+        "payments": {
+          "title": "Öğrettiğiniz şey için ödeme alın",
+          "b1": "Kursları tek seferlik veya abonelikle satın",
+          "b2": "Ödemeler doğrudan Stripe hesabınıza, ek ücret yok",
+          "b3": "İstediğinizde kuponlar, paketler ve ücretsiz erişim"
+        },
+        "boards": {
+          "title": "Ortak bir tuvalde birlikte düşünün",
+          "b1": "Atölyeler, dersler ve planlama için beyaz tahtalar",
+          "b2": "Herkes her cihazdan canlı düzenler",
+          "b3": "Panoyu kursun yanında tutun"
+        },
+        "playgrounds": {
+          "title": "Öğrenciler yalnızca okumasın, pratik yapsın",
+          "b1": "Yapay zekâyla oluşturulan etkileşimli alıştırmalar",
+          "b2": "Her denemede anında geri bildirim",
+          "b3": "Plays'leri tüm akademinizle paylaşın"
+        },
+        "company_seats": {
+          "title": "Yalnızca bireyleri değil, şirketleri de eğitin",
+          "b1": "Bir şirketin çalışanlarına birkaç tıklamayla kurslarınıza erişim verin",
+          "b2": "Her şirket için kendi kurslarıyla markalı bir alan",
+          "b3": "İlerlemelerini takip edin, koltukları yalnızca isterseniz satın"
+        },
+        "newsletter": {
+          "title": "Öğrencilerin geri gelmesini sağlayın",
+          "b1": "Öğrencilerinize e-postayla güncellemeler ve yeni kurslar gönderin",
+          "b2": "Her kampanya için açılma ve tıklama verileri",
+          "b3": "Abonelikten çıkmalar ve geri dönen e-postalar sizin için yönetilir"
+        },
+        "audit_logs": {
+          "title": "Neyi kimin değiştirdiğini bilin",
+          "b1": "Her yönetici işlemi kim, ne ve ne zaman bilgisiyle kaydedilir",
+          "b2": "Denetimler için arama ve dışa aktarma",
+          "b3": "Uyumluluk gereksinimlerinizi karşılayın"
+        },
+        "sso": {
+          "title": "Tüm organizasyonunuz için tek oturum açma",
+          "b1": "Üyeler kimlik sağlayıcınızla oturum açar",
+          "b2": "Biri şirketinizden ayrıldığında erişimi sona erer",
+          "b3": "Yönetilecek ek parola yok"
+        },
+        "scim": {
+          "title": "Üyeleri otomatik olarak senkronize tutun",
+          "b1": "Üyeler dizininize göre eklenir ve kaldırılır",
+          "b2": "Gruplar kimlik sağlayıcınızı takip eder",
+          "b3": "Elle erişim kaldırmaya gerek yok"
+        },
+        "lti": {
+          "title": "Kurslarınızı LMS'inize bağlayın",
+          "b1": "Moodle, Canvas, Blackboard ve diğerleri için LTI 1.3",
+          "b2": "Notlar otomatik olarak geri aktarılır",
+          "b3": "Öğrencilerin ayrı bir hesaba ihtiyacı olmaz"
+        },
+        "scorm": {
+          "title": "Mevcut e-öğrenme içeriğinizi getirin",
+          "b1": "SCORM paketlerini ders olarak içe aktarın",
+          "b2": "Puanlar ve tamamlanma takip edilir",
+          "b3": "Eski içeriği yeniden oluşturmanıza gerek yok"
+        },
+        "compare": "Planları karşılaştır",
+        "sample": {
+          "discussion_1": "Grup projelerini nasıl notlandırıyorsunuz?",
+          "discussion_2": "2. haftadan notlarım",
+          "discussion_3": "Final testi için ipuçları",
+          "course_name": "Veri analizine giriş",
+          "path_1": "Başlarken",
+          "path_2": "Temel beceriler",
+          "path_3": "Final projesi",
+          "session_1": "Ofis saatleri",
+          "session_2": "Soru-cevap: Modül 3",
+          "today": "Bugün",
+          "thursday": "Per",
+          "episode": "Bölüm 4: Kalıcı çalışma alışkanlıkları",
+          "seo_snippet": "Altı uygulamalı haftada verileri temizlemeyi, keşfetmeyi ve sunmayı öğrenin. Sertifika dahil.",
+          "drip_1": "Hoş geldiniz ve kurulum",
+          "drip_2": "İlk veri kümeniz",
+          "drip_3": "Hikâye anlatan grafikler",
+          "drip_4": "Final projesi",
+          "one_time": "Tek seferlik ödeme",
+          "newsletter_subject": "Bu ay akademide",
+          "note_1": "Atölye için fikirler",
+          "note_2": "Gruptan gelen sorular",
+          "note_3": "Cuma için sonraki adımlar",
+          "play_title": "Alıştırma",
+          "play_question": "Bir beşgenin kaç kenarı vardır?"
         }
       }
     },
@@ -561,7 +766,35 @@
       "go_to_login": "Girişe Git",
       "signing_in": "Oturumunuz açılıyor...",
       "setting_up": "Oturumunuz hazırlanırken lütfen bekleyin."
-    }
+    },
+    "show_password": "Şifreyi göster",
+    "hide_password": "Şifreyi gizle",
+    "password_req_letter": "Bir harf",
+    "password_req_number_or_symbol": "Bir rakam veya sembol",
+    "password_req_not_common": "Yaygın bir şifre değil",
+    "your_name": "Adınız",
+    "signup_one_step": "Bir dakikadan kısa sürer.",
+    "verification_sent_to": "{{email}} adresine bir onay bağlantısı gönderdik. Hesabınızı kullanmaya başlamak için açın.",
+    "invite_link": {
+      "joining": "{{org}} kuruluşuna katılıyorsunuz…",
+      "invalid_title": "Bu davet bağlantısının süresi doldu",
+      "invalid_desc": "Zaten kullanılmış, geri çekilmiş veya daha yeni bir davetle değiştirilmiş. Sizi davet eden kişiden yenisini isteyin.",
+      "go_to_org": "{{org}} sayfasına git",
+      "wrong_account_title": "Bu davet başka bir adres için",
+      "wrong_account_desc": "{{current}} olarak oturum açtınız, ancak davet {{email}} adresine gönderildi.",
+      "switch_account": "Oturumu kapat ve devam et",
+      "signin_title": "{{org}} kuruluşuna katılın",
+      "signin_desc": "Zaten bir hesabınız var. Giriş yapın, hemen katılın.",
+      "signin_cta": "Katılmak için giriş yap",
+      "signup_title": "{{org}} kuruluşuna katılın",
+      "signup_desc": "Davet edildiniz. Bir şifre seçin, hazırsınız.",
+      "choose_password": "Bir şifre seçin",
+      "create_and_join": "{{org}} kuruluşuna katıl"
+    },
+    "login_failed_forgot": "Şifrenizi mi unuttunuz?",
+    "login_failed_reset": "Sıfırlayın",
+    "login_failed_magic": "Bunun yerine giriş bağlantısı gönder",
+    "login_failed_google_hint": "Google ile mi kaydoldunuz? Aşağıdan Google ile devam edin."
   },
   "validation": {
     "required": "Gerekli",
@@ -1518,7 +1751,8 @@
       },
       "thread_actions": "Konu işlemleri",
       "threads_one": "{{count}} konu",
-      "threads_other": "{{count}} konu"
+      "threads_other": "{{count}} konu",
+      "newer_discussions": "Daha yeni tartışmalar"
     }
   },
   "boards": {
@@ -4170,7 +4404,9 @@
       "unavailable_body": "Bu kuruluş mağazasını henüz etkinleştirmedi.",
       "unavailable_title": "Mağaza kullanılamıyor",
       "view_content": "İçeriği görüntüle"
-    }
+    },
+    "checkout_paused": "Bu ürün için ödeme geçici olarak kullanılamıyor. Organizasyona bilgi verildi; lütfen daha sonra tekrar deneyin.",
+    "checkout_paused_short": "Geçici olarak kullanılamıyor"
   },
   "account": {
     "title": "Hesap ayarları",
@@ -4658,7 +4894,9 @@
       "section_people": "İnsanlar ve iş",
       "section_settings": "Ayarlar",
       "resize_sidebar": "Kenar çubuğunu yeniden boyutlandır",
-      "open_account_menu": "Hesap menüsünü aç"
+      "open_account_menu": "Hesap menüsünü aç",
+      "trial_caption_one": "{{plan}} denemesi · {{count}} gün kaldı",
+      "trial_caption_other": "{{plan}} denemesi · {{count}} gün kaldı"
     },
     "home": {
       "cards": {
@@ -6689,7 +6927,138 @@
         "ai_copilot_description": "Öğrencilerin kurs içeriği hakkında soru sormasına izin verin. Kaynak alıntılarıyla desteklenmiş yanıtlar vermek için dizine eklenmiş materyali kullanır.",
         "feature_editor_description": "Kurs oluşturucular için yapay zeka destekli içerik düzenleme yardımı.",
         "feature_activity_description": "Öğrencilere yardımcı olmak için aktivitelerde kullanılabilen yapay zeka asistanı.",
-        "always_on": "Her zaman açık"
+        "always_on": "Her zaman açık",
+        "platform_disabled": "Yapay zekâ bu kuruluş için platform tarafından kapatıldı. Yeniden açmak için destekle iletişime geçin.",
+        "enabled_count": "{{total}} yapay zekâ özelliğinden {{on}} tanesi açık",
+        "group_all_on": "Tümünü aç",
+        "group_all_off": "Tümünü kapat",
+        "ask_ai_audience": "Yapay Zekâya Sor'u kimler kullanabilir",
+        "audience_everyone": "Herkes",
+        "audience_staff": "Yalnızca kurs ekibi",
+        "limits_title": "Aylık kredi sınırı",
+        "limits_description": "Kuruluş bu kadar kredi kullandığında yapay zekâ ayın geri kalanında durur. Sınır istemiyorsanız boş bırakın.",
+        "cap_placeholder": "Sınır yok",
+        "cap_unit": "kredi / ay",
+        "save_cap": "Kaydet",
+        "cap_invalid": "Bir tam sayı girin veya boş bırakın.",
+        "off_by_admin": "Yöneticiniz tarafından kapatıldı",
+        "off_by_admin_description": "{{feature}} bu kuruluşta kullanılamıyor. İhtiyacınız varsa bir yöneticiye sorun.",
+        "groups": {
+          "assistants": {
+            "title": "Asistanlar",
+            "description": "Ekibinizle sohbet eden ve iş bitiren ajanlar."
+          },
+          "authoring": {
+            "title": "İçerik hazırlama",
+            "description": "Kurs oluştururken yazarlara yardım."
+          },
+          "learners": {
+            "title": "Öğrenciler",
+            "description": "Öğrencilerinizin çalışırken kullandığı yapay zekâ."
+          },
+          "content": {
+            "title": "İçerik üretimi",
+            "description": "Yapay zekâ ile medya, ses ve çeviriler."
+          },
+          "integrations": {
+            "title": "Entegrasyonlar",
+            "description": "Web sitenizde, e-postalarınızda ve bağlı uygulamalarda yapay zekâ."
+          }
+        },
+        "features": {
+          "atlas": {
+            "title": "Atlas",
+            "description": "Soruları yanıtlayan ve kuruluşunuz genelinde iş yapan pano asistanı."
+          },
+          "atlas_scheduled": {
+            "title": "Zamanlanmış ajanlar",
+            "description": "Haftalık raporlar gibi bir zamanlamayla çalışan Atlas görevleri."
+          },
+          "ai_editor": {
+            "title": "Yapay Zekâ Düzenleyici",
+            "description": "Sayfa düzenleyicide yazarlarla birlikte yazan ve düzenleyen yapay zekâ paneli."
+          },
+          "course_builder": {
+            "title": "Yapay zekâ kurs oluşturucu",
+            "description": "Kısa bir özetten kurs planı ve dersleri taslağı hazırlayın."
+          },
+          "editor_ai": {
+            "title": "Yapay zekâ yazma eylemleri",
+            "description": "Seçili metni yeniden yazın, kısaltın, düzeltin veya tonunu değiştirin."
+          },
+          "magic_blocks": {
+            "title": "Sihirli bloklar",
+            "description": "Bir istemden üretilen etkileşimli bloklar."
+          },
+          "quiz_generation": {
+            "title": "Test ve kart oluşturma",
+            "description": "Ders içeriğinden testler ve bilgi kartları oluşturun."
+          },
+          "assignment_generation": {
+            "title": "Ödev ve senaryo oluşturma",
+            "description": "Yapay zekâ ile ödev ve dallanan senaryo taslakları hazırlayın."
+          },
+          "course_import": {
+            "title": "Yapay zekâ ile kurs içe aktarma",
+            "description": "Belgeleri ve diğer platformların dışa aktarımlarını kursa dönüştürün."
+          },
+          "seo": {
+            "title": "SEO önerileri",
+            "description": "Sayfalarınız için arama başlıkları ve açıklamaları yazın."
+          },
+          "ask_ai": {
+            "title": "Yapay Zekâya Sor",
+            "description": "Öğrenciler bir ders hakkında soru sorar ve kaynaklı yanıtlar alır."
+          },
+          "ai_grading": {
+            "title": "Yapay zekâ ile notlandırma",
+            "description": "Teslimleri puanlayın ve ödevler için geri bildirim taslağı hazırlayın."
+          },
+          "messaging_agents": {
+            "title": "Mesajlar'da yapay zekâ ajanları",
+            "description": "Üyelerin Mesajlar'da sohbet edebildiği asistanlar."
+          },
+          "plays": {
+            "title": "Plays'te yapay zekâ",
+            "description": "Plays oluşturun ve öğrenciler için yapay zekâ adımlarını çalıştırın."
+          },
+          "translations": {
+            "title": "Yapay zekâ çevirileri",
+            "description": "Kursları ve SEO'larını başka dillere çevirin."
+          },
+          "image_generation": {
+            "title": "Görsel oluşturma",
+            "description": "Yapay zekâ ile küçük resimler ve görseller oluşturun."
+          },
+          "voice": {
+            "title": "Ses ve podcastler",
+            "description": "Podcast metinleri yazın ve sesli anlatım oluşturun."
+          },
+          "video_ai": {
+            "title": "Video altyazıları ve bölümleri",
+            "description": "Videoları yazıya dökün ve bölümlere ayırın."
+          },
+          "live_session_summary": {
+            "title": "Canlı oturum özetleri",
+            "description": "Canlı oturum kayıtlarını özetleyin."
+          },
+          "boards": {
+            "title": "Panolarda yapay zekâ",
+            "description": "Panolarda playground ve içerik oluşturun."
+          },
+          "landing_builder": {
+            "title": "Yapay zekâ ile site tasarımı",
+            "description": "Açılış sayfaları oluşturun ve metinlerini yeniden yazın."
+          },
+          "newsletter": {
+            "title": "Yapay zekâ ile bülten yazımı",
+            "description": "Konu satırları ve bülten içeriği taslağı hazırlayın."
+          },
+          "mcp_tools": {
+            "title": "MCP üzerinden yapay zekâ araçları",
+            "description": "Uygulamalar kuruluşunuza MCP ile bağlandığında yapay zekâ kullanan araçlar."
+          }
+        }
       },
       "sso": {
         "title": "Tek Oturum Açma (SSO)",
@@ -7116,7 +7485,8 @@
           "users_admin": "Kullanıcılar (Yönetici API'si)",
           "roles_admin": "Roller (Yönetici API'si)",
           "newsletter": "Bülten",
-          "crm": "CRM entegrasyonları"
+          "crm": "CRM entegrasyonları",
+          "agent": "Yapay zekâ ajanları (Agent API)"
         },
         "resource": "Kaynak",
         "perm_create": "Oluştur",
@@ -7476,7 +7846,9 @@
           "suspended": "Erişim sınırlı. Yeniden açmak için LearnHouse ile iletişime geçin.",
           "licensed": "Enterprise Sürümü lisansıyla kendi sunucunuzda, plan sınırı yok",
           "community": "Kendi sunucunuzda Community Sürümü, plan sınırı yok",
-          "billing_page": "Faturalar ve ödeme bilgileri faturalandırma sayfasında"
+          "billing_page": "Faturalar ve ödeme bilgileri faturalandırma sayfasında",
+          "free_trial_one": "Ücretsiz deneme, {{count}} gün kaldı. Kart gerekmez.",
+          "free_trial_other": "Ücretsiz deneme, {{count}} gün kaldı. Kart gerekmez."
         },
         "next_invoice": "{{date}} tarihinde {{amount}}",
         "seats_of": "{{used}} / {{limit}}",
@@ -7543,7 +7915,8 @@
             "addon": "Eklenti",
             "locked": "{{plan}} gerekir",
             "locked_none": "Mevcut değil",
-            "edition": "Enterprise Sürümü"
+            "edition": "Enterprise Sürümü",
+            "trial": "Deneme"
           },
           "on": "Açık",
           "off": "Kapalı",
@@ -7579,7 +7952,7 @@
             "usergroups": "Kullanıcı grupları",
             "roles": "Özel roller",
             "required_training": "Zorunlu eğitim",
-            "company_seats": "Şirket koltukları",
+            "company_seats": "Şirketler",
             "payments": "Ödemeler",
             "ai": "Yapay zeka özellikleri",
             "analytics": "Analitik",
@@ -7596,7 +7969,22 @@
           }
         },
         "next_invoice_label": "Sonraki fatura",
-        "seats_no_limit": "{{used}}, sınır yok"
+        "seats_no_limit": "{{used}}, sınır yok",
+        "invoices": "Faturalar",
+        "trial": {
+          "title_one": "{{plan}} denemesi: {{count}} gün kaldı",
+          "title_other": "{{plan}} denemesi: {{count}} gün kaldı",
+          "desc_one": "{{plan}} planındaki her şey {{date}} tarihine kadar sizin; buna Ücretsiz planın ötesindeki {{count}} özellik de dahil. Korumak için istediğiniz zaman bir plan seçin; deneme bittiğinde hiçbir şey silinmez.",
+          "desc_other": "{{plan}} planındaki her şey {{date}} tarihine kadar sizin; buna Ücretsiz planın ötesindeki {{count}} özellik de dahil. Korumak için istediğiniz zaman bir plan seçin; deneme bittiğinde hiçbir şey silinmez.",
+          "choose": "{{plan}} ile devam et",
+          "what_happens": "Deneme bir plan seçilmeden biterse ne olur",
+          "ended_title_trial": "{{plan}} denemeniz {{date}} tarihinde sona erdi",
+          "ended_title": "{{date}} tarihinde {{plan}} planından Ücretsiz plana geçtiniz",
+          "ended_courses_one": "{{count}} kurs özel hale geldi ve {{plan}} özellikleri duraklatıldı. Yükseltin, her şey eskisi gibi geri gelsin.",
+          "ended_courses_other": "{{count}} kurs özel hale geldi ve {{plan}} özellikleri duraklatıldı. Yükseltin, her şey eskisi gibi geri gelsin.",
+          "ended_no_courses": "{{plan}} özellikleri duraklatıldı. Yükseltin, her şey eskisi gibi geri gelsin.",
+          "restore": "{{plan}} planını geri getir"
+        }
       },
       "overview": {
         "created": "{{date}} tarihinde oluşturuldu",
@@ -14887,7 +15275,7 @@
     "done": "Tamam, hazırım!",
     "steps": {
       "create_course": {
-        "title": "İlk kursunuzu oluşturun",
+        "title": "İlk kursunuz şekilleniyor",
         "description": "Bir kurs oluştur ya da senin için hazırladığımız taslağı düzenle.",
         "action": "Kurs oluştur"
       },
@@ -14934,42 +15322,42 @@
         "university_desc": "Kılavuzlar, ipuçları ve en iyi uygulamalar"
       },
       "add_content": {
-        "title": "İlk dersinizi ekleyin",
+        "title": "Uğruna gelmeye değer bir ders",
         "description": "Bir video, sayfa veya quiz ekleyin; öğrencilere kaydolmaları için gerçek bir neden verin.",
         "action": "İçerik ekle"
       },
       "brand_school": {
-        "title": "Logonuzu ve renklerinizi ekleyin",
+        "title": "Öğrencilerin güvendiği bir okul",
         "description": "Logonuzu ve renklerinizi ekleyin; böylece güvenilir, profesyonel bir okul gibi görünsün.",
         "action": "Markala"
       },
       "share_grow": {
-        "title": "Ana sayfanızı yayınlayın",
+        "title": "Okulunuzun ön kapısı",
         "description": "Bir şablon seçin, kendinize göre düzenleyin ve öğrencilerin ilk gördüğü sayfayı yayınlayın.",
         "action": "Web sitesini aç"
       },
       "invite_learners": {
-        "title": "İlk öğrencilerinizi davet edin",
+        "title": "İlk öğrencinizi karşılayın",
         "description": "Katılım bağlantınızı paylaşın veya insanları davet edin; o ilk öğrenciyi kapıdan içeri alın.",
         "action": "Öğrenci davet et"
       },
       "build_community": {
-        "title": "Bir topluluk alanı açın",
+        "title": "Öğrencileri geri getirmeye devam edin",
         "description": "Bir topluluk alanı açın; böylece öğrencileriniz aktif kalsın ve arkadaşlarını getirsin.",
         "action": "Topluluğu aç"
       },
       "publish_course": {
-        "title": "İlk kursunuzu yayınlayın",
+        "title": "İlk kursunuz yayında",
         "description": "Öğrencilerin gerçekten kaydolabilmesi için bir kurs yayınla.",
         "action": "Kursu yayınla"
       },
       "create_group": {
-        "title": "İlk grubunuzu oluşturun",
+        "title": "İlk grubunuz",
         "description": "Kursları tek seferde atamak için kişileri takım, sınıf veya gruba göre topla.",
         "action": "Grup oluştur"
       },
       "setup_payments": {
-        "title": "Ödemeleri ayarla",
+        "title": "Öğrettiklerinizden kazanın",
         "description": "Stripe'ı bağla ve kursuna fiyat koy.",
         "action": "Stripe'ı bağla"
       }
@@ -15651,7 +16039,37 @@
       "checkout_note": "Organizasyonunuzu oluşturduktan sonra güvenli ödeme sayfasına yönlendirileceksiniz."
     },
     "add_pack": "{{pack}} ekle",
-    "cancels_on": "Aboneliğiniz {{periodEnd}} tarihinde iptal edilecek. Erişim o zamana kadar devam eder."
+    "cancels_on": "Aboneliğiniz {{periodEnd}} tarihinde iptal edilecek. Erişim o zamana kadar devam eder.",
+    "trial": {
+      "title_one": "{{plan}} denemesi · {{count}} gün kaldı",
+      "title_other": "{{plan}} denemesi · {{count}} gün kaldı",
+      "desc": "Kart gerekmedi. Her şeyi olduğu gibi korumak için bir plan seçin.",
+      "choose": "Plan seçin",
+      "what_happens": "Deneme bir plan seçilmeden biterse ne değişir",
+      "keep": "{{plan}} ile devam et"
+    },
+    "downgrade_preview": {
+      "intro": "Ücretsiz planda:",
+      "course_kept": "“{{course}}” herkese açık kalır.",
+      "courses_private_one": "Diğer {{count}} kurs özel hale gelir (üyeler yine de açabilir).",
+      "courses_private_other": "Diğer {{count}} kurs özel hale gelir (üyeler yine de açabilir).",
+      "drip_paused_one": "{{count}} kursun kademeli içerik takvimi duraklar, böylece tüm bölümleri açılır.",
+      "drip_paused_other": "{{count}} kursun kademeli içerik takvimi duraklar, böylece tüm bölümleri açılır.",
+      "features_pause": "Bu özellikler siz yükseltene kadar duraklar:",
+      "more_one": "ve {{count}} tane daha",
+      "more_other": "ve {{count}} tane daha",
+      "members_over": "{{count}} üye kalır; bu, Ücretsiz planın {{limit}} sınırının üzerinde. Siz yükseltene kadar yeni üye katılamaz.",
+      "admins_over": "{{count}} yönetici kalır; bu, Ücretsiz planın {{limit}} sınırının üzerinde. Yeni yönetici eklenemez.",
+      "nothing_deleted": "Hiçbir şey silinmez. Yeniden yükseltin, her şey eskisi gibi geri gelsin."
+    },
+    "cancel_flow": {
+      "title": "{{plan}} iptal edilsin mi?",
+      "until": "Planınız {{date}} tarihine kadar aktif kalır. Sonrasında organizasyonunuz Ücretsiz plana geçer.",
+      "until_unknown": "Planınız ödenen dönemin sonuna kadar aktif kalır. Sonrasında organizasyonunuz Ücretsiz plana geçer.",
+      "restore": "İstediğiniz zaman yeniden yükseltebilirsiniz: kurs görünürlüğü ve duraklatılan özellikler otomatik olarak geri gelir.",
+      "keep": "{{plan}} ile devam et",
+      "confirm": "Planı iptal et"
+    }
   },
   "hub_new": {
     "useType": {
@@ -16318,6 +16736,13 @@
       "resource_plural": "Kaynaklar",
       "newsletter": "Bülten",
       "newsletter_plural": "Bültenler"
+    },
+    "health": {
+      "title": "Öğrenciler şu anda satın alamıyor",
+      "body_one": "Ödeme sağlayıcınız {{date}} tarihinden bu yana {{count}} ödemeyi reddetti. Stripe hesabınızın bağlantısı kesilmiş olabilir veya ilgilenmeniz gerekebilir. Sorun giderilene kadar öğrenciler ödemenin geçici olarak kullanılamadığını görür.",
+      "body_other": "Ödeme sağlayıcınız {{date}} tarihinden bu yana {{count}} ödemeyi reddetti. Stripe hesabınızın bağlantısı kesilmiş olabilir veya ilgilenmeniz gerekebilir. Sorun giderilene kadar öğrenciler ödemenin geçici olarak kullanılamadığını görür.",
+      "recheck": "Tekrar kontrol et",
+      "fix": "Ödeme ayarlarını aç"
     }
   },
   "lti": {
@@ -23087,7 +23512,47 @@
         "podcast": "Podcast",
         "community": "Topluluk",
         "folder": "Klasör"
-      }
+      },
+      "features_title": "Arama motorlarının dizine ekleyebilecekleri",
+      "features_subtitle": "Bir bölümü Google, Bing ve yapay zekâ aramasının dışında tutmak için kapatın. Sayfaları ziyaretçilere açık kalır.",
+      "feature": {
+        "courses": "Kurslar",
+        "activities": "Ücretsiz dersler",
+        "paths": "Öğrenme yolları",
+        "podcasts": "Podcast'ler",
+        "communities": "Topluluklar",
+        "library": "Kütüphane",
+        "live": "Canlı oturumlar",
+        "newsletters": "Bülten arşivleri",
+        "pages": "Web sitesi sayfaları",
+        "store": "Mağaza teklifleri"
+      },
+      "thin_threads": "Yanıtsız konuları şu süreden sonra gizle",
+      "thin_threads_hint": "Hiç yanıt almayan konular bu yaşa ulaşınca arama motorlarından gizlenir; böylece boş sayfalar topluluğu yormaz. 0 hepsini tutar.",
+      "days": "gün",
+      "ai_title": "Yapay zekâ araması ve tarayıcılar",
+      "ai_subtitle": "ChatGPT, Claude, Perplexity, Gemini ve diğer yapay zekâ araçlarının herkese açık içeriğinizi nasıl kullanabileceği.",
+      "ai_policy": "Yapay zekâ tarayıcı politikası",
+      "ai_allow": "Tüm yapay zekâ tarayıcılarına izin ver",
+      "ai_allow_hint": "Yapay zekâ yanıtları sayfalarınıza atıf yapabilir, modeller de onlardan öğrenebilir.",
+      "ai_block_training": "Yapay zekâ yanıtlarına izin ver, eğitimi engelle",
+      "ai_block_training_hint": "Asistanlar sayfalarınızı yine bulup alıntılayabilir; eğitim tarayıcıları (GPTBot, Google-Extended, CCBot…) engellenir.",
+      "ai_block_all": "Tüm yapay zekâ tarayıcılarını engelle",
+      "ai_block_all_hint": "Bilinen tüm yapay zekâ ajanları robots.txt içinde engellenir ve llms.txt kapatılır. Web araması etkilenmez.",
+      "ai_blocked_extra": "Şu user agent'ları da engelle",
+      "ai_blocked_extra_hint": "Her satıra bir tarayıcı adı, örn. Bytespider.",
+      "llms_enabled": "llms.txt ve Markdown sayfalarını yayınla",
+      "llms_enabled_hint": "Herkese açık içeriğinizin /llms.txt adresindeki haritası ve her herkese açık sayfanın bir Markdown kopyası; yapay zekâ araçları sizden doğru alıntı yapsın diye.",
+      "feeds_title": "Akışlar",
+      "feeds_enabled": "RSS, Atom ve JSON akışlarını yayınla",
+      "feeds_enabled_hint": "Yeni kurslar, topluluk konuları ve canlı oturumlar akış okuyucularında ve toplayıcılarda görünür. Podcast akışları her zaman açık kalır.",
+      "indexnow_title": "IndexNow",
+      "indexnow_subtitle": "Bing, Yandex ve diğer IndexNow arama motorlarına yeni ve güncellenen sayfaları hemen bildirin.",
+      "indexnow_enabled": "Yayınlarken arama motorlarına haber ver",
+      "indexnow_enabled_hint": "Kaydettiğinizde siteniz için bir doğrulama anahtarı oluşturulur.",
+      "indexnow_key": "Doğrulama anahtarı",
+      "links_llms": "llms.txt",
+      "links_feed": "RSS akışı"
     },
     "save_failed": "SEO ayarları kaydedilemedi.",
     "saved": "SEO ayarları kaydedildi."
@@ -23572,8 +24037,8 @@
     }
   },
   "companies": {
-    "title": "Müşteriler",
-    "subtitle": "Eğitim verdiğiniz şirketler, çalışanları, kursları ve koltukları",
+    "title": "Şirketler",
+    "subtitle": "Eğitim verdiğiniz şirketler: çalışanlarına kurslarınıza erişim verin veya onlara koltuk satın",
     "tabs": {
       "companies": "Şirketler",
       "offers": "Koltuk teklifleri",
@@ -23583,7 +24048,7 @@
       "tab": "Şirketler",
       "title": "Şirketler",
       "subtitle": "Şirketlere satılan koltuklar ve satın aldıkları teklifler",
-      "open_customers": "Müşteri profillerini aç"
+      "open_customers": "Şirket profillerini aç"
     },
     "menu": {
       "manage_team": "Ekibi yönet"
@@ -23664,7 +24129,8 @@
       "auto_assign": "Katılanlara ücretsiz koltuk ver",
       "company_admins": "Şirket yöneticileri",
       "billing_email": "Fatura e-postası",
-      "tags": "Etiketler"
+      "tags": "Etiketler",
+      "member_limit": "Üye sınırı"
     },
     "list": {
       "new": "Yeni şirket",
@@ -23693,7 +24159,7 @@
       "no_match": "Bu filtrelerle eşleşen şirket yok",
       "clear_filters": "Filtreleri temizle",
       "empty_title": "Henüz şirket yok",
-      "empty_body": "Bir şirket ekleyerek ona markalı bir alan, kendi kursları ve kendisinin yöneteceği koltuklar verin."
+      "empty_body": "Çalışanlarına kurslarınıza erişim, markalı bir alan ve takip edebileceğiniz ilerleme sağlamak için bir şirket ekleyin. Koltuk satmak isteğe bağlıdır."
     },
     "onboard": {
       "title": "Şirket ekle",
@@ -23746,7 +24212,7 @@
       "remove_member_title": "Bu üye kaldırılsın mı?",
       "remove_member_body": "{{name}}, şirket alanına ve özel kurslarına erişimini kaybeder. İlerlemesi korunur.",
       "member_removed": "Üye kaldırıldı",
-      "courses_intro": "Paylaşılan kurslar şirket alanında görünür. Özel kursları yalnızca şirketin üyeleri görebilir.",
+      "courses_intro": "Şirkete kurslara erişim verin: özel kursları yalnızca şirketin çalışanları görür, paylaşılan kurslar her zamanki gibi görünür kalır ve şirketin alanında da yer alır.",
       "link_course": "Kurs bağla",
       "create_course": "Kurs oluştur",
       "no_courses": "Bağlı kurs yok",
@@ -23773,7 +24239,7 @@
       "grant_seats_hint": "Stripe dışında faturalanan anlaşmalar için: faturalar, pilot projeler, iş ortakları.",
       "cancel_company": "Koltukları iptal et",
       "no_seats": "Koltuk yok",
-      "no_seats_body": "Bu şirket koltuk satın almadı. Siz koltuk verebilirsiniz.",
+      "no_seats_body": "Bu şirketin koltuğu yok. Çalışanları kursları yine de doğrudan alabilir; koltuklar belirli bir sayıyı satmak veya vermek içindir.",
       "comped_n_one": "{{count}} ücretsiz",
       "comped_n_other": "{{count}} ücretsiz",
       "renews": "Yenilenir",
@@ -23799,7 +24265,14 @@
       "no_activity": "Henüz bir şey olmadı",
       "notes": "Notlar",
       "notes_hint": "Yalnızca akademinizin yöneticileri görebilir.",
-      "notes_placeholder": "Kişiler, yenileme planları, önem verdikleri şeyler…"
+      "notes_placeholder": "Kişiler, yenileme planları, önem verdikleri şeyler…",
+      "access_hint": "Bu şirkete kimlerin katılıp kurslarını alabileceği. Ödeme gerekmez.",
+      "member_limit_hint": "E-posta veya alan adıyla eklenen kişiler için isteğe bağlı üst sınır",
+      "no_limit": "Sınır yok",
+      "over_limit": "Üye sınırına ulaşıldığı için şunlar eklenmedi: {{list}}",
+      "or_folder": "Veya bir klasörün tamamı",
+      "folder_hint": "Şirkete içindeki tüm kursları verir",
+      "pick_folder": "Bir klasör seçin"
     },
     "offers": {
       "intro": "Koltuk teklifleri şirketler için koltuk fiyatlarını belirler: hacim kademeleri, en az sayı, tek seferlik veya yinelenen.",
@@ -28367,7 +28840,11 @@
       "ai_credits_low": "Yapay zekâ kredisi azaldı",
       "org_payment_failed": "Abonelik ödemesi başarısız",
       "agent_run_finished": "Ajan çalıştırması bitti",
-      "agent_run_failed": "Ajan çalıştırması başarısız"
+      "agent_run_failed": "Ajan çalıştırması başarısız",
+      "trial_ending": "Deneme bitiyor",
+      "plan_downgraded": "Ücretsiz plana geçildi",
+      "plan_restored": "Plan geri yüklendi",
+      "payments_checkout_failing": "Ödemeler başarısız oluyor"
     },
     "copy": {
       "assignment_graded": "Notlandırıldı: {{assignment}}",
@@ -28425,7 +28902,11 @@
       "ai_credits_low": "Yapay zekâ kredileri azalıyor ({{remaining}} kaldı)",
       "org_payment_failed": "Abonelik ödemeniz başarısız oldu",
       "agent_run_finished": "{{agent}} zamanlanmış çalıştırmasını bitirdi",
-      "agent_run_failed": "{{agent}} ajanının zamanlanmış çalıştırması başarısız oldu"
+      "agent_run_failed": "{{agent}} ajanının zamanlanmış çalıştırması başarısız oldu",
+      "trial_ending": "{{plan}} denemeniz {{days}} gün içinde bitiyor",
+      "plan_downgraded": "Artık Ücretsiz plandasınız. Hiçbir şey silinmedi",
+      "plan_restored": "{{plan}} planına tekrar hoş geldiniz",
+      "payments_checkout_failing": "Öğrenciler şu anda satın alamıyor ({{count}} başarısız ödeme)"
     },
     "routing": {
       "short": "Kimlere bildirilir",
@@ -28489,7 +28970,9 @@
       "start_template": "Şablonla başla",
       "start_template_desc": "{{template}} web sitesini adınla yayınlıyor ve düzenleyebileceğin bir ilk kurs taslağı ekliyoruz.",
       "start_blank": "Boş başla",
-      "start_blank_desc": "Boş bir akademi. Kurulum listesi gerisinde sana yol gösterir."
+      "start_blank_desc": "Boş bir akademi. Kurulum listesi gerisinde sana yol gösterir.",
+      "trial_note_after": "Kart gerekmez. Sonrasında bu planla devam edebilir, başka bir plan seçebilir veya Ücretsiz planda kalabilirsiniz.",
+      "trial_note": "{{days}} gün boyunca {{plan}} planını ücretsiz kullanıyorsunuz."
     },
     "checklist": {
       "full_guide": "Tam rehber",
@@ -28526,7 +29009,10 @@
         "ai_credits_one": "Yapay zekâ kredisi: {{formatted}}",
         "ai_credits_other": "Yapay zekâ kredisi: {{formatted}}"
       },
-      "compare": "Planları karşılaştır"
+      "compare": "Planları karşılaştır",
+      "your_trial": "Denemeniz",
+      "keep_plan": "{{plan}} ile devam et",
+      "subtitle_trial": "{{plan}} planını ücretsiz deniyorsunuz. Size uyan planı seçin; siz seçene kadar hiçbir şey değişmez."
     },
     "invite": {
       "title": "Kişileri davet et",
@@ -28562,7 +29048,10 @@
       "import_one": "Öğrenci davet et: {{count}}",
       "import_other": "Öğrenci davet et: {{count}}",
       "sent_toast_one": "Gönderilen davet: {{count}}",
-      "sent_toast_other": "Gönderilen davet: {{count}}"
+      "sent_toast_other": "Gönderilen davet: {{count}}",
+      "invite_only_create": "Okulunuz yalnızca davetle. İnsanların kaydolabilmesi için bir katılım bağlantısı oluşturun.",
+      "create_link": "Katılım bağlantısı oluştur",
+      "invite_only_hint": "Bu bağlantı bir katılım kodu içerir: bağlantıya sahip herkes kaydolabilir."
     },
     "invites": {
       "title": "Davetler",
@@ -28621,6 +29110,17 @@
       },
       "desc_one": "Son {{count}} günde açılan hesaplar ve ne kadar ilerledikleri",
       "desc_other": "Son {{count}} günde açılan hesaplar ve ne kadar ilerledikleri"
+    },
+    "first_course": {
+      "title": "İlk kursunuzu oluşturun",
+      "subtitle": "Geri kalan her şey bekleyebilir. Bir başlangıç seçin, her kelimeyi sonra değiştirebilirsiniz.",
+      "template": "Bir şablonla başlayın",
+      "template_desc": "Bölümleri ve dersleri hazır bir taslak, düzenleyicide açılır.",
+      "ai": "Yapay zekâ ile oluşturun",
+      "ai_desc": "Konunuzu anlatın, dakikalar içinde eksiksiz bir kurs taslağı alın.",
+      "blank": "Ya da boş bir kursla başlayın",
+      "template_short": "Şablonla başla",
+      "ai_short": "Yapay zekâ ile oluştur"
     }
   },
   "impersonation": {
@@ -28648,5 +29148,19 @@
     "no_access_desc": "Kimliğe bürünme erişimi için bir LearnHouse yöneticisine başvurun.",
     "back_to_console": "Konsola dön",
     "retry": "Tekrar dene"
+  },
+  "mobile_app": {
+    "title": "Mobil uygulamayı edinin",
+    "heading": "Telefonunuzda öğrenin",
+    "body": "LearnHouse uygulamasını açın ve bu okula bağlanmak için bu kodu tarayın.",
+    "qr_alt": "Bu okulu LearnHouse uygulamasında açmak için QR kod",
+    "qr_actions": "QR kodu kaydetmek veya kopyalamak için sağ tıklayın",
+    "copy_image": "Görseli kopyala",
+    "download_png": "PNG indir",
+    "copy_link": "Uygulama bağlantısını kopyala",
+    "copied_image": "QR kod kopyalandı",
+    "copied_link": "Uygulama bağlantısı kopyalandı",
+    "copy_failed": "Görsel kopyalanamadı. İndirmeyi deneyin.",
+    "download_failed": "Görsel kaydedilemedi."
   }
 }

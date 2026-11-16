@@ -295,34 +295,27 @@ function HomeClient() {
   )
 }
 
-/** Role, plan, status and setup progress, as small chips under the org name. */
-function OrgChips({ org, info }: { org: any; info?: HubOrg }) {
+/** Role, plan, status and setup progress. Kept off the card (it read as
+ *  noise) and shown at the top of the org's menu instead. */
+function OrgDetails({ org, info }: { org: any; info?: HubOrg }) {
   const { t } = useTranslation()
   if (!info) return null
-  const chip = 'inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold'
   const left = daysUntil(info.poc_ends_at)
+  const parts: string[] = [t(`onb2.hub.roles.${info.role}`)]
+  if (info.plan && !org.is_demo) parts.push(t(`billing.catalog.names.${info.plan.replace('-', '_')}`))
+  if (info.status === 'poc') {
+    parts.push(left != null ? t('onb2.hub.poc_left', { count: left }) : t('dashboard.organization.plan_usage.status.poc'))
+  } else if (info.status === 'trial') {
+    parts.push(t('dashboard.organization.plan_usage.status.trial'))
+  }
+  if (info.setup) parts.push(t('onb2.hub.setup', { done: info.setup.done, total: info.setup.total }))
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-1" data-testid="org-chips">
-      <span className={`${chip} bg-neutral-100 text-neutral-600`}>{t(`onb2.hub.roles.${info.role}`)}</span>
-      {info.plan && !org.is_demo && (
-        <span className={`${chip} bg-neutral-100 text-neutral-600`}>{t(`billing.catalog.names.${info.plan.replace('-', '_')}`)}</span>
-      )}
-      {info.status === 'poc' && (
-        <span className={`${chip} bg-sky-50 text-sky-700`}>
-          {left != null ? t('onb2.hub.poc_left', { count: left }) : t('dashboard.organization.plan_usage.status.poc')}
-        </span>
-      )}
-      {(info.status === 'trial' || info.status === 'suspended') && (
-        <span className={`${chip} ${info.status === 'suspended' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-800'}`}>
-          {t(`dashboard.organization.plan_usage.status.${info.status}`)}
-        </span>
-      )}
-      {info.setup && (
-        <span className={`${chip} bg-emerald-50 text-emerald-700`}>
-          {t('onb2.hub.setup', { done: info.setup.done, total: info.setup.total })}
-        </span>
-      )}
-    </div>
+    <>
+      <DropdownMenuLabel className="text-xs font-normal text-neutral-500" data-testid="org-details">
+        {parts.join(' · ')}
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+    </>
   )
 }
 
@@ -415,12 +408,13 @@ function OrgRow({ org, access_token, info }: { org: any; access_token: string; i
               </span>
             )}
           </div>
-          {org.description ? (
-            <p className="text-xs text-black/40 truncate mt-0.5">{org.description}</p>
+          {/* One quiet line. A suspended org says so here, since it blocks
+              everything; the rest (role, plan, setup) lives in the menu. */}
+          {info?.status === 'suspended' ? (
+            <p className="text-xs text-rose-600 truncate mt-0.5">{t('dashboard.organization.plan_usage.status.suspended')}</p>
           ) : (
-            <p className="text-xs text-black/30 truncate mt-0.5">{org.slug}</p>
+            <p className="text-xs text-black/35 truncate mt-0.5">{org.slug}</p>
           )}
-          <OrgChips org={org} info={info} />
         </div>
 
         <ChevronRight
@@ -440,6 +434,7 @@ function OrgRow({ org, access_token, info }: { org: any; access_token: string; i
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
+          <OrgDetails org={org} info={info} />
           {canManageOrg && !org.is_demo && (
             <>
               <DropdownMenuItem asChild>

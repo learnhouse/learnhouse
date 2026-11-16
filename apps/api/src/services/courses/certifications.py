@@ -55,6 +55,21 @@ async def _check_certification_access(
     await check_resource_access(request, db_session, current_user, course_uuid, action)
 
 
+async def _certificates_in_plan(certification: Certifications, db_session: AsyncSession) -> bool:
+    """Whether the course's org may still issue certificates (a Pro feature
+    on SaaS). Certificates already issued stay valid either way."""
+    from src.security.features_utils.plan_check import check_org_plan
+
+    course = await db_session.get(Course, certification.course_id)
+    if course is None:
+        return False
+    try:
+        await check_org_plan(course.org_id, "pro", "Certifications", db_session)
+    except HTTPException:
+        return False
+    return True
+
+
 async def create_certification(
     request: Request,
     certification_object: CertificationCreate,
@@ -836,7 +851,7 @@ async def check_course_completion_and_create_certificate(
         statement = select(Certifications).where(Certifications.course_id == course_id)
         certification = (await db_session.execute(statement)).scalars().first()
         
-        if certification and certification.id:
+        if certification and certification.id and await _certificates_in_plan(certification, db_session):
             # Certificate integrity: completion is necessary but not sufficient;
             # every graded assignment in the course must be passed. This withholds
             # the certificate from learners who finished all activities but failed

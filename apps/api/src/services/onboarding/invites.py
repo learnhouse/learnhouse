@@ -129,13 +129,33 @@ def _invite_usergroup(r, record: dict, org_uuid: str) -> Optional[int]:
     return None
 
 
-async def accept_invite(request: Request, db_session: AsyncSession, user_id: int, org_uuid: str) -> dict:
+async def join_from_invite(request: Request, db_session: AsyncSession, user: User, org: Organization, join_method: str) -> None:
+    """Make ``user`` a member of ``org`` because they were invited: seat check,
+    membership, usage, analytics and the admins' "someone joined" notice."""
     from src.routers.users import _invalidate_session_cache
     from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
     from src.services.analytics import events as analytics_events
     from src.services.analytics.analytics import track
     from src.services.orgs.join_notifications import notify_user_joined_org
 
+    await check_limits_with_usage("members", org.id, db_session)
+    db_session.add(UserOrganization(
+        user_id=user.id, org_id=org.id, role_id=USER_ROLE_ID,
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    ))
+    await db_session.commit()
+    await increase_feature_usage("members", org.id, db_session)
+    _invalidate_session_cache(user.id)
+    await track(
+        event_name=analytics_events.USER_JOINED_ORG,
+        org_id=org.id,
+        user_id=user.id,
+        properties={"join_method": join_method},
+    )
+    await notify_user_joined_org(request, db_session, user, org.id, org=org)
+
+
+async def accept_invite(request: Request, db_session: AsyncSession, user_id: int, org_uuid: str) -> dict:
     user = await _user(db_session, user_id)
     _require_verified(user)
     org = await _org_by_uuid(db_session, org_uuid)
@@ -153,14 +173,7 @@ async def accept_invite(request: Request, db_session: AsyncSession, user_id: int
     if already is not None:
         raise HTTPException(status_code=400, detail="You are already a member of this organization")
 
-    await check_limits_with_usage("members", org.id, db_session)
-    db_session.add(UserOrganization(
-        user_id=user.id, org_id=org.id, role_id=USER_ROLE_ID,
-        creation_date=str(datetime.now()), update_date=str(datetime.now()),
-    ))
-    await db_session.commit()
-    await increase_feature_usage("members", org.id, db_session)
-    _invalidate_session_cache(user.id)
+    await join_from_invite(request, db_session, user, org, join_method="email_invite")
 
     group_id = _invite_usergroup(r, record, org.org_uuid)
     ttl = r.ttl(key)
@@ -173,13 +186,6 @@ async def accept_invite(request: Request, db_session: AsyncSession, user_id: int
         except HTTPException:
             logger.warning("Invited user %s joined org %s but not group %s", user.id, org.id, group_id)
 
-    await track(
-        event_name=analytics_events.USER_JOINED_ORG,
-        org_id=org.id,
-        user_id=user.id,
-        properties={"join_method": "email_invite"},
-    )
-    await notify_user_joined_org(request, db_session, user, org.id, org=org)
     return {"org_id": org.id, "slug": org.slug, "name": org.name}
 
 

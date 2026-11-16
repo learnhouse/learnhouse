@@ -294,7 +294,7 @@ class TestEmailsService:
         role_call = send_email.call_args_list[2].kwargs
 
         assert "Vous êtes invité" in invite_call["body"]
-        assert "Vous êtes invité à rejoindre Org &amp; Co" == invite_call["subject"]
+        assert "Vous êtes invité à apprendre avec Org &amp; Co" == invite_call["subject"]
         assert "Réinitialisez votre mot de passe" in reset_call["body"]
         assert "Réinitialisez votre mot de passe" == reset_call["subject"]
         assert "Votre rôle a été mis à jour" in role_call["body"]

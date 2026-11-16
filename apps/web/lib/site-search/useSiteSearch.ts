@@ -16,6 +16,7 @@ import {
 import { safeImageSrc } from '@services/security/url'
 import { extractPreviewText } from '@/lib/site-search/preview'
 import { coursePath, resourcePath } from '@/lib/seo/paths'
+import { threadPath } from '@/lib/seo/paths'
 
 export type SiteResultType =
   | 'course'
@@ -183,7 +184,7 @@ export function normalizeSiteResults(
       updatedAt: d.update_date || d.creation_date || undefined,
       emoji: d.emoji || undefined,
       href: community
-        ? link(`/community/${community}/discussion/${discussion}`)
+        ? link(d.id ? threadPath(community, d) : `/community/${community}/discussion/${discussion}`)
         : link(`/discussion/${discussion}`),
     })
   }

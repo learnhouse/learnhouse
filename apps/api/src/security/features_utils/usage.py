@@ -74,6 +74,21 @@ def _get_redis_client():
     return r
 
 
+_LIMIT_NOUNS = {"members": "members", "admin_seats": "admin seats", "courses": "courses"}
+
+
+def _limit_detail(feature: str, limit: int) -> str:
+    """The 403 for a reached plan limit. Starts with the stable "Usage Limit
+    has been reached for X" prefix clients match on, then says what it means:
+    nothing is removed, only adding more needs a bigger plan."""
+    noun = _LIMIT_NOUNS.get(feature, feature.replace("_", " "))
+    return (
+        f"Usage Limit has been reached for {feature.capitalize()}. "
+        f"Your plan includes {limit} {noun}. Everything you already have stays; "
+        f"upgrade to add more."
+    )
+
+
 def _plan_from_config_dict(config: dict) -> PlanLevel:
     """Read the plan out of a raw org config dict (supports v1 and v2 layout)."""
     config = config or {}
@@ -336,7 +351,7 @@ async def check_limits_with_usage(
             else:
                 raise HTTPException(
                     status_code=403,
-                    detail=f"Usage Limit has been reached for {feature.capitalize()}",
+                    detail=_limit_detail(feature, feature_limit),
                 )
         return True
 
@@ -398,7 +413,7 @@ async def check_members_limit_with_pending(
     if current + max(pending_and_new, 0) > feature_limit:
         raise HTTPException(
             status_code=403,
-            detail="Usage Limit has been reached for Members",
+            detail=_limit_detail("members", feature_limit),
         )
     return True
 
@@ -834,7 +849,7 @@ async def check_admin_seat_limit(
     if current >= limit:
         raise HTTPException(
             status_code=403,
-            detail="Usage Limit has been reached for Admin_seats",
+            detail=_limit_detail("admin_seats", limit),
         )
     return True
 
@@ -906,7 +921,7 @@ async def enforce_admin_seat_limit_for_role_rights_change(
     if current + holders > limit:
         raise HTTPException(
             status_code=403,
-            detail="Usage Limit has been reached for Admin_seats",
+            detail=_limit_detail("admin_seats", limit),
         )
 
 

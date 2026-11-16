@@ -1,0 +1,240 @@
+---
+title: "Agent API Approvals & Tools"
+description: "How Agent API approvals work for risky actions, who can approve, confirmation phrases for destructive ones, per-conversation tool allowlists, and client-side tools your app runs."
+---
+
+import { Callout, Steps } from '@/components/mdx'
+
+# Approvals and tools
+
+Atlas acts through tools. Reading is free; changes that matter (publishing a course, emailing learners, deleting
+something, changing billing) stop and wait for a person to approve them. The Agent API exposes those approvals so your
+app can show them and answer them.
+
+## The approval lifecycle
+
+<Steps>
+
+### The agent asks
+
+The stream sends `approval.required`, then ends with `message.done` and `status: "requires_action"`. The conversation's
+`status` is `requires_action` and its `pending_approvals` lists the approval, so a client that wasn't connected can
+find it later.
+
+### Someone decides
+
+`POST /approvals/{approval_id}/approve` or `POST /approvals/{approval_id}/deny`. Both answer with a stream that
+continues the same message (`message.start` with `"continued": true`), or with `{"message": …}` when you send
+`"stream": false`.
+
+### The run goes on
+
+`approval.resolved` reports the decision. After an approval, the tool runs and `action.applied` describes what changed.
+After a denial, the agent is told and answers accordingly.
+
+</Steps>
+
+## The approval object
+
+```json
+{
+  "id": "pnd_77",
+  "tool": "delete_course",
+  "summary": "Delete \"Intro to Python\"",
+  "risk": "destructive",
+  "reason": "deletes",
+  "target": { "kind": "course", "uuid": "course_42", "name": "Intro to Python" },
+  "args": { "course_uuid": "course_42" },
+  "estimate_credits": null,
+  "confirmation": {
+    "phrase": "Intro to Python",
+    "kind": "type_name",
+    "action_label": "Delete course",
+    "blast_radius": "312 enrolled learners lose access"
+  },
+  "status": "pending",
+  "can_approve": true
+}
+```
+
+| Field | |
+| --- | --- |
+| `tool`, `args` | The exact call that will run |
+| `summary` | One line to show on the approval card |
+| `risk` | `write` or `destructive` |
+| `reason` | Why it needs approval (`ask_first`, `deletes`, …) |
+| `target` | What it acts on, when there is one thing |
+| `estimate_credits` | For actions that spend AI credits (generating a course, say), the expected cost |
+| `confirmation` | For destructive actions, what the approver must type. `null` otherwise. |
+| `status` | `pending`, `approved`, `denied`, `expired`, `superseded`, `applied` |
+| `can_approve` | Whether the current caller may approve it. Hide the button when `false`. |
+
+`expired` approvals waited too long. `superseded` ones were replaced before anyone answered, for example because the
+conversation moved on with a new message. Neither can be approved; ask the agent again.
+
+## Destructive actions
+
+When `confirmation` is set, the approver has to type something, the same way they would in LearnHouse:
+
+- `kind: "type_name"`: type the target's name (`phrase`).
+- `kind: "type_phrase"`: type the given `phrase`.
+
+Show `action_label` on the button and `blast_radius` as the warning. Send what the person typed:
+
+```bash
+curl -N -X POST $LH/approvals/pnd_77/approve \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{ "confirmation_phrase": "Intro to Python" }'
+```
+
+A missing or wrong phrase answers `422 challenge_failed` and the approval stays pending. Don't fill the phrase in for the
+user: it exists so a person reads what is about to happen.
+
+To deny, with an optional reason the agent will see (up to 1000 characters):
+
+```bash
+curl -N -X POST $LH/approvals/pnd_77/deny \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{ "reason": "Archive it instead" }'
+```
+
+Answering an approval that is no longer pending answers `409 approval_conflict`.
+
+## Who can approve
+
+| Caller | Can approve |
+| --- | --- |
+| **Member session** | Approvals in their own conversations, for actions their role allows |
+| **API token** | Only with the **AI agents: Update** permission (self-approval), and only within the token's rights |
+| **Embed session** | Never |
+
+Approving never adds rights: the tool runs with the caller's permissions and is checked again when it runs.
+
+A common setup for automation is a token with **Read** and **Create** only. Your backend starts the conversation and
+sends messages; when an approval comes up, your app shows it to a staff member, who approves it with their own member
+session. The token never needs self-approval.
+
+<Callout type="warning">
+  Self-approval lets a script make changes with no person in the loop. Give **Update** only to tokens that need it,
+  limit what they can reach with the token's other permissions and the conversation's tool allowlist, and review the
+  [audit log](/enterprise/audit-logs).
+</Callout>
+
+## Limit the tools of a conversation
+
+`GET /agents/{agent_id}/tools` lists the tools the agent may call for this caller:
+
+```json
+{
+  "tools": [
+    {
+      "name": "list_courses",
+      "title": "List courses",
+      "description": "…",
+      "toolset": "courses",
+      "tier": "read",
+      "needs_approval": false,
+      "input_schema": { "type": "object", "properties": { "...": "…" } }
+    },
+    { "name": "update_course", "title": "Update a course", "toolset": "courses", "tier": "write", "needs_approval": true, "...": "…" }
+  ]
+}
+```
+
+Pass `tools.allow` when you create the conversation to narrow it further:
+
+```json
+{
+  "agent": "atlas",
+  "tools": { "allow": ["list_courses", "get_course", "get_course_analytics"] }
+}
+```
+
+- `null` or no `allow`: every tool the caller may use.
+- A list (up to 100 names): only those. Names the caller can't use are ignored, never granted.
+- An allowlist removes tools; it can't skip approvals. A risky tool in the list still asks first.
+
+A read-only reporting bot, for example, allows only `read` tools and never sees an approval.
+
+## Client-side tools
+
+Client-side tools are functions in your app that the agent can call: look up the user's order in your database, open a
+page in your UI, read something only the browser knows. You declare them on the conversation; LearnHouse never runs
+them.
+
+```json
+{
+  "agent": "copilot",
+  "tools": {
+    "client": [
+      {
+        "name": "get_my_schedule",
+        "description": "The learner's upcoming classes in our timetable app.",
+        "input_schema": {
+          "type": "object",
+          "properties": { "days": { "type": "integer", "minimum": 1, "maximum": 14 } },
+          "required": ["days"]
+        }
+      }
+    ]
+  }
+}
+```
+
+| Field | Rules |
+| --- | --- |
+| `name` | `^[a-z][a-z0-9_]{1,47}$`. Pick names that don't clash with LearnHouse's tools. |
+| `description` | Up to 500 characters. This is what the model reads to decide when to call it. |
+| `input_schema` | A JSON Schema object for the arguments |
+
+Up to 8 client tools per conversation.
+
+### The round trip
+
+<Steps>
+
+### The agent calls your tool
+
+The stream sends `tool.call` with `"client": true`, then `message.done` with `status: "requires_action"`. The
+conversation lists the call in `pending_tool_calls` (`call_id`, `name`, `args`).
+
+### Your app runs it
+
+Validate `args` yourself: they come from the model.
+
+### You send the result
+
+```bash
+curl -N -X POST $LH/conversations/agconv_1/tool-results \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{
+    "results": [
+      { "call_id": "call_3", "output": { "classes": [{ "day": "Tue", "title": "Algebra" }] } }
+    ]
+  }'
+```
+
+The stream continues the same message. Send `"is_error": true` with an error message as `output` when the tool failed;
+the agent sees it and can recover. One request can carry the results of several calls.
+
+</Steps>
+
+Sending results when nothing is pending answers `409 no_pending_tool_calls`.
+
+With the SDK:
+
+```ts
+for await (const event of lh.agent.streamMessage(conversation.id, { content })) {
+  if (event.type === 'tool.call' && event.client) {
+    const output = await runMyTool(event.name, event.args)
+    for await (const next of lh.agent.submitToolResults(conversation.id, [{ call_id: event.call_id, output }])) {
+      render(next)
+    }
+  }
+}
+```
+
+<Callout type="info">
+  The output of a client tool goes to the model as data. Keep it small, and don't put secrets in it: the model may
+  quote it back to the user.
+</Callout>

@@ -5,8 +5,9 @@
 import { getAPIUrl } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
 import type { DeploymentMode } from '@services/orgs/usage'
+import type { OrgTrial } from '@services/plans/trial'
 
-export type FeatureState = 'included' | 'poc' | 'addon' | 'locked' | 'edition'
+export type FeatureState = 'included' | 'poc' | 'trial' | 'addon' | 'locked' | 'edition'
 export type PlanStatusKey =
   | 'active'
   | 'free'
@@ -52,6 +53,33 @@ export interface LicenseBrief {
   reason: string | null
 }
 
+export interface CourseRef {
+  id: number
+  uuid: string
+  name: string
+}
+
+/** What moving to `to_plan` would change (computed by the API before it happens). */
+export interface DowngradePreview {
+  to_plan: string
+  features: string[]
+  courses: { public: number; public_cap: number; kept: CourseRef | null; made_private: CourseRef[]; drip_paused: number }
+  members: { count: number; limit: number; over: boolean }
+  admins: { count: number; limit: number; over: boolean }
+}
+
+/** The last move to Free: what it changed and whether an upgrade restored it. */
+export interface LastDowngrade {
+  from_plan: string
+  to_plan: string
+  reason: 'trial_expired' | 'billing' | 'platform' | 'other' | string
+  created_at: string
+  restored: boolean
+  courses_made_private: number
+  drip_paused: number
+  kept_course: CourseRef | null
+}
+
 export interface PlanOverview {
   org_id: number
   mode: DeploymentMode
@@ -60,6 +88,9 @@ export interface PlanOverview {
   billing: 'stripe' | 'contract' | 'none'
   next_plan: string | null
   poc: PocBrief | null
+  trial?: OrgTrial | null
+  downgrade_preview?: DowngradePreview | null
+  last_downgrade?: LastDowngrade | null
   license: LicenseBrief | null
   features: PlanFeature[]
   usage: { newsletter_emails?: { usage: number; limit: number | 'unlimited' } }
@@ -82,7 +113,7 @@ export function getPlanOverview(orgId: number | string, token: string): Promise<
 
 export type FeatureFilter = 'all' | 'have' | 'missing'
 
-const HAVE: FeatureState[] = ['included', 'poc', 'addon']
+const HAVE: FeatureState[] = ['included', 'poc', 'trial', 'addon']
 
 export function hasFeature(f: Pick<PlanFeature, 'state'>): boolean {
   return HAVE.includes(f.state)

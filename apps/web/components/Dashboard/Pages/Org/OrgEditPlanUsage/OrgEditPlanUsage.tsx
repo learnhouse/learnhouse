@@ -24,6 +24,7 @@ import { AICreditPriceTable, AICreditsUsageBreakdown } from './AICreditsUsage'
 import FeatureMatrix from './FeatureMatrix'
 import UsageMeters, { AICreditsDetail, useMeters, type AICreditsSummary } from './UsageMeters'
 import { LicenseCard, PlanSummaryCard, PocBriefCard, StatusNotice } from './PlanSummary'
+import { LastDowngradeCard, TrialCard } from './TrialCard'
 
 const P = 'dashboard.organization.plan_usage'
 const SECTIONS = ['usage', 'features', 'ai'] as const
@@ -90,7 +91,11 @@ export default function OrgEditPlanUsage() {
   const settingsBase = getUriWithOrg(orgSlug, '') + '/dash/org/settings'
   const manageUrl = getUpgradeUrl(orgSlug)
   const pocPlan = overview?.poc?.state === 'active' ? overview.poc.plan : null
-  const upgradeTarget = pocPlan ?? overview?.next_plan ?? null
+  // Mid-trial the natural next step is keeping the trial's plan, not the tier
+  // above it; after a move to Free, getting back the plan it came from.
+  const trial = overview?.trial?.active ? overview.trial : null
+  const lastDowngrade = overview?.last_downgrade && !overview.last_downgrade.restored ? overview.last_downgrade : null
+  const upgradeTarget = pocPlan ?? trial?.plan ?? lastDowngrade?.from_plan ?? overview?.next_plan ?? null
   const upgradeUrl = upgradeTarget ? getUpgradeUrl(orgSlug, upgradeTarget) : null
   const endedPocUrl = overview?.poc?.state === 'ended' && overview.poc.plan ? getUpgradeUrl(orgSlug, overview.poc.plan) : null
   const activePacks = packsQ.data?.active_packs ?? []
@@ -127,12 +132,22 @@ export default function OrgEditPlanUsage() {
             subscription={subQ.data ?? null}
             invoice={invoiceQ.data ?? null}
             manageUrl={manageUrl}
-            upgradeUrl={upgradeUrl}
+            upgradeUrl={trial ? null : upgradeUrl}
             canManage={canManageOrg}
           />
+          {trial && (
+            <TrialCard
+              trial={trial}
+              preview={overview.downgrade_preview}
+              upgradeUrl={upgradeUrl}
+              canManage={canManageOrg}
+              unlockedCount={overview.features.filter((f) => f.state === 'trial').length}
+            />
+          )}
+          {lastDowngrade && <LastDowngradeCard downgrade={lastDowngrade} upgradeUrl={upgradeUrl} canManage={canManageOrg} />}
           {overview.mode === 'saas' && canManageOrg && !!orgId && <ComparePlansButton orgId={Number(orgId)} orgSlug={orgSlug} />}
           {overview.poc && <PocBriefCard poc={overview.poc} upgradeUrl={endedPocUrl} canManage={canManageOrg} />}
-          {!overview.poc && (overview.status === 'trial' || overview.status === 'suspended') && <StatusNotice status={overview.status} />}
+          {!overview.poc && !trial && (overview.status === 'trial' || overview.status === 'suspended') && <StatusNotice status={overview.status} />}
           {overview.mode !== 'saas' && <LicenseCard overview={overview} />}
         </>
       )}

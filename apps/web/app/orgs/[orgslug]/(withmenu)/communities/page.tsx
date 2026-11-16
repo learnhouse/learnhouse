@@ -1,7 +1,8 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getSeoContext } from '@/lib/seo/context.server'
-import { buildListMetadata } from '@/lib/seo/pageMetadata'
+import { buildListMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
+import { featureIndexable } from '@/lib/seo/meta'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunities } from '@services/communities/communities'
 import CommunitiesClient from './communities'
@@ -14,7 +15,16 @@ type MetadataProps = {
 export async function generateMetadata(props: { params: Promise<{ orgslug: string }> }): Promise<Metadata> {
   const { orgslug } = await props.params
   const ctx = await getSeoContext(orgslug)
-  return buildListMetadata({ ctx, name: 'Communities', path: '/communities', description: ctx.seo.default_meta_description || `Discussion communities from ${ctx.org?.name}`, keywords: undefined })
+  const indexable = featureIndexable(ctx.seo, 'communities')
+  return buildListMetadata({
+    ctx,
+    name: 'Communities',
+    path: '/communities',
+    description: ctx.seo.default_meta_description || `Discussion communities from ${ctx.org?.name}`,
+    keywords: undefined,
+    noindex: !indexable,
+    alternateTypes: await seoAlternates(ctx, { indexable, feed: '/communities/' }),
+  })
 }
 
 const CommunitiesPage = async (params: any) => {

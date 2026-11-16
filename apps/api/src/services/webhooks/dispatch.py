@@ -174,6 +174,10 @@ async def dispatch_webhooks(
         from src.core.ee_hooks import notify_ee_event
 
         notify_ee_event(event_name, org_id, data)
+        # Publish events also ping IndexNow for orgs that opted in (no-op otherwise).
+        from src.services.seo.indexnow import notify_event as notify_indexnow
+
+        notify_indexnow(event_name, org_id, data)
     if not webhook_ids and _active_cache_get(org_id) is False:
         return
     task = asyncio.create_task(
