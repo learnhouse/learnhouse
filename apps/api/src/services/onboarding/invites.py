@@ -203,7 +203,7 @@ async def join_from_invite(request: Request, db_session: AsyncSession, user: Use
     # Joined through an older invitation: newer ones for the address close.
     from src.services.orgs.invitations.apply import close_pending_invitations
 
-    await close_pending_invitations(request, db_session, org.id, user.email, actor=user)
+    await close_pending_invitations(request, db_session, org.id, user.email, actor=user, owner_proven=_inbox_proven(user))
     await increase_feature_usage("members", org.id, db_session)
     _invalidate_session_cache(user.id)
     await track(
@@ -283,3 +283,9 @@ async def decline_invite(db_session: AsyncSession, user_id: int, org_uuid: str, 
         raise HTTPException(status_code=404, detail="This invitation is no longer valid")
     r.delete(key)
     return {"org_id": org.id, "declined": True}
+
+
+def _inbox_proven(user) -> bool:
+    from src.services.users.users import inbox_proven
+
+    return inbox_proven(user)

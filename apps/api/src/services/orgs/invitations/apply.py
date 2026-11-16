@@ -214,11 +214,20 @@ async def close_pending_invitations(
     org_id: int,
     email: Optional[str],
     actor=None,
+    *,
+    owner_proven: bool = True,
 ) -> int:
     """Someone with this address just became a member another way (an invite
     code, an open join, a signup, an admin adding them): their pending
     invitations to the org are closed, so an old link or a later automatic
-    path can't change the role they joined with. Returns how many."""
+    path can't change the role they joined with. Returns how many.
+
+    ``owner_proven`` is False when the new member hasn't proven they own the
+    address: anyone can sign up with an invited address, so closing the
+    invitation then would let them cancel the real person's invite. It stays
+    pending; explicit acceptance only ever upgrades a role."""
+    if not owner_proven:
+        return 0
     email = normalize_email(email or "")
     if not email:
         return 0

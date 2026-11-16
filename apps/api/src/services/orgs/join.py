@@ -129,7 +129,7 @@ async def join_org(
 
             db_session.add(user_organization)
             await db_session.commit()
-            await close_pending_invitations(request, db_session, org.id, user.email, actor=user)
+            await close_pending_invitations(request, db_session, org.id, user.email, actor=user, owner_proven=_inbox_proven(user))
 
             await increase_feature_usage("members", org.id, db_session)
 
@@ -228,10 +228,16 @@ async def _after_open_join(request: Request, db_session: AsyncSession, user: Use
     joined another way), then apply an invite code the person came through."""
     from src.services.orgs.invitations.apply import apply_invite_code, close_pending_invitations
 
-    await close_pending_invitations(request, db_session, org.id, user.email, actor=user)
+    await close_pending_invitations(request, db_session, org.id, user.email, actor=user, owner_proven=_inbox_proven(user))
     if invite_code:
         try:
             code_data = await get_invite_code(request, org.id, invite_code, current_user, db_session)
         except HTTPException:
             return
         await apply_invite_code(request, db_session, user, org, code_data)
+
+
+def _inbox_proven(user) -> bool:
+    from src.services.users.users import inbox_proven
+
+    return inbox_proven(user)

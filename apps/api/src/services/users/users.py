@@ -347,7 +347,9 @@ async def create_user(
         # Joined without its invitation: an old link can't change the role later.
         from src.services.orgs.invitations.apply import close_pending_invitations
 
-        await close_pending_invitations(request, db_session, org_id, user_read.email, actor=user_read)
+        await close_pending_invitations(
+            request, db_session, org_id, user_read.email, actor=user_read, owner_proven=inbox_proven(user)
+        )
 
     await increase_feature_usage("members", org_id, db_session)
 

@@ -208,8 +208,12 @@ async def test_open_join_with_an_unproven_inbox_is_a_plain_join(world, mock_requ
     ):
         await join_org(mock_request, JoinOrg(org_id=world.org.id, user_id=82), _public(user), db)
     assert (await _membership(db, 82, world.org.id)).role_id == 4
-    # The invitation closed: it can't hand out Admin later.
-    assert (await _row(db, "maybe@test.com")).status == "revoked"
+    # The invitation stays pending: an unproven signup can't cancel the real
+    # person's invite, and can't claim it either.
+    inv = await _row(db, "maybe@test.com")
+    assert inv.status == "pending"
+    with pytest.raises(HTTPException):
+        await apply.accept_invitation(mock_request, db, user, world.org, inv, via="hub")
 
 
 # ---------------------------------------------------------------------------
@@ -358,6 +362,10 @@ async def test_joining_another_way_closes_pending_invitations(world, mock_reques
     await db.commit()
     with signup_side_effects():
         await create_user(mock_request, db, AnonymousUser(), UserCreate(email="new@test.com", username="newnew", password="blue river 42"), world.org.id)
+    # The signup hasn't proven the address yet, so the invitation stays.
+    assert (await _row(db, "new@test.com")).status == "pending"
+    assert await apply.close_pending_invitations(mock_request, db, world.org.id, "new@test.com", owner_proven=False) == 0
+    assert await apply.close_pending_invitations(mock_request, db, world.org.id, "new@test.com") == 1
     assert (await _row(db, "new@test.com")).status == "revoked"
     assert await apply.close_pending_invitations(mock_request, db, world.org.id, "") == 0
 
