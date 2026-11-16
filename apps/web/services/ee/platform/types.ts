@@ -141,6 +141,8 @@ export interface OrgProfile extends PocFields {
   health_computed_at?: string | null
   last_activity_at?: string | null
   updated_at?: string | null
+  /** A running self-serve free trial (the plan is unlocked, not paid for). */
+  trial?: { plan: string; active: boolean; ends_at: string; days_left: number } | null
 }
 
 export interface AdminUserInfo {
