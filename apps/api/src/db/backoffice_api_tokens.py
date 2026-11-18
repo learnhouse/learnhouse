@@ -17,10 +17,13 @@ class BackofficeAPIToken(BackofficeAPITokenBase, table=True):
     no rights (all-or-nothing scope). Token secret prefix is ``lh_sa_`` to
     distinguish from org tokens (``lh_``).
     """
-    __tablename__ = "backoffice_apitoken"
+    # The physical table keeps its pre-Backoffice name (and index names) for
+    # zero-downtime deploys: pods still on the previous release query it during
+    # a rolling update. A later expand/contract migration renames it.
+    __tablename__ = "superadmin_apitoken"
     __table_args__ = (
-        Index("ix_backoffice_apitoken_token_prefix", "token_prefix"),
-        Index("ix_backoffice_apitoken_created_by", "created_by_user_id"),
+        Index("ix_superadmin_apitoken_token_prefix", "token_prefix"),
+        Index("ix_superadmin_apitoken_created_by", "created_by_user_id"),
         {"extend_existing": True},
     )
 

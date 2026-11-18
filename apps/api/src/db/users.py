@@ -3,7 +3,7 @@ from typing import Literal, Optional, TYPE_CHECKING
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, computed_field, field_validator
 from sqlmodel import Field, SQLModel
-from sqlalchemy import JSON, Column, Index
+from sqlalchemy import JSON, Boolean, Column, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from src.db.roles import RoleRead
 
@@ -256,7 +256,7 @@ class BackofficeAPITokenUser(SQLModel):
     org tokens unchanged, while backoffice tokens are handled via their own
     type and the ``require_backoffice`` dependency.
     """
-    id: int = 0  # backoffice_apitoken.id (NOT a user id)
+    id: int = 0  # BackofficeAPIToken.id (NOT a user id)
     user_uuid: str = "satoken_user"  # set to token_uuid
     username: str = "backoffice_api_token"
     token_name: str = ""
@@ -278,7 +278,13 @@ class User(UserBase, table=True):
     last_login_at: Optional[str] = None
     last_login_ip: Optional[str] = None
     signup_method: Optional[str] = None
-    is_backoffice_staff: bool = Field(default=False)
+    # The column keeps its pre-Backoffice name for zero-downtime deploys: pods
+    # still on the previous release read user.is_superadmin on every auth check
+    # during a rolling update. A later expand/contract migration renames it.
+    is_backoffice_staff: bool = Field(
+        default=False,
+        sa_column=Column("is_superadmin", Boolean, nullable=False, default=False),
+    )
     password_changed_at: Optional[datetime] = Field(default=None)
     # Interface preferences (UserPreferences); kept out of UserBase so the
     # profile update endpoint can't write it.
