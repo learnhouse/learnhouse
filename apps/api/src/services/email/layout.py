@@ -1,21 +1,19 @@
-"""The one email layout, in the V2 design language.
+"""The one email layout.
 
-Every message LearnHouse sends, whatever feature sends it, is an
-:class:`Email` (subject, blocks, footer facts) rendered here into the same
-frame, the one the V2 transactional templates already use:
+Every message LearnHouse sends is an :class:`Email` (subject, blocks, footer
+facts) rendered here into the same plain frame, the way product mail from
+Linear, Vercel, Stripe or GitHub looks:
 
-* the ``#f8f8f8`` canvas and a white 16px card with the V2 card shadow;
-* a thin rule on top of the card in the category's accent (the only
-  decoration; nothing is coloured for its own sake);
-* the sender's mark: the LearnHouse logo, or for org-scoped mail the
-  organization's uploaded logo, else its name set in text;
-* the body blocks;
-* a quiet footer: why the reader got it, manage / unsubscribe links where
-  they apply, and the platform line ("Powered by LearnHouse" on org mail).
+* a white page and a ~520px left-aligned column with normal margins;
+* a small mark at the top: the LearnHouse wordmark (a hosted PNG; Gmail
+  drops SVG images), or for org-scoped mail the organization's uploaded logo,
+  else its name in text;
+* the body blocks: a heading, short paragraphs, one button, a grey
+  fallback link;
+* one or two short grey footer lines: why the reader got it, manage /
+  unsubscribe where they apply, and the company line on LearnHouse mail.
 
-Tables and inline styles only (Outlook's Word engine, Gmail's style
-stripping). The light scheme is declared explicitly, as in the product, where
-light is the default.
+Inline styles only; tables where Outlook needs them. Light scheme only.
 """
 
 from __future__ import annotations
@@ -25,14 +23,14 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional, Sequence
 
-from src.services.email.blocks import Block, Ctx, Heading, Paragraph, esc, to_text
-from src.services.email.theme import FONT_STACK, INK, RTL_LANGUAGES, palette
+from src.services.email.blocks import Block, Ctx, Heading, Paragraph, esc, font, to_text
+from src.services.email.theme import FONT_STACK, INK, RTL_LANGUAGES
 
 LEARNHOUSE_NAME = "LearnHouse"
-POWERED_BY_URL = "https://www.learnhouse.io"
-# The hosted LearnHouse wordmark, as in the V2 email templates. Override with
+# The LearnHouse wordmark as a 2x PNG (apps/web/public/emails), served by the
+# web app. PNG because Gmail drops SVG images. Override with
 # LEARNHOUSE_EMAIL_LOGO_URL (self-hosted installs can point at their own copy).
-DEFAULT_LOGO_URL = "https://www.learnhouse.app/new/learnhouse-dark.svg"
+DEFAULT_LOGO_URL = "https://www.learnhouse.io/emails/learnhouse-wordmark@2x.png"
 
 # Media directory of the square logo variant (see ``upload_org_square_logo``).
 SQUARE_LOGO_DIR = "/square_logos/"
@@ -42,10 +40,10 @@ SQUARE_LOGO_DIR = "/square_logos/"
 class Brand:
     """Who the email is from, visually.
 
-    ``org_scoped`` mail is the organization's own: its logo or name in the
-    header, its colour on the buttons, its name as the From display name, and
-    the "Powered by LearnHouse" line when ``powered_by`` is on. Platform mail
-    keeps the LearnHouse mark.
+    ``org_scoped`` mail is the organization's own: its logo or name at the
+    top, its colour on the button, its name as the From display name.
+    Platform mail keeps the LearnHouse wordmark and the company line.
+    ``powered_by`` is carried for callers but no longer rendered.
     """
 
     name: str = LEARNHOUSE_NAME
@@ -67,7 +65,6 @@ class Email:
     subject: str
     blocks: Sequence[Block]
     preheader: str = ""
-    eyebrow: str = ""
     # Why the reader got this (plain or :class:`Safe`), shown first in the footer.
     reason: object = ""
     footer: object = ""
@@ -99,40 +96,37 @@ def learnhouse_logo_url() -> str:
     return (os.environ.get("LEARNHOUSE_EMAIL_LOGO_URL") or DEFAULT_LOGO_URL).strip()
 
 
+ALT_STYLE = f"font-family: {FONT_STACK}; font-size: 16px; font-weight: 600; color: {INK['text']};"
+
+
 def learnhouse_mark() -> str:
-    """The LearnHouse wordmark image; its ``alt`` reads "LearnHouse" when images are off."""
+    """The LearnHouse wordmark, 20px tall; its ``alt`` reads "LearnHouse" when images are off."""
     return (
-        f'<img src="{esc(learnhouse_logo_url())}" alt="LearnHouse" width="132" height="20" '
-        f'style="display: block; width: 132px; height: auto; max-height: 20px; border: 0; '
-        f'font-family: {FONT_STACK}; font-size: 16px; font-weight: 700; color: {INK["text"]};">'
+        f'<img src="{esc(learnhouse_logo_url())}" alt="LearnHouse" width="135" height="20" '
+        f'style="display: block; width: 135px; height: 20px; border: 0; {ALT_STYLE}">'
     )
 
 
 def org_logo_img(logo_url: str, alt: str) -> str:
-    """<img> for an org's uploaded logo: a square mark at 40px, a wide one letterboxed.
+    """<img> for an org's uploaded logo: a square mark at 32px, a wide one at most 28px tall.
 
     ``width``/``height`` attributes are for desktop Outlook, which ignores
-    ``max-width``; every other client lets the inline style win. When images
-    are blocked the ``alt`` (the org name) shows instead.
+    ``max-width``. When images are blocked the ``alt`` (the org name) shows.
     """
-    alt_style = f"font-family: {FONT_STACK}; font-size: 16px; font-weight: 600; color: {INK['text']};"
     if SQUARE_LOGO_DIR in logo_url:
         return (
-            f'<img src="{esc(logo_url)}" alt="{esc(alt)}" width="40" height="40" '
-            f'style="display: block; width: 40px; height: 40px; border: 0; border-radius: 12px; {alt_style}">'
+            f'<img src="{esc(logo_url)}" alt="{esc(alt)}" width="32" height="32" '
+            f'style="display: block; width: 32px; height: 32px; border: 0; border-radius: 6px; {ALT_STYLE}">'
         )
     return (
-        f'<img src="{esc(logo_url)}" alt="{esc(alt)}" height="32" '
-        f'style="display: block; max-height: 32px; max-width: 180px; height: auto; width: auto; border: 0; {alt_style}">'
+        f'<img src="{esc(logo_url)}" alt="{esc(alt)}" height="28" '
+        f'style="display: block; max-height: 28px; max-width: 160px; height: auto; width: auto; border: 0; {ALT_STYLE}">'
     )
 
 
 def org_name_mark(name: str) -> str:
-    """An org without a logo: its name in text. Never the LearnHouse mark, never a fake tile."""
-    return (
-        f'<span style="font-family: {FONT_STACK}; font-size: 16px; font-weight: 600; letter-spacing: -0.02em; '
-        f'color: {INK["text"]};">{esc(name)}</span>'
-    )
+    """An org without a logo: its name in text. Never the LearnHouse mark."""
+    return f'<span style="{ALT_STYLE}">{esc(name)}</span>'
 
 
 def sender_mark(brand: Brand) -> str:
@@ -170,7 +164,7 @@ def preheader_block(text: str) -> str:
         return ""
     hide = (
         "display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; "
-        "line-height: 1px; color: #f8f8f8; opacity: 0;"
+        "line-height: 1px; color: #ffffff; opacity: 0;"
     )
     return (
         f'<div style="{hide}">{html.escape(text)}</div>'
@@ -192,18 +186,17 @@ def _auto_preheader(email: Email) -> str:
 
 HEAD_CSS = """<style>
   :root { color-scheme: light; supported-color-schemes: light; }
-  @media only screen and (max-width: 560px) {
-    .lh-pad { padding-left: 24px !important; padding-right: 24px !important; }
-    .lh-outer { padding: 16px 8px 32px 8px !important; }
-  }
+  @media only screen and (max-width: 560px) { .lh-outer { padding: 24px 20px !important; } }
 </style>"""
+
+COMPANY_LINE = "LearnHouse, the open-source learning platform."
 
 
 def _button_colors(brand: Brand) -> tuple[str, str]:
-    """The primary fill: the org's accent on its own mail, else the V2 ink.
+    """The button fill: the org's colour on its own mail, else near-black.
 
-    A near-white org colour would vanish on the white card, so those orgs keep
-    the ink button.
+    A near-white org colour would vanish on the white page, so those orgs
+    keep the dark button.
     """
     from src.services.email.branding import contrasting_text_color, is_near_white, normalize_brand_color
 
@@ -213,50 +206,38 @@ def _button_colors(brand: Brand) -> tuple[str, str]:
     return color, contrasting_text_color(color)
 
 
-def footer_html(email: Email, brand: Brand, lang: str) -> str:
-    from src.services.email.translations import t
-
-    small = f"margin: 0 0 6px 0; font-family: {FONT_STACK}; font-size: 12px; line-height: 1.6; color: {INK['faint']};"
-    link = f"color: {INK['muted']}; text-decoration: underline;"
-    parts = [f'<p style="{small}">{esc(line)}</p>' for line in (email.reason, email.footer) if line]
+def footer_html(email: Email, brand: Brand) -> str:
+    small = f"margin: 0 0 4px 0; {font(12, INK['faint'])}"
+    link = f"color: {INK['faint']}; text-decoration: underline;"
+    reason = " ".join(str(esc(line)) for line in (email.reason, email.footer) if line)
     links = []
     if email.manage_url:
         links.append(f'<a href="{esc(email.manage_url)}" style="{link}">{esc(email.manage_label)}</a>')
     if email.unsubscribe_url:
         links.append(f'<a href="{esc(email.unsubscribe_url)}" style="{link}">{esc(email.unsubscribe_label)}</a>')
-    if links:
-        parts.append(f'<p style="{small}">{" &nbsp;&middot;&nbsp; ".join(links)}</p>')
-    if brand.org_scoped:
-        if brand.powered_by:
-            parts.append(
-                f'<p style="{small} margin-top: 12px;"><a href="{POWERED_BY_URL}" style="color: {INK["faint"]}; '
-                f'text-decoration: none;">{esc(t(lang, "common.powered_by"))}</a></p>'
-            )
-    else:
-        parts.append(f'<p style="{small} margin-top: 12px;">LearnHouse, the open-source learning platform.</p>')
+    first = " &middot; ".join(p for p in (reason, " &middot; ".join(links)) if p)
+    lines = [first] if first else []
+    if not brand.org_scoped:
+        lines.append(COMPANY_LINE)
+    if not lines:
+        return ""
+    paragraphs = "".join(f'<p style="{small}">{line}</p>' for line in lines)
     return (
-        f'<tr><td class="lh-pad" style="padding: 0 40px 32px 40px;">'
-        f'<hr style="margin: 0 0 18px 0; border: none; border-top: 1px solid {INK["border"]};">'
-        f'{"".join(parts)}</td></tr>'
+        '<tr><td style="padding: 16px 0 0 0;">'
+        f'<hr style="margin: 0 0 16px 0; border: none; border-top: 1px solid {INK["hairline"]};">'
+        f"{paragraphs}</td></tr>"
     )
 
 
 def render_html(email: Email, brand: Brand, category: str, lang: str) -> str:
     from src.services.email.translations import normalize_language
 
-    pal = palette(category)
     code = normalize_language(lang)
     rtl = code in RTL_LANGUAGES
     align = "right" if rtl else "left"
     button_bg, button_fg = _button_colors(brand)
-    ctx = Ctx(palette=pal, button_bg=button_bg, button_fg=button_fg, align=align)
+    ctx = Ctx(button_bg=button_bg, button_fg=button_fg, align=align)
     body = "".join(block.html(ctx) for block in email.blocks)
-    eyebrow = (
-        f'<p style="margin: 0 0 8px 0; font-family: {FONT_STACK}; font-size: 11px; font-weight: 600; '
-        f'letter-spacing: 0.05em; text-transform: uppercase; color: {pal.ink};">{esc(email.eyebrow)}</p>'
-        if email.eyebrow
-        else ""
-    )
     title = next((to_text(b.content) for b in email.blocks if isinstance(b, Heading)), email.subject)
 
     return f"""<!DOCTYPE html>
@@ -271,17 +252,14 @@ def render_html(email: Email, brand: Brand, category: str, lang: str) -> str:
 <title>{html.escape(' '.join(title.split()))}</title>
 {HEAD_CSS}
 </head>
-<body style="margin: 0; padding: 0; width: 100%; background-color: {INK['canvas']}; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%;">{preheader_block(_auto_preheader(email))}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: {INK['canvas']};">
-<tr><td align="center" class="lh-outer" style="padding: 40px 16px 56px 16px;">
-<!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 560px; background-color: {INK['card']}; border: 1px solid #ececec; border-radius: 16px; border-collapse: separate; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(209,213,219,0.25), 0 2px 4px -2px rgba(209,213,219,0.25);">
-<tr><td style="height: 3px; padding: 0; background-color: {pal.rule}; font-size: 0; line-height: 0; border-radius: 16px 16px 0 0;">&nbsp;</td></tr>
-<tr><td class="lh-pad" style="padding: 32px 40px 0 40px; text-align: {align};">{sender_mark(brand)}</td></tr>
-<tr><td class="lh-pad" style="padding: 28px 40px 12px 40px; text-align: {align}; font-family: {FONT_STACK};">
-{eyebrow}{body}
-</td></tr>
-{footer_html(email, brand, code)}
+<body style="margin: 0; padding: 0; width: 100%; background-color: {INK['page']}; -webkit-text-size-adjust: 100%;">{preheader_block(_auto_preheader(email))}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: {INK['page']};">
+<tr><td align="{align}" class="lh-outer" style="padding: 40px 24px;">
+<!--[if mso]><table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 520px;">
+<tr><td style="padding: 0 0 32px 0; text-align: {align};">{sender_mark(brand)}</td></tr>
+<tr><td style="text-align: {align};">{body}</td></tr>
+{footer_html(email, brand)}
 </table>
 <!--[if mso]></td></tr></table><![endif]-->
 </td></tr>
@@ -292,19 +270,14 @@ def render_html(email: Email, brand: Brand, category: str, lang: str) -> str:
 
 def render_text(email: Email, brand: Brand, lang: str = "en") -> str:
     """The ``text/plain`` alternative, block by block."""
-    from src.services.email.translations import t
-
     parts = [brand.name]
-    if email.eyebrow:
-        parts.append(email.eyebrow.upper())
     parts += [chunk for chunk in (block.text() for block in email.blocks) if chunk]
     footer = [to_text(line) for line in (email.reason, email.footer) if line]
     if email.manage_url:
         footer.append(f"{email.manage_label}: {email.manage_url}")
     if email.unsubscribe_url:
         footer.append(f"{email.unsubscribe_label}: {email.unsubscribe_url}")
-    if brand.org_scoped and brand.powered_by:
-        footer.append(f"{to_text(t(lang, 'common.powered_by'))}: {POWERED_BY_URL}")
-    if footer:
-        parts.append("--\n" + "\n".join(footer))
+    if not brand.org_scoped:
+        footer.append(COMPANY_LINE)
+    parts.append("--\n" + "\n".join(footer))
     return "\n\n".join(parts).strip() + "\n"

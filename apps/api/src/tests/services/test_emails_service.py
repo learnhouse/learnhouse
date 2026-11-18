@@ -90,7 +90,7 @@ class TestEmailsService:
         # Org-less keeps the LearnHouse-branded subject + Academy footer, no org logo.
         assert "Welcome to LearnHouse" in call["subject"]
         assert "LearnHouse Academy" in call["body"]
-        assert "learnhouse-dark.svg" in call["body"]  # the LearnHouse wordmark, no org logo
+        assert "learnhouse-wordmark@2x.png" in call["body"]  # the LearnHouse wordmark, no org logo
 
     def test_welcome_is_whitelabeled_when_org_supplied(self):
         with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
@@ -106,10 +106,10 @@ class TestEmailsService:
         assert "Acme & Co" in call["subject"]
         assert "Welcome to LearnHouse" not in call["subject"]
         assert "Acme &amp; Co" in call["body"]
-        # Org logo replaces the mark; Academy link is gone; powered-by remains.
+        # Org logo replaces the mark; Academy link is gone; no platform badge.
         assert '<img src="https://api.test/content/orgs/org_uuid/logos/logo.png"' in call["body"]
         assert "LearnHouse Academy" not in call["body"]
-        assert "Powered by LearnHouse" in call["body"]
+        assert "Powered by LearnHouse" not in call["body"]
         assert "https://acme.test/home" in call["body"]
 
     def test_whitelabel_without_logo_uses_the_org_name_as_wordmark(self):
@@ -123,7 +123,7 @@ class TestEmailsService:
         assert "<svg" not in call["body"]
         assert _wordmark("Acme &amp; Co") in call["body"]
         assert "Acme & Co" in call["subject"]
-        assert "Powered by LearnHouse" in call["body"]
+        assert "LearnHouse" not in call["body"]
 
     def test_role_changed_email_links_back_to_the_org(self):
         """Telling someone their permissions changed is useless without a way
@@ -151,9 +151,8 @@ class TestEmailsService:
         body = send_email.call_args.kwargs["body"]
         assert "Go to Acme" not in body
         assert 'href="/"' not in body
-        # The only link left is the footer attribution, never a CTA.
-        assert body.count("<a href") == 1
-        assert "Powered by LearnHouse" in body
+        # No CTA and no platform attribution: not a single link.
+        assert body.count("<a href") == 0
 
     def test_org_join_email_is_whitelabeled_and_links_to_the_org(self):
         with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
@@ -573,14 +572,12 @@ class TestWhiteLabel:
             assert "background-color: #ff5500;" in call["body"], call["subject"]
             assert "background-color: #171717; color: #ffffff" not in call["body"]
             # Orange is light enough that white text would fail contrast.
-            assert "color: #000000; border: 1px solid #ff5500" in call["body"]
+            assert "background-color: #ff5500; color: #000000" in call["body"]
 
-    def test_watermark_on_adds_exactly_one_powered_by_line(self):
+    def test_org_mail_never_carries_platform_attribution(self):
         branding = dict(self.BRANDING, powered_by=True)
         for call in self._all_org_scoped_sends(**branding):
-            assert call["body"].count("Powered by LearnHouse") == 1, call["subject"]
-            # ...and that line is the only place the platform appears.
-            assert call["body"].count("LearnHouse") == 1
+            assert "LearnHouse" not in call["body"], call["subject"]
             assert "LearnHouse" not in call["subject"]
 
     def test_square_logo_renders_as_a_square_box_and_wide_logo_letterboxed(self):
@@ -596,11 +593,11 @@ class TestWhiteLabel:
                 signup_url="https://acme.test/signup", logo_url=self.LOGO,
             )
             wide_body = sent.call_args.kwargs["body"]
-        assert f'<img src="{square}" alt="Acme" width="40" height="40"' in square_body
-        assert "border-radius: 12px" in square_body
-        assert f'<img src="{self.LOGO}" alt="Acme" height="32"' in wide_body
-        assert "max-width: 180px" in wide_body
-        assert "width=\"40\"" not in wide_body
+        assert f'<img src="{square}" alt="Acme" width="32" height="32"' in square_body
+        assert "border-radius: 6px" in square_body
+        assert f'<img src="{self.LOGO}" alt="Acme" height="28"' in wide_body
+        assert "max-width: 160px" in wide_body
+        assert "width=\"32\"" not in wide_body
 
     def test_org_without_logo_or_color_gets_wordmark_and_default_button(self):
         for call in self._all_org_scoped_sends(powered_by=False):
@@ -660,7 +657,7 @@ class TestWhiteLabel:
             send_account_deleted_email("user@test.com", "user")
         for call in sent.call_args_list:
             body = call.kwargs["body"]
-            assert "learnhouse-dark.svg" in body, call.kwargs["subject"]
+            assert "learnhouse-wordmark@2x.png" in body, call.kwargs["subject"]
             assert "Powered by LearnHouse" not in body
             assert "#ff5500" not in body
         verification_body = sent.call_args_list[1].kwargs["body"]

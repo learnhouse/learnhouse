@@ -13,19 +13,14 @@ from src.services.email.nudge_translations import NUDGE_TRANSLATIONS
 from src.services.nudges.catalog import get_spec
 from src.services.nudges.runner import TRACK_STATS, _stats_for
 from src.services.nudges.snapshot import OrgSnapshot
-from src.services.email.blocks import Ctx, Paragraph, Stats
+from src.services.email.blocks import Paragraph
 from src.services.email.layout import PLATFORM_BRAND, Email, render_html
 from src.services.email.layout import first_sentence as _first_sentence
-from src.services.email.theme import palette
 
 
 def _email_layout(title, body, footer_note="", preheader=""):
     email = Email(subject=title, blocks=[Paragraph(body)], reason=footer_note, preheader=preheader)
     return render_html(email, PLATFORM_BRAND, "learning", "en")
-
-
-def _stat_strip(stats):
-    return Stats(stats).html(Ctx(palette=palette("learning"), button_bg="#171717", button_fg="#ffffff"))
 
 NOW = datetime(2026, 7, 28, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -93,31 +88,6 @@ class TestPreheader:
     def test_preheader_appears_before_the_content(self):
         html = _email_layout("T", "body-marker", preheader="pre-marker")
         assert html.index("pre-marker") < html.index("body-marker")
-
-
-class TestStatStrip:
-    def test_no_stats_renders_nothing(self):
-        assert _stat_strip([]) == ""
-
-    def test_renders_label_and_value(self):
-        html = _stat_strip([("Lessons", 8), ("Learners", 0)])
-        assert ">8<" in html and ">0<" in html
-        assert "Lessons" in html and "Learners" in html
-
-    def test_uses_no_prose_so_no_plural_agreement_is_needed(self):
-        """Writing "8 lessons" into copy means solving plural rules in twenty
-        languages; Russian has three forms and Arabic six."""
-        html = _stat_strip([("Lessons", 1)])
-        assert "1 Lessons" not in html
-        assert "1 lesson" not in html
-
-    def test_labels_are_escaped(self):
-        html = _stat_strip([("<b>x</b>", 1)])
-        assert "<b>x</b>" not in html
-
-    def test_is_a_table_so_outlook_lays_it_out(self):
-        html = _stat_strip([("Lessons", 3)])
-        assert "<table" in html and 'role="presentation"' in html
 
 
 class TestStatsSelection:

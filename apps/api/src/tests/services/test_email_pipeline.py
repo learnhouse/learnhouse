@@ -18,13 +18,13 @@ from src.services.email import blocks as b
 from src.services.email import layout, pipeline, registry
 from src.services.email.branding import OrgEmailBranding
 from src.services.email.layout import Brand, Email
-from src.services.email.theme import palette
+from src.services.email.theme import category
 
 XSS = '<script>alert(1)</script>"&'
 
 
 def _ctx(align="left"):
-    return b.Ctx(palette=palette("security"), button_bg="#171717", button_fg="#ffffff", align=align)
+    return b.Ctx(button_bg="#171717", button_fg="#ffffff", align=align)
 
 
 # ── blocks ───────────────────────────────────────────────────────────────
@@ -47,10 +47,9 @@ class TestBlocks:
         b.Button(XSS, "https://x.test", secondary=True), b.LinkFallback("https://x.test/?a=<b>"),
         b.Code(XSS), b.Callout(XSS, tone="danger", title=XSS), b.Callout(XSS, tone="nope"),
         b.Quote(XSS + "\nline 2", XSS), b.Quote("", None), b.Details([(XSS, XSS), ("empty", "")]),
-        b.BulletList([XSS]), b.Stats([(XSS, 3)]), b.Links([(XSS, "https://x.test")], lead=XSS), b.Links([(XSS, "https://x.test")]),
+        b.BulletList([XSS]), b.Links([(XSS, "https://x.test")], lead=XSS), b.Links([(XSS, "https://x.test")]),
         b.Table(XSS, [[XSS, XSS, XSS]] * 12, more=XSS), b.Table(XSS, [[XSS, XSS]]),
-        b.Items([b.Row(XSS, XSS, "https://x.test", 3, "A"), b.Row(XSS, avatar="https://img.test/a.png"),
-                 b.Row(XSS, avatar="🤖", avatar_color="#7c3aed")], more=XSS),
+        b.Items([b.Row(XSS, XSS, "https://x.test", 3), b.Row(XSS)], more=XSS),
         b.Divider(), b.Buttons([b.Button("Go", "https://x.test"), b.Button("Also", "https://y.test", secondary=True)]),
     ])
     def test_every_block_escapes_user_text(self, block):
@@ -60,7 +59,7 @@ class TestBlocks:
         assert isinstance(block.text(), str)
 
     def test_empty_blocks_render_nothing(self):
-        for block in (b.Details([]), b.BulletList([]), b.Stats([]), b.Items([]), b.Table("t", []), b.Links([])):
+        for block in (b.Details([]), b.BulletList([]), b.Items([]), b.Table("t", []), b.Links([])):
             assert block.html(_ctx()) == ""
 
     def test_prose_styles_known_tags_and_has_text(self):
@@ -71,10 +70,12 @@ class TestBlocks:
         assert b.Prose(b.Safe("<p>a</p>")).text() == "a"
 
     def test_text_alternatives(self):
-        assert b.Heading("Title").text() == "Title\n====="
+        assert b.Heading("Title").text() == "Title"
+        assert b.Subheading("Sub").text() == "Sub"
+        assert b.Code("AB12").text() == "AB12"
         assert b.Button("Go", "https://x.test").text() == "Go: https://x.test"
         assert b.LinkFallback("https://x.test").text() == ""
-        assert b.Callout("c", title="T").text() == "> T: c"
+        assert b.Callout("c", title="T").text() == "T: c"
         assert b.Quote("a\nb", "Ann").text() == "Ann\n> a\n> b"
         assert b.Details([("A", "1")]).text() == "A: 1"
         assert "- x" in b.BulletList(["x"]).text()
@@ -96,9 +97,9 @@ class TestLayout:
         html = layout.render_html(self._email(), layout.PLATFORM_BRAND, "security", "en")
         assert html.startswith("<!DOCTYPE html>") and 'lang="en" dir="ltr"' in html
         assert "<title>Hello &lt;b&gt;</title>" in html
-        assert "learnhouse-dark.svg" in html and 'alt="LearnHouse"' in html
-        assert "background-color: #f8f8f8" in html  # V2 canvas
-        assert "background-color: #0284c7" in html  # security rule
+        assert "learnhouse-wordmark@2x.png" in html and 'alt="LearnHouse"' in html
+        assert "background-color: #ffffff" in html  # plain white page
+        assert "max-width: 520px" in html and "border-radius: 16px" not in html
         assert "<!--[if mso]>" in html
         assert 'content="light"' in html
         assert "First sentence." in html.split("<table", 1)[0]  # preheader
@@ -110,15 +111,15 @@ class TestLayout:
 
     def test_org_brand_logo_name_color_powered_by(self):
         brand = Brand(name="Acme & Co", org_scoped=True, color="#ff5500", powered_by=True)
-        html = layout.render_html(self._email(eyebrow="Note"), brand, "learning", "en")
-        assert "Acme &amp; Co</span>" in html and "learnhouse-dark.svg" not in html
-        assert "Powered by LearnHouse" in html and ">Note</p>" in html
+        html = layout.render_html(self._email(), brand, "learning", "en")
+        assert "Acme &amp; Co</span>" in html and "learnhouse-wordmark" not in html
+        assert "LearnHouse" not in html  # no badge, no company line on org mail
         assert layout._button_colors(brand) == ("#ff5500", "#000000")
         square = Brand(name="A", org_scoped=True, logo_url="https://x.test/square_logos/a.png")
-        assert 'width="40" height="40"' in layout.render_html(self._email(), square, "x", "en")
+        assert 'width="32" height="32"' in layout.render_html(self._email(), square, "x", "en")
         wide = Brand(name="A", org_scoped=True, logo_url="https://x.test/logos/a.png", color="#ffffff")
         out = layout.render_html(self._email(), wide, "x", "en")
-        assert 'height="32"' in out and layout._button_colors(wide) == ("#171717", "#ffffff")
+        assert 'height="28"' in out and layout._button_colors(wide) == ("#171717", "#ffffff")
         assert "Powered by" not in out
 
     def test_rtl_and_language_normalisation(self):
@@ -131,8 +132,9 @@ class TestLayout:
         assert 'href="https://u.test"' in html and 'href="https://m.test"' in html
         text = layout.render_text(email, Brand(name="Acme", org_scoped=True, powered_by=True))
         assert text.startswith("Acme\n") and "Unsubscribe: https://u.test" in text
-        assert "Email preferences: https://m.test" in text and "Powered by LearnHouse" in text
-        assert layout.render_text(Email(subject="s", blocks=[], eyebrow="Ey"), layout.PLATFORM_BRAND).startswith("LearnHouse\n\nEY")
+        assert "Email preferences: https://m.test" in text and "Powered by" not in text
+        assert layout.render_text(Email(subject="s", blocks=[]), layout.PLATFORM_BRAND).endswith(
+            "LearnHouse, the open-source learning platform.\n")
 
     def test_preheader(self):
         assert layout.preheader_block("") == ""
@@ -406,3 +408,21 @@ def test_send_billing_email_internal_endpoint(monkeypatch):
             template="billing.payment_failed", to=["a@test.com", "b@test.com", "b@test.com", "bad"],
             context={"plan": "pro", "org_slug": "acme"})))
     assert out == {"sent": 1, "recipients": 2}
+
+
+def test_categories_and_human_dates():
+    from datetime import date, datetime
+
+    from src.services.email.dates import human_date
+
+    assert category("nope").name == "team" and category("billing").label == "Billing"
+    assert human_date(date(2026, 12, 2)) == "2 December 2026"
+    assert human_date(datetime(2026, 11, 29, 8, 0)) == "29 November 2026"
+    assert human_date("2026-12-02") == "2 December 2026"
+    assert human_date("2026-12-02T10:00:00Z") == "2 December 2026"
+    assert human_date("soon") == "soon" and human_date(None) == "" and human_date("") == ""
+
+
+def test_org_mail_without_footer_facts_has_no_footer():
+    brand = Brand(name="Acme", org_scoped=True)
+    assert layout.footer_html(Email(subject="s", blocks=[]), brand) == ""

@@ -24,21 +24,20 @@ def _render_unread(conversations, **kwargs):
 
 
 class TestUnreadMessagesEmail:
-    def test_rows_show_avatar_title_snippet_and_count(self):
+    def test_rows_show_title_snippet_and_count(self):
         captured = _render_unread([
             {"title": "Grace Hopper", "count": 3, "snippet": "See you at the lab"},
         ])
         body = captured["body"]
-        assert ">G</td>" in body
         assert "Grace Hopper" in body
         assert "See you at the lab" in body
-        assert ">3</span>" in body
+        assert ">3 new</td>" in body
         assert captured["subject"] == "3 unread messages in Acme & Co"
 
     def test_dm_rows_have_no_author_placeholder(self):
         body = _render_unread([{"title": "Grace", "count": 1, "snippet": "hi"}])["body"]
         assert "LearnHouse user" not in body
-        assert "Powered by LearnHouse" in body
+        assert "Powered by LearnHouse" not in body
 
     def test_group_rows_name_the_author(self):
         body = _render_unread([
@@ -46,19 +45,13 @@ class TestUnreadMessagesEmail:
         ])["body"]
         assert "Linus: Review?" in body
 
-    def test_agent_rows_use_emoji_and_color(self):
+    def test_rows_are_plain_text_without_avatars(self):
         body = _render_unread([
-            {"title": "Tutor", "count": 1, "emoji": "🦉", "color": "#7c3aed", "snippet": "Think again"},
+            {"title": "Tutor", "count": 1, "emoji": "🦉", "color": "#7c3aed",
+             "image": "https://x.test/a.png", "snippet": "Think again"},
         ])["body"]
-        assert "🦉" in body
-        assert "background-color: #7c3aed" in body
-
-    def test_copilot_row_uses_its_logo(self):
-        body = _render_unread([
-            {"title": "Copilot", "count": 1, "emoji": "✨", "image": "https://x.test/learnhouse_ai_simple_colored.png", "snippet": "Reminder"},
-        ])["body"]
-        assert '<img src="https://x.test/learnhouse_ai_simple_colored.png"' in body
-        assert "✨" not in body
+        assert "Tutor" in body and "Think again" in body
+        assert "🦉" not in body and "#7c3aed" not in body and "https://x.test/a.png" not in body
 
     def test_long_snippets_are_shortened(self):
         body = _render_unread([{"title": "Grace", "count": 1, "snippet": "word " * 60}])["body"]

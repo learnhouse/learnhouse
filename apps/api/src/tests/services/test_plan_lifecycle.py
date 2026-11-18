@@ -479,7 +479,7 @@ class TestTrialEmails:
         with mail() as sent, quiet_notifications() as emit:
             await notify.send_due_trial_emails(db, NOW + timedelta(days=11, hours=12))
         assert sent.call_args.args[0] == notify.TRIAL_ENDS_3D
-        assert sent.call_args.kwargs["end_date"] == "2026-11-29"
+        assert sent.call_args.kwargs["end_date"] == "29 November 2026"
         assert emit.call_args.args[1] == "trial_ending" and emit.call_args.kwargs["params"]["days"] == 3
 
     async def test_failed_provider_and_no_admins(self, db, org, admin_user, other_org):

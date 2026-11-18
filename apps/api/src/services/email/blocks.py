@@ -1,12 +1,12 @@
 """Building blocks of an email body.
 
 A template is a list of these. Each block renders twice: to email-safe HTML
-(tables and inline styles, nothing a mail client might drop) and to plain
-text for the ``text/plain`` alternative, so the two can never drift apart.
+(inline styles, tables only where layout needs them) and to plain text for
+the ``text/plain`` alternative, so the two never drift apart.
 
-The looks follow the V2 design system (``theme.py``): quiet neutral text, a
-near-black primary button (the org's accent on org mail), status colours only
-on callouts that carry a status, hairline tables for secondary facts.
+The look is deliberately plain (see ``theme.py``): paragraphs, one dark
+button, a grey fallback link, quiet label/value lines. No boxes, tiles or
+coloured accents.
 
 Escaping is the blocks' job, not the caller's. Text is passed RAW and escaped
 on the way out; the only way to hand a block markup is to wrap it in
@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass
 from typing import Iterable, Optional, Sequence, Union
 
-from src.services.email.theme import FONT_STACK, INK, MONO_STACK, TONES, Palette
+from src.services.email.theme import FONT_STACK, INK, MONO_STACK
 
 
 class Safe(str):
@@ -59,39 +59,27 @@ def to_text(value: object) -> str:
 
 @dataclass(frozen=True)
 class Ctx:
-    """What a block needs from the layout: colours and text direction."""
+    """What a block needs from the layout: the button colours and text direction."""
 
-    palette: Palette
-    button_bg: str
-    button_fg: str
+    button_bg: str = INK["ink"]
+    button_fg: str = "#ffffff"
     align: str = "left"
-
-    @property
-    def start(self) -> str:
-        return self.align
 
     @property
     def end(self) -> str:
         return "left" if self.align == "right" else "right"
 
 
-def _font(size: int, color: str, weight: int = 400, line: str = "1.6") -> str:
-    return (
-        f"font-family: {FONT_STACK}; font-size: {size}px; line-height: {line}; color: {color}; "
-        f"font-weight: {weight}; letter-spacing: -0.01em;"
-    )
+def font(size: int = 15, color: str = INK["body"], weight: int = 400, line: str = "1.5") -> str:
+    return f"font-family: {FONT_STACK}; font-size: {size}px; line-height: {line}; color: {color}; font-weight: {weight};"
 
 
-def _box(inner: str, *, bg: str, border: str = "", radius: int = 12, padding: str = "14px 16px",
-         margin: str = "0 0 20px 0") -> str:
-    """A full-width rounded box (one-cell table: Outlook-safe)."""
-    edge = f" border: 1px solid {border};" if border else ""
-    return (
-        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" '
-        f'style="margin: {margin}; border-collapse: separate;"><tr>'
-        f'<td style="padding: {padding}; border-radius: {radius}px; background-color: {bg};{edge}">{inner}</td>'
-        "</tr></table>"
-    )
+def _p(content: str, style: str, margin: str = "0 0 16px 0") -> str:
+    return f'<p style="margin: {margin}; {style}">{content}</p>'
+
+
+LINK = f"color: {INK['text']}; text-decoration: underline;"
+MUTED_LINK = f"color: {INK['muted']}; text-decoration: underline;"
 
 
 class Block:
@@ -109,14 +97,10 @@ class Heading(Block):
     content: Content
 
     def html(self, ctx: Ctx) -> str:
-        return (
-            f'<h1 style="margin: 0 0 10px 0; {_font(22, INK["text"], 700, "1.3")} letter-spacing: -0.025em;">'
-            f"{esc(self.content)}</h1>"
-        )
+        return f'<h1 style="margin: 0 0 16px 0; {font(22, INK["text"], 600, "1.3")}">{esc(self.content)}</h1>'
 
     def text(self) -> str:
-        title = to_text(self.content)
-        return f"{title}\n{'=' * min(len(title), 60)}"
+        return to_text(self.content)
 
 
 @dataclass
@@ -124,10 +108,10 @@ class Subheading(Block):
     content: Content
 
     def html(self, ctx: Ctx) -> str:
-        return f'<h2 style="margin: 4px 0 6px 0; {_font(14, INK["text"], 600, "1.4")}">{esc(self.content)}</h2>'
+        return f'<h2 style="margin: 24px 0 8px 0; {font(15, INK["text"], 600)}">{esc(self.content)}</h2>'
 
     def text(self) -> str:
-        return to_text(self.content).upper()
+        return to_text(self.content)
 
 
 @dataclass
@@ -138,10 +122,8 @@ class Paragraph(Block):
 
     def html(self, ctx: Ctx) -> str:
         if self.small:
-            style = _font(12, INK["faint"], 400, "1.6")
-        else:
-            style = _font(15, INK["muted"] if self.muted else INK["body"], 400, "1.6")
-        return f'<p style="margin: 0 0 16px 0; {style}">{esc(self.content)}</p>'
+            return _p(esc(self.content), font(13, INK["muted"]))
+        return _p(esc(self.content), font(15, INK["muted"] if self.muted else INK["body"]))
 
     def text(self) -> str:
         return to_text(self.content)
@@ -149,31 +131,25 @@ class Paragraph(Block):
 
 @dataclass
 class Button(Block):
-    """The V2 Button: primary (ink, or the org accent) or secondary (white, hairline)."""
+    """The one call to action: dark (or the org's colour), 6px radius."""
 
     label: Content
     url: str
-    secondary: bool = False
+    secondary: bool = False  # rendered as a plain link
 
     def anchor(self, ctx: Ctx) -> str:
         if self.secondary:
-            style = (
-                f"display: inline-block; padding: 10px 16px; border-radius: 12px; background-color: {INK['card']}; "
-                f"color: {INK['secondary']}; border: 1px solid {INK['border_strong']}; text-decoration: none; "
-                f"{_font(14, INK['secondary'], 600, '1')}"
-            )
-        else:
-            style = (
-                f"display: inline-block; padding: 11px 18px; border-radius: 12px; background-color: {ctx.button_bg}; "
-                f"color: {ctx.button_fg}; border: 1px solid {ctx.button_bg}; text-decoration: none; "
-                f"{_font(14, ctx.button_fg, 600, '1')} "
-                "box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 1px rgba(0,0,0,0.08);"
-            )
+            return f'<a href="{esc(self.url)}" style="{font(14, INK["text"], 500)} {LINK}">{esc(self.label)}</a>'
+        style = (
+            f"display: inline-block; padding: 10px 18px; border-radius: 6px; background-color: {ctx.button_bg}; "
+            f"color: {ctx.button_fg}; font-family: {FONT_STACK}; font-size: 14px; line-height: 20px; "
+            "font-weight: 600; text-decoration: none;"
+        )
         return f'<a href="{esc(self.url)}" style="{style}">{esc(self.label)}</a>'
 
     def html(self, ctx: Ctx) -> str:
         return (
-            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0 20px 0;">'
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0 24px 0;">'
             f"<tr><td>{self.anchor(ctx)}</td></tr></table>"
         )
 
@@ -183,15 +159,18 @@ class Button(Block):
 
 @dataclass
 class Buttons(Block):
-    """One primary button, then secondary ones on the same line."""
+    """A button followed by plain links on the same line."""
 
     items: Sequence[Button]
 
     def html(self, ctx: Ctx) -> str:
-        pad = "padding: 0 0 8px 8px;" if ctx.align == "right" else "padding: 0 8px 8px 0;"
-        cells = "".join(f'<td style="{pad}">{b.anchor(ctx)}</td>' for b in self.items)
+        pad = "padding: 0 0 8px 20px;" if ctx.align == "right" else "padding: 0 20px 8px 0;"
+        cells = "".join(
+            f'<td valign="middle" style="{pad}">{Button(b.label, b.url, secondary=i > 0).anchor(ctx)}</td>'
+            for i, b in enumerate(self.items)
+        )
         return (
-            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0 12px 0;">'
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0 16px 0;">'
             f"<tr>{cells}</tr></table>"
         )
 
@@ -201,15 +180,15 @@ class Buttons(Block):
 
 @dataclass
 class LinkFallback(Block):
-    """The "button not working?" line with the raw URL."""
+    """The "button not working?" line with the raw URL, small and grey."""
 
     url: str
     label: Content = "Or paste this link into your browser:"
 
     def html(self, ctx: Ctx) -> str:
-        return (
-            f'<p style="margin: -4px 0 18px 0; {_font(12, INK["faint"])} word-break: break-all;">{esc(self.label)}<br>'
-            f'<a href="{esc(self.url)}" style="color: {INK["muted"]}; text-decoration: underline;">{esc(self.url)}</a></p>'
+        return _p(
+            f'{esc(self.label)}<br><a href="{esc(self.url)}" style="{MUTED_LINK}">{esc(self.url)}</a>',
+            f"{font(13, INK['muted'])} word-break: break-all;", "-8px 0 24px 0",
         )
 
     def text(self) -> str:
@@ -218,55 +197,57 @@ class LinkFallback(Block):
 
 @dataclass
 class Code(Block):
-    """A one-time code, large and monospaced, easy to copy."""
+    """A one-time or invite code, inline in bold monospace."""
 
     code: str
 
     def html(self, ctx: Ctx) -> str:
-        return (
-            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 4px 0 20px 0;">'
-            f'<tr><td style="padding: 12px 20px; border-radius: 12px; background-color: {INK["sunken"]}; '
-            f'font-family: {MONO_STACK}; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; '
-            f'color: {INK["text"]};">{esc(self.code)}</td></tr></table>'
+        return _p(
+            f'<span style="font-family: {MONO_STACK}; font-size: 20px; font-weight: 700; letter-spacing: 0.08em; '
+            f'color: {INK["text"]};">{esc(self.code)}</span>',
+            font(15, INK["text"]),
         )
 
     def text(self) -> str:
-        return f"    {self.code}"
+        return self.code
 
 
 @dataclass
 class Callout(Block):
-    """A soft status box (info, success, warning, danger, neutral)."""
+    """An important line. Plain text with an optional bold lead-in, no box.
+
+    ``tone`` is kept for the text part and for callers; it does not colour
+    anything.
+    """
 
     content: Content
     tone: str = "info"
     title: Optional[Content] = None
 
     def html(self, ctx: Ctx) -> str:
-        fill, ink = TONES.get(self.tone, TONES["info"])
-        title = f'<p style="margin: 0 0 2px 0; {_font(13, ink, 600, "1.5")}">{esc(self.title)}</p>' if self.title else ""
-        return _box(f'{title}<p style="margin: 0; {_font(14, ink, 400, "1.55")}">{esc(self.content)}</p>', bg=fill)
+        lead = f'<strong style="color: {INK["text"]}; font-weight: 600;">{esc(self.title)}:</strong> ' if self.title else ""
+        return _p(f"{lead}{esc(self.content)}", font(15, INK["text"]))
 
     def text(self) -> str:
         head = f"{to_text(self.title)}: " if self.title else ""
-        return f"> {head}{to_text(self.content)}"
+        return f"{head}{to_text(self.content)}"
 
 
 @dataclass
 class Quote(Block):
-    """Someone's own words: an inviter's note, a comment, a message."""
+    """Someone's own words (an inviter's note, a comment): a thin left rule."""
 
     content: str
     attribution: Optional[Content] = None
 
     def html(self, ctx: Ctx) -> str:
-        who = (
-            f'<p style="margin: 0 0 4px 0; {_font(12, INK["muted"], 600, "1.5")}">{esc(self.attribution)}</p>'
-            if self.attribution else ""
-        )
+        side = "right" if ctx.align == "right" else "left"
+        who = _p(esc(self.attribution), font(13, INK["muted"]), "0 0 6px 0") if self.attribution else ""
         body = esc(self.content).replace("\n", "<br>")
-        return _box(f'{who}<p style="margin: 0; {_font(14, INK["secondary"], 400, "1.6")}">{body}</p>',
-                    bg=INK["muted_bg"], border=INK["border"])
+        return (
+            f"{who}<p style=\"margin: 0 0 20px 0; padding-{side}: 12px; border-{side}: 2px solid {INK['rule']}; "
+            f'{font(15, INK["body"])}">{body}</p>'
+        )
 
     def text(self) -> str:
         who = f"{to_text(self.attribution)}\n" if self.attribution else ""
@@ -275,7 +256,7 @@ class Quote(Block):
 
 @dataclass
 class Details(Block):
-    """Label / value rows: a session's time, a plan, a due date."""
+    """Label / value lines: a session's time, a plan, a due date."""
 
     rows: Sequence[tuple[Content, Content]]
 
@@ -283,16 +264,14 @@ class Details(Block):
         rows = [(label, value) for label, value in self.rows if value not in (None, "")]
         if not rows:
             return ""
-        line = f"border-top: 1px solid {INK['border']};"
         trs = "".join(
-            f'<tr><td style="padding: 10px 0; {line if i else ""} {_font(13, INK["muted"])} vertical-align: top;">{esc(label)}</td>'
-            f'<td style="padding: 10px 0; {line if i else ""} {_font(14, INK["text"], 600)} text-align: {ctx.end};">'
-            f"{esc(value)}</td></tr>"
-            for i, (label, value) in enumerate(rows)
+            f'<tr><td valign="top" style="padding: 3px 16px 3px 0; {font(14, INK["muted"])} white-space: nowrap;">'
+            f'{esc(label)}</td><td valign="top" style="padding: 3px 0; {font(14, INK["text"])}">{esc(value)}</td></tr>'
+            for label, value in rows
         )
-        return _box(
-            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' + trs + "</table>",
-            bg=INK["card"], border=INK["border_strong"], padding="4px 16px",
+        return (
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+            f'style="margin: 0 0 20px 0;">{trs}</table>'
         )
 
     def text(self) -> str:
@@ -306,45 +285,12 @@ class BulletList(Block):
     def html(self, ctx: Ctx) -> str:
         if not self.items:
             return ""
-        gap = "padding-left: 10px;" if ctx.align == "right" else "padding-right: 10px;"
-        rows = "".join(
-            f'<tr><td valign="top" style="{gap} {_font(15, INK["faint"], 700)}">&bull;</td>'
-            f'<td style="padding: 0 0 6px 0; {_font(15, INK["body"])}">{esc(item)}</td></tr>'
-            for item in self.items
-        )
-        return (
-            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
-            f'style="margin: 0 0 16px 0;">{rows}</table>'
-        )
+        side = "right" if ctx.align == "right" else "left"
+        items = "".join(f'<li style="margin: 0 0 6px 0; {font(15, INK["body"])}">{esc(item)}</li>' for item in self.items)
+        return f'<ul style="margin: 0 0 16px 0; padding-{side}: 20px;">{items}</ul>'
 
     def text(self) -> str:
         return "\n".join(f"- {to_text(item)}" for item in self.items)
-
-
-@dataclass
-class Stats(Block):
-    """StatCard-style figures, for emails whose job is the numbers."""
-
-    items: Sequence[tuple[Content, object]]
-
-    def html(self, ctx: Ctx) -> str:
-        if not self.items:
-            return ""
-        gap = '<td style="width: 8px; font-size: 0;">&nbsp;</td>'
-        cells = gap.join(
-            f'<td style="padding: 12px 16px; border-radius: 12px; border: 1px solid {INK["border_strong"]}; '
-            f'background-color: {INK["card"]}; text-align: {ctx.start};">'
-            f'<div style="{_font(12, INK["muted"], 500, "1.4")}">{esc(label)}</div>'
-            f'<div style="{_font(20, INK["text"], 700, "1.3")} font-variant-numeric: tabular-nums;">{esc(value)}</div></td>'
-            for label, value in self.items
-        )
-        return (
-            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
-            f'style="margin: 0 0 20px 0; border-collapse: separate;"><tr>{cells}</tr></table>'
-        )
-
-    def text(self) -> str:
-        return "   ".join(f"{to_text(label)}: {value}" for label, value in self.items)
 
 
 @dataclass
@@ -354,66 +300,39 @@ class Row:
     title: Content
     body: Content = ""
     url: str = ""
-    meta: Content = ""  # end-aligned count or short status
-    avatar: str = ""  # initial, emoji or image URL
-    avatar_color: Optional[str] = None
+    meta: Content = ""  # end-aligned count or short status, grey
 
 
 @dataclass
 class Items(Block):
-    """A divided panel of rows: notifications, conversations."""
+    """A list of short entries (notifications, conversations) split by hairlines."""
 
     rows: Sequence[Row]
     more: Content = ""
-
-    def _avatar(self, row: Row) -> str:
-        from src.services.email.branding import contrasting_text_color, normalize_brand_color
-
-        if row.avatar.startswith(("https://", "http://")):
-            inner = (
-                f'<img src="{esc(row.avatar)}" width="32" height="32" alt="{esc(to_text(row.title))}" '
-                'style="display: block; width: 32px; height: 32px; border: 0; border-radius: 16px;">'
-            )
-        else:
-            bg = normalize_brand_color(row.avatar_color) or INK["sunken"]
-            fg = contrasting_text_color(bg) if row.avatar_color else INK["secondary"]
-            inner = (
-                '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>'
-                f'<td width="32" height="32" align="center" valign="middle" style="width: 32px; height: 32px; '
-                f'border-radius: 16px; background-color: {bg}; {_font(13, fg, 600, "32px")} text-align: center;">'
-                f"{esc(row.avatar)}</td></tr></table>"
-            )
-        return f'<td width="44" valign="top" style="width: 44px;">{inner}</td>'
 
     def html(self, ctx: Ctx) -> str:
         if not self.rows:
             return ""
         out = []
         for i, row in enumerate(self.rows):
-            line = f"border-top: 1px solid {INK['border']};" if i else ""
+            line = f"border-top: 1px solid {INK['hairline']};" if i else ""
             title = esc(row.title)
             if row.url:
                 title = Safe(f'<a href="{esc(row.url)}" style="color: {INK["text"]}; text-decoration: none;">{title}</a>')
-            body = f'<div style="margin-top: 2px; {_font(13, INK["muted"], 400, "1.5")}">{esc(row.body)}</div>' if row.body else ""
+            body = f'<div style="{font(14, INK["muted"])}">{esc(row.body)}</div>' if row.body else ""
             meta = (
-                f'<td width="48" valign="middle" style="width: 48px; text-align: {ctx.end};">'
-                f'<span style="display: inline-block; min-width: 8px; padding: 2px 8px; border-radius: 9999px; '
-                f'background-color: {INK["ink"]}; {_font(11, "#ffffff", 600, "16px")} text-align: center;">'
-                f"{esc(row.meta)}</span></td>"
+                f'<td valign="top" style="padding: 12px 0 12px 12px; {line} {font(13, INK["muted"])} '
+                f'text-align: {ctx.end}; white-space: nowrap;">{esc(row.meta)}</td>'
                 if row.meta not in ("", None) else ""
             )
             out.append(
-                f'<tr><td style="padding: 14px 20px; {line}">'
-                '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
-                f'{self._avatar(row) if row.avatar else ""}'
-                f'<td valign="top" style="text-align: {ctx.start};"><div style="{_font(14, INK["text"], 600, "1.45")}">'
-                f"{title}</div>{body}</td>{meta}</tr></table></td></tr>"
+                f'<tr><td valign="top" style="padding: 12px 0; {line}">'
+                f'<div style="{font(15, INK["text"], 500)}">{title}</div>{body}</td>{meta}</tr>'
             )
-        more = f'<p style="margin: -8px 0 18px 0; {_font(12, INK["faint"])}">{esc(self.more)}</p>' if self.more else ""
+        more = _p(esc(self.more), font(13, INK["muted"]), "-8px 0 20px 0") if self.more else ""
         return (
             '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" '
-            f'style="margin: 0 0 20px 0; border: 1px solid {INK["border_strong"]}; border-radius: 16px; '
-            f'border-collapse: separate;">{"".join(out)}</table>{more}'
+            f'style="margin: 0 0 20px 0;">{"".join(out)}</table>{more}'
         )
 
     def text(self) -> str:
@@ -432,7 +351,7 @@ class Items(Block):
 
 @dataclass
 class Table(Block):
-    """A titled table of short rows (digests): first column semibold, last end-aligned."""
+    """A titled list of short rows (digests): first column the name, last end-aligned."""
 
     title: Content
     rows: Sequence[Sequence[Content]]
@@ -444,29 +363,29 @@ class Table(Block):
             return ""
         trs = []
         for i, row in enumerate(list(self.rows)[: self.limit]):
-            line = f"border-top: 1px solid {INK['border']};" if i else ""
+            line = f"border-top: 1px solid {INK['hairline']};" if i else ""
             tds = []
             for j, value in enumerate(row):
                 if j == 0:
-                    style = _font(14, INK["text"], 600)
+                    style = font(14, INK["text"], 500)
                 elif j == len(row) - 1:
-                    style = f"{_font(13, INK['muted'])} text-align: {ctx.end}; white-space: nowrap;"
+                    style = f"{font(14, INK['muted'])} text-align: {ctx.end}; white-space: nowrap;"
                 else:
-                    style = f"{_font(13, INK['body'])} padding-left: 8px; padding-right: 8px;"
-                tds.append(f'<td style="padding: 10px 0; {line} {style}">{esc(value)}</td>')
+                    style = f"{font(14, INK['body'])} padding-left: 8px; padding-right: 8px;"
+                tds.append(f'<td style="padding: 8px 0; {line} {style}">{esc(value)}</td>')
             trs.append(f"<tr>{''.join(tds)}</tr>")
         more = (
-            f'<p style="margin: -10px 0 18px 0; {_font(12, INK["faint"])}">{esc(self.more)}</p>'
+            _p(esc(self.more), font(13, INK["muted"]), "-8px 0 20px 0")
             if self.more and len(self.rows) > self.limit else ""
         )
-        table = _box(
-            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' + "".join(trs) + "</table>",
-            bg=INK["card"], border=INK["border_strong"], padding="4px 16px",
+        return (
+            Subheading(self.title).html(ctx)
+            + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" '
+            f'style="margin: 0 0 20px 0;">{"".join(trs)}</table>{more}'
         )
-        return Subheading(self.title).html(ctx) + table + more
 
     def text(self) -> str:
-        lines = [to_text(self.title).upper()]
+        lines = [to_text(self.title)]
         lines += [" | ".join(to_text(v) for v in row) for row in list(self.rows)[: self.limit]]
         if self.more and len(self.rows) > self.limit:
             lines.append(to_text(self.more))
@@ -483,13 +402,9 @@ class Links(Block):
     def html(self, ctx: Ctx) -> str:
         if not self.links:
             return ""
-        joined = " &middot; ".join(
-            f'<a href="{esc(url)}" style="color: {INK["secondary"]}; font-weight: 600; text-decoration: underline;">'
-            f"{esc(label)}</a>"
-            for label, url in self.links
-        )
+        joined = " &middot; ".join(f'<a href="{esc(url)}" style="{MUTED_LINK}">{esc(label)}</a>' for label, url in self.links)
         lead = f"{esc(self.lead)} " if self.lead else ""
-        return f'<p style="margin: 0 0 16px 0; {_font(13, INK["muted"])}">{lead}{joined}</p>'
+        return _p(f"{lead}{joined}", font(13, INK["muted"]))
 
     def text(self) -> str:
         lead = f"{to_text(self.lead)}\n" if self.lead else ""
@@ -499,21 +414,21 @@ class Links(Block):
 @dataclass
 class Divider(Block):
     def html(self, ctx: Ctx) -> str:
-        return f'<hr style="margin: 4px 0 20px 0; border: none; border-top: 1px solid {INK["border"]};">'
+        return f'<hr style="margin: 8px 0 24px 0; border: none; border-top: 1px solid {INK["hairline"]};">'
 
     def text(self) -> str:
         return "---"
 
 
 _PROSE_STYLES = {
-    "p": "margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: {body};",
+    "p": "margin: 0 0 16px 0; font-size: 15px; line-height: 1.5; color: {body};",
     "ul": "margin: 0 0 16px 0; padding-{start}: 20px; color: {body};",
     "ol": "margin: 0 0 16px 0; padding-{start}: 20px; color: {body};",
-    "li": "margin: 0 0 6px 0; font-size: 15px; line-height: 1.6;",
-    "a": "color: {text}; font-weight: 600; text-decoration: underline;",
+    "li": "margin: 0 0 6px 0; font-size: 15px; line-height: 1.5;",
+    "a": "color: {text}; text-decoration: underline;",
     "strong": "color: {text}; font-weight: 600;",
-    "h2": "margin: 8px 0 8px 0; font-size: 16px; color: {text};",
-    "h3": "margin: 8px 0 6px 0; font-size: 14px; color: {text};",
+    "h2": "margin: 24px 0 8px 0; font-size: 17px; font-weight: 600; color: {text};",
+    "h3": "margin: 20px 0 8px 0; font-size: 15px; font-weight: 600; color: {text};",
 }
 _OPEN_TAG = re.compile(r"<(p|ul|ol|li|a|strong|h2|h3)(\s[^>]*)?>")
 
@@ -530,7 +445,7 @@ class Prose(Block):
     plain: str = ""
 
     def html(self, ctx: Ctx) -> str:
-        values = {"body": INK["body"], "text": INK["text"], "start": ctx.start}
+        values = {"body": INK["body"], "text": INK["text"], "start": "right" if ctx.align == "right" else "left"}
 
         def style(match: re.Match) -> str:
             tag, attrs = match.group(1), match.group(2) or ""
@@ -549,6 +464,6 @@ def compact(blocks: Iterable[Optional[Block]]) -> list[Block]:
 
 __all__ = [
     "Block", "BulletList", "Button", "Buttons", "Callout", "Code", "Content", "Ctx", "Details", "Divider",
-    "Heading", "Items", "LinkFallback", "Links", "Paragraph", "Prose", "Quote", "Row", "Safe", "Stats",
-    "Subheading", "Table", "compact", "esc", "to_text",
+    "Heading", "Items", "LinkFallback", "Links", "Paragraph", "Prose", "Quote", "Row", "Safe", "Subheading",
+    "Table", "compact", "esc", "to_text",
 ]

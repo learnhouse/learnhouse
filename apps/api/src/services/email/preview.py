@@ -18,7 +18,7 @@ from typing import Iterable, Optional
 from src.services.email.branding import OrgEmailBranding
 from src.services.email.pipeline import render_email
 from src.services.email.registry import EmailTemplate, Sample, all_templates
-from src.services.email.theme import palette
+from src.services.email.theme import category
 
 
 def sample_org(sample: Sample) -> Optional[OrgEmailBranding]:
@@ -46,11 +46,11 @@ def _index(entries: list[dict]) -> str:
     cards = []
     for e in entries:
         tpl, rendered = e["template"], e["rendered"]
-        pal = palette(rendered.category)
+        cat = category(rendered.category)
         label = " · ".join(p for p in (e["sample"].label, e["lang"]) if p)
         cards.append(
-            f'<a class="card" href="{e["slug"]}.html" style="--accent: {pal.rule}; --ink: {pal.ink};">'
-            f'<span class="chip">{html.escape(pal.label)}</span>'
+            f'<a class="card" href="{e["slug"]}.html">'
+            f'<span class="chip">{html.escape(cat.label)}</span>'
             f'<strong>{html.escape(tpl.name)}</strong>'
             f'<span class="subject">{html.escape(rendered.subject)}</span>'
             f'<span class="meta">{html.escape(label)}{" · critical" if tpl.critical else ""}</span>'
@@ -66,8 +66,8 @@ def _index(entries: list[dict]) -> str:
   .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }}
   .card {{ display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; background: #fff;
           border: 1px solid #e2e8f0; text-decoration: none; color: inherit; }}
-  .card:hover {{ border-color: var(--accent); }}
-  .chip {{ align-self: flex-start; padding: 2px 8px; border-radius: 999px; background: #f5f5f5; color: var(--ink);
+  .card:hover {{ border-color: #a3a3a3; }}
+  .chip {{ align-self: flex-start; padding: 2px 8px; border-radius: 999px; background: #f5f5f5; color: #404040;
           font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }}
   .subject {{ font-size: 13px; color: #334155; }} .meta {{ font-size: 12px; color: #94a3b8; }}
   iframe {{ width: 100%; height: 360px; border: 0; border-radius: 10px; pointer-events: none; background: #fff; }}

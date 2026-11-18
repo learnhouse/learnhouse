@@ -11,7 +11,6 @@ from src.services.email.blocks import (
     Paragraph,
     Quote,
     Row,
-    Stats,
     compact,
 )
 from src.services.email.layout import Brand, Email, first_sentence
@@ -110,7 +109,6 @@ def nudge(v: dict, lang: str, brand: Brand) -> Email:
     nudge_id = v["nudge_id"]
     copy = {k: str(val) for k, val in (v.get("copy") or {}).items() if val is not None}
     copy.setdefault("org_name", brand.name)
-    stats = [(t(lang, f"nudge.stat.{key}"), value) for key, value in (v.get("stats") or [])]
     cta_url = v.get("cta_url")
     return Email(
         subject=tt(lang, f"nudge.{nudge_id}.subject", **copy),
@@ -118,7 +116,6 @@ def nudge(v: dict, lang: str, brand: Brand) -> Email:
         blocks=compact([
             Heading(th(lang, f"nudge.{nudge_id}.heading", **copy)),
             Paragraph(th(lang, f"nudge.{nudge_id}.body", **copy)),
-            Stats(stats) if stats else None,
             Button(th(lang, f"nudge.{nudge_id}.cta", **copy), cta_url) if v.get("has_cta", True) and cta_url else None,
             LinkFallback(cta_url) if v.get("has_cta", True) and cta_url else None,
         ]),
@@ -202,10 +199,7 @@ def unread(v: dict, lang: str, brand: Brand) -> Email:
         rows.append(Row(
             title=title,
             body=f"{email_user_name(author)}: {snippet}" if author else snippet,
-            meta=(count if count < 100 else "99+") if count else "",
-            avatar=conv.get("image") if (conv.get("image") or "").startswith(("https://", "http://"))
-            else (conv.get("emoji") or next((c for c in title if c.isalnum()), "#").upper()),
-            avatar_color=conv.get("color"),
+            meta=f"{count if count < 100 else '99+'} new" if count else "",
         ))
     more = len(conversations) - len(shown)
     first = conversations[0] if conversations else {}

@@ -30,6 +30,7 @@ from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
 from src.db.usergroups import UserGroup
 from src.db.users import User
+from src.services.email.dates import human_date
 from src.services.orgs.invitations import policy
 from src.services.orgs.invitations.policy import (
     Caller,
@@ -180,7 +181,7 @@ async def _send_email(
             signup_url=url,
             role_name=role.name if role else None,
             message=inv.message,
-            expires_on=policy.aware(inv.expires_at).strftime("%Y-%m-%d"),
+            expires_on=human_date(policy.aware(inv.expires_at)),
             **branding.as_kwargs(),
         )
         return result is not None
