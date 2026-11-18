@@ -42,7 +42,34 @@ def _plan_factory(factory_name: str):
     return factory
 
 
+def _preload_unstubbed_routers() -> None:
+    """Import, for real, the router modules src/router.py uses that the stubs
+    below don't replace. Without this the test only passed when an earlier
+    test in the same worker had already imported them."""
+    import ast
+    import importlib
+    from pathlib import Path
+
+    tree = ast.parse((Path(__file__).resolve().parents[1] / "router.py").read_text())
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("src.routers"):
+            for alias in node.names:
+                names.add(f"{node.module}.{alias.name}")
+    for name in sorted(names):
+        try:
+            importlib.import_module(name)
+        except ImportError:
+            pass  # a symbol, not a module (e.g. `from src.routers.x import router`)
+    # Route registration builds the AI tool registry; build it before the
+    # stubs replace the modules its tools import.
+    from src.services.ai.tools import get_registry
+
+    get_registry()
+
+
 def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
+    _preload_unstubbed_routers()
     def install(name: str, **attrs):
         monkeypatch.setitem(sys.modules, name, _module(name, **attrs))
 
@@ -247,6 +274,8 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     install(
         "src.core.ee_hooks",
         register_ee_routers=lambda _router: None,
+        # The AI tool registry asks for EE hooks while routes register.
+        get_ee_hooks=lambda: None,
     )
     install(
         "src.services.dev.dev",

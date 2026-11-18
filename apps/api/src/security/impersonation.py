@@ -7,7 +7,7 @@ impersonation.py``), which keeps the server-side record. Everything that has
 to hold on *every* request lives here, in core, because the request pipeline
 is core code:
 
-* **Token.** A short-lived JWT with ``purpose: "impersonation"``. Every gate
+* **Token.** A JWT with ``purpose: "impersonation"``. Every gate
   that only accepts ``purpose: "session"`` already refuses it, so it can never
   be refreshed, never mints a normal session and is inert anywhere that does
   not know about it. :func:`src.security.auth.get_current_user` resolves it to
@@ -93,6 +93,10 @@ CODE_MESSAGING = "IMPERSONATION_MESSAGING_BLOCKED"
 CODE_PRIVATE = "IMPERSONATION_PRIVATE"
 CODE_ENDED = "IMPERSONATION_ENDED"
 CODE_WRONG_ORG = "IMPERSONATION_WRONG_ORG"
+# Why a session ended, sent next to CODE_ENDED so the badge can say so. The
+# EE record's end reasons pass through as they are; this one is core's own:
+# the token itself ran out (it carries the session's cap, so the session did).
+REASON_TOKEN_EXPIRED = "token_expired"
 # Audit-only: an impersonation token presented outside LH_imp / Bearer.
 CODE_MISPLACED = "IMPERSONATION_TOKEN_MISPLACED"
 
@@ -181,7 +185,8 @@ def mint_impersonation_token(
 
     ``type: "access"`` keeps it out of ``/auth/refresh`` (refresh only accepts
     ``type: "refresh"``) and ``purpose`` keeps it out of every session gate.
-    ``exp`` is the session's own end, never extended.
+    ``exp`` is the session's absolute cap (stored on the record), never
+    extended: idle limits are the record's, checked on every request.
     """
     now = int(time.time())
     payload = {
@@ -429,8 +434,11 @@ _MESSAGES = {
 }
 
 
-def error_detail(code: str) -> dict:
-    return {"code": code, "message": _MESSAGES[code]}
+def error_detail(code: str, reason: Optional[str] = None) -> dict:
+    detail = {"code": code, "message": _MESSAGES[code]}
+    if reason:
+        detail["reason"] = reason
+    return detail
 
 
 def request_policy(method: str, path: str, ctx: ImpersonationContext) -> Optional[str]:
@@ -505,6 +513,20 @@ def report_misplaced(credential: "SessionCredential", method: str, path: str) ->
     ctx = context_from_claims(credential.payload)
     if ctx is not None:
         report_denied(ctx, method, path, CODE_MISPLACED)
+
+
+async def impersonation_end_reason(db_session, ctx: ImpersonationContext) -> Optional[str]:
+    """Why the session ``ctx`` names is over (its record's end reason), for
+    the badge. None when unknown; never raises."""
+    hook = _ee_hook("impersonation_end_reason")
+    if hook is None:
+        return None
+    try:
+        reason = await hook(db_session, ctx)
+    except Exception:
+        logger.exception("impersonation: could not read why a session ended")
+        return None
+    return reason if isinstance(reason, str) and reason else None
 
 
 async def end_impersonations_started_by(db_session, user_id: int, reason: str = "logout") -> int:
@@ -614,7 +636,8 @@ class ImpersonationGateMiddleware:
         if credential.refused:
             if credential.status == "misplaced":
                 report_misplaced(credential, scope.get("method") or "GET", path)
-            await self._refuse(scope, send, 401, CODE_ENDED)
+            reason = REASON_TOKEN_EXPIRED if credential.status == "expired" else None
+            await self._refuse(scope, send, 401, CODE_ENDED, reason)
             return
         ctx = context_from_claims(credential.payload)
         if ctx is None:
@@ -641,8 +664,8 @@ class ImpersonationGateMiddleware:
             reset_impersonation(reset)
 
     @staticmethod
-    async def _refuse(scope, send, status_code: int, code: str) -> None:
+    async def _refuse(scope, send, status_code: int, code: str, reason: Optional[str] = None) -> None:
         if scope.get("type") == "websocket":
             await send({"type": "websocket.close", "code": 4403 if status_code == 403 else 4401})
             return
-        await _send_json(send, status_code, {"detail": error_detail(code)})
+        await _send_json(send, status_code, {"detail": error_detail(code, reason)})

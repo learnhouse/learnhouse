@@ -9,7 +9,9 @@ import {
   authRefreshUrl,
   dispatchImpersonationEnded,
   dispatchImpersonationRefused,
+  endReasonOf,
   impersonationCode,
+  normalizeEndReason,
 } from '@/lib/auth/impersonation'
 
 const AUTH_RETRY_HEADER = 'X-LH-Auth-Retry'
@@ -60,7 +62,7 @@ export default function AuthFetchInterceptor() {
           })
 
           if (response.status === 410) {
-            dispatchImpersonationEnded('ended')
+            dispatchImpersonationEnded(normalizeEndReason(endReasonOf(await response.json().catch(() => null))))
             return null
           }
 
@@ -106,9 +108,10 @@ export default function AuthFetchInterceptor() {
         && isApiRequest(url)
         && (response.status === 403 || response.status === 401)
       ) {
-        const code = impersonationCode(await response.clone().json().catch(() => null))
+        const body = await response.clone().json().catch(() => null)
+        const code = impersonationCode(body)
         if (code === 'IMPERSONATION_ENDED') {
-          dispatchImpersonationEnded('ended')
+          dispatchImpersonationEnded(normalizeEndReason(endReasonOf(body)))
           return response
         }
         // Only what the person did (a write) gets the notice; a page's own

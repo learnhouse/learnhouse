@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@services/config/config'
 import { IMPERSONATION_COOKIE, getCookieOptions, getDomainFromRequest } from '@services/auth/cookies'
 import { isLocalhost } from '@services/utils/ts/hostUtils'
+import { impersonationCookieMaxAge } from '@/lib/auth/impersonationToken'
 
 // Shared by the impersonation route handlers (files prefixed with `_` are
 // never routes).
@@ -60,7 +61,21 @@ export async function readJson(res: Response): Promise<any> {
 
 /** Keep a freshly issued impersonation token in its httpOnly cookie. */
 export function setCookie(response: NextResponse, request: NextRequest, token: string) {
-  // The server ends an idle session after 8 h and any session after 12 h; the
-  // cookie lasts as long as the token itself.
-  response.cookies.set(IMPERSONATION_COOKIE, token, { ...getCookieOptions(request), maxAge: 12 * 60 * 60 })
+  // The cookie lasts exactly as long as the token, which runs to the session's
+  // stored cap (idle limits are the API's, checked on every request).
+  response.cookies.set(IMPERSONATION_COOKIE, token, { ...getCookieOptions(request), maxAge: impersonationCookieMaxAge(token) })
+}
+
+/** End the session on the API (best effort): its owner signed out. */
+export async function endOnServer(request: NextRequest, token: string): Promise<void> {
+  try {
+    await fetch(`${BACKEND_URL}/api/v1/auth/impersonation/end`, {
+      method: 'POST',
+      headers: forwardHeaders(request, token),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    })
+  } catch {
+    /* the cookie goes regardless; the record ends at its cap or on the owner's sign-out */
+  }
 }

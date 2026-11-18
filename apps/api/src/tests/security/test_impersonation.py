@@ -268,6 +268,19 @@ class TestHooks:
         with patch("src.core.ee_hooks.get_ee_hooks", return_value=SimpleNamespace(end_impersonations_started_by=boom)):
             assert await imp.end_impersonations_started_by("db", 1) == 0
 
+    async def test_end_reason(self):
+        ctx = _ctx()
+        with patch("src.core.ee_hooks.get_ee_hooks", return_value=None):
+            assert await imp.impersonation_end_reason("db", ctx) is None
+        for value, expected in (("revoked", "revoked"), ("", None), (None, None), (3, None)):
+            hook = AsyncMock(return_value=value)
+            with patch("src.core.ee_hooks.get_ee_hooks", return_value=SimpleNamespace(impersonation_end_reason=hook)):
+                assert await imp.impersonation_end_reason("db", ctx) == expected
+        hook.assert_awaited_with("db", ctx)
+        boom = AsyncMock(side_effect=RuntimeError("x"))
+        with patch("src.core.ee_hooks.get_ee_hooks", return_value=SimpleNamespace(impersonation_end_reason=boom)):
+            assert await imp.impersonation_end_reason("db", ctx) is None
+
 
 # ── middleware ──────────────────────────────────────────────────────────
 
@@ -326,9 +339,11 @@ class TestGate:
     async def test_spent_tokens_are_401_never_a_fallback(self):
         r, _ = await self._req("GET", "/api/v1/courses/x", cookie=_token(expires_at=int(time.time()) - 1))
         assert r.status_code == 401 and r.json()["detail"]["code"] == imp.CODE_ENDED
+        # An expired token says so (the badge reports the time limit).
+        assert r.json()["detail"]["reason"] == imp.REASON_TOKEN_EXPIRED
         bad = jwt.encode({"sub": "x", "exp": int(time.time()) + 60, "purpose": "impersonation"}, SECRET_KEY, algorithm=ALGORITHM)
         r, _ = await self._req("GET", "/api/v1/courses/x", token=bad)
-        assert r.status_code == 401
+        assert r.status_code == 401 and "reason" not in r.json()["detail"]
 
     async def test_gate_and_auth_agree_on_misplaced_and_foreign_tokens(self):
         seen = []
@@ -487,10 +502,23 @@ class TestResolve:
         with pytest.raises(HTTPException):
             await self._resolve(db, _request(token=_token()), AsyncMock(return_value=None))
 
+    async def test_an_ended_session_says_why(self, db, org):
+        from src.security.auth import get_current_user
+
+        ns = SimpleNamespace(
+            confirm_impersonation=AsyncMock(return_value=None),
+            impersonation_end_reason=AsyncMock(return_value="impersonator_changed"),
+        )
+        with patch("src.core.ee_hooks.get_ee_hooks", return_value=ns):
+            with pytest.raises(HTTPException) as e:
+                await get_current_user(_request(token=_token()), db)
+        assert e.value.status_code == 401
+        assert e.value.detail == {**imp.error_detail(imp.CODE_ENDED), "reason": "impersonator_changed"}
+
     async def test_spent_or_malformed_token_is_401(self, db, org):
         with pytest.raises(HTTPException) as e:
             await self._resolve(db, _request(cookie=f"{imp.IMPERSONATION_COOKIE}={_token(expires_at=1)}"))
-        assert e.value.status_code == 401
+        assert e.value.status_code == 401 and e.value.detail["reason"] == imp.REASON_TOKEN_EXPIRED
         bad = jwt.encode({"sub": "x", "exp": int(time.time()) + 60, "purpose": "impersonation", "imp": {}}, SECRET_KEY, algorithm=ALGORITHM)
         with pytest.raises(HTTPException):
             await self._resolve(db, _request(token=bad), AsyncMock())
