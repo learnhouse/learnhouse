@@ -19848,7 +19848,8 @@
         "not_found": "This delivery doesn't exist anymore.",
         "empty_title": "Nothing delivered yet",
         "empty_desc": "Every message a rule sends shows up here with its status and retries.",
-        "no_match": "No deliveries match these filters."
+        "no_match": "No deliveries match these filters.",
+        "summary": "What was sent"
       },
       "prefs": {
         "title": "How you hear about each group",
@@ -29424,7 +29425,9 @@
       "start_blank": "Start blank",
       "start_blank_desc": "An empty academy. The setup checklist walks you through the rest.",
       "trial_note_after": "No card needed. Keep it, pick another plan or stay on Free afterwards.",
-      "trial_note": "You're getting {{days}} days of {{plan}}, free."
+      "trial_note": "You're getting {{days}} days of {{plan}}, free.",
+      "just_created": "You created {{name}} a moment ago.",
+      "just_created_open": "Open it"
     },
     "checklist": {
       "full_guide": "Full guide",

@@ -20207,7 +20207,8 @@
         "not_found": "Esta entrega não existe mais.",
         "empty_title": "Nada entregue ainda",
         "empty_desc": "Cada mensagem enviada por uma regra aparece aqui com seu status e novas tentativas.",
-        "no_match": "Nenhuma entrega corresponde a estes filtros."
+        "no_match": "Nenhuma entrega corresponde a estes filtros.",
+        "summary": "O que foi enviado"
       },
       "prefs": {
         "title": "Como você fica sabendo de cada grupo",
@@ -30073,7 +30074,9 @@
       "start_blank": "Começar do zero",
       "start_blank_desc": "Uma academia vazia. A lista de configuração guia você no resto.",
       "trial_note_after": "Não precisa de cartão. Depois, mantenha, escolha outro plano ou continue no Gratuito.",
-      "trial_note": "Você ganha {{days}} dias de {{plan}}, grátis."
+      "trial_note": "Você ganha {{days}} dias de {{plan}}, grátis.",
+      "just_created": "Você acabou de criar {{name}}.",
+      "just_created_open": "Abrir"
     },
     "checklist": {
       "full_guide": "Guia completo",

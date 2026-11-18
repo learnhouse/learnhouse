@@ -5,15 +5,21 @@ Mounted with ``require_authenticated_user`` (a real session, no API tokens).
 """
 
 import logging
+from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import func
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core import deployment_mode
 from src.core.events.database import get_db_session
-from src.db.organizations import OrganizationCreate
+from src.core import redis as core_redis
+from src.db.organization_config import OrganizationConfig
+from src.db.organizations import Organization, OrganizationCreate
+from src.db.user_organizations import UserOrganization
 from src.db.users import PublicUser
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.features_utils.resolve import _get_plan_from_config
@@ -68,6 +74,92 @@ class CreateOrgBody(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     slug: Optional[str] = Field(default=None, max_length=63)
     goal: Optional[Goal] = None
+    # Create it even when this user made an org of the same name moments ago.
+    allow_duplicate: bool = False
+
+
+# A second org of the same name by the same person this soon is a retry (a
+# back button, a reload, a lost response), not a new school.
+DUPLICATE_WINDOW_SECONDS = 600
+IDEMPOTENCY_TTL_SECONDS = 86400
+IDEMPOTENCY_KEY_MAX = 100
+
+
+def _idempotency_redis_key(user_id: int, key: str) -> str:
+    return f"onboarding:create:idem:{user_id}:{key}"
+
+
+def _remembered_org_id(user_id: int, key: Optional[str]) -> Optional[int]:
+    """The org an earlier request with this Idempotency-Key created. Fails
+    open (None) when Redis is unreachable."""
+    if not key:
+        return None
+    try:
+        client = core_redis.get_redis_client()
+        raw = client.get(_idempotency_redis_key(user_id, key)) if client is not None else None
+        return int(raw) if raw else None
+    except Exception:
+        logger.warning("Onboarding idempotency lookup unavailable", exc_info=True)
+        return None
+
+
+def _remember_org_id(user_id: int, key: Optional[str], org_id: int) -> None:
+    if not key:
+        return
+    try:
+        client = core_redis.get_redis_client()
+        if client is not None:
+            client.set(_idempotency_redis_key(user_id, key), str(org_id), ex=IDEMPOTENCY_TTL_SECONDS)
+    except Exception:
+        logger.warning("Onboarding idempotency store unavailable", exc_info=True)
+
+
+async def _recent_org_by_user(
+    db_session: AsyncSession, user_id: int, *, org_id: Optional[int] = None, name: Optional[str] = None
+):
+    """An org this user administers: by id, or the newest one named ``name``
+    created within ``DUPLICATE_WINDOW_SECONDS``."""
+    stmt = (
+        select(Organization)
+        .join(UserOrganization, UserOrganization.org_id == Organization.id)
+        .where(UserOrganization.user_id == user_id, UserOrganization.role_id == 1)
+    )
+    if org_id is not None:
+        return (await db_session.execute(stmt.where(Organization.id == org_id))).scalars().first()
+    org = (await db_session.execute(
+        stmt.where(func.lower(func.trim(Organization.name)) == (name or "").strip().lower())
+        .order_by(Organization.id.desc()).limit(1)
+    )).scalars().first()
+    age = _age_seconds(org.creation_date) if org is not None else None
+    if age is None or age > DUPLICATE_WINDOW_SECONDS:
+        return None
+    return org
+
+
+def _age_seconds(raw: Optional[str]) -> Optional[float]:
+    """Seconds since a ``creation_date``: ``str(datetime.now())`` (naive,
+    server-local, like ``create_org`` writes it) or an ISO date with an offset."""
+    try:
+        created = datetime.fromisoformat(str(raw).strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    now = datetime.now(timezone.utc) if created.tzinfo else datetime.now()
+    return (now - created).total_seconds()
+
+
+async def _replay(db_session: AsyncSession, org, user_id: int) -> dict:
+    """The response the first request got, for an org that already exists."""
+    from src.services.orgs.orgs import _build_org_read_with_resolved
+
+    config = (await db_session.execute(
+        select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    )).scalars().first()
+    org_row = await state_service.get_org(db_session, org.id)
+    return {
+        "org": _build_org_read_with_resolved(org, config).model_dump(mode="json"),
+        "onboarding": await state_service.build_state(db_session, org_row, user_id),
+        "reused": True,
+    }
 
 
 class StarterBody(BaseModel):
@@ -120,7 +212,7 @@ async def api_check_slug(
         "the starter template). Returns the organization and its checklist."
     ),
     responses={
-        200: {"description": "Organization created."},
+        200: {"description": "Organization created, or (``reused: true``) the one this user just created: a retry with the same Idempotency-Key, or the same name within 10 minutes unless ``allow_duplicate``."},
         400: {"description": "Invalid name or address"},
         403: {"description": "Free organization limit reached, or multi-org not enabled"},
         409: {"description": "Address taken or reserved (the response carries a free suggestion)"},
@@ -137,10 +229,19 @@ async def api_create_org(
 
     refuse_lms_session()
     user_id = resolve_acting_user_id(current_user)
-    enforce_limit("create", user_id)
     name = body.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Give your organization a name")
+    # Retries never create a second org: the same Idempotency-Key, or the same
+    # name moments after the first, answers with the org already made.
+    idem = (request.headers.get("idempotency-key") or "").strip()[:IDEMPOTENCY_KEY_MAX] or None
+    remembered = _remembered_org_id(user_id, idem)
+    existing = await _recent_org_by_user(db_session, user_id, org_id=remembered) if remembered else None
+    if existing is None and not body.allow_duplicate:
+        existing = await _recent_org_by_user(db_session, user_id, name=name)
+    if existing is not None:
+        return await _replay(db_session, existing, user_id)
+    enforce_limit("create", user_id)
     if body.slug:
         check = await slugs.check_slug(name, body.slug, db_session)
         if not check["available"]:
@@ -166,9 +267,11 @@ async def api_create_org(
         state_service.stamp(row, "goal_selected")
     db_session.add(row)
     await db_session.commit()
+    _remember_org_id(user_id, idem, int(org.id))
     return {
         "org": org.model_dump(mode="json"),
         "onboarding": await state_service.build_state(db_session, org_row, user_id),
+        "reused": False,
     }
 
 

@@ -20633,7 +20633,8 @@
         "not_found": "To dostarczenie już nie istnieje.",
         "empty_title": "Nic jeszcze nie dostarczono",
         "empty_desc": "Każda wiadomość wysłana przez regułę pojawia się tutaj ze swoim statusem i ponowieniami.",
-        "no_match": "Żadne dostarczenia nie pasują do tych filtrów."
+        "no_match": "Żadne dostarczenia nie pasują do tych filtrów.",
+        "summary": "Co zostało wysłane"
       },
       "prefs": {
         "title": "Jak dowiadujesz się o każdej grupie",
@@ -30828,7 +30829,9 @@
       "start_blank": "Zacznij od zera",
       "start_blank_desc": "Pusta akademia. Lista konfiguracji przeprowadzi cię przez resztę.",
       "trial_note_after": "Karta nie jest potrzebna. Potem zachowaj ten plan, wybierz inny albo zostań na planie Bezpłatny.",
-      "trial_note": "Dostajesz {{days}} dni planu {{plan}} za darmo."
+      "trial_note": "Dostajesz {{days}} dni planu {{plan}} za darmo.",
+      "just_created": "Właśnie utworzono {{name}}.",
+      "just_created_open": "Otwórz"
     },
     "checklist": {
       "full_guide": "Pełny przewodnik",

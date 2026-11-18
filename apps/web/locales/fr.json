@@ -20207,7 +20207,8 @@
         "empty_title": "Rien n’a encore été envoyé",
         "empty_desc": "Chaque message envoyé par une règle apparaît ici avec son statut et ses nouvelles tentatives.",
         "no_match": "Aucun envoi ne correspond à ces filtres.",
-        "attempts_many": "{{count}} tentatives"
+        "attempts_many": "{{count}} tentatives",
+        "summary": "Ce qui a été envoyé"
       },
       "prefs": {
         "title": "Comment vous êtes informé de chaque groupe",
@@ -30073,7 +30074,9 @@
       "start_blank": "Partir de zéro",
       "start_blank_desc": "Une académie vide. La liste de configuration vous guide pour le reste.",
       "trial_note_after": "Aucune carte requise. Ensuite, gardez-la, choisissez une autre offre ou restez sur Gratuit.",
-      "trial_note": "Vous profitez de {{days}} jours de {{plan}}, gratuitement."
+      "trial_note": "Vous profitez de {{days}} jours de {{plan}}, gratuitement.",
+      "just_created": "Vous avez créé {{name}} il y a un instant.",
+      "just_created_open": "L'ouvrir"
     },
     "checklist": {
       "full_guide": "Guide complet",

@@ -19821,7 +19821,8 @@
         "not_found": "Bu teslimat artık yok.",
         "empty_title": "Henüz bir şey teslim edilmedi",
         "empty_desc": "Bir kuralın gönderdiği her mesaj, durumu ve yeniden denemeleriyle burada görünür.",
-        "no_match": "Bu filtrelerle eşleşen teslimat yok."
+        "no_match": "Bu filtrelerle eşleşen teslimat yok.",
+        "summary": "Gönderilen"
       },
       "prefs": {
         "title": "Her grup hakkında nasıl haberdar olursunuz",
@@ -29444,7 +29445,9 @@
       "start_blank": "Boş başla",
       "start_blank_desc": "Boş bir akademi. Kurulum listesi gerisinde sana yol gösterir.",
       "trial_note_after": "Kart gerekmez. Sonrasında bu planla devam edebilir, başka bir plan seçebilir veya Ücretsiz planda kalabilirsiniz.",
-      "trial_note": "{{days}} gün boyunca {{plan}} planını ücretsiz kullanıyorsunuz."
+      "trial_note": "{{days}} gün boyunca {{plan}} planını ücretsiz kullanıyorsunuz.",
+      "just_created": "{{name}} az önce oluşturuldu.",
+      "just_created_open": "Aç"
     },
     "checklist": {
       "full_guide": "Tam rehber",

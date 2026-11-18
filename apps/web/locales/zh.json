@@ -19782,7 +19782,8 @@
         "not_found": "此投递记录已不存在。",
         "empty_title": "尚未投递任何内容",
         "empty_desc": "规则发送的每条消息都会连同其状态和重试记录显示在这里。",
-        "no_match": "没有符合这些筛选条件的投递记录。"
+        "no_match": "没有符合这些筛选条件的投递记录。",
+        "summary": "发送的内容"
       },
       "prefs": {
         "title": "各分组的通知方式",
@@ -29402,7 +29403,9 @@
       "start_blank": "从空白开始",
       "start_blank_desc": "一个空白学院。设置清单会引导你完成其余部分。",
       "trial_note_after": "无需绑卡。之后可以保留它、选择其他方案，或继续使用免费版。",
-      "trial_note": "你将免费使用 {{plan}} {{days}} 天。"
+      "trial_note": "你将免费使用 {{plan}} {{days}} 天。",
+      "just_created": "你刚刚创建了 {{name}}。",
+      "just_created_open": "打开"
     },
     "checklist": {
       "full_guide": "完整指南",

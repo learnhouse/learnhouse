@@ -46,6 +46,7 @@ import {
   type OnboardingGoal,
   type SlugCheck,
 } from '@services/onboarding/onboarding'
+import { attemptKey, recentlyCreated, rememberCreated, sessionStore, type CreatedOrg } from '@services/onboarding/createAttempt'
 import { Button, INPUT } from '@/design'
 import { planNameById } from '@/app/(hub)/_billing/planText'
 import { TRIAL_DAYS, TRIAL_PLAN } from '@services/plans/trial'
@@ -392,10 +393,17 @@ export default function CreateNewOrgPage() {
   const [error, setError] = useState<{ message: string; capReached?: boolean } | null>(null)
   const [created, setCreated] = useState<{ id: number; slug: string } | null>(null)
   const [starting, setStarting] = useState<'template' | 'blank' | null>(null)
+  // A second submit before the first answers (Enter + click, a double click)
+  // is dropped here; React state lags a render behind.
+  const inFlight = useRef(false)
+  // The org this tab made a moment ago: coming back to /new (the back
+  // button, a reload) shows it instead of quietly offering to make another.
+  const [recent, setRecent] = useState<CreatedOrg | null>(null)
   // A plan picked on the pricing page before signing up (?plan=standard).
   const [planIntent, setPlanIntent] = useState<string | null>(null)
 
   useEffect(() => {
+    setRecent(recentlyCreated(sessionStore()))
     setPlanIntent(new URLSearchParams(window.location.search).get('plan'))
     track(AnalyticsEvent.OnboardingStarted, { version: 2 })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -425,12 +433,15 @@ export default function CreateNewOrgPage() {
   }
 
   const create = async ({ name, slug }: { name: string; slug: string }) => {
+    if (inFlight.current) return
+    inFlight.current = true
     setSubmitting(true)
     setError(null)
     track(AnalyticsEvent.OrgCreateSubmitted, { goal: goal ?? 'none', version: 2 })
     try {
-      const res = await createOrgWithOnboarding(token, { name, slug, goal })
+      const res = await createOrgWithOnboarding(token, { name, slug, goal }, attemptKey(sessionStore(), name))
       const org = res.org
+      rememberCreated(sessionStore(), { id: org.id, slug: org.slug, name: org.name ?? name })
       track(AnalyticsEvent.OrgCreated, { goal: goal ?? 'none', slug: org.slug, version: 2 })
       // Marketing audience (Loops), as before: SaaS-gated server-side, email from the session.
       void fetch('/api/loops/admin', {
@@ -460,6 +471,7 @@ export default function CreateNewOrgPage() {
       }
       track(AnalyticsEvent.OrgCreateFailed, { goal: goal ?? 'none', status: e?.status ?? 0 })
     } finally {
+      inFlight.current = false
       setSubmitting(false)
     }
   }
@@ -561,6 +573,18 @@ export default function CreateNewOrgPage() {
             ) : (
               <>
                 {step !== 'start' && <PendingInvites invites={invites} unverified={hub.data?.email_verified === false} className="mb-6" />}
+                {step !== 'start' && recent && (
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900" data-testid="recent-org" role="status">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <CheckCircle size={16} weight="fill" className="shrink-0 text-emerald-600" />
+                      <span className="min-w-0 break-words">{t('onb2.new.just_created', { name: recent.name })}</span>
+                    </span>
+                    <a href={orgUrl(recent.slug, '/dash')} className="inline-flex items-center gap-1 font-semibold underline-offset-2 hover:underline">
+                      {t('onb2.new.just_created_open')}
+                      <ArrowRight size={13} weight="bold" className="rtl:rotate-180" />
+                    </a>
+                  </div>
+                )}
                 <AnimatePresence mode="wait" custom={dir}>
                   <motion.div key={`hdr-${step}`} custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={trans} className="mb-6 text-center">
                     <StepDots current={index} />

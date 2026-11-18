@@ -19821,7 +19821,8 @@
         "not_found": "Deze levering bestaat niet meer.",
         "empty_title": "Nog niets geleverd",
         "empty_desc": "Elk bericht dat een regel verstuurt, verschijnt hier met zijn status en nieuwe pogingen.",
-        "no_match": "Geen leveringen komen overeen met deze filters."
+        "no_match": "Geen leveringen komen overeen met deze filters.",
+        "summary": "Wat er is verstuurd"
       },
       "prefs": {
         "title": "Hoe je van elke groep hoort",
@@ -29444,7 +29445,9 @@
       "start_blank": "Leeg beginnen",
       "start_blank_desc": "Een lege academie. De inrichtingschecklist helpt je met de rest.",
       "trial_note_after": "Geen kaart nodig. Houd het daarna, kies een ander abonnement of blijf op Gratis.",
-      "trial_note": "Je krijgt {{days}} dagen {{plan}}, gratis."
+      "trial_note": "Je krijgt {{days}} dagen {{plan}}, gratis.",
+      "just_created": "Je hebt {{name}} zojuist aangemaakt.",
+      "just_created_open": "Openen"
     },
     "checklist": {
       "full_guide": "Volledige gids",
