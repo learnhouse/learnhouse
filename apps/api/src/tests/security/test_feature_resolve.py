@@ -89,6 +89,23 @@ class TestFeatureResolve:
                     "upgrade_plan": None,
                 }
 
+    def test_usergroups_follow_the_plan_on_saas(self):
+        """The /usergroups routers need Standard; resolution must say so, or the
+        web offers groups to Free orgs and every call comes back 403."""
+        with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="saas"):
+            free = resolve_feature("usergroups", {"config_version": "2.0", "plan": "free"}, 0)
+            assert free["available"] is False
+            assert free["enabled"] is False
+            assert free["required_plan"] == "standard"
+            assert free["upgrade_plan"] == "standard"
+
+            standard = resolve_feature("usergroups", {"config_version": "2.0", "plan": "standard"}, 0)
+            assert standard["available"] is True
+            assert standard["enabled"] is True
+
+        with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="ee"):
+            assert resolve_feature("usergroups", {}, 0)["enabled"] is True
+
     def test_saas_resolution_covers_overrides_limits_and_admin_toggles(self):
         config = {
             "config_version": "2.0",
