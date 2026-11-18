@@ -19821,7 +19821,8 @@
         "not_found": "Diese Zustellung existiert nicht mehr.",
         "empty_title": "Noch nichts zugestellt",
         "empty_desc": "Jede von einer Regel gesendete Nachricht erscheint hier mit Status und Wiederholungen.",
-        "no_match": "Keine Zustellungen entsprechen diesen Filtern."
+        "no_match": "Keine Zustellungen entsprechen diesen Filtern.",
+        "summary": "Was gesendet wurde"
       },
       "prefs": {
         "title": "Wie du von jeder Gruppe erfährst",
@@ -29444,7 +29445,9 @@
       "start_blank": "Leer starten",
       "start_blank_desc": "Eine leere Akademie. Die Einrichtungs-Checkliste führt dich durch den Rest.",
       "trial_note_after": "Keine Karte nötig. Danach behältst du ihn, wählst einen anderen Plan oder bleibst bei Kostenlos.",
-      "trial_note": "Du bekommst {{days}} Tage {{plan}}, kostenlos."
+      "trial_note": "Du bekommst {{days}} Tage {{plan}}, kostenlos.",
+      "just_created": "Sie haben {{name}} gerade erstellt.",
+      "just_created_open": "Öffnen"
     },
     "checklist": {
       "full_guide": "Vollständige Anleitung",

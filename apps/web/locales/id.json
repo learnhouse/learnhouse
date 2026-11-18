@@ -19780,7 +19780,8 @@
         "not_found": "Pengiriman ini sudah tidak ada.",
         "empty_title": "Belum ada yang terkirim",
         "empty_desc": "Setiap pesan yang dikirim aturan muncul di sini dengan status dan percobaan ulangnya.",
-        "no_match": "Tidak ada pengiriman yang cocok dengan filter ini."
+        "no_match": "Tidak ada pengiriman yang cocok dengan filter ini.",
+        "summary": "Yang dikirim"
       },
       "prefs": {
         "title": "Cara Anda diberi tahu tentang setiap grup",
@@ -29400,7 +29401,9 @@
       "start_blank": "Mulai kosong",
       "start_blank_desc": "Akademi kosong. Daftar pengaturan memandu sisanya.",
       "trial_note_after": "Tanpa kartu. Setelahnya, pertahankan paket ini, pilih paket lain, atau tetap di paket Gratis.",
-      "trial_note": "Anda mendapatkan {{plan}} selama {{days}} hari, gratis."
+      "trial_note": "Anda mendapatkan {{plan}} selama {{days}} hari, gratis.",
+      "just_created": "Anda baru saja membuat {{name}}.",
+      "just_created_open": "Buka"
     },
     "checklist": {
       "full_guide": "Panduan lengkap",

@@ -20207,7 +20207,8 @@
         "empty_title": "Ancora nulla consegnato",
         "empty_desc": "Ogni messaggio inviato da una regola compare qui con il suo stato e i nuovi tentativi.",
         "no_match": "Nessuna consegna corrisponde a questi filtri.",
-        "attempts_many": "{{count}} tentativi"
+        "attempts_many": "{{count}} tentativi",
+        "summary": "Cosa è stato inviato"
       },
       "prefs": {
         "title": "Come vieni informato su ogni gruppo",
@@ -30073,7 +30074,9 @@
       "start_blank": "Parti da zero",
       "start_blank_desc": "Un'accademia vuota. La checklist di configurazione ti guida nel resto.",
       "trial_note_after": "Nessuna carta richiesta. Poi puoi tenerlo, scegliere un altro piano o restare su Gratuito.",
-      "trial_note": "Hai {{days}} giorni di {{plan}}, gratis."
+      "trial_note": "Hai {{days}} giorni di {{plan}}, gratis.",
+      "just_created": "Hai appena creato {{name}}.",
+      "just_created_open": "Aprila"
     },
     "checklist": {
       "full_guide": "Guida completa",

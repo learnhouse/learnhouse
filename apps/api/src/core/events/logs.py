@@ -13,6 +13,12 @@ def _log_level() -> int:
     return getattr(logging, raw, logging.INFO)
 
 
+# Client libraries that log every request URL at INFO. Their URLs can carry
+# credentials (Discord/Slack webhook tokens in the path, OAuth access tokens
+# in the query), so only their warnings reach the log.
+QUIET_LOGGERS = ("httpx", "httpcore")
+
+
 def init_logging() -> None:
     """Send application logs to stdout.
 
@@ -31,6 +37,8 @@ def init_logging() -> None:
     """
     root = logging.getLogger()
     root.setLevel(_log_level())
+    for name in QUIET_LOGGERS:
+        logging.getLogger(name).setLevel(max(logging.WARNING, _log_level()))
 
     already = any(
         isinstance(h, logging.StreamHandler) and getattr(h, "_learnhouse", False)

@@ -153,6 +153,22 @@ def test_init_logging_attaches_a_stdout_handler():
         root.handlers = before
 
 
+def test_init_logging_keeps_request_urls_out_of_the_log():
+    """httpx logs each request URL at INFO; webhook tokens and OAuth access
+    tokens travel in those URLs, so it only logs warnings."""
+    root = logging.getLogger()
+    before = list(root.handlers)
+    try:
+        root.handlers = []
+        logging.getLogger("httpx").setLevel(logging.NOTSET)
+        logs.init_logging()
+        assert logging.getLogger("httpx").level == logging.WARNING
+        assert not logging.getLogger("httpx").isEnabledFor(logging.INFO)
+        assert logging.getLogger("httpcore").level == logging.WARNING
+    finally:
+        root.handlers = before
+
+
 def test_init_logging_is_idempotent():
     """Startup can run more than once in a process; a second call must not
     double every log line."""

@@ -20633,7 +20633,8 @@
         "not_found": "Toto doručenie už neexistuje.",
         "empty_title": "Zatiaľ nič nedoručené",
         "empty_desc": "Každá správa, ktorú pravidlo odošle, sa zobrazí tu so stavom a opakovanými pokusmi.",
-        "no_match": "Týmto filtrom nezodpovedá žiadne doručenie."
+        "no_match": "Týmto filtrom nezodpovedá žiadne doručenie.",
+        "summary": "Čo bolo odoslané"
       },
       "prefs": {
         "title": "Ako sa dozviete o každej skupine",
@@ -30828,7 +30829,9 @@
       "start_blank": "Začať načisto",
       "start_blank_desc": "Prázdna akadémia. Zoznam nastavenia vás prevedie zvyškom.",
       "trial_note_after": "Karta nie je potrebná. Potom si plán ponecháte, vyberiete iný alebo zostanete na Free.",
-      "trial_note": "Získavate {{plan}} na {{days}} dní zadarmo."
+      "trial_note": "Získavate {{plan}} na {{days}} dní zadarmo.",
+      "just_created": "Práve ste vytvorili {{name}}.",
+      "just_created_open": "Otvoriť"
     },
     "checklist": {
       "full_guide": "Celý sprievodca",

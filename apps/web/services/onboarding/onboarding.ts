@@ -126,10 +126,19 @@ export const checkSlug = (token: string | undefined, name: string, slug?: string
   return request<SlugCheck>(`/slug?${q.toString()}`, token)
 }
 
+// ``idempotencyKey``: one per attempt (see createAttempt.ts). A retry with the
+// same key, or the same name moments later, returns the org already made
+// (``reused: true``) instead of creating another.
 export const createOrgWithOnboarding = (
   token: string | undefined,
   body: { name: string; slug?: string; goal?: OnboardingGoal | null },
-) => request<{ org: any; onboarding: OnboardingState }>('/orgs', token, { method: 'POST', body: JSON.stringify(body) })
+  idempotencyKey?: string,
+) =>
+  request<{ org: any; onboarding: OnboardingState; reused?: boolean }>('/orgs', token, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+  })
 
 export const applyStarter = (token: string | undefined, orgId: number, body: { website?: boolean; course?: boolean } = {}) =>
   request<{ template: string | null; page_uuid: string | null; course_uuid: string | null }>(`/orgs/${orgId}/starter`, token, {

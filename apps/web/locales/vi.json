@@ -19780,7 +19780,8 @@
         "not_found": "Lượt gửi này không còn tồn tại.",
         "empty_title": "Chưa gửi gì",
         "empty_desc": "Mọi tin nhắn mà quy tắc gửi đều hiện ở đây cùng trạng thái và các lần thử lại.",
-        "no_match": "Không có lượt gửi nào khớp với các bộ lọc này."
+        "no_match": "Không có lượt gửi nào khớp với các bộ lọc này.",
+        "summary": "Nội dung đã gửi"
       },
       "prefs": {
         "title": "Cách bạn nhận tin về từng nhóm",
@@ -29400,7 +29401,9 @@
       "start_blank": "Bắt đầu trống",
       "start_blank_desc": "Một học viện trống. Danh sách thiết lập sẽ hướng dẫn phần còn lại.",
       "trial_note_after": "Không cần thẻ. Sau đó, bạn có thể giữ gói này, chọn gói khác hoặc ở lại gói Miễn phí.",
-      "trial_note": "Bạn được dùng {{plan}} miễn phí trong {{days}} ngày."
+      "trial_note": "Bạn được dùng {{plan}} miễn phí trong {{days}} ngày.",
+      "just_created": "Bạn vừa tạo {{name}}.",
+      "just_created_open": "Mở"
     },
     "checklist": {
       "full_guide": "Hướng dẫn đầy đủ",

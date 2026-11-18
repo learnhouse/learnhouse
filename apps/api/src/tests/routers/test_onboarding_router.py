@@ -4,8 +4,8 @@ with permissions and rate limits."""
 
 import json
 from contextlib import contextmanager
-from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import fakeredis
 import pytest
@@ -83,7 +83,7 @@ class TestCreateOrg:
 
     async def test_default_address_avoids_a_collision(self, make_app, admin_user, org):
         with org_creation():
-            res = await call(make_app(admin_user), "POST", "/orgs", json={"name": "Test Org"})
+            res = await call(make_app(admin_user), "POST", "/orgs", json={"name": "Test Org", "allow_duplicate": True})
         assert res.status_code == 200
         assert res.json()["org"]["slug"] == "test-org-2"
         assert res.json()["onboarding"]["goal"] is None
@@ -117,6 +117,111 @@ class TestCreateOrg:
         with patch("src.services.security.rate_limiting.get_redis_connection", side_effect=RuntimeError("down")):
             res = await call(make_app(admin_user), "GET", "/slug?name=Acme")
         assert res.status_code == 200 and res.json()["slug"] == "acme"
+
+
+class TestDuplicateGuard:
+    """A back button, a reload or a lost response must not make a second org."""
+
+    async def _orgs(self, db, name):
+        return (await db.execute(select(Organization).where(Organization.name == name))).scalars().all()
+
+    async def test_same_name_moments_later_returns_the_first_org(self, make_app, admin_user, db):
+        app = make_app(admin_user)
+        with org_creation():
+            first = await call(app, "POST", "/orgs", json={"name": "Amy Allen", "goal": "sell"})
+            again = await call(app, "POST", "/orgs", json={"name": "  amy allen "})
+        assert first.status_code == 200 and again.status_code == 200, again.text
+        assert first.json()["reused"] is False and again.json()["reused"] is True
+        assert again.json()["org"]["id"] == first.json()["org"]["id"] and again.json()["org"]["slug"] == "amy-allen"
+        assert again.json()["onboarding"]["goal"] == "sell"
+        assert len(await self._orgs(db, "Amy Allen")) == 1
+
+    async def test_same_name_is_allowed_on_purpose(self, make_app, admin_user, db):
+        app = make_app(admin_user)
+        with org_creation():
+            await call(app, "POST", "/orgs", json={"name": "Twin"})
+            res = await call(app, "POST", "/orgs", json={"name": "Twin", "allow_duplicate": True})
+        assert res.json()["reused"] is False and res.json()["org"]["slug"] == "twin-2"
+
+    async def test_same_name_after_the_window_is_a_new_org(self, make_app, admin_user, db):
+        app = make_app(admin_user)
+        with org_creation():
+            await call(app, "POST", "/orgs", json={"name": "Later"})
+        for o in await self._orgs(db, "Later"):
+            o.creation_date = str(datetime.now() - timedelta(minutes=11))
+            db.add(o)
+        await db.commit()
+        with org_creation():
+            res = await call(app, "POST", "/orgs", json={"name": "Later"})
+        assert res.json()["reused"] is False and len(await self._orgs(db, "Later")) == 2
+
+    async def test_an_unreadable_creation_date_never_blocks(self, make_app, admin_user, db):
+        app = make_app(admin_user)
+        with org_creation():
+            await call(app, "POST", "/orgs", json={"name": "Odd"})
+        for o in await self._orgs(db, "Odd"):
+            o.creation_date = "yesterday-ish"
+            db.add(o)
+        await db.commit()
+        with org_creation():
+            res = await call(app, "POST", "/orgs", json={"name": "Odd"})
+        assert res.json()["reused"] is False
+
+    async def test_another_users_org_of_the_same_name_does_not_count(self, make_app, admin_user, regular_user, db):
+        with org_creation():
+            await call(make_app(admin_user), "POST", "/orgs", json={"name": "Shared Name"})
+            res = await call(make_app(regular_user), "POST", "/orgs", json={"name": "Shared Name"})
+        assert res.json()["reused"] is False and len(await self._orgs(db, "Shared Name")) == 2
+
+    async def test_idempotency_key_replays_even_after_a_rename(self, make_app, admin_user, db, fake_redis):
+        app = make_app(admin_user)
+        headers = {"Idempotency-Key": "attempt-1"}
+        with org_creation():
+            first = await call(app, "POST", "/orgs", json={"name": "Keyed"}, headers=headers)
+            org_row = (await self._orgs(db, "Keyed"))[0]
+            org_row.name = "Keyed Renamed"
+            db.add(org_row)
+            await db.commit()
+            again = await call(app, "POST", "/orgs", json={"name": "Keyed", "allow_duplicate": True}, headers=headers)
+            other = await call(app, "POST", "/orgs", json={"name": "Keyed", "allow_duplicate": True},
+                               headers={"Idempotency-Key": "attempt-2"})
+        assert again.json()["reused"] is True and again.json()["org"]["id"] == first.json()["org"]["id"]
+        assert other.json()["reused"] is False
+        assert fake_redis.get(f"onboarding:create:idem:{admin_user.id}:attempt-1") == str(first.json()["org"]["id"]).encode()
+
+    async def test_replays_skip_the_rate_limit(self, make_app, admin_user, fake_redis):
+        app = make_app(admin_user)
+        with org_creation():
+            await call(app, "POST", "/orgs", json={"name": "Busy"})
+            fake_redis.set(f"rate_limit:onboarding:create:{admin_user.id}", 10, ex=60)
+            res = await call(app, "POST", "/orgs", json={"name": "Busy"})
+        assert res.status_code == 200 and res.json()["reused"] is True
+
+    async def test_idempotency_fails_open_without_redis(self, make_app, admin_user, db):
+        app = make_app(admin_user)
+        broken = MagicMock()
+        broken.get.side_effect = broken.set.side_effect = RuntimeError("down")
+        with org_creation(), patch("src.core.redis.get_redis_client", return_value=broken):
+            first = await call(app, "POST", "/orgs", json={"name": "No Redis"}, headers={"Idempotency-Key": "k"})
+            again = await call(app, "POST", "/orgs", json={"name": "No Redis"}, headers={"Idempotency-Key": "k"})
+        assert first.status_code == 200 and again.json()["reused"] is True
+        with org_creation(), patch("src.core.redis.get_redis_client", return_value=None):
+            res = await call(app, "POST", "/orgs", json={"name": "Nil", "allow_duplicate": True}, headers={"Idempotency-Key": "k2"})
+        assert res.json()["reused"] is False
+
+    async def test_a_remembered_org_the_user_no_longer_runs_is_ignored(self, make_app, admin_user, fake_redis, org):
+        fake_redis.set(f"onboarding:create:idem:{admin_user.id}:gone", "999999")
+        with org_creation():
+            res = await call(make_app(admin_user), "POST", "/orgs", json={"name": "Fresh"}, headers={"Idempotency-Key": "gone"})
+        assert res.json()["reused"] is False and res.json()["org"]["slug"] == "fresh"
+
+
+def test_age_of_creation_dates():
+    from src.routers.onboarding import _age_seconds
+
+    assert 0 <= _age_seconds(str(datetime.now())) < 5
+    assert _age_seconds("2020-01-01T00:00:00Z") > 86400
+    assert _age_seconds(None) is None
 
 
 class TestSlug:

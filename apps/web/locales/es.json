@@ -20207,7 +20207,8 @@
         "empty_title": "Aún no se ha entregado nada",
         "empty_desc": "Cada mensaje que envía una regla aparece aquí con su estado y reintentos.",
         "no_match": "Ninguna entrega coincide con estos filtros.",
-        "attempts_many": "{{count}} intentos"
+        "attempts_many": "{{count}} intentos",
+        "summary": "Lo que se envió"
       },
       "prefs": {
         "title": "Cómo te enteras de cada grupo",
@@ -30073,7 +30074,9 @@
       "start_blank": "Empezar en blanco",
       "start_blank_desc": "Una academia vacía. La lista de configuración te guía en el resto.",
       "trial_note_after": "No hace falta tarjeta. Después puedes conservarlo, elegir otro plan o quedarte en Gratis.",
-      "trial_note": "Tienes {{days}} días de {{plan}}, gratis."
+      "trial_note": "Tienes {{days}} días de {{plan}}, gratis.",
+      "just_created": "Acabas de crear {{name}}.",
+      "just_created_open": "Abrirla"
     },
     "checklist": {
       "full_guide": "Guía completa",
