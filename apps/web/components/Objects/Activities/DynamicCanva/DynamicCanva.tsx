@@ -4,7 +4,6 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import TableOfContents from './TableOfContents'
 import { getActivityExtensions, normalizeActivityContent } from './activityExtensions'
-import AICanvaToolkit from './AI/AICanvaToolkit'
 import BlockThemeScope, { type BlockThemeRequest } from '@components/Objects/Activities/BlockTheme/BlockThemeScope'
 
 interface Editor {
@@ -52,7 +51,6 @@ function Canva(props: Editor) {
   return (
     <EditorOptionsProvider options={{ isEditable: false }}>
       <BlockThemeScope theme={props.theme} className="w-full mx-auto">
-        <AICanvaToolkit activity={props.activity} editor={editor} />
         <div className="canva-content-wrapper" data-lesson-content="">
           {!props.hideTableOfContents && <TableOfContents editor={editor} />}
           <EditorContent editor={editor} />
