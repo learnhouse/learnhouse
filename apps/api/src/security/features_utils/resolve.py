@@ -22,11 +22,15 @@ ORG_TOGGLEABLE_FEATURES = {
     "playgrounds", "podcasts", "newsletter",
 }
 
-# Features that are always on (no admin toggle, cannot be disabled)
-ALWAYS_ON_FEATURES = {"courses", "usergroups", "assignments"}
+# Features that are always on (no admin toggle, cannot be disabled).
+# User groups are not: they need the Standard plan (require_plan_for_usergroups
+# on the /usergroups routers), and resolving them as always-on made the web
+# offer them to Free orgs only for every call to come back 403.
+ALWAYS_ON_FEATURES = {"courses", "assignments"}
 
-# Always-on features that have plan-based limits (not unlimited)
-# These are always enabled but their limit comes from the plan config
+# Always-on features that have plan-based limits (not unlimited). These are
+# always enabled but their limit comes from the plan config. Every always-on
+# feature has one today.
 ALWAYS_ON_WITH_LIMITS = {"courses", "assignments"}
 
 # All known features
@@ -180,10 +184,6 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
     """
     mode = get_deployment_mode()
     required_plan = FEATURE_PLAN_REQUIREMENTS.get(feature)
-
-    # Always-on features without limits: enabled in all modes, unlimited, no admin toggle
-    if feature in ALWAYS_ON_FEATURES and feature not in ALWAYS_ON_WITH_LIMITS:
-        return _state(True, True, 0, required_plan)
 
     # Always-on features WITH plan limits: enabled in all modes, but limit comes from plan
     if feature in ALWAYS_ON_WITH_LIMITS:

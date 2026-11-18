@@ -86,12 +86,19 @@ export function getErrorMessage(detail: unknown, fallback: string, t?: Translate
 //   - "Usage Limit has been reached for {Feature}": plan quota hit
 //   - "{Feature} is not enabled for this organization": feature gated to a
 //     higher plan
+//   - "{Feature} requires a Pro plan or higher" / "requires the Standard
+//     plan" / "needs the Standard plan": the plan gates (require_plan,
+//     check_org_plan, check_feature_access)
 //   - { code: "ACCOUNT_TOO_NEW" }: free-tier age gate (upgrading lifts it)
+const PLAN_REQUIREMENT =
+  /\b(?:requires?|needs?)\s+(?:an?\s+|the\s+)?(?:personal|standard|pro|business|enterprise)\b[^.]{0,40}?\bplans?\b/i
+
 export function isPlanLimitError(detail: unknown): boolean {
   if (typeof detail === 'string') {
     return (
       /Usage Limit has been reached/i.test(detail) ||
-      /is not enabled for this organization/i.test(detail)
+      /(?:is|are) not enabled for this organization/i.test(detail) ||
+      PLAN_REQUIREMENT.test(detail)
     )
   }
   if (detail && typeof detail === 'object') {

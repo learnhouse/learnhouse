@@ -21,6 +21,7 @@ import { cloneCourse, deleteCourseFromBackend, updateCourse } from '@services/co
 import type { ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
 import { queryKeys } from '@/lib/query/keys'
+import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 
 // Admin-only, and only opened from a menu.
 const ManageAccessPopover = dynamic(() => import('@components/Dashboard/Library/ManageAccessPopover'), { ssr: false })
@@ -116,6 +117,7 @@ export function CourseActionsMenu({
   const queryClient = useQueryClient()
   const patchCourse = usePatchCourseInCache(orgslug)
   const [confirm, setConfirm] = React.useState<'delete' | 'clone' | null>(null)
+  const { handlePlanLimit } = useUpgradeModal()
   const [accessOpen, setAccessOpen] = React.useState(false)
 
   const togglePublished = async () => {
@@ -150,6 +152,9 @@ export function CourseActionsMenu({
       if (result.success) {
         toast.success(t('courses.course_cloned_success'), { id: toastId })
         onChanged()
+      } else if (handlePlanLimit(result, { source: 'course_clone', feature: 'courses', requiredPlan: 'standard' })) {
+        // At the course limit: the upgrade prompt replaces the error toast.
+        toast.dismiss(toastId)
       } else {
         toast.error(result.HTTPmessage || t('courses.course_cloned_error'), { id: toastId })
       }

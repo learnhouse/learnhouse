@@ -667,10 +667,6 @@ class TestGateMatrix:
             resolved = resolve_feature(feature, {"config_version": "2.0", "plan": plan})
             hierarchy = plan_meets_requirement(plan, FEATURE_PLAN_REQUIREMENTS[feature])
         configured = PLAN_FEATURE_CONFIGS[plan]["features"][feature]["enabled"]
-        if feature == "usergroups":
-            # Always on in the resolver (basic groups); the management API is gated.
-            assert resolved["enabled"]
-            return
         assert resolved["available"] == configured, (plan, feature)
         if feature == "boards" and plan == "standard":
             assert hierarchy and not configured
