@@ -18119,12 +18119,14 @@
         "ai_costs": "Sağlayıcı maliyeti ve tahsil edilen krediler, marjlar",
         "deliverability": "Bülten gönderim sağlığı ve limitleri",
         "demos": "Potansiyel müşterilere özel demo örnekleri",
-        "impersonations": "Kimin bir üye olarak görüntülediği ve geçmiş"
+        "impersonations": "Kimin bir üye olarak görüntülediği ve geçmiş",
+        "channels": "Discord, Slack ve webhook uyarıları"
       },
       "ai_costs": "Yapay zekâ maliyetleri",
       "deliverability": "Teslim edilebilirlik",
       "demos": "Demolar",
-      "impersonations": "Kimliğe bürünmeler"
+      "impersonations": "Kimliğe bürünmeler",
+      "channels": "Kanallar"
     },
     "search": {
       "trigger": "Ara…",
@@ -19603,7 +19605,8 @@
         "token": "API belirteçleri",
         "security": "Güvenlik",
         "follow": "Takip edilen organizasyonlar",
-        "system": "Sistem"
+        "system": "Sistem",
+        "user": "Kayıtlar"
       },
       "modes": {
         "instant": "Anında",
@@ -19719,7 +19722,19 @@
         "err_secret": "Gizli anahtar en az 16 karakter olmalı",
         "err_notion_token": "Entegrasyon gizli anahtarını yapıştırın (ntn_… veya secret_…)",
         "err_database": "Veritabanı bağlantısını ya da 32 karakterlik kimliğini yapıştırın",
-        "err_recipients": "En az bir rol veya kişi seçin"
+        "err_recipients": "En az bir rol veya kişi seçin",
+        "show_emails": "Tam e-posta adreslerini göster",
+        "show_emails_hint": "Kapalıyken mesajlardaki adresler gizlenir (a•••@example.com).",
+        "events": "Gönderilecek olaylar",
+        "events_hint": "Varsayılanlar önceden seçili",
+        "events_none": "Olay seçilmedi. Bu kanal yalnızca kuralların gönderdiklerini alır.",
+        "routing_none": "Henüz olay seçilmedi",
+        "events_count_one": "{{count}} olay",
+        "events_count_other": "{{count}} olay",
+        "routing_summary_one": "{{count}} olay alır",
+        "routing_summary_other": "{{count}} olay alır",
+        "other_rules_one": "{{count}} kural daha",
+        "other_rules_other": "{{count}} kural daha"
       },
       "rules": {
         "intro": "Kurallar, hangi olayların, hangi organizasyonlar için, ne sıklıkla ve nereye bildirime dönüşeceğini belirler.",
@@ -19777,7 +19792,8 @@
         "err_name": "Kurala bir ad verin",
         "err_events": "En az bir olay seçin",
         "err_channel": "Bir kanal seçin",
-        "err_quiet": "İki saat için de SS:DD kullanın"
+        "err_quiet": "İki saat için de SS:DD kullanın",
+        "channel_managed": "Kanal olayları"
       },
       "deliveries": {
         "title": "Teslimat #{{id}}",
@@ -20945,6 +20961,12 @@
       "status_switched": "Geçiş yapıldı",
       "status_target_changed": "Üye değişti",
       "status_impersonator_changed": "Erişim değişti"
+    },
+    "channels": {
+      "title": "Kanallar",
+      "subtitle": "Platform uyarılarını Discord, Slack, Notion, bir webhook veya e-postaya gönderin ve her kanalın hangi olayları alacağını seçin.",
+      "rules_link": "Gelişmiş kurallar",
+      "deliveries_link": "Teslimat günlüğü"
     }
   },
   "background_tasks": {

@@ -18833,12 +18833,14 @@
         "ai_costs": "Вартість у провайдера та нараховані кредити, маржа",
         "deliverability": "Стан і ліміти надсилання розсилок",
         "demos": "Окремі демо-екземпляри для потенційних клієнтів",
-        "impersonations": "Хто зараз переглядає від імені учасника, та історія"
+        "impersonations": "Хто зараз переглядає від імені учасника, та історія",
+        "channels": "Сповіщення в Discord, Slack і вебхуки"
       },
       "ai_costs": "Витрати на ШІ",
       "deliverability": "Доставлюваність",
       "demos": "Демо",
-      "impersonations": "Вхід від імені"
+      "impersonations": "Вхід від імені",
+      "channels": "Канали"
     },
     "search": {
       "trigger": "Пошук…",
@@ -20397,7 +20399,8 @@
         "token": "API-токени",
         "security": "Безпека",
         "follow": "Організації, за якими стежу",
-        "system": "Система"
+        "system": "Система",
+        "user": "Реєстрації"
       },
       "modes": {
         "instant": "Миттєво",
@@ -20523,7 +20526,25 @@
         "err_secret": "Секрет має містити щонайменше 16 символів",
         "err_notion_token": "Вставте секрет інтеграції (ntn_… або secret_…)",
         "err_database": "Вставте посилання на базу даних або її 32-символьний id",
-        "err_recipients": "Виберіть принаймні одну роль або особу"
+        "err_recipients": "Виберіть принаймні одну роль або особу",
+        "show_emails": "Показувати адреси пошти повністю",
+        "show_emails_hint": "Якщо вимкнено, адреси в повідомленнях приховано (a•••@example.com).",
+        "events": "Події для надсилання",
+        "events_hint": "Типові вже вибрано",
+        "events_none": "Події не вибрано. Канал отримує лише те, що йому надсилають правила.",
+        "routing_none": "Події ще не вибрано",
+        "events_count_one": "{{count}} подія",
+        "events_count_few": "{{count}} події",
+        "events_count_many": "{{count}} подій",
+        "events_count_other": "{{count}} події",
+        "routing_summary_one": "Отримує {{count}} подію",
+        "routing_summary_few": "Отримує {{count}} події",
+        "routing_summary_many": "Отримує {{count}} подій",
+        "routing_summary_other": "Отримує {{count}} події",
+        "other_rules_one": "ще {{count}} правило",
+        "other_rules_few": "ще {{count}} правила",
+        "other_rules_many": "ще {{count}} правил",
+        "other_rules_other": "ще {{count}} правила"
       },
       "rules": {
         "intro": "Правила вирішують, які події стають сповіщеннями, для яких організацій, як часто і куди вони надходять.",
@@ -20581,7 +20602,8 @@
         "err_name": "Дайте правилу назву",
         "err_events": "Виберіть принаймні одну подію",
         "err_channel": "Виберіть канал",
-        "err_quiet": "Використайте ГГ:ХХ для обох значень часу"
+        "err_quiet": "Використайте ГГ:ХХ для обох значень часу",
+        "channel_managed": "Події каналу"
       },
       "deliveries": {
         "title": "Доставка №{{id}}",
@@ -21817,6 +21839,12 @@
       "status_switched": "Перемкнено",
       "status_target_changed": "Учасника змінено",
       "status_impersonator_changed": "Доступ змінено"
+    },
+    "channels": {
+      "title": "Канали",
+      "subtitle": "Надсилайте сповіщення платформи в Discord, Slack, Notion, вебхук або на пошту й обирайте, які події отримує кожен канал.",
+      "rules_link": "Розширені правила",
+      "deliveries_link": "Журнал доставки"
     }
   },
   "background_tasks": {

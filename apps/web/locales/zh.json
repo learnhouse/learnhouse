@@ -18080,12 +18080,14 @@
         "ai_costs": "服务商成本与已收积分对比、利润率",
         "deliverability": "新闻通讯的发送健康状况和限制",
         "demos": "专属潜在客户演示实例",
-        "impersonations": "谁正在以成员身份查看，以及历史记录"
+        "impersonations": "谁正在以成员身份查看，以及历史记录",
+        "channels": "Discord、Slack 和 Webhook 提醒"
       },
       "ai_costs": "AI 成本",
       "deliverability": "送达率",
       "demos": "演示",
-      "impersonations": "模拟"
+      "impersonations": "模拟",
+      "channels": "渠道"
     },
     "search": {
       "trigger": "搜索…",
@@ -19564,7 +19566,8 @@
         "token": "API 令牌",
         "security": "安全",
         "follow": "已关注的组织",
-        "system": "系统"
+        "system": "系统",
+        "user": "注册"
       },
       "modes": {
         "instant": "即时",
@@ -19680,7 +19683,19 @@
         "err_secret": "密钥至少需要 16 个字符",
         "err_notion_token": "请粘贴集成密钥（ntn_… 或 secret_…）",
         "err_database": "请粘贴数据库链接或其 32 位 ID",
-        "err_recipients": "请至少选择一个角色或一个人"
+        "err_recipients": "请至少选择一个角色或一个人",
+        "show_emails": "显示完整邮箱地址",
+        "show_emails_hint": "关闭时，消息中的地址会被隐藏（a•••@example.com）。",
+        "events": "要发送的事件",
+        "events_hint": "已预选默认事件",
+        "events_none": "未选择事件。此渠道只接收规则发送给它的内容。",
+        "routing_none": "尚未选择事件",
+        "events_count_one": "{{count}} 个事件",
+        "events_count_other": "{{count}} 个事件",
+        "routing_summary_one": "接收 {{count}} 个事件",
+        "routing_summary_other": "接收 {{count}} 个事件",
+        "other_rules_one": "另有 {{count}} 条规则",
+        "other_rules_other": "另有 {{count}} 条规则"
       },
       "rules": {
         "intro": "规则决定哪些事件会成为通知、针对哪些组织、频率如何以及发送到哪里。",
@@ -19738,7 +19753,8 @@
         "err_name": "请为规则命名",
         "err_events": "请至少选择一个事件",
         "err_channel": "请选择一个渠道",
-        "err_quiet": "两个时间都请使用 HH:MM 格式"
+        "err_quiet": "两个时间都请使用 HH:MM 格式",
+        "channel_managed": "渠道事件"
       },
       "deliveries": {
         "title": "投递 #{{id}}",
@@ -20906,6 +20922,12 @@
       "status_switched": "已切换",
       "status_target_changed": "成员已变更",
       "status_impersonator_changed": "权限已变更"
+    },
+    "channels": {
+      "title": "渠道",
+      "subtitle": "将平台提醒发送到 Discord、Slack、Notion、Webhook 或邮件，并为每个渠道选择要接收的事件。",
+      "rules_link": "高级规则",
+      "deliveries_link": "投递日志"
     }
   },
   "background_tasks": {

@@ -18078,12 +18078,14 @@
         "ai_costs": "Chi phí nhà cung cấp so với credit đã tính, biên lợi nhuận",
         "deliverability": "Tình trạng và giới hạn gửi bản tin",
         "demos": "Các phiên bản demo riêng dành cho khách hàng tiềm năng",
-        "impersonations": "Ai đang xem với tư cách thành viên, và lịch sử"
+        "impersonations": "Ai đang xem với tư cách thành viên, và lịch sử",
+        "channels": "Cảnh báo qua Discord, Slack và webhook"
       },
       "ai_costs": "Chi phí AI",
       "deliverability": "Khả năng gửi thư",
       "demos": "Bản demo",
-      "impersonations": "Đóng vai"
+      "impersonations": "Đóng vai",
+      "channels": "Kênh"
     },
     "search": {
       "trigger": "Tìm kiếm…",
@@ -19562,7 +19564,8 @@
         "token": "Token API",
         "security": "Bảo mật",
         "follow": "Tổ chức đang theo dõi",
-        "system": "Hệ thống"
+        "system": "Hệ thống",
+        "user": "Đăng ký"
       },
       "modes": {
         "instant": "Tức thì",
@@ -19678,7 +19681,19 @@
         "err_secret": "Bí mật cần ít nhất 16 ký tự",
         "err_notion_token": "Dán bí mật tích hợp (ntn_… hoặc secret_…)",
         "err_database": "Dán liên kết cơ sở dữ liệu hoặc id 32 ký tự của nó",
-        "err_recipients": "Hãy chọn ít nhất một vai trò hoặc một người"
+        "err_recipients": "Hãy chọn ít nhất một vai trò hoặc một người",
+        "show_emails": "Hiện đầy đủ địa chỉ email",
+        "show_emails_hint": "Khi tắt, địa chỉ trong tin nhắn sẽ được ẩn (a•••@example.com).",
+        "events": "Sự kiện sẽ gửi",
+        "events_hint": "Đã chọn sẵn mặc định",
+        "events_none": "Chưa chọn sự kiện. Kênh này chỉ nhận những gì quy tắc gửi tới.",
+        "routing_none": "Chưa chọn sự kiện nào",
+        "events_count_one": "{{count}} sự kiện",
+        "events_count_other": "{{count}} sự kiện",
+        "routing_summary_one": "Nhận {{count}} sự kiện",
+        "routing_summary_other": "Nhận {{count}} sự kiện",
+        "other_rules_one": "Thêm {{count}} quy tắc",
+        "other_rules_other": "Thêm {{count}} quy tắc"
       },
       "rules": {
         "intro": "Quy tắc quyết định sự kiện nào trở thành thông báo, cho tổ chức nào, tần suất ra sao và gửi đến đâu.",
@@ -19736,7 +19751,8 @@
         "err_name": "Hãy đặt tên cho quy tắc",
         "err_events": "Hãy chọn ít nhất một sự kiện",
         "err_channel": "Hãy chọn một kênh",
-        "err_quiet": "Dùng HH:MM cho cả hai mốc giờ"
+        "err_quiet": "Dùng HH:MM cho cả hai mốc giờ",
+        "channel_managed": "Sự kiện của kênh"
       },
       "deliveries": {
         "title": "Lượt gửi #{{id}}",
@@ -20904,6 +20920,12 @@
       "status_switched": "Đã chuyển",
       "status_target_changed": "Thành viên đã thay đổi",
       "status_impersonator_changed": "Quyền truy cập đã thay đổi"
+    },
+    "channels": {
+      "title": "Kênh",
+      "subtitle": "Gửi cảnh báo của nền tảng tới Discord, Slack, Notion, webhook hoặc email, và chọn sự kiện mà từng kênh nhận.",
+      "rules_link": "Quy tắc nâng cao",
+      "deliveries_link": "Nhật ký gửi"
     }
   },
   "background_tasks": {

@@ -18080,12 +18080,14 @@
         "ai_costs": "プロバイダー費用と請求クレジット、マージン",
         "deliverability": "ニュースレター配信の状態と上限",
         "demos": "見込み客専用のデモインスタンス",
-        "impersonations": "メンバーとして表示している人と、その履歴"
+        "impersonations": "メンバーとして表示している人と、その履歴",
+        "channels": "Discord・Slack・Webhook への通知"
       },
       "ai_costs": "AIコスト",
       "deliverability": "到達率",
       "demos": "デモ",
-      "impersonations": "なりすまし"
+      "impersonations": "なりすまし",
+      "channels": "チャンネル"
     },
     "search": {
       "trigger": "検索…",
@@ -19564,7 +19566,8 @@
         "token": "APIトークン",
         "security": "セキュリティ",
         "follow": "フォロー中の組織",
-        "system": "システム"
+        "system": "システム",
+        "user": "新規登録"
       },
       "modes": {
         "instant": "即時",
@@ -19680,7 +19683,19 @@
         "err_secret": "シークレットは16文字以上が必要です",
         "err_notion_token": "インテグレーションのシークレットを貼り付けてください（ntn_… または secret_…）",
         "err_database": "データベースのリンク、または32文字のIDを貼り付けてください",
-        "err_recipients": "ロールまたはユーザーを1つ以上選択してください"
+        "err_recipients": "ロールまたはユーザーを1つ以上選択してください",
+        "show_emails": "メールアドレスを省略せずに表示",
+        "show_emails_hint": "オフのときはメッセージ内のアドレスを伏せ字にします（a•••@example.com）。",
+        "events": "送信するイベント",
+        "events_hint": "既定のイベントが選択済みです",
+        "events_none": "イベントが選ばれていません。このチャンネルにはルールが送るものだけが届きます。",
+        "routing_none": "イベントはまだ選ばれていません",
+        "events_count_one": "{{count}}件のイベント",
+        "events_count_other": "{{count}}件のイベント",
+        "routing_summary_one": "{{count}}件のイベントを受信",
+        "routing_summary_other": "{{count}}件のイベントを受信",
+        "other_rules_one": "ほか{{count}}件のルール",
+        "other_rules_other": "ほか{{count}}件のルール"
       },
       "rules": {
         "intro": "ルールは、どのイベントを通知にするか、どの組織を対象にするか、頻度、送信先を決めます。",
@@ -19738,7 +19753,8 @@
         "err_name": "ルール名を入力してください",
         "err_events": "イベントを1つ以上選択してください",
         "err_channel": "チャンネルを選択してください",
-        "err_quiet": "両方の時刻をHH:MM形式で入力してください"
+        "err_quiet": "両方の時刻をHH:MM形式で入力してください",
+        "channel_managed": "チャンネルのイベント"
       },
       "deliveries": {
         "title": "配信 #{{id}}",
@@ -20906,6 +20922,12 @@
       "status_switched": "切り替え済み",
       "status_target_changed": "メンバー変更",
       "status_impersonator_changed": "アクセス変更"
+    },
+    "channels": {
+      "title": "チャンネル",
+      "subtitle": "プラットフォームのアラートを Discord、Slack、Notion、Webhook、メールに送り、チャンネルごとに受け取るイベントを選びます。",
+      "rules_link": "詳細ルール",
+      "deliveries_link": "配信ログ"
     }
   },
   "background_tasks": {

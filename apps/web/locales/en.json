@@ -18146,12 +18146,14 @@
         "ai_costs": "Provider cost vs credits charged, margins",
         "deliverability": "Newsletter sending health and limits",
         "demos": "Dedicated prospect demo instances",
-        "impersonations": "Who is viewing as a member, and the history"
+        "impersonations": "Who is viewing as a member, and the history",
+        "channels": "Discord, Slack and webhook alerts"
       },
       "ai_costs": "AI costs",
       "deliverability": "Deliverability",
       "demos": "Demos",
-      "impersonations": "Impersonations"
+      "impersonations": "Impersonations",
+      "channels": "Channels"
     },
     "search": {
       "trigger": "Search…",
@@ -19630,7 +19632,8 @@
         "token": "API tokens",
         "security": "Security",
         "follow": "Followed orgs",
-        "system": "System"
+        "system": "System",
+        "user": "Sign-ups"
       },
       "modes": {
         "instant": "Instant",
@@ -19746,7 +19749,19 @@
         "err_secret": "The secret needs at least 16 characters",
         "err_notion_token": "Paste the integration secret (ntn_… or secret_…)",
         "err_database": "Paste the database link or its 32-character id",
-        "err_recipients": "Pick at least one role or person"
+        "err_recipients": "Pick at least one role or person",
+        "show_emails": "Show full email addresses",
+        "show_emails_hint": "When off, addresses in messages are masked (a•••@example.com).",
+        "events": "Events to send",
+        "events_hint": "Defaults are pre-selected",
+        "events_none": "No events picked. This channel only gets what rules send to it.",
+        "routing_none": "No events picked yet",
+        "events_count_one": "{{count}} event",
+        "events_count_other": "{{count}} events",
+        "routing_summary_one": "Gets {{count}} event",
+        "routing_summary_other": "Gets {{count}} events",
+        "other_rules_one": "{{count}} more rule",
+        "other_rules_other": "{{count}} more rules"
       },
       "rules": {
         "intro": "Rules decide which events become notifications, for which orgs, how often, and where they go.",
@@ -19804,7 +19819,8 @@
         "err_name": "Give the rule a name",
         "err_events": "Pick at least one event",
         "err_channel": "Pick a channel",
-        "err_quiet": "Use HH:MM for both times"
+        "err_quiet": "Use HH:MM for both times",
+        "channel_managed": "Channel events"
       },
       "deliveries": {
         "title": "Delivery #{{id}}",
@@ -20972,6 +20988,12 @@
       "status_switched": "Switched",
       "status_target_changed": "Member changed",
       "status_impersonator_changed": "Access changed"
+    },
+    "channels": {
+      "title": "Channels",
+      "subtitle": "Send platform alerts to Discord, Slack, Notion, a webhook or email, and pick which events each channel gets.",
+      "rules_link": "Advanced rules",
+      "deliveries_link": "Delivery log"
     }
   },
   "background_tasks": {

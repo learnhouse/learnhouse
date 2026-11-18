@@ -18456,12 +18456,14 @@
         "ai_costs": "Coût fournisseur vs crédits facturés, marges",
         "deliverability": "État et limites d'envoi des newsletters",
         "demos": "Instances de démo dédiées aux prospects",
-        "impersonations": "Qui consulte en tant que membre, et l'historique"
+        "impersonations": "Qui consulte en tant que membre, et l'historique",
+        "channels": "Alertes Discord, Slack et webhook"
       },
       "ai_costs": "Coûts IA",
       "deliverability": "Délivrabilité",
       "demos": "Démos",
-      "impersonations": "Emprunts d'identité"
+      "impersonations": "Emprunts d'identité",
+      "channels": "Canaux"
     },
     "search": {
       "trigger": "Rechercher…",
@@ -19980,7 +19982,8 @@
         "token": "Jetons API",
         "security": "Sécurité",
         "follow": "Organisations suivies",
-        "system": "Système"
+        "system": "Système",
+        "user": "Inscriptions"
       },
       "modes": {
         "instant": "Instantané",
@@ -20101,7 +20104,22 @@
         "err_database": "Collez le lien de la base de données ou son identifiant de 32 caractères",
         "err_recipients": "Choisissez au moins un rôle ou une personne",
         "failures_many": "{{count}} envois échoués d’affilée",
-        "people_count_many": "{{count}} personnes"
+        "people_count_many": "{{count}} personnes",
+        "show_emails": "Afficher les adresses e-mail complètes",
+        "show_emails_hint": "Désactivé : les adresses sont masquées dans les messages (a•••@example.com).",
+        "events": "Événements à envoyer",
+        "events_hint": "Les valeurs par défaut sont présélectionnées",
+        "events_none": "Aucun événement choisi. Ce canal ne reçoit que ce que les règles lui envoient.",
+        "routing_none": "Aucun événement choisi",
+        "events_count_one": "{{count}} événement",
+        "events_count_other": "{{count}} événements",
+        "events_count_many": "{{count}} événements",
+        "routing_summary_one": "Reçoit {{count}} événement",
+        "routing_summary_other": "Reçoit {{count}} événements",
+        "routing_summary_many": "Reçoit {{count}} événements",
+        "other_rules_one": "{{count}} autre règle",
+        "other_rules_other": "{{count}} autres règles",
+        "other_rules_many": "{{count}} autres règles"
       },
       "rules": {
         "intro": "Les règles décident quels événements deviennent des notifications, pour quelles organisations, à quelle fréquence et où elles vont.",
@@ -20159,7 +20177,8 @@
         "err_name": "Donnez un nom à la règle",
         "err_events": "Choisissez au moins un événement",
         "err_channel": "Choisissez un canal",
-        "err_quiet": "Utilisez HH:MM pour les deux heures"
+        "err_quiet": "Utilisez HH:MM pour les deux heures",
+        "channel_managed": "Événements du canal"
       },
       "deliveries": {
         "title": "Envoi n° {{id}}",
@@ -21360,6 +21379,12 @@
       "status_switched": "Changé",
       "status_target_changed": "Membre modifié",
       "status_impersonator_changed": "Accès modifié"
+    },
+    "channels": {
+      "title": "Canaux",
+      "subtitle": "Envoyez les alertes de la plateforme vers Discord, Slack, Notion, un webhook ou par e-mail, et choisissez les événements de chaque canal.",
+      "rules_link": "Règles avancées",
+      "deliveries_link": "Journal des envois"
     }
   },
   "background_tasks": {
