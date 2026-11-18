@@ -18833,12 +18833,14 @@
         "ai_costs": "Koszt dostawcy a naliczone kredyty, marże",
         "deliverability": "Stan i limity wysyłki newsletterów",
         "demos": "Dedykowane instancje demo dla potencjalnych klientów",
-        "impersonations": "Kto teraz ogląda jako członek, oraz historia"
+        "impersonations": "Kto teraz ogląda jako członek, oraz historia",
+        "channels": "Powiadomienia Discord, Slack i webhook"
       },
       "ai_costs": "Koszty AI",
       "deliverability": "Dostarczalność",
       "demos": "Dema",
-      "impersonations": "Działanie jako członek"
+      "impersonations": "Działanie jako członek",
+      "channels": "Kanały"
     },
     "search": {
       "trigger": "Szukaj…",
@@ -20397,7 +20399,8 @@
         "token": "Tokeny API",
         "security": "Bezpieczeństwo",
         "follow": "Obserwowane organizacje",
-        "system": "System"
+        "system": "System",
+        "user": "Rejestracje"
       },
       "modes": {
         "instant": "Natychmiast",
@@ -20523,7 +20526,25 @@
         "err_secret": "Sekret musi mieć co najmniej 16 znaków",
         "err_notion_token": "Wklej sekret integracji (ntn_… lub secret_…)",
         "err_database": "Wklej link do bazy danych lub jej 32-znakowe ID",
-        "err_recipients": "Wybierz co najmniej jedną rolę lub osobę"
+        "err_recipients": "Wybierz co najmniej jedną rolę lub osobę",
+        "show_emails": "Pokazuj pełne adresy e-mail",
+        "show_emails_hint": "Wyłączone: adresy w wiadomościach są maskowane (a•••@example.com).",
+        "events": "Zdarzenia do wysłania",
+        "events_hint": "Domyślne są już zaznaczone",
+        "events_none": "Nie wybrano zdarzeń. Ten kanał dostaje tylko to, co wyślą do niego reguły.",
+        "routing_none": "Nie wybrano jeszcze zdarzeń",
+        "events_count_one": "{{count}} zdarzenie",
+        "events_count_few": "{{count}} zdarzenia",
+        "events_count_many": "{{count}} zdarzeń",
+        "events_count_other": "{{count}} zdarzenia",
+        "routing_summary_one": "Otrzymuje {{count}} zdarzenie",
+        "routing_summary_few": "Otrzymuje {{count}} zdarzenia",
+        "routing_summary_many": "Otrzymuje {{count}} zdarzeń",
+        "routing_summary_other": "Otrzymuje {{count}} zdarzenia",
+        "other_rules_one": "jeszcze {{count}} reguła",
+        "other_rules_few": "jeszcze {{count}} reguły",
+        "other_rules_many": "jeszcze {{count}} reguł",
+        "other_rules_other": "jeszcze {{count}} reguły"
       },
       "rules": {
         "intro": "Reguły decydują, które zdarzenia stają się powiadomieniami, dla jakich organizacji, jak często i dokąd trafiają.",
@@ -20581,7 +20602,8 @@
         "err_name": "Nadaj regule nazwę",
         "err_events": "Wybierz co najmniej jedno zdarzenie",
         "err_channel": "Wybierz kanał",
-        "err_quiet": "Użyj formatu GG:MM dla obu godzin"
+        "err_quiet": "Użyj formatu GG:MM dla obu godzin",
+        "channel_managed": "Zdarzenia kanału"
       },
       "deliveries": {
         "title": "Dostarczenie #{{id}}",
@@ -21817,6 +21839,12 @@
       "status_switched": "Przełączono",
       "status_target_changed": "Zmieniono członka",
       "status_impersonator_changed": "Zmieniono dostęp"
+    },
+    "channels": {
+      "title": "Kanały",
+      "subtitle": "Wysyłaj alerty platformy na Discord, Slack, Notion, webhook lub e-mail i wybierz, jakie zdarzenia dostaje każdy kanał.",
+      "rules_link": "Reguły zaawansowane",
+      "deliveries_link": "Dziennik wysyłek"
     }
   },
   "background_tasks": {

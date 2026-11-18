@@ -110,7 +110,22 @@ async def on_plan_changed(
     """React to a plan change that was just written. Never raises."""
     if deployment_mode.get_deployment_mode() != "saas" or not new_plan or old_plan == new_plan:
         return
+    from src.core.ee_hooks import audit_event
     from src.services.plans import downgrade, notify, trial
+
+    try:
+        # One audit row per plan move, whatever the path: the Backoffice turns
+        # it into its upgrade/downgrade/cancel alerts (a no-op without EE).
+        in_trial = await trial.get_active_trial(db_session, org_id) is not None
+        audit_event(
+            None, action="billing.plan.transition", org_id=org_id,
+            target_type="organization", target_id=org_id,
+            changes={"plan": {"from": old_plan, "to": new_plan}},
+            details={"reason": reason, "trial": in_trial},
+        )
+    except Exception:
+        logger.exception("Recording the plan move of org %s failed", org_id)
+        await db_session.rollback()
 
     try:
         await trial.settle_on_plan_change(db_session, org_id, new_plan, reason)

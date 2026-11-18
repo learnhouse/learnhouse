@@ -19424,12 +19424,14 @@
         "settings": "مفاتيح على مستوى المنصة",
         "deliverability": "سلامة إرسال النشرات البريدية وحدوده",
         "demos": "نسخ تجريبية مخصصة للعملاء المحتملين",
-        "impersonations": "من يعرض المنصة باسم عضو، والسجل"
+        "impersonations": "من يعرض المنصة باسم عضو، والسجل",
+        "channels": "تنبيهات Discord وSlack وwebhook"
       },
       "group_organizations": "المؤسسات",
       "deliverability": "قابلية التسليم",
       "demos": "العروض التجريبية",
-      "impersonations": "عمليات انتحال الهوية"
+      "impersonations": "عمليات انتحال الهوية",
+      "channels": "القنوات"
     },
     "search": {
       "trigger": "بحث…",
@@ -21068,7 +21070,8 @@
         "token": "رموز API",
         "security": "الأمان",
         "follow": "المنظمات المتابَعة",
-        "system": "النظام"
+        "system": "النظام",
+        "user": "التسجيلات"
       },
       "modes": {
         "instant": "فوري",
@@ -21204,7 +21207,31 @@
         "err_secret": "يجب أن يتكون السر من 16 حرفًا على الأقل",
         "err_notion_token": "الصق سر التكامل (ntn_… أو secret_…)",
         "err_database": "الصق رابط قاعدة البيانات أو معرّفها المكوّن من 32 حرفًا",
-        "err_recipients": "اختر دورًا أو شخصًا واحدًا على الأقل"
+        "err_recipients": "اختر دورًا أو شخصًا واحدًا على الأقل",
+        "show_emails": "إظهار عناوين البريد كاملة",
+        "show_emails_hint": "عند الإيقاف تُخفى العناوين في الرسائل (a•••@example.com).",
+        "events": "الأحداث المرسلة",
+        "events_hint": "القيم الافتراضية محددة مسبقًا",
+        "events_none": "لم تُختر أحداث. تتلقى هذه القناة ما ترسله القواعد إليها فقط.",
+        "routing_none": "لم تُختر أحداث بعد",
+        "events_count_zero": "لا أحداث",
+        "events_count_one": "حدث واحد",
+        "events_count_two": "حدثان",
+        "events_count_few": "{{count}} أحداث",
+        "events_count_many": "{{count}} حدثًا",
+        "events_count_other": "{{count}} حدث",
+        "routing_summary_zero": "لا تتلقى أحداثًا",
+        "routing_summary_one": "تتلقى حدثًا واحدًا",
+        "routing_summary_two": "تتلقى حدثين",
+        "routing_summary_few": "تتلقى {{count}} أحداث",
+        "routing_summary_many": "تتلقى {{count}} حدثًا",
+        "routing_summary_other": "تتلقى {{count}} حدث",
+        "other_rules_zero": "لا قواعد أخرى",
+        "other_rules_one": "قاعدة أخرى",
+        "other_rules_two": "قاعدتان أخريان",
+        "other_rules_few": "{{count}} قواعد أخرى",
+        "other_rules_many": "{{count}} قاعدة أخرى",
+        "other_rules_other": "{{count}} قاعدة أخرى"
       },
       "rules": {
         "intro": "تقرر القواعد أي الأحداث تصبح إشعارات، ولأي منظمات، وكم مرة، وإلى أين تذهب.",
@@ -21262,7 +21289,8 @@
         "err_name": "أعطِ القاعدة اسمًا",
         "err_events": "اختر حدثًا واحدًا على الأقل",
         "err_channel": "اختر قناة",
-        "err_quiet": "استخدم HH:MM لكلا الوقتين"
+        "err_quiet": "استخدم HH:MM لكلا الوقتين",
+        "channel_managed": "أحداث القناة"
       },
       "deliveries": {
         "title": "التسليم رقم {{id}}",
@@ -22550,6 +22578,12 @@
       "status_switched": "تم التبديل",
       "status_target_changed": "تغيّر العضو",
       "status_impersonator_changed": "تغيّر الوصول"
+    },
+    "channels": {
+      "title": "القنوات",
+      "subtitle": "أرسل تنبيهات المنصة إلى Discord أو Slack أو Notion أو webhook أو البريد الإلكتروني، واختر الأحداث التي تصل إلى كل قناة.",
+      "rules_link": "قواعد متقدمة",
+      "deliveries_link": "سجل التسليم"
     }
   },
   "background_tasks": {

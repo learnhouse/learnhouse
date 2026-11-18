@@ -18833,12 +18833,14 @@
         "ai_costs": "Náklady poskytovateľa vs. účtované kredity, marže",
         "deliverability": "Stav a limity odosielania newsletterov",
         "demos": "Samostatné demo inštancie pre záujemcov",
-        "impersonations": "Kto si práve zobrazuje obsah ako člen, a história"
+        "impersonations": "Kto si práve zobrazuje obsah ako člen, a história",
+        "channels": "Upozornenia do Discordu, Slacku a webhookov"
       },
       "ai_costs": "Náklady na AI",
       "deliverability": "Doručiteľnosť",
       "demos": "Demá",
-      "impersonations": "Konanie za členov"
+      "impersonations": "Konanie za členov",
+      "channels": "Kanály"
     },
     "search": {
       "trigger": "Hľadať…",
@@ -20397,7 +20399,8 @@
         "token": "API tokeny",
         "security": "Bezpečnosť",
         "follow": "Sledované organizácie",
-        "system": "Systém"
+        "system": "Systém",
+        "user": "Registrácie"
       },
       "modes": {
         "instant": "Okamžite",
@@ -20523,7 +20526,25 @@
         "err_secret": "Tajomstvo musí mať aspoň 16 znakov",
         "err_notion_token": "Vložte tajomstvo integrácie (ntn_… alebo secret_…)",
         "err_database": "Vložte odkaz na databázu alebo jej 32-znakové id",
-        "err_recipients": "Vyberte aspoň jednu rolu alebo osobu"
+        "err_recipients": "Vyberte aspoň jednu rolu alebo osobu",
+        "show_emails": "Zobrazovať celé e-mailové adresy",
+        "show_emails_hint": "Keď je vypnuté, adresy v správach sú maskované (a•••@example.com).",
+        "events": "Udalosti na odoslanie",
+        "events_hint": "Predvolené sú už vybraté",
+        "events_none": "Nevybrali ste žiadne udalosti. Kanál dostane len to, čo mu pošlú pravidlá.",
+        "routing_none": "Zatiaľ žiadne vybraté udalosti",
+        "events_count_one": "{{count}} udalosť",
+        "events_count_few": "{{count}} udalosti",
+        "events_count_many": "{{count}} udalosti",
+        "events_count_other": "{{count}} udalostí",
+        "routing_summary_one": "Dostáva {{count}} udalosť",
+        "routing_summary_few": "Dostáva {{count}} udalosti",
+        "routing_summary_many": "Dostáva {{count}} udalosti",
+        "routing_summary_other": "Dostáva {{count}} udalostí",
+        "other_rules_one": "ešte {{count}} pravidlo",
+        "other_rules_few": "ešte {{count}} pravidlá",
+        "other_rules_many": "ešte {{count}} pravidla",
+        "other_rules_other": "ešte {{count}} pravidiel"
       },
       "rules": {
         "intro": "Pravidlá rozhodujú, ktoré udalosti sa stanú upozorneniami, pre ktoré organizácie, ako často a kam idú.",
@@ -20581,7 +20602,8 @@
         "err_name": "Dajte pravidlu názov",
         "err_events": "Vyberte aspoň jednu udalosť",
         "err_channel": "Vyberte kanál",
-        "err_quiet": "Pre oba časy použite HH:MM"
+        "err_quiet": "Pre oba časy použite HH:MM",
+        "channel_managed": "Udalosti kanála"
       },
       "deliveries": {
         "title": "Doručenie č. {{id}}",
@@ -21817,6 +21839,12 @@
       "status_switched": "Prepnuté",
       "status_target_changed": "Člen sa zmenil",
       "status_impersonator_changed": "Prístup sa zmenil"
+    },
+    "channels": {
+      "title": "Kanály",
+      "subtitle": "Posielajte upozornenia platformy do Discordu, Slacku, Notionu, na webhook alebo e-mail a vyberte, aké udalosti dostane každý kanál.",
+      "rules_link": "Pokročilé pravidlá",
+      "deliveries_link": "Záznam doručení"
     }
   },
   "background_tasks": {

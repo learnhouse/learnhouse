@@ -18119,12 +18119,14 @@
         "ai_costs": "प्रदाता की लागत बनाम वसूले गए क्रेडिट, मार्जिन",
         "deliverability": "न्यूज़लेटर भेजने की स्थिति और सीमाएँ",
         "demos": "संभावित ग्राहकों के लिए समर्पित डेमो इंस्टेंस",
-        "impersonations": "कौन किसी सदस्य के रूप में देख रहा है, और इतिहास"
+        "impersonations": "कौन किसी सदस्य के रूप में देख रहा है, और इतिहास",
+        "channels": "Discord, Slack और वेबहुक अलर्ट"
       },
       "ai_costs": "AI की लागत",
       "deliverability": "डिलीवरेबिलिटी",
       "demos": "डेमो",
-      "impersonations": "इम्पर्सनेशन"
+      "impersonations": "इम्पर्सनेशन",
+      "channels": "चैनल"
     },
     "search": {
       "trigger": "खोजें…",
@@ -19603,7 +19605,8 @@
         "token": "API टोकन",
         "security": "सुरक्षा",
         "follow": "फ़ॉलो किए संगठन",
-        "system": "सिस्टम"
+        "system": "सिस्टम",
+        "user": "साइन-अप"
       },
       "modes": {
         "instant": "तुरंत",
@@ -19719,7 +19722,19 @@
         "err_secret": "सीक्रेट में कम से कम 16 अक्षर चाहिए",
         "err_notion_token": "इंटीग्रेशन सीक्रेट चिपकाएं (ntn_… या secret_…)",
         "err_database": "डेटाबेस का लिंक या उसकी 32-अक्षर की ID चिपकाएं",
-        "err_recipients": "कम से कम एक भूमिका या व्यक्ति चुनें"
+        "err_recipients": "कम से कम एक भूमिका या व्यक्ति चुनें",
+        "show_emails": "पूरे ईमेल पते दिखाएँ",
+        "show_emails_hint": "बंद होने पर संदेशों में पते छिपाए जाते हैं (a•••@example.com)।",
+        "events": "भेजे जाने वाले इवेंट",
+        "events_hint": "डिफ़ॉल्ट पहले से चुने हुए हैं",
+        "events_none": "कोई इवेंट नहीं चुना गया। इस चैनल को सिर्फ़ वही मिलेगा जो नियम इसे भेजेंगे।",
+        "routing_none": "अभी कोई इवेंट नहीं चुना गया",
+        "events_count_one": "{{count}} इवेंट",
+        "events_count_other": "{{count}} इवेंट",
+        "routing_summary_one": "{{count}} इवेंट मिलता है",
+        "routing_summary_other": "{{count}} इवेंट मिलते हैं",
+        "other_rules_one": "{{count}} और नियम",
+        "other_rules_other": "{{count}} और नियम"
       },
       "rules": {
         "intro": "नियम तय करते हैं कि कौन से इवेंट सूचना बनें, किन संगठनों के लिए, कितनी बार, और कहां जाएं।",
@@ -19777,7 +19792,8 @@
         "err_name": "नियम को एक नाम दें",
         "err_events": "कम से कम एक इवेंट चुनें",
         "err_channel": "चैनल चुनें",
-        "err_quiet": "दोनों समय के लिए HH:MM इस्तेमाल करें"
+        "err_quiet": "दोनों समय के लिए HH:MM इस्तेमाल करें",
+        "channel_managed": "चैनल इवेंट"
       },
       "deliveries": {
         "title": "डिलीवरी #{{id}}",
@@ -20945,6 +20961,12 @@
       "status_switched": "स्विच किया गया",
       "status_target_changed": "सदस्य बदला",
       "status_impersonator_changed": "पहुंच बदली"
+    },
+    "channels": {
+      "title": "चैनल",
+      "subtitle": "प्लेटफ़ॉर्म अलर्ट Discord, Slack, Notion, किसी वेबहुक या ईमेल पर भेजें, और चुनें कि हर चैनल को कौन से इवेंट मिलें।",
+      "rules_link": "उन्नत नियम",
+      "deliveries_link": "डिलीवरी लॉग"
     }
   },
   "background_tasks": {

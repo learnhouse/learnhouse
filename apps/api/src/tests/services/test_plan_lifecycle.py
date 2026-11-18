@@ -271,6 +271,33 @@ class TestTransitions:
         ):
             await transitions.on_plan_changed(db, org.id, "pro", "free")
 
+    async def test_on_plan_changed_records_one_transition(self, db, org):
+        with saas(), patch("src.core.ee_hooks.audit_event") as audit, patch.object(
+            trial, "settle_on_plan_change", AsyncMock()
+        ), patch.object(downgrade, "restore_after_upgrade", AsyncMock(return_value=([], 0))):
+            await transitions.on_plan_changed(db, org.id, "free", "pro", reason="billing")
+        audit.assert_called_once()
+        kwargs = audit.call_args.kwargs
+        assert kwargs["action"] == "billing.plan.transition" and kwargs["org_id"] == org.id
+        assert kwargs["changes"] == {"plan": {"from": "free", "to": "pro"}}
+        assert kwargs["details"] == {"reason": "billing", "trial": False}
+
+    async def test_on_plan_changed_flags_a_running_trial(self, db, org):
+        db.add(OrgTrial(org_id=org.id, plan="pro", started_at=NOW, ends_at=NOW + timedelta(days=14)))
+        await db.commit()
+        with saas(), patch("src.core.ee_hooks.audit_event") as audit, patch.object(
+            trial, "settle_on_plan_change", AsyncMock()
+        ):
+            await transitions.on_plan_changed(db, org.id, "pro", "standard", reason="billing")
+        assert audit.call_args.kwargs["details"] == {"reason": "billing", "trial": True}
+
+    async def test_transition_audit_failure_never_raises(self, db, org):
+        with saas(), patch("src.core.ee_hooks.audit_event", side_effect=RuntimeError), patch.object(
+            trial, "settle_on_plan_change", AsyncMock()
+        ) as settle, patch.object(downgrade, "restore_after_upgrade", AsyncMock(return_value=([], 0))):
+            await transitions.on_plan_changed(db, org.id, "free", "pro")
+        settle.assert_awaited_once()
+
     async def test_config_write_path_runs_the_reactions(self, db, org):
         from src.services.orgs.orgs import update_org_with_config_no_auth
 

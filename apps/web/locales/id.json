@@ -18078,12 +18078,14 @@
         "ai_costs": "Biaya penyedia vs kredit yang ditagihkan, margin",
         "deliverability": "Kesehatan dan batas pengiriman newsletter",
         "demos": "Instans demo khusus untuk calon klien",
-        "impersonations": "Siapa yang sedang melihat sebagai anggota, dan riwayatnya"
+        "impersonations": "Siapa yang sedang melihat sebagai anggota, dan riwayatnya",
+        "channels": "Peringatan Discord, Slack, dan webhook"
       },
       "ai_costs": "Biaya AI",
       "deliverability": "Keterkiriman",
       "demos": "Demo",
-      "impersonations": "Impersonasi"
+      "impersonations": "Impersonasi",
+      "channels": "Saluran"
     },
     "search": {
       "trigger": "Cari…",
@@ -19562,7 +19564,8 @@
         "token": "Token API",
         "security": "Keamanan",
         "follow": "Organisasi yang diikuti",
-        "system": "Sistem"
+        "system": "Sistem",
+        "user": "Pendaftaran"
       },
       "modes": {
         "instant": "Instan",
@@ -19678,7 +19681,19 @@
         "err_secret": "Rahasia memerlukan minimal 16 karakter",
         "err_notion_token": "Tempel rahasia integrasi (ntn_… atau secret_…)",
         "err_database": "Tempel tautan database atau id 32 karakternya",
-        "err_recipients": "Pilih setidaknya satu peran atau orang"
+        "err_recipients": "Pilih setidaknya satu peran atau orang",
+        "show_emails": "Tampilkan alamat email lengkap",
+        "show_emails_hint": "Jika mati, alamat di pesan disamarkan (a•••@example.com).",
+        "events": "Peristiwa yang dikirim",
+        "events_hint": "Bawaan sudah dipilih",
+        "events_none": "Belum ada peristiwa dipilih. Saluran ini hanya menerima kiriman dari aturan.",
+        "routing_none": "Belum ada peristiwa dipilih",
+        "events_count_one": "{{count}} peristiwa",
+        "events_count_other": "{{count}} peristiwa",
+        "routing_summary_one": "Menerima {{count}} peristiwa",
+        "routing_summary_other": "Menerima {{count}} peristiwa",
+        "other_rules_one": "{{count}} aturan lagi",
+        "other_rules_other": "{{count}} aturan lagi"
       },
       "rules": {
         "intro": "Aturan menentukan peristiwa mana yang menjadi notifikasi, untuk organisasi mana, seberapa sering, dan ke mana dikirim.",
@@ -19736,7 +19751,8 @@
         "err_name": "Beri nama aturan",
         "err_events": "Pilih setidaknya satu peristiwa",
         "err_channel": "Pilih kanal",
-        "err_quiet": "Gunakan HH:MM untuk kedua waktu"
+        "err_quiet": "Gunakan HH:MM untuk kedua waktu",
+        "channel_managed": "Peristiwa saluran"
       },
       "deliveries": {
         "title": "Pengiriman #{{id}}",
@@ -20904,6 +20920,12 @@
       "status_switched": "Dialihkan",
       "status_target_changed": "Anggota berubah",
       "status_impersonator_changed": "Akses berubah"
+    },
+    "channels": {
+      "title": "Saluran",
+      "subtitle": "Kirim peringatan platform ke Discord, Slack, Notion, webhook, atau email, lalu pilih peristiwa yang diterima tiap saluran.",
+      "rules_link": "Aturan lanjutan",
+      "deliveries_link": "Log pengiriman"
     }
   },
   "background_tasks": {

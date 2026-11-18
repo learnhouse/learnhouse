@@ -18078,12 +18078,14 @@
         "ai_costs": "공급자 비용 대비 청구 크레딧, 마진",
         "deliverability": "뉴스레터 발송 상태와 한도",
         "demos": "잠재 고객 전용 데모 인스턴스",
-        "impersonations": "멤버로 보고 있는 사람과 기록"
+        "impersonations": "멤버로 보고 있는 사람과 기록",
+        "channels": "Discord, Slack, 웹훅 알림"
       },
       "ai_costs": "AI 비용",
       "deliverability": "전달성",
       "demos": "데모",
-      "impersonations": "대리 접속"
+      "impersonations": "대리 접속",
+      "channels": "채널"
     },
     "search": {
       "trigger": "검색…",
@@ -19562,7 +19564,8 @@
         "token": "API 토큰",
         "security": "보안",
         "follow": "팔로우 중인 조직",
-        "system": "시스템"
+        "system": "시스템",
+        "user": "가입"
       },
       "modes": {
         "instant": "즉시",
@@ -19678,7 +19681,19 @@
         "err_secret": "시크릿은 16자 이상이어야 합니다",
         "err_notion_token": "통합 시크릿을 붙여넣으세요(ntn_… 또는 secret_…)",
         "err_database": "데이터베이스 링크 또는 32자리 ID를 붙여넣으세요",
-        "err_recipients": "역할 또는 사람을 하나 이상 선택하세요"
+        "err_recipients": "역할 또는 사람을 하나 이상 선택하세요",
+        "show_emails": "이메일 주소 전체 표시",
+        "show_emails_hint": "끄면 메시지의 주소가 가려집니다(a•••@example.com).",
+        "events": "보낼 이벤트",
+        "events_hint": "기본 이벤트가 미리 선택되어 있습니다",
+        "events_none": "선택한 이벤트가 없습니다. 이 채널은 규칙이 보내는 것만 받습니다.",
+        "routing_none": "아직 선택한 이벤트가 없습니다",
+        "events_count_one": "이벤트 {{count}}개",
+        "events_count_other": "이벤트 {{count}}개",
+        "routing_summary_one": "이벤트 {{count}}개 수신",
+        "routing_summary_other": "이벤트 {{count}}개 수신",
+        "other_rules_one": "규칙 {{count}}개 더",
+        "other_rules_other": "규칙 {{count}}개 더"
       },
       "rules": {
         "intro": "규칙은 어떤 이벤트를 알림으로 만들지, 어떤 조직을 대상으로 할지, 얼마나 자주, 어디로 보낼지를 정합니다.",
@@ -19736,7 +19751,8 @@
         "err_name": "규칙 이름을 입력하세요",
         "err_events": "이벤트를 하나 이상 선택하세요",
         "err_channel": "채널을 선택하세요",
-        "err_quiet": "두 시각 모두 HH:MM 형식으로 입력하세요"
+        "err_quiet": "두 시각 모두 HH:MM 형식으로 입력하세요",
+        "channel_managed": "채널 이벤트"
       },
       "deliveries": {
         "title": "전송 #{{id}}",
@@ -20904,6 +20920,12 @@
       "status_switched": "전환됨",
       "status_target_changed": "멤버 변경됨",
       "status_impersonator_changed": "권한 변경됨"
+    },
+    "channels": {
+      "title": "채널",
+      "subtitle": "플랫폼 알림을 Discord, Slack, Notion, 웹훅 또는 이메일로 보내고 채널마다 받을 이벤트를 고르세요.",
+      "rules_link": "고급 규칙",
+      "deliveries_link": "전송 기록"
     }
   },
   "background_tasks": {

@@ -18119,12 +18119,14 @@
         "ai_costs": "Providerkosten vs. berekende credits, marges",
         "deliverability": "Verzendstatus en limieten van nieuwsbrieven",
         "demos": "Aparte demo-instanties voor prospects",
-        "impersonations": "Wie er als lid meekijkt, en de geschiedenis"
+        "impersonations": "Wie er als lid meekijkt, en de geschiedenis",
+        "channels": "Discord-, Slack- en webhookmeldingen"
       },
       "ai_costs": "AI-kosten",
       "deliverability": "Bezorgbaarheid",
       "demos": "Demo's",
-      "impersonations": "Impersonaties"
+      "impersonations": "Impersonaties",
+      "channels": "Kanalen"
     },
     "search": {
       "trigger": "Zoeken…",
@@ -19603,7 +19605,8 @@
         "token": "API-tokens",
         "security": "Beveiliging",
         "follow": "Gevolgde organisaties",
-        "system": "Systeem"
+        "system": "Systeem",
+        "user": "Aanmeldingen"
       },
       "modes": {
         "instant": "Direct",
@@ -19719,7 +19722,19 @@
         "err_secret": "Het geheim moet minstens 16 tekens hebben",
         "err_notion_token": "Plak het integratiegeheim (ntn_… of secret_…)",
         "err_database": "Plak de databaselink of het id van 32 tekens",
-        "err_recipients": "Kies minstens één rol of persoon"
+        "err_recipients": "Kies minstens één rol of persoon",
+        "show_emails": "Volledige e-mailadressen tonen",
+        "show_emails_hint": "Uit: adressen worden in berichten gemaskeerd (a•••@example.com).",
+        "events": "Te verzenden gebeurtenissen",
+        "events_hint": "Standaardwaarden zijn vooraf geselecteerd",
+        "events_none": "Geen gebeurtenissen gekozen. Dit kanaal krijgt alleen wat regels ernaartoe sturen.",
+        "routing_none": "Nog geen gebeurtenissen gekozen",
+        "events_count_one": "{{count}} gebeurtenis",
+        "events_count_other": "{{count}} gebeurtenissen",
+        "routing_summary_one": "Krijgt {{count}} gebeurtenis",
+        "routing_summary_other": "Krijgt {{count}} gebeurtenissen",
+        "other_rules_one": "Nog {{count}} regel",
+        "other_rules_other": "Nog {{count}} regels"
       },
       "rules": {
         "intro": "Regels bepalen welke gebeurtenissen meldingen worden, voor welke organisaties, hoe vaak en waar ze naartoe gaan.",
@@ -19777,7 +19792,8 @@
         "err_name": "Geef de regel een naam",
         "err_events": "Kies minstens één gebeurtenis",
         "err_channel": "Kies een kanaal",
-        "err_quiet": "Gebruik HH:MM voor beide tijden"
+        "err_quiet": "Gebruik HH:MM voor beide tijden",
+        "channel_managed": "Kanaalgebeurtenissen"
       },
       "deliveries": {
         "title": "Levering #{{id}}",
@@ -20945,6 +20961,12 @@
       "status_switched": "Gewisseld",
       "status_target_changed": "Lid gewijzigd",
       "status_impersonator_changed": "Toegang gewijzigd"
+    },
+    "channels": {
+      "title": "Kanalen",
+      "subtitle": "Stuur platformmeldingen naar Discord, Slack, Notion, een webhook of e-mail en kies welke gebeurtenissen elk kanaal krijgt.",
+      "rules_link": "Geavanceerde regels",
+      "deliveries_link": "Verzendlog"
     }
   },
   "background_tasks": {

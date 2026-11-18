@@ -18456,12 +18456,14 @@
         "ai_costs": "Costo del fornitore rispetto ai crediti addebitati, margini",
         "deliverability": "Stato e limiti di invio delle newsletter",
         "demos": "Istanze demo dedicate ai potenziali clienti",
-        "impersonations": "Chi sta visualizzando come un membro, e la cronologia"
+        "impersonations": "Chi sta visualizzando come un membro, e la cronologia",
+        "channels": "Avvisi Discord, Slack e webhook"
       },
       "ai_costs": "Costi IA",
       "deliverability": "Recapitabilità",
       "demos": "Demo",
-      "impersonations": "Impersonificazioni"
+      "impersonations": "Impersonificazioni",
+      "channels": "Canali"
     },
     "search": {
       "trigger": "Cerca…",
@@ -19980,7 +19982,8 @@
         "token": "Token API",
         "security": "Sicurezza",
         "follow": "Organizzazioni seguite",
-        "system": "Sistema"
+        "system": "Sistema",
+        "user": "Iscrizioni"
       },
       "modes": {
         "instant": "Istantaneo",
@@ -20101,7 +20104,22 @@
         "err_database": "Incolla il link del database o il suo id di 32 caratteri",
         "err_recipients": "Scegli almeno un ruolo o una persona",
         "failures_many": "{{count}} consegne non riuscite di fila",
-        "people_count_many": "{{count}} persone"
+        "people_count_many": "{{count}} persone",
+        "show_emails": "Mostra gli indirizzi email completi",
+        "show_emails_hint": "Se disattivato, gli indirizzi nei messaggi sono mascherati (a•••@example.com).",
+        "events": "Eventi da inviare",
+        "events_hint": "I predefiniti sono già selezionati",
+        "events_none": "Nessun evento scelto. Questo canale riceve solo ciò che le regole gli inviano.",
+        "routing_none": "Nessun evento scelto",
+        "events_count_one": "{{count}} evento",
+        "events_count_other": "{{count}} eventi",
+        "events_count_many": "{{count}} eventi",
+        "routing_summary_one": "Riceve {{count}} evento",
+        "routing_summary_other": "Riceve {{count}} eventi",
+        "routing_summary_many": "Riceve {{count}} eventi",
+        "other_rules_one": "{{count}} altra regola",
+        "other_rules_other": "{{count}} altre regole",
+        "other_rules_many": "{{count}} altre regole"
       },
       "rules": {
         "intro": "Le regole decidono quali eventi diventano notifiche, per quali organizzazioni, con quale frequenza e dove vanno.",
@@ -20159,7 +20177,8 @@
         "err_name": "Dai un nome alla regola",
         "err_events": "Scegli almeno un evento",
         "err_channel": "Scegli un canale",
-        "err_quiet": "Usa HH:MM per entrambi gli orari"
+        "err_quiet": "Usa HH:MM per entrambi gli orari",
+        "channel_managed": "Eventi del canale"
       },
       "deliveries": {
         "title": "Consegna n. {{id}}",
@@ -21360,6 +21379,12 @@
       "status_switched": "Cambiata",
       "status_target_changed": "Membro cambiato",
       "status_impersonator_changed": "Accesso cambiato"
+    },
+    "channels": {
+      "title": "Canali",
+      "subtitle": "Invia gli avvisi della piattaforma a Discord, Slack, Notion, un webhook o via email, e scegli quali eventi riceve ogni canale.",
+      "rules_link": "Regole avanzate",
+      "deliveries_link": "Registro degli invii"
     }
   },
   "background_tasks": {
