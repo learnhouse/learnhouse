@@ -3,7 +3,7 @@ the notice when an org moves to the Free plan."""
 
 from __future__ import annotations
 
-from src.services.email.blocks import BulletList, Button, Callout, Details, Heading, Paragraph
+from src.services.email.blocks import BulletList, Button, Details, Heading, LinkFallback, Paragraph, chip, compact
 from src.services.email.layout import Brand, Email, first_sentence
 from src.services.email.registry import Sample, email_template
 from src.services.email.safe_text import email_org_name
@@ -39,6 +39,7 @@ def plan(v: dict, lang: str, brand: Brand) -> Email:
             Paragraph(th(lang, f"plan_email.{stage}.body", **copy)),
             Button(th(lang, f"plan_email.{stage}.cta", **copy), v["cta_url"]),
         ],
+        icon="clock" if stage.startswith("trial_ends") else "credit-card",
         reason=th(lang, "plan_email.common.footer", org_name=copy["org_name"]),
         unsubscribe_url=v.get("unsubscribe_url") or "",
         unsubscribe_label=t(lang, "nudge.common.unsubscribe"),
@@ -77,8 +78,9 @@ def plan_changed(v: dict, lang: str, brand: Brand) -> Email:
             Paragraph("The change is done. Anything your new plan doesn't include is paused, not deleted, "
                       "and comes back if you upgrade." if down
                       else f"Everything in {new} is unlocked for your academy, starting now."),
-            Details([("Previous plan", old), ("New plan", new), ("Organization", v.get("org_slug") or "")]),
+            Details([("Previous plan", old), ("New plan", chip(new, "amber")), ("Organization", v.get("org_slug") or "")]),
         ],
+        icon="credit-card",
         reason="You're receiving this because you manage billing for this organization on LearnHouse.",
     )
 
@@ -94,10 +96,12 @@ def subscription_canceled(v: dict, lang: str, brand: Brand) -> Email:
             Heading("Your plan won't renew"),
             Paragraph(f"Your {plan_name} plan stays active until the end of the current billing period. "
                       "After that, your academy moves to Free. Nothing is deleted."),
-            Details([("Organization", v.get("org_slug") or "")]),
+            Details([("Plan", plan_name), ("Status", chip("Cancels at period end", "amber")),
+                     ("Organization", v.get("org_slug") or "")]),
             Paragraph("If you change your mind, pick a plan again from your billing settings and everything "
                       "comes back as it was."),
         ],
+        icon="credit-card",
         reason="You're receiving this because you manage billing for this organization on LearnHouse.",
     )
 
@@ -112,12 +116,15 @@ def purchase_complete(v: dict, lang: str, brand: Brand) -> Email:
         blocks=[
             Heading(f"{plan_name} is active"),
             Paragraph(f"Your payment went through and every {plan_name} feature is available to your academy now."),
-            Details([("Plan", plan_name), ("Organization", v.get("org_slug") or "")]),
+            Details([("Plan", plan_name), ("Status", chip("Active", "emerald", dot=True)),
+                     ("Organization", v.get("org_slug") or "")]),
             BulletList([
                 "Anything paused on the Free plan, like private courses, is back as it was.",
                 "Invoices and plan changes are in your billing settings.",
             ]),
         ],
+        icon="check-circle",
+        tone="emerald",
         reason="You're receiving this because you manage billing for this organization on LearnHouse.",
     )
 
@@ -133,24 +140,38 @@ def pack_activated(v: dict, lang: str, brand: Brand) -> Email:
             Paragraph("The extra capacity is available to your academy now."),
             Details([("Add-on", v.get("pack_id") or "Pack"), ("Organization", v.get("org_slug") or "")]),
         ],
+        icon="receipt",
         reason="You're receiving this because you manage billing for this organization on LearnHouse.",
     )
 
 
 @email_template("billing.payment_failed", category="billing",
-                samples=(Sample({**_PLAN_SAMPLE, "plan": "pro"}),))
+                samples=(Sample({**_PLAN_SAMPLE, "plan": "pro", "amount": "$49.00", "date": "18 November 2026",
+                                 "billing_url": "https://northwind.learnhouse.app/dash/org/settings/plan"}),))
 def payment_failed(v: dict, lang: str, brand: Brand) -> Email:
     """A subscription payment failed."""
+    from src.services.email.dates import human_date
+
     plan_name = pretty_plan(v.get("plan"))
+    url = v.get("billing_url") or ""
     return Email(
         subject=f"Your {plan_name} payment didn't go through",
-        blocks=[
+        blocks=compact([
             Heading("Your payment didn't go through"),
-            Callout(f"We couldn't charge your card for {plan_name}. Your learners keep full access for now.",
-                    tone="danger"),
-            Paragraph("Update your payment method in your billing settings and nothing changes for them."),
-            Details([("Organization", v.get("org_slug") or "")]),
-        ],
+            Paragraph(f"We couldn't charge your card for {plan_name}. Your learners keep full access for now; "
+                      "update your payment method and nothing changes for them."),
+            Details([
+                ("Status", chip("Payment failed", "rose", dot=True)),
+                ("Plan", plan_name),
+                ("Amount", v.get("amount") or ""),
+                ("Date", human_date(v.get("date")) if v.get("date") else ""),
+                ("Organization", v.get("org_slug") or ""),
+            ]),
+            Button("Update payment method", url) if url else None,
+            LinkFallback(url) if url else None,
+        ]),
+        icon="warning-circle",
+        tone="rose",
         reason="You're receiving this because you manage billing for this organization on LearnHouse.",
     )
 

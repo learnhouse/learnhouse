@@ -45,13 +45,14 @@ class TestUnreadMessagesEmail:
         ])["body"]
         assert "Linus: Review?" in body
 
-    def test_rows_are_plain_text_without_avatars(self):
+    def test_rows_use_initials_or_the_avatar_image(self):
         body = _render_unread([
             {"title": "Tutor", "count": 1, "emoji": "🦉", "color": "#7c3aed",
              "image": "https://x.test/a.png", "snippet": "Think again"},
         ])["body"]
         assert "Tutor" in body and "Think again" in body
-        assert "🦉" not in body and "#7c3aed" not in body and "https://x.test/a.png" not in body
+        assert "🦉" not in body and "#7c3aed" not in body
+        assert '<img src="https://x.test/a.png"' in body  # a real avatar image is kept
 
     def test_long_snippets_are_shortened(self):
         body = _render_unread([{"title": "Grace", "count": 1, "snippet": "word " * 60}])["body"]
@@ -78,7 +79,7 @@ class TestUnreadMessagesEmail:
         )["body"]
         assert "background-color: #ff5500; color: #000000" in body
         assert "https://acme.test/messages?settings=notifications" in body
-        assert "LearnHouse" not in body
+        assert body.count("LearnHouse") == body.count("via LearnHouse") == 1
 
 
 class TestButtonColors:

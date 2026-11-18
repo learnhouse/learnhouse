@@ -327,8 +327,15 @@ async def send_billing_email_internal(body: SendBillingEmailRequest):
     if body.template not in WEB_BILLING_TEMPLATES:
         raise HTTPException(status_code=400, detail="Unknown billing email template")
     recipients = list(dict.fromkeys(e.strip() for e in body.to if e and "@" in e))[:20]
+    context = dict(body.context)
+    if context.get("org_slug") and not context.get("billing_url"):
+        from src.services.email.utils import get_org_signup_base_url
+
+        base = await get_org_signup_base_url(str(context["org_slug"]))
+        if base:
+            context["billing_url"] = f"{base.rstrip('/')}/dash/org/settings/plan"
     sent = 0
     for to in recipients:
-        if await asend_email(body.template, to, body.context, critical=False) is not False:
+        if await asend_email(body.template, to, context, critical=False) is not False:
             sent += 1
     return {"sent": sent, "recipients": len(recipients)}

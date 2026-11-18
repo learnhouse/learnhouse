@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.services.email.blocks import Button, Code, Heading, LinkFallback, Paragraph, Quote, compact
+from src.services.email.blocks import Button, Code, Details, Heading, LinkFallback, Paragraph, Quote, chip, compact
 from src.services.email.layout import Brand, Email
 from src.services.email.registry import Sample, email_template
 from src.services.email.safe_text import email_org_name, email_user_name
@@ -34,6 +34,8 @@ def org_created(v: dict, lang: str, brand: Brand) -> Email:
             Paragraph(body),
             Button(t(lang, "org_created.cta"), v["dashboard_url"]),
         ],
+        icon="rocket-launch",
+        tone="emerald",
         reason=th(lang, "org_created.footer"),
     )
 
@@ -45,6 +47,7 @@ def org_deleted(v: dict, lang: str, brand: Brand) -> Email:
     return Email(
         subject=tt(lang, "org_deleted.subject", org_name=name),
         blocks=[Heading(th(lang, "org_deleted.heading", org_name=name)), Paragraph(th(lang, "org_deleted.body"))],
+        icon="trash",
         reason=th(lang, "org_deleted.footer"),
     )
 
@@ -71,13 +74,19 @@ def invitation(v: dict, lang: str, brand: Brand) -> Email:
         blocks=compact([
             Heading(th(lang, "invitation.heading")),
             Paragraph(th(lang, "invitation.intro", inviter=inviter, org_name=org)),
-            Paragraph(th(lang, "invitation.role_line", role=v["role_name"])) if v.get("role_name") else None,
             Quote(v["message"], th(lang, "invitation.message_label", inviter=inviter)) if v.get("message") else None,
-            Code(code) if code else None,
+            Details([
+                (t(lang, "label.organization"), org),
+                (t(lang, "label.role"), chip(v["role_name"], "sky")) if v.get("role_name") else ("", ""),
+                (t(lang, "label.expires"), v.get("expires_on") or ""),
+            ]),
             Paragraph(th(lang, "invitation.code_hint" if code else "invitation.no_code_hint")),
+            Code(code) if code else None,
             Button(th(lang, "invitation.cta", org_name=org), v["signup_url"]),
-            Paragraph(th(lang, "invitation.expires", date=v["expires_on"]), small=True) if v.get("expires_on") else None,
+            LinkFallback(v["signup_url"]),
         ]),
+        icon="user-plus",
+        tone="sky",
         reason=th(lang, "invitation.footer", inviter=inviter),
     )
 
@@ -98,6 +107,8 @@ def org_joined(v: dict, lang: str, brand: Brand) -> Email:
             Button(t(lang, "org_join.cta"), v["cta_url"]),
             LinkFallback(v["cta_url"]),
         ],
+        icon="users",
+        tone="emerald",
         reason=th(lang, "org_join.footer", org_name=org),
     )
 
@@ -117,8 +128,10 @@ def role_changed(v: dict, lang: str, brand: Brand) -> Email:
             Heading(th(lang, "role_changed.heading")),
             Paragraph(th(lang, "role_changed.body_1", username=email_user_name(v.get("username")), org_name=org,
                          role=v["role_name"])),
+            Details([(t(lang, "label.organization"), org), (t(lang, "label.role"), chip(v["role_name"]))]),
             Paragraph(th(lang, "role_changed.body_2")),
             Button(th(lang, "role_changed.cta", org_name=org), cta) if cta else None,
         ]),
+        icon="identification-badge",
         reason=th(lang, "role_changed.footer", org_name=org),
     )

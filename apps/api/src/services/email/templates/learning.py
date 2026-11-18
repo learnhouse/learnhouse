@@ -11,6 +11,8 @@ from src.services.email.blocks import (
     Paragraph,
     Quote,
     Row,
+    Stat,
+    Stats,
     compact,
 )
 from src.services.email.layout import Brand, Email, first_sentence
@@ -18,6 +20,14 @@ from src.services.email.registry import Sample, email_template
 from src.services.email.safe_text import email_org_name, email_user_name
 from src.services.email.templates import SAMPLE_ORG
 from src.services.email.translations import t, th, tt
+
+
+STAT_ICONS = {"courses": "book-open", "chapters": "book-open", "lessons": "book-open",
+              "members": "users", "learners": "users", "completed": "check-circle"}
+
+
+def _initial(text: str) -> str:
+    return next((c for c in text if c.isalnum()), "#").upper()
 
 
 def reply_to_address() -> str:
@@ -116,9 +126,13 @@ def nudge(v: dict, lang: str, brand: Brand) -> Email:
         blocks=compact([
             Heading(th(lang, f"nudge.{nudge_id}.heading", **copy)),
             Paragraph(th(lang, f"nudge.{nudge_id}.body", **copy)),
+            Stats([Stat(t(lang, f"nudge.stat.{key}"), value, STAT_ICONS.get(key, "chart-bar"), "emerald")
+                   for key, value in (v.get("stats") or [])]) if v.get("stats") else None,
             Button(th(lang, f"nudge.{nudge_id}.cta", **copy), cta_url) if v.get("has_cta", True) and cta_url else None,
             LinkFallback(cta_url) if v.get("has_cta", True) and cta_url else None,
         ]),
+        icon="rocket-launch",
+        tone="emerald",
         reason=th(lang, "nudge.common.footer", org_name=brand.name),
         unsubscribe_url=v.get("unsubscribe_url") or "",
         unsubscribe_label=t(lang, "nudge.common.unsubscribe"),
@@ -150,7 +164,7 @@ def digest(v: dict, lang: str, brand: Brand) -> Email:
     items = v.get("items") or []
     rows = [
         Row(title=i.get("title") or "", body=(i.get("body") or "")[:180],
-            url=base + (i.get("path") or "/notifications"))
+            url=base + (i.get("path") or "/notifications"), avatar=_initial(i.get("title") or ""))
         for i in items
     ]
     org = brand.name if brand.org_scoped and brand.name else "LearnHouse"
@@ -162,6 +176,7 @@ def digest(v: dict, lang: str, brand: Brand) -> Email:
             Items(rows),
             Button(_digest_copy(lang, "cta"), base + "/notifications"),
         ],
+        icon="bell",
         reason=_digest_copy(lang, "footer"),
     )
 
@@ -200,6 +215,7 @@ def unread(v: dict, lang: str, brand: Brand) -> Email:
             title=title,
             body=f"{email_user_name(author)}: {snippet}" if author else snippet,
             meta=f"{count if count < 100 else '99+'} new" if count else "",
+            avatar=conv["image"] if (conv.get("image") or "").startswith(("https://", "http://")) else _initial(title),
         ))
     more = len(conversations) - len(shown)
     first = conversations[0] if conversations else {}

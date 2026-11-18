@@ -98,12 +98,15 @@ class TestLayout:
         assert html.startswith("<!DOCTYPE html>") and 'lang="en" dir="ltr"' in html
         assert "<title>Hello &lt;b&gt;</title>" in html
         assert "learnhouse-wordmark@2x.png" in html and 'alt="LearnHouse"' in html
-        assert "background-color: #ffffff" in html  # plain white page
-        assert "max-width: 520px" in html and "border-radius: 16px" not in html
+        assert "background-color: #f8f8f8" in html  # the V2 canvas
+        assert "max-width: 560px" in html and "border-radius: 16px" in html  # the card
+        assert "0 4px 6px -1px rgba(209,213,219,0.25)" in html  # nice-shadow
+        assert "icons/shield-check-sky.png" in html  # the hero tile (security default)
+        assert "learnhouse-wordmark-grey@2x.png" in html  # footer wordmark
         assert "<!--[if mso]>" in html
         assert 'content="light"' in html
         assert "First sentence." in html.split("<table", 1)[0]  # preheader
-        assert "open-source learning platform" in html
+        assert 'alt="LearnHouse" width="109"' in html  # grey footer wordmark
 
     def test_logo_url_override(self, monkeypatch):
         monkeypatch.setenv("LEARNHOUSE_EMAIL_LOGO_URL", "https://cdn.test/logo.png")
@@ -113,13 +116,13 @@ class TestLayout:
         brand = Brand(name="Acme & Co", org_scoped=True, color="#ff5500", powered_by=True)
         html = layout.render_html(self._email(), brand, "learning", "en")
         assert "Acme &amp; Co</span>" in html and "learnhouse-wordmark" not in html
-        assert "LearnHouse" not in html  # no badge, no company line on org mail
+        assert html.count("LearnHouse") == 1 and "Sent by Acme &amp; Co via LearnHouse" in html
         assert layout._button_colors(brand) == ("#ff5500", "#000000")
         square = Brand(name="A", org_scoped=True, logo_url="https://x.test/square_logos/a.png")
-        assert 'width="32" height="32"' in layout.render_html(self._email(), square, "x", "en")
+        assert 'width="36" height="36"' in layout.render_html(self._email(), square, "x", "en")
         wide = Brand(name="A", org_scoped=True, logo_url="https://x.test/logos/a.png", color="#ffffff")
         out = layout.render_html(self._email(), wide, "x", "en")
-        assert 'height="28"' in out and layout._button_colors(wide) == ("#171717", "#ffffff")
+        assert 'height="32"' in out and layout._button_colors(wide) == ("#171717", "#ffffff")
         assert "Powered by" not in out
 
     def test_rtl_and_language_normalisation(self):
@@ -133,8 +136,8 @@ class TestLayout:
         text = layout.render_text(email, Brand(name="Acme", org_scoped=True, powered_by=True))
         assert text.startswith("Acme\n") and "Unsubscribe: https://u.test" in text
         assert "Email preferences: https://m.test" in text and "Powered by" not in text
-        assert layout.render_text(Email(subject="s", blocks=[]), layout.PLATFORM_BRAND).endswith(
-            "LearnHouse, the open-source learning platform.\n")
+        assert layout.render_text(Email(subject="s", blocks=[]), layout.PLATFORM_BRAND).endswith("--\nLearnHouse\n")
+        assert text.endswith("Sent by Acme via LearnHouse\n")
 
     def test_preheader(self):
         assert layout.preheader_block("") == ""
@@ -423,6 +426,70 @@ def test_categories_and_human_dates():
     assert human_date("soon") == "soon" and human_date(None) == "" and human_date("") == ""
 
 
-def test_org_mail_without_footer_facts_has_no_footer():
+def test_org_mail_footer_is_the_sent_by_line():
     brand = Brand(name="Acme", org_scoped=True)
-    assert layout.footer_html(Email(subject="s", blocks=[]), brand) == ""
+    assert "Sent by Acme via LearnHouse" in layout.footer_html(Email(subject="s", blocks=[]), brand)
+
+
+def test_kit_blocks():
+    from src.services.email.blocks import Hero, Stat, Stats, chip, icon_tile
+
+    ctx = b.Ctx(tone="emerald")
+    assert "background-color: #fff1f2" in chip("Failed", "rose", dot=True)  # rose-50 tint
+    assert "icons/key-sky.png" in icon_tile("key", "sky")
+    hero = Hero("T", "D", "key", "sky")
+    assert "icons/key-sky.png" in hero.html(ctx) and hero.text() == "T\n\nD"
+    assert Hero("T").text() == "T"
+    stats = Stats([Stat("Courses", 3, "book-open", "emerald"), ("Members", 5)])
+    html = stats.html(ctx)
+    assert "icons/book-open-emerald.png" in html and ">5</div>" in html
+    assert stats.text() == "Courses: 3   Members: 5" and Stats([]).html(ctx) == ""
+    assert "background-color: #fffbeb" in b.Callout("x", tone="warning").html(ctx)
+    assert "background-color: #fafafa" in b.Callout("x").html(ctx)
+    org = b.Button("Go", "https://x.test").html(b.Ctx(button_bg="#2563eb", org_button=True))
+    assert "background-color: #2563eb" in org and "v:roundrect" in org
+
+
+def test_asset_base_override(monkeypatch):
+    from src.services.email.blocks import asset_url
+
+    monkeypatch.setenv("LEARNHOUSE_EMAIL_ASSETS_URL", "https://cdn.test/mail/")
+    assert asset_url("icons/key-sky.png") == "https://cdn.test/mail/icons/key-sky.png"
+
+
+def test_every_template_icon_has_its_png():
+    """Each hero icon (template or category default) exists in apps/web/public/emails/icons."""
+    from src.services.email.theme import CATEGORIES, ICONS
+
+    icons_dir = API_ROOT.parent / "web" / "public" / "emails" / "icons"
+    if not icons_dir.is_dir():
+        pytest.skip("web app not checked out")
+    for icon, tones in ICONS.items():
+        for tone_name in tones:
+            assert (icons_dir / f"{icon}-{tone_name}.png").is_file(), (icon, tone_name)
+    for cat in CATEGORIES.values():
+        assert cat.tone in ICONS[cat.icon], cat
+    for tpl, sample in [(p.values[0], p.values[1]) for p in ALL_SAMPLES]:
+        from src.services.email.preview import sample_org
+
+        html = pipeline.render_email(tpl.name, sample.values, org=sample_org(sample)).html
+        for icon, tone_name in re.findall(r"icons/([a-z-]+)-([a-z]+)\.png", html):
+            assert tone_name in ICONS.get(icon, ()), (tpl.name, icon, tone_name)
+
+
+def test_preheader_from_a_hero_and_billing_url_from_the_org(monkeypatch):
+    import asyncio
+
+    from src.routers.orgs.org_plan import SendBillingEmailRequest, send_billing_email_internal
+    from src.services.email.blocks import Hero
+
+    assert layout._auto_preheader(Email(subject="s", blocks=[Hero("T", "Short one. Then more.")])) == "Short one."
+
+    async def base(slug):
+        return "https://acme.test/"
+
+    monkeypatch.setattr("src.services.email.utils.get_org_signup_base_url", base)
+    with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
+        asyncio.run(send_billing_email_internal(SendBillingEmailRequest(
+            template="billing.payment_failed", to=["a@test.com"], context={"plan": "pro", "org_slug": "acme"})))
+    assert "https://acme.test/dash/org/settings/plan" in sent.call_args.kwargs["body"]

@@ -274,10 +274,16 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
         console.warn(`Plan subscription ${subscription.id} is ${status} for org ${orgId}`);
         const customer = await stripe.customers.retrieve(subscription.customer);
         if (customer?.email) {
+          const price = subscription?.items?.data?.[0]?.price;
+          const amount =
+            typeof price?.unit_amount === "number" && price?.currency
+              ? new Intl.NumberFormat("en-US", { style: "currency", currency: String(price.currency).toUpperCase() }).format(price.unit_amount / 100)
+              : undefined;
           await sendPaymentFailedMail({
             email: customer.email,
             planName: subscription.metadata.plan,
             orgSlug: subscription.metadata.org_slug,
+            amount,
           }).catch((err) => console.error("Failed to send payment failed email:", err));
         }
       } else if (status === "paused") {

@@ -100,9 +100,13 @@ export async function sendPaymentFailedMail(args: {
   email: string;
   planName?: string;
   orgSlug?: string;
+  /** Formatted amount, e.g. "$49.00". */
+  amount?: string;
 }): Promise<void> {
   await sendBillingEmail("billing.payment_failed", args.email, {
     plan: args.planName ?? "",
     org_slug: args.orgSlug ?? "",
+    amount: args.amount ?? "",
+    date: new Date().toISOString().slice(0, 10),
   });
 }

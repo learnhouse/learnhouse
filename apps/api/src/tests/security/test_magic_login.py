@@ -205,7 +205,7 @@ class TestSendMagicLoginEmail:
         assert "Connectez-vous à Acme &amp; Co" in call["body"]
         assert '<img src="https://api.test/content/orgs/o/logos/l.png"' in call["body"]
         assert "background-color: #1d4ed8;" in call["body"]
-        assert "LearnHouse" not in call["body"]
+        assert call["body"].count("LearnHouse") == call["body"].count("via LearnHouse") == 1
         assert "learnhouse-wordmark@2x.png" not in call["body"]
         assert call["sender_name"] == "Acme Academy"
         assert "https://academy.example.com/auth/magic?token=tok" in call["body"]

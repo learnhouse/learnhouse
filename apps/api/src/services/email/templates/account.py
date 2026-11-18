@@ -45,6 +45,7 @@ def welcome(v: dict, lang: str, brand: Brand) -> Email:
             Paragraph(body),
             Button(t(lang, "account_creation.cta"), v.get("cta_url") or ACADEMY_URL),
         ],
+        icon="user-circle",
         reason=reason,
     )
 
@@ -69,6 +70,7 @@ def email_verification(v: dict, lang: str, brand: Brand) -> Email:
             Button(t(lang, "email_verification.cta"), v["url"]),
             LinkFallback(v["url"], t(lang, "email_verification.copy_paste")),
         ],
+        icon="envelope-simple",
         reason=th(lang, "email_verification.footer", brand=name),
     )
 
@@ -93,6 +95,7 @@ def password_reset(v: dict, lang: str, brand: Brand) -> Email:
             Code(v["code"]),
             Button(t(lang, "password_reset.cta"), v["url"]),
         ],
+        icon="key",
         reason=th(lang, footer_key),
     )
 
@@ -114,6 +117,7 @@ def magic_login(v: dict, lang: str, brand: Brand) -> Email:
             Button(t(lang, "magic_login.cta"), v["url"]),
             LinkFallback(v["url"], t(lang, "email_verification.copy_paste")),
         ],
+        icon="sign-in",
         reason=th(lang, "magic_login.footer", brand=name),
     )
 
@@ -130,8 +134,9 @@ def email_changed(v: dict, lang: str, brand: Brand) -> Email:
         blocks=[
             Heading(th(lang, "email_changed.heading")),
             Paragraph(th(lang, "email_changed.body", username=email_user_name(v.get("username")), new_email=v["new_email"])),
-            Callout(th(lang, "email_changed.footer"), tone="warning"),
+            Callout(th(lang, "email_changed.footer")),
         ],
+        icon="shield-check",
     )
 
 
@@ -141,5 +146,7 @@ def account_deleted(v: dict, lang: str, brand: Brand) -> Email:
     return Email(
         subject=tt(lang, "account_deleted.subject"),
         blocks=compact([Heading(th(lang, "account_deleted.heading")), Paragraph(th(lang, "account_deleted.body"))]),
+        icon="trash",
+        tone="neutral",
         reason=th(lang, "account_deleted.footer"),
     )

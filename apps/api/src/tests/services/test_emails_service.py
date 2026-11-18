@@ -37,9 +37,14 @@ def _user(**overrides):
     return UserRead(**data)
 
 
+def _platform_free(body: str) -> bool:
+    """Org mail names LearnHouse only in the "Sent by {org} via LearnHouse" line."""
+    return body.count("LearnHouse") == body.count("via LearnHouse") == 1
+
+
 def _wordmark(escaped_name: str) -> str:
     """The org-name header an org-branded mail shows when it has no logo."""
-    return f'color: #171717;">{escaped_name}</span>'
+    return f'font-weight: 600;">{escaped_name}</span>'
 
 
 def _org(**overrides):
@@ -119,11 +124,11 @@ class TestEmailsService:
             )
         call = send_email.call_args.kwargs
         # No org logo → the org's own name up top, never the LearnHouse mark.
-        assert "<img" not in call["body"]
+        assert 'alt="Acme' not in call["body"] and "learnhouse-wordmark" not in call["body"]
         assert "<svg" not in call["body"]
         assert _wordmark("Acme &amp; Co") in call["body"]
         assert "Acme & Co" in call["subject"]
-        assert "LearnHouse" not in call["body"]
+        assert _platform_free(call["body"])
 
     def test_role_changed_email_links_back_to_the_org(self):
         """Telling someone their permissions changed is useless without a way
@@ -181,7 +186,7 @@ class TestEmailsService:
                 cta_url="https://acme.test/home",
             )
         call = send_email.call_args.kwargs
-        assert "<img" not in call["body"]
+        assert 'alt="Acme' not in call["body"] and "learnhouse-wordmark" not in call["body"]
         assert "<svg" not in call["body"]
         assert _wordmark("Acme") in call["body"]
 
@@ -561,7 +566,7 @@ class TestWhiteLabel:
 
     def test_no_platform_branding_leaks_when_watermark_is_off(self):
         for call in self._all_org_scoped_sends(**self.BRANDING):
-            assert "LearnHouse" not in call["body"], call["subject"]
+            assert _platform_free(call["body"]), call["subject"]
             assert "LearnHouse" not in call["subject"]
             assert "<svg" not in call["body"]
             assert f'<img src="{self.LOGO}" alt="Acme &amp; Co"' in call["body"]
@@ -577,7 +582,7 @@ class TestWhiteLabel:
     def test_org_mail_never_carries_platform_attribution(self):
         branding = dict(self.BRANDING, powered_by=True)
         for call in self._all_org_scoped_sends(**branding):
-            assert "LearnHouse" not in call["body"], call["subject"]
+            assert _platform_free(call["body"]), call["subject"]
             assert "LearnHouse" not in call["subject"]
 
     def test_square_logo_renders_as_a_square_box_and_wide_logo_letterboxed(self):
@@ -593,16 +598,16 @@ class TestWhiteLabel:
                 signup_url="https://acme.test/signup", logo_url=self.LOGO,
             )
             wide_body = sent.call_args.kwargs["body"]
-        assert f'<img src="{square}" alt="Acme" width="32" height="32"' in square_body
-        assert "border-radius: 6px" in square_body
-        assert f'<img src="{self.LOGO}" alt="Acme" height="28"' in wide_body
-        assert "max-width: 160px" in wide_body
-        assert "width=\"32\"" not in wide_body
+        assert f'<img src="{square}" alt="Acme" width="36" height="36"' in square_body
+        assert "border-radius: 10px" in square_body
+        assert f'<img src="{self.LOGO}" alt="Acme" height="32"' in wide_body
+        assert "max-width: 180px" in wide_body
+        assert 'alt="Acme" width="36"' not in wide_body
 
     def test_org_without_logo_or_color_gets_wordmark_and_default_button(self):
         for call in self._all_org_scoped_sends(powered_by=False):
             assert _wordmark("Acme &amp; Co") in call["body"], call["subject"]
-            assert "<img" not in call["body"]
+            assert 'alt="Acme' not in call["body"] and "learnhouse-wordmark" not in call["body"]
             assert "<svg" not in call["body"]
             assert "background-color: #171717; color: #ffffff" in call["body"]
 
@@ -634,7 +639,7 @@ class TestWhiteLabel:
         body = sent.call_args.kwargs["body"]
         assert "activate your Acme &amp; Co account" in body
         assert "create a Acme &amp; Co account" in body or "Acme &amp; Co account" in body
-        assert "LearnHouse" not in body
+        assert _platform_free(body)
 
     def test_platform_mails_keep_the_learnhouse_mark_and_no_powered_by(self):
         with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
@@ -687,7 +692,7 @@ class TestWhiteLabel:
                 assert "{brand}" not in call["subject"], lang
                 assert "{username}" not in call["body"], lang
                 assert "Acme" in call["body"], lang
-            assert "LearnHouse" not in magic["body"], lang
+            assert _platform_free(magic["body"]), lang
             assert "LearnHouse" not in magic["subject"], lang
 
     def test_invitation_with_role_note_and_expiry_in_every_language(self):
