@@ -43,6 +43,44 @@ export const IMPERSONATION_CODES = [
   'IMPERSONATION_WRONG_ORG',
 ] as const
 
+// Why a session ended, as the API reports it (the record's end reason). The
+// badge names it on the way out instead of leaving requests to fail.
+export const IMPERSONATION_END_REASONS = [
+  'ended',
+  'expired',
+  'revoked',
+  'logout',
+  'replaced',
+  'impersonator_changed',
+  'target_changed',
+] as const
+export type ImpersonationEndReason = (typeof IMPERSONATION_END_REASONS)[number]
+/** Core's own reason: the token ran out while the session may live on (renew, then retry). */
+export const TOKEN_EXPIRED_REASON = 'token_expired'
+
+/** A reason from the API, a URL or an event, as one the badge knows. */
+export function normalizeEndReason(raw: unknown, fallback: ImpersonationEndReason = 'ended'): ImpersonationEndReason {
+  if (raw === TOKEN_EXPIRED_REASON) return 'expired'
+  return typeof raw === 'string' && (IMPERSONATION_END_REASONS as readonly string[]).includes(raw)
+    ? (raw as ImpersonationEndReason)
+    : fallback
+}
+
+/** The end reason in an API refusal (``detail.reason``) or a proxy reply (``reason``). */
+export function endReasonOf(body: unknown): string | null {
+  const b = body as any
+  const detail = b && typeof b === 'object' ? b.detail : null
+  const reason = detail && typeof detail === 'object' ? detail.reason : b?.reason
+  return typeof reason === 'string' && reason ? reason : null
+}
+
+/** The i18n key of the note shown once the session is over. */
+export function endedNoticeKey(reason: ImpersonationEndReason, platform: boolean): string {
+  // Leaving on purpose from the console keeps its "back in the console" note.
+  if (platform && reason === 'ended') return 'impersonation.returned_ended'
+  return `impersonation.ended_notice_${reason}`
+}
+
 /** The console (its own session), as opposed to org pages (the impersonation's). */
 export function isPlatformContext(): boolean {
   if (typeof window === 'undefined') return false
@@ -88,10 +126,10 @@ export function dispatchImpersonationRefused(code: string, message?: string) {
 }
 
 /** Another tab (or the console) ended a session: every tab of it hears it. */
-export function broadcastImpersonationEnded(sessionUuid?: string | null) {
+export function broadcastImpersonationEnded(sessionUuid?: string | null, reason: ImpersonationEndReason = 'revoked') {
   try {
     const bc = new BroadcastChannel(IMPERSONATION_CHANNEL)
-    bc.postMessage({ type: 'ended', session_uuid: sessionUuid ?? null })
+    bc.postMessage({ type: 'ended', session_uuid: sessionUuid ?? null, reason })
     bc.close()
   } catch {
     /* BroadcastChannel unavailable: the banner's status poll catches it */

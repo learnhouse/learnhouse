@@ -110,6 +110,11 @@ class TestSessionRoutes:
         with patch("src.core.ee_hooks.get_ee_hooks", return_value=hooks):
             r = await self._call(app, "GET", "/api/v1/auth/impersonation/status", ctx)
             assert r.status_code == 200 and r.json() == {"session_uuid": "imp_abc"}
+            # A token due for renewal rides along (the web proxy moves it to the cookie).
+            hooks.renew_impersonation_token = AsyncMock(return_value={"token": "t2", "token_expires_at": 9})
+            r = await self._call(app, "GET", "/api/v1/auth/impersonation/status", ctx)
+            assert r.json() == {"session_uuid": "imp_abc", "token": "t2", "token_expires_at": 9}
+            del hooks.renew_impersonation_token
             r = await self._call(app, "POST", "/api/v1/auth/impersonation/end", ctx)
             assert r.json() == {"ended": True}
             # Not in a session, or an unconfirmed one.

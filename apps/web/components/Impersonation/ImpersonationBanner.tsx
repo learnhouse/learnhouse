@@ -8,13 +8,17 @@ import {
   IMPERSONATION_CHANNEL,
   IMPERSONATION_ENDED_EVENT,
   IMPERSONATION_REFUSED_EVENT,
+  IMPERSONATION_END_REASONS,
   broadcastImpersonationEnded,
   consoleUrl,
+  endedNoticeKey,
   fetchImpersonationTargets,
   isPlatformContext,
+  normalizeEndReason,
   setActiveImpersonation,
   switchImpersonation,
   takeEarlyImpersonationEnd,
+  type ImpersonationEndReason,
   type ImpersonationSession,
   type ImpersonationSwitch,
   type ImpersonationTargets,
@@ -26,7 +30,10 @@ import {
 // It sits on top of everything (z-max), takes no layout space, and only its
 // own pixels catch the pointer.
 
+// Also how the token slides: each poll lets the proxy swap in a renewed one.
 const STATUS_POLL_MS = 30_000
+// How long the "why it ended" note stays up.
+const RETURNED_NOTE_MS = 8_000
 
 function readCookie(name: string): string | null {
   const raw = document.cookie.split('; ').find((c) => c.startsWith(`${name}=`))?.split('=')[1]
@@ -57,7 +64,7 @@ export default function ImpersonationBanner() {
   const session = useLHSession() as any
   const fromSession: ImpersonationSession | null = session?.data?.impersonation ?? null
   const [platform, setPlatform] = useState(true)
-  const [returned, setReturned] = useState<string | null>(null)
+  const [returned, setReturned] = useState<ImpersonationEndReason | null>(null)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -67,17 +74,16 @@ export default function ImpersonationBanner() {
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const onPlatform = isPlatformContext()
-    setPlatform(onPlatform)
-    if (!onPlatform) return
-    // Back in the console after impersonating: say so once, tidy the URL.
+    setPlatform(isPlatformContext())
+    // Back in the console (or an admin's dashboard) after a session ended:
+    // say why once, tidy the URL.
     const url = new URL(window.location.href)
     const reason = url.searchParams.get('impersonation')
-    if (reason === 'ended' || reason === 'expired' || reason === 'revoked') {
-      setReturned(reason)
+    if (reason && (IMPERSONATION_END_REASONS as readonly string[]).includes(reason)) {
+      setReturned(reason as ImpersonationEndReason)
       url.searchParams.delete('impersonation')
       window.history.replaceState(window.history.state, '', url.toString())
-      const id = window.setTimeout(() => setReturned(null), 5000)
+      const id = window.setTimeout(() => setReturned(null), RETURNED_NOTE_MS)
       return () => window.clearTimeout(id)
     }
   }, [])
@@ -88,20 +94,24 @@ export default function ImpersonationBanner() {
   }, [imp])
 
   const finish = useCallback(
-    async (reason: 'ended' | 'expired' | 'revoked') => {
+    async (reason: ImpersonationEndReason) => {
       if (endingRef.current) return
       endingRef.current = true
       setBusy(true)
       let returnUrl = imp?.return_url ?? null
-      try {
-        const res = await fetch('/api/auth/impersonation', { method: 'DELETE', credentials: 'include' })
-        const body = await res.json().catch(() => ({}))
-        returnUrl = body?.return_url || returnUrl
-      } catch {
-        /* the cookie is cleared server-side on the next call anyway */
+      // Replaced by a session opened in another tab: the cookie now holds
+      // that one, so leave it (and it) alone.
+      if (reason !== 'replaced') {
+        try {
+          const res = await fetch('/api/auth/impersonation', { method: 'DELETE', credentials: 'include' })
+          const body = await res.json().catch(() => ({}))
+          returnUrl = body?.return_url || returnUrl
+        } catch {
+          /* the cookie is cleared server-side on the next call anyway */
+        }
       }
       setActiveImpersonation(null)
-      broadcastImpersonationEnded(imp?.session_uuid)
+      broadcastImpersonationEnded(imp?.session_uuid, reason)
       // An admin's "view as" goes back to where it started in the org's own
       // dashboard; platform support access goes back to the console.
       const target =
@@ -131,18 +141,18 @@ export default function ImpersonationBanner() {
     window.location.reload()
   }, [t])
 
-  // Ended on the server before this tab even had the session (idle or
+  // Ended on the server before this tab even had the session (the cap, or
   // revoked while it was closed): back to the console, never signed out.
   useEffect(() => {
     if (platform) return
-    const toReason = (r?: string | null) => (r === 'ended' ? 'ended' : r === 'expired' ? 'expired' : 'revoked')
     const early = takeEarlyImpersonationEnd()
     if (early && !imp) {
-      void finish(toReason(early))
+      void finish(normalizeEndReason(early, 'revoked'))
       return
     }
     if (imp) return
-    const onEnded = (e: Event) => void finish(toReason((e as CustomEvent<{ reason?: string }>).detail?.reason))
+    const onEnded = (e: Event) =>
+      void finish(normalizeEndReason((e as CustomEvent<{ reason?: string }>).detail?.reason, 'revoked'))
     window.addEventListener(IMPERSONATION_ENDED_EVENT, onEnded)
     return () => window.removeEventListener(IMPERSONATION_ENDED_EVENT, onEnded)
   }, [platform, imp, finish])
@@ -150,27 +160,27 @@ export default function ImpersonationBanner() {
   // Ended elsewhere: another tab, the console (revoke), the API (401/410).
   useEffect(() => {
     if (!imp) return
-    const onEnded = (e: Event) => {
-      const reason = (e as CustomEvent<{ reason?: string }>).detail?.reason
-      void finish(reason === 'ended' ? 'ended' : reason === 'expired' ? 'expired' : 'revoked')
-    }
+    const onEnded = (e: Event) =>
+      void finish(normalizeEndReason((e as CustomEvent<{ reason?: string }>).detail?.reason, 'revoked'))
     window.addEventListener(IMPERSONATION_ENDED_EVENT, onEnded)
     let bc: BroadcastChannel | null = null
     try {
       bc = new BroadcastChannel(IMPERSONATION_CHANNEL)
       bc.onmessage = (e) => {
         if (e.data?.type === 'ended' && (!e.data.session_uuid || e.data.session_uuid === imp.session_uuid)) {
-          void finish('revoked')
+          void finish(normalizeEndReason(e.data.reason, 'revoked'))
         }
       }
     } catch {
       bc = null
     }
+    // The poll keeps the session in step: it notices an end (and why), and
+    // the proxy swaps in a renewed token as it goes.
     const poll = window.setInterval(async () => {
       try {
         const res = await fetch('/api/auth/impersonation', { credentials: 'include', cache: 'no-store' })
         const body = await res.json()
-        if (body?.active === false) void finish('revoked')
+        if (body?.active === false) void finish(normalizeEndReason(body.reason, 'revoked'))
       } catch {
         /* offline: try again */
       }
@@ -247,7 +257,7 @@ export default function ImpersonationBanner() {
           className="pointer-events-auto flex items-center gap-2 rounded-full bg-neutral-950/95 px-3 py-1.5 text-[12.5px] font-medium text-white shadow-lg ring-1 ring-white/15"
         >
           <UserSwitch size={14} weight="bold" className="text-amber-400" />
-          {t(`impersonation.returned_${returned}`)}
+          {t(endedNoticeKey(returned, platform))}
         </div>
       </div>
     )

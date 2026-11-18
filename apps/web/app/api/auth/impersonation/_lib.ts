@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@services/config/config'
 import { IMPERSONATION_COOKIE, getCookieOptions, getDomainFromRequest } from '@services/auth/cookies'
 import { isLocalhost } from '@services/utils/ts/hostUtils'
+import { impersonationCookieMaxAge } from '@/lib/auth/impersonationToken'
 
 // Shared by the impersonation route handlers (files prefixed with `_` are
 // never routes).
@@ -58,9 +59,10 @@ export async function readJson(res: Response): Promise<any> {
 }
 
 
-/** Keep a freshly issued impersonation token in its httpOnly cookie. */
+/** Keep a freshly issued (or renewed) impersonation token in its httpOnly cookie. */
 export function setCookie(response: NextResponse, request: NextRequest, token: string) {
-  // The server ends an idle session after 8 h and any session after 12 h; the
-  // cookie lasts as long as the token itself.
-  response.cookies.set(IMPERSONATION_COOKIE, token, { ...getCookieOptions(request), maxAge: 12 * 60 * 60 })
+  // The cookie lasts exactly as long as the token: staff sessions run to the
+  // safety cap, an admin's "view as" slides with use (the API renews the
+  // token on /status and this swaps the cookie).
+  response.cookies.set(IMPERSONATION_COOKIE, token, { ...getCookieOptions(request), maxAge: impersonationCookieMaxAge(token) })
 }

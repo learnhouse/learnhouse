@@ -20,8 +20,10 @@ from src.security.impersonation import (
     CODE_DENIED as IMPERSONATION_CODE_DENIED,
     CODE_ENDED as IMPERSONATION_CODE_ENDED,
     CODE_WRONG_ORG as IMPERSONATION_CODE_WRONG_ORG,
+    REASON_TOKEN_EXPIRED as IMPERSONATION_REASON_TOKEN_EXPIRED,
     context_from_claims,
     error_detail as impersonation_error_detail,
+    impersonation_end_reason,
     report_denied as report_impersonation_denied,
     report_misplaced as report_misplaced_impersonation,
     request_policy as impersonation_request_policy,
@@ -741,7 +743,9 @@ async def _resolve_current_user(
             report_misplaced_impersonation(
                 credential, request.scope.get("method") or "GET", request.scope.get("path") or ""
             )
-        raise _impersonation_ended_exception()
+        raise _impersonation_ended_exception(
+            IMPERSONATION_REASON_TOKEN_EXPIRED if credential.status == "expired" else None
+        )
 
     if token:
         payload = decode_jwt(token)
@@ -873,10 +877,10 @@ def remembered_user_email(db_session: AsyncSession, user_id: int) -> Optional[tu
     return memo.get(("user_email", user_id)) if memo is not None else None
 
 
-def _impersonation_ended_exception() -> HTTPException:
+def _impersonation_ended_exception(reason: Optional[str] = None) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=impersonation_error_detail(IMPERSONATION_CODE_ENDED),
+        detail=impersonation_error_detail(IMPERSONATION_CODE_ENDED, reason),
         headers={"WWW-Authenticate": "Bearer"},
     )
 
@@ -927,7 +931,8 @@ async def _resolve_impersonated_user(
         raise _impersonation_ended_exception()
     user = await confirm(db_session, ctx)
     if user is None:
-        raise _impersonation_ended_exception()
+        # Say why (revoked, expired, permission changed…) so the badge can.
+        raise _impersonation_ended_exception(await impersonation_end_reason(db_session, ctx))
 
     scoped_org = await _request_org_id(request, db_session)
     if scoped_org is not None and scoped_org != ctx.org_id:

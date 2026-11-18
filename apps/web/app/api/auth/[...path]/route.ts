@@ -11,6 +11,9 @@ import {
   getCookieOptions,
 } from '@services/auth/cookies'
 import { isLocalhost } from '@services/utils/ts/hostUtils'
+import { endReasonOf } from '@/lib/auth/impersonation'
+import { sessionIsOver, splitRenewal } from '@/lib/auth/impersonationToken'
+import { setCookie as setImpersonationCookie } from '../impersonation/_lib'
 
 const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
 
@@ -193,19 +196,36 @@ async function impersonationRefresh(request: NextRequest, token: string): Promis
   } catch {
     res = null
   }
-  if (!res || res.status >= 500) {
+  if (!res || (!res.ok && !sessionIsOver(res.status))) {
     return NextResponse.json({ error: 'Impersonation check unavailable' }, { status: 503 })
   }
   if (!res.ok) {
-    const response = NextResponse.json({ code: 'impersonation_ended' }, { status: 410 })
+    const response = NextResponse.json(
+      { code: 'impersonation_ended', reason: endReasonOf(await readImpersonationJson(res)) },
+      { status: 410 },
+    )
     clearImpersonationCookie(response, request)
     return response
   }
-  return NextResponse.json({
-    access_token: token,
-    expiry: decodeJwtExpiryMs(token) ?? undefined,
+  // The API slides the token while the session is in use: hand the page the
+  // renewed one and keep it in the cookie.
+  const { token: renewed } = splitRenewal(await readImpersonationJson(res))
+  const current = renewed || token
+  const response = NextResponse.json({
+    access_token: current,
+    expiry: decodeJwtExpiryMs(current) ?? undefined,
     impersonation: true,
   })
+  if (renewed) setImpersonationCookie(response, request, renewed)
+  return response
+}
+
+async function readImpersonationJson(res: Response): Promise<unknown> {
+  try {
+    return await res.json()
+  } catch {
+    return {}
+  }
 }
 
 function clearImpersonationCookie(response: NextResponse, request: NextRequest) {

@@ -24,6 +24,8 @@ import {
   activeImpersonation,
   authRefreshUrl,
   dispatchImpersonationEnded,
+  endReasonOf,
+  normalizeEndReason,
   setActiveImpersonation,
   type ImpersonationSession,
 } from '@/lib/auth/impersonation'
@@ -436,8 +438,9 @@ export function SessionProvider({
 
         if (response.status === 410) {
           // The impersonation this tab ran on is over; the superadmin's own
-          // session is untouched. The banner takes the tab back to the console.
-          dispatchImpersonationEnded('ended')
+          // session is untouched. The banner takes the tab back to the console
+          // and says why.
+          dispatchImpersonationEnded(normalizeEndReason(endReasonOf(await response.json().catch(() => null))))
           return { status: 'transient' } as const
         }
 

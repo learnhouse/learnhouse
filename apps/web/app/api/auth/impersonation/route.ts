@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { ACCESS_TOKEN_COOKIE, IMPERSONATION_COOKIE } from '@services/auth/cookies'
+import { jwtPurpose, sessionIsOver, splitRenewal } from '@/lib/auth/impersonationToken'
+import { endReasonOf } from '@/lib/auth/impersonation'
 import { BACKEND_URL, clearCookie, forwardHeaders, isCrossSite, readJson, setCookie } from './_lib'
 
 // Impersonation, browser side.
@@ -9,24 +11,13 @@ import { BACKEND_URL, clearCookie, forwardHeaders, isCrossSite, readJson, setCoo
 //          API with the superadmin's own session; the returned token goes into
 //          the httpOnly LH_imp cookie. The superadmin's own LH_access /
 //          LH_refresh stay untouched, so ending is just dropping LH_imp.
-//   GET    status of the impersonation this browser holds (badge, other tabs).
+//   GET    status of the impersonation this browser holds (badge, other tabs);
+//          also where the token slides: a renewed one replaces the cookie.
 //   DELETE end it (server-side record first, then the cookie).
 //   ./switch, ./targets: the badge's menu.
 //
 // Same-origin only for the state-changing verbs (the API's own CSRF check
 // can't see the browser's Origin through this proxy).
-
-function jwtPurpose(token: string): string | null {
-  try {
-    const part = token.split('.')[1]
-    if (!part) return null
-    const json = Buffer.from(part.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8')
-    const purpose = JSON.parse(json)?.purpose
-    return typeof purpose === 'string' ? purpose : null
-  } catch {
-    return null
-  }
-}
 
 export async function POST(request: NextRequest) {
   if (isCrossSite(request)) {
@@ -81,16 +72,21 @@ export async function GET(request: NextRequest) {
   } catch {
     res = null
   }
-  if (!res || res.status >= 500) {
-    // Unknown, not ended: the caller keeps the session and asks again.
+  if (!res || (!res.ok && !sessionIsOver(res.status))) {
+    // Unknown, not ended (down, busy, rate limited): the caller keeps the
+    // session and asks again.
     return NextResponse.json({ active: true, unknown: true })
   }
   if (!res.ok) {
-    const response = NextResponse.json({ active: false, ended: true })
+    // Over: say why, so the badge can.
+    const response = NextResponse.json({ active: false, ended: true, reason: endReasonOf(await readJson(res)) })
     clearCookie(response, request)
     return response
   }
-  return NextResponse.json({ active: true, session: await readJson(res) })
+  const { session, token: renewed } = splitRenewal(await readJson(res))
+  const response = NextResponse.json({ active: true, session })
+  if (renewed) setCookie(response, request, renewed)
+  return response
 }
 
 export async function DELETE(request: NextRequest) {
