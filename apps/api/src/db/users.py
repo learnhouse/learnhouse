@@ -1,7 +1,7 @@
 import json
 from typing import Literal, Optional, TYPE_CHECKING
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, computed_field, field_validator
+from pydantic import BaseModel, EmailStr, computed_field, field_validator, model_validator
 from sqlmodel import Field, SQLModel
 from sqlalchemy import JSON, Boolean, Column, Index
 from sqlalchemy.dialects.postgresql import JSONB
@@ -100,6 +100,15 @@ class UserRead(UserBase):
     is_backoffice_staff: bool = False
     # The signed-in user's own interface choices (theme…), see UserPreferences.
     ui_preferences: Optional[dict] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_staff_flag(cls, data):
+        # Session data cached before the Backoffice rename carries only
+        # ``is_superadmin``; read it so a stale cache entry can't lock staff out.
+        if isinstance(data, dict) and "is_backoffice_staff" not in data and "is_superadmin" in data:
+            data = {**data, "is_backoffice_staff": bool(data["is_superadmin"])}
+        return data
 
     # Deprecated: the pre-Backoffice name of ``is_backoffice_staff``. Shipped
     # mobile and desktop builds still read it; drop it once they no longer do.
