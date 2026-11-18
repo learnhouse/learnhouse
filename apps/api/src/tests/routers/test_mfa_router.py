@@ -776,17 +776,17 @@ class TestOrgResetMember:
         assert resp.status_code == 200
         assert resp.json()["had_factor"] is False
 
-    async def test_cannot_reset_a_superadmin(self, app, client, db, org, admin_user, regular_user):
+    async def test_cannot_reset_a_backoffice(self, app, client, db, org, admin_user, regular_user):
         from sqlmodel import select as _select
 
         from src.db.users import User as _User
 
         target = (await db.execute(_select(_User).where(_User.id == regular_user.id))).scalars().first()
-        target.is_superadmin = True
+        target.is_backoffice_staff = True
         db.add(target)
         await db.commit()
 
         _act_as(app, admin_user)
         resp = await client.post(f"/api/v1/auth/mfa/org-reset/{org.id}/{regular_user.id}")
         assert resp.status_code == 403
-        assert resp.json()["detail"]["code"] == "TARGET_IS_SUPERADMIN"
+        assert resp.json()["detail"]["code"] == "TARGET_IS_BACKOFFICE_STAFF"

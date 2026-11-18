@@ -17935,7 +17935,7 @@
       "ordered": "Classez les cours dans l'ordre où les apprenants doivent les suivre."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Vue d'ensemble",
@@ -18124,7 +18124,7 @@
       "password_placeholder": "Saisissez votre mot de passe",
       "signing_in": "Connexion...",
       "sign_in": "Se connecter",
-      "superadmin_only": "Réservé à l'équipe de la plateforme LearnHouse"
+      "backoffice_only": "Réservé à l'équipe de la plateforme LearnHouse"
     },
     "pages": {
       "analytics": "Analytique globale",
@@ -18139,7 +18139,7 @@
       "ai_costs_desc": "Ce que les requêtes IA nous coûtent au tarif public du fournisseur, comparé à la valeur des crédits facturés"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Utilisateurs",
       "developers": "Développeurs",
       "avatar": "Avatar",
@@ -18261,7 +18261,7 @@
       "users_count_many": "{{count}} d'utilisateurs",
       "users_count_other": "{{count}} utilisateurs",
       "role_label": "Rôle :",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Standard",
       "min_orgs": "Min. d'org. :",
       "any": "Tous",
@@ -18291,9 +18291,9 @@
       },
       "tabs": {
         "tokens_label": "Jetons d'API",
-        "tokens_desc": "Créez, listez et révoquez des jetons d'API superadmin inter-organisations.",
+        "tokens_desc": "Créez, listez et révoquez des jetons d'API Backoffice inter-organisations.",
         "docs_label": "Documentation et Playground",
-        "docs_desc": "Parcourez l'API superadmin, puis appelez-la en direct avec votre jeton."
+        "docs_desc": "Parcourez l'API Backoffice, puis appelez-la en direct avec votre jeton."
       },
       "org_picker": {
         "none_yet": "Aucune organisation pour l'instant",
@@ -18315,7 +18315,7 @@
       "endpoint": {
         "invalid_json": "JSON invalide",
         "network_error": "Erreur réseau",
-        "session_only": "<strong>Authentification par session uniquement.</strong> Les jetons d'API ne peuvent pas appeler ce point de terminaison (blocage contre l'élévation de privilèges). Le bouton Envoyer en direct échouera avec une erreur 403 si vous utilisez un jeton ; copiez plutôt l'extrait et exécutez-le en tant que superadmin connecté.",
+        "session_only": "<strong>Authentification par session uniquement.</strong> Les jetons d'API ne peuvent pas appeler ce point de terminaison (blocage contre l'élévation de privilèges). Le bouton Envoyer en direct échouera avec une erreur 403 si vous utilisez un jeton ; copiez plutôt l'extrait et exécutez-le en tant qu'utilisateur Backoffice connecté.",
         "parameters": "Paramètres",
         "request_body": "Corps de la requête (JSON)",
         "reset_to_sample": "Réinitialiser à l'exemple",
@@ -18343,7 +18343,7 @@
       "description_placeholder": "À quoi sert ce jeton",
       "expiration": "Expiration",
       "never_expires": "N'expire jamais",
-      "warning": "Un jeton superadmin peut appeler <em>tous</em> les points de terminaison <code>/ee/superadmin/*</code> : créer des organisations, activer des fonctionnalités, modifier les offres sur toute la plateforme. Traitez-le comme une clé maîtresse.",
+      "warning": "Un jeton Backoffice peut appeler <em>tous</em> les points de terminaison <code>/ee/backoffice/*</code> : créer des organisations, activer des fonctionnalités, modifier les offres sur toute la plateforme. Traitez-le comme une clé maîtresse.",
       "create_token": "Créer le jeton",
       "failed_revoke": "Échec de la révocation ({{status}})",
       "revoke_title": "Révoquer le jeton ?",
@@ -18362,7 +18362,7 @@
       "count_other": "{{count}} jetons",
       "loading": "Chargement des jetons…",
       "failed_load": "Échec du chargement des jetons.",
-      "empty_title": "Aucun jeton d'API superadmin pour l'instant.",
+      "empty_title": "Aucun jeton d'API Backoffice pour l'instant.",
       "empty_desc": "Créez-en un pour automatiser le provisionnement des organisations et l'activation des fonctionnalités.",
       "col_name": "Nom",
       "col_prefix": "Préfixe",
@@ -18383,7 +18383,7 @@
       "scopes": "Portées",
       "revoked": "Jeton révoqué",
       "scope_desc": {
-        "api": "Appeler l'API REST superadmin.",
+        "api": "Appeler l'API REST Backoffice.",
         "mcp": "Connecter un assistant IA au MCP de la plateforme (outils de lecture).",
         "mcp_write": "Autorise aussi les écritures sûres du MCP : notes, tags, prolongations de POC, propriétaire du compte."
       },
@@ -18399,16 +18399,16 @@
     },
     "ee_required": {
       "title": "Licence Enterprise Edition requise",
-      "description": "Le tableau de bord superadmin fait partie de LearnHouse Enterprise Edition et n'est pas disponible sur ce déploiement."
+      "description": "Le tableau de bord Backoffice fait partie de LearnHouse Enterprise Edition et n'est pas disponible sur ce déploiement."
     },
     "access_denied": {
       "title": "Accès refusé",
-      "description": "Vous devez disposer des privilèges superadmin pour accéder à cette page."
+      "description": "Vous devez disposer des privilèges Backoffice pour accéder à cette page."
     },
     "shell": {
-      "platform": "Plateforme",
-      "title": "Plateforme LearnHouse",
-      "subtitle": "Console superadmin",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Navigation de la console",
       "open_menu": "Ouvrir le menu",
       "close_menu": "Fermer le menu",
@@ -19561,7 +19561,7 @@
       "add_member": "Ajouter un membre",
       "read_only_hint": "Seuls les propriétaires de la plateforme peuvent ajouter, modifier ou retirer des membres de l'équipe.",
       "empty_title": "Aucun membre dans l'équipe pour le moment",
-      "empty_desc": "Les superadmins apparaîtront ici une fois l'API de la plateforme mise à jour.",
+      "empty_desc": "Les membres du Backoffice apparaîtront ici une fois l'API de la plateforme mise à jour.",
       "col_member": "Membre",
       "col_role": "Rôle",
       "col_granted_by": "Accordé par",
@@ -19657,7 +19657,7 @@
       "enabled": "Activé",
       "disabled": "Désactivé",
       "mcp": "MCP de la plateforme",
-      "mcp_desc": "Point d'accès MCP en lecture quasi seule pour les assistants IA, authentifié par des jetons superadmin.",
+      "mcp_desc": "Point d'accès MCP en lecture quasi seule pour les assistants IA, authentifié par des jetons Backoffice.",
       "status": "Statut",
       "license": "Licence",
       "license_desc": "Champs de licence sans risque. Les clés et signatures ne sont jamais affichées.",
@@ -19681,7 +19681,7 @@
       "every_hours_many": "Toutes les {{count}} heures"
     },
     "users": {
-      "superadmin_filter": "Filtrer par superadmin",
+      "backoffice_filter": "Filtrer par Backoffice",
       "min_orgs": "Nombre minimum d'organisations",
       "any_orgs": "Toutes organisations",
       "min_orgs_value_one": "{{count}}+ organisation",
@@ -19726,7 +19726,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Connecter un assistant IA",
-      "desc": "Le MCP de la plateforme permet à Claude et à d'autres assistants de lire les données de la plateforme avec un jeton superadmin.",
+      "desc": "Le MCP de la plateforme permet à Claude et à d'autres assistants de lire les données de la plateforme avec un jeton Backoffice.",
       "enabled": "Activé",
       "disabled": "Désactivé sur ce serveur",
       "step1_title": "Créer un jeton",
@@ -20205,7 +20205,7 @@
           "automation": "Exécutions échouées et règles qui ont agi",
           "team": "Changements dans l’équipe de la plateforme",
           "token": "Nouveaux jetons API",
-          "security": "Connexions superadmin échouées, jetons révoqués",
+          "security": "Connexions Backoffice échouées, jetons révoqués",
           "follow": "Activité des organisations que vous suivez",
           "system": "Alertes de la plateforme et échecs de canaux"
         },
@@ -21099,7 +21099,7 @@
       },
       "history": {
         "title": "Modifications récentes",
-        "desc": "Modifications faites depuis la console plateforme, champ par champ.",
+        "desc": "Modifications faites depuis le Backoffice, champ par champ.",
         "empty": "Aucune modification pour l'instant",
         "empty_desc": "Les modifications faites ici apparaissent avec leur auteur et ce qui a changé."
       }

@@ -7,12 +7,12 @@ export type InstanceMode = 'saas' | 'oss' | 'ee'
  * The whole gate policy, in one pure function so it can be tested directly.
  *
  * Blocks only on a definitive 'oss'. A null mode means the lookup failed, and
- * that renders the dashboard: failing closed would lock real SaaS superadmins
- * out of /admin during any brief API blip, which is exactly when they need
+ * that renders the dashboard: failing closed would lock real SaaS backoffice staff
+ * out of /backoffice during any brief API blip, which is exactly when they need
  * it. The API-side check is what actually enforces this; the web gate exists
  * to show a clean message instead of dead chrome.
  */
-export function isSuperadminSurfaceBlocked(mode: InstanceMode | null): boolean {
+export function isBackofficeSurfaceBlocked(mode: InstanceMode | null): boolean {
   return mode === 'oss'
 }
 

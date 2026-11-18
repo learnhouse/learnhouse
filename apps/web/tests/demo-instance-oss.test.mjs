@@ -16,8 +16,8 @@ const IMPORTS = {
   "app/auth/layout.tsx": "components/DemoInstance/DemoInstanceBar",
   "app/orgs/[orgslug]/demo-access/page.tsx": "app/demo/DemoAccessPage",
   "app/orgs/[orgslug]/demo-ended/page.tsx": "app/demo/DemoEndedPage",
-  "app/admin/(dashboard)/demos/page.tsx": "components/Demos/DemosPage",
-  "app/admin/(dashboard)/demos/[uuid]/page.tsx": "components/Demos/DemoDetailPage",
+  "app/backoffice/(dashboard)/demos/page.tsx": "components/Demos/DemosPage",
+  "app/backoffice/(dashboard)/demos/[uuid]/page.tsx": "components/Demos/DemoDetailPage",
 };
 
 describe("demo instances in the OSS build", () => {

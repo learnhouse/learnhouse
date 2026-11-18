@@ -436,7 +436,7 @@ async def test_create_role_cannot_grant_bucket_creator_lacks(db, org, admin_user
         new_callable=AsyncMock,
         return_value=creator_role,
     ), patch(
-        "src.services.roles.roles.is_user_superadmin",
+        "src.services.roles.roles.is_user_backoffice_staff",
         new_callable=AsyncMock,
         return_value=False,
     ):

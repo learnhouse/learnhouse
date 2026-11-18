@@ -39,7 +39,7 @@ function getViewport(): 'mobile' | 'tablet' | 'desktop' {
 
 function highestRole(session: any, orgId?: number): string {
   const user = session?.data?.user
-  if (user?.is_superadmin) return 'superadmin'
+  if (user?.is_backoffice_staff) return 'backoffice'
   const roles = session?.data?.roles
   if (Array.isArray(roles)) {
     const forOrg = orgId ? roles.find((r: any) => r?.org?.id === orgId) : roles[0]

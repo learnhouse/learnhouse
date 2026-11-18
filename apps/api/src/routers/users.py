@@ -337,7 +337,7 @@ async def api_create_user_without_org(
     response_model=UserReadPublic,
     tags=["users"],
     summary="Get user by ID",
-    description="Get a user by numeric ID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+    description="Get a user by numeric ID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.",
     responses={
         200: {"description": "Public view of the user.", "model": UserReadPublic},
         401: {"description": "Authentication required"},
@@ -355,7 +355,7 @@ async def api_get_user_by_id(
 
     SECURITY: Requires authentication to prevent user enumeration attacks.
     Anonymous users cannot access this endpoint.
-    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_backoffice_staff, signup_method) are excluded.
     """
     return await read_user_by_id(request, db_session, current_user, user_id)
 
@@ -365,7 +365,7 @@ async def api_get_user_by_id(
     response_model=UserReadPublic,
     tags=["users"],
     summary="Get user by UUID",
-    description="Get a user by UUID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+    description="Get a user by UUID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.",
     responses={
         200: {"description": "Public view of the user.", "model": UserReadPublic},
         401: {"description": "Authentication required"},
@@ -382,7 +382,7 @@ async def api_get_user_by_uuid(
     Get User by UUID.
 
     SECURITY: Requires authentication to prevent user enumeration attacks.
-    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_backoffice_staff, signup_method) are excluded.
     """
     return await read_user_by_uuid(request, db_session, current_user, user_uuid)
 
@@ -392,7 +392,7 @@ async def api_get_user_by_uuid(
     response_model=UserReadPublic,
     tags=["users"],
     summary="Get user by username",
-    description="Get a user by username. Requires authentication to prevent username enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+    description="Get a user by username. Requires authentication to prevent username enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.",
     responses={
         200: {"description": "Public view of the user.", "model": UserReadPublic},
         401: {"description": "Authentication required"},
@@ -409,7 +409,7 @@ async def api_get_user_by_username(
     Get User by Username.
 
     SECURITY: Requires authentication to prevent username enumeration attacks.
-    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_backoffice_staff, signup_method) are excluded.
     """
     return await read_user_by_username(request, db_session, current_user, username)
 

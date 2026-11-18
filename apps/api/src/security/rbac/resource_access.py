@@ -24,8 +24,8 @@ from sqlalchemy import inspect as sa_inspect
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.users import AnonymousUser, PublicUser, APITokenUser, SuperadminAPITokenUser
-from src.security.superadmin import superadmin_org_bypass_blocked
+from src.db.users import AnonymousUser, PublicUser, APITokenUser, BackofficeAPITokenUser
+from src.security.backoffice import backoffice_org_bypass_blocked
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
@@ -189,18 +189,18 @@ class ResourceAccessChecker:
                     context=context.value,
                 )
 
-        # Superadmin bypass: platform admins act on any tenant without an org
+        # Backoffice bypass: platform admins act on any tenant without an org
         # membership row. The flag is loaded onto PublicUser by get_current_user
         # so this is a free attribute read, no DB hit. API tokens and anonymous
-        # users carry no superadmin flag and continue through the normal path.
+        # users carry no backoffice flag and continue through the normal path.
         if (
             isinstance(self.current_user, PublicUser)
-            and self.current_user.is_superadmin
-            and not superadmin_org_bypass_blocked(self.current_user.id)
+            and self.current_user.is_backoffice_staff
+            and not backoffice_org_bypass_blocked(self.current_user.id)
         ):
             return AccessDecision(
                 allowed=True,
-                reason="Superadmin access",
+                reason="Backoffice access",
                 via_admin=True,
                 resource_uuid=resource_uuid,
                 user_id=self.current_user.id,
@@ -208,14 +208,14 @@ class ResourceAccessChecker:
                 context=context.value,
             )
 
-        # Superadmin API tokens are cross-org by design and re-check at auth
-        # time that their minter is still a superadmin. Their id is the token
+        # Backoffice API tokens are cross-org by design and re-check at auth
+        # time that their minter is still a backoffice staff member. Their id is the token
         # row id, so they must never fall through to the user-id based checks
         # below, where that id would be read as some unrelated user's.
-        if isinstance(self.current_user, SuperadminAPITokenUser):
+        if isinstance(self.current_user, BackofficeAPITokenUser):
             return AccessDecision(
                 allowed=True,
-                reason="Superadmin API token access",
+                reason="Backoffice API token access",
                 via_admin=True,
                 resource_uuid=resource_uuid,
                 user_id=self.current_user.created_by_user_id,
@@ -247,7 +247,7 @@ class ResourceAccessChecker:
             return await self._check_api_token_access(resource_uuid, action, config)
 
         # Org-wide "require two-factor" policy. Applies only to real signed-in
-        # users: anonymous public browsing is unaffected, superadmins bypassed
+        # users: anonymous public browsing is unaffected, backoffice staff bypassed
         # above, and API tokens are a separate credential class handled above.
         # Raises rather than returning a denial so the structured error code
         # survives to the client; the UI needs to tell "enable 2FA" apart from
@@ -742,7 +742,7 @@ class ResourceAccessChecker:
 
     def _get_user_id(self) -> int:
         """Get the current user's ID."""
-        if isinstance(self.current_user, (APITokenUser, SuperadminAPITokenUser)):
+        if isinstance(self.current_user, (APITokenUser, BackofficeAPITokenUser)):
             return 0  # token ids are not user ids
         return self.current_user.id if self.current_user else 0
 

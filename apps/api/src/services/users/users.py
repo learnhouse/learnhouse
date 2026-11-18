@@ -10,7 +10,7 @@ import redis
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from config.config import get_learnhouse_config
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
@@ -317,7 +317,7 @@ async def create_user(
     # `extra_metadata` is protected here because it was just rebuilt from the
     # org's declared signup fields; re-applying the submitted value would undo
     # that and let a public caller store arbitrary JSON.
-    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "extra_metadata"}
+    _PROTECTED_FIELDS = {"is_backoffice_staff", "id", "user_uuid", "extra_metadata"}
     user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         if key not in _PROTECTED_FIELDS:
@@ -580,7 +580,7 @@ async def create_user_without_org(
     # Exclude unset values; strip protected fields to prevent privilege escalation.
     # `extra_metadata` is protected because this org-less path has no declared
     # signup fields, so a submitted blob must never reach the database.
-    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "extra_metadata"}
+    _PROTECTED_FIELDS = {"is_backoffice_staff", "id", "user_uuid", "extra_metadata"}
     user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         if key not in _PROTECTED_FIELDS:
@@ -629,21 +629,21 @@ async def update_user(
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
 
     is_owner = current_user.id == user.id
-    acting_superadmin = not is_owner and await is_user_superadmin(current_user.id, db_session)
+    acting_backoffice = not is_owner and await is_user_backoffice_staff(current_user.id, db_session)
 
     # Email and username identify a global account; only its owner (or a
-    # superadmin) changes them, never an admin of one of its orgs.
+    # backoffice) changes them, never an admin of one of its orgs.
     # EmailStr lowercases the domain, so a form that re-sends the stored
     # address can differ from it in case alone; that is not a change.
     email_changed = (user_object.email or "").strip().lower() != (user.email or "").strip().lower()
     identity_changed = email_changed or user_object.username != user.username
-    if identity_changed and not is_owner and not acting_superadmin:
+    if identity_changed and not is_owner and not acting_backoffice:
         raise HTTPException(
             status_code=403,
             detail="Only the account owner can change its email or username",
         )
 
-    if not is_owner and not acting_superadmin:
+    if not is_owner and not acting_backoffice:
         await _check_org_admin_can_edit_account(user, db_session)
 
     if email_changed:
@@ -687,7 +687,7 @@ async def update_user(
     # signup fields: letting a member rewrite it through their own profile
     # would let them forge data the organization collected about them.
     _PROTECTED_FIELDS = {
-        "is_superadmin",
+        "is_backoffice_staff",
         "id",
         "user_uuid",
         "email_verified",
@@ -748,11 +748,11 @@ async def _check_org_admin_can_edit_account(user: User, db_session: AsyncSession
 
     The ``User`` row is shared by every org it belongs to, so (as for API
     tokens) an org admin may only rewrite it when the account is an ordinary
-    member of that one org: never a superadmin, an Admin/Maintainer, or an
+    member of that one org: never a backoffice staff member, an Admin/Maintainer, or an
     account that also belongs to another organization.
     """
-    if user.is_superadmin:
-        raise HTTPException(status_code=403, detail="You cannot modify superadmin accounts")
+    if user.is_backoffice_staff:
+        raise HTTPException(status_code=403, detail="You cannot modify backoffice accounts")
     memberships = (await db_session.execute(
         select(UserOrganization).where(UserOrganization.user_id == user.id)
     )).scalars().all()
@@ -987,7 +987,7 @@ async def _can_see_user(current_user, target: User, db_session: AsyncSession) ->
 
     SECURITY: these lookups only require a login, and any account could
     otherwise walk the id space and read every user's profile on the platform.
-    Visible: yourself, anyone you share an org with, or anyone if superadmin.
+    Visible: yourself, anyone you share an org with, or anyone if backoffice.
     An API token is scoped to its org, so it sees only that org's members.
     Callers answer 404 either way, so a miss does not confirm the account.
     """
@@ -1008,7 +1008,7 @@ async def _can_see_user(current_user, target: User, db_session: AsyncSession) ->
     caller_id = current_user.id
     if caller_id == target.id:
         return True
-    if await is_user_superadmin(caller_id, db_session):
+    if await is_user_backoffice_staff(caller_id, db_session):
         return True
 
     caller_orgs = select(UserOrganization.org_id).where(
@@ -1033,7 +1033,7 @@ async def read_user_by_id(
     Get user by ID.
 
     SECURITY: Returns 404 with generic message to prevent user enumeration.
-    Returns UserReadPublic to exclude sensitive fields (is_superadmin, signup_method).
+    Returns UserReadPublic to exclude sensitive fields (is_backoffice_staff, signup_method).
     """
     # Get user
     statement = select(User).where(User.id == user_id)
@@ -1058,7 +1058,7 @@ async def read_user_by_uuid(
     Get user by UUID.
 
     SECURITY: Returns 404 with generic message to prevent user enumeration.
-    Returns UserReadPublic to exclude sensitive fields (is_superadmin, signup_method).
+    Returns UserReadPublic to exclude sensitive fields (is_backoffice_staff, signup_method).
     """
     # Get user
     statement = select(User).where(User.user_uuid == user_uuid)
@@ -1083,7 +1083,7 @@ async def read_user_by_username(
     Get user by username.
 
     SECURITY: Returns 404 with generic message to prevent username enumeration.
-    Returns UserReadPublic to exclude sensitive fields (is_superadmin, signup_method).
+    Returns UserReadPublic to exclude sensitive fields (is_backoffice_staff, signup_method).
     """
     # Get user
     statement = select(User).where(User.username == username)
@@ -1216,7 +1216,7 @@ async def delete_user_by_id(
 
     # Deleting an account is global and cascades to every org the user is the
     # sole admin of. Org admins remove members from their org instead.
-    if current_user.id != user.id and not await is_user_superadmin(current_user.id, db_session):
+    if current_user.id != user.id and not await is_user_backoffice_staff(current_user.id, db_session):
         raise HTTPException(
             status_code=403,
             detail="Only the account owner can delete this account",

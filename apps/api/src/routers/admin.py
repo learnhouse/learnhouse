@@ -407,7 +407,7 @@ class UserTrailDetail(BaseModel):
     description=(
         "Issue a JWT access token on behalf of a user. The user must belong to "
         "the organization matching the org_slug. Requires `users.action_update` permission. "
-        "Privileged targets (org Admin/Maintainer, platform superadmin) are refused."
+        "Privileged targets (org Admin/Maintainer, platform backoffice staff member) are refused."
     ),
     responses={
         200: {"description": "Access token minted on behalf of the target user.", "model": TokenResponse},
@@ -438,7 +438,7 @@ async def api_admin_issue_token(
         "mint a new one when it expires. It only works inside this organization, only on the "
         "routes the embed components use, and never on account settings. "
         "Requires `users.action_update` permission. Privileged targets (org Admin/Maintainer, "
-        "platform superadmin) and accounts that belong to other organizations are refused."
+        "platform backoffice staff member) and accounts that belong to other organizations are refused."
     ),
     responses={
         200: {"description": "Embed session minted for the learner.", "model": EmbedSessionResponse},
@@ -970,7 +970,7 @@ async def api_admin_get_user_by_email(
         "The target must be an ordinary member. Consuming the link mints a full "
         "session, so the same rule as `/users/{user_id}/token` applies: an API "
         "token cannot sign in as an organization Admin or Maintainer, or as a "
-        "platform superadmin. "
+        "platform backoffice staff member. "
         "Requires `users.action_update` permission."
     ),
     responses={
@@ -979,7 +979,7 @@ async def api_admin_get_user_by_email(
         403: {
             "description": (
                 "User not in this org, or the target is an Admin, Maintainer or "
-                "superadmin; distinguish by the detail message before treating "
+                "backoffice; distinguish by the detail message before treating "
                 "it as a membership problem"
             )
         },

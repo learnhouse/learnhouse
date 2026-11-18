@@ -271,7 +271,7 @@ function BillingClient() {
   const currentPlanId = trial && !subscription ? 'free' : storedPlanId
   const isOrgActive = resolveOrgActive(org)
   const hasExistingSub = !!subscription
-  // Billing is org-management: only admins/superadmins may view/manage it, even
+  // Billing is org-management: only admins/backoffice staff may view/manage it, even
   // via a direct link (the menu entries are already hidden for non-admins).
   const canManage = canManageOrgFromSession(session, org?.id)
 

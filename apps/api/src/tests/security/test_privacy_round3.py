@@ -1,7 +1,7 @@
 """Personal-data exposure regressions (round 3).
 
 1. Org admins received the global account record: signup answers collected by
-   OTHER orgs (``extra_metadata``) and the platform ``is_superadmin`` flag.
+   OTHER orgs (``extra_metadata``) and the platform ``is_backoffice_staff`` flag.
 2. The audit dossier mixed in org-agnostic login rows (other orgs' IPs and
    devices) and account-global lockout state (tested with the EE dossier).
 3. ``/users/id|uuid|username`` let any logged-in account read any user.
@@ -98,7 +98,7 @@ LEAKY_META = {"company": "Acme", "other_org_secret": "diagnosis: x"}
 
 @pytest.mark.asyncio
 class TestOrgMemberView:
-    async def test_members_list_filters_metadata_and_drops_superadmin(
+    async def test_members_list_filters_metadata_and_drops_backoffice(
         self, db, org, admin_user, user_role, mock_request
     ):
         from src.services.orgs.users import get_organization_users
@@ -106,18 +106,18 @@ class TestOrgMemberView:
         await _declare_signup_field(db, org.id, "company")
         await _make_user(
             db, 90, [org.id], extra_metadata=dict(LEAKY_META),
-            is_superadmin=True, signup_method="google",
+            is_backoffice_staff=True, signup_method="google",
         )
 
         with patch("src.services.orgs.users.is_org_member", return_value=True), \
-                patch("src.security.superadmin.is_user_superadmin", return_value=False), \
+                patch("src.security.backoffice.is_user_backoffice_staff", return_value=False), \
                 patch("src.security.org_auth.is_org_admin", return_value=True):
             result = await get_organization_users(mock_request, org.id, db, admin_user)
 
         body = jsonable_encoder(result)
         row = next(i["user"] for i in body["items"] if i["user"]["id"] == 90)
         assert row["extra_metadata"] == {"company": "Acme"}
-        assert "is_superadmin" not in row
+        assert "is_backoffice_staff" not in row
         # What the members table renders is still there.
         assert row["signup_method"] == "google"
         assert row["email"] == "u90@example.com"
@@ -126,7 +126,7 @@ class TestOrgMemberView:
         from src.services.admin.admin import list_usergroup_members
 
         await _declare_signup_field(db, org.id, "company")
-        member = await _make_user(db, 91, [org.id], extra_metadata=dict(LEAKY_META), is_superadmin=True)
+        member = await _make_user(db, 91, [org.id], extra_metadata=dict(LEAKY_META), is_backoffice_staff=True)
         group = UserGroup(name="g", description="", org_id=org.id, usergroup_uuid="ug_r3")
         db.add(group)
         await db.commit()
@@ -137,7 +137,7 @@ class TestOrgMemberView:
         token = APITokenUser(id=1, org_id=org.id, rights=FULL_ADMIN_API_RIGHTS, created_by_user_id=admin_user.id)
         rows = await list_usergroup_members(token, "ug_r3", db)
         assert rows[0]["user"]["extra_metadata"] == {"company": "Acme"}
-        assert "is_superadmin" not in rows[0]["user"]
+        assert "is_backoffice_staff" not in rows[0]["user"]
 
     async def test_no_declared_fields_means_no_metadata(self, db, org):
         from src.db.users import OrgMemberUserRead
@@ -159,7 +159,7 @@ class TestUserLookupScope:
         )
 
         outsider = _public(await _make_user(db, 93, [other_org.id]))
-        with patch("src.services.users.users.is_user_superadmin", return_value=False):
+        with patch("src.services.users.users.is_user_backoffice_staff", return_value=False):
             for fn, key in (
                 (read_user_by_id, regular_user.id),
                 (read_user_by_uuid, regular_user.user_uuid),
@@ -169,17 +169,17 @@ class TestUserLookupScope:
                     await fn(mock_request, db, outsider, key)
                 assert exc.value.status_code == 404
 
-    async def test_self_shared_org_and_superadmin_allowed(
+    async def test_self_shared_org_and_backoffice_allowed(
         self, db, org, other_org, admin_user, regular_user, mock_request
     ):
         from src.services.users.users import read_user_by_username
 
-        with patch("src.services.users.users.is_user_superadmin", return_value=False):
+        with patch("src.services.users.users.is_user_backoffice_staff", return_value=False):
             assert (await read_user_by_username(mock_request, db, regular_user, "regular")).id == regular_user.id
             assert (await read_user_by_username(mock_request, db, admin_user, "regular")).id == regular_user.id
 
         outsider = _public(await _make_user(db, 94, [other_org.id]))
-        with patch("src.services.users.users.is_user_superadmin", return_value=True):
+        with patch("src.services.users.users.is_user_backoffice_staff", return_value=True):
             assert (await read_user_by_username(mock_request, db, outsider, "regular")).id == regular_user.id
 
     async def test_api_token_scoped_to_its_org(self, db, org, other_org, regular_user, mock_request):
@@ -261,7 +261,7 @@ class TestContributorsEditorView:
     async def test_editor_gets_author_fields_plus_email_only(self, db, org, course, admin_user, mock_request):
         from src.services.courses.contributors import get_course_contributors
 
-        contrib = await _make_user(db, 97, [org.id], extra_metadata=dict(LEAKY_META), is_superadmin=True)
+        contrib = await _make_user(db, 97, [org.id], extra_metadata=dict(LEAKY_META), is_backoffice_staff=True)
         db.add(ResourceAuthor(
             resource_uuid=course.course_uuid, user_id=contrib.id,
             authorship=ResourceAuthorshipEnum.CONTRIBUTOR,

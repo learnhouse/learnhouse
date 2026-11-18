@@ -81,7 +81,7 @@ class OrganizationRead(OrganizationBase):
 
 
 class OrganizationUser(BaseModel):
-    # Org-scoped member view: never the full UserRead (no is_superadmin, and
+    # Org-scoped member view: never the full UserRead (no is_backoffice_staff, and
     # extra_metadata limited to the viewing org's signup fields).
     user: "OrgMemberUserRead"
     role: RoleRead

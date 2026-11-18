@@ -4,7 +4,7 @@ Security model, in one place:
 
 - Managing invitations needs the org write right (Admin or Maintainer, or an
   API token with ``organizations.action_create``), checked by ``rbac_check``.
-- A role must be global or belong to the org. Only an Admin (or a superadmin)
+- A role must be global or belong to the org. Only an Admin (or a backoffice staff member)
   may grant Admin or Maintainer. Below Admin, nobody may grant a role that
   turns on a permission their own role lacks; an API token is held to its
   creator's role and to its own rights.
@@ -37,11 +37,11 @@ from src.db.users import (
     APITokenUser,
     InternalUser,
     PublicUser,
-    SuperadminAPITokenUser,
+    BackofficeAPITokenUser,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
 
-Caller = Union[PublicUser, AnonymousUser, APITokenUser, InternalUser, SuperadminAPITokenUser]
+Caller = Union[PublicUser, AnonymousUser, APITokenUser, InternalUser, BackofficeAPITokenUser]
 
 USER_ROLE_ID = 4
 DEFAULT_EXPIRY_DAYS = 14
@@ -297,16 +297,16 @@ async def role_for_grant(db_session: AsyncSession, org_id: int, role_id: Optiona
 
 
 async def caller_grant_ceiling(db_session: AsyncSession, org: Organization, current_user: Caller) -> tuple[bool, Optional[Role]]:
-    """(unrestricted, caller's role). Unrestricted: internal calls, superadmins
+    """(unrestricted, caller's role). Unrestricted: internal calls, backoffice staff
     and org Admins (an API token is held to its creator)."""
     from src.security.auth import resolve_acting_user_id
     from src.security.org_auth import get_user_org
-    from src.security.superadmin import is_user_superadmin
+    from src.security.backoffice import is_user_backoffice_staff
 
-    if isinstance(current_user, (InternalUser, SuperadminAPITokenUser)):
+    if isinstance(current_user, (InternalUser, BackofficeAPITokenUser)):
         return True, None
     acting = resolve_acting_user_id(current_user)
-    if not isinstance(current_user, APITokenUser) and await is_user_superadmin(acting, db_session):
+    if not isinstance(current_user, APITokenUser) and await is_user_backoffice_staff(acting, db_session):
         return True, None
     membership = await get_user_org(acting, org.id, db_session)
     role = await db_session.get(Role, membership.role_id) if membership is not None else None

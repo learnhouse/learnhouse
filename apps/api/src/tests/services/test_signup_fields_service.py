@@ -119,10 +119,10 @@ class TestValidateSignupFieldValues:
         smuggle arbitrary keys into extra_metadata."""
         result = validate_signup_field_values(
             _fields(),
-            {"company": "Acme", "is_superadmin": True, "anything": {"deep": [1, 2]}},
+            {"company": "Acme", "is_backoffice_staff": True, "anything": {"deep": [1, 2]}},
         )
         assert set(result) == {"company", "news"}
-        assert "is_superadmin" not in result
+        assert "is_backoffice_staff" not in result
         assert "anything" not in result
 
     def test_no_declared_fields_stores_nothing(self):

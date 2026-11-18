@@ -17610,7 +17610,7 @@
       "ordered": "Kursları öğrencilerin alması gereken sırayla dizin."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Genel Bakış",
@@ -17794,7 +17794,7 @@
       "password_placeholder": "Parolanızı girin",
       "signing_in": "Oturum açılıyor...",
       "sign_in": "Oturum aç",
-      "superadmin_only": "Yalnızca LearnHouse platform ekibi için"
+      "backoffice_only": "Yalnızca LearnHouse platform ekibi için"
     },
     "pages": {
       "analytics": "Genel Analitik",
@@ -17809,7 +17809,7 @@
       "ai_costs_desc": "Yapay zekâ isteklerinin sağlayıcının liste fiyatıyla bize maliyeti ile tahsil ettiğimiz kredilerin değeri"
     },
     "menu": {
-      "superadmin": "Süper yönetici",
+      "backoffice": "Backoffice",
       "users": "Kullanıcılar",
       "developers": "Geliştiriciler",
       "avatar": "Avatar",
@@ -17926,7 +17926,7 @@
       "users_count_one": "{{count}} kullanıcı",
       "users_count_other": "{{count}} kullanıcı",
       "role_label": "Rol:",
-      "superadmin": "Süper yönetici",
+      "backoffice": "Backoffice",
       "regular": "Normal",
       "min_orgs": "En az organizasyon:",
       "any": "Herhangi",
@@ -17956,9 +17956,9 @@
       },
       "tabs": {
         "tokens_label": "API Token'ları",
-        "tokens_desc": "Organizasyonlar arası süper yönetici API token'ları oluşturun, listeleyin ve iptal edin.",
+        "tokens_desc": "Organizasyonlar arası Backoffice API token'ları oluşturun, listeleyin ve iptal edin.",
         "docs_label": "Dokümantasyon ve Oyun Alanı",
-        "docs_desc": "Süper yönetici API'sine göz atın, ardından token'ınızla canlı olarak çağırın."
+        "docs_desc": "Backoffice API'sine göz atın, ardından token'ınızla canlı olarak çağırın."
       },
       "org_picker": {
         "none_yet": "Henüz organizasyon yok",
@@ -17980,7 +17980,7 @@
       "endpoint": {
         "invalid_json": "Geçersiz JSON",
         "network_error": "Ağ hatası",
-        "session_only": "<strong>Yalnızca oturum kimlik doğrulaması.</strong> API token'ları bu uç noktayı çağıramaz (ayrıcalık yükseltme engeli). Token kullanırsanız canlı Gönder düğmesi 403 ile başarısız olur; bunun yerine kod parçasını kopyalayıp oturum açmış bir süper yönetici olarak çalıştırın.",
+        "session_only": "<strong>Yalnızca oturum kimlik doğrulaması.</strong> API token'ları bu uç noktayı çağıramaz (ayrıcalık yükseltme engeli). Token kullanırsanız canlı Gönder düğmesi 403 ile başarısız olur; bunun yerine kod parçasını kopyalayıp oturum açmış bir Backoffice kullanıcısı olarak çalıştırın.",
         "parameters": "Parametreler",
         "request_body": "İstek Gövdesi (JSON)",
         "reset_to_sample": "Örneğe sıfırla",
@@ -18008,7 +18008,7 @@
       "description_placeholder": "Bu token'ın ne için olduğu",
       "expiration": "Son kullanma",
       "never_expires": "Süresi dolmaz",
-      "warning": "Bir süper yönetici token'ı <em>her</em> <code>/ee/superadmin/*</code> uç noktasını çağırabilir: organizasyon oluşturma, özellikleri açıp kapatma, platform genelinde planları güncelleme. Bir ana anahtar gibi davranın.",
+      "warning": "Bir Backoffice token'ı <em>her</em> <code>/ee/backoffice/*</code> uç noktasını çağırabilir: organizasyon oluşturma, özellikleri açıp kapatma, platform genelinde planları güncelleme. Bir ana anahtar gibi davranın.",
       "create_token": "Token oluştur",
       "failed_revoke": "İptal edilemedi ({{status}})",
       "revoke_title": "Token iptal edilsin mi?",
@@ -18026,7 +18026,7 @@
       "count_other": "{{count}} token",
       "loading": "Token'lar yükleniyor…",
       "failed_load": "Token'lar yüklenemedi.",
-      "empty_title": "Henüz süper yönetici API token'ı yok.",
+      "empty_title": "Henüz Backoffice API token'ı yok.",
       "empty_desc": "Organizasyon hazırlama ve özellik açıp kapatmayı otomatikleştirmek için bir tane oluşturun.",
       "col_name": "Ad",
       "col_prefix": "Önek",
@@ -18047,7 +18047,7 @@
       "scopes": "Kapsamlar",
       "revoked": "Belirteç iptal edildi",
       "scope_desc": {
-        "api": "Süper yönetici REST API'sini çağırın.",
+        "api": "Backoffice REST API'sini çağırın.",
         "mcp": "Bir yapay zekâ asistanını platform MCP'sine bağlayın (okuma araçları).",
         "mcp_write": "MCP'nin güvenli yazma işlemlerine de izin verir: notlar, etiketler, POC uzatmaları, hesap sahibi."
       },
@@ -18062,16 +18062,16 @@
     },
     "ee_required": {
       "title": "Enterprise Sürüm lisansı gerekli",
-      "description": "Süper yönetici paneli LearnHouse Enterprise Sürümü'nün bir parçasıdır ve bu dağıtımda kullanılamaz."
+      "description": "Backoffice paneli LearnHouse Enterprise Sürümü'nün bir parçasıdır ve bu dağıtımda kullanılamaz."
     },
     "access_denied": {
       "title": "Erişim Reddedildi",
-      "description": "Bu sayfaya erişmek için süper yönetici ayrıcalıklarına ihtiyacınız var."
+      "description": "Bu sayfaya erişmek için Backoffice ayrıcalıklarına ihtiyacınız var."
     },
     "shell": {
-      "platform": "Platform",
-      "title": "LearnHouse Platformu",
-      "subtitle": "Süper yönetici konsolu",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Konsol gezintisi",
       "open_menu": "Menüyü aç",
       "close_menu": "Menüyü kapat",
@@ -19192,7 +19192,7 @@
       "add_member": "Üye ekle",
       "read_only_hint": "Ekip üyelerini yalnızca platform sahipleri ekleyebilir, değiştirebilir veya kaldırabilir.",
       "empty_title": "Henüz ekip üyesi yok",
-      "empty_desc": "Platform API'si güncellendiğinde süper yöneticiler burada görünür.",
+      "empty_desc": "Platform API'si güncellendiğinde Backoffice ekibi burada görünür.",
       "col_member": "Üye",
       "col_role": "Rol",
       "col_granted_by": "Yetkiyi veren",
@@ -19288,7 +19288,7 @@
       "enabled": "Açık",
       "disabled": "Kapalı",
       "mcp": "Platform MCP",
-      "mcp_desc": "Süper yönetici belirteçleriyle doğrulanan, yapay zekâ asistanları için çoğunlukla salt okunur MCP uç noktası.",
+      "mcp_desc": "Backoffice belirteçleriyle doğrulanan, yapay zekâ asistanları için çoğunlukla salt okunur MCP uç noktası.",
       "status": "Durum",
       "license": "Lisans",
       "license_desc": "Güvenli lisans alanları. Anahtarlar ve imzalar asla gösterilmez.",
@@ -19309,7 +19309,7 @@
       "every_hours_other": "Her {{count}} saatte"
     },
     "users": {
-      "superadmin_filter": "Süper yöneticiye göre filtrele",
+      "backoffice_filter": "Backoffice göre filtrele",
       "min_orgs": "En az organizasyon",
       "any_orgs": "Herhangi bir sayı",
       "min_orgs_value_one": "{{count}}+ organizasyon",
@@ -19353,7 +19353,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Bir yapay zekâ asistanı bağlayın",
-      "desc": "Platform MCP'si, Claude ve diğer asistanların süper yönetici belirteciyle platform verilerini okumasını sağlar.",
+      "desc": "Platform MCP'si, Claude ve diğer asistanların Backoffice belirteciyle platform verilerini okumasını sağlar.",
       "enabled": "Açık",
       "disabled": "Bu sunucuda kapalı",
       "step1_title": "Bir belirteç oluşturun",
@@ -19822,7 +19822,7 @@
           "automation": "Başarısız çalıştırmalar ve harekete geçen kurallar",
           "team": "Platform ekibi değişiklikleri",
           "token": "Yeni API belirteçleri",
-          "security": "Başarısız süper yönetici girişleri, iptal edilen belirteçler",
+          "security": "Başarısız Backoffice girişleri, iptal edilen belirteçler",
           "follow": "Takip ettiğiniz organizasyonların etkinliği",
           "system": "Platform uyarıları ve kanal hataları"
         },
@@ -20684,7 +20684,7 @@
       },
       "history": {
         "title": "Son değişiklikler",
-        "desc": "Platform konsolundan yapılan değişiklikler, alan alan.",
+        "desc": "Backoffice üzerinden yapılan değişiklikler, alan alan.",
         "empty": "Henüz değişiklik yok",
         "empty_desc": "Burada yapılan düzenlemeler, yapan kişi ve değişenlerle birlikte görünür."
       }

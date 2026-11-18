@@ -2,9 +2,9 @@
 //
 // While impersonating, org pages run on its token (the auth proxy
 // hands it out from the httpOnly LH_imp cookie) and the console keeps the
-// superadmin's own session (it asks with ?scope=platform). These helpers keep
+// backoffice staff member's own session (it asks with ?scope=platform). These helpers keep
 // that split in one place, and turn "the impersonation ended" into a trip
-// back to the console instead of a sign-out of the superadmin.
+// back to the console instead of a sign-out of the backoffice staff member.
 
 export type ImpersonationMode = 'read_only' | 'full'
 
@@ -85,7 +85,7 @@ export function endedNoticeKey(reason: ImpersonationEndReason, platform: boolean
 export function isPlatformContext(): boolean {
   if (typeof window === 'undefined') return false
   const { pathname, hostname } = window.location
-  return pathname === '/admin' || pathname.startsWith('/admin/') || hostname.startsWith('admin.')
+  return pathname === '/backoffice' || pathname.startsWith('/backoffice/') || hostname.startsWith('admin.')
 }
 
 /** Where to trade the cookies for an access token in this tab. */
@@ -145,7 +145,7 @@ export function impersonationCode(body: unknown): string | null {
 
 /** The console URL a session returns to: the stored path on the console origin. */
 export function consoleUrl(returnUrl: string | null | undefined, frontendDomain?: string | null): string {
-  const path = returnUrl && returnUrl.startsWith('/admin') ? returnUrl : '/admin'
+  const path = returnUrl && returnUrl.startsWith('/backoffice') ? returnUrl : '/backoffice'
   if (typeof window === 'undefined') return path
   const { protocol, hostname, port } = window.location
   const tenancy = document.cookie.split('; ').find((c) => c.startsWith('LH_tenancy='))?.split('=')[1]

@@ -156,7 +156,7 @@ export interface paths {
         };
         /**
          * Get user by ID
-         * @description Get a user by numeric ID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.
+         * @description Get a user by numeric ID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.
          */
         get: operations["api_get_user_by_id_api_v1_users_id__user_id__get"];
         put?: never;
@@ -176,7 +176,7 @@ export interface paths {
         };
         /**
          * Get user by UUID
-         * @description Get a user by UUID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.
+         * @description Get a user by UUID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.
          */
         get: operations["api_get_user_by_uuid_api_v1_users_uuid__user_uuid__get"];
         put?: never;
@@ -196,7 +196,7 @@ export interface paths {
         };
         /**
          * Get user by username
-         * @description Get a user by username. Requires authentication to prevent username enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.
+         * @description Get a user by username. Requires authentication to prevent username enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.
          */
         get: operations["api_get_user_by_username_api_v1_users_username__username__get"];
         put?: never;
@@ -1134,7 +1134,7 @@ export interface paths {
         };
         /**
          * List users in a usergroup
-         * @description Retrieve the list of users that belong to a specific usergroup. Sensitive fields (is_superadmin, signup_method) are excluded.
+         * @description Retrieve the list of users that belong to a specific usergroup. Sensitive fields (is_backoffice_staff, signup_method) are excluded.
          */
         get: operations["api_get_users_linked_to_usergroup_api_v1_usergroups__usergroup_id__users_get"];
         put?: never;
@@ -3057,8 +3057,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add purchased AI credits (superadmin only)
-         * @description Add purchased AI credits to an organization. Restricted to superadmins because it grants paid quota with no payment verification; the amount must be a positive integer.
+         * Add purchased AI credits (backoffice only)
+         * @description Add purchased AI credits to an organization. Restricted to backoffice staff because it grants paid quota with no payment verification; the amount must be a positive integer.
          */
         post: operations["add_org_ai_credits_api_v1_orgs__org_id__ai_credits_add_post"];
         delete?: never;
@@ -3077,8 +3077,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Reset AI credits usage (superadmin only)
-         * @description Reset AI credits usage for an organization. Typically used at the start of a new billing period. Restricted to superadmins because it clears metered usage and would otherwise let a tenant bypass its quota.
+         * Reset AI credits usage (backoffice only)
+         * @description Reset AI credits usage for an organization. Typically used at the start of a new billing period. Restricted to backoffice staff because it clears metered usage and would otherwise let a tenant bypass its quota.
          */
         post: operations["reset_org_ai_credits_api_v1_orgs__org_id__ai_credits_reset_post"];
         delete?: never;
@@ -3097,8 +3097,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Set purchased AI credits (superadmin only)
-         * @description Overwrite the org's purchased AI credit balance to an absolute value. Restricted to superadmins; bypasses the additive /add flow so it can grant, correct, or zero out credits in one call.
+         * Set purchased AI credits (backoffice only)
+         * @description Overwrite the org's purchased AI credit balance to an absolute value. Restricted to backoffice staff; bypasses the additive /add flow so it can grant, correct, or zero out credits in one call.
          */
         post: operations["set_org_ai_credits_api_v1_orgs__org_id__ai_credits_set_post"];
         delete?: never;
@@ -26090,10 +26090,10 @@ export interface components {
             /** Signup Method */
             signup_method?: string | null;
             /**
-             * Is Superadmin
+             * Is Backoffice
              * @default false
              */
-            is_superadmin?: boolean;
+            is_backoffice_staff?: boolean;
             /** Ui Preferences */
             ui_preferences?: {
                 [key: string]: unknown;
@@ -26105,7 +26105,7 @@ export interface components {
          *
          *     SECURITY: comment/discussion authors are returned to *every* reader of a
          *     thread (often anonymous). It must therefore expose ONLY the fields needed to
-         *     render an author chip, never ``email``, ``is_superadmin``, ``signup_method``
+         *     render an author chip, never ``email``, ``is_backoffice_staff``, ``signup_method``
          *     or the raw ``details``/``profile``/``extra_metadata`` blobs that ``UserRead``
          *     carries. The frontend reads only id/user_uuid/username/name/avatar.
          */
@@ -26134,7 +26134,7 @@ export interface components {
          *     look up *another* user (by id/uuid/username, or via usergroup member lists).
          *     It must therefore NOT inherit from ``UserBase``, because ``UserBase`` (and
          *     ``UserRead``) expose PII / internal fields (``email``, ``signup_method``,
-         *     ``is_superadmin``, ``extra_metadata``) that would leak to anyone who can
+         *     ``is_backoffice_staff``, ``extra_metadata``) that would leak to anyone who can
          *     enumerate user ids. ``details`` and ``profile`` ARE included: they are the
          *     user's own public profile content (bio extension, links, etc.) that the
          *     public profile page renders, so they are intentionally exposed.
@@ -30492,7 +30492,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Not an org admin, or target is an org admin or platform superadmin */
+            /** @description Not an org admin, or target is an org admin or platform backoffice staff member */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -34278,7 +34278,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Superadmin access required */
+            /** @description Backoffice access required */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -34323,7 +34323,7 @@ export interface operations {
                     "application/json": components["schemas"]["ResetCreditsResponse"];
                 };
             };
-            /** @description Superadmin access required */
+            /** @description Backoffice access required */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -34379,7 +34379,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Superadmin access required */
+            /** @description Backoffice access required */
             403: {
                 headers: {
                     [name: string]: unknown;

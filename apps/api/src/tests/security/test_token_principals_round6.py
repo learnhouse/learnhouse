@@ -1,7 +1,7 @@
 """API-token principals act with their own rights, in their own org.
 
 Covers: community writes (members with discussions.action_create only, tokens
-resolved to their creator and held to their own rights), superadmin tokens at
+resolved to their creator and held to their own rights), backoffice tokens at
 the "no API token" gates, token validation (creator membership, expiry
 parsing), rights caps, listing endpoints, certification templates, admin API
 role/impersonation caps, Zapier subscription rights and active-user
@@ -26,7 +26,7 @@ from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup
 from src.db.user_activity import UserActivityDay
 from src.db.user_organizations import UserOrganization
-from src.db.users import APITokenUser, PublicUser, SuperadminAPITokenUser, User
+from src.db.users import APITokenUser, PublicUser, BackofficeAPITokenUser, User
 from src.tests.conftest import ADMIN_RIGHTS, USER_RIGHTS
 
 pytestmark = pytest.mark.asyncio
@@ -182,21 +182,21 @@ class TestCommunityWrites:
         assert len(await get_communities_by_org(mock_request, org.id, legacy, db)) == 1
 
 
-# -- Superadmin token at the non-token gates -----------------------------------
+# -- Backoffice token at the non-token gates -----------------------------------
 
 
-class TestSuperadminTokenGates:
+class TestBackofficeTokenGates:
     def _sa(self):
-        return SuperadminAPITokenUser(id=1, created_by_user_id=5)
+        return BackofficeAPITokenUser(id=1, created_by_user_id=5)
 
-    async def test_reject_api_token_access_rejects_superadmin_token(self):
+    async def test_reject_api_token_access_rejects_backoffice_token(self):
         from src.security.api_token_utils import reject_api_token_access
 
         with pytest.raises(HTTPException) as exc:
             reject_api_token_access(self._sa())
         assert exc.value.status_code == 403
 
-    async def test_authenticated_gates_reject_superadmin_token(self, mock_request, db):
+    async def test_authenticated_gates_reject_backoffice_token(self, mock_request, db):
         from src.security import api_token_utils
 
         with patch("src.security.auth.get_authenticated_user", new=AsyncMock(return_value=self._sa())):
@@ -485,22 +485,22 @@ class TestActiveUserRecording:
         assert await count_active_users(org.id, 2026, 3, db) == 1
 
 
-class TestSuperadminTokenOrgAndCommunityGates:
-    async def test_org_rbac_check_treats_superadmin_token_as_superadmin(self, db, org, mock_request):
-        from src.db.users import SuperadminAPITokenUser
+class TestBackofficeTokenOrgAndCommunityGates:
+    async def test_org_rbac_check_treats_backoffice_token_as_backoffice(self, db, org, mock_request):
+        from src.db.users import BackofficeAPITokenUser
         from src.services.orgs.orgs import rbac_check
 
-        token = SuperadminAPITokenUser(id=5, created_by_user_id=999)
+        token = BackofficeAPITokenUser(id=5, created_by_user_id=999)
         assert await rbac_check(mock_request, org.org_uuid, token, "update", db) is True
 
-    async def test_superadmin_token_cannot_post_to_a_community(self, db, org):
-        from src.db.users import SuperadminAPITokenUser
+    async def test_backoffice_token_cannot_post_to_a_community(self, db, org):
+        from src.db.users import BackofficeAPITokenUser
         from src.services.communities.access import require_community_participant
 
         community = await _community(db, org)
         with pytest.raises(HTTPException) as exc:
             await require_community_participant(
-                SuperadminAPITokenUser(id=5, created_by_user_id=999), community, db
+                BackofficeAPITokenUser(id=5, created_by_user_id=999), community, db
             )
         assert exc.value.status_code == 403
 

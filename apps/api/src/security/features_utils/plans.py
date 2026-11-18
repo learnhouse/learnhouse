@@ -394,7 +394,7 @@ def is_paying_plan(plan: str) -> bool:
     Whether `plan` is a paid plan (anything above free).
 
     Features INCLUDED in a paid plan are guaranteed to the organization: the
-    superadmin kill switch can never disable them. It still governs free orgs and
+    backoffice kill switch can never disable them. It still governs free orgs and
     comp-granted extras. The org's own toggle is separate and always applies.
     See resolve_feature().
     """

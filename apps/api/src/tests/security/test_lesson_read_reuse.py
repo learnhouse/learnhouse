@@ -116,10 +116,10 @@ class TestAuthorship:
 
 
 class TestOrgAdminById:
-    async def test_admin_member_superadmin_and_member(self, db, org, admin_user, regular_user):
+    async def test_admin_member_backoffice_and_member(self, db, org, admin_user, regular_user):
         assert await authorization_verify_org_admin_by_id(admin_user.id, org.id, db) is True
         assert await authorization_verify_org_admin_by_id(regular_user.id, org.id, db) is False
-        with patch("src.security.rbac.rbac.is_user_superadmin", new=AsyncMock(return_value=True)):
+        with patch("src.security.rbac.rbac.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
             assert await authorization_verify_org_admin_by_id(regular_user.id, org.id, db) is True
 
 

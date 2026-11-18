@@ -17610,7 +17610,7 @@
       "ordered": "Bringe die Kurse in die Reihenfolge, in der Lernende sie absolvieren sollen."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Übersicht",
@@ -17794,7 +17794,7 @@
       "password_placeholder": "Geben Sie Ihr Passwort ein",
       "signing_in": "Anmeldung läuft...",
       "sign_in": "Anmelden",
-      "superadmin_only": "Nur für das LearnHouse-Plattform-Team"
+      "backoffice_only": "Nur für das LearnHouse-Plattform-Team"
     },
     "pages": {
       "analytics": "Globale Analysen",
@@ -17809,7 +17809,7 @@
       "ai_costs_desc": "Was KI-Anfragen uns zum Listenpreis des Anbieters kosten, verglichen mit dem Wert der berechneten Credits"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Benutzer",
       "developers": "Entwickler",
       "avatar": "Avatar",
@@ -17926,7 +17926,7 @@
       "users_count_one": "{{count}} Nutzer",
       "users_count_other": "{{count}} Benutzer",
       "role_label": "Rolle:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Regulär",
       "min_orgs": "Min. Orgs.:",
       "any": "Beliebig",
@@ -17956,9 +17956,9 @@
       },
       "tabs": {
         "tokens_label": "API-Tokens",
-        "tokens_desc": "Organisationsübergreifende Superadmin-API-Tokens erstellen, auflisten und widerrufen.",
+        "tokens_desc": "Organisationsübergreifende Backoffice-API-Tokens erstellen, auflisten und widerrufen.",
         "docs_label": "Dokumentation & Playground",
-        "docs_desc": "Durchsuchen Sie die Superadmin-API und rufen Sie sie dann live mit Ihrem Token auf."
+        "docs_desc": "Durchsuchen Sie die Backoffice-API und rufen Sie sie dann live mit Ihrem Token auf."
       },
       "org_picker": {
         "none_yet": "Noch keine Organisationen",
@@ -17980,7 +17980,7 @@
       "endpoint": {
         "invalid_json": "Ungültiges JSON",
         "network_error": "Netzwerkfehler",
-        "session_only": "<strong>Nur Sitzungs-Authentifizierung.</strong> API-Tokens können diesen Endpunkt nicht aufrufen (Sperre gegen Rechteausweitung). Die Live-Schaltfläche „Senden“ schlägt mit 403 fehl, wenn Sie ein Token verwenden; kopieren Sie stattdessen das Snippet und führen Sie es als angemeldeter Superadmin aus.",
+        "session_only": "<strong>Nur Sitzungs-Authentifizierung.</strong> API-Tokens können diesen Endpunkt nicht aufrufen (Sperre gegen Rechteausweitung). Die Live-Schaltfläche „Senden“ schlägt mit 403 fehl, wenn Sie ein Token verwenden; kopieren Sie stattdessen das Snippet und führen Sie es als angemeldete Backoffice-Person aus.",
         "parameters": "Parameter",
         "request_body": "Request Body (JSON)",
         "reset_to_sample": "Auf Beispiel zurücksetzen",
@@ -18008,7 +18008,7 @@
       "description_placeholder": "Wofür dieses Token gedacht ist",
       "expiration": "Ablauf",
       "never_expires": "Läuft nie ab",
-      "warning": "Ein Superadmin-Token kann <em>jeden</em> <code>/ee/superadmin/*</code>-Endpunkt aufrufen: Organisationen erstellen, Funktionen umschalten, Tarife plattformweit aktualisieren. Behandeln Sie es wie einen Generalschlüssel.",
+      "warning": "Ein Backoffice-Token kann <em>jeden</em> <code>/ee/backoffice/*</code>-Endpunkt aufrufen: Organisationen erstellen, Funktionen umschalten, Tarife plattformweit aktualisieren. Behandeln Sie es wie einen Generalschlüssel.",
       "create_token": "Token erstellen",
       "failed_revoke": "Widerruf fehlgeschlagen ({{status}})",
       "revoke_title": "Token widerrufen?",
@@ -18026,7 +18026,7 @@
       "count_other": "{{count}} Token",
       "loading": "Tokens werden geladen…",
       "failed_load": "Tokens konnten nicht geladen werden.",
-      "empty_title": "Noch keine Superadmin-API-Tokens.",
+      "empty_title": "Noch keine Backoffice-API-Tokens.",
       "empty_desc": "Erstellen Sie eines, um die Bereitstellung von Organisationen und das Umschalten von Funktionen zu automatisieren.",
       "col_name": "Name",
       "col_prefix": "Präfix",
@@ -18047,7 +18047,7 @@
       "scopes": "Scopes",
       "revoked": "Token widerrufen",
       "scope_desc": {
-        "api": "Die Superadmin-REST-API aufrufen.",
+        "api": "Die Backoffice-REST-API aufrufen.",
         "mcp": "Einen KI-Assistenten mit dem Plattform-MCP verbinden (Lesewerkzeuge).",
         "mcp_write": "Erlaubt zusätzlich die sicheren Schreibzugriffe des MCP: Notizen, Tags, POC-Verlängerungen, Kontoverantwortlicher."
       },
@@ -18062,16 +18062,16 @@
     },
     "ee_required": {
       "title": "Enterprise-Edition-Lizenz erforderlich",
-      "description": "Das Superadmin-Dashboard gehört zur LearnHouse Enterprise Edition und ist in dieser Installation nicht verfügbar."
+      "description": "Das Backoffice-Dashboard gehört zur LearnHouse Enterprise Edition und ist in dieser Installation nicht verfügbar."
     },
     "access_denied": {
       "title": "Zugriff verweigert",
-      "description": "Sie benötigen Superadmin-Rechte, um auf diese Seite zuzugreifen."
+      "description": "Sie benötigen Backoffice-Zugriff, um auf diese Seite zuzugreifen."
     },
     "shell": {
-      "platform": "Plattform",
-      "title": "LearnHouse-Plattform",
-      "subtitle": "Superadmin-Konsole",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Konsolennavigation",
       "open_menu": "Menü öffnen",
       "close_menu": "Menü schließen",
@@ -19192,7 +19192,7 @@
       "add_member": "Mitglied hinzufügen",
       "read_only_hint": "Nur Plattform-Owner können Teammitglieder hinzufügen, ändern oder entfernen.",
       "empty_title": "Noch keine Teammitglieder",
-      "empty_desc": "Superadmins erscheinen hier, sobald die Plattform-API aktualisiert ist.",
+      "empty_desc": "Backoffice-Mitarbeitende erscheinen hier, sobald die Plattform-API aktualisiert ist.",
       "col_member": "Mitglied",
       "col_role": "Rolle",
       "col_granted_by": "Vergeben von",
@@ -19288,7 +19288,7 @@
       "enabled": "Aktiviert",
       "disabled": "Deaktiviert",
       "mcp": "Plattform-MCP",
-      "mcp_desc": "Überwiegend lesender MCP-Endpunkt für KI-Assistenten, authentifiziert mit Superadmin-Tokens.",
+      "mcp_desc": "Überwiegend lesender MCP-Endpunkt für KI-Assistenten, authentifiziert mit Backoffice-Tokens.",
       "status": "Status",
       "license": "Lizenz",
       "license_desc": "Unbedenkliche Lizenzfelder. Schlüssel und Signaturen werden nie angezeigt.",
@@ -19309,7 +19309,7 @@
       "every_hours_other": "Alle {{count}} Stunden"
     },
     "users": {
-      "superadmin_filter": "Nach Superadmin filtern",
+      "backoffice_filter": "Nach Backoffice filtern",
       "min_orgs": "Mindestanzahl Organisationen",
       "any_orgs": "Beliebig viele Orgs",
       "min_orgs_value_one": "{{count}}+ Org",
@@ -19353,7 +19353,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "KI-Assistenten verbinden",
-      "desc": "Mit dem Plattform-MCP können Claude und andere Assistenten Plattformdaten mit einem Superadmin-Token lesen.",
+      "desc": "Mit dem Plattform-MCP können Claude und andere Assistenten Plattformdaten mit einem Backoffice-Token lesen.",
       "enabled": "Aktiviert",
       "disabled": "Auf diesem Server deaktiviert",
       "step1_title": "Token erstellen",
@@ -19822,7 +19822,7 @@
           "automation": "Fehlgeschlagene Läufe und Regeln, die gehandelt haben",
           "team": "Änderungen im Plattform-Team",
           "token": "Neue API-Tokens",
-          "security": "Fehlgeschlagene Superadmin-Anmeldungen, widerrufene Tokens",
+          "security": "Fehlgeschlagene Backoffice-Anmeldungen, widerrufene Tokens",
           "follow": "Aktivität der Orgs, denen du folgst",
           "system": "Plattform-Warnungen und Kanalfehler"
         },
@@ -20684,7 +20684,7 @@
       },
       "history": {
         "title": "Letzte Änderungen",
-        "desc": "Änderungen aus der Plattformkonsole, Feld für Feld.",
+        "desc": "Änderungen aus dem Backoffice, Feld für Feld.",
         "empty": "Noch keine Änderungen",
         "empty_desc": "Änderungen hier erscheinen mit Urheber und dem, was sich geändert hat."
       }

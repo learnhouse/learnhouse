@@ -129,7 +129,7 @@ async def evaluate_org_auth(
     result: Optional[Dict[str, Any]] = None
     try:
         from src.security.impersonation import current_impersonation
-        from src.security.superadmin import is_user_superadmin
+        from src.security.backoffice import is_user_backoffice_staff
 
         impersonation = current_impersonation()
         if impersonation is not None and impersonation.target_user_id == user_id:
@@ -139,9 +139,9 @@ async def evaluate_org_auth(
             # setting says.
             if impersonation.org_id != org_id:
                 result = {"code": SESSION_NOT_BOUND_CODE}
-        # Superadmins operate across tenants and must never be locked out of one
+        # Backoffice staff operate across tenants and must never be locked out of one
         # by that tenant's own policy.
-        elif not await is_user_superadmin(user_id, db_session):
+        elif not await is_user_backoffice_staff(user_id, db_session):
             policy = await get_org_auth_policy(db_session, org_id)
             provenance = get_session_provenance() or SessionProvenance()
             # A session signed in on an org's custom domain went through a host
@@ -169,7 +169,7 @@ async def evaluate_org_auth(
                 # Machine credentials carry their own org boundary
                 # (_verify_api_token_org_boundary) and are exempt from the human
                 # auth-method policy. Org tokens and the sessions they mint are
-                # still bound to their org below; only superadmin tokens (no
+                # still bound to their org below; only backoffice tokens (no
                 # org) are cross-org by design.
                 is_api_token = provenance.amr == AUTH_METHOD_API_TOKEN
                 cross_org_token = is_api_token and provenance.org_id is None

@@ -17571,7 +17571,7 @@
       "ordered": "按学习者应该学习的顺序排列课程。"
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "概览",
@@ -17755,7 +17755,7 @@
       "password_placeholder": "输入您的密码",
       "signing_in": "正在登录...",
       "sign_in": "登录",
-      "superadmin_only": "仅限 LearnHouse 平台团队使用"
+      "backoffice_only": "仅限 LearnHouse 平台团队使用"
     },
     "pages": {
       "analytics": "全局分析",
@@ -17770,7 +17770,7 @@
       "ai_costs_desc": "AI 请求按服务商标价计算的成本，与我们收取的积分价值之比较"
     },
     "menu": {
-      "superadmin": "超级管理员",
+      "backoffice": "Backoffice",
       "users": "用户",
       "developers": "开发者",
       "avatar": "头像",
@@ -17885,7 +17885,7 @@
       "search_placeholder": "搜索用户...",
       "users_count_other": "{{count}} 位用户",
       "role_label": "角色：",
-      "superadmin": "超级管理员",
+      "backoffice": "Backoffice",
       "regular": "普通用户",
       "min_orgs": "最少组织数：",
       "any": "不限",
@@ -17917,9 +17917,9 @@
       },
       "tabs": {
         "tokens_label": "API 令牌",
-        "tokens_desc": "创建、列出和撤销跨组织超级管理员 API 令牌。",
+        "tokens_desc": "创建、列出和撤销跨组织 Backoffice API 令牌。",
         "docs_label": "文档与 Playground",
-        "docs_desc": "浏览超级管理员 API，然后使用您的令牌实时调用。"
+        "docs_desc": "浏览 Backoffice API，然后使用您的令牌实时调用。"
       },
       "org_picker": {
         "none_yet": "还没有组织",
@@ -17941,7 +17941,7 @@
       "endpoint": {
         "invalid_json": "JSON 无效",
         "network_error": "网络错误",
-        "session_only": "<strong>仅限会话认证。</strong>API 令牌无法调用此端点（防止权限提升）。如果使用令牌，实时“发送”按钮会返回 403；请复制代码片段，并以已登录的超级管理员身份运行。",
+        "session_only": "<strong>仅限会话认证。</strong>API 令牌无法调用此端点（防止权限提升）。如果使用令牌，实时“发送”按钮会返回 403；请复制代码片段，并以已登录的 Backoffice 身份运行。",
         "parameters": "参数",
         "request_body": "请求体 (JSON)",
         "reset_to_sample": "重置为示例",
@@ -17969,7 +17969,7 @@
       "description_placeholder": "此令牌的用途",
       "expiration": "过期时间",
       "never_expires": "永不过期",
-      "warning": "超级管理员令牌可以调用<em>所有</em> <code>/ee/superadmin/*</code> 端点：创建组织、切换功能、更新整个平台的方案。请将其视为万能钥匙。",
+      "warning": " Backoffice 令牌可以调用<em>所有</em> <code>/ee/backoffice/*</code> 端点：创建组织、切换功能、更新整个平台的方案。请将其视为万能钥匙。",
       "create_token": "创建令牌",
       "failed_revoke": "撤销失败（{{status}}）",
       "revoke_title": "撤销令牌？",
@@ -17986,7 +17986,7 @@
       "count_other": "{{count}} 个令牌",
       "loading": "正在加载令牌…",
       "failed_load": "加载令牌失败。",
-      "empty_title": "还没有超级管理员 API 令牌。",
+      "empty_title": "还没有 Backoffice API 令牌。",
       "empty_desc": "创建一个，用于自动化组织配置和功能开关。",
       "col_name": "名称",
       "col_prefix": "前缀",
@@ -18008,7 +18008,7 @@
       "scopes": "范围",
       "revoked": "令牌已撤销",
       "scope_desc": {
-        "api": "调用超级管理员 REST API。",
+        "api": "调用 Backoffice REST API。",
         "mcp": "将 AI 助手连接到平台 MCP（读取工具）。",
         "mcp_write": "同时允许 MCP 的安全写入：备注、标签、POC 延期、账户所有者。"
       },
@@ -18023,16 +18023,16 @@
     },
     "ee_required": {
       "title": "需要企业版许可证",
-      "description": "超级管理员仪表板属于 LearnHouse 企业版，在当前部署中不可用。"
+      "description": " Backoffice 仪表板属于 LearnHouse 企业版，在当前部署中不可用。"
     },
     "access_denied": {
       "title": "拒绝访问",
-      "description": "您需要超级管理员权限才能访问此页面。"
+      "description": "您需要 Backoffice 权限才能访问此页面。"
     },
     "shell": {
-      "platform": "平台",
-      "title": "LearnHouse 平台",
-      "subtitle": "超级管理员控制台",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "控制台导航",
       "open_menu": "打开菜单",
       "close_menu": "关闭菜单",
@@ -19153,7 +19153,7 @@
       "add_member": "添加成员",
       "read_only_hint": "只有平台所有者可以添加、更改或移除团队成员。",
       "empty_title": "暂无团队成员",
-      "empty_desc": "平台 API 更新后，超级管理员将显示在这里。",
+      "empty_desc": "平台 API 更新后，Backoffice 成员将显示在这里。",
       "col_member": "成员",
       "col_role": "角色",
       "col_granted_by": "授予者",
@@ -19249,7 +19249,7 @@
       "enabled": "已启用",
       "disabled": "已禁用",
       "mcp": "平台 MCP",
-      "mcp_desc": "面向 AI 助手的以读取为主的 MCP 端点，使用超级管理员令牌进行身份验证。",
+      "mcp_desc": "面向 AI 助手的以读取为主的 MCP 端点，使用 Backoffice 令牌进行身份验证。",
       "status": "状态",
       "license": "许可证",
       "license_desc": "安全的许可证字段。密钥和签名永不显示。",
@@ -19270,7 +19270,7 @@
       "every_hours_other": "每 {{count}} 小时"
     },
     "users": {
-      "superadmin_filter": "按超级管理员筛选",
+      "backoffice_filter": "按 Backoffice 筛选",
       "min_orgs": "最少组织数",
       "any_orgs": "任意组织数",
       "min_orgs_value_one": "{{count}} 个以上组织",
@@ -19314,7 +19314,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "连接 AI 助手",
-      "desc": "平台 MCP 允许 Claude 和其他助手使用超级管理员令牌读取平台数据。",
+      "desc": "平台 MCP 允许 Claude 和其他助手使用 Backoffice 令牌读取平台数据。",
       "enabled": "已启用",
       "disabled": "此服务器上已禁用",
       "step1_title": "创建令牌",
@@ -19783,7 +19783,7 @@
           "automation": "失败的运行以及已执行的规则",
           "team": "平台团队变更",
           "token": "新的 API 令牌",
-          "security": "超级管理员登录失败、已撤销的令牌",
+          "security": " Backoffice 登录失败、已撤销的令牌",
           "follow": "您关注的组织的活动",
           "system": "平台告警和渠道故障"
         },
@@ -20645,7 +20645,7 @@
       },
       "history": {
         "title": "最近更改",
-        "desc": "在平台控制台所做的更改,逐个字段显示。",
+        "desc": "在 Backoffice 所做的更改,逐个字段显示。",
         "empty": "还没有更改",
         "empty_desc": "在这里所做的编辑会显示操作人和更改内容。"
       }

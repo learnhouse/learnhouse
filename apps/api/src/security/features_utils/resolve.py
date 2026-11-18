@@ -167,7 +167,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
       plan makes usable), independent of any toggle.
     - "enabled" = whether it is actually ON after the toggles.
     - "disabled_by" = why an available feature is off: "org" (the org turned it
-      off in its Features settings) or "platform" (superadmin kill switch). None
+      off in its Features settings) or "platform" (backoffice kill switch). None
       when enabled or when it is simply not in the plan.
     - "upgrade_plan" = the cheapest plan that includes the feature when it is not
       available, so the UI can label it with the plan that actually unlocks it.
@@ -175,7 +175,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
 
     Two toggles live under admin_toggles[feature]:
     - "org_disabled": the org's own choice. Always honored.
-    - "disabled": the superadmin kill switch. It can never take away a feature a
+    - "disabled": the backoffice staff member kill switch. It can never take away a feature a
       PAID plan includes; it still governs free orgs and comp-granted extras.
     """
     mode = get_deployment_mode()
@@ -249,7 +249,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
             upgrade_plan=get_upgrade_plan(plan, feature),
         )
 
-    # Layer 5: Toggles. The superadmin kill switch never takes away a feature
+    # Layer 5: Toggles. The backoffice staff member kill switch never takes away a feature
     # the org is PAYING for; the org's own choice always applies.
     plan_guaranteed = plan_enabled and is_paying_plan(plan)
     off_by = _toggle_off_reason(admin_toggle, platform_applies=not plan_guaranteed)

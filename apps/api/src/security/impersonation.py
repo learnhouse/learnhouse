@@ -1,6 +1,6 @@
 """Platform staff impersonation: the core side.
 
-A platform superadmin (or staff member with an impersonation permission) acts
+A platform backoffice staff member (or staff member with an impersonation permission) acts
 as one member of one organization. The session is started
 from the platform console (Enterprise Edition, ``ee/services/platform/
 impersonation.py``), which keeps the server-side record. Everything that has
@@ -12,7 +12,7 @@ is core code:
   be refreshed, never mints a normal session and is inert anywhere that does
   not know about it. :func:`src.security.auth.get_current_user` resolves it to
   the TARGET user after the server-side record confirms it (EE hook), so the
-  target's own permissions apply exactly and no superadmin bypass leaks in.
+  target's own permissions apply exactly and no backoffice bypass leaks in.
 * **Context.** :class:`ImpersonationContext` sits on a ContextVar (and on the
   ASGI scope's state) for the lifetime of the request, so side-effect code
   (analytics, activity, notifications, audit) can tell an impersonated request
@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 IMPERSONATION_PURPOSE = "impersonation"
 # httpOnly cookie that holds the impersonation token next to (never instead of)
-# the superadmin's own LH_access / LH_refresh pair, so ending the session is
+# the backoffice staff member's own LH_access / LH_refresh pair, so ending the session is
 # just dropping this cookie.
 IMPERSONATION_COOKIE = "LH_imp"
 IMPERSONATION_CLAIM = "imp"
@@ -280,7 +280,7 @@ def context_from_claims(payload: Optional[dict]) -> Optional[ImpersonationContex
 # Where a request's session token came from. Impersonation tokens are only
 # ever honoured from the impersonation cookie or an explicit Bearer header
 # (the web app's Bearer-based client and its server-side renders); one found in
-# the superadmin's own LH_access cookie is refused outright, and anything that
+# the backoffice staff member's own LH_access cookie is refused outright, and anything that
 # isn't an impersonation token in LH_imp is refused too. The gate middleware
 # and get_current_user both go through resolve_credential, so they always agree
 # on who the request is.
@@ -316,10 +316,10 @@ def resolve_credential(headers, cookies) -> SessionCredential:
     Starlette ``Headers`` or a lower-cased dict).
 
     An explicit ``Authorization: Bearer <jwt>`` wins (the admin console sends
-    the superadmin's own token that way while an impersonation runs in another
+    the backoffice staff member's own token that way while an impersonation runs in another
     tab). Without one, LH_imp wins over LH_access: on an org page a cookie-only
     request (a download link, an EventSource) must run as the target, never
-    fall back to the superadmin. ``Bearer lh_…`` is an API token, handled
+    fall back to the backoffice staff member. ``Bearer lh_…`` is an API token, handled
     elsewhere: no session credential here.
     """
     auth = (headers.get("authorization") or headers.get("Authorization") or "").strip()
@@ -387,7 +387,7 @@ _DENIED: tuple[tuple[Optional[frozenset], re.Pattern], ...] = (
     (_ALL, re.compile(r"^/api/v1/admin/[^/]+/auth/")),
     (_ALL, re.compile(r"^/api/v1/(admin/[^/]+/users/[^/]+|orgs/\d+/users)/export")),
     (_ALL, re.compile(r"^/api/v1/(audit|ee/audit_logs)(/.*)?/export")),
-    (_ALL, re.compile(r"^/api/v1/ee/superadmin(/|$)")),
+    (_ALL, re.compile(r"^/api/v1/ee/(backoffice|superadmin)(/|$)")),
     (_WRITES, re.compile(r"^/api/v1/ee/license(/|$)")),
     (_ALL, re.compile(r"^/api/v1/mcp(/|$)")),
     (_ALL, re.compile(r"^/mcp(/|$)")),

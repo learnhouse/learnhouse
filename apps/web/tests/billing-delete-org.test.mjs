@@ -54,7 +54,7 @@ const { POST } = await import("../app/api/billing/delete-org/route.ts");
 // --- backend double ---------------------------------------------------------
 
 const ADMIN_SESSION = {
-  user: { id: 7, email: "admin@example.test", is_superadmin: false },
+  user: { id: 7, email: "admin@example.test", is_backoffice_staff: false },
   roles: [{ org: { id: 4242 }, role: { rights: { organizations: { action_delete: true } } } }],
 };
 

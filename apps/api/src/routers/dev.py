@@ -15,26 +15,26 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _require_superadmin(current_user: PublicUser):
-    """Require superadmin access for dev endpoints."""
-    if not hasattr(current_user, 'is_superadmin') or not current_user.is_superadmin:
-        raise HTTPException(status_code=403, detail="Superadmin access required")
+def _require_backoffice(current_user: PublicUser):
+    """Require backoffice access for dev endpoints."""
+    if not hasattr(current_user, 'is_backoffice_staff') or not current_user.is_backoffice_staff:
+        raise HTTPException(status_code=403, detail="Backoffice access required")
 
 
 @router.get(
     "/config",
     summary="Get LearnHouse runtime config",
-    description="Returns the current LearnHouse configuration with sensitive values redacted. Restricted to superadmin users.",
+    description="Returns the current LearnHouse configuration with sensitive values redacted. Restricted to backoffice users.",
     responses={
         200: {"description": "Configuration dictionary with secrets redacted"},
         401: {"description": "Authentication required"},
-        403: {"description": "Superadmin access required"},
+        403: {"description": "Backoffice access required"},
     },
 )
 async def config(
     current_user: PublicUser = Depends(get_authenticated_user),
 ):
-    _require_superadmin(current_user)
+    _require_backoffice(current_user)
     config = get_learnhouse_config()
     config_dict = config.model_dump()
 
@@ -63,11 +63,11 @@ def _redact_secrets(d: dict, _sensitive_keys=None):
 @router.post(
     "/migrate_orgconfig_v0_to_v1",
     summary="Migrate organization config v0 to v1",
-    description="Runs the v0 to v1 schema migration across every organization's configuration. Restricted to superadmin users.",
+    description="Runs the v0 to v1 schema migration across every organization's configuration. Restricted to backoffice users.",
     responses={
         200: {"description": "Migration completed successfully"},
         401: {"description": "Authentication required"},
-        403: {"description": "Superadmin access required"},
+        403: {"description": "Backoffice access required"},
     },
 )
 async def migrate(
@@ -77,7 +77,7 @@ async def migrate(
     """
     Migrate organization config from v0 to v1
     """
-    _require_superadmin(current_user)
+    _require_backoffice(current_user)
     statement = select(OrganizationConfig)
     result = (await db_session.execute(statement)).scalars().all()
 
@@ -93,11 +93,11 @@ async def migrate(
 @router.post(
     "/migrate_orgconfig_v1_to_v1.1",
     summary="Migrate organization config v1 to v1.1",
-    description="Runs the v1 to v1.1 schema migration across every organization's configuration. Restricted to superadmin users.",
+    description="Runs the v1 to v1.1 schema migration across every organization's configuration. Restricted to backoffice users.",
     responses={
         200: {"description": "Migration completed successfully"},
         401: {"description": "Authentication required"},
-        403: {"description": "Superadmin access required"},
+        403: {"description": "Backoffice access required"},
     },
 )
 async def migratev1_1(
@@ -107,7 +107,7 @@ async def migratev1_1(
     """
     Migrate organization config from v1 to v1.1
     """
-    _require_superadmin(current_user)
+    _require_backoffice(current_user)
     statement = select(OrganizationConfig)
     result = (await db_session.execute(statement)).scalars().all()
 
@@ -122,11 +122,11 @@ async def migratev1_1(
 @router.post(
     "/migrate_orgconfig_v1_to_v1.2",
     summary="Migrate organization config v1 to v1.2",
-    description="Runs the v1 to v1.2 schema migration across every organization's configuration. Restricted to superadmin users.",
+    description="Runs the v1 to v1.2 schema migration across every organization's configuration. Restricted to backoffice users.",
     responses={
         200: {"description": "Migration completed successfully"},
         401: {"description": "Authentication required"},
-        403: {"description": "Superadmin access required"},
+        403: {"description": "Backoffice access required"},
     },
 )
 async def migratev1_2(
@@ -136,7 +136,7 @@ async def migratev1_2(
     """
     Migrate organization config from v1 to v1.2
     """
-    _require_superadmin(current_user)
+    _require_backoffice(current_user)
     statement = select(OrganizationConfig)
     result = (await db_session.execute(statement)).scalars().all()
 

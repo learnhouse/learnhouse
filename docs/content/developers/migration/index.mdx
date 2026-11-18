@@ -58,7 +58,7 @@ The minted JWT is a user session that lasts **1 hour** and works on every endpoi
 
 - The API token needs the **Update** right on **Users (Admin API)**.
 - The target user must belong to the token's organization and to no other organization.
-- The target cannot be an Admin, a Maintainer or a platform superadmin, and their role cannot hold rights the token does not have.
+- The target cannot be an Admin, a Maintainer or a Backoffice staff member, and their role cannot hold rights the token does not have.
 
 For migrations, create a dedicated account with a role that can create courses (the Instructor role, or a custom role) and swap to that account.
 </Callout>

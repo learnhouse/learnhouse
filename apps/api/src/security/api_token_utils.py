@@ -9,12 +9,12 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
-from src.db.users import AnonymousUser, APITokenUser, PublicUser, SuperadminAPITokenUser
+from src.db.users import AnonymousUser, APITokenUser, PublicUser, BackofficeAPITokenUser
 
 # Both token principals carry a token row id in ``id``, not a user id, so
-# every "no API tokens" gate rejects them alike. Superadmin token routes use
-# ``require_superadmin`` and never these gates.
-_TOKEN_PRINCIPALS = (APITokenUser, SuperadminAPITokenUser)
+# every "no API tokens" gate rejects them alike. Backoffice token routes use
+# ``require_backoffice`` and never these gates.
+_TOKEN_PRINCIPALS = (APITokenUser, BackofficeAPITokenUser)
 
 
 def token_has_right(current_user: APITokenUser, resource: str, action: str) -> bool:
@@ -162,11 +162,11 @@ async def require_authenticated_user_or_api_token(
     from src.security.auth import get_authenticated_user
 
     user = await get_authenticated_user(request, db_session)
-    # Org-scoped routers: a cross-org superadmin token has no org and no
+    # Org-scoped routers: a cross-org backoffice token has no org and no
     # rights bucket for the handlers to check.
-    if isinstance(user, SuperadminAPITokenUser):
+    if isinstance(user, BackofficeAPITokenUser):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Superadmin API tokens cannot access this resource.",
+            detail="Backoffice API tokens cannot access this resource.",
         )
     return user

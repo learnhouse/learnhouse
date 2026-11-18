@@ -21,9 +21,9 @@ from src.security.rbac.rbac import (
 from src.security.rbac.utils import get_element_organization_id
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.security.org_auth import get_user_org
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.services.security.profile_validation import validate_profile_fields
-from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, SuperadminAPITokenUser
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, BackofficeAPITokenUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
     Organization,
@@ -1023,7 +1023,7 @@ async def _org_ids_user_may_manage(
 ) -> set[int]:
     """Org ids among ``org_ids`` where the user holds organizations.update
     (mirrors require_org_role_permission, including its role-id fallback)."""
-    if await is_user_superadmin(user_id, db_session):
+    if await is_user_backoffice_staff(user_id, db_session):
         return set(org_ids)
     from src.db.roles import Role
     from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
@@ -1423,7 +1423,7 @@ async def _update_feature_toggle(
     updated_config = _deep_copy_config(org_config)
 
     if _is_v2_config(updated_config):
-        # The org's own choice; the superadmin kill switch ("disabled") is left
+        # The org's own choice; the backoffice staff member kill switch ("disabled") is left
         # alone. See resolve_feature().
         updated_config.setdefault("admin_toggles", {}).setdefault(feature, {})
         updated_config["admin_toggles"][feature]["org_disabled"] = not enabled
@@ -2471,10 +2471,10 @@ async def rbac_check(
     if isinstance(current_user, InternalUser):
         return True
 
-    # Superadmin API tokens are cross-org by design, and auth re-checks that
-    # their minter is still a superadmin. Their id is a token row id, so they
+    # Backoffice API tokens are cross-org by design, and auth re-checks that
+    # their minter is still a backoffice staff member. Their id is a token row id, so they
     # must not reach the user-id based checks below.
-    if isinstance(current_user, SuperadminAPITokenUser):
+    if isinstance(current_user, BackofficeAPITokenUser):
         return True
 
     # API Token path: verify token has permissions for this action on organizations
@@ -2544,19 +2544,19 @@ async def rbac_check(
             )
 
         # Org session policies (2FA requirement, allowed sign-in methods) apply
-        # to org writes too; superadmins are exempt inside the policy itself.
+        # to org writes too; backoffice staff are exempt inside the policy itself.
         target_org_id = await get_element_organization_id(org_uuid, db_session)
         if target_org_id is not None:
             await enforce_org_mfa(current_user.id, target_org_id, db_session)
 
 
 async def is_org_admin_role(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
-    """True if the user holds the Admin role in the org, or is a superadmin.
+    """True if the user holds the Admin role in the org, or is a backoffice staff member.
 
     Unlike ``is_org_admin`` this excludes Maintainers, whose seeded role has no
     organization update/delete rights.
     """
-    if await is_user_superadmin(user_id, db_session):
+    if await is_user_backoffice_staff(user_id, db_session):
         return True
     user_org = await get_user_org(user_id, org_id, db_session)
     return user_org is not None and user_org.role_id == ADMIN_ROLE_ID

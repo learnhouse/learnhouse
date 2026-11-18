@@ -102,14 +102,14 @@ const nextConfig = {
         ],
       },
       // App chrome is never search content: dashboards, editors, auth, the
-      // superadmin console and embeds (shown inside other sites) are noindex
+      // backoffice console and embeds (shown inside other sites) are noindex
       // even when a crawler ignores robots.txt or reaches them by a link.
       {
-        source: '/:area(dash|editor|auth|admin|embed|home|billing|account|messages|notifications|trail)/:path*',
+        source: '/:area(dash|editor|auth|admin|backoffice|embed|home|billing|account|messages|notifications|trail)/:path*',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
       {
-        source: '/:area(dash|editor|auth|admin|embed|home|billing|account|messages|notifications|trail)',
+        source: '/:area(dash|editor|auth|admin|backoffice|embed|home|billing|account|messages|notifications|trail)',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
       // Un-hashed files from public/. Next serves them with max-age=0, so every

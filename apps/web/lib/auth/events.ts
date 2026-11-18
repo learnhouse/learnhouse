@@ -19,7 +19,7 @@ const AUTH_EXPIRED_DEBOUNCE_MS = 1500
 export function dispatchAuthExpired(detail: AuthExpiredDetail = {}) {
   if (typeof window === 'undefined') return
   // Inside an impersonation a dead token means the session ended:
-  // go back to the console, never sign the superadmin out.
+  // go back to the console, never sign the backoffice staff member out.
   if (activeImpersonation()) {
     dispatchImpersonationEnded('expired')
     return

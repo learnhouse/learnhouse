@@ -38,7 +38,7 @@ function isAuthRoute(url: string): boolean {
 
 function getLoginCallbackUrl(): string {
   if (typeof window === 'undefined') return '/login'
-  return window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login'
+  return window.location.pathname.startsWith('/backoffice') ? '/backoffice/login' : '/login'
 }
 
 export default function AuthFetchInterceptor() {

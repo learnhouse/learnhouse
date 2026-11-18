@@ -320,7 +320,7 @@ def _app(db, user):
 
 
 async def _settings_status(db, user, method="GET"):
-    with patch("src.security.superadmin.is_user_superadmin", new=AsyncMock(return_value=False)):
+    with patch("src.security.backoffice.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
         async with AsyncClient(transport=ASGITransport(app=_app(db, user)), base_url="http://test") as c:
             if method == "GET":
                 return await c.get("/api/v1/orgs/1/config/ai/settings")

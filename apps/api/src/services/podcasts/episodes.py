@@ -25,7 +25,7 @@ from src.security.features_utils.usage import check_feature_access
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.services.analytics import events as analytics_events
 from src.services.analytics.analytics import track
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 
 
 async def _user_can_view_unpublished_episode(
@@ -43,8 +43,8 @@ async def _user_can_view_unpublished_episode(
 
     acting_user_id = resolve_acting_user_id(current_user)
 
-    # Superadmins can view everything
-    if await is_user_superadmin(acting_user_id, db_session):
+    # Backoffice staff can view everything
+    if await is_user_backoffice_staff(acting_user_id, db_session):
         return True
 
     # Check if user is a resource author of this podcast

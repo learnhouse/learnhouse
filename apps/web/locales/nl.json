@@ -17610,7 +17610,7 @@
       "ordered": "Zet cursussen in de volgorde waarin cursisten ze moeten volgen."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Overzicht",
@@ -17794,7 +17794,7 @@
       "password_placeholder": "Voer je wachtwoord in",
       "signing_in": "Inloggen...",
       "sign_in": "Inloggen",
-      "superadmin_only": "Alleen voor het LearnHouse-platformteam"
+      "backoffice_only": "Alleen voor het LearnHouse-platformteam"
     },
     "pages": {
       "analytics": "Globale analyses",
@@ -17809,7 +17809,7 @@
       "ai_costs_desc": "Wat AI-verzoeken ons kosten tegen de catalogusprijs van de provider, afgezet tegen de waarde van de credits die we hebben berekend"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Gebruikers",
       "developers": "Ontwikkelaars",
       "avatar": "Avatar",
@@ -17926,7 +17926,7 @@
       "users_count_one": "{{count}} gebruiker",
       "users_count_other": "{{count}} gebruikers",
       "role_label": "Rol:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Gewoon",
       "min_orgs": "Min. orgs:",
       "any": "Alle",
@@ -17956,9 +17956,9 @@
       },
       "tabs": {
         "tokens_label": "API-tokens",
-        "tokens_desc": "Maak superadmin-API-tokens voor alle organisaties aan, bekijk ze en trek ze in.",
+        "tokens_desc": "Maak Backoffice-API-tokens voor alle organisaties aan, bekijk ze en trek ze in.",
         "docs_label": "Documentatie en Playground",
-        "docs_desc": "Bekijk de superadmin-API en roep hem daarna live aan met je token."
+        "docs_desc": "Bekijk de Backoffice-API en roep hem daarna live aan met je token."
       },
       "org_picker": {
         "none_yet": "Nog geen organisaties",
@@ -17980,7 +17980,7 @@
       "endpoint": {
         "invalid_json": "Ongeldige JSON",
         "network_error": "Netwerkfout",
-        "session_only": "<strong>Alleen sessieauthenticatie.</strong> API-tokens kunnen dit endpoint niet aanroepen (blokkade tegen privilege-escalatie). De live Verzenden-knop mislukt met 403 als je een token gebruikt; kopieer het fragment en voer het uit als ingelogde superadmin.",
+        "session_only": "<strong>Alleen sessieauthenticatie.</strong> API-tokens kunnen dit endpoint niet aanroepen (blokkade tegen privilege-escalatie). De live Verzenden-knop mislukt met 403 als je een token gebruikt; kopieer het fragment en voer het uit als ingelogde Backoffice-gebruiker.",
         "parameters": "Parameters",
         "request_body": "Aanvraagbody (JSON)",
         "reset_to_sample": "Terugzetten naar voorbeeld",
@@ -18008,7 +18008,7 @@
       "description_placeholder": "Waarvoor dit token dient",
       "expiration": "Vervaldatum",
       "never_expires": "Verloopt nooit",
-      "warning": "Een superadmin-token kan <em>elk</em> <code>/ee/superadmin/*</code>-endpoint aanroepen: orgs aanmaken, functies schakelen en abonnementen over het hele platform bijwerken. Behandel het als een hoofdsleutel.",
+      "warning": "Een Backoffice-token kan <em>elk</em> <code>/ee/backoffice/*</code>-endpoint aanroepen: orgs aanmaken, functies schakelen en abonnementen over het hele platform bijwerken. Behandel het als een hoofdsleutel.",
       "create_token": "Token aanmaken",
       "failed_revoke": "Intrekken mislukt ({{status}})",
       "revoke_title": "Token intrekken?",
@@ -18026,7 +18026,7 @@
       "count_other": "{{count}} tokens",
       "loading": "Tokens laden…",
       "failed_load": "Laden van tokens mislukt.",
-      "empty_title": "Nog geen superadmin-API-tokens.",
+      "empty_title": "Nog geen Backoffice-API-tokens.",
       "empty_desc": "Maak er een aan om het aanmaken van orgs en het schakelen van functies te automatiseren.",
       "col_name": "Naam",
       "col_prefix": "Voorvoegsel",
@@ -18047,7 +18047,7 @@
       "scopes": "Scopes",
       "revoked": "Token ingetrokken",
       "scope_desc": {
-        "api": "Roep de superadmin-REST-API aan.",
+        "api": "Roep de Backoffice-REST-API aan.",
         "mcp": "Verbind een AI-assistent met de platform-MCP (leestools).",
         "mcp_write": "Sta ook de veilige schrijfacties van de MCP toe: notities, tags, POC-verlengingen, accounteigenaar."
       },
@@ -18062,16 +18062,16 @@
     },
     "ee_required": {
       "title": "Enterprise Edition-licentie vereist",
-      "description": "Het superadmin-dashboard maakt deel uit van LearnHouse Enterprise Edition en is niet beschikbaar in deze implementatie."
+      "description": "Het Backoffice-dashboard maakt deel uit van LearnHouse Enterprise Edition en is niet beschikbaar in deze implementatie."
     },
     "access_denied": {
       "title": "Toegang geweigerd",
-      "description": "Je hebt superadmin-rechten nodig om deze pagina te openen."
+      "description": "Je hebt Backoffice-rechten nodig om deze pagina te openen."
     },
     "shell": {
-      "platform": "Platform",
-      "title": "LearnHouse-platform",
-      "subtitle": "Superadmin-console",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Consolenavigatie",
       "open_menu": "Menu openen",
       "close_menu": "Menu sluiten",
@@ -19192,7 +19192,7 @@
       "add_member": "Lid toevoegen",
       "read_only_hint": "Alleen platformeigenaren kunnen teamleden toevoegen, wijzigen of verwijderen.",
       "empty_title": "Nog geen teamleden",
-      "empty_desc": "Superadmins verschijnen hier zodra de platform-API is bijgewerkt.",
+      "empty_desc": "Backoffice-medewerkers verschijnen hier zodra de platform-API is bijgewerkt.",
       "col_member": "Lid",
       "col_role": "Rol",
       "col_granted_by": "Toegekend door",
@@ -19288,7 +19288,7 @@
       "enabled": "Ingeschakeld",
       "disabled": "Uitgeschakeld",
       "mcp": "Platform-MCP",
-      "mcp_desc": "Overwegend lezend MCP-endpoint voor AI-assistenten, geauthenticeerd met superadmin-tokens.",
+      "mcp_desc": "Overwegend lezend MCP-endpoint voor AI-assistenten, geauthenticeerd met Backoffice-tokens.",
       "status": "Status",
       "license": "Licentie",
       "license_desc": "Veilige licentievelden. Sleutels en handtekeningen worden nooit getoond.",
@@ -19309,7 +19309,7 @@
       "every_hours_other": "Elke {{count}} uur"
     },
     "users": {
-      "superadmin_filter": "Filter op superadmin",
+      "backoffice_filter": "Filter op Backoffice",
       "min_orgs": "Minimum aantal organisaties",
       "any_orgs": "Elk aantal orgs",
       "min_orgs_value_one": "{{count}}+ org",
@@ -19353,7 +19353,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Een AI-assistent verbinden",
-      "desc": "Met de platform-MCP kunnen Claude en andere assistenten platformgegevens lezen met een superadmin-token.",
+      "desc": "Met de platform-MCP kunnen Claude en andere assistenten platformgegevens lezen met een Backoffice-token.",
       "enabled": "Ingeschakeld",
       "disabled": "Uitgeschakeld op deze server",
       "step1_title": "Maak een token aan",
@@ -19822,7 +19822,7 @@
           "automation": "Mislukte runs en regels die hebben gehandeld",
           "team": "Wijzigingen in het platformteam",
           "token": "Nieuwe API-tokens",
-          "security": "Mislukte superadmin-logins, ingetrokken tokens",
+          "security": "Mislukte Backoffice-logins, ingetrokken tokens",
           "follow": "Activiteit van de organisaties die je volgt",
           "system": "Platformmeldingen en kanaalstoringen"
         },
@@ -20684,7 +20684,7 @@
       },
       "history": {
         "title": "Recente wijzigingen",
-        "desc": "Wijzigingen vanuit de platformconsole, veld voor veld.",
+        "desc": "Wijzigingen vanuit de Backoffice, veld voor veld.",
         "empty": "Nog geen wijzigingen",
         "empty_desc": "Wijzigingen die hier worden gedaan verschijnen met wie ze deed en wat er veranderde."
       }

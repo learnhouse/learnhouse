@@ -45,7 +45,7 @@ from src.security.rbac import (
     check_resource_access,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_patterns
@@ -391,8 +391,8 @@ async def get_courses_orgslug(
         # org one by one, published or not (check_resource_access).
         can_view_unpublished = include_unpublished
     elif include_unpublished and not isinstance(current_user, AnonymousUser):
-        # Superadmins can always view unpublished courses
-        if await is_user_superadmin(acting_user_id, db_session):
+        # Backoffice staff can always view unpublished courses
+        if await is_user_backoffice_staff(acting_user_id, db_session):
             can_view_unpublished = True
         else:
             # Check if user has admin/editor role in this organization
@@ -563,8 +563,8 @@ async def get_courses_count_orgslug(
             return 0
         _require_token_course_listing(current_user, org_id)
         query = query.where(Course.published == True)
-    elif await is_user_superadmin(acting_user_id, db_session):
-        # Superadmins see all courses (no additional filter)
+    elif await is_user_backoffice_staff(acting_user_id, db_session):
+        # Backoffice staff see all courses (no additional filter)
         pass
     else:
         # For authenticated users, count:
@@ -610,7 +610,7 @@ def accessible_courses_filter(
     *,
     is_anonymous: bool,
     is_api_token: bool,
-    is_superadmin: bool,
+    is_backoffice_staff: bool,
 ):
     """SQL boolean selecting the courses ``acting_user_id`` may see in a listing.
 
@@ -622,7 +622,7 @@ def accessible_courses_filter(
     - Anonymous: published and public courses only.
     - API tokens: every published course in their org (the org scope is the
       caller's job).
-    - Superadmins: everything.
+    - Backoffice staff: everything.
     - Members: published public courses; published courses not attached to
       any usergroup, when they belong to the course's org; published courses
       in a usergroup they are in; and any course (drafts included) they are an
@@ -632,7 +632,7 @@ def accessible_courses_filter(
         return and_(Course.public == True, Course.published == True)  # noqa: E712
     if is_api_token:
         return Course.published == True  # noqa: E712
-    if is_superadmin:
+    if is_backoffice_staff:
         return sa_true()
 
     in_any_usergroup = (
@@ -758,17 +758,17 @@ async def search_courses(
             return []
         _require_token_course_listing(current_user, org_id)
 
-    is_superadmin = (
+    is_backoffice_staff = (
         not is_anonymous
         and not is_api_token
-        and await is_user_superadmin(search_acting_user_id, db_session)
+        and await is_user_backoffice_staff(search_acting_user_id, db_session)
     )
     query = query.where(
         accessible_courses_filter(
             search_acting_user_id,
             is_anonymous=is_anonymous,
             is_api_token=is_api_token,
-            is_superadmin=is_superadmin,
+            is_backoffice_staff=is_backoffice_staff,
         )
     )
 
@@ -1379,11 +1379,11 @@ async def get_user_courses(
     # visibility filter, any logged-in user could enumerate another user's
     # UNPUBLISHED / private courses just by passing their id (IDOR / content
     # disclosure). A caller may only see another user's unpublished courses if
-    # they are that user or a superadmin; everyone else is limited to the
+    # they are that user or a backoffice staff member; everyone else is limited to the
     # published + public courses that user authored.
     can_see_unpublished = (
         int(current_user.id) == int(user_id)
-        or await is_user_superadmin(int(current_user.id), db_session)
+        or await is_user_backoffice_staff(int(current_user.id), db_session)
     )
 
     # Fetch courses the user has authored using a single JOIN query with pagination

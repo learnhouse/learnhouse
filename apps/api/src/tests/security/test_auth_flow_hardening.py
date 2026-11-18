@@ -343,8 +343,8 @@ class TestOrgAdminProfileEditScope:
             await self._edit(db, mock_request, admin_user, target)
         assert exc.value.status_code == 403
 
-    async def test_superadmin_is_refused(self, db, mock_request, org, admin_user):
-        target = await _make_user(db, 73, "root@test.com", is_superadmin=True)
+    async def test_backoffice_is_refused(self, db, mock_request, org, admin_user):
+        target = await _make_user(db, 73, "root@test.com", is_backoffice_staff=True)
         await _join(db, target.id, org.id)
         with pytest.raises(HTTPException) as exc:
             await self._edit(db, mock_request, admin_user, target)

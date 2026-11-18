@@ -263,7 +263,7 @@ export const errorHandling = async (res: any) => {
     // redirected to login.
     if (typeof window !== 'undefined' && res.status === 401 && hasSessionMarker()) {
       dispatchAuthExpired({
-        callbackUrl: window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login',
+        callbackUrl: window.location.pathname.startsWith('/backoffice') ? '/backoffice/login' : '/login',
         reason: 'api_401',
       })
     }

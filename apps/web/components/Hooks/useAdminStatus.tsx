@@ -82,7 +82,7 @@ interface UseAdminStatusReturn {
     isAdmin: boolean | null;
     // Can the user MANAGE the org (settings + billing)? Stricter than isAdmin
     // (dashboard access): an editor/maintainer may reach the dashboard, but only
-    // an org admin (or superadmin) manages the organization and its billing.
+    // an org admin (or backoffice) manages the organization and its billing.
     canManageOrg: boolean;
     loading: boolean;
     userRoles: Role[];
@@ -96,7 +96,7 @@ interface UseAdminStatusReturn {
  */
 export function canManageOrgFromSession(session: any, orgId?: number): boolean {
     if (!orgId) return false;
-    if (session?.data?.user?.is_superadmin === true) return true;
+    if (session?.data?.user?.is_backoffice_staff === true) return true;
     const roles: Role[] = session?.data?.roles || [];
     return roles.some(
         (r) => r?.org?.id === orgId && r?.role?.rights?.organizations?.action_update === true,
@@ -111,7 +111,7 @@ export function canManageOrgFromSession(session: any, orgId?: number): boolean {
  * doesn't count.
  */
 export function managesAnyOrgFromSession(session: any): boolean {
-    if (session?.data?.user?.is_superadmin === true) return true;
+    if (session?.data?.user?.is_backoffice_staff === true) return true;
     const roles: Role[] = session?.data?.roles || [];
     return roles.some(
         (r) => !r?.org?.is_demo && r?.role?.rights?.organizations?.action_update === true,
@@ -129,7 +129,7 @@ export function seesPlatformHubFromSession(session: any): boolean {
     return roles.length > 0 && roles.every((r) => r?.org?.is_demo === true);
 }
 
-/** Does the user hold an org-managing role in this org (superadmin aside)? */
+/** Does the user hold an org-managing role in this org (backoffice aside)? */
 export function hasManagingRoleFromSession(session: any, orgId?: number): boolean {
     const roles: Role[] = session?.data?.roles || [];
     return roles.some(
@@ -232,7 +232,7 @@ function useAdminStatus(): UseAdminStatusReturn {
     const orgId = org?.id;
     const isAuthenticated = session.status === 'authenticated';
 
-    // A platform superadmin's own session gets an org's rights from its real
+    // A platform backoffice staff member's own session gets an org's rights from its real
     // membership there, like anyone else. Acting inside an org they don't
     // belong to goes through an impersonation (impersonation), started from
     // the platform console: bounded, attributed and audited. The old "enter

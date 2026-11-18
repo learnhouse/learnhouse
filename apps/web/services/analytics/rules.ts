@@ -3,8 +3,8 @@
  * unit tested on their own.
  */
 
-// Dashboard, editor and super-admin pages are staff at work, not traffic.
-const STAFF_PATH = /(^|\/)(dash|editor)(\/|$)|^\/admin(\/|$)/
+// Dashboard, editor and backoffice pages are staff at work, not traffic.
+const STAFF_PATH = /(^|\/)(dash|editor)(\/|$)|^\/(backoffice|admin)(\/|$)/
 
 /** Whether a page view on `pathname` counts toward an org's traffic. */
 export function isTrackedPagePath(pathname: string): boolean {

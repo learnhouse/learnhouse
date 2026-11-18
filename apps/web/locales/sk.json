@@ -18300,7 +18300,7 @@
       "ordered": "Zoraďte kurzy v poradí, v akom by ich mali študenti absolvovať."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Prehľad",
@@ -18494,7 +18494,7 @@
       "password_placeholder": "Zadajte svoje heslo",
       "signing_in": "Prihlasuje sa...",
       "sign_in": "Prihlásiť sa",
-      "superadmin_only": "Iba pre tím platformy LearnHouse"
+      "backoffice_only": "Iba pre tím platformy LearnHouse"
     },
     "pages": {
       "analytics": "Globálna analytika",
@@ -18509,7 +18509,7 @@
       "ai_costs_desc": "Koľko nás stoja požiadavky AI podľa cenníka poskytovateľa v porovnaní s hodnotou kreditov, ktoré sme účtovali"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Používatelia",
       "developers": "Vývojári",
       "avatar": "Avatar",
@@ -18636,7 +18636,7 @@
       "users_count_many": "{{count}} používateľa",
       "users_count_other": "{{count}} používateľov",
       "role_label": "Rola:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Bežný",
       "min_orgs": "Min. organizácií:",
       "any": "Ľubovoľný",
@@ -18666,9 +18666,9 @@
       },
       "tabs": {
         "tokens_label": "API tokeny",
-        "tokens_desc": "Vytvárajte, zobrazujte a rušte superadmin API tokeny platné naprieč organizáciami.",
+        "tokens_desc": "Vytvárajte, zobrazujte a rušte Backoffice API tokeny platné naprieč organizáciami.",
         "docs_label": "Dokumentácia a Playground",
-        "docs_desc": "Prehľadajte superadmin API a potom ho živo volajte svojím tokenom."
+        "docs_desc": "Prehľadajte Backoffice API a potom ho živo volajte svojím tokenom."
       },
       "org_picker": {
         "none_yet": "Zatiaľ žiadne organizácie",
@@ -18690,7 +18690,7 @@
       "endpoint": {
         "invalid_json": "Neplatný JSON",
         "network_error": "Chyba siete",
-        "session_only": "<strong>Len overenie reláciou.</strong> API tokeny nemôžu tento koncový bod volať (blokovanie eskalácie oprávnení). Živé tlačidlo Odoslať skončí s chybou 403, ak použijete token; skopírujte úryvok a spustite ho ako prihlásený superadmin.",
+        "session_only": "<strong>Len overenie reláciou.</strong> API tokeny nemôžu tento koncový bod volať (blokovanie eskalácie oprávnení). Živé tlačidlo Odoslať skončí s chybou 403, ak použijete token; skopírujte úryvok a spustite ho ako prihlásený používateľ Backoffice.",
         "parameters": "Parametre",
         "request_body": "Telo požiadavky (JSON)",
         "reset_to_sample": "Obnoviť na ukážku",
@@ -18718,7 +18718,7 @@
       "description_placeholder": "Na čo tento token slúži",
       "expiration": "Expirácia",
       "never_expires": "Nikdy nevyprší",
-      "warning": "Superadmin token môže volať <em>každý</em> koncový bod <code>/ee/superadmin/*</code>: vytvárať organizácie, prepínať funkcie, meniť plány na celej platforme. Berte ho ako hlavný kľúč.",
+      "warning": "Backoffice token môže volať <em>každý</em> koncový bod <code>/ee/backoffice/*</code>: vytvárať organizácie, prepínať funkcie, meniť plány na celej platforme. Berte ho ako hlavný kľúč.",
       "create_token": "Vytvoriť token",
       "failed_revoke": "Zrušenie zlyhalo ({{status}})",
       "revoke_title": "Zrušiť token?",
@@ -18738,7 +18738,7 @@
       "count_other": "{{count}} tokenov",
       "loading": "Načítavajú sa tokeny…",
       "failed_load": "Tokeny sa nepodarilo načítať.",
-      "empty_title": "Zatiaľ žiadne superadmin API tokeny.",
+      "empty_title": "Zatiaľ žiadne Backoffice API tokeny.",
       "empty_desc": "Vytvorte jeden na automatizáciu zakladania organizácií a prepínania funkcií.",
       "col_name": "Názov",
       "col_prefix": "Prefix",
@@ -18759,7 +18759,7 @@
       "scopes": "Rozsahy",
       "revoked": "Token odvolaný",
       "scope_desc": {
-        "api": "Volať REST API superadministrátora.",
+        "api": "Volať REST API Backoffice.",
         "mcp": "Pripojiť AI asistenta k platform MCP (nástroje na čítanie).",
         "mcp_write": "Povoliť aj bezpečné zápisy MCP: poznámky, štítky, predĺženia POC, vlastníka účtu."
       },
@@ -18776,16 +18776,16 @@
     },
     "ee_required": {
       "title": "Vyžaduje sa licencia Enterprise Edition",
-      "description": "Superadmin nástenka je súčasťou LearnHouse Enterprise Edition a v tomto nasadení nie je dostupná."
+      "description": "Backoffice nástenka je súčasťou LearnHouse Enterprise Edition a v tomto nasadení nie je dostupná."
     },
     "access_denied": {
       "title": "Prístup zamietnutý",
-      "description": "Na prístup k tejto stránke potrebujete oprávnenia superadmina."
+      "description": "Na prístup k tejto stránke potrebujete oprávnenia Backoffice."
     },
     "shell": {
-      "platform": "Platforma",
-      "title": "LearnHouse Platform",
-      "subtitle": "Konzola superadministrátora",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Navigácia konzoly",
       "open_menu": "Otvoriť ponuku",
       "close_menu": "Zavrieť ponuku",
@@ -19970,7 +19970,7 @@
       "add_member": "Pridať člena",
       "read_only_hint": "Členov tímu môžu pridávať, meniť alebo odstraňovať iba vlastníci platformy.",
       "empty_title": "Zatiaľ žiadni členovia tímu",
-      "empty_desc": "Superadministrátori sa tu zobrazia po aktualizácii API platformy.",
+      "empty_desc": "Pracovníci Backoffice sa tu zobrazia po aktualizácii API platformy.",
       "col_member": "Člen",
       "col_role": "Rola",
       "col_granted_by": "Udelil",
@@ -20066,7 +20066,7 @@
       "enabled": "Zapnutý",
       "disabled": "Vypnutý",
       "mcp": "Platform MCP",
-      "mcp_desc": "Prevažne čitateľný koncový bod MCP pre AI asistentov, overovaný tokenmi superadministrátora.",
+      "mcp_desc": "Prevažne čitateľný koncový bod MCP pre AI asistentov, overovaný tokenmi Backoffice.",
       "status": "Stav",
       "license": "Licencia",
       "license_desc": "Bezpečné polia licencie. Kľúče a podpisy sa nikdy nezobrazujú.",
@@ -20093,7 +20093,7 @@
       "every_hours_other": "Každých {{count}} hodín"
     },
     "users": {
-      "superadmin_filter": "Filtrovať podľa superadministrátora",
+      "backoffice_filter": "Filtrovať podľa Backoffice",
       "min_orgs": "Minimum organizácií",
       "any_orgs": "Ľubovoľný počet",
       "min_orgs_value_one": "{{count}}+ organizácia",
@@ -20139,7 +20139,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Pripojte AI asistenta",
-      "desc": "Platform MCP umožňuje Claude a ďalším asistentom čítať údaje platformy pomocou tokenu superadministrátora.",
+      "desc": "Platform MCP umožňuje Claude a ďalším asistentom čítať údaje platformy pomocou tokenu Backoffice.",
       "enabled": "Zapnuté",
       "disabled": "Na tomto serveri vypnuté",
       "step1_title": "Vytvorte token",
@@ -20628,7 +20628,7 @@
           "automation": "Zlyhané spustenia a pravidlá, ktoré konali",
           "team": "Zmeny v tíme platformy",
           "token": "Nové API tokeny",
-          "security": "Neúspešné prihlásenia superadminov, zrušené tokeny",
+          "security": "Neúspešné prihlásenia Backoffice, zrušené tokeny",
           "follow": "Aktivita organizácií, ktoré sledujete",
           "system": "Upozornenia platformy a zlyhania kanálov"
         },
@@ -21556,7 +21556,7 @@
       },
       "history": {
         "title": "Nedávne zmeny",
-        "desc": "Zmeny urobené z konzoly platformy, pole po poli.",
+        "desc": "Zmeny urobené z Backoffice, pole po poli.",
         "empty": "Zatiaľ žiadne zmeny",
         "empty_desc": "Úpravy urobené tu sa zobrazia s autorom a tým, čo sa zmenilo."
       }

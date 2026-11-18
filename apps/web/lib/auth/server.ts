@@ -13,7 +13,7 @@ const BACKEND_URL = (
 const ACCESS_TOKEN_COOKIE = 'LH_access'
 const REFRESH_TOKEN_COOKIE = 'LH_refresh'
 // An impersonation: while it is open, org pages act
-// as its target and must never fall back to the superadmin's own LH_access.
+// as its target and must never fall back to the backoffice staff member's own LH_access.
 const IMPERSONATION_COOKIE = 'LH_imp'
 
 // Types matching the client-side session structure
@@ -78,7 +78,7 @@ async function readServerSession(): Promise<Session | null> {
           },
         }
       }
-      // A spent impersonation: never fall back to the superadmin's own
+      // A spent impersonation: never fall back to the backoffice staff member's own
       // session. Report it unresolved so pages render without bouncing to
       // /login; the client sees the end on hydration and returns to the console.
       if (impersonation) return { user: undefined, roles: [], tokens: undefined, unresolved: true }

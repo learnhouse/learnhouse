@@ -21,7 +21,7 @@ from src.security.rbac.resource_access import (
     check_resource_access,
     _get_request_checker,
 )
-from src.db.users import AnonymousUser, PublicUser, APITokenUser, SuperadminAPITokenUser
+from src.db.users import AnonymousUser, PublicUser, APITokenUser, BackofficeAPITokenUser
 
 
 class TestResourceConfig:
@@ -175,12 +175,12 @@ class TestResourceAccessChecker:
 
     @pytest.fixture
     def mock_public_user(self):
-        """Create a mock authenticated user (non-superadmin)."""
+        """Create a mock authenticated user (non-backoffice staff member)."""
         user = Mock(spec=PublicUser)
         user.id = 1
         user.user_uuid = "user_123"
         user.username = "testuser"
-        user.is_superadmin = False
+        user.is_backoffice_staff = False
         return user
 
     @pytest.fixture
@@ -199,11 +199,11 @@ class TestResourceAccessChecker:
         return user
 
     @pytest.mark.asyncio
-    async def test_check_access_superadmin_bypasses_all_checks(
+    async def test_check_access_backoffice_bypasses_all_checks(
         self, mock_request, mock_db_session, mock_public_user
     ):
-        """Superadmin gets allowed=True via_admin on any resource, any action."""
-        mock_public_user.is_superadmin = True
+        """Backoffice gets allowed=True via_admin on any resource, any action."""
+        mock_public_user.is_backoffice_staff = True
         checker = ResourceAccessChecker(mock_request, mock_db_session, mock_public_user)
 
         decision = await checker.check_access(
@@ -217,11 +217,11 @@ class TestResourceAccessChecker:
         mock_db_session.execute.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_check_access_superadmin_token_never_reads_token_id_as_user(
+    async def test_check_access_backoffice_token_never_reads_token_id_as_user(
         self, mock_request, mock_db_session
     ):
-        """A superadmin API token resolves to its minter, not to user id == token id."""
-        token = SuperadminAPITokenUser(id=7, created_by_user_id=42)
+        """A backoffice API token resolves to its minter, not to user id == token id."""
+        token = BackofficeAPITokenUser(id=7, created_by_user_id=42)
         checker = ResourceAccessChecker(mock_request, mock_db_session, token)
 
         decision = await checker.check_access(
@@ -337,10 +337,10 @@ class TestCheckResourceAccessFunction:
 
     @pytest.fixture
     def mock_public_user(self):
-        """Create a mock authenticated user (non-superadmin)."""
+        """Create a mock authenticated user (non-backoffice staff member)."""
         user = Mock(spec=PublicUser)
         user.id = 1
-        user.is_superadmin = False
+        user.is_backoffice_staff = False
         return user
 
     @pytest.mark.asyncio
@@ -473,7 +473,7 @@ class TestDashboardContext:
     def mock_public_user(self):
         user = Mock(spec=PublicUser)
         user.id = 42
-        user.is_superadmin = False
+        user.is_backoffice_staff = False
         return user
 
     def _make_checker(self, request, session, user, **overrides):
@@ -620,7 +620,7 @@ class TestRequestScopedChecker:
     def mock_public_user(self):
         user = Mock(spec=PublicUser)
         user.id = 7
-        user.is_superadmin = False
+        user.is_backoffice_staff = False
         return user
 
     def _make_request(self):

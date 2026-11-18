@@ -54,7 +54,7 @@ class TestRolesService:
             "src.services.roles.roles.get_user_org_role",
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             return_value=False,
         ):
             created = await create_role(
@@ -103,7 +103,7 @@ class TestRolesService:
             new_callable=AsyncMock,
             return_value=user_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -185,7 +185,7 @@ class TestRolesService:
             "src.services.roles.roles.get_user_org_role",
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             return_value=False,
         ):
             with pytest.raises(HTTPException) as exc:
@@ -228,7 +228,7 @@ class TestRolesService:
             "src.services.roles.roles.get_user_org_role",
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             return_value=False,
         ):
             with pytest.raises(HTTPException) as exc:
@@ -282,7 +282,7 @@ class TestRolesService:
             new_callable=AsyncMock,
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=False,
         ), patch.object(db, "add"), patch.object(
@@ -344,7 +344,7 @@ class TestRolesService:
             new_callable=AsyncMock,
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=False,
         ), patch.object(db, "add"), patch.object(
@@ -386,7 +386,7 @@ class TestRolesService:
             "src.services.roles.roles.get_user_org_role",
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             return_value=False,
         ), patch.object(db, "add"), patch.object(
             db, "commit", side_effect=commit_side_effect
@@ -591,7 +591,7 @@ class TestRolesService:
             new_callable=AsyncMock,
             return_value=user_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -655,7 +655,7 @@ class TestRolesService:
             "src.services.roles.roles.get_user_org_role",
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             return_value=False,
         ), patch(
             "src.services.roles.roles.Role.model_validate",
@@ -747,7 +747,7 @@ class TestRolesService:
             "src.services.roles.roles.get_user_org_role",
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             return_value=False,
         ):
             created = await create_role(
@@ -789,7 +789,7 @@ class TestRolesService:
             "src.services.roles.roles.get_user_org_role",
             return_value=admin_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             return_value=False,
         ):
             updated = await update_role(
@@ -825,7 +825,7 @@ class TestRolesService:
             new_callable=AsyncMock,
             return_value=user_role,
         ), patch(
-            "src.services.roles.roles.is_user_superadmin",
+            "src.services.roles.roles.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=False,
         ):

@@ -336,7 +336,7 @@ class TestGetCoursesOrgslug:
         self, db, org, course, admin_user, mock_request, bypass_rbac
     ):
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=False
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=False
         ):
             result = await get_courses_orgslug(
                 mock_request, admin_user, "test-org", db
@@ -360,7 +360,7 @@ class TestGetCoursesOrgslug:
         self, db, other_org, admin_user, mock_request
     ):
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=False
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=False
         ):
             result = await get_courses_orgslug(
                 mock_request, admin_user, other_org.slug, db
@@ -401,7 +401,7 @@ class TestGetCoursesOrgslug:
         await _make_course(db, org, id=3, name="Course Three", course_uuid="course_3")
 
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=False
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=False
         ):
             result = await get_courses_orgslug(
                 mock_request, admin_user, "test-org", db, page=1, limit=2
@@ -424,7 +424,7 @@ class TestGetCoursesOrgslug:
         )
 
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=False
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=False
         ):
             result = await get_courses_orgslug(
                 mock_request,
@@ -439,21 +439,21 @@ class TestGetCoursesOrgslug:
         assert "course_draft" in uuids
 
     @pytest.mark.asyncio
-    async def test_get_courses_orgslug_include_unpublished_for_superadmin(
+    async def test_get_courses_orgslug_include_unpublished_for_backoffice(
         self, db, org, course, admin_user, mock_request, bypass_rbac
     ):
         await _make_course(
             db,
             org,
             id=13,
-            name="Superadmin Draft",
-            course_uuid="course_superadmin_draft",
+            name="Backoffice Draft",
+            course_uuid="course_backoffice_draft",
             public=False,
             published=False,
         )
 
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=True
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=True
         ):
             result = await get_courses_orgslug(
                 mock_request,
@@ -464,7 +464,7 @@ class TestGetCoursesOrgslug:
             )
 
         uuids = [c.course_uuid for c in result]
-        assert "course_superadmin_draft" in uuids
+        assert "course_backoffice_draft" in uuids
 
     @pytest.mark.asyncio
     async def test_get_courses_orgslug_groups_multiple_authors(
@@ -493,7 +493,7 @@ class TestGetCoursesOrgslug:
         await db.commit()
 
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=False
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=False
         ):
             result = await get_courses_orgslug(
                 mock_request, admin_user, "test-org", db
@@ -531,13 +531,13 @@ class TestGetCoursesCountOrgslug:
         assert count == 1
 
     @pytest.mark.asyncio
-    async def test_get_courses_count_orgslug_superadmin_counts_all(
+    async def test_get_courses_count_orgslug_backoffice_counts_all(
         self, db, org, course, admin_user, mock_request, bypass_rbac
     ):
         await _make_course(db, org, id=21, name="Hidden", course_uuid="course_hidden", public=False, published=False)
 
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=True
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=True
         ):
             count = await get_courses_count_orgslug(
                 mock_request, admin_user, "test-org", db
@@ -761,7 +761,7 @@ class TestCourseMutationsAndRights:
             )
 
         # Query as the owner: a user may see their own unpublished courses, while
-        # other non-superadmin users only see the author's published+public ones.
+        # other non-backoffice users only see the author's published+public ones.
         user_courses = await get_user_courses(
             mock_request, admin_user, admin_user.id, db
         )
@@ -1793,7 +1793,7 @@ class TestSearchCourses:
         await db.commit()
 
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=False
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=False
         ):
             result = await search_courses(
                 mock_request, regular_user, "test-org", "Draft Searchable", db
@@ -1803,11 +1803,11 @@ class TestSearchCourses:
         assert "course_draft_search" in uuids
 
     @pytest.mark.asyncio
-    async def test_search_courses_superadmin_uses_unbounded_branch(
+    async def test_search_courses_backoffice_uses_unbounded_branch(
         self, db, org, course, admin_user, mock_request
     ):
         with patch(
-            "src.services.courses.courses.is_user_superadmin", return_value=True
+            "src.services.courses.courses.is_user_backoffice_staff", return_value=True
         ):
             result = await search_courses(
                 mock_request, admin_user, "test-org", "Test", db, limit=500

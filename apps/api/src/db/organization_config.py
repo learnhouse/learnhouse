@@ -144,7 +144,7 @@ class AIFeatureToggles(BaseModel):
 
 
 class AIAdminToggle(BaseModel):
-    # Platform kill switch (superadmin); see resolve_feature().
+    # Platform kill switch (backoffice); see resolve_feature().
     disabled: bool = False
     # The organization's own master switch (Settings > AI).
     org_disabled: bool = False
@@ -163,7 +163,7 @@ class MembersAdminToggle(BaseModel):
 
 
 class FeatureAdminToggle(BaseModel):
-    # Platform kill switch (superadmin). Never takes away a feature a paid plan
+    # Platform kill switch (backoffice). Never takes away a feature a paid plan
     # includes; see resolve_feature().
     disabled: bool = False
     # The organization's own choice, set from its Features settings. Always

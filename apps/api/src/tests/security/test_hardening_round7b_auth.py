@@ -72,12 +72,12 @@ async def _custom_domain(db, org_id: int, domain: str = "academy.example.com", s
     await db.commit()
 
 
-async def _set_superadmin(db, user_id: int, value: bool = True):
+async def _set_backoffice(db, user_id: int, value: bool = True):
     row = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
-    row.is_superadmin = value
+    row.is_backoffice_staff = value
     db.add(row)
     await db.commit()
-    db._superadmin_cache = {}
+    db._backoffice_cache = {}
 
 
 @pytest.fixture(autouse=True)
@@ -313,10 +313,10 @@ class TestRegenerateApiToken:
             await self._regen(db, org, regular_user, admin_token.token_uuid)
         assert exc.value.status_code == 403
 
-        # A token whose rights the caller holds anyway, the creator, a superadmin.
+        # A token whose rights the caller holds anyway, the creator, a backoffice staff member.
         assert (await self._regen(db, org, regular_user, reader_token.token_uuid)).token
         assert (await self._regen(db, org, admin_user, admin_token.token_uuid)).token
-        await _set_superadmin(db, regular_user.id)
+        await _set_backoffice(db, regular_user.id)
         assert (await self._regen(db, org, regular_user, admin_token.token_uuid)).token
 
 
@@ -524,7 +524,7 @@ class TestCustomDomainDetection:
                 ) == (org.id, True)
             enforce.assert_awaited_once_with(db, org.id, "password")
 
-            await _set_superadmin(db, regular_user.id)
+            await _set_backoffice(db, regular_user.id)
             with pytest.raises(HTTPException) as exc:
                 await _bind_session_to_custom_domain(custom, db, regular_user.id, org.id, "password")
         assert exc.value.detail["code"] == "PLATFORM_SIGN_IN_REQUIRED"
@@ -554,7 +554,7 @@ ORIGIN = {"origin": "https://academy.example.com"}
 
 
 class TestCustomDomainSignIn:
-    async def test_password_login_binds_session_and_refuses_superadmin(
+    async def test_password_login_binds_session_and_refuses_backoffice(
         self, auth_app, db, org, other_org, regular_user
     ):
         await _custom_domain(db, org.id)
@@ -568,7 +568,7 @@ class TestCustomDomainSignIn:
                 auth_app, "/api/v1/auth/login", headers=ORIGIN,
                 data={"username": user.email, "password": "pw", "org_slug": other_org.slug},
             )
-            await _set_superadmin(db, regular_user.id)
+            await _set_backoffice(db, regular_user.id)
             refused = await _post(
                 auth_app, "/api/v1/auth/login", headers=ORIGIN,
                 data={"username": user.email, "password": "pw"},
@@ -715,9 +715,9 @@ class TestVerifyEmailSignInGates:
             response = await self._verify(auth_app, db, row)
         assert response.json() == {"message": "Email verified"}
 
-    async def test_superadmin_on_custom_domain_is_not_signed_in(self, auth_app, db, org, regular_user):
+    async def test_backoffice_on_custom_domain_is_not_signed_in(self, auth_app, db, org, regular_user):
         await _custom_domain(db, org.id)
-        await _set_superadmin(db, regular_user.id)
+        await _set_backoffice(db, regular_user.id)
         row = (await db.execute(select(User).where(User.id == regular_user.id))).scalars().first()
         response = await self._verify(auth_app, db, row, headers=ORIGIN)
         assert response.json() == {"message": "Email verified"}

@@ -161,7 +161,7 @@ def get_cookie_domain_for_request(request: Request) -> str | None:
 # Set by the web app's auth proxy to the host the browser is on. The proxy
 # rebuilds request headers, so without it a sign-in made through the proxy only
 # shows the backend's own host here. A client can send it too, but it can only
-# narrow its own session (bind it to an org, or refuse a superadmin), never widen it.
+# narrow its own session (bind it to an org, or refuse a backoffice staff member), never widen it.
 CLIENT_HOST_HEADER = "x-learnhouse-client-host"
 
 
@@ -224,16 +224,16 @@ async def _bind_session_to_custom_domain(
 
     A sign-in on an org's custom domain goes through a host that org controls,
     so the session is bound to that org whatever the page said, and a platform
-    superadmin may not sign in there at all: their session would be readable by
+    backoffice may not sign in there at all: their session would be readable by
     one tenant and valid in every other.
     """
     domain_org_id = await custom_domain_org_id(request, db_session)
     if domain_org_id is None:
         return org_id, False
 
-    from src.security.superadmin import is_user_superadmin
+    from src.security.backoffice import is_user_backoffice_staff
 
-    if await is_user_superadmin(user_id, db_session):
+    if await is_user_backoffice_staff(user_id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -1579,7 +1579,7 @@ async def api_verify_email(
 
     # The address is verified either way; the automatic sign-in is held to the
     # same gates as any other sign-in (account lockout, the org's allowed
-    # methods, no superadmin session on a custom domain). When one refuses, the
+    # methods, no backoffice session on a custom domain). When one refuses, the
     # user simply signs in normally afterwards.
     try:
         session_org_id, on_custom_domain = await _bind_session_to_custom_domain(

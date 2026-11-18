@@ -8,8 +8,8 @@ import { BACKEND_URL, clearCookie, endOnServer, forwardHeaders, isCrossSite, rea
 // Impersonation, browser side.
 //
 //   POST   start: the console (or an org page a staff member opened) asks the
-//          API with the superadmin's own session; the returned token goes into
-//          the httpOnly LH_imp cookie. The superadmin's own LH_access /
+//          API with the backoffice staff member's own session; the returned token goes into
+//          the httpOnly LH_imp cookie. The backoffice staff member's own LH_access /
 //          LH_refresh stay untouched, so ending is just dropping LH_imp.
 //   GET    status of the impersonation this browser holds (badge, other tabs).
 //          Ends it when the person who opened it can no longer refresh their
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   }
   let res: Response
   try {
-    res = await fetch(`${BACKEND_URL}/api/v1/ee/superadmin/impersonations`, {
+    res = await fetch(`${BACKEND_URL}/api/v1/ee/backoffice/impersonations`, {
       method: 'POST',
       headers: { ...forwardHeaders(request, token), 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

@@ -17637,7 +17637,7 @@
       "continue_with": "Continue: {{name}}"
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Overview",
@@ -17821,7 +17821,7 @@
       "password_placeholder": "Enter your password",
       "signing_in": "Signing in...",
       "sign_in": "Sign in",
-      "superadmin_only": "For the LearnHouse platform team only"
+      "backoffice_only": "For the LearnHouse platform team only"
     },
     "pages": {
       "analytics": "Global Analytics",
@@ -17836,7 +17836,7 @@
       "ai_costs_desc": "What AI requests cost us at the provider's list price against what the credits we charged are worth"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Users",
       "developers": "Developers",
       "avatar": "Avatar",
@@ -17953,7 +17953,7 @@
       "users_count_one": "{{count}} user",
       "users_count_other": "{{count}} users",
       "role_label": "Role:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Regular",
       "min_orgs": "Min orgs:",
       "any": "Any",
@@ -17983,9 +17983,9 @@
       },
       "tabs": {
         "tokens_label": "API Tokens",
-        "tokens_desc": "Mint, list, and revoke cross-org superadmin API tokens.",
+        "tokens_desc": "Mint, list, and revoke cross-org Backoffice API tokens.",
         "docs_label": "Documentation & Playground",
-        "docs_desc": "Browse the superadmin API, then call it live with your token."
+        "docs_desc": "Browse the Backoffice API, then call it live with your token."
       },
       "org_picker": {
         "none_yet": "No organizations yet",
@@ -18007,7 +18007,7 @@
       "endpoint": {
         "invalid_json": "Invalid JSON",
         "network_error": "Network error",
-        "session_only": "<strong>Session auth only.</strong> API tokens cannot call this endpoint (privilege-escalation block). The live Send button will fail with 403 if you use a token; copy the snippet and run it as a logged-in superadmin instead.",
+        "session_only": "<strong>Session auth only.</strong> API tokens cannot call this endpoint (privilege-escalation block). The live Send button will fail with 403 if you use a token; copy the snippet and run it as a signed-in Backoffice user instead.",
         "parameters": "Parameters",
         "request_body": "Request Body (JSON)",
         "reset_to_sample": "Reset to sample",
@@ -18035,7 +18035,7 @@
       "description_placeholder": "What this token is for",
       "expiration": "Expiration",
       "never_expires": "Never expires",
-      "warning": "A superadmin token can call <em>every</em> <code>/ee/superadmin/*</code> endpoint: create orgs, toggle features, update plans across the platform. Treat it like a master key.",
+      "warning": "A Backoffice token can call <em>every</em> <code>/ee/backoffice/*</code> endpoint: create orgs, toggle features, update plans across the platform. Treat it like a master key.",
       "create_token": "Create token",
       "failed_revoke": "Failed to revoke ({{status}})",
       "revoke_title": "Revoke token?",
@@ -18053,7 +18053,7 @@
       "count_other": "{{count}} tokens",
       "loading": "Loading tokens…",
       "failed_load": "Failed to load tokens.",
-      "empty_title": "No superadmin API tokens yet.",
+      "empty_title": "No Backoffice API tokens yet.",
       "empty_desc": "Create one to automate org provisioning and feature toggling.",
       "col_name": "Name",
       "col_prefix": "Prefix",
@@ -18074,7 +18074,7 @@
       "scopes": "Scopes",
       "revoked": "Token revoked",
       "scope_desc": {
-        "api": "Call the superadmin REST API.",
+        "api": "Call the Backoffice REST API.",
         "mcp": "Connect an AI assistant to the platform MCP (read tools).",
         "mcp_write": "Also allow the MCP's safe writes: notes, tags, POC extensions, account owner."
       },
@@ -18089,16 +18089,16 @@
     },
     "ee_required": {
       "title": "Enterprise Edition license required",
-      "description": "The superadmin dashboard is part of LearnHouse Enterprise Edition and is not available on this deployment."
+      "description": "LearnHouse Backoffice is part of LearnHouse Enterprise Edition and is not available on this deployment."
     },
     "access_denied": {
       "title": "Access Denied",
-      "description": "You need superadmin privileges to access this page."
+      "description": "You need Backoffice access to open this page."
     },
     "shell": {
-      "platform": "Platform",
-      "title": "LearnHouse Platform",
-      "subtitle": "Superadmin console",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Console navigation",
       "open_menu": "Open menu",
       "close_menu": "Close menu",
@@ -19219,7 +19219,7 @@
       "add_member": "Add member",
       "read_only_hint": "Only platform owners can add, change or remove team members.",
       "empty_title": "No team members yet",
-      "empty_desc": "Superadmins appear here once the platform API is updated.",
+      "empty_desc": "Backoffice staff appear here once the platform API is updated.",
       "col_member": "Member",
       "col_role": "Role",
       "col_granted_by": "Granted by",
@@ -19315,7 +19315,7 @@
       "enabled": "Enabled",
       "disabled": "Disabled",
       "mcp": "Platform MCP",
-      "mcp_desc": "Read-mostly MCP endpoint for AI assistants, authenticated with superadmin tokens.",
+      "mcp_desc": "Read-mostly MCP endpoint for AI assistants, authenticated with Backoffice tokens.",
       "status": "Status",
       "license": "License",
       "license_desc": "Safe license fields. Keys and signatures are never shown.",
@@ -19336,7 +19336,7 @@
       "every_hours_other": "Every {{count}} hours"
     },
     "users": {
-      "superadmin_filter": "Filter by superadmin",
+      "backoffice_filter": "Filter by Backoffice access",
       "min_orgs": "Minimum organizations",
       "any_orgs": "Any orgs",
       "min_orgs_value_one": "{{count}}+ org",
@@ -19380,7 +19380,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Connect an AI assistant",
-      "desc": "The platform MCP lets Claude and other assistants read platform data with a superadmin token.",
+      "desc": "The platform MCP lets Claude and other assistants read platform data with a Backoffice token.",
       "enabled": "Enabled",
       "disabled": "Disabled on this server",
       "step1_title": "Create a token",
@@ -19849,7 +19849,7 @@
           "automation": "Failed runs and rules that acted",
           "team": "Platform team changes",
           "token": "New API tokens",
-          "security": "Failed superadmin sign-ins, revoked tokens",
+          "security": "Failed Backoffice sign-ins, revoked tokens",
           "follow": "Activity of the orgs you follow",
           "system": "Platform alerts and channel failures"
         },
@@ -20711,7 +20711,7 @@
       },
       "history": {
         "title": "Recent changes",
-        "desc": "Changes made from the platform console, field by field.",
+        "desc": "Changes made from the Backoffice, field by field.",
         "empty": "No changes yet",
         "empty_desc": "Edits made here show up with who made them and what changed."
       }

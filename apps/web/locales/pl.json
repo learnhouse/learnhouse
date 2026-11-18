@@ -18300,7 +18300,7 @@
       "ordered": "Ułóż kursy w kolejności, w jakiej uczestnicy powinni je przechodzić."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Przegląd",
@@ -18494,7 +18494,7 @@
       "password_placeholder": "Wpisz swoje hasło",
       "signing_in": "Logowanie...",
       "sign_in": "Zaloguj się",
-      "superadmin_only": "Tylko dla zespołu platformy LearnHouse"
+      "backoffice_only": "Tylko dla zespołu platformy LearnHouse"
     },
     "pages": {
       "analytics": "Analityka globalna",
@@ -18509,7 +18509,7 @@
       "ai_costs_desc": "Ile kosztują nas zapytania AI według cennika dostawcy w porównaniu z wartością naliczonych kredytów"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Użytkownicy",
       "developers": "Deweloperzy",
       "avatar": "Awatar",
@@ -18636,7 +18636,7 @@
       "users_count_many": "{{count}} użytkowników",
       "users_count_other": "{{count}} użytkowników",
       "role_label": "Rola:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Zwykły",
       "min_orgs": "Min. organizacji:",
       "any": "Dowolna",
@@ -18666,9 +18666,9 @@
       },
       "tabs": {
         "tokens_label": "Tokeny API",
-        "tokens_desc": "Generuj, wyświetlaj i unieważniaj tokeny API superadministratora obejmujące wiele organizacji.",
+        "tokens_desc": "Generuj, wyświetlaj i unieważniaj tokeny API Backoffice obejmujące wiele organizacji.",
         "docs_label": "Dokumentacja i Playground",
-        "docs_desc": "Przeglądaj API superadministratora, a następnie wywołuj je na żywo za pomocą swojego tokenu."
+        "docs_desc": "Przeglądaj API Backoffice, a następnie wywołuj je na żywo za pomocą swojego tokenu."
       },
       "org_picker": {
         "none_yet": "Brak organizacji",
@@ -18690,7 +18690,7 @@
       "endpoint": {
         "invalid_json": "Nieprawidłowy JSON",
         "network_error": "Błąd sieci",
-        "session_only": "<strong>Tylko uwierzytelnianie sesją.</strong> Tokeny API nie mogą wywoływać tego endpointu (blokada eskalacji uprawnień). Przycisk Wyślij na żywo zakończy się błędem 403, jeśli użyjesz tokenu; skopiuj fragment i uruchom go jako zalogowany superadministrator.",
+        "session_only": "<strong>Tylko uwierzytelnianie sesją.</strong> Tokeny API nie mogą wywoływać tego endpointu (blokada eskalacji uprawnień). Przycisk Wyślij na żywo zakończy się błędem 403, jeśli użyjesz tokenu; skopiuj fragment i uruchom go jako zalogowany użytkownik Backoffice.",
         "parameters": "Parametry",
         "request_body": "Treść żądania (JSON)",
         "reset_to_sample": "Przywróć przykład",
@@ -18718,7 +18718,7 @@
       "description_placeholder": "Do czego służy ten token",
       "expiration": "Wygaśnięcie",
       "never_expires": "Nigdy nie wygasa",
-      "warning": "Token superadministratora może wywołać <em>każdy</em> endpoint <code>/ee/superadmin/*</code>: tworzyć organizacje, przełączać funkcje i aktualizować plany na całej platformie. Traktuj go jak klucz główny.",
+      "warning": "Token Backoffice może wywołać <em>każdy</em> endpoint <code>/ee/backoffice/*</code>: tworzyć organizacje, przełączać funkcje i aktualizować plany na całej platformie. Traktuj go jak klucz główny.",
       "create_token": "Utwórz token",
       "failed_revoke": "Nie udało się unieważnić ({{status}})",
       "revoke_title": "Unieważnić token?",
@@ -18738,7 +18738,7 @@
       "count_other": "{{count}} tokeny",
       "loading": "Wczytywanie tokenów…",
       "failed_load": "Nie udało się wczytać tokenów.",
-      "empty_title": "Brak tokenów API superadministratora.",
+      "empty_title": "Brak tokenów API Backoffice.",
       "empty_desc": "Utwórz jeden, aby zautomatyzować tworzenie organizacji i przełączanie funkcji.",
       "col_name": "Nazwa",
       "col_prefix": "Prefiks",
@@ -18759,7 +18759,7 @@
       "scopes": "Zakresy",
       "revoked": "Token unieważniony",
       "scope_desc": {
-        "api": "Wywołuj REST API superadmina.",
+        "api": "Wywołuj REST API Backoffice.",
         "mcp": "Połącz asystenta AI z platformowym MCP (narzędzia odczytu).",
         "mcp_write": "Dodatkowo zezwala na bezpieczne zapisy MCP: notatki, tagi, przedłużenia POC, właściciela konta."
       },
@@ -18776,16 +18776,16 @@
     },
     "ee_required": {
       "title": "Wymagana licencja Enterprise Edition",
-      "description": "Panel superadministratora jest częścią LearnHouse Enterprise Edition i nie jest dostępny w tym wdrożeniu."
+      "description": "Panel Backoffice jest częścią LearnHouse Enterprise Edition i nie jest dostępny w tym wdrożeniu."
     },
     "access_denied": {
       "title": "Odmowa dostępu",
-      "description": "Aby uzyskać dostęp do tej strony, potrzebujesz uprawnień superadministratora."
+      "description": "Aby uzyskać dostęp do tej strony, potrzebujesz uprawnień Backoffice."
     },
     "shell": {
-      "platform": "Platforma",
-      "title": "Platforma LearnHouse",
-      "subtitle": "Konsola superadmina",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Nawigacja konsoli",
       "open_menu": "Otwórz menu",
       "close_menu": "Zamknij menu",
@@ -19970,7 +19970,7 @@
       "add_member": "Dodaj członka",
       "read_only_hint": "Tylko właściciele platformy mogą dodawać, zmieniać i usuwać członków zespołu.",
       "empty_title": "Brak członków zespołu",
-      "empty_desc": "Superadmini pojawią się tutaj po aktualizacji API platformy.",
+      "empty_desc": "Pracownicy Backoffice pojawią się tutaj po aktualizacji API platformy.",
       "col_member": "Członek",
       "col_role": "Rola",
       "col_granted_by": "Przyznał",
@@ -20066,7 +20066,7 @@
       "enabled": "Włączony",
       "disabled": "Wyłączony",
       "mcp": "Platformowy MCP",
-      "mcp_desc": "Głównie odczytowy punkt końcowy MCP dla asystentów AI, uwierzytelniany tokenami superadmina.",
+      "mcp_desc": "Głównie odczytowy punkt końcowy MCP dla asystentów AI, uwierzytelniany tokenami Backoffice.",
       "status": "Status",
       "license": "Licencja",
       "license_desc": "Bezpieczne pola licencji. Klucze i podpisy nigdy nie są wyświetlane.",
@@ -20093,7 +20093,7 @@
       "every_hours_other": "Co {{count}} godzin"
     },
     "users": {
-      "superadmin_filter": "Filtruj według superadminów",
+      "backoffice_filter": "Filtruj według Backoffice",
       "min_orgs": "Minimalna liczba organizacji",
       "any_orgs": "Dowolna liczba",
       "min_orgs_value_one": "{{count}}+ organizacja",
@@ -20139,7 +20139,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Połącz asystenta AI",
-      "desc": "Platformowy MCP pozwala Claude i innym asystentom odczytywać dane platformy za pomocą tokenu superadmina.",
+      "desc": "Platformowy MCP pozwala Claude i innym asystentom odczytywać dane platformy za pomocą tokenu Backoffice.",
       "enabled": "Włączony",
       "disabled": "Wyłączony na tym serwerze",
       "step1_title": "Utwórz token",
@@ -20628,7 +20628,7 @@
           "automation": "Nieudane uruchomienia i reguły, które zadziałały",
           "team": "Zmiany w zespole platformy",
           "token": "Nowe tokeny API",
-          "security": "Nieudane logowania superadmina, unieważnione tokeny",
+          "security": "Nieudane logowania Backoffice, unieważnione tokeny",
           "follow": "Aktywność obserwowanych organizacji",
           "system": "Alerty platformy i awarie kanałów"
         },
@@ -21556,7 +21556,7 @@
       },
       "history": {
         "title": "Ostatnie zmiany",
-        "desc": "Zmiany wprowadzone z konsoli platformy, pole po polu.",
+        "desc": "Zmiany wprowadzone z Backoffice, pole po polu.",
         "empty": "Brak zmian",
         "empty_desc": "Zmiany wprowadzone tutaj pojawiają się z autorem i tym, co się zmieniło."
       }

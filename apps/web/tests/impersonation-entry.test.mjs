@@ -5,11 +5,11 @@ const { autoEntryMode } = await import("../lib/auth/impersonationEntry.ts");
 const at = (slug, path = "/", platform = false) => ({ slug, path, platform });
 const staff = (extra = {}) => ({
   status: "authenticated",
-  data: { user: { is_superadmin: true }, roles: [], impersonation: null, ...extra },
+  data: { user: { is_backoffice_staff: true }, roles: [], impersonation: null, ...extra },
 });
 const impersonating = (slug) => ({
   status: "authenticated",
-  data: { user: { is_superadmin: false }, roles: [{ org: { slug } }], impersonation: { org: { slug } } },
+  data: { user: { is_backoffice_staff: false }, roles: [{ org: { slug } }], impersonation: { org: { slug } } },
 });
 
 describe("impersonation auto entry", () => {
@@ -43,7 +43,7 @@ describe("impersonation auto entry", () => {
   test("never on the console, auth pages or without an org", () => {
     expect(autoEntryMode(impersonating("acme"), at("globex", "/", true))).toBeNull();
     expect(autoEntryMode(impersonating("acme"), at("globex", "/login"))).toBeNull();
-    expect(autoEntryMode(staff(), at("acme", "/admin/organizations"))).toBeNull();
+    expect(autoEntryMode(staff(), at("acme", "/backoffice/organizations"))).toBeNull();
     expect(autoEntryMode(staff(), at(null))).toBeNull();
     expect(autoEntryMode(staff(), null)).toBeNull();
   });
@@ -51,7 +51,7 @@ describe("impersonation auto entry", () => {
   test("signed-out visitors and regular members never trigger it", () => {
     expect(autoEntryMode({ status: "unauthenticated" }, at("acme"))).toBeNull();
     expect(autoEntryMode(null, at("acme"))).toBeNull();
-    const member = { status: "authenticated", data: { user: { is_superadmin: false }, roles: [], impersonation: null } };
+    const member = { status: "authenticated", data: { user: { is_backoffice_staff: false }, roles: [], impersonation: null } };
     expect(autoEntryMode(member, at("acme"))).toBeNull();
   });
 });

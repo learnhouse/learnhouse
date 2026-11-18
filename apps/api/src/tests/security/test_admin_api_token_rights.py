@@ -16,7 +16,7 @@ from httpx import ASGITransport, AsyncClient
 from src.core.events.database import get_db_session
 from src.db.roles import Permission
 from src.db.usergroups import UserGroup
-from src.db.users import APITokenUser, SuperadminAPITokenUser
+from src.db.users import APITokenUser, BackofficeAPITokenUser
 from src.routers.admin import router as admin_router
 from src.security.auth import get_current_user
 from src.services.admin.admin import _require_token_right
@@ -275,8 +275,8 @@ class TestRequireTokenRightHelper:
             _require_token_right(self._tok(rights), "users", "update")
         assert exc.value.status_code == 403
 
-    def test_superadmin_token_keeps_full_access(self):
-        _require_token_right(SuperadminAPITokenUser(id=1), "users", "delete")
+    def test_backoffice_token_keeps_full_access(self):
+        _require_token_right(BackofficeAPITokenUser(id=1), "users", "delete")
 
     def test_unknown_action_is_a_programming_error(self):
         with pytest.raises(ValueError):

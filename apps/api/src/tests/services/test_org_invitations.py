@@ -707,7 +707,7 @@ async def test_targets_roles_and_callers(world, mock_request, db):
     assert (await policy.role_for_grant(db, world.org.id, None)).id == 4
 
     assert await policy.caller_grant_ceiling(db, world.org, InternalUser(id=0)) == (True, None)
-    with patch("src.security.superadmin.is_user_superadmin", AsyncMock(return_value=True)):
+    with patch("src.security.backoffice.is_user_backoffice_staff", AsyncMock(return_value=True)):
         assert await policy.caller_grant_ceiling(db, world.org, world.regular) == (True, None)
     token = APITokenUser(org_id=world.org.id, rights=USER_RIGHTS.model_dump(), created_by_user_id=world.admin.id)
     unrestricted, role = await policy.caller_grant_ceiling(db, world.org, token)

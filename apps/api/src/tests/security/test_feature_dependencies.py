@@ -75,17 +75,17 @@ class TestFeatureDependencies:
     async def test_require_org_admin_returns_404_when_org_missing(self):
         db_session = _make_async_session(None)
 
-        with patch("src.security.superadmin.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.backoffice.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             with pytest.raises(HTTPException) as exc_info:
                 await require_org_admin(1, _public_user(), db_session)
 
         assert exc_info.value.status_code == 404
         assert "Organization not found" in exc_info.value.detail
 
-    async def test_require_org_admin_allows_superadmin_bypass(self):
+    async def test_require_org_admin_allows_backoffice_bypass(self):
         db_session = _make_async_session(SimpleNamespace(id=1))
 
-        with patch("src.security.superadmin.is_user_superadmin", new=AsyncMock(return_value=True)):
+        with patch("src.security.backoffice.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
             result = await require_org_admin(1, _public_user(), db_session)
 
         assert result is True
@@ -93,7 +93,7 @@ class TestFeatureDependencies:
     async def test_require_org_admin_allows_org_admin(self):
         db_session = _make_async_session(SimpleNamespace(id=1), SimpleNamespace(id=2))
 
-        with patch("src.security.superadmin.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.backoffice.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             result = await require_org_admin(1, _public_user(), db_session)
 
         assert result is True
@@ -101,7 +101,7 @@ class TestFeatureDependencies:
     async def test_require_org_admin_rejects_non_admin_member(self):
         db_session = _make_async_session(SimpleNamespace(id=1), None)
 
-        with patch("src.security.superadmin.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.backoffice.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             with pytest.raises(HTTPException) as exc_info:
                 await require_org_admin(1, _public_user(), db_session)
 

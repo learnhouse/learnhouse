@@ -259,7 +259,7 @@ export enum AnalyticsEvent {
   OfferCreated = 'offer_created',
   PaymentsFeatureGateBlocked = 'payments_feature_gate_blocked',
 
-  // Super-admin (/admin) is intentionally NOT tracked; see PostHogAdminGuard.
+  // Backoffice (/backoffice) is intentionally NOT tracked; see PostHogAdminGuard.
 
   // ── Global navigation & cross-cutting ────────────────────────────────────
   CommandPaletteOpened = 'command_palette_opened',
@@ -351,7 +351,7 @@ const GROUP_PREFIXES: Array<[string, string[]]> = [
   ['editor', ['editor_', 'magic_block_', 'ai_editor_']],
   ['org_settings', ['invite_', 'members_', 'api_token_', 'custom_domain_', 'sso_config', 'org_general', 'webhook_', 'signup_mechanism']],
   ['billing', ['feature_gate_', 'upgrade_', 'payments_']],
-  ['admin', ['organization_', 'superadmin_', 'admin_', 'global_analytics']],
+  ['admin', ['organization_', 'backoffice_', 'admin_', 'global_analytics']],
   ['navigation', ['command_palette_', 'dashboard_nav', 'dashboard_entered', 'error_view', 'not_found', 'language_changed', 'feedback_']],
 ]
 

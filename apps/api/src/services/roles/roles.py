@@ -10,7 +10,7 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
 from src.security.org_auth import require_org_role_permission, get_user_org_role
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
 from src.security.auth import resolve_acting_user_id
 from src.db.roles import Rights, Role, RoleCreate, RoleRead, RoleUpdate, RoleTypeEnum
@@ -59,7 +59,7 @@ async def create_role(
         )
 
     # ============================================================================
-    # VERIFICATION 3+4: Membership + permission (superadmins bypass)
+    # VERIFICATION 3+4: Membership + permission (backoffice staff bypass)
     # ============================================================================
     await require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_create")
 
@@ -104,10 +104,10 @@ async def create_role(
 
     # ============================================================================
     # VERIFICATION 8: Ensure user cannot create a role with higher permissions than they have
-    # (superadmins skip this check; they can grant any permission)
+    # (backoffice staff skip this check; they can grant any permission)
     # ============================================================================
     create_role_user_id = resolve_acting_user_id(current_user)
-    if not await is_user_superadmin(create_role_user_id, db_session):
+    if not await is_user_backoffice_staff(create_role_user_id, db_session):
         await _enforce_rights_subset(
             role.rights,
             create_role_user_id,
@@ -209,7 +209,7 @@ async def get_roles_by_organization(
         )
 
     # ============================================================================
-    # VERIFICATION 2+3: Membership + permission (superadmins bypass)
+    # VERIFICATION 2+3: Membership + permission (backoffice staff bypass)
     # ============================================================================
     await require_org_role_permission(resolve_acting_user_id(current_user), org_id, db_session, "roles", "action_read")
 
@@ -332,10 +332,10 @@ async def update_role(
 
     # ============================================================================
     # VERIFICATION: Ensure user cannot escalate a role to have higher permissions
-    # than they themselves hold (superadmins skip this check).
+    # than they themselves hold (backoffice staff skip this check).
     # ============================================================================
     update_role_user_id = resolve_acting_user_id(current_user)
-    if 'rights' in update_data and not await is_user_superadmin(update_role_user_id, db_session):
+    if 'rights' in update_data and not await is_user_backoffice_staff(update_role_user_id, db_session):
         await _enforce_rights_subset(
             new_rights or {},
             update_role_user_id,

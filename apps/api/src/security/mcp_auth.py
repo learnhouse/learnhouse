@@ -6,7 +6,7 @@ Two kinds of credential get through:
   as the member who consented, inside the org they picked. This is what MCP
   clients use, and it works on every plan.
 * LearnHouse API tokens (`lh_...`), bounded by the token's own rights. Handy
-  for scripts and CI. Superadmin tokens (`lh_sa_...`) are refused: they are
+  for scripts and CI. Backoffice tokens (`lh_sa_...`) are refused: they are
   cross-org and the MCP surface is strictly org scoped.
 
 Anything else gets a 401 whose `WWW-Authenticate` header points at the
@@ -35,7 +35,7 @@ from src.security.auth import validate_api_token
 from src.services.mcp import oauth
 
 API_TOKEN_PREFIX = "lh_"
-SUPERADMIN_PREFIX = "lh_sa_"
+BACKOFFICE_PREFIX = "lh_sa_"
 CACHE_TTL_SECONDS = 30
 
 
@@ -161,8 +161,8 @@ class MCPAuthMiddleware:
             return
 
         token = authorization[7:].strip()
-        if token.startswith(SUPERADMIN_PREFIX):
-            await _reject(scope, send, 401, "invalid_token", "Superadmin tokens are not accepted here")
+        if token.startswith(BACKOFFICE_PREFIX):
+            await _reject(scope, send, 401, "invalid_token", "Backoffice tokens are not accepted here")
             return
 
         request = Request(scope)

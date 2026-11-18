@@ -19,8 +19,8 @@ Demo instances are an Enterprise Edition feature. Without the Enterprise Edition
 | --- | --- | --- |
 | Demo-instance mode | inside each instance (`LEARNHOUSE_DEMO_INSTANCE=true`) | sign-in links, lifecycle (expiry, close), banner, usage tracking |
 | Demo API | each instance, `/api/v1/demo-control/*`, control key | status, extend, close, reopen, links, org, content, analytics |
-| Console **Admin → Demos** | the platform (superadmin) | register demos, issue links, push branding and content, the analytics breakdown |
-| Superadmin API + platform MCP | the platform | the same controls for scripts and `automation-tools` |
+| **Backoffice → Demos** | the platform (Backoffice) | register demos, issue links, push branding and content, the analytics breakdown |
+| Backoffice API + platform MCP | the platform | the same controls for scripts and `automation-tools` |
 | Demo images | `ghcr.io/learnhouse/demo-{backend,frontend,collab}:demo-<version>` | Enterprise images with demo defaults |
 | Helm chart | `infra/k8s/charts/learnhouse-demo` | one namespace per demo, `https://<slug>.getlearnhouse.com` |
 | Orchestrator | `automation-tools/apps/demo-orchestrator` | create → seed → link → refresh analytics → tear down |
@@ -111,7 +111,7 @@ The summary has totals (sessions, active time, page views, actions, people, acti
 - **Register a demo**: company, prospect, subdomain (`<slug>.getlearnhouse.com`), instance URL, control key (stored encrypted, never shown again), duration.
 - A demo: overview (score, active time, milestones, features tried vs not, time per area, daily activity, top actions), people, sessions, sign-in links (issue, copy once, turn off), content and branding (push name, color, logo, unlock every feature; sample packs; a course spec), settings (extend, close, reopen, edit, rotate the key, unregister).
 
-The same through the superadmin API (`/api/v1/ee/superadmin/demos*`) and the platform MCP (`list_demos`, `get_demo`, `sync_demo_analytics`, `issue_demo_link`, `extend_demo`; closing stays in the console and the REST API).
+The same through the Backoffice API (`/api/v1/ee/backoffice/demos*`) and the platform MCP (`list_demos`, `get_demo`, `sync_demo_analytics`, `issue_demo_link`, `extend_demo`; closing stays in the console and the REST API).
 
 ## Images and Kubernetes
 

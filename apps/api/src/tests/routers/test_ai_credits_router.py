@@ -38,7 +38,7 @@ async def client(app):
 def ee_mode():
     """Run this module against the self-hosted-EE baseline.
 
-    The credit mutators are superadmin-only and therefore Enterprise-only. The
+    The credit mutators are backoffice-only and therefore Enterprise-only. The
     suite pins 'oss' globally (see conftest), which would 403 them before any
     of the behaviour under test runs. Tests that specifically want OSS patch
     the same target again; the inner patch wins.
@@ -130,9 +130,9 @@ class TestAICreditsRouter:
         assert "not scoped" in response.json()["detail"]
 
     async def test_add_org_ai_credits_success_and_validation(self, client, org):
-        # Adding "purchased" credits has no payment check, so it is superadmin-only.
+        # Adding "purchased" credits has no payment check, so it is backoffice-only.
         with patch(
-            "src.routers.orgs.ai_credits.is_user_superadmin",
+            "src.routers.orgs.ai_credits.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
@@ -148,7 +148,7 @@ class TestAICreditsRouter:
         assert response.json()["new_purchased_total"] == 250
 
         with patch(
-            "src.routers.orgs.ai_credits.is_user_superadmin",
+            "src.routers.orgs.ai_credits.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=True,
         ):
@@ -165,9 +165,9 @@ class TestAICreditsRouter:
         )
         assert response.status_code == 404
 
-        # A mere org admin (non-superadmin) must be rejected.
+        # A mere org admin (non-backoffice staff member) must be rejected.
         with patch(
-            "src.routers.orgs.ai_credits.is_user_superadmin",
+            "src.routers.orgs.ai_credits.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -179,7 +179,7 @@ class TestAICreditsRouter:
 
     async def test_reset_org_ai_credits_success_and_forbidden(self, client, org):
         with patch(
-            "src.routers.orgs.ai_credits.is_user_superadmin",
+            "src.routers.orgs.ai_credits.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=True,
         ), patch("src.routers.orgs.ai_credits.reset_ai_credits_usage") as reset_mock:
@@ -188,9 +188,9 @@ class TestAICreditsRouter:
         assert response.status_code == 200
         reset_mock.assert_called_once_with(org.id)
 
-        # A mere org admin (non-superadmin) must be rejected.
+        # A mere org admin (non-backoffice staff member) must be rejected.
         with patch(
-            "src.routers.orgs.ai_credits.is_user_superadmin",
+            "src.routers.orgs.ai_credits.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -201,9 +201,9 @@ class TestAICreditsRouter:
         response = await client.post("/api/v1/orgs/9999/ai-credits/reset")
         assert response.status_code == 404
 
-    async def test_set_org_ai_credits_superadmin_and_errors(self, client, org):
+    async def test_set_org_ai_credits_backoffice_and_errors(self, client, org):
         with patch(
-            "src.routers.orgs.ai_credits.is_user_superadmin",
+            "src.routers.orgs.ai_credits.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
@@ -219,7 +219,7 @@ class TestAICreditsRouter:
         assert response.json()["purchased_total"] == 500
 
         with patch(
-            "src.routers.orgs.ai_credits.is_user_superadmin",
+            "src.routers.orgs.ai_credits.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -236,7 +236,7 @@ class TestAICreditsRouter:
         assert response.status_code == 404
 
         with patch(
-            "src.routers.orgs.ai_credits.is_user_superadmin",
+            "src.routers.orgs.ai_credits.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=True,
         ):
@@ -317,11 +317,11 @@ class TestAICreditsOSSGate:
 
 
 async def test_mutators_apply_the_ee_platform_role(client, org):
-    """On EE a superadmin whose platform role lacks orgs.plan is refused."""
+    """On EE a backoffice staff member whose platform role lacks orgs.plan is refused."""
     from types import SimpleNamespace
 
     hooks = SimpleNamespace(platform_permission_denied=AsyncMock(return_value=True))
-    with patch("src.routers.orgs.ai_credits.is_user_superadmin", new_callable=AsyncMock, return_value=True), \
+    with patch("src.routers.orgs.ai_credits.is_user_backoffice_staff", new_callable=AsyncMock, return_value=True), \
             patch("src.core.ee_hooks.get_ee_hooks", return_value=hooks):
         for path, body in (("add", {"amount": 5}), ("set", {"amount": 5}), ("reset", None)):
             r = await client.post(f"/api/v1/orgs/{org.id}/ai-credits/{path}", json=body)

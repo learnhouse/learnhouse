@@ -26,7 +26,7 @@ from src.db.users import APITokenUser, User
 from src.security.api_token_utils import require_token_content_read
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac import AccessAction, check_resource_access
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.services.ai.tools import refs, results
 from src.services.ai.tools.base import ActionTier, ToolContext, ToolSpec, require_approval
 from src.services.ai.tools.results import Paging
@@ -160,7 +160,7 @@ async def _visible_community_ids(ctx: ToolContext):
         require_token_content_read(ctx.user, "communities")
         return everything
     user_id = resolve_acting_user_id(ctx.user)
-    if await is_user_superadmin(user_id, ctx.db_session) or await can_read_all_communities(
+    if await is_user_backoffice_staff(user_id, ctx.db_session) or await can_read_all_communities(
         ctx.request, ctx.org, user_id, ctx.db_session
     ):
         return everything

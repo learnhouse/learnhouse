@@ -246,7 +246,7 @@ function DashLeftMenu() {
 
   const plan = usePlan()
   const mode = getDeploymentMode()
-  // Only org managers (admins/superadmins) see billing surfaces; non-admins
+  // Only org managers (admins/backoffice staff) see billing surfaces; non-admins
   // shouldn't manage the plan/subscription.
   const { canManageOrg } = useAdminStatus()
   // A running free trial shows as a quiet caption under the org name (admins only).

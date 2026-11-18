@@ -16,7 +16,7 @@ from src.security.rbac.utils import (
     check_course_permissions_with_own,
     get_element_organization_id,
 )
-from src.security.superadmin import is_user_superadmin, superadmin_org_bypass_blocked
+from src.security.backoffice import is_user_backoffice_staff, backoffice_org_bypass_blocked
 from src.core.session_memo import session_memo
 
 logger = logging.getLogger(__name__)
@@ -406,8 +406,8 @@ async def authorization_verify_based_on_roles(
     element_uuid: str,
     db_session: AsyncSession,
 ):
-    # Superadmin bypass - full access to all resources
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
+    # Backoffice bypass - full access to all resources
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
         return True
 
     element_type = await check_element_type(element_uuid)
@@ -496,8 +496,8 @@ async def authorization_verify_based_on_org_admin_status(
     Returns:
         bool: True if user is admin in the target organization, False otherwise
     """
-    # Superadmin bypass - full access to all organizations
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
+    # Backoffice bypass - full access to all organizations
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
         return True
 
     # Get the target organization's ID from the element UUID
@@ -517,7 +517,7 @@ async def authorization_verify_based_on_org_admin_status(
 async def authorization_verify_org_admin_by_id(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """``authorization_verify_based_on_org_admin_status`` for a caller that
     already knows the org id, without resolving it from a uuid."""
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
         return True
     from src.security.org_auth import holds_admin_or_maintainer_role
 
@@ -534,9 +534,9 @@ async def authorization_verify_based_on_roles_and_authorship(
 ):
     logger.debug("[RBAC] authorization_verify_based_on_roles_and_authorship: user_id=%s, action=%s, element_uuid=%s", user_id, action, element_uuid)
 
-    # Superadmin bypass - full access to all resources
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
-        logger.debug("[RBAC] Superadmin bypass for user_id=%s", user_id)
+    # Backoffice bypass - full access to all resources
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
+        logger.debug("[RBAC] Backoffice bypass for user_id=%s", user_id)
         return True
 
     isAuthor = await authorization_verify_if_user_is_author(
@@ -727,8 +727,8 @@ async def authorization_verify_based_on_roles_and_authorship_or_api_token(
             request, current_user, action, element_uuid, db_session
         )
 
-    # Superadmin bypass - full access to all resources
-    if (await is_user_superadmin(current_user.id, db_session) and not superadmin_org_bypass_blocked(current_user.id)):
+    # Backoffice bypass - full access to all resources
+    if (await is_user_backoffice_staff(current_user.id, db_session) and not backoffice_org_bypass_blocked(current_user.id)):
         return True
 
     # Regular user path: use existing logic

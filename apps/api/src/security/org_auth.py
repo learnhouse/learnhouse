@@ -2,7 +2,7 @@
 Centralized organization authorization helpers.
 
 All org membership and admin checks go through this module.
-Superadmin bypass is baked in: superadmins pass every check automatically.
+Backoffice bypass is baked in: backoffice staff pass every check automatically.
 """
 
 import logging
@@ -15,7 +15,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
 from src.db.users import APITokenUser
 from src.core.session_memo import session_memo
-from src.security.superadmin import is_user_superadmin, superadmin_org_bypass_blocked
+from src.security.backoffice import is_user_backoffice_staff, backoffice_org_bypass_blocked
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ async def get_user_org_rows(user_id: int, org_id: int, db_session: AsyncSession)
 
     Membership, admin status and role lookups all start from these rows, and a
     single request asks several of those questions about the same user and org.
-    Memoized per session so they share one query. Does NOT check superadmin.
+    Memoized per session so they share one query. Does NOT check backoffice.
     """
     _cache = getattr(db_session, '_user_org_cache', None)
     if _cache is None:
@@ -81,37 +81,37 @@ def roles_of_memberships(
 
 
 async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> Optional[UserOrganization]:
-    """Return the UserOrganization row, or None. Does NOT check superadmin."""
+    """Return the UserOrganization row, or None. Does NOT check backoffice."""
     rows = await get_user_org_rows(user_id, org_id, db_session)
     return rows[0] if rows else None
 
 
 async def holds_admin_or_maintainer_role(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """True if any of the user's membership rows in the org is admin/maintainer.
-    Does NOT check superadmin."""
+    Does NOT check backoffice."""
     rows = await get_user_org_rows(user_id, org_id, db_session)
     return any(row.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS for row in rows)
 
 
 async def is_org_member(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
-    """Check if user is a member of the org (or a superadmin)."""
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
-        logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
+    """Check if user is a member of the org (or a backoffice staff member)."""
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
+        logger.debug("Backoffice bypass: user %s accessed org %s", user_id, org_id)
         return True
     return await get_user_org(user_id, org_id, db_session) is not None
 
 
 async def is_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
-    """Check if user is an admin/maintainer of the org (or a superadmin)."""
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
-        logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
+    """Check if user is an admin/maintainer of the org (or a backoffice staff member)."""
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
+        logger.debug("Backoffice bypass: user %s accessed org %s", user_id, org_id)
         return True
     user_org = await get_user_org(user_id, org_id, db_session)
     return user_org is not None and user_org.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS
 
 
 async def get_user_org_role(user_id: int, org_id: int, db_session: AsyncSession) -> Optional[Role]:
-    """Return the user's Role in the org, or None. Does NOT check superadmin."""
+    """Return the user's Role in the org, or None. Does NOT check backoffice."""
     user_org = await get_user_org(user_id, org_id, db_session)
     if not user_org:
         return None
@@ -145,7 +145,7 @@ async def enforce_org_mfa(user_id: int, org_id: int, db_session: AsyncSession) -
 
 
 async def require_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> None:
-    """Raise 403 if user is not an org member and not a superadmin."""
+    """Raise 403 if user is not an org member and not a backoffice staff member."""
     if not await is_org_member(user_id, org_id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -155,7 +155,7 @@ async def require_org_membership(user_id: int, org_id: int, db_session: AsyncSes
 
 
 async def require_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> None:
-    """Raise 403 if user is not an org admin/maintainer and not a superadmin."""
+    """Raise 403 if user is not an org admin/maintainer and not a backoffice staff member."""
     if not await is_org_admin(user_id, org_id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -166,13 +166,13 @@ async def require_org_admin(user_id: int, org_id: int, db_session: AsyncSession)
 
 async def verify_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> None:
     """Gate of the org reporting surfaces (per-student audit, analytics):
-    403 unless the user belongs to the org. Superadmins pass without the org's
+    403 unless the user belongs to the org. Backoffice staff pass without the org's
     session policies; members go through them.
 
     Prevents cross-org data access (IDOR) by ensuring the requesting user
     actually belongs to the org whose data they are querying.
     """
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
         return
 
     membership = (await db_session.execute(
@@ -189,11 +189,11 @@ async def verify_org_membership(user_id: int, org_id: int, db_session: AsyncSess
 async def verify_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> None:
     """403 unless the user's role in this org grants
     ``organizations.action_update`` (admins, maintainers, custom roles with
-    that right). Superadmins pass.
+    that right). Backoffice staff pass.
 
     Scoped to the org being accessed, not any org the user belongs to.
     """
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
         return
 
     membership = (await db_session.execute(
@@ -233,15 +233,15 @@ async def require_org_role_permission(
 ) -> None:
     """
     Check that the user has a specific permission via their org role's rights dict.
-    Superadmins bypass entirely.
+    Backoffice staff bypass entirely.
 
     Args:
         resource: e.g. 'roles', 'courses'
         action: e.g. 'action_create', 'action_read'
         fallback_role_ids: allowed role IDs when rights dict is absent
     """
-    if (await is_user_superadmin(user_id, db_session) and not superadmin_org_bypass_blocked(user_id)):
-        logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
+    if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
+        logger.debug("Backoffice bypass: user %s accessed org %s", user_id, org_id)
         return
 
     user_org = await get_user_org(user_id, org_id, db_session)
@@ -308,10 +308,10 @@ async def org_owns_account(user_id: int, org_id: int, db_session: AsyncSession) 
     A user row is global. An org that is the account's only organization is
     effectively its home and may change its email, reset its two-factor or
     scrub it; an account that also belongs to other orgs (or is a platform
-    superadmin) is not any one org's to rewrite; otherwise joining a second
+    backoffice) is not any one org's to rewrite; otherwise joining a second
     org would hand that org's admins the keys to the first.
     """
-    if await is_user_superadmin(user_id, db_session):
+    if await is_user_backoffice_staff(user_id, db_session):
         return False
     other = (await db_session.execute(
         select(UserOrganization.org_id).where(

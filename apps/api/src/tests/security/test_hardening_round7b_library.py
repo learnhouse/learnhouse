@@ -72,7 +72,7 @@ async def _user(db, org, user_id, role_id, **extra):
     await db.commit()
     return PublicUser(
         id=user_id, username=u.username, first_name="U", last_name=str(user_id),
-        email=u.email, user_uuid=u.user_uuid, is_superadmin=extra.get("is_superadmin", False),
+        email=u.email, user_uuid=u.user_uuid, is_backoffice_staff=extra.get("is_backoffice_staff", False),
     )
 
 
@@ -473,12 +473,12 @@ class TestMembershipByRights:
         assert "manage a member" in exc.value.detail
 
     @pytest.mark.asyncio
-    async def test_admin_superadmin_and_internal_callers_pass(self, db, org, admin_user, members):
+    async def test_admin_backoffice_and_internal_callers_pass(self, db, org, admin_user, members):
         from src.services.orgs.users import _require_rights_over_members
 
         target = [members["power"].id]
-        superadmin = await _user(db, None, 40, None, is_superadmin=True)
-        for caller in (admin_user, superadmin, InternalUser()):
+        backoffice = await _user(db, None, 40, None, is_backoffice_staff=True)
+        for caller in (admin_user, backoffice, InternalUser()):
             await _require_rights_over_members(org, caller, target, db)
         await _require_rights_over_members(org, members["maintainer"], [], db)
 

@@ -25,7 +25,7 @@ from src.security.api_token_utils import require_token_content_read, token_has_r
 from src.security.auth import resolve_acting_user_id
 from src.services.orgs.auth_policy import viewer_for_org
 from src.security.org_auth import is_org_admin, is_org_member
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.services.communities.communities import (
     accessible_community_ids_select,
     can_read_all_communities,
@@ -76,7 +76,7 @@ class SearchResult(BaseModel):
     folders: List[FolderRead]
     # SECURITY: the stripped projection, never ``UserRead``. Search is open to
     # every org member, and ``UserRead`` carries email / signup_method /
-    # is_superadmin / extra_metadata (the answers to the org's custom signup
+    # is_backoffice_staff / extra_metadata (the answers to the org's custom signup
     # fields): PII the member directory deliberately restricts to admins.
     users: List[UserReadPublic]
     communities: List[CommunityRead]
@@ -279,7 +279,7 @@ async def search_across_org(
         activities: list = []
         total_activities = 0
     else:
-        is_superadmin = (not is_anon) and await is_user_superadmin(acting_user_id, db_session)
+        is_backoffice_staff = (not is_anon) and await is_user_backoffice_staff(acting_user_id, db_session)
         admin_for_locks = (not is_anon) and await is_org_admin(acting_user_id, org.id, db_session)
         activities_q = (
             select(Activity, Course, Chapter)
@@ -294,7 +294,7 @@ async def search_across_org(
                     acting_user_id,
                     is_anonymous=is_anon,
                     is_api_token=isinstance(current_user, APITokenUser),
-                    is_superadmin=is_superadmin,
+                    is_backoffice_staff=is_backoffice_staff,
                 )
             )
         )

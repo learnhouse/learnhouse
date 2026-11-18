@@ -37,29 +37,29 @@ def _session_with_firsts(*results: object) -> AsyncMock:
 
 
 class TestOrgAuthHelpers:
-    async def test_is_org_member_superadmin_bypass(self):
+    async def test_is_org_member_backoffice_bypass(self):
         session = AsyncMock()
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=True)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
             assert await is_org_member(1, 2, session) is True
             session.execute.assert_not_called()
 
     async def test_is_org_member_queries_membership(self):
         session = _session_with_firsts(SimpleNamespace(id=1))
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             assert await is_org_member(7, 9, session) is True
 
     async def test_is_org_member_returns_false_when_missing(self):
         session = _session_with_firsts(None)
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             assert await is_org_member(7, 9, session) is False
 
-    async def test_is_org_admin_superadmin_bypass(self):
+    async def test_is_org_admin_backoffice_bypass(self):
         session = AsyncMock()
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=True)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
             assert await is_org_admin(1, 2, session) is True
             session.execute.assert_not_called()
 
@@ -67,13 +67,13 @@ class TestOrgAuthHelpers:
         # role_id=1 is in ADMIN_OR_MAINTAINER_ROLE_IDS
         session = _session_with_firsts(SimpleNamespace(id=1, role_id=1))
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             assert await is_org_admin(7, 9, session) is True
 
     async def test_is_org_admin_returns_false_when_missing(self):
         session = _session_with_firsts(None)
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             assert await is_org_admin(7, 9, session) is False
 
     async def test_get_user_org_returns_row(self):
@@ -131,16 +131,16 @@ class TestOrgAuthRequirementsAndPermissions:
 
         assert exc_info.value.status_code == 403
 
-    async def test_require_org_role_permission_superadmin_bypass(self):
+    async def test_require_org_role_permission_backoffice_bypass(self):
         session = AsyncMock()
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=True)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
             assert await require_org_role_permission(7, 9, session, "courses", "action_create") is None
 
     async def test_require_org_role_permission_rejects_missing_membership(self):
         session = _session_with_firsts(None)
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             with pytest.raises(HTTPException) as exc_info:
                 await require_org_role_permission(7, 9, session, "courses", "action_create")
 
@@ -149,7 +149,7 @@ class TestOrgAuthRequirementsAndPermissions:
     async def test_require_org_role_permission_rejects_missing_role(self):
         session = _session_with_firsts(SimpleNamespace(role_id=11), None)
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             with pytest.raises(HTTPException) as exc_info:
                 await require_org_role_permission(7, 9, session, "courses", "action_create")
 
@@ -161,7 +161,7 @@ class TestOrgAuthRequirementsAndPermissions:
             SimpleNamespace(id=11, rights={"courses": {"action_create": True}}),
         )
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             assert await require_org_role_permission(7, 9, session, "courses", "action_create") is None
 
     async def test_require_org_role_permission_rejects_dict_permission(self):
@@ -170,7 +170,7 @@ class TestOrgAuthRequirementsAndPermissions:
             SimpleNamespace(id=11, rights={"courses": {"action_create": False}}),
         )
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             with pytest.raises(HTTPException) as exc_info:
                 await require_org_role_permission(7, 9, session, "courses", "action_create")
 
@@ -182,7 +182,7 @@ class TestOrgAuthRequirementsAndPermissions:
             SimpleNamespace(id=1, rights=None),
         )
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             assert await require_org_role_permission(7, 9, session, "courses", "action_create") is None
 
     async def test_require_org_role_permission_rejects_non_fallback_role(self):
@@ -191,7 +191,7 @@ class TestOrgAuthRequirementsAndPermissions:
             SimpleNamespace(id=99, rights=None),
         )
 
-        with patch("src.security.org_auth.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.security.org_auth.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             with pytest.raises(HTTPException) as exc_info:
                 await require_org_role_permission(7, 9, session, "courses", "action_create")
 

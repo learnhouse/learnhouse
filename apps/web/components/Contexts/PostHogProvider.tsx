@@ -19,7 +19,7 @@ const loadPostHogInit = () => import('@/lib/analytics/posthogInit')
 
 /**
  * Disables ALL PostHog capture (autocapture, pageviews, session replay) while
- * the user is in the super-admin area (/admin); that's the platform owner's
+ * the user is in the backoffice area (/backoffice); that's the platform owner's
  * internal dashboard and is intentionally untracked. Re-enables elsewhere.
  */
 function PostHogAdminGuard() {
@@ -32,7 +32,7 @@ function PostHogAdminGuard() {
 
   useEffect(() => {
     if (!posthogClient) return
-    const isAdmin = pathname?.startsWith('/admin') || impersonating
+    const isAdmin = pathname?.startsWith('/backoffice') || impersonating
     if (isAdmin) {
       if (!posthogClient.has_opted_out_capturing()) posthogClient.opt_out_capturing()
     } else if (posthogClient.has_opted_out_capturing()) {
@@ -51,8 +51,8 @@ function PostHogPageView() {
 
   useEffect(() => {
     if (!posthogClient || !pathname) return
-    // Never emit pageviews for the super-admin area.
-    if (pathname.startsWith('/admin')) return
+    // Never emit pageviews for the backoffice area.
+    if (pathname.startsWith('/backoffice')) return
     let url = window.origin + pathname
     const qs = searchParams?.toString()
     if (qs) url += `?${qs}`

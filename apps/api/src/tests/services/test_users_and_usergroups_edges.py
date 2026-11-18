@@ -6,7 +6,7 @@ users.py:
   * anonymous callers can never look another user up,
   * a failing goodbye email does not undo or fail an account deletion.
 usergroups.py:
-  * a superadmin (who passes the membership gates for any org) still gets a
+  * a backoffice staff member (who passes the membership gates for any org) still gets a
     400 when creating a usergroup in an org that does not exist,
   * internal callers and org API tokens may always manage usergroups,
   * a membership row whose user no longer exists is skipped, not linked.
@@ -76,8 +76,8 @@ class TestDeleteAccountGoodbyeEmail:
 
 
 class TestCreateUsergroupMissingOrg:
-    async def test_superadmin_gets_400_for_an_org_that_does_not_exist(self, mock_request, db):
-        superadmin = User(
+    async def test_backoffice_gets_400_for_an_org_that_does_not_exist(self, mock_request, db):
+        backoffice = User(
             id=601,
             username="root",
             first_name="Root",
@@ -85,11 +85,11 @@ class TestCreateUsergroupMissingOrg:
             email="root@test.com",
             password="hashed",
             user_uuid="user_root601",
-            is_superadmin=True,
+            is_backoffice_staff=True,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
         )
-        db.add(superadmin)
+        db.add(backoffice)
         await db.commit()
 
         with patch("src.services.users.usergroups.rbac_check", new_callable=AsyncMock):
@@ -97,7 +97,7 @@ class TestCreateUsergroupMissingOrg:
                 await create_usergroup(
                     mock_request,
                     db,
-                    superadmin,
+                    backoffice,
                     UserGroupCreate(name="UG", description="d", org_id=424242),
                 )
 

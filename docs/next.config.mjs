@@ -16,6 +16,7 @@ export default withMDX({
       { source: '/self-hosting/installation/cli-reference', destination: '/cli/commands', permanent: true },
       { source: '/guides/custom-features/webhooks', destination: '/platform/automations/webhooks', permanent: true },
       { source: '/developers/api/endpoints', destination: '/reference', permanent: true },
+      { source: '/platform/organizations/admin-dashboard', destination: '/platform/organizations/backoffice', permanent: true },
     ]
   },
   async rewrites() {

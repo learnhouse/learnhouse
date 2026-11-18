@@ -17935,7 +17935,7 @@
       "ordered": "Coloque os cursos na ordem em que os alunos devem fazê-los."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Visão geral",
@@ -18124,7 +18124,7 @@
       "password_placeholder": "Digite sua senha",
       "signing_in": "Entrando...",
       "sign_in": "Entrar",
-      "superadmin_only": "Somente para a equipe da plataforma LearnHouse"
+      "backoffice_only": "Somente para a equipe da plataforma LearnHouse"
     },
     "pages": {
       "analytics": "Análises globais",
@@ -18139,7 +18139,7 @@
       "ai_costs_desc": "Quanto as solicitações de IA nos custam no preço de tabela do provedor, comparado ao valor dos créditos cobrados"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Usuários",
       "developers": "Desenvolvedores",
       "avatar": "Avatar",
@@ -18261,7 +18261,7 @@
       "users_count_many": "{{count}} de usuários",
       "users_count_other": "{{count}} usuários",
       "role_label": "Função:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Comum",
       "min_orgs": "Mín. de orgs:",
       "any": "Qualquer",
@@ -18291,9 +18291,9 @@
       },
       "tabs": {
         "tokens_label": "Tokens de API",
-        "tokens_desc": "Crie, liste e revogue tokens de API de superadmin entre organizações.",
+        "tokens_desc": "Crie, liste e revogue tokens de API de Backoffice entre organizações.",
         "docs_label": "Documentação e Playground",
-        "docs_desc": "Explore a API de superadmin e depois chame-a ao vivo com seu token."
+        "docs_desc": "Explore a API de Backoffice e depois chame-a ao vivo com seu token."
       },
       "org_picker": {
         "none_yet": "Nenhuma organização ainda",
@@ -18315,7 +18315,7 @@
       "endpoint": {
         "invalid_json": "JSON inválido",
         "network_error": "Erro de rede",
-        "session_only": "<strong>Somente autenticação por sessão.</strong> Tokens de API não podem chamar este endpoint (bloqueio de escalonamento de privilégios). O botão Enviar ao vivo falhará com 403 se você usar um token; copie o trecho e execute-o como superadmin conectado.",
+        "session_only": "<strong>Somente autenticação por sessão.</strong> Tokens de API não podem chamar este endpoint (bloqueio de escalonamento de privilégios). O botão Enviar ao vivo falhará com 403 se você usar um token; copie o trecho e execute-o como usuário do Backoffice conectado.",
         "parameters": "Parâmetros",
         "request_body": "Corpo da requisição (JSON)",
         "reset_to_sample": "Redefinir para o exemplo",
@@ -18343,7 +18343,7 @@
       "description_placeholder": "Para que serve este token",
       "expiration": "Expiração",
       "never_expires": "Nunca expira",
-      "warning": "Um token de superadmin pode chamar <em>todos</em> os endpoints <code>/ee/superadmin/*</code>: criar organizações, alternar recursos e atualizar planos em toda a plataforma. Trate-o como uma chave mestra.",
+      "warning": "Um token de Backoffice pode chamar <em>todos</em> os endpoints <code>/ee/backoffice/*</code>: criar organizações, alternar recursos e atualizar planos em toda a plataforma. Trate-o como uma chave mestra.",
       "create_token": "Criar token",
       "failed_revoke": "Falha ao revogar ({{status}})",
       "revoke_title": "Revogar token?",
@@ -18362,7 +18362,7 @@
       "count_other": "{{count}} tokens",
       "loading": "Carregando tokens…",
       "failed_load": "Falha ao carregar os tokens.",
-      "empty_title": "Nenhum token de API de superadmin ainda.",
+      "empty_title": "Nenhum token de API de Backoffice ainda.",
       "empty_desc": "Crie um para automatizar o provisionamento de organizações e a alternância de recursos.",
       "col_name": "Nome",
       "col_prefix": "Prefixo",
@@ -18383,7 +18383,7 @@
       "scopes": "Escopos",
       "revoked": "Token revogado",
       "scope_desc": {
-        "api": "Chama a API REST de superadmin.",
+        "api": "Chama a API REST de Backoffice.",
         "mcp": "Conecta um assistente de IA ao MCP da plataforma (ferramentas de leitura).",
         "mcp_write": "Permite também as gravações seguras do MCP: notas, tags, extensões de POC, responsável pela conta."
       },
@@ -18399,16 +18399,16 @@
     },
     "ee_required": {
       "title": "Licença da Enterprise Edition necessária",
-      "description": "O painel de superadmin faz parte da LearnHouse Enterprise Edition e não está disponível nesta implantação."
+      "description": "O painel de Backoffice faz parte da LearnHouse Enterprise Edition e não está disponível nesta implantação."
     },
     "access_denied": {
       "title": "Acesso negado",
-      "description": "Você precisa de privilégios de superadmin para acessar esta página."
+      "description": "Você precisa de privilégios de Backoffice para acessar esta página."
     },
     "shell": {
-      "platform": "Plataforma",
-      "title": "Plataforma LearnHouse",
-      "subtitle": "Console de superadmin",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Navegação do console",
       "open_menu": "Abrir menu",
       "close_menu": "Fechar menu",
@@ -19561,7 +19561,7 @@
       "add_member": "Adicionar membro",
       "read_only_hint": "Somente proprietários da plataforma podem adicionar, alterar ou remover membros da equipe.",
       "empty_title": "Nenhum membro da equipe ainda",
-      "empty_desc": "Os superadmins aparecerão aqui quando a API da plataforma for atualizada.",
+      "empty_desc": "Os membros do Backoffice aparecerão aqui quando a API da plataforma for atualizada.",
       "col_member": "Membro",
       "col_role": "Função",
       "col_granted_by": "Concedido por",
@@ -19657,7 +19657,7 @@
       "enabled": "Ativado",
       "disabled": "Desativado",
       "mcp": "MCP da plataforma",
-      "mcp_desc": "Endpoint MCP principalmente de leitura para assistentes de IA, autenticado com tokens de superadmin.",
+      "mcp_desc": "Endpoint MCP principalmente de leitura para assistentes de IA, autenticado com tokens de Backoffice.",
       "status": "Status",
       "license": "Licença",
       "license_desc": "Campos de licença seguros. Chaves e assinaturas nunca são exibidas.",
@@ -19681,7 +19681,7 @@
       "every_hours_many": "A cada {{count}} horas"
     },
     "users": {
-      "superadmin_filter": "Filtrar por superadmin",
+      "backoffice_filter": "Filtrar por Backoffice",
       "min_orgs": "Mínimo de organizações",
       "any_orgs": "Qualquer número de orgs.",
       "min_orgs_value_one": "{{count}}+ org.",
@@ -19726,7 +19726,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Conectar um assistente de IA",
-      "desc": "O MCP da plataforma permite que o Claude e outros assistentes leiam dados da plataforma com um token de superadmin.",
+      "desc": "O MCP da plataforma permite que o Claude e outros assistentes leiam dados da plataforma com um token de Backoffice.",
       "enabled": "Ativado",
       "disabled": "Desativado neste servidor",
       "step1_title": "Crie um token",
@@ -20205,7 +20205,7 @@
           "automation": "Execuções com falha e regras que agiram",
           "team": "Mudanças na equipe da plataforma",
           "token": "Novos tokens de API",
-          "security": "Logins de superadmin com falha, tokens revogados",
+          "security": "Logins de Backoffice com falha, tokens revogados",
           "follow": "Atividade das orgs que você segue",
           "system": "Alertas da plataforma e falhas de canais"
         },
@@ -21099,7 +21099,7 @@
       },
       "history": {
         "title": "Alterações recentes",
-        "desc": "Alterações feitas pelo console da plataforma, campo a campo.",
+        "desc": "Alterações feitas pelo Backoffice, campo a campo.",
         "empty": "Ainda não há alterações",
         "empty_desc": "As edições feitas aqui aparecem com o autor e o que mudou."
       }

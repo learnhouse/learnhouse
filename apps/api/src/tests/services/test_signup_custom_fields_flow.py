@@ -122,7 +122,7 @@ class TestSignupCustomFields:
                     last_name="User",
                     email="blob_user@test.com",
                     password="Password123!",
-                    extra_metadata={"injected": "value", "is_superadmin": True},
+                    extra_metadata={"injected": "value", "is_backoffice_staff": True},
                     custom_fields={"company": "Acme"},
                 ),
                 org.id,
@@ -130,7 +130,7 @@ class TestSignupCustomFields:
 
         row = await _fetch(db, created.id)
         assert row.extra_metadata == {"company": "Acme"}
-        assert row.is_superadmin is False
+        assert row.is_backoffice_staff is False
 
     @pytest.mark.asyncio
     async def test_undeclared_custom_field_keys_are_dropped(
