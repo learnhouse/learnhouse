@@ -18,7 +18,6 @@ The request endpoint never reveals whether an address has an account (always a
 200), so it cannot be used to enumerate users.
 """
 
-import html
 import logging
 import secrets
 from datetime import timedelta
@@ -32,7 +31,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organizations import Organization
 from src.db.users import UserRead
 from src.security.auth import create_access_token, decode_jwt
-from src.services.email.utils import send_email
+from src.services.email.safe_text import email_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -81,53 +80,14 @@ def send_magic_login_email(
     subject and copy, its logo (or name) in the header, its color on the
     button, its From display name. Without one it is a platform email.
     """
-    from src.services.email.translations import t
-    from src.services.users.emails import (
-        LOGO_SVG,
-        STYLES,
-        _brand_logo_html,
-        _button_style,
-        _email_layout,
-    )
+    from src.services.email.pipeline import send_email
+    from src.services.users.emails import org_brand
 
-    from src.services.email.safe_text import email_org_name, email_user_name
-
-    # Names are attacker-controllable; never relay a link or header break.
-    org_name = email_org_name(org_name) if org_name else None
-    safe_token = quote(token, safe="")
-    login_url = html.escape(f"{base_url.rstrip('/')}/auth/magic?token={safe_token}")
-    safe_name = html.escape(email_user_name(user.username) if user.username else user.email)
-    white_label = bool(org_name)
-    brand = html.escape(org_name) if org_name else "LearnHouse"
-
-    heading = t(lang, "magic_login.heading", brand=brand)
-    body_text = t(lang, "magic_login.body", username=safe_name)
-    cta = t(lang, "magic_login.cta")
-    copy_paste = t(lang, "email_verification.copy_paste")
-
-    body_content = f"""
-        <h1 style="{STYLES['h1']}">{heading}</h1>
-        <p style="{STYLES['p']}">
-            {body_text}
-        </p>
-        <a href="{login_url}" style="{_button_style(brand_color if white_label else None)}">{cta}</a>
-        <p style="{STYLES['link_text']}">
-            {copy_paste}<br />{login_url}
-        </p>
-    """
+    url = f"{base_url.rstrip('/')}/auth/magic?token={quote(token, safe='')}"
+    username = email_user_name(user.username) if user.username else user.email
     return send_email(
-        to=email,
-        # Plain-text subject: the org name must not arrive HTML-escaped.
-        subject=t(lang, "magic_login.subject", brand=org_name or "LearnHouse"),
-        body=_email_layout(
-            title=heading,
-            body_content=body_content,
-            footer_note=t(lang, "magic_login.footer", brand=brand),
-            logo_html=_brand_logo_html(logo_url, org_name) if white_label else LOGO_SVG,
-            powered_by=white_label and powered_by,
-            lang=lang,
-        ),
-        sender_name=sender_name,
+        "account.magic_login", email, {"username": username, "url": url},
+        org=org_brand(org_name, lang, sender_name, logo_url, brand_color, powered_by), lang=lang,
     )
 
 

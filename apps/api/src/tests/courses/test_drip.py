@@ -768,7 +768,7 @@ class TestUnlockEmails:
     def test_email_template(self):
         from src.services.users.emails import send_drip_unlocked_email
 
-        with patch("src.services.users.emails.send_email") as send:
+        with patch("src.services.email.pipeline.deliver_message") as send:
             send_drip_unlocked_email(
                 email="l@test.com", username="lena", org_name="Kitebase", course_name="Bootcamp",
                 chapter_names=["Week 2", "Bonus <live>"], cta_url="https://a.test/course/x", lang="fr",
@@ -780,7 +780,7 @@ class TestUnlockEmails:
     def test_email_template_single_chapter(self):
         from src.services.users.emails import send_drip_unlocked_email
 
-        with patch("src.services.users.emails.send_email") as send:
+        with patch("src.services.email.pipeline.deliver_message") as send:
             send_drip_unlocked_email(
                 email="l@test.com", username="lena", org_name="Kitebase", course_name="Bootcamp",
                 chapter_names=["Week 2"], cta_url="https://a.test/course/x",

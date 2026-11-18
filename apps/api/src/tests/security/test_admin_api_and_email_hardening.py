@@ -267,7 +267,7 @@ async def test_join_email_sanitizes_org_and_user_names(db, org, mock_request):
     with patch(
         "src.services.email.utils.get_org_signup_base_url",
         new=AsyncMock(return_value="https://acme.test/"),
-    ), patch("src.services.users.emails.send_email", return_value=True) as send:
+    ), patch("src.services.email.pipeline.deliver_message", return_value=True) as send:
         await notify_user_joined_org(mock_request, db, user, org.id)
 
     call = send.call_args.kwargs
@@ -282,7 +282,7 @@ def test_magic_link_email_sanitizes_org_and_user_names():
         id=1, username="eve http://evil.com/x", first_name="E", last_name="V",
         email="eve@example.com", user_uuid="user_eve",
     )
-    with patch.object(ml, "send_email", return_value=True) as send:
+    with patch("src.services.email.pipeline.deliver_message", return_value=True) as send:
         ml.send_magic_login_email(
             user, "eve@example.com", "https://acme.test", "tok", org_name=_HOSTILE_ORG
         )
@@ -295,10 +295,10 @@ def test_magic_link_email_sanitizes_org_and_user_names():
 
 
 def test_send_email_strips_breaks_from_subject():
-    from src.services.email import utils as email_utils
+    from src.services.email import transport as email_utils
 
     with patch.object(email_utils, "_send_email_resend", return_value=True) as resend, \
             patch.object(email_utils, "_send_email_smtp", return_value=True) as smtp:
-        email_utils.send_email(to="a@example.com", subject="Hi\r\nBcc: x@evil.test", body="b")
+        email_utils.send_message(to="a@example.com", subject="Hi\r\nBcc: x@evil.test", body="b")
     sent = (resend.call_args or smtp.call_args).args
     assert sent[2] == "Hi Bcc: x@evil.test"

@@ -160,7 +160,7 @@ class TestSendMagicLoginEmail:
     def test_builds_consume_url_and_delegates_to_send_email(self):
         # The clickable link must point at the frontend consume page with the
         # (url-encoded) token, and must be handed to the shared mailer.
-        with patch.object(ml, "send_email", return_value=True) as send_mock:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_mock:
             result = send_magic_login_email(
                 _fake_user_read(),
                 "learner@example.com",
@@ -174,19 +174,19 @@ class TestSendMagicLoginEmail:
         assert send_mock.call_args.kwargs["to"] == "learner@example.com"
 
     def test_platform_mail_is_learnhouse_branded(self):
-        with patch.object(ml, "send_email", return_value=True) as send_mock:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_mock:
             send_magic_login_email(
                 _fake_user_read(), "learner@example.com", "https://app.test", "tok"
             )
         call = send_mock.call_args.kwargs
         assert call["subject"] == "Your LearnHouse login link"
         assert "Sign in to LearnHouse" in call["body"]
-        assert "<svg" in call["body"]
+        assert "learnhouse-dark.svg" in call["body"]
         assert "Powered by LearnHouse" not in call["body"]
         assert call["sender_name"] is None
 
     def test_org_mail_is_the_orgs_own(self):
-        with patch.object(ml, "send_email", return_value=True) as send_mock:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_mock:
             send_magic_login_email(
                 _fake_user_read(),
                 "learner@example.com",
@@ -206,12 +206,12 @@ class TestSendMagicLoginEmail:
         assert '<img src="https://api.test/content/orgs/o/logos/l.png"' in call["body"]
         assert "background-color: #1d4ed8;" in call["body"]
         assert "LearnHouse" not in call["body"]
-        assert "<svg" not in call["body"]
+        assert "learnhouse-dark.svg" not in call["body"]
         assert call["sender_name"] == "Acme Academy"
         assert "https://academy.example.com/auth/magic?token=tok" in call["body"]
 
     def test_token_is_url_encoded_in_link(self):
-        with patch.object(ml, "send_email", return_value=True) as send_mock:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_mock:
             send_magic_login_email(
                 _fake_user_read(),
                 "learner@example.com",

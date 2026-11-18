@@ -191,3 +191,15 @@ def resolve_org_email_branding(
         brand_color=resolve_org_brand_color(org_config),
         powered_by=resolve_org_powered_by(org_config),
     )
+
+
+async def org_email_branding(db_session, org) -> OrgEmailBranding:
+    """:func:`resolve_org_email_branding` for background jobs holding an org row."""
+    from sqlmodel import select
+
+    from src.db.organization_config import OrganizationConfig
+
+    org_config = (await db_session.execute(
+        select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    )).scalars().first()
+    return resolve_org_email_branding(org, org_config, None)

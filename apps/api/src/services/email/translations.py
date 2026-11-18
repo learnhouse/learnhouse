@@ -1521,3 +1521,22 @@ def t(lang: str | None, key: str, **fmt) -> str:
         return template.format(**fmt)
     except (KeyError, IndexError):
         return template
+
+
+def th(lang: str | None, key: str, **values):
+    """Translated copy as HTML: each value escaped, the string's own markup kept.
+
+    Copy strings may carry trusted markup (``<strong>{org_name}</strong>``),
+    so the result is :class:`~src.services.email.blocks.Safe`; values are
+    escaped here unless they are already ``Safe``.
+    """
+    from src.services.email.blocks import Safe, esc
+
+    return Safe(t(lang, key, **{k: esc(v) for k, v in values.items()}))
+
+
+def tt(lang: str | None, key: str, **values) -> str:
+    """Translated copy as plain text (subjects, preheaders): raw values, no tags."""
+    from src.services.email.blocks import to_text
+
+    return to_text(th(lang, key, **values))

@@ -381,7 +381,7 @@ class TestRateLimit:
 class TestMentionEmail:
     @pytest.fixture
     def mailer(self):
-        with patch("src.services.email.utils.send_email") as send, patch(
+        with patch("src.services.email.transport.send_message") as send, patch(
             "src.services.email.utils.get_org_signup_base_url",
             new_callable=AsyncMock,
             return_value="https://acme.test/",

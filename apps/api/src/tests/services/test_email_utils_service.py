@@ -14,8 +14,8 @@ from src.services.email.utils import (
     _is_allowed_base_url,
     get_base_url_from_request,
     get_org_signup_base_url,
-    send_email,
 )
+from src.services.email.transport import send_message as send_email
 
 
 def _config(**overrides):
@@ -285,20 +285,20 @@ class TestEmailUtilsService:
 
     def test_send_email_routes_to_resend_and_smtp(self):
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(
                 email_provider="resend",
                 system_email_address="system@test.com",
                 resend_api_key="resend-key",
             ),
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             return_value={"id": "msg-1"},
         ) as mock_resend_send:
             result = send_email("to@test.com", "Hello", "<p>Body</p>")
 
         assert result == {"id": "msg-1"}
-        assert send_email.__module__ == "src.services.email.utils"
+        assert send_email.__module__ == "src.services.email.transport"
         assert mock_resend_send.call_args.args[0] == {
             "from": "LearnHouse <system@test.com>",
             "to": ["to@test.com"],
@@ -308,7 +308,7 @@ class TestEmailUtilsService:
 
         smtp_client = Mock()
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(
                 email_provider="smtp",
                 system_email_address="system@test.com",
@@ -319,7 +319,7 @@ class TestEmailUtilsService:
                 smtp_use_tls=True,
             ),
         ), patch(
-            "src.services.email.utils.smtplib.SMTP",
+            "src.services.email.transport.smtplib.SMTP",
             return_value=smtp_client,
         ) as mock_smtp:
             result = send_email("to@test.com", "Hello", "<p>Body</p>")
@@ -334,7 +334,7 @@ class TestEmailUtilsService:
     def test_send_email_smtp_without_tls_or_login(self):
         smtp_client = Mock()
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(
                 email_provider="smtp",
                 system_email_address="system@test.com",
@@ -345,7 +345,7 @@ class TestEmailUtilsService:
                 smtp_use_tls=False,
             ),
         ), patch(
-            "src.services.email.utils.smtplib.SMTP",
+            "src.services.email.transport.smtplib.SMTP",
             return_value=smtp_client,
         ):
             result = send_email("to@test.com", "Hello", "<p>Body</p>")
@@ -358,10 +358,10 @@ class TestEmailUtilsService:
 
     def test_send_email_resend_failure_raises_503(self):
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(email_provider="resend", resend_api_key="key"),
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             side_effect=Exception("API error"),
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -383,12 +383,12 @@ class TestEmailUtilsService:
             code=400,
         )
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(email_provider="resend", resend_api_key="key"),
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             side_effect=rejection,
-        ), patch("src.services.email.utils.logger") as mock_logger:
+        ), patch("src.services.email.transport.logger") as mock_logger:
             with pytest.raises(HTTPException) as exc_info:
                 send_email("nobody@example.com", "Subject", "<p>Body</p>")
 
@@ -427,12 +427,12 @@ class TestEmailUtilsService:
         user, so they must stay at error level even though several carry a 4xx.
         """
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(email_provider="resend", resend_api_key="key"),
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             side_effect=failure,
-        ), patch("src.services.email.utils.logger") as mock_logger:
+        ), patch("src.services.email.transport.logger") as mock_logger:
             with pytest.raises(HTTPException) as exc_info:
                 send_email("to@test.com", "Subject", "<p>Body</p>")
 
@@ -444,7 +444,7 @@ class TestEmailUtilsService:
         smtp_client.sendmail.side_effect = smtplib.SMTPException("SMTP error")
         smtp_client.quit.side_effect = Exception("quit failed")
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(
                 email_provider="smtp",
                 smtp_use_tls=False,
@@ -452,7 +452,7 @@ class TestEmailUtilsService:
                 smtp_password="",
             ),
         ), patch(
-            "src.services.email.utils.smtplib.SMTP",
+            "src.services.email.transport.smtplib.SMTP",
             return_value=smtp_client,
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -461,7 +461,7 @@ class TestEmailUtilsService:
 
     def test_send_email_smtp_os_error_raises_503(self):
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(
                 email_provider="smtp",
                 smtp_use_tls=False,
@@ -469,7 +469,7 @@ class TestEmailUtilsService:
                 smtp_password="",
             ),
         ), patch(
-            "src.services.email.utils.smtplib.SMTP",
+            "src.services.email.transport.smtplib.SMTP",
             side_effect=OSError("conn refused"),
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -790,10 +790,10 @@ class TestSendEmailSenderName:
 
     def test_org_name_reaches_the_resend_payload(self):
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(email_provider="resend"),
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             return_value={"id": "msg-1"},
         ) as mock_resend_send:
             send_email(
@@ -805,10 +805,10 @@ class TestSendEmailSenderName:
 
     def test_platform_send_keeps_the_deployment_default(self):
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(email_provider="resend"),
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             return_value={"id": "msg-1"},
         ) as mock_resend_send:
             send_email("to@test.com", "Hello", "<p>Body</p>")
@@ -820,12 +820,12 @@ class TestSendEmailSenderName:
 
     def test_deployment_default_is_configurable(self):
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(
                 email_provider="resend", system_email_sender_name="Acme Platform"
             ),
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             return_value={"id": "msg-1"},
         ) as mock_resend_send:
             send_email("to@test.com", "Hello", "<p>Body</p>")
@@ -839,10 +839,10 @@ class TestSendEmailSenderName:
         """Deliverability rests on the From address staying on the verified
         domain; a name that looks like an address must not become one."""
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(email_provider="resend"),
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             return_value={"id": "msg-1"},
         ) as mock_resend_send:
             send_email(
@@ -862,11 +862,11 @@ class TestSendEmailSenderName:
 
         smtp_client = Mock()
         with patch(
-            "src.services.email.utils.get_learnhouse_config",
+            "src.services.email.transport.get_learnhouse_config",
             return_value=_config(email_provider="smtp", smtp_use_tls=False,
                                  smtp_username="", smtp_password=""),
         ), patch(
-            "src.services.email.utils.smtplib.SMTP", return_value=smtp_client
+            "src.services.email.transport.smtplib.SMTP", return_value=smtp_client
         ):
             send_email(
                 "to@test.com",
@@ -892,9 +892,9 @@ class TestSendEmailSenderName:
         del config.mailing_config.system_email_sender_name
 
         with patch(
-            "src.services.email.utils.get_learnhouse_config", return_value=config
+            "src.services.email.transport.get_learnhouse_config", return_value=config
         ), patch(
-            "src.services.email.utils.resend.Emails.send",
+            "src.services.email.transport.resend.Emails.send",
             return_value={"id": "msg-1"},
         ) as mock_resend_send:
             send_email("to@test.com", "Hello", "<p>Body</p>")

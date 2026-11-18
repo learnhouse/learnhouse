@@ -13,7 +13,19 @@ from src.services.email.nudge_translations import NUDGE_TRANSLATIONS
 from src.services.nudges.catalog import get_spec
 from src.services.nudges.runner import TRACK_STATS, _stats_for
 from src.services.nudges.snapshot import OrgSnapshot
-from src.services.users.emails import _email_layout, _first_sentence, _stat_strip
+from src.services.email.blocks import Ctx, Paragraph, Stats
+from src.services.email.layout import PLATFORM_BRAND, Email, render_html
+from src.services.email.layout import first_sentence as _first_sentence
+from src.services.email.theme import palette
+
+
+def _email_layout(title, body, footer_note="", preheader=""):
+    email = Email(subject=title, blocks=[Paragraph(body)], reason=footer_note, preheader=preheader)
+    return render_html(email, PLATFORM_BRAND, "learning", "en")
+
+
+def _stat_strip(stats):
+    return Stats(stats).html(Ctx(palette=palette("learning"), button_bg="#171717", button_fg="#ffffff"))
 
 NOW = datetime(2026, 7, 28, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -59,18 +71,15 @@ class TestFirstSentence:
 
 
 class TestPreheader:
-    def test_absent_preheader_leaves_the_document_unchanged(self):
-        """The twelve transactional emails share this layout."""
-        before = _email_layout("T", "<p>b</p>", footer_note="note")
-        assert "<body style=" in before
-        assert "mso-hide" not in before
-        assert '<body style="margin: 0; padding: 0; background-color: #f5f5f5;' in before
+    def test_without_preheader_the_first_sentence_is_used(self):
+        html = _email_layout("T", "First one. Second.", footer_note="note")
+        assert html.index("First one.") < html.index("<table")
 
     def test_preheader_is_hidden_from_the_rendered_body(self):
         html = _email_layout("T", "<p>b</p>", preheader="Second line of info")
         assert "Second line of info" in html
-        assert "display:none" in html
-        assert "mso-hide:all" in html
+        assert "display: none" in html
+        assert "mso-hide: all" in html
 
     def test_preheader_is_padded(self):
         """Without padding the client keeps reading into the body copy."""
@@ -82,7 +91,7 @@ class TestPreheader:
         assert "<script>" not in html
 
     def test_preheader_appears_before_the_content(self):
-        html = _email_layout("T", "<p>body-marker</p>", preheader="pre-marker")
+        html = _email_layout("T", "body-marker", preheader="pre-marker")
         assert html.index("pre-marker") < html.index("body-marker")
 
 

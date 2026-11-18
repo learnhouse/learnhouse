@@ -14,6 +14,7 @@ Two hardening fixes in ``src/services/email/utils.py``:
 
 import re
 import ssl
+from contextlib import contextmanager
 import time
 from datetime import datetime
 from pathlib import Path
@@ -33,8 +34,8 @@ from src.services.email.utils import (
     _is_allowed_base_url,
     _is_scoped_origin_regexp,
     _is_verified_custom_domain,
-    send_email,
 )
+from src.services.email.transport import send_message as send_email
 
 # The historical shipped default: an unanchored catch-all that `re.fullmatch`
 # still accepts for any http(s) URL.
@@ -70,11 +71,13 @@ def _config(**overrides):
     )
 
 
+@contextmanager
 def _patch_config(**overrides):
-    return patch(
-        "src.services.email.utils.get_learnhouse_config",
-        return_value=_config(**overrides),
-    )
+    config = _config(**overrides)
+    with patch("src.services.email.utils.get_learnhouse_config", return_value=config), patch(
+        "src.services.email.transport.get_learnhouse_config", return_value=config
+    ):
+        yield
 
 
 def _no_platform_url():
@@ -287,7 +290,7 @@ class TestMagicLinkUrlInEmailBody:
         ), patch(
             "src.services.auth.magic_login.issue_magic_login_token", return_value="tok"
         ), patch(
-            "src.services.auth.magic_login.send_email", side_effect=_capture
+            "src.services.email.pipeline.deliver_message", side_effect=_capture
         ), _patch_config(
             allowed_regexp=CATCH_ALL_REGEXP
         ), _no_platform_url():
@@ -337,7 +340,7 @@ class TestSmtpTls:
     def test_starttls_uses_a_verifying_context(self):
         smtp_client = Mock()
         with _patch_config(email_provider="smtp", smtp_port=587), patch(
-            "src.services.email.utils.smtplib.SMTP", return_value=smtp_client
+            "src.services.email.transport.smtplib.SMTP", return_value=smtp_client
         ):
             assert send_email("to@test.com", "Hi", "<p>b</p>") == {
                 "id": None,
@@ -354,7 +357,7 @@ class TestSmtpTls:
     def test_implicit_tls_port_uses_smtp_ssl_with_the_same_context(self):
         smtp_client = Mock()
         with _patch_config(email_provider="smtp", smtp_port=465), patch(
-            "src.services.email.utils.smtplib.SMTP_SSL", return_value=smtp_client
+            "src.services.email.transport.smtplib.SMTP_SSL", return_value=smtp_client
         ) as mock_smtp_ssl:
             send_email("to@test.com", "Hi", "<p>b</p>")
 
@@ -367,7 +370,7 @@ class TestSmtpTls:
     def test_non_numeric_port_falls_back_to_starttls(self):
         smtp_client = Mock()
         with _patch_config(email_provider="smtp", smtp_port=None), patch(
-            "src.services.email.utils.smtplib.SMTP", return_value=smtp_client
+            "src.services.email.transport.smtplib.SMTP", return_value=smtp_client
         ):
             send_email("to@test.com", "Hi", "<p>b</p>")
 
@@ -377,7 +380,7 @@ class TestSmtpTls:
         smtp_client = Mock()
         with _patch_config(
             email_provider="smtp", smtp_use_tls=False
-        ), patch("src.services.email.utils.smtplib.SMTP", return_value=smtp_client):
+        ), patch("src.services.email.transport.smtplib.SMTP", return_value=smtp_client):
             with pytest.raises(HTTPException) as exc_info:
                 send_email("to@test.com", "Hi", "<p>b</p>")
 
@@ -390,7 +393,7 @@ class TestSmtpTls:
         smtp_client = Mock()
         smtp_client.starttls.side_effect = ssl.SSLError("certificate verify failed")
         with _patch_config(email_provider="smtp"), patch(
-            "src.services.email.utils.smtplib.SMTP", return_value=smtp_client
+            "src.services.email.transport.smtplib.SMTP", return_value=smtp_client
         ):
             with pytest.raises(HTTPException) as exc_info:
                 send_email("to@test.com", "Hi", "<p>b</p>")

@@ -44,7 +44,7 @@ class TestNotifyUserJoinedOrg:
             "src.services.email.utils.get_org_signup_base_url",
             new=AsyncMock(return_value=org_host + "/"),
         ), patch(
-            "src.services.users.emails.send_email", return_value=True
+            "src.services.email.pipeline.deliver_message", return_value=True
         ) as send_email:
             await notify_user_joined_org(mock_request, db, user, org.id)
 
@@ -62,7 +62,7 @@ class TestNotifyUserJoinedOrg:
     async def test_skips_user_without_email(self, mock_request, db, org):
         user = await _make_user(db, email="", user_uuid="user_no_email")
 
-        with patch("src.services.users.emails.send_email") as send_email:
+        with patch("src.services.email.pipeline.deliver_message") as send_email:
             await notify_user_joined_org(mock_request, db, user, org.id)
 
         send_email.assert_not_called()
@@ -71,7 +71,7 @@ class TestNotifyUserJoinedOrg:
     async def test_unknown_org_sends_nothing(self, mock_request, db):
         user = await _make_user(db, user_uuid="user_no_org")
 
-        with patch("src.services.users.emails.send_email") as send_email:
+        with patch("src.services.email.pipeline.deliver_message") as send_email:
             await notify_user_joined_org(mock_request, db, user, 999999)
 
         send_email.assert_not_called()
@@ -82,7 +82,7 @@ class TestNotifyUserJoinedOrg:
         user = await _make_user(db, user_uuid="user_mail_down")
 
         with patch(
-            "src.services.users.emails.send_email",
+            "src.services.email.pipeline.deliver_message",
             side_effect=RuntimeError("provider down"),
         ):
             await notify_user_joined_org(mock_request, db, user, org.id)

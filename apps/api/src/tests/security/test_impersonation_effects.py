@@ -217,10 +217,10 @@ class TestExclusions:
         on_user_changed.assert_called_once()
 
     def test_shadow_members_never_get_mail(self):
-        from src.services.email import utils
+        from src.services.email import transport as utils
 
         with patch.object(utils, "_send_email_resend") as resend, patch.object(utils, "_send_email_smtp") as smtp:
-            assert utils.send_email(f"support-x@{imp.SHADOW_EMAIL_DOMAIN}", "Hi", "<p>x</p>") is None
+            assert utils.send_message(f"support-x@{imp.SHADOW_EMAIL_DOMAIN}", "Hi", "<p>x</p>") is None
         resend.assert_not_called()
         smtp.assert_not_called()
 

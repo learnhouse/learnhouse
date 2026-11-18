@@ -1,18 +1,54 @@
 import "server-only";
-// Billing notification emails, now backed by Resend (services/emails/resend.ts)
-// through the shared React Email template. Every caller still invokes these with
-// `.catch(...)` and they never throw; with no RESEND_API_KEY they log-and-skip,
-// so a mail failure (or an unconfigured deploy) never blocks the Stripe flow.
+// Billing notification emails. The web app no longer renders or sends mail
+// itself: each helper asks the API to send a registered billing template
+// (POST cloud_internal/send_billing_email), so billing mail uses the same
+// layout, provider, suppression list and plain-text part as every other
+// LearnHouse email (apps/api/src/services/email).
+//
+// Every caller still invokes these with `.catch(...)`, and they never throw:
+// a mail failure (or an unconfigured deploy) must never block the Stripe flow.
+// SaaS-only, as before: nothing is sent on OSS / self-hosted.
 //
 // Plain server module (no `"use server"`): internal helpers invoked only from
 // server actions / route handlers, never directly from the client.
-import { send, planColor } from "@services/emails/resend";
+import { getServerAPIUrl } from "@services/config/config";
+import { isSaaSMode } from "@lib/saas";
 
-const prettyPlan = (plan?: string) =>
-  (plan || "free")
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+export interface SendResult {
+  ok: boolean;
+  skipped?: boolean;
+}
+
+async function sendBillingEmail(
+  template: string,
+  to: string,
+  context: Record<string, unknown>,
+): Promise<SendResult> {
+  if (!(await isSaaSMode())) return { ok: false, skipped: true };
+  const internalKey =
+    process.env.CLOUD_INTERNAL_KEY || process.env.LEARNHOUSE_CLOUD_INTERNAL_KEY || "";
+  if (!internalKey || !to) {
+    console.log(`[email] skipped (${internalKey ? "no recipient" : "internal key unset"}): ${template}`);
+    return { ok: false, skipped: true };
+  }
+  try {
+    const res = await fetch(`${getServerAPIUrl()}cloud_internal/send_billing_email`, {
+      method: "POST",
+      // Runs inside the Stripe webhook: never hold the delivery open.
+      signal: AbortSignal.timeout(10_000),
+      headers: { "Content-Type": "application/json", "X-Internal-Key": internalKey },
+      body: JSON.stringify({ template, to: [to], context }),
+    });
+    if (!res.ok) {
+      console.error(`[email] ${template} failed: ${res.status}`);
+      return { ok: false };
+    }
+    return { ok: true };
+  } catch (err) {
+    console.error(`[email] ${template} failed:`, err);
+    return { ok: false };
+  }
+}
 
 export async function sendPlanSwitchMail(args: {
   email: string;
@@ -20,21 +56,10 @@ export async function sendPlanSwitchMail(args: {
   newPlan: string;
   isDowngrade: boolean;
 }): Promise<void> {
-  const { email, oldPlan, newPlan, isDowngrade } = args;
-  await send(email, `You're on ${prettyPlan(newPlan)} now`, {
-    accentColor: planColor(newPlan),
-    heading: isDowngrade ? `You're on ${prettyPlan(newPlan)} now` : `${prettyPlan(newPlan)} is ready for your learners`,
-    subtitle: isDowngrade
-      ? `The change is done. Anything your new plan doesn't include is paused, not deleted, and comes back if you upgrade.`
-      : `Everything in ${prettyPlan(newPlan)} is unlocked for your academy, starting now.`,
-    transition: {
-      fromLabel: "Previous",
-      fromValue: prettyPlan(oldPlan),
-      fromColor: planColor(oldPlan),
-      toLabel: "New plan",
-      toValue: prettyPlan(newPlan),
-      toColor: planColor(newPlan),
-    },
+  await sendBillingEmail("billing.plan_changed", args.email, {
+    old_plan: args.oldPlan,
+    new_plan: args.newPlan,
+    is_downgrade: args.isDowngrade,
   });
 }
 
@@ -43,15 +68,9 @@ export async function sendSubscriptionCanceledMail(args: {
   planName: string;
   orgSlug?: string;
 }): Promise<void> {
-  const { email, planName, orgSlug } = args;
-  await send(email, `Your ${prettyPlan(planName)} plan won't renew`, {
-    accentColor: "#ef4444",
-    heading: "Your plan won't renew",
-    subtitle: `Your ${prettyPlan(planName)} plan stays active until the end of the current billing period. After that, your academy moves to Free. Nothing is deleted.`,
-    body: "If you change your mind, pick a plan again from your billing settings and everything comes back as it was.",
-    card: orgSlug
-      ? { label: "Organization", title: orgSlug, color: "#ef4444" }
-      : undefined,
+  await sendBillingEmail("billing.subscription_canceled", args.email, {
+    plan: args.planName,
+    org_slug: args.orgSlug ?? "",
   });
 }
 
@@ -60,21 +79,9 @@ export async function sendPurchaseCompleteMail(args: {
   plan?: string;
   orgSlug?: string;
 }): Promise<void> {
-  const { email, plan, orgSlug } = args;
-  await send(email, `Your ${prettyPlan(plan)} plan is active`, {
-    accentColor: planColor(plan),
-    heading: `${prettyPlan(plan)} is active`,
-    subtitle: `Your payment went through and every ${prettyPlan(plan)} feature is available to your academy now.`,
-    card: {
-      label: "Your plan",
-      title: prettyPlan(plan),
-      caption: orgSlug,
-      color: planColor(plan),
-    },
-    bulletPoints: [
-      "Anything paused on the Free plan, like private courses, is back as it was.",
-      "Invoices and plan changes are in your billing settings.",
-    ],
+  await sendBillingEmail("billing.purchase_complete", args.email, {
+    plan: args.plan ?? "",
+    org_slug: args.orgSlug ?? "",
   });
 }
 
@@ -83,17 +90,9 @@ export async function sendPackActivatedMail(args: {
   packId?: string;
   orgSlug?: string;
 }): Promise<void> {
-  const { email, packId, orgSlug } = args;
-  await send(email, "Your add-on is active", {
-    accentColor: "#7c3aed",
-    heading: "Your add-on is active",
-    subtitle: "The extra capacity is available to your academy now.",
-    card: {
-      label: "Add-on",
-      title: packId || "Pack",
-      caption: orgSlug,
-      color: "#7c3aed",
-    },
+  await sendBillingEmail("billing.pack_activated", args.email, {
+    pack_id: args.packId ?? "",
+    org_slug: args.orgSlug ?? "",
   });
 }
 
@@ -102,14 +101,8 @@ export async function sendPaymentFailedMail(args: {
   planName?: string;
   orgSlug?: string;
 }): Promise<void> {
-  const { email, planName, orgSlug } = args;
-  await send(email, `Your ${prettyPlan(planName)} payment didn't go through`, {
-    accentColor: "#ef4444",
-    heading: "Your payment didn't go through",
-    subtitle: `We couldn't charge your card for ${prettyPlan(planName)}. Your learners keep full access for now.`,
-    body: "Update your payment method in your billing settings and nothing changes for them.",
-    card: orgSlug
-      ? { label: "Organization", title: orgSlug, color: "#ef4444" }
-      : undefined,
+  await sendBillingEmail("billing.payment_failed", args.email, {
+    plan: args.planName ?? "",
+    org_slug: args.orgSlug ?? "",
   });
 }

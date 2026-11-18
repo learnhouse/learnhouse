@@ -234,7 +234,7 @@ def test_demo_addresses_are_recognised():
 
 def test_send_email_drops_demo_recipients(monkeypatch):
     """No provider call is made for a fake student's address."""
-    from src.services.email import utils as email_utils
+    from src.services.email import transport as email_utils
 
     calls = []
     monkeypatch.setattr(
@@ -246,13 +246,13 @@ def test_send_email_drops_demo_recipients(monkeypatch):
         lambda *a, **k: calls.append(a),
     )
 
-    assert email_utils.send_email("demo-03@demo.example.com", "Subject", "<p>Body</p>") is None
+    assert email_utils.send_message("demo-03@demo.example.com", "Subject", "<p>Body</p>") is None
     assert calls == []
 
 
 def test_send_email_still_delivers_to_real_recipients(monkeypatch):
     """The guard must not swallow ordinary transactional mail."""
-    from src.services.email import utils as email_utils
+    from src.services.email import transport as email_utils
 
     calls = []
     monkeypatch.setattr(
@@ -264,7 +264,7 @@ def test_send_email_still_delivers_to_real_recipients(monkeypatch):
         lambda *a, **k: calls.append(a) or "sent",
     )
 
-    email_utils.send_email("real.person@example.com", "Subject", "<p>Body</p>")
+    email_utils.send_message("real.person@example.com", "Subject", "<p>Body</p>")
     assert len(calls) == 1
 
 

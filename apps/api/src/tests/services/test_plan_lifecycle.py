@@ -779,8 +779,8 @@ class TestEmails:
     def test_plan_email_rendering(self):
         from src.services.users import emails
 
-        with patch.object(emails, "_send_notification_email", return_value=True) as send, patch.object(
-            emails, "_reply_to_address", return_value="hi@lh.io"
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send, patch(
+            "src.services.email.templates.learning.reply_to_address", return_value="hi@lh.io"
         ):
             emails.send_plan_email("trial_ends_3d", "a@x.io", "Acme & Co", "https://a/plan", lang="fr",
                                    unsubscribe_url="https://u", plan_name="Pro", days=3, end_date="2026-11-29")
@@ -790,8 +790,8 @@ class TestEmails:
             assert "Acme &amp; Co" in kw["body"]
             emails.send_plan_email("trial_ended", "a@x.io", "Acme", "https://a/plan", plan_name="Pro")
             assert "List-Unsubscribe" not in (send.call_args.kwargs["headers"] or {})
-        with patch.object(emails, "_send_notification_email", return_value=True) as send, patch.object(
-            emails, "_reply_to_address", return_value=""
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send, patch(
+            "src.services.email.templates.learning.reply_to_address", return_value=""
         ):
             emails.send_plan_email("plan_downgraded", "a@x.io", "Acme", "https://a/plan", plan_name="Pro")
             assert send.call_args.kwargs["headers"] is None
@@ -811,7 +811,7 @@ class TestEmails:
     def test_org_created_email_trial_variant(self):
         from src.services.users import emails
 
-        with patch.object(emails, "_send_notification_email", return_value=True) as send:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send:
             emails.send_org_created_email("a@x.io", "Acme", "https://a/dash", trial_plan="pro", trial_days=14)
             assert "14 days" in send.call_args.kwargs["body"] and "Pro" in send.call_args.kwargs["body"]
             emails.send_org_created_email("a@x.io", "Acme", "https://a/dash")
