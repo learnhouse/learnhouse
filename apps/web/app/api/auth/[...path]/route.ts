@@ -71,7 +71,7 @@ const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
 // LH_default_org): those describe the deployment, are non-sensitive, are needed
 // by anonymous visitors, and the proxy re-sets them on the very next request, so
 // clearing them is both pointless and would briefly break tenancy resolution.
-// LH_imp: an impersonation ends with its superadmin's sign-out.
+// LH_imp: an impersonation ends with its backoffice staff member's sign-out.
 const CLEAR_HTTPONLY = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, 'LH_custom_domain', IMPERSONATION_COOKIE]
 const CLEAR_MARKERS = ['LH_session', 'LH_org']
 
@@ -291,7 +291,7 @@ async function proxyRequest(
 
   // The host the browser is on. The backend can't see it through this proxy,
   // and needs it to hold a session signed in on an org's custom domain to that
-  // org (and to refuse platform superadmins there).
+  // org (and to refuse platform backoffice staff there).
   const clientHost = browserHost(request)
   if (clientHost) headers[CLIENT_HOST_HEADER] = clientHost
 
@@ -308,11 +308,11 @@ async function proxyRequest(
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)
 
   // An impersonation is open: org pages get its
-  // token instead of the superadmin's own, checked against the server-side
+  // token instead of the backoffice staff member's own, checked against the server-side
   // record on every refresh. It is never refreshed or traded for a session; a
   // spent one answers 410 (and drops the cookie) so the client goes back to the
-  // console, never falls back to the superadmin. The console itself asks with
-  // ?scope=platform and keeps the superadmin's session.
+  // console, never falls back to the backoffice staff member. The console itself asks with
+  // ?scope=platform and keeps the backoffice staff member's session.
   const impersonationToken = cookieStore.get(IMPERSONATION_COOKIE)?.value
   if (
     pathSegments === 'refresh'

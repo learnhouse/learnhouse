@@ -187,8 +187,8 @@ describe("isTrackedPagePath", () => {
     }
   });
 
-  test("dashboard, editor and super-admin pages don't", () => {
-    for (const p of ["/dash", "/dash/courses", "/orgs/acme/dash/analytics", "/editor/course/x/activity/y/edit", "/admin", "/admin/orgs"]) {
+  test("dashboard, editor and backoffice pages don't", () => {
+    for (const p of ["/dash", "/dash/courses", "/orgs/acme/dash/analytics", "/editor/course/x/activity/y/edit", "/backoffice", "/backoffice/orgs"]) {
       expect(isTrackedPagePath(p)).toBe(false);
     }
   });

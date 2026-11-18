@@ -685,7 +685,7 @@ async def test_maybe_prune_is_occasional(db):
     prune.assert_awaited_once()
 
 
-# ─── admin scope, superadmins, connection lifetime ───────────────────────────
+# ─── admin scope, backoffice staff, connection lifetime ───────────────────────────
 
 
 async def _open_grant(db, user_id):
@@ -757,21 +757,21 @@ async def test_describe_marks_admin_orgs_and_shows_app_schemes(db, org, admin_us
     assert learner["orgs"][0]["can_admin"] is False
 
 
-async def test_superadmin_needs_real_membership_and_loses_the_flag(db, org, other_org, admin_user, mcp_config, frontend):
+async def test_backoffice_needs_real_membership_and_loses_the_flag(db, org, other_org, admin_user, mcp_config, frontend):
     row = await db.get(User, admin_user.id)
-    row.is_superadmin = True
+    row.is_backoffice_staff = True
     db.add(row)
     await db.commit()
-    admin_user = admin_user.model_copy(update={"is_superadmin": True})
+    admin_user = admin_user.model_copy(update={"is_backoffice_staff": True})
     _, challenge = pkce_pair()
     client = await register(db)
     req = await authorize(db, client["client_id"], challenge)
-    # Superadmins pass is_org_member everywhere, but consent wants a real row.
+    # Backoffice staff pass is_org_member everywhere, but consent wants a real row.
     with pytest.raises(oauth.OAuthError):
         await consent(db, admin_user, other_org.id, req)
     _, tokens = await full_tokens(db, admin_user, org)
     found = await oauth.verify_access_token(tokens["access_token"], "https://api.example.com/mcp", db)
-    assert found is not None and found.user.is_superadmin is False
+    assert found is not None and found.user.is_backoffice_staff is False
 
 
 async def test_reconnecting_restarts_the_connection_clock(db, org, admin_user, mcp_config, frontend):

@@ -18,12 +18,12 @@ export default function SessionOrgProvider({ orgslug, children }: { orgslug: str
   const org = useSessionOrg(orgslug, token)
 
   const roles = session?.data?.roles
-  const superadmin = !!session?.data?.user?.is_superadmin
+  const backoffice = !!session?.data?.user?.is_backoffice_staff
   const value = useMemo(() => {
     const member =
-      !org?.id || superadmin || (Array.isArray(roles) && roles.some((r: any) => r?.org?.id === org.id))
+      !org?.id || backoffice || (Array.isArray(roles) && roles.some((r: any) => r?.org?.id === org.id))
     return { org, isUserPartOfTheOrg: member, orgslug }
-  }, [org, roles, superadmin, orgslug])
+  }, [org, roles, backoffice, orgslug])
 
   if (outer?.org) return <>{children}</>
   return <OrgContext.Provider value={value}>{children}</OrgContext.Provider>

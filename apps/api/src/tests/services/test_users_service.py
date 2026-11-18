@@ -43,11 +43,11 @@ from src.services.users.users import (
 
 
 @pytest.fixture
-def act_as_superadmin():
-    """Identity fields and account deletion are owner-or-superadmin only now;
+def act_as_backoffice():
+    """Identity fields and account deletion are owner-or-backoffice only now;
     these tests exercise the mechanics, not that gate."""
     with patch(
-        "src.services.users.users.is_user_superadmin",
+        "src.services.users.users.is_user_backoffice_staff",
         new_callable=AsyncMock,
         return_value=True,
     ):
@@ -154,7 +154,7 @@ class TestDeleteUserById:
         new_callable=AsyncMock,
     )
     async def test_delete_user_by_id(
-        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org, act_as_superadmin
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org, act_as_backoffice
     ):
         # Create a separate user to delete (id=10)
         user_to_delete = User(
@@ -210,7 +210,7 @@ class TestDeleteUserById:
         new_callable=AsyncMock,
     )
     async def test_delete_user_deletes_sole_admin_org_only(
-        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org, act_as_superadmin
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org, act_as_backoffice
     ):
         """Deleting a user wipes orgs they solely administer, keeps the rest."""
         # org (id=1) already has admin_user as admin. Add a second org where the
@@ -278,7 +278,7 @@ class TestDeleteUserById:
         new_callable=AsyncMock,
     )
     async def test_delete_user_skips_missing_admin_org(
-        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, act_as_superadmin
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, act_as_backoffice
     ):
         """An admin membership pointing at a missing org is safely skipped."""
         user_to_delete = User(
@@ -316,7 +316,7 @@ class TestDeleteUserById:
 class TestCreateAndUpdateUser:
     @pytest.mark.asyncio
     async def test_create_user_and_update_flows(
-        self, mock_request, db, admin_user, org, act_as_superadmin
+        self, mock_request, db, admin_user, org, act_as_backoffice
     ):
         with patch(
             "src.services.users.users.validate_password_complexity",

@@ -150,7 +150,7 @@ async def user(db, org):
 async def learner_user(db, org):
     """A plain member, a legitimate magic-link target.
 
-    issue_magic_link refuses Admins, Maintainers and superadmins, the same rule
+    issue_magic_link refuses Admins, Maintainers and backoffice staff, the same rule
     issue_user_token applies: a leaked API token must not be able to borrow an
     elevated session. The `user` fixture is an Admin, so these tests need
     somebody ordinary.

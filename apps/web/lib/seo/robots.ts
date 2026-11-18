@@ -1,7 +1,7 @@
 import type { OrgSeoConfig } from './meta'
 
 /** Paths that are never worth crawling (app chrome, per-user pages, APIs). */
-export const ROBOTS_DISALLOW = ['/dash/', '/api/', '/auth/', '/editor/', '/admin/', '/account', '/messages', '/trail', '/search', '/embed/']
+export const ROBOTS_DISALLOW = ['/dash/', '/api/', '/auth/', '/editor/', '/backoffice/', '/admin/', '/account', '/messages', '/trail', '/search', '/embed/']
 
 /**
  * AI crawlers that collect pages to train models. Blocking them keeps the

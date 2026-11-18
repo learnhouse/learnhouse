@@ -14,24 +14,24 @@ from src.security.auth import get_authenticated_user
 
 
 @pytest.fixture
-def superadmin_user():
+def backoffice_user():
     return PublicUser(
         id=99,
-        username="superadmin",
+        username="backoffice",
         first_name="Super",
         last_name="Admin",
-        email="superadmin@test.com",
-        user_uuid="user_superadmin",
-        is_superadmin=True,
+        email="backoffice@test.com",
+        user_uuid="user_backoffice",
+        is_backoffice_staff=True,
     )
 
 
 @pytest.fixture
-def app(db, superadmin_user):
+def app(db, backoffice_user):
     app = FastAPI()
     app.include_router(dev_router, prefix="/api/v1/dev")
     app.dependency_overrides[get_db_session] = lambda: db
-    app.dependency_overrides[get_authenticated_user] = lambda: superadmin_user
+    app.dependency_overrides[get_authenticated_user] = lambda: backoffice_user
     yield app
     app.dependency_overrides.clear()
 

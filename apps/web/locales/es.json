@@ -17935,7 +17935,7 @@
       "ordered": "Ordena los cursos en el orden en que los estudiantes deben tomarlos."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Resumen",
@@ -18124,7 +18124,7 @@
       "password_placeholder": "Introduce tu contraseña",
       "signing_in": "Iniciando sesión...",
       "sign_in": "Iniciar sesión",
-      "superadmin_only": "Solo para el equipo de la plataforma LearnHouse"
+      "backoffice_only": "Solo para el equipo de la plataforma LearnHouse"
     },
     "pages": {
       "analytics": "Analíticas globales",
@@ -18139,7 +18139,7 @@
       "ai_costs_desc": "Lo que nos cuestan las solicitudes de IA al precio de lista del proveedor, frente a lo que valen los créditos cobrados"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Usuarios",
       "developers": "Desarrolladores",
       "avatar": "Avatar",
@@ -18261,7 +18261,7 @@
       "users_count_many": "{{count}} usuarios",
       "users_count_other": "{{count}} usuarios",
       "role_label": "Rol:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Normal",
       "min_orgs": "Mín. de organizaciones:",
       "any": "Cualquiera",
@@ -18291,9 +18291,9 @@
       },
       "tabs": {
         "tokens_label": "Tokens de API",
-        "tokens_desc": "Crea, lista y revoca tokens de API de superadmin entre organizaciones.",
+        "tokens_desc": "Crea, lista y revoca tokens de API de Backoffice entre organizaciones.",
         "docs_label": "Documentación y Playground",
-        "docs_desc": "Explora la API de superadmin y llámala en vivo con tu token."
+        "docs_desc": "Explora la API de Backoffice y llámala en vivo con tu token."
       },
       "org_picker": {
         "none_yet": "Aún no hay organizaciones",
@@ -18315,7 +18315,7 @@
       "endpoint": {
         "invalid_json": "JSON no válido",
         "network_error": "Error de red",
-        "session_only": "<strong>Solo autenticación por sesión.</strong> Los tokens de API no pueden llamar a este endpoint (bloqueo de escalada de privilegios). El botón Enviar en vivo fallará con un 403 si usas un token; copia el fragmento y ejecútalo como superadmin con sesión iniciada.",
+        "session_only": "<strong>Solo autenticación por sesión.</strong> Los tokens de API no pueden llamar a este endpoint (bloqueo de escalada de privilegios). El botón Enviar en vivo fallará con un 403 si usas un token; copia el fragmento y ejecútalo como usuario del Backoffice con sesión iniciada.",
         "parameters": "Parámetros",
         "request_body": "Cuerpo de la solicitud (JSON)",
         "reset_to_sample": "Restablecer al ejemplo",
@@ -18343,7 +18343,7 @@
       "description_placeholder": "Para qué sirve este token",
       "expiration": "Caducidad",
       "never_expires": "No caduca nunca",
-      "warning": "Un token de superadmin puede llamar a <em>todos</em> los endpoints <code>/ee/superadmin/*</code>: crear organizaciones, activar funciones y actualizar planes en toda la plataforma. Trátalo como una llave maestra.",
+      "warning": "Un token de Backoffice puede llamar a <em>todos</em> los endpoints <code>/ee/backoffice/*</code>: crear organizaciones, activar funciones y actualizar planes en toda la plataforma. Trátalo como una llave maestra.",
       "create_token": "Crear token",
       "failed_revoke": "No se pudo revocar ({{status}})",
       "revoke_title": "¿Revocar token?",
@@ -18362,7 +18362,7 @@
       "count_other": "{{count}} tokens",
       "loading": "Cargando tokens…",
       "failed_load": "No se pudieron cargar los tokens.",
-      "empty_title": "Aún no hay tokens de API de superadmin.",
+      "empty_title": "Aún no hay tokens de API de Backoffice.",
       "empty_desc": "Crea uno para automatizar el aprovisionamiento de organizaciones y la activación de funciones.",
       "col_name": "Nombre",
       "col_prefix": "Prefijo",
@@ -18383,7 +18383,7 @@
       "scopes": "Alcances",
       "revoked": "Token revocado",
       "scope_desc": {
-        "api": "Llamar a la API REST de superadmin.",
+        "api": "Llamar a la API REST de Backoffice.",
         "mcp": "Conectar un asistente de IA al MCP de la plataforma (herramientas de lectura).",
         "mcp_write": "Permite también las escrituras seguras del MCP: notas, etiquetas, ampliaciones de POC, propietario de la cuenta."
       },
@@ -18399,16 +18399,16 @@
     },
     "ee_required": {
       "title": "Se requiere una licencia de Enterprise Edition",
-      "description": "El panel de superadmin forma parte de LearnHouse Enterprise Edition y no está disponible en este despliegue."
+      "description": "El panel de Backoffice forma parte de LearnHouse Enterprise Edition y no está disponible en este despliegue."
     },
     "access_denied": {
       "title": "Acceso denegado",
-      "description": "Necesitas privilegios de superadmin para acceder a esta página."
+      "description": "Necesitas privilegios de Backoffice para acceder a esta página."
     },
     "shell": {
-      "platform": "Plataforma",
-      "title": "Plataforma LearnHouse",
-      "subtitle": "Consola de superadmin",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Navegación de la consola",
       "open_menu": "Abrir menú",
       "close_menu": "Cerrar menú",
@@ -19561,7 +19561,7 @@
       "add_member": "Añadir miembro",
       "read_only_hint": "Solo los propietarios de la plataforma pueden añadir, cambiar o quitar miembros del equipo.",
       "empty_title": "Aún no hay miembros en el equipo",
-      "empty_desc": "Los superadmins aparecerán aquí cuando se actualice la API de la plataforma.",
+      "empty_desc": "Los miembros del Backoffice aparecerán aquí cuando se actualice la API de la plataforma.",
       "col_member": "Miembro",
       "col_role": "Rol",
       "col_granted_by": "Concedido por",
@@ -19657,7 +19657,7 @@
       "enabled": "Activado",
       "disabled": "Desactivado",
       "mcp": "MCP de la plataforma",
-      "mcp_desc": "Endpoint MCP casi de solo lectura para asistentes de IA, autenticado con tokens de superadmin.",
+      "mcp_desc": "Endpoint MCP casi de solo lectura para asistentes de IA, autenticado con tokens de Backoffice.",
       "status": "Estado",
       "license": "Licencia",
       "license_desc": "Campos de licencia seguros. Las claves y firmas nunca se muestran.",
@@ -19681,7 +19681,7 @@
       "every_hours_many": "Cada {{count}} horas"
     },
     "users": {
-      "superadmin_filter": "Filtrar por superadmin",
+      "backoffice_filter": "Filtrar por Backoffice",
       "min_orgs": "Mínimo de organizaciones",
       "any_orgs": "Cualquier número",
       "min_orgs_value_one": "{{count}}+ organización",
@@ -19726,7 +19726,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Conectar un asistente de IA",
-      "desc": "El MCP de la plataforma permite a Claude y a otros asistentes leer los datos de la plataforma con un token de superadmin.",
+      "desc": "El MCP de la plataforma permite a Claude y a otros asistentes leer los datos de la plataforma con un token de Backoffice.",
       "enabled": "Activado",
       "disabled": "Desactivado en este servidor",
       "step1_title": "Crear un token",
@@ -20205,7 +20205,7 @@
           "automation": "Ejecuciones fallidas y reglas que actuaron",
           "team": "Cambios en el equipo de la plataforma",
           "token": "Nuevos tokens de API",
-          "security": "Inicios de sesión de superadmin fallidos, tokens revocados",
+          "security": "Inicios de sesión de Backoffice fallidos, tokens revocados",
           "follow": "Actividad de las organizaciones que sigues",
           "system": "Alertas de la plataforma y fallos de canales"
         },
@@ -21099,7 +21099,7 @@
       },
       "history": {
         "title": "Cambios recientes",
-        "desc": "Cambios hechos desde la consola de la plataforma, campo por campo.",
+        "desc": "Cambios hechos desde el Backoffice, campo por campo.",
         "empty": "Aún no hay cambios",
         "empty_desc": "Los cambios hechos aquí aparecen con su autor y lo que cambió."
       }
@@ -30217,9 +30217,9 @@
     "refused_messaging": "Los mensajes como este miembro están desactivados. Actívalos desde el menú de la insignia.",
     "refused_wrong_org": "La suplantación solo funciona en esta organización.",
     "refused_denied": "No disponible durante una suplantación.",
-    "returned_ended": "Suplantación finalizada. Has vuelto a la consola.",
-    "returned_expired": "La suplantación caducó. Has vuelto a la consola.",
-    "returned_revoked": "Se finalizó la suplantación. Has vuelto a la consola.",
+    "returned_ended": "Suplantación finalizada. Has vuelto al Backoffice.",
+    "returned_expired": "La suplantación caducó. Has vuelto al Backoffice.",
+    "returned_revoked": "Se finalizó la suplantación. Has vuelto al Backoffice.",
     "ended_notice_ended": "Sesión finalizada.",
     "ended_notice_expired": "Sesión finalizada: se alcanzó el límite de tiempo.",
     "ended_notice_revoked": "Sesión finalizada: fue revocada.",
@@ -30231,7 +30231,7 @@
     "entry_failed": "No se pudo iniciar la suplantación",
     "no_access_title": "No tienes acceso a {{org}}",
     "no_access_desc": "Pide acceso a la suplantación a un administrador de LearnHouse.",
-    "back_to_console": "Volver a la consola",
+    "back_to_console": "Volver al Backoffice",
     "retry": "Reintentar",
     "refused_private": "Los mensajes privados de un alumno siguen siendo privados, incluso cuando ves como él."
   },

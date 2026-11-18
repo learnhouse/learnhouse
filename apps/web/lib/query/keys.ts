@@ -146,12 +146,12 @@ export const queryKeys = {
   courseUsergroups: {
     resources: (courseUuid: string, orgId: number) => ['courseUsergroups', courseUuid, orgId] as const,
   },
-  superadmin: {
-    status: () => ['superadmin', 'status'] as const,
-    orgs: () => ['superadmin', 'orgs'] as const,
-    users: () => ['superadmin', 'users'] as const,
-    analytics: () => ['superadmin', 'analytics'] as const,
-    apiTokens: () => ['superadmin', 'apiTokens'] as const,
+  backoffice: {
+    status: () => ['backoffice', 'status'] as const,
+    orgs: () => ['backoffice', 'orgs'] as const,
+    users: () => ['backoffice', 'users'] as const,
+    analytics: () => ['backoffice', 'analytics'] as const,
+    apiTokens: () => ['backoffice', 'apiTokens'] as const,
   },
   payments: {
     configs: (orgId: number) => ['payments', orgId, 'configs'] as const,

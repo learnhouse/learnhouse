@@ -37,7 +37,7 @@ export function badRequest(message: string): NextResponse {
 export interface AuthedUser {
   email: string;
   userId: number;
-  isSuperadmin: boolean;
+  isBackofficeStaff: boolean;
   token: string;
   // Session role entries: [{ role: { rights, ... }, org: { id, ... } }]
   roles: any[];
@@ -64,7 +64,7 @@ export async function authenticateUser(
       { status: 403 },
     );
   // Billing is never available inside an impersonation: neither as the
-  // member, nor as the superadmin behind it.
+  // member, nor as the backoffice staff member behind it.
   if (cookieStore.get("LH_imp")?.value) return impersonating();
   // The cookie wins; a bearer token is only a fallback for pages where the
   // cookie isn't sent (custom domains). Either way it is checked against the
@@ -94,7 +94,7 @@ export async function authenticateUser(
   return {
     email,
     userId: session?.user?.id,
-    isSuperadmin: session?.user?.is_superadmin === true,
+    isBackofficeStaff: session?.user?.is_backoffice_staff === true,
     token,
     roles: Array.isArray(session?.roles) ? session.roles : [],
   };
@@ -103,14 +103,14 @@ export async function authenticateUser(
 /**
  * Whether `user` may manage billing for `orgId`. Mirrors the client-side
  * `useAdminStatus` gate (components/Hooks/useAdminStatus.tsx) so server
- * enforcement matches the UI: superadmins always pass, otherwise the user must
+ * enforcement matches the UI: backoffice staff always pass, otherwise the user must
  * hold a role on that org granting `organizations.action_update` (or delete).
  */
 export function canManageOrgBilling(
   user: AuthedUser,
   orgId: string | number,
 ): boolean {
-  if (user.isSuperadmin) return true;
+  if (user.isBackofficeStaff) return true;
   const target = String(orgId);
   for (const r of user.roles) {
     if (String(r?.org?.id) !== target) continue;
@@ -169,7 +169,7 @@ export async function requireOrgBillingAccess(
  * `GET /orgs/{id}`, which does not exist (405), so the guard silently never
  * fired.
  *
- * A superadmin who has never entered the demo has no role entry for it and so
+ * A backoffice staff member who has never entered the demo has no role entry for it and so
  * is not caught here; they would be deliberately billing a sandbox, and the
  * backend still refuses the plan write.
  */

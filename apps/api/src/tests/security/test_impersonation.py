@@ -186,8 +186,8 @@ class TestPolicy:
         ("POST", "/api/v1/admin/default/auth/token"),
         ("GET", "/api/v1/orgs/1/users/export"),
         ("GET", "/api/v1/ee/audit_logs/1/export"),
-        ("POST", "/api/v1/ee/superadmin/impersonations"),
-        ("GET", "/api/v1/ee/superadmin/me"),
+        ("POST", "/api/v1/ee/backoffice/impersonations"),
+        ("GET", "/api/v1/ee/backoffice/me"),
         ("POST", "/api/v1/ee/license/activate"),
         ("POST", "/api/v1/mcp/oauth/approve"),
         ("POST", "/mcp"),
@@ -452,7 +452,7 @@ class TestResolve:
         assert isinstance(user, PublicUser) and user.id == regular_user.id
         assert holder["ctx"].verified and holder["ctx"].target_label == "Regular User"
         assert holder["prov"].amr == "impersonation" and holder["held"] == org.id
-        assert request.state.impersonation.verified and db._superadmin_cache[regular_user.id] is False
+        assert request.state.impersonation.verified and db._backoffice_cache[regular_user.id] is False
 
     async def test_tokens_outside_lh_imp_or_bearer_are_refused(self, db, org, regular_user):
         """An impersonation token in LH_access is a 401 (and audited), never a
@@ -538,32 +538,32 @@ class TestResolve:
                       _request(token=_token(), path_params={"org_slug": "test-org"}), AsyncMock(return_value=row))
 
 
-class TestSuperadminOrgBypass:
+class TestBackofficeOrgBypass:
     def test_blocking_rules(self):
-        from src.security import superadmin as sa
+        from src.security import backoffice as sa
 
         def check(path):
             def inner():
-                sa.block_superadmin_org_bypass(7, path)
-                return sa.superadmin_org_bypass_blocked(7), sa.superadmin_org_bypass_blocked(8)
+                sa.block_backoffice_org_bypass(7, path)
+                return sa.backoffice_org_bypass_blocked(7), sa.backoffice_org_bypass_blocked(8)
             return contextvars.copy_context().run(inner)
 
-        assert check("/api/v1/ee/superadmin/organizations") == (False, False)
-        assert check("/api/v1/ee/superadmin") == (False, False)
+        assert check("/api/v1/ee/backoffice/organizations") == (False, False)
+        assert check("/api/v1/ee/backoffice") == (False, False)
         assert check("/api/v1/courses/x") == (True, False)
-        assert check("/api/v1/ee/superadminx") == (True, False)
-        assert sa.superadmin_org_bypass_blocked(None) is False
+        assert check("/api/v1/ee/backofficex") == (True, False)
+        assert sa.backoffice_org_bypass_blocked(None) is False
 
     async def test_own_session_is_an_ordinary_user_outside_the_console(self, db, org, admin_user):
-        """No implicit org access for a superadmin's own session, reads
+        """No implicit org access for a backoffice staff member's own session, reads
         included; real memberships still work; the console still sees them as
-        a superadmin."""
+        a backoffice staff member."""
         from src.security import org_auth
         from src.security.auth import create_access_token, get_current_user
-        from src.security.superadmin import is_user_superadmin, superadmin_org_bypass_blocked
+        from src.security.backoffice import is_user_backoffice_staff, backoffice_org_bypass_blocked
 
         row = await db.get(User, admin_user.id)
-        row.is_superadmin = True
+        row.is_backoffice_staff = True
         db.add(row)
         await db.commit()
         token = create_access_token({"sub": row.email, "purpose": "session"})
@@ -572,10 +572,10 @@ class TestSuperadminOrgBypass:
             request = _request(token=token, method=method, path=path)
             user = await get_current_user(request, db)
             return (
-                superadmin_org_bypass_blocked(admin_user.id),
+                backoffice_org_bypass_blocked(admin_user.id),
                 await org_auth.is_org_member(admin_user.id, org_id, db),
-                await is_user_superadmin(admin_user.id, db),
-                user.is_superadmin,
+                await is_user_backoffice_staff(admin_user.id, db),
+                user.is_backoffice_staff,
             )
 
         for method in ("GET", "POST"):
@@ -584,7 +584,7 @@ class TestSuperadminOrgBypass:
             assert blocked and not member_elsewhere and sa_flag is False and row_flag is True
         blocked, member_home, _, _ = await _in_ctx(contextvars.copy_context(), as_request, "POST", "/api/v1/courses/x", org.id)
         assert blocked and member_home
-        blocked, _, sa_flag, _ = await _in_ctx(contextvars.copy_context(), as_request, "GET", "/api/v1/ee/superadmin/me", 99)
+        blocked, _, sa_flag, _ = await _in_ctx(contextvars.copy_context(), as_request, "GET", "/api/v1/ee/backoffice/me", 99)
         assert not blocked and sa_flag is True
 
 

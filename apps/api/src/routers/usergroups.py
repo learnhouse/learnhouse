@@ -80,7 +80,7 @@ async def api_get_usergroup(
     response_model=list[UserReadPublic],
     tags=["usergroups"],
     summary="List users in a usergroup",
-    description="Retrieve the list of users that belong to a specific usergroup. Sensitive fields (is_superadmin, signup_method) are excluded.",
+    description="Retrieve the list of users that belong to a specific usergroup. Sensitive fields (is_backoffice_staff, signup_method) are excluded.",
     responses={
         200: {"description": "Users linked to the usergroup.", "model": list[UserReadPublic]},
         401: {"description": "Authentication required"},

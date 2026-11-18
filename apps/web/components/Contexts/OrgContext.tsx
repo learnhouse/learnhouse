@@ -55,11 +55,11 @@ export function OrgProvider({
       if (roles.some((r: any) => r.org?.id === org.id)) return true
     }
 
-    // Superadmins are always part of every org
-    if (session?.data?.user?.is_superadmin) return true
+    // Backoffice staff are always part of every org
+    if (session?.data?.user?.is_backoffice_staff) return true
 
     return false
-  }, [session?.data?.roles, session?.data?.user?.is_superadmin, org?.id, session.status])
+  }, [session?.data?.roles, session?.data?.user?.is_backoffice_staff, org?.id, session.status])
 
   const contextValue = useMemo<OrgContextValue>(() => ({
     org,

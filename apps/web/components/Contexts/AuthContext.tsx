@@ -437,9 +437,9 @@ export function SessionProvider({
         })
 
         if (response.status === 410) {
-          // The impersonation this tab ran on is over; the superadmin's own
-          // session is untouched. The banner takes the tab back to the console
-          // and says why.
+          // The impersonation this tab ran on is over; the backoffice staff
+          // member's own session is untouched. The banner takes the tab back to
+          // the console and says why.
           dispatchImpersonationEnded(normalizeEndReason(endReasonOf(await response.json().catch(() => null))))
           return { status: 'transient' } as const
         }
@@ -1079,7 +1079,7 @@ export function SessionProvider({
   const handleSignOut = useCallback(async (options: SignOutOptions = {}) => {
     const { callbackUrl = '/', redirect = true } = options
     // "Sign out" inside an impersonation ends the session (back to the
-    // console); the superadmin behind it stays signed in.
+    // console); the backoffice staff member behind it stays signed in.
     if (activeImpersonation()) {
       dispatchImpersonationEnded('ended')
       return
@@ -1147,7 +1147,7 @@ export function SessionProvider({
 
       const detail = (event as CustomEvent<{ callbackUrl?: string }>).detail
       const callbackUrl = detail?.callbackUrl
-        || (window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login')
+        || (window.location.pathname.startsWith('/backoffice') ? '/backoffice/login' : '/login')
 
       handleSignOut({ callbackUrl, redirect: true }).catch((error) => {
         console.error('Forced sign-out failed:', error)

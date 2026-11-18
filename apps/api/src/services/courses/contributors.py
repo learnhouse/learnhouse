@@ -12,7 +12,7 @@ from src.security.rbac import authorization_verify_if_user_is_anon, check_resour
 from src.security.rbac.rbac import authorization_verify_based_on_org_admin_status
 from src.security.rbac.constants import ADMIN_ROLE_IDS
 from src.security.org_auth import get_user_org
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.services.webhooks.dispatch import dispatch_webhooks
 from typing import List
 
@@ -171,7 +171,7 @@ async def update_course_contributor(
         caller_org = await get_user_org(acting_user_id, course.org_id, db_session)
         if not (
             (caller_org is not None and caller_org.role_id in ADMIN_ROLE_IDS)
-            or await is_user_superadmin(acting_user_id, db_session)
+            or await is_user_backoffice_staff(acting_user_id, db_session)
         ):
             raise HTTPException(
                 status_code=403,
@@ -264,7 +264,7 @@ async def get_course_contributors(
 
     def user_view(user: User) -> dict:
         # SECURITY: editors get the author chip plus email (the contributors
-        # table shows it), never the full account record: is_superadmin,
+        # table shows it), never the full account record: is_backoffice_staff,
         # extra_metadata, signup/login details are not a course editor's.
         data = UserReadAuthor.model_validate(user).model_dump()
         if can_manage:

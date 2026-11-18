@@ -59,9 +59,9 @@ def test_organization_user_is_typed_as_org_member_view():
     )
     ou = OrganizationUser.model_construct(user=member, role=role)
     dumped = OrganizationUser.model_validate(
-        {"user": {**member.model_dump(), "is_superadmin": True}, "role": role}
+        {"user": {**member.model_dump(), "is_backoffice_staff": True}, "role": role}
     ).model_dump()
-    assert "is_superadmin" not in dumped["user"]
+    assert "is_backoffice_staff" not in dumped["user"]
     assert ou.user.email == "e@x.io"
 
 

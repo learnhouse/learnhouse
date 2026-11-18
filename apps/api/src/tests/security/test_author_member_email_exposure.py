@@ -23,7 +23,7 @@ from src.services.courses.contributors import get_course_contributors
 from src.services.courses.courses import get_course
 from src.services.users.usergroups import get_users_linked_to_usergroup
 
-PRIVATE_FIELDS = {"email", "is_superadmin", "signup_method", "last_login_at", "extra_metadata"}
+PRIVATE_FIELDS = {"email", "is_backoffice_staff", "signup_method", "last_login_at", "extra_metadata"}
 
 
 async def _add_course_creator(db, course, user_id):
@@ -70,7 +70,7 @@ class TestCourseAuthors:
         # narrowed to the author projection on validation.
         full = UserRead(
             id=1, user_uuid="u", username="x", first_name="A", last_name="B",
-            email="secret@test.com", is_superadmin=True, signup_method="email",
+            email="secret@test.com", is_backoffice_staff=True, signup_method="email",
         )
         author = AuthorWithRole(
             user=full,

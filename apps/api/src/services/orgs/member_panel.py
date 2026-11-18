@@ -6,7 +6,7 @@ latest learning events), and two lazy ones for the Assignments and Activity
 tabs. Everything is scoped to one organization: an org admin sees what the
 member did *here*, never their activity in another org they belong to.
 
-Access follows the members list: org admins and maintainers (or superadmins),
+Access follows the members list: org admins and maintainers (or backoffice staff),
 the org's session policies applied, and the target must be a member of the org
 (in the shared demo, only the seeded students or the caller).
 """
@@ -373,18 +373,18 @@ async def get_member_summary(
 
     # Who may strip this member's two-factor (mirrors /auth/mfa/org-reset):
     # an Admin (not a Maintainer), never on themselves, never on another Admin
-    # unless the caller is a platform superadmin, and never in the demo.
-    from src.security.superadmin import is_user_superadmin
+    # unless the caller is a platform backoffice staff member, and never in the demo.
+    from src.security.backoffice import is_user_backoffice_staff
     from src.services.demo.guards import is_demo_org
     from src.services.orgs.orgs import is_org_admin_role
 
     caller_is_admin = await is_org_admin_role(acting_id, org_id, db_session)
-    caller_is_superadmin = await is_user_superadmin(acting_id, db_session)
+    caller_is_backoffice_staff = await is_user_backoffice_staff(acting_id, db_session)
     can_reset_mfa = (
         mfa_enabled
         and caller_is_admin
         and acting_id != user_id
-        and (membership.role_id != ADMIN_ROLE_ID or caller_is_superadmin)
+        and (membership.role_id != ADMIN_ROLE_ID or caller_is_backoffice_staff)
         and not await is_demo_org(org_id, db_session)
     )
 

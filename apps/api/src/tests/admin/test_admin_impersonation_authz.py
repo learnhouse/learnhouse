@@ -69,7 +69,7 @@ async def _member(
     *,
     user_id: int,
     role_id: int,
-    is_superadmin: bool = False,
+    is_backoffice_staff: bool = False,
 ) -> User:
     u = User(
         id=user_id,
@@ -79,7 +79,7 @@ async def _member(
         email=f"member{user_id}@test.com",
         password="hashed",
         user_uuid=f"user_member{user_id}",
-        is_superadmin=is_superadmin,
+        is_backoffice_staff=is_backoffice_staff,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
@@ -185,16 +185,16 @@ class TestIssueUserTokenPrivilegedTargets:
         assert exc.value.status_code == 403
         assert "Admin or Maintainer" in str(exc.value.detail)
 
-    async def test_superadmin_target_is_refused(self, db, org, reader_token):
+    async def test_backoffice_target_is_refused(self, db, org, reader_token):
         target = await _member(
-            db, org.id, user_id=27, role_id=MEMBER_ROLE_ID, is_superadmin=True
+            db, org.id, user_id=27, role_id=MEMBER_ROLE_ID, is_backoffice_staff=True
         )
 
         with pytest.raises(HTTPException) as exc:
             await issue_user_token(reader_token, target.id, db)
 
         assert exc.value.status_code == 403
-        assert "superadmin" in str(exc.value.detail)
+        assert "backoffice" in str(exc.value.detail)
 
 
 class TestIssueUserTokenCrossOrg:

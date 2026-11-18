@@ -207,7 +207,7 @@ class TestUsergroupGrantAfterRoles:
     async def test_usergroup_member_is_granted(self, db):
         from src.security.rbac import rbac
 
-        with patch.object(rbac, "is_user_superadmin", new=AsyncMock(return_value=False)), \
+        with patch.object(rbac, "is_user_backoffice_staff", new=AsyncMock(return_value=False)), \
                 patch.object(rbac, "authorization_verify_if_user_is_author", new=AsyncMock(return_value=False)), \
                 patch.object(rbac, "authorization_verify_based_on_roles", new=AsyncMock(return_value=False)), \
                 patch.object(rbac, "check_usergroup_access", new=AsyncMock(return_value=True)):

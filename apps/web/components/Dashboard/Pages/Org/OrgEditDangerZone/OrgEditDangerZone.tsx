@@ -30,7 +30,7 @@ const OrgEditDangerZone: React.FC = () => {
 
   // Mirror the backend: delete/wipe/remove-all are authorized on admin/maintainer
   // role membership (rbac "delete"/"update" → authorization_verify_based_on_org_
-  // admin_status), which canManageOrg (organizations.action_update, superadmin
+  // admin_status), which canManageOrg (organizations.action_update, backoffice
   // bypass) reflects. The broad `isAdmin` (dashboard access) also lets editors in,
   // so gating on it showed them a delete button the API would 403, a dead button.
   const canDeleteOrg = canManageOrg === true

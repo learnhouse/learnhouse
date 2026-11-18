@@ -132,7 +132,7 @@ async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
 
 
 async def verify_user_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
-    """Verify that the user is a member of the organization (superadmins bypass)."""
+    """Verify that the user is a member of the organization (backoffice staff bypass)."""
     member = await is_org_member(user_id, org_id, db_session)
     if member:
         await enforce_org_mfa(user_id, org_id, db_session)

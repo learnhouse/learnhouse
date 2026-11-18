@@ -381,7 +381,7 @@
           "users"
         ],
         "summary": "Get user by ID",
-        "description": "Get a user by numeric ID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+        "description": "Get a user by numeric ID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.",
         "operationId": "api_get_user_by_id_api_v1_users_id__user_id__get",
         "parameters": [
           {
@@ -428,7 +428,7 @@
           "users"
         ],
         "summary": "Get user by UUID",
-        "description": "Get a user by UUID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+        "description": "Get a user by UUID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.",
         "operationId": "api_get_user_by_uuid_api_v1_users_uuid__user_uuid__get",
         "parameters": [
           {
@@ -475,7 +475,7 @@
           "users"
         ],
         "summary": "Get user by username",
-        "description": "Get a user by username. Requires authentication to prevent username enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+        "description": "Get a user by username. Requires authentication to prevent username enumeration attacks. Sensitive fields (`is_backoffice_staff`, `signup_method`) are excluded.",
         "operationId": "api_get_user_by_username_api_v1_users_username__username__get",
         "parameters": [
           {
@@ -3504,7 +3504,7 @@
           "usergroups"
         ],
         "summary": "List users in a usergroup",
-        "description": "Retrieve the list of users that belong to a specific usergroup. Sensitive fields (is_superadmin, signup_method) are excluded.",
+        "description": "Retrieve the list of users that belong to a specific usergroup. Sensitive fields (is_backoffice_staff, signup_method) are excluded.",
         "operationId": "api_get_users_linked_to_usergroup_api_v1_usergroups__usergroup_id__users_get",
         "parameters": [
           {
@@ -4831,7 +4831,7 @@
             "description": "Cannot reset your own factor here; use /mfa/disable"
           },
           "403": {
-            "description": "Not an org admin, or target is an org admin or platform superadmin"
+            "description": "Not an org admin, or target is an org admin or platform backoffice staff member"
           },
           "404": {
             "description": "Target user is not a member of this org"
@@ -9349,8 +9349,8 @@
         "tags": [
           "ai-credits"
         ],
-        "summary": "Add purchased AI credits (superadmin only)",
-        "description": "Add purchased AI credits to an organization. Restricted to superadmins because it grants paid quota with no payment verification; the amount must be a positive integer.",
+        "summary": "Add purchased AI credits (backoffice only)",
+        "description": "Add purchased AI credits to an organization. Restricted to backoffice staff because it grants paid quota with no payment verification; the amount must be a positive integer.",
         "operationId": "add_org_ai_credits_api_v1_orgs__org_id__ai_credits_add_post",
         "parameters": [
           {
@@ -9388,7 +9388,7 @@
             "description": "Credit amount must be a positive number"
           },
           "403": {
-            "description": "Superadmin access required"
+            "description": "Backoffice access required"
           },
           "404": {
             "description": "Organization not found"
@@ -9411,8 +9411,8 @@
         "tags": [
           "ai-credits"
         ],
-        "summary": "Reset AI credits usage (superadmin only)",
-        "description": "Reset AI credits usage for an organization. Typically used at the start of a new billing period. Restricted to superadmins because it clears metered usage and would otherwise let a tenant bypass its quota.",
+        "summary": "Reset AI credits usage (backoffice only)",
+        "description": "Reset AI credits usage for an organization. Typically used at the start of a new billing period. Restricted to backoffice staff because it clears metered usage and would otherwise let a tenant bypass its quota.",
         "operationId": "reset_org_ai_credits_api_v1_orgs__org_id__ai_credits_reset_post",
         "parameters": [
           {
@@ -9437,7 +9437,7 @@
             }
           },
           "403": {
-            "description": "Superadmin access required"
+            "description": "Backoffice access required"
           },
           "404": {
             "description": "Organization not found"
@@ -9460,8 +9460,8 @@
         "tags": [
           "ai-credits"
         ],
-        "summary": "Set purchased AI credits (superadmin only)",
-        "description": "Overwrite the org's purchased AI credit balance to an absolute value. Restricted to superadmins; bypasses the additive /add flow so it can grant, correct, or zero out credits in one call.",
+        "summary": "Set purchased AI credits (backoffice only)",
+        "description": "Overwrite the org's purchased AI credit balance to an absolute value. Restricted to backoffice staff; bypasses the additive /add flow so it can grant, correct, or zero out credits in one call.",
         "operationId": "set_org_ai_credits_api_v1_orgs__org_id__ai_credits_set_post",
         "parameters": [
           {
@@ -9499,7 +9499,7 @@
             "description": "Credit amount must be non-negative"
           },
           "403": {
-            "description": "Superadmin access required"
+            "description": "Backoffice access required"
           },
           "404": {
             "description": "Organization not found"
@@ -75567,9 +75567,9 @@
             ],
             "title": "Signup Method"
           },
-          "is_superadmin": {
+          "is_backoffice_staff": {
             "type": "boolean",
-            "title": "Is Superadmin",
+            "title": "Is Backoffice",
             "default": false
           },
           "ui_preferences": {
@@ -75640,7 +75640,7 @@
           "last_name"
         ],
         "title": "UserReadAuthor",
-        "description": "Minimal author projection for community comments/discussions.\n\nSECURITY: comment/discussion authors are returned to *every* reader of a\nthread (often anonymous). It must therefore expose ONLY the fields needed to\nrender an author chip, never ``email``, ``is_superadmin``, ``signup_method``\nor the raw ``details``/``profile``/``extra_metadata`` blobs that ``UserRead``\ncarries. The frontend reads only id/user_uuid/username/name/avatar."
+        "description": "Minimal author projection for community comments/discussions.\n\nSECURITY: comment/discussion authors are returned to *every* reader of a\nthread (often anonymous). It must therefore expose ONLY the fields needed to\nrender an author chip, never ``email``, ``is_backoffice_staff``, ``signup_method``\nor the raw ``details``/``profile``/``extra_metadata`` blobs that ``UserRead``\ncarries. The frontend reads only id/user_uuid/username/name/avatar."
       },
       "UserReadPublic": {
         "properties": {
@@ -75727,7 +75727,7 @@
           "last_name"
         ],
         "title": "UserReadPublic",
-        "description": "User model for public-facing endpoints; excludes sensitive fields.\n\nSECURITY: This is the view returned to *any* authenticated user when they\nlook up *another* user (by id/uuid/username, or via usergroup member lists).\nIt must therefore NOT inherit from ``UserBase``, because ``UserBase`` (and\n``UserRead``) expose PII / internal fields (``email``, ``signup_method``,\n``is_superadmin``, ``extra_metadata``) that would leak to anyone who can\nenumerate user ids. ``details`` and ``profile`` ARE included: they are the\nuser's own public profile content (bio extension, links, etc.) that the\npublic profile page renders, so they are intentionally exposed."
+        "description": "User model for public-facing endpoints; excludes sensitive fields.\n\nSECURITY: This is the view returned to *any* authenticated user when they\nlook up *another* user (by id/uuid/username, or via usergroup member lists).\nIt must therefore NOT inherit from ``UserBase``, because ``UserBase`` (and\n``UserRead``) expose PII / internal fields (``email``, ``signup_method``,\n``is_backoffice_staff``, ``extra_metadata``) that would leak to anyone who can\nenumerate user ids. ``details`` and ``profile`` ARE included: they are the\nuser's own public profile content (bio extension, links, etc.) that the\npublic profile page renders, so they are intentionally exposed."
       },
       "UserRoleWithOrg": {
         "properties": {

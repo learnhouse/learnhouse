@@ -17569,7 +17569,7 @@
       "ordered": "Susun kursus dalam urutan yang seharusnya diambil peserta didik."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Ikhtisar",
@@ -17753,7 +17753,7 @@
       "password_placeholder": "Masukkan kata sandi Anda",
       "signing_in": "Sedang masuk...",
       "sign_in": "Masuk",
-      "superadmin_only": "Hanya untuk tim platform LearnHouse"
+      "backoffice_only": "Hanya untuk tim platform LearnHouse"
     },
     "pages": {
       "analytics": "Analitik Global",
@@ -17768,7 +17768,7 @@
       "ai_costs_desc": "Biaya permintaan AI pada harga resmi penyedia dibandingkan dengan nilai kredit yang kami tagihkan"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Pengguna",
       "developers": "Pengembang",
       "avatar": "Avatar",
@@ -17883,7 +17883,7 @@
       "search_placeholder": "Cari pengguna...",
       "users_count_other": "{{count}} pengguna",
       "role_label": "Peran:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Reguler",
       "min_orgs": "Min. organisasi:",
       "any": "Apa saja",
@@ -17915,9 +17915,9 @@
       },
       "tabs": {
         "tokens_label": "Token API",
-        "tokens_desc": "Buat, daftar, dan cabut token API superadmin lintas organisasi.",
+        "tokens_desc": "Buat, daftar, dan cabut token API Backoffice lintas organisasi.",
         "docs_label": "Dokumentasi & Playground",
-        "docs_desc": "Jelajahi API superadmin, lalu panggil secara langsung dengan token Anda."
+        "docs_desc": "Jelajahi API Backoffice, lalu panggil secara langsung dengan token Anda."
       },
       "org_picker": {
         "none_yet": "Belum ada organisasi",
@@ -17939,7 +17939,7 @@
       "endpoint": {
         "invalid_json": "JSON tidak valid",
         "network_error": "Kesalahan jaringan",
-        "session_only": "<strong>Hanya autentikasi sesi.</strong> Token API tidak dapat memanggil endpoint ini (pemblokiran eskalasi hak istimewa). Tombol Kirim langsung akan gagal dengan 403 jika Anda menggunakan token; salin cuplikan dan jalankan sebagai superadmin yang sudah masuk.",
+        "session_only": "<strong>Hanya autentikasi sesi.</strong> Token API tidak dapat memanggil endpoint ini (pemblokiran eskalasi hak istimewa). Tombol Kirim langsung akan gagal dengan 403 jika Anda menggunakan token; salin cuplikan dan jalankan sebagai pengguna Backoffice yang sudah masuk.",
         "parameters": "Parameter",
         "request_body": "Request Body (JSON)",
         "reset_to_sample": "Reset ke contoh",
@@ -17967,7 +17967,7 @@
       "description_placeholder": "Untuk apa token ini",
       "expiration": "Kedaluwarsa",
       "never_expires": "Tidak pernah kedaluwarsa",
-      "warning": "Token superadmin dapat memanggil <em>setiap</em> endpoint <code>/ee/superadmin/*</code>: membuat organisasi, mengalihkan fitur, memperbarui paket di seluruh platform. Perlakukan seperti kunci induk.",
+      "warning": "Token Backoffice dapat memanggil <em>setiap</em> endpoint <code>/ee/backoffice/*</code>: membuat organisasi, mengalihkan fitur, memperbarui paket di seluruh platform. Perlakukan seperti kunci induk.",
       "create_token": "Buat token",
       "failed_revoke": "Gagal mencabut ({{status}})",
       "revoke_title": "Cabut token?",
@@ -17984,7 +17984,7 @@
       "count_other": "{{count}} token",
       "loading": "Memuat token…",
       "failed_load": "Gagal memuat token.",
-      "empty_title": "Belum ada token API superadmin.",
+      "empty_title": "Belum ada token API Backoffice.",
       "empty_desc": "Buat satu untuk mengotomatiskan penyediaan organisasi dan pengalihan fitur.",
       "col_name": "Nama",
       "col_prefix": "Awalan",
@@ -18006,7 +18006,7 @@
       "scopes": "Cakupan",
       "revoked": "Token dicabut",
       "scope_desc": {
-        "api": "Memanggil REST API superadmin.",
+        "api": "Memanggil REST API Backoffice.",
         "mcp": "Menghubungkan asisten AI ke MCP platform (tool baca).",
         "mcp_write": "Juga mengizinkan penulisan aman MCP: catatan, tag, perpanjangan POC, pemilik akun."
       },
@@ -18021,16 +18021,16 @@
     },
     "ee_required": {
       "title": "Lisensi Enterprise Edition diperlukan",
-      "description": "Dasbor superadmin adalah bagian dari LearnHouse Enterprise Edition dan tidak tersedia pada deployment ini."
+      "description": "Dasbor Backoffice adalah bagian dari LearnHouse Enterprise Edition dan tidak tersedia pada deployment ini."
     },
     "access_denied": {
       "title": "Akses Ditolak",
-      "description": "Anda memerlukan hak superadmin untuk mengakses halaman ini."
+      "description": "Anda memerlukan hak Backoffice untuk mengakses halaman ini."
     },
     "shell": {
-      "platform": "Platform",
-      "title": "Platform LearnHouse",
-      "subtitle": "Konsol superadmin",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Navigasi konsol",
       "open_menu": "Buka menu",
       "close_menu": "Tutup menu",
@@ -19151,7 +19151,7 @@
       "add_member": "Tambah anggota",
       "read_only_hint": "Hanya pemilik platform yang dapat menambah, mengubah, atau menghapus anggota tim.",
       "empty_title": "Belum ada anggota tim",
-      "empty_desc": "Superadmin akan muncul di sini setelah API platform diperbarui.",
+      "empty_desc": "Staf Backoffice akan muncul di sini setelah API platform diperbarui.",
       "col_member": "Anggota",
       "col_role": "Peran",
       "col_granted_by": "Diberikan oleh",
@@ -19247,7 +19247,7 @@
       "enabled": "Aktif",
       "disabled": "Nonaktif",
       "mcp": "MCP Platform",
-      "mcp_desc": "Endpoint MCP yang sebagian besar baca-saja untuk asisten AI, diautentikasi dengan token superadmin.",
+      "mcp_desc": "Endpoint MCP yang sebagian besar baca-saja untuk asisten AI, diautentikasi dengan token Backoffice.",
       "status": "Status",
       "license": "Lisensi",
       "license_desc": "Kolom lisensi yang aman. Kunci dan tanda tangan tidak pernah ditampilkan.",
@@ -19268,7 +19268,7 @@
       "every_hours_other": "Setiap {{count}} jam"
     },
     "users": {
-      "superadmin_filter": "Filter berdasarkan superadmin",
+      "backoffice_filter": "Filter berdasarkan Backoffice",
       "min_orgs": "Organisasi minimum",
       "any_orgs": "Org berapa pun",
       "min_orgs_value_one": "{{count}}+ org",
@@ -19312,7 +19312,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Hubungkan asisten AI",
-      "desc": "MCP platform memungkinkan Claude dan asisten lain membaca data platform dengan token superadmin.",
+      "desc": "MCP platform memungkinkan Claude dan asisten lain membaca data platform dengan token Backoffice.",
       "enabled": "Aktif",
       "disabled": "Nonaktif di server ini",
       "step1_title": "Buat token",
@@ -19781,7 +19781,7 @@
           "automation": "Eksekusi yang gagal dan aturan yang bertindak",
           "team": "Perubahan tim platform",
           "token": "Token API baru",
-          "security": "Login superadmin yang gagal, token yang dicabut",
+          "security": "Login Backoffice yang gagal, token yang dicabut",
           "follow": "Aktivitas organisasi yang Anda ikuti",
           "system": "Peringatan platform dan kegagalan kanal"
         },
@@ -20643,7 +20643,7 @@
       },
       "history": {
         "title": "Perubahan terbaru",
-        "desc": "Perubahan dari konsol platform, per kolom.",
+        "desc": "Perubahan dari Backoffice, per kolom.",
         "empty": "Belum ada perubahan",
         "empty_desc": "Perubahan di sini tampil beserta pembuatnya dan apa yang berubah."
       }
@@ -29547,9 +29547,9 @@
     "refused_messaging": "Mengirim pesan sebagai anggota ini dinonaktifkan. Aktifkan dari menu lencana.",
     "refused_wrong_org": "Impersonasi hanya berfungsi di organisasi ini.",
     "refused_denied": "Tidak tersedia saat impersonasi.",
-    "returned_ended": "Impersonasi berakhir. Anda kembali ke konsol.",
-    "returned_expired": "Impersonasi kedaluwarsa. Anda kembali ke konsol.",
-    "returned_revoked": "Impersonasi telah diakhiri. Anda kembali ke konsol.",
+    "returned_ended": "Impersonasi berakhir. Anda kembali ke Backoffice.",
+    "returned_expired": "Impersonasi kedaluwarsa. Anda kembali ke Backoffice.",
+    "returned_revoked": "Impersonasi telah diakhiri. Anda kembali ke Backoffice.",
     "ended_notice_ended": "Sesi berakhir.",
     "ended_notice_expired": "Sesi berakhir: batas waktu tercapai.",
     "ended_notice_revoked": "Sesi berakhir: sesi dicabut.",
@@ -29561,7 +29561,7 @@
     "entry_failed": "Gagal memulai impersonasi",
     "no_access_title": "Anda tidak memiliki akses ke {{org}}",
     "no_access_desc": "Minta akses impersonasi ke admin LearnHouse.",
-    "back_to_console": "Kembali ke konsol",
+    "back_to_console": "Kembali ke Backoffice",
     "retry": "Coba lagi",
     "refused_private": "Pesan pribadi pelajar tetap pribadi, bahkan saat Anda melihat sebagai mereka."
   },

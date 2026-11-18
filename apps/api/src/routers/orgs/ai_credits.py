@@ -23,14 +23,14 @@ from src.security.features_utils.usage import (
     set_ai_credits,
 )
 from src.security.org_auth import is_org_member, is_org_admin, enforce_org_mfa
-from src.security.superadmin import ensure_ee_superadmin_surface, is_user_superadmin
+from src.security.backoffice import ensure_ee_backoffice_surface, is_user_backoffice_staff
 
 
 router = APIRouter()
 
 
 async def _require_platform_plan_role(user_id: int, db_session: AsyncSession) -> None:
-    """On EE the platform console roles apply here too: a superadmin whose
+    """On EE the platform console roles apply here too: a backoffice staff member whose
     team role lacks ``orgs.plan`` (viewer, support, sales) can't change credits."""
     from src.core.ee_hooks import get_ee_hooks
 
@@ -89,7 +89,7 @@ async def verify_user_is_org_admin(
     org_id: int,
     db_session: AsyncSession,
 ) -> bool:
-    """Verify that the user is an admin of the organization (superadmins bypass)."""
+    """Verify that the user is an admin of the organization (backoffice staff bypass)."""
     return await is_org_admin(user_id, org_id, db_session)
 
 
@@ -98,7 +98,7 @@ async def verify_user_is_org_member(
     org_id: int,
     db_session: AsyncSession,
 ) -> bool:
-    """Verify that the user is a member of the organization (superadmins bypass)."""
+    """Verify that the user is a member of the organization (backoffice staff bypass)."""
     member = await is_org_member(user_id, org_id, db_session)
     if member:
         await enforce_org_mfa(user_id, org_id, db_session)
@@ -227,16 +227,16 @@ async def get_org_ai_usage(
 @router.post(
     "/{org_id}/ai-credits/add",
     response_model=AddCreditsResponse,
-    summary="Add purchased AI credits (superadmin only)",
+    summary="Add purchased AI credits (backoffice only)",
     description=(
-        "Add purchased AI credits to an organization. Restricted to superadmins "
+        "Add purchased AI credits to an organization. Restricted to backoffice staff "
         "because it grants paid quota with no payment verification; the amount "
         "must be a positive integer."
     ),
     responses={
         200: {"description": "Credits added and new purchased total returned.", "model": AddCreditsResponse},
         400: {"description": "Credit amount must be a positive number"},
-        403: {"description": "Superadmin access required"},
+        403: {"description": "Backoffice access required"},
         404: {"description": "Organization not found"},
     },
 )
@@ -249,7 +249,7 @@ async def add_org_ai_credits(
     """
     Add purchased AI credits to an organization.
 
-    Restricted to superadmins (grants paid quota with no payment check).
+    Restricted to backoffice staff (grants paid quota with no payment check).
 
     Args:
         org_id: The organization ID
@@ -268,14 +268,14 @@ async def add_org_ai_credits(
     # Granting "purchased" AI credits adds paid quota for an arbitrary,
     # client-supplied amount with NO payment verification. Allowing any org
     # admin here lets a tenant mint unlimited free AI credits for itself
-    # (revenue/quota bypass), so this must be a billing-platform / superadmin
+    # (revenue/quota bypass), so this must be a billing-platform / backoffice
     # operation, same posture as the /set endpoint.
-    ensure_ee_superadmin_surface()
+    ensure_ee_backoffice_surface()
     user_id = resolve_acting_user_id(current_user)
-    if not user_id or not await is_user_superadmin(user_id, db_session):
+    if not user_id or not await is_user_backoffice_staff(user_id, db_session):
         raise HTTPException(
             status_code=403,
-            detail="Superadmin access required",
+            detail="Backoffice access required",
         )
     await _require_platform_plan_role(user_id, db_session)
 
@@ -299,15 +299,15 @@ async def add_org_ai_credits(
 @router.post(
     "/{org_id}/ai-credits/reset",
     response_model=ResetCreditsResponse,
-    summary="Reset AI credits usage (superadmin only)",
+    summary="Reset AI credits usage (backoffice only)",
     description=(
         "Reset AI credits usage for an organization. Typically used at the "
-        "start of a new billing period. Restricted to superadmins because it "
+        "start of a new billing period. Restricted to backoffice staff because it "
         "clears metered usage and would otherwise let a tenant bypass its quota."
     ),
     responses={
         200: {"description": "AI credits usage reset to zero.", "model": ResetCreditsResponse},
-        403: {"description": "Superadmin access required"},
+        403: {"description": "Backoffice access required"},
         404: {"description": "Organization not found"},
     },
 )
@@ -320,7 +320,7 @@ async def reset_org_ai_credits(
     Reset AI credits usage for an organization.
 
     This is typically used at the start of a new billing period.
-    Restricted to superadmins (clears metered usage / quota).
+    Restricted to backoffice staff (clears metered usage / quota).
 
     Args:
         org_id: The organization ID
@@ -337,13 +337,13 @@ async def reset_org_ai_credits(
 
     # Resetting consumed usage effectively grants free metered AI usage, letting
     # a tenant zero out its own usage at will and bypass the plan's AI quota.
-    # This is a billing-platform / superadmin operation (same posture as /set).
-    ensure_ee_superadmin_surface()
+    # This is a billing-platform / backoffice operation (same posture as /set).
+    ensure_ee_backoffice_surface()
     user_id = resolve_acting_user_id(current_user)
-    if not user_id or not await is_user_superadmin(user_id, db_session):
+    if not user_id or not await is_user_backoffice_staff(user_id, db_session):
         raise HTTPException(
             status_code=403,
-            detail="Superadmin access required",
+            detail="Backoffice access required",
         )
     await _require_platform_plan_role(user_id, db_session)
 
@@ -359,16 +359,16 @@ async def reset_org_ai_credits(
 @router.post(
     "/{org_id}/ai-credits/set",
     response_model=SetCreditsResponse,
-    summary="Set purchased AI credits (superadmin only)",
+    summary="Set purchased AI credits (backoffice only)",
     description=(
         "Overwrite the org's purchased AI credit balance to an absolute value. "
-        "Restricted to superadmins; bypasses the additive /add flow so it can "
+        "Restricted to backoffice staff; bypasses the additive /add flow so it can "
         "grant, correct, or zero out credits in one call."
     ),
     responses={
         200: {"description": "Credits set; returns the new purchased total.", "model": SetCreditsResponse},
         400: {"description": "Credit amount must be non-negative"},
-        403: {"description": "Superadmin access required"},
+        403: {"description": "Backoffice access required"},
         404: {"description": "Organization not found"},
     },
 )
@@ -383,10 +383,10 @@ async def set_org_ai_credits(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    ensure_ee_superadmin_surface()
+    ensure_ee_backoffice_surface()
     user_id = resolve_acting_user_id(current_user)
-    if not user_id or not await is_user_superadmin(user_id, db_session):
-        raise HTTPException(status_code=403, detail="Superadmin access required")
+    if not user_id or not await is_user_backoffice_staff(user_id, db_session):
+        raise HTTPException(status_code=403, detail="Backoffice access required")
     await _require_platform_plan_role(user_id, db_session)
 
     if request.amount < 0:

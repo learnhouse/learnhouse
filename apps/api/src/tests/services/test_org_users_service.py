@@ -149,7 +149,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=False
         ):
@@ -160,7 +160,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -217,7 +217,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -254,7 +254,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=False
         ):
@@ -303,7 +303,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -349,7 +349,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -494,7 +494,7 @@ class TestOrgUsersService:
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.security.superadmin.is_user_superadmin",
+            "src.security.backoffice.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=True,
         ):
@@ -511,13 +511,13 @@ class TestOrgUsersService:
 
         role = await _make_role(db, org, id=11, name="Instructor", role_uuid="role_instructor")
 
-        # Only a superadmin may change their own role, so the last-admin guard
+        # Only a backoffice staff member may change their own role, so the last-admin guard
         # is reached as one.
         with patch(
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.security.superadmin.is_user_superadmin",
+            "src.security.backoffice.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=True,
         ):
@@ -728,7 +728,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -745,7 +745,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -761,7 +761,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -804,7 +804,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -859,7 +859,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -907,7 +907,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):
@@ -983,7 +983,7 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.is_org_member", return_value=True
         ), patch(
-            "src.security.superadmin.is_user_superadmin", return_value=False
+            "src.security.backoffice.is_user_backoffice_staff", return_value=False
         ), patch(
             "src.security.org_auth.is_org_admin", return_value=True
         ):

@@ -306,7 +306,7 @@ class TestRBACRuntime:
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_roles_covers_dict_and_object_rights(self):
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="users"), \
-            patch("src.security.rbac.rbac.is_user_superadmin", return_value=False), \
+            patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=False), \
             patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock, return_value=False):
             session = _session_with_results(_result(all=[_role_with_dict_rights()]))
 
@@ -322,7 +322,7 @@ class TestRBACRuntime:
             )
 
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="users"), \
-            patch("src.security.rbac.rbac.is_user_superadmin", return_value=False), \
+            patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=False), \
             patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock, return_value=False):
             session = _session_with_results(_result(all=[_role_with_object_rights()]))
 
@@ -338,10 +338,10 @@ class TestRBACRuntime:
             )
 
     @pytest.mark.asyncio
-    async def test_authorization_verify_based_on_roles_superadmin_bypass(self):
+    async def test_authorization_verify_based_on_roles_backoffice_bypass(self):
         session = AsyncMock()
 
-        with patch("src.security.rbac.rbac.is_user_superadmin", return_value=True), \
+        with patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=True), \
             patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock) as mock_check_type:
             result = await authorization_verify_based_on_roles(
                 request=_request(),
@@ -355,10 +355,10 @@ class TestRBACRuntime:
         mock_check_type.assert_not_awaited()
 
     @pytest.mark.asyncio
-    async def test_authorization_verify_based_on_org_admin_status_covers_superadmin_and_unknown_org(self):
+    async def test_authorization_verify_based_on_org_admin_status_covers_backoffice_and_unknown_org(self):
         session = AsyncMock()
 
-        with patch("src.security.rbac.rbac.is_user_superadmin", return_value=True), \
+        with patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=True), \
             patch("src.security.rbac.rbac.get_element_organization_id", new_callable=AsyncMock) as mock_get_org:
             assert (
                 await authorization_verify_based_on_org_admin_status(
@@ -372,7 +372,7 @@ class TestRBACRuntime:
             )
             mock_get_org.assert_not_awaited()
 
-        with patch("src.security.rbac.rbac.is_user_superadmin", return_value=False), \
+        with patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=False), \
             patch("src.security.rbac.rbac.get_element_organization_id", new_callable=AsyncMock, return_value=None):
             assert (
                 await authorization_verify_based_on_org_admin_status(
@@ -386,10 +386,10 @@ class TestRBACRuntime:
             )
 
     @pytest.mark.asyncio
-    async def test_authorization_verify_based_on_roles_and_authorship_superadmin_bypass(self):
+    async def test_authorization_verify_based_on_roles_and_authorship_backoffice_bypass(self):
         session = AsyncMock()
 
-        with patch("src.security.rbac.rbac.is_user_superadmin", return_value=True), \
+        with patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=True), \
             patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock) as mock_author, \
             patch("src.security.rbac.rbac.authorization_verify_based_on_roles", new_callable=AsyncMock) as mock_roles:
             assert (
@@ -584,7 +584,7 @@ class TestRBACRuntime:
             mock_token.assert_awaited_once()
 
         user = SimpleNamespace(id=11)
-        with patch("src.security.rbac.rbac.is_user_superadmin", return_value=False), \
+        with patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=False), \
             patch("src.security.rbac.rbac.authorization_verify_based_on_roles_and_authorship", new_callable=AsyncMock, return_value="regular") as mock_regular:
             assert (
                 await authorization_verify_based_on_roles_and_authorship_or_api_token(
@@ -604,7 +604,7 @@ class TestRBACRuntime:
                 session,
             )
 
-        with patch("src.security.rbac.rbac.is_user_superadmin", return_value=True), \
+        with patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=True), \
             patch("src.security.rbac.rbac.authorization_verify_based_on_roles_and_authorship", new_callable=AsyncMock) as mock_regular:
             assert (
                 await authorization_verify_based_on_roles_and_authorship_or_api_token(

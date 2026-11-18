@@ -18,7 +18,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.user_mfa import UserMFA
-from src.db.users import APITokenUser, PublicUser, SuperadminAPITokenUser, User, UserRead
+from src.db.users import APITokenUser, PublicUser, BackofficeAPITokenUser, User, UserRead
 from src.security.auth import (
     create_access_token,
     create_refresh_token,
@@ -88,7 +88,7 @@ class MFALoginRequest(BaseModel):
 
 
 async def _require_human_user(
-    current_user: Union[PublicUser, APITokenUser, SuperadminAPITokenUser],
+    current_user: Union[PublicUser, APITokenUser, BackofficeAPITokenUser],
     db_session: AsyncSession,
 ) -> User:
     """Resolve the acting principal to a real User row.
@@ -97,7 +97,7 @@ async def _require_human_user(
     enroll, and more importantly must not be able to *remove* a second factor
     from a human's account.
     """
-    if isinstance(current_user, (APITokenUser, SuperadminAPITokenUser)):
+    if isinstance(current_user, (APITokenUser, BackofficeAPITokenUser)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -740,9 +740,9 @@ async def api_set_org_mfa_policy(
     # Auth-method / session-sharing policy, with self-lockout guards so an admin
     # cannot save a policy that would refuse their own current session.
     from src.security.session_context import POLICY_AUTH_METHODS, get_session_provenance
-    from src.security.superadmin import is_user_superadmin
+    from src.security.backoffice import is_user_backoffice_staff
 
-    is_super = await is_user_superadmin(user.id, db_session)
+    is_super = await is_user_backoffice_staff(user.id, db_session)
     provenance = get_session_provenance()
 
     if form.allowed_auth_methods is not None:
@@ -895,7 +895,7 @@ async def api_org_mfa_compliance_list(
     ),
     tags=["auth"],
     responses={
-        403: {"description": "Not an org admin, or target is an org admin or platform superadmin"},
+        403: {"description": "Not an org admin, or target is an org admin or platform backoffice staff member"},
         404: {"description": "Target user is not a member of this org"},
         400: {"description": "Cannot reset your own factor here; use /mfa/disable"},
     },
@@ -907,7 +907,7 @@ async def api_org_reset_member_mfa(
     current_user=Depends(get_authenticated_user),
 ):
     from src.security.org_auth import get_user_org
-    from src.security.superadmin import is_user_superadmin
+    from src.security.backoffice import is_user_backoffice_staff
     from src.services.auth.mfa import disable_mfa
 
     from src.services.orgs.orgs import is_org_admin_role
@@ -950,17 +950,17 @@ async def api_org_reset_member_mfa(
         )
 
     # One admin must not be able to strip another admin's factor.
-    if target_membership.role_id == ADMIN_ROLE_ID and not await is_user_superadmin(admin.id, db_session):
+    if target_membership.role_id == ADMIN_ROLE_ID and not await is_user_backoffice_staff(admin.id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"code": "TARGET_IS_ADMIN", "message": "You cannot reset another administrator's two-factor."},
         )
 
-    # An org admin must not be able to clear a platform superadmin's factor.
-    if await is_user_superadmin(user_id, db_session) and not await is_user_superadmin(admin.id, db_session):
+    # An org admin must not be able to clear a platform backoffice staff member's factor.
+    if await is_user_backoffice_staff(user_id, db_session) and not await is_user_backoffice_staff(admin.id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"code": "TARGET_IS_SUPERADMIN", "message": "You cannot reset this user's two-factor."},
+            detail={"code": "TARGET_IS_BACKOFFICE_STAFF", "message": "You cannot reset this user's two-factor."},
         )
 
     # The factor protects the whole account. An org only gets to clear it for

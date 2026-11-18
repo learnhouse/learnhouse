@@ -14,7 +14,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
-from src.db.users import AnonymousUser, APITokenUser, PublicUser, SuperadminAPITokenUser
+from src.db.users import AnonymousUser, APITokenUser, PublicUser, BackofficeAPITokenUser
 from src.security.api_token_utils import require_token_right
 from src.security.org_auth import require_org_role_permission
 from src.security.rbac import (
@@ -46,9 +46,9 @@ async def require_community_participant(
     db_session: AsyncSession,
 ) -> int:
     """Gate a community write and return the real user id it is made as."""
-    if isinstance(current_user, SuperadminAPITokenUser):
+    if isinstance(current_user, BackofficeAPITokenUser):
         # A post needs a real author; a cross-org token is not one.
-        raise HTTPException(status_code=403, detail="Superadmin API tokens cannot post to communities")
+        raise HTTPException(status_code=403, detail="Backoffice API tokens cannot post to communities")
     if isinstance(current_user, APITokenUser):
         require_token_in_community_org(current_user, community)
         require_token_right(current_user, "discussions", "action_create")

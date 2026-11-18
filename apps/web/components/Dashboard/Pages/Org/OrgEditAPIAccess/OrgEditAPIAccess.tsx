@@ -44,7 +44,7 @@ import {
   formatRelative,
   useStoredState,
 } from '@components/Dashboard/Shared/DashKit/DashKit'
-import { buildSnippets } from '@components/Admin/Developers/snippets'
+import { buildSnippets } from '@components/Dashboard/Pages/Org/Developers/snippets'
 import { CodeBlock, SecretOnce, absoluteApiBase } from '@components/Dashboard/Pages/Org/Developers/devKit'
 import APIDocumentation from './APIDocumentation'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'

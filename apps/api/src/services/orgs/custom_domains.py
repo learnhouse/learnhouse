@@ -342,7 +342,7 @@ async def add_custom_domain(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3+4: Membership + organizations.update (superadmins bypass).
+    # VERIFICATION 3+4: Membership + organizations.update (backoffice staff bypass).
     # Routing the org's traffic is not everyday editing for Maintainers.
     await require_org_role_permission(
         acting_user_id, org_id, db_session, "organizations", "action_update"
@@ -482,7 +482,7 @@ async def list_custom_domains(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3: Membership (superadmins bypass)
+    # VERIFICATION 3: Membership (backoffice staff bypass)
     await require_org_membership(acting_user_id, org_id, db_session)
 
     # Get all custom domains for the organization
@@ -508,7 +508,7 @@ async def get_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership (superadmins bypass)
+    # VERIFICATION 2: Membership (backoffice staff bypass)
     await require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the custom domain
@@ -540,7 +540,7 @@ async def get_domain_verification_info(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership (superadmins bypass)
+    # VERIFICATION 2: Membership (backoffice staff bypass)
     await require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the organization for the slug
@@ -591,7 +591,7 @@ async def verify_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership + organizations.update (superadmins bypass)
+    # VERIFICATION 2: Membership + organizations.update (backoffice staff bypass)
     await require_org_role_permission(
         acting_user_id, org_id, db_session, "organizations", "action_update"
     )
@@ -648,7 +648,7 @@ async def delete_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership + organizations.update (superadmins bypass)
+    # VERIFICATION 2: Membership + organizations.update (backoffice staff bypass)
     await require_org_role_permission(
         acting_user_id, org_id, db_session, "organizations", "action_update"
     )
@@ -704,7 +704,7 @@ async def check_domain_ssl_status(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership (superadmins bypass)
+    # VERIFICATION 2: Membership (backoffice staff bypass)
     await require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the custom domain

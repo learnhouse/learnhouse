@@ -2,7 +2,7 @@
 
 Called with the impersonation token itself (the web app's auth proxy sends it
 from the httpOnly ``LH_imp`` cookie). Starting a session is a platform console
-action (``/api/v1/ee/superadmin/impersonations``); these two only describe and
+action (``/api/v1/ee/backoffice/impersonations``); these two only describe and
 end, switch (another member, a role, read-only, messaging) the one the caller
 is in, and list who it could switch to. They are the only ``/auth`` routes the
 impersonation gate lets through.

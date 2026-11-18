@@ -1,7 +1,7 @@
 """get_current_user publishes session provenance on every auth path.
 
 These call get_current_user directly (rather than relying on a whole request
-flow) so each provenance branch (JWT session, org API token, superadmin API
+flow) so each provenance branch (JWT session, org API token, backoffice API
 token) is covered deterministically, independent of suite ordering.
 """
 
@@ -68,15 +68,15 @@ class TestProvenancePublished:
         assert prov.amr == AUTH_METHOD_API_TOKEN
         assert prov.org_id == 77
 
-    async def test_superadmin_api_token_publishes_api_token_no_org(self, db):
-        sa_user = SimpleNamespace(id=0, is_superadmin=True)
+    async def test_backoffice_api_token_publishes_api_token_no_org(self, db):
+        sa_user = SimpleNamespace(id=0, is_backoffice_staff=True)
         req = _request(auth="Bearer lh_sa_faketoken")
 
-        # Superadmin tokens are an EE credential and are refused outright in
+        # Backoffice tokens are an EE credential and are refused outright in
         # 'oss', which the suite pins globally. Run this against EE.
         with patch(
             "src.core.deployment_mode.get_deployment_mode", return_value="ee"
-        ), patch("src.security.auth.validate_superadmin_api_token", return_value=sa_user):
+        ), patch("src.security.auth.validate_backoffice_api_token", return_value=sa_user):
             result = await get_current_user(req, db)
 
         assert result is sa_user

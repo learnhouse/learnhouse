@@ -31,7 +31,7 @@ from src.core.ee_hooks import audit_event
 from src.db.usergroup_extras import UserGroupEvent, UserGroupManager
 from src.db.usergroups import UserGroup
 from src.security.features_utils.plans import FEATURE_PLAN_REQUIREMENTS
-from src.db.users import AnonymousUser, APITokenUser, InternalUser, SuperadminAPITokenUser
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, BackofficeAPITokenUser
 
 ADVANCED_PLAN = FEATURE_PLAN_REQUIREMENTS["usergroups_advanced"]
 
@@ -91,7 +91,7 @@ def group_settings(group: UserGroup) -> dict[str, Any]:
     return out
 
 
-_NOT_PEOPLE = (APITokenUser, SuperadminAPITokenUser, InternalUser, AnonymousUser)
+_NOT_PEOPLE = (APITokenUser, BackofficeAPITokenUser, InternalUser, AnonymousUser)
 
 
 def person_id(user: Any) -> Optional[int]:
@@ -107,7 +107,7 @@ def person_id(user: Any) -> Optional[int]:
 
 def require_person(user: Any) -> int:
     """403 for API tokens, 401 for anonymous callers; else the person's id."""
-    if isinstance(user, (APITokenUser, SuperadminAPITokenUser, InternalUser)):
+    if isinstance(user, (APITokenUser, BackofficeAPITokenUser, InternalUser)):
         raise HTTPException(status_code=403, detail="This endpoint is for people, not API tokens")
     uid = person_id(user)
     if uid is None:

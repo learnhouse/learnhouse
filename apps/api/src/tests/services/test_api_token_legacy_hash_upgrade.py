@@ -10,10 +10,10 @@ import hashlib
 from datetime import datetime
 
 from src.db.api_tokens import APIToken
-from src.db.superadmin_api_tokens import SuperadminAPIToken
+from src.db.backoffice_api_tokens import BackofficeAPIToken
 from src.security.security import security_token_needs_rehash, security_verify_token
 from src.services.api_tokens.api_tokens import validate_api_token_for_auth
-from src.services.api_tokens.superadmin_api_tokens import validate_superadmin_token_for_auth
+from src.services.api_tokens.backoffice_api_tokens import validate_backoffice_token_for_auth
 
 
 def _legacy_hash(token: str) -> str:
@@ -49,10 +49,10 @@ class TestOrgTokenLegacyHashUpgrade:
         assert security_verify_token(token, record.token_hash)
 
 
-class TestSuperadminTokenLegacyHashUpgrade:
+class TestBackofficeTokenLegacyHashUpgrade:
     async def test_legacy_hash_authenticates_and_is_upgraded(self, db, admin_user):
         token = "lh_sa_legacytok0123456789"  # fake test token  gitleaks:allow
-        record = SuperadminAPIToken(
+        record = BackofficeAPIToken(
             token_uuid="satoken_legacy",
             name="Legacy SA",
             token_prefix=token[:15],
@@ -65,7 +65,7 @@ class TestSuperadminTokenLegacyHashUpgrade:
         db.add(record)
         await db.commit()
 
-        validated = await validate_superadmin_token_for_auth(token, db)
+        validated = await validate_backoffice_token_for_auth(token, db)
 
         assert validated is not None
         assert validated.token_uuid == "satoken_legacy"

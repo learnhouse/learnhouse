@@ -3,14 +3,14 @@
 // owner; staff already impersonating in another org switch to this one.
 
 export const ENTRY_EXEMPT =
-  /^\/(login|signup|reset|forgot|verify-email|auth|home|new|redirect_from_auth|embed|oauth|payments|admin)(\/|$)/
+  /^\/(login|signup|reset|forgot|verify-email|auth|home|new|redirect_from_auth|embed|oauth|payments|backoffice|admin)(\/|$)/
 
 export type EntryPlace = { slug: string | null; path: string; platform: boolean }
 
 export type EntrySession = {
   status?: string
   data?: {
-    user?: { is_superadmin?: boolean } | null
+    user?: { is_backoffice_staff?: boolean } | null
     roles?: unknown
     impersonation?: { scope?: string | null; org?: { slug?: string | null } | null } | null
   } | null
@@ -30,6 +30,6 @@ export function autoEntryMode(session: EntrySession | null | undefined, where: E
     return impersonatedSlug && impersonatedSlug !== where.slug ? 'switch' : null
   }
   const roles: any[] = Array.isArray(data?.roles) ? (data!.roles as any[]) : []
-  if (data?.user?.is_superadmin === true && !roles.some((r) => r?.org?.slug === where.slug)) return 'enter'
+  if (data?.user?.is_backoffice_staff === true && !roles.some((r) => r?.org?.slug === where.slug)) return 'enter'
   return null
 }

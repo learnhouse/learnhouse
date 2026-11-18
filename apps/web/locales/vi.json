@@ -17569,7 +17569,7 @@
       "ordered": "Xếp các khóa học theo thứ tự người học nên theo."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "Tổng quan",
@@ -17753,7 +17753,7 @@
       "password_placeholder": "Nhập mật khẩu của bạn",
       "signing_in": "Đang đăng nhập...",
       "sign_in": "Đăng nhập",
-      "superadmin_only": "Chỉ dành cho nhóm nền tảng LearnHouse"
+      "backoffice_only": "Chỉ dành cho nhóm nền tảng LearnHouse"
     },
     "pages": {
       "analytics": "Phân tích toàn cục",
@@ -17768,7 +17768,7 @@
       "ai_costs_desc": "Chi phí của các yêu cầu AI theo giá niêm yết của nhà cung cấp so với giá trị credit chúng tôi đã tính"
     },
     "menu": {
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "users": "Người dùng",
       "developers": "Nhà phát triển",
       "avatar": "Ảnh đại diện",
@@ -17883,7 +17883,7 @@
       "search_placeholder": "Tìm người dùng...",
       "users_count_other": "{{count}} người dùng",
       "role_label": "Vai trò:",
-      "superadmin": "Superadmin",
+      "backoffice": "Backoffice",
       "regular": "Thông thường",
       "min_orgs": "Số tổ chức tối thiểu:",
       "any": "Bất kỳ",
@@ -17915,9 +17915,9 @@
       },
       "tabs": {
         "tokens_label": "Token API",
-        "tokens_desc": "Tạo, liệt kê và thu hồi các token API superadmin liên tổ chức.",
+        "tokens_desc": "Tạo, liệt kê và thu hồi các token API Backoffice liên tổ chức.",
         "docs_label": "Tài liệu & Playground",
-        "docs_desc": "Duyệt API superadmin, sau đó gọi trực tiếp bằng token của bạn."
+        "docs_desc": "Duyệt API Backoffice, sau đó gọi trực tiếp bằng token của bạn."
       },
       "org_picker": {
         "none_yet": "Chưa có tổ chức nào",
@@ -17939,7 +17939,7 @@
       "endpoint": {
         "invalid_json": "JSON không hợp lệ",
         "network_error": "Lỗi mạng",
-        "session_only": "<strong>Chỉ xác thực bằng phiên.</strong> Token API không thể gọi điểm cuối này (chặn leo thang đặc quyền). Nút Gửi trực tiếp sẽ thất bại với lỗi 403 nếu bạn dùng token; hãy sao chép đoạn mã và chạy nó với tư cách superadmin đã đăng nhập.",
+        "session_only": "<strong>Chỉ xác thực bằng phiên.</strong> Token API không thể gọi điểm cuối này (chặn leo thang đặc quyền). Nút Gửi trực tiếp sẽ thất bại với lỗi 403 nếu bạn dùng token; hãy sao chép đoạn mã và chạy nó với tư cách người dùng Backoffice đã đăng nhập.",
         "parameters": "Tham số",
         "request_body": "Nội dung yêu cầu (JSON)",
         "reset_to_sample": "Đặt lại về mẫu",
@@ -17967,7 +17967,7 @@
       "description_placeholder": "Token này dùng để làm gì",
       "expiration": "Hết hạn",
       "never_expires": "Không bao giờ hết hạn",
-      "warning": "Một token superadmin có thể gọi <em>mọi</em> điểm cuối <code>/ee/superadmin/*</code>: tạo tổ chức, bật/tắt tính năng, cập nhật gói trên toàn nền tảng. Hãy coi nó như chìa khóa chủ.",
+      "warning": "Một token Backoffice có thể gọi <em>mọi</em> điểm cuối <code>/ee/backoffice/*</code>: tạo tổ chức, bật/tắt tính năng, cập nhật gói trên toàn nền tảng. Hãy coi nó như chìa khóa chủ.",
       "create_token": "Tạo token",
       "failed_revoke": "Không thể thu hồi ({{status}})",
       "revoke_title": "Thu hồi token?",
@@ -17984,7 +17984,7 @@
       "count_other": "{{count}} token",
       "loading": "Đang tải token…",
       "failed_load": "Không thể tải token.",
-      "empty_title": "Chưa có token API superadmin nào.",
+      "empty_title": "Chưa có token API Backoffice nào.",
       "empty_desc": "Hãy tạo một token để tự động hóa việc cấp phát tổ chức và bật/tắt tính năng.",
       "col_name": "Tên",
       "col_prefix": "Tiền tố",
@@ -18006,7 +18006,7 @@
       "scopes": "Phạm vi",
       "revoked": "Đã thu hồi token",
       "scope_desc": {
-        "api": "Gọi REST API siêu quản trị.",
+        "api": "Gọi REST API Backoffice.",
         "mcp": "Kết nối trợ lý AI với MCP nền tảng (công cụ đọc).",
         "mcp_write": "Đồng thời cho phép các thao tác ghi an toàn của MCP: ghi chú, thẻ, gia hạn POC, chủ tài khoản."
       },
@@ -18021,16 +18021,16 @@
     },
     "ee_required": {
       "title": "Cần giấy phép Enterprise Edition",
-      "description": "Bảng điều khiển superadmin là một phần của LearnHouse Enterprise Edition và không khả dụng trên bản triển khai này."
+      "description": "Bảng điều khiển Backoffice là một phần của LearnHouse Enterprise Edition và không khả dụng trên bản triển khai này."
     },
     "access_denied": {
       "title": "Truy cập bị từ chối",
-      "description": "Bạn cần quyền superadmin để truy cập trang này."
+      "description": "Bạn cần quyền Backoffice để truy cập trang này."
     },
     "shell": {
-      "platform": "Nền tảng",
-      "title": "Nền tảng LearnHouse",
-      "subtitle": "Bảng điều khiển siêu quản trị",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "Điều hướng bảng điều khiển",
       "open_menu": "Mở menu",
       "close_menu": "Đóng menu",
@@ -19151,7 +19151,7 @@
       "add_member": "Thêm thành viên",
       "read_only_hint": "Chỉ chủ sở hữu nền tảng mới có thể thêm, thay đổi hoặc xóa thành viên nhóm.",
       "empty_title": "Chưa có thành viên nhóm",
-      "empty_desc": "Siêu quản trị viên sẽ xuất hiện ở đây sau khi API nền tảng được cập nhật.",
+      "empty_desc": "Nhân viên Backoffice sẽ xuất hiện ở đây sau khi API nền tảng được cập nhật.",
       "col_member": "Thành viên",
       "col_role": "Vai trò",
       "col_granted_by": "Được cấp bởi",
@@ -19247,7 +19247,7 @@
       "enabled": "Đã bật",
       "disabled": "Đã tắt",
       "mcp": "MCP nền tảng",
-      "mcp_desc": "Endpoint MCP chủ yếu để đọc dành cho trợ lý AI, xác thực bằng token siêu quản trị.",
+      "mcp_desc": "Endpoint MCP chủ yếu để đọc dành cho trợ lý AI, xác thực bằng token Backoffice.",
       "status": "Trạng thái",
       "license": "Giấy phép",
       "license_desc": "Các trường giấy phép an toàn. Khóa và chữ ký không bao giờ được hiển thị.",
@@ -19268,7 +19268,7 @@
       "every_hours_other": "Mỗi {{count}} giờ"
     },
     "users": {
-      "superadmin_filter": "Lọc theo siêu quản trị",
+      "backoffice_filter": "Lọc theo Backoffice",
       "min_orgs": "Số tổ chức tối thiểu",
       "any_orgs": "Bất kỳ số tổ chức",
       "min_orgs_value_one": "{{count}}+ tổ chức",
@@ -19312,7 +19312,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "Kết nối trợ lý AI",
-      "desc": "MCP nền tảng cho phép Claude và các trợ lý khác đọc dữ liệu nền tảng bằng token siêu quản trị.",
+      "desc": "MCP nền tảng cho phép Claude và các trợ lý khác đọc dữ liệu nền tảng bằng token Backoffice.",
       "enabled": "Đã bật",
       "disabled": "Đã tắt trên máy chủ này",
       "step1_title": "Tạo token",
@@ -19781,7 +19781,7 @@
           "automation": "Các lượt chạy thất bại và quy tắc đã hành động",
           "team": "Thay đổi của nhóm nền tảng",
           "token": "Token API mới",
-          "security": "Đăng nhập superadmin thất bại, token bị thu hồi",
+          "security": "Đăng nhập Backoffice thất bại, token bị thu hồi",
           "follow": "Hoạt động của các tổ chức bạn theo dõi",
           "system": "Cảnh báo nền tảng và lỗi kênh"
         },
@@ -20643,7 +20643,7 @@
       },
       "history": {
         "title": "Thay đổi gần đây",
-        "desc": "Các thay đổi từ bảng điều khiển nền tảng, theo từng trường.",
+        "desc": "Các thay đổi từ Backoffice, theo từng trường.",
         "empty": "Chưa có thay đổi",
         "empty_desc": "Chỉnh sửa ở đây sẽ hiện kèm người thực hiện và nội dung thay đổi."
       }
@@ -29547,9 +29547,9 @@
     "refused_messaging": "Nhắn tin với tư cách thành viên này đang tắt. Hãy bật trong menu huy hiệu.",
     "refused_wrong_org": "Đóng vai chỉ hoạt động trong tổ chức này.",
     "refused_denied": "Không khả dụng khi đang đóng vai.",
-    "returned_ended": "Đã kết thúc đóng vai. Bạn đã quay lại bảng điều khiển.",
-    "returned_expired": "Đóng vai đã hết hạn. Bạn đã quay lại bảng điều khiển.",
-    "returned_revoked": "Đóng vai đã bị kết thúc. Bạn đã quay lại bảng điều khiển.",
+    "returned_ended": "Đã kết thúc đóng vai. Bạn đã quay lại Backoffice.",
+    "returned_expired": "Đóng vai đã hết hạn. Bạn đã quay lại Backoffice.",
+    "returned_revoked": "Đóng vai đã bị kết thúc. Bạn đã quay lại Backoffice.",
     "ended_notice_ended": "Phiên đã kết thúc.",
     "ended_notice_expired": "Phiên đã kết thúc: đã hết thời gian giới hạn.",
     "ended_notice_revoked": "Phiên đã kết thúc: phiên đã bị thu hồi.",
@@ -29561,7 +29561,7 @@
     "entry_failed": "Không thể bắt đầu đóng vai",
     "no_access_title": "Bạn không có quyền truy cập {{org}}",
     "no_access_desc": "Hãy xin quyền đóng vai từ quản trị viên LearnHouse.",
-    "back_to_console": "Quay lại bảng điều khiển",
+    "back_to_console": "Quay lại Backoffice",
     "retry": "Thử lại",
     "refused_private": "Tin nhắn riêng của học viên vẫn riêng tư, kể cả khi bạn xem với tư cách họ."
   },

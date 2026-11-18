@@ -8,7 +8,7 @@ F29: GET /playgrounds/{uuid}/usergroups returned another tenant's cohort
       EE: ee/tests/test_plays_core.py).
 F35: GET /search/org_slug/{slug} serialized user hits with ``UserRead``,
       handing every org member the full PII projection (email,
-      ``extra_metadata`` signup-field answers, ``is_superadmin``).
+      ``extra_metadata`` signup-field answers, ``is_backoffice_staff``).
 """
 
 import json
@@ -139,11 +139,11 @@ class TestInvitedUsersListAuthz:
 
         assert [item["email"] for item in invited] == ["a@test.com", "b@test.com"]
 
-    async def test_superadmin_still_gets_the_invite_list(
+    async def test_backoffice_still_gets_the_invite_list(
         self, mock_request, db, org, admin_user
     ):
-        # Superadmins carry no admin membership row for every tenant; they are
-        # allowed through by the is_user_superadmin bypass.
+        # Backoffice staff carry no admin membership row for every tenant; they are
+        # allowed through by the is_user_backoffice_staff bypass.
         outsider = await _outsider(db)
         fake_redis = _fake_redis(["c@test.com"])
 
@@ -155,7 +155,7 @@ class TestInvitedUsersListAuthz:
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
-            "src.security.superadmin.is_user_superadmin",
+            "src.security.backoffice.is_user_backoffice_staff",
             new_callable=AsyncMock,
             return_value=True,
         ):
@@ -170,7 +170,7 @@ class TestInvitedUsersListAuthz:
 # F35: org search user projection
 # ---------------------------------------------------------------------------
 
-PII_FIELDS = ("email", "extra_metadata", "is_superadmin", "signup_method")
+PII_FIELDS = ("email", "extra_metadata", "is_backoffice_staff", "signup_method")
 
 
 async def _make_target_user_pii(db):

@@ -393,7 +393,7 @@ class TestPodcastsService:
             is False
         )
 
-        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=AsyncMock(return_value=True)):
+        with patch("src.services.podcasts.podcasts.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
             assert (
                 await _user_can_view_unpublished_podcast(
                     mock_request, hidden_podcast, regular_user, db
@@ -401,7 +401,7 @@ class TestPodcastsService:
                 is True
             )
 
-        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.services.podcasts.podcasts.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             assert (
                 await _user_can_view_unpublished_podcast(
                     mock_request, author_podcast, regular_user, db
@@ -460,7 +460,7 @@ class TestPodcastsService:
             "src.services.podcasts.podcasts.check_resource_access",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.podcasts.podcasts.is_user_superadmin",
+            "src.services.podcasts.podcasts.is_user_backoffice_staff",
             new=AsyncMock(return_value=False),
         ):
             with pytest.raises(HTTPException) as hidden_exc:
@@ -546,8 +546,8 @@ class TestPodcastsService:
         admin_results = await get_podcasts_orgslug(
             mock_request, admin_user, org.slug, db, include_unpublished=True
         )
-        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=AsyncMock(return_value=True)):
-            superadmin_results = await get_podcasts_orgslug(
+        with patch("src.services.podcasts.podcasts.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
+            backoffice_results = await get_podcasts_orgslug(
                 mock_request, regular_user, org.slug, db, include_unpublished=True
             )
         anonymous_results = await get_podcasts_orgslug(
@@ -559,7 +559,7 @@ class TestPodcastsService:
         anon_uuids = {podcast.podcast_uuid for podcast in anonymous_results}
 
         # The usergroup podcast is unpublished, so its group's members don't
-        # see it; admins and superadmins do.
+        # see it; admins and backoffice staff do.
         assert regular_uuids == {
             public_podcast.podcast_uuid,
             published_private.podcast_uuid,
@@ -567,14 +567,14 @@ class TestPodcastsService:
         }
         everything = regular_uuids | {grouped_podcast.podcast_uuid}
         assert admin_uuids == everything
-        assert {podcast.podcast_uuid for podcast in superadmin_results} == everything
+        assert {podcast.podcast_uuid for podcast in backoffice_results} == everything
         assert anon_uuids == {public_podcast.podcast_uuid}
 
         assert await get_podcasts_count_orgslug(
             mock_request, anonymous_user, org.slug, db
         ) == 1
 
-        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=AsyncMock(return_value=True)):
+        with patch("src.services.podcasts.podcasts.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
             assert await get_podcasts_count_orgslug(
                 mock_request, regular_user, org.slug, db
             ) == 4
@@ -945,7 +945,7 @@ class TestEpisodesService:
             is False
         )
 
-        with patch("src.services.podcasts.episodes.is_user_superadmin", new=AsyncMock(return_value=True)):
+        with patch("src.services.podcasts.episodes.is_user_backoffice_staff", new=AsyncMock(return_value=True)):
             assert (
                 await _user_can_view_unpublished_episode(
                     mock_request, episode, podcast, regular_user, db
@@ -953,7 +953,7 @@ class TestEpisodesService:
                 is True
             )
 
-        with patch("src.services.podcasts.episodes.is_user_superadmin", new=AsyncMock(return_value=False)):
+        with patch("src.services.podcasts.episodes.is_user_backoffice_staff", new=AsyncMock(return_value=False)):
             assert (
                 await _user_can_view_unpublished_episode(
                     mock_request, episode, podcast, regular_user, db

@@ -76,8 +76,8 @@ async def test_org_deletion_survives_a_failed_confirmation_email(db, org, admin_
     send.assert_called_once_with(admin_user.email, "Test Org")
 
 
-async def test_superadmin_counts_as_org_admin(db):
-    with patch.object(orgs_service, "is_user_superadmin", new=AsyncMock(return_value=True)), \
+async def test_backoffice_counts_as_org_admin(db):
+    with patch.object(orgs_service, "is_user_backoffice_staff", new=AsyncMock(return_value=True)), \
          patch.object(orgs_service, "get_user_org", new=AsyncMock()) as lookup:
         assert await orgs_service.is_org_admin_role(5, 1, db) is True
     lookup.assert_not_awaited()

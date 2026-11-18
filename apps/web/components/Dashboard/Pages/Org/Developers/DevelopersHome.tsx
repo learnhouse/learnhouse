@@ -36,7 +36,7 @@ import { listCustomDomains, type CustomDomain } from '@services/custom_domains/c
 import { getMCPSettings, listMCPConnections, type MCPConnection } from '@services/mcp/mcp'
 import { getSSOConfig } from '@services/auth/sso'
 import type { WebhookEndpoint } from '@services/webhooks/webhooks'
-import { buildSnippets } from '@components/Admin/Developers/snippets'
+import { buildSnippets } from '@components/Dashboard/Pages/Org/Developers/snippets'
 import { CodeBlock, DOCS, MonoField, StatusCode, absoluteApiBase } from './devKit'
 
 type StepState = 'done' | 'pending' | 'todo' | 'locked' | 'loading'

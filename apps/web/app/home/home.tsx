@@ -324,7 +324,7 @@ function OrgRow({ org, access_token, info }: { org: any; access_token: string; i
   const queryClient = useQueryClient()
   const orgSession = useLHSession() as any
   const { track } = useLHAnalytics('hub')
-  // Only org managers (admins/superadmins) see the billing / Manage-Upgrade entry.
+  // Only org managers (admins/backoffice staff) see the billing / Manage-Upgrade entry.
   const canManageOrg = canManageOrgFromSession(orgSession, org?.id)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmText, setConfirmText] = useState('')

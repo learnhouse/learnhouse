@@ -31,7 +31,7 @@ class PodcastSEO(BaseModel):
 class AuthorWithRole(SQLModel):
     # SECURITY: authors are returned to every reader of the resource (anonymous
     # included on public ones), so only the author-chip projection goes out,
-    # never email/is_superadmin/signup_method/extra_metadata.
+    # never email/is_backoffice_staff/signup_method/extra_metadata.
     user: UserReadAuthor
     authorship: ResourceAuthorshipEnum
     authorship_status: ResourceAuthorshipStatusEnum

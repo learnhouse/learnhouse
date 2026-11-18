@@ -107,14 +107,14 @@ class TestAuthorsArePublicProfiles:
     def test_author_payload_has_no_email(self):
         user = UserRead(
             id=1, user_uuid="u", username="x", first_name="", last_name="",
-            email="secret@test.com", is_superadmin=True, signup_method="email",
+            email="secret@test.com", is_backoffice_staff=True, signup_method="email",
         )
         dumped = AuthorWithRole(
             user=user, authorship="CREATOR", authorship_status="ACTIVE",
             creation_date="", update_date="",
         ).model_dump()["user"]
         assert "email" not in dumped
-        assert "is_superadmin" not in dumped
+        assert "is_backoffice_staff" not in dumped
         assert "signup_method" not in dumped
 
 

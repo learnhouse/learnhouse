@@ -1,4 +1,4 @@
-"""Demo-visitor AI cap failing closed, and the superadmin "set credits" helper.
+"""Demo-visitor AI cap failing closed, and the backoffice staff member "set credits" helper.
 
 The demo cap's happy path and 429 are covered in test_hardening_round4.py.
 Here: when the counter store errors, the request is refused with 503 rather

@@ -10,7 +10,7 @@ import { PlanLevel, planMeetsRequirement } from '../../services/plans/plans'
 
 export type GateReason = 'plan' | 'disabled'
 
-/** Who turned an available feature off: the org itself, or the platform (superadmin). */
+/** Who turned an available feature off: the org itself, or the platform (backoffice). */
 export type DisabledBy = 'org' | 'platform'
 
 export interface ResolvedFeaturePayload {

@@ -11,7 +11,7 @@ from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
 from src.security.org_auth import require_org_create_permission, require_org_role_permission
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.db.communities.communities import (
     Community,
     CommunityCreate,
@@ -223,8 +223,8 @@ async def get_communities_by_org(
         communities = (await db_session.execute(query)).scalars().all()
         return [community_read(c) for c in communities]
 
-    # Superadmins bypass the admin check; they can see all communities
-    if await is_user_superadmin(acting_user_id, db_session):
+    # Backoffice staff bypass the admin check; they can see all communities
+    if await is_user_backoffice_staff(acting_user_id, db_session):
         query = select(Community).where(Community.org_id == org_id)
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
         communities = (await db_session.execute(query)).scalars().all()

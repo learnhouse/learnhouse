@@ -200,11 +200,11 @@ class TestOrgSessionPolicy:
             with pytest.raises(HTTPException):
                 await verify_org_admin(admin_user.id, org.id, db)
 
-    async def test_superadmin_is_not_blocked_by_policy(self, db, org):
+    async def test_backoffice_is_not_blocked_by_policy(self, db, org):
         from src.security.org_auth import verify_org_membership
 
         boss = await _outsider(db, 20, "boss")
-        with patch("src.security.org_auth.is_user_superadmin", new_callable=AsyncMock, return_value=True), \
+        with patch("src.security.org_auth.is_user_backoffice_staff", new_callable=AsyncMock, return_value=True), \
              patch("src.security.org_auth.enforce_org_mfa", new_callable=AsyncMock) as mfa:
             await verify_org_membership(boss.id, org.id, db)
         mfa.assert_not_awaited()
@@ -364,11 +364,11 @@ class TestOrgListEmail:
         assert (await get_orgs_by_user(mock_request, db, admin_user.id))[0].email == org.email
         assert (await get_orgs_by_user_admin(mock_request, db, admin_user.id))[0].email == org.email
 
-    async def test_superadmin_sees_org_email(self, db, org, regular_user, mock_request):
+    async def test_backoffice_sees_org_email(self, db, org, regular_user, mock_request):
         from src.services.orgs.orgs import get_orgs_by_user
 
         user = await db.get(User, regular_user.id)
-        user.is_superadmin = True
+        user.is_backoffice_staff = True
         db.add(user)
         await db.commit()
         assert (await get_orgs_by_user(mock_request, db, regular_user.id))[0].email == org.email

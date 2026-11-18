@@ -264,7 +264,7 @@ class TestFeatureResolve:
 
     def test_org_toggle_turns_off_a_paid_plan_feature(self):
         # The org's own choice applies even to a feature its paid plan includes;
-        # only the superadmin kill switch is held back by the paid guarantee.
+        # only the backoffice staff member kill switch is held back by the paid guarantee.
         config = {
             "config_version": "2.0",
             "plan": "pro",

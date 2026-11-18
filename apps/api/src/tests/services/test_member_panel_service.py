@@ -46,7 +46,7 @@ def _public(user) -> PublicUser:
     )
 
 
-async def _add_user(db, user_id, *, org_id=None, role_id=4, signup_method=None, superadmin=False):
+async def _add_user(db, user_id, *, org_id=None, role_id=4, signup_method=None, backoffice=False):
     user = User(
         id=user_id,
         username=f"u{user_id}",
@@ -56,7 +56,7 @@ async def _add_user(db, user_id, *, org_id=None, role_id=4, signup_method=None, 
         password="x",
         user_uuid=f"user_u{user_id}",
         signup_method=signup_method,
-        is_superadmin=superadmin,
+        is_backoffice_staff=backoffice,
         creation_date=NOW,
         update_date=NOW,
     )
@@ -141,7 +141,7 @@ async def test_summary_of_a_new_member_is_empty_and_quiet(db, org, admin_user, r
     summary = await get_member_summary(org.id, regular_user.id, admin_user, db)
 
     assert summary["user"]["username"] == "regular"
-    assert "is_superadmin" not in summary["user"]
+    assert "is_backoffice_staff" not in summary["user"]
     assert summary["role"]["name"] == "User"
     assert summary["usergroups"] == []
     assert summary["courses"] == [] and summary["certificates"] == [] and summary["recent"] == []
@@ -290,7 +290,7 @@ async def test_who_may_reset_two_factor(db, org, admin_user, regular_user):
     await db.commit()
     maintainer = await _add_user(db, 40, org_id=org.id, role_id=2)
     other_admin = await _add_user(db, 41, org_id=org.id, role_id=1)
-    superadmin = await _add_user(db, 42, superadmin=True)
+    backoffice = await _add_user(db, 42, backoffice=True)
     for uid in (regular_user.id, other_admin.id, admin_user.id):
         db.add(UserMFA(user_id=uid, confirmed_at=NOW, creation_date=NOW, update_date=NOW))
     await db.commit()
@@ -301,7 +301,7 @@ async def test_who_may_reset_two_factor(db, org, admin_user, regular_user):
     assert await can(admin_user, regular_user.id) is True
     assert await can(_public(maintainer), regular_user.id) is False  # Maintainers never
     assert await can(admin_user, other_admin.id) is False  # not another Admin
-    assert await can(_public(superadmin), other_admin.id) is True  # unless platform superadmin
+    assert await can(_public(backoffice), other_admin.id) is True  # unless platform backoffice staff member
     own = await get_member_summary(org.id, admin_user.id, admin_user, db)
     assert own["security"]["can_reset_mfa"] is False and own["security"]["is_self"] is True
 
@@ -363,8 +363,8 @@ def test_event_row_keeps_aware_timestamps():
     assert row["at"] == when.isoformat() and row["metadata"] == {}
 
 
-async def test_superadmin_reads_any_org(db, org, regular_user):
-    root = await _add_user(db, 50, superadmin=True)
+async def test_backoffice_reads_any_org(db, org, regular_user):
+    root = await _add_user(db, 50, backoffice=True)
     summary = await get_member_summary(org.id, regular_user.id, _public(root), db)
     assert summary["user"]["id"] == regular_user.id
     rows = (await db.execute(select(UserOrganization).where(UserOrganization.user_id == 50))).scalars().all()

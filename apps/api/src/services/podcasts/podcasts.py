@@ -35,7 +35,7 @@ from src.security.rbac import (
     AccessAction,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.services.podcasts.thumbnails import upload_podcast_thumbnail
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
@@ -76,8 +76,8 @@ async def _user_can_view_unpublished_podcast(
 
     acting_user_id = resolve_acting_user_id(current_user)
 
-    # Superadmins can always view unpublished podcasts
-    if await is_user_superadmin(acting_user_id, db_session):
+    # Backoffice staff can always view unpublished podcasts
+    if await is_user_backoffice_staff(acting_user_id, db_session):
         return True
 
     # Check if user is a resource author of this podcast
@@ -348,8 +348,8 @@ async def get_podcasts_orgslug(
         # podcasts.action_read already reads every podcast of the token's org.
         can_view_unpublished = include_unpublished
     elif include_unpublished and not isinstance(current_user, AnonymousUser):
-        # Superadmins can always view unpublished podcasts
-        if await is_user_superadmin(acting_user_id, db_session):
+        # Backoffice staff can always view unpublished podcasts
+        if await is_user_backoffice_staff(acting_user_id, db_session):
             can_view_unpublished = True
         else:
             role_statement = (
@@ -479,8 +479,8 @@ async def get_podcasts_count_orgslug(
             return 0
         _require_token_podcast_listing(current_user, org_id)
         query = query.where(Podcast.published == True)
-    elif await is_user_superadmin(count_acting_user_id, db_session):
-        # Superadmins see all podcasts (no additional filter)
+    elif await is_user_backoffice_staff(count_acting_user_id, db_session):
+        # Backoffice staff see all podcasts (no additional filter)
         pass
     else:
         query = query.where(Podcast.id.in_(accessible_podcast_ids_query(count_acting_user_id)))

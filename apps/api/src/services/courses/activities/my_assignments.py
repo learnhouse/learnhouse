@@ -169,7 +169,7 @@ async def get_my_assignments(
             Course.published == True,  # noqa: E712
             Activity.published == True,  # noqa: E712
             enrolled,
-            accessible_courses_filter(user_id, is_anonymous=False, is_api_token=False, is_superadmin=False),
+            accessible_courses_filter(user_id, is_anonymous=False, is_api_token=False, is_backoffice_staff=False),
             or_(Chapter.lock_type != LockType.RESTRICTED, in_users_group(Chapter.chapter_uuid), course_group),
             or_(Activity.lock_type != ActivityLockType.RESTRICTED, in_users_group(Activity.activity_uuid), course_group),
         )

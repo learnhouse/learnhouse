@@ -1,9 +1,9 @@
 import json
 from typing import Literal, Optional, TYPE_CHECKING
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, computed_field, field_validator
 from sqlmodel import Field, SQLModel
-from sqlalchemy import JSON, Column, Index
+from sqlalchemy import JSON, Boolean, Column, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from src.db.roles import RoleRead
 
@@ -97,9 +97,16 @@ class UserRead(UserBase):
     email_verified: bool = False
     last_login_at: Optional[str] = None
     signup_method: Optional[str] = None
-    is_superadmin: bool = False
+    is_backoffice_staff: bool = False
     # The signed-in user's own interface choices (theme…), see UserPreferences.
     ui_preferences: Optional[dict] = None
+
+    # Deprecated: the pre-Backoffice name of ``is_backoffice_staff``. Shipped
+    # mobile and desktop builds still read it; drop it once they no longer do.
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def is_superadmin(self) -> bool:
+        return self.is_backoffice_staff
 
 
 UiTheme = Literal["light", "dark"]
@@ -129,7 +136,7 @@ class UserReadPublic(SQLModel):
     look up *another* user (by id/uuid/username, or via usergroup member lists).
     It must therefore NOT inherit from ``UserBase``, because ``UserBase`` (and
     ``UserRead``) expose PII / internal fields (``email``, ``signup_method``,
-    ``is_superadmin``, ``extra_metadata``) that would leak to anyone who can
+    ``is_backoffice_staff``, ``extra_metadata``) that would leak to anyone who can
     enumerate user ids. ``details`` and ``profile`` ARE included: they are the
     user's own public profile content (bio extension, links, etc.) that the
     public profile page renders, so they are intentionally exposed.
@@ -151,7 +158,7 @@ class UserReadAuthor(SQLModel):
 
     SECURITY: comment/discussion authors are returned to *every* reader of a
     thread (often anonymous). It must therefore expose ONLY the fields needed to
-    render an author chip, never ``email``, ``is_superadmin``, ``signup_method``
+    render an author chip, never ``email``, ``is_backoffice_staff``, ``signup_method``
     or the raw ``details``/``profile``/``extra_metadata`` blobs that ``UserRead``
     carries. The frontend reads only id/user_uuid/username/name/avatar.
     """
@@ -168,8 +175,8 @@ class OrgMemberUserRead(SQLModel):
 
     SECURITY: ``User`` is a global account shared across every org it joins.
     ``extra_metadata`` collects signup-field answers from *all* of those orgs,
-    and ``is_superadmin`` is platform-level. An org admin must see neither, so
-    this view drops ``is_superadmin`` and the caller filters ``extra_metadata``
+    and ``is_backoffice_staff`` is platform-level. An org admin must see neither, so
+    this view drops ``is_backoffice_staff`` and the caller filters ``extra_metadata``
     down to the keys of the viewing org's own declared signup fields (see
     ``for_org``). ``signup_method``/``last_login_at`` stay: the members table
     renders them.
@@ -241,19 +248,19 @@ class APITokenUser(SQLModel):
     created_by_user_id: int = 0  # User who created the token
 
 
-class SuperadminAPITokenUser(SQLModel):
-    """Represents an authenticated cross-org superadmin API token request.
+class BackofficeAPITokenUser(SQLModel):
+    """Represents an authenticated cross-org backoffice API token request.
 
     Deliberately NOT a subclass of APITokenUser, so existing
     ``isinstance(user, APITokenUser)`` org-scope checks continue to reject
-    org tokens unchanged, while superadmin tokens are handled via their own
-    type and the ``require_superadmin`` dependency.
+    org tokens unchanged, while backoffice tokens are handled via their own
+    type and the ``require_backoffice`` dependency.
     """
-    id: int = 0  # superadmin_apitoken.id (NOT a user id)
+    id: int = 0  # BackofficeAPIToken.id (NOT a user id)
     user_uuid: str = "satoken_user"  # set to token_uuid
-    username: str = "superadmin_api_token"
+    username: str = "backoffice_api_token"
     token_name: str = ""
-    created_by_user_id: int = 0  # the superadmin user who minted it
+    created_by_user_id: int = 0  # the backoffice user who minted it
 
 
 class User(UserBase, table=True):
@@ -271,7 +278,13 @@ class User(UserBase, table=True):
     last_login_at: Optional[str] = None
     last_login_ip: Optional[str] = None
     signup_method: Optional[str] = None
-    is_superadmin: bool = Field(default=False)
+    # The column keeps its pre-Backoffice name for zero-downtime deploys: pods
+    # still on the previous release read user.is_superadmin on every auth check
+    # during a rolling update. A later expand/contract migration renames it.
+    is_backoffice_staff: bool = Field(
+        default=False,
+        sa_column=Column("is_superadmin", Boolean, nullable=False, default=False),
+    )
     password_changed_at: Optional[datetime] = Field(default=None)
     # Interface preferences (UserPreferences); kept out of UserBase so the
     # profile update endpoint can't write it.

@@ -255,7 +255,7 @@ class FeaturePrice:
     ``credits`` is the published price per ``unit``. A ``metered`` feature charges
     ``max(credits x units, actual cost at the floor)``: ``credits`` is its minimum,
     and the estimate shown before it runs. ``p90_cost_usd`` is the recorded p90
-    provider cost per unit (see the usage fixtures), kept here for the superadmin
+    provider cost per unit (see the usage fixtures), kept here for the backoffice
     view and the margin tests.
     """
 
@@ -394,7 +394,7 @@ def public_price_table() -> list[dict[str, Any]]:
 
 
 def pricing_summary() -> dict[str, Any]:
-    """Everything the superadmin view shows about pricing."""
+    """Everything the backoffice view shows about pricing."""
     rows = []
     for fp in FEATURES.values():
         value = fp.credits * CREDIT_VALUE_USD

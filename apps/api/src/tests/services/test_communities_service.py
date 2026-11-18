@@ -215,7 +215,7 @@ class TestCommunitiesService:
         await db.commit()
 
         with patch(
-            "src.services.communities.communities.is_user_superadmin",
+            "src.services.communities.communities.is_user_backoffice_staff",
             return_value=False,
         ), patch(
             "src.services.communities.communities.authorization_verify_based_on_roles",
@@ -237,7 +237,7 @@ class TestCommunitiesService:
             )
 
         with patch(
-            "src.services.communities.communities.is_user_superadmin",
+            "src.services.communities.communities.is_user_backoffice_staff",
             return_value=True,
         ):
             admin_result = await get_communities_by_org(
@@ -545,11 +545,11 @@ class TestCommunitiesService:
     async def test_get_communities_by_org_missing_org_raises_404(
         self, db, org, admin_user, mock_request
     ):
-        """Covers communities service line 154: a non-superadmin listing
+        """Covers communities service line 154: a non-backoffice staff member listing
         communities for an org_id that resolves to no Organization gets a 404
         rather than silently dropping into the restricted member view."""
         with patch(
-            "src.services.communities.communities.is_user_superadmin",
+            "src.services.communities.communities.is_user_backoffice_staff",
             return_value=False,
         ):
             with pytest.raises(HTTPException) as exc:

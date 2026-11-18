@@ -36,7 +36,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.users import (
     APITokenUser,
     OrgMemberUserRead,
-    SuperadminAPITokenUser,
+    BackofficeAPITokenUser,
     User,
     UserRead,
 )
@@ -97,11 +97,11 @@ def _require_token_right(token_user, resource: str, action: str) -> None:
     Passing the org boundary only says which org a token may touch; what it
     may do there is its ``rights`` (``{"users": {"action_read": true, ...}}``,
     stored as a dict or a ``Rights`` model). A missing bucket or flag denies.
-    Superadmin tokens are not org-scoped rights holders and keep full access.
+    Backoffice tokens are not org-scoped rights holders and keep full access.
     """
     if action not in _TOKEN_ACTIONS:
         raise ValueError(f"Unknown token action: {action}")
-    if isinstance(token_user, SuperadminAPITokenUser):
+    if isinstance(token_user, BackofficeAPITokenUser):
         return
     rights = getattr(token_user, "rights", None) or {}
     bucket = rights.get(resource) if isinstance(rights, dict) else getattr(rights, resource, None)
@@ -227,14 +227,14 @@ async def _check_token_can_impersonate(
 
     Same reasoning as :func:`_check_token_can_assign_role`: elevated authority
     only comes from an interactive admin flow, so a leaked token cannot borrow
-    an org Admin/Maintainer's (or a platform superadmin's) session and inherit
+    an org Admin/Maintainer's (or a platform backoffice staff member's) session and inherit
     every check that trusts it.
     """
     org_id = token_user.org_id
-    if user.is_superadmin:
+    if user.is_backoffice_staff:
         raise HTTPException(
             status_code=403,
-            detail="API tokens cannot issue tokens for superadmin accounts",
+            detail="API tokens cannot issue tokens for backoffice accounts",
         )
 
     membership = (await db_session.execute(
@@ -308,10 +308,10 @@ async def _check_token_can_edit_account(
     The ``User`` row is shared by every org it belongs to, so a token may only
     rewrite it when the account is an ordinary member of the token's org alone.
     """
-    if user.is_superadmin:
+    if user.is_backoffice_staff:
         raise HTTPException(
             status_code=403,
-            detail="API tokens cannot modify superadmin accounts",
+            detail="API tokens cannot modify backoffice accounts",
         )
     await _check_token_can_manage_membership(user.id, org_id, db_session)
     await _check_not_member_elsewhere(
@@ -1665,7 +1665,7 @@ async def issue_magic_link(
     # link mints a full session for the target, so leaving it off made the
     # magic-link route a way around the impersonation rules rather than a
     # variation on them. A token that may not mint a session for an Admin,
-    # Maintainer or superadmin directly must not be able to mail itself one.
+    # Maintainer or backoffice directly must not be able to mail itself one.
     await _check_token_can_impersonate(user, token_user, db_session)
 
     safe_redirect = _validate_magic_link_redirect(redirect_to)
@@ -2022,7 +2022,7 @@ async def list_course_enrollments(
         .limit(limit)
     )).all()
 
-    # SECURITY: org-scoped member view (no is_superadmin, extra_metadata cut
+    # SECURITY: org-scoped member view (no is_backoffice_staff, extra_metadata cut
     # down to this org's signup fields), not the global UserRead.
     meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
     return [

@@ -203,9 +203,9 @@ async def is_org_mfa_blocking(db_session: AsyncSession, user_id: int, org_id: in
 
     result: Optional[MFAComplianceState] = None
     try:
-        # Superadmins operate across tenants and frequently have no membership
+        # Backoffice staff operate across tenants and frequently have no membership
         # row in the org at all; a per-org policy must not strand them.
-        from src.security.superadmin import is_user_superadmin
+        from src.security.backoffice import is_user_backoffice_staff
 
         # Most orgs don't require 2FA. The policy read is shared with the
         # auth-method gate, so checking it first skips the user lookup for them.
@@ -217,7 +217,7 @@ async def is_org_mfa_blocking(db_session: AsyncSession, user_id: int, org_id: in
         # sign-in is), so the org's 2FA requirement can't apply to it.
         supported = impersonation is not None and impersonation.target_user_id == user_id
         policy = await get_org_mfa_policy(db_session, org_id)
-        if policy.require_2fa and not supported and not await is_user_superadmin(user_id, db_session):
+        if policy.require_2fa and not supported and not await is_user_backoffice_staff(user_id, db_session):
             user = (
                 await db_session.execute(select(User).where(User.id == user_id))
             ).scalars().first()

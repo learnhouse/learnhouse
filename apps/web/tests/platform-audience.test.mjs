@@ -33,8 +33,8 @@ describe("managesAnyOrgFromSession", () => {
     expect(managesAnyOrgFromSession(session([role(1, false), role(9, true, { is_demo: true })]))).toBe(false);
   });
 
-  test("a superadmin does", () => {
-    expect(managesAnyOrgFromSession(session([], { is_superadmin: true }))).toBe(true);
+  test("a backoffice staff member does", () => {
+    expect(managesAnyOrgFromSession(session([], { is_backoffice_staff: true }))).toBe(true);
   });
 
   test("no session, no roles", () => {
@@ -63,8 +63,8 @@ describe("seesPlatformHubFromSession", () => {
 });
 
 describe("hasManagingRoleFromSession", () => {
-  test("only an org-managing role in that org counts, not superadmin", () => {
-    const s = session([role(1, false), role(2, true)], { is_superadmin: true });
+  test("only an org-managing role in that org counts, not backoffice", () => {
+    const s = session([role(1, false), role(2, true)], { is_backoffice_staff: true });
     expect(hasManagingRoleFromSession(s, 1)).toBe(false);
     expect(hasManagingRoleFromSession(s, 2)).toBe(true);
     expect(hasManagingRoleFromSession(s, 3)).toBe(false);

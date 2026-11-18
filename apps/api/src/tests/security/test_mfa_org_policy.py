@@ -391,12 +391,12 @@ class TestEnforcement:
         )
         await require_org_membership(regular_user.id, org.id, db)
 
-    async def test_superadmin_is_never_blocked(self, db, org, regular_user):
+    async def test_backoffice_is_never_blocked(self, db, org, regular_user):
         from src.security.org_auth import require_org_membership
 
         await self._make_blocking(db, org.id, regular_user.id)
         user = await _get_user(db, regular_user.id)
-        user.is_superadmin = True
+        user.is_backoffice_staff = True
         db.add(user)
         await db.commit()
 

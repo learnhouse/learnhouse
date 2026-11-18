@@ -18867,7 +18867,7 @@
       "ordered": "رتّب الدورات بالترتيب الذي ينبغي للمتعلمين اتباعه."
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "نظرة عامة",
@@ -19071,7 +19071,7 @@
       "password_placeholder": "أدخل كلمة المرور",
       "signing_in": "جارٍ تسجيل الدخول...",
       "sign_in": "تسجيل الدخول",
-      "superadmin_only": "لفريق منصة LearnHouse فقط"
+      "backoffice_only": "لفريق منصة LearnHouse فقط"
     },
     "pages": {
       "analytics": "التحليلات العامة",
@@ -19086,7 +19086,7 @@
       "ai_costs_desc": "ما تكلّفنا طلبات الذكاء الاصطناعي بسعر المزوّد المعلن مقابل قيمة الأرصدة التي احتسبناها"
     },
     "menu": {
-      "superadmin": "المشرف العام",
+      "backoffice": "Backoffice",
       "users": "المستخدمون",
       "developers": "المطورون",
       "avatar": "الصورة الرمزية",
@@ -19223,7 +19223,7 @@
       "users_count_many": "{{count}} مستخدمًا",
       "users_count_other": "{{count}} مستخدم",
       "role_label": "الدور:",
-      "superadmin": "مشرف عام",
+      "backoffice": "Backoffice",
       "regular": "عادي",
       "min_orgs": "الحد الأدنى للمنظمات:",
       "any": "أي",
@@ -19253,9 +19253,9 @@
       },
       "tabs": {
         "tokens_label": "رموز API",
-        "tokens_desc": "أنشئ رموز API للمشرف العام العابرة للمنظمات واعرضها وألغِها.",
+        "tokens_desc": "أنشئ رموز API لـ Backoffice العابرة للمنظمات واعرضها وألغِها.",
         "docs_label": "الوثائق وساحة التجربة",
-        "docs_desc": "تصفّح API المشرف العام، ثم استدعِه مباشرة برمزك."
+        "docs_desc": "تصفّح API Backoffice، ثم استدعِه مباشرة برمزك."
       },
       "org_picker": {
         "none_yet": "لا توجد منظمات بعد",
@@ -19277,7 +19277,7 @@
       "endpoint": {
         "invalid_json": "JSON غير صالح",
         "network_error": "خطأ في الشبكة",
-        "session_only": "<strong>مصادقة الجلسة فقط.</strong> لا يمكن لرموز API استدعاء نقطة النهاية هذه (حظر لمنع تصعيد الصلاحيات). سيفشل زر الإرسال المباشر بالخطأ 403 إذا استخدمت رمزًا؛ انسخ المقطع وشغّله بصفتك مشرفًا عامًا مسجّل الدخول.",
+        "session_only": "<strong>مصادقة الجلسة فقط.</strong> لا يمكن لرموز API استدعاء نقطة النهاية هذه (حظر لمنع تصعيد الصلاحيات). سيفشل زر الإرسال المباشر بالخطأ 403 إذا استخدمت رمزًا؛ انسخ المقطع وشغّله بصفتك مستخدم Backoffice مسجّل الدخول.",
         "parameters": "المعلمات",
         "request_body": "نص الطلب (JSON)",
         "reset_to_sample": "إعادة التعيين إلى النموذج",
@@ -19305,7 +19305,7 @@
       "description_placeholder": "الغرض من هذا الرمز",
       "expiration": "انتهاء الصلاحية",
       "never_expires": "لا تنتهي صلاحيته أبدًا",
-      "warning": "يمكن لرمز المشرف العام استدعاء <em>كل</em> نقطة نهاية <code>/ee/superadmin/*</code>: إنشاء المنظمات، وتبديل الميزات، وتحديث الباقات عبر المنصة. تعامل معه كمفتاح رئيسي.",
+      "warning": "يمكن لرمز Backoffice استدعاء <em>كل</em> نقطة نهاية <code>/ee/backoffice/*</code>: إنشاء المنظمات، وتبديل الميزات، وتحديث الباقات عبر المنصة. تعامل معه كمفتاح رئيسي.",
       "create_token": "إنشاء رمز",
       "failed_revoke": "تعذّر الإلغاء ({{status}})",
       "revoke_title": "إلغاء الرمز؟",
@@ -19327,7 +19327,7 @@
       "count_other": "{{count}} رمز",
       "loading": "جارٍ تحميل الرموز…",
       "failed_load": "تعذّر تحميل الرموز.",
-      "empty_title": "لا توجد رموز API للمشرف العام بعد.",
+      "empty_title": "لا توجد رموز API لـ Backoffice بعد.",
       "empty_desc": "أنشئ واحدًا لأتمتة تهيئة المنظمات وتبديل الميزات.",
       "col_name": "الاسم",
       "col_prefix": "البادئة",
@@ -19348,7 +19348,7 @@
       "scopes": "النطاقات",
       "revoked": "تم إبطال الرمز",
       "scope_desc": {
-        "api": "استدعاء واجهة REST API للمشرف العام.",
+        "api": "استدعاء واجهة REST API لـ Backoffice.",
         "mcp": "ربط مساعد ذكاء اصطناعي بـ platform MCP (أدوات القراءة).",
         "mcp_write": "السماح أيضًا بعمليات الكتابة الآمنة في MCP: الملاحظات والوسوم وتمديدات POC ومالك الحساب."
       },
@@ -19367,16 +19367,16 @@
     },
     "ee_required": {
       "title": "الإصدار المؤسسي يتطلب ترخيصًا",
-      "description": "لوحة تحكم المشرف العام جزء من LearnHouse Enterprise Edition وغير متاحة في هذا النشر."
+      "description": "لوحة تحكم Backoffice جزء من LearnHouse Enterprise Edition وغير متاحة في هذا النشر."
     },
     "access_denied": {
       "title": "تم رفض الوصول",
-      "description": "تحتاج إلى صلاحيات المشرف العام للوصول إلى هذه الصفحة."
+      "description": "تحتاج إلى صلاحيات Backoffice للوصول إلى هذه الصفحة."
     },
     "shell": {
-      "platform": "المنصة",
-      "title": "LearnHouse Platform",
-      "subtitle": "وحدة تحكم المشرف العام",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "التنقل في وحدة التحكم",
       "open_menu": "فتح القائمة",
       "close_menu": "إغلاق القائمة",
@@ -20625,7 +20625,7 @@
       "add_member": "إضافة عضو",
       "read_only_hint": "يمكن لمالكي المنصة فقط إضافة أعضاء الفريق أو تغييرهم أو إزالتهم.",
       "empty_title": "لا يوجد أعضاء في الفريق بعد",
-      "empty_desc": "يظهر المشرفون العامون هنا بعد تحديث واجهة API للمنصة.",
+      "empty_desc": "يظهر فريق Backoffice هنا بعد تحديث واجهة API للمنصة.",
       "col_member": "العضو",
       "col_role": "الدور",
       "col_granted_by": "منحه",
@@ -20721,7 +20721,7 @@
       "enabled": "مفعّل",
       "disabled": "معطّل",
       "mcp": "Platform MCP",
-      "mcp_desc": "نقطة نهاية MCP للقراءة غالبًا لمساعدي الذكاء الاصطناعي، تُصادَق برموز المشرف العام.",
+      "mcp_desc": "نقطة نهاية MCP للقراءة غالبًا لمساعدي الذكاء الاصطناعي، تُصادَق برموز Backoffice.",
       "status": "الحالة",
       "license": "الترخيص",
       "license_desc": "حقول ترخيص آمنة. لا تُعرض المفاتيح والتواقيع أبدًا.",
@@ -20754,7 +20754,7 @@
       "every_hours_other": "كل {{count}} ساعة"
     },
     "users": {
-      "superadmin_filter": "التصفية حسب المشرف العام",
+      "backoffice_filter": "التصفية حسب Backoffice",
       "min_orgs": "الحد الأدنى للمنظمات",
       "any_orgs": "أي عدد",
       "min_orgs_value_zero": "{{count}}+ منظمة",
@@ -22289,7 +22289,7 @@
       },
       "history": {
         "title": "أحدث التغييرات",
-        "desc": "التغييرات التي تمت من لوحة المنصة، حقلًا بحقل.",
+        "desc": "التغييرات التي تمت من Backoffice، حقلًا بحقل.",
         "empty": "لا توجد تغييرات بعد",
         "empty_desc": "تظهر التعديلات التي تتم هنا مع من أجراها وما الذي تغيّر."
       }
@@ -32107,9 +32107,9 @@
     "refused_messaging": "المراسلة باسم هذا العضو متوقفة. فعّلها من قائمة الشارة.",
     "refused_wrong_org": "يعمل انتحال الهوية داخل هذه المنظمة فقط.",
     "refused_denied": "غير متاح أثناء انتحال الهوية.",
-    "returned_ended": "انتهى انتحال الهوية. عدت إلى وحدة التحكم.",
-    "returned_expired": "انتهت مدة انتحال الهوية. عدت إلى وحدة التحكم.",
-    "returned_revoked": "أُنهي انتحال الهوية. عدت إلى وحدة التحكم.",
+    "returned_ended": "انتهى انتحال الهوية. عدت إلى Backoffice.",
+    "returned_expired": "انتهت مدة انتحال الهوية. عدت إلى Backoffice.",
+    "returned_revoked": "أُنهي انتحال الهوية. عدت إلى Backoffice.",
     "ended_notice_ended": "انتهت الجلسة.",
     "ended_notice_expired": "انتهت الجلسة: تم بلوغ الحد الزمني.",
     "ended_notice_revoked": "انتهت الجلسة: تم إلغاؤها.",
@@ -32121,7 +32121,7 @@
     "entry_failed": "تعذّر بدء انتحال الهوية",
     "no_access_title": "ليس لديك وصول إلى {{org}}",
     "no_access_desc": "اطلب من أحد مشرفي LearnHouse الوصول إلى انتحال الهوية.",
-    "back_to_console": "العودة إلى وحدة التحكم",
+    "back_to_console": "العودة إلى Backoffice",
     "retry": "حاول مرة أخرى",
     "refused_private": "تبقى الرسائل الخاصة للمتعلّم خاصة، حتى عند العرض بصفته."
   },

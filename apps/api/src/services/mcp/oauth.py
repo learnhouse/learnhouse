@@ -618,7 +618,7 @@ async def decide_authorization(
             },
         )
 
-    # A real membership row: platform superadmins pass every org check, but an
+    # A real membership row: platform backoffice staff pass every org check, but an
     # app must only ever act where the member actually belongs.
     if org_id is None or not await _has_membership(user.id, org_id, db_session):
         raise OAuthError("access_denied", "Pick an organization you are a member of", 403)
@@ -984,10 +984,10 @@ async def verify_access_token(
         )
         await db_session.commit()
 
-    # Never a superadmin through an app: the connection is bound to the org
+    # Never a backoffice staff member through an app: the connection is bound to the org
     # the member picked, and platform-wide power must not reach a third party.
     data = user.model_dump()
-    data["is_superadmin"] = False
+    data["is_backoffice_staff"] = False
     return OAuthPrincipal(
         user=PublicUser(**data),
         org_id=grant.org_id,

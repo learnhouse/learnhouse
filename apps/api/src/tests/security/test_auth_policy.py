@@ -218,8 +218,8 @@ class TestSharingGate:
 
 
 @pytest.mark.asyncio
-class TestSuperadminAndResilience:
-    async def test_superadmin_is_never_blocked(self, db, org, regular_user):
+class TestBackofficeAndResilience:
+    async def test_backoffice_is_never_blocked(self, db, org, regular_user):
         await _set_auth_policy(
             db, org.id,
             allowed_auth_methods=["sso"],
@@ -228,7 +228,7 @@ class TestSuperadminAndResilience:
         user = (
             await db.execute(select(User).where(User.id == regular_user.id))
         ).scalars().first()
-        user.is_superadmin = True
+        user.is_backoffice_staff = True
         db.add(user)
         await db.commit()
 

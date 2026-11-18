@@ -215,7 +215,7 @@ if learnhouse_config.mcp_config.enabled:
     app.add_route("/mcp", _mcp_app, methods=["GET", "POST", "DELETE", "OPTIONS"])
     app.add_route("/mcp/", _mcp_app, methods=["GET", "POST", "DELETE", "OPTIONS"])
     app.include_router(mcp_oauth_public_router)
-    # The platform (superadmin) MCP server at /mcp/platform, EE only.
+    # The platform (backoffice) MCP server at /mcp/platform, EE only.
     from src.core.ee_hooks import register_ee_platform_mcp
 
     register_ee_platform_mcp(app)

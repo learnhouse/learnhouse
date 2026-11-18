@@ -1,6 +1,6 @@
 """
 RBAC hardening: draft visibility, token create rights, contributor CREATOR
-assignment, role rights validation, superadmin token re-check, session org
+assignment, role rights validation, backoffice token re-check, session org
 email, MFA exemption by sign-in method and stale custom-domain claims.
 """
 
@@ -25,7 +25,7 @@ from src.db.resource_authors import (
 from src.db.roles import Role, RoleCreate, RoleTypeEnum, RoleUpdate
 from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, PublicUser, User
-from src.security.auth import validate_superadmin_api_token
+from src.security.auth import validate_backoffice_api_token
 from src.security.rbac import AccessAction, check_resource_access
 from src.security.session_context import SessionProvenance
 from src.services.courses.contributors import update_course_contributor
@@ -251,9 +251,9 @@ class TestContributorCreatorAssignment:
         assert row.authorship == ResourceAuthorshipEnum.CREATOR
 
     @pytest.mark.asyncio
-    async def test_superadmin_can_assign_creator(self, db, org, course, user_role):
+    async def test_backoffice_can_assign_creator(self, db, org, course, user_role):
         _, target = await self._setup(db, org, course, user_role)
-        root = await _make_user(db, uid=32, username="root", is_superadmin=True)
+        root = await _make_user(db, uid=32, username="root", is_backoffice_staff=True)
         await self._set(db, course, root, target.id, ResourceAuthorshipEnum.CREATOR)
 
 
@@ -355,30 +355,30 @@ class TestRoleRightsValidation:
 
 
 # ---------------------------------------------------------------------------
-# Superadmin tokens die with their minter's superadmin flag
+# Backoffice tokens die with their minter's backoffice flag
 # ---------------------------------------------------------------------------
 
 
-class TestSuperadminTokenRecheck:
+class TestBackofficeTokenRecheck:
     def _token_row(self, created_by):
         return SimpleNamespace(id=9, token_uuid="satoken_x", name="ops", created_by_user_id=created_by)
 
     async def _validate(self, db, row):
         with patch(
-            "src.services.api_tokens.superadmin_api_tokens.validate_superadmin_token_for_auth",
+            "src.services.api_tokens.backoffice_api_tokens.validate_backoffice_token_for_auth",
             AsyncMock(return_value=row),
         ):
-            return await validate_superadmin_api_token("lh_sa_whatever", db)
+            return await validate_backoffice_api_token("lh_sa_whatever", db)
 
     @pytest.mark.asyncio
-    async def test_token_of_current_superadmin_is_accepted(self, db):
-        await _make_user(db, uid=50, username="sa", is_superadmin=True)
+    async def test_token_of_current_backoffice_is_accepted(self, db):
+        await _make_user(db, uid=50, username="sa", is_backoffice_staff=True)
         principal = await self._validate(db, self._token_row(50))
         assert principal is not None and principal.created_by_user_id == 50
 
     @pytest.mark.asyncio
     async def test_token_of_demoted_or_missing_minter_is_refused(self, db):
-        await _make_user(db, uid=51, username="demoted", is_superadmin=False)
+        await _make_user(db, uid=51, username="demoted", is_backoffice_staff=False)
         assert await self._validate(db, self._token_row(51)) is None
         assert await self._validate(db, self._token_row(999)) is None
         assert await self._validate(db, self._token_row(0)) is None
@@ -405,9 +405,9 @@ class TestSessionOrgEmail:
         assert session.roles[0].org.email == org.email
 
     @pytest.mark.asyncio
-    async def test_superadmin_member_gets_org_email(self, db, org, user_role):
+    async def test_backoffice_member_gets_org_email(self, db, org, user_role):
         sa = await _make_user(
-            db, uid=52, username="samember", org_id=org.id, role_id=user_role.id, is_superadmin=True
+            db, uid=52, username="samember", org_id=org.id, role_id=user_role.id, is_backoffice_staff=True
         )
         session = await get_user_session(_request(), db, sa)
         assert session.roles[0].org.email == org.email

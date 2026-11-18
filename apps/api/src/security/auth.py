@@ -4,7 +4,7 @@ from typing import Optional, Union
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
-from src.db.users import AnonymousUser, APITokenUser, PublicUser, SuperadminAPITokenUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, PublicUser, BackofficeAPITokenUser, User, UserRead
 from src.services.users.users import security_get_user
 from config.config import get_learnhouse_config
 from pydantic import BaseModel
@@ -80,7 +80,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def resolve_acting_user_id(
-    current_user: Union[PublicUser, AnonymousUser, APITokenUser, SuperadminAPITokenUser],
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser, BackofficeAPITokenUser],
 ) -> int:
     """Return the real user id behind an authenticated principal.
 
@@ -90,7 +90,7 @@ def resolve_acting_user_id(
     admin/role checks, author comparisons) so tokens resolve to their
     creator instead of silently failing against id=0.
     """
-    if isinstance(current_user, (APITokenUser, SuperadminAPITokenUser)):
+    if isinstance(current_user, (APITokenUser, BackofficeAPITokenUser)):
         return current_user.created_by_user_id
     return current_user.id
 
@@ -659,7 +659,7 @@ def _resolved_current_user(request: Request):
 async def get_current_user(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
-) -> Union[PublicUser, APITokenUser, SuperadminAPITokenUser, AnonymousUser]:
+) -> Union[PublicUser, APITokenUser, BackofficeAPITokenUser, AnonymousUser]:
     resolved = _resolved_current_user(request)
     if resolved is not None:
         return resolved
@@ -673,7 +673,7 @@ async def get_current_user(
 async def _resolve_current_user(
     request: Request,
     db_session: AsyncSession,
-) -> Union[PublicUser, APITokenUser, SuperadminAPITokenUser, AnonymousUser]:
+) -> Union[PublicUser, APITokenUser, BackofficeAPITokenUser, AnonymousUser]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -684,28 +684,28 @@ async def _resolve_current_user(
     auth_header = request.headers.get("Authorization", "").strip()
     auth_lower = auth_header.lower()
 
-    # ORDER MATTERS: the superadmin prefix "lh_sa_" also starts with "lh_",
+    # ORDER MATTERS: the backoffice prefix "lh_sa_" also starts with "lh_",
     # so the broader org-token branch below would shadow it. Keep this
     # branch above the org-token branch (do not reorder for "alphabetical
-    # cleanliness") or every superadmin token will silently fall through
+    # cleanliness") or every backoffice token will silently fall through
     # to org-token validation and fail.
     if auth_lower.startswith("bearer lh_sa_"):
-        # Superadmin tokens are an Enterprise Edition credential. On an OSS
+        # Backoffice tokens are an Enterprise Edition credential. On an OSS
         # deployment they can only exist through a lapsed license or a direct
         # DB insert, so refuse before touching the database. This matters
-        # because SuperadminAPITokenUser is not an APITokenUser subclass and
+        # because BackofficeAPITokenUser is not an APITokenUser subclass and
         # therefore passes the api-token rejection on core routers.
-        from src.security.superadmin import ensure_ee_superadmin_surface
+        from src.security.backoffice import ensure_ee_backoffice_surface
 
-        ensure_ee_superadmin_surface()
+        ensure_ee_backoffice_surface()
         token = auth_header[7:].strip()  # strip "Bearer "
-        sa_user = await validate_superadmin_api_token(token, db_session)
+        sa_user = await validate_backoffice_api_token(token, db_session)
         if sa_user:
-            # No _verify_api_token_org_boundary call: superadmin tokens are
+            # No _verify_api_token_org_boundary call: backoffice tokens are
             # cross-org by design and have no org to bind to.
             request.state.user = sa_user
             request.state.is_api_token = True
-            request.state.is_superadmin_api_token = True
+            request.state.is_backoffice_api_token = True
             _publish_session_provenance(AUTH_METHOD_API_TOKEN, None)
             return sa_user
         raise credentials_exception
@@ -825,23 +825,23 @@ async def _resolve_current_user(
             raise credentials_exception
 
         public_user = PublicUser(**user.model_dump())
-        # The superadmin flag is on the row just loaded; seed the per-session
+        # The backoffice flag is on the row just loaded; seed the per-session
         # memo so RBAC checks later in this request don't query it again.
-        superadmin_memo = getattr(db_session, "_superadmin_cache", None)
-        if not isinstance(superadmin_memo, dict):
-            superadmin_memo = {}
-            db_session._superadmin_cache = superadmin_memo
-        superadmin_memo[user.id] = bool(getattr(user, "is_superadmin", False))
+        backoffice_memo = getattr(db_session, "_backoffice_cache", None)
+        if not isinstance(backoffice_memo, dict):
+            backoffice_memo = {}
+            db_session._backoffice_cache = backoffice_memo
+        backoffice_memo[user.id] = bool(getattr(user, "is_backoffice_staff", False))
         remember_user_email(db_session, user)
-        if superadmin_memo[user.id]:
-            # Outside the platform console a superadmin's own session is an
+        if backoffice_memo[user.id]:
+            # Outside the platform console a backoffice staff member's own session is an
             # ordinary user's; org access is an impersonation (see
-            # src.security.superadmin).
-            from src.security.superadmin import block_superadmin_org_bypass
+            # src.security.backoffice).
+            from src.security.backoffice import block_backoffice_org_bypass
 
             scope = getattr(request, "scope", None)
             scope = scope if isinstance(scope, dict) else {}
-            block_superadmin_org_bypass(user.id, scope.get("path") or "")
+            block_backoffice_org_bypass(user.id, scope.get("path") or "")
         request.state.user = public_user
         request.state.is_api_token = False
         # Publish this session's provenance (how the user authenticated, which
@@ -908,7 +908,7 @@ async def _resolve_impersonated_user(
     fingerprint, impersonator still allowed, target still a non-staff member
     holding the role the session allows) and returns the target's row. The
     target's own memberships and roles then decide everything, exactly as if
-    they had signed in, with no superadmin bypass and no activity tracking.
+    they had signed in, with no backoffice bypass and no activity tracking.
     """
     ctx = context_from_claims(payload)
     if ctx is None:
@@ -944,11 +944,11 @@ async def _resolve_impersonated_user(
     label = " ".join(p for p in (user.first_name, user.last_name) if p).strip() or user.username
     confirmed = ctx.confirmed(label)
     public_user = PublicUser(**user.model_dump())
-    superadmin_memo = getattr(db_session, "_superadmin_cache", None)
-    if not isinstance(superadmin_memo, dict):
-        superadmin_memo = {}
-        db_session._superadmin_cache = superadmin_memo
-    superadmin_memo[user.id] = False
+    backoffice_memo = getattr(db_session, "_backoffice_cache", None)
+    if not isinstance(backoffice_memo, dict):
+        backoffice_memo = {}
+        db_session._backoffice_cache = backoffice_memo
+    backoffice_memo[user.id] = False
     request.state.user = public_user
     request.state.is_api_token = False
     request.state.impersonation = confirmed
@@ -965,7 +965,7 @@ async def non_public_endpoint(current_user: UserRead | AnonymousUser):
 async def get_authenticated_user(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
-) -> Union[PublicUser, APITokenUser, SuperadminAPITokenUser]:
+) -> Union[PublicUser, APITokenUser, BackofficeAPITokenUser]:
     """
     Dependency that requires authentication.
 
@@ -1048,39 +1048,39 @@ async def validate_api_token(
     return api_token_user_from(api_token)
 
 
-async def validate_superadmin_api_token(
+async def validate_backoffice_api_token(
     token: str,
     db_session: AsyncSession,
-) -> Optional[SuperadminAPITokenUser]:
-    """Validate a cross-org superadmin API token (lh_sa_...).
+) -> Optional[BackofficeAPITokenUser]:
+    """Validate a cross-org backoffice API token (lh_sa_...).
 
-    Returns a SuperadminAPITokenUser principal on success, None otherwise.
+    Returns a BackofficeAPITokenUser principal on success, None otherwise.
     The principal's `id` is the token id (not a user id); code that needs
     the acting user must use `created_by_user_id`.
     """
-    from src.services.api_tokens.superadmin_api_tokens import (
-        validate_superadmin_token_for_auth,
+    from src.services.api_tokens.backoffice_api_tokens import (
+        validate_backoffice_token_for_auth,
     )
 
-    api_token = await validate_superadmin_token_for_auth(token, db_session)
+    api_token = await validate_backoffice_token_for_auth(token, db_session)
     if not api_token:
         return None
 
     # The token only carries its minter's authority: once that account is gone
-    # or no longer a superadmin, every token it minted stops working. Several
+    # or no longer a backoffice staff member, every token it minted stops working. Several
     # core paths allow these tokens outright, so this can't be left to the
-    # require_superadmin dependency alone.
-    from src.security.superadmin import is_user_superadmin
+    # require_backoffice dependency alone.
+    from src.security.backoffice import is_user_backoffice_staff
 
-    if not api_token.created_by_user_id or not await is_user_superadmin(
+    if not api_token.created_by_user_id or not await is_user_backoffice_staff(
         api_token.created_by_user_id, db_session
     ):
         return None
 
-    return SuperadminAPITokenUser(
+    return BackofficeAPITokenUser(
         id=api_token.id,
         user_uuid=api_token.token_uuid,
-        username=f"superadmin_api_token_{api_token.name}",
+        username=f"backoffice_api_token_{api_token.name}",
         token_name=api_token.name,
         created_by_user_id=api_token.created_by_user_id,
     )

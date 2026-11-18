@@ -11,7 +11,7 @@ from src.security.security import (
     Pbkdf2Sha256Hasher,
     security_verify_and_update_password,
 )
-from src.security.superadmin import _get_current_user_lazy, is_user_superadmin, require_superadmin
+from src.security.backoffice import _get_current_user_lazy, is_user_backoffice_staff, require_backoffice
 
 
 def _make_pbkdf2_hash(password: str, salt: bytes = b"salt1234", rounds: int = 1000) -> str:
@@ -78,9 +78,9 @@ class TestSecurityRuntime:
         mock_verify.assert_called_once_with("plain", "old-hash")
 
 
-class TestSuperadminRuntime:
+class TestBackofficeRuntime:
     @pytest.mark.asyncio
-    async def test_is_user_superadmin_true_and_false(self):
+    async def test_is_user_backoffice_staff_true_and_false(self):
         from unittest.mock import AsyncMock as _AsyncMock, MagicMock as _MM
 
         def _make_db(first_value):
@@ -91,17 +91,17 @@ class TestSuperadminRuntime:
             _exec.scalars.return_value = _scalars
             db.execute.return_value = _exec
             # Reset cache between calls
-            db._superadmin_cache = None
+            db._backoffice_cache = None
             return db
 
         db1 = _make_db(True)
-        assert await is_user_superadmin(1, db1) is True
+        assert await is_user_backoffice_staff(1, db1) is True
 
         db2 = _make_db(False)
-        assert await is_user_superadmin(2, db2) is False
+        assert await is_user_backoffice_staff(2, db2) is False
 
         db3 = _make_db(None)
-        assert await is_user_superadmin(3, db3) is False
+        assert await is_user_backoffice_staff(3, db3) is False
 
     @pytest.mark.asyncio
     async def test_get_current_user_lazy_delegates(self):
@@ -123,15 +123,15 @@ class TestSuperadminRuntime:
         mock_get_current_user.assert_awaited_once_with(request, db_session)
 
     @pytest.mark.asyncio
-    async def test_require_superadmin_requires_authentication(self):
+    async def test_require_backoffice_requires_authentication(self):
         with pytest.raises(HTTPException) as exc_info:
-            await require_superadmin(current_user=AnonymousUser(), db_session=Mock(spec=Session))
+            await require_backoffice(current_user=AnonymousUser(), db_session=Mock(spec=Session))
 
         assert exc_info.value.status_code == 401
         assert exc_info.value.detail == "Authentication required"
 
     @pytest.mark.asyncio
-    async def test_require_superadmin_requires_superadmin_flag(self):
+    async def test_require_backoffice_requires_backoffice_flag(self):
         current_user = PublicUser(
             id=2,
             email="user@example.com",
@@ -142,18 +142,18 @@ class TestSuperadminRuntime:
         )
 
         # 'ee' is the self-hosted-EE baseline; the suite pins 'oss' globally,
-        # which would trip the EE gate before the superadmin flag is read.
+        # which would trip the EE gate before the backoffice flag is read.
         with patch(
             "src.core.deployment_mode.get_deployment_mode", return_value="ee"
-        ), patch("src.security.superadmin.is_user_superadmin", return_value=False):
+        ), patch("src.security.backoffice.is_user_backoffice_staff", return_value=False):
             with pytest.raises(HTTPException) as exc_info:
-                await require_superadmin(current_user=current_user, db_session=Mock(spec=Session))
+                await require_backoffice(current_user=current_user, db_session=Mock(spec=Session))
 
         assert exc_info.value.status_code == 403
-        assert exc_info.value.detail == "Superadmin access required"
+        assert exc_info.value.detail == "Backoffice access required"
 
     @pytest.mark.asyncio
-    async def test_require_superadmin_allows_superadmin(self):
+    async def test_require_backoffice_allows_backoffice(self):
         current_user = PublicUser(
             id=1,
             email="admin@example.com",
@@ -166,8 +166,8 @@ class TestSuperadminRuntime:
 
         with patch(
             "src.core.deployment_mode.get_deployment_mode", return_value="ee"
-        ), patch("src.security.superadmin.is_user_superadmin", return_value=True) as mock_is_superadmin:
-            result = await require_superadmin(current_user=current_user, db_session=db_session)
+        ), patch("src.security.backoffice.is_user_backoffice_staff", return_value=True) as mock_is_backoffice_staff:
+            result = await require_backoffice(current_user=current_user, db_session=db_session)
 
         assert result == current_user
-        mock_is_superadmin.assert_called_once_with(1, db_session)
+        mock_is_backoffice_staff.assert_called_once_with(1, db_session)

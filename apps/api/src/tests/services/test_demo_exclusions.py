@@ -370,7 +370,7 @@ async def test_members_page_hides_other_visitors_in_the_demo(
     student, viewer, stranger = demo_members
 
     with patch("src.services.orgs.users.is_org_member", return_value=True), patch(
-        "src.security.superadmin.is_user_superadmin", return_value=False
+        "src.security.backoffice.is_user_backoffice_staff", return_value=False
     ), patch("src.security.org_auth.is_org_admin", return_value=True):
         result = await get_organization_users(
             mock_request, demo_org.id, db, viewer, limit=100
@@ -395,7 +395,7 @@ async def test_members_csv_export_hides_other_visitors_in_the_demo(
     student, viewer, stranger = demo_members
 
     with patch("src.services.orgs.users.is_org_member", return_value=True), patch(
-        "src.security.superadmin.is_user_superadmin", return_value=False
+        "src.security.backoffice.is_user_backoffice_staff", return_value=False
     ), patch("src.security.org_auth.is_org_admin", return_value=True):
         response = await export_organization_users_csv(
             mock_request, demo_org.id, db, viewer
@@ -424,7 +424,7 @@ async def test_members_page_is_unfiltered_for_a_real_org(
     )
 
     with patch("src.services.orgs.users.is_org_member", return_value=True), patch(
-        "src.security.superadmin.is_user_superadmin", return_value=False
+        "src.security.backoffice.is_user_backoffice_staff", return_value=False
     ), patch("src.security.org_auth.is_org_admin", return_value=True):
         result = await get_organization_users(
             mock_request, org.id, db, admin_user, limit=100

@@ -25,7 +25,7 @@ from src.security.org_auth import (
     require_org_role_permission,
     get_user_org_role,
 )
-from src.security.superadmin import is_user_superadmin
+from src.security.backoffice import is_user_backoffice_staff
 from src.security.security import (
     security_hash_token,
     security_token_needs_rehash,
@@ -154,7 +154,7 @@ async def create_api_token(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3+4: Membership + permission (superadmins bypass)
+    # VERIFICATION 3+4: Membership + permission (backoffice staff bypass)
     await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_create")
 
     # A token scoped to the shared demo is a key to the headless /admin surface
@@ -266,7 +266,7 @@ async def list_api_tokens(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3+4: Membership + permission (superadmins bypass)
+    # VERIFICATION 3+4: Membership + permission (backoffice staff bypass)
     await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_read")
 
     # Get all tokens for the organization
@@ -291,7 +291,7 @@ async def get_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2+3: Membership + permission (superadmins bypass).
+    # VERIFICATION 2+3: Membership + permission (backoffice staff bypass).
     # Reading a token record must require the same 'roles' read permission as
     # listing them; otherwise any low-privilege org member could enumerate
     # token metadata (rights, creator, expiry) by guessing UUIDs.
@@ -326,7 +326,7 @@ async def update_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2+3: Membership + permission (superadmins bypass)
+    # VERIFICATION 2+3: Membership + permission (backoffice staff bypass)
     await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_update")
 
     # VERIFICATION 4: Get the token
@@ -385,7 +385,7 @@ async def revoke_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2+3: Membership + permission (superadmins bypass)
+    # VERIFICATION 2+3: Membership + permission (backoffice staff bypass)
     await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_delete")
 
     # VERIFICATION 4: Get the token
@@ -430,7 +430,7 @@ async def regenerate_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2+3: Membership + permission (superadmins bypass)
+    # VERIFICATION 2+3: Membership + permission (backoffice staff bypass)
     await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_update")
 
     # VERIFICATION 4: Get the token
@@ -454,7 +454,7 @@ async def regenerate_api_token(
 
     # A new secret is the token's full authority in the caller's hands, so only
     # its creator, or someone who already holds every right it carries, gets it.
-    if token.created_by_user_id != current_user.id and not await is_user_superadmin(
+    if token.created_by_user_id != current_user.id and not await is_user_backoffice_staff(
         current_user.id, db_session
     ):
         caller_role = await get_user_org_role(current_user.id, org_id, db_session)

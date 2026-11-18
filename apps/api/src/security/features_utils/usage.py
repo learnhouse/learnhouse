@@ -1390,7 +1390,7 @@ def add_ai_credits(org_id: int, amount: int) -> int:
 
 
 def set_ai_credits(org_id: int, amount: int) -> int:
-    """Set purchased AI credits to an absolute value (superadmin-only operation)."""
+    """Set purchased AI credits to an absolute value (backoffice-only operation)."""
     r = _get_redis_client()
     r.set(f"ai_credits_purchased:{org_id}", amount)
     return amount

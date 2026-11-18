@@ -134,7 +134,7 @@ def _role_ref(role) -> dict | None:
 
 
 async def _is_staff(ctx: ToolContext) -> bool:
-    """Admin or maintainer of this org (superadmins too), as the HTTP member
+    """Admin or maintainer of this org (backoffice staff too), as the HTTP member
     routes require. API tokens resolve to the person who made them."""
     return await is_org_admin(resolve_acting_user_id(ctx.user), ctx.org.id, ctx.db_session)
 

@@ -14,7 +14,7 @@
   bright but calm on dark (all AA checked).
 
   How it reaches every screen without a `dark:` class per element, like the
-  platform console (components/Admin/Shell/adminDark.css) and the lesson block
+  platform console (ee/components/Backoffice/Shell/backofficeDark.css) and the lesson block
   themes (styles/block-theme.css):
 
   1. Tokens (--lhd-*): the dark surfaces, for the few places that need them.

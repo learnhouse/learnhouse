@@ -147,9 +147,21 @@ async function hostIsCustomDomain(host: string | null, instance: InstanceInfo): 
   }
 }
 
+/** LearnHouse Backoffice (the platform console) lives under /backoffice. */
+function isBackofficePath(pathname: string): boolean {
+  return pathname === '/backoffice' || pathname.startsWith('/backoffice/')
+}
+
+/** The rest of a pre-rename /admin console path ('' for /admin itself), or null. */
+function legacyBackofficeRest(pathname: string): string | null {
+  if (pathname === '/admin') return ''
+  if (pathname.startsWith('/admin/')) return pathname.slice('/admin'.length)
+  return null
+}
+
 /**
- * Detect the admin subdomain (multi tenancy only). In single mode there is no
- * admin subdomain; operators reach admin via /admin path.
+ * Detect the Backoffice subdomain, admin.{domain} (multi tenancy only). In
+ * single mode there is no such subdomain; operators use the /backoffice path.
  */
 async function isAdminSubdomain(host: string | null, instance: InstanceInfo): Promise<boolean> {
   if (instance.tenancy === 'single' || !host) return false
@@ -336,26 +348,29 @@ async function route(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 1. Admin subdomain (multi only) → rewrite to /admin route group.
-  //    Idempotent: if the path already starts with /admin (e.g. internal nav
-  //    uses /admin/organizations so it works in both subdomain and path mode),
-  //    don't double-prefix.
+  // 1. Backoffice subdomain (admin.{domain}, multi only) → rewrite to the
+  //    /backoffice route group. Idempotent: internal nav uses /backoffice/...
+  //    so it works in both subdomain and path mode; don't double-prefix.
+  //    Pre-rename /admin/... links on the subdomain land on the same page.
   // -------------------------------------------------------------------------
   if (await isAdminSubdomain(fullhost, instance)) {
-    const target = pathname === '/admin' || pathname.startsWith('/admin/')
-      ? pathname
-      : `/admin${pathname}`
+    const target = isBackofficePath(pathname) ? pathname : `/backoffice${legacyBackofficeRest(pathname) ?? pathname}`
     const response = NextResponse.rewrite(new URL(`${target}${search}`, req.url))
     setInstanceCookies(req, response, instance)
     return response
   }
 
   // -------------------------------------------------------------------------
-  // 1b. Admin path: direct /admin access works in any tenancy mode.
-  //     In single mode this is the only way to reach the admin panel; in
-  //     multi mode it's an alternative to the admin.{domain} subdomain.
+  // 1b. Backoffice path: direct /backoffice access works in any tenancy mode.
+  //     In single mode this is the only way to reach LearnHouse Backoffice;
+  //     in multi mode it's an alternative to the admin.{domain} subdomain.
+  //     The old /admin path redirects so bookmarks keep working.
   // -------------------------------------------------------------------------
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+  const legacyRest = legacyBackofficeRest(pathname)
+  if (legacyRest !== null) {
+    return NextResponse.redirect(new URL(`/backoffice${legacyRest}${search}`, req.url), 308)
+  }
+  if (isBackofficePath(pathname)) {
     const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
     setInstanceCookies(req, response, instance)
     return response

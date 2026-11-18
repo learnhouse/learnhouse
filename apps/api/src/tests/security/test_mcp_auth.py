@@ -78,7 +78,7 @@ async def test_missing_token_gets_discovery_challenge(config):
     assert inner.seen == []
 
 
-async def test_superadmin_token_refused(config):
+async def test_backoffice_token_refused(config):
     resp = await _post(MCPAuthMiddleware(_Inner()), "lh_sa_abc")
     assert resp.status_code == 401
     assert 'error="invalid_token"' in resp.headers["www-authenticate"]

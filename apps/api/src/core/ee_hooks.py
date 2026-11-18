@@ -74,7 +74,7 @@ def register_ee_routers(v1_router):
         hooks.register_routers(v1_router)
 
 def register_ee_platform_mcp(app):
-    """Let EE mount the platform (superadmin) MCP server at /mcp/platform.
+    """Let EE mount the platform (backoffice) MCP server at /mcp/platform.
     Called only when MCP is enabled; nothing is mounted without EE."""
     hooks = get_ee_hooks()
     if hooks and hasattr(hooks, "register_platform_mcp"):

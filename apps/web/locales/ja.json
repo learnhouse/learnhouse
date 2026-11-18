@@ -17571,7 +17571,7 @@
       "ordered": "学習者が受講すべき順にコースを並べます。"
     }
   },
-  "admin": {
+  "backoffice": {
     "org_detail": {
       "tabs": {
         "overview": "概要",
@@ -17755,7 +17755,7 @@
       "password_placeholder": "パスワードを入力",
       "signing_in": "ログイン中...",
       "sign_in": "ログイン",
-      "superadmin_only": "LearnHouseプラットフォームチーム専用"
+      "backoffice_only": "LearnHouseプラットフォームチーム専用"
     },
     "pages": {
       "analytics": "グローバルアナリティクス",
@@ -17770,7 +17770,7 @@
       "ai_costs_desc": "AIリクエストのプロバイダー定価での費用と、請求したクレジットの価値の比較"
     },
     "menu": {
-      "superadmin": "スーパー管理者",
+      "backoffice": "Backoffice",
       "users": "ユーザー",
       "developers": "開発者",
       "avatar": "アバター",
@@ -17885,7 +17885,7 @@
       "search_placeholder": "ユーザーを検索...",
       "users_count_other": "ユーザー{{count}}人",
       "role_label": "ロール：",
-      "superadmin": "スーパー管理者",
+      "backoffice": "Backoffice",
       "regular": "一般",
       "min_orgs": "最小組織数：",
       "any": "指定なし",
@@ -17917,9 +17917,9 @@
       },
       "tabs": {
         "tokens_label": "APIトークン",
-        "tokens_desc": "組織横断のスーパー管理者APIトークンを発行、一覧表示、失効します。",
+        "tokens_desc": "組織横断のBackofficeAPIトークンを発行、一覧表示、失効します。",
         "docs_label": "ドキュメントとPlayground",
-        "docs_desc": "スーパー管理者APIを閲覧し、トークンを使ってその場で呼び出せます。"
+        "docs_desc": "BackofficeAPIを閲覧し、トークンを使ってその場で呼び出せます。"
       },
       "org_picker": {
         "none_yet": "組織はまだありません",
@@ -17941,7 +17941,7 @@
       "endpoint": {
         "invalid_json": "JSONが無効です",
         "network_error": "ネットワークエラー",
-        "session_only": "<strong>セッション認証のみ。</strong>APIトークンではこのエンドポイントを呼び出せません（権限昇格のブロック）。トークンを使うと送信ボタンは403で失敗します。代わりにスニペットをコピーして、ログイン済みのスーパー管理者として実行してください。",
+        "session_only": "<strong>セッション認証のみ。</strong>APIトークンではこのエンドポイントを呼び出せません（権限昇格のブロック）。トークンを使うと送信ボタンは403で失敗します。代わりにスニペットをコピーして、ログイン済みのBackofficeユーザーとして実行してください。",
         "parameters": "パラメーター",
         "request_body": "リクエストボディ（JSON）",
         "reset_to_sample": "サンプルにリセット",
@@ -17969,7 +17969,7 @@
       "description_placeholder": "このトークンの用途",
       "expiration": "有効期限",
       "never_expires": "無期限",
-      "warning": "スーパー管理者トークンは、<code>/ee/superadmin/*</code> の<em>すべての</em>エンドポイントを呼び出せます。組織の作成、機能の切り替え、プラットフォーム全体のプランの更新が可能です。マスターキーと同様に扱ってください。",
+      "warning": "Backofficeトークンは、<code>/ee/backoffice/*</code> の<em>すべての</em>エンドポイントを呼び出せます。組織の作成、機能の切り替え、プラットフォーム全体のプランの更新が可能です。マスターキーと同様に扱ってください。",
       "create_token": "トークンを作成",
       "failed_revoke": "失効できませんでした（{{status}}）",
       "revoke_title": "トークンを失効しますか？",
@@ -17986,7 +17986,7 @@
       "count_other": "トークン{{count}}件",
       "loading": "トークンを読み込み中…",
       "failed_load": "トークンを読み込めませんでした。",
-      "empty_title": "スーパー管理者APIトークンはまだありません。",
+      "empty_title": "BackofficeAPIトークンはまだありません。",
       "empty_desc": "作成すると、組織のプロビジョニングや機能の切り替えを自動化できます。",
       "col_name": "名前",
       "col_prefix": "プレフィックス",
@@ -18008,7 +18008,7 @@
       "scopes": "スコープ",
       "revoked": "トークンを失効しました",
       "scope_desc": {
-        "api": "スーパー管理者REST APIを呼び出します。",
+        "api": "BackofficeREST APIを呼び出します。",
         "mcp": "AIアシスタントをプラットフォームMCPに接続します(読み取りツール)。",
         "mcp_write": "MCPの安全な書き込みも許可します: メモ、タグ、POCの延長、アカウントオーナー。"
       },
@@ -18023,16 +18023,16 @@
     },
     "ee_required": {
       "title": "Enterprise Editionライセンスが必要です",
-      "description": "スーパー管理者ダッシュボードはLearnHouse Enterprise Editionの一部で、このデプロイでは利用できません。"
+      "description": "BackofficeダッシュボードはLearnHouse Enterprise Editionの一部で、このデプロイでは利用できません。"
     },
     "access_denied": {
       "title": "アクセスが拒否されました",
-      "description": "このページにアクセスするには、スーパー管理者権限が必要です。"
+      "description": "このページにアクセスするには、Backoffice権限が必要です。"
     },
     "shell": {
-      "platform": "プラットフォーム",
-      "title": "LearnHouse プラットフォーム",
-      "subtitle": "スーパー管理者コンソール",
+      "platform": "Backoffice",
+      "title": "LearnHouse Backoffice",
+      "subtitle": "Backoffice",
       "navigation": "コンソールナビゲーション",
       "open_menu": "メニューを開く",
       "close_menu": "メニューを閉じる",
@@ -19153,7 +19153,7 @@
       "add_member": "メンバーを追加",
       "read_only_hint": "チームメンバーの追加、変更、削除ができるのはプラットフォームオーナーのみです。",
       "empty_title": "チームメンバーはまだいません",
-      "empty_desc": "プラットフォームAPIが更新されると、スーパー管理者がここに表示されます。",
+      "empty_desc": "プラットフォームAPIが更新されると、Backofficeがここに表示されます。",
       "col_member": "メンバー",
       "col_role": "ロール",
       "col_granted_by": "付与者",
@@ -19249,7 +19249,7 @@
       "enabled": "有効",
       "disabled": "無効",
       "mcp": "プラットフォームMCP",
-      "mcp_desc": "AIアシスタント向けの読み取り中心のMCPエンドポイント。スーパー管理者トークンで認証します。",
+      "mcp_desc": "AIアシスタント向けの読み取り中心のMCPエンドポイント。Backofficeトークンで認証します。",
       "status": "ステータス",
       "license": "ライセンス",
       "license_desc": "安全なライセンス項目。キーと署名は表示されません。",
@@ -19270,7 +19270,7 @@
       "every_hours_other": "{{count}}時間ごと"
     },
     "users": {
-      "superadmin_filter": "スーパー管理者で絞り込み",
+      "backoffice_filter": "Backofficeで絞り込み",
       "min_orgs": "組織数の下限",
       "any_orgs": "組織数の指定なし",
       "min_orgs_value_one": "{{count}}件以上の組織",
@@ -19314,7 +19314,7 @@
     "mcp": {
       "tab": "MCP",
       "title": "AIアシスタントを接続",
-      "desc": "プラットフォームMCPを使うと、Claudeなどのアシスタントがスーパー管理者トークンでプラットフォームデータを読み取れます。",
+      "desc": "プラットフォームMCPを使うと、ClaudeなどのアシスタントがBackofficeトークンでプラットフォームデータを読み取れます。",
       "enabled": "有効",
       "disabled": "このサーバーでは無効",
       "step1_title": "トークンを作成",
@@ -19783,7 +19783,7 @@
           "automation": "失敗した実行と、動作したルール",
           "team": "プラットフォームチームの変更",
           "token": "新しいAPIトークン",
-          "security": "スーパー管理者のサインイン失敗、失効したトークン",
+          "security": "Backofficeのサインイン失敗、失効したトークン",
           "follow": "フォロー中の組織のアクティビティ",
           "system": "プラットフォームのアラートとチャンネルの障害"
         },
@@ -20645,7 +20645,7 @@
       },
       "history": {
         "title": "最近の変更",
-        "desc": "プラットフォームコンソールからの変更を項目ごとに表示します。",
+        "desc": "Backofficeからの変更を項目ごとに表示します。",
         "empty": "まだ変更はありません",
         "empty_desc": "ここでの編集は、変更した人と変更内容とともに表示されます。"
       }
@@ -29549,9 +29549,9 @@
     "refused_messaging": "このメンバーとしてのメッセージ送信はオフです。バッジのメニューからオンにしてください。",
     "refused_wrong_org": "なりすましはこの組織内でのみ使えます。",
     "refused_denied": "なりすまし中は利用できません。",
-    "returned_ended": "なりすましを終了しました。コンソールに戻りました。",
-    "returned_expired": "なりすましの期限が切れました。コンソールに戻りました。",
-    "returned_revoked": "なりすましが終了されました。コンソールに戻りました。",
+    "returned_ended": "なりすましを終了しました。Backofficeに戻りました。",
+    "returned_expired": "なりすましの期限が切れました。Backofficeに戻りました。",
+    "returned_revoked": "なりすましが終了されました。Backofficeに戻りました。",
     "ended_notice_ended": "セッションが終了しました。",
     "ended_notice_expired": "セッションが終了しました：制限時間に達しました。",
     "ended_notice_revoked": "セッションが終了しました：取り消されました。",
@@ -29563,7 +29563,7 @@
     "entry_failed": "なりすましを開始できませんでした",
     "no_access_title": "{{org}}へのアクセス権がありません",
     "no_access_desc": "LearnHouseの管理者になりすましの権限を依頼してください。",
-    "back_to_console": "コンソールに戻る",
+    "back_to_console": "Backofficeに戻る",
     "retry": "再試行",
     "refused_private": "学習者のプライベートメッセージは、本人として表示しても非公開のままです。"
   },

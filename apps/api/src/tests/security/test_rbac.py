@@ -300,7 +300,7 @@ class TestRBAC:
     async def test_authorization_verify_based_on_roles_success(self, mock_request, mock_db_session, mock_role):
         """Test role-based authorization success"""
         with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock) as mock_check_type, \
-             patch('src.security.rbac.rbac.is_user_superadmin', return_value=False):
+             patch('src.security.rbac.rbac.is_user_backoffice_staff', return_value=False):
             mock_check_type.return_value = "courses"
 
             # The membership lookup returns each membership row with its role.
@@ -325,7 +325,7 @@ class TestRBAC:
     async def test_authorization_verify_based_on_roles_no_permission(self, mock_request, mock_db_session, mock_role):
         """Test role-based authorization failure"""
         with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock) as mock_check_type, \
-             patch('src.security.rbac.rbac.is_user_superadmin', return_value=False):
+             patch('src.security.rbac.rbac.is_user_backoffice_staff', return_value=False):
             mock_check_type.return_value = "courses"
 
             # Mock role without permission
@@ -348,7 +348,7 @@ class TestRBAC:
     async def test_authorization_verify_based_on_org_admin_status_success(self, mock_request, mock_db_session):
         """Test org admin status verification success"""
         with patch('src.security.rbac.rbac.get_element_organization_id', new_callable=AsyncMock) as mock_get_org_id, \
-             patch('src.security.rbac.rbac.is_user_superadmin', return_value=False):
+             patch('src.security.rbac.rbac.is_user_backoffice_staff', return_value=False):
             # Mock get_element_organization_id to return a valid org_id
             mock_get_org_id.return_value = 1
 
@@ -376,7 +376,7 @@ class TestRBAC:
     async def test_authorization_verify_based_on_org_admin_status_no_admin(self, mock_request, mock_db_session):
         """Test org admin status verification failure"""
         with patch('src.security.rbac.rbac.get_element_organization_id', new_callable=AsyncMock) as mock_get_org_id, \
-             patch('src.security.rbac.rbac.is_user_superadmin', return_value=False):
+             patch('src.security.rbac.rbac.is_user_backoffice_staff', return_value=False):
             # Mock get_element_organization_id to return a valid org_id
             mock_get_org_id.return_value = 1
 
@@ -399,7 +399,7 @@ class TestRBAC:
         with patch('src.security.rbac.rbac.authorization_verify_if_user_is_author', new_callable=AsyncMock) as mock_author, \
              patch('src.security.rbac.rbac.authorization_verify_based_on_roles', new_callable=AsyncMock) as mock_roles, \
              patch('src.security.rbac.rbac.check_usergroup_access', new_callable=AsyncMock) as mock_usergroup, \
-             patch('src.security.rbac.rbac.is_user_superadmin', return_value=False):
+             patch('src.security.rbac.rbac.is_user_backoffice_staff', return_value=False):
 
             mock_author.return_value = True
             mock_roles.return_value = False
@@ -421,7 +421,7 @@ class TestRBAC:
         with patch('src.security.rbac.rbac.authorization_verify_if_user_is_author', new_callable=AsyncMock) as mock_author, \
              patch('src.security.rbac.rbac.authorization_verify_based_on_roles', new_callable=AsyncMock) as mock_roles, \
              patch('src.security.rbac.rbac.check_usergroup_access', new_callable=AsyncMock) as mock_usergroup, \
-             patch('src.security.rbac.rbac.is_user_superadmin', return_value=False):
+             patch('src.security.rbac.rbac.is_user_backoffice_staff', return_value=False):
 
             mock_author.return_value = False
             mock_roles.return_value = False

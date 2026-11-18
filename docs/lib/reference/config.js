@@ -91,7 +91,7 @@ export const LANG_STORAGE_KEY = 'lh:ref-lang'
  * Documented endpoint groups, in display order.
  * `tags` are OpenAPI tags folded into the group (first tag of each operation wins).
  * Any operation whose first tag is not listed here is NOT documented;
- * internal surfaces (superadmin, cloud_internal, ee, dev, …) stay out by default.
+ * internal surfaces (backoffice, cloud_internal, ee, dev, …) stay out by default.
  *
  * `access` mirrors the router-level auth wiring in apps/api/src/router.py:
  *   'token':           accepts lh_ API tokens or a user session

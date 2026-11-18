@@ -108,7 +108,7 @@ async def _require_admin_to_touch_admins(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ) -> None:
-    """Only Admins (or superadmins) may remove an Admin or Maintainer.
+    """Only Admins (or backoffice staff) may remove an Admin or Maintainer.
 
     rbac_check lets Maintainers remove ordinary members; removing staff also
     takes the users.delete right, which the seeded Maintainer role lacks.
@@ -139,10 +139,10 @@ async def _require_rights_over_members(
     """
     if isinstance(current_user, (InternalUser, APITokenUser)) or not user_ids:
         return
-    from src.security.superadmin import is_user_superadmin
+    from src.security.backoffice import is_user_backoffice_staff
 
     acting_user_id = resolve_acting_user_id(current_user)
-    if await is_user_superadmin(acting_user_id, db_session):
+    if await is_user_backoffice_staff(acting_user_id, db_session):
         return
     caller_membership = await get_user_org(acting_user_id, org.id, db_session)
     if caller_membership is not None and caller_membership.role_id == ADMIN_ROLE_ID:
@@ -321,7 +321,7 @@ async def get_organization_users(
 
     acting_user_id = resolve_acting_user_id(current_user)
 
-    # Membership check (superadmins bypass)
+    # Membership check (backoffice staff bypass)
     if not await is_org_member(acting_user_id, org.id, db_session):
         raise HTTPException(
             status_code=403,
@@ -331,8 +331,8 @@ async def get_organization_users(
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(acting_user_id, org.id, db_session)
     # Only admins/maintainers can list organization members
-    from src.security.superadmin import is_user_superadmin
-    if not await is_user_superadmin(acting_user_id, db_session):
+    from src.security.backoffice import is_user_backoffice_staff
+    if not await is_user_backoffice_staff(acting_user_id, db_session):
         from src.security.org_auth import is_org_admin
         if not await is_org_admin(acting_user_id, org.id, db_session):
             raise HTTPException(
@@ -520,7 +520,7 @@ async def get_organization_users(
                 continue
 
             # SECURITY: org admins get the org-scoped member view: no
-            # is_superadmin, and extra_metadata limited to THIS org's declared
+            # is_backoffice_staff, and extra_metadata limited to THIS org's declared
             # signup fields (the column holds answers from every org the
             # account joined).
             if member_meta_keys is None:
@@ -600,8 +600,8 @@ async def export_organization_users_csv(
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(export_acting_user_id, org.id, db_session)
     # Only admins/maintainers can export organization members
-    from src.security.superadmin import is_user_superadmin
-    if not await is_user_superadmin(export_acting_user_id, db_session):
+    from src.security.backoffice import is_user_backoffice_staff
+    if not await is_user_backoffice_staff(export_acting_user_id, db_session):
         from src.security.org_auth import is_org_admin
         if not await is_org_admin(export_acting_user_id, org.id, db_session):
             raise HTTPException(
@@ -1101,11 +1101,11 @@ async def update_user_role(
 
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    from src.security.superadmin import is_user_superadmin
+    from src.security.backoffice import is_user_backoffice_staff
     if (
         not isinstance(current_user, (InternalUser, APITokenUser))
         and current_user.id == user_id
-        and not await is_user_superadmin(current_user.id, db_session)
+        and not await is_user_backoffice_staff(current_user.id, db_session)
     ):
         raise HTTPException(
             status_code=403,
@@ -1115,7 +1115,7 @@ async def update_user_role(
     # Below Admin, a caller may only hand out roles that grant nothing they
     # don't hold themselves, and may not touch an Admin's or Maintainer's role.
     acting_user_id = resolve_acting_user_id(current_user)
-    if not isinstance(current_user, InternalUser) and not await is_user_superadmin(
+    if not isinstance(current_user, InternalUser) and not await is_user_backoffice_staff(
         acting_user_id, db_session
     ):
         caller_membership = await get_user_org(acting_user_id, org.id, db_session)
@@ -1361,8 +1361,8 @@ async def get_list_of_invited_users(
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(acting_user_id, org.id, db_session)
 
-    from src.security.superadmin import is_user_superadmin
-    if not await is_user_superadmin(acting_user_id, db_session):
+    from src.security.backoffice import is_user_backoffice_staff
+    if not await is_user_backoffice_staff(acting_user_id, db_session):
         from src.security.org_auth import is_org_admin
         if not await is_org_admin(acting_user_id, org.id, db_session):
             raise HTTPException(

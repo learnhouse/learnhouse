@@ -65,9 +65,9 @@ async def require_org_admin(
 
     acting_user_id = resolve_acting_user_id(current_user)
 
-    # Superadmin bypass
-    from src.security.superadmin import is_user_superadmin
-    if await is_user_superadmin(acting_user_id, db_session):
+    # Backoffice bypass
+    from src.security.backoffice import is_user_backoffice_staff
+    if await is_user_backoffice_staff(acting_user_id, db_session):
         return True
 
     # Check if user is admin in this organization

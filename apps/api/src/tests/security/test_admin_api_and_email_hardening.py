@@ -145,8 +145,8 @@ class TestAccountEdits:
             await update_user_profile(token, admin.id, {"first_name": "X"}, db)
         assert exc.value.status_code == 403
 
-    async def test_profile_update_refused_for_superadmin(self, db, org, token):
-        sa = await _member(db, 62, [org.id], is_superadmin=True)
+    async def test_profile_update_refused_for_backoffice(self, db, org, token):
+        sa = await _member(db, 62, [org.id], is_backoffice_staff=True)
         with pytest.raises(HTTPException) as exc:
             await update_user_profile(token, sa.id, {"first_name": "X"}, db)
         assert exc.value.status_code == 403

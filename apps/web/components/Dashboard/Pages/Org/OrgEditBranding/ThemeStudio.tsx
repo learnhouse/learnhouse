@@ -3,7 +3,7 @@
  * Branding → Theme: a short list of essentials (preset, brand color, font,
  * corners, dark mode) beside a small live preview of a learner page. Every
  * other theme option is still here, behind one collapsed "More options"
- * section, so values set there (or by the superadmin editor, Atlas or the
+ * section, so values set there (or by the backoffice staff member editor, Atlas or the
  * API) keep applying. Saving happens from the branding page's save bar.
  */
 import React from 'react'

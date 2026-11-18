@@ -1225,7 +1225,7 @@ class TestOrgRbacWave3:
         )).scalars().first()
         assert result == {"detail": "Analytics configuration updated"}
         assert stored.config["admin_toggles"]["analytics"]["org_disabled"] is False
-        # The superadmin kill switch is not touched by the org's own toggle.
+        # The backoffice staff member kill switch is not touched by the org's own toggle.
         assert "disabled" not in stored.config["admin_toggles"]["analytics"]
 
     @pytest.mark.asyncio
