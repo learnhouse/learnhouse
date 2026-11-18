@@ -95,7 +95,7 @@ CODE_ENDED = "IMPERSONATION_ENDED"
 CODE_WRONG_ORG = "IMPERSONATION_WRONG_ORG"
 # Why a session ended, sent next to CODE_ENDED so the badge can say so. The
 # EE record's end reasons pass through as they are; this one is core's own:
-# the token itself ran out (the session may live on, the client can renew).
+# the token itself ran out (it carries the session's cap, so the session did).
 REASON_TOKEN_EXPIRED = "token_expired"
 # Audit-only: an impersonation token presented outside LH_imp / Bearer.
 CODE_MISPLACED = "IMPERSONATION_TOKEN_MISPLACED"
@@ -181,12 +181,12 @@ def mint_impersonation_token(
     expires_at: int,
     scope: str = SCOPE_PLATFORM,
 ) -> str:
-    """Sign the token for a session the EE service has just recorded (or
-    renewed: same ``jti``, later ``exp``).
+    """Sign the token for a session the EE service has just recorded.
 
     ``type: "access"`` keeps it out of ``/auth/refresh`` (refresh only accepts
     ``type: "refresh"``) and ``purpose`` keeps it out of every session gate.
-    ``exp`` never passes the session's own deadline; the record decides.
+    ``exp`` is the session's absolute cap (stored on the record), never
+    extended: idle limits are the record's, checked on every request.
     """
     now = int(time.time())
     payload = {
@@ -209,46 +209,6 @@ def mint_impersonation_token(
         },
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def reissue_impersonation_token(ctx: ImpersonationContext, target_email: str, expires_at: int) -> str:
-    """The same session's token with a later ``exp`` (sliding renewal).
-
-    Same ``jti``, so the stored fingerprint still matches and every copy a
-    browser holds stays bound to the one record: ending or revoking the
-    session refuses them all at once. Only the EE service calls this, after
-    the record and the impersonator's rights were re-checked.
-    """
-    return mint_impersonation_token(
-        session_id=ctx.session_id,
-        jti=ctx.jti,
-        impersonator_id=ctx.impersonator_id,
-        org_id=ctx.org_id,
-        target_user_id=ctx.target_user_id,
-        target_email=target_email,
-        mode=ctx.mode,
-        kind=ctx.kind,
-        role_id=ctx.role_id,
-        allow_messaging=ctx.allow_messaging,
-        expires_at=expires_at,
-        scope=ctx.scope,
-    )
-
-
-def renewal_due(current_exp: int, deadline: int, window_seconds: float, now: Optional[int] = None) -> bool:
-    """Whether a token expiring at ``current_exp`` should be re-minted to
-    expire at ``deadline`` (the session's current end).
-
-    Never when that gains under a minute. Otherwise once less than half of
-    the token's window is left, or as soon as the token lags the session by a
-    tenth of the window, so a tab left closed is cut off by the session's own
-    idle rule, not by a token that stopped sliding early.
-    """
-    now = int(time.time()) if now is None else int(now)
-    gain = int(deadline) - int(current_exp)
-    if gain < 60:
-        return False
-    return (int(current_exp) - now) < window_seconds / 2 or gain >= window_seconds / 10
 
 
 def _unverified_purpose(token: str) -> Optional[str]:
@@ -567,24 +527,6 @@ async def impersonation_end_reason(db_session, ctx: ImpersonationContext) -> Opt
         logger.exception("impersonation: could not read why a session ended")
         return None
     return reason if isinstance(reason, str) and reason else None
-
-
-async def renew_impersonation_token(db_session, ctx: ImpersonationContext) -> Optional[dict]:
-    """A later token for the session (``{"token", "token_expires_at"}``) when
-    the EE service says one is due, else None; never raises. Called only from
-    ``/auth/impersonation/status``, after ``get_current_user`` re-checked the
-    session (record, revocation, the impersonator's permission)."""
-    hook = _ee_hook("renew_impersonation_token")
-    if hook is None:
-        return None
-    try:
-        renewal = await hook(db_session, ctx)
-    except Exception:
-        logger.exception("impersonation: could not renew a session's token")
-        return None
-    if not isinstance(renewal, dict) or not isinstance(renewal.get("token"), str):
-        return None
-    return {"token": renewal["token"], "token_expires_at": renewal.get("token_expires_at")}
 
 
 async def end_impersonations_started_by(db_session, user_id: int, reason: str = "logout") -> int:

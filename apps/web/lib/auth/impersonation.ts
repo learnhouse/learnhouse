@@ -55,7 +55,7 @@ export const IMPERSONATION_END_REASONS = [
   'target_changed',
 ] as const
 export type ImpersonationEndReason = (typeof IMPERSONATION_END_REASONS)[number]
-/** Core's own reason: the token ran out while the session may live on (renew, then retry). */
+/** Core's own reason: the token ran out (it carries the session's cap). */
 export const TOKEN_EXPIRED_REASON = 'token_expired'
 
 /** A reason from the API, a URL or an event, as one the badge knows. */

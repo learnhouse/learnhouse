@@ -1,10 +1,9 @@
 // Impersonation token helpers for the auth proxy (server side, no Next
 // imports, so they can be tested on their own).
 //
-// The API renews the token on /auth/impersonation/status while the session is
-// in use (same session, later expiry). The proxy then swaps the httpOnly
-// LH_imp cookie for it, and the cookie always lives exactly as long as the
-// token it holds.
+// A token expires at its session's absolute cap (stored on the session when
+// it starts, never re-minted); the httpOnly LH_imp cookie lives exactly as
+// long as the token it holds.
 
 /** Used only when a token carries no readable expiry (the API refuses those anyway). */
 export const IMPERSONATION_COOKIE_FALLBACK_MAX_AGE = 12 * 60 * 60
@@ -34,11 +33,13 @@ export function impersonationCookieMaxAge(token: string, nowMs: number = Date.no
   return Math.max(0, Math.floor(exp - nowMs / 1000))
 }
 
-/** Split a /status reply into what the page may see and a renewed token (if any). */
-export function splitRenewal(data: unknown): { session: Record<string, unknown>; token: string | null } {
-  if (!data || typeof data !== 'object') return { session: {}, token: null }
-  const { token, token_expires_at: _exp, ...session } = data as Record<string, unknown>
-  return { session, token: typeof token === 'string' && token ? token : null }
+/** Why a session is ended by the proxy itself: its owner's own sign-in is gone. */
+export const OWNER_SIGNED_OUT_REASON = 'logout'
+
+/** The person who opened the session can no longer refresh their own sign-in
+ *  (no LH_refresh cookie): the session must not outlive it. */
+export function ownerSessionGone(refreshCookie: string | null | undefined): boolean {
+  return !refreshCookie
 }
 
 /** The API answered that the session is over (as opposed to unreachable or busy). */

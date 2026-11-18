@@ -16,7 +16,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
-from src.security.impersonation import current_impersonation, renew_impersonation_token
+from src.security.impersonation import current_impersonation
 
 router = APIRouter()
 
@@ -45,12 +45,7 @@ async def api_impersonation_status(
     current_user=Depends(get_current_user),
 ):
     ctx = _session_or_404()
-    out = await _hook("describe_impersonation")(db_session, ctx)
-    # Sliding renewal: while the session is in use its token moves forward
-    # (never past the session's own deadline). The web proxy puts it in the
-    # httpOnly cookie and keeps it off the page.
-    renewal = await renew_impersonation_token(db_session, ctx)
-    return {**out, **renewal} if renewal else out
+    return await _hook("describe_impersonation")(db_session, ctx)
 
 
 @router.post("/end", summary="Stop impersonating")

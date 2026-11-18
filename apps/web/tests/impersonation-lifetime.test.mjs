@@ -35,13 +35,12 @@ describe("impersonation cookie lifetime", () => {
     expect(token.jwtClaims(`a.${Buffer.from("7").toString("base64url")}.c`)).toBeNull();
   });
 
-  test("a renewed token is split off the status reply, never shown to the page", () => {
-    const { session, token: renewed } = token.splitRenewal({ session_uuid: "imp_1", token: "t.k.n", token_expires_at: 5 });
-    expect(renewed).toBe("t.k.n");
-    expect(session).toEqual({ session_uuid: "imp_1" });
-    expect(token.splitRenewal({ session_uuid: "imp_1" })).toEqual({ session: { session_uuid: "imp_1" }, token: null });
-    expect(token.splitRenewal({ token: "" }).token).toBeNull();
-    expect(token.splitRenewal(null)).toEqual({ session: {}, token: null });
+  test("a session ends with its owner's own sign-in", () => {
+    expect(token.ownerSessionGone(undefined)).toBe(true);
+    expect(token.ownerSessionGone("")).toBe(true);
+    expect(token.ownerSessionGone("refresh.jwt.value")).toBe(false);
+    expect(token.OWNER_SIGNED_OUT_REASON).toBe("logout");
+    expect(imp.normalizeEndReason(token.OWNER_SIGNED_OUT_REASON)).toBe("logout");
   });
 
   test("only 401/404/410 mean the session is over (busy or rate limited is not)", () => {
@@ -54,9 +53,13 @@ describe("impersonation cookie lifetime", () => {
     expect(lib).toContain("maxAge: impersonationCookieMaxAge(token)");
     expect(lib).not.toContain("12 * 60 * 60");
     const status = readFileSync(new URL("../app/api/auth/impersonation/route.ts", import.meta.url), "utf8");
-    expect(status).toContain("if (renewed) setCookie(response, request, renewed)");
     const refresh = readFileSync(new URL("../app/api/auth/[...path]/route.ts", import.meta.url), "utf8");
-    expect(refresh).toContain("if (renewed) setImpersonationCookie(response, request, renewed)");
+    // Both the badge poll and the token refresh end it once the owner's own
+    // refresh cookie is gone; neither ever mints or forwards another token.
+    expect(status).toContain("ownerSessionGone(jar.get(REFRESH_TOKEN_COOKIE)?.value)");
+    expect(refresh).toContain("impersonationRefresh(request, impersonationToken, refreshToken?.value)");
+    expect(refresh).toContain("if (ownerSessionGone(ownerRefreshToken))");
+    for (const src of [status, refresh]) expect(src).not.toMatch(/renew/i);
   });
 });
 

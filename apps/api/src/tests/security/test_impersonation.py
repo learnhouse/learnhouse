@@ -282,48 +282,6 @@ class TestHooks:
             assert await imp.impersonation_end_reason("db", ctx) is None
 
 
-class TestRenewal:
-    async def test_renew_hook(self):
-        ctx = _ctx()
-        with patch("src.core.ee_hooks.get_ee_hooks", return_value=None):
-            assert await imp.renew_impersonation_token("db", ctx) is None
-        for value, expected in (
-            ({"token": "t", "token_expires_at": 5}, {"token": "t", "token_expires_at": 5}),
-            ({"token": None}, None),
-            (None, None),
-        ):
-            hook = AsyncMock(return_value=value)
-            with patch("src.core.ee_hooks.get_ee_hooks", return_value=SimpleNamespace(renew_impersonation_token=hook)):
-                assert await imp.renew_impersonation_token("db", ctx) == expected
-        hook.assert_awaited_with("db", ctx)
-        boom = AsyncMock(side_effect=RuntimeError("x"))
-        with patch("src.core.ee_hooks.get_ee_hooks", return_value=SimpleNamespace(renew_impersonation_token=boom)):
-            assert await imp.renew_impersonation_token("db", ctx) is None
-
-    def test_reissue_keeps_the_session_and_moves_exp(self):
-        ctx = _ctx(mode=imp.MODE_FULL, allow_messaging=True, scope=imp.SCOPE_ORG, role_id=None)
-        later = int(time.time()) + 7200
-        status, payload = imp.decode_impersonation_token(imp.reissue_impersonation_token(ctx, "regular@test.com", later))
-        assert status == "ok" and payload["sub"] == "regular@test.com"
-        again = imp.context_from_claims(payload)
-        assert again == imp.ImpersonationContext(**{**ctx.__dict__, "expires_at": later})
-
-    @pytest.mark.parametrize("current, deadline, window, expected", [
-        (1000 + 7200, 1000 + 7200, 7200, False),   # already at the deadline
-        (1000 + 3000, 1000 + 3030, 7200, False),   # gains under a minute
-        (1000 + 3000, 1000 + 7200, 7200, True),    # under half left
-        (1000 + 5000, 1000 + 5100, 7200, False),   # over half left, small lag
-        (1000 + 5000, 1000 + 5800, 7200, True),    # lags by a tenth of the window
-        (1000 + 43200, 1000 + 43200, 43200, False),  # a staff token minted to the cap
-    ])
-    def test_renewal_due(self, current, deadline, window, expected):
-        assert imp.renewal_due(current, deadline, window, now=1000) is expected
-
-    def test_renewal_due_defaults_to_now(self):
-        now = int(time.time())
-        assert imp.renewal_due(now + 60, now + 7200, 7200) is True
-
-
 # ── middleware ──────────────────────────────────────────────────────────
 
 
@@ -381,7 +339,7 @@ class TestGate:
     async def test_spent_tokens_are_401_never_a_fallback(self):
         r, _ = await self._req("GET", "/api/v1/courses/x", cookie=_token(expires_at=int(time.time()) - 1))
         assert r.status_code == 401 and r.json()["detail"]["code"] == imp.CODE_ENDED
-        # An expired token says so, so the client renews instead of leaving.
+        # An expired token says so (the badge reports the time limit).
         assert r.json()["detail"]["reason"] == imp.REASON_TOKEN_EXPIRED
         bad = jwt.encode({"sub": "x", "exp": int(time.time()) + 60, "purpose": "impersonation"}, SECRET_KEY, algorithm=ALGORITHM)
         r, _ = await self._req("GET", "/api/v1/courses/x", token=bad)

@@ -12,8 +12,8 @@ import {
 } from '@services/auth/cookies'
 import { isLocalhost } from '@services/utils/ts/hostUtils'
 import { endReasonOf } from '@/lib/auth/impersonation'
-import { sessionIsOver, splitRenewal } from '@/lib/auth/impersonationToken'
-import { setCookie as setImpersonationCookie } from '../impersonation/_lib'
+import { OWNER_SIGNED_OUT_REASON, ownerSessionGone, sessionIsOver } from '@/lib/auth/impersonationToken'
+import { endOnServer as endImpersonationOnServer } from '../impersonation/_lib'
 
 const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
 
@@ -185,7 +185,19 @@ function withoutRefreshToken(data: unknown): unknown {
   return stripped
 }
 
-async function impersonationRefresh(request: NextRequest, token: string): Promise<NextResponse> {
+async function impersonationRefresh(
+  request: NextRequest,
+  token: string,
+  ownerRefreshToken: string | undefined,
+): Promise<NextResponse> {
+  // The person who opened the session can't refresh their own sign-in any
+  // more: the session ends with it instead of living on to its cap.
+  if (ownerSessionGone(ownerRefreshToken)) {
+    await endImpersonationOnServer(request, token)
+    const response = NextResponse.json({ code: 'impersonation_ended', reason: OWNER_SIGNED_OUT_REASON }, { status: 410 })
+    clearImpersonationCookie(response, request)
+    return response
+  }
   let res: Response | null = null
   try {
     res = await fetch(`${BACKEND_URL}/api/v1/auth/impersonation/status`, {
@@ -207,17 +219,11 @@ async function impersonationRefresh(request: NextRequest, token: string): Promis
     clearImpersonationCookie(response, request)
     return response
   }
-  // The API slides the token while the session is in use: hand the page the
-  // renewed one and keep it in the cookie.
-  const { token: renewed } = splitRenewal(await readImpersonationJson(res))
-  const current = renewed || token
-  const response = NextResponse.json({
-    access_token: current,
-    expiry: decodeJwtExpiryMs(current) ?? undefined,
+  return NextResponse.json({
+    access_token: token,
+    expiry: decodeJwtExpiryMs(token) ?? undefined,
     impersonation: true,
   })
-  if (renewed) setImpersonationCookie(response, request, renewed)
-  return response
 }
 
 async function readImpersonationJson(res: Response): Promise<unknown> {
@@ -313,7 +319,7 @@ async function proxyRequest(
     && impersonationToken
     && request.nextUrl.searchParams.get('scope') !== 'platform'
   ) {
-    return impersonationRefresh(request, impersonationToken)
+    return impersonationRefresh(request, impersonationToken, refreshToken?.value)
   }
 
   // Short-circuit: no refresh token cookie means nothing to refresh. Clear the

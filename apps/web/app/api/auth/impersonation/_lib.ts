@@ -59,10 +59,23 @@ export async function readJson(res: Response): Promise<any> {
 }
 
 
-/** Keep a freshly issued (or renewed) impersonation token in its httpOnly cookie. */
+/** Keep a freshly issued impersonation token in its httpOnly cookie. */
 export function setCookie(response: NextResponse, request: NextRequest, token: string) {
-  // The cookie lasts exactly as long as the token: staff sessions run to the
-  // safety cap, an admin's "view as" slides with use (the API renews the
-  // token on /status and this swaps the cookie).
+  // The cookie lasts exactly as long as the token, which runs to the session's
+  // stored cap (idle limits are the API's, checked on every request).
   response.cookies.set(IMPERSONATION_COOKIE, token, { ...getCookieOptions(request), maxAge: impersonationCookieMaxAge(token) })
+}
+
+/** End the session on the API (best effort): its owner signed out. */
+export async function endOnServer(request: NextRequest, token: string): Promise<void> {
+  try {
+    await fetch(`${BACKEND_URL}/api/v1/auth/impersonation/end`, {
+      method: 'POST',
+      headers: forwardHeaders(request, token),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    })
+  } catch {
+    /* the cookie goes regardless; the record ends at its cap or on the owner's sign-out */
+  }
 }

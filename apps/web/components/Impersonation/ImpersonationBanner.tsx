@@ -30,7 +30,6 @@ import {
 // It sits on top of everything (z-max), takes no layout space, and only its
 // own pixels catch the pointer.
 
-// Also how the token slides: each poll lets the proxy swap in a renewed one.
 const STATUS_POLL_MS = 30_000
 // How long the "why it ended" note stays up.
 const RETURNED_NOTE_MS = 8_000
@@ -174,8 +173,8 @@ export default function ImpersonationBanner() {
     } catch {
       bc = null
     }
-    // The poll keeps the session in step: it notices an end (and why), and
-    // the proxy swaps in a renewed token as it goes.
+    // The poll notices an end elsewhere (and why), including the person who
+    // opened the session signing out.
     const poll = window.setInterval(async () => {
       try {
         const res = await fetch('/api/auth/impersonation', { credentials: 'include', cache: 'no-store' })

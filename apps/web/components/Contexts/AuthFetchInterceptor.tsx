@@ -12,7 +12,6 @@ import {
   endReasonOf,
   impersonationCode,
   normalizeEndReason,
-  TOKEN_EXPIRED_REASON,
 } from '@/lib/auth/impersonation'
 
 const AUTH_RETRY_HEADER = 'X-LH-Auth-Retry'
@@ -112,18 +111,8 @@ export default function AuthFetchInterceptor() {
         const body = await response.clone().json().catch(() => null)
         const code = impersonationCode(body)
         if (code === 'IMPERSONATION_ENDED') {
-          const reason = endReasonOf(body)
-          // Only the token ran out (the session may live on): renew it and
-          // retry below. Anything else is the session's own end.
-          const renewable =
-            reason === TOKEN_EXPIRED_REASON
-            && !hasRetried
-            && !!authHeader?.startsWith('Bearer ')
-            && !(typeof Request !== 'undefined' && input instanceof Request)
-          if (!renewable) {
-            dispatchImpersonationEnded(normalizeEndReason(reason))
-            return response
-          }
+          dispatchImpersonationEnded(normalizeEndReason(endReasonOf(body)))
+          return response
         }
         // Only what the person did (a write) gets the notice; a page's own
         // background reads that the session may not make stay quiet.
