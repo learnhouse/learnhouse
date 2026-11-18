@@ -47,6 +47,9 @@ def _run(args: list[str], timeout: int) -> tuple[int, bytes, bytes]:
     try:
         p = subprocess.run(args, capture_output=True, timeout=timeout)
         return p.returncode, p.stdout or b"", p.stderr or b""
+    except FileNotFoundError:
+        # ffmpeg/ffprobe not installed (or LEARNHOUSE_FFMPEG_PATH points nowhere).
+        return 127, b"", f"{args[0]} not found: install ffmpeg or set LEARNHOUSE_FFMPEG_PATH".encode()
     except subprocess.TimeoutExpired as e:
         return -1, (e.stdout or b""), (e.stderr or b"")
 

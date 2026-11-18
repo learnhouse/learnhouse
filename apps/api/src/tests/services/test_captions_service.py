@@ -139,3 +139,17 @@ async def test_translate_raises_without_cues(monkeypatch):
     import pytest
     with pytest.raises(ValueError):
         await cap.translate_vtt("WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello", "French", "gemini-x")
+
+
+# --- missing ffmpeg ----------------------------------------------------------
+
+def test_run_reports_missing_binary_instead_of_crashing():
+    rc, out, err = cap._run(["/nonexistent/ffmpeg-lh-test", "-version"], 5)
+    assert rc == 127
+    assert out == b""
+    assert b"not found" in err
+
+
+async def test_extract_audio_chunks_returns_empty_when_ffmpeg_missing(monkeypatch, tmp_path):
+    monkeypatch.setenv("LEARNHOUSE_FFMPEG_PATH", "/nonexistent/ffmpeg-lh-test")
+    assert await cap.extract_audio_chunks(str(tmp_path / "in.mp4"), str(tmp_path)) == []
