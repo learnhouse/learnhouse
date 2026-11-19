@@ -4,7 +4,7 @@ Boards (like Plays) are an Enterprise feature: without EE their toolset is
 simply not registered. Everything else on the platform keeps working: the
 shared tool registry, the tools API for org API tokens (listing, a course
 tool, a user group tool, the approval gate), the org API token OpenAPI spec,
-and the org MCP server's tools/list, search_tools and invoke_tool. This suite
+and the org MCP server's tools/list, search_tools and invoke_read_tool / invoke_tool. This suite
 pins EE off (src/tests/conftest.py), and these run against the real registry.
 """
 
@@ -113,13 +113,13 @@ async def test_mcp_lists_searches_and_invokes_without_ee(db, org, admin_user, co
     who = ctx_for(member(admin_user, org), query={"toolsets": "all"})
 
     names = {t.name for t in (await handlers.list_tools(who, None)).tools}
-    assert {"search_tools", "invoke_tool", "list_courses", "delete_course"} <= names and _boardless(names)
+    assert {"search_tools", "invoke_read_tool", "invoke_tool", "list_courses", "delete_course"} <= names and _boardless(names)
 
     found = body(await handlers.call_tool(who, call("search_tools", {"query": "board whiteboard"})))
     assert _boardless(i["name"] for i in found["items"])
     assert _boardless(t["name"] for t in found["toolsets"])
 
-    ran = body(await handlers.call_tool(who, call("invoke_tool", {"name": "list_courses", "arguments": {}})))
+    ran = body(await handlers.call_tool(who, call("invoke_read_tool", {"name": "list_courses", "arguments": {}})))
     assert "error" not in ran and course.course_uuid in str(ran)
-    missing = body(await handlers.call_tool(who, call("invoke_tool", {"name": "list_boards", "arguments": {}})))
+    missing = body(await handlers.call_tool(who, call("invoke_read_tool", {"name": "list_boards", "arguments": {}})))
     assert missing["error"]["code"] == "unknown_tool"

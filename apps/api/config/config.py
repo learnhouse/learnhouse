@@ -114,6 +114,9 @@ class MCPConfig(BaseModel):
     # tokens are bound to it, so set it whenever a proxy rewrites the host or
     # scheme. Derived from each request when unset.
     public_url: str | None = None
+    # Domain-verification token the ChatGPT app directory asks for, served as
+    # plain text at /.well-known/openai-apps-challenge. Unset means 404.
+    openai_apps_challenge: str | None = None
 
 
 class S3ApiConfig(BaseModel):
@@ -792,6 +795,11 @@ def _build_learnhouse_config(yaml_config: dict) -> LearnHouseConfig:
         ),
         public_url=(
             os.environ.get("LEARNHOUSE_MCP_PUBLIC_URL") or mcp_yaml.get("public_url") or None
+        ),
+        openai_apps_challenge=(
+            os.environ.get("LEARNHOUSE_MCP_OPENAI_APPS_CHALLENGE")
+            or mcp_yaml.get("openai_apps_challenge")
+            or None
         ),
     )
 

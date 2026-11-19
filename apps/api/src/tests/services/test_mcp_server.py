@@ -235,6 +235,14 @@ def test_requested_toolsets():
     }
 
 
+def test_meta_tools_enabled():
+    assert srv.meta_tools_enabled(None) and srv.meta_tools_enabled(SimpleNamespace(query_params={}))
+    assert srv.meta_tools_enabled(SimpleNamespace(query_params=None))
+    assert srv.meta_tools_enabled(SimpleNamespace(query_params={"meta": "on"}))
+    for off in ("off", "0", "false", "None"):
+        assert not srv.meta_tools_enabled(SimpleNamespace(query_params={"meta": off})), off
+
+
 def test_essentials_fits_clients_that_cap_tools():
     from src.services.ai.tools import build_registry
 
@@ -318,7 +326,7 @@ async def test_list_tools(db, org, admin_user, regular_user, sessions):
     learner = {t.name for t in (await handlers.list_tools(ctx_for(member(regular_user, org)), None)).tools}
     assert "create_course" not in learner and "list_courses" in learner
     narrowed = {t.name for t in (await handlers.list_tools(ctx_for(member(admin_user, org), query={"toolsets": "content"}), None)).tools}
-    assert narrowed == {"search_tools", "invoke_tool", "get_context", "get_activity_content", "fetch_url"}
+    assert narrowed == {"search_tools", "invoke_read_tool", "invoke_tool", "get_context", "get_activity_content", "fetch_url"}
     # The default listing leaves other toolsets to search_tools; all lists them.
     assert "list_boards" not in names
     everything = {t.name for t in (await handlers.list_tools(ctx_for(member(admin_user, org), query={"toolsets": "all"}), None)).tools}

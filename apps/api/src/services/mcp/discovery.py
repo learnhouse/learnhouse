@@ -1,13 +1,15 @@
 """Finding tools when there are hundreds, and the shapes results come in.
 
 * Toolset defaults: without ``?toolsets=`` a connection lists the course
-  building set (DEFAULT_TOOLSETS) plus the two tools below; ``?toolsets=all``
+  building set (DEFAULT_TOOLSETS) plus the three tools below; ``?toolsets=all``
   lists everything, and named sets or presets work as before.
 * ``search_tools`` finds any tool this connection may use, listed or not, by
   words in its name, title or description, and returns its input schema.
-* ``invoke_tool`` calls a tool by name for clients that only let the model
-  call listed tools. It is dispatched exactly like a direct call (same
-  checks, same approvals, bound to the real tool name and arguments).
+* ``invoke_read_tool`` and ``invoke_tool`` call a tool by name for clients
+  that only let the model call listed tools: the first only read-only tools,
+  the second only tools that change data, so each keeps honest annotations.
+  Both are dispatched exactly like a direct call (same checks, same
+  approvals, bound to the real tool name and arguments).
 * Output schemas: every tool declares the shape of its structuredContent,
   loose enough that any result of the tool fits it.
 * Cursors for the protocol lists (tools, resources, prompts).
@@ -32,8 +34,10 @@ RESOURCES_PAGE = 100
 PROMPTS_PAGE = 50
 
 SEARCH_TOOLS = "search_tools"
+INVOKE_READ_TOOL = "invoke_read_tool"
 INVOKE_TOOL = "invoke_tool"
-META_TOOLS = (SEARCH_TOOLS, INVOKE_TOOL)
+INVOKE_TOOLS = (INVOKE_READ_TOOL, INVOKE_TOOL)
+META_TOOLS = (SEARCH_TOOLS, INVOKE_READ_TOOL, INVOKE_TOOL)
 
 
 # ─── cursors ─────────────────────────────────────────────────────────────────
@@ -179,8 +183,9 @@ def meta_tool_definitions() -> list[types.Tool]:
             description=(
                 "Find any LearnHouse tool this connection can use, including ones not in the current tool "
                 "list (paths, communities, people, org settings, ...). Search by words (query) and/or "
-                "toolset; returns each tool's name, purpose and input schema. Call the tool directly, or "
-                "through invoke_tool if your app only allows listed tools. Omit both to see the toolsets."
+                "toolset; returns each tool's name, purpose and input schema. Call the tool directly, or, if "
+                "your app only allows listed tools, through invoke_read_tool (read_only tools) or invoke_tool "
+                "(tools that change data). Omit both to see the toolsets."
             ),
             input_schema={
                 "type": "object",
@@ -198,29 +203,48 @@ def meta_tool_definitions() -> list[types.Tool]:
                 title="Search tools", read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
             ),
         ),
-        types.Tool(
-            name=INVOKE_TOOL,
-            title="Call a tool by name",
-            description=(
-                "Call a LearnHouse tool found with search_tools that is not in your tool list. Same checks "
-                "and approvals as calling it directly; for an approval, call invoke_tool again with the same "
-                "name and arguments plus approval_id inside arguments."
-            ),
-            input_schema={
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "maxLength": 100, "description": "The tool's name, from search_tools."},
-                    "arguments": {"type": "object", "description": "The tool's arguments, matching its input schema."},
-                },
-                "required": ["name"],
-                "additionalProperties": False,
-            },
-            output_schema={"type": "object", "additionalProperties": True},
-            annotations=types.ToolAnnotations(
-                title="Call a tool by name", read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
-            ),
+        _invoke_definition(
+            INVOKE_READ_TOOL,
+            "Call a read-only tool by name",
+            "Call a read-only LearnHouse tool (read_only: true in search_tools) that is not in your tool "
+            "list. Same checks as calling it directly. Tools that change data go through invoke_tool.",
+            read_only=True,
+        ),
+        _invoke_definition(
+            INVOKE_TOOL,
+            "Call a tool that changes data by name",
+            "Call a LearnHouse tool that changes data (read_only: false in search_tools) and is not in your "
+            "tool list. Same checks and approvals as calling it directly; for an approval, call invoke_tool "
+            "again with the same name and arguments plus approval_id inside arguments. Read-only tools go "
+            "through invoke_read_tool.",
+            read_only=False,
         ),
     ]
+
+
+def _invoke_definition(name: str, title: str, description: str, read_only: bool) -> types.Tool:
+    return types.Tool(
+        name=name,
+        title=title,
+        description=description,
+        input_schema={
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "maxLength": 100, "description": "The tool's name, from search_tools."},
+                "arguments": {"type": "object", "description": "The tool's arguments, matching its input schema."},
+            },
+            "required": ["name"],
+            "additionalProperties": False,
+        },
+        output_schema={"type": "object", "additionalProperties": True},
+        annotations=types.ToolAnnotations(
+            title=title,
+            read_only_hint=read_only,
+            destructive_hint=not read_only,
+            idempotent_hint=read_only,
+            open_world_hint=not read_only,
+        ),
+    )
 
 
 def output_schema_for_meta(name: str) -> dict:

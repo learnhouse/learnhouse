@@ -68,6 +68,15 @@ async def test_discovery(client):
     assert (await client.get("/.well-known/openid-configuration")).json() == asm
 
 
+async def test_openai_apps_challenge(client):
+    with patch("config.config.get_learnhouse_config") as get_config:
+        get_config.return_value.mcp_config = SimpleNamespace(openai_apps_challenge=None)
+        assert (await client.get("/.well-known/openai-apps-challenge")).status_code == 404
+        get_config.return_value.mcp_config = SimpleNamespace(openai_apps_challenge=" tok_123\n")
+        res = await client.get("/.well-known/openai-apps-challenge")
+    assert res.status_code == 200 and res.text == "tok_123" and res.headers["content-type"].startswith("text/plain")
+
+
 async def test_register_errors_and_rate_limit(app, client):
     resp = await client.post("/oauth/register", content=b"not json", headers={"content-type": "application/json"})
     assert resp.status_code == 400 and resp.json()["error"] == "invalid_client_metadata"
