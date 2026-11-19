@@ -138,6 +138,14 @@ def mcp_resource_url(request: Request) -> str:
     return f"{_request_origin(request)}/mcp"
 
 
+def canonical_resource(value: str) -> str:
+    """A resource indicator without query, fragment or trailing slash, so
+    clients that send the endpoint URL with options (?toolsets=...) still
+    name the same server."""
+    parsed = urlparse(value)
+    return parsed._replace(query="", fragment="").geturl().rstrip("/")
+
+
 def issuer_url(request: Request) -> str:
     """The authorization server lives on the same origin as the endpoint."""
     parsed = urlparse(mcp_resource_url(request))
@@ -485,8 +493,8 @@ async def start_authorization(
     except OAuthError as e:
         raise fail(e.error, e.description)
 
-    resource = params.get("resource") or mcp_resource_url(request)
-    if resource.rstrip("/") != mcp_resource_url(request):
+    resource = canonical_resource(params.get("resource") or mcp_resource_url(request))
+    if resource != mcp_resource_url(request):
         raise fail("invalid_target", "Tokens can only be issued for this server's MCP endpoint")
 
     signed = sign_authorization_request(
@@ -496,7 +504,7 @@ async def start_authorization(
             "state": state,
             "code_challenge": challenge,
             "scope": format_scope(scopes),
-            "resource": resource.rstrip("/"),
+            "resource": resource,
             "iss": issuer_url(request),
         }
     )
@@ -806,7 +814,7 @@ async def _exchange_code(
         raise OAuthError("invalid_grant", "redirect_uri does not match the authorization request")
     if not _pkce_ok(form.get("code_verifier"), challenge):
         raise OAuthError("invalid_grant", "PKCE verification failed")
-    asked_resource = (form.get("resource") or "").rstrip("/")
+    asked_resource = canonical_resource(form.get("resource") or "")
     if asked_resource and resource and asked_resource != resource:
         raise OAuthError("invalid_target", "resource does not match the authorization request")
 
