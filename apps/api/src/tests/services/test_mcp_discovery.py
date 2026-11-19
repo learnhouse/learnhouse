@@ -91,6 +91,10 @@ def test_output_schemas_are_open_and_fit_the_tool():
     assert tool.output_schema == listed
     meta = {t.name: t for t in disc.meta_tool_definitions()}
     assert meta["search_tools"].annotations.read_only_hint and not meta["invoke_tool"].annotations.read_only_hint
+    # Reads and writes go through separate meta tools, each annotated for what it can reach.
+    read, write = meta["invoke_read_tool"].annotations, meta["invoke_tool"].annotations
+    assert read.read_only_hint and not read.destructive_hint and read.title == meta["invoke_read_tool"].title
+    assert write.destructive_hint and not write.read_only_hint
 
 
 def test_search_ranks_name_words_first():
@@ -129,6 +133,13 @@ async def test_search_tools_and_invoke_tool(db, org, admin_user, sessions):  # n
     assert held["error"]["code"] == "approval_required"
     for bad in ({"name": "search_tools"}, {"name": 5}, {"name": "enroll_people", "arguments": []}):
         assert body(await handlers.call_tool(who, call("invoke_tool", bad)))["error"]["code"] == "invalid_args"
+    # invoke_read_tool only reaches read-only tools, invoke_tool only tools that change data.
+    listed = body(await handlers.call_tool(who, call("invoke_read_tool", {"name": "list_things", "arguments": {}})))
+    assert "error" not in listed
+    for via, name, other in (("invoke_read_tool", "enroll_people", "invoke_tool"), ("invoke_tool", "list_things", "invoke_read_tool")):
+        wrong = body(await handlers.call_tool(who, call(via, {"name": name, "arguments": {}})))
+        assert wrong["error"]["code"] == "invalid_args" and other in wrong["error"]["message"], via
+    assert body(await handlers.call_tool(who, call("invoke_read_tool", {"name": "invoke_tool"})))["error"]["code"] == "invalid_args"
     unknown = body(await handlers.call_tool(who, call("invoke_tool", {"name": "enrol_people"})))
     assert unknown["error"]["code"] == "unknown_tool" and unknown["error"]["did_you_mean"] == ["enroll_people"]
     with patch.object(h, "_rate_limited", return_value=True):
@@ -162,7 +173,7 @@ async def test_tool_list_pages(db, org, admin_user, sessions, monkeypatch):  # n
         cursor = page.next_cursor
         if not cursor:
             break
-    assert pages > 2 and names[:2] == ["search_tools", "invoke_tool"] and len(names) == len(set(names))
+    assert pages > 2 and names[:3] == ["search_tools", "invoke_read_tool", "invoke_tool"] and len(names) == len(set(names))
     with pytest.raises(MCPError):
         await handlers.list_tools(who, types.PaginatedRequestParams(cursor="garbage"))
 

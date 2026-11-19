@@ -339,12 +339,13 @@ class Handlers:
             if _rate_limited(principal):
                 return srv.error_result("rate_limited", "Too many calls in the last minute")
             return await self._search_tools(ctx, principal, dict(params.arguments or {}))
-        if params.name == disc.INVOKE_TOOL:
+        via = params.name if params.name in disc.INVOKE_TOOLS else None
+        if via is not None:
             args = dict(params.arguments or {})
             name, inner = args.get("name"), args.get("arguments", {})
             if not isinstance(name, str) or name in disc.META_TOOLS or not isinstance(inner, dict):
                 return srv.error_result(
-                    "invalid_args", "invoke_tool needs name (a tool from search_tools, not a meta tool) and arguments (an object).",
+                    "invalid_args", f"{via} needs name (a tool from search_tools, not a meta tool) and arguments (an object).",
                     fields=[{"field": "name", "problem": "required tool name"}],
                 )
             # Dispatched exactly like a direct call: same checks, approvals bound to the real tool.
@@ -357,6 +358,13 @@ class Handlers:
             return srv.error_result(
                 "unknown_tool", f"Unknown tool: {params.name}",
                 did_you_mean=close or None,
+            )
+        if via is not None and (spec.tier is ActionTier.READ) != (via == disc.INVOKE_READ_TOOL):
+            other = disc.INVOKE_TOOL if via == disc.INVOKE_READ_TOOL else disc.INVOKE_READ_TOOL
+            kind = "changes data" if via == disc.INVOKE_READ_TOOL else "is read-only"
+            return srv.error_result(
+                "invalid_args", f"{params.name} {kind}; call it through {other} instead.",
+                fields=[{"field": "name", "problem": f"use {other}"}],
             )
         arguments = dict(params.arguments or {})
         call = approvals.call_args(arguments)

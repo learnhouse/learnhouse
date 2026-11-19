@@ -138,7 +138,7 @@ retry; explain them to the user.
 13. Results include links (url); end by giving the user links to what you changed.
 14. The tool list shows course building by default. search_tools finds every other tool \
 (paths, communities, people, settings...) with its input schema; call it directly or through \
-invoke_tool. Long builds report progress when you send a progressToken.
+invoke_read_tool (read-only tools) or invoke_tool (tools that change data). Long builds report progress when you send a progressToken.
 """
 
 
