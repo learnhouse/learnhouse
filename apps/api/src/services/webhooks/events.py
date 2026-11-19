@@ -170,8 +170,10 @@ WEBHOOK_EVENTS: dict[str, dict] = {
         "data_schema": {
             "org_id": "integer",
             "emails": "list[string]",
-            "invite_code_uuid": "string",
             "invited_by": "string",
+            "role_uuid": "string",
+            "usergroup_ids": "list[integer]",
+            "course_uuids": "list[string]",
         },
     },
     "user_removed_from_org": {

@@ -90,6 +90,22 @@ def verification_next_path(user_uuid: str, org_uuid: str, token: str) -> str | N
         return None
 
 
+async def invitee_email_branding(request: Request, db_session: AsyncSession, email: str, org: Organization) -> dict:
+    """``{"lang", "org_name"}`` of the inviting org for an address it invited
+    (not a member yet), else ``{}``. Only the copy: the link's host stays the
+    platform's, which the org can't read."""
+    from src.services.email.branding import resolve_org_email_branding
+    from src.services.orgs.invitations.apply import has_pending_invite
+
+    if not await has_pending_invite(db_session, email, org):
+        return {}
+    org_config = (await db_session.execute(
+        select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    )).scalars().first()
+    branding = resolve_org_email_branding(org, org_config, request)
+    return {"lang": branding.lang, "org_name": branding.org_name}
+
+
 def generate_verification_token() -> str:
     """Generate a secure verification token."""
     return secrets.token_urlsafe(32)
@@ -138,6 +154,9 @@ async def send_verification_email(
         from src.security.org_auth import get_user_org
 
         if await get_user_org(user.id, org.id, db_session) is None:
+            # Someone the org invited still reads the email in the org's
+            # language, under its name; the link stays the platform's.
+            branding_kwargs = await invitee_email_branding(request, db_session, user.email, org)
             org = None
             org_id = None
 
@@ -311,21 +330,33 @@ async def verify_email_token(
 
             had_password = bool(user.password)
             await claim_account_on_inbox_proof(user, db_session)
+            await _apply_invitations(request, db_session, user)
             return user, (INBOX_CLAIMED if had_password else "Email verified")
         return user, "Email already verified"
 
-    # Identity-provider links made while the address was unproven go first.
-    from src.services.auth.utils import _drop_unverified_sso_links
+    claimed_password = False
+    if inbox_unproven(user) or (user.password and await _invitations_waiting(db_session, user.email)):
+        # Verifying applies the invitations waiting for the address (their
+        # roles), and whoever set the password may not own the inbox (it was
+        # set before this proof: at signup, or the email was changed to this
+        # address since). So the password goes, with its sessions, before the
+        # invitations apply, as on a self-hosted proof; the owner sets a new
+        # one. Decided now, so an invitation sent after the signup counts too.
+        from src.services.auth.utils import claim_account_on_inbox_proof
 
-    await _drop_unverified_sso_links(user.id, db_session)
+        claimed_password = bool(user.password)
+        await claim_account_on_inbox_proof(user, db_session)
+    else:
+        # Identity-provider links made while the address was unproven go first.
+        await _drop_unverified_sso_links(user.id, db_session)
 
-    # Mark email as verified
-    user.email_verified = True
-    user.email_verified_at = datetime.now(timezone.utc).isoformat()
+        # Mark email as verified
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
 
-    db_session.add(user)
-    await db_session.commit()
-    await db_session.refresh(user)
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
 
     # Delete used token
     r.delete(redis_key)
@@ -334,6 +365,9 @@ async def verify_email_token(
     from src.core.ee_hooks import notify_ee_email_verified
 
     notify_ee_email_verified(user.id)
+
+    # Invitations addressed to the now-proven inbox apply.
+    await _apply_invitations(request, db_session, user)
 
     # Dispatch webhook; resolve org_id from org_uuid
     if org_uuid != NO_ORG_UUID:
@@ -349,7 +383,27 @@ async def verify_email_token(
                 },
             )
 
-    return user, "Email verified successfully"
+    return user, (INBOX_CLAIMED if claimed_password else "Email verified successfully")
+
+
+async def _invitations_waiting(db_session: AsyncSession, email: str) -> bool:
+    """A pending invitation for this address in any org, database or Redis."""
+    from src.services.onboarding.invites import _db_pending, _pending_records
+
+    return bool(await _db_pending(db_session, email)) or bool(_pending_records(email))
+
+
+async def _drop_unverified_sso_links(user_id: int, db_session: AsyncSession) -> None:
+    from src.services.auth.utils import _drop_unverified_sso_links as drop
+
+    await drop(user_id, db_session)
+
+
+async def _apply_invitations(request: Request, db_session: AsyncSession, user: User) -> None:
+    """Accept every invitation waiting for the address (never raises)."""
+    from src.services.onboarding.invites import apply_all_pending_invites
+
+    await apply_all_pending_invites(request, db_session, user, via="email_verified")
 
 
 async def resend_verification_email(

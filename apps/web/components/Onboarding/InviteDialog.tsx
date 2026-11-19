@@ -16,6 +16,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { recordOnboardingEvent } from '@services/onboarding/onboarding'
 import { extractEmails } from '@/lib/onboarding'
+import { copyTextFrom } from '@/lib/text/clipboard'
 
 export type InviteTab = 'link' | 'email' | 'csv'
 
@@ -110,10 +111,10 @@ export default function InviteDialog({
     : null
 
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(joinUrl)
-    } catch {
-      /* the field stays selectable */
+    // "Copied" only when it was; otherwise the field stays selectable.
+    if (!(await copyTextFrom(joinUrl))) {
+      toast.error(t('dashboard.users.dash.signups.copy_failed'))
+      return
     }
     setCopied(true)
     setTimeout(() => setCopied(false), 1600)

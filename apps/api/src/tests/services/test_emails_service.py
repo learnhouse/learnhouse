@@ -38,8 +38,9 @@ def _user(**overrides):
 
 
 def _platform_free(body: str) -> bool:
-    """Org mail names LearnHouse only in the "Sent by {org} via LearnHouse" line."""
-    return body.count("LearnHouse") == body.count("via LearnHouse") == 1
+    """Org mail names LearnHouse only in the "Sent by {org} via LearnHouse"
+    line (translated in the email's language)."""
+    return body.count("LearnHouse") == 1
 
 
 def _wordmark(escaped_name: str) -> str:
@@ -265,7 +266,7 @@ class TestEmailsService:
                 "https://app.test/signup",
             )
         invite_body = send_email.call_args.kwargs["body"]
-        assert "Create your account to accept" in invite_body
+        assert "Use the button below to get started." in invite_body
 
     def test_send_emails_in_french_when_lang_is_fr(self):
         with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:

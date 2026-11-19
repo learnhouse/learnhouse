@@ -206,7 +206,11 @@ function JoinAndCodes() {
       track(AnalyticsEvent.SignupMechanismChanged, { method })
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org?.slug) })
       router.refresh()
-      toast.success(t('dashboard.users.signups.invite_codes.toasts.change_success', { method }))
+      toast.success(
+        t('dashboard.users.signups.invite_codes.toasts.change_success', {
+          method: t(method === 'open' ? 'dashboard.users.invitations.page.mode_open' : 'dashboard.users.invitations.page.mode_invite_only'),
+        })
+      )
     } else {
       setOverride(previous)
       toast.error(t('dashboard.users.signups.invite_codes.toasts.change_error'))

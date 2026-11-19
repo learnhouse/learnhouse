@@ -168,7 +168,7 @@ def payment_failed(v: dict, lang: str, brand: Brand) -> Email:
                 ("Organization", v.get("org_slug") or ""),
             ]),
             Button("Update payment method", url) if url else None,
-            LinkFallback(url) if url else None,
+            LinkFallback(url, t(lang, "common.copy_paste")) if url else None,
         ]),
         icon="warning-circle",
         tone="rose",

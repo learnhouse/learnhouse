@@ -670,7 +670,11 @@
       "google_not_configured": "Google OAuth non configurato",
       "profile_field_invalid": "Link e indirizzi email non sono consentiti in: {{fields}}",
       "field_no_links": "Niente link o indirizzi email",
-      "rate_limited": "Troppi tentativi. Attendi un momento e riprova."
+      "rate_limited": "Troppi tentativi. Attendi un momento e riprova.",
+      "invite_required": "Ti serve un invito per entrare in questa organizzazione.",
+      "invite_email_mismatch": "Questo invito è stato inviato a un altro indirizzo email. Accedi con quell'indirizzo per accettarlo.",
+      "invite_email_mismatch_hint": "Questo invito è stato inviato a {{email}}. Accedi con quell'account Google per accettarlo.",
+      "invite_verify_email": "Verifica prima il tuo indirizzo email, poi riapri questo invito."
     },
     "sso_errors": {
       "access_denied": "Accesso negato. Potresti aver rifiutato la richiesta di accesso o non avere l'autorizzazione per usare questa applicazione.",
@@ -726,7 +730,9 @@
       "try_again": "Riprova",
       "success": "Fatto!",
       "redirecting": "Reindirizzamento in corso...",
-      "google_failed": "Autenticazione Google non riuscita: {{error}}"
+      "google_failed": "Autenticazione Google non riuscita: {{error}}",
+      "invite_mismatch_title": "Account Google sbagliato",
+      "use_another_account": "Usa un altro account Google"
     },
     "magic": {
       "expired": "Questo link è scaduto o è già stato usato. Richiedine uno nuovo per accedere.",
@@ -801,14 +807,23 @@
         "verify_note": "Questo link ti è stato condiviso direttamente, quindi verificherai la tua email prima di entrare."
       },
       "verify_title": "Controlla la tua casella di posta",
-      "verify_desc": "Il tuo account è pronto. Abbiamo inviato un link di verifica a {{email}}. Verifica la tua email, poi riapri questo invito o accettalo dalla tua home page per entrare in {{org}}."
+      "verify_desc": "Il tuo account è pronto. Abbiamo inviato un link di verifica a {{email}}. Dopo aver verificato l'email, accedi ed entrerai in {{org}}.",
+      "accepted_title": "Hai già accettato questo invito",
+      "accepted_desc": "Accedi per andare a {{org}}.",
+      "retry_title": "Non siamo riusciti a caricare questo invito",
+      "retry_desc": "Controlla la connessione e riprova. Il tuo link di invito funziona ancora.",
+      "try_again": "Riprova",
+      "org_full": "Questa organizzazione al momento è piena. Chiedi al suo amministratore di fare spazio."
     },
     "login_failed_forgot": "Password dimenticata?",
     "login_failed_reset": "Reimpostala",
     "login_failed_magic": "Inviami invece un link di accesso",
     "login_failed_google_hint": "Registrato con Google? Usa Continua con Google qui sotto.",
     "email_verified_set_password": "La tua email è stata verificata. Per la tua sicurezza, la password impostata in precedenza è stata rimossa: scegline una nuova per accedere con una password.",
-    "set_new_password": "Imposta una nuova password"
+    "set_new_password": "Imposta una nuova password",
+    "invited_by_email_cta": "Invitato via email? Registrati con quell'indirizzo",
+    "use_invite_code_instead": "Hai invece un codice di invito?",
+    "password_reset_done": "La tua password è stata modificata."
   },
   "validation": {
     "required": "Obbligatorio",
@@ -9765,7 +9780,7 @@
           "error": "Qualcosa è andato storto. Riprova.",
           "resent": "Nuovo invito inviato a {{email}}",
           "email_failed": "Non è stato possibile inviare l'email. Copia invece il link di invito.",
-          "link_copied": "Link di invito copiato. Chi lo apre verifica la propria email prima di entrare. Il link nell'email precedente non funziona più.",
+          "link_copied": "Link di invito copiato. Chi lo apre verifica la propria email prima di entrare.",
           "revoked": "Invito revocato",
           "updated": "Invito aggiornato",
           "bulk_resend_one": "{{count}} invito inviato di nuovo",
@@ -30247,7 +30262,9 @@
       "verify_resend": "Invia di nuovo l'email di verifica",
       "verify_sent": "Inviata. Controlla la posta.",
       "invited_as": "Ti ha invitato come {{role}}",
-      "invited_as_by": "{{name}} ti ha invitato come {{role}}"
+      "invited_as_by": "{{name}} ti ha invitato come {{role}}",
+      "accept": "Accetta",
+      "new_role": "Nuovo ruolo: {{role}}"
     },
     "celebrate": {
       "title": "Il tuo primo corso è online",

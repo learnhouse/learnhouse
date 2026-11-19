@@ -6,8 +6,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import OpenSignUpComponent from './OpenSignup'
 import InviteOnlySignUpComponent from './InviteOnlySignUp'
-import InviteLinkSignup from './InviteLinkSignup'
-import { inviteTokenFrom } from '@/lib/auth/signup'
+import InviteLinkSignup, { InviteLinkInvalid } from './InviteLinkSignup'
+import { inviteTokenFrom, isMalformedInviteParam } from '@/lib/auth/signup'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { validateInviteCode } from '@services/organizations/invites'
 import { joinOrg } from '@services/organizations/orgs'
@@ -15,7 +15,7 @@ import { getDeploymentMode, getUriWithOrg } from '@services/config/config'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
-import { AUTH_INPUT, AuthButton, AuthHeading, AuthLabel, AuthNotice } from '@components/Auth/AuthUI'
+import { AUTH_INPUT, AUTH_TEXT_BUTTON, AuthButton, AuthFootnote, AuthHeading, AuthLabel, AuthNotice } from '@components/Auth/AuthUI'
 import FormLayout from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 
@@ -34,6 +34,10 @@ function SignUpClient(props: SignUpClientProps) {
   // The personal link from an invitation email (`?invite=`): its own flow on
   // this org's page, whatever the org's signup mode.
   const inviteLinkToken = inviteTokenFrom(searchParams.get('invite'))
+  // `?invite=` that is no token even after trimming (a mangled copy): say the
+  // link is broken instead of falling through to the invite-code screen.
+  const brokenInviteLink = isMalformedInviteParam(searchParams.get('invite'))
+  const inviteFlow = !!inviteLinkToken || brokenInviteLink
 
   const isAuthenticated = session.status === 'authenticated'
   // There is only an org to JOIN when we actually resolved one (a subdomain or an
@@ -43,12 +47,12 @@ function SignUpClient(props: SignUpClientProps) {
   const hasOrgToJoin = !!props.org
 
   useEffect(() => {
-    if (isAuthenticated && !hasOrgToJoin && !inviteLinkToken) {
+    if (isAuthenticated && !hasOrgToJoin && !inviteLinkToken && !brokenInviteLink) {
       // /new only exists in SaaS; an invite code means they came to join, and
       // the hub forwards them to their school.
       router.replace(getDeploymentMode() === 'saas' && !inviteCodeParam ? '/new' : '/home')
     }
-  }, [isAuthenticated, hasOrgToJoin, inviteCodeParam, inviteLinkToken, router])
+  }, [isAuthenticated, hasOrgToJoin, inviteCodeParam, inviteLinkToken, brokenInviteLink, router])
 
   useEffect(() => {
     // On the org-less apex (learn.io/signup) props.org is null; guard it and
@@ -76,14 +80,15 @@ function SignUpClient(props: SignUpClientProps) {
       })}
     >
       {inviteLinkToken && <InviteLinkSignup token={inviteLinkToken} org={props.org} />}
-      {!inviteLinkToken && session.status === 'loading' && (
+      {brokenInviteLink && <InviteLinkInvalid org={props.org} />}
+      {!inviteFlow && session.status === 'loading' && (
         // Don't flash the open/invite signup form while the session is still
         // resolving; a logged-in user would otherwise briefly see it.
         <div className="flex justify-center py-16" role="status" aria-label={t('common.loading')}>
           <CircleNotch size={22} className="animate-spin text-neutral-400" />
         </div>
       )}
-      {!inviteLinkToken && session.status !== 'loading' && joinMethod == 'open' &&
+      {!inviteFlow && session.status !== 'loading' && joinMethod == 'open' &&
         (isAuthenticated ? (
           hasOrgToJoin ? (
             <LoggedInJoinScreen inviteCode={inviteCode} org={props.org} />
@@ -94,9 +99,11 @@ function SignUpClient(props: SignUpClientProps) {
             </div>
           )
         ) : (
-          <OpenSignUpComponent org={props.org} />
+          // An invite code on an open org still counts (the code's role and
+          // usergroup apply), so it goes through the invite-code signup too.
+          <OpenSignUpComponent org={props.org} inviteCode={inviteCode || undefined} />
         ))}
-      {!inviteLinkToken && session.status !== 'loading' && joinMethod == 'inviteOnly' &&
+      {!inviteFlow && session.status !== 'loading' && joinMethod == 'inviteOnly' &&
         (inviteCode ? (
           session.status == 'authenticated' ? (
             <LoggedInJoinScreen inviteCode={inviteCode} org={props.org} />
@@ -220,6 +227,9 @@ const NoTokenScreen = ({ org }: NoTokenScreenProps) => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showMessage, setShowMessage] = useState(false)
+  // Invited by email but without the email at hand: sign up with the invited
+  // address (the org lets an invited address in; anyone else gets INVITE_REQUIRED).
+  const [emailSignup, setEmailSignup] = useState(false)
 
   const validateCode = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -264,6 +274,19 @@ const NoTokenScreen = ({ org }: NoTokenScreenProps) => {
     }
   }
 
+  if (emailSignup) {
+    return (
+      <>
+        <OpenSignUpComponent org={activeOrg} />
+        <AuthFootnote>
+          <button type="button" onClick={() => setEmailSignup(false)} className={AUTH_TEXT_BUTTON}>
+            {t('auth.use_invite_code_instead')}
+          </button>
+        </AuthFootnote>
+      </>
+    )
+  }
+
   return (
     <>
       {showMessage && (error || success) && (
@@ -297,6 +320,12 @@ const NoTokenScreen = ({ org }: NoTokenScreenProps) => {
           </AuthButton>
         </Form.Submit>
       </FormLayout>
+
+      <AuthFootnote>
+        <button type="button" onClick={() => setEmailSignup(true)} className={`${AUTH_TEXT_BUTTON} text-neutral-900`} data-testid="invited-by-email">
+          {t('auth.invited_by_email_cta')}
+        </button>
+      </AuthFootnote>
     </>
   )
 }

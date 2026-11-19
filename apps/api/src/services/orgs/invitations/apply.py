@@ -11,6 +11,7 @@ notification follow once it is in.
 caller has made the person a member.
 """
 
+import contextlib
 import logging
 from datetime import datetime
 from typing import Iterable, Optional
@@ -66,10 +67,124 @@ async def find_pending_invitation(db_session: AsyncSession, email: Optional[str]
 
 
 async def invitation_by_token(db_session: AsyncSession, token: str) -> Optional[OrgInvitation]:
-    """The invitation a personal link token belongs to, whatever its state."""
+    """The invitation a personal link token belongs to, whatever its state:
+    the emailed link or the one an admin copied."""
+    digest = hash_token(token)
     return (await db_session.execute(
-        select(OrgInvitation).where(OrgInvitation.token_hash == hash_token(token))
+        select(OrgInvitation).where(
+            (OrgInvitation.token_hash == digest) | (OrgInvitation.copy_token_hash == digest)  # type: ignore[operator]
+        )
     )).scalars().first()
+
+
+def token_emailed(inv: OrgInvitation, token: str) -> bool:
+    """Whether ``token`` is the link mailed to the invited address (proof of
+    the inbox), not one an admin copied to share by hand."""
+    return inv.token_hash == hash_token(token) and inv.token_delivery == "email"
+
+
+# ---------------------------------------------------------------------------
+# Invitations sent before they moved to the database (Redis, until they
+# expire): ``invited_user:{email}:org:{org_uuid}``, joining as a plain member
+# plus the user group of the invite code the email carried.
+# ---------------------------------------------------------------------------
+
+
+def legacy_invite_key(email: Optional[str], org_uuid: str) -> str:
+    return f"invited_user:{normalize_email(email or '')}:org:{org_uuid}"
+
+
+def find_legacy_invite(email: Optional[str], org: Organization) -> Optional[tuple[str, dict]]:
+    """(key, record) of the pending Redis invitation for this address in this
+    org. A record without ``pending`` counts as pending. None without Redis."""
+    import json
+
+    from src.core.redis import get_redis_client
+
+    if not normalize_email(email or ""):
+        return None
+    r = get_redis_client()
+    if r is None:
+        return None
+    key = legacy_invite_key(email, org.org_uuid)
+    try:
+        raw = r.get(key)
+        record = json.loads(raw) if raw else None
+    except Exception:
+        logger.warning("Could not read the legacy invitation for org %s", org.id, exc_info=True)
+        return None
+    if not isinstance(record, dict) or not record.get("pending", True):
+        return None
+    return key, record
+
+
+def consume_legacy_invite(key: str, record: dict) -> None:
+    """Mark a Redis invitation answered, keeping its TTL. Never raises."""
+    import json
+
+    from src.core.redis import get_redis_client
+
+    r = get_redis_client()
+    if r is None:
+        return
+    try:
+        ttl = r.ttl(key)
+        r.set(key, json.dumps({**record, "pending": False}), ex=ttl if ttl and ttl > 0 else None)
+    except Exception:
+        logger.warning("Could not mark the legacy invitation %s answered", key, exc_info=True)
+
+
+async def has_pending_invite(db_session: AsyncSession, email: Optional[str], org: Organization) -> bool:
+    """A usable invitation for this address in this org, database or Redis."""
+    if await find_pending_invitation(db_session, email, org.id) is not None:
+        return True
+    return find_legacy_invite(email, org) is not None
+
+
+# The member cap refusal as the invitee reads it: the admin's wording says
+# "upgrade", which only the admin can do. Same code; ``invitee`` lets the page
+# tell the two apart.
+INVITEE_ORG_FULL = {
+    "code": "MEMBER_LIMIT_REACHED",
+    "invitee": True,
+    "message": "This organization is full right now. Ask its admin to make room.",
+}
+
+
+def invitee_limit_refusal(exc: HTTPException) -> HTTPException:
+    """``exc`` in the invitee's words when it is the member cap, else as is."""
+    if exc.status_code == 403 and str(exc.detail).startswith("Usage Limit has been reached"):
+        return HTTPException(status_code=403, detail=INVITEE_ORG_FULL)
+    return exc
+
+
+async def check_room_for_invitee(org_id: int, db_session: AsyncSession) -> None:
+    """The plan's member cap, for someone joining through an invitation."""
+    from src.security.features_utils.usage import check_limits_with_usage
+
+    try:
+        await check_limits_with_usage("members", org_id, db_session)
+    except HTTPException as exc:
+        refusal = invitee_limit_refusal(exc)
+        if refusal is exc:
+            raise
+        raise refusal from exc
+
+
+async def stage_membership(db_session: AsyncSession, user_id: int, org_id: int, role_id: int) -> Optional[UserOrganization]:
+    """Add the membership in a savepoint, staged for the caller's commit. None
+    when one already exists (a concurrent join won the unique (user, org)
+    index); the caller's own transaction carries on either way."""
+    from sqlalchemy.exc import IntegrityError
+
+    now = str(datetime.now())
+    membership = UserOrganization(user_id=user_id, org_id=org_id, role_id=role_id, creation_date=now, update_date=now)
+    try:
+        async with db_session.begin_nested():
+            db_session.add(membership)
+    except IntegrityError:
+        return None
+    return membership
 
 
 async def _grant_groups(
@@ -290,7 +405,7 @@ async def accept_invitation(
     never demotes anyone.
     """
     from src.routers.users import _invalidate_session_cache
-    from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
+    from src.security.features_utils.usage import increase_feature_usage
     from src.services.analytics import events as analytics_events
     from src.services.analytics.analytics import track
     from src.services.audit.org_log import role_name
@@ -311,48 +426,75 @@ async def accept_invitation(
     )).scalars().first()
     created = membership is None
     if created:
-        await check_limits_with_usage("members", org.id, db_session)
+        await check_room_for_invitee(org.id, db_session)
 
-    now = utcnow()
-    claimed = await db_session.execute(
-        update(OrgInvitation)
-        .where(
-            OrgInvitation.id == inv.id,
-            OrgInvitation.status == InvitationStatus.PENDING.value,
-            OrgInvitation.expires_at > now,
-        )
-        .values(
-            status=InvitationStatus.ACCEPTED.value,
-            accepted_at=now,
-            accepted_user_id=user.id,
-            updated_at=now,
-        )
-        # Not "evaluate": SQLite hands back naive datetimes to compare.
-        .execution_options(synchronize_session="fetch")
-    )
-    if claimed.rowcount != 1:
-        # Nothing was changed, so nothing to roll back (a rollback would also
-        # expire the caller's objects).
-        raise HTTPException(status_code=404, detail=INVALID_INVITATION)
+    # The claim and every grant in one savepoint: if a grant fails, the claim
+    # goes too, so a caller that carries on never commits an accepted
+    # invitation with nothing applied.
+    try:
+        async with db_session.begin_nested():
+            now = utcnow()
+            claimed = await db_session.execute(
+                update(OrgInvitation)
+                .where(
+                    OrgInvitation.id == inv.id,
+                    OrgInvitation.status == InvitationStatus.PENDING.value,
+                    OrgInvitation.expires_at > now,
+                )
+                .values(
+                    status=InvitationStatus.ACCEPTED.value,
+                    accepted_at=now,
+                    accepted_user_id=user.id,
+                    updated_at=now,
+                )
+                # Not "evaluate": SQLite hands back naive datetimes to compare.
+                .execution_options(synchronize_session="fetch")
+            )
+            if claimed.rowcount != 1:
+                # Nothing was changed: the savepoint has nothing to undo.
+                raise HTTPException(status_code=404, detail=INVALID_INVITATION)
+            # Any other invitation still pending for the address here is settled by
+            # this one (one invitation per address).
+            await db_session.execute(
+                update(OrgInvitation)
+                .where(
+                    OrgInvitation.org_id == org.id,
+                    OrgInvitation.email == inv.email,
+                    OrgInvitation.status == InvitationStatus.PENDING.value,
+                    OrgInvitation.id != inv.id,
+                )
+                .values(status=InvitationStatus.REVOKED.value, updated_at=now)
+                .execution_options(synchronize_session="fetch")
+            )
 
-    role: Role = await role_for_grant(db_session, org.id, inv.role_id)
-    previous_role_id = membership.role_id if membership is not None else None
-    if created:
-        membership = UserOrganization(
-            user_id=user.id, org_id=org.id, role_id=role.id,
-            creation_date=str(datetime.now()), update_date=str(datetime.now()),
-        )
-        db_session.add(membership)
-    elif membership.role_id != role.id and (
-        joined_now or (may_change_role and await _role_is_upgrade(db_session, org.id, membership.role_id, role))
-    ):
-        membership.role_id = role.id
-        membership.update_date = str(datetime.now())
-        db_session.add(membership)
-    role_applied = membership.role_id == role.id
+            role: Role = await role_for_grant(db_session, org.id, inv.role_id)
+            previous_role_id = membership.role_id if membership is not None else None
+            if created:
+                staged = await stage_membership(db_session, user.id, org.id, role.id)
+                if staged is None:
+                    # Joined another way a moment ago: an existing member now.
+                    created = False
+                    membership = (await db_session.execute(
+                        select(UserOrganization).where(UserOrganization.user_id == user.id, UserOrganization.org_id == org.id)
+                    )).scalars().first()
+                    previous_role_id = membership.role_id
+                else:
+                    membership = staged
+            if not created and membership.role_id != role.id and (
+                joined_now or (may_change_role and await _role_is_upgrade(db_session, org.id, membership.role_id, role))
+            ):
+                membership.role_id = role.id
+                membership.update_date = str(datetime.now())
+                db_session.add(membership)
+            role_applied = membership.role_id == role.id
 
-    groups = await _grant_groups(db_session, org.id, user.id, inv.usergroup_ids, "manual", inv.invited_by_user_id)
-    courses = await _grant_courses(db_session, org.id, user.id, inv.course_uuids)
+            groups = await _grant_groups(db_session, org.id, user.id, inv.usergroup_ids, "manual", inv.invited_by_user_id)
+            courses = await _grant_courses(db_session, org.id, user.id, inv.course_uuids)
+    except Exception:
+        # Rolled back: the row in memory must not still read "accepted".
+        with contextlib.suppress(Exception):
+            await db_session.refresh(inv)
+        raise
     await db_session.commit()
 
     if created:
@@ -503,6 +645,7 @@ async def has_pending_invitations(db_session: AsyncSession, org_id: int) -> bool
         select(func.count()).select_from(OrgInvitation).where(
             OrgInvitation.org_id == org_id,
             OrgInvitation.status == InvitationStatus.PENDING.value,
+            OrgInvitation.expires_at > utcnow(),
         )
     )).scalar_one()
     return bool(count)

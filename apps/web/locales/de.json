@@ -670,7 +670,11 @@
       "google_not_configured": "Google OAuth ist nicht konfiguriert",
       "profile_field_invalid": "Links und E-Mail-Adressen sind hier nicht erlaubt: {{fields}}",
       "field_no_links": "Keine Links oder E-Mail-Adressen",
-      "rate_limited": "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut."
+      "rate_limited": "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.",
+      "invite_required": "Sie brauchen eine Einladung, um dieser Organisation beizutreten.",
+      "invite_email_mismatch": "Diese Einladung wurde an eine andere E-Mail-Adresse gesendet. Melden Sie sich mit dieser Adresse an, um sie anzunehmen.",
+      "invite_email_mismatch_hint": "Diese Einladung wurde an {{email}} gesendet. Melden Sie sich mit diesem Google-Konto an, um sie anzunehmen.",
+      "invite_verify_email": "Bestätigen Sie zuerst Ihre E-Mail-Adresse und öffnen Sie diese Einladung dann erneut."
     },
     "sso_errors": {
       "access_denied": "Der Zugriff wurde verweigert. Möglicherweise haben Sie die Anmeldeanfrage abgelehnt oder haben keine Berechtigung für diese Anwendung.",
@@ -726,7 +730,9 @@
       "try_again": "Erneut versuchen",
       "success": "Erfolgreich!",
       "redirecting": "Sie werden jetzt weitergeleitet...",
-      "google_failed": "Google-Authentifizierung fehlgeschlagen: {{error}}"
+      "google_failed": "Google-Authentifizierung fehlgeschlagen: {{error}}",
+      "invite_mismatch_title": "Falsches Google-Konto",
+      "use_another_account": "Anderes Google-Konto verwenden"
     },
     "magic": {
       "expired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordern Sie einen neuen an, um sich anzumelden.",
@@ -801,14 +807,23 @@
         "verify_note": "Dieser Link wurde direkt mit dir geteilt, deshalb bestätigst du vor dem Beitritt deine E-Mail-Adresse."
       },
       "verify_title": "Schau in dein Postfach",
-      "verify_desc": "Dein Konto ist bereit. Wir haben einen Bestätigungslink an {{email}} gesendet. Bestätige deine E-Mail-Adresse und öffne dann diese Einladung erneut oder nimm sie auf deiner Startseite an, um {{org}} beizutreten."
+      "verify_desc": "Ihr Konto ist bereit. Wir haben einen Bestätigungslink an {{email}} gesendet. Sobald Ihre E-Mail bestätigt ist, melden Sie sich an und treten {{org}} bei.",
+      "accepted_title": "Sie haben diese Einladung bereits angenommen",
+      "accepted_desc": "Melden Sie sich an, um zu {{org}} zu gelangen.",
+      "retry_title": "Diese Einladung konnte nicht geladen werden",
+      "retry_desc": "Prüfen Sie Ihre Verbindung und versuchen Sie es erneut. Ihr Einladungslink ist weiterhin gültig.",
+      "try_again": "Erneut versuchen",
+      "org_full": "Diese Organisation ist gerade voll. Bitten Sie die Administration, Platz zu schaffen."
     },
     "login_failed_forgot": "Passwort vergessen?",
     "login_failed_reset": "Zurücksetzen",
     "login_failed_magic": "Stattdessen einen Anmeldelink senden",
     "login_failed_google_hint": "Mit Google registriert? Nutze unten „Mit Google fortfahren“.",
     "email_verified_set_password": "Ihre E-Mail wurde bestätigt. Zu Ihrer Sicherheit wurde das zuvor festgelegte Passwort entfernt: Wählen Sie ein neues, um sich mit einem Passwort anzumelden.",
-    "set_new_password": "Neues Passwort festlegen"
+    "set_new_password": "Neues Passwort festlegen",
+    "invited_by_email_cta": "Per E-Mail eingeladen? Registrieren Sie sich mit dieser Adresse",
+    "use_invite_code_instead": "Haben Sie stattdessen einen Einladungscode?",
+    "password_reset_done": "Ihr Passwort wurde geändert."
   },
   "validation": {
     "required": "Erforderlich",
@@ -9586,7 +9601,7 @@
           "error": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
           "resent": "Neue Einladung an {{email}} gesendet",
           "email_failed": "Die E-Mail konnte nicht gesendet werden. Kopiere stattdessen den Einladungslink.",
-          "link_copied": "Einladungslink kopiert. Wer ihn öffnet, bestätigt vor dem Beitritt die eigene E-Mail-Adresse. Der Link in der früheren E-Mail funktioniert nicht mehr.",
+          "link_copied": "Einladungslink kopiert. Wer ihn öffnet, bestätigt vor dem Beitritt die eigene E-Mail-Adresse.",
           "revoked": "Einladung widerrufen",
           "updated": "Einladung aktualisiert",
           "bulk_resend_one": "{{count}} Einladung erneut gesendet",
@@ -29618,7 +29633,9 @@
       "verify_resend": "Bestätigungs-E-Mail erneut senden",
       "verify_sent": "Gesendet. Sieh in dein Postfach.",
       "invited_as": "Hat dich als {{role}} eingeladen",
-      "invited_as_by": "{{name}} hat dich als {{role}} eingeladen"
+      "invited_as_by": "{{name}} hat dich als {{role}} eingeladen",
+      "accept": "Annehmen",
+      "new_role": "Neue Rolle: {{role}}"
     },
     "celebrate": {
       "title": "Dein erster Kurs ist online",

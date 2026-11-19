@@ -16,6 +16,21 @@ export function withNextParam(path: string, next: string | null | undefined): st
   return `${path}${sep}next=${encodeURIComponent(next)}`
 }
 
+/** An invitation page (`/signup?invite=…`): where an invited person must land. */
+export function isInviteSignupPath(next: string | null | undefined): next is string {
+  if (!next || !/^\/signup\?/.test(next) || next.includes('\\')) return false
+  return !!new URLSearchParams(next.slice(next.indexOf('?') + 1)).get('invite')
+}
+
+/**
+ * Sign-up link from the sign-in page: an invitation page in ?next is linked
+ * directly (wrapped in ?next, /signup would ask for an invite code instead),
+ * anything else is kept as ?next.
+ */
+export function signupHrefFor(next: string | null | undefined): string {
+  return isInviteSignupPath(next) ? next : withNextParam('/signup', next)
+}
+
 /**
  * Link target that keeps the current page's ?next, so switching between
  * /signup and /login doesn't drop where the person was headed (a course they
@@ -27,4 +42,9 @@ const noSubscribe = () => () => {}
 export function useForwardedNextHref(path: string): string {
   const search = useSyncExternalStore(noSubscribe, () => window.location.search, () => '')
   return withNextParam(path, readNextParam(search))
+}
+
+export function useForwardedSignupHref(): string {
+  const search = useSyncExternalStore(noSubscribe, () => window.location.search, () => '')
+  return signupHrefFor(readNextParam(search))
 }

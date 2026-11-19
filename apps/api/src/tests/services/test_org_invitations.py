@@ -291,10 +291,18 @@ async def test_resend_link_and_revoke(world, mock_request, db, quiet):
     await db.refresh(inv)
     assert inv.token_hash != first
 
+    emailed = inv.token_hash
     link = await service.invitation_link(mock_request, db, world.org.id, inv.invitation_uuid, world.admin)
     await db.refresh(inv)
     token = link["url"].split("invite=", 1)[1]
-    assert policy.hash_token(token) == inv.token_hash and "/signup?invite=" in link["url"]
+    # A copied link has its own token: the emailed one keeps working.
+    assert policy.hash_token(token) == inv.copy_token_hash and "/signup?invite=" in link["url"]
+    assert inv.token_hash == emailed and inv.token_delivery == "email"
+    copied = inv.copy_token_hash
+    # Resending rotates the emailed link only.
+    await service.resend_invitation(mock_request, db, world.org.id, inv.invitation_uuid, service.InvitationResend(), world.admin)
+    await db.refresh(inv)
+    assert inv.token_hash != emailed and inv.copy_token_hash == copied
 
     # An expired invitation comes back to pending when sent again.
     inv.expires_at = policy.utcnow() - timedelta(days=1)

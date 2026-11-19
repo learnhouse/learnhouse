@@ -43,6 +43,7 @@ import {
   type LegacyInvitation,
 } from '@services/organizations/invitations'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
+import { copyTextFrom } from '@/lib/text/clipboard'
 import { CheckBox, ListPager, RoleChip, RowSkeleton } from '../usersUi'
 import EditInvitationDialog from './EditInvitationDialog'
 import { InvitationStatusChip, daysUntil, invitationKeys, useInvitationAuth, useRoleText } from './invitationsKit'
@@ -64,10 +65,6 @@ export function useInvitationList(params: { status: Filter; q: string; page: num
     placeholderData: keepPreviousData,
     staleTime: 15_000,
   })
-}
-
-async function copy(text: string) {
-  await navigator.clipboard.writeText(text)
 }
 
 /** Invitations of the org: filter by status, search, act on one or many. */
@@ -130,21 +127,27 @@ export default function InvitationsPanel({
 
   const run = async (inv: Invitation, kind: 'resend' | 'link' | 'revoke') => {
     setBusy(inv.invitation_uuid)
+    // The clipboard write has to start inside the click (Safari), before the
+    // link has come back from the server.
+    let url: Promise<string> | null = null
+    let copied: Promise<boolean> | null = null
+    if (kind === 'link') {
+      url = invitationLink(orgId, inv.invitation_uuid, token).then((res) => {
+        if (!res.success) throw res
+        return res.data.url as string
+      })
+      copied = copyTextFrom(url)
+    }
     try {
       if (kind === 'resend') {
         const res = await resendInvitation(orgId, inv.invitation_uuid, token)
         if (!res.success) throw res
         if (res.data?.resent) toast.success(t('dashboard.users.invitations.toasts.resent', { email: inv.email }))
         else toast.error(t('dashboard.users.invitations.toasts.email_failed'))
-      } else if (kind === 'link') {
-        const res = await invitationLink(orgId, inv.invitation_uuid, token)
-        if (!res.success) throw res
-        try {
-          await copy(res.data.url)
-          toast.success(t('dashboard.users.invitations.toasts.link_copied'))
-        } catch {
-          toast.error(t('dashboard.users.dash.signups.copy_failed'))
-        }
+      } else if (url && copied) {
+        await url
+        if (await copied) toast.success(t('dashboard.users.invitations.toasts.link_copied'))
+        else toast.error(t('dashboard.users.dash.signups.copy_failed'))
       } else {
         const res = await revokeInvitation(orgId, inv.invitation_uuid, token)
         if (!res.success) throw res

@@ -69,7 +69,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "invitation.heading": "You're invited",
         "invitation.intro": "<strong>@{inviter}</strong> has invited you to join <strong>{org_name}</strong>.",
         "invitation.code_hint": "Enter this code when you sign up, or use the button.",
-        "invitation.no_code_hint": "Create your account to accept the invitation.",
+        "invitation.no_code_hint": "Use the button below to get started.",
         "invitation.cta": "Join {org_name}",
         "invitation.footer": "Sent by @{inviter}. Not expecting it? Ignore this email.",
         "invitation.role_line": "You'll join as <strong>{role}</strong>.",
@@ -1528,6 +1528,69 @@ _LABELS: dict[str, dict[str, str]] = {
 
 for _label_lang, _label_keys in _LABELS.items():
     EMAIL_TRANSLATIONS.setdefault(_label_lang, {}).update(_label_keys)
+
+
+# The sender line under an organization's own email, in every email language.
+_SENT_BY: dict[str, str] = {
+    "en": "Sent by {org} via LearnHouse",
+    "fr": "Envoyé par {org} via LearnHouse",
+    "de": "Gesendet von {org} über LearnHouse",
+    "es": "Enviado por {org} a través de LearnHouse",
+    "ar": "أُرسلت من {org} عبر LearnHouse",
+    "ja": "{org} から LearnHouse 経由で送信",
+    "pt": "Enviado por {org} via LearnHouse",
+    "ru": "Отправлено {org} через LearnHouse",
+    "zh": "由 {org} 通过 LearnHouse 发送",
+    "hi": "{org} द्वारा LearnHouse के माध्यम से भेजा गया",
+    "ko": "{org}에서 LearnHouse를 통해 보냄",
+    "it": "Inviato da {org} tramite LearnHouse",
+    "tr": "{org} tarafından LearnHouse aracılığıyla gönderildi",
+    "vi": "Được gửi bởi {org} qua LearnHouse",
+    "id": "Dikirim oleh {org} melalui LearnHouse",
+    "pl": "Wysłane przez {org} za pośrednictwem LearnHouse",
+    "uk": "Надіслано {org} через LearnHouse",
+    "nl": "Verzonden door {org} via LearnHouse",
+    "th": "ส่งโดย {org} ผ่าน LearnHouse",
+    "bn": "{org} LearnHouse-এর মাধ্যমে পাঠিয়েছে",
+}
+
+# The "button not working?" line under every button, in every email
+# language: the same words as the verification email's.
+for _bundle in EMAIL_TRANSLATIONS.values():
+    if "email_verification.copy_paste" in _bundle:
+        _bundle.setdefault("common.copy_paste", _bundle["email_verification.copy_paste"])
+
+for _sent_lang, _sent_text in _SENT_BY.items():
+    EMAIL_TRANSLATIONS.setdefault(_sent_lang, {})["common.sent_by"] = _sent_text
+
+
+# The built-in roles as the app names them (the web's invitation labels):
+# "Learner", not the stored "User". Custom roles keep their own name.
+_BUILT_IN_ROLES: dict[str, dict[str, str]] = {
+    "en": {"role.admin": "Admin", "role.maintainer": "Maintainer", "role.instructor": "Instructor", "role.user": "Learner"},
+    "fr": {"role.admin": "Administrateur", "role.maintainer": "Mainteneur", "role.instructor": "Formateur", "role.user": "Apprenant"},
+    "de": {"role.admin": "Admin", "role.maintainer": "Verwalter", "role.instructor": "Lehrer", "role.user": "Lernender"},
+    "es": {"role.admin": "Administrador", "role.maintainer": "Mantenedor", "role.instructor": "Instructor", "role.user": "Estudiante"},
+    "ar": {"role.admin": "مدير", "role.maintainer": "مسؤول صيانة", "role.instructor": "مدرب", "role.user": "متعلم"},
+    "ja": {"role.admin": "管理者", "role.maintainer": "メンテナー", "role.instructor": "講師", "role.user": "学習者"},
+    "pt": {"role.admin": "Admin", "role.maintainer": "Mantenedor", "role.instructor": "Instrutor", "role.user": "Aluno"},
+    "ru": {"role.admin": "Администратор", "role.maintainer": "Сопровождающий", "role.instructor": "Инструктор", "role.user": "Ученик"},
+    "zh": {"role.admin": "管理员", "role.maintainer": "维护者", "role.instructor": "讲师", "role.user": "学习者"},
+    "hi": {"role.admin": "एडमिन", "role.maintainer": "मेंटेनर", "role.instructor": "प्रशिक्षक", "role.user": "शिक्षार्थी"},
+    "ko": {"role.admin": "관리자", "role.maintainer": "유지관리자", "role.instructor": "강사", "role.user": "학습자"},
+    "it": {"role.admin": "Admin", "role.maintainer": "Maintainer", "role.instructor": "Istruttore", "role.user": "Studente"},
+    "tr": {"role.admin": "Yönetici", "role.maintainer": "Sorumlu", "role.instructor": "Eğitmen", "role.user": "Öğrenci"},
+    "vi": {"role.admin": "Quản trị viên", "role.maintainer": "Người duy trì", "role.instructor": "Giảng viên", "role.user": "Học viên"},
+    "id": {"role.admin": "Admin", "role.maintainer": "Maintainer", "role.instructor": "Instruktur", "role.user": "Pelajar"},
+    "pl": {"role.admin": "Administrator", "role.maintainer": "Opiekun", "role.instructor": "Instruktor", "role.user": "Uczeń"},
+    "uk": {"role.admin": "Адміністратор", "role.maintainer": "Супроводжувач", "role.instructor": "Інструктор", "role.user": "Учень"},
+    "nl": {"role.admin": "Beheerder", "role.maintainer": "Maintainer", "role.instructor": "Instructeur", "role.user": "Leerling"},
+    "th": {"role.admin": "ผู้ดูแลระบบ", "role.maintainer": "ผู้ดูแล", "role.instructor": "ผู้สอน", "role.user": "ผู้เรียน"},
+    "bn": {"role.admin": "অ্যাডমিন", "role.maintainer": "মেইনটেইনার", "role.instructor": "প্রশিক্ষক", "role.user": "শিক্ষার্থী"},
+}
+
+for _role_lang, _role_keys in _BUILT_IN_ROLES.items():
+    EMAIL_TRANSLATIONS.setdefault(_role_lang, {}).update(_role_keys)
 
 
 def normalize_language(lang: str | None) -> str:

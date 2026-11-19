@@ -669,7 +669,11 @@
       "google_not_configured": "Google OAuthが設定されていません",
       "profile_field_invalid": "{{fields}} にリンクやメールアドレスは使用できません",
       "field_no_links": "リンクやメールアドレスは使用できません",
-      "rate_limited": "試行回数が多すぎます。しばらく待ってから再度お試しください。"
+      "rate_limited": "試行回数が多すぎます。しばらく待ってから再度お試しください。",
+      "invite_required": "この組織に参加するには招待が必要です。",
+      "invite_email_mismatch": "この招待は別のメールアドレスに送信されました。承諾するには、そのアドレスでサインインしてください。",
+      "invite_email_mismatch_hint": "この招待は {{email}} に送信されました。承諾するには、その Google アカウントでサインインしてください。",
+      "invite_verify_email": "先にメールアドレスを確認してから、この招待をもう一度開いてください。"
     },
     "sso_errors": {
       "access_denied": "アクセスが拒否されました。ログイン要求を拒否したか、このアプリケーションへのアクセス権がない可能性があります。",
@@ -725,7 +729,9 @@
       "try_again": "再試行",
       "success": "成功しました！",
       "redirecting": "リダイレクトしています...",
-      "google_failed": "Google認証に失敗しました：{{error}}"
+      "google_failed": "Google認証に失敗しました：{{error}}",
+      "invite_mismatch_title": "Google アカウントが違います",
+      "use_another_account": "別の Google アカウントを使う"
     },
     "magic": {
       "expired": "このリンクは有効期限が切れているか、すでに使用されています。新しいリンクをリクエストしてログインしてください。",
@@ -800,14 +806,23 @@
         "verify_note": "このリンクは直接共有されたものなので、参加する前にメールアドレスを確認していただきます。"
       },
       "verify_title": "受信トレイを確認してください",
-      "verify_desc": "アカウントの準備ができました。{{email}} に確認リンクを送信しました。メールアドレスを確認してから、この招待をもう一度開くか、ホームページで承諾すると {{org}} に参加できます。"
+      "verify_desc": "アカウントの準備ができました。{{email}} に確認リンクを送信しました。メールを確認したらサインインすると、{{org}} に参加できます。",
+      "accepted_title": "この招待はすでに承諾済みです",
+      "accepted_desc": "{{org}} に移動するにはサインインしてください。",
+      "retry_title": "招待を読み込めませんでした",
+      "retry_desc": "接続を確認して、もう一度お試しください。招待リンクは引き続き有効です。",
+      "try_again": "再試行",
+      "org_full": "この組織は現在満員です。管理者に空きを作ってもらってください。"
     },
     "login_failed_forgot": "パスワードをお忘れですか？",
     "login_failed_reset": "再設定する",
     "login_failed_magic": "代わりにログインリンクをメールで受け取る",
     "login_failed_google_hint": "Google で登録しましたか？下の「Google で続行」を使ってください。",
     "email_verified_set_password": "メールアドレスが確認されました。セキュリティのため、確認前に設定されていたパスワードは削除されました。パスワードでログインするには、新しいパスワードを設定してください。",
-    "set_new_password": "新しいパスワードを設定"
+    "set_new_password": "新しいパスワードを設定",
+    "invited_by_email_cta": "メールで招待されましたか？そのアドレスで登録",
+    "use_invite_code_instead": "招待コードをお持ちですか？",
+    "password_reset_done": "パスワードを変更しました。"
   },
   "validation": {
     "required": "必須項目です",
@@ -9558,7 +9573,7 @@
           "error": "問題が発生しました。もう一度お試しください。",
           "resent": "{{email}}に新しい招待を送信しました",
           "email_failed": "メールを送信できませんでした。代わりに招待リンクをコピーしてください。",
-          "link_copied": "招待リンクをコピーしました。リンクを開いた人は、参加する前にメールアドレスを確認します。以前のメールのリンクは使えなくなりました。",
+          "link_copied": "招待リンクをコピーしました。リンクを開いた人は、参加する前にメールアドレスを確認します。",
           "revoked": "招待を取り消しました",
           "updated": "招待を更新しました",
           "bulk_resend_one": "{{count}}件の招待を再送信しました",
@@ -29576,7 +29591,9 @@
       "verify_resend": "確認メールを再送",
       "verify_sent": "送信しました。受信トレイをご確認ください。",
       "invited_as": "{{role}}として招待されています",
-      "invited_as_by": "{{name}}さんから{{role}}として招待されています"
+      "invited_as_by": "{{name}}さんから{{role}}として招待されています",
+      "accept": "承諾",
+      "new_role": "新しいロール: {{role}}"
     },
     "celebrate": {
       "title": "最初のコースを公開しました",

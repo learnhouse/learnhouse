@@ -669,7 +669,11 @@
       "google_not_configured": "Chưa cấu hình Google OAuth",
       "profile_field_invalid": "Không được dùng liên kết và địa chỉ email trong: {{fields}}",
       "field_no_links": "Không dùng liên kết hoặc địa chỉ email",
-      "rate_limited": "Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại."
+      "rate_limited": "Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại.",
+      "invite_required": "Bạn cần lời mời để tham gia tổ chức này.",
+      "invite_email_mismatch": "Lời mời này đã được gửi đến một địa chỉ email khác. Hãy đăng nhập bằng địa chỉ đó để chấp nhận.",
+      "invite_email_mismatch_hint": "Lời mời này đã được gửi đến {{email}}. Hãy đăng nhập bằng tài khoản Google đó để chấp nhận.",
+      "invite_verify_email": "Hãy xác minh địa chỉ email trước, rồi mở lại lời mời này."
     },
     "sso_errors": {
       "access_denied": "Quyền truy cập bị từ chối. Có thể bạn đã từ chối yêu cầu đăng nhập hoặc không có quyền truy cập ứng dụng này.",
@@ -725,7 +729,9 @@
       "try_again": "Thử lại",
       "success": "Thành công!",
       "redirecting": "Đang chuyển hướng bạn...",
-      "google_failed": "Xác thực Google thất bại: {{error}}"
+      "google_failed": "Xác thực Google thất bại: {{error}}",
+      "invite_mismatch_title": "Sai tài khoản Google",
+      "use_another_account": "Dùng tài khoản Google khác"
     },
     "magic": {
       "expired": "Liên kết này đã hết hạn hoặc đã được dùng. Hãy yêu cầu liên kết mới để đăng nhập.",
@@ -800,14 +806,23 @@
         "verify_note": "Liên kết này được chia sẻ trực tiếp với bạn, vì vậy bạn sẽ xác minh email trước khi tham gia."
       },
       "verify_title": "Kiểm tra hộp thư đến của bạn",
-      "verify_desc": "Tài khoản của bạn đã sẵn sàng. Chúng tôi đã gửi liên kết xác minh đến {{email}}. Hãy xác minh email, sau đó mở lại lời mời này hoặc chấp nhận nó từ trang chủ của bạn để tham gia {{org}}."
+      "verify_desc": "Tài khoản của bạn đã sẵn sàng. Chúng tôi đã gửi liên kết xác minh đến {{email}}. Sau khi xác minh email, hãy đăng nhập và bạn sẽ tham gia {{org}}.",
+      "accepted_title": "Bạn đã chấp nhận lời mời này rồi",
+      "accepted_desc": "Đăng nhập để vào {{org}}.",
+      "retry_title": "Không thể tải lời mời này",
+      "retry_desc": "Hãy kiểm tra kết nối và thử lại. Liên kết mời của bạn vẫn còn hiệu lực.",
+      "try_again": "Thử lại",
+      "org_full": "Tổ chức này hiện đã đầy. Hãy nhờ quản trị viên dành chỗ."
     },
     "login_failed_forgot": "Quên mật khẩu?",
     "login_failed_reset": "Đặt lại",
     "login_failed_magic": "Gửi cho tôi liên kết đăng nhập",
     "login_failed_google_hint": "Đã đăng ký bằng Google? Hãy dùng Tiếp tục với Google bên dưới.",
     "email_verified_set_password": "Email của bạn đã được xác minh. Vì lý do bảo mật, mật khẩu được đặt trước đó đã bị xóa: hãy chọn mật khẩu mới để đăng nhập bằng mật khẩu.",
-    "set_new_password": "Đặt mật khẩu mới"
+    "set_new_password": "Đặt mật khẩu mới",
+    "invited_by_email_cta": "Được mời qua email? Đăng ký bằng địa chỉ đó",
+    "use_invite_code_instead": "Bạn có mã mời?",
+    "password_reset_done": "Mật khẩu của bạn đã được thay đổi."
   },
   "validation": {
     "required": "Bắt buộc",
@@ -9556,7 +9571,7 @@
           "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
           "resent": "Đã gửi lời mời mới tới {{email}}",
           "email_failed": "Không thể gửi email. Hãy sao chép liên kết mời.",
-          "link_copied": "Đã sao chép liên kết mời. Người mở liên kết sẽ xác minh email trước khi tham gia. Liên kết trong email trước không còn hoạt động.",
+          "link_copied": "Đã sao chép liên kết mời. Người mở liên kết sẽ xác minh email trước khi tham gia.",
           "revoked": "Đã thu hồi lời mời",
           "updated": "Đã cập nhật lời mời",
           "bulk_resend_one": "Đã gửi lại {{count}} lời mời",
@@ -29574,7 +29589,9 @@
       "verify_resend": "Gửi lại email xác minh",
       "verify_sent": "Đã gửi. Hãy kiểm tra hộp thư.",
       "invited_as": "Đã mời bạn với vai trò {{role}}",
-      "invited_as_by": "{{name}} đã mời bạn với vai trò {{role}}"
+      "invited_as_by": "{{name}} đã mời bạn với vai trò {{role}}",
+      "accept": "Chấp nhận",
+      "new_role": "Vai trò mới: {{role}}"
     },
     "celebrate": {
       "title": "Khóa học đầu tiên đã lên sóng",

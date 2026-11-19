@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Literal, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Query
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.redis import get_redis_client as _get_redis_pool_client
 from src.services.users.password_reset import (
@@ -208,15 +208,25 @@ async def _enforce_password_signup_allowed(db_session: AsyncSession, org_id: int
     await enforce_login_auth_method(db_session, org_id, AUTH_METHOD_PASSWORD)
 
 
+class UserSignupRead(UserRead):
+    # The account was created without the membership: an invitation to the
+    # org waits for the email to be verified, then applies.
+    invitation_pending: bool = False
+
+
 @router.post(
     "/{org_id}",
-    response_model=UserRead,
+    response_model=UserSignupRead,
     tags=["users"],
     summary="Create user in organization",
-    description="Create a user and attach them to the given organization. Rejected if the organization is invite-only; use the invite-code endpoint instead.",
+    description=(
+        "Create a user and attach them to the given organization. On an invite-only organization the "
+        "address must have a pending invitation: the account is then created on its own "
+        "(`invitation_pending: true`) and the invitation applies once the email is verified."
+    ),
     responses={
-        200: {"description": "User created and attached to the organization.", "model": UserRead},
-        403: {"description": "Organization is invite-only; an invite code is required"},
+        200: {"description": "User created (and attached to the organization unless `invitation_pending`).", "model": UserSignupRead},
+        403: {"description": "Organization is invite-only and the address has no invitation"},
     },
 )
 async def api_create_user_with_orgid(
@@ -227,7 +237,7 @@ async def api_create_user_with_orgid(
     user_object: UserCreate,
     org_id: int,
     next: Optional[str] = Query(default=None, max_length=512, description="Page to land on after verifying the email (relative path)."),
-) -> UserRead:
+) -> UserSignupRead:
     """
     Create User with Org ID
     """
@@ -241,12 +251,23 @@ async def api_create_user_with_orgid(
         await get_org_join_mechanism(request, org_id, current_user, db_session)
         == "inviteOnly"
     ):
-        raise HTTPException(
-            status_code=403,
-            detail="You need an invite to join this organization",
+        from src.db.organizations import Organization
+        from src.services.orgs.invitations.apply import has_pending_invite
+
+        org = await db_session.get(Organization, org_id)
+        if org is None or not await has_pending_invite(db_session, user_object.email, org):
+            raise HTTPException(
+                status_code=403,
+                detail="You need an invite to join this organization",
+            )
+        # Invited: the account comes first, the membership once the email is
+        # verified (anyone can type an invited address).
+        user = await create_user_without_org(
+            request, db_session, current_user, user_object, next_path=next, invited_org_id=org_id
         )
-    else:
-        return await create_user(request, db_session, current_user, user_object, org_id, next_path=next)
+        return UserSignupRead(**user.model_dump(), invitation_pending=True)
+    user = await create_user(request, db_session, current_user, user_object, org_id, next_path=next)
+    return UserSignupRead(**user.model_dump())
 
 
 @router.post(
@@ -254,10 +275,10 @@ async def api_create_user_with_orgid(
     response_model=UserRead,
     tags=["users"],
     summary="Create user with invite code",
-    description="Create a user and attach them to the given organization using an invite code. Only valid when the organization is configured as invite-only.",
+    description="Create a user and attach them to the given organization using an invite code, which applies its role, user groups and courses (open or invite-only organizations).",
     responses={
         200: {"description": "User created and attached via invite code.", "model": UserRead},
-        403: {"description": "Organization does not require an invite code"},
+        400: {"description": "Invite code is incorrect"},
     },
 )
 async def api_create_user_with_orgid_and_invite(
@@ -291,19 +312,11 @@ async def api_create_user_with_orgid_and_invite(
             headers={"Retry-After": str(retry_after)},
         )
 
-    # TODO: This is temporary, logic should be moved to service
-    if (
-        await get_org_join_mechanism(request, org_id, current_user, db_session)
-        == "inviteOnly"
-    ):
-        return await create_user_with_invite(
-            request, db_session, current_user, user_object, org_id, invite_code, next_path=next
-        )
-    else:
-        raise HTTPException(
-            status_code=403,
-            detail="This organization does not require an invite code",
-        )
+    # An open org needs no code to join, but one followed from a code link
+    # still carries its role, groups and courses (and counts the use).
+    return await create_user_with_invite(
+        request, db_session, current_user, user_object, org_id, invite_code, next_path=next
+    )
 
 
 @router.post(
@@ -720,6 +733,9 @@ class PlatformResetPasswordRequest(BaseModel):
 
 class SendPlatformResetCodeRequest(BaseModel):
     email: EmailStr
+    # Page to land on after resetting (relative path, validated server-side),
+    # such as the invitation the person was accepting.
+    next: Optional[str] = Field(default=None, max_length=512)
 
 
 @router.post(
@@ -746,7 +762,7 @@ async def api_send_password_reset_email_platform_v2(
             detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
         )
     return await send_reset_password_code_platform(
-        request, db_session, current_user, body.email
+        request, db_session, current_user, body.email, next_path=body.next
     )
 
 

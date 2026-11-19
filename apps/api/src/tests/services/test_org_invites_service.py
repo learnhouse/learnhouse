@@ -142,7 +142,8 @@ class TestOrgInvitesService:
 
         # Codes live in the database: no Redis just means no legacy code.
         assert get_code_redis_exc.value.status_code == 404
-        assert delete_redis_exc.value.status_code == 500
+        # Not a database code's uuid either: not found, Redis or not.
+        assert delete_redis_exc.value.status_code == 404
 
         with patch(
             "src.services.orgs.invites.get_learnhouse_config",

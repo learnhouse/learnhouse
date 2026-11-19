@@ -381,6 +381,7 @@ async def send_reset_password_code_platform(
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     email: EmailStr,
+    next_path: str | None = None,
 ):
     """
     Send a password reset code to the user's email (platform-level, no org required).
@@ -412,6 +413,12 @@ async def send_reset_password_code_platform(
         "created_at": datetime.now().isoformat(),
         "created_by": user.user_uuid,
     }
+    # Where to land once the password is reset (same-host relative path).
+    from src.services.users.email_verification import safe_next_path
+
+    safe_next = safe_next_path(next_path)
+    if safe_next:
+        resetCodeObject["next"] = safe_next
 
     # Use a deterministic key so the lookup can be done with r.get() instead of scan_iter
     r.set(
@@ -431,6 +438,7 @@ async def send_reset_password_code_platform(
         user=user_read,
         email=user_read.email,
         base_url=base_url,
+        next_path=safe_next,
     )
 
     if not isEmailSent:
@@ -494,7 +502,8 @@ async def change_password_with_reset_code_platform(
 
     # Direct deterministic key lookup; no wildcards or scan_iter needed
     reset_key = f"pwd_reset:user:{user.user_uuid}:platform:code:{reset_code}"
-    if _consume_reset_code(r, reset_key, user.user_uuid) is None:
+    redeemed = _consume_reset_code(r, reset_key, user.user_uuid)
+    if redeemed is None:
         logging.warning(f"Invalid reset code attempt for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
@@ -517,4 +526,10 @@ async def change_password_with_reset_code_platform(
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")
     audit_account_event(request, "security.password_reset.completed", user, actor=user.id, details={"sessions_revoked": True})
+    from src.services.users.email_verification import safe_next_path
+
+    next_path = safe_next_path(redeemed.get("next"))
+    if next_path:
+        # Where the person was headed when they asked for the reset.
+        return {"detail": "Password changed", "next": next_path}
     return "Password changed"

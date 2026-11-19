@@ -670,7 +670,11 @@
       "google_not_configured": "OAuth do Google não configurado",
       "profile_field_invalid": "Links e endereços de e-mail não são permitidos em: {{fields}}",
       "field_no_links": "Sem links ou endereços de e-mail",
-      "rate_limited": "Muitas tentativas. Aguarde um momento e tente novamente."
+      "rate_limited": "Muitas tentativas. Aguarde um momento e tente novamente.",
+      "invite_required": "Você precisa de um convite para entrar nesta organização.",
+      "invite_email_mismatch": "Este convite foi enviado para outro endereço de e-mail. Entre com esse endereço para aceitá-lo.",
+      "invite_email_mismatch_hint": "Este convite foi enviado para {{email}}. Entre com essa conta do Google para aceitá-lo.",
+      "invite_verify_email": "Verifique primeiro seu endereço de e-mail e depois abra este convite novamente."
     },
     "sso_errors": {
       "access_denied": "O acesso foi negado. Você pode ter recusado a solicitação de login ou não ter permissão para acessar este aplicativo.",
@@ -726,7 +730,9 @@
       "try_again": "Tentar novamente",
       "success": "Sucesso!",
       "redirecting": "Redirecionando você agora...",
-      "google_failed": "Falha na autenticação do Google: {{error}}"
+      "google_failed": "Falha na autenticação do Google: {{error}}",
+      "invite_mismatch_title": "Conta do Google errada",
+      "use_another_account": "Usar outra conta do Google"
     },
     "magic": {
       "expired": "Este link expirou ou já foi usado. Solicite um novo para entrar.",
@@ -801,14 +807,23 @@
         "verify_note": "Este link foi compartilhado diretamente com você, então você vai verificar seu e-mail antes de entrar."
       },
       "verify_title": "Verifique sua caixa de entrada",
-      "verify_desc": "Sua conta está pronta. Enviamos um link de verificação para {{email}}. Verifique seu e-mail e depois abra este convite novamente ou aceite-o na sua página inicial para entrar em {{org}}."
+      "verify_desc": "Sua conta está pronta. Enviamos um link de verificação para {{email}}. Depois de verificar seu e-mail, entre e você fará parte de {{org}}.",
+      "accepted_title": "Você já aceitou este convite",
+      "accepted_desc": "Entre para ir para {{org}}.",
+      "retry_title": "Não foi possível carregar este convite",
+      "retry_desc": "Verifique sua conexão e tente novamente. Seu link de convite continua funcionando.",
+      "try_again": "Tentar novamente",
+      "org_full": "Esta organização está cheia no momento. Peça ao administrador para liberar espaço."
     },
     "login_failed_forgot": "Esqueceu sua senha?",
     "login_failed_reset": "Redefinir",
     "login_failed_magic": "Enviar um link de acesso por e-mail",
     "login_failed_google_hint": "Cadastrou-se com o Google? Use Continuar com o Google abaixo.",
     "email_verified_set_password": "Seu e-mail foi verificado. Para sua segurança, a senha definida anteriormente foi removida: escolha uma nova para fazer login com senha.",
-    "set_new_password": "Definir nova senha"
+    "set_new_password": "Definir nova senha",
+    "invited_by_email_cta": "Convidado por e-mail? Cadastre-se com esse endereço",
+    "use_invite_code_instead": "Tem um código de convite?",
+    "password_reset_done": "Sua senha foi alterada."
   },
   "validation": {
     "required": "Obrigatório",
@@ -9765,7 +9780,7 @@
           "error": "Algo deu errado. Tente novamente.",
           "resent": "Novo convite enviado para {{email}}",
           "email_failed": "Não foi possível enviar o e-mail. Copie o link do convite.",
-          "link_copied": "Link do convite copiado. Quem abrir o link verifica o e-mail antes de entrar. O link do e-mail anterior não funciona mais.",
+          "link_copied": "Link do convite copiado. Quem abrir o link verifica o e-mail antes de entrar.",
           "revoked": "Convite revogado",
           "updated": "Convite atualizado",
           "bulk_resend_one": "{{count}} convite reenviado",
@@ -30247,7 +30262,9 @@
       "verify_resend": "Reenviar o e-mail de verificação",
       "verify_sent": "Enviado. Confira sua caixa de entrada.",
       "invited_as": "Convidou você como {{role}}",
-      "invited_as_by": "{{name}} convidou você como {{role}}"
+      "invited_as_by": "{{name}} convidou você como {{role}}",
+      "accept": "Aceitar",
+      "new_role": "Nova função: {{role}}"
     },
     "celebrate": {
       "title": "Seu primeiro curso está no ar",

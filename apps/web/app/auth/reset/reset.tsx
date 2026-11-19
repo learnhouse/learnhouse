@@ -14,6 +14,8 @@ import { AUTH_INPUT, AUTH_LINK, AuthButton, AuthFootnote, AuthHeading, AuthLabel
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
 import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useForwardedNextHref, withNextParam } from '@/lib/auth/nextParam'
+import { isSafeNextPath, rememberPostAuthNext } from '@/lib/auth/signup'
 
 const validate = (values: any, t: any) => {
     const errors: any = {}
@@ -53,6 +55,13 @@ interface ResetPasswordClientProps {
 
 function ResetPasswordClient({ org }: ResetPasswordClientProps) {
     const { t } = useTranslation();
+    // Keeps a ?next; without one the sign-in falls back to the destination
+    // remembered on this host when the reset was requested.
+    const linkLoginHref = useForwardedNextHref('/login')
+    // The destination the API hands back after the reset (sent with the
+    // request), else the link's own ?next.
+    const [landing, setLanding] = React.useState<string | null>(null)
+    const loginHref = landing ? withNextParam('/login', landing) : linkLoginHref
     const { track } = useLHAnalytics('public')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const searchParams = useSearchParams()
@@ -95,7 +104,13 @@ function ResetPasswordClient({ org }: ResetPasswordClientProps) {
                 track(AnalyticsEvent.PasswordResetSubmitted, { came_from_email_link: Boolean(reset_code) })
                 let res = await resetPassword(values.email, values.new_password, values.reset_code)
                 if (res.status == 200) {
-                    setMessage(res.data)
+                    const data = res.data
+                    const returned = data && typeof data === 'object' && isSafeNextPath(data.next) ? data.next : null
+                    if (returned) {
+                        setLanding(returned)
+                        rememberPostAuthNext(returned)
+                    }
+                    setMessage(typeof data === 'string' ? data : data?.message ?? t('auth.password_reset_done'))
                     setShowMessage(true)
                 } else {
                     setError(getErrorMessage(res.data?.detail, t('auth.error_generic')))
@@ -125,7 +140,7 @@ function ResetPasswordClient({ org }: ResetPasswordClientProps) {
                     {message && (
                         <>
                             {' · '}
-                            <Link href="/login" className="font-semibold underline underline-offset-2 hover:no-underline">
+                            <Link href={loginHref} className="font-semibold underline underline-offset-2 hover:no-underline">
                                 {t('auth.proceed_to_login')}
                             </Link>
                         </>
@@ -205,7 +220,7 @@ function ResetPasswordClient({ org }: ResetPasswordClientProps) {
 
             <AuthFootnote>
                 {t('auth.remember_password')}{' '}
-                <Link href="/login" className={AUTH_LINK}>
+                <Link href={loginHref} className={AUTH_LINK}>
                     {t('auth.login')}
                 </Link>
             </AuthFootnote>

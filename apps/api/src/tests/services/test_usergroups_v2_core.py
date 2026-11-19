@@ -38,7 +38,8 @@ def quiet():
 
 async def mkuser(db, uid: int, email: str, org_id: int = 1, role_id: int = 4, joined: str | None = None, meta=None):
     db.add(User(id=uid, username=f"u{uid}", first_name=f"F{uid}", last_name="L", email=email, password="x",
-                user_uuid=f"user_{uid}", creation_date=NOW, update_date=NOW, extra_metadata=meta or {}))
+                user_uuid=f"user_{uid}", creation_date=NOW, update_date=NOW, extra_metadata=meta or {},
+                email_verified=True))
     db.add(UserOrganization(user_id=uid, org_id=org_id, role_id=role_id, creation_date=joined or NOW, update_date=NOW))
     await db.commit()
     return await db.get(User, uid)

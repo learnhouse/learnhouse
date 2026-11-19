@@ -93,8 +93,9 @@ def send_email_changed_notice(email: EmailStr, new_email: str, username: str = "
     return send_email("account.email_changed", email, {"username": username, "new_email": new_email}, lang=lang)
 
 
-def _reset_url(base_url: str, email: str, code: str) -> str:
-    return f"{base_url}/reset?email={quote(str(email), safe='')}&resetCode={quote(code, safe='')}"
+def _reset_url(base_url: str, email: str, code: str, next_path: str | None = None) -> str:
+    url = f"{base_url}/reset?email={quote(str(email), safe='')}&resetCode={quote(code, safe='')}"
+    return f"{url}&next={quote(next_path, safe='')}" if next_path else url
 
 
 def send_password_reset_email(
@@ -124,12 +125,14 @@ def send_password_reset_email_platform(
     email: EmailStr,
     base_url: str,
     lang: str = "en",
+    next_path: str | None = None,
 ):
-    """Platform-level password reset under the LearnHouse mark."""
+    """Platform-level password reset under the LearnHouse mark. ``next_path``
+    (already validated) rides on the link so the page lands there after."""
     return send_email(
         "account.password_reset", email,
         {"username": user.username, "code": generated_reset_code,
-         "url": _reset_url(base_url, email, generated_reset_code)},
+         "url": _reset_url(base_url, email, generated_reset_code, next_path)},
         lang=lang,
     )
 
@@ -227,8 +230,11 @@ def send_email_verification_email(
     logo_url: str | None = None,
     brand_color: str | None = None,
     powered_by: bool = True,
+    org_name: str | None = None,
 ):
-    """Address verification link; branded to ``organization`` when there is one."""
+    """Address verification link; branded to ``organization`` when there is
+    one. ``org_name`` without ``organization``: the inviting org named in the
+    copy of a platform email (the link stays the platform's)."""
     org_uuid = organization.org_uuid if organization else "none"
     url = (
         f"{base_url}/verify-email?token={quote(token, safe='')}"
@@ -236,7 +242,7 @@ def send_email_verification_email(
     )
     return send_email(
         "account.email_verification", email, {"username": user.username, "url": url},
-        org=org_brand(organization.name if organization else None, lang, sender_name, logo_url, brand_color, powered_by),
+        org=org_brand(organization.name if organization else org_name, lang, sender_name, logo_url, brand_color, powered_by),
         lang=lang,
     )
 

@@ -12,8 +12,8 @@ Security model, in one place:
 - Invite codes only carry roles that can do no more than the built-in User
   role (no management, dashboard or content write rights): anyone holding the
   code could otherwise claim it.
-- Plan capacity counts pending invitations: member caps where the plan has
-  one, admin seats for roles that open the dashboard.
+- Plan capacity counts pending invitations: the member cap on the free plan
+  (paid plans may go over), admin seats for roles that open the dashboard.
 """
 
 import hashlib
@@ -411,7 +411,12 @@ async def capacity(db_session: AsyncSession, org_id: int) -> dict:
             plan = _get_org_plan(config)
             resolved = resolve_feature("members", config.config or {}, org_id)
             # Members switched off: no one may be added (limit 0 refuses all).
-            member_limit = (resolved["limit"] or None) if resolved["enabled"] else 0
+            # Otherwise only the free plan caps members; paid plans may go
+            # over (billing tracks the overage), as they always could.
+            if not resolved["enabled"]:
+                member_limit = 0
+            elif plan == "free":
+                member_limit = resolved["limit"] or None
             seat_limit = get_plan_limit(plan, "admin_seats") or None
     return {
         "plan": plan,

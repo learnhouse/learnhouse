@@ -4,12 +4,22 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { ShieldWarning, WarningCircle } from '@phosphor-icons/react'
 import { AuthStatus, AuthStatusScreen, authButtonClass } from '@components/Auth/AuthUI'
-import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { useAuth, validateOAuthState } from '@components/Contexts/AuthContext'
-import { getLEARNHOUSE_DOMAIN_VAL, getLEARNHOUSE_TOP_DOMAIN_VAL, getAPIUrl } from '@services/config/config'
+import { decodeOAuthStatePayload, useAuth, validateOAuthState } from '@components/Contexts/AuthContext'
+import { getLEARNHOUSE_DOMAIN_VAL, getAPIUrl } from '@services/config/config'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { oauthBounceCheckUrl } from '@/lib/auth/oauthBounce'
+import { readOAuthContextCookies } from '@/lib/auth/oauthCookies'
+import { isMemberLimitError } from '@/lib/auth/signup'
+import { clearOAuthContextCookies } from '@/lib/auth/oauthCookiesClient'
+import {
+  callbackHomeHref,
+  callbackRetryHref,
+  callbackTargets,
+  callbackUrlToOrgRoot,
+  isInviteEmailMismatch,
+  mfaLoginHref,
+} from '@/lib/auth/oauthCallback'
 
 export default function GoogleCallbackPage() {
   const { t } = useTranslation()
@@ -18,6 +28,14 @@ export default function GoogleCallbackPage() {
   const { signIn } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'csrf_error'>('loading')
+  // Where the error buttons lead: the sign-in's own site (and invitation page),
+  // not this page's host, which is often the platform domain.
+  const [linkContext, setLinkContext] = useState<{ callbackUrl: string | null; trustedOrigin: string | null }>({
+    callbackUrl: null,
+    trustedOrigin: null,
+  })
+  // Signed in with a Google account other than the invited one.
+  const [inviteMismatch, setInviteMismatch] = useState(false)
   // The authorization code is single-use: a second run of the effect (React
   // StrictMode, or signIn changing identity) would redeem it again and fail.
   const handledRef = useRef<string | null>(null)
@@ -27,33 +45,16 @@ export default function GoogleCallbackPage() {
     if (handledRef.current === callbackKey) return
     handledRef.current = callbackKey
 
-    const handleCallback = async () => {
-      const code = searchParams.get('code')
-      const state = searchParams.get('state')
-      const errorParam = searchParams.get('error')
+    // Every way out of this page drops the org context cookies, so a stale org
+    // or invitation can't ride along with a later sign-in.
+    const fail = (message: string, kind: 'error' | 'csrf_error' = 'error') => {
+      clearOAuthContextCookies()
+      setError(message)
+      setStatus(kind)
+    }
 
-      // Handle OAuth errors from Google
-      if (errorParam) {
-        setError(t('auth.google_callback.google_failed', { error: errorParam }))
-        setStatus('error')
-        return
-      }
-
-      if (!code) {
-        setError(t('auth.google_callback.no_code'))
-        setStatus('error')
-        return
-      }
-
-      if (!state) {
-        setError(t('auth.google_callback.missing_state'))
-        setStatus('csrf_error')
-        return
-      }
-
-      // Verify the state's signature server-side BEFORE trusting anything in
-      // it. Only a state we issued may name a returnOrigin to bounce the code to.
-      let returnOrigin: string | null = null
+    // Server check of the state's signature; null when it isn't ours.
+    const verifyState = async (state: string): Promise<{ returnOrigin: string | null } | null> => {
       try {
         const verifyRes = await fetch('/api/auth/google/state', {
           method: 'POST',
@@ -61,13 +62,54 @@ export default function GoogleCallbackPage() {
           body: JSON.stringify({ state }),
         })
         const verified = verifyRes.ok ? await verifyRes.json() : null
-        if (!verified?.valid) throw new Error('invalid state')
-        returnOrigin = typeof verified.returnOrigin === 'string' ? verified.returnOrigin : null
+        if (!verified?.valid) return null
+        const returnOrigin = typeof verified.returnOrigin === 'string' ? verified.returnOrigin : null
+        if (returnOrigin) setLinkContext((prev) => ({ ...prev, trustedOrigin: returnOrigin }))
+        return { returnOrigin }
       } catch {
-        setError(t('auth.google_callback.invalid_request'))
-        setStatus('csrf_error')
+        return null
+      }
+    }
+
+    const handleCallback = async () => {
+      const code = searchParams.get('code')
+      const state = searchParams.get('state')
+      const errorParam = searchParams.get('error')
+
+      // The buttons on an error screen point at the site the sign-in started
+      // from. The state's callbackUrl is only used for an origin that checks
+      // out (see callbackTargets).
+      const statePayload = state ? decodeOAuthStatePayload(state) : null
+      if (typeof statePayload?.callbackUrl === 'string') {
+        setLinkContext((prev) => ({ ...prev, callbackUrl: statePayload.callbackUrl }))
+      }
+
+      // Handle OAuth errors from Google (cancelled, refused). A signed state
+      // still says which custom domain the buttons should lead back to.
+      if (errorParam) {
+        if (state) await verifyState(state)
+        fail(t('auth.google_callback.google_failed', { error: errorParam }))
         return
       }
+
+      if (!code) {
+        fail(t('auth.google_callback.no_code'))
+        return
+      }
+
+      if (!state) {
+        fail(t('auth.google_callback.missing_state'), 'csrf_error')
+        return
+      }
+
+      // Verify the state's signature server-side BEFORE trusting anything in
+      // it. Only a state we issued may name a returnOrigin to bounce the code to.
+      const verified = await verifyState(state)
+      if (!verified) {
+        fail(t('auth.google_callback.invalid_request'), 'csrf_error')
+        return
+      }
+      const returnOrigin = verified.returnOrigin
 
       // When OAuth was initiated from a custom domain, Google redirects to the
       // main domain; bounce code+state back so CSRF validation and cookies
@@ -98,8 +140,7 @@ export default function GoogleCallbackPage() {
           /* malformed returnOrigin: no bounce */
         }
         if (!bounceOrigin) {
-          setError(t('auth.google_callback.domain_failed'))
-          setStatus('error')
+          fail(t('auth.google_callback.domain_failed'))
           return
         }
         if (bounceOrigin !== window.location.origin) {
@@ -115,45 +156,30 @@ export default function GoogleCallbackPage() {
 
       const stateValidation = validateOAuthState(state)
       if (!stateValidation.valid) {
-        setError(t('auth.google_callback.invalid_request'))
-        setStatus('csrf_error')
+        fail(t('auth.google_callback.invalid_request'), 'csrf_error')
         return
       }
 
       const callbackUrl = stateValidation.callbackUrl
+      setLinkContext((prev) => ({ ...prev, callbackUrl }))
 
-      // Get org_id (and, for invite-only orgs, the invite code) from cookies if set
+      // Org context (and, for invitations, the invite code or personal link
+      // token) from the cookies the sign-in page set.
       let orgId: number | undefined
       let inviteCode: string | undefined
+      let inviteToken: string | undefined
       try {
-        const cookies = document.cookie.split(';')
-        for (const cookie of cookies) {
-          const [name, value] = cookie.trim().split('=')
-          if (name === 'LH_oauth_org_id' && value) {
-            orgId = parseInt(value, 10)
-            if (isNaN(orgId)) {
-              orgId = undefined
-            }
-          } else if (name === 'LH_oauth_invite_code' && value) {
-            inviteCode = decodeURIComponent(value)
-          }
-        }
+        const ctx = readOAuthContextCookies(document.cookie)
+        orgId = ctx.orgId
+        inviteCode = ctx.inviteCode
+        inviteToken = ctx.inviteToken
       } catch {
         // Ignore cookie parsing errors
       }
 
       // Consume the OAuth org-context cookies once read, so a stale org id can't
       // bleed into a later OAuth attempt (both domain-scoped and host-only).
-      try {
-        const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL()
-        const domainAttr = topDomain && topDomain !== 'localhost' ? `; domain=.${topDomain}` : ''
-        for (const n of ['LH_oauth_org_id', 'LH_oauth_orgslug', 'LH_oauth_invite_code']) {
-          document.cookie = `${n}=; path=/; max-age=0`
-          if (domainAttr) document.cookie = `${n}=; path=/; max-age=0${domainAttr}`
-        }
-      } catch {
-        // best-effort cleanup
-      }
+      clearOAuthContextCookies()
 
       try {
         // redirect_uri must always match what was sent during authorization (main domain)
@@ -214,6 +240,9 @@ export default function GoogleCallbackPage() {
         const oauthParams = new URLSearchParams()
         if (orgId) oauthParams.set('org_id', String(orgId))
         if (orgId && inviteCode) oauthParams.set('invite_code', inviteCode)
+        // A personal invitation link: the sign-in joins the org and accepts it
+        // when the Google address is the invited one.
+        if (inviteToken) oauthParams.set('invite_token', inviteToken)
         const oauthUrl = oauthParams.toString()
           ? `/api/auth/oauth?${oauthParams.toString()}`
           : '/api/auth/oauth'
@@ -233,7 +262,12 @@ export default function GoogleCallbackPage() {
 
         if (!oauthResponse.ok) {
           const errorData = await oauthResponse.json().catch(() => ({}))
-          throw new Error(getErrorMessage(errorData.detail, t('auth.google_callback.authenticate_failed')))
+          if (isInviteEmailMismatch(errorData.detail)) setInviteMismatch(true)
+          throw new Error(
+            isMemberLimitError(errorData.detail)
+              ? t('auth.invite_link.org_full')
+              : getErrorMessage(errorData.detail, t('auth.google_callback.authenticate_failed'), t),
+          )
         }
 
         const data = await oauthResponse.json()
@@ -241,11 +275,11 @@ export default function GoogleCallbackPage() {
         // A Google account with 2FA enrolled gets a pending challenge instead of
         // a session. Hand it to the login page, which owns the code form, the same
         // handoff the admin magic-link consume endpoint uses.
+        // The destination lives in the state's callbackUrl, and the sign-in
+        // page is on the org's own site.
         if (data.mfa_required && data.mfa_token) {
-          const mfaParams = new URLSearchParams({ mfa_token: data.mfa_token })
-          const next = new URLSearchParams(window.location.search).get('next')
-          if (next && /^\/(?!\/)/.test(next)) mfaParams.set('redirect_to', next)
-          router.push(`/auth/login?${mfaParams.toString()}`)
+          const targets = callbackTargets(callbackUrl, window.location.origin, getLEARNHOUSE_DOMAIN_VAL(), returnOrigin)
+          window.location.href = mfaLoginHref(targets, data.mfa_token)
           return
         }
 
@@ -254,6 +288,13 @@ export default function GoogleCallbackPage() {
           throw new Error(t('auth.google_callback.invalid_server_response'))
         }
 
+        // The sign-in accepted the invitation: straight to the org, not back to
+        // the invitation page (which would only say the link was used).
+        const destination =
+          inviteToken && data.invite_accepted !== false
+            ? callbackUrlToOrgRoot(callbackUrl, window.location.origin)
+            : callbackUrl
+
         // Sign in with the obtained tokens
         const result = await signIn('credentials', {
           redirect: false,
@@ -261,7 +302,7 @@ export default function GoogleCallbackPage() {
           sso_access_token: data.tokens.access_token,
           sso_user: JSON.stringify(data.user),
           sso_expiry: data.tokens.expiry,
-          callbackUrl,
+          callbackUrl: destination,
         })
 
         if (result && !result.ok) {
@@ -269,16 +310,24 @@ export default function GoogleCallbackPage() {
         }
 
         setStatus('success')
-        router.push(callbackUrl)
+        router.push(destination)
       } catch (err: any) {
         console.error('Google OAuth callback error:', err)
-        setError(err.message || t('auth.google_callback.auth_failed'))
-        setStatus('error')
+        fail(err.message || t('auth.google_callback.auth_failed'))
       }
     }
 
     handleCallback()
   }, [searchParams, router, signIn, t])
+
+  const targets = callbackTargets(
+    linkContext.callbackUrl,
+    typeof window === 'undefined' ? '' : window.location.origin,
+    getLEARNHOUSE_DOMAIN_VAL(),
+    linkContext.trustedOrigin,
+  )
+  const retryHref = callbackRetryHref(targets)
+  const homeHref = callbackHomeHref(targets)
 
   if (status === 'loading') {
     return (
@@ -302,12 +351,12 @@ export default function GoogleCallbackPage() {
             </>
           }
         >
-          <Link href="/login" className={authButtonClass('primary')}>
+          <a href={retryHref} className={authButtonClass('primary')}>
             {t('auth.google_callback.go_to_login')}
-          </Link>
-          <Link href="/" className={authButtonClass('secondary')}>
+          </a>
+          <a href={homeHref} className={authButtonClass('secondary')}>
             {t('auth.google_callback.go_home')}
-          </Link>
+          </a>
         </AuthStatus>
       </AuthStatusScreen>
     )
@@ -319,15 +368,15 @@ export default function GoogleCallbackPage() {
         <AuthStatus
           tone="danger"
           icon={<WarningCircle size={22} weight="duotone" />}
-          title={t('auth.google_callback.auth_failed')}
+          title={inviteMismatch ? t('auth.google_callback.invite_mismatch_title') : t('auth.google_callback.auth_failed')}
           description={error}
         >
-          <Link href="/login" className={authButtonClass('primary')}>
-            {t('auth.google_callback.try_again')}
-          </Link>
-          <Link href="/" className={authButtonClass('secondary')}>
+          <a href={retryHref} className={authButtonClass('primary')}>
+            {inviteMismatch ? t('auth.google_callback.use_another_account') : t('auth.google_callback.try_again')}
+          </a>
+          <a href={homeHref} className={authButtonClass('secondary')}>
             {t('auth.google_callback.go_home')}
-          </Link>
+          </a>
         </AuthStatus>
       </AuthStatusScreen>
     )

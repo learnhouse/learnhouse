@@ -133,6 +133,10 @@ async def _sync_rule_sources(db: AsyncSession, group: UserGroup, members: set[in
     removed: set[int] = set()
 
     wanted: dict[str, set[int]] = {"rule": set(), "domain": set()}
+    # Who may be added: an email domain only counts once the address is
+    # proven. Someone unproven who matches is not added, but not removed for
+    # being unproven either (a self-hosted member until they verify).
+    addable: dict[str, set[int]] = {}
     if group.kind in ("smart", "hybrid") and group.rules:
         if not advanced:
             # Below the plan the rules stop running; their members stay
@@ -141,17 +145,22 @@ async def _sync_rule_sources(db: AsyncSession, group: UserGroup, members: set[in
         else:
             try:
                 wanted["rule"] = await rules_mod.evaluate(db, group.org_id, group.rules, self_group_id=group.id, members=members)
+                if rules_mod.uses_email_domain(group.rules):
+                    addable["rule"] = await rules_mod.evaluate(
+                        db, group.org_id, group.rules, self_group_id=group.id, members=members, proven_only=True
+                    )
             except HTTPException:
                 logger.warning("Group %s has invalid rules; leaving rule members as they are", group.id)
                 wanted.pop("rule")
     domains = set(group_settings(group)["auto_join_domains"])
     if domains:
-        wanted["domain"] = await rules_mod.condition_set(
-            db, group.org_id, {"type": "email_domain", "values": sorted(domains)}, members
-        ) & members
+        condition = {"type": "email_domain", "values": sorted(domains)}
+        wanted["domain"] = await rules_mod.condition_set(db, group.org_id, condition, members) & members
+        addable["domain"] = await rules_mod.condition_set(db, group.org_id, condition, members, proven_only=True)
 
     for source, desired in wanted.items():
-        for uid in desired:
+        to_add = desired & addable[source] if source in addable else desired
+        for uid in to_add:
             row = rows.get(uid)
             if await add_source(db, group, uid, source, row=row, lookup=False) == "added":
                 added.add(uid)

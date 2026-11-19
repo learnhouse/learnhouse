@@ -4,7 +4,7 @@ import { useFormik } from 'formik'
 import Link from 'next/link'
 import * as Form from '@radix-ui/react-form'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, CircleNotch, EnvelopeSimple, LinkBreak, SignIn, SignOut } from '@phosphor-icons/react'
+import { ArrowClockwise, ArrowRight, CircleNotch, EnvelopeSimple, LinkBreak, SignIn, SignOut } from '@phosphor-icons/react'
 import FormLayout from '@components/Objects/StyledElements/Form/Form'
 import {
   AUTH_INPUT,
@@ -24,8 +24,10 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn, signOut, useAuth } from '@components/Contexts/AuthContext'
 import { getAllowedAuthMethods } from '@services/auth/authMethods'
-import { getLEARNHOUSE_TOP_DOMAIN_VAL, getUriWithOrg, isOnCustomDomain } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
+import { resendVerificationEmail } from '@services/auth/auth'
 import { readSignupFields, type SignupFieldItem } from '@services/settings/org'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import {
@@ -34,7 +36,19 @@ import {
   signupWithInviteLink,
   type InviteLinkInfo,
 } from '@services/auth/inviteLinks'
-import { inviteSignInHref, setLoginHint, splitFullName } from '@/lib/auth/signup'
+import {
+  acceptedInvitePhase,
+  invitePeekOutcome,
+  inviteSignInHref,
+  isMemberLimitError,
+  isOrgMember,
+  rememberPostAuthNext,
+  setLoginHint,
+  splitFullName,
+  takePostAuthNext,
+  type InvitePeekOutcome,
+} from '@/lib/auth/signup'
+import { setOAuthContextCookies } from '@/lib/auth/oauthCookiesClient'
 import { useRoleText } from '@components/Dashboard/Pages/Users/OrgUsersAdd/roleText'
 
 /** Absolute URL on this host, for the full page loads after auth. */
@@ -42,7 +56,51 @@ function fullPageUrl(path: string): string {
   return `${window.location.origin}${path}`
 }
 
-type Phase = 'loading' | 'invalid' | 'signup' | 'signin' | 'wrong_account' | 'joining' | 'error'
+type Phase =
+  | 'loading'
+  | 'invalid'
+  | 'retry'
+  | 'accepted'
+  | 'to_org'
+  | 'signup'
+  | 'signin'
+  | 'wrong_account'
+  | 'joining'
+  | 'error'
+
+/** The link is gone (used, withdrawn, replaced or mangled). */
+export function InviteLinkInvalid({ org: propOrg }: { org?: any }) {
+  const { t } = useTranslation()
+  const session = useLHSession() as any
+  const contextOrg = useOrg() as any
+  const orgName = contextOrg?.name || propOrg?.name || ''
+  return (
+    <div data-testid="invite-link-invalid">
+      <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
+        <LinkBreak size={22} weight="duotone" aria-hidden="true" />
+      </div>
+      <AuthHeading
+        title={t('auth.invite_link.invalid_title', { defaultValue: 'This invitation link has expired' })}
+        description={t('auth.invite_link.invalid_desc', {
+          defaultValue: 'It was already used, withdrawn, or replaced by a newer invitation. Ask the person who invited you to send a new one.',
+        })}
+      />
+      <div className="mt-6 flex flex-col gap-2.5">
+        {session?.status === 'authenticated' ? (
+          <a href="/" className={authButtonClass('primary')}>
+            <span>{t('auth.invite_link.go_to_org', { org: orgName, defaultValue: 'Go to {{org}}' })}</span>
+            <ArrowRight size={16} aria-hidden="true" data-dir-flip="" />
+          </a>
+        ) : (
+          <Link href="/login" className={authButtonClass('primary')}>
+            <SignIn size={16} aria-hidden="true" />
+            <span>{t('auth.login')}</span>
+          </Link>
+        )}
+      </div>
+    </div>
+  )
+}
 
 /**
  * The page behind the button in an invitation email: the org's own signup page
@@ -59,13 +117,21 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
   const auth = useAuth()
   const contextOrg = useOrg() as any
   const org = contextOrg && (contextOrg.id || contextOrg.slug) ? contextOrg : propOrg
-  const [info, setInfo] = React.useState<InviteLinkInfo | null>(null)
-  const [peeked, setPeeked] = React.useState(false)
+  // Peek answer: the invitation, or why there is none (gone, or worth a retry).
+  const [peek, setPeek] = React.useState<{ outcome: InvitePeekOutcome; info: InviteLinkInfo | null } | null>(null)
+  const [peekAttempt, setPeekAttempt] = React.useState(0)
+  const info = peek?.info ?? null
   const [error, setError] = React.useState('')
+  const [errorCode, setErrorCode] = React.useState<string | null>(null)
+  const [resendState, setResendState] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [submitting, setSubmitting] = React.useState(false)
   const [verifySent, setVerifySent] = React.useState(false)
   const roleText = useRoleText()
   const joinStarted = React.useRef(false)
+
+  // A full org is the admin's to fix: the invitee gets no upgrade wording.
+  const inviteErrorMessage = (detail: unknown) =>
+    isMemberLimitError(detail) ? t('auth.invite_link.org_full') : getErrorMessage(detail, t('common.something_went_wrong'), t)
 
   const sessionStatus: string = session?.status
   const sessionEmail: string = (session?.data?.user?.email || '').toLowerCase()
@@ -75,13 +141,41 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
     let cancelled = false
     peekInviteLink(token).then((res) => {
       if (cancelled) return
-      setInfo(res.ok ? res.data : null)
-      setPeeked(true)
+      setPeek({ outcome: invitePeekOutcome(res), info: res.ok ? res.data : null })
     })
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [token, peekAttempt])
+  const retryPeek = () => {
+    setPeek(null)
+    setPeekAttempt((n) => n + 1)
+  }
+
+  // The invitation's org decides the form (sign-in methods, signup fields) and
+  // the org a Google sign-in joins. The host's org is that org only when the
+  // ids match (a renamed slug, the platform domain or another subdomain would
+  // otherwise show the wrong form and send the wrong org_id).
+  const inviteOrgId = info?.org.id
+  const hostIsInviteOrg = !!org?.id && org.id === inviteOrgId
+  const [fetchedOrg, setFetchedOrg] = React.useState<{ id: number; org: any } | null>(null)
+  React.useEffect(() => {
+    if (!info || hostIsInviteOrg) return
+    let cancelled = false
+    const want = info.org
+    Promise.resolve()
+      .then(() => getOrganizationContextInfo(want.slug, null))
+      .then((o: any) => (o && o.id === want.id ? o : null))
+      .catch(() => null)
+      .then((o) => {
+        // Unreadable: the invitation's own org summary (default methods, no fields).
+        if (!cancelled) setFetchedOrg({ id: want.id, org: o || want })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [info, hostIsInviteOrg])
+  const inviteOrg: any = !info ? org : hostIsInviteOrg ? org : fetchedOrg?.id === inviteOrgId ? fetchedOrg?.org : null
 
   const orgName = info?.org.name || org?.name || ''
   const orgSlug = info?.org.slug || org?.slug || ''
@@ -89,15 +183,28 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
     window.location.assign(getUriWithOrg(orgSlug, '/'))
   }, [orgSlug])
 
+  const signedIn = sessionStatus === 'authenticated'
   let phase: Phase = 'loading'
-  if (peeked && !info) phase = 'invalid'
-  else if (info && sessionStatus !== 'loading') {
-    if (sessionStatus === 'authenticated') phase = sessionEmail === info.email.toLowerCase() ? 'joining' : 'wrong_account'
+  if (peek?.outcome === 'retry') phase = 'retry'
+  else if (peek && sessionStatus === 'loading') phase = 'loading'
+  // Used already (by this person, typically right after joining with Google):
+  // a member goes straight to the org; someone signed in who isn't one (removed
+  // since, or another account) is told the link was used.
+  else if (peek?.outcome === 'accepted') phase = acceptedInvitePhase(signedIn, session?.data?.roles, info?.org.id ?? org?.id)
+  else if (peek?.outcome === 'invalid') phase = signedIn && isOrgMember(session?.data?.roles, org?.id) ? 'to_org' : 'invalid'
+  else if (info) {
+    if (signedIn) phase = sessionEmail === info.email.toLowerCase() ? 'joining' : 'wrong_account'
     // A copied link doesn't say whether the address has an account: offer
     // signup, with a way to sign in instead.
     else phase = info.account_exists ? 'signin' : 'signup'
   }
+  // The invitation's org config is still on its way.
+  if ((phase === 'signin' || phase === 'signup') && !inviteOrg) phase = 'loading'
   if (phase === 'joining' && error) phase = 'error'
+
+  React.useEffect(() => {
+    if (phase === 'to_org') goToOrg()
+  }, [phase, goToOrg])
 
   // Signed in as the invited address: join straight away.
   React.useEffect(() => {
@@ -109,27 +216,29 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
         await session.update?.(true)
         goToOrg()
       } else {
-        setError(getErrorMessage(res.detail, t('common.something_went_wrong')))
+        setErrorCode(typeof res.detail?.code === 'string' ? res.detail.code : null)
+        setError(inviteErrorMessage(res.detail))
       }
     })
   }, [phase, accessToken, token, session, goToOrg, t, track])
 
-  const allowed = React.useMemo(() => getAllowedAuthMethods(org), [org])
+  const allowed = React.useMemo(() => getAllowedAuthMethods(inviteOrg), [inviteOrg])
   const passwordAllowed = allowed.has('password')
   const googleAllowed = allowed.has('google')
-  const customFields = React.useMemo<SignupFieldItem[]>(() => readSignupFields(org), [org])
+  const customFields = React.useMemo<SignupFieldItem[]>(() => readSignupFields(inviteOrg), [inviteOrg])
   const backHere = `/signup?invite=${token}`
 
   const continueWithGoogle = () => {
     track(AnalyticsEvent.SignupGoogleClicked)
-    if (org?.slug) {
-      const top = getLEARNHOUSE_TOP_DOMAIN_VAL()
-      const secure = window.location.protocol === 'https:' ? '; secure' : ''
-      const domain = top === 'localhost' || isOnCustomDomain() ? '' : `; domain=.${top}`
-      document.cookie = `LH_oauth_orgslug=${org.slug}; path=/; SameSite=Lax${secure}${domain}`
-      document.cookie = `LH_oauth_org_id=${org.id}; path=/; SameSite=Lax${secure}${domain}`
-    }
-    // Back to this page once signed in, which then joins the org.
+    // The invitation token rides along: the sign-in itself joins the org and
+    // accepts the invitation when the Google address is the invited one.
+    setOAuthContextCookies({
+      orgSlug: info?.org.slug || org?.slug,
+      orgId: info?.org.id || org?.id,
+      inviteToken: token,
+    })
+    // Back to this page once signed in, which then joins the org (the callback
+    // goes to the org itself when the sign-in already accepted).
     setError('')
     signIn('google', { callbackUrl: `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(backHere)}` }).then((res) => {
       if (res && !res.ok) {
@@ -155,6 +264,9 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
       setSubmitting(true)
       setError('')
       track(AnalyticsEvent.SignupSubmitted, { invite_code_present: true, has_bio: false })
+      // A copied link waits for the email to be verified: verifying (and the
+      // sign-in after) comes back to this invitation.
+      rememberPostAuthNext(backHere)
       const res = await signupWithInviteLink({
         token,
         password: values.password,
@@ -162,8 +274,9 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
         ...(customFields.length ? { custom_fields: values.custom_fields } : {}),
       })
       if (!res.ok) {
+        takePostAuthNext()
         track(AnalyticsEvent.SignupFailed, { status_code: res.status })
-        setError(getErrorMessage(res.detail, t('common.something_went_wrong')))
+        setError(inviteErrorMessage(res.detail))
         setSubmitting(false)
         return
       }
@@ -176,6 +289,7 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
         return
       }
       track(AnalyticsEvent.SignupSucceeded, { email_verified: true })
+      takePostAuthNext()
       // The link proved the inbox, so the new account can sign in right away.
       const signed: any = await auth.signIn('credentials', {
         redirect: false,
@@ -193,7 +307,7 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
     },
   })
 
-  if (phase === 'loading' || (phase === 'joining' && !error)) {
+  if (phase === 'loading' || phase === 'to_org' || (phase === 'joining' && !error)) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center" role="status" data-testid="invite-link-loading">
         <CircleNotch size={22} className="animate-spin text-neutral-400" aria-hidden="true" />
@@ -204,36 +318,40 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
     )
   }
 
-  if (phase === 'invalid') {
+  if (phase === 'invalid') return <InviteLinkInvalid org={org} />
+
+  // No answer (offline, rate limited, server busy): the link may well be fine.
+  if (phase === 'retry') {
     return (
-      <div data-testid="invite-link-invalid">
-        <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
-          <LinkBreak size={22} weight="duotone" aria-hidden="true" />
-        </div>
-        <AuthHeading
-          title={t('auth.invite_link.invalid_title', { defaultValue: 'This invitation link has expired' })}
-          description={t('auth.invite_link.invalid_desc', {
-            defaultValue: 'It was already used, withdrawn, or replaced by a newer invitation. Ask the person who invited you to send a new one.',
-          })}
-        />
-        <div className="mt-6 flex flex-col gap-2.5">
-          {sessionStatus === 'authenticated' ? (
-            <a href="/" className={authButtonClass('primary')}>
-              <span>{t('auth.invite_link.go_to_org', { org: orgName, defaultValue: 'Go to {{org}}' })}</span>
-              <ArrowRight size={16} aria-hidden="true" data-dir-flip="" />
-            </a>
-          ) : (
-            <Link href="/login" className={authButtonClass('primary')}>
-              <SignIn size={16} aria-hidden="true" />
-              <span>{t('auth.login')}</span>
-            </Link>
-          )}
-        </div>
+      <div data-testid="invite-link-retry">
+        <AuthHeading title={t('auth.invite_link.retry_title')} description={t('auth.invite_link.retry_desc')} />
+        <AuthButton type="button" className="mt-6" icon={<ArrowClockwise size={16} />} onClick={retryPeek}>
+          {t('auth.invite_link.try_again')}
+        </AuthButton>
       </div>
     )
   }
 
   if (!info) return null
+
+  if (phase === 'accepted') {
+    return (
+      <div data-testid="invite-link-accepted">
+        <AuthHeading
+          title={t('auth.invite_link.accepted_title')}
+          description={t('auth.invite_link.accepted_desc', { org: orgName })}
+        />
+        <a
+          href="/login"
+          onClick={() => info.email && setLoginHint(info.email)}
+          className={authButtonClass('primary', 'mt-6')}
+        >
+          <SignIn size={16} aria-hidden="true" />
+          <span>{t('auth.login')}</span>
+        </a>
+      </div>
+    )
+  }
 
   if (phase === 'wrong_account') {
     return (
@@ -262,6 +380,29 @@ export default function InviteLinkSignup({ token, org: propOrg }: { token: strin
     return (
       <div data-testid="invite-link-error">
         <AuthNotice tone="danger">{error}</AuthNotice>
+        {/* Joining waits for a verified address: offer the email again. */}
+        {errorCode === 'INVITE_VERIFY_EMAIL' && sessionEmail && (
+          <div className="mt-3 text-[13px] text-neutral-500">
+            {resendState === 'sent' ? (
+              <p className="font-medium text-emerald-700">{t('auth.verification_email_resent')}</p>
+            ) : (
+              <button
+                type="button"
+                disabled={resendState === 'sending'}
+                onClick={async () => {
+                  setResendState('sending')
+                  rememberPostAuthNext(backHere)
+                  const res = await resendVerificationEmail(sessionEmail, info.org.id, backHere)
+                  setResendState(res.success ? 'sent' : 'error')
+                }}
+                className="font-medium text-neutral-700 underline underline-offset-2 hover:no-underline disabled:opacity-50 text-start"
+              >
+                {resendState === 'sending' ? t('common.loading') : t('auth.resend_verification_email')}
+              </button>
+            )}
+            {resendState === 'error' && <p className="mt-1 text-xs text-rose-600">{t('auth.resend_verification_failed')}</p>}
+          </div>
+        )}
         <a href="/" className={authButtonClass('secondary', 'mt-4')}>
           {t('auth.invite_link.go_to_org', { org: orgName, defaultValue: 'Go to {{org}}' })}
         </a>

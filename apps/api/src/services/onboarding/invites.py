@@ -14,7 +14,7 @@ invitations sent before that are still listed and honoured until they expire.
 
 import json
 import logging
-from datetime import datetime
+import re
 from typing import Any, Optional
 
 from fastapi import HTTPException, Request
@@ -59,7 +59,9 @@ def _pending_records(email: str) -> dict[str, dict]:
     prefix = f"invited_user:{email.strip().lower()}:org:"
     found: dict[str, dict] = {}
     try:
-        for key in r.scan_iter(match=prefix + "*", count=200):
+        # The address is literal: * ? [ ] in it must not match other
+        # people's records.
+        for key in r.scan_iter(match=_glob_escape(prefix) + "*", count=200):
             name = _decode(key)
             raw = r.get(name)
             if not raw:
@@ -71,6 +73,11 @@ def _pending_records(email: str) -> dict[str, dict]:
         logger.warning("Could not read pending invitations", exc_info=True)
         return {}
     return found
+
+
+def _glob_escape(value: str) -> str:
+    """``value`` as a literal inside a Redis SCAN MATCH pattern."""
+    return re.sub(r"([*?\[\]\\])", r"\\\1", value)
 
 
 VERIFY_FIRST = "Please verify your email address first."
@@ -148,7 +155,9 @@ async def list_pending_invites(db_session: AsyncSession, user_id: int) -> list[d
     )).scalars().all())
     out = []
     for org in orgs:
-        if org.id in member_of or org.is_demo:
+        # A member still sees an invitation that would give them more (its
+        # role, groups or courses); an older Redis one adds nothing to them.
+        if org.is_demo or (org.id in member_of and org.id not in db_invites):
             continue
         row = {
             "org_uuid": org.org_uuid,
@@ -156,6 +165,7 @@ async def list_pending_invites(db_session: AsyncSession, user_id: int) -> list[d
             "name": org.name,
             "slug": org.slug,
             "logo_image": org.logo_image,
+            "already_member": org.id in member_of,
         }
         if org.id in db_invites:
             row.update(await _invite_details(db_session, db_invites[org.id]))
@@ -185,20 +195,20 @@ def _invite_usergroup(r, record: dict, org_uuid: str) -> Optional[int]:
     return None
 
 
-async def join_from_invite(request: Request, db_session: AsyncSession, user: User, org: Organization, join_method: str) -> None:
+async def join_from_invite(request: Request, db_session: AsyncSession, user: User, org: Organization, join_method: str) -> bool:
     """Make ``user`` a member of ``org`` because they were invited: seat check,
-    membership, usage, analytics and the admins' "someone joined" notice."""
+    membership, usage, analytics and the admins' "someone joined" notice.
+    False when they turned out to be a member already (a concurrent join)."""
     from src.routers.users import _invalidate_session_cache
-    from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
+    from src.security.features_utils.usage import increase_feature_usage
     from src.services.analytics import events as analytics_events
     from src.services.analytics.analytics import track
+    from src.services.orgs.invitations.apply import check_room_for_invitee, stage_membership
     from src.services.orgs.join_notifications import notify_user_joined_org
 
-    await check_limits_with_usage("members", org.id, db_session)
-    db_session.add(UserOrganization(
-        user_id=user.id, org_id=org.id, role_id=USER_ROLE_ID,
-        creation_date=str(datetime.now()), update_date=str(datetime.now()),
-    ))
+    await check_room_for_invitee(org.id, db_session)
+    if await stage_membership(db_session, user.id, org.id, USER_ROLE_ID) is None:
+        return False
     await db_session.commit()
     # Joined through an older invitation: newer ones for the address close.
     from src.services.orgs.invitations.apply import close_pending_invitations
@@ -213,6 +223,7 @@ async def join_from_invite(request: Request, db_session: AsyncSession, user: Use
         properties={"join_method": join_method},
     )
     await notify_user_joined_org(request, db_session, user, org.id, org=org)
+    return True
 
 
 async def accept_invite(request: Request, db_session: AsyncSession, user_id: int, org_uuid: str) -> dict:
@@ -239,20 +250,113 @@ async def accept_invite(request: Request, db_session: AsyncSession, user_id: int
     if already is not None:
         raise HTTPException(status_code=400, detail="You are already a member of this organization")
 
-    await join_from_invite(request, db_session, user, org, join_method="email_invite")
-
-    group_id = _invite_usergroup(r, record, org.org_uuid)
-    ttl = r.ttl(key)
-    r.set(key, json.dumps({**record, "pending": False}), ex=ttl if ttl and ttl > 0 else None)
-    if group_id:
-        from src.services.users.usergroups import add_users_to_usergroup
-
-        try:
-            await add_users_to_usergroup(request, db_session, InternalUser(id=0), group_id, str(user.id))
-        except HTTPException:
-            logger.warning("Invited user %s joined org %s but not group %s", user.id, org.id, group_id)
-
+    await accept_legacy_invite(request, db_session, user, org, key, record, join_method="email_invite")
     return {"org_id": org.id, "slug": org.slug, "name": org.name}
+
+
+async def accept_legacy_invite(
+    request: Optional[Request],
+    db_session: AsyncSession,
+    user: User,
+    org: Organization,
+    key: str,
+    record: dict,
+    *,
+    join_method: str,
+    joined_now: bool = False,
+) -> bool:
+    """Apply a pending Redis invitation: membership as a plain member (unless
+    they already belong), the user group of the invite code it carried, and
+    the record marked answered. ``joined_now``: the membership was created
+    moments ago for this arrival, so the group still applies. True when this
+    made them a member."""
+    from src.services.orgs.invitations.apply import consume_legacy_invite
+
+    member = (await db_session.execute(
+        select(UserOrganization.id).where(UserOrganization.user_id == user.id, UserOrganization.org_id == org.id)
+    )).first()
+    joined = member is None and await join_from_invite(request, db_session, user, org, join_method=join_method)
+    if joined or joined_now:
+        await _add_legacy_group(request, db_session, user, org, record)
+    consume_legacy_invite(key, record)
+    return joined
+
+
+async def _add_legacy_group(request: Optional[Request], db_session: AsyncSession, user: User, org: Organization, record: dict) -> None:
+    r = _redis()
+    if r is None:
+        return
+    try:
+        group_id = _invite_usergroup(r, record, org.org_uuid)
+    except Exception:
+        logger.warning("Could not read the invite group for org %s", org.id, exc_info=True)
+        return
+    if not group_id:
+        return
+    from src.services.users.usergroups import add_users_to_usergroup
+
+    try:
+        await add_users_to_usergroup(request, db_session, InternalUser(id=0), group_id, str(user.id))
+    except HTTPException:
+        logger.warning("Invited user %s joined org %s but not group %s", user.id, org.id, group_id)
+
+
+async def apply_all_pending_invites(
+    request: Optional[Request],
+    db_session: AsyncSession,
+    user: User,
+    *,
+    via: str,
+    joined_org_id: Optional[int] = None,
+) -> list[int]:
+    """The inbox was just proven (a verification email, an emailed link):
+    every invitation waiting for the address is accepted, database ones with
+    their role (never a demotion), groups and courses, older Redis ones as a
+    plain member with their group. ``joined_org_id``: the org whose membership
+    was created moments ago for this arrival (its placeholder role is
+    replaced). Returns the org ids. Never raises."""
+    from src.services.orgs.invitations.apply import accept_invitation
+    from src.services.users.users import inbox_proven
+
+    if not inbox_proven(user):
+        return []
+    user_id = user.id
+    applied: list[int] = []
+    try:
+        db_invites = await _db_pending(db_session, user.email)
+        records = _pending_records(user.email)
+        legacy_orgs = list((await db_session.execute(
+            select(Organization).where(Organization.org_uuid.in_(list(records)))  # type: ignore[attr-defined]
+        )).scalars().all()) if records else []
+    except Exception:
+        logger.warning("Could not list the invitations for user %s", user.id, exc_info=True)
+        return []
+    for org_id, inv in db_invites.items():
+        org = await db_session.get(Organization, org_id)
+        if org is None or org.is_demo:
+            continue
+        # Read before: a failed acceptance rolls back (and expires) the row.
+        invitation_uuid = inv.invitation_uuid
+        try:
+            await accept_invitation(
+                request, db_session, user, org, inv, via=via, ownership_proven=True,
+                joined_now=org_id == joined_org_id,
+            )
+            applied.append(org_id)
+        except Exception:
+            logger.warning("Could not accept invitation %s for user %s", invitation_uuid, user_id, exc_info=True)
+    for org in legacy_orgs:
+        if org.id in db_invites or org.is_demo:
+            continue
+        try:
+            await accept_legacy_invite(
+                request, db_session, user, org, _invite_key(user.email, org.org_uuid), records[org.org_uuid],
+                join_method=via, joined_now=org.id == joined_org_id,
+            )
+            applied.append(org.id)
+        except Exception:
+            logger.warning("Could not accept the legacy invitation to org %s for user %s", org.id, user_id, exc_info=True)
+    return applied
 
 
 async def decline_invite(db_session: AsyncSession, user_id: int, org_uuid: str, request: Optional[Request] = None) -> dict:
@@ -266,9 +370,13 @@ async def decline_invite(db_session: AsyncSession, user_id: int, org_uuid: str, 
     org = await _org_by_uuid(db_session, org_uuid)
     inv = await find_pending_invitation(db_session, user.email, org.id)
     if inv is not None:
-        inv.status = InvitationStatus.DECLINED.value
-        inv.updated_at = utcnow()
-        db_session.add(inv)
+        # Only while still pending: one accepted meanwhile stays accepted.
+        from src.services.orgs.invitations.service import _transition
+
+        await _transition(
+            db_session, inv, (InvitationStatus.PENDING.value,), "This invitation is no longer valid",
+            status=InvitationStatus.DECLINED.value, updated_at=utcnow(),
+        )
         await db_session.commit()
         audit_event(
             request, action="members.invitation.declined", org_id=org.id, actor=user,

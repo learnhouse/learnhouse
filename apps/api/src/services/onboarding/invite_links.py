@@ -24,6 +24,7 @@ Redis, still work until they expire.
 import hashlib
 import json
 import logging
+from contextlib import contextmanager
 import re
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -146,13 +147,15 @@ def _public_org(org: Organization) -> dict:
 
 async def _user_by_email(db_session: AsyncSession, email: str) -> Optional[User]:
     return (await db_session.execute(
-        select(User).where(func.lower(User.email) == email.lower())
+        # Oldest first: a few older accounts differ from another only in case.
+        select(User).where(func.lower(User.email) == email.lower()).order_by(User.id)  # type: ignore[arg-type]
     )).scalars().first()
 
 
-async def _db_invitation(db_session: AsyncSession, token: str):
+async def _db_invitation(db_session: AsyncSession, token: str, *, allow_accepted: bool = False):
     """(invitation, org) for a database link token, or None when the token is
-    not one of them. A database link that can't be used any more is a 404."""
+    not one of them. A database link that can't be used any more is a 404
+    (``allow_accepted``: except an accepted one, which peek reports)."""
     from src.services.orgs.invitations.apply import invitation_by_token
     from src.services.orgs.invitations.policy import effective_status
 
@@ -161,7 +164,8 @@ async def _db_invitation(db_session: AsyncSession, token: str):
     inv = await invitation_by_token(db_session, token)
     if inv is None:
         return None
-    if effective_status(inv) != "pending":
+    status = effective_status(inv)
+    if status != "pending" and not (allow_accepted and status == "accepted"):
         raise HTTPException(status_code=404, detail=INVALID)
     org = await db_session.get(Organization, inv.org_id)
     if org is None or org.is_demo:
@@ -169,7 +173,7 @@ async def _db_invitation(db_session: AsyncSession, token: str):
     return inv, org
 
 
-async def _invitation_summary(db_session: AsyncSession, inv) -> dict:
+async def _invitation_summary(db_session: AsyncSession, inv, token: str) -> dict:
     """What the invitee is told before joining: the role, who invited them,
     their note, the groups and courses, and the deadline."""
     from src.db.courses.courses import Course
@@ -200,33 +204,38 @@ async def _invitation_summary(db_session: AsyncSession, inv) -> dict:
         "courses": list(courses),
         "expires_at": iso(inv.expires_at),
         # A copied link: joining waits until the person verifies their email.
-        "proves_inbox": inv.token_delivery == "email",
+        "proves_inbox": _emailed(inv, token),
     }
 
 
 async def peek_invite_link(db_session: AsyncSession, token: str) -> dict:
     """What the org's signup page needs to greet the invitee. The holder of an
     emailed token is the invited inbox, so it may learn whether an account
-    exists for the address; a copied link doesn't say."""
-    found = await _db_invitation(db_session, token)
+    exists for the address; a copied link doesn't say. An invitation already
+    accepted is reported as such (``status: "accepted"``), so the page can
+    send a signed-in member on to the org."""
+    found = await _db_invitation(db_session, token, allow_accepted=True)
     if found is not None:
         inv, org = found
+        if inv.status == "accepted":
+            return {"status": "accepted", "email": inv.email, "org": _public_org(org)}
         out = {
+            "status": "pending",
             "email": inv.email,
             "org": _public_org(org),
-            "invitation": await _invitation_summary(db_session, inv),
+            "invitation": await _invitation_summary(db_session, inv, token),
         }
         # Only the inbox's owner (who received the emailed link) is told
         # whether the address has an account. A copied link went through an
         # org admin, who must not be able to probe that.
-        if _emailed(inv):
+        if _emailed(inv, token):
             out["account_exists"] = await _user_by_email(db_session, inv.email) is not None
         return out
     r = _require_redis()
     _digest, record, _key, _invite = _load(r, token)
     org = await _org(db_session, record)
     existing = await _user_by_email(db_session, record["email"])
-    return {"email": record["email"], "org": _public_org(org), "account_exists": existing is not None}
+    return {"status": "pending", "email": record["email"], "org": _public_org(org), "account_exists": existing is not None}
 
 
 def _claim(r, digest: str) -> None:
@@ -296,10 +305,11 @@ async def signup_with_invite_link(request: Request, db_session: AsyncSession, bo
             password=body.password,
             custom_fields=body.custom_fields,
         )
-        user = await create_user(
-            request, db_session, AnonymousUser(), user_object, org.id,
-            signup_provider="invite", email_verified_by_link=True,
-        )
+        with _invitee_wording():
+            user = await create_user(
+                request, db_session, AnonymousUser(), user_object, org.id,
+                signup_provider="invite_link", email_verified_by_link=True,
+            )
         await _add_to_invite_group(request, db_session, r, invite, org, user.id)
         _consume(r, digest, invite_key, invite)
     finally:
@@ -313,7 +323,7 @@ async def accept_invite_link(request: Request, db_session: AsyncSession, user_id
 
     found = await _db_invitation(db_session, token)
     if found is not None:
-        return await _accept_db_invitation(request, db_session, user_id, *found)
+        return await _accept_db_invitation(request, db_session, user_id, token, *found)
 
     r = _require_redis()
     digest, record, invite_key, invite = _load(r, token)
@@ -360,6 +370,20 @@ async def _prove_inbox(db_session: AsyncSession, user: User) -> None:
     await _drop_unverified_sso_links(user.id, db_session)
 
 
+@contextmanager
+def _invitee_wording():
+    """A full org refuses the invitee in their words, not the admin's."""
+    from src.services.orgs.invitations.apply import invitee_limit_refusal
+
+    try:
+        yield
+    except HTTPException as exc:
+        refusal = invitee_limit_refusal(exc)
+        if refusal is exc:
+            raise
+        raise refusal from exc
+
+
 def _optional_claim(digest: str):
     """The Redis "being redeemed" marker when Redis is there; the database
     claim on the invitation is the real single-use guard."""
@@ -370,10 +394,12 @@ def _optional_claim(digest: str):
     return r
 
 
-def _emailed(inv) -> bool:
+def _emailed(inv, token: str) -> bool:
     """Only a token that was mailed to the invited address proves the inbox.
     A link the admin copied to share by hand proves nothing about it."""
-    return inv.token_delivery == "email"
+    from src.services.orgs.invitations.apply import token_emailed
+
+    return token_emailed(inv, token)
 
 
 async def _signup_with_db_invitation(request: Request, db_session: AsyncSession, body: InviteSignupBody, inv, org: Organization) -> dict:
@@ -381,8 +407,18 @@ async def _signup_with_db_invitation(request: Request, db_session: AsyncSession,
     from src.services.orgs.invitations.apply import accept_invitation
     from src.services.users.users import create_user, create_user_without_org
 
-    if await _user_by_email(db_session, inv.email) is not None:
-        raise HTTPException(status_code=409, detail=ACCOUNT_EXISTS)
+    emailed = _emailed(inv, body.token)
+    existing = await _user_by_email(db_session, inv.email)
+    if existing is not None:
+        if emailed:
+            # The holder of the emailed link owns the inbox and was already
+            # told (peek) that the address has an account.
+            raise HTTPException(status_code=409, detail=ACCOUNT_EXISTS)
+        # A copied link went through an admin, who must not learn whether the
+        # address has an account: same answer as a new signup, and the owner
+        # gets the invitation by email to sign in and accept it.
+        await _mail_invitation_to_owner(request, db_session, inv, org, body.token)
+        return {"email": inv.email, "org": _public_org(org), "verification_required": True}
     await _enforce_password_signup_allowed(db_session, org.id)
     digest = _hash(body.token)
     r = _optional_claim(digest)
@@ -395,45 +431,68 @@ async def _signup_with_db_invitation(request: Request, db_session: AsyncSession,
             password=body.password,
             custom_fields=body.custom_fields,
         )
-        if not _emailed(inv):
+        if not emailed:
             # A copied link: the account is created like any signup, with its
-            # email still to verify, and the invitation waits for that proof.
-            created = await create_user_without_org(request, db_session, AnonymousUser(), user_object)
-            await _send_proof_request(request, db_session, created.id, org)
+            # email still to verify (the email's link lands back on this
+            # invitation), and the invitation applies on that proof. On
+            # a self-hosted install that proof drops the password chosen here
+            # (whoever held the link may not be the inbox's owner): verifying
+            # answers ``set_password: true`` and the owner sets a new one.
+            await create_user_without_org(
+                request, db_session, AnonymousUser(), user_object,
+                next_path=f"/signup?invite={body.token}", invited_org_id=org.id,
+            )
             return {"email": inv.email, "org": _public_org(org), "verification_required": True}
-        created = await create_user(
-            request, db_session, AnonymousUser(), user_object, org.id,
-            signup_provider="invite", email_verified_by_link=True, keep_invitations=True,
-        )
+        with _invitee_wording():
+            created = await create_user(
+                request, db_session, AnonymousUser(), user_object, org.id,
+                signup_provider="invite_link", email_verified_by_link=True, keep_invitations=True,
+            )
         user = await db_session.get(User, created.id)
-        await accept_invitation(
-            request, db_session, user, org, inv, via="email_invite_link", ownership_proven=True, joined_now=True,
-        )
+        try:
+            await accept_invitation(
+                request, db_session, user, org, inv, via="email_invite_link", ownership_proven=True, joined_now=True,
+            )
+        except HTTPException:
+            # The invitation went away meanwhile (withdrawn, expired): the
+            # account stays, the membership made for it does not.
+            await _undo_membership(db_session, user.id, org.id)
+            raise
     finally:
         if r is not None:
             _release(r, digest)
     return {"email": inv.email, "org": _public_org(org), "verification_required": False}
 
 
-async def _send_proof_request(request: Request, db_session: AsyncSession, user_id: int, org: Organization) -> None:
-    """On a self-hosted install the new account counts as verified without an
-    email round trip, so no verification email went out: send one (branded to
-    the org), so the person can prove the inbox and then accept. A SaaS signup
-    already got its verification email. Never fails the signup."""
-    from src.services.users.users import inbox_unproven
+async def _undo_membership(db_session: AsyncSession, user_id: int, org_id: int) -> None:
+    from src.routers.users import _invalidate_session_cache
+    from src.security.features_utils.usage import decrease_feature_usage
 
-    user = await db_session.get(User, user_id)
-    if user is None or not inbox_unproven(user):
+    membership = (await db_session.execute(
+        select(UserOrganization).where(UserOrganization.user_id == user_id, UserOrganization.org_id == org_id)
+    )).scalars().first()
+    if membership is None:
         return
-    try:
-        from src.services.users.email_verification import send_verification_email
-
-        await send_verification_email(request, db_session, user, org.id)
-    except Exception:
-        logger.warning("Could not send the verification email for user %s", user_id, exc_info=True)
+    await db_session.delete(membership)
+    await db_session.commit()
+    await decrease_feature_usage("members", org_id, db_session)
+    _invalidate_session_cache(user_id)
 
 
-async def _accept_db_invitation(request: Request, db_session: AsyncSession, user_id: int, inv, org: Organization) -> dict:
+async def _mail_invitation_to_owner(request: Request, db_session: AsyncSession, inv, org: Organization, token: str) -> None:
+    """The invitation email, with this link, to the address's owner (who has
+    an account and only needs to sign in and accept). Never raises."""
+    from src.db.roles import Role
+    from src.services.orgs.invitations.service import _send_email
+
+    sender = await db_session.get(User, inv.invited_by_user_id) if inv.invited_by_user_id else None
+    if sender is None:
+        return
+    role = await db_session.get(Role, inv.role_id) if inv.role_id else None
+    await _send_email(request, db_session, org, sender, inv, token, role)
+
+
+async def _accept_db_invitation(request: Request, db_session: AsyncSession, user_id: int, token: str, inv, org: Organization) -> dict:
     from src.services.orgs.invitations.apply import accept_invitation
 
     user = await db_session.get(User, user_id)
@@ -441,15 +500,14 @@ async def _accept_db_invitation(request: Request, db_session: AsyncSession, user
         raise HTTPException(status_code=404, detail="User not found")
     if (user.email or "").strip().lower() != inv.email:
         raise HTTPException(status_code=403, detail=EMAIL_MISMATCH)
-    emailed = _emailed(inv)
+    emailed = _emailed(inv, token)
     if not emailed:
         from src.services.users.users import inbox_proven
 
         # A copied link proves nothing: the account must have proven its inbox.
         if not inbox_proven(user):
             raise HTTPException(status_code=403, detail=VERIFY_FIRST)
-    # Found by this token, so the hash is the one on the invitation.
-    digest = inv.token_hash
+    digest = _hash(token)
     r = _optional_claim(digest)
     try:
         if emailed:
@@ -461,3 +519,89 @@ async def _accept_db_invitation(request: Request, db_session: AsyncSession, user
         if r is not None:
             _release(r, digest)
     return {"org": _public_org(org), "already_member": result["already_member"], "role": result["role"]}
+
+
+# ---------------------------------------------------------------------------
+# Google sign-in from an invitation link (POST /auth/oauth?invite_token=...)
+# ---------------------------------------------------------------------------
+
+
+def mask_email(email: str) -> str:
+    """``b***@example.com``: enough to recognise the address, not to read it."""
+    local, _, domain = (email or "").partition("@")
+    return f"{local[:1]}***@{domain}" if domain else "***"
+
+
+def email_mismatch_detail(invited_email: str) -> dict:
+    hint = mask_email(invited_email)
+    return {
+        "code": "INVITE_EMAIL_MISMATCH",
+        "message": f"This invitation was sent to {hint}. Sign in with that Google account to accept it.",
+        "invited_email_hint": hint,
+    }
+
+
+async def resolve_invite_token(db_session: AsyncSession, token: Optional[str]) -> Optional[dict]:
+    """The usable invitation behind a personal link token: ``{"email", "org",
+    "inv"}`` for a database invitation (pending, unexpired), or ``{"email",
+    "org", "legacy": (digest, record, key, invite)}`` for an older Redis one.
+    None for anything else (unknown, used, withdrawn, expired, a demo org, no
+    Redis to check): the caller then falls back to its usual rules."""
+    from src.services.orgs.invitations.apply import invitation_by_token
+    from src.services.orgs.invitations.policy import effective_status
+
+    if not TOKEN_RE.fullmatch(token or ""):
+        return None
+    inv = await invitation_by_token(db_session, token)
+    if inv is not None:
+        if effective_status(inv) != "pending":
+            return None
+        org = await db_session.get(Organization, inv.org_id)
+        if org is None or org.is_demo:
+            return None
+        return {"email": inv.email, "org": org, "inv": inv}
+    r = _redis()
+    if r is None:
+        return None
+    try:
+        legacy = _load(r, token)
+        org = await _org(db_session, legacy[1])
+    except HTTPException:
+        return None
+    except Exception:
+        logger.warning("Could not read an invitation link from Redis", exc_info=True)
+        return None
+    return {"email": legacy[1]["email"].strip().lower(), "org": org, "legacy": legacy}
+
+
+async def accept_after_google(request: Request, db_session: AsyncSession, user_id: int, found: dict, *, joined_now: bool) -> bool:
+    """Accept the link's invitation once Google signed the invited address in
+    (the same acceptance as the link's own accept endpoint; Google vouching
+    for the address proves the inbox). ``joined_now``: the sign-in just made
+    the account a member, so its placeholder role is replaced. True when it
+    applied; never turns the completed sign-in into an error."""
+    from src.services.orgs.invitations.apply import accept_invitation
+
+    user = await db_session.get(User, user_id)
+    org = found["org"]
+    try:
+        if found.get("inv") is not None:
+            # The claim on the invitation row is the single-use guard.
+            await accept_invitation(
+                request, db_session, user, org, found["inv"], via="google_invite_link",
+                ownership_proven=True, joined_now=joined_now,
+            )
+            return True
+        from src.services.onboarding.invites import accept_legacy_invite
+
+        digest, _record, invite_key, invite = found["legacy"]
+        await accept_legacy_invite(
+            request, db_session, user, org, invite_key, invite, join_method="google_invite_link", joined_now=joined_now,
+        )
+        r = _redis()
+        if r is not None:
+            _consume(r, digest, invite_key, invite)
+        return True
+    except Exception:
+        logger.warning("Could not accept the invitation after Google sign-in for user %s", user_id, exc_info=True)
+        return False

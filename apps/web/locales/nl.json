@@ -670,7 +670,11 @@
       "google_not_configured": "Google OAuth is niet geconfigureerd",
       "profile_field_invalid": "Links en e-mailadressen zijn niet toegestaan in: {{fields}}",
       "field_no_links": "Geen links of e-mailadressen",
-      "rate_limited": "Te veel pogingen. Wacht even en probeer het opnieuw."
+      "rate_limited": "Te veel pogingen. Wacht even en probeer het opnieuw.",
+      "invite_required": "Je hebt een uitnodiging nodig om lid te worden van deze organisatie.",
+      "invite_email_mismatch": "Deze uitnodiging is naar een ander e-mailadres gestuurd. Log in met dat adres om haar te accepteren.",
+      "invite_email_mismatch_hint": "Deze uitnodiging is naar {{email}} gestuurd. Log in met dat Google-account om haar te accepteren.",
+      "invite_verify_email": "Bevestig eerst je e-mailadres en open deze uitnodiging daarna opnieuw."
     },
     "sso_errors": {
       "access_denied": "Toegang geweigerd. Je hebt het inlogverzoek mogelijk geweigerd of hebt geen toestemming voor deze applicatie.",
@@ -726,7 +730,9 @@
       "try_again": "Opnieuw proberen",
       "success": "Gelukt!",
       "redirecting": "Je wordt nu doorgestuurd...",
-      "google_failed": "Google-authenticatie mislukt: {{error}}"
+      "google_failed": "Google-authenticatie mislukt: {{error}}",
+      "invite_mismatch_title": "Verkeerd Google-account",
+      "use_another_account": "Ander Google-account gebruiken"
     },
     "magic": {
       "expired": "Deze link is verlopen of al gebruikt. Vraag een nieuwe aan om in te loggen.",
@@ -801,14 +807,23 @@
         "verify_note": "Deze link is rechtstreeks met je gedeeld, dus je verifieert je e-mailadres voordat je lid wordt."
       },
       "verify_title": "Check je inbox",
-      "verify_desc": "Je account is klaar. We hebben een verificatielink gestuurd naar {{email}}. Verifieer je e-mailadres en open deze uitnodiging daarna opnieuw, of accepteer hem vanaf je startpagina om lid te worden van {{org}}."
+      "verify_desc": "Je account is klaar. We hebben een verificatielink naar {{email}} gestuurd. Zodra je e-mail is bevestigd, log je in en word je lid van {{org}}.",
+      "accepted_title": "Je hebt deze uitnodiging al geaccepteerd",
+      "accepted_desc": "Log in om naar {{org}} te gaan.",
+      "retry_title": "We konden deze uitnodiging niet laden",
+      "retry_desc": "Controleer je verbinding en probeer het opnieuw. Je uitnodigingslink werkt nog.",
+      "try_again": "Opnieuw proberen",
+      "org_full": "Deze organisatie zit op dit moment vol. Vraag de beheerder om ruimte te maken."
     },
     "login_failed_forgot": "Wachtwoord vergeten?",
     "login_failed_reset": "Opnieuw instellen",
     "login_failed_magic": "Stuur me liever een inloglink",
     "login_failed_google_hint": "Aangemeld met Google? Gebruik hieronder Doorgaan met Google.",
     "email_verified_set_password": "Je e-mail is geverifieerd. Voor je veiligheid is het eerder ingestelde wachtwoord verwijderd: kies een nieuw wachtwoord om met een wachtwoord in te loggen.",
-    "set_new_password": "Nieuw wachtwoord instellen"
+    "set_new_password": "Nieuw wachtwoord instellen",
+    "invited_by_email_cta": "Uitgenodigd per e-mail? Meld je aan met dat adres",
+    "use_invite_code_instead": "Heb je een uitnodigingscode?",
+    "password_reset_done": "Je wachtwoord is gewijzigd."
   },
   "validation": {
     "required": "Verplicht",
@@ -9586,7 +9601,7 @@
           "error": "Er ging iets mis. Probeer het opnieuw.",
           "resent": "Nieuwe uitnodiging verstuurd naar {{email}}",
           "email_failed": "De e-mail kon niet worden verstuurd. Kopieer in plaats daarvan de uitnodigingslink.",
-          "link_copied": "Uitnodigingslink gekopieerd. Wie de link opent, verifieert eerst het e-mailadres en wordt daarna lid. De link in de eerdere e-mail werkt niet meer.",
+          "link_copied": "Uitnodigingslink gekopieerd. Wie de link opent, verifieert eerst het e-mailadres en wordt daarna lid.",
           "revoked": "Uitnodiging ingetrokken",
           "updated": "Uitnodiging bijgewerkt",
           "bulk_resend_one": "{{count}} uitnodiging opnieuw verstuurd",
@@ -29618,7 +29633,9 @@
       "verify_resend": "Bevestigingsmail opnieuw sturen",
       "verify_sent": "Verstuurd. Kijk in je inbox.",
       "invited_as": "Heeft je uitgenodigd als {{role}}",
-      "invited_as_by": "{{name}} heeft je uitgenodigd als {{role}}"
+      "invited_as_by": "{{name}} heeft je uitgenodigd als {{role}}",
+      "accept": "Accepteren",
+      "new_role": "Nieuwe rol: {{role}}"
     },
     "celebrate": {
       "title": "Je eerste cursus staat live",

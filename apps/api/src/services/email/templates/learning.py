@@ -60,7 +60,7 @@ def drip_unlocked(v: dict, lang: str, brand: Brand) -> Email:
             Paragraph(th(lang, "drip_unlocked.body", username=email_user_name(v.get("username")), course=course)),
             Paragraph(th(lang, "drip_unlocked.more", chapters=", ".join(chapters[1:]))) if len(chapters) > 1 else None,
             Button(t(lang, "drip_unlocked.cta"), v["cta_url"]),
-            LinkFallback(v["cta_url"]),
+            LinkFallback(v["cta_url"], t(lang, "common.copy_paste")),
         ]),
         reason=th(lang, "drip_unlocked.footer", course=course, org_name=brand.name),
     )
@@ -95,7 +95,7 @@ def comment_mention(v: dict, lang: str, brand: Brand) -> Email:
             Paragraph(f"“{v['quote']}”", muted=True) if v.get("quote") else None,
             Quote(excerpt, author),
             Button(t(lang, "comment_mention.cta"), v["cta_url"]),
-            LinkFallback(v["cta_url"]),
+            LinkFallback(v["cta_url"], t(lang, "common.copy_paste")),
         ]),
         reason=th(lang, "comment_mention.footer", course=course, org_name=brand.name),
     )
@@ -129,7 +129,7 @@ def nudge(v: dict, lang: str, brand: Brand) -> Email:
             Stats([Stat(t(lang, f"nudge.stat.{key}"), value, STAT_ICONS.get(key, "chart-bar"), "emerald")
                    for key, value in (v.get("stats") or [])]) if v.get("stats") else None,
             Button(th(lang, f"nudge.{nudge_id}.cta", **copy), cta_url) if v.get("has_cta", True) and cta_url else None,
-            LinkFallback(cta_url) if v.get("has_cta", True) and cta_url else None,
+            LinkFallback(cta_url, t(lang, "common.copy_paste")) if v.get("has_cta", True) and cta_url else None,
         ]),
         icon="rocket-launch",
         tone="emerald",

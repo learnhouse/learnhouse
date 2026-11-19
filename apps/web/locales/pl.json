@@ -672,7 +672,11 @@
       "google_not_configured": "Google OAuth nie jest skonfigurowany",
       "profile_field_invalid": "Linki i adresy e-mail są niedozwolone w polach: {{fields}}",
       "field_no_links": "Bez linków i adresów e-mail",
-      "rate_limited": "Zbyt wiele prób. Odczekaj chwilę i spróbuj ponownie."
+      "rate_limited": "Zbyt wiele prób. Odczekaj chwilę i spróbuj ponownie.",
+      "invite_required": "Aby dołączyć do tej organizacji, potrzebujesz zaproszenia.",
+      "invite_email_mismatch": "To zaproszenie wysłano na inny adres e-mail. Zaloguj się tym adresem, aby je przyjąć.",
+      "invite_email_mismatch_hint": "To zaproszenie wysłano na adres {{email}}. Zaloguj się tym kontem Google, aby je przyjąć.",
+      "invite_verify_email": "Najpierw potwierdź swój adres e-mail, a potem ponownie otwórz to zaproszenie."
     },
     "sso_errors": {
       "access_denied": "Odmówiono dostępu. Mogłeś(-aś) odrzucić prośbę o logowanie lub nie masz uprawnień do tej aplikacji.",
@@ -728,7 +732,9 @@
       "try_again": "Spróbuj ponownie",
       "success": "Gotowe!",
       "redirecting": "Przekierowujemy Cię...",
-      "google_failed": "Uwierzytelnianie Google nie powiodło się: {{error}}"
+      "google_failed": "Uwierzytelnianie Google nie powiodło się: {{error}}",
+      "invite_mismatch_title": "Niewłaściwe konto Google",
+      "use_another_account": "Użyj innego konta Google"
     },
     "magic": {
       "expired": "Ten link wygasł lub został już użyty. Poproś o nowy, aby się zalogować.",
@@ -803,14 +809,23 @@
         "verify_note": "Ten link został Ci udostępniony bezpośrednio, więc przed dołączeniem zweryfikujesz swój e-mail."
       },
       "verify_title": "Sprawdź skrzynkę odbiorczą",
-      "verify_desc": "Twoje konto jest gotowe. Wysłaliśmy link weryfikacyjny na adres {{email}}. Zweryfikuj e-mail, a potem otwórz to zaproszenie ponownie lub zaakceptuj je na swojej stronie głównej, aby dołączyć do {{org}}."
+      "verify_desc": "Twoje konto jest gotowe. Wysłaliśmy link weryfikacyjny na adres {{email}}. Po potwierdzeniu adresu zaloguj się, a dołączysz do {{org}}.",
+      "accepted_title": "To zaproszenie zostało już przyjęte",
+      "accepted_desc": "Zaloguj się, aby przejść do {{org}}.",
+      "retry_title": "Nie udało się wczytać tego zaproszenia",
+      "retry_desc": "Sprawdź połączenie i spróbuj ponownie. Twój link z zaproszeniem nadal działa.",
+      "try_again": "Spróbuj ponownie",
+      "org_full": "Ta organizacja jest teraz pełna. Poproś administratora o zwolnienie miejsca."
     },
     "login_failed_forgot": "Nie pamiętasz hasła?",
     "login_failed_reset": "Zresetuj je",
     "login_failed_magic": "Wyślij mi link do logowania",
     "login_failed_google_hint": "Rejestracja przez Google? Użyj poniżej opcji Kontynuuj z Google.",
     "email_verified_set_password": "Twój e-mail został zweryfikowany. Ze względów bezpieczeństwa hasło ustawione wcześniej zostało usunięte: wybierz nowe, aby logować się za pomocą hasła.",
-    "set_new_password": "Ustaw nowe hasło"
+    "set_new_password": "Ustaw nowe hasło",
+    "invited_by_email_cta": "Zaproszenie przyszło e-mailem? Zarejestruj się tym adresem",
+    "use_invite_code_instead": "Masz kod zaproszenia?",
+    "password_reset_done": "Hasło zostało zmienione."
   },
   "validation": {
     "required": "Wymagane",
@@ -9974,7 +9989,7 @@
           "error": "Coś poszło nie tak. Spróbuj ponownie.",
           "resent": "Wysłano nowe zaproszenie na {{email}}",
           "email_failed": "Nie udało się wysłać e-maila. Skopiuj link z zaproszeniem.",
-          "link_copied": "Skopiowano link z zaproszeniem. Osoba, która go otworzy, przed dołączeniem zweryfikuje swój e-mail. Link z poprzedniego e-maila już nie działa.",
+          "link_copied": "Skopiowano link z zaproszeniem. Osoba, która go otworzy, przed dołączeniem zweryfikuje swój e-mail.",
           "revoked": "Zaproszenie unieważnione",
           "updated": "Zaproszenie zaktualizowane",
           "bulk_resend_one": "Ponownie wysłano {{count}} zaproszenie",
@@ -31002,7 +31017,9 @@
       "verify_resend": "Wyślij ponownie e-mail weryfikacyjny",
       "verify_sent": "Wysłano. Sprawdź skrzynkę.",
       "invited_as": "Zaprasza cię jako {{role}}",
-      "invited_as_by": "{{name}} zaprasza cię jako {{role}}"
+      "invited_as_by": "{{name}} zaprasza cię jako {{role}}",
+      "accept": "Przyjmij",
+      "new_role": "Nowa rola: {{role}}"
     },
     "celebrate": {
       "title": "Twój pierwszy kurs jest opublikowany",

@@ -120,16 +120,6 @@ async def delete_invite_code(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ):
-    # Redis init
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-
-    if not redis_conn_string:
-        raise HTTPException(
-            status_code=500,
-            detail="Redis connection string not found",
-        )
-
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -148,7 +138,13 @@ async def delete_invite_code(
     if revoked is not None:
         return revoked
 
-    # Connect to Redis
+    # An older code, kept in Redis: without Redis it can't be found.
+    redis_conn_string = get_learnhouse_config().redis_config.redis_connection_string
+    if not redis_conn_string:
+        raise HTTPException(
+            status_code=500,
+            detail="Redis connection string not found",
+        )
     r = _get_redis(redis_conn_string)
 
     if not r:

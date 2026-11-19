@@ -9,7 +9,6 @@ import Link from 'next/link'
 import { signup, signUpWithInviteCode, resendVerificationEmail } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from '@components/Contexts/AuthContext'
-import { getLEARNHOUSE_TOP_DOMAIN_VAL, isOnCustomDomain } from '@services/config/config'
 import { getErrorMessage, getFieldErrors } from '@services/utils/ts/errorMessage'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
@@ -25,6 +24,7 @@ import CustomSignupFields, {
 import { readSignupFields, type SignupFieldItem } from '@services/settings/org'
 import { rememberPostAuthNext, splitFullName, usernameFromEmail } from '@/lib/auth/signup'
 import { readNextParam, useForwardedNextHref } from '@/lib/auth/nextParam'
+import { setOAuthContextCookies } from '@/lib/auth/oauthCookiesClient'
 
 export { usernameFromEmail }
 
@@ -74,7 +74,9 @@ function OpenSignUpComponent({ org: propOrg, inviteCode }: OpenSignUpComponentPr
   const contextOrg = useOrg() as any
   const org = (contextOrg && (contextOrg.id || contextOrg.slug)) ? contextOrg : propOrg
   const [error, setError] = React.useState('')
-  const [message, setMessage] = React.useState<{ email_verified: boolean } | null>(null)
+  // `invitation_pending`: an invite-only org let the address in because it was
+  // invited; the account waits for the email to be verified.
+  const [message, setMessage] = React.useState<{ email_verified: boolean; invitation_pending?: boolean } | null>(null)
   const [resendState, setResendState] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const turnstileRef = React.useRef<TurnstileWidgetHandle>(null)
   const turnstileRequired = useTurnstileRequired()
@@ -162,24 +164,12 @@ function OpenSignUpComponent({ org: propOrg, inviteCode }: OpenSignUpComponentPr
 
   const handleGoogleSignIn = () => {
     track(AnalyticsEvent.SignupGoogleClicked)
-    // Store org context in cookies before OAuth redirect
-    if (org?.slug) {
-      const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
-      const isSecure = window.location.protocol === 'https:';
-      const secureAttr = isSecure ? '; secure' : '';
-      const baseAttributes = `; path=/; SameSite=Lax${secureAttr}`;
-      // Host-only on custom domains (a .{platformTopDomain} cookie can't be set
-      // from learn.acme.org → browser drops it → callback loses org context).
-      const domainAttr = (topDomain === 'localhost' || isOnCustomDomain()) ? '' : `; domain=.${topDomain}`;
-      document.cookie = `LH_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
-      document.cookie = `LH_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
-      // Invite-only orgs need the invite code itself, not just the org: the
-      // OAuth callback joins through /users/{org_id}/invite/{code}. Without it
-      // a Google sign-up through an invite link is refused.
-      if (inviteCode) {
-        document.cookie = `LH_oauth_invite_code=${encodeURIComponent(inviteCode)}${baseAttributes}${domainAttr}`;
-      }
-    }
+    // Store org context in cookies before OAuth redirect, replacing whatever
+    // an earlier attempt left (no org on the apex clears them all). Invite-only
+    // orgs need the invite code itself, not just the org: the OAuth callback
+    // joins through /users/{org_id}/invite/{code}. Without it a Google sign-up
+    // through an invite link is refused.
+    setOAuthContextCookies(org?.slug ? { orgSlug: org.slug, orgId: org.id, inviteCode } : {})
     // Use absolute URL with current origin for custom domain support. On
     // success this navigates to Google; a failure used to be swallowed, which
     // left people clicking a button that did nothing.
@@ -195,7 +185,7 @@ function OpenSignUpComponent({ org: propOrg, inviteCode }: OpenSignUpComponentPr
   // Account created, inbox to confirm: the form steps aside for one clear
   // next step instead of a notice stacked above a used-up form.
   if (message) {
-    const verified = message.email_verified !== false
+    const verified = message.email_verified !== false && !message.invitation_pending
     return (
       <div className="w-full" data-testid="signup-done">
         <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">

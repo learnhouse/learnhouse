@@ -669,7 +669,11 @@
       "google_not_configured": "未配置 Google OAuth",
       "profile_field_invalid": "{{fields}} 中不能包含链接或电子邮件地址",
       "field_no_links": "不能包含链接或电子邮件地址",
-      "rate_limited": "尝试次数过多，请稍后再试。"
+      "rate_limited": "尝试次数过多，请稍后再试。",
+      "invite_required": "加入此组织需要邀请。",
+      "invite_email_mismatch": "此邀请发送到了另一个邮箱地址。请使用该地址登录以接受邀请。",
+      "invite_email_mismatch_hint": "此邀请发送到了 {{email}}。请使用该 Google 账号登录以接受邀请。",
+      "invite_verify_email": "请先验证你的邮箱地址，然后重新打开此邀请。"
     },
     "sso_errors": {
       "access_denied": "访问被拒绝。您可能拒绝了登录请求，或没有访问此应用程序的权限。",
@@ -725,7 +729,9 @@
       "try_again": "重试",
       "success": "成功！",
       "redirecting": "正在为您跳转...",
-      "google_failed": "Google 认证失败：{{error}}"
+      "google_failed": "Google 认证失败：{{error}}",
+      "invite_mismatch_title": "Google 账号不对",
+      "use_another_account": "使用其他 Google 账号"
     },
     "magic": {
       "expired": "此链接已过期或已被使用。请重新获取链接以登录。",
@@ -800,14 +806,23 @@
         "verify_note": "此链接是直接分享给你的，因此加入前需要先验证邮箱。"
       },
       "verify_title": "请查收邮件",
-      "verify_desc": "你的账号已就绪。我们已向 {{email}} 发送了验证链接。验证邮箱后，重新打开此邀请或在主页上接受邀请，即可加入 {{org}}。"
+      "verify_desc": "你的账号已创建。我们已向 {{email}} 发送验证链接。验证邮箱后登录，即可加入 {{org}}。",
+      "accepted_title": "你已接受此邀请",
+      "accepted_desc": "登录以前往 {{org}}。",
+      "retry_title": "无法加载此邀请",
+      "retry_desc": "请检查网络连接后重试。你的邀请链接仍然有效。",
+      "try_again": "重试",
+      "org_full": "该组织目前已满员。请联系其管理员腾出名额。"
     },
     "login_failed_forgot": "忘记密码？",
     "login_failed_reset": "重置密码",
     "login_failed_magic": "改为通过邮件发送登录链接",
     "login_failed_google_hint": "使用 Google 注册的？请使用下方的「使用 Google 继续」。",
     "email_verified_set_password": "您的邮箱已验证。为了您的安全，此前设置的密码已被移除：请设置新密码以使用密码登录。",
-    "set_new_password": "设置新密码"
+    "set_new_password": "设置新密码",
+    "invited_by_email_cta": "通过邮件收到邀请？用该邮箱注册",
+    "use_invite_code_instead": "有邀请码？",
+    "password_reset_done": "你的密码已更改。"
   },
   "validation": {
     "required": "必填",
@@ -9558,7 +9573,7 @@
           "error": "出了点问题，请重试。",
           "resent": "已向 {{email}} 发送新邀请",
           "email_failed": "邮件未能发送。请改为复制邀请链接。",
-          "link_copied": "邀请链接已复制。打开链接的人需先验证邮箱才能加入。之前邮件中的链接已失效。",
+          "link_copied": "邀请链接已复制。打开链接的人需先验证邮箱才能加入。",
           "revoked": "邀请已撤销",
           "updated": "邀请已更新",
           "bulk_resend_one": "已重新发送 {{count}} 份邀请",
@@ -29576,7 +29591,9 @@
       "verify_resend": "重新发送验证邮件",
       "verify_sent": "已发送，请查看收件箱。",
       "invited_as": "邀请你以{{role}}身份加入",
-      "invited_as_by": "{{name}} 邀请你以{{role}}身份加入"
+      "invited_as_by": "{{name}} 邀请你以{{role}}身份加入",
+      "accept": "接受",
+      "new_role": "新角色：{{role}}"
     },
     "celebrate": {
       "title": "你的第一门课程已上线",

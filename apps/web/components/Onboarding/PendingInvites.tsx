@@ -118,7 +118,9 @@ export default function PendingInvites({
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-neutral-900">{inv.name}</p>
               <p className="truncate text-xs text-neutral-500">
-                {inv.role
+                {inv.already_member && inv.role
+                  ? t('onb2.invites.new_role', { role: roleText({ role_uuid: inv.role_uuid ?? '', name: inv.role }).name })
+                  : inv.role
                   ? inv.invited_by
                     ? t('onb2.invites.invited_as_by', { name: inv.invited_by, role: roleText({ role_uuid: inv.role_uuid ?? '', name: inv.role }).name })
                     : t('onb2.invites.invited_as', { role: roleText({ role_uuid: inv.role_uuid ?? '', name: inv.role }).name })
@@ -135,7 +137,7 @@ export default function PendingInvites({
                 {t('onb2.invites.decline')}
               </Button>
               <Button size="sm" variant="primary" loading={busy === inv.org_uuid} onClick={() => accept(inv)}>
-                {t('onb2.invites.join')}
+                {inv.already_member ? t('onb2.invites.accept') : t('onb2.invites.join')}
               </Button>
             </div>
           </li>

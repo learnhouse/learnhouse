@@ -700,9 +700,8 @@ async def test_list_members_paging_and_invite_filters(registry, db, org, admin_u
     assert [i["email"] for i in out["items"]] == ["new@x.com"]
 
 
-async def test_invite_into_a_group_uses_its_link(registry, db, org, admin_user, people, environment):
+async def test_invite_into_a_group_puts_it_on_the_invitation(registry, db, org, admin_user, people, environment):
     ctx = _ctx(db, org, admin_user, approved=True)
-    ok(await call(registry, "create_invite_code", {"usergroup_uuid": "usergroup_a"}, ctx))
     out = ok(await call(registry, "invite_members", {"emails": ["g@x.com"], "usergroup_uuid": "usergroup_a"}, ctx))
     assert out["results"] == [{"email": "g@x.com", "result": "invited"}]
     # A group of another organization is not found, and nothing is sent.
@@ -713,7 +712,7 @@ async def test_invite_into_a_group_uses_its_link(registry, db, org, admin_user, 
 
 async def test_invite_reports_rejected_addresses(registry, db, org, admin_user, people):
     outcome = {"results": [{"email": "bad@x.com", "status": "invalid_email"}]}
-    with patch.object(user_tools, "invite_batch_users", AsyncMock(return_value=outcome)):
+    with patch.object(user_tools, "create_invitations", AsyncMock(return_value=outcome)):
         out = ok(await call(registry, "invite_members", {"emails": ["bad@x.com"]}, _ctx(db, org, admin_user, approved=True)))
     assert out["ok"] is False and "rejected as invalid" in out["summary"]
 

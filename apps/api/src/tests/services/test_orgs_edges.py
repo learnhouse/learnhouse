@@ -160,7 +160,7 @@ async def test_invite_only_org_without_a_code_refuses_the_join(db, org, mock_req
         with pytest.raises(HTTPException) as exc:
             await join_org(mock_request, JoinOrg(org_id=org.id, user_id=40), caller, db)
     assert exc.value.status_code == 403
-    assert exc.value.detail == "Something wrong, try later."
+    assert exc.value.detail == "You need an invite to join this organization"
 
 
 async def test_policy_read_failure_allows_login(db):

@@ -258,9 +258,28 @@ class TestSignup:
         assert res.status_code == 403
 
     async def test_signup_rate_limit_applies(self, make_app, org, fake_redis):
-        with patch("src.routers.users._enforce_signup_rate_limit", side_effect=HTTPException(429, "slow down")):
+        with patch("src.routers.invite_links._limit", side_effect=HTTPException(429, "slow down")):
             res = await call(make_app(), "/signup", {"token": "A" * 43, "password": "x"})
         assert res.status_code == 429
+
+    async def test_signup_is_limited_per_link_not_by_the_shared_signup_cap(self, make_app, org, fake_redis):
+        from src.routers import invite_links as router_module
+
+        seen = []
+
+        def fake_check(key, max_attempts, window):
+            seen.append((key, max_attempts))
+            return True, 1, 0
+
+        # A classroom behind one address: the plain signup limiter is never
+        # consulted, the per-address cap is generous and the link has its own.
+        with patch("src.services.security.rate_limiting.check_rate_limit", side_effect=fake_check), patch(
+            "src.routers.users._enforce_signup_rate_limit", side_effect=AssertionError("shared signup limit used")
+        ):
+            res = await call(make_app(), "/signup", {"token": "A" * 43, "password": "x"})
+        assert res.status_code == 404
+        assert seen[0][1] == router_module.LIMITS["signup"][0] == 60
+        assert seen[1] == (f"invite_link:signup_token:{invite_links._hash('A' * 43)}", 10)
 
 
 class TestUsername:
