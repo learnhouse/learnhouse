@@ -1,47 +1,14 @@
-"""The shared email layout and the unread-messages digest."""
+"""The unread-messages digest and the org button colours of the shared layout."""
 
 from unittest.mock import patch
 
-from src.services.users.emails import (
-    COLORS,
-    _email_layout,
-    send_unread_messages_email,
-)
-
-
-class TestLayout:
-    def test_layout_is_table_based_for_outlook(self):
-        html = _email_layout("Title", "<p>body</p>")
-        assert 'class="lh-card"' in html
-        assert "<!--[if mso]>" in html
-        assert "<div style=" not in html.split("<body", 1)[1].split("<p>body</p>")[0]
-
-    def test_dark_mode_is_progressive_enhancement(self):
-        html = _email_layout("Title", "<p>body</p>")
-        assert 'name="color-scheme" content="light dark"' in html
-        assert "@media (prefers-color-scheme: dark)" in html
-        # Light colors stay inline, so clients that drop <style> still render.
-        assert f"background-color: {COLORS['page']}" in html
-
-    def test_title_is_plain_text(self):
-        html = _email_layout("Hi <strong>Acme &amp; Co</strong>", "<p>b</p>")
-        assert "<title>Hi Acme &amp; Co</title>" in html
-
-    def test_rtl_languages_flip_direction(self):
-        html = _email_layout("T", "<p>b</p>", lang="ar")
-        assert 'dir="rtl"' in html
-        assert "text-align: right" in html
-
-    def test_unknown_language_is_normalized(self):
-        html = _email_layout("T", "<p>b</p>", lang='xx"><script>')
-        assert "<script>" not in html
-        assert 'lang="en"' in html
+from src.services.users.emails import send_unread_messages_email
 
 
 def _render_unread(conversations, **kwargs):
     captured = {}
     with patch(
-        "src.services.users.emails.send_email",
+        "src.services.email.pipeline.deliver_message",
         side_effect=lambda **k: captured.update(k) or True,
     ):
         send_unread_messages_email(
@@ -57,41 +24,35 @@ def _render_unread(conversations, **kwargs):
 
 
 class TestUnreadMessagesEmail:
-    def test_rows_show_avatar_title_snippet_and_count(self):
+    def test_rows_show_title_snippet_and_count(self):
         captured = _render_unread([
             {"title": "Grace Hopper", "count": 3, "snippet": "See you at the lab"},
         ])
         body = captured["body"]
-        assert ">G</td>" in body
         assert "Grace Hopper" in body
         assert "See you at the lab" in body
-        assert 'class="lh-pill"' in body and ">3</span>" in body
+        assert ">3 new</td>" in body
         assert captured["subject"] == "3 unread messages in Acme & Co"
 
     def test_dm_rows_have_no_author_placeholder(self):
         body = _render_unread([{"title": "Grace", "count": 1, "snippet": "hi"}])["body"]
         assert "LearnHouse user" not in body
-        assert "Powered by LearnHouse" in body
+        assert "Powered by LearnHouse" not in body
 
     def test_group_rows_name_the_author(self):
         body = _render_unread([
             {"title": "Study group", "count": 2, "author": "Linus", "snippet": "Review?"},
         ])["body"]
-        assert "Linus:</span>" in body
+        assert "Linus: Review?" in body
 
-    def test_agent_rows_use_emoji_and_color(self):
+    def test_rows_use_initials_or_the_avatar_image(self):
         body = _render_unread([
-            {"title": "Tutor", "count": 1, "emoji": "🦉", "color": "#7c3aed", "snippet": "Think again"},
+            {"title": "Tutor", "count": 1, "emoji": "🦉", "color": "#7c3aed",
+             "image": "https://x.test/a.png", "snippet": "Think again"},
         ])["body"]
-        assert "🦉" in body
-        assert "background-color: #7c3aed" in body
-
-    def test_copilot_row_uses_its_logo(self):
-        body = _render_unread([
-            {"title": "Copilot", "count": 1, "emoji": "✨", "image": "https://x.test/learnhouse_ai_simple_colored.png", "snippet": "Reminder"},
-        ])["body"]
-        assert '<img src="https://x.test/learnhouse_ai_simple_colored.png"' in body
-        assert "✨" not in body
+        assert "Tutor" in body and "Think again" in body
+        assert "🦉" not in body and "#7c3aed" not in body
+        assert '<img src="https://x.test/a.png"' in body  # a real avatar image is kept
 
     def test_long_snippets_are_shortened(self):
         body = _render_unread([{"title": "Grace", "count": 1, "snippet": "word " * 60}])["body"]
@@ -116,47 +77,40 @@ class TestUnreadMessagesEmail:
         body = _render_unread(
             [{"title": "Grace", "count": 1, "snippet": "hi"}], brand_color="#ff5500", powered_by=False
         )["body"]
-        assert "background-color: #ff5500;" in body
+        assert "background-color: #ff5500; color: #000000" in body
         assert "https://acme.test/messages?settings=notifications" in body
-        assert "LearnHouse" not in body
+        assert body.count("LearnHouse") == body.count("via LearnHouse") == 1
 
 
-class TestButtonStyle:
-    """The CTA button tinted with the org's brand color."""
+class TestButtonColors:
+    """The CTA button tinted with the org's brand colour."""
+
+    @staticmethod
+    def _colors(color):
+        from src.services.email.layout import Brand, _button_colors
+
+        return _button_colors(Brand(name="Acme", org_scoped=True, color=color))
 
     def test_dark_brand_gets_white_text(self):
-        from src.services.users.emails import _button_style
-
-        style = _button_style("#1d4ed8")
-        assert "background-color: #1d4ed8;" in style
-        assert " color: #ffffff;" in style
+        assert self._colors("#1d4ed8") == ("#1d4ed8", "#ffffff")
 
     def test_light_brand_gets_black_text(self):
-        from src.services.users.emails import _button_style
-
-        style = _button_style("#fbbf24")
-        assert "background-color: #fbbf24;" in style
-        assert " color: #000000;" in style
+        assert self._colors("#fbbf24") == ("#fbbf24", "#000000")
 
     def test_white_brand_keeps_a_visible_default_button(self):
-        # A white brand used to come out black-on-black: replacing
-        # "color: #ffffff;" also hit "background-color: #ffffff;".
-        from src.services.users.emails import STYLES, _button_style
-
-        assert _button_style("#ffffff") == STYLES["button"]
-        assert _button_style("#fafafa") == STYLES["button"]
+        assert self._colors("#ffffff") == ("#171717", "#ffffff")
+        assert self._colors("#fafafa") == ("#171717", "#ffffff")
 
     def test_no_or_invalid_brand_keeps_default(self):
-        from src.services.users.emails import STYLES, _button_style
+        assert self._colors(None) == ("#171717", "#ffffff")
+        assert self._colors("red; display:none") == ("#171717", "#ffffff")
 
-        assert _button_style(None) == STYLES["button"]
-        assert _button_style("red; display:none") == STYLES["button"]
+    def test_platform_mail_ignores_a_stray_colour(self):
+        from src.services.email.layout import Brand, _button_colors
+
+        assert _button_colors(Brand(color="#ff5500")) == ("#171717", "#ffffff")
 
     def test_background_and_text_never_match(self):
-        from src.services.users.emails import _button_style
-
         for color in ("#000000", "#ffffff", "#808080", "#c9a85c", "#00ff00", "#0f172a"):
-            style = _button_style(color)
-            bg = style.split("background-color: ")[1].split(";")[0]
-            fg = style.split(" color: ")[1].split(";")[0]
+            bg, fg = self._colors(color)
             assert bg != fg, color

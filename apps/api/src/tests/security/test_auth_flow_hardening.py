@@ -301,7 +301,7 @@ class TestEmailChange:
     def test_email_changed_notice_goes_to_the_old_address_escaped(self):
         from src.services.users import emails
 
-        with patch.object(emails, "_send_notification_email", return_value=True) as send_mock:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_mock:
             assert emails.send_email_changed_notice(
                 email="old@test.com", new_email="<b>evil</b>@test.com", username="<i>u</i>"
             ) is True
@@ -607,7 +607,7 @@ class TestLinkHosts:
         user = UserRead(
             id=1, username="u", first_name="", last_name="", email="u@test.com", user_uuid="user_1"
         )
-        with patch("src.services.users.emails.send_email", return_value=True) as send_mock:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_mock:
             emails.send_password_reset_email_platform(
                 generated_reset_code="CODE", user=user, email="u@test.com",
                 base_url='https://x.test/"><script>',

@@ -37,9 +37,14 @@ def _user(**overrides):
     return UserRead(**data)
 
 
+def _platform_free(body: str) -> bool:
+    """Org mail names LearnHouse only in the "Sent by {org} via LearnHouse" line."""
+    return body.count("LearnHouse") == body.count("via LearnHouse") == 1
+
+
 def _wordmark(escaped_name: str) -> str:
     """The org-name header an org-branded mail shows when it has no logo."""
-    return f'line-height: 1.2;">{escaped_name}</span>'
+    return f'font-weight: 600;">{escaped_name}</span>'
 
 
 def _org(**overrides):
@@ -58,12 +63,12 @@ def _org(**overrides):
 
 class TestEmailsService:
     def test_lifecycle_confirmation_emails(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             assert send_org_created_email("a@test.com", "Org & Co", "https://learnhouse.io/home") is True
             created = send_email.call_args
             assert "Org &amp; Co" in created.kwargs["body"]  # name html-escaped
             assert "https://learnhouse.io/home" in created.kwargs["body"]  # CTA link
-            assert "Org &amp; Co" in created.kwargs["subject"]
+            assert "Org & Co" in created.kwargs["subject"]
 
             assert send_org_deleted_email("a@test.com", "Org & Co") is True
             assert "deleted" in send_email.call_args.kwargs["subject"].lower()
@@ -72,7 +77,7 @@ class TestEmailsService:
             assert "deleted" in send_email.call_args.kwargs["subject"].lower()
 
     def test_send_account_creation_email_escapes_username(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             result = send_account_creation_email(_user(), "user@test.com")
 
         assert result is True
@@ -81,7 +86,7 @@ class TestEmailsService:
         assert "Get started" in body
 
     def test_orgless_welcome_uses_cta_url_and_learnhouse_branding(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_account_creation_email(
                 _user(), "user@test.com", cta_url="https://platform.test/organizations"
             )
@@ -90,10 +95,10 @@ class TestEmailsService:
         # Org-less keeps the LearnHouse-branded subject + Academy footer, no org logo.
         assert "Welcome to LearnHouse" in call["subject"]
         assert "LearnHouse Academy" in call["body"]
-        assert "<img" not in call["body"]
+        assert "learnhouse-wordmark@2x.png" in call["body"]  # the LearnHouse wordmark, no org logo
 
     def test_welcome_is_whitelabeled_when_org_supplied(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_account_creation_email(
                 _user(),
                 "user@test.com",
@@ -103,32 +108,32 @@ class TestEmailsService:
             )
         call = send_email.call_args.kwargs
         # Subject/body name the org (html-escaped), not LearnHouse.
-        assert "Acme &amp; Co" in call["subject"]
+        assert "Acme & Co" in call["subject"]
         assert "Welcome to LearnHouse" not in call["subject"]
         assert "Acme &amp; Co" in call["body"]
-        # Org logo replaces the mark; Academy link is gone; powered-by remains.
+        # Org logo replaces the mark; Academy link is gone; no platform badge.
         assert '<img src="https://api.test/content/orgs/org_uuid/logos/logo.png"' in call["body"]
         assert "LearnHouse Academy" not in call["body"]
-        assert "Powered by LearnHouse" in call["body"]
+        assert "Powered by LearnHouse" not in call["body"]
         assert "https://acme.test/home" in call["body"]
 
     def test_whitelabel_without_logo_uses_the_org_name_as_wordmark(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_account_creation_email(
                 _user(), "user@test.com", org_name="Acme & Co", logo_url=None
             )
         call = send_email.call_args.kwargs
         # No org logo → the org's own name up top, never the LearnHouse mark.
-        assert "<img" not in call["body"]
+        assert 'alt="Acme' not in call["body"] and "learnhouse-wordmark" not in call["body"]
         assert "<svg" not in call["body"]
         assert _wordmark("Acme &amp; Co") in call["body"]
-        assert "Acme &amp; Co" in call["subject"]
-        assert "Powered by LearnHouse" in call["body"]
+        assert "Acme & Co" in call["subject"]
+        assert _platform_free(call["body"])
 
     def test_role_changed_email_links_back_to_the_org(self):
         """Telling someone their permissions changed is useless without a way
         to go use them."""
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_role_changed_email(
                 email="user@test.com",
                 username="learner",
@@ -141,7 +146,7 @@ class TestEmailsService:
         assert "Acme &amp; Co" in body
 
     def test_role_changed_email_without_a_link_renders_no_button(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_role_changed_email(
                 email="user@test.com",
                 username="learner",
@@ -151,12 +156,11 @@ class TestEmailsService:
         body = send_email.call_args.kwargs["body"]
         assert "Go to Acme" not in body
         assert 'href="/"' not in body
-        # The only link left is the footer attribution, never a CTA.
-        assert body.count("<a href") == 1
-        assert "Powered by LearnHouse" in body
+        # No CTA and no platform attribution: not a single link.
+        assert body.count("<a href") == 0
 
     def test_org_join_email_is_whitelabeled_and_links_to_the_org(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             assert send_org_join_email(
                 email="user@test.com",
                 username="user<script>",
@@ -166,7 +170,7 @@ class TestEmailsService:
             ) is True
         call = send_email.call_args.kwargs
         # Named after the org, with the org's own logo, not the LearnHouse mark.
-        assert "Acme &amp; Co" in call["subject"]
+        assert "Acme & Co" in call["subject"]
         assert '<img src="https://api.test/content/orgs/org_uuid/logos/logo.png"' in call["body"]
         # The whole point of the email: a working way back into the org.
         assert "https://acme.test/home" in call["body"]
@@ -174,7 +178,7 @@ class TestEmailsService:
         assert "<script>" not in call["body"]
 
     def test_org_join_email_uses_the_org_name_as_wordmark_without_logo(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_org_join_email(
                 email="user@test.com",
                 username="learner",
@@ -182,12 +186,12 @@ class TestEmailsService:
                 cta_url="https://acme.test/home",
             )
         call = send_email.call_args.kwargs
-        assert "<img" not in call["body"]
+        assert 'alt="Acme' not in call["body"] and "learnhouse-wordmark" not in call["body"]
         assert "<svg" not in call["body"]
         assert _wordmark("Acme") in call["body"]
 
     def test_org_join_email_translates(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_org_join_email(
                 email="user@test.com",
                 username="learner",
@@ -199,7 +203,7 @@ class TestEmailsService:
         assert "Bienvenue" in call["subject"]
 
     def test_send_password_reset_email_variants_encode_params(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_password_reset_email(
                 "code 123",
                 _user(),
@@ -222,7 +226,7 @@ class TestEmailsService:
         assert "/reset?email=user%2Btag%40test.com&amp;resetCode=code%20123" in second_body
 
     def test_send_invitation_role_change_and_verification_email(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_invitation_email(
                 "invitee@test.com",
                 "Org & Co",
@@ -253,7 +257,7 @@ class TestEmailsService:
         assert "verify-email?token=token%20123&amp;user=user_uuid&amp;org=org_uuid" in verification_body
 
     def test_send_invitation_email_without_invite_code(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_invitation_email(
                 "invitee@test.com",
                 "Test Org",
@@ -264,7 +268,7 @@ class TestEmailsService:
         assert "Create your account to accept" in invite_body
 
     def test_send_emails_in_french_when_lang_is_fr(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_invitation_email(
                 "invitee@test.com",
                 "Org & Co",
@@ -294,13 +298,13 @@ class TestEmailsService:
         role_call = send_email.call_args_list[2].kwargs
 
         assert "Vous êtes invité" in invite_call["body"]
-        assert "Vous êtes invité à apprendre avec Org &amp; Co" == invite_call["subject"]
+        assert "Vous êtes invité à apprendre avec Org & Co" == invite_call["subject"]
         assert "Réinitialisez votre mot de passe" in reset_call["body"]
         assert "Réinitialisez votre mot de passe" == reset_call["subject"]
         assert "Votre rôle a été mis à jour" in role_call["body"]
 
     def test_send_emails_falls_back_to_english_for_unknown_lang(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as send_email:
             send_invitation_email(
                 "invitee@test.com",
                 "Org",
@@ -319,7 +323,7 @@ class TestNotificationEmailResilience:
         from fastapi import HTTPException
 
         with patch(
-            "src.services.users.emails.send_email",
+            "src.services.email.pipeline.deliver_message",
             side_effect=HTTPException(status_code=503, detail="Email service temporarily unavailable"),
         ):
             # A signup whose welcome email fails still returns; the account is
@@ -332,7 +336,7 @@ class TestNotificationEmailResilience:
         from src.services.users.emails import send_password_reset_email
 
         with patch(
-            "src.services.users.emails.send_email",
+            "src.services.email.pipeline.deliver_message",
             side_effect=HTTPException(status_code=503, detail="down"),
         ):
             with pytest.raises(HTTPException):
@@ -347,7 +351,7 @@ class TestNotificationEmailResilience:
 
 class TestResendTransientRetry:
     def test_timeout_is_retried_once_then_succeeds(self, monkeypatch):
-        from src.services.email import utils as email_utils
+        from src.services.email import transport as email_utils
 
         monkeypatch.setattr(email_utils.time, "sleep", lambda _s: None)
         calls = []
@@ -371,7 +375,7 @@ class TestResendTransientRetry:
     def test_quota_error_is_not_retried(self, monkeypatch):
         from fastapi import HTTPException
 
-        from src.services.email import utils as email_utils
+        from src.services.email import transport as email_utils
 
         monkeypatch.setattr(email_utils.time, "sleep", lambda _s: None)
         calls = []
@@ -402,7 +406,7 @@ class TestSenderNameRouting:
     """
 
     def test_org_scoped_emails_forward_the_org_name(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
             send_password_reset_email(
                 generated_reset_code="code",
                 user=_user(),
@@ -434,7 +438,7 @@ class TestSenderNameRouting:
 
     def test_org_scoped_notifications_forward_the_org_name(self):
         with patch(
-            "src.services.users.emails.send_email", return_value=True
+            "src.services.email.pipeline.deliver_message", return_value=True
         ) as sent:
             send_org_join_email(
                 email="user@test.com",
@@ -455,22 +459,22 @@ class TestSenderNameRouting:
             assert sent.call_args.kwargs["sender_name"] == "Acme Academy"
 
     def test_platform_emails_send_no_org_name(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
             send_password_reset_email_platform(
                 generated_reset_code="code",
                 user=_user(),
                 email="user@test.com",
                 base_url="https://platform.test",
             )
-            assert "sender_name" not in sent.call_args.kwargs
+            assert sent.call_args.kwargs["sender_name"] is None
 
             send_account_deleted_email("user@test.com", "user")
-            assert "sender_name" not in sent.call_args.kwargs
+            assert sent.call_args.kwargs["sender_name"] is None
 
     def test_org_scoped_default_is_still_no_name(self):
         """Callers without org context keep the platform default by omission,
         so nothing had to change at the platform-scoped call sites."""
-        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
             send_invitation_email(
                 email="user@test.com",
                 org_name="Org & Co",
@@ -501,9 +505,7 @@ class TestWhiteLabel:
         """Render each org-scoped mail once; returns the captured calls."""
         from src.services.auth.magic_login import send_magic_login_email
 
-        with patch("src.services.users.emails.send_email", return_value=True) as sent, patch(
-            "src.services.auth.magic_login.send_email", return_value=True
-        ) as sent_magic:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
             send_password_reset_email(
                 generated_reset_code="CODE1234",
                 user=_user(),
@@ -558,13 +560,13 @@ class TestWhiteLabel:
                 org_name="Acme & Co",
                 **branding,
             )
-        calls = [c.kwargs for c in sent.call_args_list] + [c.kwargs for c in sent_magic.call_args_list]
+        calls = [c.kwargs for c in sent.call_args_list]
         assert len(calls) == 7
         return calls
 
     def test_no_platform_branding_leaks_when_watermark_is_off(self):
         for call in self._all_org_scoped_sends(**self.BRANDING):
-            assert "LearnHouse" not in call["body"], call["subject"]
+            assert _platform_free(call["body"]), call["subject"]
             assert "LearnHouse" not in call["subject"]
             assert "<svg" not in call["body"]
             assert f'<img src="{self.LOGO}" alt="Acme &amp; Co"' in call["body"]
@@ -573,21 +575,19 @@ class TestWhiteLabel:
     def test_brand_color_tints_the_button(self):
         for call in self._all_org_scoped_sends(**self.BRANDING):
             assert "background-color: #ff5500;" in call["body"], call["subject"]
-            assert "background-color: #000000;" not in call["body"]
+            assert "background-color: #171717; color: #ffffff" not in call["body"]
             # Orange is light enough that white text would fail contrast.
-            assert "color: #000000; text-decoration: none" in call["body"]
+            assert "background-color: #ff5500; color: #000000" in call["body"]
 
-    def test_watermark_on_adds_exactly_one_powered_by_line(self):
+    def test_org_mail_never_carries_platform_attribution(self):
         branding = dict(self.BRANDING, powered_by=True)
         for call in self._all_org_scoped_sends(**branding):
-            assert call["body"].count("Powered by LearnHouse") == 1, call["subject"]
-            # ...and that line is the only place the platform appears.
-            assert call["body"].count("LearnHouse") == 1
+            assert _platform_free(call["body"]), call["subject"]
             assert "LearnHouse" not in call["subject"]
 
     def test_square_logo_renders_as_a_square_box_and_wide_logo_letterboxed(self):
         square = "https://api.test/content/orgs/org_uuid/square_logos/sq.png"
-        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
             send_invitation_email(
                 email="user@test.com", org_name="Acme", inviter_username="owner",
                 signup_url="https://acme.test/signup", logo_url=square,
@@ -598,22 +598,22 @@ class TestWhiteLabel:
                 signup_url="https://acme.test/signup", logo_url=self.LOGO,
             )
             wide_body = sent.call_args.kwargs["body"]
-        assert f'<img src="{square}" alt="Acme" width="56" height="56"' in square_body
-        assert "border-radius: 12px" in square_body
-        assert f'<img src="{self.LOGO}" alt="Acme" height="40"' in wide_body
+        assert f'<img src="{square}" alt="Acme" width="36" height="36"' in square_body
+        assert "border-radius: 10px" in square_body
+        assert f'<img src="{self.LOGO}" alt="Acme" height="32"' in wide_body
         assert "max-width: 180px" in wide_body
-        assert "width=\"56\"" not in wide_body
+        assert 'alt="Acme" width="36"' not in wide_body
 
     def test_org_without_logo_or_color_gets_wordmark_and_default_button(self):
         for call in self._all_org_scoped_sends(powered_by=False):
             assert _wordmark("Acme &amp; Co") in call["body"], call["subject"]
-            assert "<img" not in call["body"]
+            assert 'alt="Acme' not in call["body"] and "learnhouse-wordmark" not in call["body"]
             assert "<svg" not in call["body"]
-            assert "background-color: #000000;" in call["body"]
+            assert "background-color: #171717; color: #ffffff" in call["body"]
 
     def test_invalid_brand_color_keeps_the_default_button(self):
         for bad in ("red", "#12345", "#ff5500; color: red", "url(x)", "", None):
-            with patch("src.services.users.emails.send_email", return_value=True) as sent:
+            with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
                 send_invitation_email(
                     email="user@test.com",
                     org_name="Acme",
@@ -622,12 +622,12 @@ class TestWhiteLabel:
                     brand_color=bad,
                 )
             body = sent.call_args.kwargs["body"]
-            assert "background-color: #000000;" in body, bad
+            assert "background-color: #171717; color: #ffffff" in body, bad
             assert "color: red" not in body
             assert "url(" not in body
 
     def test_org_verification_mail_names_the_org_not_the_platform(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
             send_email_verification_email(
                 token="tok",
                 user=_user(),
@@ -639,10 +639,10 @@ class TestWhiteLabel:
         body = sent.call_args.kwargs["body"]
         assert "activate your Acme &amp; Co account" in body
         assert "create a Acme &amp; Co account" in body or "Acme &amp; Co account" in body
-        assert "LearnHouse" not in body
+        assert _platform_free(body)
 
     def test_platform_mails_keep_the_learnhouse_mark_and_no_powered_by(self):
-        with patch("src.services.users.emails.send_email", return_value=True) as sent:
+        with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
             send_password_reset_email_platform(
                 generated_reset_code="code",
                 user=_user(),
@@ -662,7 +662,7 @@ class TestWhiteLabel:
             send_account_deleted_email("user@test.com", "user")
         for call in sent.call_args_list:
             body = call.kwargs["body"]
-            assert "<svg" in body, call.kwargs["subject"]
+            assert "learnhouse-wordmark@2x.png" in body, call.kwargs["subject"]
             assert "Powered by LearnHouse" not in body
             assert "#ff5500" not in body
         verification_body = sent.call_args_list[1].kwargs["body"]
@@ -673,9 +673,7 @@ class TestWhiteLabel:
         from src.services.email.translations import SUPPORTED_LANGUAGES
 
         for lang in SUPPORTED_LANGUAGES:
-            with patch("src.services.users.emails.send_email", return_value=True) as sent, patch(
-                "src.services.auth.magic_login.send_email", return_value=True
-            ) as sent_magic:
+            with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
                 send_email_verification_email(
                     token="tok",
                     user=_user(),
@@ -688,19 +686,20 @@ class TestWhiteLabel:
                     _user(), "user@test.com", "https://acme.test", "jwt",
                     lang=lang, org_name="Acme", powered_by=False,
                 )
-            for call in [sent.call_args.kwargs, sent_magic.call_args.kwargs]:
+            verification, magic = (c.kwargs for c in sent.call_args_list[-2:])
+            for call in [verification, magic]:
                 assert "{brand}" not in call["body"], lang
                 assert "{brand}" not in call["subject"], lang
                 assert "{username}" not in call["body"], lang
                 assert "Acme" in call["body"], lang
-            assert "LearnHouse" not in sent_magic.call_args.kwargs["body"], lang
-            assert "LearnHouse" not in sent_magic.call_args.kwargs["subject"], lang
+            assert _platform_free(magic["body"]), lang
+            assert "LearnHouse" not in magic["subject"], lang
 
     def test_invitation_with_role_note_and_expiry_in_every_language(self):
         from src.services.email.translations import SUPPORTED_LANGUAGES
 
         for lang in SUPPORTED_LANGUAGES:
-            with patch("src.services.users.emails.send_email", return_value=True) as sent:
+            with patch("src.services.email.pipeline.deliver_message", return_value=True) as sent:
                 send_invitation_email(
                     "invitee@test.com", "Acme", "owner", "https://acme.test/signup?invite=tok",
                     lang=lang, role_name="Instructor<b>", message="Line one\nLine <two>", expires_on="2026-12-01",

@@ -407,8 +407,10 @@ def test_digest_helpers():
     assert not digest.is_due(NotificationPreference(user_id=1, email_digest="weekly", last_digest_at=recent), now)
     assert digest.is_due(NotificationPreference(user_id=1, email_digest="weekly", last_digest_at="garbage"), now)
     assert digest._parse("2026-11-01T00:00:00").tzinfo is not None
-    html = digest.render([Notification(title="<b>x</b>", body="b", data={"path": "/p"}), Notification(title="y", body="", data={})],
-                         base_url="https://o.test", org_name="Org", lang="en")
+    from src.services.email.pipeline import render_email
+
+    html = render_email("notifications.digest", {"base_url": "https://o.test", "items": [
+        {"title": "<b>x</b>", "body": "b", "path": "/p"}, {"title": "y", "body": "", "path": None}]}).html
     assert "&lt;b&gt;" in html and 'href="https://o.test/p"' in html and 'href="https://o.test/notifications"' in html
 
 
@@ -423,7 +425,7 @@ async def test_run_digests(db, org, admin_user, regular_user, monkeypatch):
         _n(regular_user.id, type="join_request", title="Join"),
     ])
     sent = []
-    with patch("src.services.users.emails._send_notification_email", side_effect=lambda **kw: sent.append(kw)), \
+    with patch("src.services.email.pipeline.deliver_message", side_effect=lambda **kw: sent.append(kw)), \
          patch("src.services.nudges.links.org_base_url", new=AsyncMock(return_value="https://test-org.test/")):
         assert await digest.run_digests(db, now) == 2
         # Already emailed / not due: nothing more.

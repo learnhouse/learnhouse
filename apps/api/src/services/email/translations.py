@@ -1504,6 +1504,32 @@ for _plan_lang, _plan_keys in PLAN_EMAIL_TRANSLATIONS.items():
     EMAIL_TRANSLATIONS.setdefault(_plan_lang, {}).update(_plan_keys)
 
 
+# Labels of the label / value rows (invitation, role change). Locales not
+# listed fall back to English through ``t``.
+_LABELS: dict[str, dict[str, str]] = {
+    "en": {"label.organization": "Organization", "label.role": "Role", "label.expires": "Expires"},
+    "fr": {"label.organization": "Organisation", "label.role": "Rôle", "label.expires": "Expire le"},
+    "de": {"label.organization": "Organisation", "label.role": "Rolle", "label.expires": "Läuft ab am"},
+    "es": {"label.organization": "Organización", "label.role": "Rol", "label.expires": "Caduca el"},
+    "pt": {"label.organization": "Organização", "label.role": "Função", "label.expires": "Expira em"},
+    "it": {"label.organization": "Organizzazione", "label.role": "Ruolo", "label.expires": "Scade il"},
+    "nl": {"label.organization": "Organisatie", "label.role": "Rol", "label.expires": "Verloopt op"},
+    "pl": {"label.organization": "Organizacja", "label.role": "Rola", "label.expires": "Wygasa"},
+    "tr": {"label.organization": "Kuruluş", "label.role": "Rol", "label.expires": "Son geçerlilik"},
+    "id": {"label.organization": "Organisasi", "label.role": "Peran", "label.expires": "Kedaluwarsa"},
+    "vi": {"label.organization": "Tổ chức", "label.role": "Vai trò", "label.expires": "Hết hạn"},
+    "ru": {"label.organization": "Организация", "label.role": "Роль", "label.expires": "Истекает"},
+    "uk": {"label.organization": "Організація", "label.role": "Роль", "label.expires": "Спливає"},
+    "ja": {"label.organization": "組織", "label.role": "ロール", "label.expires": "有効期限"},
+    "zh": {"label.organization": "组织", "label.role": "角色", "label.expires": "过期时间"},
+    "ko": {"label.organization": "조직", "label.role": "역할", "label.expires": "만료"},
+    "ar": {"label.organization": "المؤسسة", "label.role": "الدور", "label.expires": "تنتهي في"},
+}
+
+for _label_lang, _label_keys in _LABELS.items():
+    EMAIL_TRANSLATIONS.setdefault(_label_lang, {}).update(_label_keys)
+
+
 def normalize_language(lang: str | None) -> str:
     """Return a supported locale code, falling back to English."""
     if not lang:
@@ -1521,3 +1547,22 @@ def t(lang: str | None, key: str, **fmt) -> str:
         return template.format(**fmt)
     except (KeyError, IndexError):
         return template
+
+
+def th(lang: str | None, key: str, **values):
+    """Translated copy as HTML: each value escaped, the string's own markup kept.
+
+    Copy strings may carry trusted markup (``<strong>{org_name}</strong>``),
+    so the result is :class:`~src.services.email.blocks.Safe`; values are
+    escaped here unless they are already ``Safe``.
+    """
+    from src.services.email.blocks import Safe, esc
+
+    return Safe(t(lang, key, **{k: esc(v) for k, v in values.items()}))
+
+
+def tt(lang: str | None, key: str, **values) -> str:
+    """Translated copy as plain text (subjects, preheaders): raw values, no tags."""
+    from src.services.email.blocks import to_text
+
+    return to_text(th(lang, key, **values))

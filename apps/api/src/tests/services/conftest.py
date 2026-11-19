@@ -144,5 +144,5 @@ def _no_outbound_email():
     """
     from unittest.mock import patch
 
-    with patch("src.services.users.emails.send_email", return_value=True):
+    with patch("src.services.email.pipeline.deliver_message", return_value=True):
         yield

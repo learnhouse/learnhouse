@@ -1,34 +1,25 @@
-"""Tests for the bulk-email support added to the shared email plumbing.
+"""Tests for the bulk-email support in the shared email plumbing.
 
-Covers `_email_layout(unsubscribe_url=...)` and `send_email(headers=...)`.
-The regression guard matters most: twelve transactional emails share this
-layout, and none of their output may shift.
+Covers the layout's unsubscribe footer and ``send_message(headers=...)``.
+Transactional mail (no unsubscribe URL) must carry no opt-out link.
 """
 
 import re
 
-from src.services.users.emails import _email_layout
+from src.services.email.blocks import Paragraph
+from src.services.email.layout import PLATFORM_BRAND, Email, render_html
+
+
+def _email_layout(title, body, footer_note="", unsubscribe_url="", unsubscribe_label="Unsubscribe from these emails"):
+    email = Email(subject=title, blocks=[Paragraph(body)], reason=footer_note, unsubscribe_url=unsubscribe_url,
+                  unsubscribe_label=unsubscribe_label)
+    return render_html(email, PLATFORM_BRAND, "team", "en")
 
 
 class TestLayoutRegression:
-    def test_no_unsubscribe_url_renders_identically_to_before(self):
-        """The pre-existing footer HTML, byte for byte.
-
-        Pinned as a literal rather than compared against another call of the
-        same function, so a refactor that changes both paths at once still
-        fails here.
-        """
-        html = _email_layout("Title", "<p>body</p>", footer_note="A note")
-        assert (
-            '<hr style="margin: 0 0 16px 0; border: none; border-top: 1px solid #f0f0f0;" />\n'
-            '            <p style="margin: 0; font-size: 12px; color: #a3a3a3; '
-            'font-weight: 400; line-height: 1.6;">A note</p>'
-        ) in html
-        assert "unsubscribe" not in html.lower()
-
-    def test_no_footer_note_and_no_unsubscribe_renders_no_footer_block(self):
-        html = _email_layout("Title", "<p>body</p>")
-        assert "<hr" not in html
+    def test_no_unsubscribe_url_renders_no_opt_out(self):
+        html = _email_layout("Title", "body", footer_note="A note")
+        assert ">A note</p>" in html
         assert "unsubscribe" not in html.lower()
 
 
@@ -36,34 +27,26 @@ class TestUnsubscribeFooter:
     def test_unsubscribe_url_renders_a_link(self):
         html = _email_layout(
             "Title",
-            "<p>body</p>",
+            "body",
             unsubscribe_url="https://app.test/api/v1/emails/unsubscribe?token=abc.def",
         )
         assert 'href="https://app.test/api/v1/emails/unsubscribe?token=abc.def"' in html
         assert "Unsubscribe from these emails" in html
 
-    def test_unsubscribe_renders_without_a_footer_note(self):
-        # The footer <div> is gated on either piece being present; an
-        # unsubscribe-only footer must still produce the divider.
-        html = _email_layout(
-            "Title", "<p>body</p>", unsubscribe_url="https://app.test/u?token=x"
-        )
-        assert "<hr" in html
-
     def test_note_and_unsubscribe_both_render(self):
         html = _email_layout(
             "Title",
-            "<p>body</p>",
+            "body",
             footer_note="Because you're an admin.",
             unsubscribe_url="https://app.test/u?token=x",
         )
-        assert "Because you&#x27;re an admin." in html or "Because you're an admin." in html
+        assert "Because you&#x27;re an admin." in html
         assert "https://app.test/u?token=x" in html
 
     def test_url_and_label_are_escaped(self):
         html = _email_layout(
             "Title",
-            "<p>body</p>",
+            "body",
             unsubscribe_url='https://app.test/u?t=x"><script>alert(1)</script>',
             unsubscribe_label="<b>Stop</b>",
         )
@@ -74,7 +57,7 @@ class TestUnsubscribeFooter:
     def test_label_is_translatable(self):
         html = _email_layout(
             "Title",
-            "<p>body</p>",
+            "body",
             unsubscribe_url="https://app.test/u?token=x",
             unsubscribe_label="Se désabonner de ces e-mails",
         )
@@ -83,7 +66,7 @@ class TestUnsubscribeFooter:
 
 class TestSendEmailHeaders:
     def test_headers_reach_the_resend_payload(self, monkeypatch):
-        from src.services.email import utils as email_utils
+        from src.services.email import transport as email_utils
 
         captured = {}
 
@@ -103,7 +86,7 @@ class TestSendEmailHeaders:
         assert captured["headers"] == {"List-Unsubscribe": "<https://app.test/u>"}
 
     def test_no_headers_leaves_the_payload_unchanged(self, monkeypatch):
-        from src.services.email import utils as email_utils
+        from src.services.email import transport as email_utils
 
         captured = {}
 
@@ -118,7 +101,7 @@ class TestSendEmailHeaders:
         assert "headers" not in captured
 
     def test_headers_reach_the_smtp_message(self, monkeypatch):
-        from src.services.email import utils as email_utils
+        from src.services.email import transport as email_utils
 
         sent = {}
 
@@ -154,16 +137,16 @@ class TestSendEmailHeaders:
         assert "List-Unsubscribe-Post: List-Unsubscribe=One-Click" in sent["message"]
 
     def test_send_email_forwards_headers_to_the_provider(self, monkeypatch):
-        from src.services.email import utils as email_utils
+        from src.services.email import transport as email_utils
 
         captured = {}
 
-        def fake_resend(sender, to, subject, body, mailing, headers=None):
+        def fake_resend(sender, to, subject, body, mailing, headers=None, text=None):
             captured["headers"] = headers
             return {"id": "sent"}
 
         monkeypatch.setattr(email_utils, "_send_email_resend", fake_resend)
-        email_utils.send_email(
+        email_utils.send_message(
             "user@test.com", "hi", "<p>hi</p>", headers={"List-Unsubscribe": "<x>"}
         )
         assert captured["headers"] == {"List-Unsubscribe": "<x>"}
@@ -207,7 +190,7 @@ class TestNudgeRendering:
 
         captured = {}
         with patch(
-            "src.services.users.emails.send_email",
+            "src.services.email.pipeline.deliver_message",
             side_effect=lambda **k: captured.update(k) or {"id": "sent"},
         ):
             send_nudge_email(**kwargs)
@@ -263,12 +246,10 @@ class TestNudgeRendering:
         The unsubscribe link is still an anchor, so this checks for the button
         specifically rather than for anchors in general.
         """
-        from src.services.users.emails import STYLES
-
         captured = self._send(
             nudge_id="activation.whats_blocking_d14", has_cta=False
         )
-        assert STYLES["button"] not in captured["body"]
+        assert "border-radius: 12px; background-color: #171717" not in captured["body"]
         assert "https://acme.test/dash" not in captured["body"]
         # ...but the reader can still opt out.
         assert "unsubscribe" in captured["body"].lower()

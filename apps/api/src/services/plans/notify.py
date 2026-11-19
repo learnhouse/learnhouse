@@ -28,6 +28,7 @@ from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.services.email.dates import human_date
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +233,7 @@ async def send_due_trial_emails(db_session: AsyncSession, now: Optional[datetime
                 now=now,
                 plan_name=_plan_name(trial.plan),
                 days=days,
-                end_date=_utc(trial.ends_at).date().isoformat(),
+                end_date=human_date(_utc(trial.ends_at)),
             )
             if stage == TRIAL_ENDS_3D:
                 await notify_trial_ending(db_session, trial, days)

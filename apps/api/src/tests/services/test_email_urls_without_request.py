@@ -220,6 +220,8 @@ class TestRecipientValidation:
         from fastapi import HTTPException
 
         with pytest.raises(HTTPException) as excinfo:
-            email_utils.send_email(bad, "hi", "<p>hi</p>")
+            from src.services.email import transport
+
+            transport.send_message(bad, "hi", "<p>hi</p>")
 
         assert excinfo.value.status_code == 400

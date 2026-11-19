@@ -7,13 +7,12 @@ the categories they left on for email. Rows go out at most once
 (``emailed_at``), and an empty digest sends nothing (but still counts as a
 run, so the next one waits a full period).
 
-Email goes through the existing sender with the org's branding and default
-language. ``LEARNHOUSE_NOTIFICATIONS_DIGEST_DISABLED`` turns it off.
+Email goes through the shared pipeline (``notifications.digest`` template)
+with the org's branding and default language. ``LEARNHOUSE_NOTIFICATIONS_DIGEST_DISABLED`` turns it off.
 """
 
 from __future__ import annotations
 
-import html
 import logging
 import os
 from datetime import datetime, timedelta, timezone
@@ -123,28 +122,12 @@ def is_due(pref: NotificationPreference, now: datetime) -> bool:
     return last is None or now - last >= period
 
 
-def render(items: list[Notification], *, base_url: str, org_name: str, lang: str) -> str:
-    rows = "".join(
-        '<tr><td style="padding:10px 0;border-bottom:1px solid #eee">'
-        f'<a href="{html.escape(base_url + ((n.data or {}).get("path") or "/notifications"))}" '
-        'style="color:#111;text-decoration:none;font-weight:600">'
-        f'{html.escape(n.title)}</a>'
-        + (f'<div style="color:#666;font-size:13px;margin-top:2px">{html.escape(n.body[:180])}</div>' if n.body else "")
-        + "</td></tr>"
-        for n in items
-    )
-    return (
-        f'<p>{html.escape(copy(lang, "intro", org=org_name))}</p>'
-        f'<table role="presentation" width="100%" style="border-collapse:collapse">{rows}</table>'
-    )
-
-
 async def send_digest(db: AsyncSession, user, org_id: Optional[int], items: list[Notification]) -> bool:
     from src.db.organization_config import OrganizationConfig
     from src.db.organizations import Organization
     from src.services.email.branding import resolve_org_email_branding
+    from src.services.email.pipeline import send_email
     from src.services.nudges.links import org_base_url
-    from src.services.users.emails import _brand_logo_html, _button_style, _email_layout, _send_notification_email
 
     org = await db.get(Organization, org_id) if org_id else None
     org_config = (await db.execute(
@@ -152,24 +135,14 @@ async def send_digest(db: AsyncSession, user, org_id: Optional[int], items: list
     )).scalars().first() if org_id else None
     branding = resolve_org_email_branding(org, org_config, None)
     base = (await org_base_url(org.slug, db, org.id)).rstrip("/") if org is not None else ""
-    lang = branding.lang
-    heading = copy(lang, "heading")
-    body = render(items, base_url=base, org_name=branding.org_name or "LearnHouse", lang=lang) + (
-        f'<p style="margin-top:20px"><a href="{html.escape(base + "/notifications")}" '
-        f'style="{_button_style(branding.brand_color)}">{html.escape(copy(lang, "cta"))}</a></p>'
-    )
-    _send_notification_email(
-        to=user.email,
-        subject=copy(lang, "subject", count=len(items)),
-        body=_email_layout(
-            title=heading,
-            body_content=f"<h1>{html.escape(heading)}</h1>{body}",
-            footer_note=copy(lang, "footer"),
-            logo_html=_brand_logo_html(branding.logo_url, branding.org_name or "LearnHouse"),
-            powered_by=branding.powered_by,
-            lang=lang,
-        ),
-        sender_name=branding.sender_name or None,
+    send_email(
+        "notifications.digest",
+        user.email,
+        {"base_url": base, "items": [
+            {"title": n.title, "body": n.body or "", "path": (n.data or {}).get("path")} for n in items
+        ]},
+        org=branding if org is not None else None,
+        lang=branding.lang,
     )
     return True
 

@@ -9,7 +9,6 @@ who opted out of email or whose address is suppressed.
 
 from __future__ import annotations
 
-import html
 import logging
 from typing import Optional
 
@@ -24,10 +23,6 @@ from src.db.users import User
 
 logger = logging.getLogger(__name__)
 
-# The body is quoted in the email; long comments are cut, the link has the rest.
-EXCERPT_MAX = 600
-
-
 def _display_name(user: Optional[User]) -> str:
     if user is None:
         return "Someone"
@@ -41,65 +36,9 @@ def editor_link(base_url: str, course_uuid: str, activity_uuid: str, thread_uuid
     return f"{base_url.rstrip('/')}/course/{course}/activity/{activity}/edit?thread={thread_uuid}"
 
 
-def render_mention_email(
-    *,
-    lang: str,
-    username: str,
-    author: str,
-    activity_name: str,
-    course_name: str,
-    org_name: str,
-    quote: str,
-    body: str,
-    cta_url: str,
-    logo_url: Optional[str],
-    brand_color: Optional[str],
-    powered_by: bool,
-) -> tuple[str, str]:
-    """(subject, html) of one mention email. Every input is escaped here."""
-    from src.services.email.safe_text import email_org_name, email_user_name
-    from src.services.email.translations import t
-    from src.services.users.emails import (
-        COLORS,
-        STYLES,
-        _brand_logo_html,
-        _button_style,
-        _email_layout,
-    )
-
-    safe_user = html.escape(email_user_name(username))
-    safe_author = html.escape(email_user_name(author))
-    safe_activity = html.escape(email_org_name(activity_name))
-    safe_course = html.escape(email_org_name(course_name))
-    safe_org = html.escape(email_org_name(org_name))
-    excerpt = body if len(body) <= EXCERPT_MAX else body[:EXCERPT_MAX].rstrip() + "…"
-    quote_html = (
-        f'<p style="{STYLES["p"]} margin-bottom: 8px; padding-left: 12px; '
-        f'border-left: 3px solid #fde68a; color: {COLORS["muted"]};">{html.escape(quote)}</p>'
-        if quote
-        else ""
-    )
-    heading = t(lang, "comment_mention.heading", author=safe_author)
-    body_content = f"""
-        <h1 style="{STYLES['h1']}">{heading}</h1>
-        <p style="{STYLES['p']}">{t(lang, "comment_mention.body", username=safe_user, author=safe_author, activity=safe_activity, course=safe_course)}</p>
-        {quote_html}
-        <p style="{STYLES['p']} white-space: pre-wrap; padding: 12px 14px; background-color: {COLORS['subtle']}; border: 1px solid {COLORS['border']}; border-radius: 8px;">{html.escape(excerpt)}</p>
-        <a href="{html.escape(cta_url)}" style="{_button_style(brand_color)}">
-            {t(lang, "comment_mention.cta")}
-        </a>
-        <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
-    """
-    subject = t(lang, "comment_mention.subject", author=safe_author, activity=safe_activity)
-    page = _email_layout(
-        title=heading,
-        body_content=body_content,
-        footer_note=t(lang, "comment_mention.footer", course=safe_course, org_name=safe_org),
-        logo_html=_brand_logo_html(logo_url, org_name),
-        powered_by=powered_by,
-        lang=lang,
-    )
-    return subject, page
+def _mention_values(*, username, author, activity_name, course_name, quote, body, cta_url) -> dict:
+    return {"username": username, "author": author, "activity": activity_name, "course": course_name,
+            "quote": quote, "body": body, "cta_url": cta_url}
 
 
 async def send_mention_emails(
@@ -140,7 +79,8 @@ async def _send(
     mention_ids: list[int],
 ) -> int:
     from src.services.email.branding import resolve_org_email_branding
-    from src.services.email.utils import get_org_signup_base_url, send_email
+    from src.services.email.pipeline import send_email
+    from src.services.email.utils import get_org_signup_base_url
     from src.services.nudges.preferences import get_opted_out_user_ids
 
     row = (await db_session.execute(
@@ -174,24 +114,11 @@ async def _send(
         user = by_id.get(uid)
         if user is None or not user.email:
             continue
-        subject, page = render_mention_email(
-            lang=branding.lang,
-            username=user.first_name or user.username,
-            author=author,
-            activity_name=activity.name,
-            course_name=course.name,
-            org_name=branding.org_name or org.name,
-            quote=quote,
-            body=body,
-            cta_url=link,
-            logo_url=branding.logo_url,
-            brand_color=branding.brand_color,
-            powered_by=branding.powered_by,
+        values = _mention_values(
+            username=user.first_name or user.username, author=author, activity_name=activity.name,
+            course_name=course.name, quote=quote, body=body, cta_url=link,
         )
-        try:
-            send_email(to=user.email, subject=subject, body=page, sender_name=branding.sender_name or None)
+        # Non-critical: one bad address is logged and must not stop the others.
+        if send_email("learning.comment_mention", user.email, values, org=branding) is not False:
             sent += 1
-        except Exception:
-            # One bad address must not stop the others.
-            logger.warning("Mention email to user %s not sent", uid, exc_info=True)
     return sent

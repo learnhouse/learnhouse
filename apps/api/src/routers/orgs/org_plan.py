@@ -302,3 +302,40 @@ async def api_fast_forward_trial(
     job = await run_once(db_session)
     await db_session.refresh(trial)
     return {"trial": trial_state(trial), "job": job}
+
+
+class SendBillingEmailRequest(BaseModel):
+    template: str
+    to: list[str]
+    context: dict = {}
+
+
+@internal_router.post(
+    "/send_billing_email",
+    summary="Send a Stripe billing email through the shared mail pipeline",
+    description=(
+        "Used by the web app's Stripe webhook so billing mail renders with the "
+        "same templates and goes through the same provider as every other "
+        "email. Only the billing templates are accepted. Protected by the "
+        "internal cloud key (X-Internal-Key header)."
+    ),
+)
+async def send_billing_email_internal(body: SendBillingEmailRequest):
+    from src.services.email.pipeline import asend_email
+    from src.services.email.templates.billing import WEB_BILLING_TEMPLATES
+
+    if body.template not in WEB_BILLING_TEMPLATES:
+        raise HTTPException(status_code=400, detail="Unknown billing email template")
+    recipients = list(dict.fromkeys(e.strip() for e in body.to if e and "@" in e))[:20]
+    context = dict(body.context)
+    if context.get("org_slug") and not context.get("billing_url"):
+        from src.services.email.utils import get_org_signup_base_url
+
+        base = await get_org_signup_base_url(str(context["org_slug"]))
+        if base:
+            context["billing_url"] = f"{base.rstrip('/')}/dash/org/settings/plan"
+    sent = 0
+    for to in recipients:
+        if await asend_email(body.template, to, context, critical=False) is not False:
+            sent += 1
+    return {"sent": sent, "recipients": len(recipients)}
