@@ -463,6 +463,19 @@ async def test_code_exchange_failures(db, org, admin_user, mcp_config, frontend,
     assert e.value.error == error
 
 
+async def test_resource_with_query_names_the_same_endpoint(db, org, admin_user, mcp_config, frontend):
+    # Clients that connect to /mcp?toolsets=all&meta=off send that URL as the resource.
+    assert oauth.canonical_resource("https://api.example.com/mcp/?toolsets=all&meta=off#x") == "https://api.example.com/mcp"
+    verifier, challenge = pkce_pair()
+    client = await register(db)
+    with_query = "https://api.example.com/mcp?toolsets=all&meta=off"
+    req = await authorize(db, client["client_id"], challenge, resource=with_query)
+    code = (await consent(db, admin_user, org.id, req))["code"][0]
+    form = {"grant_type": "authorization_code", "client_id": client["client_id"], "code": code, "redirect_uri": REDIRECT, "code_verifier": verifier, "resource": with_query}
+    tokens = await oauth.exchange_token(form, None, make_request(), db)
+    assert await oauth.verify_access_token(tokens["access_token"], "https://api.example.com/mcp", db) is not None
+
+
 async def test_code_exchange_expired_and_wrong_client(db, org, admin_user, mcp_config, frontend):
     verifier, challenge = pkce_pair()
     client = await register(db)
