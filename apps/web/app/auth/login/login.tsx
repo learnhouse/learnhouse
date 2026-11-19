@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@components/Contexts/AuthContext'
 import { removeQueryParamsFromAddressBar } from '@services/utils/ts/scrubUrl'
-import { getLEARNHOUSE_TOP_DOMAIN_VAL, getDeploymentMode, isOnCustomDomain } from '@services/config/config'
+import { getDeploymentMode } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { resendVerificationEmail } from '@services/auth/auth'
@@ -34,7 +34,8 @@ import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type Turns
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getAllowedAuthMethods } from '@services/auth/authMethods'
 import { peekPostAuthNext, takeLoginHint, takePostAuthNext } from '@/lib/auth/signup'
-import { useForwardedNextHref } from '@/lib/auth/nextParam'
+import { readNextParam, useForwardedNextHref, useForwardedSignupHref } from '@/lib/auth/nextParam'
+import { setOAuthContextCookies } from '@/lib/auth/oauthCookiesClient'
 
 interface LoginClientProps {
   org: any
@@ -43,8 +44,10 @@ interface LoginClientProps {
 const LoginClient = (props: LoginClientProps) => {
   const { t } = useTranslation()
   const { signIn, completeMfaLogin, requestMagicLink } = useAuth()
-  // Keep ?next when switching to sign-up.
-  const signupHref = useForwardedNextHref('/signup')
+  // Keep ?next when switching to sign-up (an invitation page is linked as is).
+  const signupHref = useForwardedSignupHref()
+  // ...and through a password reset.
+  const forgotHref = useForwardedNextHref('/forgot')
   const { track } = useLHAnalytics('public')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [ssoEnabled, setSsoEnabled] = useState(false)
@@ -118,7 +121,9 @@ const LoginClient = (props: LoginClientProps) => {
     setMagicSubmitting(true)
     setMagicError('')
 
-    const res = await requestMagicLink(email, props.org?.slug)
+    // The link signs them in to where they were headed (an invitation page).
+    const next = readNextParam(window.location.search) ?? peekPostAuthNext()
+    const res = await requestMagicLink(email, props.org?.slug, next)
     setMagicSubmitting(false)
 
     if (res.rateLimited) {
@@ -238,19 +243,9 @@ const LoginClient = (props: LoginClientProps) => {
 
   const handleGoogleSignIn = () => {
     track(AnalyticsEvent.LoginGoogleClicked)
-    // Store org context in cookies before OAuth redirect
-    if (props.org?.slug) {
-      const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
-      const isSecure = window.location.protocol === 'https:';
-      const secureAttr = isSecure ? '; secure' : '';
-      const baseAttributes = `; path=/; SameSite=Lax${secureAttr}`;
-      // Host-only on custom domains: a `.{platformTopDomain}` cookie can't be set
-      // from learn.acme.org (Domain not a suffix of host) → the browser drops it
-      // and the callback loses org context. Omit the Domain there.
-      const domainAttr = (topDomain === 'localhost' || isOnCustomDomain()) ? '' : `; domain=.${topDomain}`;
-      document.cookie = `LH_oauth_orgslug=${props.org.slug}${baseAttributes}${domainAttr}`;
-      document.cookie = `LH_oauth_org_id=${props.org.id}${baseAttributes}${domainAttr}`;
-    }
+    // Store org context in cookies before OAuth redirect. Without an org (the
+    // apex) this clears what an earlier attempt left, so it can't bleed in.
+    setOAuthContextCookies(props.org?.slug ? { orgSlug: props.org.slug, orgId: props.org.id } : {})
     // Use absolute URL with current origin for custom domain support
     signIn('google', { callbackUrl: buildCallbackUrl() });
   };
@@ -532,7 +527,7 @@ const LoginClient = (props: LoginClientProps) => {
                 <span className="mt-1.5 block" data-testid="login-recovery">
                   {t('auth.login_failed_forgot', { defaultValue: 'Forgot your password?' })}{' '}
                   <Link
-                    href="/forgot"
+                    href={forgotHref}
                     onClick={() => track(AnalyticsEvent.LoginRecoveryClicked, { action: 'reset_password' })}
                     className="font-semibold underline underline-offset-2 hover:no-underline"
                   >
@@ -770,7 +765,7 @@ const LoginClient = (props: LoginClientProps) => {
                   <AuthLabel
                     error={formik.touched.password && formik.errors.password}
                     end={
-                      <Link href="/forgot" className="shrink-0 text-xs font-medium text-neutral-500 hover:text-neutral-900 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20">
+                      <Link href={forgotHref} className="shrink-0 text-xs font-medium text-neutral-500 hover:text-neutral-900 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20">
                         {t('auth.forgot_password')}
                       </Link>
                     }

@@ -212,28 +212,108 @@ def reconcile(connection: Connection, metadata: MetaData, *, indexes: bool = Tru
     return applied, skipped
 
 
-def build_indexes_concurrently(engine, indexes: list[tuple[str, str, list[str]]]) -> list[str]:
+# Unique indexes the app relies on that migrations build concurrently: each
+# startup checks they exist and are valid (a failed or killed concurrent build
+# leaves none, or an invalid one), and rebuilds them after removing the
+# duplicates they would refuse. (name, table, columns, options), see
+# ``build_indexes_concurrently``.
+UNIQUE_INDEX_GUARDS: tuple[tuple, ...] = (
+    ("uq_userorganization_user_org", "userorganization", ["user_id", "org_id"], {
+        "unique": True,
+        # One row per person and org: the strongest built-in role, then the oldest.
+        "before": [
+            "DELETE FROM userorganization WHERE id IN ("
+            "  SELECT id FROM ("
+            "    SELECT id, ROW_NUMBER() OVER ("
+            "      PARTITION BY user_id, org_id ORDER BY COALESCE(role_id, 2147483647), id"
+            "    ) AS rn FROM userorganization"
+            "  ) ranked WHERE rn > 1"
+            ")"
+        ],
+    }),
+    ("uq_org_invitation_pending_email", "org_invitation", ["org_id", "email"], {
+        "unique": True,
+        "where": "status = 'pending'",
+        # The newest pending invitation per org and address stays.
+        "before": [
+            "UPDATE org_invitation SET status = 'revoked' "
+            "WHERE status = 'pending' AND id NOT IN ("
+            "  SELECT MAX(id) FROM org_invitation WHERE status = 'pending' GROUP BY org_id, email"
+            ")"
+        ],
+    }),
+)
+
+# A concurrent build waits for every older transaction; under the migration
+# lock that would hold up every replica's startup. Give up quickly instead:
+# the guard above retries on the next start.
+BUILD_LOCK_TIMEOUT = "10s"
+BUILD_STATEMENT_TIMEOUT = "10min"
+
+
+def guarded_indexes_to_build(connection: Connection) -> list[tuple]:
+    """The ``UNIQUE_INDEX_GUARDS`` entries missing or invalid (Postgres only),
+    an invalid one dropped first."""
+    if connection.dialect.name != "postgresql":
+        return []
+    names = [guard[0] for guard in UNIQUE_INDEX_GUARDS]
+    valid = dict(connection.execute(
+        text(
+            "SELECT c.relname, i.indisvalid FROM pg_class c JOIN pg_index i ON i.indexrelid = c.oid "
+            "WHERE c.relname = ANY(:names)"
+        ),
+        {"names": names},
+    ).all())
+    inspector = inspect(connection)
+    todo = []
+    for name, table, columns, options in UNIQUE_INDEX_GUARDS:
+        if valid.get(name) is True or not inspector.has_table(table):
+            continue
+        before = list(options.get("before", ()))
+        if name in valid:
+            quote = connection.dialect.identifier_preparer.quote
+            before.insert(0, f"DROP INDEX CONCURRENTLY IF EXISTS {quote(name)}")
+        todo.append((name, table, columns, {**options, "before": before}))
+    return todo
+
+
+def build_indexes_concurrently(engine, indexes: list[tuple]) -> list[str]:
     """Build indexes that migrations deferred, outside any transaction.
 
     ``CREATE INDEX CONCURRENTLY`` can't run inside the migration transaction
     (it would also wait on that transaction forever), but unlike a plain build
-    it doesn't block writes to a live table while it runs. A failure is logged,
-    not raised: these indexes only speed reads up. Returns the names built.
+    it doesn't block writes to a live table while it runs. Each entry is
+    ``(name, table, columns)`` or ``(name, table, columns, options)`` with
+    options ``unique`` (bool), ``where`` (a partial index's predicate, trusted
+    SQL from the migration) and ``before`` (statements run just before the
+    build, such as removing duplicates a unique index would refuse). A failure
+    is logged, not raised: the app keeps working without the index (a unique
+    one is logged as an error, since it is what enforces the rule). Returns
+    the names built.
     """
     built: list[str] = []
     if not indexes:
         return built
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+        connection.exec_driver_sql(f"SET lock_timeout = '{BUILD_LOCK_TIMEOUT}'")
+        connection.exec_driver_sql(f"SET statement_timeout = '{BUILD_STATEMENT_TIMEOUT}'")
         quote = connection.dialect.identifier_preparer.quote
-        for name, table, columns in indexes:
+        for entry in indexes:
+            name, table, columns = entry[:3]
+            options = entry[3] if len(entry) > 3 else {}
             column_list = ", ".join(quote(column) for column in columns)
+            unique = "UNIQUE " if options.get("unique") else ""
+            where = f" WHERE {options['where']}" if options.get("where") else ""
             try:
+                for statement in options.get("before", ()):
+                    connection.execute(text(statement))
                 connection.execute(
-                    text(f"CREATE INDEX CONCURRENTLY IF NOT EXISTS {quote(name)} ON {quote(table)} ({column_list})")
+                    text(f"CREATE {unique}INDEX CONCURRENTLY IF NOT EXISTS {quote(name)} ON {quote(table)} ({column_list}){where}")
                 )
                 built.append(name)
             except Exception as exc:
-                logger.warning("Could not build index %s on %s, reads stay slower without it: %s", name, table, exc)
+                log = logger.error if unique else logger.warning
+                log("Could not build index %s on %s, reads stay slower without it: %s", name, table, exc)
                 # A failed concurrent build leaves an invalid index behind that
                 # writes still have to maintain.
                 try:
@@ -275,6 +355,15 @@ def ensure_schema(url: Optional[str] = None, *, metadata: Optional[MetaData] = N
                     raise SchemaMigrationError(f"database at {report.after} after migrating, expected {heads}")
             # Still under the lock, so another replica doesn't start the same
             # builds.
+            # Unique indexes a failed or killed build left missing or invalid
+            # (not already queued by a migration just now).
+            # Best effort: a failed check must never stop the API starting.
+            try:
+                with engine.connect() as connection:
+                    queued = {entry[0] for entry in deferred}
+                    deferred += [entry for entry in guarded_indexes_to_build(connection) if entry[0] not in queued]
+            except Exception:
+                logger.exception("Could not check the guarded unique indexes; skipping their rebuild")
             built = build_indexes_concurrently(engine, deferred)
     except SchemaMigrationError:
         raise

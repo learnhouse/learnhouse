@@ -239,7 +239,14 @@ def _button_colors(brand: Brand) -> tuple[str, str]:
     return color, contrasting_text_color(color)
 
 
-def footer_html(email: Email, brand: Brand) -> str:
+def sent_by(lang: str, org_name: str) -> str:
+    """"Sent by {org} via LearnHouse" in the email's language."""
+    from src.services.email.translations import t
+
+    return t(lang, "common.sent_by", org=org_name)
+
+
+def footer_html(email: Email, brand: Brand, lang: str = "en") -> str:
     """The lines under the card: reason, links, then the sender line or wordmark."""
     small = f"margin: 0 0 6px 0; {font(12, INK['faint'], 400, '1.6')} text-align: center;"
     link = f"color: {INK['faint']}; text-decoration: underline;"
@@ -252,7 +259,7 @@ def footer_html(email: Email, brand: Brand) -> str:
     if links:
         parts.append(f'<p style="{small}">{" &nbsp;&middot;&nbsp; ".join(links)}</p>')
     if brand.org_scoped:
-        parts.append(f'<p style="{small} margin-top: 12px;">Sent by {esc(brand.name)} via LearnHouse</p>')
+        parts.append(f'<p style="{small} margin-top: 12px;">{esc(sent_by(lang, brand.name))}</p>')
     else:
         parts.append(
             '<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin: 14px auto 0 auto;">'
@@ -303,7 +310,7 @@ def render_html(email: Email, brand: Brand, category_name: str, lang: str) -> st
 </td></tr>
 </table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 560px;">
-<tr><td align="center" style="padding: 24px 24px 0 24px;">{footer_html(email, brand)}</td></tr>
+<tr><td align="center" style="padding: 24px 24px 0 24px;">{footer_html(email, brand, lang)}</td></tr>
 </table>
 <!--[if mso]></td></tr></table><![endif]-->
 </td></tr>
@@ -321,6 +328,6 @@ def render_text(email: Email, brand: Brand, lang: str = "en") -> str:
         footer.append(f"{email.manage_label}: {email.manage_url}")
     if email.unsubscribe_url:
         footer.append(f"{email.unsubscribe_label}: {email.unsubscribe_url}")
-    footer.append(f"Sent by {brand.name} via LearnHouse" if brand.org_scoped else "LearnHouse")
+    footer.append(sent_by(lang, brand.name) if brand.org_scoped else "LearnHouse")
     parts.append("--\n" + "\n".join(footer))
     return "\n\n".join(parts).strip() + "\n"

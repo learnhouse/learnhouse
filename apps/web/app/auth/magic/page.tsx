@@ -7,6 +7,7 @@ import { ArrowClockwise, LinkBreak, UserSwitch } from '@phosphor-icons/react'
 import { AuthButton, AuthStatus, AuthStatusScreen, authButtonClass } from '@components/Auth/AuthUI'
 import { useAuth } from '@components/Contexts/AuthContext'
 import { removeQueryParamsFromAddressBar } from '@services/utils/ts/scrubUrl'
+import { isSafeNextPath } from '@/lib/auth/signup'
 
 /**
  * Consumes a sign-in link: reads ?token from the URL and hands it to
@@ -31,8 +32,9 @@ type PageState = 'waiting' | 'loading' | 'confirm' | 'success' | 'retry' | 'erro
 // a previous session's refresh is still in flight is what the wait prevents.
 const AUTH_SETTLE_TIMEOUT_MS = 15000
 
-const isSafePath = (value: string | null | undefined): value is string =>
-  !!value && /^\/(?!\/)/.test(value)
+// Internal paths only (no "//host", no backslashes): the link may carry the
+// page it was requested from, such as an invitation.
+const isSafePath = (value: string | null | undefined): value is string => isSafeNextPath(value)
 
 // The address the link was issued for, for display only. The JWT payload is
 // readable without the key; the server verifies the signature on redemption.

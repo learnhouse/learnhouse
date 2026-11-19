@@ -670,7 +670,11 @@
       "google_not_configured": "Google OAuth not configured",
       "profile_field_invalid": "Links and email addresses aren't allowed in: {{fields}}",
       "field_no_links": "No links or email addresses",
-      "rate_limited": "Too many attempts. Please wait a moment and try again."
+      "rate_limited": "Too many attempts. Please wait a moment and try again.",
+      "invite_required": "You need an invite to join this organization.",
+      "invite_email_mismatch": "This invitation was sent to a different email address. Sign in with that address to accept it.",
+      "invite_email_mismatch_hint": "This invitation was sent to {{email}}. Sign in with that Google account to accept it.",
+      "invite_verify_email": "Verify your email address first, then open this invitation again."
     },
     "sso_errors": {
       "access_denied": "Access was denied. You may have declined the login request or don't have permission to access this application.",
@@ -726,7 +730,9 @@
       "try_again": "Try Again",
       "success": "Success!",
       "redirecting": "Redirecting you now...",
-      "google_failed": "Google authentication failed: {{error}}"
+      "google_failed": "Google authentication failed: {{error}}",
+      "invite_mismatch_title": "Wrong Google account",
+      "use_another_account": "Use another Google account"
     },
     "magic": {
       "expired": "This link has expired or was already used. Request a new one to sign in.",
@@ -801,14 +807,23 @@
         "verify_note": "This link was shared with you directly, so you'll verify your email before joining."
       },
       "verify_title": "Check your inbox",
-      "verify_desc": "Your account is ready. We sent a verification link to {{email}}. Verify your email, then open this invitation again or accept it from your home page to join {{org}}."
+      "verify_desc": "Your account is ready. We sent a verification link to {{email}}. Once you've verified your email, sign in and you'll join {{org}}.",
+      "accepted_title": "You've already accepted this invitation",
+      "accepted_desc": "Sign in to go to {{org}}.",
+      "retry_title": "We couldn't load this invitation",
+      "retry_desc": "Check your connection and try again. Your invitation link still works.",
+      "try_again": "Try again",
+      "org_full": "This organization is full right now. Ask its admin to make room."
     },
     "login_failed_forgot": "Forgot your password?",
     "login_failed_reset": "Reset it",
     "login_failed_magic": "Email me a login link instead",
     "login_failed_google_hint": "Signed up with Google? Use Continue with Google below.",
     "email_verified_set_password": "Your email is verified. For your security, the password set before this was removed: choose a new one to sign in with a password.",
-    "set_new_password": "Set a new password"
+    "set_new_password": "Set a new password",
+    "invited_by_email_cta": "Invited by email? Sign up with that address",
+    "use_invite_code_instead": "Have an invite code instead?",
+    "password_reset_done": "Your password has been changed."
   },
   "validation": {
     "required": "Required",
@@ -9576,7 +9591,7 @@
           "error": "Something went wrong. Please try again.",
           "resent": "New invitation sent to {{email}}",
           "email_failed": "The email couldn't be sent. Copy the invite link instead.",
-          "link_copied": "Invite link copied. Whoever opens it verifies their email before joining. The link in the earlier email no longer works.",
+          "link_copied": "Invite link copied. Whoever opens it verifies their email before joining.",
           "revoked": "Invitation revoked",
           "updated": "Invitation updated",
           "bulk_resend_one": "{{count}} invitation sent again",
@@ -29598,7 +29613,9 @@
       "verify_resend": "Resend the verification email",
       "verify_sent": "Sent. Check your inbox.",
       "invited_as": "Invited you as {{role}}",
-      "invited_as_by": "{{name}} invited you as {{role}}"
+      "invited_as_by": "{{name}} invited you as {{role}}",
+      "accept": "Accept",
+      "new_role": "New role: {{role}}"
     },
     "celebrate": {
       "title": "Your first course is live",

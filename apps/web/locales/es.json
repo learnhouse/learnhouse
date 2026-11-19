@@ -670,7 +670,11 @@
       "google_not_configured": "Google OAuth no está configurado",
       "profile_field_invalid": "No se permiten enlaces ni direcciones de correo electrónico en: {{fields}}",
       "field_no_links": "Sin enlaces ni direcciones de correo electrónico",
-      "rate_limited": "Demasiados intentos. Espera un momento y vuelve a intentarlo."
+      "rate_limited": "Demasiados intentos. Espera un momento y vuelve a intentarlo.",
+      "invite_required": "Necesitas una invitación para unirte a esta organización.",
+      "invite_email_mismatch": "Esta invitación se envió a otra dirección de correo. Inicia sesión con esa dirección para aceptarla.",
+      "invite_email_mismatch_hint": "Esta invitación se envió a {{email}}. Inicia sesión con esa cuenta de Google para aceptarla.",
+      "invite_verify_email": "Primero verifica tu dirección de correo y luego vuelve a abrir esta invitación."
     },
     "sso_errors": {
       "access_denied": "Se denegó el acceso. Puede que hayas rechazado la solicitud de inicio de sesión o que no tengas permiso para acceder a esta aplicación.",
@@ -726,7 +730,9 @@
       "try_again": "Intentar de nuevo",
       "success": "¡Listo!",
       "redirecting": "Redirigiéndote ahora...",
-      "google_failed": "Error de autenticación con Google: {{error}}"
+      "google_failed": "Error de autenticación con Google: {{error}}",
+      "invite_mismatch_title": "Cuenta de Google incorrecta",
+      "use_another_account": "Usar otra cuenta de Google"
     },
     "magic": {
       "expired": "Este enlace ha caducado o ya se usó. Solicita uno nuevo para iniciar sesión.",
@@ -801,14 +807,23 @@
         "verify_note": "Este enlace se compartió contigo directamente, así que verificarás tu correo antes de unirte."
       },
       "verify_title": "Revisa tu bandeja de entrada",
-      "verify_desc": "Tu cuenta está lista. Enviamos un enlace de verificación a {{email}}. Verifica tu correo y luego vuelve a abrir esta invitación o acéptala desde tu página de inicio para unirte a {{org}}."
+      "verify_desc": "Tu cuenta está lista. Enviamos un enlace de verificación a {{email}}. Cuando verifiques tu correo, inicia sesión y te unirás a {{org}}.",
+      "accepted_title": "Ya aceptaste esta invitación",
+      "accepted_desc": "Inicia sesión para ir a {{org}}.",
+      "retry_title": "No pudimos cargar esta invitación",
+      "retry_desc": "Revisa tu conexión e inténtalo de nuevo. Tu enlace de invitación sigue funcionando.",
+      "try_again": "Reintentar",
+      "org_full": "Esta organización está llena ahora mismo. Pide a su administrador que libere espacio."
     },
     "login_failed_forgot": "¿Olvidaste tu contraseña?",
     "login_failed_reset": "Restablécela",
     "login_failed_magic": "Envíame un enlace de acceso",
     "login_failed_google_hint": "¿Te registraste con Google? Usa Continuar con Google abajo.",
     "email_verified_set_password": "Tu correo electrónico ha sido verificado. Por tu seguridad, se eliminó la contraseña establecida anteriormente: elige una nueva para iniciar sesión con contraseña.",
-    "set_new_password": "Establecer nueva contraseña"
+    "set_new_password": "Establecer nueva contraseña",
+    "invited_by_email_cta": "¿Te invitaron por correo? Regístrate con esa dirección",
+    "use_invite_code_instead": "¿Tienes un código de invitación?",
+    "password_reset_done": "Tu contraseña se ha cambiado."
   },
   "validation": {
     "required": "Obligatorio",
@@ -9765,7 +9780,7 @@
           "error": "Algo salió mal. Inténtalo de nuevo.",
           "resent": "Nueva invitación enviada a {{email}}",
           "email_failed": "No se pudo enviar el correo. Copia el enlace de invitación.",
-          "link_copied": "Enlace de invitación copiado. Quien lo abra verificará su correo antes de unirse. El enlace del correo anterior ya no funciona.",
+          "link_copied": "Enlace de invitación copiado. Quien lo abra verificará su correo antes de unirse.",
           "revoked": "Invitación revocada",
           "updated": "Invitación actualizada",
           "bulk_resend_one": "{{count}} invitación reenviada",
@@ -30247,7 +30262,9 @@
       "verify_resend": "Reenviar el correo de verificación",
       "verify_sent": "Enviado. Revisa tu bandeja de entrada.",
       "invited_as": "Te invitó como {{role}}",
-      "invited_as_by": "{{name}} te invitó como {{role}}"
+      "invited_as_by": "{{name}} te invitó como {{role}}",
+      "accept": "Aceptar",
+      "new_role": "Nuevo rol: {{role}}"
     },
     "celebrate": {
       "title": "Tu primer curso ya está publicado",

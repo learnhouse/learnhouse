@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from sqlmodel import select
 from fastapi import HTTPException, FastAPI
 from httpx import ASGITransport, AsyncClient
 
@@ -112,15 +113,15 @@ class TestLocalContentRouter:
                 f"/content/orgs/{org.org_uuid}/courses/{course.course_uuid}/activities/activity_x/video.mp4"
             )
 
-            db.add(
-                UserOrganization(
-                    user_id=regular_user.id,
-                    org_id=org.id,
-                    role_id=1,
-                    creation_date="2024-01-01",
-                    update_date="2024-01-01",
+            membership = (await db.execute(
+                select(UserOrganization).where(UserOrganization.user_id == regular_user.id, UserOrganization.org_id == org.id)
+            )).scalars().first()
+            if membership is None:
+                membership = UserOrganization(
+                    user_id=regular_user.id, org_id=org.id, creation_date="2024-01-01", update_date="2024-01-01",
                 )
-            )
+            membership.role_id = 1
+            db.add(membership)
             await db.commit()
             app.dependency_overrides[get_current_user] = lambda: regular_user
             ok_response = await client.get(

@@ -670,7 +670,11 @@
       "google_not_configured": "Google OAuth yapılandırılmamış",
       "profile_field_invalid": "{{fields}} alanlarında bağlantı ve e-posta adresi kullanılamaz",
       "field_no_links": "Bağlantı veya e-posta adresi kullanılamaz",
-      "rate_limited": "Çok fazla deneme. Lütfen biraz bekleyip tekrar deneyin."
+      "rate_limited": "Çok fazla deneme. Lütfen biraz bekleyip tekrar deneyin.",
+      "invite_required": "Bu kuruluşa katılmak için bir davete ihtiyacınız var.",
+      "invite_email_mismatch": "Bu davet farklı bir e-posta adresine gönderildi. Kabul etmek için o adresle giriş yapın.",
+      "invite_email_mismatch_hint": "Bu davet {{email}} adresine gönderildi. Kabul etmek için o Google hesabıyla giriş yapın.",
+      "invite_verify_email": "Önce e-posta adresinizi doğrulayın, ardından bu daveti yeniden açın."
     },
     "sso_errors": {
       "access_denied": "Erişim reddedildi. Giriş isteğini reddetmiş olabilirsiniz veya bu uygulamaya erişim izniniz yok.",
@@ -726,7 +730,9 @@
       "try_again": "Tekrar Dene",
       "success": "Başarılı!",
       "redirecting": "Şimdi yönlendiriliyorsunuz...",
-      "google_failed": "Google kimlik doğrulaması başarısız oldu: {{error}}"
+      "google_failed": "Google kimlik doğrulaması başarısız oldu: {{error}}",
+      "invite_mismatch_title": "Yanlış Google hesabı",
+      "use_another_account": "Başka bir Google hesabı kullan"
     },
     "magic": {
       "expired": "Bu bağlantının süresi dolmuş veya zaten kullanılmış. Oturum açmak için yeni bir bağlantı isteyin.",
@@ -801,14 +807,23 @@
         "verify_note": "Bu bağlantı sizinle doğrudan paylaşıldı, bu yüzden katılmadan önce e-postanızı doğrulayacaksınız."
       },
       "verify_title": "Gelen kutunuzu kontrol edin",
-      "verify_desc": "Hesabınız hazır. {{email}} adresine bir doğrulama bağlantısı gönderdik. E-postanızı doğrulayın, ardından {{org}} kuruluşuna katılmak için bu daveti yeniden açın veya ana sayfanızdan kabul edin."
+      "verify_desc": "Hesabınız hazır. {{email}} adresine bir doğrulama bağlantısı gönderdik. E-postanızı doğruladıktan sonra giriş yapın, {{org}} kuruluşuna katılacaksınız.",
+      "accepted_title": "Bu daveti zaten kabul ettiniz",
+      "accepted_desc": "{{org}} sayfasına gitmek için giriş yapın.",
+      "retry_title": "Bu davet yüklenemedi",
+      "retry_desc": "Bağlantınızı kontrol edip tekrar deneyin. Davet bağlantınız hâlâ geçerli.",
+      "try_again": "Tekrar dene",
+      "org_full": "Bu kuruluş şu anda dolu. Yöneticisinden yer açmasını isteyin."
     },
     "login_failed_forgot": "Şifrenizi mi unuttunuz?",
     "login_failed_reset": "Sıfırlayın",
     "login_failed_magic": "Bunun yerine giriş bağlantısı gönder",
     "login_failed_google_hint": "Google ile mi kaydoldunuz? Aşağıdan Google ile devam edin.",
     "email_verified_set_password": "E-postanız doğrulandı. Güvenliğiniz için daha önce belirlenen şifre kaldırıldı: şifreyle giriş yapmak için yeni bir şifre seçin.",
-    "set_new_password": "Yeni şifre belirle"
+    "set_new_password": "Yeni şifre belirle",
+    "invited_by_email_cta": "E-postayla mı davet edildiniz? O adresle kaydolun",
+    "use_invite_code_instead": "Bunun yerine davet kodunuz mu var?",
+    "password_reset_done": "Şifreniz değiştirildi."
   },
   "validation": {
     "required": "Gerekli",
@@ -9586,7 +9601,7 @@
           "error": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
           "resent": "{{email}} adresine yeni davet gönderildi",
           "email_failed": "E-posta gönderilemedi. Bunun yerine davet bağlantısını kopyalayın.",
-          "link_copied": "Davet bağlantısı kopyalandı. Bağlantıyı açan kişi katılmadan önce e-postasını doğrular. Önceki e-postadaki bağlantı artık çalışmıyor.",
+          "link_copied": "Davet bağlantısı kopyalandı. Bağlantıyı açan kişi katılmadan önce e-postasını doğrular.",
           "revoked": "Davet iptal edildi",
           "updated": "Davet güncellendi",
           "bulk_resend_one": "{{count}} davet yeniden gönderildi",
@@ -29618,7 +29633,9 @@
       "verify_resend": "Doğrulama e-postasını yeniden gönder",
       "verify_sent": "Gönderildi. Gelen kutunu kontrol et.",
       "invited_as": "Seni {{role}} olarak davet etti",
-      "invited_as_by": "{{name}} seni {{role}} olarak davet etti"
+      "invited_as_by": "{{name}} seni {{role}} olarak davet etti",
+      "accept": "Kabul et",
+      "new_role": "Yeni rol: {{role}}"
     },
     "celebrate": {
       "title": "İlk kursun yayında",

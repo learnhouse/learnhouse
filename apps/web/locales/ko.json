@@ -669,7 +669,11 @@
       "google_not_configured": "Google OAuth가 구성되지 않았습니다",
       "profile_field_invalid": "{{fields}}에는 링크나 이메일 주소를 사용할 수 없습니다",
       "field_no_links": "링크나 이메일 주소는 사용할 수 없습니다",
-      "rate_limited": "시도 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요."
+      "rate_limited": "시도 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+      "invite_required": "이 조직에 참여하려면 초대가 필요합니다.",
+      "invite_email_mismatch": "이 초대는 다른 이메일 주소로 전송되었습니다. 수락하려면 해당 주소로 로그인하세요.",
+      "invite_email_mismatch_hint": "이 초대는 {{email}}(으)로 전송되었습니다. 수락하려면 해당 Google 계정으로 로그인하세요.",
+      "invite_verify_email": "먼저 이메일 주소를 인증한 다음 이 초대를 다시 여세요."
     },
     "sso_errors": {
       "access_denied": "접근이 거부되었습니다. 로그인 요청을 거부했거나 이 애플리케이션에 접근할 권한이 없을 수 있습니다.",
@@ -725,7 +729,9 @@
       "try_again": "다시 시도",
       "success": "성공!",
       "redirecting": "지금 이동하는 중...",
-      "google_failed": "Google 인증에 실패했습니다: {{error}}"
+      "google_failed": "Google 인증에 실패했습니다: {{error}}",
+      "invite_mismatch_title": "잘못된 Google 계정",
+      "use_another_account": "다른 Google 계정 사용"
     },
     "magic": {
       "expired": "이 링크는 만료되었거나 이미 사용되었습니다. 새 링크를 요청하여 로그인하세요.",
@@ -800,14 +806,23 @@
         "verify_note": "이 링크는 직접 공유된 링크라서 참여하기 전에 이메일을 인증하게 돼요."
       },
       "verify_title": "받은 편지함을 확인하세요",
-      "verify_desc": "계정이 준비됐어요. {{email}}(으)로 인증 링크를 보냈어요. 이메일을 인증한 뒤 이 초대를 다시 열거나 홈 페이지에서 수락하면 {{org}}에 참여할 수 있어요."
+      "verify_desc": "계정이 준비되었습니다. {{email}}(으)로 인증 링크를 보냈습니다. 이메일 인증 후 로그인하면 {{org}}에 참여하게 됩니다.",
+      "accepted_title": "이미 이 초대를 수락했습니다",
+      "accepted_desc": "{{org}}(으)로 이동하려면 로그인하세요.",
+      "retry_title": "초대를 불러오지 못했습니다",
+      "retry_desc": "연결을 확인하고 다시 시도하세요. 초대 링크는 아직 유효합니다.",
+      "try_again": "다시 시도",
+      "org_full": "이 조직은 지금 정원이 찼습니다. 관리자에게 자리를 마련해 달라고 요청하세요."
     },
     "login_failed_forgot": "비밀번호를 잊으셨나요?",
     "login_failed_reset": "재설정하기",
     "login_failed_magic": "대신 로그인 링크를 이메일로 받기",
     "login_failed_google_hint": "Google로 가입하셨나요? 아래의 Google로 계속하기를 사용하세요.",
     "email_verified_set_password": "이메일이 인증되었습니다. 보안을 위해 인증 전에 설정된 비밀번호가 삭제되었습니다. 비밀번호로 로그인하려면 새 비밀번호를 설정하세요.",
-    "set_new_password": "새 비밀번호 설정"
+    "set_new_password": "새 비밀번호 설정",
+    "invited_by_email_cta": "이메일로 초대받으셨나요? 그 주소로 가입하세요",
+    "use_invite_code_instead": "초대 코드가 있으신가요?",
+    "password_reset_done": "비밀번호가 변경되었습니다."
   },
   "validation": {
     "required": "필수 항목입니다",
@@ -9556,7 +9571,7 @@
           "error": "문제가 발생했어요. 다시 시도해 주세요.",
           "resent": "{{email}}(으)로 새 초대를 보냈어요",
           "email_failed": "이메일을 보내지 못했어요. 대신 초대 링크를 복사하세요.",
-          "link_copied": "초대 링크를 복사했어요. 링크를 여는 사람은 참여하기 전에 이메일을 인증해요. 이전 이메일의 링크는 더 이상 작동하지 않아요.",
+          "link_copied": "초대 링크를 복사했어요. 링크를 여는 사람은 참여하기 전에 이메일을 인증해요.",
           "revoked": "초대를 취소했어요",
           "updated": "초대를 업데이트했어요",
           "bulk_resend_one": "초대 {{count}}개를 다시 보냈어요",
@@ -29574,7 +29589,9 @@
       "verify_resend": "인증 이메일 다시 보내기",
       "verify_sent": "보냈습니다. 받은편지함을 확인하세요.",
       "invited_as": "{{role}}(으)로 초대했어요",
-      "invited_as_by": "{{name}}님이 {{role}}(으)로 초대했어요"
+      "invited_as_by": "{{name}}님이 {{role}}(으)로 초대했어요",
+      "accept": "수락",
+      "new_role": "새 역할: {{role}}"
     },
     "celebrate": {
       "title": "첫 코스가 공개되었습니다",

@@ -21,7 +21,7 @@ from sqlmodel import select
 
 from src.db.org_invitations import OrgInvitation, OrgInviteCode
 from src.db.users import User
-from src.services.onboarding import hub, invite_links
+from src.services.onboarding import hub
 from src.services.onboarding import invites as hub_invites
 from src.services.orgs.invitations import apply, codes, policy, service
 from src.tests.conftest import USER_RIGHTS
@@ -64,7 +64,8 @@ def _pending(world, email, role_id=4, **kw):
 
 async def test_copied_link_signup_creates_an_unverified_account_and_waits(world, mock_request, db):
     token, inv = await _token_for(world, mock_request, db, "ceo@bigcorp.com", delivery="copied", role_id=3)
-    assert inv.token_delivery == "copied"
+    # Kept apart from the emailed link, which still works.
+    assert inv.copy_token_hash == policy.hash_token(token) and inv.token_delivery == "email"
     peek = await _post(_app(db), f"{LINKS}/peek", {"token": token})
     assert peek.json()["invitation"]["proves_inbox"] is False
 
@@ -111,11 +112,16 @@ async def test_copied_link_on_self_hosted_sends_a_proof_request(world, mock_requ
     assert user.email_verified is True and user.email_verified_at == ""
     proof.assert_awaited_once()
     assert proof.await_args.args[3] == world.org.id
+    # It lands back on the invitation.
+    assert proof.await_args.kwargs == {"next_path": f"/signup?invite={token}"}
 
     # A failure to send never fails the signup.
-    with patch("src.services.users.email_verification.send_verification_email", AsyncMock(side_effect=RuntimeError("smtp"))):
-        await invite_links._send_proof_request(mock_request, db, user.id, world.org)
-    await invite_links._send_proof_request(mock_request, db, 999, world.org)
+    token2, _inv2 = await _token_for(world, mock_request, db, "new2@self.host", delivery="copied")
+    with signup_side_effects(mode="oss"), join_side_effects(), patch(
+        "src.services.users.email_verification.send_verification_email", AsyncMock(side_effect=RuntimeError("smtp"))
+    ):
+        res = await _post(_app(db), f"{LINKS}/signup", {"token": token2, "password": "blue river 42"})
+    assert res.status_code == 200 and res.json()["verification_required"] is True
 
 
 async def test_resending_by_email_restores_the_proof(world, mock_request, db):
@@ -337,22 +343,34 @@ async def test_joining_another_way_closes_pending_invitations(world, mock_reques
     from src.services.orgs.join import JoinOrg, join_org
     from src.tests.routers.test_auth_invitations_v2 import _signup_mode
 
-    # An invite code join.
+    # An invite code join by an unproven account: a plain code join, and the
+    # invitation (the richer of the two) is accepted instead once proven.
     await _signup_mode(db, world.org, "inviteOnly")
     code = await _code(world, mock_request, db)
     token, inv = await _token_for(world, mock_request, db, "zoe@test.com", role_id=1)
     zoe = await _user(db, 85, "zoe@test.com")
+    await _unproven(db, 85)
     with join_side_effects(), patch("src.services.orgs.join.increase_feature_usage", new=AsyncMock()), patch(
         "src.services.orgs.join.notify_user_joined_org", new=AsyncMock()
     ):
         await join_org(mock_request, JoinOrg(org_id=world.org.id, user_id=85, invite_code=code["invite_code"]), _public(zoe), db)
     await db.refresh(inv)
-    assert inv.status == "revoked"
-    # The old emailed link no longer hands out Admin.
-    with join_side_effects():
-        res = await _post(_app(db, _public(zoe)), f"{LINKS}/accept", {"token": token})
-    assert res.status_code == 404
+    assert inv.status == "pending"
     assert (await _membership(db, 85, world.org.id)).role_id == 4
+
+    # A proven address joining with a code while an invitation waits: the
+    # invitation is accepted instead of the code.
+    _t2, inv2 = await _token_for(world, mock_request, db, "yan@test.com", role_id=3)
+    yan = await _user(db, 84, "yan@test.com")
+    with join_side_effects(), patch("src.services.orgs.join.increase_feature_usage", new=AsyncMock()), patch(
+        "src.services.orgs.join.notify_user_joined_org", new=AsyncMock()
+    ):
+        await join_org(mock_request, JoinOrg(org_id=world.org.id, user_id=84, invite_code=code["invite_code"]), _public(yan), db)
+    await db.refresh(inv2)
+    assert inv2.status == "accepted"
+    assert (await _membership(db, 84, world.org.id)).role_id == 3
+    stored = (await db.execute(select(OrgInviteCode).where(OrgInviteCode.code_uuid == code["invite_code_uuid"]))).scalars().one()
+    assert stored.uses == 1  # Zoe's join only
 
     # A plain signup into the org (create_user without keep_invitations).
     from src.db.users import AnonymousUser, UserCreate

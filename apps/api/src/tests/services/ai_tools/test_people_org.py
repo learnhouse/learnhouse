@@ -383,11 +383,22 @@ async def test_invite_members_limits(registry, db, org, admin_user, regular_user
     denied(await call(registry, "invite_members", {"emails": ["not-an-email"]}, _ctx(db, org, admin_user, approved=True)), "invalid_args")
     denied(await call(registry, "invite_members", {"emails": ["c@x.com"]}, _ctx(db, org, _token(org.id), approved=True)), "not_for_api_tokens")
     denied(await call(registry, "invite_members", {"emails": ["c@x.com"]}, _ctx(db, org, regular_user, approved=True)), "http_403")
-    reason = denied(
-        await call(registry, "invite_members", {"emails": ["c@x.com"], "usergroup_uuid": "usergroup_a"}, _ctx(db, org, admin_user, approved=True)),
-        "http_400",
+    # A group goes on the invitation itself: no invite link needed.
+    out = ok(await call(
+        registry, "invite_members", {"emails": ["c@x.com"], "usergroup_uuid": "usergroup_a", "role_uuid": "role_user"},
+        _ctx(db, org, admin_user, approved=True),
+    ))
+    assert out["results"] == [{"email": "c@x.com", "result": "invited"}]
+    from src.db.org_invitations import OrgInvitation
+    from src.db.usergroups import UserGroup
+
+    group = (await db.execute(select(UserGroup).where(UserGroup.usergroup_uuid == "usergroup_a"))).scalars().one()
+    row = (await db.execute(select(OrgInvitation).where(OrgInvitation.email == "c@x.com"))).scalars().one()
+    assert row.usergroup_ids == [group.id] and row.role_id == 4
+    summary = registry.get("invite_members").summarize(
+        user_tools.InviteMembersParams(emails=["c@x.com"], usergroup_uuid="usergroup_a", role_uuid="role_user")
     )
-    assert "create_invite_code" in reason
+    assert "into group usergroup_a" in summary and ", as " in summary
     from fastapi import HTTPException
 
     limit = HTTPException(status_code=429, detail={"code": "RATE_LIMITED", "message": "Invite limit reached."})
@@ -425,8 +436,9 @@ async def test_invite_links(registry, db, org, admin_user, regular_user, setup, 
     assert len(row.usergroup_ids) == 1
 
     listing = ok(await call(registry, "list_invite_codes", {}, _ctx(db, org, admin_user)))
-    assert listing["total"] == 1 and listing["remaining"] == 5
+    assert listing["total"] == 1 and listing["remaining"] == 5 and listing["active"] == 1
     item = listing["items"][0]
+    assert item["status"] == "active"
     assert item["code_uuid"] == out["code_uuid"] and item["usergroup"]["uuid"] == "usergroup_a"
     secret = out["join_link"].rsplit("=", 1)[1]
     assert secret not in json.dumps(listing)
@@ -439,6 +451,17 @@ async def test_invite_links(registry, db, org, admin_user, regular_user, setup, 
     assert row.revoked_at is not None
     gone = ok(await call(registry, "list_invite_codes", {}, _ctx(db, org, admin_user)))
     assert gone["total"] == 0
+
+    # An expired link is listed with its status and doesn't take a slot.
+    out = ok(await call(registry, "create_invite_code", {}, _ctx(db, org, admin_user, approved=True)))
+    row = (await db.execute(select(OrgInviteCode).where(OrgInviteCode.code_uuid == out["code_uuid"]))).scalars().one()
+    from datetime import timedelta
+
+    row.expires_at = utcnow() - timedelta(days=1)
+    db.add(row)
+    await db.commit()
+    stale = ok(await call(registry, "list_invite_codes", {}, _ctx(db, org, admin_user)))
+    assert stale["items"][0]["status"] == "expired" and stale["active"] == 0 and stale["remaining"] == 6
 
 
 async def test_invite_link_cap_is_explained(registry, db, org, admin_user, setup):

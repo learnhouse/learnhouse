@@ -80,6 +80,22 @@ def inbox_proven(user) -> bool:
     return bool(getattr(user, "email_verified", False)) and getattr(user, "email_verified_at", None) != _INBOX_UNPROVEN
 
 
+async def _unverified_marker(db_session: AsyncSession, user_object: UserCreate) -> str | None:
+    """``email_verified_at`` for a new unverified (SaaS) account. When the
+    address has an invitation waiting, whoever signs up with it may not own
+    the inbox, yet verifying would hand the invitation (its role) to this
+    account: the password is marked as set before the proof, so verifying
+    drops it and the owner sets their own (``claim_account_on_inbox_proof``).
+    Other signups keep their password as before."""
+    if not user_object.password:
+        return None
+    from src.services.onboarding.invites import _db_pending, _pending_records
+
+    if await _db_pending(db_session, user_object.email) or _pending_records(user_object.email):
+        return _INBOX_UNPROVEN
+    return None
+
+
 def clear_inbox_unproven(user) -> None:
     """Record that something (Google, an emailed link or reset code) proved the inbox."""
     if inbox_unproven(user):
@@ -202,6 +218,11 @@ async def _get_welcome_cta_url(
         return None
 
 
+# How a signup joined the org, for analytics: an invite code ("invite") or a
+# personal invitation link ("invite_link").
+_JOIN_METHODS = {"invite": "invite_code", "invite_link": "invite_link"}
+
+
 async def create_user(
     request: Request,
     db_session: AsyncSession,
@@ -261,7 +282,7 @@ async def create_user(
         user.signup_method = signup_provider if is_oauth else "email"
     else:
         user.email_verified = False
-        user.email_verified_at = None
+        user.email_verified_at = await _unverified_marker(db_session, user_object)
         user.signup_method = "email"
 
     user.creation_date = str(datetime.now())
@@ -343,13 +364,12 @@ async def create_user(
 
     user_read = UserRead.model_validate(user)
 
-    if not keep_invitations:
-        # Joined without its invitation: an old link can't change the role later.
-        from src.services.orgs.invitations.apply import close_pending_invitations
+    if not keep_invitations and inbox_proven(user):
+        # The inbox is proven (an emailed link): the invitations waiting for
+        # the address apply now, this org's on the membership just made.
+        from src.services.onboarding.invites import apply_all_pending_invites
 
-        await close_pending_invitations(
-            request, db_session, org_id, user_read.email, actor=user_read, owner_proven=inbox_proven(user)
-        )
+        await apply_all_pending_invites(request, db_session, user, via="signup", joined_org_id=org_id)
 
     await increase_feature_usage("members", org_id, db_session)
 
@@ -370,7 +390,7 @@ async def create_user(
         event_name=analytics_events.USER_JOINED_ORG,
         org_id=org_id,
         user_id=user.id if user.id else 0,
-        properties={"join_method": "invite_code" if signup_provider == "invite" else "signup"},
+        properties={"join_method": _JOIN_METHODS.get(signup_provider, "signup")},
     )
     await dispatch_webhooks(
         event_name=analytics_events.USER_SIGNED_UP,
@@ -505,7 +525,12 @@ async def create_user_without_org(
     is_oauth: bool = False,
     signup_provider: str = "email",
     next_path: str | None = None,
+    invited_org_id: int | None = None,
 ):
+    # ``invited_org_id``: signing up to join this org through an invitation
+    # that applies once the email is verified. Its signup fields are kept.
+    # The verification email is the platform's (the org's host is only for
+    # members); ``next_path`` brings the person back to the invitation.
     # Validate password complexity (skip for OAuth users who have empty passwords)
     if user_object.password and not is_oauth:
         validation_result = validate_password_complexity(user_object.password)
@@ -546,7 +571,7 @@ async def create_user_without_org(
         user.signup_method = signup_provider if is_oauth else "email"
     else:
         user.email_verified = False
-        user.email_verified_at = None
+        user.email_verified_at = await _unverified_marker(db_session, user_object)
         user.signup_method = "email"
 
     user.creation_date = str(datetime.now())
@@ -557,8 +582,13 @@ async def create_user_without_org(
 
     # SECURITY: this endpoint is public and has no org, so there are no declared
     # signup fields to validate against, so nothing may be stored. Dropping the
-    # submitted blob stops an anonymous caller writing arbitrary JSON.
-    user.extra_metadata = None
+    # submitted blob stops an anonymous caller writing arbitrary JSON. Joining
+    # an org through an invitation: only that org's declared fields are kept.
+    user.extra_metadata = (
+        await _resolve_signup_custom_fields(user_object, invited_org_id, db_session)
+        if invited_org_id is not None
+        else None
+    )
 
     # Verifications
 
@@ -601,9 +631,20 @@ async def create_user_without_org(
             email=user_read.email,
             cta_url=await _get_welcome_cta_url(request, db_session, org_id=None),
         )
+        if invited_org_id is not None and inbox_unproven(user):
+            # Marked verified without a round trip, but the invitation waits
+            # for a proven inbox: send the proof request. Never fails the signup.
+            from src.services.users.email_verification import send_verification_email
+
+            try:
+                await send_verification_email(request, db_session, user, invited_org_id, next_path=next_path)
+            except Exception:
+                logging.getLogger(__name__).warning(
+                    "Could not send the verification email for user %s", user.id, exc_info=True
+                )
     else:
         from src.services.users.email_verification import send_verification_email
-        await send_verification_email(request, db_session, user, org_id=None, next_path=next_path)
+        await send_verification_email(request, db_session, user, org_id=invited_org_id, next_path=next_path)
 
     return user_read
 

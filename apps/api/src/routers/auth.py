@@ -1,4 +1,5 @@
 import contextlib
+import json
 import logging
 from datetime import timedelta, datetime, timezone
 from typing import Literal, Optional
@@ -856,6 +857,39 @@ async def _apply_oauth_invites(
         logging.getLogger(__name__).warning("Could not apply the invitation after Google sign-in", exc_info=True)
 
 
+def _verified_google_email(google_user: dict) -> str:
+    """The address Google vouches for, lower-cased, or 401."""
+    email = google_user.get("email")
+    if not email or not google_user.get("email_verified"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google did not return a verified email for this account",
+        )
+    return email.strip().lower()
+
+
+async def _second_factor_pending(db_session: AsyncSession, email: Optional[str]) -> bool:
+    """The account for this address (the oldest when several differ only in
+    case) has a confirmed second factor, so its sign-in waits on a code."""
+    from src.services.auth.mfa import is_mfa_active
+
+    user_id = (await db_session.execute(
+        select(User.id).where(func.lower(User.email) == (email or "").lower()).order_by(User.id).limit(1)  # type: ignore[arg-type]
+    )).scalar()
+    return user_id is not None and await is_mfa_active(db_session, user_id)
+
+
+def _legacy_invite_pending(raw) -> bool:
+    """A Redis invitation record that is still pending (no flag = pending)."""
+    if not raw:
+        return False
+    try:
+        record = json.loads(raw)
+    except (TypeError, ValueError):
+        return False
+    return isinstance(record, dict) and bool(record.get("pending", True))
+
+
 class ThirdPartyLogin(BaseModel):
     email: EmailStr
     provider: Literal["google"]
@@ -880,7 +914,13 @@ class ThirdPartyLogin(BaseModel):
         },
         400: {"description": "Unknown org_id or unsupported provider"},
         401: {"description": "Third-party authentication failed"},
-        403: {"description": "Organization is invite-only and no valid invite was provided"},
+        403: {
+            "description": (
+                "Organization is invite-only and no valid invite was provided "
+                "(detail code INVITE_REQUIRED), or `invite_token` belongs to another "
+                "address (detail code INVITE_EMAIL_MISMATCH, with invited_email_hint)"
+            )
+        },
         503: {"description": "Invitation could not be verified; retry"},
     },
 )
@@ -890,6 +930,8 @@ async def third_party_login(
     body: ThirdPartyLogin,
     org_id: Optional[int] = None,
     invite_code: Optional[str] = None,
+    # The personal invitation link token (``/signup?invite=<token>``).
+    invite_token: Optional[str] = None,
     current_user: AnonymousUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
@@ -910,6 +952,31 @@ async def third_party_login(
     _code_claimed = False
     # Filled by signWithGoogle: whether this sign-in made the account a member.
     _google_outcome: dict = {}
+    # The verified Google profile, fetched once when an invite needs it.
+    _google_user: Optional[dict] = None
+
+    # A personal invitation link the person followed: when it is still usable
+    # and Google vouches for the invited address, it lets them in (open or
+    # invite-only org) and is accepted after sign-in. Signed in as another
+    # address, the sign-in is refused with a hint of the invited one, so the
+    # invitation can't be spent on the wrong account. An unusable token is
+    # ignored (an accepted invitee who is now a member simply signs in).
+    _token_invite: Optional[dict] = None
+    if invite_token:
+        from src.services.onboarding.invite_links import email_mismatch_detail, resolve_invite_token
+
+        _token_invite = await resolve_invite_token(db_session, invite_token)
+        if _token_invite is not None and org_id is not None and _token_invite["org"].id != org_id:
+            _token_invite = None
+        if _token_invite is not None:
+            org_id = _token_invite["org"].id
+            _google_user = await get_google_user_info(body.access_token)
+            _google_verified_email = _verified_google_email(_google_user)
+            if _google_verified_email != _token_invite["email"]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=email_mismatch_detail(_token_invite["email"]),
+                )
 
     # Validate org_id before passing it downstream. The rule must mirror the
     # email/password signup endpoints, otherwise the same person gets a
@@ -960,19 +1027,15 @@ async def third_party_login(
             # joined to an org they were never invited to. The invite must be
             # checked against the same email that will own the account.
             if body.provider == "google":
-                _google_user = await get_google_user_info(body.access_token)
-                _verified_email = _google_user.get("email")
-                if not _verified_email or not _google_user.get("email_verified"):
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Google did not return a verified email for this account",
-                    )
-                _invite_email = _verified_email.strip().lower()
+                if _google_user is None:
+                    _google_user = await get_google_user_info(body.access_token)
+                _invite_email = _verified_google_email(_google_user)
                 _google_verified_email = _invite_email
-            else:
+            else:  # pragma: no cover - the request model only accepts "google"
                 _invite_email = body.email.strip().lower()
 
-            _authorized = False
+            # The invitation link was checked against this address above.
+            _authorized = _token_invite is not None
 
             # 0. Already a member: this is a plain sign-in, not a join. The org
             #    context cookie is set on the login page too, so requiring an
@@ -1019,7 +1082,9 @@ async def third_party_login(
                     if _redis_url:
                         _r = _redis.Redis.from_url(_redis_url)
                         _invite_key = f"invited_user:{_invite_email}:org:{org_record.org_uuid}"
-                        if _r.get(_invite_key):
+                        # Only a pending record: one already answered (or
+                        # unreadable) lets nobody in.
+                        if _legacy_invite_pending(_r.get(_invite_key)):
                             _authorized = True
                             _consume_invite_key = _invite_key
                 except Exception as e:
@@ -1048,13 +1113,13 @@ async def third_party_login(
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You need an invite to join this organization",
+                    detail={"code": "INVITE_REQUIRED", "message": "You need an invite to join this organization"},
                 )
 
             # Joining through a capped code: count the use before the
             # membership exists (it rides the sign-in's first commit), unless
             # an invitation is what lets this person in.
-            if _invite_code_data and not _was_member:
+            if _invite_code_data and not _was_member and _token_invite is None:
                 from src.services.orgs.invitations.apply import claim_code_for_join, find_pending_invitation
 
                 if await find_pending_invitation(db_session, _invite_email, org_id) is None:
@@ -1072,11 +1137,18 @@ async def third_party_login(
 
     user = None
 
+    # Signing in from an invitation link with a second factor still to
+    # complete: nothing joins yet. Once fully signed in, the person accepts the
+    # invitation from the link (invite_accepted: false).
+    _join_org_id = org_id
+    if _token_invite is not None and await _second_factor_pending(db_session, _google_verified_email):
+        _join_org_id = None
+
     # Google
     if body.provider == "google":
 
         user = await signWithGoogle(
-            request, body.access_token, body.email, org_id, current_user, db_session,
+            request, body.access_token, body.email, _join_org_id, current_user, db_session,
             outcome=_google_outcome,
         )
     else:
@@ -1096,7 +1168,25 @@ async def third_party_login(
     # invitation addressed to this (Google-verified) address, or the invite
     # code's role, groups and courses for someone who just joined, and stop
     # showing a Redis invite as pending.
-    if org_id is not None and user.id is not None:
+    _token_accepted = False
+    _issue = None
+    if _token_invite is not None and user.id is not None:
+        # The session (or second-factor challenge) first: with a second
+        # factor to complete, the invitation waits. Once signed in, the
+        # person accepts it from the link (invite_accepted: false).
+        session_org_id, on_custom_domain = await _bind_session_to_custom_domain(
+            request, db_session, user.id, org_id, AUTH_METHOD_GOOGLE
+        )
+        _issue = await issue_session_or_challenge(
+            db_session, user, amr=AUTH_METHOD_GOOGLE, org_id=session_org_id, custom_domain=on_custom_domain,
+        )
+        if not _issue.mfa_required:
+            from src.services.onboarding.invite_links import accept_after_google
+
+            _token_accepted = await accept_after_google(
+                request, db_session, user.id, _token_invite, joined_now=bool(_google_outcome.get("joined")),
+            )
+    if org_id is not None and user.id is not None and not _token_accepted and not (_issue and _issue.mfa_required):
         # signWithGoogle matched or created the account by the address Google
         # verified, so that address is proven.
         await _apply_oauth_invites(
@@ -1140,21 +1230,26 @@ async def third_party_login(
     # entirely, and the org-wide require_2fa policy did not catch it either,
     # because the factor exists and so the user counts as compliant. The
     # provenance (amr/sorg) is stamped either way for the org auth-method policy.
-    session_org_id, on_custom_domain = await _bind_session_to_custom_domain(
-        request, db_session, user.id, org_id, AUTH_METHOD_GOOGLE
-    )
-    issue = await issue_session_or_challenge(
-        db_session,
-        user,
-        amr=AUTH_METHOD_GOOGLE,
-        org_id=session_org_id,
-        custom_domain=on_custom_domain,
-    )
+    issue = _issue
+    if issue is None:
+        session_org_id, on_custom_domain = await _bind_session_to_custom_domain(
+            request, db_session, user.id, org_id, AUTH_METHOD_GOOGLE
+        )
+        issue = await issue_session_or_challenge(
+            db_session,
+            user,
+            amr=AUTH_METHOD_GOOGLE,
+            org_id=session_org_id,
+            custom_domain=on_custom_domain,
+        )
     if issue.mfa_required:
-        return {
+        out = {
             "mfa_required": True,
             "mfa_token": issue.mfa_token,
         }
+        if invite_token:
+            out["invite_accepted"] = _token_accepted
+        return out
 
     set_auth_cookies(response, issue.access_token, issue.refresh_token, request)
 
@@ -1168,12 +1263,19 @@ async def third_party_login(
             "expiry": get_token_expiry_ms(),
         },
     }
+    if invite_token:
+        # Whether the link's invitation was accepted (false: the token was
+        # unusable and ignored, or accepting it failed).
+        result["invite_accepted"] = _token_accepted
     return result
 
 
 class MagicLinkLoginRequest(BaseModel):
     email: EmailStr
     org_slug: Optional[str] = None
+    # Page to land on after signing in (relative path; validated server-side
+    # and carried in the link, returned by /magic-link/verify as ``next``).
+    next: Optional[str] = Field(default=None, max_length=512)
 
 
 MAGIC_LINK_MAX_PER_EMAIL = 5
@@ -1249,16 +1351,22 @@ async def magic_link_request(
     # The org's host and branding are only for its members; anyone else gets
     # the platform link, so an org cannot mail sign-in links for accounts it
     # has nothing to do with from (or to) a host it controls.
+    invitee_branding: dict = {}
     if org is not None:
         from src.security.org_auth import get_user_org
 
         if await get_user_org(user.id, org.id, db_session) is None:
+            # Someone the org invited still reads it in the org's language,
+            # under its name; the link stays the platform's.
+            from src.services.users.email_verification import invitee_email_branding
+
+            invitee_branding = await invitee_email_branding(request, db_session, user.email, org)
             org = None
 
     try:
-        token = issue_magic_login_token(user.email, org.id if org else None)
+        token = issue_magic_login_token(user.email, org.id if org else None, body.next)
         base_url = await get_member_link_base_url(request, db_session, user.id)
-        branding_kwargs: dict = {}
+        branding_kwargs: dict = dict(invitee_branding)
         if org is not None:
             # Org-scoped request: the link lands on the org's own host (its
             # verified custom domain when it has one) and the mail is branded
@@ -1282,6 +1390,7 @@ async def magic_link_request(
             user.email,
             base_url,
             token,
+            next_path=body.next,
             **branding_kwargs,
         )
     except Exception:
@@ -1364,6 +1473,12 @@ async def magic_link_verify(
         return await _verify_admin_magic_link(request, response, body.token, db_session)
 
     email, org_id = await consume_magic_login_token(body.token, db_session)
+    # Where the link was asked from (an invitation page): validated when the
+    # link was made and again here.
+    from src.services.users.email_verification import safe_next_path
+
+    next_path = safe_next_path(peek.get("next"))
+    landing = {"next": next_path, "redirect_to": next_path} if next_path else {}
 
     # A link issued before the org turned magic login off must not still work.
     await enforce_login_auth_method(db_session, org_id, AUTH_METHOD_MAGIC_LOGIN)
@@ -1399,10 +1514,11 @@ async def magic_link_verify(
     )
     await _record_login_quietly(user, request, db_session)
     if issue.mfa_required:
-        return {"mfa_required": True, "mfa_token": issue.mfa_token}
+        return {"mfa_required": True, "mfa_token": issue.mfa_token, **landing}
 
     set_auth_cookies(response, issue.access_token, issue.refresh_token, request)
     return {
+        **landing,
         "user": user_read,
         "tokens": {
             "access_token": issue.access_token,
@@ -1558,7 +1674,8 @@ async def api_verify_email(
     from src.services.users.email_verification import INBOX_CLAIMED
 
     if message == INBOX_CLAIMED:
-        landing = {**landing, "set_password": True}
+        # The page pre-fills the "set a password" (reset) form with it.
+        landing = {**landing, "set_password": True, "email": user.email}
 
     # Auto sign-in: issue a session exactly like /login (sub = email), and go
     # through the same second-factor gate. A brand-new user cannot have MFA yet,

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { verifyEmail } from '@services/auth/auth'
 import { defaultPostAuthPath } from '@services/auth/redirects'
-import { isSafeNextPath, takePostAuthNext } from '@/lib/auth/signup'
+import { isSafeNextPath, setLoginHint, takePostAuthNext } from '@/lib/auth/signup'
 import { withNextParam } from '@/lib/auth/nextParam'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
@@ -32,6 +32,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
     // Where they were headed when they signed up (kept with the token, or on
     // this host as a fallback); the school's home otherwise.
     const [landing, setLanding] = useState<string | null>(null)
+    const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null)
     const destination = landing || homePath
 
     // The verification token is single-use: the backend consumes (deletes) it the
@@ -60,6 +61,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                 const stored = takePostAuthNext()
                 const next = isSafeNextPath(res.next) ? res.next : stored
                 if (next) setLanding(next)
+                if (res.email) setVerifiedEmail(res.email)
                 if (res.success) {
                     track(AnalyticsEvent.EmailVerificationCompleted, { result: 'success' })
                     // Verification auto-signs the user in (session cookies were set
@@ -136,7 +138,12 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                         title={t('auth.email_verified_success')}
                         description={t('auth.email_verified_set_password')}
                     >
-                        <Link href="/forgot" className={authButtonClass('primary')}>
+                        {/* The reset keeps the address and where they were headed. */}
+                        <Link
+                            href={withNextParam('/forgot', landing)}
+                            onClick={() => verifiedEmail && setLoginHint(verifiedEmail)}
+                            className={authButtonClass('primary')}
+                        >
                             {t('auth.set_new_password')}
                         </Link>
                         <Link href={destination} className={authButtonClass('secondary', 'mt-2')}>

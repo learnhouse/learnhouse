@@ -5,6 +5,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from sqlmodel import select
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
@@ -494,15 +495,11 @@ class TestRolesService:
             role_type=RoleTypeEnum.TYPE_GLOBAL,
             role_uuid="role_immutable",
         )
-        db.add(
-            UserOrganization(
-                user_id=regular_user.id,
-                org_id=org.id,
-                role_id=org_role.id,
-                creation_date=str(datetime.now()),
-                update_date=str(datetime.now()),
-            )
-        )
+        membership = (await db.execute(
+            select(UserOrganization).where(UserOrganization.user_id == regular_user.id, UserOrganization.org_id == org.id)
+        )).scalars().first()
+        membership.role_id = org_role.id
+        db.add(membership)
         await db.commit()
 
         with patch("src.services.roles.roles.require_org_role_permission"), patch(
@@ -860,15 +857,11 @@ class TestRolesService:
             role_type=RoleTypeEnum.TYPE_GLOBAL,
             role_uuid="role_delete_guard",
         )
-        db.add(
-            UserOrganization(
-                user_id=regular_user.id,
-                org_id=org.id,
-                role_id=org_role.id,
-                creation_date=str(datetime.now()),
-                update_date=str(datetime.now()),
-            )
-        )
+        membership = (await db.execute(
+            select(UserOrganization).where(UserOrganization.user_id == regular_user.id, UserOrganization.org_id == org.id)
+        )).scalars().first()
+        membership.role_id = org_role.id
+        db.add(membership)
         await db.commit()
 
         with patch("src.services.roles.roles.require_org_role_permission"), patch(

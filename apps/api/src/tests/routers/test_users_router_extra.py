@@ -331,12 +331,14 @@ class TestAuthorizationAndCreationEndpoints:
         assert response.json()["username"] == "invited"
         create_mock.assert_awaited_once()
 
-    async def test_create_user_with_invite_rejects_open_org(self, client):
+    async def test_create_user_with_invite_applies_the_code_on_an_open_org(self, client):
+        # An open org needs no code, but one followed from a code link still
+        # applies (and counts) it.
         with patch(
-            "src.routers.users.get_org_join_mechanism",
+            "src.routers.users.create_user_with_invite",
             new_callable=AsyncMock,
-            return_value="open",
-        ):
+            return_value=_mock_user_read(username="invited"),
+        ) as create_mock:
             response = await client.post(
                 "/api/v1/users/1/invite/code123",
                 json={
@@ -348,8 +350,8 @@ class TestAuthorizationAndCreationEndpoints:
                 },
             )
 
-        assert response.status_code == 403
-        assert "invite code" in response.json()["detail"].lower()
+        assert response.status_code == 200
+        create_mock.assert_awaited_once()
 
 
 class TestMutationEndpoints:

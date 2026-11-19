@@ -17,7 +17,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
 from sqlmodel import Field, SQLModel
 
 
@@ -35,6 +35,12 @@ class OrgInvitation(SQLModel, table=True):
         Index("ix_org_invitation_org_status", "org_id", "status"),
         Index("ix_org_invitation_email_status", "email", "status"),
         UniqueConstraint("token_hash", name="uq_org_invitation_token_hash"),
+        UniqueConstraint("copy_token_hash", name="uq_org_invitation_copy_token_hash"),
+        # At most one pending invitation per address and org.
+        Index(
+            "uq_org_invitation_pending_email", "org_id", "email", unique=True,
+            postgresql_where=text("status = 'pending'"), sqlite_where=text("status = 'pending'"),
+        ),
         {"extend_existing": True},
     )
 
@@ -63,6 +69,10 @@ class OrgInvitation(SQLModel, table=True):
     # address, so following it proves the inbox) or "copied" (handed to the
     # admin to share by hand, which proves nothing about the inbox).
     token_delivery: Optional[str] = Field(default=None, sa_column=Column(String(16), nullable=True))
+    # SHA-256 hex of the link an admin copied to share by hand. Kept apart
+    # from ``token_hash`` so copying a link never breaks the emailed one; a
+    # copied link proves nothing about the inbox. Rotated on each copy.
+    copy_token_hash: Optional[str] = Field(default=None, sa_column=Column(String(64), nullable=True))
     expires_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
     accepted_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     accepted_user_id: Optional[int] = Field(

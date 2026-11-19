@@ -19,17 +19,21 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# (max requests, window seconds) per client IP.
-LIMITS = {"peek": (60, 600), "signup": (10, 3600), "accept": (30, 3600)}
+# (max requests, window seconds) per client IP, except "signup_token": per
+# invitation link. An invitation signup is held to its own link rather than
+# the shared signup limit, so a classroom behind one address (a school NAT)
+# can all sign up; the per-address cap stays well above a class.
+LIMITS = {"peek": (60, 600), "signup": (60, 3600), "signup_token": (10, 3600), "accept": (30, 3600)}
 
 
-def _limit(request: Request, kind: str) -> None:
-    """Fails open when Redis is unreachable; the token is the real guard."""
+def _limit(request: Request, kind: str, key: str | None = None) -> None:
+    """Fails open when Redis is unreachable; the token is the real guard.
+    ``key`` replaces the client IP (a hash of the link token)."""
     from src.services.security.rate_limiting import check_rate_limit, get_client_ip
 
     max_attempts, window = LIMITS[kind]
     try:
-        allowed, _count, retry_after = check_rate_limit(f"invite_link:{kind}:{get_client_ip(request)}", max_attempts, window)
+        allowed, _count, retry_after = check_rate_limit(f"invite_link:{kind}:{key or get_client_ip(request)}", max_attempts, window)
     except Exception:
         logger.warning("Invite link rate limit unavailable (%s)", kind, exc_info=True)
         return
@@ -71,10 +75,8 @@ async def api_signup_with_invite_link(
     body: invite_links.InviteSignupBody,
     db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
-    from src.routers.users import _enforce_signup_rate_limit
-
     _limit(request, "signup")
-    _enforce_signup_rate_limit(request)
+    _limit(request, "signup_token", invite_links._hash(body.token))
     return await invite_links.signup_with_invite_link(request, db_session, body)
 
 

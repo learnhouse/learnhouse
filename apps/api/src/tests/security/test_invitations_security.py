@@ -203,9 +203,16 @@ async def test_link_signup_applies_everything(world, mock_request, db):
     await db.refresh(inv)
     assert inv.status == "accepted" and inv.accepted_user_id == user.id
 
-    # Single use.
+    # Single use: peek now says it was accepted (so a signed-in member is
+    # sent on to the org), and signing up again is refused.
     again = await _post(_app(db), f"{LINKS}/peek", {"token": token})
-    assert again.status_code == 404
+    assert again.status_code == 200 and again.json() == {
+        "status": "accepted", "email": "new@test.com", "org": again.json()["org"],
+    }
+    assert again.json()["org"]["id"] == world.org.id and "invitation" not in again.json()
+    with signup_side_effects(), join_side_effects():
+        reuse = await _post(_app(db), f"{LINKS}/signup", {"token": token, "password": "blue river 42"})
+    assert reuse.status_code == 404
 
 
 async def test_link_signup_refuses_an_existing_account(world, mock_request, db):

@@ -281,7 +281,8 @@ class LinkFallback(Block):
     """The "button not working?" line with the raw URL, small and grey."""
 
     url: str
-    label: Content = "Or paste this link into your browser:"
+    # Templates pass the translated "common.copy_paste"; this is its English.
+    label: Content = "Button not working? Paste this link into your browser:"
 
     def html(self, ctx: Ctx) -> str:
         return _p(

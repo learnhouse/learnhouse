@@ -79,10 +79,12 @@ export async function loginWithOAuthToken(
 // Password reset is PLATFORM-level (org-less): the backend finds the user by
 // email, so no org_id is needed, matching how the platform worked and working
 // for org-less accounts created on the apex.
-export async function sendResetLink(email: string) {
+// `next` (an internal path) travels with the reset so the sign-in after it
+// lands there, e.g. back on an invitation.
+export async function sendResetLink(email: string, next?: string | null) {
   const result = await fetch(
     `${getAPIUrl()}users/reset_password/platform/send_reset_code`,
-    RequestBody('POST', { email }, null)
+    RequestBody('POST', { email, ...(next ? { next } : {}) }, null)
   )
   const res = await getResponseMetadata(result)
   return res
@@ -230,7 +232,7 @@ export async function verifyEmail(
   token: string,
   userUuid: string,
   orgUuid: string
-): Promise<{ success: boolean; error?: string; next?: string | null; setPassword?: boolean }> {
+): Promise<{ success: boolean; error?: string; next?: string | null; setPassword?: boolean; email?: string | null }> {
   try {
     const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
 
@@ -253,7 +255,13 @@ export async function verifyEmail(
     if (response.ok) {
       // Where they were headed when they signed up, kept with the token.
       // `set_password`: a password set before the inbox was proven was dropped.
-      return { success: true, next: typeof data?.next === 'string' ? data.next : null, setPassword: data?.set_password === true }
+      return {
+        success: true,
+        next: typeof data?.next === 'string' ? data.next : null,
+        setPassword: data?.set_password === true,
+        // The verified address, when the response carries the signed-in user.
+        email: typeof data?.user?.email === 'string' ? data.user.email : typeof data?.email === 'string' ? data.email : null,
+      }
     } else {
       return {
         success: false,

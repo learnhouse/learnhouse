@@ -196,13 +196,23 @@ async def _profiles(db: AsyncSession, org_id: int):
     return (await db.execute(select(OrgMemberProfile).where(OrgMemberProfile.org_id == org_id))).scalars().all()
 
 
-async def condition_set(db: AsyncSession, org_id: int, c: dict, members: set[int], *, self_group_id: Optional[int] = None) -> set[int]:
+async def condition_set(db: AsyncSession, org_id: int, c: dict, members: set[int], *, self_group_id: Optional[int] = None,
+                        proven_only: bool = False) -> set[int]:
+    """Members matching one condition. ``proven_only``: an email domain only
+    counts for an address its owner has proven (anyone can sign up as
+    someone@school.edu on a self-hosted install); sync adds people with it."""
     kind = c["type"]
     today = utcnow().date()
     if kind == "email_domain":
         domains = set(c["values"])
-        rows = (await db.execute(select(User.id, User.email).where(User.id.in_(list(members))))).all() if members else []  # type: ignore[union-attr]
-        return {uid for uid, email in rows if email and email.rsplit("@", 1)[-1].lower() in domains}
+        rows = (await db.execute(
+            select(User.id, User.email, User.email_verified, User.email_verified_at).where(User.id.in_(list(members)))  # type: ignore[union-attr]
+        )).all() if members else []
+        return {
+            uid for uid, email, verified, verified_at in rows
+            if email and email.rsplit("@", 1)[-1].lower() in domains
+            and (not proven_only or (verified and verified_at != ""))
+        }
     if kind == "role":
         return set((await db.execute(select(UserOrganization.user_id).where(
             UserOrganization.org_id == org_id, UserOrganization.role_id.in_(c["role_ids"])  # type: ignore[attr-defined]
@@ -306,8 +316,12 @@ async def condition_set(db: AsyncSession, org_id: int, c: dict, members: set[int
     return set()  # pragma: no cover - validate_rules refuses unknown types
 
 
+def uses_email_domain(rules: Any) -> bool:
+    return any(c.get("type") == "email_domain" for c in validate_rules(rules)["conditions"])
+
+
 async def evaluate(db: AsyncSession, org_id: int, rules: Any, *, self_group_id: Optional[int] = None,
-                   members: Optional[set[int]] = None) -> set[int]:
+                   members: Optional[set[int]] = None, proven_only: bool = False) -> set[int]:
     """Org members matching a rule set. An empty rule set matches nobody (a
     smart group with no rules is empty, never "everyone")."""
     rules = validate_rules(rules)
@@ -316,7 +330,11 @@ async def evaluate(db: AsyncSession, org_id: int, rules: Any, *, self_group_id: 
     members = members if members is not None else await org_member_ids(db, org_id)
     sets = []
     for c in rules["conditions"]:
-        hit = await condition_set(db, org_id, c, members, self_group_id=self_group_id) & members
+        # A negated domain ("not @school.edu") treats an unproven address as
+        # being that domain, so negating can't make it addable either.
+        hit = await condition_set(
+            db, org_id, c, members, self_group_id=self_group_id, proven_only=proven_only and not c.get("negate"),
+        ) & members
         sets.append(members - hit if c.get("negate") else hit)
     return set.intersection(*sets) if rules["match"] == "all" else set.union(*sets)
 

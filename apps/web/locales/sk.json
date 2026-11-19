@@ -672,7 +672,11 @@
       "google_not_configured": "Google OAuth nie je nakonfigurovaný",
       "profile_field_invalid": "Odkazy a e-mailové adresy nie sú povolené v poliach: {{fields}}",
       "field_no_links": "Bez odkazov a e-mailových adries",
-      "rate_limited": "Príliš veľa pokusov. Chvíľu počkajte a skúste to znova."
+      "rate_limited": "Príliš veľa pokusov. Chvíľu počkajte a skúste to znova.",
+      "invite_required": "Na pripojenie k tejto organizácii potrebujete pozvánku.",
+      "invite_email_mismatch": "Táto pozvánka bola odoslaná na inú e-mailovú adresu. Prihláste sa touto adresou, aby ste ju prijali.",
+      "invite_email_mismatch_hint": "Táto pozvánka bola odoslaná na {{email}}. Prihláste sa týmto účtom Google, aby ste ju prijali.",
+      "invite_verify_email": "Najprv overte svoju e-mailovú adresu a potom túto pozvánku otvorte znova."
     },
     "sso_errors": {
       "access_denied": "Prístup bol zamietnutý. Možno ste odmietli žiadosť o prihlásenie alebo nemáte oprávnenie na prístup k tejto aplikácii.",
@@ -728,7 +732,9 @@
       "try_again": "Skúsiť znova",
       "success": "Hotovo!",
       "redirecting": "Presmerovávame vás...",
-      "google_failed": "Overenie cez Google zlyhalo: {{error}}"
+      "google_failed": "Overenie cez Google zlyhalo: {{error}}",
+      "invite_mismatch_title": "Nesprávny účet Google",
+      "use_another_account": "Použiť iný účet Google"
     },
     "magic": {
       "expired": "Platnosť tohto odkazu vypršala alebo bol už použitý. Vyžiadajte si nový, aby ste sa prihlásili.",
@@ -803,14 +809,23 @@
         "verify_note": "Tento odkaz vám niekto poslal priamo, preto si pred pripojením overíte e-mail."
       },
       "verify_title": "Skontrolujte si doručenú poštu",
-      "verify_desc": "Váš účet je pripravený. Na adresu {{email}} sme poslali overovací odkaz. Overte svoj e-mail a potom túto pozvánku otvorte znova alebo ju prijmite na svojej domovskej stránke, aby ste sa pripojili k {{org}}."
+      "verify_desc": "Váš účet je pripravený. Na {{email}} sme poslali overovací odkaz. Keď e-mail overíte, prihláste sa a pripojíte sa k {{org}}.",
+      "accepted_title": "Túto pozvánku ste už prijali",
+      "accepted_desc": "Prihláste sa a prejdite do {{org}}.",
+      "retry_title": "Túto pozvánku sa nepodarilo načítať",
+      "retry_desc": "Skontrolujte pripojenie a skúste to znova. Váš odkaz na pozvánku stále funguje.",
+      "try_again": "Skúsiť znova",
+      "org_full": "Táto organizácia je momentálne plná. Požiadajte jej správcu, aby uvoľnil miesto."
     },
     "login_failed_forgot": "Zabudli ste heslo?",
     "login_failed_reset": "Obnoviť",
     "login_failed_magic": "Poslať mi radšej prihlasovací odkaz",
     "login_failed_google_hint": "Registrovali ste sa cez Google? Použite nižšie Pokračovať cez Google.",
     "email_verified_set_password": "Váš e-mail bol overený. Z bezpečnostných dôvodov bolo predtým nastavené heslo odstránené: zvoľte si nové, aby ste sa mohli prihlasovať heslom.",
-    "set_new_password": "Nastaviť nové heslo"
+    "set_new_password": "Nastaviť nové heslo",
+    "invited_by_email_cta": "Pozvánka prišla e-mailom? Zaregistrujte sa touto adresou",
+    "use_invite_code_instead": "Máte namiesto toho pozývací kód?",
+    "password_reset_done": "Vaše heslo bolo zmenené."
   },
   "validation": {
     "required": "Povinné",
@@ -9974,7 +9989,7 @@
           "error": "Niečo sa pokazilo. Skúste to znova.",
           "resent": "Nová pozvánka odoslaná na {{email}}",
           "email_failed": "E-mail sa nepodarilo odoslať. Skopírujte pozývací odkaz.",
-          "link_copied": "Pozývací odkaz skopírovaný. Kto ho otvorí, pred pripojením si overí e-mail. Odkaz v predchádzajúcom e-maile už nefunguje.",
+          "link_copied": "Pozývací odkaz skopírovaný. Kto ho otvorí, pred pripojením si overí e-mail.",
           "revoked": "Pozvánka zrušená",
           "updated": "Pozvánka aktualizovaná",
           "bulk_resend_one": "{{count}} pozvánka odoslaná znova",
@@ -31002,7 +31017,9 @@
       "verify_resend": "Znova odoslať overovací e-mail",
       "verify_sent": "Odoslané. Skontrolujte schránku.",
       "invited_as": "Pozýva vás s rolou {{role}}",
-      "invited_as_by": "{{name}} vás pozýva s rolou {{role}}"
+      "invited_as_by": "{{name}} vás pozýva s rolou {{role}}",
+      "accept": "Prijať",
+      "new_role": "Nová rola: {{role}}"
     },
     "celebrate": {
       "title": "Váš prvý kurz je zverejnený",

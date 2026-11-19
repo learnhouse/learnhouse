@@ -4,8 +4,9 @@ revoke, and bulk actions.
 Every invitation is addressed to one email and carries the role, user groups
 and courses to apply when the person joins, an optional personal note and an
 expiry. The email holds a personal link (``/signup?invite=<token>``); only the
-token's SHA-256 is stored, and resending or copying the link mints a new one,
-which retires the previous link.
+token's SHA-256 is stored. Resending mints a new emailed link (retiring the
+previous one); copying a link to share by hand mints a separate one, so the
+emailed link keeps working.
 
 People who already belong are skipped (and reported as such) unless the
 admin explicitly asks to update existing members, in which case their role
@@ -132,7 +133,9 @@ async def _lock_org(db_session: AsyncSession, org_id: int) -> None:
     await db_session.execute(select(Organization.id).where(Organization.id == org_id).with_for_update())
 
 
-async def _expire_stale(db_session: AsyncSession, org_id: int) -> None:
+async def _expire_stale(db_session: AsyncSession, org_id: int, *, commit: bool = True) -> None:
+    """Pending invitations past their expiry become expired (``commit``
+    False: staged in the caller's transaction, under its org lock)."""
     now = utcnow()
     await db_session.execute(
         update(OrgInvitation)
@@ -144,7 +147,8 @@ async def _expire_stale(db_session: AsyncSession, org_id: int) -> None:
         .values(status=InvitationStatus.EXPIRED.value, updated_at=now)
         .execution_options(synchronize_session="fetch")
     )
-    await db_session.commit()
+    if commit:
+        await db_session.commit()
 
 
 async def _signup_url(request: Request, db_session: AsyncSession, org: Organization, token: str) -> str:
@@ -179,15 +183,33 @@ async def _send_email(
             org_name=sanitize_display_name(org.name, fallback="A LearnHouse organization"),
             inviter_username=sanitize_display_name(sender.username),
             signup_url=url,
-            role_name=role.name if role else None,
+            role_name=role_label(role, branding.lang),
             message=inv.message,
-            expires_on=human_date(policy.aware(inv.expires_at)),
+            expires_on=human_date(policy.aware(inv.expires_at), branding.lang),
             **branding.as_kwargs(),
         )
         return result is not None
     except Exception:
         logger.exception("Failed to send the invitation email for %s", inv.invitation_uuid)
         return False
+
+
+# Built-in roles by id (always seeded as 1-4, like ADMIN_ROLE_ID and
+# USER_ROLE_ID): their names in emails come from the translations.
+_BUILT_IN_ROLE_KEYS = {1: "role.admin", 2: "role.maintainer", 3: "role.instructor", 4: "role.user"}
+
+
+def role_label(role: Optional[Role], lang: str) -> Optional[str]:
+    """A role as the reader's app names it: a built-in role translated
+    ("Learner" for the stored "User"), a custom role by its own name."""
+    if role is None:
+        return None
+    key = _BUILT_IN_ROLE_KEYS.get(role.id)
+    if key is None:
+        return role.name
+    from src.services.email.translations import t
+
+    return t(lang, key)
 
 
 def _record_send(inv: OrgInvitation, sent: bool) -> None:
@@ -460,12 +482,15 @@ async def create_invitations(request: Request, db_session: AsyncSession, org_id:
     message = policy.clean_message(body.message)
     expires_at = policy.expiry_from_days(body.expires_in_days)
 
+    # Under the org lock: who is pending is read after it, so two sends to the
+    # same address can't both create a pending invitation (one per address).
+    await _lock_org(db_session, org.id)
+    await _expire_stale(db_session, org.id, commit=False)
     members = await _members_by_email(db_session, org.id, valid)
     pending = await _pending_by_email(db_session, org.id, valid)
     new_emails = [e for e in valid if e not in members]
     to_update = [members[e] for e in valid if e in members] if body.update_existing_members else []
 
-    await _lock_org(db_session, org.id)
     new_members, new_seats = await _plan_demand(db_session, role, new_emails, pending, to_update)
     await policy.check_capacity(db_session, org.id, new_members, new_seats)
     if new_emails:
@@ -493,6 +518,9 @@ async def create_invitations(request: Request, db_session: AsyncSession, org_id:
         inv.invited_by_user_id = sender.id
         inv.token_hash = digest
         inv.token_delivery = "email"
+        # Re-invited (maybe with another role): a link copied earlier stops
+        # working, so it can't carry the new settings to whoever holds it.
+        inv.copy_token_hash = None
         inv.expires_at = expires_at
         inv.updated_at = now
         db_session.add(inv)
@@ -670,6 +698,22 @@ def _require_status(inv: OrgInvitation, allowed: tuple[str, ...], message: str) 
         raise HTTPException(status_code=409, detail={"code": "INVITATION_NOT_EDITABLE", "message": message})
 
 
+async def _transition(db_session: AsyncSession, inv: OrgInvitation, from_statuses: tuple[str, ...], message: str, **values) -> None:
+    """Change ``inv`` only while it is still in one of ``from_statuses``, in
+    one conditional UPDATE (staged; the caller commits): an invitation
+    accepted meanwhile is never turned back into a pending, revoked or
+    declined one. 409 when it moved on."""
+    result = await db_session.execute(
+        update(OrgInvitation)
+        .where(OrgInvitation.id == inv.id, OrgInvitation.status.in_(from_statuses))  # type: ignore[attr-defined]
+        .values(**values)
+        .execution_options(synchronize_session="fetch")
+    )
+    if result.rowcount != 1:
+        await db_session.refresh(inv)
+        raise HTTPException(status_code=409, detail={"code": "INVITATION_NOT_EDITABLE", "message": message})
+
+
 async def update_invitation(
     request: Request, db_session: AsyncSession, org_id: int, invitation_uuid: str, body: InvitationUpdate, current_user: Caller
 ) -> dict:
@@ -689,6 +733,8 @@ async def update_invitation(
                 await policy.check_capacity(db_session, org.id, 0, 1)
             changes["role"] = {"from": old_role.name if old_role else None, "to": role.name}
             inv.role_id = role.id
+            # A link copied for the old settings stops working.
+            inv.copy_token_hash = None
     elif old_role is not None:
         # Changing other settings still needs the right to grant the role.
         await policy.assert_can_grant_role(db_session, org, current_user, old_role)
@@ -702,9 +748,11 @@ async def update_invitation(
         if new_groups != list(inv.usergroup_ids or []):
             changes["usergroup_ids"] = {"from": list(inv.usergroup_ids or []), "to": new_groups}
             inv.usergroup_ids = new_groups
+            inv.copy_token_hash = None
         if new_courses != list(inv.course_uuids or []):
             changes["course_uuids"] = {"from": list(inv.course_uuids or []), "to": new_courses}
             inv.course_uuids = new_courses
+            inv.copy_token_hash = None
     if body.message is not None:
         message = policy.clean_message(body.message)
         if message != inv.message:
@@ -739,16 +787,34 @@ async def _rotate_and_send(
     if role is not None:
         await policy.assert_can_grant_role(db_session, org, current_user, role)
     if policy.effective_status(inv) == InvitationStatus.EXPIRED.value:
-        # Back to pending: it counts against the plan again.
+        # Back to pending: it counts against the plan again, and only while
+        # no newer invitation is pending for the address (one per address).
         await _lock_org(db_session, org.id)
+        await _expire_stale(db_session, org.id, commit=False)
+        newer = (await db_session.execute(
+            select(OrgInvitation.id).where(
+                OrgInvitation.org_id == org.id,
+                OrgInvitation.email == inv.email,
+                OrgInvitation.status == InvitationStatus.PENDING.value,
+                OrgInvitation.id != inv.id,
+            )
+        )).first()
+        if newer is not None:
+            raise HTTPException(status_code=409, detail={
+                "code": "INVITATION_SUPERSEDED",
+                "message": "A newer invitation is pending for this address. Send that one again instead.",
+            })
         await policy.check_capacity(db_session, org.id, 1, 1 if policy.occupies_seat(role) else 0)
     token, digest = policy.mint_token()
-    inv.token_hash = digest
-    inv.token_delivery = "email"
-    inv.status = InvitationStatus.PENDING.value
-    inv.expires_at = policy.expiry_from_days(expires_in_days)
-    inv.updated_at = utcnow()
-    db_session.add(inv)
+    await _transition(
+        db_session, inv, (InvitationStatus.PENDING.value, InvitationStatus.EXPIRED.value),
+        "Only pending or expired invitations can be sent again.",
+        token_hash=digest,
+        token_delivery="email",
+        status=InvitationStatus.PENDING.value,
+        expires_at=policy.expiry_from_days(expires_in_days),
+        updated_at=utcnow(),
+    )
     await db_session.commit()
     sent = await _send_email(request, db_session, org, sender, inv, token, role)
     _record_send(inv, sent)
@@ -780,9 +846,10 @@ async def resend_invitation(
 
 async def invitation_link(request: Request, db_session: AsyncSession, org_id: int, invitation_uuid: str, current_user: Caller) -> dict:
     """A fresh personal link to share by hand. The token is only ever stored
-    hashed, so this mints a new one: the link in the earlier email stops
-    working. A copied link doesn't prove the invitee's inbox, so they verify
-    their email before the invitation applies."""
+    hashed, so this mints a new one (replacing the previously copied link),
+    kept apart from the emailed link, which keeps working. A copied link
+    doesn't prove the invitee's inbox, so they verify their email before the
+    invitation applies."""
     org, _sender = await _sending_context(request, db_session, org_id, current_user)
     inv = await _load(db_session, org, invitation_uuid)
     _require_status(inv, (InvitationStatus.PENDING.value,), "Only pending invitations have a link.")
@@ -790,10 +857,9 @@ async def invitation_link(request: Request, db_session: AsyncSession, org_id: in
     if role is not None:
         await policy.assert_can_grant_role(db_session, org, current_user, role)
     token, digest = policy.mint_token()
-    inv.token_hash = digest
     # Handed to the admin, not mailed to the address: following it proves
     # nothing about the inbox, so joining waits for the email to be verified.
-    inv.token_delivery = "copied"
+    inv.copy_token_hash = digest
     inv.updated_at = utcnow()
     db_session.add(inv)
     await db_session.commit()
@@ -810,9 +876,11 @@ async def _revoke(request: Request, db_session: AsyncSession, org: Organization,
     role = await db_session.get(Role, inv.role_id) if inv.role_id else None
     if role is not None:
         await policy.assert_can_grant_role(db_session, org, current_user, role)
-    inv.status = InvitationStatus.REVOKED.value
-    inv.updated_at = utcnow()
-    db_session.add(inv)
+    await _transition(
+        db_session, inv, (InvitationStatus.PENDING.value, InvitationStatus.EXPIRED.value),
+        "Only pending or expired invitations can be revoked.",
+        status=InvitationStatus.REVOKED.value, updated_at=utcnow(),
+    )
     await db_session.commit()
     audit_event(
         request, action="members.invitation.revoked", org_id=org.id, actor=current_user,

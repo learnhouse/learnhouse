@@ -670,7 +670,11 @@
       "google_not_configured": "Google OAuth n'est pas configuré",
       "profile_field_invalid": "Les liens et les adresses e-mail ne sont pas autorisés dans : {{fields}}",
       "field_no_links": "Pas de liens ni d'adresses e-mail",
-      "rate_limited": "Trop de tentatives. Veuillez patienter un instant avant de réessayer."
+      "rate_limited": "Trop de tentatives. Veuillez patienter un instant avant de réessayer.",
+      "invite_required": "Vous avez besoin d'une invitation pour rejoindre cette organisation.",
+      "invite_email_mismatch": "Cette invitation a été envoyée à une autre adresse e-mail. Connectez-vous avec cette adresse pour l'accepter.",
+      "invite_email_mismatch_hint": "Cette invitation a été envoyée à {{email}}. Connectez-vous avec ce compte Google pour l'accepter.",
+      "invite_verify_email": "Vérifiez d'abord votre adresse e-mail, puis rouvrez cette invitation."
     },
     "sso_errors": {
       "access_denied": "L'accès a été refusé. Vous avez peut-être refusé la demande de connexion ou vous n'avez pas l'autorisation d'accéder à cette application.",
@@ -726,7 +730,9 @@
       "try_again": "Réessayer",
       "success": "Succès !",
       "redirecting": "Redirection en cours...",
-      "google_failed": "Échec de l'authentification Google : {{error}}"
+      "google_failed": "Échec de l'authentification Google : {{error}}",
+      "invite_mismatch_title": "Mauvais compte Google",
+      "use_another_account": "Utiliser un autre compte Google"
     },
     "magic": {
       "expired": "Ce lien a expiré ou a déjà été utilisé. Demandez-en un nouveau pour vous connecter.",
@@ -801,14 +807,23 @@
         "verify_note": "Ce lien vous a été partagé directement, vous vérifierez donc votre e-mail avant de rejoindre l'organisation."
       },
       "verify_title": "Consultez votre boîte de réception",
-      "verify_desc": "Votre compte est prêt. Nous avons envoyé un lien de vérification à {{email}}. Vérifiez votre e-mail, puis rouvrez cette invitation ou acceptez-la depuis votre page d'accueil pour rejoindre {{org}}."
+      "verify_desc": "Votre compte est prêt. Nous avons envoyé un lien de vérification à {{email}}. Une fois votre e-mail vérifié, connectez-vous et vous rejoindrez {{org}}.",
+      "accepted_title": "Vous avez déjà accepté cette invitation",
+      "accepted_desc": "Connectez-vous pour accéder à {{org}}.",
+      "retry_title": "Impossible de charger cette invitation",
+      "retry_desc": "Vérifiez votre connexion et réessayez. Votre lien d'invitation fonctionne toujours.",
+      "try_again": "Réessayer",
+      "org_full": "Cette organisation est complète pour le moment. Demandez à son administrateur de libérer de la place."
     },
     "login_failed_forgot": "Mot de passe oublié ?",
     "login_failed_reset": "Le réinitialiser",
     "login_failed_magic": "M'envoyer plutôt un lien de connexion",
     "login_failed_google_hint": "Inscrit avec Google ? Utilisez Continuer avec Google ci-dessous.",
     "email_verified_set_password": "Votre e-mail a été vérifié. Pour votre sécurité, le mot de passe défini auparavant a été supprimé : choisissez-en un nouveau pour vous connecter avec un mot de passe.",
-    "set_new_password": "Définir un nouveau mot de passe"
+    "set_new_password": "Définir un nouveau mot de passe",
+    "invited_by_email_cta": "Invité par e-mail ? Inscrivez-vous avec cette adresse",
+    "use_invite_code_instead": "Vous avez plutôt un code d'invitation ?",
+    "password_reset_done": "Votre mot de passe a été modifié."
   },
   "validation": {
     "required": "Requis",
@@ -9765,7 +9780,7 @@
           "error": "Une erreur est survenue. Veuillez réessayer.",
           "resent": "Nouvelle invitation envoyée à {{email}}",
           "email_failed": "L'e-mail n'a pas pu être envoyé. Copiez plutôt le lien d'invitation.",
-          "link_copied": "Lien d'invitation copié. La personne qui l'ouvre vérifie son e-mail avant de rejoindre l'organisation. Le lien de l'e-mail précédent ne fonctionne plus.",
+          "link_copied": "Lien d'invitation copié. La personne qui l'ouvre vérifie son e-mail avant de rejoindre l'organisation.",
           "revoked": "Invitation révoquée",
           "updated": "Invitation mise à jour",
           "bulk_resend_one": "{{count}} invitation renvoyée",
@@ -30247,7 +30262,9 @@
       "verify_resend": "Renvoyer l’e-mail de vérification",
       "verify_sent": "Envoyé. Consultez votre boîte de réception.",
       "invited_as": "Vous a invité en tant que {{role}}",
-      "invited_as_by": "{{name}} vous a invité en tant que {{role}}"
+      "invited_as_by": "{{name}} vous a invité en tant que {{role}}",
+      "accept": "Accepter",
+      "new_role": "Nouveau rôle : {{role}}"
     },
     "celebrate": {
       "title": "Votre premier cours est en ligne",

@@ -86,6 +86,9 @@ export type PendingInvite = {
   expires_at?: string | null
   courses?: number
   usergroups?: number
+  // Already in the org: the invitation changes the role (or adds courses),
+  // so the button accepts rather than joins.
+  already_member?: boolean
 }
 
 // `invites` is empty until the user's email is verified (`email_verified`):

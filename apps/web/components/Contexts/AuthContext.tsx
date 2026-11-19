@@ -20,6 +20,8 @@ import i18n from '@/lib/i18n'
 import { safeExternalUrl } from '@services/security/url'
 import { AUTH_EXPIRED_EVENT, AUTH_REFRESHED_EVENT } from '@/lib/auth/events'
 import { buildGoogleAuthorizeBody } from '@/lib/auth/googleAuthorizeBody'
+import { clearOAuthContextCookies, setOAuthContextCookies } from '@/lib/auth/oauthCookiesClient'
+import { isSafeNextPath } from '@/lib/auth/signup'
 import {
   activeImpersonation,
   authRefreshUrl,
@@ -140,7 +142,8 @@ interface AuthContextValue {
   // throws on the generic 200. `completeMagicLink` consumes the token from the
   // link and either establishes a session or (for 2FA accounts) returns an
   // mfa_token the login page can pick up, mirroring completeMfaLogin.
-  requestMagicLink: (_email: string, _orgSlug?: string) => Promise<MagicLinkRequestResult>
+  // `next` (an internal path) is where the link signs them in to.
+  requestMagicLink: (_email: string, _orgSlug?: string, _next?: string | null) => Promise<MagicLinkRequestResult>
   completeMagicLink: (
     _token: string,
     // lookupSession: false skips the follow-up roles lookup, for a caller that
@@ -795,12 +798,16 @@ export function SessionProvider({
   // generic detail (never revealing whether the account exists), except for a
   // 429 rate-limit, so this never throws on the happy path.
   const requestMagicLink = useCallback(
-    async (email: string, orgSlug?: string): Promise<MagicLinkRequestResult> => {
+    async (email: string, orgSlug?: string, next?: string | null): Promise<MagicLinkRequestResult> => {
       try {
         const response = await fetch('/api/auth/magic-link/request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, ...(orgSlug ? { org_slug: orgSlug } : {}) }),
+          body: JSON.stringify({
+            email,
+            ...(orgSlug ? { org_slug: orgSlug } : {}),
+            ...(isSafeNextPath(next) ? { next } : {}),
+          }),
           credentials: 'include',
         })
 
@@ -1037,18 +1044,9 @@ export function SessionProvider({
         }
 
         if (provider === 'google') {
-          // Store org context in cookies before OAuth redirect
-          const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
-          const baseAttributes = `; path=/${sameSiteAttr}${secureAttr}`
-
-          if (options.orgSlug || options.orgId) {
-            if (options.orgSlug) {
-              document.cookie = `LH_oauth_orgslug=${options.orgSlug}${baseAttributes}${domainAttr}`
-            }
-            if (options.orgId) {
-              document.cookie = `LH_oauth_org_id=${options.orgId}${baseAttributes}${domainAttr}`
-            }
-          }
+          // Store org context in cookies before OAuth redirect (and drop any
+          // left from an earlier attempt).
+          setOAuthContextCookies({ orgSlug: options.orgSlug, orgId: options.orgId })
 
           // The server signs the final state (with returnOrigin pinned to this
           // request's origin) so the callback can trust where it bounces the code.
@@ -1112,10 +1110,7 @@ export function SessionProvider({
     isRefreshingRef.current = false
 
     // Clear any auth cookies on client side
-    const { secureAttr, domainAttr } = getCookieAttributes()
-    const expireAttr = '; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    document.cookie = `LH_oauth_orgslug=; path=/${expireAttr}${secureAttr}${domainAttr}`
-    document.cookie = `LH_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
+    clearOAuthContextCookies()
 
     // Clear OAuth state
     clearOAuthStateCookie()
@@ -1342,10 +1337,7 @@ export async function signOut(options?: SignOutOptions): Promise<void> {
   }
 
   // Clear cookies
-  const { secureAttr, domainAttr } = getCookieAttributes()
-  const expireAttr = '; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-  document.cookie = `LH_oauth_orgslug=; path=/${expireAttr}${secureAttr}${domainAttr}`
-  document.cookie = `LH_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
+  clearOAuthContextCookies()
 
   // Clear OAuth state
   clearOAuthStateCookie()

@@ -1362,7 +1362,9 @@ async def provision_user(
 
     # Never attach an existing global account: the token's org would gain
     # control of someone else's identity without their consent.
-    existing_user = (await db_session.execute(select(User).where(User.email == email))).scalars().first()
+    existing_user = (await db_session.execute(
+        select(User.id).where(func.lower(User.email) == email.strip().lower()).limit(1)
+    )).first()
     if existing_user:
         raise HTTPException(
             status_code=409,

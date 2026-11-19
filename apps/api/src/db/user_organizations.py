@@ -7,6 +7,8 @@ class UserOrganization(SQLModel, table=True):
     __table_args__ = (
         Index("ix_userorg_user_org", "user_id", "org_id"),
         Index("ix_userorg_org_role", "org_id", "role_id"),
+        # One membership per person and org: concurrent joins can't both land.
+        Index("uq_userorganization_user_org", "user_id", "org_id", unique=True),
     )
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(

@@ -669,7 +669,11 @@
       "google_not_configured": "Google OAuth belum dikonfigurasi",
       "profile_field_invalid": "Tautan dan alamat email tidak diizinkan di: {{fields}}",
       "field_no_links": "Tanpa tautan atau alamat email",
-      "rate_limited": "Terlalu banyak percobaan. Harap tunggu sebentar lalu coba lagi."
+      "rate_limited": "Terlalu banyak percobaan. Harap tunggu sebentar lalu coba lagi.",
+      "invite_required": "Anda memerlukan undangan untuk bergabung dengan organisasi ini.",
+      "invite_email_mismatch": "Undangan ini dikirim ke alamat email lain. Masuk dengan alamat tersebut untuk menerimanya.",
+      "invite_email_mismatch_hint": "Undangan ini dikirim ke {{email}}. Masuk dengan akun Google tersebut untuk menerimanya.",
+      "invite_verify_email": "Verifikasi alamat email Anda terlebih dahulu, lalu buka undangan ini lagi."
     },
     "sso_errors": {
       "access_denied": "Akses ditolak. Anda mungkin menolak permintaan login atau tidak memiliki izin untuk mengakses aplikasi ini.",
@@ -725,7 +729,9 @@
       "try_again": "Coba Lagi",
       "success": "Berhasil!",
       "redirecting": "Mengalihkan Anda sekarang...",
-      "google_failed": "Autentikasi Google gagal: {{error}}"
+      "google_failed": "Autentikasi Google gagal: {{error}}",
+      "invite_mismatch_title": "Akun Google salah",
+      "use_another_account": "Gunakan akun Google lain"
     },
     "magic": {
       "expired": "Tautan ini telah kedaluwarsa atau sudah digunakan. Minta tautan baru untuk masuk.",
@@ -800,14 +806,23 @@
         "verify_note": "Tautan ini dibagikan langsung kepada Anda, jadi Anda akan memverifikasi email sebelum bergabung."
       },
       "verify_title": "Periksa kotak masuk Anda",
-      "verify_desc": "Akun Anda sudah siap. Kami mengirim tautan verifikasi ke {{email}}. Verifikasi email Anda, lalu buka undangan ini lagi atau terima dari halaman beranda Anda untuk bergabung dengan {{org}}."
+      "verify_desc": "Akun Anda sudah siap. Kami mengirim tautan verifikasi ke {{email}}. Setelah email Anda terverifikasi, masuk dan Anda akan bergabung dengan {{org}}.",
+      "accepted_title": "Anda sudah menerima undangan ini",
+      "accepted_desc": "Masuk untuk membuka {{org}}.",
+      "retry_title": "Undangan ini tidak dapat dimuat",
+      "retry_desc": "Periksa koneksi Anda lalu coba lagi. Tautan undangan Anda masih berlaku.",
+      "try_again": "Coba lagi",
+      "org_full": "Organisasi ini sedang penuh. Minta admin-nya untuk menyediakan tempat."
     },
     "login_failed_forgot": "Lupa kata sandi?",
     "login_failed_reset": "Atur ulang",
     "login_failed_magic": "Kirimi saya tautan masuk saja",
     "login_failed_google_hint": "Mendaftar dengan Google? Gunakan Lanjutkan dengan Google di bawah.",
     "email_verified_set_password": "Email Anda telah diverifikasi. Demi keamanan Anda, kata sandi yang ditetapkan sebelumnya telah dihapus: pilih kata sandi baru untuk masuk dengan kata sandi.",
-    "set_new_password": "Atur kata sandi baru"
+    "set_new_password": "Atur kata sandi baru",
+    "invited_by_email_cta": "Diundang lewat email? Daftar dengan alamat itu",
+    "use_invite_code_instead": "Punya kode undangan?",
+    "password_reset_done": "Kata sandi Anda telah diubah."
   },
   "validation": {
     "required": "Wajib isi",
@@ -9556,7 +9571,7 @@
           "error": "Terjadi kesalahan. Silakan coba lagi.",
           "resent": "Undangan baru dikirim ke {{email}}",
           "email_failed": "Email tidak dapat dikirim. Salin tautan undangan sebagai gantinya.",
-          "link_copied": "Tautan undangan disalin. Siapa pun yang membukanya akan memverifikasi emailnya sebelum bergabung. Tautan di email sebelumnya tidak berfungsi lagi.",
+          "link_copied": "Tautan undangan disalin. Siapa pun yang membukanya akan memverifikasi emailnya sebelum bergabung.",
           "revoked": "Undangan dicabut",
           "updated": "Undangan diperbarui",
           "bulk_resend_one": "{{count}} undangan dikirim ulang",
@@ -29574,7 +29589,9 @@
       "verify_resend": "Kirim ulang email verifikasi",
       "verify_sent": "Terkirim. Periksa kotak masuk Anda.",
       "invited_as": "Mengundang Anda sebagai {{role}}",
-      "invited_as_by": "{{name}} mengundang Anda sebagai {{role}}"
+      "invited_as_by": "{{name}} mengundang Anda sebagai {{role}}",
+      "accept": "Terima",
+      "new_role": "Peran baru: {{role}}"
     },
     "celebrate": {
       "title": "Kursus pertama Anda sudah tayang",

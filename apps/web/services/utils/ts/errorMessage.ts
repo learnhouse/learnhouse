@@ -11,6 +11,9 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   PROFILE_FIELD_INVALID: 'auth.errors.profile_field_invalid',
   RATE_LIMITED: 'auth.errors.rate_limited',
   WEAK_PASSWORD: 'auth.password_requirements_not_met',
+  INVITE_REQUIRED: 'auth.errors.invite_required',
+  INVITE_EMAIL_MISMATCH: 'auth.errors.invite_email_mismatch',
+  INVITE_VERIFY_EMAIL: 'auth.errors.invite_verify_email',
 }
 
 // Labels for the field names the API reports in `invalid_fields`.
@@ -41,6 +44,11 @@ function localizeErrorCode(detail: unknown, t: Translate): string | null {
     if (!labels.length) return null
     return t(key, { fields: labels.join(', ') })
   }
+  if (code === 'INVITE_EMAIL_MISMATCH') {
+    // Names the invited address (masked) when the API gives it.
+    const hint = (detail as any).invited_email_hint
+    if (typeof hint === 'string' && hint) return t('auth.errors.invite_email_mismatch_hint', { email: hint })
+  }
   return t(key)
 }
 
@@ -66,6 +74,10 @@ export function getFieldErrors(detail: unknown, t: Translate): Record<string, st
 export function getErrorMessage(detail: unknown, fallback: string, t?: Translate): string {
   const localized = t ? localizeErrorCode(detail, t) : null
   if (localized) return localized
+  // The invite-only refusal still arrives as a plain string from older paths.
+  if (t && typeof detail === 'string' && /^you need an invite to join this organization\.?$/i.test(detail.trim())) {
+    return t(ERROR_CODE_KEYS.INVITE_REQUIRED)
+  }
   if (typeof detail === 'string' && detail.trim()) return detail
   if (Array.isArray(detail)) {
     const msgs = detail

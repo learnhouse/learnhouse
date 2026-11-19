@@ -248,17 +248,35 @@ async def _drop_accepted_invites(
     db_session: AsyncSession, org: Organization, user_ids: list[int]
 ) -> None:
     """Remove the invite records that would let a removed member rejoin an
-    invite-only org (the OAuth signup gate accepts any existing key)."""
+    invite-only org: their pending invitations to it are withdrawn, and the
+    older Redis records deleted (the OAuth signup gate accepts those)."""
     if not user_ids:
         return
     from src.core.redis import get_redis_client
+    from src.db.org_invitations import InvitationStatus, OrgInvitation
+    from src.services.orgs.invitations.policy import utcnow
 
-    r = get_redis_client()
-    if r is None:
-        return
     emails = (await db_session.execute(
         select(User.email).where(User.id.in_(user_ids))
     )).scalars().all()
+    normalized = sorted({e.strip().lower() for e in emails if e})
+    if normalized:
+        rows = (await db_session.execute(
+            select(OrgInvitation).where(
+                OrgInvitation.org_id == org.id,
+                OrgInvitation.email.in_(normalized),  # type: ignore[attr-defined]
+                OrgInvitation.status == InvitationStatus.PENDING.value,
+            )
+        )).scalars().all()
+        for inv in rows:
+            inv.status = InvitationStatus.REVOKED.value
+            inv.updated_at = utcnow()
+            db_session.add(inv)
+        if rows:
+            await db_session.commit()
+    r = get_redis_client()
+    if r is None:
+        return
     try:
         keys = [
             f"invited_user:{email.strip().lower()}:org:{org.org_uuid}"
@@ -1422,8 +1440,11 @@ async def remove_invited_user(
             detail="Organization not found",
         )
 
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    # The right that manages invitations (the org write right; an API token
+    # allowed to write the org too), as the invitations API checks it.
+    from src.services.orgs.invitations.policy import require_invite_manager
+
+    await require_invite_manager(request, db_session, org, current_user)
 
     # Invites are keyed on the lower-cased address, so normalise here too.
     # Otherwise an admin who typed the address with any capitals could never

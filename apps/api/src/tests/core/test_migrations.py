@@ -248,6 +248,23 @@ class TestDeferredIndexes:
         assert 'DROP INDEX CONCURRENTLY IF EXISTS "ix_a"' in statements
         assert "Could not build index ix_a" in caplog.text
 
+    def test_unique_partial_index_runs_its_preparation_first(self, caplog):
+        engine, connection = self._engine()
+        built = migrations.build_indexes_concurrently(
+            engine, [("uq_a", "t", ["a", "b"], {"unique": True, "where": "status = 'pending'", "before": ["DELETE FROM t"]})]
+        )
+        assert built == ["uq_a"]
+        statements = [str(call.args[0]) for call in connection.execute.call_args_list]
+        assert statements == [
+            "DELETE FROM t",
+            'CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS "uq_a" ON "t" ("a", "b") WHERE status = \'pending\'',
+        ]
+        # A unique index that can't be built is an error in the log.
+        engine, _ = self._engine([RuntimeError("duplicate"), None])
+        with caplog.at_level(logging.WARNING):
+            assert migrations.build_indexes_concurrently(engine, [("uq_b", "t", ["a"], {"unique": True})]) == []
+        assert any(r.levelno == logging.ERROR and "uq_b" in r.getMessage() for r in caplog.records)
+
     def test_failed_drop_only_logs(self, caplog):
         engine, _ = self._engine([RuntimeError("canceled"), RuntimeError("gone")])
         with caplog.at_level(logging.WARNING):
@@ -266,6 +283,65 @@ class TestDeferredIndexes:
             ensure_schema(db_url, metadata=_models())
         assert build.call_args.args[1] == [("ix_x", "widget", ["name"])]
         assert "Built indexes concurrently: ix_x" in caplog.text
+
+    def test_builds_give_up_quickly_instead_of_stalling_startup(self):
+        engine, connection = self._engine()
+        migrations.build_indexes_concurrently(engine, [("ix_a", "t", ["c"])])
+        assert [c.args[0] for c in connection.exec_driver_sql.call_args_list] == [
+            f"SET lock_timeout = '{migrations.BUILD_LOCK_TIMEOUT}'",
+            f"SET statement_timeout = '{migrations.BUILD_STATEMENT_TIMEOUT}'",
+        ]
+
+    def test_guarded_unique_indexes_missing_or_invalid_are_queued(self):
+        connection = MagicMock()
+        connection.dialect.name = "postgresql"
+        connection.dialect.identifier_preparer.quote = lambda name: f'"{name}"'
+        # The membership index was left invalid; the invitation one is fine.
+        connection.execute.return_value.all.return_value = [
+            ("uq_userorganization_user_org", False), ("uq_org_invitation_pending_email", True),
+        ]
+        inspector = MagicMock()
+        inspector.has_table.return_value = True
+        with patch.object(migrations, "inspect", return_value=inspector):
+            todo = migrations.guarded_indexes_to_build(connection)
+        assert [t[0] for t in todo] == ["uq_userorganization_user_org"]
+        name, table, columns, options = todo[0]
+        assert options["unique"] is True
+        assert options["before"][0] == 'DROP INDEX CONCURRENTLY IF EXISTS "uq_userorganization_user_org"'
+        assert "DELETE FROM userorganization" in options["before"][1]
+
+        # Missing (no row) on a table that exists: queued without a drop; a
+        # table that doesn't exist yet: skipped.
+        connection.execute.return_value.all.return_value = []
+        inspector.has_table.side_effect = lambda table: table == "org_invitation"
+        with patch.object(migrations, "inspect", return_value=inspector):
+            todo = migrations.guarded_indexes_to_build(connection)
+        assert [t[0] for t in todo] == ["uq_org_invitation_pending_email"]
+        assert not todo[0][3]["before"][0].startswith("DROP")
+
+        sqlite = MagicMock()
+        sqlite.dialect.name = "sqlite"
+        assert migrations.guarded_indexes_to_build(sqlite) == []
+
+    def test_runner_queues_guarded_indexes_once(self, db_url):
+        ensure_schema(db_url, metadata=_models())
+        guard = ("uq_x", "widget", ["name"], {"unique": True})
+
+        def upgrade(config, target):
+            config.attributes[migrations.DEFERRED_INDEXES].append(guard)
+
+        with patch.object(migrations.command, "upgrade", side_effect=upgrade), \
+             patch.object(migrations, "guarded_indexes_to_build", return_value=[guard, ("uq_y", "widget", ["id"], {})]), \
+             patch.object(migrations, "build_indexes_concurrently", return_value=[]) as build:
+            ensure_schema(db_url, metadata=_models())
+        assert [entry[0] for entry in build.call_args.args[1]] == ["uq_x", "uq_y"]
+
+    def test_guard_check_failure_does_not_block_startup(self, db_url):
+        ensure_schema(db_url, metadata=_models())
+        with patch.object(migrations, "guarded_indexes_to_build", side_effect=RuntimeError("boom")), \
+             patch.object(migrations, "build_indexes_concurrently", return_value=[]) as build:
+            ensure_schema(db_url, metadata=_models())
+        assert build.call_args.args[1] == []
 
     def test_hand_run_alembic_has_no_deferral_list(self):
         assert migrations.DEFERRED_INDEXES not in migrations.alembic_config().attributes

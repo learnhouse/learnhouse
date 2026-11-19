@@ -12,6 +12,8 @@ import AuthLayout from '@components/Auth/AuthLayout'
 import { AUTH_INPUT, AUTH_LINK, AuthButton, AuthFootnote, AuthHeading, AuthLabel, AuthNotice } from '@components/Auth/AuthUI'
 import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { readNextParam, useForwardedNextHref } from '@/lib/auth/nextParam'
+import { rememberPostAuthNext, takeLoginHint } from '@/lib/auth/signup'
 
 const validate = (values: any, t: any) => {
     const errors: any = {}
@@ -39,6 +41,8 @@ function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
     const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null)
     const turnstileRef = React.useRef<TurnstileWidgetHandle>(null)
     const turnstileRequired = useTurnstileRequired()
+    // Back to sign-in keeps where they were headed (an invitation page).
+    const loginHref = useForwardedNextHref('/login')
 
     const formik = useFormik({
         initialValues: {
@@ -59,10 +63,15 @@ function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
                     turnstileRef.current?.reset()
                     return
                 }
-                let res = await sendResetLink(values.email)
+                // Where they were headed travels with the reset (the link comes
+                // back with it) and is remembered on this host as a fallback.
+                const next = readNextParam(window.location.search)
+                rememberPostAuthNext(next)
+                let res = await sendResetLink(values.email, next)
                 if (res.status == 200) {
                     track(AnalyticsEvent.PasswordResetLinkRequested, { success: true })
-                    setMessage(res.data + ', ' + t('auth.check_email_message'))
+                    const sent = typeof res.data === 'string' ? res.data : res.data?.message ?? res.data?.detail
+                    setMessage(sent ? `${sent}, ${t('auth.check_email_message')}` : t('auth.check_email_message'))
                     setShowMessage(true)
                 } else {
                     track(AnalyticsEvent.PasswordResetLinkRequested, { success: false })
@@ -78,6 +87,13 @@ function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
             }
         },
     })
+
+    // Coming from a page that knew the address (a verified invitation): it is
+    // handed over in sessionStorage, never the URL.
+    React.useEffect(() => {
+        const hint = takeLoginHint()
+        if (hint) formik.setFieldValue('email', hint, false)
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <AuthLayout
@@ -122,7 +138,7 @@ function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
             </FormLayout>
 
             <AuthFootnote>
-                <Link href="/login" className={`${AUTH_LINK} inline-flex items-center gap-1.5`}>
+                <Link href={loginHref} className={`${AUTH_LINK} inline-flex items-center gap-1.5`}>
                     <ArrowLeft size={14} className="rtl:rotate-180" aria-hidden="true" />
                     {t('auth.back_to_login')}
                 </Link>

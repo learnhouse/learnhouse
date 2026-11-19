@@ -19,7 +19,16 @@ export type InviteLinkDetails = {
 // moved to the database (older links carry no details).
 // `account_exists` is left out for a link an admin copied (it would let them
 // probe accounts); the page then offers signup with a sign-in option.
-export type InviteLinkInfo = { email: string; org: InviteLinkOrg; account_exists?: boolean; invitation?: InviteLinkDetails }
+// `status` is "accepted" once the invitation was used (the peek then still
+// answers, so a person coming back after joining is sent to the org).
+export type InviteLinkStatus = 'pending' | 'accepted'
+export type InviteLinkInfo = {
+  email: string
+  org: InviteLinkOrg
+  status?: InviteLinkStatus
+  account_exists?: boolean
+  invitation?: InviteLinkDetails
+}
 export type InviteLinkResult<T> = { ok: true; data: T } | { ok: false; status: number; detail: any }
 
 async function post<T>(path: string, body: unknown, accessToken?: string): Promise<InviteLinkResult<T>> {

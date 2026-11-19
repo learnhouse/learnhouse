@@ -41,8 +41,12 @@ MAGIC_LOGIN_PURPOSE = "magic_login"
 MAGIC_LOGIN_TTL = timedelta(minutes=15)
 
 
-def issue_magic_login_token(email: str, org_id: Optional[int]) -> str:
-    """Mint a single-use magic-login JWT for ``email`` (optionally org-bound)."""
+def issue_magic_login_token(email: str, org_id: Optional[int], next_path: Optional[str] = None) -> str:
+    """Mint a single-use magic-login JWT for ``email`` (optionally org-bound).
+    ``next_path``, a same-host relative path (anything else is dropped), is
+    where signing in lands (such as an invitation page)."""
+    from src.services.users.email_verification import safe_next_path
+
     payload = {
         "sub": email,
         "purpose": MAGIC_LOGIN_PURPOSE,
@@ -50,6 +54,9 @@ def issue_magic_login_token(email: str, org_id: Optional[int]) -> str:
     }
     if org_id is not None:
         payload["org_id"] = org_id
+    safe_next = safe_next_path(next_path)
+    if safe_next:
+        payload["next"] = safe_next
     return create_access_token(data=payload, expires_delta=MAGIC_LOGIN_TTL)
 
 
@@ -66,6 +73,7 @@ def send_magic_login_email(
     email: str,
     base_url: str,
     token: str,
+    next_path: str | None = None,
     lang: str = "en",
     org_name: str | None = None,
     sender_name: str | None = None,
@@ -84,6 +92,12 @@ def send_magic_login_email(
     from src.services.users.emails import org_brand
 
     url = f"{base_url.rstrip('/')}/auth/magic?token={quote(token, safe='')}"
+    from src.services.users.email_verification import safe_next_path
+
+    safe_next = safe_next_path(next_path)
+    if safe_next:
+        # Where signing in lands (the same path is in the token, for verify).
+        url += f"&next={quote(safe_next, safe='')}"
     username = email_user_name(user.username) if user.username else user.email
     return send_email(
         "account.magic_login", email, {"username": username, "url": url},

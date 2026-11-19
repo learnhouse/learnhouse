@@ -47,10 +47,10 @@ from src.services.orgs.invites import (
     get_invite_codes,
 )
 from src.services.orgs.orgs import rbac_check
+from src.services.orgs.invitations.service import InvitationCreate, create_invitations
 from src.services.orgs.users import (
     get_list_of_invited_users,
     get_organization_users,
-    invite_batch_users,
     remove_invited_user,
     remove_user_from_org,
     update_user_role,
@@ -432,10 +432,12 @@ class InviteMembersParams(BaseModel):
     usergroup_uuid: str | None = Field(
         None,
         max_length=80,
-        description=(
-            "Put people who sign up from this invitation into this user group "
-            "(usergroup_...). Needs an invite link for that group (create_invite_code)."
-        ),
+        description="Add the invited people to this user group when they join (usergroup_...).",
+    )
+    role_uuid: str | None = Field(
+        None,
+        max_length=80,
+        description="The role they join with (role_..., from list_roles). Default: User.",
     )
 
 
@@ -449,28 +451,14 @@ _INVITE_STATUS = {
 }
 
 
-async def _invite_code_for_group(ctx: ToolContext, usergroup_uuid: str) -> str:
-    group = await refs.load(ctx, "usergroup", usergroup_uuid)
-    codes = await get_invite_codes(ctx.request, ctx.org.id, ctx.user, ctx.db_session)
-    for code in codes:
-        if code.get("usergroup_id") == group.id and code.get("invite_code_uuid"):
-            return code["invite_code_uuid"]
-    raise HTTPException(
-        status_code=400,
-        detail=(
-            f"No invite link puts people into '{group.name}'. Create one with "
-            "create_invite_code(usergroup_uuid=...) first, then invite again."
-        ),
-    )
-
-
 async def _invite_members(ctx: ToolContext, p: InviteMembersParams):
-    # The permission check invite_batch_users makes, run first: the lookups
+    # The permission check create_invitations makes, run first: the lookups
     # below would otherwise tell anyone which addresses already belong.
     await rbac_check(ctx.request, ctx.org.org_uuid, ctx.user, "create", ctx.db_session)
-    code_uuid = None
-    if p.usergroup_uuid:
-        code_uuid = await _invite_code_for_group(ctx, p.usergroup_uuid)
+    # The invitation itself carries the group and the role (no invite link,
+    # whose other groups, courses, expiry or use cap don't belong here).
+    group = await refs.load(ctx, "usergroup", p.usergroup_uuid) if p.usergroup_uuid else None
+    role = await refs.load(ctx, "role", p.role_uuid) if p.role_uuid else None
 
     emails = list(dict.fromkeys(str(e).strip().lower() for e in p.emails))
     # People who already belong are not mailed again.
@@ -490,8 +478,14 @@ async def _invite_members(ctx: ToolContext, p: InviteMembersParams):
     results = [{"email": e, "result": "already_member"} for e in emails if e in existing]
     if to_invite:
         try:
-            outcome = await invite_batch_users(
-                ctx.request, ctx.org.id, ",".join(to_invite), code_uuid, ctx.db_session, ctx.user
+            outcome = await create_invitations(
+                ctx.request, ctx.db_session, ctx.org.id,
+                InvitationCreate(
+                    emails=to_invite,
+                    usergroup_ids=[group.id] if group else [],
+                    role_id=role.id if role else None,
+                ),
+                ctx.user,
             )
         except HTTPException as e:
             # Rate, batch and member limits answer with a structured detail.
@@ -560,6 +554,8 @@ async def _code_item(ctx: ToolContext, code: dict, group_url: str | None) -> dic
         "usergroup": group,
         "created_at": _iso(code.get("created_at")),
         "expires_at": code.get("expires_at") or _expires_at(code.get("created_at"), code.get("invite_code_expires")),
+        # active, expired or used_up (an older link, kept until it expires: active).
+        "status": code.get("status") or "active",
     }
 
 
@@ -568,14 +564,17 @@ async def _list_invite_codes(ctx: ToolContext, _p: ListInviteCodesParams):
     group_url = await refs.web_url(ctx, "usergroup")
     items = [await _code_item(ctx, c, group_url) for c in codes if isinstance(c, dict)]
     items.sort(key=lambda i: i["created_at"] or "", reverse=True)
+    # Only live links take one of the slots; expired or used-up ones don't.
+    active = sum(1 for i in items if i["status"] == "active")
     # The codes themselves are join secrets: they stay on the signups page.
     return page(
         items,
         offset=0,
-        limit=MAX_INVITE_CODES,
+        limit=max(MAX_INVITE_CODES, len(items)),
         total=len(items),
         max_links=MAX_INVITE_CODES,
-        remaining=max(0, MAX_INVITE_CODES - len(items)),
+        active=active,
+        remaining=max(0, MAX_INVITE_CODES - active),
         manage_url=await _dash_url(ctx, "/dash/users/settings/signups"),
     )
 
@@ -805,7 +804,9 @@ SPECS: list[ToolSpec] = [
         open_world=True,
         summarize=lambda p: f"Email {len(p.emails)} invitation(s) to join the organization: "
         + ", ".join(str(e) for e in p.emails[:5])
-        + (" and more" if len(p.emails) > 5 else ""),
+        + (" and more" if len(p.emails) > 5 else "")
+        + (f", as {_role_label(p.role_uuid)}" if p.role_uuid else "")
+        + (f", into group {p.usergroup_uuid}" if p.usergroup_uuid else ""),
         title="Invite members",
     ),
     ToolSpec(
@@ -830,7 +831,8 @@ SPECS: list[ToolSpec] = [
         params_model=ListInviteCodesParams,
         tier=ActionTier.READ,
         rights_bucket="organizations",
-        access_action=AccessAction.UPDATE,
+        # The invite service's own check: the org write ("create") right.
+        access_action=AccessAction.CREATE,
         execute=_list_invite_codes,
         access="admin",
         title="List invite links",
@@ -845,7 +847,7 @@ SPECS: list[ToolSpec] = [
         params_model=CreateInviteCodeParams,
         tier=ActionTier.CREATE,
         rights_bucket="organizations",
-        access_action=AccessAction.UPDATE,
+        access_action=AccessAction.CREATE,
         execute=_create_invite_code,
         access="admin",
         approval=True,
