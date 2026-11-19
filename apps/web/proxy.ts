@@ -292,7 +292,7 @@ export const config = {
      * 2. /_next (Next.js internals)
      * 3. /fonts (inside /public)
      * 4. Umami Analytics
-     * 5. /examples (inside /public)
+     * 5. /examples and /emails (inside /public; /emails holds email images)
      * 6. all root files inside /public (e.g. /favicon.ico)
      * 7. /embed (activity embeds)
      * 8. /lhrel (PostHog reverse proxy; must reach the next.config rewrite
@@ -302,7 +302,7 @@ export const config = {
      * /lhrel and /monitoring are matched again below on their own, only so
      * the credentials can be stripped before the rewrite forwards them.
      */
-    '/((?!api|_next|fonts|umami|lhrel|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
+    '/((?!api|_next|fonts|umami|lhrel|examples|emails/|embed|monitoring|[\\w-]+\\.\\w+).*)',
     '/lhrel/:path*',
     '/monitoring/:path*',
     '/sitemap.xml',
