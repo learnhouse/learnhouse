@@ -308,6 +308,16 @@ def requested_toolsets(request: Any, known: Iterable[str] | None = None) -> set[
     return wanted
 
 
+def meta_tools_enabled(request: Any) -> bool:
+    """`?meta=off` drops search_tools and the invoke tools, for clients that
+    list every tool directly (pair it with `toolsets=all`)."""
+    try:
+        raw = request.query_params.get("meta") if request is not None else None
+    except Exception:
+        raw = None
+    return (raw or "").strip().lower() not in ("off", "0", "false", "none")
+
+
 def _role_allows(rights: Any, bucket: str, action: Any) -> bool:
     """A role grants an action outright or on the member's own items."""
     if _token_bucket_allows(rights, bucket, action):

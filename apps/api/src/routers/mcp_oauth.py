@@ -15,7 +15,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from pydantic import BaseModel, Field
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -92,6 +92,16 @@ async def protected_resource_metadata(request: Request):
 @public_router.get("/.well-known/openid-configuration")
 async def authorization_server_metadata(request: Request):
     return JSONResponse(oauth.authorization_server_metadata(request), headers=_NO_STORE)
+
+
+@public_router.get("/.well-known/openai-apps-challenge")
+async def openai_apps_challenge():
+    from config.config import get_learnhouse_config
+
+    token = get_learnhouse_config().mcp_config.openai_apps_challenge
+    if not token:
+        return PlainTextResponse("Not found", status_code=404)
+    return PlainTextResponse(token.strip(), headers=_NO_STORE)
 
 
 # ─── OAuth endpoints ──────────────────────────────────────────────────────────

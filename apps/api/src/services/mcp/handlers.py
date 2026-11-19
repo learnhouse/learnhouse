@@ -260,7 +260,8 @@ class Handlers:
         found = await self._callable_specs(principal)
         if found is None:
             return types.ListToolsResult(tools=[])
-        tools = disc.meta_tool_definitions() + [srv.tool_definition(spec) for spec in self._listed(ctx, found[0])]
+        meta = disc.meta_tool_definitions() if srv.meta_tools_enabled(getattr(ctx, "request", None)) else []
+        tools = meta + [srv.tool_definition(spec) for spec in self._listed(ctx, found[0])]
         try:
             page, nxt = disc.paginate(tools, getattr(params, "cursor", None), disc.TOOLS_PAGE)
         except (ValueError, KeyError, TypeError):
@@ -335,6 +336,8 @@ class Handlers:
         principal = _principal(ctx)
         if principal is None:
             return srv.error_result("unauthenticated", "Sign in to use LearnHouse tools")
+        if params.name in disc.META_TOOLS and not srv.meta_tools_enabled(getattr(ctx, "request", None)):
+            return srv.error_result("unknown_tool", f"{params.name} is not available to this connection")
         if params.name == disc.SEARCH_TOOLS:
             if _rate_limited(principal):
                 return srv.error_result("rate_limited", "Too many calls in the last minute")

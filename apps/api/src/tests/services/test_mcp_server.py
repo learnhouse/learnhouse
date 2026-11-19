@@ -235,6 +235,14 @@ def test_requested_toolsets():
     }
 
 
+def test_meta_tools_enabled():
+    assert srv.meta_tools_enabled(None) and srv.meta_tools_enabled(SimpleNamespace(query_params={}))
+    assert srv.meta_tools_enabled(SimpleNamespace(query_params=None))
+    assert srv.meta_tools_enabled(SimpleNamespace(query_params={"meta": "on"}))
+    for off in ("off", "0", "false", "None"):
+        assert not srv.meta_tools_enabled(SimpleNamespace(query_params={"meta": off})), off
+
+
 def test_essentials_fits_clients_that_cap_tools():
     from src.services.ai.tools import build_registry
 

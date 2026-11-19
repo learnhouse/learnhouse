@@ -146,6 +146,17 @@ async def test_search_tools_and_invoke_tool(db, org, admin_user, sessions):  # n
         assert body(await handlers.call_tool(who, call("search_tools", {})))["error"]["code"] == "rate_limited"
 
 
+async def test_meta_off_lists_and_calls_only_real_tools(db, org, admin_user, sessions):  # noqa: F811 (fixture)
+    handlers = h.Handlers(_paged_registry())
+    who = ctx_for(member(admin_user, SimpleNamespace(id=org.id)), query={"toolsets": "all", "meta": "off"})
+    names = {t.name for t in (await handlers.list_tools(who, None)).tools}
+    assert names and not names & set(disc.META_TOOLS) and "enroll_people" in names
+    for name in disc.META_TOOLS:
+        out = body(await handlers.call_tool(who, call(name, {"name": "list_things", "arguments": {}})))
+        assert out["error"]["code"] == "unknown_tool", name
+    assert "error" not in body(await handlers.call_tool(who, call("list_things", {})))
+
+
 async def test_search_tools_when_mcp_is_off(db, org, admin_user, sessions):  # noqa: F811 (fixture)
     db.add(OrganizationConfig(org_id=org.id, config={"config_version": "2.0", "admin_toggles": {"mcp": {"disabled": True}}}, creation_date="", update_date=""))
     await db.commit()
