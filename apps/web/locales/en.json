@@ -12684,6 +12684,7 @@
         "quizzes": "Quizzes",
         "flashcards": "Flashcards",
         "assignments": "Assignments with rubrics",
+        "practice": "Interactive practice",
         "remix": "Start from existing courses",
         "remix_placeholder": "Search a course to remix",
         "add_to": "Add chapters to a course",
@@ -12711,7 +12712,8 @@
         "quiz": "Quiz",
         "flashcards": "Flashcards",
         "video": "Video",
-        "assignment": "Assignment"
+        "assignment": "Assignment",
+        "practice": "Practice"
       },
       "status": {
         "idle": "Not written",

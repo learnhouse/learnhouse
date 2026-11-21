@@ -394,6 +394,24 @@ async def test_insert_on_empty_page(registry, db, org, admin_user, activity):
     assert content[3]["attrs"]["quizId"].startswith("quiz_")
 
 
+async def test_insert_typed_experience_blocks(registry, db, org, admin_user, activity):
+    ctx = ctx_for(db, org, admin_user)
+    venn = {"type": "venn", "sets": {"a": "Frogs", "b": "Toads"}, "items": [
+        {"text": "Smooth skin", "zone": "a"}, {"text": "Dry skin", "zone": "b"}, {"text": "Amphibians", "zone": "both"}]}
+    out = await edit(registry, ctx, {"op": "insert", "at": "end", "block": {"blocks": [
+        venn, {"type": "word_guess", "words": [{"answer": "atom", "clue": "Tiny block"}]}]}})
+    assert out.status == "executed", out.reason
+    assert out.result["ops"][0]["paths"] == [[0], [1]]
+    content = (await stored(db)).content["content"]
+    assert [n["type"] for n in content] == ["expVenn", "expWordGuess"]
+    assert len(content[0]["attrs"]["blockId"]) == 36 and content[0]["attrs"]["items"][0]["id"].startswith("item_")
+    bad = await edit(registry, ctx, {"op": "insert", "at": "end", "block": {"blocks": [{"type": "reflection", "prompt": "Why?"}]}})
+    assert bad.status != "executed" and "model_answer" in (bad.reason or "")
+    files = await edit(registry, ctx, {"op": "insert", "at": "end", "block": {"blocks": [
+        {"type": "image", "url": "https://example.org/a.png", "alt": "A"}]}})
+    assert files.status != "executed" and "add_media_block" in (files.reason or "")
+
+
 async def test_edits_on_a_page_with_callouts(registry, db, org, admin_user, page):
     """The old validator refused every edit on a page holding a callout."""
     out = await edit(registry, ctx_for(db, org, admin_user),
@@ -531,7 +549,7 @@ async def test_list_and_restore_versions(registry, db, org, admin_user, regular_
 async def test_block_catalog(registry, db, org, regular_user):
     ctx = ctx_for(db, org, regular_user)
     catalog = await ok(registry, ctx, "describe_activity_blocks")
-    assert len(json.dumps(catalog)) < 5200  # the Experiences add one compact line
+    assert len(json.dumps(catalog)) < 5400  # the 16 Experiences add one compact line
     assert {"callout", "blockQuiz", "media"} <= {b["type"] for b in catalog["blocks"]}
     quiz = await ok(registry, ctx, "describe_activity_blocks", type="quiz")
     assert quiz["type"] == "blockQuiz" and "example" in quiz

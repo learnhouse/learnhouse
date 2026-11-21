@@ -456,7 +456,7 @@ class WriteContentParams(BaseModel):
             "lists, tables, ``` code fences, > quotes, > [!TIP] / > [!WARNING] callouts, $$ math $$, "
             "and ```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```button / ```badge "
             "/ ```preview / ```h5p / ```widget fences for rich blocks (interactive sort, sequence, "
-            "fill_gaps, myth_fact, ... blocks have no fence: use add_blocks). "
+            "fill_gaps, myth_fact, venn, word_guess, reflection, ... blocks have no fence: use add_blocks). "
             "Keep <!-- block [path] type --> comments from a read to keep those blocks."
         ),
     )
@@ -620,9 +620,19 @@ class NodeBlock(_Strict):
     )
 
 
+class TypedBlocks(_Strict):
+    blocks: list[dict[str, Any]] = Field(
+        ..., min_length=1, max_length=20,
+        description=(
+            "Typed blocks exactly as add_blocks takes them ({type: 'venn', ...}, see learnhouse://blocks), "
+            "e.g. the interactive Experiences; ids are generated. No files or member cards here."
+        ),
+    )
+
+
 Block = Annotated[
-    Union[MarkdownBlock, QuizBlock, CalloutBlock, NodeBlock],
-    Field(description="What to add: {markdown} | {quiz} | {callout} | {node}."),
+    Union[MarkdownBlock, QuizBlock, CalloutBlock, NodeBlock, TypedBlocks],
+    Field(description="What to add: {markdown} | {quiz} | {callout} | {node} | {blocks} (typed blocks)."),
 ]
 
 
@@ -710,6 +720,17 @@ def _block_nodes(block: Any, notes: set[str]) -> list[dict]:
         node, extra = md.callout(block.callout.type, block.callout.markdown)
         notes.update(extra)
         return [node]
+    if isinstance(block, TypedBlocks):
+        from src.services.ai.tools import block_specs as bs
+
+        try:
+            converted = bs.to_converted(bs.parse_blocks(block.blocks))
+        except bs.BlockError as e:
+            raise HTTPException(status_code=400, detail=f"Typed blocks: {e}") from None
+        if converted.media:
+            raise HTTPException(status_code=400, detail="Typed blocks here cannot hold files: add them with add_media_block.")
+        notes.update(converted.notes)
+        return converted.doc["content"]
     node = copy.deepcopy(block.node)
     if node.get("type") == "blockQuiz" and isinstance(node.get("attrs"), dict):
         node["attrs"]["questions"] = d.fill_quiz_ids(node["attrs"].get("questions"))
@@ -975,7 +996,8 @@ SPECS: list[ToolSpec] = [
         description=(
             "Change parts of a page in one atomic call: replace_text, set_text, set_attrs, insert, "
             "replace_block, delete, move (1 to 100 ops, paths from get_activity_content). Insert "
-            "takes Markdown, a quiz, a callout or a raw node (describe_activity_blocks). Adding "
+            "takes Markdown, a quiz, a callout, typed blocks such as the Experiences ({blocks}) or a "
+            "raw node (describe_activity_blocks). Adding "
             "or changing custom HTML, embed code, H5P or web preview blocks needs approval. Saves "
             "one version; returns per-op results and an undo."
         ),

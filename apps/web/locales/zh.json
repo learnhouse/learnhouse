@@ -12665,6 +12665,7 @@
         "quizzes": "测验",
         "flashcards": "闪卡",
         "assignments": "带评分标准的作业",
+        "practice": "互动练习",
         "remix": "基于现有课程开始",
         "remix_placeholder": "搜索要重混的课程",
         "add_to": "向课程添加章节",
@@ -12692,7 +12693,8 @@
         "quiz": "测验",
         "flashcards": "闪卡",
         "video": "视频",
-        "assignment": "作业"
+        "assignment": "作业",
+        "practice": "练习"
       },
       "status": {
         "idle": "未撰写",

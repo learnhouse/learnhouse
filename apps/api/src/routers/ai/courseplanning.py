@@ -650,6 +650,7 @@ def validate_prosemirror_content(content: dict) -> tuple[bool, str]:
         "blockLibrary", "flipcardGrid",
         "expSort", "expSequence", "expMatch", "expHotspot", "expGaps", "expMythFact",
         "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock",
+        "expVenn", "expLabel", "expWordGuess", "expConfidence", "expMatrix", "expReflect",
     }
 
     def check_node(node: dict, path: str = "root") -> tuple[bool, str]:

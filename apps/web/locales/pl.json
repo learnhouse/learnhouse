@@ -13155,6 +13155,7 @@
         "quizzes": "Quizy",
         "flashcards": "Fiszki",
         "assignments": "Zadania z rubrykami",
+        "practice": "Interaktywne ćwiczenia",
         "remix": "Zacznij od istniejących kursów",
         "remix_placeholder": "Wyszukaj kurs do przeróbki",
         "add_to": "Dodaj rozdziały do kursu",
@@ -13182,7 +13183,8 @@
         "quiz": "Quiz",
         "flashcards": "Fiszki",
         "video": "Wideo",
-        "assignment": "Zadanie"
+        "assignment": "Zadanie",
+        "practice": "Ćwiczenia"
       },
       "status": {
         "idle": "Nie napisano",

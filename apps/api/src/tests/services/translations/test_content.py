@@ -285,3 +285,43 @@ def test_experiences_text_is_translated_and_answers_stay_safe():
     out, report = c.apply_segments(doc, broken)
     assert out["content"][2]["attrs"]["text"] == doc["content"][2]["attrs"]["text"]
     assert report["missing"] == [gaps_id] and report["warnings"] == {gaps_id: ["gaps_changed"]}
+
+
+def test_new_experiences_translate_text_and_keep_play_intact():
+    doc = {"type": "doc", "content": [
+        {"type": "expVenn", "attrs": {"title": "Compare", "instructions": "Place", "showNeither": True,
+                                      "sets": {"a": {"label": "Frogs", "color": "emerald"}, "b": {"label": "Toads", "color": "amber"}},
+                                      "items": [{"id": "i1", "text": "Dry skin", "zone": "b", "explanation": "Drier"}]}},
+        {"type": "expLabel", "attrs": {"title": "Label", "instructions": "Drag", "imageUrl": "https://x.org/a.png",
+                                       "pins": [{"id": "p1", "x": 1, "y": 2, "label": "Stem"}], "distractors": ["Wing"]}},
+        {"type": "expWordGuess", "attrs": {"title": "Words", "maxGuesses": 6,
+                                           "words": [{"id": "w1", "answer": "atom", "clue": "Tiny block", "explanation": "All matter"}]}},
+        {"type": "expConfidence", "attrs": {"title": "Sure?", "questions": [
+            {"id": "q1", "prompt": "Closest?", "options": ["Venus", "Mercury"], "answer": 1, "explanation": "Orbit"}]}},
+        {"type": "expMatrix", "attrs": {"title": "Grid", "instructions": "Tick", "mode": "single",
+                                        "rows": [{"id": "r1", "label": "Whale"}], "columns": [{"id": "c1", "label": "Mammal"}],
+                                        "cells": {"r1:c1": True}}},
+        {"type": "expReflect", "attrs": {"title": "Think", "prompt": "Why?", "guidingQuestions": ["Tilt?"], "minWords": 30,
+                                         "modelAnswer": "Because of tilt", "checklist": ["Tilt", "Angle"]}},
+    ]}
+    segs = c.iter_segments(doc)
+    assert [s.text for s in segs] == [
+        "Compare", "Place", "Frogs", "Toads", "Dry skin", "Drier",
+        "Label", "Drag", "Stem", "Wing",
+        "Words", "Tiny block", "All matter",
+        "Sure?", "Closest?", "Venus", "Mercury", "Orbit",
+        "Grid", "Tick", "Whale", "Mammal",
+        "Think", "Why?", "Tilt?", "Because of tilt", "Tilt", "Angle",
+    ]
+    out, report = c.apply_segments(doc, {s.id: f"T({s.text})" for s in segs})
+    assert report["missing"] == []
+    venn, label, word, conf, grid, reflect = (n["attrs"] for n in out["content"])
+    assert venn["sets"] == {"a": {"label": "T(Frogs)", "color": "emerald"}, "b": {"label": "T(Toads)", "color": "amber"}}
+    assert venn["items"][0]["zone"] == "b" and venn["showNeither"] is True
+    assert label["pins"][0]["label"] == "T(Stem)" and label["distractors"] == ["T(Wing)"] and label["pins"][0]["x"] == 1
+    # The word guess answer is kept: tiles, length and letters come from it.
+    assert word["words"][0] == {"id": "w1", "answer": "atom", "clue": "T(Tiny block)", "explanation": "T(All matter)"}
+    assert conf["questions"][0]["answer"] == 1 and conf["questions"][0]["options"] == ["T(Venus)", "T(Mercury)"]
+    assert grid["cells"] == {"r1:c1": True} and grid["rows"][0] == {"id": "r1", "label": "T(Whale)"}
+    assert reflect["modelAnswer"] == "T(Because of tilt)" and reflect["checklist"] == ["T(Tilt)", "T(Angle)"]
+    assert reflect["minWords"] == 30

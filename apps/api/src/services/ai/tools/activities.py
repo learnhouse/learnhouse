@@ -59,7 +59,8 @@ _PAGE_MARKDOWN = (
     "$$ math $$, images (![alt](https://...) on their own line, fetched and stored), and "
     "```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```video / ```pdf fences "
     "for rich blocks (describe_activity_blocks shows their syntax). Interactive blocks (sort, "
-    "sequence, fill_gaps, myth_fact, speed_round, ...) are added afterwards with add_blocks."
+    "sequence, fill_gaps, myth_fact, speed_round, venn, word_guess, reflection, ...) are added "
+    "afterwards with add_blocks."
 )
 
 _ACTIVITY_UUID = Field(..., max_length=100, description="The activity (activity_...).")

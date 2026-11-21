@@ -12663,6 +12663,7 @@
         "quizzes": "Kuis",
         "flashcards": "Kartu flash",
         "assignments": "Tugas dengan rubrik",
+        "practice": "Latihan interaktif",
         "remix": "Mulai dari kursus yang ada",
         "remix_placeholder": "Cari kursus untuk diremix",
         "add_to": "Tambahkan bab ke kursus",
@@ -12690,7 +12691,8 @@
         "quiz": "Kuis",
         "flashcards": "Kartu flash",
         "video": "Video",
-        "assignment": "Tugas"
+        "assignment": "Tugas",
+        "practice": "Latihan"
       },
       "status": {
         "idle": "Belum ditulis",

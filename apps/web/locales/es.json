@@ -12910,6 +12910,7 @@
         "quizzes": "Cuestionarios",
         "flashcards": "Tarjetas de estudio",
         "assignments": "Tareas con rúbricas",
+        "practice": "Práctica interactiva",
         "remix": "Partir de cursos existentes",
         "remix_placeholder": "Busca un curso para remezclar",
         "add_to": "Añadir capítulos a un curso",
@@ -12937,7 +12938,8 @@
         "quiz": "Cuestionario",
         "flashcards": "Tarjetas de estudio",
         "video": "Vídeo",
-        "assignment": "Tarea"
+        "assignment": "Tarea",
+        "practice": "Práctica"
       },
       "status": {
         "idle": "Sin escribir",

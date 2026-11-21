@@ -16,7 +16,8 @@ from src.services.ai.tools import markdown as md
 from src.services.courses.activities import experiences as exp
 
 TYPED = ("sort", "sequence", "match_pairs", "hotspot", "fill_gaps", "myth_fact", "speed_round",
-         "estimate", "spot_mistake", "code_lock")
+         "estimate", "spot_mistake", "code_lock", "venn", "label_diagram", "word_guess", "confidence_check",
+         "property_grid", "reflection")
 
 
 def _inline(text: str) -> list[dict]:
@@ -231,6 +232,9 @@ def test_outline_text_summary_and_replace():
     assert summaries["expEstimate"]["answer"] == 50 and summaries["expEstimate"]["unit"] == "%"
     assert summaries["expCodeLock"] == {"title": "Lab escape", "clues": 1}
     assert d.summary({"type": "expEstimate", "attrs": {}}) == {}
+    assert summaries["expVenn"] == {"title": "Plants or animals?", "items": 3, "sets": ["Plants", "Animals"]}
+    assert summaries["expMatrix"]["columns"] == ["Makes sugar", "Carries water"] and summaries["expMatrix"]["rows"] == 2
+    assert summaries["expReflect"] == {"title": "In your own words", "key_points": 2}
     entries = [e for e, _full in d.outline_entries(doc)]
     assert [e["type"] for e in entries] == [n["type"] for n in built.values()]
 
@@ -241,7 +245,7 @@ def test_outline_text_summary_and_replace():
     assert d.count_in(sort, "light") == 2
     assert d.replace_in(sort, "light", "sun", None) == 2
     assert sort["attrs"]["categories"][1]["label"] == "Needs no sun"
-    lock = page["content"][-1]
+    lock = page["content"][TYPED.index("code_lock")]
     assert d.replace_in(lock, "2", "two", None) == 2  # the question's CO2 and the answer
     assert lock["attrs"]["clues"][0]["answer"] == "two"
     assert d.strict_problems(sort) == [] and d.strict_problems(lock) == []

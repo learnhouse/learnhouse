@@ -27,7 +27,7 @@ def _li(text: str) -> dict:
     return {"type": "listItem", "content": [_p(text)]}
 
 
-_TYPED = "Typed block {type: '%s', ...} in add_blocks or build_course (no fence), or insert {node}."
+_TYPED = "Typed block {type: '%s', ...} (see typed_block) in add_blocks, build_course or an insert {blocks: [...]} (no fence)."
 _BID = {"blockId": "unique id (any string; a uuid)"}
 _HEAD = {**_BID, "title": "short title", "instructions": "one line for learners"}
 
@@ -123,6 +123,69 @@ EXPERIENCE_CATALOG: dict[str, dict[str, Any]] = {
                     "clues": [{"id": "k1", "question": "Legs on a spider?", "answer": "8", "hint": "More than an insect."}]}},
         "notes": "Answers are short text or numbers (up to 40 characters), matched trimmed and case-insensitive.",
     },
+    "expVenn": {
+        "use": "Venn compare: place facts in two overlapping circles (only A, both, only B, optionally neither) to compare and contrast.",
+        "add": _TYPED % "venn",
+        "attrs": {**_HEAD, "sets": "{a: {label, color}, b: {label, color}}; color: sky|amber|emerald|rose|violet",
+                  "items": "[{id, text, zone: a|b|both|neither, explanation?}] (3 to 16)",
+                  "showNeither": "true shows an 'outside both' tray (needed for zone neither)"},
+        "example": {"type": "expVenn", "attrs": {"blockId": "b11", "title": "Frogs or toads?", "instructions": "", "showNeither": False,
+                    "sets": {"a": {"label": "Frogs", "color": "emerald"}, "b": {"label": "Toads", "color": "amber"}},
+                    "items": [{"id": "v1", "text": "Smooth, moist skin", "zone": "a"},
+                              {"id": "v2", "text": "Dry, bumpy skin", "zone": "b"},
+                              {"id": "v3", "text": "Lay eggs in water", "zone": "both", "explanation": "Both are amphibians."}]}},
+    },
+    "expLabel": {
+        "use": "Label the diagram: drag labels onto numbered pins on an image.",
+        "add": _TYPED % "label_diagram",
+        "attrs": {**_HEAD, "imageUrl": "http(s) image URL", "imageObject": "uploaded file object (set by the editor)",
+                  "pins": "[{id, x, y, label}]: x, y = % of width/height (2 to 12)",
+                  "distractors": "[wrong labels] (0 to 4)"},
+        "example": {"type": "expLabel", "attrs": {"blockId": "b12", "title": "Label the plant", "instructions": "",
+                    "imageUrl": "https://example.org/plant.png", "distractors": ["Petal"],
+                    "pins": [{"id": "p1", "x": 50, "y": 20, "label": "Flower"}, {"id": "p2", "x": 50, "y": 85, "label": "Roots"}]}},
+        "notes": "Labels are matched by text (trimmed, case-insensitive); a distractor must not equal a pin label.",
+    },
+    "expWordGuess": {
+        "use": "Word guess: guess a key term from its clue, with letter feedback after each try.",
+        "add": _TYPED % "word_guess",
+        "attrs": {**_BID, "title": "short title", "words": "[{id, answer, clue, explanation?}] (1 to 8)",
+                  "maxGuesses": "3 to 8 (default 6)"},
+        "example": {"type": "expWordGuess", "attrs": {"blockId": "b13", "title": "Guess the word", "maxGuesses": 6,
+                    "words": [{"id": "w1", "answer": "atom", "clue": "The tiny building block of matter.", "explanation": "Everything is made of atoms."}]}},
+        "notes": "Answers are 2 to 12 letters (spaces and hyphens shown fixed); matching ignores accents and case.",
+    },
+    "expConfidence": {
+        "use": "Confidence check: answer, say how sure you are, then see accuracy per confidence level (calibration).",
+        "add": _TYPED % "confidence_check",
+        "attrs": {**_BID, "title": "short title",
+                  "questions": "[{id, prompt, options: [2 to 4 texts], answer: index, explanation}] (1 to 10)"},
+        "example": {"type": "expConfidence", "attrs": {"blockId": "b14", "title": "How sure are you?",
+                    "questions": [{"id": "c1", "prompt": "Closest planet to the Sun?", "options": ["Venus", "Mercury"], "answer": 1,
+                                   "explanation": "Mercury orbits closest."}]}},
+    },
+    "expMatrix": {
+        "use": "Property grid: tick which properties (columns) apply to each row.",
+        "add": _TYPED % "property_grid",
+        "attrs": {**_HEAD, "rows": "[{id, label}] (2 to 8)", "columns": "[{id, label}] (2 to 6)",
+                  "cells": '{"rowId:colId": true} for each correct tick', "mode": "multi | single (exactly one per row)"},
+        "example": {"type": "expMatrix", "attrs": {"blockId": "b15", "title": "Which apply?", "instructions": "", "mode": "multi",
+                    "rows": [{"id": "r1", "label": "Whale"}, {"id": "r2", "label": "Shark"}],
+                    "columns": [{"id": "k1", "label": "Mammal"}, {"id": "k2", "label": "Lives in water"}],
+                    "cells": {"r1:k1": True, "r1:k2": True, "r2:k2": True}}},
+        "notes": "Ids never contain ':'; every cells key names a row id and a column id.",
+    },
+    "expReflect": {
+        "use": "Reflection: write in your own words, then compare with a model answer and tick the key points covered.",
+        "add": _TYPED % "reflection",
+        "attrs": {**_BID, "title": "short title", "prompt": "what to write about", "guidingQuestions": "[texts] (0 to 5)",
+                  "minWords": "0 to 500 (default 30)", "modelAnswer": "optional", "checklist": "[key points] (0 to 8)"},
+        "example": {"type": "expReflect", "attrs": {"blockId": "b16", "title": "In your own words", "prompt": "Why do seasons happen?",
+                    "guidingQuestions": ["What does the tilt change?"], "minWords": 30,
+                    "modelAnswer": "Earth's tilt changes how directly sunlight hits each hemisphere.",
+                    "checklist": ["Axial tilt", "Angle of sunlight"]}},
+        "notes": "The learner's draft stays on their device; give a model answer or key points to compare with.",
+    },
 }
 
 # Experiences node -> its typed block name.
@@ -130,6 +193,8 @@ EXPERIENCE_CATALOG_TYPED = {
     "expSort": "sort", "expSequence": "sequence", "expMatch": "match_pairs", "expHotspot": "hotspot",
     "expGaps": "fill_gaps", "expMythFact": "myth_fact", "expSpeedRound": "speed_round",
     "expEstimate": "estimate", "expSpotMistake": "spot_mistake", "expCodeLock": "code_lock",
+    "expVenn": "venn", "expLabel": "label_diagram", "expWordGuess": "word_guess",
+    "expConfidence": "confidence_check", "expMatrix": "property_grid", "expReflect": "reflection",
 }
 
 # type -> purpose, how to add it, attrs (name -> meaning), example node
@@ -262,7 +327,7 @@ CATALOG: dict[str, dict[str, Any]] = {
         "example": {"type": "blockWebPreview", "attrs": {"url": "https://aws.amazon.com/s3/", "title": "Amazon S3"}},
     },
     "scenarios": {
-        "use": "Branching decision scenario.",
+        "use": "Branching decision scenario (story or chat).",
         "add": "Markdown: ```scenario fence, or insert {node}.",
         "attrs": {
             "title": "name", "display": "story (default) | chat (messaging-style)",
@@ -380,7 +445,10 @@ _ALIASES = {
     "hotspot": "expHotspot", "fill_gaps": "expGaps", "gaps": "expGaps", "cloze": "expGaps",
     "myth_fact": "expMythFact", "true_false": "expMythFact", "speed_round": "expSpeedRound",
     "estimate": "expEstimate", "spot_mistake": "expSpotMistake", "code_lock": "expCodeLock",
-    "escape_room": "expCodeLock",
+    "escape_room": "expCodeLock", "venn": "expVenn", "compare": "expVenn", "label_diagram": "expLabel",
+    "label": "expLabel", "diagram": "expLabel", "word_guess": "expWordGuess", "wordle": "expWordGuess",
+    "confidence_check": "expConfidence", "confidence": "expConfidence", "property_grid": "expMatrix",
+    "matrix": "expMatrix", "reflection": "expReflect", "reflect": "expReflect",
 }
 
 def _key(name: str) -> str:
@@ -419,6 +487,12 @@ async def _describe_activity_blocks(ctx: ToolContext, p: DescribeBlocksParams):
         spec = d.SCHEMA.get(name)
         if spec is not None:
             entry["content"] = spec.content or "none (data lives in attrs)"
+        typed = EXPERIENCE_CATALOG_TYPED.get(name)
+        if typed:
+            # The typed block to send in an insert op ({blocks: [...]}) or add_blocks.
+            from src.services.ai.tools import block_specs as bs
+
+            entry["typed_block"] = bs.catalog(typed)
         fence = _FENCE_OF.get(name)
         if fence:
             entry["fence"] = FENCES[fence]
@@ -436,7 +510,10 @@ async def _describe_activity_blocks(ctx: ToolContext, p: DescribeBlocksParams):
         ),
         "fences": FENCES,
         "blocks": [{"type": name, "use": e["use"], "add": e["add"]} for name, e in CATALOG.items() if name not in EXPERIENCE_CATALOG],
-        "experiences": "Interactive typed blocks (add_blocks; no fence): " + ", ".join(EXPERIENCE_CATALOG_TYPED.values()) + ".",
+        "experiences": (
+            "Interactive typed blocks (insert {blocks: [...]} or add_blocks; no fence): " + ", ".join(EXPERIENCE_CATALOG_TYPED.values())
+            + "; plus scenarios (display: chat) and flashcards (mode: study)."
+        ),
         "read_only": _READ_ONLY,
         "detail": "Call again with type=<name> for shape, fence rules and an example.",
     }
@@ -450,7 +527,8 @@ SPECS: list[ToolSpec] = [
             "List the block types a page can hold (text, lists, tables, callouts, quizzes, "
             "flipcards, math, embeds, code exercises, media, and the interactive Experiences: "
             "sort, sequence, match pairs, hotspot, fill the gaps, myth or fact, speed round, "
-            "estimate, spot the mistake, code lock) and how to add each. Pass type for "
+            "estimate, spot the mistake, code lock, venn, label diagram, word guess, confidence "
+            "check, property grid, reflection) and how to add each. Pass type for "
             "one block's exact editor shape and a valid example."
         ),
         params_model=DescribeBlocksParams,

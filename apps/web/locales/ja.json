@@ -12665,6 +12665,7 @@
         "quizzes": "クイズ",
         "flashcards": "フラッシュカード",
         "assignments": "ルーブリック付き課題",
+        "practice": "インタラクティブな練習",
         "remix": "既存のコースから始める",
         "remix_placeholder": "リミックスするコースを検索",
         "add_to": "コースに章を追加",
@@ -12692,7 +12693,8 @@
         "quiz": "クイズ",
         "flashcards": "フラッシュカード",
         "video": "動画",
-        "assignment": "課題"
+        "assignment": "課題",
+        "practice": "練習"
       },
       "status": {
         "idle": "未作成",

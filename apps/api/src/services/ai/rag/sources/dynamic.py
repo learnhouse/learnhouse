@@ -298,10 +298,13 @@ def _flipcard_grid(node, parts):
 
 
 # Experiences blocks. Like quizzes, search gets what a learner reads but not
-# the answer key: no item -> category mapping, no myth/fact or mistake flags,
-# no right option, estimate or code lock answer, and sequence steps and match
-# sides are listed sorted rather than in their solved order. Explanations stay
-# in: they are taught content, and search should find them.
+# the answer key: no item -> category or venn zone mapping, no myth/fact or
+# mistake flags, no right option, estimate, code lock or word guess answer, no
+# pin -> label placement, no property grid ticks, and no reflection model
+# answer or key points (learners write before they see them). Sequence steps,
+# match sides and diagram labels are listed sorted rather than in their solved
+# order. Explanations stay in: they are taught content, and search should
+# find them.
 
 
 def _sorted_texts(entries, key):
@@ -404,6 +407,69 @@ def _exp_code_lock(node, parts):
     ]))
 
 
+def _exp_venn(node, parts):
+    attrs = _attrs(node)
+    sets = attrs.get("sets") if isinstance(attrs.get("sets"), dict) else {}
+    labels = [_str(s.get("label")) for s in (sets.get("a"), sets.get("b")) if isinstance(s, dict)]
+    _append(parts, join([
+        *_exp_head("Compare", attrs),
+        " / ".join(t for t in labels if t) and f"Sets: {' / '.join(t for t in labels if t)}",
+        *(f"- {t}" for t in _sorted_texts(attrs.get("items"), "text")),
+        *(_str(i.get("explanation")) for i in exp.items(attrs.get("items"))),
+    ]))
+
+
+def _exp_label(node, parts):
+    attrs = _attrs(node)
+    distractors = attrs.get("distractors") if isinstance(attrs.get("distractors"), list) else []
+    labels = {t for t in (_str(p.get("label")) for p in exp.items(attrs.get("pins"))) if t}
+    labels |= {t for t in (_str(x) for x in distractors) if t}
+    _append(parts, join([
+        *_exp_head("Label the diagram", attrs),
+        labels and f"Labels: {', '.join(sorted(labels, key=str.casefold))}",
+    ]))
+
+
+def _exp_word_guess(node, parts):
+    attrs = _attrs(node)
+    _append(parts, join([
+        *_exp_head("Word guess", attrs),
+        *(join([_str(w.get("clue")) and f"Clue: {_str(w.get('clue'))}", _str(w.get("explanation"))])
+          for w in exp.items(attrs.get("words"))),
+    ]))
+
+
+def _exp_confidence(node, parts):
+    attrs = _attrs(node)
+    lines = _exp_head("Confidence check", attrs)
+    for q in exp.items(attrs.get("questions")):
+        options = q.get("options") if isinstance(q.get("options"), list) else []
+        lines.append(join([_str(q.get("prompt")) and f"Question: {_str(q.get('prompt'))}",
+                           *(f"- {_str(o)}" for o in options if _str(o)), _str(q.get("explanation"))]))
+    _append(parts, join(lines))
+
+
+def _exp_matrix(node, parts):
+    attrs = _attrs(node)
+    rows = [t for t in (_str(r.get("label")) for r in exp.items(attrs.get("rows"))) if t]
+    columns = [t for t in (_str(c.get("label")) for c in exp.items(attrs.get("columns"))) if t]
+    _append(parts, join([
+        *_exp_head("Property grid", attrs),
+        columns and f"Properties: {', '.join(columns)}",
+        *(f"- {t}" for t in rows),
+    ]))
+
+
+def _exp_reflect(node, parts):
+    attrs = _attrs(node)
+    guiding = attrs.get("guidingQuestions") if isinstance(attrs.get("guidingQuestions"), list) else []
+    _append(parts, join([
+        _str(attrs.get("title")) and f"Reflection: {_str(attrs.get('title'))}",
+        _str(attrs.get("prompt")),
+        *(f"- {_str(g)}" for g in guiding if _str(g)),
+    ]))
+
+
 def _math(node, parts):
     equation = _str(_attrs(node).get("math_equation"))
     if equation:
@@ -477,4 +543,10 @@ _NODE_HANDLERS: dict[str, Callable[[dict, list[str]], None]] = {
     "expEstimate": _exp_estimate,
     "expSpotMistake": _exp_spot_mistake,
     "expCodeLock": _exp_code_lock,
+    "expVenn": _exp_venn,
+    "expLabel": _exp_label,
+    "expWordGuess": _exp_word_guess,
+    "expConfidence": _exp_confidence,
+    "expMatrix": _exp_matrix,
+    "expReflect": _exp_reflect,
 }

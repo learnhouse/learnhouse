@@ -12697,6 +12697,7 @@
         "quizzes": "Sınavlar",
         "flashcards": "Bilgi kartları",
         "assignments": "Rubrikli ödevler",
+        "practice": "Etkileşimli alıştırmalar",
         "remix": "Mevcut kurslardan başla",
         "remix_placeholder": "Yeniden kullanmak için bir kurs arayın",
         "add_to": "Bir kursa bölüm ekle",
@@ -12724,7 +12725,8 @@
         "quiz": "Sınav",
         "flashcards": "Bilgi kartları",
         "video": "Video",
-        "assignment": "Ödev"
+        "assignment": "Ödev",
+        "practice": "Alıştırma"
       },
       "status": {
         "idle": "Yazılmadı",

@@ -12911,6 +12911,7 @@
         "quizzes": "Quizzes",
         "flashcards": "Flashcards",
         "assignments": "Tarefas com rubricas",
+        "practice": "Prática interativa",
         "remix": "Começar de cursos existentes",
         "remix_placeholder": "Busque um curso para remixar",
         "add_to": "Adicionar capítulos a um curso",
@@ -12938,7 +12939,8 @@
         "quiz": "Quiz",
         "flashcards": "Flashcards",
         "video": "Vídeo",
-        "assignment": "Tarefa"
+        "assignment": "Tarefa",
+        "practice": "Prática"
       },
       "status": {
         "idle": "Não escrita",

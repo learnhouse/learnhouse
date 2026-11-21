@@ -48,6 +48,7 @@ PRACTICE = (
     # Experiences: interactive learning blocks
     "expSort", "expSequence", "expMatch", "expHotspot", "expGaps", "expMythFact",
     "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock",
+    "expVenn", "expLabel", "expWordGuess", "expConfidence", "expMatrix", "expReflect",
 )
 SEVERITY = {"high": 0, "medium": 1, "low": 2}
 _PLACEHOLDER = re.compile(r"lorem ipsum|\bTODO\b|\bTBD\b|\[insert[^\]]*\]|\bxxx\b", re.IGNORECASE)

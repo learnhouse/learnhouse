@@ -12697,6 +12697,7 @@
         "quizzes": "Quizzen",
         "flashcards": "Flashcards",
         "assignments": "Opdrachten met rubrics",
+        "practice": "Interactieve oefeningen",
         "remix": "Beginnen met bestaande cursussen",
         "remix_placeholder": "Zoek een cursus om te remixen",
         "add_to": "Hoofdstukken toevoegen aan een cursus",
@@ -12724,7 +12725,8 @@
         "quiz": "Quiz",
         "flashcards": "Flashcards",
         "video": "Video",
-        "assignment": "Opdracht"
+        "assignment": "Opdracht",
+        "practice": "Oefenen"
       },
       "status": {
         "idle": "Niet geschreven",

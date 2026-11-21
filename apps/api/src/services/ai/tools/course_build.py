@@ -1185,7 +1185,8 @@ SPECS: list[ToolSpec] = [
             "math, embed for 18 services, video, image, audio, pdf, h5p, web_preview, toggle, "
             "conditional, widget, user, divider, button, badge, and the interactive sort, sequence, "
             "match_pairs, hotspot, fill_gaps, myth_fact, speed_round, estimate, spot_mistake, "
-            "code_lock), youtube/video/pdf activities and graded "
+            "code_lock, venn, label_diagram, word_guess, confidence_check, property_grid, "
+            "reflection), youtube/video/pdf activities and graded "
             "assignments with tasks; plus settings (certificate, drip, SEO, languages, publish). "
             "Everything is validated before writing. dry_run=true returns the plan as a diff. Give "
             "chapters and activities a key and an idempotency_key so retries resume instead of "
@@ -1212,7 +1213,8 @@ SPECS: list[ToolSpec] = [
             "math, embed, video, image, audio, pdf, h5p, web_preview, toggle, conditional, widget, "
             "user, divider, button, badge, markdown, raw node) and the interactive Experiences "
             "(sort, sequence, match_pairs, hotspot, fill_gaps, myth_fact, speed_round, estimate, "
-            "spot_mistake, code_lock). Checked against the editor schema "
+            "spot_mistake, code_lock, venn, label_diagram, word_guess, confidence_check, "
+            "property_grid, reflection). Checked against the editor schema "
             "before saving (one new version). Files, custom HTML and outside frames need approval."
         ),
         params_model=AddBlocksParams,

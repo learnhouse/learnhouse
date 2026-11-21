@@ -1,6 +1,7 @@
 """Experiences: the interactive learning blocks of the editor (sort, sequence,
 match pairs, hotspot, fill the gaps, myth or fact, speed round, estimate,
-spot the mistake, code lock).
+spot the mistake, code lock, venn compare, label the diagram, word guess,
+confidence check, property grid, reflection).
 
 Pure helpers shared by the AI tools (doc_ops, markdown, block_specs), search
 (rag/sources/dynamic.py) and translation (translations/content.py), so they
@@ -25,6 +26,12 @@ NODES: dict[str, str] = {
     "expEstimate": "estimate",
     "expSpotMistake": "spot_mistake",
     "expCodeLock": "code_lock",
+    "expVenn": "venn",
+    "expLabel": "label_diagram",
+    "expWordGuess": "word_guess",
+    "expConfidence": "confidence_check",
+    "expMatrix": "property_grid",
+    "expReflect": "reflection",
 }
 NODE_NAMES = tuple(NODES)
 
@@ -43,6 +50,12 @@ TEXT_PATHS: dict[str, tuple[str, ...]] = {
         "title", "instructions", "segments.*.text", "segments.*.correction", "segments.*.explanation",
     ),
     "expCodeLock": ("title", "story", "clues.*.question", "clues.*.answer", "clues.*.hint", "reward"),
+    "expVenn": ("title", "instructions", "sets.a.label", "sets.b.label", "items.*.text", "items.*.explanation"),
+    "expLabel": ("title", "instructions", "pins.*.label", "distractors.*"),
+    "expWordGuess": ("title", "words.*.clue", "words.*.answer", "words.*.explanation"),
+    "expConfidence": ("title", "questions.*.prompt", "questions.*.options.*", "questions.*.explanation"),
+    "expMatrix": ("title", "instructions", "rows.*.label", "columns.*.label"),
+    "expReflect": ("title", "prompt", "guidingQuestions.*", "modelAnswer", "checklist.*"),
 }
 
 

@@ -12697,6 +12697,7 @@
         "quizzes": "Quizze",
         "flashcards": "Lernkarten",
         "assignments": "Aufgaben mit Bewertungsrastern",
+        "practice": "Interaktive Übungen",
         "remix": "Von bestehenden Kursen ausgehen",
         "remix_placeholder": "Kurs zum Remixen suchen",
         "add_to": "Kapitel zu einem Kurs hinzufügen",
@@ -12724,7 +12725,8 @@
         "quiz": "Quiz",
         "flashcards": "Lernkarten",
         "video": "Video",
-        "assignment": "Aufgabe"
+        "assignment": "Aufgabe",
+        "practice": "Übung"
       },
       "status": {
         "idle": "Nicht geschrieben",

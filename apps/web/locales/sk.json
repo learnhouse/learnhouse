@@ -13155,6 +13155,7 @@
         "quizzes": "Kvízy",
         "flashcards": "Kartičky",
         "assignments": "Úlohy s hodnotiacimi schémami",
+        "practice": "Interaktívne cvičenia",
         "remix": "Začať z existujúcich kurzov",
         "remix_placeholder": "Vyhľadajte kurz na remix",
         "add_to": "Pridať kapitoly do kurzu",
@@ -13182,7 +13183,8 @@
         "quiz": "Kvíz",
         "flashcards": "Kartičky",
         "video": "Video",
-        "assignment": "Úloha"
+        "assignment": "Úloha",
+        "practice": "Precvičovanie"
       },
       "status": {
         "idle": "Nenapísané",

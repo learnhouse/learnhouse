@@ -459,6 +459,7 @@ _RICH = (
     "scenarios", "blockWebPreview", "blockH5P", "blockMagic",
     "expSort", "expSequence", "expMatch", "expHotspot", "expGaps", "expMythFact",
     "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock",
+    "expVenn", "expLabel", "expWordGuess", "expConfidence", "expMatrix", "expReflect",
 )
 
 

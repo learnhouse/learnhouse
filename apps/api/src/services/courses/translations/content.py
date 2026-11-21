@@ -84,6 +84,17 @@ TEXT_ATTRS: dict[str, tuple[str, ...]] = {
     #   never text; expEstimate numbers are not text either (only its unit is).
     # * expSpotMistake in code mode: the code and its corrections stay as
     #   written, like code blocks (CODE_KIND_ATTRS).
+    # * expWordGuess: the clue and explanation are translated, the answer is
+    #   not. Its letter tiles, length (2 to 12 letters) and letters-only rule
+    #   come from the answer, and a translated clue for a kept answer still
+    #   plays, while a translated answer may break the game (too long, digits,
+    #   another word than the clue's). Authors translate answers themselves.
+    # * expLabel: pin labels and distractors are translated together, so the
+    #   chips still match their pins (they are compared by text).
+    # * expConfidence answers and expMatrix ticks are indexes and booleans,
+    #   never text; expVenn zones and colors are fixed keys.
+    # * expReflect: the model answer and the key points are taught content
+    #   learners compare their writing with, so they are translated.
     "expSort": ("title", "instructions", "categories.*.label", "items.*.text", "items.*.explanation"),
     "expSequence": ("title", "instructions", "items.*.text", "items.*.detail"),
     "expMatch": ("title", "instructions", "pairs.*.left", "pairs.*.right"),
@@ -96,6 +107,12 @@ TEXT_ATTRS: dict[str, tuple[str, ...]] = {
         "title", "instructions", "segments.*.text", "segments.*.correction", "segments.*.explanation",
     ),
     "expCodeLock": ("title", "story", "clues.*.question", "clues.*.answer", "clues.*.hint", "reward"),
+    "expVenn": ("title", "instructions", "sets.a.label", "sets.b.label", "items.*.text", "items.*.explanation"),
+    "expLabel": ("title", "instructions", "pins.*.label", "distractors.*"),
+    "expWordGuess": ("title", "words.*.clue", "words.*.explanation"),
+    "expConfidence": ("title", "questions.*.prompt", "questions.*.options.*", "questions.*.explanation"),
+    "expMatrix": ("title", "instructions", "rows.*.label", "columns.*.label"),
+    "expReflect": ("title", "prompt", "guidingQuestions.*", "modelAnswer", "checklist.*"),
     "toggleBlock": ("summary",),
     "blockCode": ("description", "hints.*"),
     "conditionalBlock": ("hiddenMessage", "label"),

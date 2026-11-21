@@ -181,6 +181,41 @@ class TestTipTapAttributeNodes:
         for secret in ("8849", "print(x)", "secret.png", "c1", "True", "False"):
             assert secret not in text
 
+    def test_new_experiences_give_content_but_not_the_answer_key(self):
+        text = dynamic.extract_text_from_prosemirror(_doc(
+            {"type": "expVenn", "attrs": {"title": "Frogs or toads", "instructions": "Place them",
+                                          "sets": {"a": {"label": "Frogs"}, "b": {"label": "Toads"}},
+                                          "items": [{"text": "Dry skin", "zone": "b", "explanation": "Toads are drier."},
+                                                    {"text": "Amphibian", "zone": "both"}, "junk"]}},
+            {"type": "expVenn", "attrs": {"sets": "bad", "items": []}},
+            {"type": "expLabel", "attrs": {"title": "Plant", "imageObject": {"file_name": "secret.png"},
+                                           "pins": [{"x": 1, "y": 2, "label": "Stem"}, {"label": "Flower"}], "distractors": ["Wing", 3]}},
+            {"type": "expLabel", "attrs": {"distractors": "bad"}},
+            {"type": "expWordGuess", "attrs": {"title": "Terms", "words": [
+                {"answer": "SECRETWORD", "clue": "Building block of matter", "explanation": "Everything is made of them."}]}},
+            {"type": "expConfidence", "attrs": {"questions": [
+                {"prompt": "Closest planet?", "options": ["Venus", "Mercury"], "answer": 1, "explanation": "It orbits closest."},
+                {"prompt": "", "options": "x"}]}},
+            {"type": "expMatrix", "attrs": {"title": "Animals", "rows": [{"id": "r1", "label": "Whale"}],
+                                            "columns": [{"id": "c1", "label": "Mammal"}, {"id": "c2", "label": ""}],
+                                            "cells": {"r1:c1": True}}},
+            {"type": "expReflect", "attrs": {"title": "Think", "prompt": "Why seasons?", "guidingQuestions": ["Tilt?", ""],
+                                             "modelAnswer": "SECRET_MODEL", "checklist": ["SECRET_POINT"]}},
+            {"type": "expReflect", "attrs": {"guidingQuestions": "bad"}},
+        ))
+        assert text == (
+            "Compare: Frogs or toads\nPlace them\nSets: Frogs / Toads\n- Amphibian\n- Dry skin\nToads are drier.\n"
+            "Compare\n"
+            "Label the diagram: Plant\nLabels: Flower, Stem, Wing\n"
+            "Label the diagram\n"
+            "Word guess: Terms\nClue: Building block of matter\nEverything is made of them.\n"
+            "Confidence check\nQuestion: Closest planet?\n- Venus\n- Mercury\nIt orbits closest.\n"
+            "Property grid: Animals\nProperties: Mammal\n- Whale\n"
+            "Reflection: Think\nWhy seasons?\n- Tilt?"
+        )
+        for secret in ("SECRET", "secret.png", "r1:c1", "zone", "True", "both"):
+            assert secret not in text
+
     def test_code_playground_never_includes_solution_or_tests(self):
         text = dynamic.extract_text_from_prosemirror(_doc({
             "type": "blockCode",

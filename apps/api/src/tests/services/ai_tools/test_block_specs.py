@@ -52,7 +52,8 @@ def test_every_example_builds_and_passes_the_schema():
                      "toggleBlock", "blockEmbed", "blockH5P", "blockWebPreview", "horizontalRule", "button",
                      "badge", "table", "blockMathEquation", "callout", "codeBlock", "bulletList",
                      "expSort", "expSequence", "expMatch", "expHotspot", "expGaps", "expMythFact",
-                     "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock"):
+                     "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock", "expVenn", "expLabel",
+                     "expWordGuess", "expConfidence", "expMatrix", "expReflect"):
         assert expected in types
     assert [m.kind for m in converted.media] == ["image", "audio", "pdf"]
     assert converted.doc["content"][-1]["content"][0] == {"type": "blockUser", "attrs": {"user_id": 7, "layout": "card"}}

@@ -105,7 +105,10 @@ approval. create_media_activity adds a YouTube video, video file or PDF as its o
 activity. Make pages rich: mix explanation with images, quizzes, exercises and scenarios. \
 Interactive Experiences have no fence; add them as typed blocks with add_blocks or \
 build_course: sort, sequence, match_pairs, hotspot, fill_gaps, myth_fact, speed_round, \
-estimate (a guess before the explanation), spot_mistake and code_lock. \
+estimate (a guess before the explanation), spot_mistake, code_lock, venn (compare and \
+contrast), label_diagram, word_guess (key terms), confidence_check (calibration), \
+property_grid and reflection (write, then compare with a model answer). Scenarios can run \
+as a chat (display: chat) and flashcards as a study deck (mode: study). \
 describe_activity_blocks shows every block and its syntax. Page edits are versioned and \
 can be undone with restore_activity_version.
 5. Build drafts. New courses, chapters and pages start as drafts only staff can see, and \

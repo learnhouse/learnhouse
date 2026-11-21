@@ -12663,6 +12663,7 @@
         "quizzes": "퀴즈",
         "flashcards": "플래시카드",
         "assignments": "채점 기준표가 있는 과제",
+        "practice": "인터랙티브 연습",
         "remix": "기존 코스에서 시작",
         "remix_placeholder": "리믹스할 코스 검색",
         "add_to": "코스에 장 추가",
@@ -12690,7 +12691,8 @@
         "quiz": "퀴즈",
         "flashcards": "플래시카드",
         "video": "동영상",
-        "assignment": "과제"
+        "assignment": "과제",
+        "practice": "연습"
       },
       "status": {
         "idle": "작성 전",

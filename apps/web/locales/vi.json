@@ -12663,6 +12663,7 @@
         "quizzes": "Bài kiểm tra",
         "flashcards": "Thẻ ghi nhớ",
         "assignments": "Bài tập kèm thang điểm",
+        "practice": "Luyện tập tương tác",
         "remix": "Bắt đầu từ các khóa học có sẵn",
         "remix_placeholder": "Tìm khóa học để phối lại",
         "add_to": "Thêm chương vào một khóa học",
@@ -12690,7 +12691,8 @@
         "quiz": "Bài kiểm tra",
         "flashcards": "Thẻ ghi nhớ",
         "video": "Video",
-        "assignment": "Bài tập"
+        "assignment": "Bài tập",
+        "practice": "Luyện tập"
       },
       "status": {
         "idle": "Chưa viết",

@@ -16,6 +16,7 @@ in after the page exists, exactly like images written in Markdown.
 from __future__ import annotations
 
 import re
+import unicodedata
 import uuid
 from typing import Annotated, Any, Literal, Union
 
@@ -321,6 +322,105 @@ class CodeLockB(_B):
     reward: str = Field("", max_length=5000, description="Shown when the lock opens.")
 
 
+VENN_COLORS = ("sky", "amber", "emerald", "rose", "violet")
+
+
+class VennSetB(_B):
+    label: str = Field(..., min_length=1, max_length=200)
+    color: str | None = Field(None, max_length=30, description="sky, amber, emerald, rose or violet (default: sky for a, amber for b).")
+
+
+class VennSetsB(_B):
+    a: VennSetB | Annotated[str, Field(min_length=1, max_length=200)] = Field(..., description="The left circle: a label or {label, color}.")
+    b: VennSetB | Annotated[str, Field(min_length=1, max_length=200)] = Field(..., description="The right circle: a label or {label, color}.")
+
+
+class VennItemB(_B):
+    text: str = Field(..., min_length=1, max_length=500)
+    zone: Literal["a", "b", "both", "neither"] = Field(..., description="a: only in a; b: only in b; both: the overlap; neither: outside both.")
+    explanation: str | None = Field(None, max_length=1000, description="Shown when checking.")
+
+
+class VennB(_B):
+    type: Literal["venn"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    sets: VennSetsB
+    items: list[VennItemB] = Field(..., min_length=3, max_length=16, description="3 to 16; include at least one in both.")
+    show_neither: bool | None = Field(None, description="Show an 'outside both' tray (default: on when an item's zone is neither).")
+
+
+class LabelPinB(_B):
+    x: float = Field(..., ge=0, le=100, description="% of the image width from the left.")
+    y: float = Field(..., ge=0, le=100, description="% of the image height from the top.")
+    label: str = Field(..., min_length=1, max_length=200, description="The label that belongs on this pin.")
+
+
+class LabelDiagramB(_B):
+    type: Literal["label_diagram"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    image_url: WebUrl = Field(..., min_length=8, max_length=2048, description="Public image the pins sit on.")
+    pins: list[LabelPinB] = Field(..., min_length=2, max_length=12)
+    distractors: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        default_factory=list, max_length=4, description="0 to 4 wrong labels mixed into the bank.",
+    )
+
+
+class WordB(_B):
+    answer: str = Field(..., min_length=1, max_length=40, description="2 to 12 letters; spaces and hyphens are shown fixed.")
+    clue: str = Field(..., min_length=1, max_length=500)
+    explanation: str | None = Field(None, max_length=1000, description="Shown once the word is solved or revealed.")
+
+
+class WordGuessB(_B):
+    type: Literal["word_guess"]
+    title: str = _TITLE
+    words: list[WordB] = Field(..., min_length=1, max_length=8)
+    max_guesses: int = Field(6, ge=3, le=8, description="Tries per word.")
+
+
+class ConfidenceQuestionB(_B):
+    prompt: str = Field(..., min_length=1, max_length=500)
+    options: list[Annotated[str, Field(min_length=1, max_length=300)]] = Field(..., min_length=2, max_length=4)
+    answer: int | str = Field(..., description="The right option: its 0-based index or its exact text.")
+    explanation: str = Field(..., min_length=1, max_length=1000, description="Why, shown with the result.")
+
+
+class ConfidenceCheckB(_B):
+    type: Literal["confidence_check"]
+    title: str = _TITLE
+    questions: list[ConfidenceQuestionB] = Field(..., min_length=1, max_length=10)
+
+
+class GridRowB(_B):
+    label: str = Field(..., min_length=1, max_length=200)
+    ticks: list[str | int] = Field(
+        default_factory=list, max_length=6, description="The columns that apply to this row: labels or 0-based indexes.",
+    )
+
+
+class PropertyGridB(_B):
+    type: Literal["property_grid"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    columns: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(..., min_length=2, max_length=6, description="Property names.")
+    rows: list[GridRowB] = Field(..., min_length=2, max_length=8)
+    mode: Literal["multi", "single"] = Field("multi", description="multi: any number of ticks per row; single: exactly one.")
+
+
+class ReflectionB(_B):
+    type: Literal["reflection"]
+    title: str = _TITLE
+    prompt: str = Field(..., min_length=1, max_length=2000, description="What to write about.")
+    guiding_questions: list[Annotated[str, Field(min_length=1, max_length=300)]] = Field(default_factory=list, max_length=5)
+    min_words: int = Field(30, ge=0, le=500, description="Words to write before the model answer shows.")
+    model_answer: str = Field("", max_length=5000)
+    checklist: list[Annotated[str, Field(min_length=1, max_length=300)]] = Field(
+        default_factory=list, max_length=8, description="Key points learners tick if they covered them (their score).",
+    )
+
+
 class TestB(_B):
     label: str = Field("", max_length=200)
     input: str = Field("", max_length=20_000, description="stdin")
@@ -461,7 +561,8 @@ Block = Annotated[
         MarkdownB, ParagraphB, HeadingB, ListB, CalloutB, CodeB, TableB, MathB, QuizB, FlashcardsB,
         ScenarioB, ExerciseB, WidgetB, ConditionalB, ToggleB, EmbedB, VideoB, ImageB, AudioB, PdfB,
         H5pB, WebPreviewB, UserB, DividerB, ButtonB, BadgeB, SortB, SequenceB, MatchPairsB, HotspotB,
-        FillGapsB, MythFactB, SpeedRoundB, EstimateB, SpotMistakeB, CodeLockB, NodeB,
+        FillGapsB, MythFactB, SpeedRoundB, EstimateB, SpotMistakeB, CodeLockB, VennB, LabelDiagramB,
+        WordGuessB, ConfidenceCheckB, PropertyGridB, ReflectionB, NodeB,
     ],
     Field(discriminator="type"),
 ]
@@ -759,11 +860,7 @@ def _myth_fact(b: MythFactB) -> dict:
 def _speed_round(b: SpeedRoundB) -> dict:
     questions = []
     for n, q in enumerate(b.questions, 1):
-        if isinstance(q.answer, int):
-            answer = q.answer if 0 <= q.answer < len(q.options) else None
-        else:
-            wanted = q.answer.strip().casefold()
-            answer = next((i for i, o in enumerate(q.options) if o.strip().casefold() == wanted), None)
+        answer = _option_index(list(q.options), q.answer)
         if answer is None:
             raise BlockError(f"question {n} ('{q.prompt[:40]}') answer {q.answer!r} is not one of its options")
         questions.append({"id": _sid("q"), "prompt": q.prompt, "options": list(q.options), "answer": answer})
@@ -806,6 +903,133 @@ def _code_lock(b: CodeLockB) -> dict:
     return {"title": b.title, "story": b.story, "clues": clues, "reward": b.reward}
 
 
+def _venn(b: VennB) -> dict:
+    sets = {}
+    for key, raw, fallback in (("a", b.sets.a, "sky"), ("b", b.sets.b, "amber")):
+        label, color = (raw, None) if isinstance(raw, str) else (raw.label, raw.color)
+        color = (color or "").strip().lower()
+        sets[key] = {"label": label.strip(), "color": color if color in VENN_COLORS else fallback}
+    if sets["a"]["label"].casefold() == sets["b"]["label"].casefold():
+        raise BlockError("the two sets need different labels")
+    if sets["a"]["color"] == sets["b"]["color"]:
+        sets["b"]["color"] = "rose" if sets["a"]["color"] == "amber" else "amber"
+    neither = any(i.zone == "neither" for i in b.items)
+    if neither and b.show_neither is False:
+        raise BlockError("an item's zone is neither, so show_neither must be true (or leave it out)")
+    items = []
+    for item in b.items:
+        out = {"id": _sid("item"), "text": item.text, "zone": item.zone}
+        if item.explanation and item.explanation.strip():
+            out["explanation"] = item.explanation
+        items.append(out)
+    show = neither if b.show_neither is None else b.show_neither
+    return {"title": b.title, "instructions": b.instructions, "sets": sets, "items": items, "showNeither": show}
+
+
+def _label_diagram(b: LabelDiagramB) -> dict:
+    labels = {p.label.strip().casefold() for p in b.pins}
+    for x in b.distractors:
+        if x.strip().casefold() in labels:
+            raise BlockError(f"distractor '{x[:40]}' is also a pin label; distractors must be wrong labels")
+    pins = [{"id": _sid("pin"), "x": _num(p.x), "y": _num(p.y), "label": p.label.strip()} for p in b.pins]
+    # imageObject (an uploaded file's server object) is left out, as for hotspots.
+    return {
+        "title": b.title, "instructions": b.instructions, "imageUrl": b.image_url, "pins": pins,
+        "distractors": [x.strip() for x in b.distractors],
+    }
+
+
+_FIXED_CHARS = frozenset(" -\u2010\u2011\u2013")
+
+
+def _word_letters(answer: str) -> int | None:
+    """Letters to guess in a word guess answer, or None when it holds
+    something else than letters, spaces and hyphens (as the editor reads it)."""
+    letters = 0
+    for ch in " ".join(answer.split()):
+        cat = unicodedata.category(ch)
+        if cat.startswith("L"):
+            letters += 1
+        elif not (cat.startswith("M") and letters) and ch not in _FIXED_CHARS:
+            return None
+    return letters
+
+
+def _word_guess(b: WordGuessB) -> dict:
+    words = []
+    seen: set[str] = set()
+    for n, w in enumerate(b.words, 1):
+        answer = " ".join(w.answer.split())
+        letters = _word_letters(answer)
+        if letters is None:
+            raise BlockError(f"word {n} answer '{answer[:40]}' may hold only letters, spaces and hyphens")
+        if not 2 <= letters <= 12:
+            raise BlockError(f"word {n} answer '{answer[:40]}' needs 2 to 12 letters")
+        if answer.casefold() in seen:
+            raise BlockError(f"word {n} answer '{answer[:40]}' is used twice")
+        seen.add(answer.casefold())
+        out = {"id": _sid("word"), "answer": answer, "clue": w.clue}
+        if w.explanation and w.explanation.strip():
+            out["explanation"] = w.explanation
+        words.append(out)
+    return {"title": b.title, "words": words, "maxGuesses": b.max_guesses}
+
+
+def _option_index(options: list[str], answer: int | str) -> int | None:
+    if isinstance(answer, int):
+        return answer if 0 <= answer < len(options) else None
+    wanted = answer.strip().casefold()
+    return next((i for i, o in enumerate(options) if o.strip().casefold() == wanted), None)
+
+
+def _confidence_check(b: ConfidenceCheckB) -> dict:
+    questions = []
+    for n, q in enumerate(b.questions, 1):
+        answer = _option_index(list(q.options), q.answer)
+        if answer is None:
+            raise BlockError(f"question {n} ('{q.prompt[:40]}') answer {q.answer!r} is not one of its options")
+        questions.append({"id": _sid("q"), "prompt": q.prompt, "options": list(q.options), "answer": answer, "explanation": q.explanation})
+    return {"title": b.title, "questions": questions}
+
+
+def _property_grid(b: PropertyGridB) -> dict:
+    keys = [c.strip().casefold() for c in b.columns]
+    if len(set(keys)) != len(keys):
+        raise BlockError("column labels must be different")
+    columns = [{"id": _sid("col"), "label": c.strip()} for c in b.columns]
+    rows, cells = [], {}
+    for n, r in enumerate(b.rows, 1):
+        row = {"id": _sid("row"), "label": r.label.strip()}
+        picked: list[int] = []
+        for ref in r.ticks:
+            if isinstance(ref, int):
+                index = ref if 0 <= ref < len(columns) else None
+            else:
+                index = keys.index(ref.strip().casefold()) if ref.strip().casefold() in keys else None
+            if index is None:
+                names = ", ".join(c["label"] for c in columns)
+                raise BlockError(f"row {n} ('{r.label[:40]}') ticks unknown column {ref!r}; use one of {names}")
+            if index not in picked:
+                picked.append(index)
+        if b.mode == "single" and len(picked) != 1:
+            raise BlockError(f"row {n} ('{r.label[:40]}') needs exactly one tick in single mode")
+        for index in picked:
+            cells[f"{row['id']}:{columns[index]['id']}"] = True
+        rows.append(row)
+    if not cells:
+        raise BlockError("tick at least one cell: each row's ticks name the columns that apply")
+    return {"title": b.title, "instructions": b.instructions, "rows": rows, "columns": columns, "cells": cells, "mode": b.mode}
+
+
+def _reflection(b: ReflectionB) -> dict:
+    if not b.model_answer.strip() and not b.checklist:
+        raise BlockError("give a model_answer or a checklist of key points for learners to compare with")
+    return {
+        "title": b.title, "prompt": b.prompt, "guidingQuestions": list(b.guiding_questions), "minWords": b.min_words,
+        "modelAnswer": b.model_answer, "checklist": list(b.checklist),
+    }
+
+
 # typed block -> (editor node, attrs builder)
 EXPERIENCES: dict[str, tuple[str, Any]] = {
     "sort": ("expSort", _sort),
@@ -818,6 +1042,12 @@ EXPERIENCES: dict[str, tuple[str, Any]] = {
     "estimate": ("expEstimate", _estimate),
     "spot_mistake": ("expSpotMistake", _spot_mistake),
     "code_lock": ("expCodeLock", _code_lock),
+    "venn": ("expVenn", _venn),
+    "label_diagram": ("expLabel", _label_diagram),
+    "word_guess": ("expWordGuess", _word_guess),
+    "confidence_check": ("expConfidence", _confidence_check),
+    "property_grid": ("expMatrix", _property_grid),
+    "reflection": ("expReflect", _reflection),
 }
 
 
@@ -999,6 +1229,26 @@ EXAMPLES: dict[str, dict] = {
     "code_lock": {"type": "code_lock", "title": "Lab escape", "story": "Answer every clue to open the lab door.",
                   "clues": [{"question": "How many oxygen atoms in CO2?", "answer": 2, "hint": "Read the formula."}],
                   "reward": "You are out! Photosynthesis mastered."},
+    "venn": {"type": "venn", "title": "Plants or animals?", "instructions": "Place each fact in the right zone.",
+             "sets": {"a": "Plants", "b": "Animals"}, "items": [
+                 {"text": "Make their own sugar", "zone": "a"},
+                 {"text": "Eat other living things", "zone": "b"},
+                 {"text": "Respire to release energy", "zone": "both", "explanation": "All living cells respire."}]},
+    "label_diagram": {"type": "label_diagram", "title": "Label the leaf", "instructions": "Drag each label onto its pin.",
+                      "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Leaf_1_web.jpg",
+                      "pins": [{"x": 50, "y": 20, "label": "Tip"}, {"x": 50, "y": 90, "label": "Stalk"}],
+                      "distractors": ["Root"]},
+    "word_guess": {"type": "word_guess", "title": "Guess the term", "words": [
+        {"answer": "stomata", "clue": "Tiny pores that let gases in and out of a leaf.", "explanation": "Most sit under the leaf."}]},
+    "confidence_check": {"type": "confidence_check", "title": "How sure are you?", "questions": [
+        {"prompt": "Which gas do plants release in daylight?", "options": ["Oxygen", "Nitrogen", "Methane"], "answer": 0,
+         "explanation": "Photosynthesis splits water and releases oxygen."}]},
+    "property_grid": {"type": "property_grid", "title": "Which parts do what?", "columns": ["Makes sugar", "Carries water"],
+                      "rows": [{"label": "Leaf", "ticks": ["Makes sugar"]}, {"label": "Stem", "ticks": [1]}]},
+    "reflection": {"type": "reflection", "title": "In your own words", "prompt": "Explain why a plant in a dark cupboard wilts.",
+                   "guiding_questions": ["What does the plant need light for?"], "min_words": 30,
+                   "model_answer": "Without light it cannot make sugar, so it runs out of energy.",
+                   "checklist": ["Light powers photosynthesis", "No sugar means no energy"]},
     "node": {"type": "node", "node": {"type": "paragraph", "content": [{"type": "text", "text": "Raw editor JSON"}]}},
 }
 
@@ -1027,6 +1277,12 @@ NOTES: dict[str, str] = {
     "estimate": "Prediction before teaching: ask before the explanation, so the reveal sticks.",
     "spot_mistake": "Error detection: kind code splits by line; give a correction for each mistake.",
     "code_lock": "A mini escape room: 1 to 5 clues with short answers (a word or number); the reward shows at the end.",
+    "venn": "Compare and contrast two ideas: 3 to 16 facts, each only in a, only in b, in both (the overlap) or neither.",
+    "label_diagram": "Labelling a diagram: pins sit at % coordinates of the image; add 1 to 4 plausible wrong labels.",
+    "word_guess": "Recall a key term from its clue with letter feedback (accent- and case-insensitive); best for vocabulary.",
+    "confidence_check": "Metacognition: learners answer, say how sure they are, then see their calibration; always explain.",
+    "property_grid": "Which properties apply to each row (a feature table); single mode means one tick per row.",
+    "reflection": "Self-explanation: learners write first, then compare with the model answer and tick the key points they covered.",
 }
 
 

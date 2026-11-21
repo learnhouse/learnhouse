@@ -268,7 +268,9 @@ def _experience_learner_lines(t: str, a: dict) -> list[str]:  # noqa: C901 - one
     names = {
         "expSort": "Sort it", "expSequence": "Put in order", "expMatch": "Match the pairs", "expHotspot": "Find on the image",
         "expGaps": "Fill the gaps", "expMythFact": "Myth or fact", "expSpeedRound": "Speed round", "expEstimate": "Estimate",
-        "expSpotMistake": "Spot the mistake", "expCodeLock": "Code lock",
+        "expSpotMistake": "Spot the mistake", "expCodeLock": "Code lock", "expVenn": "Compare",
+        "expLabel": "Label the diagram", "expWordGuess": "Word guess", "expConfidence": "Confidence check",
+        "expMatrix": "Property grid", "expReflect": "Reflection",
     }
     title = exp.text(a.get("title")) or exp.text(a.get("question"))
     lines = [f"**{names[t]}{': ' + title if title else ''}**"]
@@ -310,6 +312,31 @@ def _experience_learner_lines(t: str, a: dict) -> list[str]:  # noqa: C901 - one
         if exp.text(a.get("story")):
             lines.append(exp.text(a.get("story")))
         lines += [f"🔒 {exp.text(c.get('question'))}" for c in exp.items(a.get("clues"))]
+    elif t == "expVenn":
+        sets = a.get("sets") if isinstance(a.get("sets"), dict) else {}
+        labels = [exp.text(s.get("label")) for s in (sets.get("a"), sets.get("b")) if isinstance(s, dict)]
+        lines.append("Circles: " + " | ".join(labels) + (" (and outside both)" if a.get("showNeither") is True else ""))
+        lines += [f"- [{x}]" for x in _sorted(a.get("items"), "text")]
+    elif t == "expLabel":
+        pins = exp.items(a.get("pins"))
+        bank = sorted({exp.text(p.get("label")) for p in pins if exp.text(p.get("label"))}
+                      | {exp.text(x) for x in a.get("distractors") or [] if exp.text(x)}, key=str.casefold)
+        lines.append(f"[Image with {len(pins)} numbered pin(s)]")
+        lines.append("Labels: " + " | ".join(bank))
+    elif t == "expWordGuess":
+        lines += [f"🔤 {exp.text(w.get('clue'))}" for w in exp.items(a.get("words"))]
+    elif t == "expConfidence":
+        for n, q in enumerate(exp.items(a.get("questions")), 1):
+            lines.append(f"{n}. {exp.text(q.get('prompt'))}")
+            lines += [f"   ( ) {exp.text(o)}" for o in q.get("options") or [] if exp.text(o)]
+        lines.append("How sure? Guessing / Fairly sure / Certain")
+    elif t == "expMatrix":
+        lines.append("| | " + " | ".join(exp.text(c.get("label")) for c in exp.items(a.get("columns"))) + " |")
+        lines += [f"| {exp.text(r.get('label'))} |" for r in exp.items(a.get("rows"))]
+    elif t == "expReflect":
+        lines.append(exp.text(a.get("prompt")))
+        lines += [f"- {exp.text(g)}" for g in a.get("guidingQuestions") or [] if exp.text(g)]
+        lines.append(f"[Write at least {a.get('minWords', 30)} words; then compare with the model answer]")
     return lines
 
 

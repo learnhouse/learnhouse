@@ -127,6 +127,16 @@ SCHEMA: dict[str, Spec] = {
     ),
     "expSpotMistake": Spec(BLOCK, None, ("blockId", "title", "instructions", "segments", "kind")),
     "expCodeLock": Spec(BLOCK, None, ("blockId", "title", "story", "clues", "reward")),
+    "expVenn": Spec(BLOCK, None, ("blockId", "title", "instructions", "sets", "items", "showNeither")),
+    # imageObject / imageUrl: as on expHotspot.
+    "expLabel": Spec(BLOCK, None, ("blockId", "title", "instructions", "imageUrl", "imageObject", "pins", "distractors")),
+    "expWordGuess": Spec(BLOCK, None, ("blockId", "title", "words", "maxGuesses")),
+    "expConfidence": Spec(BLOCK, None, ("blockId", "title", "questions")),
+    # cells: the correct ticks as {"rowId:colId": true}.
+    "expMatrix": Spec(BLOCK, None, ("blockId", "title", "instructions", "rows", "columns", "cells", "mode")),
+    "expReflect": Spec(
+        BLOCK, None, ("blockId", "title", "prompt", "guidingQuestions", "minWords", "modelAnswer", "checklist"),
+    ),
     "blockCode": Spec(
         BLOCK, None,
         ("mode", "languageId", "languageName", "starterCode", "testCases", "description",
@@ -655,6 +665,28 @@ def _labels(v: Any) -> str | None:
     return None
 
 
+def _venn_sets(v: Any) -> str | None:
+    if not isinstance(v, dict) or set(v) - {"a", "b"}:
+        return 'must be {"a": {label, color}, "b": {label, color}}'
+    for key, side in v.items():
+        if not isinstance(side, dict):
+            return f"{key} must be {{label, color}}"
+        for field, check in (("label", _str(500)), ("color", _str(30))):
+            problem = check(side.get(field))
+            if problem:
+                return f"{key} {field} {problem}"
+    return None
+
+
+def _cells(v: Any) -> str | None:
+    if not isinstance(v, dict) or len(v) > 1000:
+        return 'must be an object of correct ticks like {"rowId:colId": true}'
+    for key, value in v.items():
+        if len(key) > 201 or ":" not in key or not isinstance(value, bool):
+            return f'entry {key[:40]!r} must be "rowId:colId": true'
+    return None
+
+
 def _image_src(v: Any) -> str | None:
     """An image: an http(s) URL, or a path on this site for uploaded files."""
     if v in (None, "") or is_web_url(v):
@@ -719,6 +751,42 @@ _EXPERIENCE_VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
         "reward": _str(10_000),
     },
 }
+_IMAGE_OBJECT = _EXPERIENCE_VALIDATORS["expHotspot"]["imageObject"]
+_EXPERIENCE_VALIDATORS.update({
+    "expVenn": {
+        "sets": _venn_sets,
+        "items": _entries("item", 50, {
+            "id": _ID, "text": _SHORT, "zone": _one_of("a", "b", "both", "neither"), "explanation": _str(2000),
+        }),
+        "showNeither": _bool,
+    },
+    "expLabel": {
+        "imageUrl": _image_src,
+        "imageObject": _IMAGE_OBJECT,
+        "pins": _entries("pin", 50, {"id": _ID, "x": _number(0, 100), "y": _number(0, 100), "label": _SHORT}),
+        "distractors": _strings(20, 500),
+    },
+    "expWordGuess": {
+        "words": _entries("word", 30, {"id": _ID, "answer": _str(100), "clue": _str(2000), "explanation": _str(2000)}),
+        "maxGuesses": _number(1, 20, whole=True),
+    },
+    "expConfidence": {
+        "questions": _entries(
+            "question", 50, {"id": _ID, "prompt": _str(2000), "options": _strings(10, 1000), "explanation": _str(2000)},
+            extra=_speed_answer,
+        ),
+    },
+    "expMatrix": {
+        "rows": _entries("row", 30, {"id": _ID, "label": _SHORT}),
+        "columns": _entries("column", 20, {"id": _ID, "label": _SHORT}),
+        "cells": _cells,
+        "mode": _one_of("multi", "single"),
+    },
+    "expReflect": {
+        "prompt": _LONG, "guidingQuestions": _strings(20, 1000), "minWords": _number(0, 10_000, whole=True),
+        "modelAnswer": _str(10_000), "checklist": _strings(30, 1000),
+    },
+})
 for _name, _checks in _EXPERIENCE_VALIDATORS.items():
     _checks.setdefault("blockId", _ID)
     _checks.setdefault("title", _SHORT)
@@ -883,7 +951,7 @@ def attrs_problems(t: str, attrs: Any, where: tuple = ()) -> list[str]:
             if problem:
                 out.append(f"{t}.{key} {problem}.")
     for key in URL_ATTRS & set(attrs):
-        if t == "expHotspot" and key == "imageUrl":
+        if t in ("expHotspot", "expLabel") and key == "imageUrl":
             continue  # _image_src: uploaded images may be site paths
         value = attrs[key]
         if value not in (None, "") and not is_web_url(value):
@@ -1144,6 +1212,8 @@ def block_text(node: Any, depth: int = 0) -> str:
             rows.append(" | ".join(block_text(cell, depth + 2).replace("\n", " ") for cell in children(row)))
         return "\n".join(rows)
     parts = [block_text(c, depth + 1) for c in children(node)]
+    if t == "flipcardGrid":
+        parts.insert(0, str((node.get("attrs") or {}).get("title") or ""))  # the deck title
     return "\n".join(p for p in parts if p)
 
 
@@ -1165,8 +1235,13 @@ def atom_text(node: dict) -> str:
         for s in a.get("scenarios") or []:
             if isinstance(s, dict):
                 lines.append(str(s.get("text") or ""))
-                lines.extend(str(o.get("text") or "") for o in s.get("options") or [] if isinstance(o, dict))
-        return "\n".join(lines)
+                for o in s.get("options") or []:
+                    if isinstance(o, dict):
+                        lines.extend(str(o.get(key) or "") for key in ("text", "feedback"))
+                ending = s.get("ending")
+                if isinstance(ending, dict):
+                    lines.append(str(ending.get("title") or ""))
+        return "\n".join(line for line in lines if line)
     if t in exp.TEXT_PATHS:
         return "\n".join(
             exp.gaps_text(owner[key], answers=True) if t == "expGaps" and key == "text" else owner[key]
@@ -1294,7 +1369,8 @@ _EXPERIENCE_COUNTS = {
     "expSort": ("items", "items"), "expSequence": ("items", "items"), "expMatch": ("pairs", "pairs"),
     "expHotspot": ("spots", "spots"), "expMythFact": ("statements", "statements"),
     "expSpeedRound": ("questions", "questions"), "expSpotMistake": ("segments", "segments"),
-    "expCodeLock": ("clues", "clues"),
+    "expCodeLock": ("clues", "clues"), "expVenn": ("items", "items"), "expLabel": ("pins", "pins"),
+    "expWordGuess": ("words", "words"), "expConfidence": ("questions", "questions"), "expMatrix": ("rows", "rows"),
 }
 
 
@@ -1311,6 +1387,15 @@ def experience_summary(t: str, a: dict, text_limit: int = 200) -> dict:
     elif t == "expEstimate":
         out["answer"] = a.get("answer")
         out["unit"] = a.get("unit") or None
+    elif t == "expVenn":
+        sets = a.get("sets") if isinstance(a.get("sets"), dict) else {}
+        out["sets"] = [clip(exp.text(s.get("label")), 80)[0] for s in (sets.get("a"), sets.get("b")) if isinstance(s, dict)]
+    elif t == "expMatrix":
+        out["columns"] = [clip(exp.text(c.get("label")), 80)[0] for c in exp.items(a.get("columns"))]
+    elif t == "expReflect":
+        out["title"] = out["title"] or clip(exp.text(a.get("prompt")), text_limit)[0] or None
+        checklist = a.get("checklist")
+        out["key_points"] = len(checklist) if isinstance(checklist, list) else None
     for key in ("mode", "variant", "kind"):
         if isinstance(a.get(key), str):
             out[key] = a[key]

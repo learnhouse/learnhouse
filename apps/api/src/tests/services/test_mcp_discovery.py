@@ -237,7 +237,7 @@ async def test_static_resources_branding_and_markdown(db, org, admin_user, sessi
         return (await handlers.read_resource(who, types.ReadResourceRequestParams(uri=uri))).contents[0]
 
     blocks = json.loads((await read("learnhouse://blocks")).text)
-    assert len(blocks["blocks"]) == 37 and blocks["blocks"][0]["schema"].startswith("learnhouse://block/")
+    assert len(blocks["blocks"]) == 43 and blocks["blocks"][0]["schema"].startswith("learnhouse://block/")
     quiz = json.loads((await read("learnhouse://block/quiz")).text)
     assert quiz["schema"]["properties"]["questions"] and quiz["example"]["type"] == "quiz"
     guide = await read("learnhouse://guide/course-spec")
@@ -288,7 +288,7 @@ async def test_static_completions(db, org, admin_user, sessions):  # noqa: F811 
         return out.completion.values
 
     block_ref = types.ResourceTemplateReference(type="ref/resource", uri="learnhouse://block/{type}")
-    assert await complete(block_ref, "type", "fl") == ["flashcards"]
+    assert await complete(block_ref, "type", "fl") == ["flashcards", "reflection"]
     assert "web_preview" in await complete(block_ref, "type", "preview")
     assert await complete(types.ResourceTemplateReference(type="ref/resource", uri="learnhouse://guide/{topic}"), "topic", "ped") == ["pedagogy"]
     assert "fr" in await complete(types.PromptReference(type="ref/prompt", name="translate_course"), "locale", "f")

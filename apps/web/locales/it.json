@@ -12910,6 +12910,7 @@
         "quizzes": "Quiz",
         "flashcards": "Flashcard",
         "assignments": "Compiti con griglie di valutazione",
+        "practice": "Esercizi interattivi",
         "remix": "Parti da corsi esistenti",
         "remix_placeholder": "Cerca un corso da remixare",
         "add_to": "Aggiungi capitoli a un corso",
@@ -12937,7 +12938,8 @@
         "quiz": "Quiz",
         "flashcards": "Flashcard",
         "video": "Video",
-        "assignment": "Compito"
+        "assignment": "Compito",
+        "practice": "Pratica"
       },
       "status": {
         "idle": "Non scritto",
