@@ -815,10 +815,8 @@
       "try_again": "Reintentar",
       "org_full": "Esta organización está llena ahora mismo. Pide a su administrador que libere espacio."
     },
-    "login_failed_forgot": "¿Olvidaste tu contraseña?",
-    "login_failed_reset": "Restablécela",
-    "login_failed_magic": "Envíame un enlace de acceso",
-    "login_failed_google_hint": "¿Te registraste con Google? Usa Continuar con Google abajo.",
+    "login_failed_reset_password": "Restablecer contraseña",
+    "login_failed_email_link": "Enviarme un enlace de acceso",
     "email_verified_set_password": "Tu correo electrónico ha sido verificado. Por tu seguridad, se eliminó la contraseña establecida anteriormente: elige una nueva para iniciar sesión con contraseña.",
     "set_new_password": "Establecer nueva contraseña",
     "invited_by_email_cta": "¿Te invitaron por correo? Regístrate con esa dirección",

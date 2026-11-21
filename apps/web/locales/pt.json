@@ -815,10 +815,8 @@
       "try_again": "Tentar novamente",
       "org_full": "Esta organização está cheia no momento. Peça ao administrador para liberar espaço."
     },
-    "login_failed_forgot": "Esqueceu sua senha?",
-    "login_failed_reset": "Redefinir",
-    "login_failed_magic": "Enviar um link de acesso por e-mail",
-    "login_failed_google_hint": "Cadastrou-se com o Google? Use Continuar com o Google abaixo.",
+    "login_failed_reset_password": "Redefinir senha",
+    "login_failed_email_link": "Enviar-me um link de acesso",
     "email_verified_set_password": "Seu e-mail foi verificado. Para sua segurança, a senha definida anteriormente foi removida: escolha uma nova para fazer login com senha.",
     "set_new_password": "Definir nova senha",
     "invited_by_email_cta": "Convidado por e-mail? Cadastre-se com esse endereço",

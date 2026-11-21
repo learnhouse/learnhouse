@@ -117,7 +117,17 @@ export function scrubSentryEvent<E extends Record<string, any> | null>(event: E)
   return event
 }
 
-/** Drops secret query params from the address bar (keeps Next's history state). */
+/**
+ * Drops secret query params from the address bar.
+ *
+ * The state argument is `null` on purpose: Next's patched replaceState copies
+ * its own history state in and moves the router's canonical URL along. Passing
+ * `window.history.state` (which carries Next's markers) made Next treat the
+ * call as internal, so the router kept the old URL, token included. A later
+ * RSC fetch for that URL, aborted by the next page load, then made Safari fall
+ * back to a hard load of the token URL: a magic link was redeemed twice and
+ * failed as "already used".
+ */
 export function removeQueryParamsFromAddressBar(names: string[]): void {
   if (typeof window === 'undefined') return
   try {
@@ -129,7 +139,7 @@ export function removeQueryParamsFromAddressBar(names: string[]): void {
         changed = true
       }
     }
-    if (changed) window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash)
+    if (changed) window.history.replaceState(null, '', u.pathname + u.search + u.hash)
   } catch {
     /* best-effort */
   }

@@ -57,7 +57,9 @@ export default function MobileActivityBar(props: MobileActivityBarProps) {
 
   return (
     <>
-      <div
+      <nav
+        // Same landmark as the desktop bar (ActivityNavBar).
+        aria-label={t('activities.nav.label', 'Activity navigation')}
         className={`lh-bottom-bleed md:hidden fixed inset-x-0 bottom-0 backdrop-blur-xl backdrop-saturate-150 ${
           dark ? 'bg-[#141414]/90 border-t border-white/5' : 'bg-white/90 border-t border-black/[0.06]'
         }`}
@@ -107,7 +109,7 @@ export default function MobileActivityBar(props: MobileActivityBarProps) {
             {isLast ? <Flag size={18} weight="fill" /> : <CaretRight size={20} weight="bold" className="rtl:rotate-180" />}
           </button>
         </div>
-      </div>
+      </nav>
 
       <CourseOutlineSheet open={outlineOpen} onOpenChange={setOutlineOpen} course={props.course} model={model} />
     </>

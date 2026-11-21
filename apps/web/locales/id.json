@@ -814,10 +814,8 @@
       "try_again": "Coba lagi",
       "org_full": "Organisasi ini sedang penuh. Minta admin-nya untuk menyediakan tempat."
     },
-    "login_failed_forgot": "Lupa kata sandi?",
-    "login_failed_reset": "Atur ulang",
-    "login_failed_magic": "Kirimi saya tautan masuk saja",
-    "login_failed_google_hint": "Mendaftar dengan Google? Gunakan Lanjutkan dengan Google di bawah.",
+    "login_failed_reset_password": "Atur ulang kata sandi",
+    "login_failed_email_link": "Kirimi saya tautan masuk",
     "email_verified_set_password": "Email Anda telah diverifikasi. Demi keamanan Anda, kata sandi yang ditetapkan sebelumnya telah dihapus: pilih kata sandi baru untuk masuk dengan kata sandi.",
     "set_new_password": "Atur kata sandi baru",
     "invited_by_email_cta": "Diundang lewat email? Daftar dengan alamat itu",

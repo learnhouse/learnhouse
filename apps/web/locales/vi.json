@@ -814,10 +814,8 @@
       "try_again": "Thử lại",
       "org_full": "Tổ chức này hiện đã đầy. Hãy nhờ quản trị viên dành chỗ."
     },
-    "login_failed_forgot": "Quên mật khẩu?",
-    "login_failed_reset": "Đặt lại",
-    "login_failed_magic": "Gửi cho tôi liên kết đăng nhập",
-    "login_failed_google_hint": "Đã đăng ký bằng Google? Hãy dùng Tiếp tục với Google bên dưới.",
+    "login_failed_reset_password": "Đặt lại mật khẩu",
+    "login_failed_email_link": "Gửi cho tôi liên kết đăng nhập",
     "email_verified_set_password": "Email của bạn đã được xác minh. Vì lý do bảo mật, mật khẩu được đặt trước đó đã bị xóa: hãy chọn mật khẩu mới để đăng nhập bằng mật khẩu.",
     "set_new_password": "Đặt mật khẩu mới",
     "invited_by_email_cta": "Được mời qua email? Đăng ký bằng địa chỉ đó",

@@ -817,10 +817,8 @@
       "try_again": "Spróbuj ponownie",
       "org_full": "Ta organizacja jest teraz pełna. Poproś administratora o zwolnienie miejsca."
     },
-    "login_failed_forgot": "Nie pamiętasz hasła?",
-    "login_failed_reset": "Zresetuj je",
-    "login_failed_magic": "Wyślij mi link do logowania",
-    "login_failed_google_hint": "Rejestracja przez Google? Użyj poniżej opcji Kontynuuj z Google.",
+    "login_failed_reset_password": "Zresetuj hasło",
+    "login_failed_email_link": "Wyślij mi link do logowania",
     "email_verified_set_password": "Twój e-mail został zweryfikowany. Ze względów bezpieczeństwa hasło ustawione wcześniej zostało usunięte: wybierz nowe, aby logować się za pomocą hasła.",
     "set_new_password": "Ustaw nowe hasło",
     "invited_by_email_cta": "Zaproszenie przyszło e-mailem? Zarejestruj się tym adresem",

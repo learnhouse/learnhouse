@@ -815,10 +815,8 @@
       "try_again": "Réessayer",
       "org_full": "Cette organisation est complète pour le moment. Demandez à son administrateur de libérer de la place."
     },
-    "login_failed_forgot": "Mot de passe oublié ?",
-    "login_failed_reset": "Le réinitialiser",
-    "login_failed_magic": "M'envoyer plutôt un lien de connexion",
-    "login_failed_google_hint": "Inscrit avec Google ? Utilisez Continuer avec Google ci-dessous.",
+    "login_failed_reset_password": "Réinitialiser le mot de passe",
+    "login_failed_email_link": "M'envoyer un lien de connexion",
     "email_verified_set_password": "Votre e-mail a été vérifié. Pour votre sécurité, le mot de passe défini auparavant a été supprimé : choisissez-en un nouveau pour vous connecter avec un mot de passe.",
     "set_new_password": "Définir un nouveau mot de passe",
     "invited_by_email_cta": "Invité par e-mail ? Inscrivez-vous avec cette adresse",

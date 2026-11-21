@@ -817,10 +817,8 @@
       "try_again": "Skúsiť znova",
       "org_full": "Táto organizácia je momentálne plná. Požiadajte jej správcu, aby uvoľnil miesto."
     },
-    "login_failed_forgot": "Zabudli ste heslo?",
-    "login_failed_reset": "Obnoviť",
-    "login_failed_magic": "Poslať mi radšej prihlasovací odkaz",
-    "login_failed_google_hint": "Registrovali ste sa cez Google? Použite nižšie Pokračovať cez Google.",
+    "login_failed_reset_password": "Obnoviť heslo",
+    "login_failed_email_link": "Poslať mi prihlasovací odkaz",
     "email_verified_set_password": "Váš e-mail bol overený. Z bezpečnostných dôvodov bolo predtým nastavené heslo odstránené: zvoľte si nové, aby ste sa mohli prihlasovať heslom.",
     "set_new_password": "Nastaviť nové heslo",
     "invited_by_email_cta": "Pozvánka prišla e-mailom? Zaregistrujte sa touto adresou",

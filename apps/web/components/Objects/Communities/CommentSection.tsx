@@ -189,6 +189,8 @@ export function CommentSection({
           icon={<PaperPlaneRight size={14} className="rtl:-scale-x-100" />}
           loading={isSubmitting}
           disabled={!newComment.trim()}
+          // The text is hidden on phones; keep the button named there.
+          aria-label={t('communities.comments.reply')}
         >
           <span className="hidden sm:inline">{t('communities.comments.reply')}</span>
         </Button>

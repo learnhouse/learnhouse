@@ -815,10 +815,8 @@
       "try_again": "Opnieuw proberen",
       "org_full": "Deze organisatie zit op dit moment vol. Vraag de beheerder om ruimte te maken."
     },
-    "login_failed_forgot": "Wachtwoord vergeten?",
-    "login_failed_reset": "Opnieuw instellen",
-    "login_failed_magic": "Stuur me liever een inloglink",
-    "login_failed_google_hint": "Aangemeld met Google? Gebruik hieronder Doorgaan met Google.",
+    "login_failed_reset_password": "Wachtwoord opnieuw instellen",
+    "login_failed_email_link": "Stuur me een inloglink",
     "email_verified_set_password": "Je e-mail is geverifieerd. Voor je veiligheid is het eerder ingestelde wachtwoord verwijderd: kies een nieuw wachtwoord om met een wachtwoord in te loggen.",
     "set_new_password": "Nieuw wachtwoord instellen",
     "invited_by_email_cta": "Uitgenodigd per e-mail? Meld je aan met dat adres",
