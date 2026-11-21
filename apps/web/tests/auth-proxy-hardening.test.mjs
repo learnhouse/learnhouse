@@ -11,6 +11,7 @@ mock.module("next/headers", () => ({
 
 mock.module("@services/config/config", () => ({
   getConfig: () => "http://api.test",
+  getServerBackendUrl: () => "http://api.test",
 }));
 
 const backendCalls = [];

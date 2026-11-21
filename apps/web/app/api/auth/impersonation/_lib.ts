@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfig } from '@services/config/config'
+import { getServerBackendUrl } from '@services/config/config'
 import { IMPERSONATION_COOKIE, getCookieOptions, getDomainFromRequest } from '@services/auth/cookies'
 import { isLocalhost } from '@services/utils/ts/hostUtils'
 import { impersonationCookieMaxAge } from '@/lib/auth/impersonationToken'
@@ -7,7 +7,7 @@ import { impersonationCookieMaxAge } from '@/lib/auth/impersonationToken'
 // Shared by the impersonation route handlers (files prefixed with `_` are
 // never routes).
 
-export const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
+export const BACKEND_URL = getServerBackendUrl('http://localhost:1338')
 
 function requestHosts(request: NextRequest): string[] {
   return [request.headers.get('x-forwarded-host'), request.headers.get('host')]

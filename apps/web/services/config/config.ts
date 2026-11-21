@@ -81,8 +81,9 @@ const getCookieValue = (name: string): string | null => {
 }
 
 // Dynamic config getters - these are functions to ensure runtime values are used
+// Case-insensitive: CLI installs before 1.7.0 wrote "True".
 const getLEARNHOUSE_HTTP_PROTOCOL = () =>
-  (getConfig('NEXT_PUBLIC_LEARNHOUSE_HTTPS') === 'true') ? 'https://' : 'http://'
+  (getConfig('NEXT_PUBLIC_LEARNHOUSE_HTTPS').toLowerCase() === 'true') ? 'https://' : 'http://'
 const getLEARNHOUSE_BACKEND_URL = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL', 'http://localhost/')
 const getLEARNHOUSE_DOMAIN = () => {
   // 1. Env var (backward compat for existing deploys)
@@ -181,6 +182,12 @@ export const getServerAPIUrl = () => {
 }
 
 export const getBackendUrl = () => getLEARNHOUSE_BACKEND_URL()
+
+// Server-side only: backend base without a trailing slash, over the internal
+// network when LEARNHOUSE_INTERNAL_API_URL is set. For route handlers that
+// proxy to the API; never use it for URLs sent to the browser.
+export const getServerBackendUrl = (fallback = 'http://localhost/'): string =>
+  getInternalBackendUrl() || (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || fallback).replace(/\/+$/, '')
 
 /**
  * Get the upgrade/plan URL for a given org.
