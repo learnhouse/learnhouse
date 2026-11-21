@@ -4447,7 +4447,9 @@
       "view_content": "Inhalt ansehen"
     },
     "checkout_paused": "Der Checkout ist für dieses Produkt vorübergehend nicht verfügbar. Die Organisation wurde informiert. Bitte versuchen Sie es später erneut.",
-    "checkout_paused_short": "Vorübergehend nicht verfügbar"
+    "checkout_paused_short": "Vorübergehend nicht verfügbar",
+    "checkout_not_for_sale": "Dieses Produkt kann noch nicht gekauft werden.",
+    "checkout_not_for_sale_short": "Noch nicht verfügbar"
   },
   "account": {
     "title": "Kontoeinstellungen",

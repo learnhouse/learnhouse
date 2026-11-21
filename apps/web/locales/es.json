@@ -4528,7 +4528,9 @@
       "owned_count_many": "Tienes {{count}} ofertas"
     },
     "checkout_paused": "El pago no está disponible temporalmente para este producto. Ya avisamos a la organización; inténtalo de nuevo más tarde.",
-    "checkout_paused_short": "No disponible temporalmente"
+    "checkout_paused_short": "No disponible temporalmente",
+    "checkout_not_for_sale": "Este producto aún no está disponible para la compra.",
+    "checkout_not_for_sale_short": "Aún no disponible"
   },
   "account": {
     "title": "Ajustes de la cuenta",

@@ -4447,7 +4447,9 @@
       "view_content": "مشاهده محتوا"
     },
     "checkout_paused": "پرداخت این محصول موقتاً در دسترس نیست. به سازمان اطلاع داده شده است؛ لطفاً بعداً دوباره تلاش کنید.",
-    "checkout_paused_short": "موقتاً در دسترس نیست"
+    "checkout_paused_short": "موقتاً در دسترس نیست",
+    "checkout_not_for_sale": "این محصول هنوز برای خرید در دسترس نیست.",
+    "checkout_not_for_sale_short": "هنوز در دسترس نیست"
   },
   "account": {
     "title": "تنظیمات حساب",

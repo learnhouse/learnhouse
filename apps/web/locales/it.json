@@ -4528,7 +4528,9 @@
       "owned_count_many": "Possiedi {{count}} offerte"
     },
     "checkout_paused": "Il checkout non è temporaneamente disponibile per questo prodotto. L'organizzazione è stata avvisata; riprova più tardi.",
-    "checkout_paused_short": "Temporaneamente non disponibile"
+    "checkout_paused_short": "Temporaneamente non disponibile",
+    "checkout_not_for_sale": "Questo prodotto non è ancora disponibile per l’acquisto.",
+    "checkout_not_for_sale_short": "Non ancora disponibile"
   },
   "account": {
     "title": "Impostazioni account",

@@ -4428,7 +4428,9 @@
       "view_content": "コンテンツを見る"
     },
     "checkout_paused": "この商品のチェックアウトは一時的に利用できません。組織には通知済みです。しばらくしてからもう一度お試しください。",
-    "checkout_paused_short": "一時的に利用できません"
+    "checkout_paused_short": "一時的に利用できません",
+    "checkout_not_for_sale": "この商品はまだ購入できません。",
+    "checkout_not_for_sale_short": "まだ購入できません"
   },
   "account": {
     "title": "アカウント設定",

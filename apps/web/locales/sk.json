@@ -4627,7 +4627,9 @@
       "view_content": "Zobraziť obsah"
     },
     "checkout_paused": "Platba za tento produkt je dočasne nedostupná. Organizácia už bola upozornená, skúste to neskôr.",
-    "checkout_paused_short": "Dočasne nedostupné"
+    "checkout_paused_short": "Dočasne nedostupné",
+    "checkout_not_for_sale": "Tento produkt zatiaľ nie je možné kúpiť.",
+    "checkout_not_for_sale_short": "Zatiaľ nedostupné"
   },
   "account": {
     "title": "Nastavenia účtu",

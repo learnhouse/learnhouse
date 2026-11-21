@@ -4426,7 +4426,9 @@
       "view_content": "콘텐츠 보기"
     },
     "checkout_paused": "이 상품은 일시적으로 결제할 수 없습니다. 조직에 알렸으니 나중에 다시 시도해 주세요.",
-    "checkout_paused_short": "일시적으로 이용 불가"
+    "checkout_paused_short": "일시적으로 이용 불가",
+    "checkout_not_for_sale": "이 상품은 아직 구매할 수 없습니다.",
+    "checkout_not_for_sale_short": "아직 구매 불가"
   },
   "account": {
     "title": "계정 설정",

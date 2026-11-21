@@ -4807,7 +4807,9 @@
       "owned_count_two": "تملك عرضَين"
     },
     "checkout_paused": "الدفع غير متاح مؤقتًا لهذا المنتج. تم إبلاغ المنظمة، يرجى المحاولة لاحقًا.",
-    "checkout_paused_short": "غير متاح مؤقتًا"
+    "checkout_paused_short": "غير متاح مؤقتًا",
+    "checkout_not_for_sale": "هذا المنتج غير متاح للشراء بعد.",
+    "checkout_not_for_sale_short": "غير متاح بعد"
   },
   "account": {
     "title": "إعدادات الحساب",

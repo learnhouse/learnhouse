@@ -4627,7 +4627,9 @@
       "view_content": "Zobacz treść"
     },
     "checkout_paused": "Płatność za ten produkt jest tymczasowo niedostępna. Organizacja została powiadomiona, spróbuj ponownie później.",
-    "checkout_paused_short": "Tymczasowo niedostępne"
+    "checkout_paused_short": "Tymczasowo niedostępne",
+    "checkout_not_for_sale": "Tego produktu nie można jeszcze kupić.",
+    "checkout_not_for_sale_short": "Jeszcze niedostępne"
   },
   "account": {
     "title": "Ustawienia konta",

@@ -4528,7 +4528,9 @@
       "owned_count_many": "Você tem {{count}} ofertas"
     },
     "checkout_paused": "O checkout está temporariamente indisponível para este produto. A organização já foi avisada; tente novamente mais tarde.",
-    "checkout_paused_short": "Temporariamente indisponível"
+    "checkout_paused_short": "Temporariamente indisponível",
+    "checkout_not_for_sale": "Este produto ainda não está disponível para compra.",
+    "checkout_not_for_sale_short": "Ainda não disponível"
   },
   "account": {
     "title": "Configurações da conta",

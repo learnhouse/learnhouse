@@ -4426,7 +4426,9 @@
       "view_content": "Xem nội dung"
     },
     "checkout_paused": "Thanh toán cho sản phẩm này tạm thời không khả dụng. Tổ chức đã được thông báo, vui lòng thử lại sau.",
-    "checkout_paused_short": "Tạm thời không khả dụng"
+    "checkout_paused_short": "Tạm thời không khả dụng",
+    "checkout_not_for_sale": "Sản phẩm này chưa có sẵn để mua.",
+    "checkout_not_for_sale_short": "Chưa có sẵn"
   },
   "account": {
     "title": "Cài đặt tài khoản",

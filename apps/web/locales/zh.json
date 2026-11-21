@@ -4428,7 +4428,9 @@
       "view_content": "查看内容"
     },
     "checkout_paused": "该商品暂时无法结账。已通知该组织，请稍后再试。",
-    "checkout_paused_short": "暂时不可用"
+    "checkout_paused_short": "暂时不可用",
+    "checkout_not_for_sale": "该产品暂不可购买。",
+    "checkout_not_for_sale_short": "暂不可购买"
   },
   "account": {
     "title": "账户设置",
