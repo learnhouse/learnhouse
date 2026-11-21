@@ -36,11 +36,12 @@ const meta = {
 }
 
 describe('LearnHouseActivity with a raw document', () => {
+  // The heading, not its table-of-contents entry, which shows the same text.
   // Block code is lazy-loaded; the first render in a fresh jsdom pays for it.
   beforeAll(async () => {
     mockFetch({ [`/courses/${COURSE}/meta`]: meta })
     const { unmount } = renderDoc()
-    await screen.findByText('Getting paid', {}, { timeout: 30000 })
+    await screen.findByText('Getting paid', { selector: 'h2' }, { timeout: 30000 })
     await screen.findByText('How long does your first payout take to arrive?', {}, { timeout: 30000 })
     unmount()
   }, 60000)
@@ -48,7 +49,7 @@ describe('LearnHouseActivity with a raw document', () => {
   it('renders the schema nodes and marks', async () => {
     mockFetch({ [`/courses/${COURSE}/meta`]: meta })
     const { container } = renderDoc()
-    await screen.findByText('Getting paid')
+    await screen.findByText('Getting paid', { selector: 'h2' })
     expect(container.querySelector('h2')?.id).toBe('heading-getting-paid')
     expect(container.querySelector('strong')?.textContent).toBe('weekly')
     expect(container.querySelector('em')?.textContent).toBe('automatic')
@@ -70,7 +71,7 @@ describe('LearnHouseActivity with a raw document', () => {
   it('highlights code blocks like the editor', async () => {
     mockFetch({ [`/courses/${COURSE}/meta`]: meta })
     const { container } = renderDoc()
-    await screen.findByText('Getting paid')
+    await screen.findByText('Getting paid', { selector: 'h2' })
     const code = container.querySelector('pre code.language-javascript')
     expect(code?.textContent).toContain('amount * 0.029')
     expect(code?.querySelector('.hljs-keyword')?.textContent).toBe('const')
@@ -126,7 +127,7 @@ describe('customization', () => {
     mockFetch({ [`/courses/${COURSE}/meta`]: meta })
     const Bold = ({ children }: any) => <b className="brand-bold">{children}</b>
     const { container } = renderDoc({ marks: { bold: Bold } })
-    await screen.findByText('Getting paid')
+    await screen.findByText('Getting paid', { selector: 'h2' })
     expect(container.querySelector('b.brand-bold')?.textContent).toBe('weekly')
   })
 
@@ -136,10 +137,12 @@ describe('customization', () => {
       hideBlocks: ['blockQuiz', 'table'],
       transformContent: (d: any) => ({ ...d, content: d.content.filter((n: any) => n.type !== 'blockquote') }),
     })
-    await screen.findByText('Getting paid')
-    // Hidden table blocks: an Experiences block's own table (property grid) is not one.
-    expect([...container.querySelectorAll('table')].filter((t) => !t.closest('[data-experience]'))).toHaveLength(0)
-    expect(container.querySelector('blockquote')).toBeNull()
+    await screen.findByText('Getting paid', { selector: 'h2' })
+    // Hidden table blocks: an Experiences block's own table (property grid) and a chart's
+    // data table are not ones.
+    expect([...container.querySelectorAll('table')].filter((t) => !t.closest('[data-experience], .lh-chart'))).toHaveLength(0)
+    // The quote block draws its own <blockquote>; only the stock one is gone.
+    expect([...container.querySelectorAll('blockquote')].filter((b) => !b.closest('.node-quoteBlock'))).toHaveLength(0)
     expect(screen.queryByText('How long does your first payout take to arrive?')).toBeNull()
   })
 
@@ -152,7 +155,7 @@ describe('customization', () => {
       header: <p>Header slot</p>,
       footer: () => <p>Footer slot</p>,
     })
-    await screen.findByText('Getting paid')
+    await screen.findByText('Getting paid', { selector: 'h2' })
     const root = container.querySelector('.lh-activity') as HTMLElement
     expect(root.classList.contains('dark')).toBe(true)
     expect(root.classList.contains('mine')).toBe(true)
@@ -166,7 +169,7 @@ describe('customization', () => {
   it('translates block UI and accepts message overrides', async () => {
     mockFetch({ [`/courses/${COURSE}/meta`]: meta })
     const { container } = renderDoc({ locale: 'ar' })
-    await screen.findByText('Getting paid')
+    await screen.findByText('Getting paid', { selector: 'h2' })
     const root = container.querySelector('.lh-activity') as HTMLElement
     expect(root.getAttribute('lang')).toBe('ar')
     expect(root.getAttribute('dir')).toBe('rtl')

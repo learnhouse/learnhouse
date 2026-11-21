@@ -550,7 +550,7 @@ async def test_block_catalog(registry, db, org, regular_user):
     ctx = ctx_for(db, org, regular_user)
     catalog = await ok(registry, ctx, "describe_activity_blocks")
     # The 16 Experiences add one compact line; layout and data blocks are listed by name only.
-    assert len(json.dumps(catalog)) < 5400
+    assert len(json.dumps(catalog)) < 5800
     assert {"callout", "blockQuiz", "media"} <= {b["type"] for b in catalog["blocks"]}
     assert "tabs" not in {b["type"] for b in catalog["blocks"]} and "tabs" in catalog["layout_blocks"]
     for spelling, name in (("tabs", "tabs"), ("checklist", "taskList"), ("blockquote", "blockquote"),

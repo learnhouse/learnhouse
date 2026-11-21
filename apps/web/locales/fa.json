@@ -821,11 +821,7 @@
     "set_new_password": "تنظیم رمز عبور جدید",
     "invited_by_email_cta": "با ایمیل دعوت شده‌اید؟ با همان نشانی ثبت‌نام کنید",
     "use_invite_code_instead": "کد دعوت دارید؟",
-    "password_reset_done": "گذرواژه شما تغییر کرد.",
-    "login_failed_forgot": "رمز عبور را فراموش کرده‌اید؟",
-    "login_failed_reset": "بازنشانی",
-    "login_failed_magic": "به‌جای آن لینک ورود را برایم ایمیل کن",
-    "login_failed_google_hint": "با Google ثبت‌نام کرده‌اید؟ از ادامه با Google در پایین استفاده کنید."
+    "password_reset_done": "گذرواژه شما تغییر کرد."
   },
   "validation": {
     "required": "الزامی",
@@ -1325,11 +1321,7 @@
       "maintainer": "نگهدارنده",
       "contributor": "مشارکت‌کننده",
       "reporter": "گزارش‌دهنده"
-    },
-    "co_created_by": "به طور مشترک ایجاد شده توسط",
-    "created_on": "ایجاد شده در",
-    "last_updated": "آخرین به‌روزرسانی",
-    "and_x_more": "و {{count}} مورد دیگر"
+    }
   },
   "communities": {
     "title": "انجمن‌ها",
@@ -13853,8 +13845,7 @@
       "create_first": "ساخت اولین سناریو",
       "modal_preview_title": "پیش‌نمایش سناریو",
       "modal_preview_desc": "سناریوی تعاملی خود را آزمایش کنید",
-      "modal_edit_desc": "سناریوهای تعاملی خود را بسازید و مدیریت کنید",
-      "max_scenarios": "حداکثر ۴۰ سناریو مجاز است"
+      "modal_edit_desc": "سناریوهای تعاملی خود را بسازید و مدیریت کنید"
     },
     "slash_menu": {
       "items": {
@@ -14629,8 +14620,7 @@
         "view": "نما",
         "view_map": "نقشه",
         "view_steps": "مرحله‌ها",
-        "your_path": "مسیر شما",
-        "limits": "حداکثر {{max}} مرحله، هرکدام {{choices}} گزینه."
+        "your_path": "مسیر شما"
       },
       "conditional": {
         "add_rule": "افزودن قاعده",

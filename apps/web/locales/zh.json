@@ -820,11 +820,7 @@
     "set_new_password": "设置新密码",
     "invited_by_email_cta": "通过邮件收到邀请？用该邮箱注册",
     "use_invite_code_instead": "有邀请码？",
-    "password_reset_done": "你的密码已更改。",
-    "login_failed_forgot": "忘记密码？",
-    "login_failed_reset": "重置密码",
-    "login_failed_magic": "改为通过邮件发送登录链接",
-    "login_failed_google_hint": "使用 Google 注册的？请使用下方的「使用 Google 继续」。"
+    "password_reset_done": "你的密码已更改。"
   },
   "validation": {
     "required": "必填",
@@ -1324,11 +1320,7 @@
       "maintainer": "维护者",
       "contributor": "贡献者",
       "reporter": "报告者"
-    },
-    "co_created_by": "共同创建者：",
-    "created_on": "创建于",
-    "last_updated": "最后更新",
-    "and_x_more": "以及另外 {{count}} 个"
+    }
   },
   "communities": {
     "title": "社区",
@@ -13821,8 +13813,7 @@
       "create_first": "创建第一个情景",
       "modal_preview_title": "情景预览",
       "modal_preview_desc": "测试您的互动情景",
-      "modal_edit_desc": "创建并管理您的互动情景",
-      "max_scenarios": "最多允许 40 个情景"
+      "modal_edit_desc": "创建并管理您的互动情景"
     },
     "slash_menu": {
       "items": {
@@ -14597,8 +14588,7 @@
         "view": "视图",
         "view_map": "地图",
         "view_steps": "步骤",
-        "your_path": "您的路径",
-        "limits": "最多 {{max}} 个步骤，每个步骤最多 {{choices}} 个选项。"
+        "your_path": "您的路径"
       },
       "conditional": {
         "add_rule": "添加规则",

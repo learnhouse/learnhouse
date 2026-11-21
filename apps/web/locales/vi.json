@@ -820,11 +820,7 @@
     "set_new_password": "Đặt mật khẩu mới",
     "invited_by_email_cta": "Được mời qua email? Đăng ký bằng địa chỉ đó",
     "use_invite_code_instead": "Bạn có mã mời?",
-    "password_reset_done": "Mật khẩu của bạn đã được thay đổi.",
-    "login_failed_forgot": "Quên mật khẩu?",
-    "login_failed_reset": "Đặt lại",
-    "login_failed_magic": "Gửi cho tôi liên kết đăng nhập",
-    "login_failed_google_hint": "Đã đăng ký bằng Google? Hãy dùng Tiếp tục với Google bên dưới."
+    "password_reset_done": "Mật khẩu của bạn đã được thay đổi."
   },
   "validation": {
     "required": "Bắt buộc",
@@ -1324,11 +1320,7 @@
       "maintainer": "Người duy trì",
       "contributor": "Người đóng góp",
       "reporter": "Người báo cáo"
-    },
-    "co_created_by": "Được đồng sáng tạo bởi",
-    "created_on": "Được tạo vào",
-    "last_updated": "Cập nhật lần cuối",
-    "and_x_more": "và {{count}} khác"
+    }
   },
   "communities": {
     "title": "Cộng đồng",
@@ -13819,8 +13811,7 @@
       "create_first": "Tạo kịch bản đầu tiên",
       "modal_preview_title": "Xem trước kịch bản",
       "modal_preview_desc": "Thử nghiệm kịch bản tương tác của bạn",
-      "modal_edit_desc": "Tạo và quản lý các kịch bản tương tác của bạn",
-      "max_scenarios": "Tối đa 40 kịch bản được phép"
+      "modal_edit_desc": "Tạo và quản lý các kịch bản tương tác của bạn"
     },
     "slash_menu": {
       "items": {
@@ -14595,8 +14586,7 @@
         "view": "Xem",
         "view_map": "Sơ đồ",
         "view_steps": "Các bước",
-        "your_path": "Lộ trình của bạn",
-        "limits": "Tối đa {{max}} bước, mỗi bước {{choices}} lựa chọn."
+        "your_path": "Lộ trình của bạn"
       },
       "conditional": {
         "add_rule": "Thêm quy tắc",

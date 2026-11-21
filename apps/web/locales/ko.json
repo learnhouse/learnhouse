@@ -820,11 +820,7 @@
     "set_new_password": "새 비밀번호 설정",
     "invited_by_email_cta": "이메일로 초대받으셨나요? 그 주소로 가입하세요",
     "use_invite_code_instead": "초대 코드가 있으신가요?",
-    "password_reset_done": "비밀번호가 변경되었습니다.",
-    "login_failed_forgot": "비밀번호를 잊으셨나요?",
-    "login_failed_reset": "재설정하기",
-    "login_failed_magic": "대신 로그인 링크를 이메일로 받기",
-    "login_failed_google_hint": "Google로 가입하셨나요? 아래의 Google로 계속하기를 사용하세요."
+    "password_reset_done": "비밀번호가 변경되었습니다."
   },
   "validation": {
     "required": "필수 항목입니다",
@@ -1324,11 +1320,7 @@
       "maintainer": "유지관리자",
       "contributor": "기여자",
       "reporter": "리포터"
-    },
-    "co_created_by": "공동 제작:",
-    "created_on": "생성일:",
-    "last_updated": "최근 업데이트:",
-    "and_x_more": "외 {{count}}건"
+    }
   },
   "communities": {
     "title": "커뮤니티",
@@ -13819,8 +13811,7 @@
       "create_first": "첫 시나리오 만들기",
       "modal_preview_title": "시나리오 미리보기",
       "modal_preview_desc": "인터랙티브 시나리오를 테스트해 보세요",
-      "modal_edit_desc": "인터랙티브 시나리오를 만들고 관리하세요",
-      "max_scenarios": "시나리오는 최대 40개까지 허용됩니다"
+      "modal_edit_desc": "인터랙티브 시나리오를 만들고 관리하세요"
     },
     "slash_menu": {
       "items": {
@@ -14595,8 +14586,7 @@
         "view": "보기",
         "view_map": "지도",
         "view_steps": "단계",
-        "your_path": "나의 경로",
-        "limits": "최대 {{max}}단계, 단계당 선택지 {{choices}}개까지."
+        "your_path": "나의 경로"
       },
       "conditional": {
         "add_rule": "규칙 추가",

@@ -823,11 +823,7 @@
     "set_new_password": "Nastaviť nové heslo",
     "invited_by_email_cta": "Pozvánka prišla e-mailom? Zaregistrujte sa touto adresou",
     "use_invite_code_instead": "Máte namiesto toho pozývací kód?",
-    "password_reset_done": "Vaše heslo bolo zmenené.",
-    "login_failed_forgot": "Zabudli ste heslo?",
-    "login_failed_reset": "Obnoviť",
-    "login_failed_magic": "Poslať mi radšej prihlasovací odkaz",
-    "login_failed_google_hint": "Registrovali ste sa cez Google? Použite nižšie Pokračovať cez Google."
+    "password_reset_done": "Vaše heslo bolo zmenené."
   },
   "validation": {
     "required": "Povinné",
@@ -1363,11 +1359,7 @@
       "maintainer": "Správca",
       "contributor": "Prispievateľ",
       "reporter": "Reportér"
-    },
-    "co_created_by": "Spolutvorené",
-    "created_on": "Vytvorené",
-    "last_updated": "Naposledy aktualizované",
-    "and_x_more": "a {{count}} ďalších"
+    }
   },
   "communities": {
     "title": "Komunity",
@@ -14331,8 +14323,7 @@
       "create_first": "Vytvoriť prvý scenár",
       "modal_preview_title": "Náhľad scenára",
       "modal_preview_desc": "Vyskúšajte svoj interaktívny scenár",
-      "modal_edit_desc": "Vytvárajte a spravujte svoje interaktívne scenáre",
-      "max_scenarios": "Povolených je najviac 40 scenárov"
+      "modal_edit_desc": "Vytvárajte a spravujte svoje interaktívne scenáre"
     },
     "slash_menu": {
       "items": {
@@ -15129,8 +15120,7 @@
         "view": "Zobrazenie",
         "view_map": "Mapa",
         "view_steps": "Kroky",
-        "your_path": "Vaša cesta",
-        "limits": "Najviac {{max}} krokov, {{choices}} volieb v každom."
+        "your_path": "Vaša cesta"
       },
       "conditional": {
         "add_rule": "Pridať pravidlo",

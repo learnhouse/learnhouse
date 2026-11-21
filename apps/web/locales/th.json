@@ -820,11 +820,7 @@
     "set_new_password": "ตั้งรหัสผ่านใหม่",
     "invited_by_email_cta": "ได้รับคำเชิญทางอีเมล? สมัครด้วยอีเมลนั้น",
     "use_invite_code_instead": "มีรหัสเชิญแทนหรือไม่",
-    "password_reset_done": "เปลี่ยนรหัสผ่านแล้ว",
-    "login_failed_forgot": "ลืมรหัสผ่าน?",
-    "login_failed_reset": "รีเซ็ต",
-    "login_failed_magic": "ส่งลิงก์เข้าสู่ระบบทางอีเมลแทน",
-    "login_failed_google_hint": "สมัครด้วย Google? ใช้ดำเนินการต่อด้วย Google ด้านล่าง"
+    "password_reset_done": "เปลี่ยนรหัสผ่านแล้ว"
   },
   "validation": {
     "required": "จำเป็น",
@@ -1324,11 +1320,7 @@
       "maintainer": "ผู้ดูแล",
       "contributor": "ผู้ร่วมสร้าง",
       "reporter": "ผู้รายงาน"
-    },
-    "co_created_by": "ร่วมสร้างโดย",
-    "created_on": "สร้างเมื่อ",
-    "last_updated": "อัปเดตล่าสุดเมื่อ",
-    "and_x_more": "และอีก {{count}} อย่าง"
+    }
   },
   "communities": {
     "title": "ชุมชน",
@@ -13819,8 +13811,7 @@
       "create_first": "สร้างสถานการณ์จำลองแรก",
       "modal_preview_title": "ตัวอย่างสถานการณ์จำลอง",
       "modal_preview_desc": "ทดสอบสถานการณ์จำลองเชิงโต้ตอบของคุณ",
-      "modal_edit_desc": "สร้างและจัดการสถานการณ์จำลองเชิงโต้ตอบของคุณ",
-      "max_scenarios": "อนุญาตสูงสุด 40 สถานการณ์จำลอง"
+      "modal_edit_desc": "สร้างและจัดการสถานการณ์จำลองเชิงโต้ตอบของคุณ"
     },
     "slash_menu": {
       "items": {
@@ -14595,8 +14586,7 @@
         "view": "มุมมอง",
         "view_map": "แผนผัง",
         "view_steps": "ขั้นตอน",
-        "your_path": "เส้นทางของคุณ",
-        "limits": "สูงสุด {{max}} ขั้นตอน ขั้นตอนละ {{choices}} ตัวเลือก"
+        "your_path": "เส้นทางของคุณ"
       },
       "conditional": {
         "add_rule": "เพิ่มกฎ",

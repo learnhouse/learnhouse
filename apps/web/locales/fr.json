@@ -821,11 +821,7 @@
     "set_new_password": "Définir un nouveau mot de passe",
     "invited_by_email_cta": "Invité par e-mail ? Inscrivez-vous avec cette adresse",
     "use_invite_code_instead": "Vous avez plutôt un code d'invitation ?",
-    "password_reset_done": "Votre mot de passe a été modifié.",
-    "login_failed_forgot": "Mot de passe oublié ?",
-    "login_failed_reset": "Le réinitialiser",
-    "login_failed_magic": "M'envoyer plutôt un lien de connexion",
-    "login_failed_google_hint": "Inscrit avec Google ? Utilisez Continuer avec Google ci-dessous."
+    "password_reset_done": "Votre mot de passe a été modifié."
   },
   "validation": {
     "required": "Requis",
@@ -1343,11 +1339,7 @@
       "maintainer": "Mainteneur",
       "contributor": "Contributeur",
       "reporter": "Rapporteur"
-    },
-    "co_created_by": "Co-créé par",
-    "created_on": "Créé le",
-    "last_updated": "Mise à jour le",
-    "and_x_more": "& {{count}} de plus"
+    }
   },
   "communities": {
     "title": "Communautés",
@@ -14077,8 +14069,7 @@
       "create_first": "Créer le premier scénario",
       "modal_preview_title": "Aperçu du scénario",
       "modal_preview_desc": "Testez votre scénario interactif",
-      "modal_edit_desc": "Créez et gérez vos scénarios interactifs",
-      "max_scenarios": "Maximum de 40 scénarios autorisés"
+      "modal_edit_desc": "Créez et gérez vos scénarios interactifs"
     },
     "slash_menu": {
       "items": {
@@ -14864,8 +14855,7 @@
         "complete_hint_many": "Vous avez fait {{count}} choix. Essayez un autre chemin pour voir ce qui change.",
         "endings_count_many": "{{count}} fins",
         "issue_count_many": "{{count}} problèmes",
-        "steps_count_many": "{{count}} étapes",
-        "limits": "Jusqu’à {{max}} étapes, {{choices}} choix chacune."
+        "steps_count_many": "{{count}} étapes"
       },
       "conditional": {
         "add_rule": "Ajouter une règle",

@@ -821,11 +821,7 @@
     "set_new_password": "Set a new password",
     "invited_by_email_cta": "Invited by email? Sign up with that address",
     "use_invite_code_instead": "Have an invite code instead?",
-    "password_reset_done": "Your password has been changed.",
-    "login_failed_forgot": "Forgot your password?",
-    "login_failed_reset": "Reset it",
-    "login_failed_magic": "Email me a login link instead",
-    "login_failed_google_hint": "Signed up with Google? Use Continue with Google below."
+    "password_reset_done": "Your password has been changed."
   },
   "validation": {
     "required": "Required",
@@ -1323,11 +1319,7 @@
       "maintainer": "Maintainer",
       "contributor": "Contributor",
       "reporter": "Reporter"
-    },
-    "co_created_by": "Co-created by",
-    "created_on": "Created on",
-    "last_updated": "Last updated",
-    "and_x_more": "& {{count}} more"
+    }
   },
   "communities": {
     "title": "Communities",
@@ -13838,8 +13830,7 @@
       "create_first": "Create First Scenario",
       "modal_preview_title": "Scenario Preview",
       "modal_preview_desc": "Test your interactive scenario",
-      "modal_edit_desc": "Create and manage your interactive scenarios",
-      "max_scenarios": "Maximum of 40 scenarios allowed"
+      "modal_edit_desc": "Create and manage your interactive scenarios"
     },
     "slash_menu": {
       "items": {
@@ -14614,8 +14605,7 @@
         "view": "View",
         "view_map": "Map",
         "view_steps": "Steps",
-        "your_path": "Your path",
-        "limits": "Up to {{max}} steps, {{choices}} choices each."
+        "your_path": "Your path"
       },
       "conditional": {
         "add_rule": "Add a rule",

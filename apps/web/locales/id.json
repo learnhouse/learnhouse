@@ -820,11 +820,7 @@
     "set_new_password": "Atur kata sandi baru",
     "invited_by_email_cta": "Diundang lewat email? Daftar dengan alamat itu",
     "use_invite_code_instead": "Punya kode undangan?",
-    "password_reset_done": "Kata sandi Anda telah diubah.",
-    "login_failed_forgot": "Lupa kata sandi?",
-    "login_failed_reset": "Atur ulang",
-    "login_failed_magic": "Kirimi saya tautan masuk saja",
-    "login_failed_google_hint": "Mendaftar dengan Google? Gunakan Lanjutkan dengan Google di bawah."
+    "password_reset_done": "Kata sandi Anda telah diubah."
   },
   "validation": {
     "required": "Wajib isi",
@@ -1324,11 +1320,7 @@
       "maintainer": "Pengelola",
       "contributor": "Kontributor",
       "reporter": "Pelapor"
-    },
-    "co_created_by": "Dibuat bersama oleh",
-    "created_on": "Dibuat pada",
-    "last_updated": "Terakhir diperbarui",
-    "and_x_more": "dan {{count}} lainnya"
+    }
   },
   "communities": {
     "title": "Komunitas",
@@ -13819,8 +13811,7 @@
       "create_first": "Buat Skenario Pertama",
       "modal_preview_title": "Pratinjau Skenario",
       "modal_preview_desc": "Uji skenario interaktif Anda",
-      "modal_edit_desc": "Buat dan kelola skenario interaktif Anda",
-      "max_scenarios": "Maksimal 40 skenario diizinkan"
+      "modal_edit_desc": "Buat dan kelola skenario interaktif Anda"
     },
     "slash_menu": {
       "items": {
@@ -14595,8 +14586,7 @@
         "view": "Tampilan",
         "view_map": "Peta",
         "view_steps": "Langkah",
-        "your_path": "Jalur Anda",
-        "limits": "Hingga {{max}} langkah, masing-masing {{choices}} pilihan."
+        "your_path": "Jalur Anda"
       },
       "conditional": {
         "add_rule": "Tambah aturan",

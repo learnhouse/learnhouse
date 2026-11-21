@@ -825,11 +825,7 @@
     "set_new_password": "تعيين كلمة مرور جديدة",
     "invited_by_email_cta": "تلقيت دعوة بالبريد الإلكتروني؟ أنشئ حسابًا بذلك العنوان",
     "use_invite_code_instead": "لديك رمز دعوة بدلًا من ذلك؟",
-    "password_reset_done": "تم تغيير كلمة المرور.",
-    "login_failed_forgot": "نسيت كلمة المرور؟",
-    "login_failed_reset": "إعادة تعيينها",
-    "login_failed_magic": "أرسل لي رابط تسجيل الدخول بدلاً من ذلك",
-    "login_failed_google_hint": "هل سجلت باستخدام Google؟ استخدم المتابعة باستخدام Google أدناه."
+    "password_reset_done": "تم تغيير كلمة المرور."
   },
   "validation": {
     "required": "مطلوب",
@@ -1401,11 +1397,7 @@
       "maintainer": "مسؤول صيانة",
       "contributor": "مساهم",
       "reporter": "مبلغ"
-    },
-    "co_created_by": "شارك في الإنشاء:",
-    "created_on": "أنشئ في",
-    "last_updated": "آخر تحديث",
-    "and_x_more": "و {{count}} أكثر"
+    }
   },
   "communities": {
     "title": "المجتمعات",
@@ -14748,8 +14740,7 @@
       "create_first": "إنشاء أول سيناريو",
       "modal_preview_title": "معاينة السيناريو",
       "modal_preview_desc": "اختبر السيناريو التفاعلي الخاص بك",
-      "modal_edit_desc": "أنشئ سيناريوهاتك التفاعلية وأدرها",
-      "max_scenarios": "الحد الأقصى المسموح به هو 40 سيناريو"
+      "modal_edit_desc": "أنشئ سيناريوهاتك التفاعلية وأدرها"
     },
     "slash_menu": {
       "items": {
@@ -15843,8 +15834,7 @@
         "view": "عرض",
         "view_map": "الخريطة",
         "view_steps": "الخطوات",
-        "your_path": "مسارك",
-        "limits": "حتى {{max}} خطوة، و{{choices}} اختيارات لكل خطوة."
+        "your_path": "مسارك"
       },
       "conditional": {
         "add_rule": "إضافة قاعدة",

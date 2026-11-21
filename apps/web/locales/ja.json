@@ -820,11 +820,7 @@
     "set_new_password": "新しいパスワードを設定",
     "invited_by_email_cta": "メールで招待されましたか？そのアドレスで登録",
     "use_invite_code_instead": "招待コードをお持ちですか？",
-    "password_reset_done": "パスワードを変更しました。",
-    "login_failed_forgot": "パスワードをお忘れですか？",
-    "login_failed_reset": "再設定する",
-    "login_failed_magic": "代わりにログインリンクをメールで受け取る",
-    "login_failed_google_hint": "Google で登録しましたか？下の「Google で続行」を使ってください。"
+    "password_reset_done": "パスワードを変更しました。"
   },
   "validation": {
     "required": "必須項目です",
@@ -1324,11 +1320,7 @@
       "maintainer": "メンテナー",
       "contributor": "投稿者",
       "reporter": "レポーター"
-    },
-    "co_created_by": "共同作成:",
-    "created_on": "作成日:",
-    "last_updated": "最終更新日:",
-    "and_x_more": "他 {{count}} 件"
+    }
   },
   "communities": {
     "title": "コミュニティ",
@@ -13821,8 +13813,7 @@
       "create_first": "最初のシナリオを作成",
       "modal_preview_title": "シナリオのプレビュー",
       "modal_preview_desc": "インタラクティブシナリオをテストします",
-      "modal_edit_desc": "インタラクティブシナリオを作成・管理します",
-      "max_scenarios": "シナリオは最大40件までです"
+      "modal_edit_desc": "インタラクティブシナリオを作成・管理します"
     },
     "slash_menu": {
       "items": {
@@ -14597,8 +14588,7 @@
         "view": "表示",
         "view_map": "マップ",
         "view_steps": "ステップ",
-        "your_path": "あなたの経路",
-        "limits": "最大{{max}}ステップ、各ステップに選択肢{{choices}}個まで。"
+        "your_path": "あなたの経路"
       },
       "conditional": {
         "add_rule": "ルールを追加",

@@ -823,11 +823,7 @@
     "set_new_password": "Задать новый пароль",
     "invited_by_email_cta": "Приглашение пришло по почте? Зарегистрируйтесь с этим адресом",
     "use_invite_code_instead": "Есть код приглашения?",
-    "password_reset_done": "Пароль изменён.",
-    "login_failed_forgot": "Забыли пароль?",
-    "login_failed_reset": "Сбросить",
-    "login_failed_magic": "Отправить ссылку для входа",
-    "login_failed_google_hint": "Регистрировались через Google? Нажмите «Продолжить с Google» ниже."
+    "password_reset_done": "Пароль изменён."
   },
   "validation": {
     "required": "Обязательно",
@@ -1363,11 +1359,7 @@
       "maintainer": "Сопровождающий",
       "contributor": "Участник",
       "reporter": "Репортёр"
-    },
-    "co_created_by": "Соавтор:",
-    "created_on": "Создано",
-    "last_updated": "Последнее обновление",
-    "and_x_more": "и еще {{count}}"
+    }
   },
   "communities": {
     "title": "Сообщества",
@@ -14331,8 +14323,7 @@
       "create_first": "Создать первый сценарий",
       "modal_preview_title": "Предпросмотр сценария",
       "modal_preview_desc": "Протестируйте свой интерактивный сценарий",
-      "modal_edit_desc": "Создавайте интерактивные сценарии и управляйте ими",
-      "max_scenarios": "Максимум 40 сценариев"
+      "modal_edit_desc": "Создавайте интерактивные сценарии и управляйте ими"
     },
     "slash_menu": {
       "items": {
@@ -15129,8 +15120,7 @@
         "view": "Вид",
         "view_map": "Карта",
         "view_steps": "Шаги",
-        "your_path": "Ваш путь",
-        "limits": "До {{max}} шагов, по {{choices}} вариантов выбора в каждом."
+        "your_path": "Ваш путь"
       },
       "conditional": {
         "add_rule": "Добавить правило",

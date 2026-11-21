@@ -823,11 +823,7 @@
     "set_new_password": "Ustaw nowe hasło",
     "invited_by_email_cta": "Zaproszenie przyszło e-mailem? Zarejestruj się tym adresem",
     "use_invite_code_instead": "Masz kod zaproszenia?",
-    "password_reset_done": "Hasło zostało zmienione.",
-    "login_failed_forgot": "Nie pamiętasz hasła?",
-    "login_failed_reset": "Zresetuj je",
-    "login_failed_magic": "Wyślij mi link do logowania",
-    "login_failed_google_hint": "Rejestracja przez Google? Użyj poniżej opcji Kontynuuj z Google."
+    "password_reset_done": "Hasło zostało zmienione."
   },
   "validation": {
     "required": "Wymagane",
@@ -1363,11 +1359,7 @@
       "maintainer": "Opiekun",
       "contributor": "Współtwórca",
       "reporter": "Zgłaszający"
-    },
-    "co_created_by": "Współtworzony przez",
-    "created_on": "Utworzono dnia",
-    "last_updated": "Ostatnia aktualizacja",
-    "and_x_more": "i {{count}} więcej"
+    }
   },
   "communities": {
     "title": "Społeczności",
@@ -14331,8 +14323,7 @@
       "create_first": "Utwórz pierwszy scenariusz",
       "modal_preview_title": "Podgląd scenariusza",
       "modal_preview_desc": "Przetestuj swój scenariusz interaktywny",
-      "modal_edit_desc": "Twórz i zarządzaj swoimi scenariuszami interaktywnymi",
-      "max_scenarios": "Dozwolone maksymalnie 40 scenariuszy"
+      "modal_edit_desc": "Twórz i zarządzaj swoimi scenariuszami interaktywnymi"
     },
     "slash_menu": {
       "items": {
@@ -15129,8 +15120,7 @@
         "view": "Widok",
         "view_map": "Mapa",
         "view_steps": "Kroki",
-        "your_path": "Twoja ścieżka",
-        "limits": "Do {{max}} kroków, po {{choices}} wyborów w każdym."
+        "your_path": "Twoja ścieżka"
       },
       "conditional": {
         "add_rule": "Dodaj regułę",

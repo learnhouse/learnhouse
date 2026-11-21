@@ -821,11 +821,7 @@
     "set_new_password": "Yeni şifre belirle",
     "invited_by_email_cta": "E-postayla mı davet edildiniz? O adresle kaydolun",
     "use_invite_code_instead": "Bunun yerine davet kodunuz mu var?",
-    "password_reset_done": "Şifreniz değiştirildi.",
-    "login_failed_forgot": "Şifrenizi mi unuttunuz?",
-    "login_failed_reset": "Sıfırlayın",
-    "login_failed_magic": "Bunun yerine giriş bağlantısı gönder",
-    "login_failed_google_hint": "Google ile mi kaydoldunuz? Aşağıdan Google ile devam edin."
+    "password_reset_done": "Şifreniz değiştirildi."
   },
   "validation": {
     "required": "Gerekli",
@@ -1325,11 +1321,7 @@
       "maintainer": "Sorumlu",
       "contributor": "Katkıda Bulunan",
       "reporter": "Raporlayıcı"
-    },
-    "co_created_by": "Birlikte oluşturuldu:",
-    "created_on": "Oluşturulma tarihi:",
-    "last_updated": "Son güncelleme:",
-    "and_x_more": "ve {{count}} tane daha"
+    }
   },
   "communities": {
     "title": "Topluluklar",
@@ -13853,8 +13845,7 @@
       "create_first": "İlk Senaryoyu Oluştur",
       "modal_preview_title": "Senaryo Önizlemesi",
       "modal_preview_desc": "Etkileşimli senaryonuzu test edin",
-      "modal_edit_desc": "Etkileşimli senaryolarınızı oluşturun ve yönetin",
-      "max_scenarios": "En fazla 40 senaryoya izin verilir"
+      "modal_edit_desc": "Etkileşimli senaryolarınızı oluşturun ve yönetin"
     },
     "slash_menu": {
       "items": {
@@ -14629,8 +14620,7 @@
         "view": "Görünüm",
         "view_map": "Harita",
         "view_steps": "Adımlar",
-        "your_path": "Yolunuz",
-        "limits": "En fazla {{max}} adım, her birinde {{choices}} seçenek."
+        "your_path": "Yolunuz"
       },
       "conditional": {
         "add_rule": "Kural ekle",

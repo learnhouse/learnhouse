@@ -53,7 +53,9 @@ def test_every_example_builds_and_passes_the_schema():
                      "badge", "table", "blockMathEquation", "callout", "codeBlock", "bulletList",
                      "expSort", "expSequence", "expMatch", "expHotspot", "expGaps", "expMythFact",
                      "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock", "expVenn", "expLabel",
-                     "expWordGuess", "expConfidence", "expMatrix", "expReflect"):
+                     "expWordGuess", "expConfidence", "expMatrix", "expReflect", "tabs", "columns", "accordion",
+                     "timeline", "keyTakeaways", "taskList", "gallery", "imageCompare", "chart", "statHighlights",
+                     "fileCard", "quoteBlock"):
         assert expected in types
     assert [m.kind for m in converted.media] == ["image", "audio", "pdf"]
     assert converted.doc["content"][-1]["content"][0] == {"type": "blockUser", "attrs": {"user_id": 7, "layout": "card"}}

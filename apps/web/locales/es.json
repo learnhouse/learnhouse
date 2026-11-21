@@ -821,11 +821,7 @@
     "set_new_password": "Establecer nueva contraseña",
     "invited_by_email_cta": "¿Te invitaron por correo? Regístrate con esa dirección",
     "use_invite_code_instead": "¿Tienes un código de invitación?",
-    "password_reset_done": "Tu contraseña se ha cambiado.",
-    "login_failed_forgot": "¿Olvidaste tu contraseña?",
-    "login_failed_reset": "Restablécela",
-    "login_failed_magic": "Envíame un enlace de acceso",
-    "login_failed_google_hint": "¿Te registraste con Google? Usa Continuar con Google abajo."
+    "password_reset_done": "Tu contraseña se ha cambiado."
   },
   "validation": {
     "required": "Obligatorio",
@@ -1343,11 +1339,7 @@
       "maintainer": "Mantenedor",
       "contributor": "Colaborador",
       "reporter": "Reportero"
-    },
-    "co_created_by": "Co-creado por",
-    "created_on": "Creado el",
-    "last_updated": "Última actualización",
-    "and_x_more": "y {{count}} más"
+    }
   },
   "communities": {
     "title": "Comunidades",
@@ -14077,8 +14069,7 @@
       "create_first": "Crear primer escenario",
       "modal_preview_title": "Vista previa del escenario",
       "modal_preview_desc": "Prueba tu escenario interactivo",
-      "modal_edit_desc": "Crea y gestiona tus escenarios interactivos",
-      "max_scenarios": "Se permite un máximo de 40 escenarios"
+      "modal_edit_desc": "Crea y gestiona tus escenarios interactivos"
     },
     "slash_menu": {
       "items": {
@@ -14864,8 +14855,7 @@
         "complete_hint_many": "Hiciste {{count}} elecciones. Prueba otro camino para ver qué cambia.",
         "endings_count_many": "{{count}} finales",
         "issue_count_many": "{{count}} problemas",
-        "steps_count_many": "{{count}} pasos",
-        "limits": "Hasta {{max}} pasos, {{choices}} opciones cada uno."
+        "steps_count_many": "{{count}} pasos"
       },
       "conditional": {
         "add_rule": "Añadir una regla",

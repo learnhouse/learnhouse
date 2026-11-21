@@ -821,11 +821,7 @@
     "set_new_password": "Neues Passwort festlegen",
     "invited_by_email_cta": "Per E-Mail eingeladen? Registrieren Sie sich mit dieser Adresse",
     "use_invite_code_instead": "Haben Sie stattdessen einen Einladungscode?",
-    "password_reset_done": "Ihr Passwort wurde geändert.",
-    "login_failed_forgot": "Passwort vergessen?",
-    "login_failed_reset": "Zurücksetzen",
-    "login_failed_magic": "Stattdessen einen Anmeldelink senden",
-    "login_failed_google_hint": "Mit Google registriert? Nutze unten „Mit Google fortfahren“."
+    "password_reset_done": "Ihr Passwort wurde geändert."
   },
   "validation": {
     "required": "Erforderlich",
@@ -1325,11 +1321,7 @@
       "maintainer": "Verwalter",
       "contributor": "Mitwirkender",
       "reporter": "Berichterstatter"
-    },
-    "co_created_by": "Miterstellt von",
-    "created_on": "Erstellt am",
-    "last_updated": "Zuletzt aktualisiert",
-    "and_x_more": "& {{count}} weitere"
+    }
   },
   "communities": {
     "title": "Communities",
@@ -13853,8 +13845,7 @@
       "create_first": "Erstes Szenario erstellen",
       "modal_preview_title": "Szenario-Vorschau",
       "modal_preview_desc": "Testen Sie Ihr interaktives Szenario",
-      "modal_edit_desc": "Erstellen und verwalten Sie Ihre interaktiven Szenarien",
-      "max_scenarios": "Maximal 40 Szenarien erlaubt"
+      "modal_edit_desc": "Erstellen und verwalten Sie Ihre interaktiven Szenarien"
     },
     "slash_menu": {
       "items": {
@@ -14629,8 +14620,7 @@
         "view": "Ansicht",
         "view_map": "Karte",
         "view_steps": "Schritte",
-        "your_path": "Dein Pfad",
-        "limits": "Bis zu {{max}} Schritte, je {{choices}} Auswahlmöglichkeiten."
+        "your_path": "Dein Pfad"
       },
       "conditional": {
         "add_rule": "Regel hinzufügen",

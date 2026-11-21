@@ -821,11 +821,7 @@
     "set_new_password": "Nieuw wachtwoord instellen",
     "invited_by_email_cta": "Uitgenodigd per e-mail? Meld je aan met dat adres",
     "use_invite_code_instead": "Heb je een uitnodigingscode?",
-    "password_reset_done": "Je wachtwoord is gewijzigd.",
-    "login_failed_forgot": "Wachtwoord vergeten?",
-    "login_failed_reset": "Opnieuw instellen",
-    "login_failed_magic": "Stuur me liever een inloglink",
-    "login_failed_google_hint": "Aangemeld met Google? Gebruik hieronder Doorgaan met Google."
+    "password_reset_done": "Je wachtwoord is gewijzigd."
   },
   "validation": {
     "required": "Verplicht",
@@ -1325,11 +1321,7 @@
       "maintainer": "Beheerder",
       "contributor": "Bijdrager",
       "reporter": "Reporter"
-    },
-    "co_created_by": "Mede gecreëerd door",
-    "created_on": "Gemaakt op",
-    "last_updated": "Laatst bijgewerkt",
-    "and_x_more": "en {{count}} meer"
+    }
   },
   "communities": {
     "title": "Community's",
@@ -13853,8 +13845,7 @@
       "create_first": "Eerste scenario aanmaken",
       "modal_preview_title": "Scenariovoorbeeld",
       "modal_preview_desc": "Test je interactieve scenario",
-      "modal_edit_desc": "Maak en beheer je interactieve scenario's",
-      "max_scenarios": "Maximaal 40 scenario's toegestaan"
+      "modal_edit_desc": "Maak en beheer je interactieve scenario's"
     },
     "slash_menu": {
       "items": {
@@ -14629,8 +14620,7 @@
         "view": "Weergave",
         "view_map": "Kaart",
         "view_steps": "Stappen",
-        "your_path": "Jouw pad",
-        "limits": "Maximaal {{max}} stappen, elk met {{choices}} keuzes."
+        "your_path": "Jouw pad"
       },
       "conditional": {
         "add_rule": "Een regel toevoegen",

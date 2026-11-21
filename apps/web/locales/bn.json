@@ -821,11 +821,7 @@
     "set_new_password": "নতুন পাসওয়ার্ড সেট করুন",
     "invited_by_email_cta": "ইমেলে আমন্ত্রণ পেয়েছেন? সেই ঠিকানা দিয়ে সাইন আপ করুন",
     "use_invite_code_instead": "এর বদলে আমন্ত্রণ কোড আছে?",
-    "password_reset_done": "আপনার পাসওয়ার্ড পরিবর্তন করা হয়েছে।",
-    "login_failed_forgot": "পাসওয়ার্ড ভুলে গেছেন?",
-    "login_failed_reset": "রিসেট করুন",
-    "login_failed_magic": "এর বদলে আমাকে লগইন লিংক ইমেইল করুন",
-    "login_failed_google_hint": "Google দিয়ে সাইন আপ করেছিলেন? নিচে Google দিয়ে চালিয়ে যান ব্যবহার করুন।"
+    "password_reset_done": "আপনার পাসওয়ার্ড পরিবর্তন করা হয়েছে।"
   },
   "validation": {
     "required": "প্রয়োজন",
@@ -1325,11 +1321,7 @@
       "maintainer": "মেইনটেইনার",
       "contributor": "কন্ট্রিবিউটর",
       "reporter": "রিপোর্টার"
-    },
-    "co_created_by": "সহ-নির্মাতা",
-    "created_on": "তৈরি হয়েছে",
-    "last_updated": "সর্বশেষ আপডেট",
-    "and_x_more": "এবং আরও {{count}}টি"
+    }
   },
   "communities": {
     "title": "কমিউনিটি",
@@ -13853,8 +13845,7 @@
       "create_first": "প্রথম সিনারিও তৈরি করুন",
       "modal_preview_title": "সিনারিও প্রিভিউ",
       "modal_preview_desc": "আপনার ইন্টারঅ্যাকটিভ সিনারিও পরীক্ষা করুন",
-      "modal_edit_desc": "আপনার ইন্টারঅ্যাকটিভ সিনারিও তৈরি ও পরিচালনা করুন",
-      "max_scenarios": "সর্বোচ্চ ৪০টি সিনারিও অনুমোদিত"
+      "modal_edit_desc": "আপনার ইন্টারঅ্যাকটিভ সিনারিও তৈরি ও পরিচালনা করুন"
     },
     "slash_menu": {
       "items": {
@@ -14629,8 +14620,7 @@
         "view": "দেখুন",
         "view_map": "মানচিত্র",
         "view_steps": "ধাপসমূহ",
-        "your_path": "আপনার পথ",
-        "limits": "সর্বোচ্চ {{max}}টি ধাপ, প্রতিটিতে {{choices}}টি বিকল্প।"
+        "your_path": "আপনার পথ"
       },
       "conditional": {
         "add_rule": "নিয়ম যোগ করুন",

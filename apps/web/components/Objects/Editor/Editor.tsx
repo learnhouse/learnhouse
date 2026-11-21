@@ -280,7 +280,7 @@ function Editor(props: EditorProps) {
       Badges.configure({ editable: true, activity: stableActivity }),
       Buttons.configure({ editable: true, activity: stableActivity }),
       UserBlock.configure({ editable: true, activity: stableActivity }),
-      ...plusExtensions({ mode: 'editor', activity: props.activity }),
+      ...plusExtensions({ mode: 'editor', activity: stableActivity }),
       getLinkExtension(),
       WebPreview.configure({ editable: true, activity: stableActivity }),
       Flipcard.configure({ editable: true, activity: stableActivity }),

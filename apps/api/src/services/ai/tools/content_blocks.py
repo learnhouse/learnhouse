@@ -706,10 +706,8 @@ SPECS: list[ToolSpec] = [
         description=(
             "List the block types a page can hold (text, lists, tables, callouts, quizzes, "
             "flipcards, math, embeds, code exercises, media, tabs, columns, accordions, timelines, "
-            "checklists, charts, galleries, and the interactive Experiences: sort, sequence, match "
-            "pairs, hotspot, fill the gaps, myth or fact, speed round, estimate, spot the mistake, "
-            "code lock, venn, label diagram, word guess, confidence check, property grid, "
-            "reflection) and how to add each. Pass type for "
+            "checklists, charts, galleries, and interactive Experiences such as sort, sequence, "
+            "match pairs, fill the gaps, myth or fact and reflection) and how to add each. Pass type for "
             "one block's exact editor shape and a valid example."
         ),
         params_model=DescribeBlocksParams,

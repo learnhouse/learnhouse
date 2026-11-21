@@ -821,11 +821,7 @@
     "set_new_password": "Definir nova senha",
     "invited_by_email_cta": "Convidado por e-mail? Cadastre-se com esse endereço",
     "use_invite_code_instead": "Tem um código de convite?",
-    "password_reset_done": "Sua senha foi alterada.",
-    "login_failed_forgot": "Esqueceu sua senha?",
-    "login_failed_reset": "Redefinir",
-    "login_failed_magic": "Enviar um link de acesso por e-mail",
-    "login_failed_google_hint": "Cadastrou-se com o Google? Use Continuar com o Google abaixo."
+    "password_reset_done": "Sua senha foi alterada."
   },
   "validation": {
     "required": "Obrigatório",
@@ -1343,11 +1339,7 @@
       "maintainer": "Mantenedor",
       "contributor": "Colaborador",
       "reporter": "Relator"
-    },
-    "co_created_by": "Co-criado por",
-    "created_on": "Criado em",
-    "last_updated": "Última atualização",
-    "and_x_more": "e mais {{count}}"
+    }
   },
   "communities": {
     "title": "Comunidades",
@@ -14077,8 +14069,7 @@
       "create_first": "Criar primeiro cenário",
       "modal_preview_title": "Prévia do cenário",
       "modal_preview_desc": "Teste seu cenário interativo",
-      "modal_edit_desc": "Crie e gerencie seus cenários interativos",
-      "max_scenarios": "É permitido no máximo 40 cenários"
+      "modal_edit_desc": "Crie e gerencie seus cenários interativos"
     },
     "slash_menu": {
       "items": {
@@ -14864,8 +14855,7 @@
         "view": "Visualizar",
         "view_map": "Mapa",
         "view_steps": "Etapas",
-        "your_path": "Seu caminho",
-        "limits": "Até {{max}} etapas, {{choices}} escolhas cada."
+        "your_path": "Seu caminho"
       },
       "conditional": {
         "add_rule": "Adicionar uma regra",

@@ -821,11 +821,7 @@
     "set_new_password": "नया पासवर्ड सेट करें",
     "invited_by_email_cta": "ईमेल से आमंत्रण मिला? उसी पते से साइन अप करें",
     "use_invite_code_instead": "इसके बजाय आमंत्रण कोड है?",
-    "password_reset_done": "आपका पासवर्ड बदल दिया गया है।",
-    "login_failed_forgot": "पासवर्ड भूल गए?",
-    "login_failed_reset": "रीसेट करें",
-    "login_failed_magic": "इसके बजाय मुझे लॉगिन लिंक ईमेल करें",
-    "login_failed_google_hint": "Google से साइन अप किया था? नीचे Google के साथ जारी रखें चुनें।"
+    "password_reset_done": "आपका पासवर्ड बदल दिया गया है।"
   },
   "validation": {
     "required": "आवश्यक",
@@ -1325,11 +1321,7 @@
       "maintainer": "मेंटेनर",
       "contributor": "योगदानकर्ता",
       "reporter": "रिपोर्टर"
-    },
-    "co_created_by": "सह-निर्मित",
-    "created_on": "बनाया गया",
-    "last_updated": "पिछला अपडेट",
-    "and_x_more": "और {{count}} और"
+    }
   },
   "communities": {
     "title": "समुदाय",
@@ -13853,8 +13845,7 @@
       "create_first": "पहला परिदृश्य बनाएं",
       "modal_preview_title": "परिदृश्य प्रीव्यू",
       "modal_preview_desc": "अपने इंटरैक्टिव परिदृश्य को आज़माएं",
-      "modal_edit_desc": "अपने इंटरैक्टिव परिदृश्य बनाएं और प्रबंधित करें",
-      "max_scenarios": "अधिकतम 40 परिदृश्यों की अनुमति है"
+      "modal_edit_desc": "अपने इंटरैक्टिव परिदृश्य बनाएं और प्रबंधित करें"
     },
     "slash_menu": {
       "items": {
@@ -14629,8 +14620,7 @@
         "view": "देखें",
         "view_map": "मानचित्र",
         "view_steps": "चरण",
-        "your_path": "आपका रास्ता",
-        "limits": "अधिकतम {{max}} चरण, हर एक में {{choices}} विकल्प।"
+        "your_path": "आपका रास्ता"
       },
       "conditional": {
         "add_rule": "नियम जोड़ें",

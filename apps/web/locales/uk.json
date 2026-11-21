@@ -823,11 +823,7 @@
     "set_new_password": "Встановити новий пароль",
     "invited_by_email_cta": "Запрошення прийшло поштою? Зареєструйтеся з цією адресою",
     "use_invite_code_instead": "Маєте код запрошення?",
-    "password_reset_done": "Пароль змінено.",
-    "login_failed_forgot": "Забули пароль?",
-    "login_failed_reset": "Скинути",
-    "login_failed_magic": "Надіслати посилання для входу",
-    "login_failed_google_hint": "Реєструвалися через Google? Натисніть «Продовжити з Google» нижче."
+    "password_reset_done": "Пароль змінено."
   },
   "validation": {
     "required": "Обов’язково",
@@ -1363,11 +1359,7 @@
       "maintainer": "Супровідник",
       "contributor": "Учасник",
       "reporter": "Репортер"
-    },
-    "co_created_by": "Створено спільно",
-    "created_on": "Створено",
-    "last_updated": "Останнє оновлення",
-    "and_x_more": "& {{count}} більше"
+    }
   },
   "communities": {
     "title": "Спільноти",
@@ -14331,8 +14323,7 @@
       "create_first": "Створити перший сценарій",
       "modal_preview_title": "Попередній перегляд сценарію",
       "modal_preview_desc": "Протестуйте свій інтерактивний сценарій",
-      "modal_edit_desc": "Створюйте й керуйте своїми інтерактивними сценаріями",
-      "max_scenarios": "Дозволено максимум 40 сценаріїв"
+      "modal_edit_desc": "Створюйте й керуйте своїми інтерактивними сценаріями"
     },
     "slash_menu": {
       "items": {
@@ -15129,8 +15120,7 @@
         "view": "Перегляд",
         "view_map": "Карта",
         "view_steps": "Кроки",
-        "your_path": "Ваш шлях",
-        "limits": "До {{max}} кроків, по {{choices}} варіантів у кожному."
+        "your_path": "Ваш шлях"
       },
       "conditional": {
         "add_rule": "Додати правило",
