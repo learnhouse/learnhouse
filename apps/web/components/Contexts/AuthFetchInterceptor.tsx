@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { getAPIUrl } from '@services/config/config'
 import { dispatchAuthExpired, dispatchAuthRefreshed } from '@/lib/auth/events'
 import { hasSessionMarker } from '@services/auth/sessionMarker'
+import { LICENSE_LOCKED_STATUS, dispatchLicenseLocked, isLicenseLockedBody } from '@/lib/license/lock'
 import {
   activeImpersonation,
   authRefreshUrl,
@@ -99,6 +100,14 @@ export default function AuthFetchInterceptor() {
       const hasRetried = headers.get(AUTH_RETRY_HEADER) === '1'
 
       const response = await originalFetch(input, init)
+
+      // Self-hosted license locked: show the lock screen instead of whatever
+      // error the caller would render (see LicenseLockGate).
+      if (response.status === LICENSE_LOCKED_STATUS && url && isApiRequest(url)) {
+        const body = await response.clone().json().catch(() => null)
+        if (isLicenseLockedBody(body)) dispatchLicenseLocked()
+        return response
+      }
 
       // Inside an impersonation: a refused write shows the banner's notice,
       // and a spent session goes back to the console (never a sign-out).

@@ -30372,5 +30372,44 @@
     "copied_link": "Lien de l'app copié",
     "copy_failed": "Impossible de copier l'image. Essayez Télécharger.",
     "download_failed": "Impossible d'enregistrer l'image."
+  },
+  "license": {
+    "locked": {
+      "title": "Cette plateforme est indisponible",
+      "description": "Sa licence LearnHouse a expiré : la plateforme est donc suspendue pour le moment.",
+      "admin_hint": "Administrateurs : contactez LearnHouse pour rétablir l'accès.",
+      "retry": "Réessayer"
+    },
+    "banner": {
+      "label": "Avis de licence",
+      "dismiss": "Masquer",
+      "poc_ends": "Le POC se termine {{when}}.",
+      "poc_ends_soon": "Votre POC se termine bientôt.",
+      "license_expires": "La licence expire {{when}}.",
+      "license_expires_soon": "Votre licence expire bientôt.",
+      "payment_overdue": "Paiement en retard — les fonctionnalités Enterprise seront désactivées le {{date}}.",
+      "payment_overdue_nodate": "Paiement en retard. Les fonctionnalités Enterprise seront bientôt désactivées.",
+      "seat_limit_exceeded": "Plus de sièges sont utilisés que votre licence n'en inclut.",
+      "org_limit_exceeded": "Il y a plus d'organisations que votre licence n'en inclut.",
+      "grace": "Impossible de joindre le serveur de licences. Les fonctionnalités Enterprise restent actives jusqu'au {{date}}.",
+      "grace_nodate": "Impossible de joindre le serveur de licences. Les fonctionnalités Enterprise restent actives pour le moment.",
+      "inactive": "Les fonctionnalités Enterprise sont désactivées : {{reason}}.",
+      "generic": "Votre licence demande votre attention.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "la licence a expiré",
+      "payment_overdue": "le paiement est en retard",
+      "revoked": "la licence a été révoquée",
+      "unknown_key": "la clé de licence n'est pas reconnue",
+      "org_inactive": "le compte de licence est inactif",
+      "key_not_issued": "la clé de licence n'a pas été émise",
+      "suspended": "la licence est suspendue",
+      "not_yet_valid": "la licence n'est pas encore valide",
+      "activation_limit": "la licence est active sur trop d'instances",
+      "seat_limit_exceeded": "plus de sièges sont utilisés que la licence n'en inclut",
+      "grace_expired": "le serveur de licences est injoignable depuis trop longtemps",
+      "unknown": "la licence n'a pas pu être vérifiée"
+    }
   }
 }

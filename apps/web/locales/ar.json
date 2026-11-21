@@ -32271,5 +32271,44 @@
     "copied_link": "تم نسخ رابط التطبيق",
     "copy_failed": "تعذّر نسخ الصورة. جرّب التنزيل بدلاً من ذلك.",
     "download_failed": "تعذّر حفظ الصورة."
+  },
+  "license": {
+    "locked": {
+      "title": "هذه المنصة غير متاحة",
+      "description": "انتهت صلاحية ترخيص LearnHouse الخاص بها، لذا توقفت المنصة مؤقتًا.",
+      "admin_hint": "إلى المسؤولين: تواصلوا مع LearnHouse لاستعادة الوصول.",
+      "retry": "إعادة المحاولة"
+    },
+    "banner": {
+      "label": "إشعارات الترخيص",
+      "dismiss": "إخفاء",
+      "poc_ends": "تنتهي فترة إثبات المفهوم {{when}}.",
+      "poc_ends_soon": "تنتهي فترة إثبات المفهوم قريبًا.",
+      "license_expires": "ينتهي الترخيص {{when}}.",
+      "license_expires_soon": "ينتهي ترخيصك قريبًا.",
+      "payment_overdue": "الدفع متأخر — ستتوقف ميزات Enterprise في {{date}}.",
+      "payment_overdue_nodate": "الدفع متأخر. ستتوقف ميزات Enterprise قريبًا.",
+      "seat_limit_exceeded": "عدد المقاعد المستخدمة أكبر مما يشمله ترخيصك.",
+      "org_limit_exceeded": "عدد المؤسسات أكبر مما يشمله ترخيصك.",
+      "grace": "تعذّر الوصول إلى خادم التراخيص. ستبقى ميزات Enterprise مفعّلة حتى {{date}}.",
+      "grace_nodate": "تعذّر الوصول إلى خادم التراخيص. ستبقى ميزات Enterprise مفعّلة حاليًا.",
+      "inactive": "ميزات Enterprise متوقفة: {{reason}}.",
+      "generic": "ترخيصك يحتاج إلى انتباهك.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "انتهت صلاحية الترخيص",
+      "payment_overdue": "الدفع متأخر",
+      "revoked": "تم إلغاء الترخيص",
+      "unknown_key": "مفتاح الترخيص غير معروف",
+      "org_inactive": "حساب الترخيص غير نشط",
+      "key_not_issued": "لم يتم إصدار مفتاح الترخيص",
+      "suspended": "الترخيص معلّق",
+      "not_yet_valid": "الترخيص غير صالح بعد",
+      "activation_limit": "الترخيص مفعّل على عدد كبير جدًا من النسخ",
+      "seat_limit_exceeded": "عدد المقاعد المستخدمة أكبر مما يشمله الترخيص",
+      "grace_expired": "تعذّر الوصول إلى خادم التراخيص لفترة طويلة جدًا",
+      "unknown": "تعذّر التحقق من الترخيص"
+    }
   }
 }

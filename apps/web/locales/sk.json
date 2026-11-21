@@ -31127,5 +31127,44 @@
     "copied_link": "Odkaz na aplikáciu skopírovaný",
     "copy_failed": "Obrázok sa nepodarilo skopírovať. Skúste Stiahnuť.",
     "download_failed": "Obrázok sa nepodarilo uložiť."
+  },
+  "license": {
+    "locked": {
+      "title": "Táto platforma nie je dostupná",
+      "description": "Jej licencia LearnHouse vypršala, preto je platforma zatiaľ pozastavená.",
+      "admin_hint": "Správcovia: kontaktujte LearnHouse a obnovte prístup.",
+      "retry": "Skúsiť znova"
+    },
+    "banner": {
+      "label": "Upozornenia k licencii",
+      "dismiss": "Zavrieť",
+      "poc_ends": "POC sa končí {{when}}.",
+      "poc_ends_soon": "Váš POC sa čoskoro končí.",
+      "license_expires": "Licencia vyprší {{when}}.",
+      "license_expires_soon": "Vaša licencia čoskoro vyprší.",
+      "payment_overdue": "Platba je po splatnosti — funkcie Enterprise sa vypnú {{date}}.",
+      "payment_overdue_nodate": "Platba je po splatnosti. Funkcie Enterprise sa čoskoro vypnú.",
+      "seat_limit_exceeded": "Používa sa viac miest, než zahŕňa vaša licencia.",
+      "org_limit_exceeded": "Organizácií je viac, než zahŕňa vaša licencia.",
+      "grace": "Licenčný server je nedostupný. Funkcie Enterprise zostanú zapnuté do {{date}}.",
+      "grace_nodate": "Licenčný server je nedostupný. Funkcie Enterprise zatiaľ zostávajú zapnuté.",
+      "inactive": "Funkcie Enterprise sú vypnuté: {{reason}}.",
+      "generic": "Vaša licencia vyžaduje pozornosť.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "licencia vypršala",
+      "payment_overdue": "platba je po splatnosti",
+      "revoked": "licencia bola zrušená",
+      "unknown_key": "licenčný kľúč nebol rozpoznaný",
+      "org_inactive": "licenčný účet je neaktívny",
+      "key_not_issued": "licenčný kľúč nebol vydaný",
+      "suspended": "licencia je pozastavená",
+      "not_yet_valid": "licencia ešte nie je platná",
+      "activation_limit": "licencia je aktívna na príliš veľa inštanciách",
+      "seat_limit_exceeded": "používa sa viac miest, než zahŕňa licencia",
+      "grace_expired": "licenčný server bol príliš dlho nedostupný",
+      "unknown": "licenciu sa nepodarilo overiť"
+    }
   }
 }

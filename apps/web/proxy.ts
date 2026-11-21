@@ -6,6 +6,7 @@ import { isThirdPartyRelayPath, withoutCredentialHeaders } from './lib/thirdPart
 import { landingDecision, threadRedirect } from './lib/seo/legacyRedirect'
 import { healSessionMarker } from './lib/auth/sessionMarker'
 import { seoRouteFor } from './lib/seo/publicRoutes'
+import { LICENSE_LOCKED_PATH, LICENSE_LOCKED_STATUS, licenseLockAction } from './lib/license/lock'
 
 // =============================================================================
 // Tenancy
@@ -32,6 +33,8 @@ interface InstanceInfo {
   tenancy: 'multi' | 'single'
   frontend_domain: string
   top_domain: string
+  // Self-hosted EE whose license lapsed with on_lapse=lock (see lib/license/lock).
+  license_locked?: boolean
   // Set when the backend couldn't be reached and the defaults below stand in.
   fallback?: true
 }
@@ -345,6 +348,28 @@ async function route(req: NextRequest) {
   ])
   if (pathname !== pathname.toLowerCase() && CANONICAL_LOWER.has(pathname.toLowerCase())) {
     return NextResponse.redirect(new URL(`${pathname.toLowerCase()}${search}`, req.url), 308)
+  }
+
+  // -------------------------------------------------------------------------
+  // 0. License lock (self-hosted EE). Every page but the login page becomes
+  //    the lock screen. Rides the cached /instance/info above, so it costs
+  //    nothing per request; the fallback (backend down) never locks.
+  // -------------------------------------------------------------------------
+  if (instance.license_locked === true) {
+    const action = licenseLockAction(pathname)
+    if (action === 'status') {
+      return new NextResponse('license_locked', {
+        status: LICENSE_LOCKED_STATUS,
+        headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/plain; charset=utf-8' },
+      })
+    }
+    if (action === 'page') {
+      const response = NextResponse.rewrite(new URL(LICENSE_LOCKED_PATH, req.url))
+      response.headers.set('Cache-Control', 'no-store')
+      response.headers.set('X-Robots-Tag', 'noindex')
+      setInstanceCookies(req, response, instance)
+      return response
+    }
   }
 
   // -------------------------------------------------------------------------

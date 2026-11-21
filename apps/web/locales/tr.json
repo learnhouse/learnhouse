@@ -29743,5 +29743,44 @@
     "copied_link": "Uygulama bağlantısı kopyalandı",
     "copy_failed": "Görsel kopyalanamadı. İndirmeyi deneyin.",
     "download_failed": "Görsel kaydedilemedi."
+  },
+  "license": {
+    "locked": {
+      "title": "Bu platform kullanılamıyor",
+      "description": "LearnHouse lisansının süresi doldu, bu yüzden platform şimdilik duraklatıldı.",
+      "admin_hint": "Yöneticiler: erişimi geri yüklemek için LearnHouse ile iletişime geçin.",
+      "retry": "Tekrar dene"
+    },
+    "banner": {
+      "label": "Lisans bildirimleri",
+      "dismiss": "Kapat",
+      "poc_ends": "POC {{when}} sona eriyor.",
+      "poc_ends_soon": "POC'niz yakında sona eriyor.",
+      "license_expires": "Lisans {{when}} sona eriyor.",
+      "license_expires_soon": "Lisansınız yakında sona eriyor.",
+      "payment_overdue": "Ödeme gecikti — Enterprise özellikleri {{date}} tarihinde kapanacak.",
+      "payment_overdue_nodate": "Ödeme gecikti. Enterprise özellikleri yakında kapanacak.",
+      "seat_limit_exceeded": "Lisansınızın içerdiğinden daha fazla koltuk kullanılıyor.",
+      "org_limit_exceeded": "Lisansınızın içerdiğinden daha fazla kuruluş var.",
+      "grace": "Lisans sunucusuna ulaşılamıyor. Enterprise özellikleri {{date}} tarihine kadar açık kalacak.",
+      "grace_nodate": "Lisans sunucusuna ulaşılamıyor. Enterprise özellikleri şimdilik açık kalıyor.",
+      "inactive": "Enterprise özellikleri kapalı: {{reason}}.",
+      "generic": "Lisansınız ilgi bekliyor.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "lisansın süresi doldu",
+      "payment_overdue": "ödeme gecikti",
+      "revoked": "lisans iptal edildi",
+      "unknown_key": "lisans anahtarı tanınmıyor",
+      "org_inactive": "lisans hesabı etkin değil",
+      "key_not_issued": "lisans anahtarı verilmedi",
+      "suspended": "lisans askıya alındı",
+      "not_yet_valid": "lisans henüz geçerli değil",
+      "activation_limit": "lisans çok fazla örnekte etkin",
+      "seat_limit_exceeded": "lisansın içerdiğinden daha fazla koltuk kullanılıyor",
+      "grace_expired": "lisans sunucusuna çok uzun süre ulaşılamadı",
+      "unknown": "lisans doğrulanamadı"
+    }
   }
 }

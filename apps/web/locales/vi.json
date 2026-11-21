@@ -29699,5 +29699,44 @@
     "copied_link": "Đã sao chép liên kết ứng dụng",
     "copy_failed": "Không thể sao chép hình ảnh. Hãy thử Tải xuống.",
     "download_failed": "Không thể lưu hình ảnh."
+  },
+  "license": {
+    "locked": {
+      "title": "Nền tảng này hiện không khả dụng",
+      "description": "Giấy phép LearnHouse của nền tảng đã hết hiệu lực nên nền tảng tạm dừng.",
+      "admin_hint": "Quản trị viên: hãy liên hệ LearnHouse để khôi phục quyền truy cập.",
+      "retry": "Thử lại"
+    },
+    "banner": {
+      "label": "Thông báo giấy phép",
+      "dismiss": "Ẩn",
+      "poc_ends": "POC kết thúc {{when}}.",
+      "poc_ends_soon": "POC của bạn sắp kết thúc.",
+      "license_expires": "Giấy phép hết hạn {{when}}.",
+      "license_expires_soon": "Giấy phép của bạn sắp hết hạn.",
+      "payment_overdue": "Quá hạn thanh toán — tính năng Enterprise sẽ tắt vào {{date}}.",
+      "payment_overdue_nodate": "Quá hạn thanh toán. Tính năng Enterprise sẽ sớm bị tắt.",
+      "seat_limit_exceeded": "Số chỗ đang dùng vượt quá số chỗ trong giấy phép.",
+      "org_limit_exceeded": "Số tổ chức vượt quá số lượng trong giấy phép.",
+      "grace": "Không thể kết nối máy chủ giấy phép. Tính năng Enterprise vẫn bật đến {{date}}.",
+      "grace_nodate": "Không thể kết nối máy chủ giấy phép. Tính năng Enterprise tạm thời vẫn bật.",
+      "inactive": "Tính năng Enterprise đã tắt: {{reason}}.",
+      "generic": "Giấy phép của bạn cần được xử lý.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "giấy phép đã hết hạn",
+      "payment_overdue": "thanh toán đã quá hạn",
+      "revoked": "giấy phép đã bị thu hồi",
+      "unknown_key": "không nhận ra khóa giấy phép",
+      "org_inactive": "tài khoản giấy phép không hoạt động",
+      "key_not_issued": "khóa giấy phép chưa được cấp",
+      "suspended": "giấy phép bị tạm ngưng",
+      "not_yet_valid": "giấy phép chưa có hiệu lực",
+      "activation_limit": "giấy phép đang hoạt động trên quá nhiều phiên bản",
+      "seat_limit_exceeded": "số chỗ đang dùng vượt quá số chỗ trong giấy phép",
+      "grace_expired": "không thể kết nối máy chủ giấy phép trong thời gian quá dài",
+      "unknown": "không thể xác minh giấy phép"
+    }
   }
 }

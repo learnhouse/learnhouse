@@ -2,8 +2,14 @@ from fastapi import APIRouter, Depends
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organizations import Organization
+from src.db.user_organizations import UserOrganization
 from src.core.events.database import get_db_session
 from src.core.deployment_mode import get_deployment_mode
+from src.core.ee_hooks import get_ee_hooks
+from src.core.middleware.license_lock import license_lock_state
+from src.security.auth import get_authenticated_user
+from src.security.backoffice import is_user_backoffice_staff
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.services.orgs.cache import get_cached_instance_info, set_cached_instance_info
 from config.config import get_learnhouse_config
 
@@ -25,6 +31,9 @@ def _live_fields(tenancy: str) -> dict:
     mode = get_deployment_mode()
     return {
         "mode": mode,
+        # True only on a self-hosted EE install whose license lapsed with
+        # lock-on-lapse; the frontend shows its lock screen.
+        "license_locked": license_lock_state()[0],
         # Deprecated: prefer `tenancy`. Will be removed in a future release.
         "multi_org_enabled": tenancy == "multi" and mode in ("ee", "saas"),
     }
@@ -82,3 +91,56 @@ async def get_instance_info(db_session: AsyncSession = Depends(get_db_session)):
     }
     set_cached_instance_info(cacheable)
     return {**cacheable, **_live_fields(tenancy)}
+
+
+async def _is_license_admin(user, db_session: AsyncSession) -> bool:
+    """Backoffice staff, or an admin/maintainer of any organization."""
+    user_id = getattr(user, "id", None)
+    if not isinstance(user_id, int):
+        return False
+    if await is_user_backoffice_staff(user_id, db_session):
+        return True
+    row = (
+        await db_session.execute(
+            select(UserOrganization.id)
+            .where(UserOrganization.user_id == user_id)
+            .where(UserOrganization.role_id.in_(ADMIN_OR_MAINTAINER_ROLE_IDS))
+            .limit(1)
+        )
+    ).first()
+    return row is not None
+
+
+@router.get(
+    "/license",
+    summary="Get license status",
+    description=(
+        "License status of a self-hosted Enterprise install, for the admin banner. "
+        "Administrators get the full status (notices, term, features); other "
+        "signed-in users only the mode, status and lock flag."
+    ),
+    responses={
+        200: {"description": "License status for the current deployment."},
+        401: {"description": "Authentication required."},
+    },
+)
+async def get_instance_license(
+    user=Depends(get_authenticated_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    mode = get_deployment_mode()
+    locked, lock_reason = license_lock_state()
+    hooks = get_ee_hooks()
+    getter = getattr(hooks, "get_license_status", None) if hooks is not None else None
+    if mode == "saas" or getter is None:
+        return {"mode": mode, "status": "unlicensed", "locked": False, "notices": []}
+    try:
+        status = dict(getter())
+    except Exception:
+        status = {"status": "inactive", "reason": "status_unavailable", "notices": []}
+    status["mode"] = mode
+    status["locked"] = locked
+    status.setdefault("lock_reason", lock_reason)
+    if not await _is_license_admin(user, db_session):
+        return {"mode": mode, "status": status.get("status", "inactive"), "locked": locked}
+    return status

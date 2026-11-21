@@ -6,7 +6,7 @@ Central feature resolution logic (v2 config).
 
 from datetime import datetime, timezone
 
-from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
+from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES, is_ee_feature_licensed
 from src.security.features_utils.plans import (
     FEATURE_PLAN_REQUIREMENTS,
     LEGACY_PRO_FEATURES,
@@ -204,8 +204,12 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
 
     admin_toggle = _get_admin_toggle(config, feature)
 
-    # EE mode: everything available & unlimited (toggles may still turn off)
+    # EE mode: everything the license includes is available & unlimited
+    # (toggles may still turn it off). EE features left out of the license
+    # behave as in OSS mode.
     if mode == "ee":
+        if feature in EE_ONLY_FEATURES and not is_ee_feature_licensed(feature):
+            return _state(False, False, 0, required_plan, upgrade_plan="enterprise")
         off_by = _toggle_off_reason(admin_toggle)
         return _state(off_by is None, True, 0, required_plan, off_by)
 

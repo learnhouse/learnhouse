@@ -29699,5 +29699,44 @@
     "copied_link": "Tautan aplikasi disalin",
     "copy_failed": "Gambar tidak dapat disalin. Coba Unduh.",
     "download_failed": "Gambar tidak dapat disimpan."
+  },
+  "license": {
+    "locked": {
+      "title": "Platform ini tidak tersedia",
+      "description": "Lisensi LearnHouse platform ini telah habis, jadi platform dijeda untuk sementara.",
+      "admin_hint": "Administrator: hubungi LearnHouse untuk memulihkan akses.",
+      "retry": "Coba lagi"
+    },
+    "banner": {
+      "label": "Pemberitahuan lisensi",
+      "dismiss": "Tutup",
+      "poc_ends": "POC berakhir {{when}}.",
+      "poc_ends_soon": "POC Anda segera berakhir.",
+      "license_expires": "Lisensi berakhir {{when}}.",
+      "license_expires_soon": "Lisensi Anda segera berakhir.",
+      "payment_overdue": "Pembayaran terlambat — fitur Enterprise akan nonaktif pada {{date}}.",
+      "payment_overdue_nodate": "Pembayaran terlambat. Fitur Enterprise akan segera nonaktif.",
+      "seat_limit_exceeded": "Kursi yang digunakan melebihi jumlah dalam lisensi Anda.",
+      "org_limit_exceeded": "Jumlah organisasi melebihi yang termasuk dalam lisensi Anda.",
+      "grace": "Server lisensi tidak dapat dijangkau. Fitur Enterprise tetap aktif hingga {{date}}.",
+      "grace_nodate": "Server lisensi tidak dapat dijangkau. Fitur Enterprise tetap aktif untuk saat ini.",
+      "inactive": "Fitur Enterprise nonaktif: {{reason}}.",
+      "generic": "Lisensi Anda perlu ditindaklanjuti.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "lisensi telah kedaluwarsa",
+      "payment_overdue": "pembayaran terlambat",
+      "revoked": "lisensi telah dicabut",
+      "unknown_key": "kunci lisensi tidak dikenali",
+      "org_inactive": "akun lisensi tidak aktif",
+      "key_not_issued": "kunci lisensi belum diterbitkan",
+      "suspended": "lisensi ditangguhkan",
+      "not_yet_valid": "lisensi belum berlaku",
+      "activation_limit": "lisensi aktif di terlalu banyak instans",
+      "seat_limit_exceeded": "kursi yang digunakan melebihi jumlah dalam lisensi",
+      "grace_expired": "server lisensi tidak dapat dijangkau terlalu lama",
+      "unknown": "lisensi tidak dapat diverifikasi"
+    }
   }
 }

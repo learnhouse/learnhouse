@@ -187,6 +187,11 @@ from src.security.impersonation import ImpersonationGateMiddleware, install_orm_
 
 app.add_middleware(ImpersonationGateMiddleware)
 install_orm_scope()
+# Self-hosted EE whose license lapsed with lock-on-lapse: 423 everything but the
+# lock screen's own calls. Inside CORS so the frontend can read the 423.
+from src.core.middleware.license_lock import LicenseLockMiddleware  # noqa: E402
+
+app.add_middleware(LicenseLockMiddleware)
 configure_cors(app)
 # Wraps the API's CORS: origins it doesn't trust get credential-less CORS, so
 # apps on other domains can call the API with a bearer token (embed sessions).

@@ -29701,5 +29701,44 @@
     "copied_link": "应用链接已复制",
     "copy_failed": "无法复制图片，请改用下载。",
     "download_failed": "无法保存图片。"
+  },
+  "license": {
+    "locked": {
+      "title": "此平台暂不可用",
+      "description": "该平台的 LearnHouse 许可证已失效，因此平台目前已暂停。",
+      "admin_hint": "管理员：请联系 LearnHouse 恢复访问。",
+      "retry": "重试"
+    },
+    "banner": {
+      "label": "许可证通知",
+      "dismiss": "关闭",
+      "poc_ends": "POC 将于{{when}}结束。",
+      "poc_ends_soon": "你的 POC 即将结束。",
+      "license_expires": "许可证将于{{when}}到期。",
+      "license_expires_soon": "你的许可证即将到期。",
+      "payment_overdue": "付款已逾期 — Enterprise 功能将于 {{date}} 关闭。",
+      "payment_overdue_nodate": "付款已逾期。Enterprise 功能即将关闭。",
+      "seat_limit_exceeded": "正在使用的席位超出了许可证包含的数量。",
+      "org_limit_exceeded": "组织数量超出了许可证包含的数量。",
+      "grace": "无法连接许可证服务器。Enterprise 功能将保持开启至 {{date}}。",
+      "grace_nodate": "无法连接许可证服务器。Enterprise 功能暂时保持开启。",
+      "inactive": "Enterprise 功能已关闭：{{reason}}。",
+      "generic": "你的许可证需要处理。",
+      "with_when": "{{message}}（{{when}}）"
+    },
+    "reason": {
+      "expired": "许可证已过期",
+      "payment_overdue": "付款已逾期",
+      "revoked": "许可证已被吊销",
+      "unknown_key": "无法识别许可证密钥",
+      "org_inactive": "许可证账户未激活",
+      "key_not_issued": "许可证密钥尚未签发",
+      "suspended": "许可证已被暂停",
+      "not_yet_valid": "许可证尚未生效",
+      "activation_limit": "许可证在过多实例上激活",
+      "seat_limit_exceeded": "正在使用的席位超出了许可证包含的数量",
+      "grace_expired": "许可证服务器长时间无法连接",
+      "unknown": "无法验证许可证"
+    }
   }
 }

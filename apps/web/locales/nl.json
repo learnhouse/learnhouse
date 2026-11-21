@@ -29743,5 +29743,44 @@
     "copied_link": "App-link gekopieerd",
     "copy_failed": "Kon de afbeelding niet kopiëren. Probeer Downloaden.",
     "download_failed": "Kon de afbeelding niet opslaan."
+  },
+  "license": {
+    "locked": {
+      "title": "Dit platform is niet beschikbaar",
+      "description": "De LearnHouse-licentie is verlopen, dus het platform is voorlopig gepauzeerd.",
+      "admin_hint": "Beheerders: neem contact op met LearnHouse om de toegang te herstellen.",
+      "retry": "Opnieuw proberen"
+    },
+    "banner": {
+      "label": "Licentiemeldingen",
+      "dismiss": "Sluiten",
+      "poc_ends": "De POC eindigt {{when}}.",
+      "poc_ends_soon": "Je POC eindigt binnenkort.",
+      "license_expires": "De licentie verloopt {{when}}.",
+      "license_expires_soon": "Je licentie verloopt binnenkort.",
+      "payment_overdue": "Betaling achterstallig — Enterprise-functies worden op {{date}} uitgeschakeld.",
+      "payment_overdue_nodate": "Betaling achterstallig. Enterprise-functies worden binnenkort uitgeschakeld.",
+      "seat_limit_exceeded": "Er zijn meer plaatsen in gebruik dan je licentie omvat.",
+      "org_limit_exceeded": "Er zijn meer organisaties dan je licentie omvat.",
+      "grace": "De licentieserver is niet bereikbaar. Enterprise-functies blijven aan tot {{date}}.",
+      "grace_nodate": "De licentieserver is niet bereikbaar. Enterprise-functies blijven voorlopig aan.",
+      "inactive": "Enterprise-functies zijn uitgeschakeld: {{reason}}.",
+      "generic": "Je licentie vraagt om aandacht.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "de licentie is verlopen",
+      "payment_overdue": "de betaling is achterstallig",
+      "revoked": "de licentie is ingetrokken",
+      "unknown_key": "de licentiesleutel wordt niet herkend",
+      "org_inactive": "het licentieaccount is inactief",
+      "key_not_issued": "de licentiesleutel is niet uitgegeven",
+      "suspended": "de licentie is opgeschort",
+      "not_yet_valid": "de licentie is nog niet geldig",
+      "activation_limit": "de licentie is op te veel instanties actief",
+      "seat_limit_exceeded": "er zijn meer plaatsen in gebruik dan de licentie omvat",
+      "grace_expired": "de licentieserver was te lang onbereikbaar",
+      "unknown": "de licentie kon niet worden geverifieerd"
+    }
   }
 }

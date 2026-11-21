@@ -132,10 +132,16 @@ def register_ee_calendar_sources():
             logger.error(f"Failed to register EE calendar sources: {e}")
 
 def is_multi_org_allowed() -> bool:
-    """Check if multi-org mode is allowed (requires EE or SaaS)."""
-    from src.core.deployment_mode import get_deployment_mode
+    """Check if multi-org mode is allowed (requires EE or SaaS).
+
+    Self-hosted EE also needs the license to include ``multi_org`` (agency
+    licenses do; single-organization enterprise licenses do not).
+    """
+    from src.core.deployment_mode import get_deployment_mode, is_ee_feature_licensed
     mode = get_deployment_mode()
-    return mode in ('ee', 'saas')
+    if mode == 'ee':
+        return is_ee_feature_licensed('multi_org')
+    return mode == 'saas'
 
 
 async def get_ee_member_risk_reasons(org_id, user_id, db_session) -> list:
