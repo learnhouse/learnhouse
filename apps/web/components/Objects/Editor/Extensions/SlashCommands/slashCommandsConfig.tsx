@@ -12,7 +12,6 @@ import {
   CursorClick,
   FilePdf,
   FloppyDisk,
-  GitBranch,
   Globe,
   Headphones,
   Image as ImageIcon,
@@ -27,7 +26,6 @@ import {
   SealQuestion,
   Sigma,
   SplitHorizontal,
-  SquaresFour,
   Table,
   Tag,
   TextHFive,
@@ -51,11 +49,31 @@ import { searchMatchesAny, normalizeForSearch } from '@/lib/search/normalize'
 import { EDITOR_EVENTS, emitEditorEvent } from '../../Templates/templateContent'
 import { presetById } from '../Dynamic/dynamicRules'
 import { requestAIEditor } from '../../AI/aiEditorBridge'
+import { experienceRegistry, insertExperience } from '../Experiences/registry'
+
+/** Slash items for the Experiences family, built from its registry. */
+const experienceSlashCommands: SlashCommandItem[] = experienceRegistry.map((entry) => {
+  const Icon = entry.icon
+  return {
+    id: entry.slashId,
+    title: entry.title,
+    description: entry.description,
+    titleKey: entry.titleKey,
+    descriptionKey: entry.descriptionKey,
+    icon: <Icon size={17} />,
+    category: 'experiences',
+    keywords: entry.keywords,
+    command: (editor) => {
+      insertExperience(editor, entry, i18n.t.bind(i18n))
+    },
+  }
+})
 
 export const categoryLabelKeys: Record<SlashCommandCategory, string> = {
   text: 'editor.slash_menu.categories.text',
   media: 'editor.slash_menu.categories.media',
   interactive: 'editor.slash_menu.categories.interactive',
+  experiences: 'editor.experiences.category',
   callouts: 'editor.slash_menu.categories.callouts',
   dynamic: 'editor.slash_menu.categories.dynamic',
   ui: 'editor.slash_menu.categories.ui',
@@ -66,6 +84,7 @@ export const categoryOrder: SlashCommandCategory[] = [
   'text',
   'media',
   'interactive',
+  'experiences',
   'callouts',
   'dynamic',
   'ui',
@@ -395,52 +414,6 @@ export const slashCommands: SlashCommandItem[] = [
     },
   },
   {
-    id: 'flipcard',
-    title: 'Flipcard',
-    description: 'Add a flashcard for learning',
-    titleKey: 'editor.slash_menu.items.flipcard.title',
-    descriptionKey: 'editor.slash_menu.items.flipcard.description',
-    icon: <ArrowsClockwise size={17} />,
-    category: 'interactive',
-    keywords: ['flipcard', 'flashcard', 'card', 'memory', 'learning'],
-    command: (editor) => {
-      editor.chain().focus().insertContent({
-        type: 'flipcard',
-        attrs: {
-          question: 'Click to reveal the answer',
-          answer: 'This is the answer',
-          color: 'blue',
-          alignment: 'center',
-          size: 'medium',
-        },
-      }).run()
-    },
-  },
-  {
-    id: 'flipcardGrid',
-    title: 'Flashcard Grid',
-    description: 'Lay several flashcards out side by side',
-    titleKey: 'editor.slash_menu.items.flipcard_grid.title',
-    descriptionKey: 'editor.slash_menu.items.flipcard_grid.description',
-    icon: <SquaresFour size={17} />,
-    category: 'interactive',
-    keywords: ['flipcard', 'flashcard', 'grid', 'columns', 'row', 'horizontal', 'deck'],
-    command: (editor) => {
-      const card = (question: string, answer: string) => ({
-        type: 'flipcard',
-        attrs: { question, answer, color: 'blue', alignment: 'center', size: 'medium' },
-      })
-      editor.chain().focus().insertContent({
-        type: 'flipcardGrid',
-        attrs: { columns: 2 },
-        content: [
-          card('Click to reveal the answer', 'This is the answer'),
-          card('Click to reveal the answer', 'This is the answer'),
-        ],
-      }).run()
-    },
-  },
-  {
     id: 'codePlayground',
     title: 'Code Playground',
     description: 'Add a coding challenge with test cases',
@@ -470,54 +443,33 @@ export const slashCommands: SlashCommandItem[] = [
       }).run()
     },
   },
+
+  // Experiences category: the family registry (Scenarios, Flashcards and the
+  // interactive exercises), with the single flipcard kept under its old id.
+  ...experienceSlashCommands.slice(0, 2),
   {
-    id: 'scenarios',
-    title: 'Scenarios',
-    description: 'Add interactive branching scenarios',
-    titleKey: 'editor.slash_menu.items.scenarios.title',
-    descriptionKey: 'editor.slash_menu.items.scenarios.description',
-    icon: <GitBranch size={17} />,
-    category: 'interactive',
-    keywords: ['scenarios', 'branching', 'interactive', 'choice', 'story'],
+    id: 'flipcard',
+    title: 'Flipcard',
+    description: 'Add a flashcard for learning',
+    titleKey: 'editor.slash_menu.items.flipcard.title',
+    descriptionKey: 'editor.slash_menu.items.flipcard.description',
+    icon: <ArrowsClockwise size={17} />,
+    category: 'experiences',
+    keywords: ['flipcard', 'flashcard', 'card', 'memory', 'learning'],
     command: (editor) => {
       editor.chain().focus().insertContent({
-        type: 'scenarios',
+        type: 'flipcard',
         attrs: {
-          title: 'Interactive Scenario',
-          scenarios: [
-            {
-              id: '1',
-              text: 'Welcome to this interactive scenario. What would you like to do?',
-              imageUrl: '',
-              options: [
-                { id: 'opt1', text: 'Continue exploring', nextScenarioId: '2' },
-                { id: 'opt2', text: 'Learn more about the topic', nextScenarioId: '3' },
-              ],
-            },
-            {
-              id: '2',
-              text: "Great choice! You are now exploring further. What's your next step?",
-              imageUrl: '',
-              options: [
-                { id: 'opt3', text: 'Go back to start', nextScenarioId: '1' },
-                { id: 'opt4', text: 'Finish scenario', nextScenarioId: null },
-              ],
-            },
-            {
-              id: '3',
-              text: "Here's more information about the topic. This helps you understand better.",
-              imageUrl: '',
-              options: [
-                { id: 'opt5', text: 'Go back to start', nextScenarioId: '1' },
-                { id: 'opt6', text: 'Finish scenario', nextScenarioId: null },
-              ],
-            },
-          ],
-          currentScenarioId: '1',
+          question: 'Click to reveal the answer',
+          answer: 'This is the answer',
+          color: 'blue',
+          alignment: 'center',
+          size: 'medium',
         },
       }).run()
     },
   },
+  ...experienceSlashCommands.slice(2),
 
   // Callouts category
   {

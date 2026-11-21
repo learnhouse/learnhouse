@@ -2,7 +2,6 @@ import { DividerVerticalIcon } from '@radix-ui/react-icons'
 import {
   ArrowCounterClockwise,
   ArrowClockwise,
-  ArrowsClockwise,
   Books,
   BracketsCurly,
   CaretDown,
@@ -13,7 +12,6 @@ import {
   Cube,
   CursorClick,
   FileText,
-  GitBranch,
   Hash,
   Globe,
   Headphones,
@@ -29,6 +27,7 @@ import {
   RowsPlusBottom,
   SealQuestion,
   Sigma,
+  Sparkle,
   SquaresFour,
   Layout,
   FloppyDiskBack,
@@ -55,6 +54,53 @@ import { useTranslation } from 'react-i18next'
 import dynamic from 'next/dynamic'
 import { useDynamicLookups } from '../Extensions/Dynamic/useDynamicLookups'
 import { useTaggableCommunities } from '@components/Objects/Communities/Tags/communityTags'
+import * as PopoverPrimitive from '@radix-ui/react-popover'
+
+const ExperiencesGallery = dynamic(() => import('../Extensions/Experiences/ExperiencesGallery'), { ssr: false })
+
+// The Experiences button: a gallery of the interactive blocks (Scenarios,
+// Flashcards, Sort it, Sequence…). Picking one inserts it, filled in.
+function ExperiencesButton({ editor, open, onOpenChange }: { editor: any; open: boolean; onOpenChange: (_open: boolean) => void }) {
+  const { t } = useTranslation()
+  const label = t('editor.experiences.toolbar_label')
+  return (
+    <PopoverPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <ToolTip content={label}>
+        <PopoverPrimitive.Trigger asChild>
+          <button
+            type="button"
+            aria-label={label}
+            aria-haspopup="dialog"
+            // Keep the editor selection so the block lands where the cursor was.
+            onMouseDown={(e) => e.preventDefault()}
+            className={`editor-tool-btn editor-tool-btn-interactive shrink-0 gap-1 ${open ? 'is-active' : ''}`}
+          >
+            <Sparkle size={15} weight="fill" />
+            <span className="hidden text-xs font-medium lg:inline">{label}</span>
+          </button>
+        </PopoverPrimitive.Trigger>
+      </ToolTip>
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+          align="start"
+          sideOffset={8}
+          collisionPadding={12}
+          style={{ zIndex: 'var(--z-popover)' }}
+          className="w-[560px] max-w-[calc(100vw-24px)] rounded-2xl bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.10),0_0_0_1px_rgba(0,0,0,0.08)] outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          onOpenAutoFocus={(e) => {
+            const first = (e.currentTarget as HTMLElement)?.querySelector<HTMLElement>('[data-exp-card]')
+            if (first) {
+              e.preventDefault()
+              first.focus()
+            }
+          }}
+        >
+          <ExperiencesGallery editor={editor} onInserted={() => onOpenChange(false)} />
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
+  )
+}
 
 const VariablePicker = dynamic(() => import('../Extensions/Dynamic/VariablePicker'), { ssr: false })
 const CustomVariablesModal = dynamic(() => import('../Extensions/Dynamic/CustomVariablesModal'), { ssr: false })
@@ -197,40 +243,6 @@ function ToolbarButton({ label, icon, variant = '', active, onSelect }: ToolbarB
       </div>
     </ToolTip>
   )
-}
-
-const scenarioStarter = {
-  title: 'Interactive Scenario',
-  scenarios: [
-    {
-      id: '1',
-      text: 'Welcome to this interactive scenario. What would you like to do?',
-      imageUrl: '',
-      options: [
-        { id: 'opt1', text: 'Continue exploring', nextScenarioId: '2' },
-        { id: 'opt2', text: 'Learn more about the topic', nextScenarioId: '3' }
-      ]
-    },
-    {
-      id: '2',
-      text: 'Great choice! You are now exploring further. What\'s your next step?',
-      imageUrl: '',
-      options: [
-        { id: 'opt3', text: 'Go back to start', nextScenarioId: '1' },
-        { id: 'opt4', text: 'Finish scenario', nextScenarioId: null }
-      ]
-    },
-    {
-      id: '3',
-      text: 'Here\'s more information about the topic. This helps you understand better.',
-      imageUrl: '',
-      options: [
-        { id: 'opt5', text: 'Go back to start', nextScenarioId: '1' },
-        { id: 'opt6', text: 'Finish scenario', nextScenarioId: null }
-      ]
-    }
-  ],
-  currentScenarioId: '1'
 }
 
 export const ToolbarButtons = React.memo(({ editor }: any) => {
@@ -447,29 +459,6 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
       icon: <SealQuestion size={15} weight="fill" />,
       variant: 'editor-tool-btn-interactive',
       onSelect: insertBlock({ type: 'blockQuiz' })
-    },
-    {
-      key: 'flipcard',
-      label: t('editor.blocks.flipcard'),
-      icon: <ArrowsClockwise size={15} weight="fill" />,
-      variant: 'editor-tool-btn-interactive',
-      onSelect: insertBlock({
-        type: 'flipcard',
-        attrs: {
-          question: 'Click to reveal the answer',
-          answer: 'This is the answer',
-          color: 'blue',
-          alignment: 'center',
-          size: 'medium'
-        }
-      })
-    },
-    {
-      key: 'scenario',
-      label: t('editor.blocks.scenario'),
-      icon: <GitBranch size={15} weight="fill" />,
-      variant: 'editor-tool-btn-interactive',
-      onSelect: insertBlock({ type: 'scenarios', attrs: scenarioStarter })
     },
     {
       key: 'h5p',
@@ -720,6 +709,7 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
         items={codeItems}
       />
       {interactiveButtons.map(({ key, ...item }) => <ToolbarButton key={key} {...item} />)}
+      <ExperiencesButton editor={editor} open={openMenu === 'experiences'} onOpenChange={(o) => setOpenMenu(o ? 'experiences' : null)} />
       <ToolbarMenu
         id="elements"
         openMenu={openMenu}

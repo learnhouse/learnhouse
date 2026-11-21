@@ -1,0 +1,342 @@
+[
+ {
+  "name": "hotspot: find mode, two spots, uploaded image",
+  "nodes": [
+   {
+    "type": "expHotspot",
+    "attrs": {
+     "blockId": "6f1c2a4e-1111-4b7a-9c1d-000000000001",
+     "title": "Parts of a flower",
+     "instructions": "Click the petal and the stem.",
+     "imageUrl": "https://cdn.example.com/flower.png",
+     "imageObject": null,
+     "spots": [
+      {
+       "id": "s1",
+       "x": 30,
+       "y": 22,
+       "r": 9,
+       "label": "Petal",
+       "explanation": "Petals attract pollinators.",
+       "correct": true
+      },
+      {
+       "id": "s2",
+       "x": 52,
+       "y": 78,
+       "r": 7,
+       "label": "Stem",
+       "correct": true
+      }
+     ],
+     "mode": "find"
+    }
+   }
+  ]
+ },
+ {
+  "name": "hotspot: explore mode, no image yet",
+  "nodes": [
+   {
+    "type": "expHotspot",
+    "attrs": {
+     "blockId": "6f1c2a4e-1111-4b7a-9c1d-000000000002",
+     "title": "Labelled diagram",
+     "instructions": "",
+     "imageUrl": "",
+     "spots": [],
+     "mode": "explore"
+    }
+   }
+  ]
+ },
+ {
+  "name": "gaps: typed answers with alternatives",
+  "nodes": [
+   {
+    "type": "expGaps",
+    "attrs": {
+     "blockId": "6f1c2a4e-2222-4b7a-9c1d-000000000001",
+     "title": "Photosynthesis",
+     "text": "Plants use [[sunlight|light]] to make food. They release [[oxygen]].",
+     "mode": "type",
+     "caseSensitive": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "gaps: word bank, case sensitive, multi-line",
+  "nodes": [
+   {
+    "type": "expGaps",
+    "attrs": {
+     "blockId": "6f1c2a4e-2222-4b7a-9c1d-000000000002",
+     "title": "Capitals",
+     "text": "[[Paris]] is in France.\n[[Tokyo]] is in Japan.",
+     "mode": "bank",
+     "caseSensitive": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "spot the mistake: text passage",
+  "nodes": [
+   {
+    "type": "expSpotMistake",
+    "attrs": {
+     "blockId": "6f1c2a4e-3333-4b7a-9c1d-000000000001",
+     "title": "Spot the mistakes",
+     "instructions": "Click every sentence that contains a mistake.",
+     "segments": [
+      {
+       "id": "a",
+       "text": "The Sun is a star.",
+       "isMistake": false
+      },
+      {
+       "id": "b",
+       "text": "Mars is the closest planet to the Sun.",
+       "isMistake": true,
+       "correction": "Mercury is the closest planet to the Sun.",
+       "explanation": "Mars is fourth."
+      }
+     ],
+     "kind": "text"
+    }
+   }
+  ]
+ },
+ {
+  "name": "spot the mistake: code lines",
+  "nodes": [
+   {
+    "type": "expSpotMistake",
+    "attrs": {
+     "blockId": "6f1c2a4e-3333-4b7a-9c1d-000000000002",
+     "title": "Find the bug",
+     "instructions": "",
+     "segments": [
+      {
+       "id": "l1",
+       "text": "for i in range(10):",
+       "isMistake": false
+      },
+      {
+       "id": "l2",
+       "text": "    print(i",
+       "isMistake": true,
+       "correction": "    print(i)",
+       "explanation": "Missing closing parenthesis."
+      }
+     ],
+     "kind": "code"
+    }
+   }
+  ]
+ },
+ {
+  "name": "sort: two categories",
+  "nodes": [
+   {
+    "type": "expSort",
+    "attrs": {
+     "blockId": "6f1c2a4e-4444-4b7a-9c1d-000000000001",
+     "title": "Renewable or not?",
+     "instructions": "Sort them.",
+     "categories": [
+      {
+       "id": "c1",
+       "label": "Renewable",
+       "color": "green"
+      },
+      {
+       "id": "c2",
+       "label": "Non-renewable",
+       "color": "orange"
+      }
+     ],
+     "items": [
+      {
+       "id": "i1",
+       "text": "Solar",
+       "categoryId": "c1"
+      },
+      {
+       "id": "i2",
+       "text": "Coal",
+       "categoryId": "c2",
+       "explanation": "It runs out."
+      }
+     ],
+     "shuffle": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "sequence: timeline with details",
+  "nodes": [
+   {
+    "type": "expSequence",
+    "attrs": {
+     "blockId": "6f1c2a4e-5555-4b7a-9c1d-000000000001",
+     "title": "Space race",
+     "instructions": "",
+     "items": [
+      {
+       "id": "a",
+       "text": "Sputnik",
+       "detail": "1957"
+      },
+      {
+       "id": "b",
+       "text": "Gagarin",
+       "detail": "1961"
+      },
+      {
+       "id": "c",
+       "text": "Apollo 11",
+       "detail": "1969"
+      }
+     ],
+     "variant": "timeline"
+    }
+   }
+  ]
+ },
+ {
+  "name": "match: memory mode",
+  "nodes": [
+   {
+    "type": "expMatch",
+    "attrs": {
+     "blockId": "6f1c2a4e-6666-4b7a-9c1d-000000000001",
+     "title": "Capitals",
+     "instructions": "",
+     "pairs": [
+      {
+       "id": "p1",
+       "left": "France",
+       "right": "Paris"
+      },
+      {
+       "id": "p2",
+       "left": "Japan",
+       "right": "Tokyo"
+      }
+     ],
+     "mode": "memory"
+    }
+   }
+  ]
+ },
+ {
+  "name": "myth or fact: custom labels",
+  "nodes": [
+   {
+    "type": "expMythFact",
+    "attrs": {
+     "blockId": "6f1c2a4e-7777-4b7a-9c1d-000000000001",
+     "title": "True or false?",
+     "statements": [
+      {
+       "id": "s1",
+       "text": "Bats are blind.",
+       "isTrue": false,
+       "explanation": "Bats can see."
+      },
+      {
+       "id": "s2",
+       "text": "Lightning can strike twice.",
+       "isTrue": true,
+       "explanation": "Often."
+      }
+     ],
+     "labels": {
+      "true": "True",
+      "false": "False"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "speed round: unlimited lives",
+  "nodes": [
+   {
+    "type": "expSpeedRound",
+    "attrs": {
+     "blockId": "6f1c2a4e-8888-4b7a-9c1d-000000000001",
+     "title": "Quick maths",
+     "questions": [
+      {
+       "id": "q1",
+       "prompt": "7 × 8",
+       "options": [
+        "54",
+        "56",
+        "64"
+       ],
+       "answer": 1
+      }
+     ],
+     "secondsPerQuestion": 15,
+     "lives": 0
+    }
+   }
+  ]
+ },
+ {
+  "name": "estimate: decimals and unit",
+  "nodes": [
+   {
+    "type": "expEstimate",
+    "attrs": {
+     "blockId": "6f1c2a4e-9999-4b7a-9c1d-000000000001",
+     "question": "How tall is Everest (km)?",
+     "min": 0,
+     "max": 20,
+     "step": 0.1,
+     "answer": 8.8,
+     "unit": "km",
+     "tolerancePct": 5,
+     "explanation": "8,849 m."
+    }
+   }
+  ]
+ },
+ {
+  "name": "code lock: three clues with hints",
+  "nodes": [
+   {
+    "type": "expCodeLock",
+    "attrs": {
+     "blockId": "6f1c2a4e-aaaa-4b7a-9c1d-000000000001",
+     "title": "Escape the lab",
+     "story": "The door is locked.",
+     "clues": [
+      {
+       "id": "c1",
+       "question": "Sides of a hexagon?",
+       "answer": "6",
+       "hint": "Honeycomb."
+      },
+      {
+       "id": "c2",
+       "question": "3 squared?",
+       "answer": "9"
+      },
+      {
+       "id": "c3",
+       "question": "Continents?",
+       "answer": "7"
+      }
+     ],
+     "reward": "The door opens."
+    }
+   }
+  ]
+ }
+]

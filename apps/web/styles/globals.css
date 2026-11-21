@@ -19,6 +19,9 @@
    (components/Objects/Activities/BlockTheme). */
 @import "./block-theme.css";
 
+/* Experiences blocks: motion and canvas resets (styles/experiences.css). */
+@import "./experiences.css";
+
 /* Dark mode: manual only, keyed off <html data-theme="dark">
    (lib/theme/colorScheme.ts). Never follows the OS. */
 @import "./dark.css";

@@ -37,6 +37,7 @@ from src.services.ai.tools.course_audit import PRACTICE, _audit
 from src.services.ai.tools.courses import _learnings_out
 from src.services.ai.tools.link_check import check_links
 from src.services.ai.tools.markdown import inline_markdown, render_block
+from src.services.courses.activities import experiences as exp
 
 _WORD = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ']+")
 _SENTENCE = re.compile(r"[.!?]+(?:\s|$)")
@@ -165,7 +166,7 @@ async def _score_course(ctx: ToolContext, p: ScoreCourseParams):
             urls.extend((u, where) for u in _outside_urls(doc))
         chapter_practice.append((chapter.name, practice_here))
         if practice_here == 0 and ids:
-            issues.append({"area": "assessment", "code": "chapter_no_practice", "message": f"Chapter '{chapter.name}' has no quiz, exercise, scenario, flashcards or assignment.", "where": refs.ref("chapter", chapter.chapter_uuid, chapter.name)})
+            issues.append({"area": "assessment", "code": "chapter_no_practice", "message": f"Chapter '{chapter.name}' has no quiz, exercise, scenario, flashcards, interactive block or assignment.", "where": refs.ref("chapter", chapter.chapter_uuid, chapter.name)})
 
     objectives = _learnings_out(course.learnings)
     corpus = _terms(" ".join(covered_text))
@@ -257,9 +258,66 @@ class PreviewActivityParams(BaseModel):
     learner: Learner = Field(default_factory=Learner, description="Who to preview as: decides conditional blocks and variables.")
 
 
+def _sorted(entries: object, key: str) -> list[str]:
+    return sorted((exp.text(e.get(key)) for e in exp.items(entries) if exp.text(e.get(key))), key=str.casefold)
+
+
+def _experience_learner_lines(t: str, a: dict) -> list[str]:  # noqa: C901 - one branch per block type
+    """What a learner sees before answering: never the answers (sequence and
+    match sides come sorted, not solved)."""
+    names = {
+        "expSort": "Sort it", "expSequence": "Put in order", "expMatch": "Match the pairs", "expHotspot": "Find on the image",
+        "expGaps": "Fill the gaps", "expMythFact": "Myth or fact", "expSpeedRound": "Speed round", "expEstimate": "Estimate",
+        "expSpotMistake": "Spot the mistake", "expCodeLock": "Code lock",
+    }
+    title = exp.text(a.get("title")) or exp.text(a.get("question"))
+    lines = [f"**{names[t]}{': ' + title if title else ''}**"]
+    if exp.text(a.get("instructions")):
+        lines.append(exp.text(a.get("instructions")))
+    if t == "expSort":
+        lines.append("Categories: " + " | ".join(_sorted(a.get("categories"), "label")))
+        lines += [f"- [{x}]" for x in _sorted(a.get("items"), "text")]
+    elif t == "expSequence":
+        lines += [f"- [{x}]" for x in _sorted(a.get("items"), "text")]
+    elif t == "expMatch":
+        lefts, rights = _sorted(a.get("pairs"), "left"), _sorted(a.get("pairs"), "right")
+        if a.get("mode") == "memory":
+            lines.append(f"{len(lefts) * 2} face-down cards to pair up.")
+        else:
+            lines += [f"- {x}" for x in lefts] + ["Match with: " + " | ".join(rights)]
+    elif t == "expHotspot":
+        spots = exp.items(a.get("spots"))
+        if a.get("mode") == "explore":
+            lines += [f"{n}. {exp.text(s.get('label'))}" for n, s in enumerate(spots, 1)]
+        else:
+            lines.append(f"[Image: find {sum(1 for s in spots if s.get('correct', True))} place(s)]")
+    elif t == "expGaps":
+        lines.append(exp.gaps_text(a.get("text"), answers=False))
+        if a.get("mode") == "bank":
+            lines.append("Word bank: " + ", ".join(sorted({g[0] for g in exp.gap_answers(a.get("text"))}, key=str.casefold)))
+    elif t == "expMythFact":
+        statements = exp.items(a.get("statements"))
+        lines.append(f"{len(statements)} statement(s), one at a time. First: {exp.text(statements[0].get('text')) if statements else ''}")
+    elif t == "expSpeedRound":
+        lines.append(f"{len(exp.items(a.get('questions')))} timed question(s), {a.get('secondsPerQuestion') or 10}s each.")
+    elif t == "expEstimate":
+        unit = exp.text(a.get("unit"))
+        lines.append(f"Slider from {a.get('min')} to {a.get('max')}{' ' + unit if unit else ''}.")
+    elif t == "expSpotMistake":
+        segments = [exp.text(s.get("text")) for s in exp.items(a.get("segments"))]
+        lines += ["```", *segments, "```"] if a.get("kind") == "code" else [" ".join(x for x in segments if x)]
+    elif t == "expCodeLock":
+        if exp.text(a.get("story")):
+            lines.append(exp.text(a.get("story")))
+        lines += [f"🔒 {exp.text(c.get('question'))}" for c in exp.items(a.get("clues"))]
+    return lines
+
+
 def _learner_lines(node: dict, depth: int = 0) -> list[str]:
     t = d.kind(node)
     a = node.get("attrs") or {}
+    if t in exp.TEXT_PATHS:
+        return _experience_learner_lines(t, a)
     if t == "blockQuiz":
         lines = ["**Quiz**"]
         for n, q in enumerate(a.get("questions") or [], 1):
@@ -270,7 +328,10 @@ def _learner_lines(node: dict, depth: int = 0) -> list[str]:
     if t == "flipcard":
         return [f"🂠 **{a.get('question', '')}** (flip to reveal)"]
     if t == "flipcardGrid":
-        return [line for c in d.children(node) for line in _learner_lines(c, depth + 1)]
+        head = ([f"**{a['title']}**"] if a.get("title") else []) + (
+            ["(study mode: one card at a time)"] if a.get("mode") == "study" else []
+        )
+        return head + [line for c in d.children(node) for line in _learner_lines(c, depth + 1)]
     if t == "blockCode":
         return ["**Coding exercise** (" + str(a.get("languageName") or "") + ")", str(a.get("description") or ""), "```", str(a.get("starterCode") or "").rstrip(), "```"] + (
             [f"{len(a.get('testCases') or [])} test(s) check the answer."] if a.get("testCases") else []

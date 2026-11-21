@@ -14,6 +14,7 @@ import { EditorState, Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import type { AIEditorHunk } from '@services/ai/aiEditor'
 import { Aliases, locateHunk, nodesFromJSON } from './proposals'
+import { EXPERIENCE_NODE_NAMES, experienceSummary, isExperienceNode } from '../../Extensions/Experiences/experienceTypes'
 
 export interface PreviewItem {
   /** `${proposalId}:${hunkId}` */
@@ -82,13 +83,24 @@ function atomSummary(node: PMNode, labels: PreviewLabels): HTMLElement {
     box.appendChild(list)
     return box
   }
+  if (isExperienceNode(type)) {
+    // Interactive exercises: name, title, then their content in short lines.
+    const { title, lines } = experienceSummary(type, node.attrs)
+    box.appendChild(el('div', 'lh-ai-atom__title', title ? `${labels.block(type)} · ${title}` : labels.block(type)))
+    if (lines.length) {
+      const list = el('ul', 'lh-ai-atom__list')
+      for (const line of lines) list.appendChild(el('li', 'lh-ai-atom__a', line))
+      box.appendChild(list)
+    }
+    return box
+  }
   box.appendChild(el('div', 'lh-ai-atom__title', labels.block(type)))
   const text = node.textContent.trim()
   if (text) box.appendChild(el('div', 'lh-ai-atom__a', text.slice(0, 280)))
   return box
 }
 
-const SUMMARY_TYPES = new Set(['blockQuiz', 'flipcard', 'flipcardGrid', 'scenarios', 'blockMagic', 'codePlayground'])
+const SUMMARY_TYPES = new Set(['blockQuiz', 'flipcard', 'flipcardGrid', 'scenarios', 'blockMagic', 'codePlayground', ...EXPERIENCE_NODE_NAMES])
 
 export function renderNodes(nodes: PMNode[], schema: Schema, labels: PreviewLabels): HTMLElement {
   const body = el('div', 'lh-ai-new__body')

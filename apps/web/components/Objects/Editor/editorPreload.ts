@@ -20,6 +20,16 @@ const COMPONENT_LOADERS: Record<string, () => Promise<unknown>> = {
   scenarios: () => import('./Extensions/Scenarios/ScenariosExtension'),
   flipcard: () => import('./Extensions/Flipcard/FlipcardExtension'),
   flipcardGrid: () => import('./Extensions/Flipcard/FlipcardGridExtension'),
+  expSort: () => import('./Extensions/Experiences/Sort/SortView'),
+  expSequence: () => import('./Extensions/Experiences/Sequence/SequenceView'),
+  expMatch: () => import('./Extensions/Experiences/Match/MatchView'),
+  expHotspot: () => import('./Extensions/Experiences/Hotspot/HotspotView'),
+  expGaps: () => import('./Extensions/Experiences/Gaps/GapsView'),
+  expMythFact: () => import('./Extensions/Experiences/MythFact/MythFactView'),
+  expSpeedRound: () => import('./Extensions/Experiences/SpeedRound/SpeedRoundView'),
+  expEstimate: () => import('./Extensions/Experiences/Estimate/EstimateView'),
+  expSpotMistake: () => import('./Extensions/Experiences/SpotMistake/SpotMistakeView'),
+  expCodeLock: () => import('./Extensions/Experiences/CodeLock/CodeLockView'),
 }
 
 function collectNodeTypes(node: any, types: Set<string>): void {

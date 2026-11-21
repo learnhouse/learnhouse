@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next'
 import type { AIEditorHunk } from '@services/ai/aiEditor'
+import { experienceTitleKey } from '../../Extensions/Experiences/experienceTypes'
 
 type T = TFunction
 
@@ -28,6 +29,9 @@ const BLOCK_KEYS: Record<string, string> = {
 }
 
 export function blockName(type: string | undefined, t: T): string {
+  // Experiences blocks carry their own name (editor.experiences.<block>.title).
+  const experience = experienceTitleKey(type)
+  if (experience) return t(experience)
   const key = BLOCK_KEYS[type || ''] || 'block'
   return t(`editor.ai_editor_v2.blocks.${key}`)
 }

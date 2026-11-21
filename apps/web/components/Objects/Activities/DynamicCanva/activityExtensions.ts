@@ -26,6 +26,7 @@ import Buttons from '@components/Objects/Editor/Extensions/Buttons/Buttons'
 import Flipcard from '@components/Objects/Editor/Extensions/Flipcard/Flipcard'
 import FlipcardGrid from '@components/Objects/Editor/Extensions/Flipcard/FlipcardGrid'
 import Scenarios from '@components/Objects/Editor/Extensions/Scenarios/Scenarios'
+import { experienceExtensions } from '@components/Objects/Editor/Extensions/Experiences/extensions'
 import CodePlayground from '@components/Objects/Editor/Extensions/CodePlayground/CodePlayground'
 import { Table } from '@tiptap/extension-table'
 import TableHeader from '@tiptap/extension-table-header'
@@ -157,6 +158,7 @@ export function getActivityExtensions(props: ActivityExtensionOptions): Extensio
       editable: false,
       activity: props.activity,
     }),
+    ...experienceExtensions({ editable: false, activity: props.activity }),
     CodePlayground.configure({
       editable: false,
       activity: props.activity,

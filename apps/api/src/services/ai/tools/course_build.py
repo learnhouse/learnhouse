@@ -1183,7 +1183,9 @@ SPECS: list[ToolSpec] = [
             "(objectives, prerequisites, tags, cover), chapters in order, and activities: pages "
             "(markdown and/or typed blocks: quiz, flashcards, scenario, exercise, callout, code, table, "
             "math, embed for 18 services, video, image, audio, pdf, h5p, web_preview, toggle, "
-            "conditional, widget, user, divider, button, badge), youtube/video/pdf activities and graded "
+            "conditional, widget, user, divider, button, badge, and the interactive sort, sequence, "
+            "match_pairs, hotspot, fill_gaps, myth_fact, speed_round, estimate, spot_mistake, "
+            "code_lock), youtube/video/pdf activities and graded "
             "assignments with tasks; plus settings (certificate, drip, SEO, languages, publish). "
             "Everything is validated before writing. dry_run=true returns the plan as a diff. Give "
             "chapters and activities a key and an idempotency_key so retries resume instead of "
@@ -1208,7 +1210,9 @@ SPECS: list[ToolSpec] = [
             "Insert typed blocks into a page (start, end, or after a top-level block): every editor "
             "block with documented fields (quiz, flashcards, scenario, exercise, callout, code, table, "
             "math, embed, video, image, audio, pdf, h5p, web_preview, toggle, conditional, widget, "
-            "user, divider, button, badge, markdown, raw node). Checked against the editor schema "
+            "user, divider, button, badge, markdown, raw node) and the interactive Experiences "
+            "(sort, sequence, match_pairs, hotspot, fill_gaps, myth_fact, speed_round, estimate, "
+            "spot_mistake, code_lock). Checked against the editor schema "
             "before saving (one new version). Files, custom HTML and outside frames need approval."
         ),
         params_model=AddBlocksParams,

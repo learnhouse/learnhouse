@@ -51,6 +51,10 @@ export default Node.create({
       currentScenarioId: {
         default: '1',
       },
+      // Experiences redesign: 'story' (the old card layout) or 'chat'.
+      display: {
+        default: 'story',
+      },
     };
   },
 

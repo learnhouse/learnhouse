@@ -10,6 +10,7 @@ from src.db.courses.activities import Activity, ActivityTypeEnum
 from src.db.courses.blocks import Block, BlockTypeEnum
 from src.services.courses.activities.dynamic_content import strip_dynamic_content
 from src.services.courses.activities.comment_marks import strip_comment_marks
+from src.services.courses.activities import experiences as exp
 from src.services.ai.rag.media import Media, status_of, transcript_segments
 from src.services.ai.rag.sources import SourceContext, source
 from src.services.ai.rag.formats import (
@@ -279,9 +280,128 @@ def _scenarios(node, parts):
         if not isinstance(step, dict):
             continue
         lines.append(_str(step.get("text")))
-        lines += [f"- {_str(o.get('text'))}" for o in step.get("options") or []
-                  if isinstance(o, dict) and _str(o.get("text"))]
+        for o in step.get("options") or []:
+            if isinstance(o, dict) and _str(o.get("text")):
+                lines.append(f"- {_str(o.get('text'))}")
+                # Feedback a learner sees after picking this option (optional).
+                lines.append(_str(o.get("feedback")))
+        ending = step.get("ending")
+        lines.append(_str(ending.get("title")) if isinstance(ending, dict) else "")
     _append(parts, join(lines))
+
+
+def _flipcard_grid(node, parts):
+    # The deck title (Experiences flashcards), then each card.
+    _append(parts, _str(_attrs(node).get("title")) and f"Flashcards: {_str(_attrs(node).get('title'))}")
+    for child in _child_nodes(node):
+        _walk_prosemirror_node(child, parts)
+
+
+# Experiences blocks. Like quizzes, search gets what a learner reads but not
+# the answer key: no item -> category mapping, no myth/fact or mistake flags,
+# no right option, estimate or code lock answer, and sequence steps and match
+# sides are listed sorted rather than in their solved order. Explanations stay
+# in: they are taught content, and search should find them.
+
+
+def _sorted_texts(entries, key):
+    return sorted({t for t in (_str(e.get(key)) for e in exp.items(entries)) if t}, key=str.casefold)
+
+
+def _exp_head(label, attrs):
+    title = _str(attrs.get("title"))
+    return [f"{label}: {title}" if title else label, _str(attrs.get("instructions"))]
+
+
+def _exp_sort(node, parts):
+    attrs = _attrs(node)
+    _append(parts, join([
+        *_exp_head("Sorting activity", attrs),
+        *(f"Category: {c}" for c in _sorted_texts(attrs.get("categories"), "label")),
+        *(f"- {t}" for t in _sorted_texts(attrs.get("items"), "text")),
+        *(_str(i.get("explanation")) for i in exp.items(attrs.get("items"))),
+    ]))
+
+
+def _exp_sequence(node, parts):
+    attrs = _attrs(node)
+    _append(parts, join([
+        *_exp_head("Ordering activity", attrs),
+        *(f"- {t}" for t in _sorted_texts(attrs.get("items"), "text")),
+    ]))
+
+
+def _exp_match(node, parts):
+    attrs = _attrs(node)
+    _append(parts, join([
+        *_exp_head("Matching activity", attrs),
+        *(f"- {t}" for t in _sorted_texts(attrs.get("pairs"), "left")),
+        *(f"- {t}" for t in _sorted_texts(attrs.get("pairs"), "right")),
+    ]))
+
+
+def _exp_hotspot(node, parts):
+    attrs = _attrs(node)
+    spots = exp.items(attrs.get("spots"))
+    _append(parts, join([
+        *_exp_head("Image activity", attrs),
+        *(join([_str(s.get("label")), _str(s.get("explanation"))], " - ") for s in spots),
+    ]))
+
+
+def _exp_gaps(node, parts):
+    attrs = _attrs(node)
+    words = sorted({a[0] for a in exp.gap_answers(attrs.get("text"))}, key=str.casefold)
+    _append(parts, join([
+        *_exp_head("Fill the gaps", attrs),
+        _str(exp.gaps_text(attrs.get("text"), answers=False)),
+        words and f"Word bank: {', '.join(words)}",
+    ]))
+
+
+def _exp_myth_fact(node, parts):
+    attrs = _attrs(node)
+    _append(parts, join([
+        *_exp_head("Myth or fact", attrs),
+        *(join([_str(st.get("text")) and f"Statement: {_str(st.get('text'))}", _str(st.get("explanation"))])
+          for st in exp.items(attrs.get("statements"))),
+    ]))
+
+
+def _exp_speed_round(node, parts):
+    attrs = _attrs(node)
+    lines = _exp_head("Speed round", attrs)
+    for q in exp.items(attrs.get("questions")):
+        options = q.get("options") if isinstance(q.get("options"), list) else []
+        lines.append(join([_str(q.get("prompt")) and f"Question: {_str(q.get('prompt'))}",
+                           *(f"- {_str(o)}" for o in options if _str(o))]))
+    _append(parts, join(lines))
+
+
+def _exp_estimate(node, parts):
+    attrs = _attrs(node)
+    _append(parts, join([_str(attrs.get("question")) and f"Estimate: {_str(attrs.get('question'))}",
+                         _str(attrs.get("explanation"))]))
+
+
+def _exp_spot_mistake(node, parts):
+    attrs = _attrs(node)
+    segments = exp.items(attrs.get("segments"))
+    glue = "\n" if attrs.get("kind") == "code" else " "
+    passage = glue.join(t for t in (_str(s.get("text")) for s in segments) if t)
+    _append(parts, join([*_exp_head("Spot the mistake", attrs), passage,
+                         *(_str(s.get("explanation")) for s in segments)]))
+
+
+def _exp_code_lock(node, parts):
+    attrs = _attrs(node)
+    clues = exp.items(attrs.get("clues"))
+    _append(parts, join([
+        *_exp_head("Puzzle", attrs), _str(attrs.get("story")),
+        *(join([_str(c.get("question")) and f"Clue: {_str(c.get('question'))}",
+                _str(c.get("hint")) and f"Hint: {_str(c.get('hint'))}"]) for c in clues),
+        _str(attrs.get("reward")),
+    ]))
 
 
 def _math(node, parts):
@@ -341,9 +461,20 @@ _NODE_HANDLERS: dict[str, Callable[[dict, list[str]], None]] = {
     "blockQuiz": _quiz,
     "flipcard": _flipcard,
     "scenarios": _scenarios,
+    "flipcardGrid": _flipcard_grid,
     "blockMathEquation": _math,
     "blockCode": _code_playground,
     "blockWebPreview": _web_preview,
     "blockLibrary": _library,
     "blockMagic": _magic,
+    "expSort": _exp_sort,
+    "expSequence": _exp_sequence,
+    "expMatch": _exp_match,
+    "expHotspot": _exp_hotspot,
+    "expGaps": _exp_gaps,
+    "expMythFact": _exp_myth_fact,
+    "expSpeedRound": _exp_speed_round,
+    "expEstimate": _exp_estimate,
+    "expSpotMistake": _exp_spot_mistake,
+    "expCodeLock": _exp_code_lock,
 }

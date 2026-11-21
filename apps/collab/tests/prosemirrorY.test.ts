@@ -116,6 +116,17 @@ const EVERY_BLOCK: PMNode = {
       attrs: { rules: [{ kind: 'progress', op: 'gte', value: 50 }], mode: 'all' },
       content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Only for some' }] }],
     },
+    // Experiences family (one of each, spec schemas).
+    { type: 'expSort', attrs: { blockId: 'b-sort', title: 'Sort', instructions: 'Group them', categories: [{ id: 'c1', label: 'A', color: 'green' }, { id: 'c2', label: 'B', color: 'orange' }], items: [{ id: 'i1', text: 'x', categoryId: 'c1' }, { id: 'i2', text: 'y', categoryId: 'c2', explanation: 'why' }], shuffle: true } },
+    { type: 'expSequence', attrs: { blockId: 'b-seq', title: 'Order', instructions: '', items: [{ id: 'i1', text: 'one' }, { id: 'i2', text: 'two', detail: '1900' }, { id: 'i3', text: 'three' }], variant: 'timeline' } },
+    { type: 'expMatch', attrs: { blockId: 'b-match', title: 'Match', instructions: '', pairs: [{ id: 'p1', left: 'L1', right: 'R1' }, { id: 'p2', left: 'L2', right: 'R2' }], mode: 'memory' } },
+    { type: 'expHotspot', attrs: { blockId: 'b-hot', title: 'Find', instructions: '', imageUrl: 'https://example.com/a.png', spots: [{ id: 's1', x: 40, y: 30, r: 8, label: 'Here', explanation: 'Because', correct: true }], mode: 'find' } },
+    { type: 'expGaps', attrs: { blockId: 'b-gaps', title: 'Gaps', text: 'The [[sky|heavens]] is blue.', mode: 'bank', caseSensitive: false } },
+    { type: 'expMythFact', attrs: { blockId: 'b-myth', title: 'Myth', statements: [{ id: 's1', text: 'Bats are blind', isTrue: false, explanation: 'They see' }, { id: 's2', text: 'Water is wet', isTrue: true, explanation: 'Yes' }], labels: { true: 'Fact', false: 'Myth' } } },
+    { type: 'expSpeedRound', attrs: { blockId: 'b-speed', title: 'Speed', questions: [{ id: 'q1', prompt: '2+2', options: ['3', '4'], answer: 1 }], secondsPerQuestion: 10, lives: 3 } },
+    { type: 'expEstimate', attrs: { blockId: 'b-est', question: 'How many?', min: 0, max: 100, step: 1, answer: 42, unit: 'things', tolerancePct: 10, explanation: 'Because' } },
+    { type: 'expSpotMistake', attrs: { blockId: 'b-spot', title: 'Spot', instructions: '', segments: [{ id: 's1', text: 'Fine.', isMistake: false }, { id: 's2', text: 'Wrong.', isMistake: true, correction: 'Right.', explanation: 'Why' }], kind: 'code' } },
+    { type: 'expCodeLock', attrs: { blockId: 'b-lock', title: 'Lock', story: 'Locked', clues: [{ id: 'c1', question: '1+1?', answer: '2', hint: 'Count' }], reward: 'Open!' } },
     { type: 'paragraph' },
   ],
 }

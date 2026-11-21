@@ -29,6 +29,7 @@ import Buttons from './Extensions/Buttons/Buttons'
 import Flipcard from './Extensions/Flipcard/Flipcard'
 import FlipcardGrid from './Extensions/Flipcard/FlipcardGrid'
 import Scenarios from './Extensions/Scenarios/Scenarios'
+import { experienceExtensions } from './Extensions/Experiences/extensions'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
 import UserBlock from './Extensions/Users/UserBlock'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
@@ -157,6 +158,7 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         editable: false,
         activity: activity,
       }),
+      ...experienceExtensions({ editable: false, activity }),
       CodePlayground.configure({
         editable: false,
         activity: activity,

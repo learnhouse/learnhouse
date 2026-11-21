@@ -457,6 +457,8 @@ _EMPTY_PAGE: dict = {}
 _RICH = (
     "blockQuiz", "flipcard", "flipcardGrid", "blockEmbed", "button", "badge", "blockCode",
     "scenarios", "blockWebPreview", "blockH5P", "blockMagic",
+    "expSort", "expSequence", "expMatch", "expHotspot", "expGaps", "expMythFact",
+    "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock",
 )
 
 

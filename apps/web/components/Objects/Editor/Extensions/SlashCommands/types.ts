@@ -22,6 +22,7 @@ export type SlashCommandCategory =
   | 'text'
   | 'media'
   | 'interactive'
+  | 'experiences'
   | 'callouts'
   | 'dynamic'
   | 'ui'

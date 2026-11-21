@@ -36,6 +36,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Iterator
 
+from src.services.courses.activities.experiences import gap_answers
+
 MAX_DEPTH = 60
 
 # Blocks whose text is never translated.
@@ -64,12 +66,55 @@ TEXT_ATTRS: dict[str, tuple[str, ...]] = {
         "questions.*.answers.*.answer",
         "questions.*.answers.*.feedback",
     ),
-    "scenarios": ("title", "scenarios.*.text", "scenarios.*.options.*.text"),
+    "scenarios": (
+        "title", "scenarios.*.text", "scenarios.*.options.*.text",
+        "scenarios.*.options.*.feedback", "scenarios.*.ending.title",
+    ),
     "flipcard": ("question", "answer"),
+    "flipcardGrid": ("title",),
+    # Experiences blocks: every text an author typed. Answers a learner must
+    # match are translated with the rest (a learner reading French answers in
+    # French), except where translating would break them:
+    # * expGaps: the whole text is one segment, answers included, and must
+    #   keep every [[answer|alt]] gap; a translation that loses or adds a gap
+    #   is refused (see GAPS_HINT and apply_segments).
+    # * expCodeLock: text answers are translated; numeric ones ("42", "3.5")
+    #   hold no words, so _translatable skips them and they stay as they are.
+    # * expSpeedRound answers and expMythFact flags are indexes and booleans,
+    #   never text; expEstimate numbers are not text either (only its unit is).
+    # * expSpotMistake in code mode: the code and its corrections stay as
+    #   written, like code blocks (CODE_KIND_ATTRS).
+    "expSort": ("title", "instructions", "categories.*.label", "items.*.text", "items.*.explanation"),
+    "expSequence": ("title", "instructions", "items.*.text", "items.*.detail"),
+    "expMatch": ("title", "instructions", "pairs.*.left", "pairs.*.right"),
+    "expHotspot": ("title", "instructions", "spots.*.label", "spots.*.explanation"),
+    "expGaps": ("title", "text"),
+    "expMythFact": ("title", "statements.*.text", "statements.*.explanation", "labels.true", "labels.false"),
+    "expSpeedRound": ("title", "questions.*.prompt", "questions.*.options.*"),
+    "expEstimate": ("question", "unit", "explanation"),
+    "expSpotMistake": (
+        "title", "instructions", "segments.*.text", "segments.*.correction", "segments.*.explanation",
+    ),
+    "expCodeLock": ("title", "story", "clues.*.question", "clues.*.answer", "clues.*.hint", "reward"),
     "toggleBlock": ("summary",),
     "blockCode": ("description", "hints.*"),
     "conditionalBlock": ("hiddenMessage", "label"),
 }
+# Attributes left untranslated when a block shows code (attrs.kind == "code").
+CODE_KIND_ATTRS: dict[str, frozenset[str]] = {
+    "expSpotMistake": frozenset({"segments.*.text", "segments.*.correction"}),
+}
+GAPS_HINT = (
+    "Keep every [[...]] gap: translate the answers inside it, keep the [[ ]] brackets and the | between "
+    "accepted answers, and keep the same number of gaps."
+)
+
+
+def _text_attrs(ntype: str, attrs: dict) -> tuple[str, ...]:
+    skip = CODE_KIND_ATTRS.get(ntype, frozenset()) if attrs.get("kind") == "code" else frozenset()
+    return tuple(spec for spec in TEXT_ATTRS.get(ntype, ()) if spec not in skip)
+
+
 # Textual attributes of marks (kept on the translated run).
 MARK_TEXT_ATTRS: dict[str, tuple[str, ...]] = {"definition": ("note",)}
 
@@ -101,7 +146,13 @@ class Segment:
         out: dict[str, Any] = {"id": self.id, "kind": self.kind, "text": self.text, "node_type": self.node_type}
         if self.kind == "text" and (self.marks or self.atoms):
             out["tags"] = "Keep every <mN>…</mN> and <xN/> tag (formatting and untranslatable parts)."
+        if _is_gaps_text(self):
+            out["gaps"] = GAPS_HINT
         return out
+
+
+def _is_gaps_text(seg: "Segment") -> bool:
+    return seg.node_type == "expGaps" and seg.attr_path == ("text",)
 
 
 def _translatable(text: Any) -> bool:
@@ -218,7 +269,7 @@ def iter_segments(doc: Any) -> list[Segment]:
         if ntype in CODE_NODES:
             return
         attrs = node.get("attrs") if isinstance(node.get("attrs"), dict) else {}
-        for spec in TEXT_ATTRS.get(ntype, ()):
+        for spec in _text_attrs(ntype, attrs):
             for trail, value in _walk_attr(attrs, spec.split("."), ()):
                 if _translatable(value):
                     add(kind="attr", text=value, node_type=ntype, node_path=path, attr_path=trail)
@@ -392,6 +443,11 @@ def apply_segments(source: Any, translations: dict[str, str]) -> tuple[dict, dic
                         if mark.get("type") == mark_type and (mark.get("attrs") or {}).get(attr) == seg.text:
                             mark.setdefault("attrs", {})[attr] = value
             else:
+                if _is_gaps_text(seg) and len(gap_answers(value)) != len(gap_answers(seg.text)):
+                    # A gap lost or broken in translation would change the exercise.
+                    missing.append(seg.id)
+                    warnings[seg.id] = ["gaps_changed"]
+                    continue
                 _set_attr(node.setdefault("attrs", {}), seg.attr_path, value)
             applied += 1
             continue

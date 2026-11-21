@@ -27,6 +27,7 @@ from src.services.ai.tools import doc_ops as d
 from src.services.ai.tools import fences
 from src.services.ai.tools import markdown as md
 from src.services.ai.tools.embeds import PROVIDERS, parse_embed
+from src.services.courses.activities import experiences as exp
 from src.services.courses.activities.dynamic_content import FIELDS as RULE_FIELDS
 
 MAX_BLOCKS = 300
@@ -123,11 +124,26 @@ class FlashcardsB(_B):
     cards: list[CardB] = Field(..., min_length=1, max_length=60)
     columns: int = Field(2, ge=1, le=6, description="Cards side by side (several cards).")
     color: Literal[fences.COLORS] = "blue"  # type: ignore[valid-type]
+    mode: Literal["grid", "study"] | None = Field(
+        None, description="grid (default): cards side by side; study: one card at a time with Again / Hard / Got it.",
+    )
+    title: str | None = Field(None, max_length=200, description="Deck title shown above the cards.")
+    shuffle: bool | None = Field(None, description="Shuffle the cards for each learner.")
+
+
+Outcome = Literal["success", "neutral", "fail"]
 
 
 class ScenarioOptionB(_B):
     text: str = Field(..., min_length=1, max_length=500)
     next: str | None = Field(None, max_length=100, description="id of the step it leads to; null ends the scenario.")
+    feedback: str | None = Field(None, max_length=1000, description="Shown after the learner picks it, before moving on.")
+    outcome: Outcome | None = Field(None, description="How the story ends when next is null.")
+
+
+class ScenarioEndingB(_B):
+    tone: Outcome = "neutral"
+    title: str | None = Field(None, max_length=200, description="Headline of the ending card.")
 
 
 class ScenarioStepB(_B):
@@ -135,12 +151,174 @@ class ScenarioStepB(_B):
     text: str = Field(..., min_length=1, max_length=5000)
     image_url: WebUrl | None = Field(None, max_length=2048)
     options: list[ScenarioOptionB] = Field(default_factory=list, max_length=12)
+    ending: ScenarioEndingB | None = Field(None, description="For a step without options: the ending's tone and title.")
 
 
 class ScenarioB(_B):
     type: Literal["scenario"]
     title: str = Field(fences.SCENARIO_TITLE, max_length=500)
     steps: list[ScenarioStepB] = Field(..., min_length=1, max_length=100, description="The first step starts.")
+    display: Literal["story", "chat"] | None = Field(None, description="story (default): cards; chat: a messaging-style dialogue.")
+
+
+# ─── experiences ─────────────────────────────────────────────────────────────
+# Interactive learning blocks (Extensions/Experiences in the editor). Limits
+# follow the editor; ids and blockId are generated here.
+
+SORT_COLORS = ("sky", "amber", "emerald", "rose")
+_TITLE = Field("", max_length=200, description="Short title shown in the block header.")
+_INSTRUCTIONS = Field("", max_length=500, description="One line telling learners what to do.")
+
+
+class SortCategoryB(_B):
+    label: str = Field(..., min_length=1, max_length=200)
+    color: str | None = Field(None, max_length=30, description="sky, amber, emerald or rose (default: one per slot).")
+
+
+class SortItemB(_B):
+    text: str = Field(..., min_length=1, max_length=500)
+    category: str | int = Field(..., description="The category label it belongs to (or its 0-based index).")
+    explanation: str | None = Field(None, max_length=1000, description="Shown when a learner places it wrongly.")
+
+
+class SortB(_B):
+    type: Literal["sort"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    categories: list[SortCategoryB | Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        ..., min_length=2, max_length=4, description="2 to 4 categories: labels or {label, color}.",
+    )
+    items: list[SortItemB] = Field(..., min_length=2, max_length=20)
+    shuffle: bool = True
+
+
+class SequenceItemB(_B):
+    text: str = Field(..., min_length=1, max_length=500)
+    detail: str | None = Field(None, max_length=200, description="e.g. a year; revealed after checking (timeline).")
+
+
+class SequenceB(_B):
+    type: Literal["sequence"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    items: list[SequenceItemB | Annotated[str, Field(min_length=1, max_length=500)]] = Field(
+        ..., min_length=3, max_length=10, description="3 to 10 steps in the CORRECT order; learners get them shuffled.",
+    )
+    variant: Literal["list", "timeline"] = "list"
+
+
+class PairB(_B):
+    left: str = Field(..., min_length=1, max_length=300)
+    right: str = Field(..., min_length=1, max_length=300)
+
+
+class MatchPairsB(_B):
+    type: Literal["match_pairs"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    pairs: list[PairB] = Field(..., min_length=2, max_length=8)
+    mode: Literal["connect", "memory"] = Field("connect", description="connect: two columns; memory: flip cards to find pairs.")
+
+
+class SpotB(_B):
+    x: float = Field(..., ge=0, le=100, description="Centre, % of the image width from the left.")
+    y: float = Field(..., ge=0, le=100, description="Centre, % of the image height from the top.")
+    r: float = Field(8, ge=2, le=25, description="Radius, % of the image width.")
+    label: str = Field(..., min_length=1, max_length=200)
+    explanation: str | None = Field(None, max_length=1000)
+    correct: bool = Field(True, description="find mode: a spot learners must find.")
+
+
+class HotspotB(_B):
+    type: Literal["hotspot"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    image_url: WebUrl = Field(..., min_length=8, max_length=2048, description="Public image the spots sit on.")
+    spots: list[SpotB] = Field(..., min_length=1, max_length=20)
+    mode: Literal["find", "explore"] = Field("find", description="find: click the right places; explore: a labelled diagram.")
+
+
+class FillGapsB(_B):
+    type: Literal["fill_gaps"]
+    title: str = _TITLE
+    text: str = Field(
+        ..., min_length=1, max_length=10_000,
+        description="Text with gaps as [[answer]] or [[answer|other accepted answer]]; \\[ \\] \\| are literal.",
+    )
+    mode: Literal["type", "bank"] = Field("type", description="type: learners type each answer; bank: they pick from a word bank.")
+    case_sensitive: bool = False
+
+
+class StatementB(_B):
+    text: str = Field(..., min_length=1, max_length=500)
+    is_true: bool = Field(..., description="true: a fact; false: a myth.")
+    explanation: str = Field("", max_length=1000, description="Why, shown right after the answer.")
+
+
+class MythFactB(_B):
+    type: Literal["myth_fact"]
+    title: str = _TITLE
+    statements: list[StatementB] = Field(..., min_length=2, max_length=20)
+    true_label: str = Field("Fact", min_length=1, max_length=40)
+    false_label: str = Field("Myth", min_length=1, max_length=40)
+
+
+class SpeedQuestionB(_B):
+    prompt: str = Field(..., min_length=1, max_length=300)
+    options: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(..., min_length=2, max_length=4)
+    answer: int | str = Field(..., description="The right option: its 0-based index or its exact text.")
+
+
+class SpeedRoundB(_B):
+    type: Literal["speed_round"]
+    title: str = _TITLE
+    questions: list[SpeedQuestionB] = Field(..., min_length=1, max_length=30)
+    seconds_per_question: int = Field(10, ge=3, le=120)
+    lives: int = Field(3, ge=0, le=10, description="Wrong answers allowed; 0 = unlimited.")
+
+
+class EstimateB(_B):
+    type: Literal["estimate"]
+    question: str = Field(..., min_length=1, max_length=500)
+    min: float
+    max: float
+    step: float = Field(1, gt=0)
+    answer: float
+    unit: str = Field("", max_length=30, description="e.g. km, %, years.")
+    tolerance_pct: float = Field(10, ge=0, le=100, description="Guesses this close (% of the answer) earn 3 stars.")
+    explanation: str = Field("", max_length=2000)
+
+
+class MistakeSegmentB(_B):
+    text: str = Field(..., min_length=1, max_length=2000)
+    is_mistake: bool = False
+    correction: str | None = Field(None, max_length=1000)
+    explanation: str | None = Field(None, max_length=1000)
+
+
+class SpotMistakeB(_B):
+    type: Literal["spot_mistake"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    segments: list[MistakeSegmentB] = Field(
+        ..., min_length=2, max_length=80,
+        description="The passage split into sentences (text) or lines (code), in order; mark the wrong ones.",
+    )
+    kind: Literal["text", "code"] = "text"
+
+
+class ClueB(_B):
+    question: str = Field(..., min_length=1, max_length=500)
+    answer: str | int | float = Field(..., description="Short text or a number (up to 40 characters); matched trimmed and case-insensitive.")
+    hint: str | None = Field(None, max_length=500)
+
+
+class CodeLockB(_B):
+    type: Literal["code_lock"]
+    title: str = _TITLE
+    story: str = Field("", max_length=3000, description="The setup learners read first.")
+    clues: list[ClueB] = Field(..., min_length=1, max_length=5, description="Each solved clue opens one dial.")
+    reward: str = Field("", max_length=5000, description="Shown when the lock opens.")
 
 
 class TestB(_B):
@@ -282,7 +460,8 @@ Block = Annotated[
     Union[
         MarkdownB, ParagraphB, HeadingB, ListB, CalloutB, CodeB, TableB, MathB, QuizB, FlashcardsB,
         ScenarioB, ExerciseB, WidgetB, ConditionalB, ToggleB, EmbedB, VideoB, ImageB, AudioB, PdfB,
-        H5pB, WebPreviewB, UserB, DividerB, ButtonB, BadgeB, NodeB,
+        H5pB, WebPreviewB, UserB, DividerB, ButtonB, BadgeB, SortB, SequenceB, MatchPairsB, HotspotB,
+        FillGapsB, MythFactB, SpeedRoundB, EstimateB, SpotMistakeB, CodeLockB, NodeB,
     ],
     Field(discriminator="type"),
 ]
@@ -395,9 +574,12 @@ class _Builder:
                 {"type": "flipcard", "attrs": {"question": c.front, "answer": c.back, "color": b.color, "alignment": "center", "size": "medium"}}
                 for c in b.cards
             ]
-            if len(cards) == 1:
+            # mode, title and shuffle live on the grid, so a deck that sets
+            # them is a grid even with one card; left out, nothing changes.
+            deck = {k: v for k, v in (("mode", b.mode), ("title", b.title), ("shuffle", b.shuffle)) if v is not None}
+            if len(cards) == 1 and not deck:
                 return cards
-            return [{"type": "flipcardGrid", "attrs": {"columns": min(b.columns, len(cards))}, "content": cards}]
+            return [{"type": "flipcardGrid", "attrs": {"columns": min(b.columns, len(cards)), **deck}, "content": cards}]
         if t == "scenario":
             ids = [s.id for s in b.steps]
             if len(set(ids)) != len(ids):
@@ -409,11 +591,20 @@ class _Builder:
                         raise BlockError(f"step '{s.id}' option '{o.text[:40]}' leads to unknown step '{o.next}'; use one of {', '.join(ids)} or null")
                 if s.image_url and not d.is_web_url(s.image_url):
                     raise BlockError(f"step '{s.id}' image_url must be an http(s) URL")
-                steps.append({
+                step: dict[str, Any] = {
                     "id": s.id, "text": s.text, "imageUrl": s.image_url or "",
-                    "options": [{"id": f"opt_{uuid.uuid4().hex[:10]}", "text": o.text, "nextScenarioId": o.next} for o in s.options],
-                })
-            return [{"type": "scenarios", "attrs": {"title": b.title, "scenarios": steps, "currentScenarioId": steps[0]["id"]}}]
+                    "options": [_scenario_option(o) for o in s.options],
+                }
+                if s.ending is not None:
+                    step["ending"] = s.ending.model_dump(exclude_none=True)
+                steps.append(step)
+            attrs = {"title": b.title, "scenarios": steps, "currentScenarioId": steps[0]["id"]}
+            if b.display is not None:
+                attrs["display"] = b.display
+            return [{"type": "scenarios", "attrs": attrs}]
+        if t in EXPERIENCES:
+            node_type, build = EXPERIENCES[t]
+            return [{"type": node_type, "attrs": {"blockId": str(uuid.uuid4()), **build(b)}}]
         if t == "exercise":
             lid, lname = fences.language(b.language)
             attrs: dict[str, Any] = {
@@ -480,6 +671,154 @@ class _Builder:
         if d.kind(node) == "blockQuiz" and isinstance(node.get("attrs"), dict):
             node = {**node, "attrs": {**node["attrs"], "questions": d.fill_quiz_ids(node["attrs"].get("questions"))}}
         return [node]
+
+
+def _scenario_option(o: ScenarioOptionB) -> dict:
+    out: dict[str, Any] = {"id": f"opt_{uuid.uuid4().hex[:10]}", "text": o.text, "nextScenarioId": o.next}
+    if o.feedback is not None:
+        out["feedback"] = o.feedback
+    if o.outcome is not None:
+        out["outcome"] = o.outcome
+    return out
+
+
+def _sid(prefix: str) -> str:
+    return f"{prefix}_{uuid.uuid4().hex[:8]}"
+
+
+def _num(value: float) -> int | float:
+    """Whole numbers stay integers in the stored JSON (10, not 10.0)."""
+    return int(value) if float(value).is_integer() else value
+
+
+def _sort(b: SortB) -> dict:
+    categories = []
+    for i, c in enumerate(b.categories):
+        label, color = (c, None) if isinstance(c, str) else (c.label, c.color)
+        categories.append({"id": _sid("cat"), "label": label.strip(), "color": color if color in SORT_COLORS else SORT_COLORS[i]})
+    keys = [c["label"].casefold() for c in categories]
+    if len(set(keys)) != len(keys):
+        raise BlockError("category labels must be different")
+    items = []
+    for item in b.items:
+        ref = item.category
+        if isinstance(ref, int):
+            index = ref if 0 <= ref < len(categories) else None
+        else:
+            index = keys.index(ref.strip().casefold()) if ref.strip().casefold() in keys else None
+        if index is None:
+            names = ", ".join(c["label"] for c in categories)
+            raise BlockError(f"item '{item.text[:40]}' names unknown category {ref!r}; use one of {names}")
+        out = {"id": _sid("item"), "text": item.text, "categoryId": categories[index]["id"]}
+        if item.explanation and item.explanation.strip():
+            out["explanation"] = item.explanation
+        items.append(out)
+    return {"title": b.title, "instructions": b.instructions, "categories": categories, "items": items, "shuffle": b.shuffle}
+
+
+def _sequence(b: SequenceB) -> dict:
+    items = []
+    for item in b.items:
+        text, detail = (item, None) if isinstance(item, str) else (item.text, item.detail)
+        items.append({"id": _sid("step"), "text": text, **({"detail": detail} if detail and detail.strip() else {})})
+    return {"title": b.title, "instructions": b.instructions, "items": items, "variant": b.variant}
+
+
+def _match(b: MatchPairsB) -> dict:
+    pairs = [{"id": _sid("pair"), "left": p.left, "right": p.right} for p in b.pairs]
+    return {"title": b.title, "instructions": b.instructions, "pairs": pairs, "mode": b.mode}
+
+
+def _hotspot(b: HotspotB) -> dict:
+    if b.mode == "find" and not any(s.correct for s in b.spots):
+        raise BlockError("find mode needs at least one spot with correct: true")
+    spots = []
+    for s in b.spots:
+        spot = {"id": _sid("spot"), "x": _num(s.x), "y": _num(s.y), "r": _num(s.r), "label": s.label, "correct": s.correct}
+        if s.explanation and s.explanation.strip():
+            spot["explanation"] = s.explanation
+        spots.append(spot)
+    # imageObject (an uploaded file's server object) is optional and left
+    # out: a typed hotspot points at a public image URL, like scenario images.
+    return {"title": b.title, "instructions": b.instructions, "imageUrl": b.image_url, "spots": spots, "mode": b.mode}
+
+
+def _gaps(b: FillGapsB) -> dict:
+    if not exp.gap_answers(b.text):
+        raise BlockError("the text has no gap; mark each one as [[answer]] or [[answer|alternative]]")
+    return {"title": b.title, "text": b.text, "mode": b.mode, "caseSensitive": b.case_sensitive}
+
+
+def _myth_fact(b: MythFactB) -> dict:
+    statements = [
+        {"id": _sid("st"), "text": s.text, "isTrue": s.is_true, "explanation": s.explanation} for s in b.statements
+    ]
+    return {"title": b.title, "statements": statements, "labels": {"true": b.true_label, "false": b.false_label}}
+
+
+def _speed_round(b: SpeedRoundB) -> dict:
+    questions = []
+    for n, q in enumerate(b.questions, 1):
+        if isinstance(q.answer, int):
+            answer = q.answer if 0 <= q.answer < len(q.options) else None
+        else:
+            wanted = q.answer.strip().casefold()
+            answer = next((i for i, o in enumerate(q.options) if o.strip().casefold() == wanted), None)
+        if answer is None:
+            raise BlockError(f"question {n} ('{q.prompt[:40]}') answer {q.answer!r} is not one of its options")
+        questions.append({"id": _sid("q"), "prompt": q.prompt, "options": list(q.options), "answer": answer})
+    return {"title": b.title, "questions": questions, "secondsPerQuestion": b.seconds_per_question, "lives": b.lives}
+
+
+def _estimate(b: EstimateB) -> dict:
+    if b.min >= b.max:
+        raise BlockError("min must be below max")
+    if not b.min <= b.answer <= b.max:
+        raise BlockError("answer must be between min and max")
+    if (b.max - b.min) / b.step > 100_000:
+        raise BlockError("the slider would have more than 100000 steps; use a larger step")
+    return {
+        "question": b.question, "min": _num(b.min), "max": _num(b.max), "step": _num(b.step), "answer": _num(b.answer),
+        "unit": b.unit, "tolerancePct": _num(b.tolerance_pct), "explanation": b.explanation,
+    }
+
+
+def _spot_mistake(b: SpotMistakeB) -> dict:
+    if not any(s.is_mistake for s in b.segments):
+        raise BlockError("mark at least one segment with is_mistake: true")
+    segments = []
+    for s in b.segments:
+        segment = {"id": _sid("seg"), "text": s.text, "isMistake": s.is_mistake}
+        for key, value in (("correction", s.correction), ("explanation", s.explanation)):
+            if value and value.strip():
+                segment[key] = value
+        segments.append(segment)
+    return {"title": b.title, "instructions": b.instructions, "segments": segments, "kind": b.kind}
+
+
+def _code_lock(b: CodeLockB) -> dict:
+    clues = []
+    for n, c in enumerate(b.clues, 1):
+        answer = exp.text(_num(c.answer) if isinstance(c.answer, float) else c.answer)
+        if not answer or len(answer) > 40:
+            raise BlockError(f"clue {n} needs a short answer (1 to 40 characters)")
+        clues.append({"id": _sid("clue"), "question": c.question, "answer": answer, "hint": c.hint or ""})
+    return {"title": b.title, "story": b.story, "clues": clues, "reward": b.reward}
+
+
+# typed block -> (editor node, attrs builder)
+EXPERIENCES: dict[str, tuple[str, Any]] = {
+    "sort": ("expSort", _sort),
+    "sequence": ("expSequence", _sequence),
+    "match_pairs": ("expMatch", _match),
+    "hotspot": ("expHotspot", _hotspot),
+    "fill_gaps": ("expGaps", _gaps),
+    "myth_fact": ("expMythFact", _myth_fact),
+    "speed_round": ("expSpeedRound", _speed_round),
+    "estimate": ("expEstimate", _estimate),
+    "spot_mistake": ("expSpotMistake", _spot_mistake),
+    "code_lock": ("expCodeLock", _code_lock),
+}
 
 
 def _contains(node: Any, kind: str, depth: int = 0) -> bool:
@@ -631,6 +970,35 @@ EXAMPLES: dict[str, dict] = {
     "divider": {"type": "divider"},
     "button": {"type": "button", "label": "Open the lab sheet", "url": "https://example.org/lab.pdf", "color": "green"},
     "badge": {"type": "badge", "text": "Key idea", "emoji": "⭐"},
+    "sort": {"type": "sort", "title": "Sort it", "instructions": "Put each thing where it belongs.",
+             "categories": ["Needs light", "Needs no light"], "items": [
+                 {"text": "Photosynthesis", "category": "Needs light"},
+                 {"text": "Cellular respiration", "category": "Needs no light",
+                  "explanation": "Cells respire day and night."}]},
+    "sequence": {"type": "sequence", "title": "Order the steps", "items": [
+        "Light hits the leaf", "Water is split", "Sugar is made"]},
+    "match_pairs": {"type": "match_pairs", "title": "Match the parts", "pairs": [
+        {"left": "Stomata", "right": "Let gases in"}, {"left": "Xylem", "right": "Carries water"}]},
+    "hotspot": {"type": "hotspot", "title": "Find the stomata", "instructions": "Click where gases enter.",
+                "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Leaf_1_web.jpg",
+                "spots": [{"x": 42, "y": 61, "r": 8, "label": "Stomata", "explanation": "Tiny pores under the leaf."}]},
+    "fill_gaps": {"type": "fill_gaps", "title": "Fill the gaps",
+                  "text": "Plants make sugar in the [[chloroplasts|chloroplast]] using [[light]]."},
+    "myth_fact": {"type": "myth_fact", "title": "Myth or fact?", "statements": [
+        {"text": "Plants only breathe at night.", "is_true": False, "explanation": "They respire all the time."},
+        {"text": "Leaves look green because of chlorophyll.", "is_true": True, "explanation": "It reflects green light."}]},
+    "speed_round": {"type": "speed_round", "title": "Quick fire", "questions": [
+        {"prompt": "Gas plants take in", "options": ["CO2", "O2", "N2"], "answer": 0},
+        {"prompt": "Sugar made", "options": ["Glucose", "Salt"], "answer": "Glucose"}], "seconds_per_question": 10},
+    "estimate": {"type": "estimate", "question": "What share of Earth's oxygen comes from the ocean?",
+                 "min": 0, "max": 100, "step": 1, "answer": 50, "unit": "%",
+                 "explanation": "Marine plankton make about half of it."},
+    "spot_mistake": {"type": "spot_mistake", "title": "Spot the mistake", "segments": [
+        {"text": "Plants take in carbon dioxide."},
+        {"text": "They release nitrogen as a by-product.", "is_mistake": True, "correction": "They release oxygen."}]},
+    "code_lock": {"type": "code_lock", "title": "Lab escape", "story": "Answer every clue to open the lab door.",
+                  "clues": [{"question": "How many oxygen atoms in CO2?", "answer": 2, "hint": "Read the formula."}],
+                  "reward": "You are out! Photosynthesis mastered."},
     "node": {"type": "node", "node": {"type": "paragraph", "content": [{"type": "text", "text": "Raw editor JSON"}]}},
 }
 
@@ -647,6 +1015,18 @@ NOTES: dict[str, str] = {
     "conditional": "Rule fields: " + ", ".join(sorted(RULE_FIELDS)) + ". Ops: " + ", ".join(d.RULE_OPS) + ".",
     "user": "Shows a member card; the member must belong to this organization.",
     "node": "Escape hatch: one raw node, checked against the editor schema.",
+    "flashcards": "mode: study shows one card at a time with spaced review (Again / Hard / Got it); best for memorising.",
+    "scenario": "Steps without options end the story; give them an ending {tone, title}. Option feedback explains each choice.",
+    "sort": "Categorisation: 2 to 4 categories, 2 to 20 items; explain the tricky ones.",
+    "sequence": "Ordering steps or events; list them in the right order (learners get them shuffled).",
+    "match_pairs": "Term to definition, cause to effect; memory mode turns it into a card game.",
+    "hotspot": "Coordinates are percentages of the image; use it only when you know where things sit on the image.",
+    "fill_gaps": "Retrieval in context: [[answer|alternative]] marks each gap; bank mode shows a word bank.",
+    "myth_fact": "Tackles misconceptions: always explain why.",
+    "speed_round": "Timed rapid recall of facts already taught; keep prompts and options short.",
+    "estimate": "Prediction before teaching: ask before the explanation, so the reveal sticks.",
+    "spot_mistake": "Error detection: kind code splits by line; give a correction for each mistake.",
+    "code_lock": "A mini escape room: 1 to 5 clues with short answers (a word or number); the reward shows at the end.",
 }
 
 

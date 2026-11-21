@@ -40,6 +40,10 @@ import { isCompactFlipcardGrid } from './compactGrid'
 import { FlipcardStylePicker, type FlipcardLook } from './FlipcardStylePicker'
 import { SIZE_BOX, faceTextClass, flipcardFaces, resolveFlipcardSize, type FlipcardSize } from './flipcardStyles'
 import { cardPlace, deleteCard, groupIntoGrid, insertCard, moveCardInGrid, takeCardFocus } from './flipcardOps'
+import { cardKey, shuffleOrder } from './flashcardStudyModel'
+
+/** One shuffle per page visit, shared by every card. */
+const SHUFFLE_SEED = Math.floor(Math.random() * 1e9)
 
 type Side = 'front' | 'back'
 
@@ -146,7 +150,9 @@ const FlipcardExtension: React.FC = (props: any) => {
       <div
         className={cn(
           isBack ? 'flipcard-back' : 'flipcard-front',
-          'border-2 p-6 nice-shadow flex flex-col items-center justify-center text-center rounded-xl',
+          // Subtle depth: a hairline plus a soft, low shadow (lifted a touch on hover for learners).
+          'border-2 p-6 flex flex-col items-center justify-center text-center rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.06),0_6px_18px_-8px_rgba(0,0,0,0.22)] transition-shadow',
+          !isEditable && 'group-hover/card:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_14px_28px_-10px_rgba(0,0,0,0.28)]',
           facePad,
           isBack ? faces.back : faces.front,
           hidden && 'pointer-events-none',
@@ -154,8 +160,12 @@ const FlipcardExtension: React.FC = (props: any) => {
         aria-hidden={hidden || undefined}
         inert={hidden || undefined}
       >
-        <div className="flex items-center justify-center mb-3 max-md:mb-1.5 select-none pointer-events-none">
-          <ArrowClockwise weight="duotone" size={ICON_SIZE[size]} className={cn('opacity-70', isBack && 'rotate-180')} />
+        {/* Which side is up, at a glance: "Question" / "Answer" and the turn icon. */}
+        <div className={cn('flex w-full items-center justify-between gap-2 mb-2 max-md:mb-1 select-none pointer-events-none', compact && 'max-md:hidden')}>
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] opacity-70">
+            {isBack ? t('activities.experiences.flashcards.answer_side', 'Answer') : t('activities.experiences.flashcards.question_side', 'Question')}
+          </span>
+          <ArrowClockwise weight="duotone" size={ICON_SIZE[size] - 4} className={cn('opacity-60', isBack && 'rotate-180')} />
         </div>
         <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-y-auto overscroll-contain">
           {isEditable ? (
@@ -167,18 +177,28 @@ const FlipcardExtension: React.FC = (props: any) => {
               placeholder={isBack ? t('activities.enter_answer') : t('activities.enter_question')}
               onCommit={(v) => update(isBack ? { answer: v } : { question: v })}
               className={cn(
-                'max-h-full cursor-text rounded-md text-center font-medium placeholder:text-current placeholder:opacity-60 hover:bg-white/10 focus:bg-white/15',
+                'max-h-full cursor-text rounded-md text-center font-semibold tracking-[-0.01em] placeholder:text-current placeholder:opacity-60 hover:bg-white/10 focus:bg-white/15',
                 faceTextClass(text, size),
               )}
             />
           ) : (
-            <p className={cn('max-h-full w-full whitespace-pre-line break-words text-center font-medium', faceTextClass(text, size), compact && 'max-md:text-[15px] max-md:leading-snug')}>
+            <p
+              dir="auto"
+              className={cn(
+                'max-h-full w-full whitespace-pre-line break-words text-center font-semibold tracking-[-0.01em]',
+                faceTextClass(text, size),
+                compact && 'max-md:text-[15px] max-md:leading-snug',
+              )}
+            >
               {text}
             </p>
           )}
         </div>
-        <div className={cn('text-xs opacity-70 mt-3 max-md:mt-1.5 select-none pointer-events-none', compact && 'max-md:hidden')}>
-          {isBack ? t('activities.click_to_flip_back') : t('activities.click_to_flip')}
+        <div className={cn('mt-3 max-md:mt-1.5 select-none pointer-events-none', compact && 'max-md:hidden')}>
+          <span className="inline-flex items-center gap-1 rounded-full bg-current/10 px-2 py-0.5 text-[11px] font-medium">
+            <ArrowClockwise size={11} weight="bold" aria-hidden className={cn(isBack && '-scale-x-100')} />
+            {isBack ? t('activities.click_to_flip_back') : t('activities.click_to_flip')}
+          </span>
         </div>
       </div>
     )
@@ -188,7 +208,7 @@ const FlipcardExtension: React.FC = (props: any) => {
 
   const card = (
     // Self-contained coloured cards: the same in every block theme.
-    <div data-lhb-keep="" className={cn('flipcard-container relative', sizeClass, mobileClass, !isEditable && 'lh-press')}>
+    <div data-lhb-keep="" className={cn('flipcard-container group/card relative', sizeClass, mobileClass, !isEditable && 'lh-press')}>
       <div
         className={cn('flipcard-inner cursor-pointer', flipped && 'flipped', !isEditable && 'rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2')}
         {...(isEditable
@@ -220,9 +240,12 @@ const FlipcardExtension: React.FC = (props: any) => {
 
   // ── learner ──
   if (!isEditable) {
+    // A shuffled deck: each card takes a per-visit CSS order (the grid's holder is display: contents).
+    const order = inGrid && place!.grid.attrs?.shuffle === true ? shuffleOrder(SHUFFLE_SEED, cardKey(question, answer) + place!.index) : undefined
     return (
       <NodeViewWrapper
         className={cn('flipcard-wrapper flex', inGrid ? 'w-full' : cn('my-4', alignment === 'left' ? 'justify-start' : alignment === 'right' ? 'justify-end' : 'justify-center'))}
+        style={order === undefined ? undefined : { order }}
       >
         {card}
       </NodeViewWrapper>

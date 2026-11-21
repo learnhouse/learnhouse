@@ -59,6 +59,37 @@ export function insertCard(editor: Editor, gridPos: number, attrs: Record<string
   return at
 }
 
+/** Update one card's attrs (list editor), one step. */
+export function updateCardAttrs(editor: Editor, gridPos: number, index: number, patch: Record<string, unknown>) {
+  return editor
+    .chain()
+    .command(({ tr }) => {
+      const grid = tr.doc.nodeAt(gridPos)
+      if (!grid || grid.type.name !== 'flipcardGrid' || index < 0 || index >= grid.childCount) return false
+      const card = grid.child(index)
+      tr.setNodeMarkup(gridPos + 1 + childOffset(grid, index), undefined, { ...card.attrs, ...patch })
+      return true
+    })
+    .run()
+}
+
+/** Append several cards at once (bulk paste), one step. Returns how many were added. */
+export function appendCards(editor: Editor, gridPos: number, cards: Record<string, unknown>[]) {
+  let added = 0
+  editor
+    .chain()
+    .command(({ tr, state }) => {
+      const grid = tr.doc.nodeAt(gridPos)
+      const type = state.schema.nodes.flipcard
+      if (!grid || !type || cards.length === 0) return false
+      tr.insert(gridPos + grid.nodeSize - 1, cards.map((attrs) => type.create(attrs)))
+      added = cards.length
+      return true
+    })
+    .run()
+  return added
+}
+
 /** Delete one card; the last card of a grid takes the (empty) grid with it. */
 export function deleteCard(editor: Editor, gridPos: number, index: number) {
   return editor

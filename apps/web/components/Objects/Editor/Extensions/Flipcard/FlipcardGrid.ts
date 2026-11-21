@@ -1,6 +1,7 @@
 import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import { mergeAttributes, Node } from "@tiptap/core";
 import dynamic from "next/dynamic";
+import { FLIPCARD_GRID_EXTRA_ATTRS } from "./flashcardStudyModel";
 
 const FlipcardGridExtension = dynamic(() => import("./FlipcardGridExtension"), {
   ssr: false,
@@ -31,6 +32,9 @@ export default Node.create({
         },
         renderHTML: (attributes) => ({ "data-columns": attributes.columns }),
       },
+      // Experiences redesign: mode ('grid' | 'study'), title, shuffle.
+      // Optional; the defaults are the old grid.
+      ...FLIPCARD_GRID_EXTRA_ATTRS,
     };
   },
 

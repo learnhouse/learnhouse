@@ -43,7 +43,12 @@ EMPTY_WORDS = 10
 LONG_WORDS = 2500
 HEADINGS_FROM = 600
 PRACTICE_FROM = 300
-PRACTICE = ("blockQuiz", "flipcard", "flipcardGrid", "blockCode", "scenarios")
+PRACTICE = (
+    "blockQuiz", "flipcard", "flipcardGrid", "blockCode", "scenarios",
+    # Experiences: interactive learning blocks
+    "expSort", "expSequence", "expMatch", "expHotspot", "expGaps", "expMythFact",
+    "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock",
+)
 SEVERITY = {"high": 0, "medium": 1, "low": 2}
 _PLACEHOLDER = re.compile(r"lorem ipsum|\bTODO\b|\bTBD\b|\[insert[^\]]*\]|\bxxx\b", re.IGNORECASE)
 _WORD = re.compile(r"\w+")
@@ -167,7 +172,7 @@ def _check_page(doc: dict, where: dict, issues: _Issues, stats: Counter, links: 
     if words >= HEADINGS_FROM and not headings:
         issues.add("low", "no_headings", f"{words} words with no headings to scan by.", where, words=words)
     if words >= PRACTICE_FROM and not practice:
-        issues.add("low", "no_practice", "No quiz, flipcards, exercise or scenario to practice with.", where, words=words)
+        issues.add("low", "no_practice", "No quiz, flipcards, exercise, scenario or other interactive block to practice with.", where, words=words)
 
 
 async def _audit_course(ctx: ToolContext, p: AuditCourseParams):

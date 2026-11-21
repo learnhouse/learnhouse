@@ -531,7 +531,7 @@ async def test_list_and_restore_versions(registry, db, org, admin_user, regular_
 async def test_block_catalog(registry, db, org, regular_user):
     ctx = ctx_for(db, org, regular_user)
     catalog = await ok(registry, ctx, "describe_activity_blocks")
-    assert len(json.dumps(catalog)) < 5000
+    assert len(json.dumps(catalog)) < 5200  # the Experiences add one compact line
     assert {"callout", "blockQuiz", "media"} <= {b["type"] for b in catalog["blocks"]}
     quiz = await ok(registry, ctx, "describe_activity_blocks", type="quiz")
     assert quiz["type"] == "blockQuiz" and "example" in quiz

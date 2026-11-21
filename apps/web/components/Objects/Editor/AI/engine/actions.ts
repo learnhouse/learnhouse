@@ -44,6 +44,7 @@ export type QuickActionId =
   | 'quiz'
   | 'flashcards'
   | 'scenario'
+  | 'experience'
   | 'images'
   | 'accessibility'
   | 'seo'
@@ -77,6 +78,8 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { id: 'quiz', group: 'practice', usesSelection: true },
   { id: 'flashcards', group: 'practice', usesSelection: true },
   { id: 'scenario', group: 'practice', usesSelection: false },
+  // An interactive exercise from the Experiences family (sort, sequence, gaps…).
+  { id: 'experience', group: 'practice', usesSelection: true },
   { id: 'images', group: 'polish', usesSelection: false, images: true },
   { id: 'accessibility', group: 'polish', usesSelection: false },
   { id: 'seo', group: 'polish', usesSelection: false },

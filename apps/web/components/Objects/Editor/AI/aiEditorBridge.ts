@@ -47,6 +47,7 @@ const BUBBLE_ACTIONS: Record<string, { action: string; param?: string }> = {
   explain: { action: 'explain' },
   quiz: { action: 'quiz' },
   flashcards: { action: 'flashcards' },
+  experience: { action: 'experience' },
 }
 
 /**

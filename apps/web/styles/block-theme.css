@@ -924,3 +924,12 @@
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+/* ── 5. Experiences family ─────────────────────────────────────────────── */
+/* The dark/tinted card surface for Extensions/Experiences/shared. Motion and
+   layout resets live in styles/experiences.css, so light keeps the original
+   look. */
+.lh-bt[data-lh-bt-tone] .lh-exp-frame {
+  background-color: var(--lhb-surface);
+  box-shadow: var(--lhb-shadow);
+}

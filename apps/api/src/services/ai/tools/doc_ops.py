@@ -28,6 +28,8 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Callable, Iterator
 
+from src.services.courses.activities import experiences as exp
+
 MAX_DEPTH = 40
 MAX_DOC_CHARS = 2_000_000
 CALLOUT_TYPES = ("info", "warning", "tip", "success", "error")
@@ -88,7 +90,8 @@ SCHEMA: dict[str, Spec] = {
     "badge": Spec(BLOCK, "text*", ("color", "emoji")),
     "button": Spec(BLOCK, "text*", ("emoji", "link", "color", "alignment")),
     "flipcard": Spec(BLOCK, "text*", ("question", "answer", "color", "alignment", "size", "style")),
-    "flipcardGrid": Spec(BLOCK, "flipcard+", ("columns",)),
+    # mode/title/shuffle: the Experiences flashcards (study mode); absent = the classic grid.
+    "flipcardGrid": Spec(BLOCK, "flipcard+", ("columns", "mode", "title", "shuffle")),
     "youtube": Spec(
         BLOCK, None, ("src", "start", "width", "height"),
         authorable=False, why_not="Use a blockEmbed with an embed URL.",
@@ -106,7 +109,24 @@ SCHEMA: dict[str, Spec] = {
     "blockMathEquation": Spec(BLOCK, None, ("math_equation",)),
     # settings: shuffle / attempts / reveal options from the editor (null = defaults).
     "blockQuiz": Spec(BLOCK, None, ("quizId", "questions", "settings")),
-    "scenarios": Spec(BLOCK, None, ("title", "scenarios", "currentScenarioId")),
+    "scenarios": Spec(BLOCK, None, ("title", "scenarios", "currentScenarioId", "display")),
+    # Experiences (Extensions/Experiences): interactive learning blocks whose
+    # data lives in attrs; blockId keys a learner's saved progress.
+    "expSort": Spec(BLOCK, None, ("blockId", "title", "instructions", "categories", "items", "shuffle")),
+    "expSequence": Spec(BLOCK, None, ("blockId", "title", "instructions", "items", "variant")),
+    "expMatch": Spec(BLOCK, None, ("blockId", "title", "instructions", "pairs", "mode")),
+    # imageObject: the uploaded file's server object (like blockImage's
+    # blockObject); imageUrl is kept in sync with it.
+    "expHotspot": Spec(BLOCK, None, ("blockId", "title", "instructions", "imageUrl", "imageObject", "spots", "mode")),
+    "expGaps": Spec(BLOCK, None, ("blockId", "title", "text", "mode", "caseSensitive")),
+    "expMythFact": Spec(BLOCK, None, ("blockId", "title", "statements", "labels")),
+    "expSpeedRound": Spec(BLOCK, None, ("blockId", "title", "questions", "secondsPerQuestion", "lives")),
+    "expEstimate": Spec(
+        BLOCK, None,
+        ("blockId", "question", "min", "max", "step", "answer", "unit", "tolerancePct", "explanation"),
+    ),
+    "expSpotMistake": Spec(BLOCK, None, ("blockId", "title", "instructions", "segments", "kind")),
+    "expCodeLock": Spec(BLOCK, None, ("blockId", "title", "story", "clues", "reward")),
     "blockCode": Spec(
         BLOCK, None,
         ("mode", "languageId", "languageName", "starterCode", "testCases", "description",
@@ -533,7 +553,199 @@ def _scenarios(v: Any) -> str | None:
                 return f"step {i} option points at unknown step {nxt!r}"
     if len(ids) != len(v):
         return "step ids must be unique"
+    return _scenario_extras(v)
+
+
+_OUTCOMES = (None, "success", "neutral", "fail")
+
+
+def _scenario_extras(v: list) -> str | None:
+    """The optional Experiences fields of scenario steps and options
+    (ending, feedback, outcome); absent on older scenarios."""
+    for i, s in enumerate(v):
+        ending = s.get("ending")
+        if ending is not None:
+            if not isinstance(ending, dict) or ending.get("tone", "neutral") not in _OUTCOMES[1:]:
+                return f"step {i} ending must be {{tone: success|neutral|fail, title}}"
+            problem = _str(200)(ending.get("title"))
+            if problem:
+                return f"step {i} ending title {problem}"
+        for o in s["options"]:
+            problem = _str(2000)(o.get("feedback"))
+            if problem:
+                return f"step {i} option feedback {problem}"
+            if o.get("outcome") not in _OUTCOMES:
+                return f"step {i} option outcome must be success, neutral or fail"
     return None
+
+
+# ─── experiences ─────────────────────────────────────────────────────────────
+# Tolerant on purpose: the editor saves blocks mid-authoring (an empty item, a
+# missing id), and its renderer fills defaults, so only types, sizes and
+# values that would break a block are refused. Typed blocks (block_specs)
+# hold new content to the editor's tighter authoring limits.
+
+
+def _number(lo: float, hi: float, *, whole: bool = False) -> Callable[[Any], str | None]:
+    def check(v: Any) -> str | None:
+        ok = isinstance(v, int) if whole else isinstance(v, (int, float))
+        if isinstance(v, bool) or not ok or v != v or not lo <= v <= hi:
+            return f"must be a {'whole ' if whole else ''}number from {lo:g} to {hi:g}"
+        return None
+
+    return check
+
+
+def _finite(v: Any) -> str | None:
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or v in (float("inf"), float("-inf")):
+        return "must be a number"
+    return None
+
+
+def _entries(what: str, hi: int, fields: dict[str, Callable[[Any], str | None]], extra: Callable[[dict], str | None] | None = None) -> Callable[[Any], str | None]:
+    """A list of at most `hi` objects whose known fields pass their checks."""
+    def check(v: Any) -> str | None:
+        if not isinstance(v, list) or len(v) > hi:
+            return f"must be a list of at most {hi} {what}s"
+        for i, item in enumerate(v):
+            if not isinstance(item, dict):
+                return f"{what} {i} must be an object"
+            for key, value in item.items():
+                problem = fields[key](value) if key in fields else None
+                if problem:
+                    return f"{what} {i} {key} {problem}"
+            problem = extra(item) if extra else None
+            if problem:
+                return f"{what} {i} {problem}"
+        return None
+
+    return check
+
+
+def _strings(hi: int, limit: int) -> Callable[[Any], str | None]:
+    def check(v: Any) -> str | None:
+        if not isinstance(v, list) or len(v) > hi or not all(isinstance(x, str) and len(x) <= limit for x in v):
+            return f"must be a list of at most {hi} texts of up to {limit} characters"
+        return None
+
+    return check
+
+
+def _speed_answer(q: dict) -> str | None:
+    options, answer = q.get("options"), q.get("answer")
+    if answer is None or not isinstance(options, list):
+        return None
+    if isinstance(answer, bool) or not isinstance(answer, int) or not 0 <= answer < max(len(options), 1):
+        return "answer must be the 0-based index of one of its options"
+    return None
+
+
+def _clue_answer(v: Any) -> str | None:
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        return None
+    return _str(100)(v)
+
+
+def _labels(v: Any) -> str | None:
+    if not isinstance(v, dict) or set(v) - {"true", "false"}:
+        return 'must be {"true": "Fact", "false": "Myth"}'
+    for key in ("true", "false"):
+        if _str(100)(v.get(key)):
+            return f"{key} must be text of up to 100 characters"
+    return None
+
+
+def _image_src(v: Any) -> str | None:
+    """An image: an http(s) URL, or a path on this site for uploaded files."""
+    if v in (None, "") or is_web_url(v):
+        return None
+    if isinstance(v, str) and re.fullmatch(r"/(?!/)[^\s<>\"'\\]{0,2040}", v):
+        return None
+    return "must be an http(s) URL"
+
+
+_ID = _str(100)
+_SHORT = _str(500)
+_LONG = _str(5000)
+
+_EXPERIENCE_VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
+    "expSort": {
+        "categories": _entries("category", 8, {"id": _ID, "label": _SHORT, "color": _str(30)}),
+        "items": _entries("item", 50, {"id": _ID, "text": _SHORT, "categoryId": _ID, "explanation": _str(2000)}),
+        "shuffle": _bool,
+    },
+    "expSequence": {
+        "items": _entries("item", 30, {"id": _ID, "text": _SHORT, "detail": _str(200)}),
+        "variant": _one_of("list", "timeline"),
+    },
+    "expMatch": {
+        "pairs": _entries("pair", 20, {"id": _ID, "left": _SHORT, "right": _SHORT}),
+        "mode": _one_of("connect", "memory"),
+    },
+    "expHotspot": {
+        "imageUrl": _image_src,
+        "imageObject": lambda v: None if v is None or isinstance(v, dict) else "must be an uploaded file object",
+        "spots": _entries("spot", 50, {
+            "id": _ID, "x": _number(0, 100), "y": _number(0, 100), "r": _number(0, 100),
+            "label": _SHORT, "explanation": _str(2000), "correct": _bool,
+        }),
+        "mode": _one_of("find", "explore"),
+    },
+    "expGaps": {"text": _str(20_000), "mode": _one_of("type", "bank"), "caseSensitive": _bool},
+    "expMythFact": {
+        "statements": _entries("statement", 50, {"id": _ID, "text": _str(1000), "isTrue": _bool, "explanation": _str(2000)}),
+        "labels": _labels,
+    },
+    "expSpeedRound": {
+        "questions": _entries(
+            "question", 50, {"id": _ID, "prompt": _SHORT, "options": _strings(6, 500)}, extra=_speed_answer,
+        ),
+        "secondsPerQuestion": _number(1, 600, whole=True),
+        "lives": _number(0, 100, whole=True),
+    },
+    "expEstimate": {
+        "question": _str(1000), "min": _finite, "max": _finite, "step": _finite, "answer": _finite,
+        "unit": _str(50), "tolerancePct": _number(0, 100), "explanation": _LONG,
+    },
+    "expSpotMistake": {
+        "segments": _entries("segment", 200, {
+            "id": _ID, "text": _LONG, "isMistake": _bool, "correction": _str(2000), "explanation": _str(2000),
+        }),
+        "kind": _one_of("text", "code"),
+    },
+    "expCodeLock": {
+        "story": _LONG,
+        "clues": _entries("clue", 10, {"id": _ID, "question": _str(1000), "answer": _clue_answer, "hint": _str(1000)}),
+        "reward": _str(10_000),
+    },
+}
+for _name, _checks in _EXPERIENCE_VALIDATORS.items():
+    _checks.setdefault("blockId", _ID)
+    _checks.setdefault("title", _SHORT)
+    _checks.setdefault("instructions", _str(1000))
+
+
+def _experience_problems(t: str, attrs: dict) -> list[str]:
+    """Checks that span two attributes of an Experiences block."""
+    out: list[str] = []
+    if t == "expSort" and isinstance(attrs.get("categories"), list) and isinstance(attrs.get("items"), list):
+        ids = {c.get("id") for c in attrs["categories"] if isinstance(c, dict)}
+        for i, item in enumerate(attrs["items"]):
+            ref = item.get("categoryId") if isinstance(item, dict) else None
+            if ref not in (None, "") and ref not in ids:
+                out.append(f"expSort.items item {i} categoryId {ref!r} names no category.")
+                break
+    if t == "expEstimate":
+        lo, hi, step = attrs.get("min"), attrs.get("max"), attrs.get("step")
+
+        def number(x: Any) -> bool:
+            return x is not None and _finite(x) is None
+
+        if number(lo) and number(hi) and lo >= hi:
+            out.append("expEstimate.min must be below max.")
+        if number(step) and step <= 0:
+            out.append("expEstimate.step must be above 0.")
+    return out
 
 
 _ALIGN = _one_of("left", "center", "right")
@@ -561,7 +773,7 @@ _VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
         "color": _str(30), "alignment": _ALIGN, "size": _one_of("small", "medium", "large"),
         "style": _one_of(None, "solid", "soft", "outline"),
     },
-    "flipcardGrid": {"columns": _int(1, 6)},
+    "flipcardGrid": {"columns": _int(1, 6), "mode": _one_of(None, "grid", "study"), "title": _str(200), "shuffle": _one_of(None, True, False)},
     "blockEmbed": {
         "embedUrl": _url(), "embedCode": _str(20_000), "embedType": _str(40),
         "embedWidth": _str(20), "alignment": _ALIGN,
@@ -575,7 +787,11 @@ _VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
     "blockUser": {"layout": _one_of("card", "compact")},
     "blockMathEquation": {"math_equation": _str(10_000, null=False)},
     "blockQuiz": {"quizId": _str(100), "questions": _quiz_questions},
-    "scenarios": {"title": _str(500), "scenarios": _scenarios, "currentScenarioId": _str(100)},
+    "scenarios": {
+        "title": _str(500), "scenarios": _scenarios, "currentScenarioId": _str(100),
+        "display": _one_of(None, "story", "chat"),
+    },
+    **_EXPERIENCE_VALIDATORS,
     "blockMagic": {"htmlContent": _str(500_000), "title": _str(200), "height": _int(50, 5000)},
     "blockH5P": {"h5pUrl": _url(null=False), "title": _str(500), "height": _int(50, 5000)},
     "blockImage": {
@@ -667,11 +883,14 @@ def attrs_problems(t: str, attrs: Any, where: tuple = ()) -> list[str]:
             if problem:
                 out.append(f"{t}.{key} {problem}.")
     for key in URL_ATTRS & set(attrs):
+        if t == "expHotspot" and key == "imageUrl":
+            continue  # _image_src: uploaded images may be site paths
         value = attrs[key]
         if value not in (None, "") and not is_web_url(value):
             out.append(f"{t}.{key} must be an http(s) URL.")
     if t == "blockEmbed" and not (attrs.get("embedUrl") or attrs.get("embedCode")):
         out.append("A blockEmbed needs embedUrl or embedCode.")
+    out.extend(_experience_problems(t, attrs))
     try:
         size = len(json.dumps(attrs, ensure_ascii=False, default=str))
     except (TypeError, ValueError):
@@ -948,6 +1167,11 @@ def atom_text(node: dict) -> str:
                 lines.append(str(s.get("text") or ""))
                 lines.extend(str(o.get("text") or "") for o in s.get("options") or [] if isinstance(o, dict))
         return "\n".join(lines)
+    if t in exp.TEXT_PATHS:
+        return "\n".join(
+            exp.gaps_text(owner[key], answers=True) if t == "expGaps" and key == "text" else owner[key]
+            for owner, key in exp.strings(a, t) if str(owner[key]).strip()
+        )
     if t == "blockMathEquation":
         return str(a.get("math_equation") or "")
     if t == "blockCode":
@@ -1037,6 +1261,10 @@ def summary(node: dict, text_limit: int = 200) -> dict:
     elif t == "scenarios":
         out["title"] = a.get("title")
         out["steps"] = len(a.get("scenarios") or [])
+        if a.get("display") == "chat":
+            out["display"] = "chat"
+    elif t in exp.TEXT_PATHS:
+        out.update(experience_summary(t, a, text_limit))
     elif t in ("blockMagic", "blockH5P"):
         out["title"] = a.get("title")
     elif t == "button":
@@ -1047,6 +1275,9 @@ def summary(node: dict, text_limit: int = 200) -> dict:
         out["resource"] = {"uuid": a.get("resourceUuid"), "kind": a.get("resourceType")}
     elif t in ("bulletList", "orderedList", "flipcardGrid", "callout", "blockquote"):
         out["children"] = len(children(node))
+        if t == "flipcardGrid":
+            out["title"] = a.get("title") or None
+            out["mode"] = a.get("mode") if a.get("mode") == "study" else None
     elif t == "table":
         rows = children(node)
         out["rows"] = [
@@ -1055,6 +1286,34 @@ def summary(node: dict, text_limit: int = 200) -> dict:
         ]
         if len(rows) > 30:
             out["more_rows"] = len(rows) - 30
+    return {k: v for k, v in out.items() if v is not None}
+
+
+# Experiences block -> (list attr, what it holds) counted in outlines.
+_EXPERIENCE_COUNTS = {
+    "expSort": ("items", "items"), "expSequence": ("items", "items"), "expMatch": ("pairs", "pairs"),
+    "expHotspot": ("spots", "spots"), "expMythFact": ("statements", "statements"),
+    "expSpeedRound": ("questions", "questions"), "expSpotMistake": ("segments", "segments"),
+    "expCodeLock": ("clues", "clues"),
+}
+
+
+def experience_summary(t: str, a: dict, text_limit: int = 200) -> dict:
+    """Key settings of an Experiences block, for outlines."""
+    out: dict[str, Any] = {"title": clip(str(a.get("title") or a.get("question") or ""), text_limit)[0] or None}
+    if t in _EXPERIENCE_COUNTS:
+        key, label = _EXPERIENCE_COUNTS[t]
+        out[label] = len(exp.items(a.get(key)))
+    if t == "expSort":
+        out["categories"] = [clip(exp.text(c.get("label")), 80)[0] for c in exp.items(a.get("categories"))]
+    elif t == "expGaps":
+        out["gaps"] = len(exp.gap_answers(a.get("text")))
+    elif t == "expEstimate":
+        out["answer"] = a.get("answer")
+        out["unit"] = a.get("unit") or None
+    for key in ("mode", "variant", "kind"):
+        if isinstance(a.get(key), str):
+            out[key] = a[key]
     return {k: v for k, v in out.items() if v is not None}
 
 
@@ -1190,18 +1449,30 @@ def _attr_strings(node: dict) -> Iterator[tuple[dict, str]]:
                 if isinstance(s.get("text"), str):
                     yield s, "text"
                 for o in s.get("options") or []:
-                    if isinstance(o, dict) and isinstance(o.get("text"), str):
-                        yield o, "text"
+                    if isinstance(o, dict):
+                        for key in ("text", "feedback"):
+                            if isinstance(o.get(key), str):
+                                yield o, key
+                ending = s.get("ending")
+                if isinstance(ending, dict) and isinstance(ending.get("title"), str):
+                    yield ending, "title"
+    if t == "flipcardGrid" and isinstance(a.get("title"), str):
+        yield a, "title"
+    yield from exp.strings(a, t)
+
+
+# Atoms whose attr text replace_text can change (besides text holders).
+_ATTR_TEXT_NODES = frozenset({"flipcard", "flipcardGrid", "blockQuiz", "scenarios", *exp.NODE_NAMES})
 
 
 def text_targets(root: dict, root_path: tuple) -> Iterator[tuple[tuple, dict]]:
     """Blocks under root (root included) whose text replace_text can change."""
-    if kind(root) in TEXT_HOLDERS or kind(root) in ("flipcard", "blockQuiz", "scenarios"):
+    if kind(root) in TEXT_HOLDERS or kind(root) in _ATTR_TEXT_NODES:
         yield root_path, root
         if kind(root) in TEXT_HOLDERS:
             return
     for path, node, _parent in walk_blocks(root):
-        if kind(node) in TEXT_HOLDERS or kind(node) in ("flipcard", "blockQuiz", "scenarios"):
+        if kind(node) in TEXT_HOLDERS or kind(node) in _ATTR_TEXT_NODES:
             yield root_path + path, node
 
 

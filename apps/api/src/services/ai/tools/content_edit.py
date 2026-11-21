@@ -455,7 +455,8 @@ class WriteContentParams(BaseModel):
             "Page content in Markdown: # headings, **bold**, *italic*, `code`, [links](https://...), "
             "lists, tables, ``` code fences, > quotes, > [!TIP] / > [!WARNING] callouts, $$ math $$, "
             "and ```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```button / ```badge "
-            "/ ```preview / ```h5p / ```widget fences for rich blocks. "
+            "/ ```preview / ```h5p / ```widget fences for rich blocks (interactive sort, sequence, "
+            "fill_gaps, myth_fact, ... blocks have no fence: use add_blocks). "
             "Keep <!-- block [path] type --> comments from a read to keep those blocks."
         ),
     )
