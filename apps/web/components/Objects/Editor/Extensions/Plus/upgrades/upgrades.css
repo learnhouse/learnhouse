@@ -1,0 +1,134 @@
+/*
+ Looks added by the block upgrades (EDITOR_PLUS_SPEC.md, section D). Every
+ rule is keyed on an attribute or class that only content using the new
+ options carries, so older content renders exactly as before.
+*/
+
+/* ── Code block: line numbers, highlighted lines, wrapping ──────────────── */
+
+.ProseMirror pre:is([data-line-numbers='true'], [data-highlight-lines]) {
+  position: relative;
+  isolation: isolate;
+}
+
+.ProseMirror pre[data-line-numbers='true'] > code {
+  display: block;
+  padding-inline-start: calc(var(--lh-code-gutter, 2ch) + 1.5ch) !important;
+}
+
+/* The marker at the start of each line (an editor widget or the static span). */
+.lh-code-line-start {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.lh-code-line-start[data-ln]::before {
+  content: attr(data-ln);
+  display: inline-block;
+  box-sizing: content-box;
+  width: var(--lh-code-gutter, 2ch);
+  margin-inline-start: calc(-1 * (var(--lh-code-gutter, 2ch) + 1.5ch));
+  margin-inline-end: 1.5ch;
+  text-align: end;
+  color: rgb(255 255 255 / 0.32);
+  font-variant-numeric: tabular-nums;
+}
+
+.lh-code-line-start[data-hl]::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  height: 1lh;
+  z-index: -1;
+  background: rgb(250 204 21 / 0.13);
+  box-shadow: inset 3px 0 0 rgb(250 204 21 / 0.75);
+}
+
+[dir='rtl'] .lh-code-line-start[data-hl]::after {
+  box-shadow: inset -3px 0 0 rgb(250 204 21 / 0.75);
+}
+
+.lh-code-line-start[data-hl][data-ln]::before {
+  color: rgb(253 224 71 / 0.9);
+}
+
+/* Phones scroll code sideways by default; wrapping overrides that everywhere. */
+.ProseMirror pre[data-wrap='true'],
+.ProseMirror pre[data-wrap='true'] code,
+.ProseMirror pre[data-wrap='true'] [data-node-view-content-react] {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+
+/* ── Button group ─────────────────────────────────────────────────────── */
+
+.lh-button-group-row,
+.lh-button-group-row > [data-node-view-content-react] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: inherit;
+}
+
+.lh-button-group-row > [data-node-view-content-react] {
+  width: 100%;
+}
+
+/* Inside a group the buttons sit in the row; their own alignment is ignored. */
+.lh-button-group-row :is(.node-button, .react-renderer.node-button) {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.lh-button-group-row .block-button {
+  text-align: start;
+}
+
+/* ── Inline math ──────────────────────────────────────────────────────── */
+
+.lh-inline-math {
+  display: inline;
+  white-space: normal;
+}
+
+.lh-inline-math-raw {
+  font-family: 'JetBrainsMono', ui-monospace, monospace;
+  font-size: 0.9em;
+}
+
+.lh-inline-math-trigger {
+  display: inline;
+  padding: 0 0.125rem;
+  margin: 0 -0.125rem;
+  border-radius: 0.25rem;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.lh-inline-math-trigger:hover,
+.lh-inline-math-trigger:focus-visible,
+.lh-inline-math[data-selected] .lh-inline-math-trigger {
+  background: rgb(14 165 233 / 0.12);
+  outline: none;
+}
+
+.lh-inline-math .katex {
+  font-size: 1.05em;
+}
+
+/* ── Image frame: polaroid keeps room for the caption feel ────────────── */
+
+.lh-image-polaroid img {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-inline-math-trigger {
+    transition: none;
+  }
+}

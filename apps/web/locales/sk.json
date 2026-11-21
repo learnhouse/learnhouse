@@ -4436,6 +4436,91 @@
         "completed_note": "Hotovo. Prečítaj si to ešte raz a zapamätaj si, čo chýbalo.",
         "write_again": "Upraviť odpoveď"
       }
+    },
+    "table": {
+      "total": "Súčet",
+      "average": "Priemer",
+      "sort_by": "Triediť podľa",
+      "original_order": "Pôvodné poradie",
+      "ascending": "Vzostupne",
+      "descending": "Zostupne",
+      "sort_direction": "Smer triedenia",
+      "sorted": "Zoradené podľa: {{column}}, {{direction}}",
+      "column_n": "Stĺpec {{n}}"
+    },
+    "tabs": {
+      "tab": "Karta",
+      "untitled": "Karta {{n}}",
+      "list_label": "Karty"
+    },
+    "accordion": {
+      "expand_all": "Rozbaliť všetko",
+      "collapse_all": "Zbaliť všetko"
+    },
+    "table_of_contents": {
+      "title": "Obsah"
+    },
+    "checklist": {
+      "progress_label": "Hotovo {{done}} z {{total}}",
+      "reset": "Vynulovať kontrolný zoznam",
+      "item": "Položka zoznamu",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "Časová os"
+    },
+    "key_takeaways": {
+      "title": "Hlavné body"
+    },
+    "chart": {
+      "category": "Kategória",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} s {{series}} radmi ({{names}}) v {{categories}} kategóriách, od {{min}} do {{max}}.",
+      "title": "Graf",
+      "types": {
+        "bar": "Pruhový graf",
+        "column": "Stĺpcový graf",
+        "line": "Čiarový graf",
+        "area": "Plošný graf",
+        "pie": "Koláčový graf",
+        "donut": "Prstencový graf"
+      }
+    },
+    "file_card": {
+      "download": "Stiahnuť",
+      "download_named": "Stiahnuť {{name}}",
+      "file": "Súbor",
+      "types": {
+        "pdf": "PDF",
+        "doc": "Dokument",
+        "sheet": "Tabuľka",
+        "slides": "Snímky",
+        "archive": "Archív",
+        "image": "Obrázok",
+        "audio": "Zvuk",
+        "video": "Video",
+        "text": "Text",
+        "code": "Kód",
+        "file": "Súbor"
+      }
+    },
+    "gallery": {
+      "carousel": "karusel",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "Zobraziť obrázok {{n}}",
+      "label": "Galéria obrázkov",
+      "next": "Ďalší obrázok",
+      "open_image": "Otvoriť obrázok {{n}} z {{count}}",
+      "previous": "Predchádzajúci obrázok",
+      "slide": "snímka",
+      "viewer_title": "Obrázok {{n}} z {{count}}"
+    },
+    "image_compare": {
+      "after": "Po",
+      "before": "Pred",
+      "slider": "Porovnať obrázky",
+      "value": "{{before}} {{b}} %, {{after}} {{a}} %"
     }
   },
   "embed": {
@@ -13934,7 +14019,11 @@
         "type_warning": "Varovanie",
         "type_tip": "Tip",
         "type_success": "Úspech",
-        "type_error": "Chyba"
+        "type_error": "Chyba",
+        "type_note": "Poznámka",
+        "type_question": "Otázka",
+        "type_example": "Príklad",
+        "type_quote": "Citát"
       }
     },
     "dynamic": {
@@ -14393,6 +14482,70 @@
         "table": {
           "title": "Tabuľka",
           "description": "Vložiť tabuľku 3x3"
+        },
+        "tabs": {
+          "description": "Prepínanie medzi panelmi obsahu",
+          "title": "Karty"
+        },
+        "columns": {
+          "description": "Obsah vedľa seba",
+          "title": "Stĺpce"
+        },
+        "accordion": {
+          "description": "Zbaliteľné sekcie, naraz otvorená jedna",
+          "title": "Akordeón"
+        },
+        "timeline": {
+          "description": "Kroky alebo udalosti v poradí",
+          "title": "Časová os"
+        },
+        "table_of_contents": {
+          "description": "Odkazy na nadpisy tejto stránky",
+          "title": "Obsah"
+        },
+        "key_takeaways": {
+          "description": "Karta so zhrnutím hlavných bodov",
+          "title": "Hlavné body"
+        },
+        "checklist": {
+          "description": "Položky, ktoré môžu študenti odškrtnúť",
+          "title": "Kontrolný zoznam"
+        },
+        "gallery": {
+          "title": "Galéria",
+          "description": "Viac obrázkov v mriežke alebo karuseli"
+        },
+        "image_compare": {
+          "title": "Porovnanie obrázkov",
+          "description": "Pred a po s posuvníkom"
+        },
+        "file_card": {
+          "title": "Súbor na stiahnutie",
+          "description": "Súbor, ktorý si študenti môžu stiahnuť"
+        },
+        "quote_block": {
+          "title": "Referencia",
+          "description": "Výňatok alebo referencia s autorom"
+        },
+        "quote": {
+          "title": "Citát",
+          "description": "Jednoduchý citovaný úryvok"
+        },
+        "chart": {
+          "title": "Graf",
+          "description": "Stĺpcový, čiarový alebo koláčový graf z malej tabuľky"
+        },
+        "stat_highlights": {
+          "title": "Štatistiky",
+          "description": "Veľké čísla, ktoré sa napočítajú"
+        },
+        "button_group": {
+          "title": "Skupina tlačidiel",
+          "description": "Viac tlačidiel vedľa seba"
+        },
+        "inline_math": {
+          "title": "Vzorec v texte",
+          "description": "Vzorec vo vete (alebo napíšte $x^2$)"
         }
       },
       "categories": {
@@ -14402,7 +14555,9 @@
         "callouts": "Upozornenia",
         "dynamic": "Dynamický obsah",
         "ui": "Prvky UI",
-        "tables": "Tabuľky"
+        "tables": "Tabuľky",
+        "layout": "Rozloženie",
+        "data": "Dáta a médiá"
       },
       "no_results": "Nenašli sa žiadne výsledky"
     },
@@ -14749,7 +14904,14 @@
       "button": {
         "emoji": "Emoji",
         "link_hint": "Otvorí sa na novej karte, keď študenti kliknú na tlačidlo.",
-        "no_link": "Zatiaľ bez odkazu: nastavte ho tlačidlom odkazu."
+        "no_link": "Zatiaľ bez odkazu: nastavte ho tlačidlom odkazu.",
+        "style": "Štýl",
+        "variant": "Vzhľad",
+        "size": "Veľkosť",
+        "variant_solid": "Plný",
+        "variant_outline": "Obrys",
+        "variant_soft": "Jemný",
+        "variant_link": "Odkaz"
       },
       "quiz": {
         "settings": "Nastavenia kvízu",
@@ -14813,7 +14975,39 @@
         "clear": "Vymazať",
         "check": "Skontrolovať odpovede",
         "try_again": "Skúsiť znova",
-        "start_over": "Začať odznova"
+        "start_over": "Začať odznova",
+        "question_type": "Typ otázky",
+        "type_multiple_choice": "Výber z možností",
+        "type_true_false": "Pravda / nepravda",
+        "type_short_answer": "Krátka odpoveď",
+        "type_numeric": "Číslo",
+        "true": "Pravda",
+        "false": "Nepravda",
+        "accepted_answers": "Akceptované odpovede",
+        "accepted_answer_n": "Akceptovaná odpoveď {{n}}",
+        "accepted_answer_placeholder": "Odpoveď, ktorá sa uzná ako správna",
+        "add_accepted": "Ďalšia akceptovaná odpoveď",
+        "remove_accepted": "Odstrániť akceptovanú odpoveď {{n}}",
+        "ignore_accents": "Ignorovať diakritiku (é = e)",
+        "short_answer_hint": "Veľké písmená a medzery navyše sa ignorujú.",
+        "numeric_value": "Správna odpoveď",
+        "numeric_tolerance": "Tolerancia",
+        "show_explanations": "Zobraziť vysvetlenia",
+        "show_explanations_hint": "Vaše vysvetlenie sa zobrazí pod každou otázkou po odoslaní odpovedí.",
+        "pass_mark": "Hranica úspešnosti",
+        "pass_mark_off": "Vypnuté",
+        "pass_mark_n": "{{n}} % na úspech",
+        "pass_mark_off_hint": "Študenti vidia, či boli všetky odpovede správne.",
+        "pass_mark_hint": "Študenti uspejú s {{n}} % a viac a uvidia svoje skóre.",
+        "pass_mark_needed": "Hranica úspešnosti: {{n}} %",
+        "passed": "Úspešné",
+        "not_passed": "Zatiaľ neúspešné",
+        "score_percent": "{{percent}} %",
+        "your_answer": "Vaša odpoveď",
+        "your_number": "Vaša odpoveď (číslo)",
+        "answer_placeholder": "Napíšte odpoveď",
+        "number_placeholder": "Napíšte číslo",
+        "expected_answer": "Očakávané: {{answer}}"
       },
       "flipcard": {
         "front": "Predná strana",
@@ -15086,6 +15280,423 @@
         "reset_text": "Obnoviť pôvodné",
         "text": "Názov a popis",
         "title": "Názov"
+      },
+      "table": {
+        "rows_cols": "Riadky a stĺpce",
+        "duplicate_row": "Duplikovať riadok",
+        "distribute": "Rovnomerne rozložiť stĺpce",
+        "merge_split": "Zlúčiť alebo rozdeliť bunky",
+        "headers": "Hlavičky",
+        "header_column": "Stĺpec hlavičky",
+        "cell_style": "Štýl bunky",
+        "apply_to": "Použiť na",
+        "scope_selection": "Vybrané bunky",
+        "scope_column": "Celý stĺpec",
+        "background": "Pozadie",
+        "align": "Zarovnanie",
+        "align_start": "Začiatok",
+        "align_center": "Stred",
+        "align_end": "Koniec",
+        "valign": "Zvislé zarovnanie",
+        "valign_top": "Hore",
+        "valign_middle": "Stred",
+        "valign_bottom": "Dole",
+        "cell_type": "Typ bunky",
+        "type_hint": "Hodnota zostáva v texte bunky, napr. 75, 4/5 alebo áno.",
+        "type": {
+          "text": "Text",
+          "progress": "Priebeh",
+          "checkbox": "Začiarkavacie políčko",
+          "rating": "Hodnotenie",
+          "status": "Stav",
+          "number": "Číslo",
+          "date": "Dátum"
+        },
+        "tone": "Farba",
+        "tone_auto": "Automaticky",
+        "number_format": "Formát čísla",
+        "format": {
+          "plain": "Obyčajný",
+          "percent": "Percentá",
+          "currency": "Mena",
+          "compact": "Skrátený"
+        },
+        "currency": "Kód meny",
+        "settings": "Nastavenia tabuľky",
+        "variant": "Štýl",
+        "variants": {
+          "default": "Predvolený",
+          "striped": "Pruhovaný",
+          "bordered": "S okrajmi",
+          "minimal": "Minimálny",
+          "cards": "Karty"
+        },
+        "cards_hint": "Na telefónoch sa z riadkov stanú karty.",
+        "caption": "Popis",
+        "caption_placeholder": "Opíšte tabuľku",
+        "sortable": "Študenti môžu triediť",
+        "sticky_header": "Pripnutá hlavička",
+        "compact": "Kompaktné riadky",
+        "totals": "Riadok súčtov",
+        "totals_hint": "Pre stĺpce čísel a priebehu.",
+        "totals_none": "Žiadny",
+        "totals_sum": "Súčet",
+        "totals_average": "Priemer",
+        "toggle_checkbox": "Začiarknuť alebo zrušiť",
+        "templates": {
+          "progress": {
+            "title": "Sledovanie priebehu",
+            "description": "Úlohy so zodpovednými osobami, stavom a ukazovateľmi priebehu"
+          },
+          "comparison": {
+            "title": "Porovnanie",
+            "description": "Porovnajte možnosti vedľa seba pomocou značiek"
+          },
+          "rubric": {
+            "title": "Hodnotiaca tabuľka",
+            "description": "Kritériá hodnotenia s úrovňami a bodmi"
+          }
+        },
+        "sample": {
+          "task": "Úloha",
+          "owner": "Zodpovedná osoba",
+          "status": "Stav",
+          "progress": "Priebeh",
+          "task_1": "Naplánovať lekciu",
+          "task_2": "Nahrať video",
+          "task_3": "Napísať kvíz",
+          "status_done": "Hotovo",
+          "status_in_progress": "Prebieha",
+          "status_todo": "Nezačaté",
+          "feature": "Funkcia",
+          "option_a": "Základný",
+          "option_b": "Pro",
+          "feature_1": "Video lekcie",
+          "feature_2": "Kvízy",
+          "feature_3": "Certifikáty",
+          "criterion": "Kritérium",
+          "look_for": "Na čo sa pozeráme",
+          "level": "Úroveň",
+          "points": "Body",
+          "crit_1": "Zrozumiteľnosť",
+          "crit_2": "Presnosť",
+          "crit_3": "Štruktúra",
+          "desc_1": "Myšlienky sa dajú ľahko sledovať",
+          "desc_2": "Fakty a kroky sú správne",
+          "desc_3": "Jasné časti v logickom poradí"
+        }
+      },
+      "layout": {
+        "settings": "Nastavenia",
+        "style": "Štýl",
+        "color": "Farba",
+        "icon": "Ikona",
+        "icon_default": "Predvolená",
+        "size_sm": "Malá",
+        "size_md": "Stredná",
+        "size_lg": "Veľká",
+        "tone_neutral": "Neutrálna",
+        "tone_blue": "Modrá",
+        "tone_teal": "Modrozelená",
+        "tone_green": "Zelená",
+        "tone_amber": "Jantárová",
+        "tone_rose": "Ružová",
+        "icons": {
+          "lightbulb": "Žiarovka",
+          "star": "Hviezda",
+          "check": "Fajka",
+          "target": "Terč",
+          "flag": "Vlajka",
+          "book": "Kniha",
+          "rocket": "Raketa",
+          "key": "Kľúč"
+        }
+      },
+      "tabs": {
+        "label": "Karty",
+        "add": "Pridať kartu",
+        "remove": "Odstrániť túto kartu",
+        "move_earlier": "Posunúť kartu dopredu",
+        "move_later": "Posunúť kartu dozadu",
+        "title_placeholder": "Názov karty",
+        "variant_line": "Čiara",
+        "variant_pills": "Pilulky",
+        "variant_boxed": "Rámček",
+        "sample": {
+          "tab_1": "Prehľad",
+          "tab_2": "Podrobnosti",
+          "tab_3": "Príklad",
+          "text_1": "Začnite celkovým obrazom.",
+          "text_2": "Vysvetlite podrobnejšie, ako to funguje.",
+          "text_3": "Ukážte to v praxi."
+        }
+      },
+      "columns": {
+        "label": "Stĺpce",
+        "layout": "Rozloženie",
+        "layout_halves": "Dva rovnaké stĺpce",
+        "layout_narrow_wide": "Úzky, potom široký",
+        "layout_wide_narrow": "Široký, potom úzky",
+        "layout_thirds": "Tri stĺpce",
+        "layout_quarters": "Štyri stĺpce",
+        "gap": "Medzera",
+        "align": "Zvislé zarovnanie",
+        "align_top": "Hore",
+        "align_center": "V strede",
+        "align_bottom": "Dole",
+        "stack": "Na malých obrazovkách pod sebou",
+        "sample": {
+          "left": "Prvý stĺpec",
+          "right": "Druhý stĺpec"
+        }
+      },
+      "accordion": {
+        "label": "Akordeón",
+        "add": "Pridať sekciu",
+        "single": "Naraz otvorená iba jedna sekcia",
+        "variant_bordered": "S okrajom",
+        "variant_filled": "Vyplnený",
+        "sample": {
+          "item_1": "Čo sa naučím?",
+          "text_1": "Opíšte výsledok tejto lekcie.",
+          "item_2": "Ako dlho to trvá?",
+          "text_2": "Uveďte odhad, podľa ktorého si študenti môžu plánovať.",
+          "item_3": "Čo potrebujem?",
+          "text_3": "Vymenujte, čo treba mať pripravené pred začatím."
+        },
+        "variant_default": "Predvolená"
+      },
+      "timeline": {
+        "label": "Časová os",
+        "add": "Pridať krok",
+        "remove": "Odstrániť krok",
+        "step": "Krok",
+        "title_placeholder": "Názov kroku",
+        "label_placeholder": "Dátum alebo označenie (voliteľné)",
+        "numbered": "Číslované kroky",
+        "orientation": "Smer",
+        "vertical": "Zvislo",
+        "horizontal": "Vodorovne",
+        "icon_number": "Číslo",
+        "variant_steps": "Kroky",
+        "variant_process": "Postup",
+        "sample": {
+          "step_1": "Príprava",
+          "text_1": "Pripravte si, čo potrebujete.",
+          "step_2": "Precvičenie",
+          "text_2": "Skúste to na malom príklade.",
+          "step_3": "Použitie",
+          "text_3": "Použite to pri skutočnej úlohe."
+        },
+        "variant_timeline": "Časová os"
+      },
+      "table_of_contents": {
+        "label": "Obsah",
+        "depth": "Zahrnuté nadpisy",
+        "numbered": "Číslovať položky",
+        "title_label": "Názov",
+        "empty": "Pridajte do lekcie nadpisy a zobrazia sa tu."
+      },
+      "key_takeaways": {
+        "label": "Hlavné body",
+        "title_label": "Názov karty",
+        "sample": {
+          "point_1": "Hlavná myšlienka v jednej vete",
+          "point_2": "Detail, ktorý stojí za zapamätanie",
+          "point_3": "Čo robiť ďalej"
+        }
+      },
+      "checklist": {
+        "label": "Kontrolný zoznam",
+        "learner_can_check": "Študenti môžu odškrtávať položky",
+        "hint": "Odškrtnutia sa ukladajú v prehliadači každého študenta. Položky odškrtnuté tu budú na začiatku odškrtnuté.",
+        "sample": {
+          "item_1": "Prečítať lekciu",
+          "item_2": "Vyskúšať cvičenie",
+          "item_3": "Skontrolovať odpovede"
+        }
+      },
+      "chart": {
+        "add_row": "Pridať riadok",
+        "add_series": "Pridať rad",
+        "apply_csv": "Použiť tieto údaje",
+        "csv_error": "Tabuľku sa nepodarilo prečítať. Popisy dajte do prvého stĺpca a čísla do ostatných.",
+        "csv_label": "Tabuľka ako CSV",
+        "csv_placeholder": "Vložte z tabuľky alebo napíšte: popis, rad 1, rad 2",
+        "edit_data": "Upraviť údaje",
+        "empty": "Pridajte údaje na vykreslenie grafu.",
+        "label": "Graf",
+        "label_n": "Popis {{n}}",
+        "labels": "Popisy",
+        "paste_csv": "Vložiť CSV",
+        "pie_hint": "Koláčové a prstencové grafy zobrazujú prvý rad.",
+        "remove_row": "Odstrániť riadok",
+        "remove_series": "Odstrániť rad",
+        "row_n": "Položka {{n}}",
+        "sample": {
+          "q1": "1. štvrťrok",
+          "q2": "2. štvrťrok",
+          "q3": "3. štvrťrok",
+          "q4": "4. štvrťrok",
+          "series_1": "Trieda A",
+          "series_2": "Trieda B",
+          "title": "Priemerné skóre kvízu podľa štvrťroka"
+        },
+        "series_color": "Zmeniť farbu: {{name}}",
+        "series_n": "Rad {{n}}",
+        "series_name": "Názov radu",
+        "settings": "Nastavenia grafu",
+        "show_legend": "Zobraziť legendu",
+        "show_values": "Zobraziť hodnoty",
+        "stacked": "Skladať rady",
+        "title_label": "Názov",
+        "title_placeholder": "Názov grafu",
+        "type": "Typ grafu"
+      },
+      "file_card": {
+        "add_link": "Pridať odkaz",
+        "description": "Popis",
+        "description_placeholder": "Čo obsahuje tento súbor? (nepovinné)",
+        "empty_hint": "Nahrajte PDF, obrázok, zvuk alebo video, alebo pridajte odkaz na akýkoľvek súbor.",
+        "empty_title": "Pridajte súbor na stiahnutie",
+        "label": "Súbor",
+        "link_hint": "Nahradí nahraný súbor, ak existuje.",
+        "link_label": "Odkaz na súbor",
+        "link_settings": "Odkaz súboru",
+        "name": "Názov súboru",
+        "type_error": "Tento typ súboru nie je možné nahrať. Nahrajte PDF, obrázok, zvuk alebo video, alebo pridajte odkaz na súbor.",
+        "upload": "Nahrať súbor"
+      },
+      "gallery": {
+        "add_images": "Pridať obrázky",
+        "add_link": "Pridať obrázok",
+        "alt_hint": "Popíšte, čo obrázok zobrazuje, pre študentov s čítačkou obrazovky.",
+        "alt_missing": "Chýba alternatívny text: {{n}}",
+        "alt_placeholder": "Alternatívny text (povinné)",
+        "columns": "Stĺpce",
+        "count": "Obrázky: {{n}}",
+        "empty_hint": "Pretiahnite naraz viac obrázkov alebo ich vyberte zo zariadenia. {{formats}} · každý do {{max}}.",
+        "empty_title": "Pridajte obrázky do galérie",
+        "full": "Galéria môže obsahovať najviac {{max}} obrázkov.",
+        "label": "Galéria",
+        "layout": "Rozloženie",
+        "layout_carousel": "Karusel",
+        "layout_grid": "Mriežka",
+        "layout_masonry": "Mozaika",
+        "move_earlier": "Posunúť dopredu",
+        "move_later": "Posunúť dozadu",
+        "remove": "Odstrániť obrázok",
+        "settings": "Nastavenia galérie"
+      },
+      "image_compare": {
+        "after_image": "Obrázok po",
+        "before_image": "Obrázok pred",
+        "empty_hint": "Vyberte obrázok pred a po v rovnakej veľkosti. Študenti ťahajú oddeľovač, aby ich porovnali.",
+        "empty_title": "Pridať obrázky",
+        "horizontal": "Vedľa seba",
+        "label": "Porovnanie obrázkov",
+        "orientation": "Smer",
+        "replace_after": "Nahradiť obrázok po",
+        "replace_before": "Nahradiť obrázok pred",
+        "settings": "Nastavenia porovnania",
+        "side_label": "Popis",
+        "start": "Oddeľovač začína na",
+        "vertical": "Hore a dole"
+      },
+      "quote_block": {
+        "author": "Autor",
+        "author_placeholder": "Meno",
+        "avatar": "Odkaz na fotku",
+        "avatar_hint": "Zobrazí sa pri mene v referenciách. Nechajte prázdne pre iniciály.",
+        "label": "Citát",
+        "role": "Pozícia",
+        "role_placeholder": "Pozícia alebo firma",
+        "sample": {
+          "author": "Sam Rivera",
+          "role": "Produktová dizajnérka",
+          "text": "Vďaka praktickým cvičeniam mi to docvaklo. Hneď na druhý deň som naučené použila v práci."
+        },
+        "settings": "Nastavenia citátu",
+        "style": "Štýl",
+        "variant_highlight": "Zvýraznenie",
+        "variant_pull": "Výňatok",
+        "variant_testimonial": "Referencia"
+      },
+      "stat_highlights": {
+        "add": "Pridať údaj",
+        "animate": "Pri zobrazení napočítať",
+        "color": "Farba",
+        "columns": "Stĺpce",
+        "description": "Popis",
+        "description_placeholder": "Krátky popis (nepovinné)",
+        "empty": "Začnite pridaním údaja.",
+        "label": "Štatistiky",
+        "label_field": "Popis",
+        "prefix": "Pred číslom",
+        "remove": "Odstrániť údaj",
+        "sample": {
+          "desc_1": "študentov dokončí kurz",
+          "desc_2": "z 1 200 recenzií",
+          "desc_3": "v 40 krajinách",
+          "label_1": "Miera dokončenia",
+          "label_2": "Priemerné hodnotenie",
+          "label_3": "Študenti"
+        },
+        "settings": "Nastavenia štatistík",
+        "suffix": "Za číslom",
+        "value": "Číslo"
+      },
+      "callout_title": "Nadpis",
+      "callout_title_placeholder": "Voliteľný nadpis",
+      "callout_collapsible": "Študenti ho môžu zbaliť",
+      "callout_default_open": "Na začiatku otvorený",
+      "callout_tone": "Farba",
+      "callout_tone_default": "Farba typu",
+      "code_copied": "Kód bol skopírovaný do schránky",
+      "code_copy_failed": "Kopírovanie zlyhalo. Označte kód a skopírujte ho ručne.",
+      "code_highlight": "Zvýraznené riadky (napríklad 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "Čísla riadkov",
+      "code_wrap": "Zalamovať dlhé riadky",
+      "align": {
+        "label": "Zarovnanie textu",
+        "start": "Zarovnať na začiatok",
+        "center": "Na stred",
+        "end": "Zarovnať na koniec",
+        "justify": "Do bloku"
+      },
+      "button_group": {
+        "label": "Skupina tlačidiel",
+        "add_button": "Pridať tlačidlo",
+        "new_button": "Tlačidlo",
+        "primary": "Začať",
+        "secondary": "Zistiť viac"
+      },
+      "image_frame": {
+        "label": "Rám",
+        "none": "Žiadny",
+        "rounded": "Zaoblený",
+        "shadow": "Tieň",
+        "border": "Okraj",
+        "polaroid": "Polaroid"
+      },
+      "inline_math": {
+        "title": "Vzorec v texte",
+        "edit": "Upraviť vzorec {{latex}}",
+        "latex": "LaTeX",
+        "hint": "Napríklad \\frac{a}{b} alebo x^2. Napíšte $…$ v texte a vytvorí sa vzorec.",
+        "make": "Vzorec",
+        "remove": "Odstrániť"
+      },
+      "toggle": {
+        "style": "Štýl rozbaľovacej sekcie",
+        "variant": "Vzhľad",
+        "variant_default": "Predvolený",
+        "variant_bordered": "S okrajom",
+        "variant_filled": "Vyplnený",
+        "icon": "Ikona",
+        "icon_chevron": "Šípka",
+        "icon_plus": "Plus a mínus"
       }
     },
     "history": {

@@ -1,0 +1,333 @@
+/*
+ Editor Plus layout blocks (Extensions/Plus/layout). Structure only: colours
+ come from palette classes in the views (dark mode and block themes remap
+ them) or from currentColor. Logical properties throughout (RTL).
+
+ Content of a container node sits in its NodeViewContent element: directly in
+ a static render (StaticCanva, @learnhouse/react), one level deeper in the
+ editor (ProseMirror's contentDOM, [data-node-view-content-react]). Rules that
+ must reach only a block's own children use child combinators for both, and
+ per-block settings travel as custom properties, so nested blocks keep theirs.
+*/
+
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+
+.lh-tab-title {
+  display: none;
+  margin: 1rem 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+/* No JS yet (server HTML) or none at all: every panel, under its title. */
+.lh-tabs:not([data-ready]) .lh-tab-title {
+  display: block;
+}
+
+.lh-tabs-panels[data-active='0'] > [data-node-view-content] > .node-tabItem:not(:nth-child(1)),
+.lh-tabs-panels[data-active='0'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(1)),
+.lh-tabs-panels[data-active='1'] > [data-node-view-content] > .node-tabItem:not(:nth-child(2)),
+.lh-tabs-panels[data-active='1'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(2)),
+.lh-tabs-panels[data-active='2'] > [data-node-view-content] > .node-tabItem:not(:nth-child(3)),
+.lh-tabs-panels[data-active='2'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(3)),
+.lh-tabs-panels[data-active='3'] > [data-node-view-content] > .node-tabItem:not(:nth-child(4)),
+.lh-tabs-panels[data-active='3'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(4)),
+.lh-tabs-panels[data-active='4'] > [data-node-view-content] > .node-tabItem:not(:nth-child(5)),
+.lh-tabs-panels[data-active='4'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(5)),
+.lh-tabs-panels[data-active='5'] > [data-node-view-content] > .node-tabItem:not(:nth-child(6)),
+.lh-tabs-panels[data-active='5'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(6)),
+.lh-tabs-panels[data-active='6'] > [data-node-view-content] > .node-tabItem:not(:nth-child(7)),
+.lh-tabs-panels[data-active='6'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(7)),
+.lh-tabs-panels[data-active='7'] > [data-node-view-content] > .node-tabItem:not(:nth-child(8)),
+.lh-tabs-panels[data-active='7'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(8)) {
+  display: none;
+}
+
+.lh-tabs-tab::placeholder {
+  font-weight: 600;
+}
+
+/* renderHTML output (exports, the HTML string renderer): titled sections. */
+.lh-tabs-static > section + section {
+  margin-top: 1rem;
+}
+
+@media print {
+  .lh-tabs-bar {
+    display: none !important;
+  }
+  .lh-tabs-panels [data-node-view-content] .node-tabItem {
+    display: block !important;
+  }
+  .lh-tab-title {
+    display: block !important;
+  }
+}
+
+/* ── Columns ──────────────────────────────────────────────────────────── */
+
+.lh-columns {
+  container: lh-columns / inline-size;
+  --lh-col-gap: 1.5rem;
+  --lh-col-align: start;
+  --lh-cols-narrow: minmax(0, 1fr);
+}
+.lh-columns[data-gap='sm'] { --lh-col-gap: 0.75rem; }
+.lh-columns[data-gap='lg'] { --lh-col-gap: 2.5rem; }
+.lh-columns[data-valign='center'] { --lh-col-align: center; }
+.lh-columns[data-valign='bottom'] { --lh-col-align: end; }
+.lh-columns[data-stack='false'] { --lh-cols-narrow: var(--lh-cols); }
+
+.lh-columns-grid,
+.lh-columns-grid > [data-node-view-content-react] {
+  display: grid;
+  grid-template-columns: var(--lh-cols, minmax(0, 1fr) minmax(0, 1fr));
+  gap: var(--lh-col-gap);
+  align-items: var(--lh-col-align);
+}
+.lh-columns-grid > [data-node-view-content-react] {
+  grid-column: 1 / -1;
+}
+@container lh-columns (max-width: 560px) {
+  .lh-columns-grid,
+  .lh-columns-grid > [data-node-view-content-react] {
+    grid-template-columns: var(--lh-cols-narrow);
+  }
+}
+
+.lh-column {
+  min-width: 0;
+}
+.lh-column-body > :first-child,
+.lh-column-body > [data-node-view-content-react] > :first-child {
+  margin-top: 0;
+}
+/* In the editor, show where each column is (authors drop blocks into them). */
+.lh-columns[data-editing] .lh-column {
+  border: 1px dashed color-mix(in srgb, currentColor 16%, transparent);
+  border-radius: 10px;
+  padding: 0.25rem 0.75rem;
+}
+
+.lh-columns-static {
+  display: grid;
+  grid-template-columns: var(--lh-cols, minmax(0, 1fr) minmax(0, 1fr));
+  gap: 1.5rem;
+}
+@media (max-width: 640px) {
+  .lh-columns-static:not([data-stack='false']) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Accordion ────────────────────────────────────────────────────────── */
+
+.lh-accordion {
+  --lh-acc-bg: color-mix(in srgb, currentColor 3.5%, transparent);
+  --lh-acc-ring: inset 0 0 0 1px color-mix(in srgb, currentColor 7%, transparent);
+}
+.lh-accordion[data-variant='bordered'] {
+  --lh-acc-bg: transparent;
+  --lh-acc-ring: inset 0 0 0 1px color-mix(in srgb, currentColor 16%, transparent);
+}
+.lh-accordion[data-variant='filled'] {
+  --lh-acc-bg: color-mix(in srgb, currentColor 7%, transparent);
+  --lh-acc-ring: none;
+}
+.lh-accordion-body > .node-toggleBlock > .lh-toggle,
+.lh-accordion-body > [data-node-view-content-react] > .node-toggleBlock > .lh-toggle {
+  margin-block: 0.375rem;
+  background: var(--lh-acc-bg);
+  box-shadow: var(--lh-acc-ring);
+}
+
+/* ── Timeline ─────────────────────────────────────────────────────────── */
+
+.lh-timeline {
+  container: lh-timeline / inline-size;
+  --lh-tl-num: counter(lh-step);
+  --lh-tl-size: 1.75rem;
+  --lh-tl-card-bg: transparent;
+  --lh-tl-card-pad: 0;
+}
+.lh-timeline[data-numbered='false'],
+.lh-timeline[data-variant='timeline'] {
+  --lh-tl-num: '';
+}
+.lh-timeline[data-variant='timeline'] {
+  --lh-tl-size: 0.875rem;
+}
+.lh-timeline[data-variant='process'] {
+  --lh-tl-card-bg: color-mix(in srgb, currentColor 4%, transparent);
+  --lh-tl-card-pad: 0.75rem 1rem 0.25rem;
+}
+
+.lh-timeline-list {
+  counter-reset: lh-step;
+}
+.node-timelineItem {
+  counter-increment: lh-step;
+}
+
+.lh-tl-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  column-gap: 0.875rem;
+  padding-bottom: 1.25rem;
+}
+.lh-tl-marker {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--lh-tl-size);
+  height: var(--lh-tl-size);
+  margin-top: calc((1.75rem - var(--lh-tl-size)) / 2);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.lh-tl-marker:empty::before {
+  content: var(--lh-tl-num);
+}
+/* The connector, from below this marker to the next one. */
+.lh-tl-item::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(0.875rem - 1px);
+  top: 1.75rem;
+  bottom: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.node-timelineItem:last-child > .lh-tl-item::before {
+  display: none;
+}
+.lh-tl-content {
+  border-radius: 12px;
+  background: var(--lh-tl-card-bg);
+  padding: var(--lh-tl-card-pad);
+}
+.lh-tl-title {
+  line-height: 1.75rem;
+}
+.lh-tl-body > :first-child,
+.lh-tl-body > [data-node-view-content-react] > :first-child {
+  margin-top: 0.125rem;
+}
+
+/* Horizontal only where there is room; narrow containers keep the vertical form. */
+@container lh-timeline (min-width: 600px) {
+  .lh-timeline[data-orientation='horizontal'] .lh-timeline-list,
+  .lh-timeline[data-orientation='horizontal'] .lh-timeline-list > [data-node-view-content-react] {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(11rem, 1fr);
+    gap: 1rem;
+  }
+  .lh-timeline[data-orientation='horizontal'] .lh-timeline-list {
+    overflow-x: auto;
+  }
+  .lh-timeline[data-orientation='horizontal'] .lh-timeline-list > [data-node-view-content-react] {
+    grid-column: 1 / -1;
+  }
+  .lh-timeline[data-orientation='horizontal'] .lh-tl-item {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.625rem;
+    padding-bottom: 0.5rem;
+  }
+  .lh-timeline[data-orientation='horizontal'] .lh-tl-marker {
+    justify-self: start;
+  }
+  .lh-timeline[data-orientation='horizontal'] .lh-tl-item::before {
+    top: calc(0.875rem - 1px);
+    bottom: auto;
+    inset-inline-start: 2.5rem;
+    inset-inline-end: -0.5rem;
+    width: auto;
+    height: 2px;
+  }
+}
+
+/* renderHTML output: a plain list with the step heading on top. */
+ol[data-type='timeline'] > li > .lh-tl-heading,
+ul[data-type='timeline'] > li > .lh-tl-heading {
+  margin-bottom: 0.25rem;
+}
+.lh-tl-heading .lh-tl-label {
+  opacity: 0.7;
+}
+
+/* ── Key takeaways ───────────────────────────────────────────────────── */
+
+.lh-kt-body > :first-child,
+.lh-kt-body > [data-node-view-content-react] > :first-child {
+  margin-top: 0.25rem;
+}
+aside[data-type='key-takeaways'] {
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
+/* ── Checklist ───────────────────────────────────────────────────────── */
+
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror ul[data-type='taskList'],
+ul[data-type='taskList'] {
+  list-style: none;
+  padding-inline: 0;
+}
+ul[data-type='taskList'] li[data-checked] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+ul[data-type='taskList'] li[data-checked] > label {
+  flex: none;
+  margin-top: 0.3rem;
+  user-select: none;
+}
+ul[data-type='taskList'] li[data-checked] > label input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #16a34a;
+}
+ul[data-type='taskList'] li[data-checked] > div {
+  flex: 1;
+  min-width: 0;
+}
+ul[data-type='taskList'] li[data-checked='true'] > div {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+ul[data-type='taskList'] li p {
+  margin: 0;
+}
+
+.lh-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding-block: 0.2rem;
+}
+.lh-check-text p {
+  margin: 0;
+}
+.lh-checklist-bar {
+  transition: width var(--lh-duration-base, 200ms) ease-out;
+}
+
+/* ── Motion ──────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-layout,
+  .lh-layout * {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

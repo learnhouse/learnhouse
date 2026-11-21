@@ -1,31 +1,16 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import EditorBlockFrame from '../../Blocks/ui/EditorBlockFrame'
-import { BlockPopover, BlockToolbarButton, CommitInput, SettingsField } from '../../Blocks/ui/BlockChrome'
+import { BlockPopover, BlockToolbarButton, CommitInput, Segmented, SettingsField } from '../../Blocks/ui/BlockChrome'
 import { safeHref } from '@services/security/url'
 import React, { lazy, Suspense } from 'react'
 const Picker = lazy(() => import('@emoji-mart/react'))
-import { ArrowRight, Link, TextAlignLeft, TextAlignCenter, TextAlignRight, Palette, Smiley } from '@phosphor-icons/react'
+import { ArrowRight, Link, TextAlignLeft, TextAlignCenter, TextAlignRight, Palette, Smiley, Sliders } from '@phosphor-icons/react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
 import { normalizeUserUrl } from '../../Blocks/embeds/embedProviders'
-
-const COLORS = ['blue', 'sky', 'indigo', 'purple', 'teal', 'green', 'amber', 'yellow', 'red', 'neutral'] as const
-
-const getButtonColor = (color: string) => {
-  switch (color) {
-    case 'sky': return 'bg-sky-500 hover:bg-sky-600'
-    case 'green': return 'bg-green-500 hover:bg-green-600'
-    case 'yellow': return 'bg-yellow-500 hover:bg-yellow-600'
-    case 'red': return 'bg-red-500 hover:bg-red-600'
-    case 'purple': return 'bg-purple-500 hover:bg-purple-600'
-    case 'teal': return 'bg-teal-500 hover:bg-teal-600'
-    case 'amber': return 'bg-amber-500 hover:bg-amber-600'
-    case 'indigo': return 'bg-indigo-500 hover:bg-indigo-600'
-    case 'neutral': return 'bg-neutral-500 hover:bg-neutral-600'
-    default: return 'bg-blue-500 hover:bg-blue-600'
-  }
-}
+import { BUTTON_SIZES, BUTTON_VARIANTS, buttonSizeOf, buttonVariantOf, type ButtonSize, type ButtonVariant } from '../../Blocks/schema/blockAttrs'
+import { BUTTON_COLORS as COLORS, buttonFaceClasses, solidColorClasses as getButtonColor } from './buttonStyles'
 
 const alignClass = (alignment: string) => (alignment === 'center' ? 'text-center' : alignment === 'right' ? 'text-end' : 'text-start')
 
@@ -41,8 +26,11 @@ const ButtonsExtension: React.FC = (props: any) => {
   const isEditable = editorState.isEditable
   const { emoji, link, alignment = 'left' } = props.node.attrs
   const color: string = props.node.attrs.color || 'blue'
-  const [open, setOpen] = React.useState<null | 'emoji' | 'link' | 'color'>(null)
-  const pop = (which: 'emoji' | 'link' | 'color') => (o: boolean) => setOpen(o ? which : null)
+  const variant = buttonVariantOf(props.node.attrs)
+  const size = buttonSizeOf(props.node.attrs)
+  const face = buttonFaceClasses(color, variant, size)
+  const [open, setOpen] = React.useState<null | 'emoji' | 'link' | 'color' | 'style'>(null)
+  const pop = (which: 'emoji' | 'link' | 'color' | 'style') => (o: boolean) => setOpen(o ? which : null)
 
   if (!isEditable) {
     return (
@@ -51,7 +39,7 @@ const ButtonsExtension: React.FC = (props: any) => {
           <button
             data-lhb-keep=""
             onClick={() => { const safe = safeHref(link); if (safe !== '#') window.open(safe, '_blank', 'noopener,noreferrer') }}
-            className={twMerge('flex items-center space-x-2 py-2 px-4 rounded-xl text-white transition-colors', getButtonColor(color), !link && 'opacity-60')}
+            className={twMerge('flex items-center space-x-2 transition-colors', face, !link && 'opacity-60')}
           >
             <span>{emoji}</span>
             <NodeViewContent className="content" />
@@ -110,6 +98,36 @@ const ButtonsExtension: React.FC = (props: any) => {
           ))}
         </div>
       </BlockPopover>
+      <BlockPopover
+        open={open === 'style'}
+        onOpenChange={pop('style')}
+        title={t('editor.blocks_v2.button.style', 'Style')}
+        width={280}
+        trigger={<BlockToolbarButton label={t('editor.blocks_v2.button.style', 'Style')}><Sliders size={14} /></BlockToolbarButton>}
+      >
+        <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-neutral-600">{t('editor.blocks_v2.button.variant', 'Look')}</span>
+          <Segmented<ButtonVariant>
+            ariaLabel={t('editor.blocks_v2.button.variant', 'Look')}
+            value={variant}
+            onChange={(v) => props.updateAttributes({ variant: v === 'solid' ? null : v })}
+            options={BUTTON_VARIANTS.map((v) => ({ value: v, label: t(`editor.blocks_v2.button.variant_${v}`, v.charAt(0).toUpperCase() + v.slice(1)) }))}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-neutral-600">{t('editor.blocks_v2.button.size', 'Size')}</span>
+          <Segmented<ButtonSize>
+            ariaLabel={t('editor.blocks_v2.button.size', 'Size')}
+            value={size}
+            onChange={(v) => props.updateAttributes({ size: v === 'md' ? null : v })}
+            options={BUTTON_SIZES.map((v) => ({
+              value: v,
+              label: { sm: 'S', md: 'M', lg: 'L' }[v],
+              title: t(`editor.blocks.common.${v === 'sm' ? 'small' : v === 'md' ? 'medium' : 'large'}`),
+            }))}
+          />
+        </div>
+      </BlockPopover>
       {(['left', 'center', 'right'] as const).map((a) => (
         <BlockToolbarButton
           key={a}
@@ -137,7 +155,7 @@ const ButtonsExtension: React.FC = (props: any) => {
         className="px-2 pb-2 pt-3"
       >
         <div className="inline-flex flex-col items-start gap-1">
-          <div className={twMerge('inline-flex items-center gap-2 rounded-xl px-4 py-2 text-white', getButtonColor(color))}>
+          <div className={twMerge('inline-flex items-center gap-2', face)}>
             <span contentEditable={false}>{emoji}</span>
             <NodeViewContent className="content min-w-[2ch] outline-none" />
             <span contentEditable={false} className="flex"><ArrowRight weight="duotone" size={14} data-dir-flip /></span>

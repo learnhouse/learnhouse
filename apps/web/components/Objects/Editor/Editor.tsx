@@ -37,10 +37,7 @@ import PDFBlock from './Extensions/PDF/PDFBlock'
 import H5PBlock from './Extensions/H5P/H5PBlock'
 import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
-import { Table } from '@tiptap/extension-table'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TableRow from '@tiptap/extension-table-row'
+import { plusExtensions } from '@components/Objects/Editor/Extensions/Plus'
 import Link from 'next/link'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getLinkExtension } from './EditorConf'
@@ -283,10 +280,7 @@ function Editor(props: EditorProps) {
       Badges.configure({ editable: true, activity: stableActivity }),
       Buttons.configure({ editable: true, activity: stableActivity }),
       UserBlock.configure({ editable: true, activity: stableActivity }),
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableHeader,
-      TableCell,
+      ...plusExtensions({ mode: 'editor', activity: stableActivity }),
       getLinkExtension(),
       WebPreview.configure({ editable: true, activity: stableActivity }),
       Flipcard.configure({ editable: true, activity: stableActivity }),

@@ -3,7 +3,7 @@ import React from 'react'
 import { GearSix } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { BlockPopover, Segmented } from '../../Blocks/ui/BlockChrome'
-import { ATTEMPT_OPTIONS, type QuizSettings } from './quizModel'
+import { ATTEMPT_OPTIONS, PASS_MARK_OPTIONS, type QuizSettings } from './quizModel'
 
 function Switch({ checked, onChange, label, hint }: { checked: boolean; onChange: (_v: boolean) => void; label: string; hint?: string }) {
   const id = React.useId()
@@ -42,7 +42,7 @@ export function QuizSettingsPopover({ settings, onChange }: { settings: QuizSett
   return (
     <BlockPopover
       title={t('editor.blocks_v2.quiz.settings', 'Quiz settings')}
-      width={300}
+      width={320}
       trigger={
         <button
           type="button"
@@ -71,6 +71,30 @@ export function QuizSettingsPopover({ settings, onChange }: { settings: QuizSett
         label={t('editor.blocks_v2.quiz.show_correct', 'Show correct answers')}
         hint={t('editor.blocks_v2.quiz.show_correct_hint', 'After submitting, learners see the right options and your explanations.')}
       />
+      <Switch
+        checked={settings.showExplanations}
+        onChange={(v) => set({ showExplanations: v })}
+        label={t('editor.blocks_v2.quiz.show_explanations', 'Show explanations')}
+        hint={t('editor.blocks_v2.quiz.show_explanations_hint', 'Your explanation appears under each question once learners submit.')}
+      />
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-neutral-600">{t('editor.blocks_v2.quiz.pass_mark', 'Pass mark')}</span>
+        <Segmented
+          ariaLabel={t('editor.blocks_v2.quiz.pass_mark', 'Pass mark')}
+          value={String(settings.passMark)}
+          onChange={(v) => set({ passMark: Number(v) })}
+          options={PASS_MARK_OPTIONS.map((n) => ({
+            value: String(n),
+            label: n === 0 ? t('editor.blocks_v2.quiz.pass_mark_off', 'Off') : `${n}%`,
+            title: n === 0 ? t('editor.blocks_v2.quiz.pass_mark_off', 'Off') : t('editor.blocks_v2.quiz.pass_mark_n', { n, defaultValue: '{{n}}% to pass' }),
+          }))}
+        />
+        <span className="text-[11px] leading-snug text-neutral-400">
+          {settings.passMark === 0
+            ? t('editor.blocks_v2.quiz.pass_mark_off_hint', 'Learners see whether every answer was right.')
+            : t('editor.blocks_v2.quiz.pass_mark_hint', { n: settings.passMark, defaultValue: 'Learners pass with {{n}}% or more and see their score.' })}
+        </span>
+      </div>
       <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium text-neutral-600">{t('editor.blocks_v2.quiz.attempts', 'Attempts')}</span>
         <Segmented

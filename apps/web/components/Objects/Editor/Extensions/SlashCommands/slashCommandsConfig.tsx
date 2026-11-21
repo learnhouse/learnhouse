@@ -50,6 +50,7 @@ import { EDITOR_EVENTS, emitEditorEvent } from '../../Templates/templateContent'
 import { presetById } from '../Dynamic/dynamicRules'
 import { requestAIEditor } from '../../AI/aiEditorBridge'
 import { experienceRegistry, insertExperience } from '../Experiences/registry'
+import { plusSlashItems } from '../Plus'
 
 /** Slash items for the Experiences family, built from its registry. */
 const experienceSlashCommands: SlashCommandItem[] = experienceRegistry.map((entry) => {
@@ -78,6 +79,8 @@ export const categoryLabelKeys: Record<SlashCommandCategory, string> = {
   dynamic: 'editor.slash_menu.categories.dynamic',
   ui: 'editor.slash_menu.categories.ui',
   tables: 'editor.slash_menu.categories.tables',
+  layout: 'editor.slash_menu.categories.layout',
+  data: 'editor.slash_menu.categories.data',
 }
 
 export const categoryOrder: SlashCommandCategory[] = [
@@ -87,11 +90,13 @@ export const categoryOrder: SlashCommandCategory[] = [
   'experiences',
   'callouts',
   'dynamic',
+  'layout',
+  'data',
   'ui',
   'tables',
 ]
 
-export const slashCommands: SlashCommandItem[] = [
+const baseSlashCommands: SlashCommandItem[] = [
   // AI Editor: opens the AI panel (same engine as the selection menu's AI)
   {
     id: 'aiAsk',
@@ -726,6 +731,9 @@ export const slashCommands: SlashCommandItem[] = [
     },
   },
 ]
+
+// Editor Plus blocks (tables templates, layout, media/data, upgrades).
+export const slashCommands: SlashCommandItem[] = [...baseSlashCommands, ...plusSlashItems]
 
 export function filterCommands(query: string): SlashCommandItem[] {
   const matches = query

@@ -23,10 +23,14 @@ const Y = await import("yjs");
 const { getSchema } = await import("@tiptap/core");
 const { yXmlFragmentToProseMirrorRootNode, prosemirrorJSONToYXmlFragment } = await import("@tiptap/y-tiptap");
 const { default: StarterKit } = await import("@tiptap/starter-kit");
-const { Table } = await import("@tiptap/extension-table");
-const { default: TableCell } = await import("@tiptap/extension-table-cell");
-const { default: TableHeader } = await import("@tiptap/extension-table-header");
-const { default: TableRow } = await import("@tiptap/extension-table-row");
+// The editor's real table nodes (stock nodes extended by Editor Plus).
+const { createTableNodes } = await import("../components/Objects/Editor/Extensions/Plus/tables/tableNodes.ts");
+// Editor Plus layout blocks (tabs, columns, accordion, timeline, toc, key takeaways, checklist).
+const { createLayoutNodes } = await import("../components/Objects/Editor/Extensions/Plus/layout/layoutNodes.ts");
+// Editor Plus media and data blocks (gallery, image compare, chart, stats, file card, quote).
+const { createMediaNodes } = await import("../components/Objects/Editor/Extensions/Plus/media/mediaNodes.ts");
+// Editor Plus block upgrades (button group, inline math, text alignment).
+const { createUpgradeNodes } = await import("../components/Objects/Editor/Extensions/Plus/upgrades/upgradeNodes.ts");
 const { default: Youtube } = await import("@tiptap/extension-youtube");
 const { getLinkExtension } = await import("../components/Objects/Editor/EditorConf.ts");
 const Blocks = await import("../components/Objects/Editor/Blocks/extensions");
@@ -65,7 +69,10 @@ const schema = getSchema([
   Blocks.ToggleBlock,
   Blocks.DividerStyle,
   Blocks.TableControls,
-  Table, TableRow, TableHeader, TableCell,
+  ...createTableNodes({ mode: "editor" }),
+  ...createLayoutNodes({ mode: "editor" }),
+  ...createMediaNodes({ mode: "editor" }),
+  ...createUpgradeNodes({ mode: "editor" }),
   getLinkExtension(),
   CommunityTag,
   AIStreamingMark,
@@ -111,7 +118,96 @@ const EVERY_BLOCK = {
         { type: "tableRow", content: [{ type: "tableCell", content: [p("a")] }, { type: "tableCell", content: [p("b")] }] },
       ],
     },
+    {
+      type: "table",
+      attrs: { variant: "striped", caption: "Progress", sortable: true, stickyHeader: true, totals: "average" },
+      content: [
+        { type: "tableRow", content: [{ type: "tableHeader", content: [p("Task")] }, { type: "tableHeader", content: [p("Done")] }, { type: "tableHeader", content: [p("Progress")] }] },
+        {
+          type: "tableRow",
+          content: [
+            { type: "tableCell", attrs: { background: "blue", valign: "middle" }, content: [p("Docs")] },
+            { type: "tableCell", attrs: { cellType: "checkbox", align: "center" }, content: [p("yes")] },
+            { type: "tableCell", attrs: { cellType: "progress", tone: "teal" }, content: [p("75")] },
+          ],
+        },
+        {
+          type: "tableRow",
+          content: [
+            { type: "tableCell", content: [p("Quiz")] },
+            { type: "tableCell", attrs: { cellType: "number", numberFormat: "currency", currency: "EUR" }, content: [p("12.5")] },
+            { type: "tableCell", attrs: { cellType: "status", tone: "red" }, content: [p("Blocked")] },
+          ],
+        },
+      ],
+    },
+    // Editor Plus layout blocks: containers hold ordinary blocks.
+    {
+      type: "tabs",
+      attrs: { blockId: "tabs_1", variant: "pills" },
+      content: [
+        { type: "tabItem", attrs: { title: "Overview" }, content: [p("Big picture")] },
+        { type: "tabItem", content: [{ type: "columns", attrs: { layout: "1-2", gap: "lg", stackOnMobile: false, verticalAlign: "center" }, content: [{ type: "column", content: [p("a")] }, { type: "column", content: [p("b")] }] }] },
+      ],
+    },
+    { type: "accordion", attrs: { single: false, variant: "filled" }, content: [{ type: "toggleBlock", attrs: { summary: "Why?" }, content: [p("Because")] }] },
+    {
+      type: "timeline",
+      attrs: { variant: "process", numbered: false, orientation: "horizontal" },
+      content: [{ type: "timelineItem", attrs: { title: "Plan", label: "Week 1", tone: "blue", icon: "flag" }, content: [p("Plan it")] }, { type: "timelineItem", content: [p("Do it")] }],
+    },
+    { type: "tableOfContents", attrs: { title: "On this page", maxLevel: 2, numbered: true } },
+    { type: "keyTakeaways", attrs: { title: "Remember", tone: "teal", icon: "star" }, content: [{ type: "bulletList", content: [{ type: "listItem", content: [p("one")] }] }] },
+    { type: "taskList", attrs: { blockId: "check_1", learnerCanCheck: false }, content: [{ type: "taskItem", attrs: { checked: true }, content: [p("done")] }, { type: "taskItem", content: [p("todo")] }] },
+    // Editor Plus media and data blocks: list-like attrs are JSON values.
+    {
+      type: "gallery",
+      attrs: {
+        blockId: "gal_1",
+        layout: "carousel",
+        columns: 2,
+        images: [
+          { id: "img_1", url: "https://images.example.com/a.jpg", caption: "Dawn", alt: "A coast" },
+          { id: "img_2", blockObject: { block_uuid: "block_g2", block_type: "BLOCK_IMAGE", content: { file_id: "f2", file_format: "png", activity_uuid: "act_1" } }, alt: "Tide pool" },
+        ],
+      },
+    },
+    { type: "imageCompare", attrs: { before: { url: "https://images.example.com/b.jpg", label: "1990" }, after: { url: "https://images.example.com/c.jpg", label: "2020", alt: "Forest" }, start: 35, orientation: "vertical" } },
+    {
+      type: "chart",
+      attrs: { type: "line", title: "Scores", data: { labels: ["Q1", "Q2"], series: [{ name: "A", values: [60, 72], tone: "blue" }, { name: "B", values: [58, 70], tone: null }] }, showLegend: false, showValues: true, stacked: true },
+    },
+    { type: "statHighlights", attrs: { items: [{ id: "s1", value: "92", label: "Completion", suffix: "%", tone: "teal" }, { id: "s2", value: "4.8", label: "Rating", description: "of 5" }], columns: 2, animate: false } },
+    { type: "fileCard", attrs: { blockObject: { block_uuid: "block_pdf", block_type: "BLOCK_DOCUMENT_PDF", content: { file_id: "f", file_format: "pdf" } }, url: null, name: "Guide.pdf", description: "Print it", sizeBytes: 2048, fileType: "pdf" } },
+    { type: "quoteBlock", attrs: { variant: "testimonial", author: "Sam", role: "Designer", avatarUrl: "https://images.example.com/s.jpg" }, content: [p("It clicked."), p("Used it the next day.")] },
     { type: "blockQuiz", attrs: { quizId: "quiz_1", questions: [{ question_id: "q1", question: "Why?", answers: [{ answer_id: "a1", answer: "Because", correct: true }] }] } },
+    // Editor Plus block upgrades: new attrs on existing blocks, the button group and inline math.
+    { type: "heading", attrs: { level: 3, textAlign: "center" }, content: [{ type: "text", text: "Centered" }] },
+    { type: "paragraph", attrs: { textAlign: "justify" }, content: [{ type: "text", text: "Area " }, { type: "inlineMath", attrs: { latex: "\\pi r^2" } }, { type: "text", text: " units" }] },
+    { type: "codeBlock", attrs: { language: "js", filename: "a.js", showLineNumbers: true, highlightLines: "1,3-4", wrap: true }, content: [{ type: "text", text: "a\nb\nc\nd" }] },
+    { type: "callout", attrs: { type: "info", kind: "question", title: "Think", collapsible: true, defaultOpen: false, tone: "purple" }, content: [p("Why?")] },
+    { type: "toggleBlock", attrs: { summary: "More", variant: "filled", icon: "plus" }, content: [p("Hidden")] },
+    { type: "blockImage", attrs: { blockObject: null, size: { width: 420 }, alignment: "center", frame: "polaroid" } },
+    {
+      type: "buttonGroup",
+      attrs: { alignment: "center" },
+      content: [
+        { type: "button", attrs: { link: "https://example.com", color: "teal" }, content: [{ type: "text", text: "Start" }] },
+        { type: "button", attrs: { variant: "outline", size: "lg" }, content: [{ type: "text", text: "Docs" }] },
+      ],
+    },
+    {
+      type: "blockQuiz",
+      attrs: {
+        quizId: "quiz_2",
+        settings: { passMark: 70, showExplanations: false },
+        questions: [
+          { question_id: "q2", question: "Sky is blue", type: "true_false", response_type: "single", explanation: "Rayleigh", answers: [{ answer_id: "t", answer: "True", correct: true }, { answer_id: "f", answer: "False", correct: false }] },
+          { question_id: "q3", question: "Capital of France", type: "short_answer", answers: [], accepted_answers: ["Paris"], accent_insensitive: true },
+          { question_id: "q4", question: "g", type: "numeric", answers: [], correct_value: 9.81, tolerance: 0.05 },
+        ],
+      },
+    },
     { type: "flipcardGrid", content: [{ type: "flipcard", attrs: { question: "Q", answer: "A" } }] },
     // Experiences family (one of each, spec schemas).
     { type: "expSort", attrs: { blockId: "b-sort", title: "Sort", instructions: "Group them", categories: [{ id: "c1", label: "A", color: "green" }, { id: "c2", label: "B", color: "orange" }], items: [{ id: "i1", text: "x", categoryId: "c1" }, { id: "i2", text: "y", categoryId: "c2", explanation: "why" }], shuffle: true } },

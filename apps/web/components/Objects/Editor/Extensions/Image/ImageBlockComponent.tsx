@@ -42,10 +42,13 @@ import { libraryMediaNodeAttrs } from '../../Blocks/media/librarySnapshot'
 import { uploadErrorText } from '../../Blocks/media/uploadMessages'
 import { deleteBlock, pickFile, replaceBlock } from '../../Blocks/nodeViewUtils'
 import {
+  IMAGE_FRAMES,
   IMAGE_WIDTH_PRESETS,
+  imageFrameClasses,
   imageWidthPresetOf,
   resolveImageView,
   safeHref,
+  type ImageFrame,
 } from '../../Blocks/schema/blockAttrs'
 
 const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral'
@@ -67,6 +70,8 @@ function ImageBlockComponent(props: NodeViewProps) {
   // Everything shown comes from the node attrs (the shared document), so undo
   // and collaborators' edits show up. Only transient UI lives in React state.
   const view = resolveImageView(attrs)
+  // Editor Plus frame; 'none' keeps the old image classes untouched.
+  const frame = imageFrameClasses(view.frame)
   const blockObject = attrs.blockObject
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [linkOpen, setLinkOpen] = React.useState(false)
@@ -215,14 +220,14 @@ function ImageBlockComponent(props: NodeViewProps) {
           // hover controls never show there. A linked image follows its link.
           if (!view.href && view.lightbox && window.matchMedia('(hover: none)').matches) setIsModalOpen(true)
         }}
-        className="rounded-lg max-md:rounded-xl max-w-full h-auto w-full"
+        className={`${frame.img} max-w-full h-auto w-full`}
       />
     )
     return (
       <>
         <NodeViewWrapper className="block-image w-full">
           <div className={`w-full flex flex-col ${ALIGN_CLASS[view.alignment]}`}>
-            <div className={`relative group ${phoneFullWidth}`} style={viewFrameStyle}>
+            <div className={`relative group ${phoneFullWidth}${frame.box ? ` ${frame.box}` : ''}`} style={viewFrameStyle} data-frame={view.frame === 'none' ? undefined : view.frame}>
               {view.href ? (
                 <a href={view.href} target="_blank" rel="noopener noreferrer" className="block">
                   {img}
@@ -326,7 +331,7 @@ function ImageBlockComponent(props: NodeViewProps) {
         open={widthOpen}
         onOpenChange={setWidthOpen}
         title={t('editor.blocks.common.size', 'Size')}
-        width={260}
+        width={300}
         trigger={
           <BlockToolbarButton label={t('editor.blocks.common.size', 'Size')}>
             <ArrowsHorizontal size={14} />
@@ -348,6 +353,33 @@ function ImageBlockComponent(props: NodeViewProps) {
           ]}
         />
         <p className="text-[11px] text-neutral-400">{t('editor.blocks_v2.drag_to_resize', 'Or drag the handle on the image’s edge.')}</p>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-neutral-600">{t('editor.blocks_v2.image_frame.label', 'Frame')}</span>
+          <div role="radiogroup" aria-label={t('editor.blocks_v2.image_frame.label', 'Frame')} className="grid grid-cols-5 gap-1.5">
+            {IMAGE_FRAMES.map((f) => {
+              const preview = imageFrameClasses(f)
+              const active = view.frame === f
+              const label = t(`editor.blocks_v2.image_frame.${f}`, { none: 'None', rounded: 'Rounded', shadow: 'Shadow', border: 'Border', polaroid: 'Polaroid' }[f])
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  aria-label={label}
+                  title={label}
+                  onClick={() => props.updateAttributes({ frame: f === 'none' ? null : (f as ImageFrame) })}
+                  className={`flex flex-col items-center gap-1 rounded-lg p-1 text-[10px] text-neutral-500 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40 ${active ? 'bg-neutral-900/[0.06] text-neutral-900' : 'hover:bg-neutral-100'}`}
+                >
+                  <span className={`flex h-9 w-full items-center justify-center bg-neutral-50 ${preview.box}`} aria-hidden>
+                    <span className={`block h-full w-full bg-gradient-to-br from-sky-200 to-violet-200 ${preview.img}`} />
+                  </span>
+                  <span className="max-w-full truncate">{label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </BlockPopover>
       <BlockPopover
         open={altOpen}
@@ -459,11 +491,11 @@ function ImageBlockComponent(props: NodeViewProps) {
                 props.updateAttributes({ size: { width: width >= parentWidth - 2 ? '100%' : width } })
               }}
             >
-              <div className="relative">
+              <div className={frame.box ? `relative ${frame.box}` : 'relative'}>
                 <img
                   src={imageUrl}
                   alt={view.alt}
-                  className="rounded-lg max-w-full h-auto"
+                  className={view.frame === 'none' ? 'rounded-lg max-w-full h-auto' : `${frame.img} max-w-full h-auto`}
                   style={{ width: '100%' }}
                   draggable={false}
                 />

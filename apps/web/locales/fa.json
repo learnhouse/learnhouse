@@ -4294,6 +4294,91 @@
         "completed_note": "تمام شد. یک بار دیگر بخوان و آنچه را جا انداختی به خاطر بسپار.",
         "write_again": "ویرایش پاسخم"
       }
+    },
+    "table": {
+      "total": "مجموع",
+      "average": "میانگین",
+      "sort_by": "مرتب‌سازی بر اساس",
+      "original_order": "ترتیب اصلی",
+      "ascending": "صعودی",
+      "descending": "نزولی",
+      "sort_direction": "جهت مرتب‌سازی",
+      "sorted": "مرتب‌شده بر اساس {{column}}، {{direction}}",
+      "column_n": "ستون {{n}}"
+    },
+    "tabs": {
+      "tab": "زبانه",
+      "untitled": "زبانهٔ {{n}}",
+      "list_label": "زبانه‌ها"
+    },
+    "accordion": {
+      "expand_all": "باز کردن همه",
+      "collapse_all": "بستن همه"
+    },
+    "table_of_contents": {
+      "title": "مطالب"
+    },
+    "checklist": {
+      "progress_label": "{{done}} از {{total}} انجام شد",
+      "reset": "بازنشانی چک‌لیست",
+      "item": "مورد چک‌لیست",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "خط زمانی"
+    },
+    "key_takeaways": {
+      "title": "نکات کلیدی"
+    },
+    "chart": {
+      "category": "دسته",
+      "point": "{{label}}، {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} با {{series}} سری ({{names}}) در {{categories}} دسته، از {{min}} تا {{max}}.",
+      "title": "نمودار",
+      "types": {
+        "bar": "نمودار میله‌ای افقی",
+        "column": "نمودار ستونی",
+        "line": "نمودار خطی",
+        "area": "نمودار ناحیه‌ای",
+        "pie": "نمودار دایره‌ای",
+        "donut": "نمودار حلقه‌ای"
+      }
+    },
+    "file_card": {
+      "download": "دانلود",
+      "download_named": "دانلود {{name}}",
+      "file": "فایل",
+      "types": {
+        "pdf": "PDF",
+        "doc": "سند",
+        "sheet": "صفحه‌گسترده",
+        "slides": "اسلاید",
+        "archive": "فایل فشرده",
+        "image": "تصویر",
+        "audio": "صوت",
+        "video": "ویدیو",
+        "text": "متن",
+        "code": "کد",
+        "file": "فایل"
+      }
+    },
+    "gallery": {
+      "carousel": "نمایش چرخشی",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "نمایش تصویر {{n}}",
+      "label": "گالری تصاویر",
+      "next": "تصویر بعدی",
+      "open_image": "باز کردن تصویر {{n}} از {{count}}",
+      "previous": "تصویر قبلی",
+      "slide": "اسلاید",
+      "viewer_title": "تصویر {{n}} از {{count}}"
+    },
+    "image_compare": {
+      "after": "بعد",
+      "before": "قبل",
+      "slider": "مقایسهٔ تصاویر",
+      "value": "{{before}} {{b}}٪، {{after}} {{a}}٪"
     }
   },
   "embed": {
@@ -13456,7 +13541,11 @@
         "type_warning": "هشدار",
         "type_tip": "نکته",
         "type_success": "موفقیت",
-        "type_error": "خطا"
+        "type_error": "خطا",
+        "type_note": "یادداشت",
+        "type_question": "پرسش",
+        "type_example": "مثال",
+        "type_quote": "نقل‌قول"
       }
     },
     "dynamic": {
@@ -13915,6 +14004,70 @@
         "table": {
           "title": "جدول",
           "description": "درج یک جدول ۳×۳"
+        },
+        "tabs": {
+          "description": "جابه‌جایی بین پنل‌های محتوا",
+          "title": "زبانه‌ها"
+        },
+        "columns": {
+          "description": "قرار دادن محتوا کنار هم",
+          "title": "ستون‌ها"
+        },
+        "accordion": {
+          "description": "بخش‌های بازشونده، هر بار یکی باز",
+          "title": "آکاردئون"
+        },
+        "timeline": {
+          "description": "مراحل یا رویدادها به ترتیب",
+          "title": "خط زمانی"
+        },
+        "table_of_contents": {
+          "description": "پیوند به عنوان‌های این صفحه",
+          "title": "فهرست مطالب"
+        },
+        "key_takeaways": {
+          "description": "کارتی که نکات اصلی را خلاصه می‌کند",
+          "title": "نکات کلیدی"
+        },
+        "checklist": {
+          "description": "مواردی که یادگیرندگان می‌توانند تیک بزنند",
+          "title": "چک‌لیست"
+        },
+        "gallery": {
+          "title": "گالری",
+          "description": "چند تصویر در شبکه یا نمایش چرخشی"
+        },
+        "image_compare": {
+          "title": "مقایسهٔ تصویر",
+          "description": "قبل و بعد با لغزنده"
+        },
+        "file_card": {
+          "title": "دانلود فایل",
+          "description": "فایلی که فراگیران می‌توانند دانلود کنند"
+        },
+        "quote_block": {
+          "title": "توصیه‌نامه",
+          "description": "نقل‌قول برجسته یا توصیه‌نامه همراه با گوینده"
+        },
+        "quote": {
+          "title": "نقل‌قول",
+          "description": "یک بخش نقل‌شدهٔ ساده"
+        },
+        "chart": {
+          "title": "نمودار",
+          "description": "نمودار میله‌ای، خطی یا دایره‌ای از یک جدول کوچک"
+        },
+        "stat_highlights": {
+          "title": "آمار",
+          "description": "اعداد بزرگی که شمارش افزایشی دارند"
+        },
+        "button_group": {
+          "title": "گروه دکمه",
+          "description": "چند دکمه کنار هم"
+        },
+        "inline_math": {
+          "title": "فرمول درون‌خطی",
+          "description": "فرمولی درون جمله (یا $x^2$ را تایپ کنید)"
         }
       },
       "categories": {
@@ -13924,7 +14077,9 @@
         "callouts": "کادرهای توجه",
         "dynamic": "محتوای پویا",
         "ui": "عناصر رابط کاربری",
-        "tables": "جدول‌ها"
+        "tables": "جدول‌ها",
+        "layout": "چیدمان",
+        "data": "داده و رسانه"
       },
       "no_results": "نتیجه‌ای یافت نشد"
     },
@@ -14269,7 +14424,14 @@
       "button": {
         "emoji": "ایموجی",
         "link_hint": "با کلیک یادگیرندگان روی دکمه، در زبانه جدید باز می‌شود.",
-        "no_link": "هنوز پیوندی نیست: با دکمه پیوند آن را تنظیم کنید."
+        "no_link": "هنوز پیوندی نیست: با دکمه پیوند آن را تنظیم کنید.",
+        "style": "سبک",
+        "variant": "ظاهر",
+        "size": "اندازه",
+        "variant_solid": "توپر",
+        "variant_outline": "خطی",
+        "variant_soft": "ملایم",
+        "variant_link": "پیوند"
       },
       "quiz": {
         "settings": "تنظیمات آزمون",
@@ -14327,7 +14489,39 @@
         "clear": "پاک کردن",
         "check": "بررسی پاسخ‌ها",
         "try_again": "تلاش دوباره",
-        "start_over": "شروع از اول"
+        "start_over": "شروع از اول",
+        "question_type": "نوع پرسش",
+        "type_multiple_choice": "چندگزینه‌ای",
+        "type_true_false": "درست / نادرست",
+        "type_short_answer": "پاسخ کوتاه",
+        "type_numeric": "عدد",
+        "true": "درست",
+        "false": "نادرست",
+        "accepted_answers": "پاسخ‌های پذیرفته",
+        "accepted_answer_n": "پاسخ پذیرفته {{n}}",
+        "accepted_answer_placeholder": "پاسخی که درست حساب می‌شود",
+        "add_accepted": "پاسخ پذیرفته دیگر",
+        "remove_accepted": "حذف پاسخ پذیرفته {{n}}",
+        "ignore_accents": "نادیده گرفتن اعراب (é = e)",
+        "short_answer_hint": "حروف بزرگ و فاصله‌های اضافه نادیده گرفته می‌شوند.",
+        "numeric_value": "پاسخ درست",
+        "numeric_tolerance": "حد مجاز",
+        "show_explanations": "نمایش توضیحات",
+        "show_explanations_hint": "پس از ارسال پاسخ‌ها، توضیح شما زیر هر پرسش نمایش داده می‌شود.",
+        "pass_mark": "نمره قبولی",
+        "pass_mark_off": "خاموش",
+        "pass_mark_n": "{{n}}٪ برای قبولی",
+        "pass_mark_off_hint": "فراگیران می‌بینند که آیا همه پاسخ‌ها درست بوده است.",
+        "pass_mark_hint": "فراگیران با {{n}}٪ یا بیشتر قبول می‌شوند و نمره خود را می‌بینند.",
+        "pass_mark_needed": "نمره قبولی: {{n}}٪",
+        "passed": "قبول",
+        "not_passed": "هنوز قبول نشده",
+        "score_percent": "{{percent}}٪",
+        "your_answer": "پاسخ شما",
+        "your_number": "پاسخ شما (یک عدد)",
+        "answer_placeholder": "پاسخ خود را بنویسید",
+        "number_placeholder": "یک عدد بنویسید",
+        "expected_answer": "پاسخ مورد انتظار: {{answer}}"
       },
       "flipcard": {
         "front": "روی کارت",
@@ -14574,6 +14768,423 @@
         "reset_text": "بازنشانی",
         "text": "عنوان و توضیحات",
         "title": "عنوان"
+      },
+      "table": {
+        "rows_cols": "سطرها و ستون‌ها",
+        "duplicate_row": "تکرار سطر",
+        "distribute": "توزیع یکسان ستون‌ها",
+        "merge_split": "ادغام یا تقسیم خانه‌ها",
+        "headers": "سرتیترها",
+        "header_column": "ستون سرتیتر",
+        "cell_style": "سبک خانه",
+        "apply_to": "اعمال روی",
+        "scope_selection": "خانه‌های انتخاب‌شده",
+        "scope_column": "کل ستون",
+        "background": "پس‌زمینه",
+        "align": "تراز",
+        "align_start": "ابتدا",
+        "align_center": "وسط",
+        "align_end": "انتها",
+        "valign": "تراز عمودی",
+        "valign_top": "بالا",
+        "valign_middle": "وسط",
+        "valign_bottom": "پایین",
+        "cell_type": "نوع خانه",
+        "type_hint": "مقدار در متن خانه می‌ماند، مثلاً 75، 4/5 یا بله.",
+        "type": {
+          "text": "متن",
+          "progress": "پیشرفت",
+          "checkbox": "چک‌باکس",
+          "rating": "امتیاز",
+          "status": "وضعیت",
+          "number": "عدد",
+          "date": "تاریخ"
+        },
+        "tone": "رنگ",
+        "tone_auto": "خودکار",
+        "number_format": "قالب عدد",
+        "format": {
+          "plain": "ساده",
+          "percent": "درصد",
+          "currency": "واحد پول",
+          "compact": "فشرده"
+        },
+        "currency": "کد واحد پول",
+        "settings": "تنظیمات جدول",
+        "variant": "سبک",
+        "variants": {
+          "default": "پیش‌فرض",
+          "striped": "راه‌راه",
+          "bordered": "با حاشیه",
+          "minimal": "مینیمال",
+          "cards": "کارت‌ها"
+        },
+        "cards_hint": "در تلفن همراه هر سطر به کارت تبدیل می‌شود.",
+        "caption": "عنوان",
+        "caption_placeholder": "جدول را توصیف کنید",
+        "sortable": "فراگیران می‌توانند مرتب کنند",
+        "sticky_header": "سرتیتر ثابت",
+        "compact": "سطرهای فشرده",
+        "totals": "سطر مجموع",
+        "totals_hint": "برای ستون‌های عددی و پیشرفت.",
+        "totals_none": "هیچ",
+        "totals_sum": "جمع",
+        "totals_average": "میانگین",
+        "toggle_checkbox": "تغییر وضعیت چک‌باکس",
+        "templates": {
+          "progress": {
+            "title": "پیگیری پیشرفت",
+            "description": "کارها با مسئول، وضعیت و نوار پیشرفت"
+          },
+          "comparison": {
+            "title": "مقایسه",
+            "description": "گزینه‌ها را کنار هم با تیک مقایسه کنید"
+          },
+          "rubric": {
+            "title": "روبریک",
+            "description": "معیارهای ارزیابی با سطح و امتیاز"
+          }
+        },
+        "sample": {
+          "task": "کار",
+          "owner": "مسئول",
+          "status": "وضعیت",
+          "progress": "پیشرفت",
+          "task_1": "برنامه‌ریزی درس",
+          "task_2": "ضبط ویدیو",
+          "task_3": "نوشتن آزمون",
+          "status_done": "انجام شد",
+          "status_in_progress": "در حال انجام",
+          "status_todo": "شروع نشده",
+          "feature": "ویژگی",
+          "option_a": "پایه",
+          "option_b": "حرفه‌ای",
+          "feature_1": "درس‌های ویدیویی",
+          "feature_2": "آزمون‌ها",
+          "feature_3": "گواهی‌نامه‌ها",
+          "criterion": "معیار",
+          "look_for": "آنچه بررسی می‌کنیم",
+          "level": "سطح",
+          "points": "امتیاز",
+          "crit_1": "وضوح",
+          "crit_2": "درستی",
+          "crit_3": "ساختار",
+          "desc_1": "دنبال کردن ایده‌ها آسان است",
+          "desc_2": "واقعیت‌ها و مراحل درست‌اند",
+          "desc_3": "بخش‌های روشن با ترتیب منطقی"
+        }
+      },
+      "layout": {
+        "settings": "تنظیمات",
+        "style": "سبک",
+        "color": "رنگ",
+        "icon": "نماد",
+        "icon_default": "پیش‌فرض",
+        "size_sm": "کوچک",
+        "size_md": "متوسط",
+        "size_lg": "بزرگ",
+        "tone_neutral": "خنثی",
+        "tone_blue": "آبی",
+        "tone_teal": "سبزآبی",
+        "tone_green": "سبز",
+        "tone_amber": "کهربایی",
+        "tone_rose": "صورتی",
+        "icons": {
+          "lightbulb": "لامپ",
+          "star": "ستاره",
+          "check": "تیک",
+          "target": "هدف",
+          "flag": "پرچم",
+          "book": "کتاب",
+          "rocket": "موشک",
+          "key": "کلید"
+        }
+      },
+      "tabs": {
+        "label": "زبانه‌ها",
+        "add": "افزودن زبانه",
+        "remove": "حذف این زبانه",
+        "move_earlier": "انتقال زبانه به قبل",
+        "move_later": "انتقال زبانه به بعد",
+        "title_placeholder": "عنوان زبانه",
+        "variant_line": "خط",
+        "variant_pills": "قرصی",
+        "variant_boxed": "قاب",
+        "sample": {
+          "tab_1": "نمای کلی",
+          "tab_2": "جزئیات",
+          "tab_3": "نمونه",
+          "text_1": "با تصویر کلی شروع کنید.",
+          "text_2": "به جزئیات کارکرد آن بپردازید.",
+          "text_3": "آن را در عمل نشان دهید."
+        }
+      },
+      "columns": {
+        "label": "ستون‌ها",
+        "layout": "چیدمان",
+        "layout_halves": "دو ستون هم‌اندازه",
+        "layout_narrow_wide": "باریک، سپس پهن",
+        "layout_wide_narrow": "پهن، سپس باریک",
+        "layout_thirds": "سه ستون",
+        "layout_quarters": "چهار ستون",
+        "gap": "فاصله",
+        "align": "تراز عمودی",
+        "align_top": "بالا",
+        "align_center": "وسط",
+        "align_bottom": "پایین",
+        "stack": "در صفحه‌های کوچک زیر هم",
+        "sample": {
+          "left": "ستون اول",
+          "right": "ستون دوم"
+        }
+      },
+      "accordion": {
+        "label": "آکاردئون",
+        "add": "افزودن بخش",
+        "single": "هر بار فقط یک بخش باز",
+        "variant_bordered": "با حاشیه",
+        "variant_filled": "پررنگ",
+        "sample": {
+          "item_1": "چه چیزی یاد می‌گیرم؟",
+          "text_1": "نتیجهٔ این درس را شرح دهید.",
+          "item_2": "چقدر طول می‌کشد؟",
+          "text_2": "تخمینی بدهید تا یادگیرندگان برنامه‌ریزی کنند.",
+          "item_3": "به چه چیزی نیاز دارم؟",
+          "text_3": "آنچه پیش از شروع باید آماده باشد را فهرست کنید."
+        },
+        "variant_default": "پیش‌فرض"
+      },
+      "timeline": {
+        "label": "خط زمانی",
+        "add": "افزودن مرحله",
+        "remove": "حذف مرحله",
+        "step": "مرحله",
+        "title_placeholder": "عنوان مرحله",
+        "label_placeholder": "تاریخ یا برچسب (اختیاری)",
+        "numbered": "مراحل شماره‌دار",
+        "orientation": "جهت",
+        "vertical": "عمودی",
+        "horizontal": "افقی",
+        "icon_number": "شماره",
+        "variant_steps": "مراحل",
+        "variant_process": "فرایند",
+        "sample": {
+          "step_1": "آماده‌سازی",
+          "text_1": "آنچه لازم دارید را جمع کنید.",
+          "step_2": "تمرین",
+          "text_2": "روی یک نمونهٔ کوچک امتحان کنید.",
+          "step_3": "به‌کارگیری",
+          "text_3": "در یک کار واقعی از آن استفاده کنید."
+        },
+        "variant_timeline": "خط زمانی"
+      },
+      "table_of_contents": {
+        "label": "فهرست مطالب",
+        "depth": "عنوان‌های شامل",
+        "numbered": "شماره‌گذاری موارد",
+        "title_label": "عنوان",
+        "empty": "به درس عنوان اضافه کنید تا اینجا فهرست شوند."
+      },
+      "key_takeaways": {
+        "label": "نکات کلیدی",
+        "title_label": "عنوان کارت",
+        "sample": {
+          "point_1": "ایدهٔ اصلی در یک جمله",
+          "point_2": "نکته‌ای که ارزش به خاطر سپردن دارد",
+          "point_3": "قدم بعدی"
+        }
+      },
+      "checklist": {
+        "label": "چک‌لیست",
+        "learner_can_check": "یادگیرندگان می‌توانند موارد را تیک بزنند",
+        "hint": "تیک‌ها در مرورگر هر یادگیرنده ذخیره می‌شوند. مواردی که اینجا تیک بزنید از ابتدا تیک‌خورده‌اند.",
+        "sample": {
+          "item_1": "خواندن درس",
+          "item_2": "انجام تمرین",
+          "item_3": "بررسی پاسخ‌ها"
+        }
+      },
+      "chart": {
+        "add_row": "افزودن ردیف",
+        "add_series": "افزودن سری",
+        "apply_csv": "استفاده از این داده‌ها",
+        "csv_error": "این جدول خوانده نشد. برچسب‌ها را در ستون اول و اعداد را در بقیه بگذارید.",
+        "csv_label": "جدول به‌صورت CSV",
+        "csv_placeholder": "از صفحه‌گسترده بچسبانید یا بنویسید: برچسب، سری ۱، سری ۲",
+        "edit_data": "ویرایش داده‌ها",
+        "empty": "برای رسم نمودار، داده اضافه کنید.",
+        "label": "نمودار",
+        "label_n": "برچسب {{n}}",
+        "labels": "برچسب‌ها",
+        "paste_csv": "چسباندن CSV",
+        "pie_hint": "نمودارهای دایره‌ای و حلقه‌ای سری اول را نشان می‌دهند.",
+        "remove_row": "حذف ردیف",
+        "remove_series": "حذف سری",
+        "row_n": "مورد {{n}}",
+        "sample": {
+          "q1": "فصل ۱",
+          "q2": "فصل ۲",
+          "q3": "فصل ۳",
+          "q4": "فصل ۴",
+          "series_1": "کلاس الف",
+          "series_2": "کلاس ب",
+          "title": "میانگین نمرهٔ آزمونک در هر فصل"
+        },
+        "series_color": "تغییر رنگ {{name}}",
+        "series_n": "سری {{n}}",
+        "series_name": "نام سری",
+        "settings": "تنظیمات نمودار",
+        "show_legend": "نمایش راهنما",
+        "show_values": "نمایش مقادیر",
+        "stacked": "انباشتن سری‌ها",
+        "title_label": "عنوان",
+        "title_placeholder": "عنوان نمودار",
+        "type": "نوع نمودار"
+      },
+      "file_card": {
+        "add_link": "افزودن پیوند",
+        "description": "توضیحات",
+        "description_placeholder": "این فایل شامل چیست؟ (اختیاری)",
+        "empty_hint": "یک فایل PDF، تصویر، صوت یا ویدیو بارگذاری کنید، یا به هر فایلی پیوند دهید.",
+        "empty_title": "افزودن فایل برای دانلود",
+        "label": "فایل",
+        "link_hint": "اگر فایلی بارگذاری شده باشد، جایگزین آن می‌شود.",
+        "link_label": "پیوند فایل",
+        "link_settings": "پیوند فایل",
+        "name": "نام فایل",
+        "type_error": "این نوع فایل قابل بارگذاری نیست. یک فایل PDF، تصویر، صوت یا ویدیو بارگذاری کنید یا به فایل پیوند دهید.",
+        "upload": "بارگذاری فایل"
+      },
+      "gallery": {
+        "add_images": "افزودن تصاویر",
+        "add_link": "افزودن تصویر",
+        "alt_hint": "برای فراگیرانی که از صفحه‌خوان استفاده می‌کنند، بنویسید تصویر چه چیزی را نشان می‌دهد.",
+        "alt_missing": "متن جایگزین ندارد: {{n}}",
+        "alt_placeholder": "متن جایگزین (الزامی)",
+        "columns": "ستون‌ها",
+        "count": "تصاویر: {{n}}",
+        "empty_hint": "چند تصویر را یک‌جا رها کنید یا از دستگاه خود انتخاب کنید. {{formats}} · هر کدام تا {{max}}.",
+        "empty_title": "افزودن تصاویر به گالری",
+        "full": "هر گالری حداکثر {{max}} تصویر دارد.",
+        "label": "گالری",
+        "layout": "چیدمان",
+        "layout_carousel": "چرخشی",
+        "layout_grid": "شبکه",
+        "layout_masonry": "آجری",
+        "move_earlier": "انتقال به قبل",
+        "move_later": "انتقال به بعد",
+        "remove": "حذف تصویر",
+        "settings": "تنظیمات گالری"
+      },
+      "image_compare": {
+        "after_image": "تصویر بعد",
+        "before_image": "تصویر قبل",
+        "empty_hint": "یک تصویر قبل و یک تصویر بعد با اندازهٔ یکسان انتخاب کنید. فراگیران جداکننده را می‌کشند تا مقایسه کنند.",
+        "empty_title": "افزودن تصاویر",
+        "horizontal": "کنار هم",
+        "label": "مقایسهٔ تصویر",
+        "orientation": "جهت",
+        "replace_after": "جایگزینی تصویر بعد",
+        "replace_before": "جایگزینی تصویر قبل",
+        "settings": "تنظیمات مقایسه",
+        "side_label": "برچسب",
+        "start": "نقطهٔ شروع جداکننده",
+        "vertical": "بالا و پایین"
+      },
+      "quote_block": {
+        "author": "نویسنده",
+        "author_placeholder": "نام",
+        "avatar": "پیوند عکس",
+        "avatar_hint": "در توصیه‌نامه‌ها کنار نام نشان داده می‌شود. برای حروف اول خالی بگذارید.",
+        "label": "نقل‌قول",
+        "role": "نقش",
+        "role_placeholder": "نقش یا شرکت",
+        "sample": {
+          "author": "سارا رضایی",
+          "role": "طراح محصول",
+          "text": "تمرین‌های عملی همه‌چیز را روشن کرد. همان روز بعد آموخته‌هایم را در کار به کار بردم."
+        },
+        "settings": "تنظیمات نقل‌قول",
+        "style": "سبک",
+        "variant_highlight": "برجسته",
+        "variant_pull": "نقل‌قول برجسته",
+        "variant_testimonial": "توصیه‌نامه"
+      },
+      "stat_highlights": {
+        "add": "افزودن آمار",
+        "animate": "شمارش افزایشی هنگام نمایش",
+        "color": "رنگ",
+        "columns": "ستون‌ها",
+        "description": "توضیحات",
+        "description_placeholder": "توضیح کوتاه (اختیاری)",
+        "empty": "برای شروع، یک آمار اضافه کنید.",
+        "label": "آمار",
+        "label_field": "برچسب",
+        "prefix": "پیش از عدد",
+        "remove": "حذف آمار",
+        "sample": {
+          "desc_1": "از فراگیران دوره را تمام می‌کنند",
+          "desc_2": "از ۱٬۲۰۰ نظر",
+          "desc_3": "در ۴۰ کشور",
+          "label_1": "نرخ تکمیل",
+          "label_2": "میانگین امتیاز",
+          "label_3": "فراگیر"
+        },
+        "settings": "تنظیمات آمار",
+        "suffix": "پس از عدد",
+        "value": "عدد"
+      },
+      "callout_title": "عنوان",
+      "callout_title_placeholder": "عنوان اختیاری",
+      "callout_collapsible": "فراگیران می‌توانند آن را جمع کنند",
+      "callout_default_open": "در ابتدا باز",
+      "callout_tone": "رنگ",
+      "callout_tone_default": "رنگ خود نوع",
+      "code_copied": "کد در کلیپ‌بورد کپی شد",
+      "code_copy_failed": "کپی نشد. کد را انتخاب کنید و دستی کپی کنید.",
+      "code_highlight": "خطوط برجسته (مثلاً 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "شماره خطوط",
+      "code_wrap": "شکستن خطوط بلند",
+      "align": {
+        "label": "تراز متن",
+        "start": "تراز به ابتدا",
+        "center": "وسط‌چین",
+        "end": "تراز به انتها",
+        "justify": "تراز دوطرفه"
+      },
+      "button_group": {
+        "label": "گروه دکمه",
+        "add_button": "افزودن دکمه",
+        "new_button": "دکمه",
+        "primary": "شروع کنید",
+        "secondary": "بیشتر بدانید"
+      },
+      "image_frame": {
+        "label": "قاب",
+        "none": "هیچ",
+        "rounded": "گرد",
+        "shadow": "سایه",
+        "border": "حاشیه",
+        "polaroid": "پولاروید"
+      },
+      "inline_math": {
+        "title": "فرمول درون‌خطی",
+        "edit": "ویرایش فرمول {{latex}}",
+        "latex": "LaTeX",
+        "hint": "مثلاً \\frac{a}{b} یا x^2. برای ساختن فرمول، $…$ را در متن تایپ کنید.",
+        "make": "فرمول",
+        "remove": "حذف"
+      },
+      "toggle": {
+        "style": "سبک بخش تاشو",
+        "variant": "ظاهر",
+        "variant_default": "پیش‌فرض",
+        "variant_bordered": "حاشیه‌دار",
+        "variant_filled": "پر",
+        "icon": "نماد",
+        "icon_chevron": "پیکان",
+        "icon_plus": "به‌علاوه و منها"
       }
     },
     "history": {

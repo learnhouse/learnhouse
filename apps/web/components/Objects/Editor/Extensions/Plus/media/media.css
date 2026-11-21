@@ -1,0 +1,168 @@
+/*
+ Media and data blocks (Editor Plus, section C). The views use palette
+ classes (remapped by dark.css and block themes); this file holds what
+ classes can't say: the chart's theme variables and SVG states, and a
+ readable look for the renderHTML markup (exports, copy, static HTML).
+*/
+
+/* Chart colours: series from the design system palette (inline styles with
+   hex fallbacks), grid / axis / surface from the lesson theme first
+   (BlockThemeScope --lhb-*), then the dark theme (--lhd-*), then light. */
+.lh-chart,
+.lh-chart-static {
+  --lhc-grid: var(--lhb-border, var(--lhd-chart-grid, var(--color-lh-chart-grid, #efefed)));
+  --lhc-axis: var(--lhb-muted, var(--lhd-chart-axis, var(--color-lh-chart-axis, #8a8984)));
+  --lhc-surface: var(--lhb-surface, var(--color-white, #ffffff));
+  --lhc-ink: var(--lhb-text, var(--color-neutral-900, #171717));
+}
+
+.lh-chart-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: inherit;
+}
+
+.lh-chart-mark {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 150ms ease;
+}
+
+.lh-chart-svg:has(.lh-chart-mark.is-active) .lh-chart-mark:not(.is-active) {
+  opacity: 0.55;
+}
+
+.lh-chart-mark:focus-visible {
+  stroke: var(--lhc-ink) !important;
+  stroke-width: 2px !important;
+}
+
+.lh-chart-tooltip {
+  white-space: nowrap;
+}
+
+/* Image compare: the handle follows the pointer without lag while dragging. */
+.lh-compare-stage img {
+  -webkit-user-drag: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-chart-mark,
+  .lh-gallery-carousel * {
+    transition: none !important;
+  }
+}
+
+/* ── renderHTML markup (no React) ─────────────────────────────────────── */
+
+.lh-gallery-static .lh-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--lh-gallery-cols, 3), minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lh-gallery-static .lh-gallery-item,
+.lh-compare-static > figure {
+  margin: 0;
+}
+
+.lh-gallery-static img,
+.lh-compare-static img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.lh-gallery-static figcaption,
+.lh-compare-static figcaption {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--lhb-muted, #737373);
+}
+
+.lh-compare-static {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lh-stats-static dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.lh-stats-static .lh-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.lh-stats-static dt {
+  order: 2;
+  font-weight: 600;
+}
+
+.lh-stats-static .lh-stat-value {
+  order: 1;
+  margin: 0;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.lh-stats-static .lh-stat-desc {
+  order: 3;
+  margin: 0;
+  font-size: 13px;
+  color: var(--lhb-muted, #737373);
+}
+
+.lh-file-card-static {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.lh-file-card-static .lh-file-meta {
+  font-size: 12px;
+  color: var(--lhb-muted, #737373);
+}
+
+.lh-file-card-static .lh-file-desc {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.lh-chart-static .lh-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.lh-chart-static .lh-chart-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-inline-end: 6px;
+  border-radius: 2px;
+}
+
+.lh-quote-static figcaption {
+  font-size: 14px;
+}
+
+.lh-quote-static .lh-quote-avatar {
+  width: 28px;
+  height: 28px;
+  margin-inline-end: 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}

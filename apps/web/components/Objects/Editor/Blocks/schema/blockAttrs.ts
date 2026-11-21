@@ -44,6 +44,33 @@ function textAttr(name: string, fallback: string | null = ''): AttrSpec {
   }
 }
 
+/** Boolean attribute stored as data-<name>; nothing is written for the default. */
+function boolAttr(key: string, name: string, fallback = false): AttrSpec {
+  return {
+    default: fallback,
+    parseHTML: (el) => {
+      const raw = el.getAttribute(`data-${name}`)
+      return raw == null ? fallback : raw === 'true'
+    },
+    renderHTML: (attrs) => (!!attrs[key] === fallback ? {} : { [`data-${name}`]: String(!!attrs[key]) }),
+  }
+}
+
+/** Text attribute limited to known values (unknown → null, the old look). */
+function enumAttr(name: string, values: readonly string[]): AttrSpec {
+  return {
+    default: null,
+    parseHTML: (el) => {
+      const v = el.getAttribute(`data-${name}`)
+      return v && values.includes(v) ? v : null
+    },
+    renderHTML: (attrs) => (attrs[name] && values.includes(attrs[name]) ? { [`data-${name}`]: String(attrs[name]) } : {}),
+  }
+}
+
+const oneOf = <T extends string>(values: readonly T[], v: unknown, fallback: T): T =>
+  typeof v === 'string' && (values as readonly string[]).includes(v) ? (v as T) : fallback
+
 // ─── Image ─────────────────────────────────────────────────────────────────
 
 export const IMAGE_EXTRA_ATTRS: Record<string, AttrSpec> = {
@@ -56,6 +83,34 @@ export const IMAGE_EXTRA_ATTRS: Record<string, AttrSpec> = {
     parseHTML: (el) => el.getAttribute('data-lightbox') !== 'false',
     renderHTML: (attrs) => (attrs.lightbox === false ? { 'data-lightbox': 'false' } : {}),
   },
+  // Editor Plus: a frame around the picture. null = 'none', the old look.
+  frame: enumAttr('frame', ['none', 'rounded', 'shadow', 'border', 'polaroid']),
+}
+
+export const IMAGE_FRAMES = ['none', 'rounded', 'shadow', 'border', 'polaroid'] as const
+export type ImageFrame = (typeof IMAGE_FRAMES)[number]
+
+export function imageFrameOf(attrs: any): ImageFrame {
+  return oneOf(IMAGE_FRAMES, attrs?.frame, 'none')
+}
+
+/**
+ * Classes for the frame: `box` wraps the picture, `img` replaces the image's
+ * own rounding. 'none' is exactly the old image (rounded-lg, no wrapper styles).
+ */
+export function imageFrameClasses(frame: ImageFrame): { box: string; img: string } {
+  switch (frame) {
+    case 'rounded':
+      return { box: '', img: 'rounded-3xl max-md:rounded-3xl' }
+    case 'shadow':
+      return { box: '', img: 'rounded-lg max-md:rounded-xl shadow-[0_10px_30px_-8px_rgba(0,0,0,0.35)]' }
+    case 'border':
+      return { box: 'rounded-xl bg-white p-1.5 ring-1 ring-black/10', img: 'rounded-lg' }
+    case 'polaroid':
+      return { box: 'lh-image-polaroid rounded-sm bg-white p-2.5 pb-9 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.3)] ring-1 ring-black/5', img: 'rounded-none' }
+    default:
+      return { box: '', img: 'rounded-lg max-md:rounded-xl' }
+  }
 }
 
 /** The image block rendered 300 px wide when no size was ever stored. */
@@ -108,6 +163,7 @@ export interface ImageView {
   caption: string
   href: string | null
   lightbox: boolean
+  frame: ImageFrame
 }
 
 export function resolveImageView(attrs: any): ImageView {
@@ -118,6 +174,7 @@ export function resolveImageView(attrs: any): ImageView {
     caption: typeof attrs?.caption === 'string' ? attrs.caption : '',
     href: safeHref(attrs?.href),
     lightbox: attrs?.lightbox !== false,
+    frame: imageFrameOf(attrs),
   }
 }
 
@@ -241,6 +298,17 @@ export const CALLOUT_EXTRA_ATTRS: Record<string, AttrSpec> = {
     parseHTML: (el) => el.getAttribute('data-icon') || null,
     renderHTML: (attrs) => (attrs.icon ? { 'data-icon': attrs.icon } : {}),
   },
+  // Editor Plus. An empty title, not collapsible and no tone is the old callout.
+  title: textAttr('title'),
+  collapsible: boolAttr('collapsible', 'collapsible'),
+  // Only read when collapsible: whether learners first see it open.
+  defaultOpen: boolAttr('defaultOpen', 'default-open', true),
+  // null = the type's own colours; otherwise a CALLOUT_TONES key.
+  tone: textAttr('tone', null),
+  // note / question / example / quote. Kept out of `type`, which older
+  // renderers look up in a fixed table (they crash on unknown values); `type`
+  // then holds the closest legacy look (calloutStyles.CALLOUT_KIND_FALLBACK).
+  kind: enumAttr('kind', ['note', 'question', 'example', 'quote']),
 }
 
 export const CODE_BLOCK_EXTRA_ATTRS: Record<string, AttrSpec> = {
@@ -249,7 +317,84 @@ export const CODE_BLOCK_EXTRA_ATTRS: Record<string, AttrSpec> = {
     parseHTML: (el) => el.getAttribute('data-filename') || null,
     renderHTML: (attrs) => (attrs.filename ? { 'data-filename': attrs.filename } : {}),
   },
+  // Editor Plus. Off / none / off is the old code block.
+  showLineNumbers: boolAttr('showLineNumbers', 'line-numbers'),
+  // Lines to emphasise, e.g. "2,4-6" (see codeBlockModel.parseHighlightLines).
+  highlightLines: {
+    default: null,
+    parseHTML: (el) => el.getAttribute('data-highlight-lines') || null,
+    renderHTML: (attrs) => (attrs.highlightLines ? { 'data-highlight-lines': String(attrs.highlightLines) } : {}),
+  },
+  // Wrap long lines everywhere (phones otherwise scroll sideways).
+  wrap: boolAttr('wrap', 'wrap'),
 }
+
+// ─── Toggle / button / text alignment (Editor Plus) ────────────────────────
+
+export const TOGGLE_VARIANTS = ['default', 'bordered', 'filled'] as const
+export type ToggleVariant = (typeof TOGGLE_VARIANTS)[number]
+export const TOGGLE_ICONS = ['chevron', 'plus'] as const
+export type ToggleIcon = (typeof TOGGLE_ICONS)[number]
+
+/** null/unknown → 'default' / 'chevron', the original toggle. */
+export const TOGGLE_EXTRA_ATTRS: Record<string, AttrSpec> = {
+  variant: enumAttr('variant', TOGGLE_VARIANTS),
+  icon: enumAttr('icon', TOGGLE_ICONS),
+}
+
+export function toggleVariantOf(attrs: any): ToggleVariant {
+  return oneOf(TOGGLE_VARIANTS, attrs?.variant, 'default')
+}
+
+export function toggleIconOf(attrs: any): ToggleIcon {
+  return oneOf(TOGGLE_ICONS, attrs?.icon, 'chevron')
+}
+
+export const BUTTON_VARIANTS = ['solid', 'outline', 'soft', 'link'] as const
+export type ButtonVariant = (typeof BUTTON_VARIANTS)[number]
+export const BUTTON_SIZES = ['sm', 'md', 'lg'] as const
+export type ButtonSize = (typeof BUTTON_SIZES)[number]
+
+/** null/unknown → 'solid' / 'md', the original button. */
+export const BUTTON_EXTRA_ATTRS: Record<string, AttrSpec> = {
+  variant: enumAttr('variant', BUTTON_VARIANTS),
+  size: enumAttr('size', BUTTON_SIZES),
+}
+
+export function buttonVariantOf(attrs: any): ButtonVariant {
+  return oneOf(BUTTON_VARIANTS, attrs?.variant, 'solid')
+}
+
+export function buttonSizeOf(attrs: any): ButtonSize {
+  return oneOf(BUTTON_SIZES, attrs?.size, 'md')
+}
+
+export const TEXT_ALIGNMENTS = ['start', 'center', 'end', 'justify'] as const
+export type TextAlignment = (typeof TEXT_ALIGNMENTS)[number]
+
+/** Pasted HTML says left/right; stored values are writing-direction aware. */
+export function readTextAlign(value: unknown): TextAlignment | null {
+  const v = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  if (v === 'left') return 'start'
+  if (v === 'right') return 'end'
+  return (TEXT_ALIGNMENTS as readonly string[]).includes(v) ? (v as TextAlignment) : null
+}
+
+/**
+ * Global `textAlign` on paragraphs and headings. null (the default, and every
+ * stored paragraph) writes no attribute and no style, so stored HTML and JSON
+ * stay as they were.
+ */
+export const TEXT_ALIGN_ATTR: AttrSpec = {
+  default: null,
+  parseHTML: (el) => readTextAlign(el.style?.textAlign),
+  renderHTML: (attrs) => {
+    const v = readTextAlign(attrs.textAlign)
+    return v ? { style: `text-align: ${v}` } : {}
+  },
+}
+
+export const TEXT_ALIGN_TYPES = ['paragraph', 'heading'] as const
 
 export const DIVIDER_VARIANTS = ['line', 'dashed', 'dotted', 'thick', 'dots', 'space'] as const
 export type DividerVariant = (typeof DIVIDER_VARIANTS)[number]
@@ -279,4 +424,8 @@ export const NEW_ATTR_DEFAULTS: Record<string, Record<string, unknown>> = {
   callout: Object.fromEntries(Object.entries(CALLOUT_EXTRA_ATTRS).map(([k, v]) => [k, v.default])),
   codeBlock: Object.fromEntries(Object.entries(CODE_BLOCK_EXTRA_ATTRS).map(([k, v]) => [k, v.default])),
   horizontalRule: Object.fromEntries(Object.entries(DIVIDER_EXTRA_ATTRS).map(([k, v]) => [k, v.default])),
+  toggleBlock: Object.fromEntries(Object.entries(TOGGLE_EXTRA_ATTRS).map(([k, v]) => [k, v.default])),
+  button: Object.fromEntries(Object.entries(BUTTON_EXTRA_ATTRS).map(([k, v]) => [k, v.default])),
+  paragraph: { textAlign: TEXT_ALIGN_ATTR.default },
+  heading: { textAlign: TEXT_ALIGN_ATTR.default },
 }

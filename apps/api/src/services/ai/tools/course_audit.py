@@ -51,6 +51,9 @@ PRACTICE = (
     "expVenn", "expLabel", "expWordGuess", "expConfidence", "expMatrix", "expReflect",
 )
 SEVERITY = {"high": 0, "medium": 1, "low": 2}
+# Editor Plus blocks that count as media on a page.
+VISUAL_TYPES = ("gallery", "imageCompare", "chart", "fileCard")
+PLUS_MEDIA = {"gallery": "gallery", "imageCompare": "image comparison", "fileCard": "file card"}
 _PLACEHOLDER = re.compile(r"lorem ipsum|\bTODO\b|\bTBD\b|\[insert[^\]]*\]|\bxxx\b", re.IGNORECASE)
 _WORD = re.compile(r"\w+")
 
@@ -106,6 +109,25 @@ def _kind(activity: Activity) -> str:
     return str(getattr(activity.activity_type, "value", activity.activity_type))
 
 
+def _picture(value: Any) -> bool:
+    return isinstance(value, dict) and (isinstance(value.get("blockObject"), dict) or d.is_web_url(value.get("url")))
+
+
+def _plus_media_missing(t: str, a: dict) -> bool:
+    if t == "gallery":
+        return not any(_picture(i) for i in a.get("images") or [])
+    if t == "imageCompare":
+        return not (_picture(a.get("before")) and _picture(a.get("after")))
+    return not _picture(a)
+
+
+def _chart_has_data(a: dict) -> bool:
+    data = a.get("data") if isinstance(a.get("data"), dict) else {}
+    return bool(data.get("labels")) and any(
+        isinstance(s, dict) and s.get("values") for s in data.get("series") or []
+    )
+
+
 def _links(node: dict):
     for child in d.children(node):
         if not isinstance(child, dict):
@@ -135,7 +157,14 @@ def _check_page(doc: dict, where: dict, issues: _Issues, stats: Counter, links: 
                 answers = [x for x in q.get("answers") or [] if isinstance(x, dict)]
                 if not str(q.get("question") or "").strip():
                     issues.add("high", "quiz_empty_question", f"Quiz question {n} has no text.", where, path=spot)
-                if len(answers) < 2:
+                if q.get("type") == "short_answer":
+                    if not any(isinstance(x, str) and x.strip() for x in q.get("accepted_answers") or []):
+                        issues.add("high", "quiz_no_correct", f"Quiz question {n} has no accepted answer.", where, path=spot)
+                elif q.get("type") == "numeric":
+                    value = q.get("correct_value")
+                    if isinstance(value, bool) or not isinstance(value, (int, float)):
+                        issues.add("high", "quiz_no_correct", f"Quiz question {n} has no correct number.", where, path=spot)
+                elif len(answers) < 2:
                     issues.add("medium", "quiz_few_options", f"Quiz question {n} has fewer than two options.", where, path=spot)
                 elif not any(x.get("correct") for x in answers):
                     issues.add("high", "quiz_no_correct", f"Quiz question {n} has no right answer marked.", where, path=spot)
@@ -146,6 +175,12 @@ def _check_page(doc: dict, where: dict, issues: _Issues, stats: Counter, links: 
             if not obj and not a.get("unsplash_url"):
                 label = t.removeprefix("block").lower()
                 issues.add("high", "media_missing", f"The {label} block has no file.", where, path=spot)
+        elif t in PLUS_MEDIA and _plus_media_missing(t, a):
+            issues.add("high", "media_missing", f"The {PLUS_MEDIA[t]} has no {'file' if t == 'fileCard' else 'pictures'}.", where, path=spot)
+        elif t == "chart" and not _chart_has_data(a):
+            issues.add("medium", "chart_empty", "Chart has no data.", where, path=spot)
+        elif t == "fileCard" and links is not None and d.is_web_url(a.get("url")):
+            links.append((str(a.get("url")).strip(), where, spot))
         elif t == "button" and not str(a.get("link") or "").strip():
             issues.add("medium", "empty_link", "Button has no link.", where, path=spot)
         elif t == "button" and links is not None:
@@ -157,7 +192,7 @@ def _check_page(doc: dict, where: dict, issues: _Issues, stats: Counter, links: 
                 elif links is not None:
                     links.append((str(href).strip(), where, spot))
     practice = sum(blocks[t] for t in PRACTICE)
-    media = sum(blocks[t] for t in d.MEDIA_TYPES) + blocks["blockEmbed"]
+    media = sum(blocks[t] for t in (*d.MEDIA_TYPES, *VISUAL_TYPES)) + blocks["blockEmbed"]
     stats["practice_blocks"] += practice
     stats["media_blocks"] += media
     for t in PRACTICE:

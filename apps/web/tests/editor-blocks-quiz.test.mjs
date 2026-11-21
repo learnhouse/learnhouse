@@ -66,7 +66,8 @@ describe("stored quizzes load unchanged", () => {
 
   test("no settings attr means the old behaviour", () => {
     expect(Q.normalizeSettings(undefined)).toEqual(Q.DEFAULT_QUIZ_SETTINGS);
-    expect(Q.normalizeSettings(null)).toEqual({ shuffleAnswers: false, shuffleQuestions: false, maxAttempts: 0, showCorrectAnswers: true });
+    // passMark 0 (no pass mark) and showExplanations true are the old behaviour too.
+    expect(Q.normalizeSettings(null)).toEqual({ shuffleAnswers: false, shuffleQuestions: false, maxAttempts: 0, showCorrectAnswers: true, passMark: 0, showExplanations: true });
     expect(Q.compactSettings(Q.DEFAULT_QUIZ_SETTINGS)).toBeNull();
   });
 
@@ -202,6 +203,164 @@ describe("quiz taking", () => {
     expect(Q.attemptsLeft({ ...Q.DEFAULT_QUIZ_SETTINGS, maxAttempts: 2 }, 5)).toBe(0);
     expect(Q.answerLetter(0)).toBe("A");
     expect(Q.answerLetter(30)).toBe("?");
+  });
+});
+
+describe("question types", () => {
+  const tfQuestion = () => Q.setQuestionType([quiz()[0]], "q1", "true_false", { true: "Vrai", false: "Faux" }, ids)[0];
+
+  test("stored questions without a type (or an unknown one) are multiple choice", () => {
+    const [q] = Q.normalizeQuestions([{ question_id: "x", question: "?", answers: [{ answer_id: "a", answer: "A", correct: true }] }]);
+    expect(q.type).toBe("multiple_choice");
+    expect(Q.questionKind(q)).toBe("multiple_choice");
+    expect(Q.normalizeQuestions([{ question_id: "y", type: "drag_and_drop", answers: [] }])[0].type).toBe("multiple_choice");
+    expect(Q.questionKind({ type: "custom_answer" })).toBe("multiple_choice");
+    for (const z of nodesOf("blockQuiz")) for (const q of Q.normalizeQuestions(z.attrs.questions)) expect(Q.questionKind(q)).toBe("multiple_choice");
+  });
+
+  test("new types and their keys survive normalizing; absent keys stay absent", () => {
+    const [sa, num] = Q.normalizeQuestions([
+      { question_id: "s", question: "Capital?", type: "short_answer", answers: [], accepted_answers: ["Paris", 3, " paris "], accent_insensitive: true },
+      { question_id: "n", question: "2+2", type: "numeric", answers: [], correct_value: "4", tolerance: 0.5 },
+    ]);
+    expect(sa).toMatchObject({ type: "short_answer", accepted_answers: ["Paris", " paris "], accent_insensitive: true });
+    expect(num).toMatchObject({ type: "numeric", correct_value: 4, tolerance: 0.5 });
+    const [mc] = Q.normalizeQuestions([{ question_id: "m", answers: [] }]);
+    for (const k of ["accepted_answers", "accent_insensitive", "correct_value", "tolerance"]) expect(k in mc).toBe(false);
+    expect("correct_value" in Q.normalizeQuestions([{ question_id: "z", type: "numeric", correct_value: "abc" }])[0]).toBe(false);
+  });
+
+  test("true/false is a two-option pick-one an older client can still take", () => {
+    const q = tfQuestion();
+    expect(q.type).toBe("true_false");
+    expect(q.response_type).toBe("single");
+    expect(q.answers.map((a) => [a.answer, a.correct])).toEqual([["Vrai", true], ["Faux", false]]);
+    expect(Q.trueFalseValue(q)).toBe(true);
+    const flipped = Q.setTrueFalseAnswer([q], "q1", false)[0];
+    expect(Q.trueFalseValue(flipped)).toBe(false);
+    expect(Q.responseTypeOf(flipped)).toBe("single");
+    const [a, b] = flipped.answers;
+    expect(Q.gradeQuestion(flipped, [b.answer_id])).toBe("correct");
+    expect(Q.gradeQuestion(flipped, [a.answer_id])).toBe("incorrect");
+    expect(Q.trueFalseValue({ ...q, answers: q.answers.map((x) => ({ ...x, correct: false })) })).toBeNull();
+  });
+
+  test("switching type keeps the question and explanation, drops what no longer applies", () => {
+    let qs = [{ ...quiz()[0], explanation: "Because." }];
+    qs = Q.setQuestionType(qs, "q1", "short_answer");
+    expect(qs[0]).toMatchObject({ type: "short_answer", question: "Pick one", explanation: "Because.", answers: [], accepted_answers: [] });
+    expect("response_type" in qs[0]).toBe(false);
+    qs = Q.setQuestionType(qs, "q1", "numeric");
+    expect(qs[0]).toMatchObject({ type: "numeric", tolerance: 0, answers: [] });
+    expect("accepted_answers" in qs[0]).toBe(false);
+    qs = Q.setQuestionType(qs, "q1", "multiple_choice", undefined, ids);
+    expect(qs[0].type).toBe("multiple_choice");
+    expect(qs[0].answers.length).toBe(2);
+    expect("tolerance" in qs[0]).toBe(false);
+    // Same type: nothing changes.
+    expect(Q.setQuestionType(qs, "q1", "multiple_choice")).toEqual(qs);
+    // True/false back to multiple choice keeps the two statements as options.
+    const tf = Q.setQuestionType([tfQuestion()], "q1", "multiple_choice");
+    expect(tf[0].answers.map((a) => a.answer)).toEqual(["Vrai", "Faux"]);
+  });
+
+  test("short answers: case, spaces and (optionally) accents don't matter", () => {
+    expect(Q.matchShortAnswer("  PARIS ", ["Paris"])).toBe(true);
+    expect(Q.matchShortAnswer("new   york", ["New York"])).toBe(true);
+    expect(Q.matchShortAnswer("Montreal", ["Montréal"])).toBe(false);
+    expect(Q.matchShortAnswer("Montreal", ["Montréal"], { accentInsensitive: true })).toBe(true);
+    expect(Q.matchShortAnswer("montréal", ["MONTREAL"], { accentInsensitive: true })).toBe(true);
+    expect(Q.matchShortAnswer("", ["Paris"])).toBe(false);
+    expect(Q.matchShortAnswer("Lyon", ["Paris", "Lyon"])).toBe(true);
+    expect(Q.matchShortAnswer("Paris", ["", "  "])).toBe(false);
+    expect(Q.normalizeTypedAnswer(" Éa\t B ", true)).toBe("ea b");
+  });
+
+  test("short answer grading, and a question without accepted answers is skipped", () => {
+    const q = { question_id: "s", question: "?", type: "short_answer", answers: [], accepted_answers: ["mitochondria"] };
+    expect(Q.gradeQuestion(q, ["Mitochondria "])).toBe("correct");
+    expect(Q.gradeQuestion(q, ["nucleus"])).toBe("incorrect");
+    expect(Q.gradeQuestion(q, [])).toBe("incorrect");
+    expect(Q.gradeQuestion({ ...q, accepted_answers: [" "] }, ["x"])).toBe("ungraded");
+    expect(Q.hasCorrectAnswer({ ...q, accepted_answers: [] })).toBe(false);
+    const edited = Q.setAcceptedAnswers([q], "s", ["a", "b", ...Array(20).fill("c")])[0];
+    expect(edited.accepted_answers.length).toBe(Q.MAX_ACCEPTED_ANSWERS);
+    expect(Q.setAccentInsensitive([q], "s", true)[0].accent_insensitive).toBe(true);
+    expect("accent_insensitive" in Q.setAccentInsensitive([q], "s", false)[0]).toBe(false);
+  });
+
+  test("numbers are read like the graded number task (thousands, decimal comma)", () => {
+    expect(Q.parseNumericAnswer("1,000")).toBe(1000);
+    expect(Q.parseNumericAnswer("1,000,000")).toBe(1000000);
+    expect(Q.parseNumericAnswer("1,000.50")).toBe(1000.5);
+    expect(Q.parseNumericAnswer("3,14")).toBe(3.14);
+    expect(Q.parseNumericAnswer(" -2.5 ")).toBe(-2.5);
+    expect(Q.parseNumericAnswer("1e3")).toBe(1000);
+    expect(Q.parseNumericAnswer(".5")).toBe(0.5);
+    expect(Q.parseNumericAnswer("")).toBeNull();
+    expect(Q.parseNumericAnswer("abc")).toBeNull();
+    expect(Q.parseNumericAnswer("12abc")).toBeNull();
+    expect(Q.parseNumericAnswer(Infinity)).toBeNull();
+    expect(Q.parseNumericAnswer(7)).toBe(7);
+  });
+
+  test("numeric grading uses the tolerance", () => {
+    const q = { question_id: "n", question: "g?", type: "numeric", answers: [], correct_value: 9.81, tolerance: 0.05 };
+    expect(Q.gradeQuestion(q, ["9.8"])).toBe("correct");
+    expect(Q.gradeQuestion(q, ["9,85"])).toBe("correct");
+    expect(Q.gradeQuestion(q, ["9.9"])).toBe("incorrect");
+    expect(Q.gradeQuestion(q, ["nine"])).toBe("incorrect");
+    expect(Q.gradeQuestion({ ...q, tolerance: undefined }, ["9.81"])).toBe("correct");
+    expect(Q.matchNumeric("0.3", 0.1 + 0.2)).toBe(true);
+    expect(Q.matchNumeric("1", 1, -0.5)).toBe(true);
+    expect(Q.gradeQuestion({ question_id: "n2", type: "numeric", answers: [] }, ["1"])).toBe("ungraded");
+    let qs = Q.setNumericAnswer([q], "n", { correct_value: "1,5", tolerance: "-0.1" });
+    expect(qs[0]).toMatchObject({ correct_value: 1.5, tolerance: 0.1 });
+    qs = Q.setNumericAnswer(qs, "n", { correct_value: "", tolerance: "x" });
+    expect("correct_value" in qs[0]).toBe(false);
+    expect(qs[0].tolerance).toBe(0);
+  });
+
+  test("typed answers are stored as the one entry; answered means non-blank", () => {
+    const q = { question_id: "s", type: "short_answer", answers: [], accepted_answers: ["x"] };
+    let s = Q.setTypedAnswer({}, q, "hello");
+    expect(s.s).toEqual(["hello"]);
+    expect(Q.isAnswered(q, s.s)).toBe(true);
+    s = Q.setTypedAnswer(s, q, "");
+    expect(s.s).toEqual([]);
+    expect(Q.isAnswered(q, ["   "])).toBe(false);
+    expect(Q.isAnswered(quiz()[0], ["a"])).toBe(true);
+    expect(Q.isAnswered(quiz()[0], [])).toBe(false);
+  });
+
+  test("mixed quiz: score, percent and the pass mark", () => {
+    const qs = [
+      quiz()[0],
+      { question_id: "s", question: "?", type: "short_answer", answers: [], accepted_answers: ["yes"] },
+      { question_id: "n", question: "?", type: "numeric", answers: [], correct_value: 10 },
+      { question_id: "u", question: "no key", type: "short_answer", answers: [] },
+    ];
+    const sel = { q1: ["a"], s: ["YES"], n: ["11"] };
+    const g = Q.gradeQuiz(qs, sel);
+    expect(g).toMatchObject({ correct: 2, graded: 3, allCorrect: false, percent: 67, passed: false });
+    expect(g.results.u).toBe("ungraded");
+    expect(Q.gradeQuiz(qs, sel, 60).passed).toBe(true);
+    expect(Q.gradeQuiz(qs, sel, 70).passed).toBe(false);
+    expect(Q.gradeQuiz(qs, { ...sel, n: ["10"] }).passed).toBe(true);
+    // No pass mark: the old rule, and nothing to grade still counts as done.
+    expect(Q.gradeQuiz([qs[3]], {})).toMatchObject({ graded: 0, percent: 100, passed: true, allCorrect: false });
+    expect(Q.gradeQuiz([qs[3]], {}, 50).passed).toBe(false);
+  });
+
+  test("pass mark and explanations settings are stored only when changed", () => {
+    expect(Q.normalizeSettings({ passMark: 72.4 }).passMark).toBe(72);
+    expect(Q.normalizeSettings({ passMark: 250 }).passMark).toBe(100);
+    expect(Q.normalizeSettings({ passMark: -5 }).passMark).toBe(0);
+    expect(Q.normalizeSettings({ passMark: "abc" }).passMark).toBe(0);
+    expect(Q.normalizeSettings({ showExplanations: false }).showExplanations).toBe(false);
+    expect(Q.normalizeSettings({ showExplanations: "no" }).showExplanations).toBe(true);
+    expect(Q.compactSettings({ ...Q.DEFAULT_QUIZ_SETTINGS, passMark: 80, showExplanations: false })).toEqual({ passMark: 80, showExplanations: false });
+    expect(Q.PASS_MARK_OPTIONS[0]).toBe(0);
   });
 });
 

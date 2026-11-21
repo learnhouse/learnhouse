@@ -19,6 +19,8 @@ export interface SlashCommandItem {
 }
 
 export type SlashCommandCategory =
+  | 'layout'
+  | 'data'
   | 'text'
   | 'media'
   | 'interactive'

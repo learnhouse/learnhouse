@@ -42,9 +42,11 @@ describe('<learnhouse-activity>', () => {
     const root = el.querySelector('.lh-activity') as HTMLElement
     expect(root.classList.contains('dark')).toBe(true)
     expect(root.style.getPropertyValue('--lh-accent')).toBe('#7c3aed')
-    // Hidden table blocks: an Experiences block's own table (property grid) is not one.
-    expect([...el.querySelectorAll('table')].filter((t) => !t.closest('[data-experience]'))).toHaveLength(0)
-    expect(el.querySelector('blockquote')).toBeNull()
+    // Hidden table blocks: an Experiences block's own table (property grid) and a chart's
+    // data table are not ones.
+    expect([...el.querySelectorAll('table')].filter((t) => !t.closest('[data-experience], .lh-chart'))).toHaveLength(0)
+    // The quote block draws its own <blockquote>; only the stock one is gone.
+    expect([...el.querySelectorAll('blockquote')].filter((b) => !b.closest('.node-quoteBlock'))).toHaveLength(0)
     el.remove()
   })
 

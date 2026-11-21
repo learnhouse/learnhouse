@@ -4276,6 +4276,91 @@
         "completed_note": "完了です。もう一度読み返し、足りなかった点を覚えておきましょう。",
         "write_again": "答えを書き直す"
       }
+    },
+    "table": {
+      "total": "合計",
+      "average": "平均",
+      "sort_by": "並べ替え",
+      "original_order": "元の順序",
+      "ascending": "昇順",
+      "descending": "降順",
+      "sort_direction": "並べ替えの方向",
+      "sorted": "{{column}}で並べ替え（{{direction}}）",
+      "column_n": "列 {{n}}"
+    },
+    "tabs": {
+      "tab": "タブ",
+      "untitled": "タブ {{n}}",
+      "list_label": "タブ"
+    },
+    "accordion": {
+      "expand_all": "すべて展開",
+      "collapse_all": "すべて折りたたむ"
+    },
+    "table_of_contents": {
+      "title": "目次"
+    },
+    "checklist": {
+      "progress_label": "{{total}} 件中 {{done}} 件完了",
+      "reset": "チェックリストをリセット",
+      "item": "チェックリストの項目",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "タイムライン"
+    },
+    "key_takeaways": {
+      "title": "重要なポイント"
+    },
+    "chart": {
+      "category": "カテゴリ",
+      "point": "{{label}}、{{series}}: {{value}}",
+      "slice": "{{label}}: {{value}}（{{percent}}）",
+      "summary": "{{type}}：{{categories}} 個のカテゴリにわたる {{series}} 系列（{{names}}）、{{min}} から {{max}}。",
+      "title": "グラフ",
+      "types": {
+        "bar": "横棒グラフ",
+        "column": "縦棒グラフ",
+        "line": "折れ線グラフ",
+        "area": "面グラフ",
+        "pie": "円グラフ",
+        "donut": "ドーナツグラフ"
+      }
+    },
+    "file_card": {
+      "download": "ダウンロード",
+      "download_named": "{{name}} をダウンロード",
+      "file": "ファイル",
+      "types": {
+        "pdf": "PDF",
+        "doc": "文書",
+        "sheet": "スプレッドシート",
+        "slides": "スライド",
+        "archive": "アーカイブ",
+        "image": "画像",
+        "audio": "音声",
+        "video": "動画",
+        "text": "テキスト",
+        "code": "コード",
+        "file": "ファイル"
+      }
+    },
+    "gallery": {
+      "carousel": "カルーセル",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "画像 {{n}} を表示",
+      "label": "画像ギャラリー",
+      "next": "次の画像",
+      "open_image": "画像 {{n}}/{{count}} を開く",
+      "previous": "前の画像",
+      "slide": "スライド",
+      "viewer_title": "画像 {{n}}/{{count}}"
+    },
+    "image_compare": {
+      "after": "後",
+      "before": "前",
+      "slider": "画像を比較",
+      "value": "{{before}} {{b}}%、{{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13424,7 +13509,11 @@
         "type_warning": "警告",
         "type_tip": "ヒント",
         "type_success": "成功",
-        "type_error": "エラー"
+        "type_error": "エラー",
+        "type_note": "メモ",
+        "type_question": "質問",
+        "type_example": "例",
+        "type_quote": "引用"
       }
     },
     "dynamic": {
@@ -13883,6 +13972,70 @@
         "table": {
           "title": "表",
           "description": "3×3の表を挿入"
+        },
+        "tabs": {
+          "description": "コンテンツのパネルを切り替える",
+          "title": "タブ"
+        },
+        "columns": {
+          "description": "コンテンツを横に並べる",
+          "title": "列"
+        },
+        "accordion": {
+          "description": "折りたたみセクション（一度に1つだけ開く）",
+          "title": "アコーディオン"
+        },
+        "timeline": {
+          "description": "順番に並んだステップや出来事",
+          "title": "タイムライン"
+        },
+        "table_of_contents": {
+          "description": "このページの見出しへのリンク",
+          "title": "目次"
+        },
+        "key_takeaways": {
+          "description": "要点をまとめたカード",
+          "title": "重要なポイント"
+        },
+        "checklist": {
+          "description": "学習者がチェックを付けられる項目",
+          "title": "チェックリスト"
+        },
+        "gallery": {
+          "title": "ギャラリー",
+          "description": "複数の画像をグリッドやカルーセルで"
+        },
+        "image_compare": {
+          "title": "画像比較",
+          "description": "スライダーで変更前と変更後を比較"
+        },
+        "file_card": {
+          "title": "ファイルのダウンロード",
+          "description": "学習者がダウンロードできるファイル"
+        },
+        "quote_block": {
+          "title": "お客様の声",
+          "description": "発言者付きのプルクオートやお客様の声"
+        },
+        "quote": {
+          "title": "引用",
+          "description": "シンプルな引用文"
+        },
+        "chart": {
+          "title": "グラフ",
+          "description": "小さな表から棒・折れ線・円グラフを作成"
+        },
+        "stat_highlights": {
+          "title": "数値",
+          "description": "カウントアップする大きな数値"
+        },
+        "button_group": {
+          "title": "ボタングループ",
+          "description": "複数のボタンを横に並べる"
+        },
+        "inline_math": {
+          "title": "インライン数式",
+          "description": "文中の数式（$x^2$ と入力しても作成できます）"
         }
       },
       "categories": {
@@ -13892,7 +14045,9 @@
         "callouts": "コールアウト",
         "dynamic": "動的コンテンツ",
         "ui": "UI要素",
-        "tables": "表"
+        "tables": "表",
+        "layout": "レイアウト",
+        "data": "データとメディア"
       },
       "no_results": "結果が見つかりません"
     },
@@ -14237,7 +14392,14 @@
       "button": {
         "emoji": "絵文字",
         "link_hint": "学習者がボタンをクリックすると新しいタブで開きます。",
-        "no_link": "リンクはまだありません。リンクボタンで設定してください。"
+        "no_link": "リンクはまだありません。リンクボタンで設定してください。",
+        "style": "スタイル",
+        "variant": "見た目",
+        "size": "サイズ",
+        "variant_solid": "塗りつぶし",
+        "variant_outline": "枠線",
+        "variant_soft": "ソフト",
+        "variant_link": "リンク"
       },
       "quiz": {
         "settings": "クイズの設定",
@@ -14295,7 +14457,39 @@
         "clear": "クリア",
         "check": "答え合わせ",
         "try_again": "もう一度",
-        "start_over": "最初から"
+        "start_over": "最初から",
+        "question_type": "質問の種類",
+        "type_multiple_choice": "選択式",
+        "type_true_false": "正誤",
+        "type_short_answer": "短答式",
+        "type_numeric": "数値",
+        "true": "正しい",
+        "false": "誤り",
+        "accepted_answers": "正解として認める答え",
+        "accepted_answer_n": "認める答え {{n}}",
+        "accepted_answer_placeholder": "正解とみなす答え",
+        "add_accepted": "認める答えを追加",
+        "remove_accepted": "認める答え {{n}} を削除",
+        "ignore_accents": "アクセント記号を無視 (é = e)",
+        "short_answer_hint": "大文字・小文字の違いや余分なスペースは無視されます。",
+        "numeric_value": "正解",
+        "numeric_tolerance": "許容誤差",
+        "show_explanations": "解説を表示",
+        "show_explanations_hint": "学習者が送信すると、各質問の下に解説が表示されます。",
+        "pass_mark": "合格ライン",
+        "pass_mark_off": "なし",
+        "pass_mark_n": "{{n}}% で合格",
+        "pass_mark_off_hint": "学習者はすべて正解だったかどうかを確認できます。",
+        "pass_mark_hint": "{{n}}% 以上で合格になり、学習者はスコアを確認できます。",
+        "pass_mark_needed": "合格ライン: {{n}}%",
+        "passed": "合格",
+        "not_passed": "まだ不合格",
+        "score_percent": "{{percent}}%",
+        "your_answer": "あなたの答え",
+        "your_number": "あなたの答え（数値）",
+        "answer_placeholder": "答えを入力",
+        "number_placeholder": "数値を入力",
+        "expected_answer": "正解: {{answer}}"
       },
       "flipcard": {
         "front": "表",
@@ -14541,6 +14735,423 @@
         "reset_text": "リセット",
         "text": "タイトルと説明",
         "title": "タイトル"
+      },
+      "table": {
+        "rows_cols": "行と列",
+        "duplicate_row": "行を複製",
+        "distribute": "列幅を均等にする",
+        "merge_split": "セルを結合または分割",
+        "headers": "見出し",
+        "header_column": "見出し列",
+        "cell_style": "セルのスタイル",
+        "apply_to": "適用先",
+        "scope_selection": "選択したセル",
+        "scope_column": "列全体",
+        "background": "背景",
+        "align": "配置",
+        "align_start": "先頭",
+        "align_center": "中央",
+        "align_end": "末尾",
+        "valign": "縦の配置",
+        "valign_top": "上",
+        "valign_middle": "中央",
+        "valign_bottom": "下",
+        "cell_type": "セルの種類",
+        "type_hint": "値はセルのテキストに残ります（例：75、4/5、はい）。",
+        "type": {
+          "text": "テキスト",
+          "progress": "進捗",
+          "checkbox": "チェックボックス",
+          "rating": "評価",
+          "status": "ステータス",
+          "number": "数値",
+          "date": "日付"
+        },
+        "tone": "色",
+        "tone_auto": "自動",
+        "number_format": "数値の形式",
+        "format": {
+          "plain": "標準",
+          "percent": "パーセント",
+          "currency": "通貨",
+          "compact": "短縮"
+        },
+        "currency": "通貨コード",
+        "settings": "表の設定",
+        "variant": "スタイル",
+        "variants": {
+          "default": "デフォルト",
+          "striped": "ストライプ",
+          "bordered": "罫線あり",
+          "minimal": "ミニマル",
+          "cards": "カード"
+        },
+        "cards_hint": "スマートフォンでは行がカードになります。",
+        "caption": "キャプション",
+        "caption_placeholder": "表の説明を入力",
+        "sortable": "受講者が並べ替え可能",
+        "sticky_header": "見出しを固定",
+        "compact": "行を詰める",
+        "totals": "合計行",
+        "totals_hint": "数値と進捗の列が対象です。",
+        "totals_none": "なし",
+        "totals_sum": "合計",
+        "totals_average": "平均",
+        "toggle_checkbox": "チェックを切り替え",
+        "templates": {
+          "progress": {
+            "title": "進捗トラッカー",
+            "description": "担当者、ステータス、進捗バー付きのタスク"
+          },
+          "comparison": {
+            "title": "比較",
+            "description": "選択肢をチェックマークで並べて比較"
+          },
+          "rubric": {
+            "title": "ルーブリック",
+            "description": "レベルと点数付きの評価基準"
+          }
+        },
+        "sample": {
+          "task": "タスク",
+          "owner": "担当者",
+          "status": "ステータス",
+          "progress": "進捗",
+          "task_1": "レッスンを計画する",
+          "task_2": "動画を収録する",
+          "task_3": "クイズを作成する",
+          "status_done": "完了",
+          "status_in_progress": "進行中",
+          "status_todo": "未着手",
+          "feature": "機能",
+          "option_a": "ベーシック",
+          "option_b": "プロ",
+          "feature_1": "動画レッスン",
+          "feature_2": "クイズ",
+          "feature_3": "修了証",
+          "criterion": "評価項目",
+          "look_for": "評価のポイント",
+          "level": "レベル",
+          "points": "点数",
+          "crit_1": "明確さ",
+          "crit_2": "正確さ",
+          "crit_3": "構成",
+          "desc_1": "考えがわかりやすい",
+          "desc_2": "事実と手順が正しい",
+          "desc_3": "論理的な順序の明確なセクション"
+        }
+      },
+      "layout": {
+        "settings": "設定",
+        "style": "スタイル",
+        "color": "色",
+        "icon": "アイコン",
+        "icon_default": "デフォルト",
+        "size_sm": "小",
+        "size_md": "中",
+        "size_lg": "大",
+        "tone_neutral": "ニュートラル",
+        "tone_blue": "ブルー",
+        "tone_teal": "ティール",
+        "tone_green": "グリーン",
+        "tone_amber": "アンバー",
+        "tone_rose": "ローズ",
+        "icons": {
+          "lightbulb": "電球",
+          "star": "星",
+          "check": "チェックマーク",
+          "target": "ターゲット",
+          "flag": "旗",
+          "book": "本",
+          "rocket": "ロケット",
+          "key": "鍵"
+        }
+      },
+      "tabs": {
+        "label": "タブ",
+        "add": "タブを追加",
+        "remove": "このタブを削除",
+        "move_earlier": "タブを前へ移動",
+        "move_later": "タブを後ろへ移動",
+        "title_placeholder": "タブのタイトル",
+        "variant_line": "ライン",
+        "variant_pills": "ピル",
+        "variant_boxed": "ボックス",
+        "sample": {
+          "tab_1": "概要",
+          "tab_2": "詳細",
+          "tab_3": "例",
+          "text_1": "まず全体像から始めましょう。",
+          "text_2": "仕組みを詳しく説明しましょう。",
+          "text_3": "実際の使い方を示しましょう。"
+        }
+      },
+      "columns": {
+        "label": "列",
+        "layout": "レイアウト",
+        "layout_halves": "同じ幅の2列",
+        "layout_narrow_wide": "狭い列と広い列",
+        "layout_wide_narrow": "広い列と狭い列",
+        "layout_thirds": "3列",
+        "layout_quarters": "4列",
+        "gap": "間隔",
+        "align": "縦方向の配置",
+        "align_top": "上",
+        "align_center": "中央",
+        "align_bottom": "下",
+        "stack": "小さい画面では縦に並べる",
+        "sample": {
+          "left": "1列目",
+          "right": "2列目"
+        }
+      },
+      "accordion": {
+        "label": "アコーディオン",
+        "add": "セクションを追加",
+        "single": "一度に開くのは1セクションのみ",
+        "variant_bordered": "枠線付き",
+        "variant_filled": "塗りつぶし",
+        "sample": {
+          "item_1": "何を学べますか？",
+          "text_1": "このレッスンで得られることを説明します。",
+          "item_2": "どのくらいかかりますか？",
+          "text_2": "学習者が計画を立てられるよう目安を示します。",
+          "item_3": "何が必要ですか？",
+          "text_3": "始める前に準備しておくものを挙げます。"
+        },
+        "variant_default": "デフォルト"
+      },
+      "timeline": {
+        "label": "タイムライン",
+        "add": "ステップを追加",
+        "remove": "ステップを削除",
+        "step": "ステップ",
+        "title_placeholder": "ステップのタイトル",
+        "label_placeholder": "日付またはラベル（任意）",
+        "numbered": "ステップに番号を付ける",
+        "orientation": "方向",
+        "vertical": "縦",
+        "horizontal": "横",
+        "icon_number": "番号",
+        "variant_steps": "ステップ",
+        "variant_process": "プロセス",
+        "sample": {
+          "step_1": "準備する",
+          "text_1": "必要なものをそろえます。",
+          "step_2": "練習する",
+          "text_2": "小さな例で試します。",
+          "step_3": "実践する",
+          "text_3": "実際の作業で使います。"
+        },
+        "variant_timeline": "タイムライン"
+      },
+      "table_of_contents": {
+        "label": "目次",
+        "depth": "含める見出し",
+        "numbered": "項目に番号を付ける",
+        "title_label": "タイトル",
+        "empty": "レッスンに見出しを追加すると、ここに表示されます。"
+      },
+      "key_takeaways": {
+        "label": "重要なポイント",
+        "title_label": "カードのタイトル",
+        "sample": {
+          "point_1": "一文で表した要点",
+          "point_2": "覚えておきたい点",
+          "point_3": "次にやること"
+        }
+      },
+      "checklist": {
+        "label": "チェックリスト",
+        "learner_can_check": "学習者が項目にチェックを付けられる",
+        "hint": "チェックは学習者ごとにブラウザに保存されます。ここでチェックした項目は最初からチェック済みになります。",
+        "sample": {
+          "item_1": "レッスンを読む",
+          "item_2": "演習に挑戦する",
+          "item_3": "答えを確認する"
+        }
+      },
+      "chart": {
+        "add_row": "行を追加",
+        "add_series": "系列を追加",
+        "apply_csv": "このデータを使う",
+        "csv_error": "表を読み取れませんでした。1 列目にラベル、ほかの列に数値を入れてください。",
+        "csv_label": "CSV 形式の表",
+        "csv_placeholder": "スプレッドシートから貼り付けるか、「ラベル, 系列1, 系列2」の形で入力",
+        "edit_data": "データを編集",
+        "empty": "グラフを描くにはデータを追加してください。",
+        "label": "グラフ",
+        "label_n": "ラベル {{n}}",
+        "labels": "ラベル",
+        "paste_csv": "CSV を貼り付け",
+        "pie_hint": "円グラフとドーナツグラフは最初の系列を表示します。",
+        "remove_row": "行を削除",
+        "remove_series": "系列を削除",
+        "row_n": "項目 {{n}}",
+        "sample": {
+          "q1": "第1四半期",
+          "q2": "第2四半期",
+          "q3": "第3四半期",
+          "q4": "第4四半期",
+          "series_1": "クラスA",
+          "series_2": "クラスB",
+          "title": "四半期ごとの小テスト平均点"
+        },
+        "series_color": "{{name}} の色を変更",
+        "series_n": "系列 {{n}}",
+        "series_name": "系列名",
+        "settings": "グラフの設定",
+        "show_legend": "凡例を表示",
+        "show_values": "値を表示",
+        "stacked": "系列を積み上げる",
+        "title_label": "タイトル",
+        "title_placeholder": "グラフのタイトル",
+        "type": "グラフの種類"
+      },
+      "file_card": {
+        "add_link": "リンクを追加",
+        "description": "説明",
+        "description_placeholder": "このファイルの内容は？（任意）",
+        "empty_hint": "PDF、画像、音声、動画をアップロードするか、任意のファイルへのリンクを追加します。",
+        "empty_title": "ダウンロード用のファイルを追加",
+        "label": "ファイル",
+        "link_hint": "アップロード済みのファイルがあれば置き換えます。",
+        "link_label": "ファイルへのリンク",
+        "link_settings": "ファイルのリンク",
+        "name": "ファイル名",
+        "type_error": "この種類のファイルはアップロードできません。PDF、画像、音声、動画をアップロードするか、ファイルへのリンクを追加してください。",
+        "upload": "ファイルをアップロード"
+      },
+      "gallery": {
+        "add_images": "画像を追加",
+        "add_link": "画像を追加",
+        "alt_hint": "スクリーンリーダーを使う学習者のために、画像の内容を書いてください。",
+        "alt_missing": "代替テキストなし: {{n}}",
+        "alt_placeholder": "代替テキスト（必須）",
+        "columns": "列数",
+        "count": "画像: {{n}}",
+        "empty_hint": "複数の画像をまとめてドロップするか、デバイスから選びます。{{formats}} · 1 枚あたり最大 {{max}}。",
+        "empty_title": "ギャラリーに画像を追加",
+        "full": "ギャラリーには最大 {{max}} 枚まで入れられます。",
+        "label": "ギャラリー",
+        "layout": "レイアウト",
+        "layout_carousel": "カルーセル",
+        "layout_grid": "グリッド",
+        "layout_masonry": "メイソンリー",
+        "move_earlier": "前へ移動",
+        "move_later": "後ろへ移動",
+        "remove": "画像を削除",
+        "settings": "ギャラリーの設定"
+      },
+      "image_compare": {
+        "after_image": "変更後の画像",
+        "before_image": "変更前の画像",
+        "empty_hint": "同じサイズの変更前と変更後の画像を選びます。学習者は仕切りをドラッグして比較します。",
+        "empty_title": "画像を追加",
+        "horizontal": "左右",
+        "label": "画像比較",
+        "orientation": "方向",
+        "replace_after": "変更後の画像を差し替え",
+        "replace_before": "変更前の画像を差し替え",
+        "settings": "比較の設定",
+        "side_label": "ラベル",
+        "start": "仕切りの初期位置",
+        "vertical": "上下"
+      },
+      "quote_block": {
+        "author": "発言者",
+        "author_placeholder": "名前",
+        "avatar": "写真のリンク",
+        "avatar_hint": "お客様の声で名前の横に表示されます。空欄ならイニシャルを表示します。",
+        "label": "引用",
+        "role": "役職",
+        "role_placeholder": "役職または会社",
+        "sample": {
+          "author": "佐藤 美咲",
+          "role": "プロダクトデザイナー",
+          "text": "実践的な演習でようやく腑に落ちました。学んだことを翌日にはもう仕事で使いました。"
+        },
+        "settings": "引用の設定",
+        "style": "スタイル",
+        "variant_highlight": "強調",
+        "variant_pull": "プルクオート",
+        "variant_testimonial": "お客様の声"
+      },
+      "stat_highlights": {
+        "add": "数値を追加",
+        "animate": "表示時にカウントアップ",
+        "color": "色",
+        "columns": "列数",
+        "description": "説明",
+        "description_placeholder": "短い説明（任意）",
+        "empty": "数値を追加して始めましょう。",
+        "label": "数値",
+        "label_field": "ラベル",
+        "prefix": "数値の前",
+        "remove": "数値を削除",
+        "sample": {
+          "desc_1": "の受講者が修了",
+          "desc_2": "1,200 件のレビューより",
+          "desc_3": "40 か国で",
+          "label_1": "修了率",
+          "label_2": "平均評価",
+          "label_3": "受講者"
+        },
+        "settings": "数値の設定",
+        "suffix": "数値の後",
+        "value": "数値"
+      },
+      "callout_title": "タイトル",
+      "callout_title_placeholder": "タイトル（任意）",
+      "callout_collapsible": "学習者が折りたためる",
+      "callout_default_open": "最初は開いておく",
+      "callout_tone": "色",
+      "callout_tone_default": "種類の色",
+      "code_copied": "コードをクリップボードにコピーしました",
+      "code_copy_failed": "コピーできませんでした。コードを選択して手動でコピーしてください。",
+      "code_highlight": "強調する行（例: 2,4-6）",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "行番号",
+      "code_wrap": "長い行を折り返す",
+      "align": {
+        "label": "テキストの配置",
+        "start": "先頭揃え",
+        "center": "中央揃え",
+        "end": "末尾揃え",
+        "justify": "両端揃え"
+      },
+      "button_group": {
+        "label": "ボタングループ",
+        "add_button": "ボタンを追加",
+        "new_button": "ボタン",
+        "primary": "はじめる",
+        "secondary": "詳しく見る"
+      },
+      "image_frame": {
+        "label": "フレーム",
+        "none": "なし",
+        "rounded": "角丸",
+        "shadow": "影",
+        "border": "枠線",
+        "polaroid": "ポラロイド"
+      },
+      "inline_math": {
+        "title": "インライン数式",
+        "edit": "数式 {{latex}} を編集",
+        "latex": "LaTeX",
+        "hint": "例: \\frac{a}{b} や x^2。本文で $…$ と入力しても作成できます。",
+        "make": "数式",
+        "remove": "削除"
+      },
+      "toggle": {
+        "style": "トグルのスタイル",
+        "variant": "見た目",
+        "variant_default": "標準",
+        "variant_bordered": "枠線あり",
+        "variant_filled": "塗りつぶし",
+        "icon": "アイコン",
+        "icon_chevron": "矢印",
+        "icon_plus": "プラスとマイナス"
       }
     },
     "history": {

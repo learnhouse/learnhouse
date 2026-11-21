@@ -9,7 +9,8 @@ import type { AnyExtension, Extensions } from '@tiptap/core'
 import type { Mark, Node as PMNode } from '@tiptap/pm/model'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import { getNodeViewComponent } from '@components/Objects/Editor/core/nodeView'
-import { lowlight } from '@components/Objects/Editor/editorLowlight'
+import { StaticCodeBlock } from '@components/Objects/Editor/Blocks/extensions/CodeBlockStatic'
+import { readTextAlign } from '@components/Objects/Editor/Blocks/schema/blockAttrs'
 import BlockThemeScope, { type BlockThemeRequest } from '@components/Objects/Activities/BlockTheme/BlockThemeScope'
 import {
   getActivityExtensions,
@@ -122,46 +123,17 @@ function nodeViewMapping(extensions: AnyExtension[]) {
   return mapping
 }
 
-type Hast = { type: string; value?: string; tagName?: string; properties?: { className?: string[] }; children?: Hast[] }
-
-function hastToReact(node: Hast, key: number): ReactNode {
-  if (node.type === 'text') return node.value
-  const children = (node.children ?? []).map(hastToReact)
-  if (node.type === 'element') {
-    return React.createElement(node.tagName ?? 'span', { key, className: node.properties?.className?.join(' ') }, children)
-  }
-  return children
-}
-
 // The editor highlights code through a ProseMirror decoration plugin, which a
-// static render never runs, so highlight here with the same lowlight instance.
-function StaticCodeBlock({ node }: { node: PMNode }) {
-  const language: string | null = node.attrs.language
-  const code = node.textContent
-  const tree = useMemo(() => {
-    try {
-      return language && lowlight.registered(language)
-        ? lowlight.highlight(language, code)
-        : lowlight.highlightAuto(code)
-    } catch {
-      return null
-    }
-  }, [language, code])
-  return (
-    <pre>
-      <code className={language ? `language-${language}` : undefined}>
-        {tree ? hastToReact(tree as Hast, 0) : code}
-      </code>
-    </pre>
-  )
-}
-
+// static render never runs; CodeBlockStatic highlights with the same lowlight
+// instance and draws line numbers / highlighted lines like the editor.
 // Heading ids come from a decoration in the editor (computed over the whole
 // document, see CustomHeadingExtenstion), which a static render never runs, so
 // the same ids are computed here and written on the heading.
 function StaticHeading({ node, id, children }: { node: PMNode; id?: string; children?: ReactNode }) {
   const level = Math.min(Math.max(Number(node.attrs.level) || 1, 1), 6)
-  return React.createElement(`h${level}`, { id }, children)
+  // Editor Plus text alignment; null (every older heading) adds no style.
+  const align = readTextAlign(node.attrs.textAlign)
+  return React.createElement(`h${level}`, align ? { id, style: { textAlign: align } } : { id }, children)
 }
 
 // computeHeadingIds walks a document in order and reads each node's type name

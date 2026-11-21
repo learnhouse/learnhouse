@@ -4294,6 +4294,91 @@
         "completed_note": "हो गया। इसे एक बार फिर पढ़ें और जो छूट गया उसे याद रखें।",
         "write_again": "अपना उत्तर बदलें"
       }
+    },
+    "table": {
+      "total": "कुल",
+      "average": "औसत",
+      "sort_by": "इसके अनुसार क्रमबद्ध करें",
+      "original_order": "मूल क्रम",
+      "ascending": "आरोही",
+      "descending": "अवरोही",
+      "sort_direction": "क्रम की दिशा",
+      "sorted": "{{column}} के अनुसार क्रमबद्ध, {{direction}}",
+      "column_n": "कॉलम {{n}}"
+    },
+    "tabs": {
+      "tab": "टैब",
+      "untitled": "टैब {{n}}",
+      "list_label": "टैब"
+    },
+    "accordion": {
+      "expand_all": "सभी खोलें",
+      "collapse_all": "सभी बंद करें"
+    },
+    "table_of_contents": {
+      "title": "सामग्री"
+    },
+    "checklist": {
+      "progress_label": "{{total}} में से {{done}} पूरे",
+      "reset": "चेकलिस्ट रीसेट करें",
+      "item": "चेकलिस्ट आइटम",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "टाइमलाइन"
+    },
+    "key_takeaways": {
+      "title": "मुख्य बातें"
+    },
+    "chart": {
+      "category": "श्रेणी",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}}: {{categories}} श्रेणियों में {{series}} सीरीज़ ({{names}}), {{min}} से {{max}} तक।",
+      "title": "चार्ट",
+      "types": {
+        "bar": "बार चार्ट",
+        "column": "कॉलम चार्ट",
+        "line": "लाइन चार्ट",
+        "area": "एरिया चार्ट",
+        "pie": "पाई चार्ट",
+        "donut": "डोनट चार्ट"
+      }
+    },
+    "file_card": {
+      "download": "डाउनलोड",
+      "download_named": "{{name}} डाउनलोड करें",
+      "file": "फ़ाइल",
+      "types": {
+        "pdf": "PDF",
+        "doc": "दस्तावेज़",
+        "sheet": "स्प्रेडशीट",
+        "slides": "स्लाइड",
+        "archive": "आर्काइव",
+        "image": "छवि",
+        "audio": "ऑडियो",
+        "video": "वीडियो",
+        "text": "टेक्स्ट",
+        "code": "कोड",
+        "file": "फ़ाइल"
+      }
+    },
+    "gallery": {
+      "carousel": "कैरोसेल",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "छवि {{n}} दिखाएँ",
+      "label": "छवि गैलरी",
+      "next": "अगली छवि",
+      "open_image": "{{count}} में से छवि {{n}} खोलें",
+      "previous": "पिछली छवि",
+      "slide": "स्लाइड",
+      "viewer_title": "{{count}} में से छवि {{n}}"
+    },
+    "image_compare": {
+      "after": "बाद में",
+      "before": "पहले",
+      "slider": "छवियों की तुलना करें",
+      "value": "{{before}} {{b}}%, {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13456,7 +13541,11 @@
         "type_warning": "चेतावनी",
         "type_tip": "सुझाव",
         "type_success": "सफलता",
-        "type_error": "त्रुटि"
+        "type_error": "त्रुटि",
+        "type_note": "नोट",
+        "type_question": "प्रश्न",
+        "type_example": "उदाहरण",
+        "type_quote": "उद्धरण"
       }
     },
     "dynamic": {
@@ -13915,6 +14004,70 @@
         "table": {
           "title": "तालिका",
           "description": "3x3 तालिका डालें"
+        },
+        "tabs": {
+          "description": "सामग्री के पैनलों के बीच बदलें",
+          "title": "टैब"
+        },
+        "columns": {
+          "description": "सामग्री को अगल-बगल रखें",
+          "title": "कॉलम"
+        },
+        "accordion": {
+          "description": "खुलने-बंद होने वाले सेक्शन, एक बार में एक खुला",
+          "title": "अकॉर्डियन"
+        },
+        "timeline": {
+          "description": "क्रम से चरण या घटनाएं",
+          "title": "टाइमलाइन"
+        },
+        "table_of_contents": {
+          "description": "इस पेज के शीर्षकों के लिंक",
+          "title": "विषय-सूची"
+        },
+        "key_takeaways": {
+          "description": "मुख्य बातों का सारांश कार्ड",
+          "title": "मुख्य बातें"
+        },
+        "checklist": {
+          "description": "आइटम जिन पर शिक्षार्थी निशान लगा सकते हैं",
+          "title": "चेकलिस्ट"
+        },
+        "gallery": {
+          "title": "गैलरी",
+          "description": "ग्रिड या कैरोसेल में कई छवियाँ"
+        },
+        "image_compare": {
+          "title": "छवि तुलना",
+          "description": "स्लाइडर के साथ पहले और बाद में"
+        },
+        "file_card": {
+          "title": "फ़ाइल डाउनलोड",
+          "description": "ऐसी फ़ाइल जिसे शिक्षार्थी डाउनलोड कर सकें"
+        },
+        "quote_block": {
+          "title": "प्रशंसापत्र",
+          "description": "लेखक के साथ पुल कोट या प्रशंसापत्र"
+        },
+        "quote": {
+          "title": "उद्धरण",
+          "description": "एक साधारण उद्धृत अंश"
+        },
+        "chart": {
+          "title": "चार्ट",
+          "description": "छोटी टेबल से बार, लाइन या पाई चार्ट"
+        },
+        "stat_highlights": {
+          "title": "आँकड़े",
+          "description": "बड़ी संख्याएँ जो गिनती में बढ़ती हैं"
+        },
+        "button_group": {
+          "title": "बटन समूह",
+          "description": "कई बटन एक साथ"
+        },
+        "inline_math": {
+          "title": "पंक्ति में सूत्र",
+          "description": "वाक्य के भीतर एक सूत्र (या $x^2$ लिखें)"
         }
       },
       "categories": {
@@ -13924,7 +14077,9 @@
         "callouts": "कॉलआउट",
         "dynamic": "डायनामिक कंटेंट",
         "ui": "UI तत्व",
-        "tables": "तालिकाएं"
+        "tables": "तालिकाएं",
+        "layout": "लेआउट",
+        "data": "डेटा और मीडिया"
       },
       "no_results": "कोई परिणाम नहीं मिला"
     },
@@ -14269,7 +14424,14 @@
       "button": {
         "emoji": "इमोजी",
         "link_hint": "शिक्षार्थियों के बटन पर क्लिक करने पर नए टैब में खुलता है।",
-        "no_link": "अभी कोई लिंक नहीं: लिंक बटन से सेट करें।"
+        "no_link": "अभी कोई लिंक नहीं: लिंक बटन से सेट करें।",
+        "style": "शैली",
+        "variant": "रूप",
+        "size": "आकार",
+        "variant_solid": "भरा हुआ",
+        "variant_outline": "रूपरेखा",
+        "variant_soft": "हल्का",
+        "variant_link": "लिंक"
       },
       "quiz": {
         "settings": "क्विज़ सेटिंग्स",
@@ -14327,7 +14489,39 @@
         "clear": "साफ़ करें",
         "check": "उत्तर जांचें",
         "try_again": "फिर कोशिश करें",
-        "start_over": "फिर से शुरू करें"
+        "start_over": "फिर से शुरू करें",
+        "question_type": "प्रश्न का प्रकार",
+        "type_multiple_choice": "बहुविकल्पीय",
+        "type_true_false": "सही / गलत",
+        "type_short_answer": "लघु उत्तर",
+        "type_numeric": "संख्या",
+        "true": "सही",
+        "false": "गलत",
+        "accepted_answers": "स्वीकार्य उत्तर",
+        "accepted_answer_n": "स्वीकार्य उत्तर {{n}}",
+        "accepted_answer_placeholder": "वह उत्तर जो सही माना जाएगा",
+        "add_accepted": "एक और स्वीकार्य उत्तर",
+        "remove_accepted": "स्वीकार्य उत्तर {{n}} हटाएँ",
+        "ignore_accents": "उच्चारण चिह्नों को अनदेखा करें (é = e)",
+        "short_answer_hint": "बड़े अक्षर और अतिरिक्त स्पेस अनदेखे किए जाते हैं।",
+        "numeric_value": "सही उत्तर",
+        "numeric_tolerance": "सहनशीलता",
+        "show_explanations": "व्याख्याएँ दिखाएँ",
+        "show_explanations_hint": "शिक्षार्थियों के सबमिट करने के बाद हर प्रश्न के नीचे आपकी व्याख्या दिखती है।",
+        "pass_mark": "उत्तीर्ण अंक",
+        "pass_mark_off": "बंद",
+        "pass_mark_n": "उत्तीर्ण होने के लिए {{n}}%",
+        "pass_mark_off_hint": "शिक्षार्थी देखते हैं कि क्या सभी उत्तर सही थे।",
+        "pass_mark_hint": "शिक्षार्थी {{n}}% या अधिक पर उत्तीर्ण होते हैं और अपना स्कोर देखते हैं।",
+        "pass_mark_needed": "उत्तीर्ण अंक: {{n}}%",
+        "passed": "उत्तीर्ण",
+        "not_passed": "अभी उत्तीर्ण नहीं",
+        "score_percent": "{{percent}}%",
+        "your_answer": "आपका उत्तर",
+        "your_number": "आपका उत्तर (एक संख्या)",
+        "answer_placeholder": "अपना उत्तर लिखें",
+        "number_placeholder": "एक संख्या लिखें",
+        "expected_answer": "अपेक्षित: {{answer}}"
       },
       "flipcard": {
         "front": "आगे",
@@ -14574,6 +14768,423 @@
         "reset_text": "रीसेट करें",
         "text": "शीर्षक और विवरण",
         "title": "शीर्षक"
+      },
+      "table": {
+        "rows_cols": "पंक्तियाँ और कॉलम",
+        "duplicate_row": "पंक्ति की प्रति बनाएँ",
+        "distribute": "कॉलम बराबर बाँटें",
+        "merge_split": "सेल मिलाएँ या अलग करें",
+        "headers": "हेडर",
+        "header_column": "हेडर कॉलम",
+        "cell_style": "सेल शैली",
+        "apply_to": "इस पर लागू करें",
+        "scope_selection": "चुने गए सेल",
+        "scope_column": "पूरा कॉलम",
+        "background": "पृष्ठभूमि",
+        "align": "संरेखण",
+        "align_start": "आरंभ",
+        "align_center": "मध्य",
+        "align_end": "अंत",
+        "valign": "लंबवत संरेखण",
+        "valign_top": "ऊपर",
+        "valign_middle": "बीच में",
+        "valign_bottom": "नीचे",
+        "cell_type": "सेल प्रकार",
+        "type_hint": "मान सेल के टेक्स्ट में ही रहता है, जैसे 75, 4/5 या हाँ।",
+        "type": {
+          "text": "टेक्स्ट",
+          "progress": "प्रगति",
+          "checkbox": "चेकबॉक्स",
+          "rating": "रेटिंग",
+          "status": "स्थिति",
+          "number": "संख्या",
+          "date": "तारीख"
+        },
+        "tone": "रंग",
+        "tone_auto": "स्वचालित",
+        "number_format": "संख्या प्रारूप",
+        "format": {
+          "plain": "सामान्य",
+          "percent": "प्रतिशत",
+          "currency": "मुद्रा",
+          "compact": "संक्षिप्त"
+        },
+        "currency": "मुद्रा कोड",
+        "settings": "तालिका सेटिंग्स",
+        "variant": "शैली",
+        "variants": {
+          "default": "डिफ़ॉल्ट",
+          "striped": "धारीदार",
+          "bordered": "बॉर्डर वाली",
+          "minimal": "न्यूनतम",
+          "cards": "कार्ड"
+        },
+        "cards_hint": "फ़ोन पर पंक्तियाँ कार्ड बन जाती हैं।",
+        "caption": "कैप्शन",
+        "caption_placeholder": "तालिका का वर्णन करें",
+        "sortable": "शिक्षार्थी क्रमबद्ध कर सकते हैं",
+        "sticky_header": "स्थिर हेडर",
+        "compact": "सघन पंक्तियाँ",
+        "totals": "योग पंक्ति",
+        "totals_hint": "संख्या और प्रगति कॉलम के लिए।",
+        "totals_none": "कोई नहीं",
+        "totals_sum": "योग",
+        "totals_average": "औसत",
+        "toggle_checkbox": "चेकबॉक्स बदलें",
+        "templates": {
+          "progress": {
+            "title": "प्रगति ट्रैकर",
+            "description": "ज़िम्मेदार व्यक्ति, स्थिति और प्रगति बार के साथ कार्य"
+          },
+          "comparison": {
+            "title": "तुलना",
+            "description": "विकल्पों की टिक के साथ आमने-सामने तुलना करें"
+          },
+          "rubric": {
+            "title": "मूल्यांकन मानदंड",
+            "description": "स्तरों और अंकों के साथ ग्रेडिंग मानदंड"
+          }
+        },
+        "sample": {
+          "task": "कार्य",
+          "owner": "ज़िम्मेदार",
+          "status": "स्थिति",
+          "progress": "प्रगति",
+          "task_1": "पाठ की योजना बनाना",
+          "task_2": "वीडियो रिकॉर्ड करना",
+          "task_3": "क्विज़ लिखना",
+          "status_done": "पूरा",
+          "status_in_progress": "जारी है",
+          "status_todo": "शुरू नहीं हुआ",
+          "feature": "सुविधा",
+          "option_a": "बेसिक",
+          "option_b": "प्रो",
+          "feature_1": "वीडियो पाठ",
+          "feature_2": "क्विज़",
+          "feature_3": "प्रमाणपत्र",
+          "criterion": "मानदंड",
+          "look_for": "हम क्या देखते हैं",
+          "level": "स्तर",
+          "points": "अंक",
+          "crit_1": "स्पष्टता",
+          "crit_2": "सटीकता",
+          "crit_3": "संरचना",
+          "desc_1": "विचारों को समझना आसान है",
+          "desc_2": "तथ्य और चरण सही हैं",
+          "desc_3": "तार्किक क्रम में स्पष्ट खंड"
+        }
+      },
+      "layout": {
+        "settings": "सेटिंग्स",
+        "style": "शैली",
+        "color": "रंग",
+        "icon": "आइकन",
+        "icon_default": "डिफ़ॉल्ट",
+        "size_sm": "छोटा",
+        "size_md": "मध्यम",
+        "size_lg": "बड़ा",
+        "tone_neutral": "तटस्थ",
+        "tone_blue": "नीला",
+        "tone_teal": "हरा-नीला",
+        "tone_green": "हरा",
+        "tone_amber": "एम्बर",
+        "tone_rose": "गुलाबी",
+        "icons": {
+          "lightbulb": "बल्ब",
+          "star": "तारा",
+          "check": "सही का निशान",
+          "target": "लक्ष्य",
+          "flag": "झंडा",
+          "book": "किताब",
+          "rocket": "रॉकेट",
+          "key": "चाबी"
+        }
+      },
+      "tabs": {
+        "label": "टैब",
+        "add": "टैब जोड़ें",
+        "remove": "यह टैब हटाएं",
+        "move_earlier": "टैब को पहले ले जाएं",
+        "move_later": "टैब को बाद में ले जाएं",
+        "title_placeholder": "टैब का शीर्षक",
+        "variant_line": "रेखा",
+        "variant_pills": "पिल",
+        "variant_boxed": "बॉक्स",
+        "sample": {
+          "tab_1": "अवलोकन",
+          "tab_2": "विवरण",
+          "tab_3": "उदाहरण",
+          "text_1": "पहले पूरी तस्वीर से शुरू करें।",
+          "text_2": "यह कैसे काम करता है, इसे गहराई से समझाएं।",
+          "text_3": "इसे व्यवहार में दिखाएं।"
+        }
+      },
+      "columns": {
+        "label": "कॉलम",
+        "layout": "लेआउट",
+        "layout_halves": "दो बराबर कॉलम",
+        "layout_narrow_wide": "पहले संकरा, फिर चौड़ा",
+        "layout_wide_narrow": "पहले चौड़ा, फिर संकरा",
+        "layout_thirds": "तीन कॉलम",
+        "layout_quarters": "चार कॉलम",
+        "gap": "अंतराल",
+        "align": "लंबवत संरेखण",
+        "align_top": "ऊपर",
+        "align_center": "बीच में",
+        "align_bottom": "नीचे",
+        "stack": "छोटी स्क्रीन पर एक के नीचे एक",
+        "sample": {
+          "left": "पहला कॉलम",
+          "right": "दूसरा कॉलम"
+        }
+      },
+      "accordion": {
+        "label": "अकॉर्डियन",
+        "add": "सेक्शन जोड़ें",
+        "single": "एक बार में एक ही सेक्शन खुला",
+        "variant_bordered": "बॉर्डर वाला",
+        "variant_filled": "भरा हुआ",
+        "sample": {
+          "item_1": "मैं क्या सीखूंगा?",
+          "text_1": "इस पाठ का परिणाम बताएं।",
+          "item_2": "इसमें कितना समय लगेगा?",
+          "text_2": "अनुमान दें ताकि शिक्षार्थी योजना बना सकें।",
+          "item_3": "मुझे क्या चाहिए?",
+          "text_3": "शुरू करने से पहले क्या तैयार रखना है, उसकी सूची दें।"
+        },
+        "variant_default": "डिफ़ॉल्ट"
+      },
+      "timeline": {
+        "label": "टाइमलाइन",
+        "add": "चरण जोड़ें",
+        "remove": "चरण हटाएं",
+        "step": "चरण",
+        "title_placeholder": "चरण का शीर्षक",
+        "label_placeholder": "तारीख या लेबल (वैकल्पिक)",
+        "numbered": "क्रमांकित चरण",
+        "orientation": "दिशा",
+        "vertical": "लंबवत",
+        "horizontal": "क्षैतिज",
+        "icon_number": "संख्या",
+        "variant_steps": "चरण",
+        "variant_process": "प्रक्रिया",
+        "sample": {
+          "step_1": "तैयारी करें",
+          "text_1": "जो चाहिए उसे इकट्ठा करें।",
+          "step_2": "अभ्यास करें",
+          "text_2": "किसी छोटे उदाहरण पर आज़माएं।",
+          "step_3": "लागू करें",
+          "text_3": "किसी असली काम में इस्तेमाल करें।"
+        },
+        "variant_timeline": "टाइमलाइन"
+      },
+      "table_of_contents": {
+        "label": "विषय-सूची",
+        "depth": "शामिल किए जाने वाले शीर्षक",
+        "numbered": "प्रविष्टियों पर क्रमांक लगाएं",
+        "title_label": "शीर्षक",
+        "empty": "पाठ में शीर्षक जोड़ें, वे यहां दिखेंगे।"
+      },
+      "key_takeaways": {
+        "label": "मुख्य बातें",
+        "title_label": "कार्ड का शीर्षक",
+        "sample": {
+          "point_1": "एक वाक्य में मुख्य विचार",
+          "point_2": "याद रखने लायक एक बात",
+          "point_3": "आगे क्या करना है"
+        }
+      },
+      "checklist": {
+        "label": "चेकलिस्ट",
+        "learner_can_check": "शिक्षार्थी आइटम पर निशान लगा सकते हैं",
+        "hint": "निशान हर शिक्षार्थी के ब्राउज़र में सहेजे जाते हैं। यहां आप जिन आइटम पर निशान लगाते हैं, वे शुरू से चिह्नित रहते हैं।",
+        "sample": {
+          "item_1": "पाठ पढ़ें",
+          "item_2": "अभ्यास करके देखें",
+          "item_3": "अपने उत्तर जांचें"
+        }
+      },
+      "chart": {
+        "add_row": "पंक्ति जोड़ें",
+        "add_series": "सीरीज़ जोड़ें",
+        "apply_csv": "यह डेटा इस्तेमाल करें",
+        "csv_error": "यह टेबल पढ़ी नहीं जा सकी। पहले कॉलम में लेबल और बाकी में संख्याएँ रखें।",
+        "csv_label": "CSV के रूप में टेबल",
+        "csv_placeholder": "स्प्रेडशीट से पेस्ट करें, या लिखें: लेबल, सीरीज़ 1, सीरीज़ 2",
+        "edit_data": "डेटा संपादित करें",
+        "empty": "चार्ट बनाने के लिए कुछ डेटा जोड़ें।",
+        "label": "चार्ट",
+        "label_n": "लेबल {{n}}",
+        "labels": "लेबल",
+        "paste_csv": "CSV पेस्ट करें",
+        "pie_hint": "पाई और डोनट चार्ट पहली सीरीज़ दिखाते हैं।",
+        "remove_row": "पंक्ति हटाएँ",
+        "remove_series": "सीरीज़ हटाएँ",
+        "row_n": "आइटम {{n}}",
+        "sample": {
+          "q1": "तिमाही 1",
+          "q2": "तिमाही 2",
+          "q3": "तिमाही 3",
+          "q4": "तिमाही 4",
+          "series_1": "कक्षा A",
+          "series_2": "कक्षा B",
+          "title": "तिमाही के अनुसार औसत क्विज़ स्कोर"
+        },
+        "series_color": "{{name}} का रंग बदलें",
+        "series_n": "सीरीज़ {{n}}",
+        "series_name": "सीरीज़ का नाम",
+        "settings": "चार्ट सेटिंग",
+        "show_legend": "लेजेंड दिखाएँ",
+        "show_values": "मान दिखाएँ",
+        "stacked": "सीरीज़ स्टैक करें",
+        "title_label": "शीर्षक",
+        "title_placeholder": "चार्ट का शीर्षक",
+        "type": "चार्ट का प्रकार"
+      },
+      "file_card": {
+        "add_link": "लिंक जोड़ें",
+        "description": "विवरण",
+        "description_placeholder": "इस फ़ाइल में क्या है? (वैकल्पिक)",
+        "empty_hint": "PDF, छवि, ऑडियो या वीडियो फ़ाइल अपलोड करें, या किसी भी फ़ाइल का लिंक दें।",
+        "empty_title": "डाउनलोड के लिए फ़ाइल जोड़ें",
+        "label": "फ़ाइल",
+        "link_hint": "अपलोड की गई फ़ाइल हो तो उसकी जगह लेता है।",
+        "link_label": "फ़ाइल का लिंक",
+        "link_settings": "फ़ाइल लिंक",
+        "name": "फ़ाइल का नाम",
+        "type_error": "इस प्रकार की फ़ाइल अपलोड नहीं की जा सकती। PDF, छवि, ऑडियो या वीडियो अपलोड करें, या फ़ाइल का लिंक दें।",
+        "upload": "फ़ाइल अपलोड करें"
+      },
+      "gallery": {
+        "add_images": "छवियाँ जोड़ें",
+        "add_link": "छवि जोड़ें",
+        "alt_hint": "स्क्रीन रीडर इस्तेमाल करने वाले शिक्षार्थियों के लिए बताएँ कि छवि में क्या है।",
+        "alt_missing": "वैकल्पिक टेक्स्ट नहीं: {{n}}",
+        "alt_placeholder": "वैकल्पिक टेक्स्ट (ज़रूरी)",
+        "columns": "कॉलम",
+        "count": "छवियाँ: {{n}}",
+        "empty_hint": "एक साथ कई छवियाँ छोड़ें, या अपने डिवाइस से चुनें। {{formats}} · हर एक {{max}} तक।",
+        "empty_title": "अपनी गैलरी में छवियाँ जोड़ें",
+        "full": "एक गैलरी में अधिकतम {{max}} छवियाँ हो सकती हैं।",
+        "label": "गैलरी",
+        "layout": "लेआउट",
+        "layout_carousel": "कैरोसेल",
+        "layout_grid": "ग्रिड",
+        "layout_masonry": "मेसनरी",
+        "move_earlier": "पहले ले जाएँ",
+        "move_later": "बाद में ले जाएँ",
+        "remove": "छवि हटाएँ",
+        "settings": "गैलरी सेटिंग"
+      },
+      "image_compare": {
+        "after_image": "बाद की छवि",
+        "before_image": "पहले की छवि",
+        "empty_hint": "एक ही आकार की पहले और बाद की छवि चुनें। शिक्षार्थी तुलना के लिए डिवाइडर खींचते हैं।",
+        "empty_title": "छवियाँ जोड़ें",
+        "horizontal": "अगल-बगल",
+        "label": "छवि तुलना",
+        "orientation": "दिशा",
+        "replace_after": "बाद की छवि बदलें",
+        "replace_before": "पहले की छवि बदलें",
+        "settings": "तुलना सेटिंग",
+        "side_label": "लेबल",
+        "start": "डिवाइडर की शुरुआती जगह",
+        "vertical": "ऊपर और नीचे"
+      },
+      "quote_block": {
+        "author": "लेखक",
+        "author_placeholder": "नाम",
+        "avatar": "फ़ोटो का लिंक",
+        "avatar_hint": "प्रशंसापत्र में नाम के पास दिखता है। आद्याक्षर के लिए खाली छोड़ें।",
+        "label": "उद्धरण",
+        "role": "भूमिका",
+        "role_placeholder": "भूमिका या कंपनी",
+        "sample": {
+          "author": "समीरा राव",
+          "role": "प्रोडक्ट डिज़ाइनर",
+          "text": "प्रैक्टिकल अभ्यासों से बात समझ आ गई। अगले ही दिन मैंने सीखी हुई चीज़ें काम में इस्तेमाल कीं।"
+        },
+        "settings": "उद्धरण सेटिंग",
+        "style": "शैली",
+        "variant_highlight": "हाइलाइट",
+        "variant_pull": "पुल कोट",
+        "variant_testimonial": "प्रशंसापत्र"
+      },
+      "stat_highlights": {
+        "add": "आँकड़ा जोड़ें",
+        "animate": "दिखने पर गिनती बढ़ाएँ",
+        "color": "रंग",
+        "columns": "कॉलम",
+        "description": "विवरण",
+        "description_placeholder": "छोटा विवरण (वैकल्पिक)",
+        "empty": "शुरू करने के लिए एक आँकड़ा जोड़ें।",
+        "label": "आँकड़े",
+        "label_field": "लेबल",
+        "prefix": "संख्या से पहले",
+        "remove": "आँकड़ा हटाएँ",
+        "sample": {
+          "desc_1": "शिक्षार्थी कोर्स पूरा करते हैं",
+          "desc_2": "1,200 समीक्षाओं से",
+          "desc_3": "40 देशों में",
+          "label_1": "पूरा करने की दर",
+          "label_2": "औसत रेटिंग",
+          "label_3": "शिक्षार्थी"
+        },
+        "settings": "आँकड़ों की सेटिंग",
+        "suffix": "संख्या के बाद",
+        "value": "संख्या"
+      },
+      "callout_title": "शीर्षक",
+      "callout_title_placeholder": "वैकल्पिक शीर्षक",
+      "callout_collapsible": "शिक्षार्थी इसे समेट सकते हैं",
+      "callout_default_open": "शुरुआत में खुला",
+      "callout_tone": "रंग",
+      "callout_tone_default": "प्रकार का रंग",
+      "code_copied": "कोड क्लिपबोर्ड पर कॉपी हो गया",
+      "code_copy_failed": "कॉपी नहीं हो सका। कोड चुनकर स्वयं कॉपी करें।",
+      "code_highlight": "हाइलाइट करने वाली पंक्तियाँ (जैसे 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "पंक्ति संख्याएँ",
+      "code_wrap": "लंबी पंक्तियाँ लपेटें",
+      "align": {
+        "label": "टेक्स्ट संरेखण",
+        "start": "शुरुआत में संरेखित करें",
+        "center": "बीच में",
+        "end": "अंत में संरेखित करें",
+        "justify": "दोनों ओर संरेखित"
+      },
+      "button_group": {
+        "label": "बटन समूह",
+        "add_button": "बटन जोड़ें",
+        "new_button": "बटन",
+        "primary": "शुरू करें",
+        "secondary": "और जानें"
+      },
+      "image_frame": {
+        "label": "फ़्रेम",
+        "none": "कोई नहीं",
+        "rounded": "गोलाकार",
+        "shadow": "छाया",
+        "border": "किनारा",
+        "polaroid": "पोलरॉइड"
+      },
+      "inline_math": {
+        "title": "पंक्ति में सूत्र",
+        "edit": "सूत्र संपादित करें {{latex}}",
+        "latex": "LaTeX",
+        "hint": "जैसे \\frac{a}{b} या x^2। टेक्स्ट में $…$ लिखकर सूत्र बनाएँ।",
+        "make": "गणित",
+        "remove": "हटाएँ"
+      },
+      "toggle": {
+        "style": "टॉगल की शैली",
+        "variant": "रूप",
+        "variant_default": "डिफ़ॉल्ट",
+        "variant_bordered": "किनारे वाला",
+        "variant_filled": "भरा हुआ",
+        "icon": "आइकन",
+        "icon_chevron": "तीर",
+        "icon_plus": "प्लस और माइनस"
       }
     },
     "history": {

@@ -178,6 +178,9 @@ def _collect_inline_text(node: dict) -> str:
             texts.append(text if isinstance(text, str) else "")
         elif child.get("type") == "hardBreak":
             texts.append("\n")
+        elif child.get("type") == "inlineMath":
+            latex = _str(_attrs(child).get("latex"))
+            texts.append(f"${latex}$" if latex else "")
         else:
             texts.append(_collect_inline_text(child))
     return "".join(texts)
@@ -242,6 +245,7 @@ def _callout(node, parts):
 
 
 def _table(node, parts):
+    _append(parts, _str(_attrs(node).get("caption")))
     for row in _child_nodes(node):
         cells = [t for t in (_collect_inline_text(cell) for cell in _child_nodes(row)) if t]
         if cells:
@@ -258,13 +262,17 @@ def _h5p(node, parts):
 
 
 def _quiz(node, parts):
-    # Question and answer text only: the `correct` flags are the answer key.
+    # Question and option text plus the author's explanation. Never the key:
+    # not the `correct` flags, short-answer accepted_answers or numeric
+    # correct_value / tolerance.
     for question in _attrs(node).get("questions") or []:
         if not isinstance(question, dict) or not _str(question.get("question")):
             continue
         answers = [_str(a.get("answer")) for a in question.get("answers") or [] if isinstance(a, dict)]
+        explanation = _str(question.get("explanation"))
         parts.append(join([f"Quiz question: {_str(question.get('question'))}",
-                           *(f"- {a}" for a in answers if a)]))
+                           *(f"- {a}" for a in answers if a),
+                           explanation and f"Explanation: {explanation}"]))
 
 
 def _flipcard(node, parts):
@@ -509,6 +517,103 @@ def _magic(node, parts):
         _append(parts, join([_str(attrs.get("title")) and f"Interactive element: {_str(attrs.get('title'))}", body]))
 
 
+def _children_of(node, parts):
+    for child in _child_nodes(node):
+        _walk_prosemirror_node(child, parts)
+
+
+def _titled(label: str, *keys: str):
+    """A container whose attrs title its content (a tab, a timeline step...)."""
+    def handler(node, parts):
+        attrs = _attrs(node)
+        title = " ".join(t for t in (_str(attrs.get(k)) for k in keys) if t)
+        if title:
+            parts.append(f"{label}: {title}" if label else title)
+        _children_of(node, parts)
+    return handler
+
+
+def _toggle(node, parts):
+    _append(parts, _str(_attrs(node).get("summary")))
+    _children_of(node, parts)
+
+
+def _modern_callout(node, parts):
+    title = _str(_attrs(node).get("title"))
+    if title:
+        parts.append(title)
+    _children_of(node, parts)
+
+
+def _task_item(node, parts):
+    texts = [t for t in (_collect_inline_text(c) for c in _child_nodes(node) if c.get("type") == "paragraph") if t]
+    if texts:
+        parts.append("- " + " ".join(texts))
+
+
+def _quote_block(node, parts):
+    _blockquote(node, parts)
+    attrs = _attrs(node)
+    who = ", ".join(t for t in (_str(attrs.get("author")), _str(attrs.get("role"))) if t)
+    if who:
+        parts.append(f"— {who}")
+
+
+def _table_of_contents(node, parts):
+    # Lists the page's headings, which are indexed where they are.
+    return None
+
+
+def _gallery(node, parts):
+    for image in _attrs(node).get("images") or []:
+        if isinstance(image, dict):
+            _append(parts, join([_str(image.get("caption")), _str(image.get("alt"))], ". "))
+
+
+def _image_compare(node, parts):
+    attrs = _attrs(node)
+    sides = [attrs.get(k) if isinstance(attrs.get(k), dict) else {} for k in ("before", "after")]
+    labels = [join([_str(s.get("label")), _str(s.get("alt"))], ": ") for s in sides]
+    if any(labels):
+        parts.append("Image comparison: " + " / ".join(x for x in labels if x))
+
+
+def _chart(node, parts):
+    attrs = _attrs(node)
+    data = attrs.get("data") if isinstance(attrs.get("data"), dict) else {}
+    labels = [_str(x) for x in data.get("labels") or []]
+    lines = [_str(attrs.get("title")) and f"Chart: {_str(attrs.get('title'))}"]
+    for series in data.get("series") or []:
+        if not isinstance(series, dict):
+            continue
+        values = series.get("values") if isinstance(series.get("values"), list) else []
+        pairs = [f"{label} {value:g}" for label, value in zip(labels, values)
+                 if label and isinstance(value, (int, float)) and not isinstance(value, bool)]
+        name = _str(series.get("name"))
+        if name or pairs:
+            lines.append(f"{name}: {', '.join(pairs)}" if pairs else name)
+    if len(lines) == 1 and any(labels):
+        lines.append(", ".join(x for x in labels if x))
+    _append(parts, join(lines))
+
+
+def _stats(node, parts):
+    for item in _attrs(node).get("items") or []:
+        if not isinstance(item, dict):
+            continue
+        value = item.get("value")
+        value = _str(value) if not isinstance(value, (int, float)) or isinstance(value, bool) else f"{value:g}"
+        shown = f"{_str(item.get('prefix'))}{value}{_str(item.get('suffix'))}" if value else ""
+        _append(parts, join([" ".join(x for x in (shown, _str(item.get("label"))) if x),
+                             _str(item.get("description"))], ": "))
+
+
+def _file_card(node, parts):
+    attrs = _attrs(node)
+    _append(parts, join([_str(attrs.get("name")) and f"File: {_str(attrs.get('name'))}",
+                         _str(attrs.get("description"))], ". "))
+
+
 _NODE_HANDLERS: dict[str, Callable[[dict, list[str]], None]] = {
     "text": _text,
     "heading": _heading,
@@ -549,4 +654,17 @@ _NODE_HANDLERS: dict[str, Callable[[dict, list[str]], None]] = {
     "expConfidence": _exp_confidence,
     "expMatrix": _exp_matrix,
     "expReflect": _exp_reflect,
+    "toggleBlock": _toggle,
+    "callout": _modern_callout,
+    "tabItem": _titled("", "title"),
+    "timelineItem": _titled("", "label", "title"),
+    "keyTakeaways": _titled("", "title"),
+    "taskItem": _task_item,
+    "quoteBlock": _quote_block,
+    "tableOfContents": _table_of_contents,
+    "gallery": _gallery,
+    "imageCompare": _image_compare,
+    "chart": _chart,
+    "statHighlights": _stats,
+    "fileCard": _file_card,
 }

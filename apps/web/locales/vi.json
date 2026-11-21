@@ -4274,6 +4274,91 @@
         "completed_note": "Xong. Hãy đọc lại một lần và ghi nhớ những gì còn thiếu.",
         "write_again": "Sửa câu trả lời"
       }
+    },
+    "table": {
+      "total": "Tổng",
+      "average": "Trung bình",
+      "sort_by": "Sắp xếp theo",
+      "original_order": "Thứ tự ban đầu",
+      "ascending": "Tăng dần",
+      "descending": "Giảm dần",
+      "sort_direction": "Hướng sắp xếp",
+      "sorted": "Đã sắp xếp theo {{column}}, {{direction}}",
+      "column_n": "Cột {{n}}"
+    },
+    "tabs": {
+      "tab": "Thẻ",
+      "untitled": "Thẻ {{n}}",
+      "list_label": "Thẻ"
+    },
+    "accordion": {
+      "expand_all": "Mở rộng tất cả",
+      "collapse_all": "Thu gọn tất cả"
+    },
+    "table_of_contents": {
+      "title": "Nội dung"
+    },
+    "checklist": {
+      "progress_label": "Đã xong {{done}}/{{total}}",
+      "reset": "Đặt lại danh sách",
+      "item": "Mục trong danh sách",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "Dòng thời gian"
+    },
+    "key_takeaways": {
+      "title": "Điểm chính"
+    },
+    "chart": {
+      "category": "Danh mục",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} gồm {{series}} chuỗi ({{names}}) trên {{categories}} danh mục, từ {{min}} đến {{max}}.",
+      "title": "Biểu đồ",
+      "types": {
+        "bar": "Biểu đồ thanh",
+        "column": "Biểu đồ cột",
+        "line": "Biểu đồ đường",
+        "area": "Biểu đồ vùng",
+        "pie": "Biểu đồ tròn",
+        "donut": "Biểu đồ vành khuyên"
+      }
+    },
+    "file_card": {
+      "download": "Tải xuống",
+      "download_named": "Tải xuống {{name}}",
+      "file": "Tệp",
+      "types": {
+        "pdf": "PDF",
+        "doc": "Tài liệu",
+        "sheet": "Bảng tính",
+        "slides": "Trang trình bày",
+        "archive": "Tệp nén",
+        "image": "Hình ảnh",
+        "audio": "Âm thanh",
+        "video": "Video",
+        "text": "Văn bản",
+        "code": "Mã",
+        "file": "Tệp"
+      }
+    },
+    "gallery": {
+      "carousel": "băng chuyền",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "Hiển thị ảnh {{n}}",
+      "label": "Thư viện ảnh",
+      "next": "Ảnh tiếp theo",
+      "open_image": "Mở ảnh {{n}} trên {{count}}",
+      "previous": "Ảnh trước",
+      "slide": "trang chiếu",
+      "viewer_title": "Ảnh {{n}} trên {{count}}"
+    },
+    "image_compare": {
+      "after": "Sau",
+      "before": "Trước",
+      "slider": "So sánh hình ảnh",
+      "value": "{{before}} {{b}}%, {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13422,7 +13507,11 @@
         "type_warning": "Cảnh báo",
         "type_tip": "Mẹo",
         "type_success": "Thành công",
-        "type_error": "Lỗi"
+        "type_error": "Lỗi",
+        "type_note": "Ghi chú",
+        "type_question": "Câu hỏi",
+        "type_example": "Ví dụ",
+        "type_quote": "Trích dẫn"
       }
     },
     "dynamic": {
@@ -13881,6 +13970,70 @@
         "table": {
           "title": "Bảng",
           "description": "Chèn bảng 3x3"
+        },
+        "tabs": {
+          "description": "Chuyển giữa các bảng nội dung",
+          "title": "Thẻ"
+        },
+        "columns": {
+          "description": "Đặt nội dung cạnh nhau",
+          "title": "Cột"
+        },
+        "accordion": {
+          "description": "Các phần thu gọn được, mỗi lần mở một phần",
+          "title": "Accordion"
+        },
+        "timeline": {
+          "description": "Các bước hoặc sự kiện theo thứ tự",
+          "title": "Dòng thời gian"
+        },
+        "table_of_contents": {
+          "description": "Liên kết đến các tiêu đề của trang này",
+          "title": "Mục lục"
+        },
+        "key_takeaways": {
+          "description": "Thẻ tóm tắt các ý chính",
+          "title": "Điểm chính"
+        },
+        "checklist": {
+          "description": "Các mục người học có thể đánh dấu",
+          "title": "Danh sách kiểm tra"
+        },
+        "gallery": {
+          "title": "Thư viện ảnh",
+          "description": "Nhiều ảnh dạng lưới hoặc băng chuyền"
+        },
+        "image_compare": {
+          "title": "So sánh ảnh",
+          "description": "Trước và sau với thanh trượt"
+        },
+        "file_card": {
+          "title": "Tải tệp xuống",
+          "description": "Tệp người học có thể tải xuống"
+        },
+        "quote_block": {
+          "title": "Lời chứng thực",
+          "description": "Trích dẫn nổi bật hoặc lời chứng thực kèm tác giả"
+        },
+        "quote": {
+          "title": "Trích dẫn",
+          "description": "Một đoạn trích dẫn đơn giản"
+        },
+        "chart": {
+          "title": "Biểu đồ",
+          "description": "Biểu đồ cột, đường hoặc tròn từ một bảng nhỏ"
+        },
+        "stat_highlights": {
+          "title": "Số liệu",
+          "description": "Số lớn tự đếm tăng"
+        },
+        "button_group": {
+          "title": "Nhóm nút",
+          "description": "Nhiều nút cạnh nhau"
+        },
+        "inline_math": {
+          "title": "Công thức trong dòng",
+          "description": "Công thức trong câu (hoặc gõ $x^2$)"
         }
       },
       "categories": {
@@ -13890,7 +14043,9 @@
         "callouts": "Hộp chú thích",
         "dynamic": "Nội dung động",
         "ui": "Thành phần giao diện",
-        "tables": "Bảng"
+        "tables": "Bảng",
+        "layout": "Bố cục",
+        "data": "Dữ liệu & phương tiện"
       },
       "no_results": "Không tìm thấy kết quả"
     },
@@ -14235,7 +14390,14 @@
       "button": {
         "emoji": "Emoji",
         "link_hint": "Mở trong tab mới khi người học nhấp vào nút.",
-        "no_link": "Chưa có liên kết: đặt liên kết bằng nút liên kết."
+        "no_link": "Chưa có liên kết: đặt liên kết bằng nút liên kết.",
+        "style": "Kiểu",
+        "variant": "Giao diện",
+        "size": "Kích thước",
+        "variant_solid": "Đặc",
+        "variant_outline": "Viền",
+        "variant_soft": "Nhạt",
+        "variant_link": "Liên kết"
       },
       "quiz": {
         "settings": "Cài đặt bài kiểm tra",
@@ -14293,7 +14455,39 @@
         "clear": "Xóa",
         "check": "Kiểm tra đáp án",
         "try_again": "Thử lại",
-        "start_over": "Làm lại từ đầu"
+        "start_over": "Làm lại từ đầu",
+        "question_type": "Loại câu hỏi",
+        "type_multiple_choice": "Trắc nghiệm",
+        "type_true_false": "Đúng / sai",
+        "type_short_answer": "Trả lời ngắn",
+        "type_numeric": "Số",
+        "true": "Đúng",
+        "false": "Sai",
+        "accepted_answers": "Đáp án được chấp nhận",
+        "accepted_answer_n": "Đáp án được chấp nhận {{n}}",
+        "accepted_answer_placeholder": "Một câu trả lời được tính là đúng",
+        "add_accepted": "Thêm đáp án được chấp nhận",
+        "remove_accepted": "Xóa đáp án được chấp nhận {{n}}",
+        "ignore_accents": "Bỏ qua dấu (é = e)",
+        "short_answer_hint": "Chữ hoa và khoảng trắng thừa được bỏ qua.",
+        "numeric_value": "Đáp án đúng",
+        "numeric_tolerance": "Sai số cho phép",
+        "show_explanations": "Hiện giải thích",
+        "show_explanations_hint": "Phần giải thích hiện dưới mỗi câu hỏi sau khi người học nộp bài.",
+        "pass_mark": "Điểm đạt",
+        "pass_mark_off": "Tắt",
+        "pass_mark_n": "{{n}}% để đạt",
+        "pass_mark_off_hint": "Người học thấy mình có trả lời đúng hết không.",
+        "pass_mark_hint": "Người học đạt khi được {{n}}% trở lên và xem được điểm.",
+        "pass_mark_needed": "Điểm đạt: {{n}}%",
+        "passed": "Đạt",
+        "not_passed": "Chưa đạt",
+        "score_percent": "{{percent}}%",
+        "your_answer": "Câu trả lời của bạn",
+        "your_number": "Câu trả lời của bạn (một số)",
+        "answer_placeholder": "Nhập câu trả lời",
+        "number_placeholder": "Nhập một số",
+        "expected_answer": "Đáp án: {{answer}}"
       },
       "flipcard": {
         "front": "Mặt trước",
@@ -14539,6 +14733,423 @@
         "reset_text": "Đặt lại",
         "text": "Tiêu đề & mô tả",
         "title": "Tiêu đề"
+      },
+      "table": {
+        "rows_cols": "Hàng và cột",
+        "duplicate_row": "Nhân bản hàng",
+        "distribute": "Chia đều các cột",
+        "merge_split": "Gộp hoặc tách ô",
+        "headers": "Tiêu đề",
+        "header_column": "Cột tiêu đề",
+        "cell_style": "Kiểu ô",
+        "apply_to": "Áp dụng cho",
+        "scope_selection": "Các ô đã chọn",
+        "scope_column": "Cả cột",
+        "background": "Nền",
+        "align": "Căn lề",
+        "align_start": "Đầu",
+        "align_center": "Giữa",
+        "align_end": "Cuối",
+        "valign": "Căn dọc",
+        "valign_top": "Trên",
+        "valign_middle": "Giữa",
+        "valign_bottom": "Dưới",
+        "cell_type": "Loại ô",
+        "type_hint": "Giá trị vẫn nằm trong chữ của ô, ví dụ 75, 4/5 hoặc có.",
+        "type": {
+          "text": "Văn bản",
+          "progress": "Tiến độ",
+          "checkbox": "Hộp kiểm",
+          "rating": "Đánh giá",
+          "status": "Trạng thái",
+          "number": "Số",
+          "date": "Ngày"
+        },
+        "tone": "Màu",
+        "tone_auto": "Tự động",
+        "number_format": "Định dạng số",
+        "format": {
+          "plain": "Thường",
+          "percent": "Phần trăm",
+          "currency": "Tiền tệ",
+          "compact": "Rút gọn"
+        },
+        "currency": "Mã tiền tệ",
+        "settings": "Cài đặt bảng",
+        "variant": "Kiểu",
+        "variants": {
+          "default": "Mặc định",
+          "striped": "Kẻ sọc",
+          "bordered": "Có viền",
+          "minimal": "Tối giản",
+          "cards": "Thẻ"
+        },
+        "cards_hint": "Trên điện thoại, mỗi hàng thành một thẻ.",
+        "caption": "Chú thích",
+        "caption_placeholder": "Mô tả bảng",
+        "sortable": "Học viên có thể sắp xếp",
+        "sticky_header": "Tiêu đề cố định",
+        "compact": "Hàng gọn",
+        "totals": "Hàng tổng",
+        "totals_hint": "Cho các cột số và tiến độ.",
+        "totals_none": "Không",
+        "totals_sum": "Tổng",
+        "totals_average": "Trung bình",
+        "toggle_checkbox": "Bật/tắt hộp kiểm",
+        "templates": {
+          "progress": {
+            "title": "Theo dõi tiến độ",
+            "description": "Công việc với người phụ trách, trạng thái và thanh tiến độ"
+          },
+          "comparison": {
+            "title": "So sánh",
+            "description": "So sánh các lựa chọn cạnh nhau bằng dấu tích"
+          },
+          "rubric": {
+            "title": "Bảng tiêu chí",
+            "description": "Tiêu chí chấm điểm với các mức và điểm"
+          }
+        },
+        "sample": {
+          "task": "Công việc",
+          "owner": "Người phụ trách",
+          "status": "Trạng thái",
+          "progress": "Tiến độ",
+          "task_1": "Lên kế hoạch bài học",
+          "task_2": "Quay video",
+          "task_3": "Viết bài trắc nghiệm",
+          "status_done": "Xong",
+          "status_in_progress": "Đang làm",
+          "status_todo": "Chưa bắt đầu",
+          "feature": "Tính năng",
+          "option_a": "Cơ bản",
+          "option_b": "Pro",
+          "feature_1": "Bài học video",
+          "feature_2": "Bài trắc nghiệm",
+          "feature_3": "Chứng chỉ",
+          "criterion": "Tiêu chí",
+          "look_for": "Điều chúng tôi xem xét",
+          "level": "Mức",
+          "points": "Điểm",
+          "crit_1": "Rõ ràng",
+          "crit_2": "Chính xác",
+          "crit_3": "Cấu trúc",
+          "desc_1": "Ý tưởng dễ theo dõi",
+          "desc_2": "Dữ kiện và các bước đều đúng",
+          "desc_3": "Các phần rõ ràng theo thứ tự hợp lý"
+        }
+      },
+      "layout": {
+        "settings": "Cài đặt",
+        "style": "Kiểu",
+        "color": "Màu",
+        "icon": "Biểu tượng",
+        "icon_default": "Mặc định",
+        "size_sm": "Nhỏ",
+        "size_md": "Vừa",
+        "size_lg": "Lớn",
+        "tone_neutral": "Trung tính",
+        "tone_blue": "Xanh dương",
+        "tone_teal": "Xanh mòng két",
+        "tone_green": "Xanh lá",
+        "tone_amber": "Hổ phách",
+        "tone_rose": "Hồng",
+        "icons": {
+          "lightbulb": "Bóng đèn",
+          "star": "Ngôi sao",
+          "check": "Dấu tích",
+          "target": "Mục tiêu",
+          "flag": "Lá cờ",
+          "book": "Sách",
+          "rocket": "Tên lửa",
+          "key": "Chìa khóa"
+        }
+      },
+      "tabs": {
+        "label": "Thẻ",
+        "add": "Thêm thẻ",
+        "remove": "Xóa thẻ này",
+        "move_earlier": "Chuyển thẻ lên trước",
+        "move_later": "Chuyển thẻ ra sau",
+        "title_placeholder": "Tiêu đề thẻ",
+        "variant_line": "Đường kẻ",
+        "variant_pills": "Viên thuốc",
+        "variant_boxed": "Khung",
+        "sample": {
+          "tab_1": "Tổng quan",
+          "tab_2": "Chi tiết",
+          "tab_3": "Ví dụ",
+          "text_1": "Bắt đầu với bức tranh tổng thể.",
+          "text_2": "Đi sâu vào cách nó hoạt động.",
+          "text_3": "Cho thấy nó trong thực tế."
+        }
+      },
+      "columns": {
+        "label": "Cột",
+        "layout": "Bố cục",
+        "layout_halves": "Hai cột bằng nhau",
+        "layout_narrow_wide": "Hẹp rồi rộng",
+        "layout_wide_narrow": "Rộng rồi hẹp",
+        "layout_thirds": "Ba cột",
+        "layout_quarters": "Bốn cột",
+        "gap": "Khoảng cách",
+        "align": "Căn chỉnh dọc",
+        "align_top": "Trên",
+        "align_center": "Giữa",
+        "align_bottom": "Dưới",
+        "stack": "Xếp chồng trên màn hình nhỏ",
+        "sample": {
+          "left": "Cột thứ nhất",
+          "right": "Cột thứ hai"
+        }
+      },
+      "accordion": {
+        "label": "Accordion",
+        "add": "Thêm phần",
+        "single": "Mỗi lần chỉ mở một phần",
+        "variant_bordered": "Có viền",
+        "variant_filled": "Tô nền",
+        "sample": {
+          "item_1": "Tôi sẽ học được gì?",
+          "text_1": "Mô tả kết quả của bài học này.",
+          "item_2": "Mất bao lâu?",
+          "text_2": "Đưa ra ước tính để người học lên kế hoạch.",
+          "item_3": "Tôi cần gì?",
+          "text_3": "Liệt kê những thứ cần chuẩn bị trước khi bắt đầu."
+        },
+        "variant_default": "Mặc định"
+      },
+      "timeline": {
+        "label": "Dòng thời gian",
+        "add": "Thêm bước",
+        "remove": "Xóa bước",
+        "step": "Bước",
+        "title_placeholder": "Tiêu đề bước",
+        "label_placeholder": "Ngày hoặc nhãn (không bắt buộc)",
+        "numbered": "Đánh số các bước",
+        "orientation": "Hướng",
+        "vertical": "Dọc",
+        "horizontal": "Ngang",
+        "icon_number": "Số",
+        "variant_steps": "Các bước",
+        "variant_process": "Quy trình",
+        "sample": {
+          "step_1": "Chuẩn bị",
+          "text_1": "Thu thập những gì bạn cần.",
+          "step_2": "Luyện tập",
+          "text_2": "Thử với một ví dụ nhỏ.",
+          "step_3": "Áp dụng",
+          "text_3": "Dùng nó cho một việc thật."
+        },
+        "variant_timeline": "Dòng thời gian"
+      },
+      "table_of_contents": {
+        "label": "Mục lục",
+        "depth": "Tiêu đề được đưa vào",
+        "numbered": "Đánh số các mục",
+        "title_label": "Tiêu đề",
+        "empty": "Thêm tiêu đề vào bài học và chúng sẽ hiện ở đây."
+      },
+      "key_takeaways": {
+        "label": "Điểm chính",
+        "title_label": "Tiêu đề thẻ",
+        "sample": {
+          "point_1": "Ý chính trong một câu",
+          "point_2": "Một chi tiết đáng nhớ",
+          "point_3": "Việc cần làm tiếp theo"
+        }
+      },
+      "checklist": {
+        "label": "Danh sách kiểm tra",
+        "learner_can_check": "Người học có thể đánh dấu mục",
+        "hint": "Dấu tích được lưu trong trình duyệt của từng người học. Mục bạn đánh dấu ở đây sẽ được đánh dấu sẵn.",
+        "sample": {
+          "item_1": "Đọc bài học",
+          "item_2": "Thử bài tập",
+          "item_3": "Kiểm tra câu trả lời"
+        }
+      },
+      "chart": {
+        "add_row": "Thêm hàng",
+        "add_series": "Thêm chuỗi",
+        "apply_csv": "Dùng dữ liệu này",
+        "csv_error": "Không đọc được bảng này. Đặt nhãn ở cột đầu tiên và số ở các cột còn lại.",
+        "csv_label": "Bảng dạng CSV",
+        "csv_placeholder": "Dán từ bảng tính hoặc nhập: nhãn, chuỗi 1, chuỗi 2",
+        "edit_data": "Sửa dữ liệu",
+        "empty": "Thêm dữ liệu để vẽ biểu đồ.",
+        "label": "Biểu đồ",
+        "label_n": "Nhãn {{n}}",
+        "labels": "Nhãn",
+        "paste_csv": "Dán CSV",
+        "pie_hint": "Biểu đồ tròn và vành khuyên hiển thị chuỗi đầu tiên.",
+        "remove_row": "Xóa hàng",
+        "remove_series": "Xóa chuỗi",
+        "row_n": "Mục {{n}}",
+        "sample": {
+          "q1": "Quý 1",
+          "q2": "Quý 2",
+          "q3": "Quý 3",
+          "q4": "Quý 4",
+          "series_1": "Lớp A",
+          "series_2": "Lớp B",
+          "title": "Điểm trắc nghiệm trung bình theo quý"
+        },
+        "series_color": "Đổi màu của {{name}}",
+        "series_n": "Chuỗi {{n}}",
+        "series_name": "Tên chuỗi",
+        "settings": "Cài đặt biểu đồ",
+        "show_legend": "Hiện chú thích",
+        "show_values": "Hiện giá trị",
+        "stacked": "Xếp chồng chuỗi",
+        "title_label": "Tiêu đề",
+        "title_placeholder": "Tiêu đề biểu đồ",
+        "type": "Loại biểu đồ"
+      },
+      "file_card": {
+        "add_link": "Thêm liên kết",
+        "description": "Mô tả",
+        "description_placeholder": "Tệp này có gì? (không bắt buộc)",
+        "empty_hint": "Tải lên tệp PDF, hình ảnh, âm thanh hoặc video, hoặc liên kết tới bất kỳ tệp nào.",
+        "empty_title": "Thêm tệp để tải xuống",
+        "label": "Tệp",
+        "link_hint": "Thay thế tệp đã tải lên, nếu có.",
+        "link_label": "Liên kết tới tệp",
+        "link_settings": "Liên kết tệp",
+        "name": "Tên tệp",
+        "type_error": "Không thể tải lên loại tệp này. Hãy tải lên tệp PDF, hình ảnh, âm thanh hoặc video, hoặc liên kết tới tệp.",
+        "upload": "Tải tệp lên"
+      },
+      "gallery": {
+        "add_images": "Thêm ảnh",
+        "add_link": "Thêm ảnh",
+        "alt_hint": "Mô tả nội dung ảnh cho người học dùng trình đọc màn hình.",
+        "alt_missing": "Thiếu văn bản thay thế: {{n}}",
+        "alt_placeholder": "Văn bản thay thế (bắt buộc)",
+        "columns": "Cột",
+        "count": "Ảnh: {{n}}",
+        "empty_hint": "Thả nhiều ảnh cùng lúc hoặc chọn từ thiết bị của bạn. {{formats}} · tối đa {{max}} mỗi ảnh.",
+        "empty_title": "Thêm ảnh vào thư viện",
+        "full": "Mỗi thư viện chứa tối đa {{max}} ảnh.",
+        "label": "Thư viện ảnh",
+        "layout": "Bố cục",
+        "layout_carousel": "Băng chuyền",
+        "layout_grid": "Lưới",
+        "layout_masonry": "Xếp gạch",
+        "move_earlier": "Chuyển lên trước",
+        "move_later": "Chuyển ra sau",
+        "remove": "Xóa ảnh",
+        "settings": "Cài đặt thư viện"
+      },
+      "image_compare": {
+        "after_image": "Ảnh sau",
+        "before_image": "Ảnh trước",
+        "empty_hint": "Chọn một ảnh trước và một ảnh sau cùng kích thước. Người học kéo thanh chia để so sánh.",
+        "empty_title": "Thêm ảnh",
+        "horizontal": "Cạnh nhau",
+        "label": "So sánh ảnh",
+        "orientation": "Hướng",
+        "replace_after": "Thay ảnh sau",
+        "replace_before": "Thay ảnh trước",
+        "settings": "Cài đặt so sánh",
+        "side_label": "Nhãn",
+        "start": "Vị trí ban đầu của thanh chia",
+        "vertical": "Trên và dưới"
+      },
+      "quote_block": {
+        "author": "Tác giả",
+        "author_placeholder": "Tên",
+        "avatar": "Liên kết ảnh",
+        "avatar_hint": "Hiển thị cạnh tên trong lời chứng thực. Để trống để dùng chữ viết tắt.",
+        "label": "Trích dẫn",
+        "role": "Vai trò",
+        "role_placeholder": "Vai trò hoặc công ty",
+        "sample": {
+          "author": "Nguyễn Minh Anh",
+          "role": "Nhà thiết kế sản phẩm",
+          "text": "Các bài thực hành giúp tôi hiểu ngay. Ngay hôm sau tôi đã áp dụng điều học được vào công việc."
+        },
+        "settings": "Cài đặt trích dẫn",
+        "style": "Kiểu",
+        "variant_highlight": "Nổi bật",
+        "variant_pull": "Trích dẫn nổi bật",
+        "variant_testimonial": "Lời chứng thực"
+      },
+      "stat_highlights": {
+        "add": "Thêm số liệu",
+        "animate": "Đếm tăng khi hiển thị",
+        "color": "Màu",
+        "columns": "Cột",
+        "description": "Mô tả",
+        "description_placeholder": "Mô tả ngắn (không bắt buộc)",
+        "empty": "Thêm một số liệu để bắt đầu.",
+        "label": "Số liệu",
+        "label_field": "Nhãn",
+        "prefix": "Trước số",
+        "remove": "Xóa số liệu",
+        "sample": {
+          "desc_1": "người học hoàn thành khóa học",
+          "desc_2": "từ 1.200 đánh giá",
+          "desc_3": "tại 40 quốc gia",
+          "label_1": "Tỷ lệ hoàn thành",
+          "label_2": "Đánh giá trung bình",
+          "label_3": "Người học"
+        },
+        "settings": "Cài đặt số liệu",
+        "suffix": "Sau số",
+        "value": "Số"
+      },
+      "callout_title": "Tiêu đề",
+      "callout_title_placeholder": "Tiêu đề (không bắt buộc)",
+      "callout_collapsible": "Người học có thể thu gọn",
+      "callout_default_open": "Mở sẵn lúc đầu",
+      "callout_tone": "Màu",
+      "callout_tone_default": "Màu theo loại",
+      "code_copied": "Đã sao chép mã vào bộ nhớ tạm",
+      "code_copy_failed": "Không sao chép được. Hãy chọn mã và sao chép thủ công.",
+      "code_highlight": "Dòng cần làm nổi bật (ví dụ 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "Số dòng",
+      "code_wrap": "Ngắt dòng dài",
+      "align": {
+        "label": "Căn chỉnh văn bản",
+        "start": "Căn đầu dòng",
+        "center": "Căn giữa",
+        "end": "Căn cuối dòng",
+        "justify": "Căn đều hai bên"
+      },
+      "button_group": {
+        "label": "Nhóm nút",
+        "add_button": "Thêm nút",
+        "new_button": "Nút",
+        "primary": "Bắt đầu",
+        "secondary": "Tìm hiểu thêm"
+      },
+      "image_frame": {
+        "label": "Khung",
+        "none": "Không",
+        "rounded": "Bo tròn",
+        "shadow": "Đổ bóng",
+        "border": "Viền",
+        "polaroid": "Polaroid"
+      },
+      "inline_math": {
+        "title": "Công thức trong dòng",
+        "edit": "Sửa công thức {{latex}}",
+        "latex": "LaTeX",
+        "hint": "Ví dụ \\frac{a}{b} hoặc x^2. Gõ $…$ trong văn bản để tạo công thức.",
+        "make": "Công thức",
+        "remove": "Xóa"
+      },
+      "toggle": {
+        "style": "Kiểu khối thu gọn",
+        "variant": "Giao diện",
+        "variant_default": "Mặc định",
+        "variant_bordered": "Có viền",
+        "variant_filled": "Tô nền",
+        "icon": "Biểu tượng",
+        "icon_chevron": "Mũi tên",
+        "icon_plus": "Cộng và trừ"
       }
     },
     "history": {

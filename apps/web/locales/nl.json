@@ -4294,6 +4294,91 @@
         "completed_note": "Klaar. Lees het nog eens door en onthoud wat ontbrak.",
         "write_again": "Mijn antwoord bewerken"
       }
+    },
+    "table": {
+      "total": "Totaal",
+      "average": "Gemiddelde",
+      "sort_by": "Sorteren op",
+      "original_order": "Oorspronkelijke volgorde",
+      "ascending": "Oplopend",
+      "descending": "Aflopend",
+      "sort_direction": "Sorteerrichting",
+      "sorted": "Gesorteerd op {{column}}, {{direction}}",
+      "column_n": "Kolom {{n}}"
+    },
+    "tabs": {
+      "tab": "Tabblad",
+      "untitled": "Tabblad {{n}}",
+      "list_label": "Tabbladen"
+    },
+    "accordion": {
+      "expand_all": "Alles uitklappen",
+      "collapse_all": "Alles inklappen"
+    },
+    "table_of_contents": {
+      "title": "Inhoud"
+    },
+    "checklist": {
+      "progress_label": "{{done}} van {{total}} gedaan",
+      "reset": "Checklist opnieuw instellen",
+      "item": "Checklistitem",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "Tijdlijn"
+    },
+    "key_takeaways": {
+      "title": "Belangrijkste punten"
+    },
+    "chart": {
+      "category": "Categorie",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} met {{series}} reeksen ({{names}}) over {{categories}} categorieën, van {{min}} tot {{max}}.",
+      "title": "Grafiek",
+      "types": {
+        "bar": "Staafdiagram",
+        "column": "Kolomdiagram",
+        "line": "Lijndiagram",
+        "area": "Vlakdiagram",
+        "pie": "Cirkeldiagram",
+        "donut": "Ringdiagram"
+      }
+    },
+    "file_card": {
+      "download": "Downloaden",
+      "download_named": "{{name}} downloaden",
+      "file": "Bestand",
+      "types": {
+        "pdf": "PDF",
+        "doc": "Document",
+        "sheet": "Spreadsheet",
+        "slides": "Dia's",
+        "archive": "Archief",
+        "image": "Afbeelding",
+        "audio": "Audio",
+        "video": "Video",
+        "text": "Tekst",
+        "code": "Code",
+        "file": "Bestand"
+      }
+    },
+    "gallery": {
+      "carousel": "carrousel",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "Afbeelding {{n}} tonen",
+      "label": "Afbeeldingengalerij",
+      "next": "Volgende afbeelding",
+      "open_image": "Afbeelding {{n}} van {{count}} openen",
+      "previous": "Vorige afbeelding",
+      "slide": "dia",
+      "viewer_title": "Afbeelding {{n}} van {{count}}"
+    },
+    "image_compare": {
+      "after": "Na",
+      "before": "Voor",
+      "slider": "Afbeeldingen vergelijken",
+      "value": "{{before}} {{b}}%, {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13456,7 +13541,11 @@
         "type_warning": "Waarschuwing",
         "type_tip": "Tip",
         "type_success": "Succes",
-        "type_error": "Fout"
+        "type_error": "Fout",
+        "type_note": "Notitie",
+        "type_question": "Vraag",
+        "type_example": "Voorbeeld",
+        "type_quote": "Citaat"
       }
     },
     "dynamic": {
@@ -13915,6 +14004,70 @@
         "table": {
           "title": "Tabel",
           "description": "Een tabel van 3x3 invoegen"
+        },
+        "tabs": {
+          "description": "Wissel tussen inhoudspanelen",
+          "title": "Tabbladen"
+        },
+        "columns": {
+          "description": "Zet inhoud naast elkaar",
+          "title": "Kolommen"
+        },
+        "accordion": {
+          "description": "Uitklapbare secties, één tegelijk open",
+          "title": "Accordeon"
+        },
+        "timeline": {
+          "description": "Stappen of gebeurtenissen op volgorde",
+          "title": "Tijdlijn"
+        },
+        "table_of_contents": {
+          "description": "Links naar de kopjes van deze pagina",
+          "title": "Inhoudsopgave"
+        },
+        "key_takeaways": {
+          "description": "Een kaart met de belangrijkste punten",
+          "title": "Belangrijkste punten"
+        },
+        "checklist": {
+          "description": "Items die cursisten kunnen afvinken",
+          "title": "Checklist"
+        },
+        "gallery": {
+          "title": "Galerij",
+          "description": "Meerdere afbeeldingen in een raster of carrousel"
+        },
+        "image_compare": {
+          "title": "Afbeeldingen vergelijken",
+          "description": "Voor en na met een schuifregelaar"
+        },
+        "file_card": {
+          "title": "Bestand downloaden",
+          "description": "Een bestand dat cursisten kunnen downloaden"
+        },
+        "quote_block": {
+          "title": "Testimonial",
+          "description": "Een streamer of testimonial met de auteur"
+        },
+        "quote": {
+          "title": "Citaat",
+          "description": "Een eenvoudige geciteerde passage"
+        },
+        "chart": {
+          "title": "Grafiek",
+          "description": "Staaf-, lijn- of cirkeldiagram uit een kleine tabel"
+        },
+        "stat_highlights": {
+          "title": "Cijfers",
+          "description": "Grote getallen die optellen"
+        },
+        "button_group": {
+          "title": "Knoppengroep",
+          "description": "Meerdere knoppen naast elkaar"
+        },
+        "inline_math": {
+          "title": "Formule in de tekst",
+          "description": "Een formule in een zin (of typ $x^2$)"
         }
       },
       "categories": {
@@ -13924,7 +14077,9 @@
         "callouts": "Infovakken",
         "dynamic": "Dynamische content",
         "ui": "UI-elementen",
-        "tables": "Tabellen"
+        "tables": "Tabellen",
+        "layout": "Indeling",
+        "data": "Data & media"
       },
       "no_results": "Geen resultaten gevonden"
     },
@@ -14269,7 +14424,14 @@
       "button": {
         "emoji": "Emoji",
         "link_hint": "Opent in een nieuw tabblad wanneer cursisten op de knop klikken.",
-        "no_link": "Nog geen link: stel er een in met de linkknop."
+        "no_link": "Nog geen link: stel er een in met de linkknop.",
+        "style": "Stijl",
+        "variant": "Uiterlijk",
+        "size": "Grootte",
+        "variant_solid": "Gevuld",
+        "variant_outline": "Omlijnd",
+        "variant_soft": "Zacht",
+        "variant_link": "Link"
       },
       "quiz": {
         "settings": "Quizinstellingen",
@@ -14327,7 +14489,39 @@
         "clear": "Wissen",
         "check": "Antwoorden controleren",
         "try_again": "Opnieuw proberen",
-        "start_over": "Opnieuw beginnen"
+        "start_over": "Opnieuw beginnen",
+        "question_type": "Vraagtype",
+        "type_multiple_choice": "Meerkeuze",
+        "type_true_false": "Waar / onwaar",
+        "type_short_answer": "Kort antwoord",
+        "type_numeric": "Getal",
+        "true": "Waar",
+        "false": "Onwaar",
+        "accepted_answers": "Geaccepteerde antwoorden",
+        "accepted_answer_n": "Geaccepteerd antwoord {{n}}",
+        "accepted_answer_placeholder": "Een antwoord dat als goed telt",
+        "add_accepted": "Nog een geaccepteerd antwoord",
+        "remove_accepted": "Geaccepteerd antwoord {{n}} verwijderen",
+        "ignore_accents": "Accenten negeren (é = e)",
+        "short_answer_hint": "Hoofdletters en extra spaties worden genegeerd.",
+        "numeric_value": "Juiste antwoord",
+        "numeric_tolerance": "Marge",
+        "show_explanations": "Uitleg tonen",
+        "show_explanations_hint": "Je uitleg verschijnt onder elke vraag zodra leerlingen inleveren.",
+        "pass_mark": "Slaaggrens",
+        "pass_mark_off": "Uit",
+        "pass_mark_n": "{{n}}% om te slagen",
+        "pass_mark_off_hint": "Leerlingen zien of alle antwoorden goed waren.",
+        "pass_mark_hint": "Leerlingen slagen met {{n}}% of meer en zien hun score.",
+        "pass_mark_needed": "Slaaggrens: {{n}}%",
+        "passed": "Geslaagd",
+        "not_passed": "Nog niet geslaagd",
+        "score_percent": "{{percent}}%",
+        "your_answer": "Jouw antwoord",
+        "your_number": "Jouw antwoord (een getal)",
+        "answer_placeholder": "Typ je antwoord",
+        "number_placeholder": "Typ een getal",
+        "expected_answer": "Verwacht: {{answer}}"
       },
       "flipcard": {
         "front": "Voorkant",
@@ -14574,6 +14768,423 @@
         "reset_text": "Herstellen",
         "text": "Titel en beschrijving",
         "title": "Titel"
+      },
+      "table": {
+        "rows_cols": "Rijen en kolommen",
+        "duplicate_row": "Rij dupliceren",
+        "distribute": "Kolommen gelijk verdelen",
+        "merge_split": "Cellen samenvoegen of splitsen",
+        "headers": "Kopteksten",
+        "header_column": "Kopkolom",
+        "cell_style": "Celstijl",
+        "apply_to": "Toepassen op",
+        "scope_selection": "Geselecteerde cellen",
+        "scope_column": "Hele kolom",
+        "background": "Achtergrond",
+        "align": "Uitlijning",
+        "align_start": "Begin",
+        "align_center": "Midden",
+        "align_end": "Einde",
+        "valign": "Verticale uitlijning",
+        "valign_top": "Boven",
+        "valign_middle": "Midden",
+        "valign_bottom": "Onder",
+        "cell_type": "Celtype",
+        "type_hint": "De waarde blijft in de celtekst, bijv. 75, 4/5 of ja.",
+        "type": {
+          "text": "Tekst",
+          "progress": "Voortgang",
+          "checkbox": "Selectievakje",
+          "rating": "Beoordeling",
+          "status": "Status",
+          "number": "Getal",
+          "date": "Datum"
+        },
+        "tone": "Kleur",
+        "tone_auto": "Automatisch",
+        "number_format": "Getalnotatie",
+        "format": {
+          "plain": "Gewoon",
+          "percent": "Procent",
+          "currency": "Valuta",
+          "compact": "Compact"
+        },
+        "currency": "Valutacode",
+        "settings": "Tabelinstellingen",
+        "variant": "Stijl",
+        "variants": {
+          "default": "Standaard",
+          "striped": "Gestreept",
+          "bordered": "Met randen",
+          "minimal": "Minimaal",
+          "cards": "Kaarten"
+        },
+        "cards_hint": "Rijen worden kaarten op telefoons.",
+        "caption": "Bijschrift",
+        "caption_placeholder": "Beschrijf de tabel",
+        "sortable": "Cursisten kunnen sorteren",
+        "sticky_header": "Vaste koprij",
+        "compact": "Compacte rijen",
+        "totals": "Totaalrij",
+        "totals_hint": "Voor getal- en voortgangskolommen.",
+        "totals_none": "Geen",
+        "totals_sum": "Som",
+        "totals_average": "Gemiddelde",
+        "toggle_checkbox": "Selectievakje omschakelen",
+        "templates": {
+          "progress": {
+            "title": "Voortgangstracker",
+            "description": "Taken met eigenaren, status en voortgangsbalken"
+          },
+          "comparison": {
+            "title": "Vergelijking",
+            "description": "Vergelijk opties naast elkaar met vinkjes"
+          },
+          "rubric": {
+            "title": "Beoordelingsrubriek",
+            "description": "Beoordelingscriteria met niveaus en punten"
+          }
+        },
+        "sample": {
+          "task": "Taak",
+          "owner": "Eigenaar",
+          "status": "Status",
+          "progress": "Voortgang",
+          "task_1": "De les plannen",
+          "task_2": "De video opnemen",
+          "task_3": "De quiz schrijven",
+          "status_done": "Klaar",
+          "status_in_progress": "Bezig",
+          "status_todo": "Niet begonnen",
+          "feature": "Functie",
+          "option_a": "Basis",
+          "option_b": "Pro",
+          "feature_1": "Videolessen",
+          "feature_2": "Quizzen",
+          "feature_3": "Certificaten",
+          "criterion": "Criterium",
+          "look_for": "Waar we op letten",
+          "level": "Niveau",
+          "points": "Punten",
+          "crit_1": "Helderheid",
+          "crit_2": "Juistheid",
+          "crit_3": "Opbouw",
+          "desc_1": "De ideeën zijn goed te volgen",
+          "desc_2": "Feiten en stappen kloppen",
+          "desc_3": "Duidelijke delen in een logische volgorde"
+        }
+      },
+      "layout": {
+        "settings": "Instellingen",
+        "style": "Stijl",
+        "color": "Kleur",
+        "icon": "Pictogram",
+        "icon_default": "Standaard",
+        "size_sm": "Klein",
+        "size_md": "Middel",
+        "size_lg": "Groot",
+        "tone_neutral": "Neutraal",
+        "tone_blue": "Blauw",
+        "tone_teal": "Blauwgroen",
+        "tone_green": "Groen",
+        "tone_amber": "Amber",
+        "tone_rose": "Roze",
+        "icons": {
+          "lightbulb": "Gloeilamp",
+          "star": "Ster",
+          "check": "Vinkje",
+          "target": "Doel",
+          "flag": "Vlag",
+          "book": "Boek",
+          "rocket": "Raket",
+          "key": "Sleutel"
+        }
+      },
+      "tabs": {
+        "label": "Tabbladen",
+        "add": "Tabblad toevoegen",
+        "remove": "Dit tabblad verwijderen",
+        "move_earlier": "Tabblad naar voren",
+        "move_later": "Tabblad naar achteren",
+        "title_placeholder": "Titel van het tabblad",
+        "variant_line": "Lijn",
+        "variant_pills": "Pillen",
+        "variant_boxed": "Kader",
+        "sample": {
+          "tab_1": "Overzicht",
+          "tab_2": "Details",
+          "tab_3": "Voorbeeld",
+          "text_1": "Begin met het grote geheel.",
+          "text_2": "Ga dieper in op hoe het werkt.",
+          "text_3": "Laat het in de praktijk zien."
+        }
+      },
+      "columns": {
+        "label": "Kolommen",
+        "layout": "Indeling",
+        "layout_halves": "Twee gelijke kolommen",
+        "layout_narrow_wide": "Smal, dan breed",
+        "layout_wide_narrow": "Breed, dan smal",
+        "layout_thirds": "Drie kolommen",
+        "layout_quarters": "Vier kolommen",
+        "gap": "Tussenruimte",
+        "align": "Verticale uitlijning",
+        "align_top": "Boven",
+        "align_center": "Midden",
+        "align_bottom": "Onder",
+        "stack": "Onder elkaar op kleine schermen",
+        "sample": {
+          "left": "Eerste kolom",
+          "right": "Tweede kolom"
+        }
+      },
+      "accordion": {
+        "label": "Accordeon",
+        "add": "Sectie toevoegen",
+        "single": "Eén sectie tegelijk open",
+        "variant_bordered": "Met rand",
+        "variant_filled": "Gevuld",
+        "sample": {
+          "item_1": "Wat ga ik leren?",
+          "text_1": "Beschrijf het resultaat van deze les.",
+          "item_2": "Hoe lang duurt het?",
+          "text_2": "Geef een schatting waar cursisten mee kunnen plannen.",
+          "item_3": "Wat heb ik nodig?",
+          "text_3": "Som op wat klaar moet liggen voor je begint."
+        },
+        "variant_default": "Standaard"
+      },
+      "timeline": {
+        "label": "Tijdlijn",
+        "add": "Stap toevoegen",
+        "remove": "Stap verwijderen",
+        "step": "Stap",
+        "title_placeholder": "Titel van de stap",
+        "label_placeholder": "Datum of label (optioneel)",
+        "numbered": "Genummerde stappen",
+        "orientation": "Richting",
+        "vertical": "Verticaal",
+        "horizontal": "Horizontaal",
+        "icon_number": "Nummer",
+        "variant_steps": "Stappen",
+        "variant_process": "Proces",
+        "sample": {
+          "step_1": "Voorbereiden",
+          "text_1": "Verzamel wat je nodig hebt.",
+          "step_2": "Oefenen",
+          "text_2": "Probeer het op een klein voorbeeld.",
+          "step_3": "Toepassen",
+          "text_3": "Gebruik het voor een echte taak."
+        },
+        "variant_timeline": "Tijdlijn"
+      },
+      "table_of_contents": {
+        "label": "Inhoudsopgave",
+        "depth": "Kopjes om op te nemen",
+        "numbered": "Items nummeren",
+        "title_label": "Titel",
+        "empty": "Voeg kopjes toe aan de les, dan verschijnen ze hier."
+      },
+      "key_takeaways": {
+        "label": "Belangrijkste punten",
+        "title_label": "Titel van de kaart",
+        "sample": {
+          "point_1": "Het hoofdidee in één zin",
+          "point_2": "Een detail om te onthouden",
+          "point_3": "Wat je hierna doet"
+        }
+      },
+      "checklist": {
+        "label": "Checklist",
+        "learner_can_check": "Cursisten kunnen items afvinken",
+        "hint": "Vinkjes worden in de browser van elke cursist bewaard. Items die je hier afvinkt, beginnen afgevinkt.",
+        "sample": {
+          "item_1": "De les lezen",
+          "item_2": "De oefening proberen",
+          "item_3": "Je antwoorden controleren"
+        }
+      },
+      "chart": {
+        "add_row": "Rij toevoegen",
+        "add_series": "Reeks toevoegen",
+        "apply_csv": "Deze gegevens gebruiken",
+        "csv_error": "Kan deze tabel niet lezen. Zet labels in de eerste kolom en getallen in de andere.",
+        "csv_label": "Tabel als CSV",
+        "csv_placeholder": "Plak uit een spreadsheet of typ: label, reeks 1, reeks 2",
+        "edit_data": "Gegevens bewerken",
+        "empty": "Voeg gegevens toe om de grafiek te tekenen.",
+        "label": "Grafiek",
+        "label_n": "Label {{n}}",
+        "labels": "Labels",
+        "paste_csv": "CSV plakken",
+        "pie_hint": "Cirkel- en ringdiagrammen tonen de eerste reeks.",
+        "remove_row": "Rij verwijderen",
+        "remove_series": "Reeks verwijderen",
+        "row_n": "Item {{n}}",
+        "sample": {
+          "q1": "K1",
+          "q2": "K2",
+          "q3": "K3",
+          "q4": "K4",
+          "series_1": "Klas A",
+          "series_2": "Klas B",
+          "title": "Gemiddelde quizscore per kwartaal"
+        },
+        "series_color": "Kleur van {{name}} wijzigen",
+        "series_n": "Reeks {{n}}",
+        "series_name": "Naam van de reeks",
+        "settings": "Grafiekinstellingen",
+        "show_legend": "Legenda tonen",
+        "show_values": "Waarden tonen",
+        "stacked": "Reeksen stapelen",
+        "title_label": "Titel",
+        "title_placeholder": "Titel van de grafiek",
+        "type": "Grafiektype"
+      },
+      "file_card": {
+        "add_link": "Link toevoegen",
+        "description": "Beschrijving",
+        "description_placeholder": "Wat staat er in dit bestand? (optioneel)",
+        "empty_hint": "Upload een pdf, afbeelding, audio- of videobestand, of link naar een willekeurig bestand.",
+        "empty_title": "Voeg een bestand toe om te downloaden",
+        "label": "Bestand",
+        "link_hint": "Vervangt het geüploade bestand, als dat er is.",
+        "link_label": "Link naar het bestand",
+        "link_settings": "Bestandslink",
+        "name": "Bestandsnaam",
+        "type_error": "Dit type bestand kan niet worden geüpload. Upload een pdf, afbeelding, audio- of videobestand, of link in plaats daarvan naar het bestand.",
+        "upload": "Bestand uploaden"
+      },
+      "gallery": {
+        "add_images": "Afbeeldingen toevoegen",
+        "add_link": "Afbeelding toevoegen",
+        "alt_hint": "Beschrijf wat de afbeelding laat zien, voor cursisten met een schermlezer.",
+        "alt_missing": "Alt-tekst ontbreekt: {{n}}",
+        "alt_placeholder": "Alt-tekst (verplicht)",
+        "columns": "Kolommen",
+        "count": "Afbeeldingen: {{n}}",
+        "empty_hint": "Sleep meerdere afbeeldingen tegelijk hierheen of kies ze op je apparaat. {{formats}} · elk tot {{max}}.",
+        "empty_title": "Voeg afbeeldingen toe aan je galerij",
+        "full": "Een galerij bevat maximaal {{max}} afbeeldingen.",
+        "label": "Galerij",
+        "layout": "Indeling",
+        "layout_carousel": "Carrousel",
+        "layout_grid": "Raster",
+        "layout_masonry": "Metselwerk",
+        "move_earlier": "Naar voren",
+        "move_later": "Naar achteren",
+        "remove": "Afbeelding verwijderen",
+        "settings": "Galerij-instellingen"
+      },
+      "image_compare": {
+        "after_image": "Afbeelding na",
+        "before_image": "Afbeelding voor",
+        "empty_hint": "Kies een voor- en een na-afbeelding van dezelfde grootte. Cursisten slepen de scheidslijn om ze te vergelijken.",
+        "empty_title": "Afbeeldingen toevoegen",
+        "horizontal": "Naast elkaar",
+        "label": "Afbeeldingen vergelijken",
+        "orientation": "Richting",
+        "replace_after": "Na-afbeelding vervangen",
+        "replace_before": "Voor-afbeelding vervangen",
+        "settings": "Vergelijkingsinstellingen",
+        "side_label": "Label",
+        "start": "Scheidslijn begint op",
+        "vertical": "Boven en onder"
+      },
+      "quote_block": {
+        "author": "Auteur",
+        "author_placeholder": "Naam",
+        "avatar": "Link naar foto",
+        "avatar_hint": "Wordt bij testimonials naast de naam getoond. Laat leeg voor initialen.",
+        "label": "Citaat",
+        "role": "Functie",
+        "role_placeholder": "Functie of bedrijf",
+        "sample": {
+          "author": "Sam Rivera",
+          "role": "Productontwerper",
+          "text": "Door de praktische oefeningen viel alles op zijn plek. De volgende dag gebruikte ik het al op mijn werk."
+        },
+        "settings": "Citaatinstellingen",
+        "style": "Stijl",
+        "variant_highlight": "Uitgelicht",
+        "variant_pull": "Streamer",
+        "variant_testimonial": "Testimonial"
+      },
+      "stat_highlights": {
+        "add": "Cijfer toevoegen",
+        "animate": "Optellen bij weergave",
+        "color": "Kleur",
+        "columns": "Kolommen",
+        "description": "Beschrijving",
+        "description_placeholder": "Korte beschrijving (optioneel)",
+        "empty": "Voeg een cijfer toe om te beginnen.",
+        "label": "Cijfers",
+        "label_field": "Label",
+        "prefix": "Voor het getal",
+        "remove": "Cijfer verwijderen",
+        "sample": {
+          "desc_1": "van de cursisten rondt de cursus af",
+          "desc_2": "uit 1.200 beoordelingen",
+          "desc_3": "in 40 landen",
+          "label_1": "Voltooiingspercentage",
+          "label_2": "Gemiddelde beoordeling",
+          "label_3": "Cursisten"
+        },
+        "settings": "Cijferinstellingen",
+        "suffix": "Na het getal",
+        "value": "Getal"
+      },
+      "callout_title": "Titel",
+      "callout_title_placeholder": "Optionele titel",
+      "callout_collapsible": "Leerlingen kunnen het inklappen",
+      "callout_default_open": "Eerst open",
+      "callout_tone": "Kleur",
+      "callout_tone_default": "De kleur van het type",
+      "code_copied": "Code gekopieerd naar het klembord",
+      "code_copy_failed": "Kopiëren mislukt. Selecteer de code en kopieer hem handmatig.",
+      "code_highlight": "Te markeren regels (bijvoorbeeld 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "Regelnummers",
+      "code_wrap": "Lange regels laten teruglopen",
+      "align": {
+        "label": "Tekstuitlijning",
+        "start": "Uitlijnen aan begin",
+        "center": "Centreren",
+        "end": "Uitlijnen aan eind",
+        "justify": "Uitvullen"
+      },
+      "button_group": {
+        "label": "Knoppengroep",
+        "add_button": "Knop toevoegen",
+        "new_button": "Knop",
+        "primary": "Aan de slag",
+        "secondary": "Meer informatie"
+      },
+      "image_frame": {
+        "label": "Kader",
+        "none": "Geen",
+        "rounded": "Afgerond",
+        "shadow": "Schaduw",
+        "border": "Rand",
+        "polaroid": "Polaroid"
+      },
+      "inline_math": {
+        "title": "Formule in de tekst",
+        "edit": "Formule {{latex}} bewerken",
+        "latex": "LaTeX",
+        "hint": "Bijvoorbeeld \\frac{a}{b} of x^2. Typ $…$ in de tekst om er een te maken.",
+        "make": "Formule",
+        "remove": "Verwijderen"
+      },
+      "toggle": {
+        "style": "Stijl van de uitklapsectie",
+        "variant": "Uiterlijk",
+        "variant_default": "Standaard",
+        "variant_bordered": "Omrand",
+        "variant_filled": "Gevuld",
+        "icon": "Pictogram",
+        "icon_chevron": "Pijl",
+        "icon_plus": "Plus en min"
       }
     },
     "history": {

@@ -33,6 +33,18 @@ from src.services.courses.activities import experiences as exp
 MAX_DEPTH = 40
 MAX_DOC_CHARS = 2_000_000
 CALLOUT_TYPES = ("info", "warning", "tip", "success", "error")
+# Newer callout looks, stored in `kind` with the closest legacy `type`.
+CALLOUT_KINDS = {"note": "info", "question": "info", "example": "tip", "quote": "info"}
+# Colour names shared with the editor's text colour palette.
+PALETTE = ("gray", "red", "orange", "amber", "green", "teal", "blue", "purple", "pink")
+# Tones of timeline steps, key takeaways and stats.
+LAYOUT_TONES = ("neutral", "blue", "teal", "green", "amber", "rose")
+LAYOUT_ICONS = ("lightbulb", "star", "check", "target", "flag", "book", "rocket", "key")
+CHART_TYPES = ("bar", "column", "line", "area", "pie", "donut")
+CHART_TONES = ("blue", "orange", "teal", "amber", "pink", "green", "violet", "red")
+CELL_TYPES = ("text", "progress", "checkbox", "rating", "status", "number", "date")
+FILE_TYPES = ("pdf", "doc", "sheet", "slides", "archive", "image", "audio", "video", "text", "code", "file")
+QUESTION_TYPES = ("multiple_choice", "true_false", "short_answer", "numeric")
 
 
 class PathError(ValueError):
@@ -59,27 +71,40 @@ class Spec:
     why_not: str = ""             # what to use instead when not authorable
 
 
+TABLE_ATTRS = ("variant", "caption", "headerColumn", "stickyHeader", "sortable", "compact", "totals")
+CELL_ATTRS = ("cellType", "background", "align", "valign", "tone", "numberFormat", "currency")
+
 _MEDIA = "Add media with add_media_block (it uploads the file and inserts the block)."
 
 SCHEMA: dict[str, Spec] = {
     "doc": Spec("", "block+"),
     "text": Spec(INLINE, None),
     "hardBreak": Spec(INLINE, None),
-    "paragraph": Spec(BLOCK, "inline*"),
-    "heading": Spec(BLOCK, "inline*", ("level",)),
+    # textAlign: start | center | end | justify; null (the default) is the old look.
+    "paragraph": Spec(BLOCK, "inline*", ("textAlign",)),
+    "heading": Spec(BLOCK, "inline*", ("level", "textAlign")),
     "blockquote": Spec(BLOCK, "block+"),
     "bulletList": Spec(BLOCK, "listItem+"),
     "orderedList": Spec(BLOCK, "listItem+", ("start", "type")),
     "listItem": Spec("", "paragraph block*"),
-    "codeBlock": Spec(BLOCK, "text*", ("language", "filename"), marks=False),
+    "codeBlock": Spec(
+        BLOCK, "text*", ("language", "filename", "showLineNumbers", "highlightLines", "wrap"), marks=False,
+    ),
     "horizontalRule": Spec(BLOCK, None, ("variant",)),
-    "table": Spec(BLOCK, "tableRow+"),
+    # Table options and typed cells (Editor Plus). A typed cell keeps its value
+    # in its own text ("75" for a progress bar), so every attr is optional.
+    "table": Spec(BLOCK, "tableRow+", TABLE_ATTRS),
     "tableRow": Spec("", "(tableCell | tableHeader)*"),
-    "tableCell": Spec("", "block+", ("colspan", "rowspan", "colwidth")),
-    "tableHeader": Spec("", "block+", ("colspan", "rowspan", "colwidth")),
-    "callout": Spec(BLOCK, "(paragraph | bulletList | orderedList)+", ("type", "dismissible", "icon")),
+    "tableCell": Spec("", "block+", ("colspan", "rowspan", "colwidth") + CELL_ATTRS),
+    "tableHeader": Spec("", "block+", ("colspan", "rowspan", "colwidth") + CELL_ATTRS),
+    # `type` stays one of CALLOUT_TYPES (older renderers crash on anything
+    # else); the newer looks live in `kind` (see callout_kind_attrs).
+    "callout": Spec(
+        BLOCK, "(paragraph | bulletList | orderedList)+",
+        ("type", "dismissible", "icon", "title", "collapsible", "defaultOpen", "tone", "kind"),
+    ),
     # Collapsible section from the editor's block menu.
-    "toggleBlock": Spec(BLOCK, "block+", ("summary", "defaultOpen")),
+    "toggleBlock": Spec(BLOCK, "block+", ("summary", "defaultOpen", "variant", "icon")),
     # Blocks shown only to readers matching `rules` (Extensions/Dynamic); the
     # API drops them for everyone else (dynamic_content.py).
     "conditionalBlock": Spec(BLOCK, "block+", ("rules", "hiddenMessage", "label", "openRules")),
@@ -88,7 +113,32 @@ SCHEMA: dict[str, Spec] = {
     "calloutInfo": Spec(BLOCK, "text*", authorable=False, why_not="Use a callout with type 'info'."),
     "calloutWarning": Spec(BLOCK, "text*", authorable=False, why_not="Use a callout with type 'warning'."),
     "badge": Spec(BLOCK, "text*", ("color", "emoji")),
-    "button": Spec(BLOCK, "text*", ("emoji", "link", "color", "alignment")),
+    "button": Spec(BLOCK, "text*", ("emoji", "link", "color", "alignment", "variant", "size")),
+    # A row of buttons.
+    "buttonGroup": Spec(BLOCK, "button+", ("alignment",)),
+    # Inline formula (KaTeX), written $...$ in Markdown.
+    "inlineMath": Spec(INLINE, None, ("latex",)),
+    # Layout blocks (Editor Plus): their text is ordinary content inside them.
+    "tabs": Spec(BLOCK, "tabItem{2,8}", ("blockId", "variant")),
+    "tabItem": Spec("", "block+", ("title", "icon")),
+    "columns": Spec(BLOCK, "column{2,4}", ("layout", "gap", "stackOnMobile", "verticalAlign")),
+    "column": Spec("", "block+"),
+    "accordion": Spec(BLOCK, "toggleBlock+", ("single", "variant")),
+    "timeline": Spec(BLOCK, "timelineItem+", ("variant", "numbered", "orientation")),
+    "timelineItem": Spec("", "block+", ("title", "label", "icon", "tone")),
+    "tableOfContents": Spec(BLOCK, None, ("title", "maxLevel", "numbered")),
+    "keyTakeaways": Spec(BLOCK, "block+", ("title", "tone", "icon")),
+    # Checklist (TipTap's task list): learners may tick items.
+    "taskList": Spec(BLOCK, "taskItem+", ("blockId", "learnerCanCheck")),
+    "taskItem": Spec("", "paragraph+", ("checked",)),
+    # Media and data blocks (Editor Plus). Linked pictures and files use `url`;
+    # an uploaded one keeps the `blockObject` the editor stored.
+    "gallery": Spec(BLOCK, None, ("blockId", "layout", "columns", "images")),
+    "imageCompare": Spec(BLOCK, None, ("before", "after", "start", "orientation")),
+    "chart": Spec(BLOCK, None, ("type", "title", "data", "showLegend", "showValues", "stacked")),
+    "statHighlights": Spec(BLOCK, None, ("items", "columns", "animate")),
+    "fileCard": Spec(BLOCK, None, ("blockObject", "url", "name", "description", "sizeBytes", "fileType")),
+    "quoteBlock": Spec(BLOCK, "paragraph+", ("variant", "author", "role", "avatarUrl")),
     "flipcard": Spec(BLOCK, "text*", ("question", "answer", "color", "alignment", "size", "style")),
     # mode/title/shuffle: the Experiences flashcards (study mode); absent = the classic grid.
     "flipcardGrid": Spec(BLOCK, "flipcard+", ("columns", "mode", "title", "shuffle")),
@@ -149,7 +199,7 @@ SCHEMA: dict[str, Spec] = {
     "blockImage": Spec(
         BLOCK, None,
         ("blockObject", "size", "alignment", "unsplash_url", "unsplash_photographer_name",
-         "unsplash_photographer_url", "unsplash_photo_url", "alt", "caption", "href", "lightbox"),
+         "unsplash_photographer_url", "unsplash_photo_url", "alt", "caption", "href", "lightbox", "frame"),
         authorable=False, why_not=_MEDIA,
     ),
     "blockVideo": Spec(BLOCK, None, ("blockObject", "caption", "startTime", "chapters"), authorable=False, why_not=_MEDIA),
@@ -209,7 +259,16 @@ _MODELS: dict[str, tuple[frozenset | None, frozenset, int]] = {
         None, frozenset({"paragraph", "bulletList", "orderedList"}), 1,
     ),
     "flipcard+": (None, frozenset({"flipcard"}), 1),
+    "button+": (None, frozenset({"button"}), 1),
+    "tabItem{2,8}": (None, frozenset({"tabItem"}), 2),
+    "column{2,4}": (None, frozenset({"column"}), 2),
+    "toggleBlock+": (None, frozenset({"toggleBlock"}), 1),
+    "timelineItem+": (None, frozenset({"timelineItem"}), 1),
+    "taskItem+": (None, frozenset({"taskItem"}), 1),
+    "paragraph+": (None, frozenset({"paragraph"}), 1),
 }
+# Content models with an upper bound.
+_MAX_CHILDREN: dict[str, int] = {"tabItem{2,8}": 8, "column{2,4}": 4}
 
 
 def kind(node: Any) -> str:
@@ -338,8 +397,16 @@ def content_problem(node: dict, path: tuple = ()) -> str | None:
     first, rest, minimum = _MODELS[spec.content]
     kids = kids if isinstance(kids, list) else []
     if len(kids) < minimum:
-        need = "a paragraph first" if first else f"at least one of {_names(rest)}"
+        if first:
+            need = "a paragraph first"
+        elif minimum > 1:
+            need = f"at least {minimum} of {_names(rest)}"
+        else:
+            need = f"at least one of {_names(rest)}"
         return f"A {kind(node)} at {_where(path)} needs {need}."
+    most = _MAX_CHILDREN.get(spec.content)
+    if most is not None and len(kids) > most:
+        return f"A {kind(node)} at {_where(path)} holds at most {most} of {_names(rest)}."
     for i, child in enumerate(kids):
         allowed = first if (i == 0 and first is not None) else rest
         if kind(child) not in allowed:
@@ -518,16 +585,24 @@ def _quiz_questions(v: Any) -> str | None:
         text = q.get("question")
         if not isinstance(text, str) or not text.strip() or len(text) > 2000:
             return f"question {i} needs question text (up to 2000 characters)"
+        # A missing or unknown type is multiple choice, as in the editor.
+        qtype = q.get("type")
         answers = q.get("answers")
-        if not isinstance(answers, list) or not 2 <= len(answers) <= 12:
+        if qtype in ("short_answer", "numeric"):
+            problem = _typed_question(q, i, qtype)
+            if problem:
+                return problem
+        elif not isinstance(answers, list) or not 2 <= len(answers) <= 12:
             return f"question {i} needs 2 to 12 answers"
-        if not any(isinstance(a, dict) and a.get("correct") is True for a in answers):
+        elif qtype == "true_false" and len(answers) != 2:
+            return f"question {i} (true_false) needs exactly 2 answers, True then False"
+        elif not any(isinstance(a, dict) and a.get("correct") is True for a in answers):
             return f"question {i} needs at least one correct answer"
         qid = q.get("question_id")
         if not isinstance(qid, str) or not qid or qid in ids:
             return f"question {i} needs a unique question_id"
         ids.add(qid)
-        for j, a in enumerate(answers):
+        for j, a in enumerate(answers or []):
             if not isinstance(a, dict):
                 return f"question {i} answer {j} must be an object"
             if not isinstance(a.get("answer"), str) or not a["answer"].strip() or len(a["answer"]) > 1000:
@@ -540,6 +615,27 @@ def _quiz_questions(v: Any) -> str | None:
             ids.add(aid)
         if q.get("response_type") not in (None, "single", "multiple"):
             return f"question {i} response_type must be single or multiple"
+    return None
+
+
+def _typed_question(q: dict, i: int, qtype: str) -> str | None:
+    """A short-answer or numeric question: no options, an answer key instead."""
+    if q.get("answers") not in (None, []):
+        return f"question {i} ({qtype}) has no options; leave answers empty"
+    if qtype == "short_answer":
+        accepted = q.get("accepted_answers")
+        if (
+            not isinstance(accepted, list) or not 1 <= len(accepted) <= 10
+            or not all(isinstance(a, str) and a.strip() and len(a) <= 500 for a in accepted)
+        ):
+            return f"question {i} (short_answer) needs 1 to 10 accepted_answers"
+        if q.get("accent_insensitive") not in (None, True, False):
+            return f"question {i} accent_insensitive must be true or false"
+        return None
+    if _num(-1e15, 1e15, null=False)(q.get("correct_value")):
+        return f"question {i} (numeric) needs a correct_value number"
+    if _num(0, 1e15)(q.get("tolerance")):
+        return f"question {i} tolerance must be a number of 0 or more"
     return None
 
 
@@ -819,6 +915,134 @@ def _experience_problems(t: str, attrs: dict) -> list[str]:
 _ALIGN = _one_of("left", "center", "right")
 
 
+def _num(lo: float, hi: float, *, null: bool = True) -> Callable[[Any], str | None]:
+    def check(v: Any) -> str | None:
+        if v is None and null:
+            return None
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or not lo <= v <= hi:
+            return f"must be a number from {lo:g} to {hi:g}"
+        return None
+
+    return check
+
+
+_HIGHLIGHT_LINES = re.compile(r"^\s*\d{1,5}(\s*-\s*\d{1,5})?(\s*,\s*\d{1,5}(\s*-\s*\d{1,5})?)*\s*$")
+
+
+def _highlight_lines(v: Any) -> str | None:
+    if v is None or (isinstance(v, str) and len(v) <= 200 and _HIGHLIGHT_LINES.match(v)):
+        return None
+    return 'must be line numbers and ranges like "2,4-6"'
+
+
+def _currency(v: Any) -> str | None:
+    if v is None or (isinstance(v, str) and re.fullmatch(r"[A-Za-z]{3}", v)):
+        return None
+    return "must be a three-letter currency code like USD"
+
+
+def _block_object(v: Any) -> str | None:
+    """A file the editor uploaded (BlockRead): kept as stored, never made up."""
+    if v is None:
+        return None
+    if not isinstance(v, dict) or not isinstance(v.get("block_uuid"), str) or not isinstance(v.get("content"), dict):
+        return "must be the stored upload ({block_uuid, content}) or null"
+    return None
+
+
+def _picture(item: Any, where: str, *, label: bool = False) -> str | None:
+    """A gallery image or a comparison side: a linked or uploaded picture."""
+    if not isinstance(item, dict):
+        return f"{where} must be an object"
+    allowed = {"id", "url", "blockObject", "caption", "alt"} if not label else {"url", "blockObject", "label", "alt"}
+    extra = sorted(set(item) - allowed)
+    if extra:
+        return f"{where} has no field {extra[0]!r}"
+    if item.get("url") not in (None, "") and not is_web_url(item.get("url")):
+        return f"{where} url must be an http(s) URL"
+    problem = _block_object(item.get("blockObject"))
+    if problem:
+        return f"{where} blockObject {problem}"
+    for key, limit in (("id", 80), ("caption", 300), ("alt", 500), ("label", 80)):
+        if _str(limit)(item.get(key)):
+            return f"{where} {key} must be text of at most {limit} characters"
+    return None
+
+
+def _gallery_images(v: Any) -> str | None:
+    if not isinstance(v, list) or len(v) > 40:
+        return "must be a list of at most 40 images"
+    for i, item in enumerate(v):
+        problem = _picture(item, f"image {i}")
+        if problem:
+            return problem
+        if not item.get("url") and not item.get("blockObject"):
+            return f"image {i} needs a url"
+    return None
+
+
+def _compare_side(v: Any) -> str | None:
+    if v is None:
+        return None
+    return _picture(v, "the side", label=True)
+
+
+def _chart_data(v: Any) -> str | None:
+    if not isinstance(v, dict) or set(v) - {"labels", "series"}:
+        return 'must be {"labels": [...], "series": [{"name", "values", "tone"}]}'
+    labels = v.get("labels")
+    series = v.get("series")
+    if not isinstance(labels, list) or len(labels) > 50 or not all(isinstance(x, str) and len(x) <= 60 for x in labels):
+        return "labels must be a list of at most 50 texts of up to 60 characters"
+    if not isinstance(series, list) or len(series) > 8:
+        return "series must be a list of at most 8 series"
+    for i, s in enumerate(series):
+        if not isinstance(s, dict) or set(s) - {"name", "values", "tone"}:
+            return f"series {i} must be {{name, values, tone}}"
+        if _str(60)(s.get("name")):
+            return f"series {i} name must be text of at most 60 characters"
+        values = s.get("values")
+        if not isinstance(values, list) or len(values) != len(labels):
+            return f"series {i} needs one value per label ({len(labels)})"
+        if any(isinstance(x, bool) or not isinstance(x, (int, float)) or x != x or abs(x) > 1e15 for x in values):
+            return f"series {i} values must be numbers"
+        if s.get("tone") not in (None, *CHART_TONES):
+            return f"series {i} tone must be one of {', '.join(CHART_TONES)}"
+    return None
+
+
+def _stats(v: Any) -> str | None:
+    if not isinstance(v, list) or not 1 <= len(v) <= 8:
+        return "must be a list of 1 to 8 stats"
+    for i, item in enumerate(v):
+        if not isinstance(item, dict):
+            return f"stat {i} must be an object"
+        extra = sorted(set(item) - {"id", "value", "label", "description", "tone", "prefix", "suffix"})
+        if extra:
+            return f"stat {i} has no field {extra[0]!r}"
+        value = item.get("value")
+        if isinstance(value, bool) or not isinstance(value, (str, int, float)) or len(str(value)) > 24:
+            return f"stat {i} value must be a number or text of up to 24 characters"
+        for key, limit in (("id", 80), ("label", 120), ("description", 300), ("prefix", 8), ("suffix", 12)):
+            if _str(limit)(item.get(key)):
+                return f"stat {i} {key} must be text of at most {limit} characters"
+        if item.get("tone") not in (None, *LAYOUT_TONES):
+            return f"stat {i} tone must be one of {', '.join(LAYOUT_TONES)}"
+    return None
+
+
+def _quiz_settings(v: Any) -> str | None:
+    if v is None:
+        return None
+    if not isinstance(v, dict):
+        return "must be an object or null"
+    if "passMark" in v and _int(0, 100)(v["passMark"]):
+        return "passMark must be a whole number from 0 to 100"
+    if "showExplanations" in v and not isinstance(v["showExplanations"], bool):
+        return "showExplanations must be true or false"
+    return None
+
+
 def _image_size(v: Any) -> str | None:
     """The editor stores an image's size as {"width": pixels}."""
     if v is None:
@@ -827,15 +1051,89 @@ def _image_size(v: Any) -> str | None:
         return 'must be {"width": pixels}'
     return _int(50, 5000, null=True)(v.get("width"))
 
+_TEXT_ALIGN = _one_of(None, "start", "center", "end", "justify")
+_CELL = {
+    "colspan": _int(1, 100), "rowspan": _int(1, 100),
+    "cellType": _one_of(None, *CELL_TYPES), "background": _one_of(None, *PALETTE),
+    "align": _one_of(None, "left", "center", "right", "start", "end"),
+    "valign": _one_of(None, "top", "middle", "bottom"), "tone": _one_of(None, *PALETTE),
+    "numberFormat": _one_of(None, "plain", "percent", "currency", "compact"), "currency": _currency,
+}
+
+
+def _callout_type(v: Any) -> str | None:
+    if v in CALLOUT_TYPES:
+        return None
+    if v in CALLOUT_KINDS:
+        return f"must be one of {', '.join(map(repr, CALLOUT_TYPES))}; for {v!r} set kind: {v!r} (and type {CALLOUT_KINDS[v]!r})"
+    return f"must be one of {', '.join(map(repr, CALLOUT_TYPES))}"
+
+
 _VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
-    "heading": {"level": _int(1, 6)},
+    "paragraph": {"textAlign": _TEXT_ALIGN},
+    "heading": {"level": _int(1, 6), "textAlign": _TEXT_ALIGN},
     "orderedList": {"start": _int(0, 1_000_000), "type": _one_of(None, "1", "a", "A", "i", "I")},
-    "codeBlock": {"language": _language},
-    "tableCell": {"colspan": _int(1, 100), "rowspan": _int(1, 100)},
-    "tableHeader": {"colspan": _int(1, 100), "rowspan": _int(1, 100)},
-    "callout": {"type": _one_of(*CALLOUT_TYPES), "dismissible": _bool},
+    "codeBlock": {
+        "language": _language, "showLineNumbers": _bool, "wrap": _bool,
+        "highlightLines": _highlight_lines,
+    },
+    "table": {
+        "variant": _one_of(None, "default", "striped", "bordered", "minimal", "cards"), "caption": _str(500),
+        "headerColumn": _bool, "stickyHeader": _bool, "sortable": _bool, "compact": _bool,
+        "totals": _one_of(None, "none", "sum", "average"),
+    },
+    "tableCell": _CELL,
+    "tableHeader": _CELL,
+    "callout": {
+        "type": _callout_type, "dismissible": _bool, "title": _str(200), "collapsible": _bool,
+        "defaultOpen": _bool, "tone": _one_of(None, *PALETTE), "kind": _one_of(None, *CALLOUT_KINDS),
+    },
     "badge": {"color": _str(30), "emoji": _str(16)},
-    "button": {"emoji": _str(16), "link": _url(empty=True), "color": _str(30), "alignment": _ALIGN},
+    "button": {
+        "emoji": _str(16), "link": _url(empty=True), "color": _str(30), "alignment": _ALIGN,
+        "variant": _one_of(None, "solid", "outline", "soft", "link"), "size": _one_of(None, "sm", "md", "lg"),
+    },
+    "buttonGroup": {"alignment": _ALIGN},
+    "inlineMath": {"latex": _str(1000, null=False, empty=False)},
+    "tabs": {"blockId": _str(100), "variant": _one_of("line", "pills", "boxed")},
+    "tabItem": {"title": _str(200), "icon": _str(40)},
+    "columns": {
+        "layout": _one_of("1-1", "1-2", "2-1", "1-1-1", "1-1-1-1"), "gap": _one_of("sm", "md", "lg"),
+        "stackOnMobile": _bool, "verticalAlign": _one_of("top", "center", "bottom"),
+    },
+    "accordion": {"single": _bool, "variant": _one_of("default", "bordered", "filled")},
+    "timeline": {
+        "variant": _one_of("steps", "timeline", "process"), "numbered": _bool,
+        "orientation": _one_of("vertical", "horizontal"),
+    },
+    "timelineItem": {
+        "title": _str(300), "label": _str(100), "icon": _one_of(None, *LAYOUT_ICONS),
+        "tone": _one_of(None, *LAYOUT_TONES),
+    },
+    "tableOfContents": {"title": _str(200), "maxLevel": _one_of(2, 3, 4), "numbered": _bool},
+    "keyTakeaways": {"title": _str(200), "tone": _one_of(*LAYOUT_TONES), "icon": _one_of(None, *LAYOUT_ICONS)},
+    "taskList": {"blockId": _str(100), "learnerCanCheck": _bool},
+    "taskItem": {"checked": _bool},
+    "gallery": {
+        "blockId": _str(100), "layout": _one_of("grid", "carousel", "masonry"), "columns": _one_of(2, 3, 4),
+        "images": _gallery_images,
+    },
+    "imageCompare": {
+        "before": _compare_side, "after": _compare_side, "start": _int(0, 100),
+        "orientation": _one_of("horizontal", "vertical"),
+    },
+    "chart": {
+        "type": _one_of(*CHART_TYPES), "title": _str(300), "data": _chart_data,
+        "showLegend": _bool, "showValues": _bool, "stacked": _bool,
+    },
+    "statHighlights": {"items": _stats, "columns": _one_of(2, 3, 4), "animate": _bool},
+    "fileCard": {
+        "blockObject": _block_object, "name": _str(200), "description": _str(1000),
+        "sizeBytes": _int(0, 10**13, null=True), "fileType": _one_of(None, *FILE_TYPES),
+    },
+    "quoteBlock": {
+        "variant": _one_of("pull", "testimonial", "highlight"), "author": _str(200), "role": _str(200),
+    },
     "flipcard": {
         "question": _str(2000, null=False), "answer": _str(2000, null=False),
         "color": _str(30), "alignment": _ALIGN, "size": _one_of("small", "medium", "large"),
@@ -854,7 +1152,7 @@ _VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
     },
     "blockUser": {"layout": _one_of("card", "compact")},
     "blockMathEquation": {"math_equation": _str(10_000, null=False)},
-    "blockQuiz": {"quizId": _str(100), "questions": _quiz_questions},
+    "blockQuiz": {"quizId": _str(100), "questions": _quiz_questions, "settings": _quiz_settings},
     "scenarios": {
         "title": _str(500), "scenarios": _scenarios, "currentScenarioId": _str(100),
         "display": _one_of(None, "story", "chat"),
@@ -865,10 +1163,13 @@ _VALIDATORS: dict[str, dict[str, Callable[[Any], str | None]]] = {
     "blockImage": {
         "alignment": _ALIGN, "size": _image_size, "unsplash_url": _url(),
         "unsplash_photographer_name": _str(200), "unsplash_photographer_url": _url(),
-        "unsplash_photo_url": _url(),
+        "unsplash_photo_url": _url(), "frame": _one_of(None, "none", "rounded", "shadow", "border", "polaroid"),
     },
     "youtube": {"src": _url(null=False), "start": _int(0, 1_000_000, null=True)},
-    "toggleBlock": {"summary": _str(300), "defaultOpen": _bool},
+    "toggleBlock": {
+        "summary": _str(300), "defaultOpen": _bool, "variant": _one_of(None, "default", "bordered", "filled"),
+        "icon": _one_of(None, "chevron", "plus"),
+    },
     "conditionalBlock": {
         "rules": lambda v: _rules(v), "hiddenMessage": _str(300), "label": _str(200),
         "openRules": _one_of(None, True),
@@ -929,7 +1230,7 @@ def _variable_path(v: Any) -> str | None:
 # javascript:, data: or vbscript: link can be written under any block type.
 URL_ATTRS = frozenset({
     "link", "url", "href", "src", "h5pUrl", "embedUrl", "embedSourceUrl", "og_image", "og_url",
-    "favicon", "imageUrl", "unsplash_url", "unsplash_photographer_url", "unsplash_photo_url",
+    "favicon", "imageUrl", "unsplash_url", "unsplash_photographer_url", "unsplash_photo_url", "avatarUrl",
 })
 
 
@@ -1025,27 +1326,73 @@ def paragraph(inline: list | None = None) -> dict:
     return {"type": "paragraph", "content": inline} if inline else {"type": "paragraph"}
 
 
-def quiz_node(questions: list[dict]) -> dict:
-    """A blockQuiz from the simple shape [{text, options: [{text, correct}],
-    explanation?}], with the ids the editor expects generated here."""
-    out = []
-    for q in questions:
-        answers = [
-            {"answer_id": f"answer_{uuid.uuid4()}", "answer": o["text"], "correct": bool(o["correct"])}
-            for o in q["options"]
-        ]
+def callout_kind_attrs(attrs: dict) -> dict:
+    """Callout attrs with a newer look asked for as `type` (note, question,
+    example, quote) moved to `kind`, and `type` set to the closest original
+    look, which is all older clients understand."""
+    if attrs.get("type") in CALLOUT_KINDS:
+        attrs = {**attrs, "kind": attrs["type"], "type": CALLOUT_KINDS[attrs["type"]]}
+    return attrs
+
+
+def _answer(text: str, correct: bool) -> dict:
+    return {"answer_id": f"answer_{uuid.uuid4()}", "answer": text, "correct": bool(correct)}
+
+
+def quiz_question(q: dict) -> dict:
+    """One question in the editor's shape from the simple shape.
+
+    {text, options: [{text, correct}], explanation?} is multiple choice (as
+    before). With `type`: true_false takes `answer` (true or false) and is
+    stored as two options, True then False, so older clients still show a
+    pick-one question; short_answer takes `accepted_answers` (and
+    `accent_insensitive`); numeric takes `correct_value` and `tolerance`."""
+    qtype = q.get("type") or "multiple_choice"
+    question: dict[str, Any] = {"question_id": f"question_{uuid.uuid4()}", "question": q["text"], "type": qtype}
+    if qtype == "true_false":
+        labels = q.get("labels") or ("True", "False")
+        truth = q.get("answer") is True
+        question["response_type"] = "single"
+        question["answers"] = [_answer(labels[0], truth), _answer(labels[1], not truth)]
+    elif qtype == "short_answer":
+        question["answers"] = []
+        question["accepted_answers"] = list(q.get("accepted_answers") or [])
+        if q.get("accent_insensitive"):
+            question["accent_insensitive"] = True
+    elif qtype == "numeric":
+        question["answers"] = []
+        question["correct_value"] = q.get("correct_value")
+        question["tolerance"] = q.get("tolerance") or 0
+    else:
+        answers = [_answer(o["text"], o["correct"]) for o in q["options"]]
         correct = sum(1 for a in answers if a["correct"])
-        question = {
-            "question_id": f"question_{uuid.uuid4()}",
-            "question": q["text"],
-            "type": "multiple_choice",
-            "response_type": "multiple" if correct >= 2 else "single",
-            "answers": answers,
-        }
-        if q.get("explanation"):
-            question["explanation"] = q["explanation"]
-        out.append(question)
-    return {"type": "blockQuiz", "attrs": {"quizId": f"quiz_{uuid.uuid4()}", "questions": out}}
+        question["type"] = "multiple_choice"
+        question["response_type"] = "multiple" if correct >= 2 else "single"
+        question["answers"] = answers
+    if q.get("explanation"):
+        question["explanation"] = q["explanation"]
+    return question
+
+
+def quiz_node(questions: list[dict], settings: dict | None = None) -> dict:
+    """A blockQuiz from the simple shape (see quiz_question), with the ids
+    the editor expects generated here."""
+    attrs: dict[str, Any] = {"quizId": f"quiz_{uuid.uuid4()}", "questions": [quiz_question(q) for q in questions]}
+    if settings:
+        attrs["settings"] = settings
+    return {"type": "blockQuiz", "attrs": attrs}
+
+
+_TYPED_KEYS = ("accepted_answers", "accent_insensitive", "correct_value", "tolerance", "answer")
+
+
+def _simple_typed(q: dict) -> bool:
+    """A question in the simple shape that has no options (true/false,
+    short answer, numeric)."""
+    return (
+        "answers" not in q and "options" not in q and ("text" in q or "question" in q)
+        and q.get("type") in ("true_false", "short_answer", "numeric")
+    )
 
 
 def fill_quiz_ids(questions: Any) -> Any:
@@ -1057,6 +1404,11 @@ def fill_quiz_ids(questions: Any) -> Any:
     for q in questions:
         if not isinstance(q, dict):
             out.append(q)
+            continue
+        if _simple_typed(q):
+            simple = {"text": q.get("text") or q.get("question") or "", "type": q["type"],
+                      **{k: q[k] for k in (*_TYPED_KEYS, "explanation") if k in q}}
+            out.append(quiz_question(simple))
             continue
         if "options" in q and "answers" not in q:
             simple = {"text": q.get("text") or q.get("question") or "", "options": [
@@ -1184,6 +1536,8 @@ def inline_text(node: dict) -> str:
             parts.append("\n")
         elif kind(child) == "dynamicVariable":
             parts.append(variable_as_text(child)["text"])
+        elif kind(child) == "inlineMath":
+            parts.append(f"${(child.get('attrs') or {}).get('latex') or ''}$")
     return "".join(parts)
 
 
@@ -1208,13 +1562,36 @@ def block_text(node: Any, depth: int = 0) -> str:
         return atom_text(node)
     if t == "table":
         rows = []
+        caption = str((node.get("attrs") or {}).get("caption") or "").strip()
+        if caption:
+            rows.append(caption)
         for row in children(node):
             rows.append(" | ".join(block_text(cell, depth + 2).replace("\n", " ") for cell in children(row)))
         return "\n".join(rows)
-    parts = [block_text(c, depth + 1) for c in children(node)]
+    parts = [container_title(node)] + [block_text(c, depth + 1) for c in children(node)]
     if t == "flipcardGrid":
         parts.insert(0, str((node.get("attrs") or {}).get("title") or ""))  # the deck title
+    if t == "quoteBlock":
+        parts.append(quote_credit(node))
     return "\n".join(p for p in parts if p)
+
+
+def container_title(node: dict) -> str:
+    """The heading a container shows above its content (a tab's title, a
+    timeline step's label and title, a callout's title...)."""
+    t = kind(node)
+    a = node.get("attrs") or {}
+    if t == "timelineItem":
+        return " ".join(str(a.get(k) or "").strip() for k in ("label", "title") if str(a.get(k) or "").strip())
+    if t in ("tabItem", "keyTakeaways", "callout"):
+        return str(a.get("title") or "").strip()
+    return ""
+
+
+def quote_credit(node: dict) -> str:
+    a = node.get("attrs") or {}
+    who = ", ".join(str(a.get(k) or "").strip() for k in ("author", "role") if str(a.get(k) or "").strip())
+    return f"— {who}" if who else ""
 
 
 def atom_text(node: dict) -> str:
@@ -1249,6 +1626,8 @@ def atom_text(node: dict) -> str:
         )
     if t == "blockMathEquation":
         return str(a.get("math_equation") or "")
+    if t in PLUS_ATOMS:
+        return "\n".join(plus_atom_lines(node))
     if t == "blockCode":
         return f"{a.get('description') or ''}\n{a.get('starterCode') or ''}"
     if t in ("blockEmbed",):
@@ -1267,6 +1646,59 @@ def atom_text(node: dict) -> str:
     return ""
 
 
+PLUS_ATOMS = ("tableOfContents", "gallery", "imageCompare", "chart", "statHighlights", "fileCard")
+
+
+def _s(value: Any) -> str:
+    return value.strip() if isinstance(value, str) else ""
+
+
+def _list_of(value: Any) -> list[dict]:
+    return [x for x in value if isinstance(x, dict)] if isinstance(value, list) else []
+
+
+def stat_text(item: dict) -> str:
+    """A stat as read: "92% Completion rate: of learners finish"."""
+    value = item.get("value")
+    shown = f"{_s(item.get('prefix'))}{value if isinstance(value, (int, float)) and not isinstance(value, bool) else _s(value)}{_s(item.get('suffix'))}"
+    label = " ".join(x for x in (shown, _s(item.get("label"))) if x)
+    return f"{label}: {_s(item.get('description'))}" if _s(item.get("description")) else label
+
+
+def plus_atom_lines(node: dict) -> list[str]:
+    """Readable lines of an Editor Plus block whose data lives in attrs: the
+    words a learner sees (titles, captions, labels, numbers)."""
+    t = kind(node)
+    a = node.get("attrs") or {}
+    lines: list[str] = []
+    if t == "tableOfContents":
+        lines.append(_s(a.get("title")) or "Table of contents")
+    elif t == "gallery":
+        for img in _list_of(a.get("images")):
+            lines.append(_s(img.get("caption")) or _s(img.get("alt")))
+    elif t == "imageCompare":
+        for key in ("before", "after"):
+            side = a.get(key) if isinstance(a.get(key), dict) else {}
+            lines.append(" - ".join(x for x in (_s(side.get("label")), _s(side.get("alt"))) if x))
+    elif t == "chart":
+        data = a.get("data") if isinstance(a.get("data"), dict) else {}
+        labels = [_s(x) for x in data.get("labels") or [] if isinstance(x, str)]
+        lines.append(_s(a.get("title")))
+        if labels:
+            lines.append(", ".join(x for x in labels if x))
+        for series in _list_of(data.get("series")):
+            values = series.get("values") if isinstance(series.get("values"), list) else []
+            pairs = [f"{label} {value:g}" for label, value in zip(labels, values)
+                     if isinstance(value, (int, float)) and not isinstance(value, bool)]
+            lines.append(f"{_s(series.get('name'))}: {', '.join(pairs)}".strip(": "))
+    elif t == "statHighlights":
+        lines.extend(stat_text(item) for item in _list_of(a.get("items")))
+    elif t == "fileCard":
+        lines.append(_s(a.get("name")))
+        lines.append(_s(a.get("description")))
+    return [line for line in lines if line]
+
+
 def clip(text: str, limit: int) -> tuple[str, bool]:
     if len(text) <= limit:
         return text, False
@@ -1281,7 +1713,11 @@ def summary(node: dict, text_limit: int = 200) -> dict:
     if t == "heading":
         out["level"] = a.get("level")
     elif t == "callout":
-        out["callout_type"] = a.get("type") or "info"
+        out["callout_type"] = a.get("kind") or a.get("type") or "info"
+        if a.get("title"):
+            out["title"] = a.get("title")
+        if a.get("collapsible"):
+            out["collapsible"] = True
     elif t in ("calloutInfo", "calloutWarning"):
         out["callout_type"] = "info" if t == "calloutInfo" else "warning"
     elif t == "codeBlock":
@@ -1302,6 +1738,7 @@ def summary(node: dict, text_limit: int = 200) -> dict:
                     if str(q.get("explanation") or "").strip()
                     else {}
                 ),
+                **_typed_summary(q),
             }
             for q in qs[:20]
         ]
@@ -1348,11 +1785,38 @@ def summary(node: dict, text_limit: int = 200) -> dict:
         out["emoji"] = a.get("emoji")
     elif t == "blockLibrary":
         out["resource"] = {"uuid": a.get("resourceUuid"), "kind": a.get("resourceType")}
-    elif t in ("bulletList", "orderedList", "flipcardGrid", "callout", "blockquote"):
+    elif t in ("bulletList", "orderedList", "flipcardGrid", "blockquote"):
         out["children"] = len(children(node))
         if t == "flipcardGrid":
             out["title"] = a.get("title") or None
             out["mode"] = a.get("mode") if a.get("mode") == "study" else None
+    elif t in ("tabs", "accordion", "timeline", "columns", "taskList", "buttonGroup"):
+        items = children(node)
+        out["children"] = len(items)
+        if t == "tabs":
+            out["tabs"] = [clip(_s((i.get("attrs") or {}).get("title")), 120)[0] for i in items]
+        elif t == "accordion":
+            out["sections"] = [clip(_s((i.get("attrs") or {}).get("summary")), 120)[0] for i in items]
+        elif t == "timeline":
+            out["steps"] = [clip(container_title(i), 120)[0] for i in items]
+        elif t == "columns":
+            out["layout"] = a.get("layout")
+        elif t == "taskList":
+            out["items"] = [clip(block_text(i), 120)[0] for i in items[:30]]
+    elif t in ("tabItem", "timelineItem", "keyTakeaways"):
+        out["title"] = container_title(node) or None
+    elif t == "quoteBlock":
+        out["author"] = a.get("author")
+    elif t in PLUS_ATOMS:
+        if t == "chart":
+            out["chart_type"] = a.get("type")
+        elif t == "gallery":
+            out["images"] = len(_list_of(a.get("images")))
+        elif t == "fileCard":
+            out["url"] = a.get("url")
+        out["details"] = [clip(line, 200)[0] for line in plus_atom_lines(node)[:20]]
+    elif t == "inlineMath":
+        out["latex"] = a.get("latex")
     elif t == "table":
         rows = children(node)
         out["rows"] = [
@@ -1361,6 +1825,12 @@ def summary(node: dict, text_limit: int = 200) -> dict:
         ]
         if len(rows) > 30:
             out["more_rows"] = len(rows) - 30
+        options = {k: a[k] for k in TABLE_ATTRS if a.get(k) not in (None, False, "default", "none", "")}
+        if options:
+            out["options"] = options
+        types = _column_types(node)
+        if types:
+            out["column_types"] = types
     return {k: v for k, v in out.items() if v is not None}
 
 
@@ -1400,12 +1870,33 @@ def experience_summary(t: str, a: dict, text_limit: int = 200) -> dict:
         if isinstance(a.get(key), str):
             out[key] = a[key]
     return {k: v for k, v in out.items() if v is not None}
+def _column_types(table: dict) -> list[str] | None:
+    """Each column's cell type, read from the first body row (None when all
+    columns are plain text)."""
+    rows = children(table)
+    body = next((r for r in rows if any(kind(c) == "tableCell" for c in children(r))), None)
+    if body is None:
+        return None
+    types = [str((c.get("attrs") or {}).get("cellType") or "text") for c in children(body)]
+    return types if any(x != "text" for x in types) else None
+
+
+def _typed_summary(q: dict) -> dict:
+    """The answer key of a question that is not multiple choice (outline only)."""
+    qtype = q.get("type")
+    if qtype == "short_answer":
+        return {"type": qtype, "accepted_answers": [clip(str(x), 120)[0] for x in q.get("accepted_answers") or []]}
+    if qtype == "numeric":
+        return {"type": qtype, "correct_value": q.get("correct_value"), "tolerance": q.get("tolerance") or 0}
+    if qtype == "true_false":
+        return {"type": qtype}
+    return {}
 
 
 def entry(node: dict, path: list[int], text_limit: int = 1000) -> tuple[dict, str]:
     """(outline entry, full searchable text) of one block."""
     t = kind(node)
-    if t == "listItem":
+    if t in ("listItem", "taskItem"):
         kids = children(node)
         first = kids[0] if kids and kind(kids[0]) == "paragraph" else None
         full = inline_text(first) if first is not None else ""
@@ -1421,6 +1912,12 @@ def entry(node: dict, path: list[int], text_limit: int = 1000) -> tuple[dict, st
             out["truncated"] = True
     out.update(summary(node))
     return out, full
+
+
+# Layout blocks whose parts the outline lists (each tab, column, step...).
+OUTLINED_CONTAINERS = frozenset({
+    "tabs", "tabItem", "columns", "column", "accordion", "timeline", "timelineItem", "taskList", "keyTakeaways",
+})
 
 
 def outline_entries(doc: dict, text_limit: int = 1000) -> Iterator[tuple[dict, str]]:
@@ -1447,6 +1944,10 @@ def outline_entries(doc: dict, text_limit: int = 1000) -> Iterator[tuple[dict, s
             stack.extend(reversed([(path + (j,), c) for j, c in enumerate(kids)]))
         elif t in ("callout", "blockquote", "flipcardGrid") and len(kids) > 1:
             stack.extend(reversed([(path + (j,), c) for j, c in enumerate(kids)]))
+        elif t in OUTLINED_CONTAINERS:
+            stack.extend(reversed([(path + (j,), c) for j, c in enumerate(kids)]))
+        elif t == "taskItem":
+            stack.extend(reversed([(path + (j,), c) for j, c in enumerate(kids) if j > 0]))
 
 
 # ─── editing ─────────────────────────────────────────────────────────────────
@@ -1506,7 +2007,23 @@ def _replace_in_segments(segs: list[list], find: str, repl: str, limit: int | No
     return len(starts)
 
 
-_ATTR_TEXT_KEYS = {"flipcard": ("question", "answer")}
+_ATTR_TEXT_KEYS = {
+    "flipcard": ("question", "answer"),
+    "tabItem": ("title",),
+    "timelineItem": ("title", "label"),
+    "keyTakeaways": ("title",),
+    "tableOfContents": ("title",),
+    "callout": ("title",),
+    "table": ("caption",),
+    "chart": ("title",),
+    "fileCard": ("name", "description"),
+    "quoteBlock": ("author", "role"),
+}
+# Blocks replace_text reaches through their attrs (besides text holders).
+ATTR_TEXT_TYPES = frozenset({
+    "flipcardGrid", "blockQuiz", "scenarios", "gallery", "imageCompare", "chart", "statHighlights",
+    *_ATTR_TEXT_KEYS, *exp.NODE_NAMES,
+})
 
 
 def _attr_strings(node: dict) -> Iterator[tuple[dict, str]]:
@@ -1526,6 +2043,28 @@ def _attr_strings(node: dict) -> Iterator[tuple[dict, str]]:
                 for ans in q.get("answers") or []:
                     if isinstance(ans, dict) and isinstance(ans.get("answer"), str):
                         yield ans, "answer"
+    if t == "gallery":
+        for img in _list_of(a.get("images")):
+            if isinstance(img.get("caption"), str):
+                yield img, "caption"
+    if t == "imageCompare":
+        for key in ("before", "after"):
+            if isinstance(a.get(key), dict) and isinstance(a[key].get("label"), str):
+                yield a[key], "label"
+    if t == "chart" and isinstance(a.get("data"), dict):
+        labels = a["data"].get("labels")
+        if isinstance(labels, list):
+            for i, label in enumerate(labels):
+                if isinstance(label, str):
+                    yield _ListSlot(labels, i), "value"
+        for series in _list_of(a["data"].get("series")):
+            if isinstance(series.get("name"), str):
+                yield series, "name"
+    if t == "statHighlights":
+        for item in _list_of(a.get("items")):
+            for key in ("label", "description"):
+                if isinstance(item.get(key), str):
+                    yield item, key
     if t == "scenarios":
         if isinstance(a.get("title"), str):
             yield a, "title"
@@ -1546,18 +2085,27 @@ def _attr_strings(node: dict) -> Iterator[tuple[dict, str]]:
     yield from exp.strings(a, t)
 
 
-# Atoms whose attr text replace_text can change (besides text holders).
-_ATTR_TEXT_NODES = frozenset({"flipcard", "flipcardGrid", "blockQuiz", "scenarios", *exp.NODE_NAMES})
+class _ListSlot(dict):
+    """A list item seen as owner[key], so replace_in can change it in place."""
+
+    def __init__(self, items: list, index: int):
+        super().__init__(value=items[index])
+        self._items = items
+        self._index = index
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        super().__setitem__(key, value)
+        self._items[self._index] = value
 
 
 def text_targets(root: dict, root_path: tuple) -> Iterator[tuple[tuple, dict]]:
     """Blocks under root (root included) whose text replace_text can change."""
-    if kind(root) in TEXT_HOLDERS or kind(root) in _ATTR_TEXT_NODES:
+    if kind(root) in TEXT_HOLDERS or kind(root) in ATTR_TEXT_TYPES:
         yield root_path, root
         if kind(root) in TEXT_HOLDERS:
             return
     for path, node, _parent in walk_blocks(root):
-        if kind(node) in TEXT_HOLDERS or kind(node) in _ATTR_TEXT_NODES:
+        if kind(node) in TEXT_HOLDERS or kind(node) in ATTR_TEXT_TYPES:
             yield root_path + path, node
 
 
@@ -1727,6 +2275,10 @@ class Editor:
             raise DocError(f"What a {t} points at cannot be changed here; {spec.why_not.lower()}")
         if t == "blockQuiz" and "questions" in attrs:
             attrs = {**attrs, "questions": fill_quiz_ids(attrs["questions"])}
+        if t == "fileCard" and "blockObject" in attrs:
+            raise DocError("The uploaded file of a file card cannot be changed here; link one with url, or upload it in the editor.")
+        if t == "callout":
+            attrs = callout_kind_attrs(attrs)
         current = dict(node.get("attrs") or {})
         before = {k: current.get(k) for k in attrs}
         for key, value in attrs.items():
@@ -1746,7 +2298,7 @@ class Editor:
         blocks)."""
         node = self.node(path)
         t = kind(node)
-        if t == "listItem":
+        if t in ("listItem", "taskItem"):
             kids = node.setdefault("content", [])
             if kids and kind(kids[0]) == "paragraph":
                 target = kids[0]
@@ -1764,7 +2316,7 @@ class Editor:
             else:
                 node.pop("content", None)
             return t
-        if t in ("callout", "blockquote"):
+        if t in ("callout", "blockquote", "quoteBlock"):
             paragraphs = []
             current: list = []
             for item in inline:

@@ -549,8 +549,15 @@ async def test_list_and_restore_versions(registry, db, org, admin_user, regular_
 async def test_block_catalog(registry, db, org, regular_user):
     ctx = ctx_for(db, org, regular_user)
     catalog = await ok(registry, ctx, "describe_activity_blocks")
-    assert len(json.dumps(catalog)) < 5400  # the 16 Experiences add one compact line
+    # The 16 Experiences add one compact line; layout and data blocks are listed by name only.
+    assert len(json.dumps(catalog)) < 5800
     assert {"callout", "blockQuiz", "media"} <= {b["type"] for b in catalog["blocks"]}
+    assert "tabs" not in {b["type"] for b in catalog["blocks"]} and "tabs" in catalog["layout_blocks"]
+    for spelling, name in (("tabs", "tabs"), ("checklist", "taskList"), ("blockquote", "blockquote"),
+                           ("toggle", "toggleBlock"), ("stats", "statHighlights"), ("button", "button")):
+        entry = await ok(registry, ctx, "describe_activity_blocks", type=spelling)
+        assert entry["type"] == name, spelling
+    assert (await ok(registry, ctx, "describe_activity_blocks", type="quote"))["type"] == "blockquote"
     quiz = await ok(registry, ctx, "describe_activity_blocks", type="quiz")
     assert quiz["type"] == "blockQuiz" and "example" in quiz
     assert "quiz" in catalog["fences"]

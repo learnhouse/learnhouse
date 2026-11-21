@@ -16,12 +16,17 @@ Two kinds of segments:
   translated (inline code, a variable, a line break, a URL, LaTeX). Tags are
   numbered per segment.
 * ``attr``: a textual node attribute (image alt text and captions, quiz
-  questions, options and feedback, flashcard faces, scenario texts, toggle
-  titles, video chapter titles...). Plain text.
+  questions, options, explanations and accepted short answers, flashcard
+  faces, scenario texts, toggle, tab, timeline and callout titles, chart
+  labels, stat labels, gallery captions, quote credits, video chapter
+  titles...). Plain text.
 
 Never translated: code blocks, math blocks, inline code, ``kbd`` text,
-dynamic variables, URLs, ``{{variables}}`` and LaTeX. Comment marks are
-dropped (a translation starts without comments).
+dynamic variables, inline formulas, URLs, ``{{variables}}``, LaTeX, numbers
+(stat values, chart values, numeric quiz answers) and ids. Comment marks are
+dropped (a translation starts without comments). A short-answer question's
+accepted answers are translated one by one in place, so the list keeps its
+length and order.
 
 Segment ids are positional (``s0``, ``s1``...) and only valid for the exact
 source document they were read from; ``segments_hash`` identifies that text.
@@ -65,6 +70,10 @@ TEXT_ATTRS: dict[str, tuple[str, ...]] = {
         "questions.*.explanation",
         "questions.*.answers.*.answer",
         "questions.*.answers.*.feedback",
+        # Short answers are matched as typed, so learners reading the
+        # translation must be able to type the translated answer. Numeric
+        # answers (correct_value, tolerance) are numbers and never listed.
+        "questions.*.accepted_answers.*",
     ),
     "scenarios": (
         "title", "scenarios.*.text", "scenarios.*.options.*.text",
@@ -116,6 +125,21 @@ TEXT_ATTRS: dict[str, tuple[str, ...]] = {
     "toggleBlock": ("summary",),
     "blockCode": ("description", "hints.*"),
     "conditionalBlock": ("hiddenMessage", "label"),
+    # Editor Plus blocks.
+    "table": ("caption",),
+    "callout": ("title",),
+    "tabItem": ("title",),
+    "timelineItem": ("title", "label"),
+    "tableOfContents": ("title",),
+    "keyTakeaways": ("title",),
+    "chart": ("title", "data.labels.*", "data.series.*.name"),
+    # Stat values stay as written; a textual prefix or suffix ("k users") is
+    # translated, symbols ("$", "%") are skipped as having no words.
+    "statHighlights": ("items.*.label", "items.*.description", "items.*.prefix", "items.*.suffix"),
+    "gallery": ("images.*.caption", "images.*.alt"),
+    "imageCompare": ("before.label", "before.alt", "after.label", "after.alt"),
+    "fileCard": ("name", "description"),
+    "quoteBlock": ("author", "role"),
 }
 # Attributes left untranslated when a block shows code (attrs.kind == "code").
 CODE_KIND_ATTRS: dict[str, frozenset[str]] = {

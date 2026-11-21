@@ -1,6 +1,7 @@
 import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import { mergeAttributes, Node } from "@tiptap/core";
 import ButtonsExtension from "./ButtonsExtension";
+import { BUTTON_EXTRA_ATTRS } from "../../Blocks/schema/blockAttrs";
 
 export default Node.create({
   name: "button",
@@ -22,6 +23,8 @@ export default Node.create({
       alignment: {
         default: 'left',
       },
+      // Editor Plus: style and size. null = solid / medium, the original button.
+      ...BUTTON_EXTRA_ATTRS,
     };
   },
 

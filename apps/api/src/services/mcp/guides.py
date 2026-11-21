@@ -93,6 +93,14 @@ the idea, not the flashiest.
 a `callout` for the one thing not to miss, a `toggle` for worked answers and optional depth, a
 `conditional` block to give beginners or a group their own path.
 
+**Structure with layout blocks, sparingly.** `timeline` for ordered steps or dates, `tabs` for
+parallel views of one idea (per language, role or option), `columns` for a side-by-side comparison,
+`accordion` for FAQs, a `table` with `column_types` for trackers and rubrics (progress bars,
+checkboxes, status pills), `chart` or `stat_highlights` when numbers carry the point, `gallery` or
+`image_compare` when pictures do, `checklist` for things to do, `quote` for a voice from the field,
+`file_card` for a handout and `key_takeaways` to close a page. Content hidden in tabs and accordions
+is easy to skip: keep what every learner must read in the open.
+
 **Accessible by default.** Alt text on every image, headings in order (`##` then `###`, never `#`
 in a page), header rows in tables, link text that says where it goes.
 
@@ -142,8 +150,10 @@ Example:
         "Assessments in LearnHouse",
         """# Assessments
 
-- **Ungraded checks inside pages**: `quiz` (single or select-all), `flashcards`, `scenario`
-  (branching), `exercise` (runnable code with tests). Learners retry freely.
+- **Ungraded checks inside pages**: `quiz` (multiple choice, single or select-all; `true_false`;
+  `short_answer` with accepted answers; `numeric` with a tolerance; an `explanation` per question,
+  optional `pass_mark`), `flashcards`, `scenario` (branching), `exercise` (runnable code with
+  tests). Learners retry freely.
 - **Interactive Experiences** (typed blocks, also ungraded, scored with stars): `sort`,
   `sequence`, `match_pairs`, `hotspot`, `fill_gaps`, `myth_fact`, `speed_round`, `estimate`,
   `spot_mistake`, `code_lock`, `venn`, `label_diagram`, `word_guess`, `confidence_check`,
@@ -169,10 +179,15 @@ SUCCESS), fenced code, `$$ math $$`, `![alt](https://...)` images (fetched after
 rich blocks as fences: ```quiz, ```flipcards, ```exercise, ```scenario, ```embed, ```button,
 ```badge, ```preview, ```h5p, ```widget. `describe_activity_blocks` shows each fence's syntax;
 typed blocks (learnhouse://blocks) cover everything fences do plus toggles, conditional blocks,
-member cards, dividers and the interactive Experiences (sort, sequence, match_pairs, hotspot,
-fill_gaps, myth_fact, speed_round, estimate, spot_mistake, code_lock, venn, label_diagram,
-word_guess, confidence_check, property_grid, reflection), which have no fence. Scenarios
-(`display: chat`) and flashcards (`mode: study`) belong to the same family and have fences.
+member cards, dividers, the layout and data blocks (tabs, columns, accordion, timeline,
+key_takeaways, checklist, gallery, image_compare, chart, stat_highlights, file_card, quote) and
+the interactive Experiences (sort, sequence, match_pairs, hotspot, fill_gaps, myth_fact,
+speed_round, estimate, spot_mistake, code_lock, venn, label_diagram, word_guess,
+confidence_check, property_grid, reflection), which have no fence. Scenarios (`display: chat`)
+and flashcards (`mode: study`) belong to the same family and have fences.
+Code block options go after the language: ```python {lines wrap highlight=2,4-6}. `$...$` inside
+a sentence stays text. Reading a page back as Markdown shows blocks Markdown cannot express as
+`<!-- block [path] type -->` comments: keep them and they are kept.
 """,
     ),
 }

@@ -4274,6 +4274,91 @@
         "completed_note": "Selesai. Baca sekali lagi dan ingat apa yang terlewat.",
         "write_again": "Ubah jawabanku"
       }
+    },
+    "table": {
+      "total": "Total",
+      "average": "Rata-rata",
+      "sort_by": "Urutkan menurut",
+      "original_order": "Urutan asli",
+      "ascending": "Naik",
+      "descending": "Turun",
+      "sort_direction": "Arah urutan",
+      "sorted": "Diurutkan menurut {{column}}, {{direction}}",
+      "column_n": "Kolom {{n}}"
+    },
+    "tabs": {
+      "tab": "Tab",
+      "untitled": "Tab {{n}}",
+      "list_label": "Tab"
+    },
+    "accordion": {
+      "expand_all": "Bentangkan semua",
+      "collapse_all": "Ciutkan semua"
+    },
+    "table_of_contents": {
+      "title": "Isi"
+    },
+    "checklist": {
+      "progress_label": "{{done}} dari {{total}} selesai",
+      "reset": "Atur ulang daftar periksa",
+      "item": "Item daftar periksa",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "Linimasa"
+    },
+    "key_takeaways": {
+      "title": "Poin penting"
+    },
+    "chart": {
+      "category": "Kategori",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} dengan {{series}} seri ({{names}}) pada {{categories}} kategori, dari {{min}} hingga {{max}}.",
+      "title": "Grafik",
+      "types": {
+        "bar": "Diagram batang",
+        "column": "Diagram kolom",
+        "line": "Diagram garis",
+        "area": "Diagram area",
+        "pie": "Diagram lingkaran",
+        "donut": "Diagram donat"
+      }
+    },
+    "file_card": {
+      "download": "Unduh",
+      "download_named": "Unduh {{name}}",
+      "file": "Berkas",
+      "types": {
+        "pdf": "PDF",
+        "doc": "Dokumen",
+        "sheet": "Spreadsheet",
+        "slides": "Slide",
+        "archive": "Arsip",
+        "image": "Gambar",
+        "audio": "Audio",
+        "video": "Video",
+        "text": "Teks",
+        "code": "Kode",
+        "file": "Berkas"
+      }
+    },
+    "gallery": {
+      "carousel": "korsel",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "Tampilkan gambar {{n}}",
+      "label": "Galeri gambar",
+      "next": "Gambar berikutnya",
+      "open_image": "Buka gambar {{n}} dari {{count}}",
+      "previous": "Gambar sebelumnya",
+      "slide": "slide",
+      "viewer_title": "Gambar {{n}} dari {{count}}"
+    },
+    "image_compare": {
+      "after": "Sesudah",
+      "before": "Sebelum",
+      "slider": "Bandingkan gambar",
+      "value": "{{before}} {{b}}%, {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13422,7 +13507,11 @@
         "type_warning": "Peringatan",
         "type_tip": "Tips",
         "type_success": "Berhasil",
-        "type_error": "Kesalahan"
+        "type_error": "Kesalahan",
+        "type_note": "Catatan",
+        "type_question": "Pertanyaan",
+        "type_example": "Contoh",
+        "type_quote": "Kutipan"
       }
     },
     "dynamic": {
@@ -13881,6 +13970,70 @@
         "table": {
           "title": "Tabel",
           "description": "Sisipkan tabel 3x3"
+        },
+        "tabs": {
+          "description": "Beralih di antara panel konten",
+          "title": "Tab"
+        },
+        "columns": {
+          "description": "Tempatkan konten berdampingan",
+          "title": "Kolom"
+        },
+        "accordion": {
+          "description": "Bagian yang bisa diciutkan, satu terbuka sekaligus",
+          "title": "Akordeon"
+        },
+        "timeline": {
+          "description": "Langkah atau peristiwa secara berurutan",
+          "title": "Linimasa"
+        },
+        "table_of_contents": {
+          "description": "Tautan ke judul di halaman ini",
+          "title": "Daftar isi"
+        },
+        "key_takeaways": {
+          "description": "Kartu ringkasan poin-poin utama",
+          "title": "Poin penting"
+        },
+        "checklist": {
+          "description": "Item yang bisa dicentang peserta didik",
+          "title": "Daftar periksa"
+        },
+        "gallery": {
+          "title": "Galeri",
+          "description": "Beberapa gambar dalam kisi atau korsel"
+        },
+        "image_compare": {
+          "title": "Perbandingan gambar",
+          "description": "Sebelum dan sesudah dengan penggeser"
+        },
+        "file_card": {
+          "title": "Unduhan berkas",
+          "description": "Berkas yang bisa diunduh peserta"
+        },
+        "quote_block": {
+          "title": "Testimoni",
+          "description": "Kutipan besar atau testimoni beserta penulisnya"
+        },
+        "quote": {
+          "title": "Kutipan",
+          "description": "Kutipan sederhana"
+        },
+        "chart": {
+          "title": "Grafik",
+          "description": "Grafik batang, garis, atau lingkaran dari tabel kecil"
+        },
+        "stat_highlights": {
+          "title": "Statistik",
+          "description": "Angka besar yang menghitung naik"
+        },
+        "button_group": {
+          "title": "Grup tombol",
+          "description": "Beberapa tombol berdampingan"
+        },
+        "inline_math": {
+          "title": "Rumus sebaris",
+          "description": "Rumus di dalam kalimat (atau ketik $x^2$)"
         }
       },
       "categories": {
@@ -13890,7 +14043,9 @@
         "callouts": "Callout",
         "dynamic": "Konten dinamis",
         "ui": "Elemen UI",
-        "tables": "Tabel"
+        "tables": "Tabel",
+        "layout": "Tata letak",
+        "data": "Data & media"
       },
       "no_results": "Tidak ada hasil"
     },
@@ -14235,7 +14390,14 @@
       "button": {
         "emoji": "Emoji",
         "link_hint": "Terbuka di tab baru saat peserta didik mengklik tombol.",
-        "no_link": "Belum ada tautan: atur dengan tombol tautan."
+        "no_link": "Belum ada tautan: atur dengan tombol tautan.",
+        "style": "Gaya",
+        "variant": "Tampilan",
+        "size": "Ukuran",
+        "variant_solid": "Penuh",
+        "variant_outline": "Garis tepi",
+        "variant_soft": "Lembut",
+        "variant_link": "Tautan"
       },
       "quiz": {
         "settings": "Pengaturan kuis",
@@ -14293,7 +14455,39 @@
         "clear": "Hapus",
         "check": "Periksa jawaban",
         "try_again": "Coba lagi",
-        "start_over": "Mulai ulang"
+        "start_over": "Mulai ulang",
+        "question_type": "Jenis pertanyaan",
+        "type_multiple_choice": "Pilihan ganda",
+        "type_true_false": "Benar / salah",
+        "type_short_answer": "Jawaban singkat",
+        "type_numeric": "Angka",
+        "true": "Benar",
+        "false": "Salah",
+        "accepted_answers": "Jawaban yang diterima",
+        "accepted_answer_n": "Jawaban diterima {{n}}",
+        "accepted_answer_placeholder": "Jawaban yang dianggap benar",
+        "add_accepted": "Jawaban diterima lainnya",
+        "remove_accepted": "Hapus jawaban diterima {{n}}",
+        "ignore_accents": "Abaikan aksen (é = e)",
+        "short_answer_hint": "Huruf kapital dan spasi berlebih diabaikan.",
+        "numeric_value": "Jawaban benar",
+        "numeric_tolerance": "Toleransi",
+        "show_explanations": "Tampilkan penjelasan",
+        "show_explanations_hint": "Penjelasan Anda muncul di bawah setiap pertanyaan setelah pelajar mengirim jawaban.",
+        "pass_mark": "Nilai lulus",
+        "pass_mark_off": "Mati",
+        "pass_mark_n": "{{n}}% untuk lulus",
+        "pass_mark_off_hint": "Pelajar melihat apakah semua jawaban benar.",
+        "pass_mark_hint": "Pelajar lulus dengan {{n}}% atau lebih dan melihat skornya.",
+        "pass_mark_needed": "Nilai lulus: {{n}}%",
+        "passed": "Lulus",
+        "not_passed": "Belum lulus",
+        "score_percent": "{{percent}}%",
+        "your_answer": "Jawaban Anda",
+        "your_number": "Jawaban Anda (angka)",
+        "answer_placeholder": "Ketik jawaban Anda",
+        "number_placeholder": "Ketik angka",
+        "expected_answer": "Yang diharapkan: {{answer}}"
       },
       "flipcard": {
         "front": "Depan",
@@ -14539,6 +14733,423 @@
         "reset_text": "Setel ulang",
         "text": "Judul & deskripsi",
         "title": "Judul"
+      },
+      "table": {
+        "rows_cols": "Baris dan kolom",
+        "duplicate_row": "Duplikat baris",
+        "distribute": "Ratakan lebar kolom",
+        "merge_split": "Gabung atau pisah sel",
+        "headers": "Judul",
+        "header_column": "Kolom judul",
+        "cell_style": "Gaya sel",
+        "apply_to": "Terapkan ke",
+        "scope_selection": "Sel terpilih",
+        "scope_column": "Seluruh kolom",
+        "background": "Latar belakang",
+        "align": "Perataan",
+        "align_start": "Awal",
+        "align_center": "Tengah",
+        "align_end": "Akhir",
+        "valign": "Perataan vertikal",
+        "valign_top": "Atas",
+        "valign_middle": "Tengah",
+        "valign_bottom": "Bawah",
+        "cell_type": "Jenis sel",
+        "type_hint": "Nilainya tetap di teks sel, mis. 75, 4/5, atau ya.",
+        "type": {
+          "text": "Teks",
+          "progress": "Progres",
+          "checkbox": "Kotak centang",
+          "rating": "Penilaian",
+          "status": "Status",
+          "number": "Angka",
+          "date": "Tanggal"
+        },
+        "tone": "Warna",
+        "tone_auto": "Otomatis",
+        "number_format": "Format angka",
+        "format": {
+          "plain": "Biasa",
+          "percent": "Persen",
+          "currency": "Mata uang",
+          "compact": "Ringkas"
+        },
+        "currency": "Kode mata uang",
+        "settings": "Pengaturan tabel",
+        "variant": "Gaya",
+        "variants": {
+          "default": "Default",
+          "striped": "Bergaris",
+          "bordered": "Berbingkai",
+          "minimal": "Minimal",
+          "cards": "Kartu"
+        },
+        "cards_hint": "Baris menjadi kartu di ponsel.",
+        "caption": "Keterangan",
+        "caption_placeholder": "Jelaskan tabelnya",
+        "sortable": "Pelajar bisa mengurutkan",
+        "sticky_header": "Judul tetap",
+        "compact": "Baris rapat",
+        "totals": "Baris total",
+        "totals_hint": "Untuk kolom angka dan progres.",
+        "totals_none": "Tidak ada",
+        "totals_sum": "Jumlah",
+        "totals_average": "Rata-rata",
+        "toggle_checkbox": "Ubah centang",
+        "templates": {
+          "progress": {
+            "title": "Pelacak progres",
+            "description": "Tugas dengan penanggung jawab, status, dan bilah progres"
+          },
+          "comparison": {
+            "title": "Perbandingan",
+            "description": "Bandingkan opsi berdampingan dengan tanda centang"
+          },
+          "rubric": {
+            "title": "Rubrik",
+            "description": "Kriteria penilaian dengan tingkat dan poin"
+          }
+        },
+        "sample": {
+          "task": "Tugas",
+          "owner": "Penanggung jawab",
+          "status": "Status",
+          "progress": "Progres",
+          "task_1": "Merencanakan pelajaran",
+          "task_2": "Merekam video",
+          "task_3": "Menulis kuis",
+          "status_done": "Selesai",
+          "status_in_progress": "Sedang berjalan",
+          "status_todo": "Belum dimulai",
+          "feature": "Fitur",
+          "option_a": "Dasar",
+          "option_b": "Pro",
+          "feature_1": "Pelajaran video",
+          "feature_2": "Kuis",
+          "feature_3": "Sertifikat",
+          "criterion": "Kriteria",
+          "look_for": "Yang kami cari",
+          "level": "Tingkat",
+          "points": "Poin",
+          "crit_1": "Kejelasan",
+          "crit_2": "Ketepatan",
+          "crit_3": "Struktur",
+          "desc_1": "Gagasan mudah diikuti",
+          "desc_2": "Fakta dan langkahnya benar",
+          "desc_3": "Bagian yang jelas dengan urutan logis"
+        }
+      },
+      "layout": {
+        "settings": "Pengaturan",
+        "style": "Gaya",
+        "color": "Warna",
+        "icon": "Ikon",
+        "icon_default": "Bawaan",
+        "size_sm": "Kecil",
+        "size_md": "Sedang",
+        "size_lg": "Besar",
+        "tone_neutral": "Netral",
+        "tone_blue": "Biru",
+        "tone_teal": "Hijau toska",
+        "tone_green": "Hijau",
+        "tone_amber": "Kuning amber",
+        "tone_rose": "Merah muda",
+        "icons": {
+          "lightbulb": "Bohlam",
+          "star": "Bintang",
+          "check": "Tanda centang",
+          "target": "Sasaran",
+          "flag": "Bendera",
+          "book": "Buku",
+          "rocket": "Roket",
+          "key": "Kunci"
+        }
+      },
+      "tabs": {
+        "label": "Tab",
+        "add": "Tambah tab",
+        "remove": "Hapus tab ini",
+        "move_earlier": "Pindahkan tab ke depan",
+        "move_later": "Pindahkan tab ke belakang",
+        "title_placeholder": "Judul tab",
+        "variant_line": "Garis",
+        "variant_pills": "Pil",
+        "variant_boxed": "Kotak",
+        "sample": {
+          "tab_1": "Ringkasan",
+          "tab_2": "Detail",
+          "tab_3": "Contoh",
+          "text_1": "Mulailah dari gambaran besarnya.",
+          "text_2": "Jelaskan lebih dalam cara kerjanya.",
+          "text_3": "Tunjukkan dalam praktik."
+        }
+      },
+      "columns": {
+        "label": "Kolom",
+        "layout": "Tata letak",
+        "layout_halves": "Dua kolom sama lebar",
+        "layout_narrow_wide": "Sempit, lalu lebar",
+        "layout_wide_narrow": "Lebar, lalu sempit",
+        "layout_thirds": "Tiga kolom",
+        "layout_quarters": "Empat kolom",
+        "gap": "Jarak",
+        "align": "Perataan vertikal",
+        "align_top": "Atas",
+        "align_center": "Tengah",
+        "align_bottom": "Bawah",
+        "stack": "Susun di layar kecil",
+        "sample": {
+          "left": "Kolom pertama",
+          "right": "Kolom kedua"
+        }
+      },
+      "accordion": {
+        "label": "Akordeon",
+        "add": "Tambah bagian",
+        "single": "Hanya satu bagian terbuka",
+        "variant_bordered": "Berbingkai",
+        "variant_filled": "Terisi",
+        "sample": {
+          "item_1": "Apa yang akan saya pelajari?",
+          "text_1": "Jelaskan hasil dari pelajaran ini.",
+          "item_2": "Berapa lama waktunya?",
+          "text_2": "Berikan perkiraan agar peserta didik bisa merencanakan.",
+          "item_3": "Apa yang saya butuhkan?",
+          "text_3": "Sebutkan apa yang perlu disiapkan sebelum mulai."
+        },
+        "variant_default": "Bawaan"
+      },
+      "timeline": {
+        "label": "Linimasa",
+        "add": "Tambah langkah",
+        "remove": "Hapus langkah",
+        "step": "Langkah",
+        "title_placeholder": "Judul langkah",
+        "label_placeholder": "Tanggal atau label (opsional)",
+        "numbered": "Langkah bernomor",
+        "orientation": "Arah",
+        "vertical": "Vertikal",
+        "horizontal": "Horizontal",
+        "icon_number": "Nomor",
+        "variant_steps": "Langkah",
+        "variant_process": "Proses",
+        "sample": {
+          "step_1": "Persiapan",
+          "text_1": "Kumpulkan yang Anda butuhkan.",
+          "step_2": "Latihan",
+          "text_2": "Coba pada contoh kecil.",
+          "step_3": "Penerapan",
+          "text_3": "Gunakan pada tugas nyata."
+        },
+        "variant_timeline": "Linimasa"
+      },
+      "table_of_contents": {
+        "label": "Daftar isi",
+        "depth": "Judul yang disertakan",
+        "numbered": "Beri nomor pada entri",
+        "title_label": "Judul",
+        "empty": "Tambahkan judul ke pelajaran dan judul itu akan tercantum di sini."
+      },
+      "key_takeaways": {
+        "label": "Poin penting",
+        "title_label": "Judul kartu",
+        "sample": {
+          "point_1": "Ide utama dalam satu kalimat",
+          "point_2": "Detail yang perlu diingat",
+          "point_3": "Apa yang dilakukan selanjutnya"
+        }
+      },
+      "checklist": {
+        "label": "Daftar periksa",
+        "learner_can_check": "Peserta didik dapat mencentang item",
+        "hint": "Centang disimpan di browser tiap peserta didik. Item yang Anda centang di sini awalnya tercentang.",
+        "sample": {
+          "item_1": "Baca pelajaran",
+          "item_2": "Coba latihannya",
+          "item_3": "Periksa jawaban Anda"
+        }
+      },
+      "chart": {
+        "add_row": "Tambah baris",
+        "add_series": "Tambah seri",
+        "apply_csv": "Gunakan data ini",
+        "csv_error": "Tabel tidak dapat dibaca. Letakkan label di kolom pertama dan angka di kolom lainnya.",
+        "csv_label": "Tabel sebagai CSV",
+        "csv_placeholder": "Tempel dari spreadsheet, atau ketik: label, seri 1, seri 2",
+        "edit_data": "Edit data",
+        "empty": "Tambahkan data untuk menggambar grafik.",
+        "label": "Grafik",
+        "label_n": "Label {{n}}",
+        "labels": "Label",
+        "paste_csv": "Tempel CSV",
+        "pie_hint": "Diagram lingkaran dan donat menampilkan seri pertama.",
+        "remove_row": "Hapus baris",
+        "remove_series": "Hapus seri",
+        "row_n": "Item {{n}}",
+        "sample": {
+          "q1": "K1",
+          "q2": "K2",
+          "q3": "K3",
+          "q4": "K4",
+          "series_1": "Kelas A",
+          "series_2": "Kelas B",
+          "title": "Rata-rata skor kuis per kuartal"
+        },
+        "series_color": "Ubah warna {{name}}",
+        "series_n": "Seri {{n}}",
+        "series_name": "Nama seri",
+        "settings": "Pengaturan grafik",
+        "show_legend": "Tampilkan legenda",
+        "show_values": "Tampilkan nilai",
+        "stacked": "Tumpuk seri",
+        "title_label": "Judul",
+        "title_placeholder": "Judul grafik",
+        "type": "Jenis grafik"
+      },
+      "file_card": {
+        "add_link": "Tambah tautan",
+        "description": "Deskripsi",
+        "description_placeholder": "Apa isi berkas ini? (opsional)",
+        "empty_hint": "Unggah PDF, gambar, audio, atau video, atau tautkan berkas apa pun.",
+        "empty_title": "Tambahkan berkas untuk diunduh",
+        "label": "Berkas",
+        "link_hint": "Menggantikan berkas yang diunggah, jika ada.",
+        "link_label": "Tautan ke berkas",
+        "link_settings": "Tautan berkas",
+        "name": "Nama berkas",
+        "type_error": "Jenis berkas ini tidak bisa diunggah. Unggah PDF, gambar, audio, atau video, atau tautkan berkasnya.",
+        "upload": "Unggah berkas"
+      },
+      "gallery": {
+        "add_images": "Tambah gambar",
+        "add_link": "Tambah gambar",
+        "alt_hint": "Jelaskan isi gambar untuk peserta yang memakai pembaca layar.",
+        "alt_missing": "Teks alternatif belum ada: {{n}}",
+        "alt_placeholder": "Teks alternatif (wajib)",
+        "columns": "Kolom",
+        "count": "Gambar: {{n}}",
+        "empty_hint": "Letakkan beberapa gambar sekaligus, atau pilih dari perangkat Anda. {{formats}} · maksimal {{max}} per gambar.",
+        "empty_title": "Tambahkan gambar ke galeri Anda",
+        "full": "Satu galeri memuat hingga {{max}} gambar.",
+        "label": "Galeri",
+        "layout": "Tata letak",
+        "layout_carousel": "Korsel",
+        "layout_grid": "Kisi",
+        "layout_masonry": "Masonry",
+        "move_earlier": "Pindah ke depan",
+        "move_later": "Pindah ke belakang",
+        "remove": "Hapus gambar",
+        "settings": "Pengaturan galeri"
+      },
+      "image_compare": {
+        "after_image": "Gambar sesudah",
+        "before_image": "Gambar sebelum",
+        "empty_hint": "Pilih gambar sebelum dan sesudah dengan ukuran yang sama. Peserta menggeser pembatas untuk membandingkannya.",
+        "empty_title": "Tambah gambar",
+        "horizontal": "Berdampingan",
+        "label": "Perbandingan gambar",
+        "orientation": "Arah",
+        "replace_after": "Ganti gambar sesudah",
+        "replace_before": "Ganti gambar sebelum",
+        "settings": "Pengaturan perbandingan",
+        "side_label": "Label",
+        "start": "Posisi awal pembatas",
+        "vertical": "Atas dan bawah"
+      },
+      "quote_block": {
+        "author": "Penulis",
+        "author_placeholder": "Nama",
+        "avatar": "Tautan foto",
+        "avatar_hint": "Ditampilkan di samping nama pada testimoni. Kosongkan untuk memakai inisial.",
+        "label": "Kutipan",
+        "role": "Peran",
+        "role_placeholder": "Peran atau perusahaan",
+        "sample": {
+          "author": "Sari Wijaya",
+          "role": "Desainer produk",
+          "text": "Latihan praktiknya membuat semuanya jelas. Keesokan harinya saya langsung memakai ilmunya di tempat kerja."
+        },
+        "settings": "Pengaturan kutipan",
+        "style": "Gaya",
+        "variant_highlight": "Sorotan",
+        "variant_pull": "Kutipan besar",
+        "variant_testimonial": "Testimoni"
+      },
+      "stat_highlights": {
+        "add": "Tambah statistik",
+        "animate": "Hitung naik saat tampil",
+        "color": "Warna",
+        "columns": "Kolom",
+        "description": "Deskripsi",
+        "description_placeholder": "Deskripsi singkat (opsional)",
+        "empty": "Tambahkan statistik untuk memulai.",
+        "label": "Statistik",
+        "label_field": "Label",
+        "prefix": "Sebelum angka",
+        "remove": "Hapus statistik",
+        "sample": {
+          "desc_1": "peserta menyelesaikan kursus",
+          "desc_2": "dari 1.200 ulasan",
+          "desc_3": "di 40 negara",
+          "label_1": "Tingkat penyelesaian",
+          "label_2": "Rata-rata penilaian",
+          "label_3": "Peserta"
+        },
+        "settings": "Pengaturan statistik",
+        "suffix": "Setelah angka",
+        "value": "Angka"
+      },
+      "callout_title": "Judul",
+      "callout_title_placeholder": "Judul opsional",
+      "callout_collapsible": "Pelajar dapat melipatnya",
+      "callout_default_open": "Terbuka di awal",
+      "callout_tone": "Warna",
+      "callout_tone_default": "Warna jenisnya",
+      "code_copied": "Kode disalin ke papan klip",
+      "code_copy_failed": "Gagal menyalin. Pilih kodenya dan salin secara manual.",
+      "code_highlight": "Baris yang disorot (misalnya 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "Nomor baris",
+      "code_wrap": "Bungkus baris panjang",
+      "align": {
+        "label": "Perataan teks",
+        "start": "Rata awal",
+        "center": "Rata tengah",
+        "end": "Rata akhir",
+        "justify": "Rata kiri-kanan"
+      },
+      "button_group": {
+        "label": "Grup tombol",
+        "add_button": "Tambah tombol",
+        "new_button": "Tombol",
+        "primary": "Mulai",
+        "secondary": "Pelajari lebih lanjut"
+      },
+      "image_frame": {
+        "label": "Bingkai",
+        "none": "Tidak ada",
+        "rounded": "Membulat",
+        "shadow": "Bayangan",
+        "border": "Garis tepi",
+        "polaroid": "Polaroid"
+      },
+      "inline_math": {
+        "title": "Rumus sebaris",
+        "edit": "Edit rumus {{latex}}",
+        "latex": "LaTeX",
+        "hint": "Misalnya \\frac{a}{b} atau x^2. Ketik $…$ di teks untuk membuatnya.",
+        "make": "Matematika",
+        "remove": "Hapus"
+      },
+      "toggle": {
+        "style": "Gaya toggle",
+        "variant": "Tampilan",
+        "variant_default": "Bawaan",
+        "variant_bordered": "Berbingkai",
+        "variant_filled": "Terisi",
+        "icon": "Ikon",
+        "icon_chevron": "Panah",
+        "icon_plus": "Plus dan minus"
       }
     },
     "history": {

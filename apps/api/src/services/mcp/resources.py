@@ -124,7 +124,7 @@ RESOURCES: dict[str, ResourceDef] = {
             tool="",
             arg=None,
             title="Block catalog",
-            description="Every page block you can write: type, purpose, a minimal valid example; per type at learnhouse://block/{type}.",
+            description="Every page block you can write (text, quizzes, media, tabs, columns, timelines, charts...): type, purpose, a minimal valid example; per type at learnhouse://block/{type}.",
             reader="static",
         ),
         ResourceDef(
