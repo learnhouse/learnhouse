@@ -6,6 +6,7 @@
  the keyboard. Uploads use the image block's endpoint and storage.
 */
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { ArrowsOut, CaretLeft, CaretRight, Images, Plus, SlidersHorizontal, Trash, Warning } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
@@ -45,41 +46,48 @@ function Lightbox({ images, index, onIndex, onClose }: { images: Shown[]; index:
   const img = index === null ? null : images[index]
   const many = images.length > 1
   return (
-    <Modal
-      isDialogOpen={index !== null}
-      onOpenChange={(o) => !o && onClose()}
-      dialogTitle={img?.caption || t('activities.gallery.viewer_title', 'Image {{n}} of {{count}}', { n: (index ?? 0) + 1, count: images.length })}
-      size="xl"
-      dialogContent={
-        img ? (
-          <div
-            className="flex flex-col items-center gap-3"
-            onKeyDown={(e) => {
-              if (!many) return
-              if (e.key === 'ArrowRight') onIndex(wrapIndex((index ?? 0) + 1, images.length))
-              else if (e.key === 'ArrowLeft') onIndex(wrapIndex((index ?? 0) - 1, images.length))
-              else return
-              e.preventDefault()
-            }}
-          >
-            <div dir="ltr" className="relative flex w-full items-center justify-center">
-              <img src={img.src} alt={img.alt ?? ''} className="max-h-[72vh] max-w-full rounded-lg object-contain" />
-              {many && (
-                <>
-                  <button type="button" onClick={() => onIndex(wrapIndex((index ?? 0) - 1, images.length))} aria-label={t('activities.gallery.previous', 'Previous image')} className="absolute start-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                    <CaretLeft size={18} weight="bold" />
-                  </button>
-                  <button type="button" onClick={() => onIndex(wrapIndex((index ?? 0) + 1, images.length))} aria-label={t('activities.gallery.next', 'Next image')} className="absolute end-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                    <CaretRight size={18} weight="bold" />
-                  </button>
-                </>
-              )}
+    <>
+      {img && createPortal(<div aria-hidden className="lh-modal-overlay fixed inset-0 bg-black/60" style={{ zIndex: 'var(--z-modal-backdrop)' }} />, document.body)}
+      <Modal
+        isDialogOpen={index !== null}
+        onOpenChange={(o) => !o && onClose()}
+        dialogTitle={img?.caption || t('activities.gallery.viewer_title', 'Image {{n}} of {{count}}', { n: (index ?? 0) + 1, count: images.length })}
+        size="xl"
+        // Non-modal: a modal dialog aria-hides the lesson around it, and those
+        // attribute changes make ProseMirror redraw this block, which unmounts
+        // the lightbox right after it opens. A plain backdrop stands in below.
+        modal={false}
+        dialogContent={
+          img ? (
+            <div
+              className="flex flex-col items-center gap-3"
+              onKeyDown={(e) => {
+                if (!many) return
+                if (e.key === 'ArrowRight') onIndex(wrapIndex((index ?? 0) + 1, images.length))
+                else if (e.key === 'ArrowLeft') onIndex(wrapIndex((index ?? 0) - 1, images.length))
+                else return
+                e.preventDefault()
+              }}
+            >
+              <div dir="ltr" className="relative flex w-full items-center justify-center">
+                <img src={img.src} alt={img.alt ?? ''} className="max-h-[72vh] max-w-full rounded-lg object-contain" />
+                {many && (
+                  <>
+                    <button type="button" onClick={() => onIndex(wrapIndex((index ?? 0) - 1, images.length))} aria-label={t('activities.gallery.previous', 'Previous image')} className="absolute start-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                      <CaretLeft size={18} weight="bold" />
+                    </button>
+                    <button type="button" onClick={() => onIndex(wrapIndex((index ?? 0) + 1, images.length))} aria-label={t('activities.gallery.next', 'Next image')} className="absolute end-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                      <CaretRight size={18} weight="bold" />
+                    </button>
+                  </>
+                )}
+              </div>
+              {many && <div className="text-xs tabular-nums text-neutral-500">{t('activities.gallery.counter', '{{n}} / {{count}}', { n: (index ?? 0) + 1, count: images.length })}</div>}
             </div>
-            {many && <div className="text-xs tabular-nums text-neutral-500">{t('activities.gallery.counter', '{{n}} / {{count}}', { n: (index ?? 0) + 1, count: images.length })}</div>}
-          </div>
-        ) : null
-      }
-    />
+          ) : null
+        }
+      />
+    </>
   )
 }
 

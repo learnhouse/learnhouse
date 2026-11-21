@@ -37,6 +37,12 @@ type ModalParams = {
   preventClose?: boolean
   /** Close when the backdrop is clicked. Defaults to true. */
   closeOnOutsideClick?: boolean
+  /**
+   * Defaults to true. False skips the focus trap, scroll lock and aria-hiding
+   * of the rest of the page (which rewrites lesson content attributes and makes
+   * the lesson editor redraw the block that opened the dialog).
+   */
+  modal?: boolean
   className?: string
 }
 
@@ -75,7 +81,7 @@ const Modal = (params: ModalParams) => {
   }
 
   return (
-    <Dialog open={params.isDialogOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={params.isDialogOpen} onOpenChange={handleOpenChange} modal={params.modal ?? true}>
       {params.dialogTrigger && (
         <DialogTrigger asChild>{params.dialogTrigger}</DialogTrigger>
       )}
