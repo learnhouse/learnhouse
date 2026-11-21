@@ -5695,7 +5695,9 @@
           "seo": "SEO",
           "certification": "Certificação",
           "analytics": "Análises",
-          "schedule": "Cronograma"
+          "schedule": "Cronograma",
+          "authors": "Autores",
+          "contributions": "Contribuições"
         },
         "access_denied": {
           "title": "Acesso Negado",
@@ -6973,6 +6975,174 @@
           "source": "Origem"
         },
         "tab": "Idiomas"
+      },
+      "authors": {
+        "title": "Autores",
+        "description": "Pessoas da sua organização que criam este curso. Elas aparecem na linha de autores do curso e podem editá-lo, dependendo da função.",
+        "search_placeholder": "Busque membros por nome ou nome de usuário para adicioná-los como autores…",
+        "already_author": "Já é autor",
+        "count_one": "{{count}} autor",
+        "count_other": "{{count}} autores",
+        "selected_one": "{{count}} autor selecionado",
+        "selected_other": "{{count}} autores selecionados",
+        "roles_section": "Funções de autor",
+        "remove_title_one": "Remover {{count}} autor?",
+        "remove_title_other": "Remover {{count}} autores?",
+        "remove_message": "Eles perdem o acesso para editar este curso e saem da linha de autores. Você pode adicioná-los de novo depois.",
+        "roles": {
+          "creator": "Proprietário",
+          "maintainer": "Mantenedor",
+          "contributor": "Editor",
+          "reporter": "Relator"
+        },
+        "statuses": {
+          "active": "Ativo",
+          "inactive": "Inativo",
+          "pending": "Solicitado"
+        },
+        "requests": {
+          "title": "Solicitações de autoria",
+          "description": "Escolha se os membros podem pedir para entrar neste curso como autores.",
+          "active": "Ativo",
+          "open_title": "Aceitar solicitações",
+          "open_description": "Os membros podem pedir para virar autores. As solicitações aparecem acima para você aprovar.",
+          "open_confirm_title": "Aceitar solicitações de autoria?",
+          "open_confirm_message": "Os membros poderão pedir para entrar neste curso como autores.",
+          "open_confirm_button": "Aceitar solicitações",
+          "closed_title": "Sem solicitações",
+          "closed_description": "Só as pessoas que você adicionar aqui são autores.",
+          "closed_confirm_title": "Parar de aceitar solicitações?",
+          "closed_confirm_message": "Os membros não poderão mais pedir para entrar neste curso como autores.",
+          "closed_confirm_button": "Parar solicitações"
+        },
+        "community": {
+          "title": "Colaboradores da comunidade",
+          "description": "Quem melhora o curso pela página do aluno não é autor. Essas pessoas recebem crédito na página do curso e ao lado do que ajudaram a escrever.",
+          "open": "Abrir Contribuições",
+          "none": "Ninguém recebeu crédito ainda.",
+          "count_one": "{{count}} colaborador creditado",
+          "count_other": "{{count}} colaboradores creditados",
+          "count_many": "{{count}} colaboradores creditados"
+        },
+        "count_many": "{{count}} autores",
+        "remove_title_many": "Remover {{count}} autores?",
+        "selected_many": "{{count}} autores selecionados"
+      },
+      "contributions": {
+        "settings": {
+          "title": "Contribuições da comunidade",
+          "description": "Deixe os alunos melhorarem este curso como uma wiki: eles sugerem edições ou deixam feedback direto na página, você revisa, e cada edição aceita recebe crédito.",
+          "enable": "Ativar contribuições da comunidade",
+          "plan_required": "As contribuições da comunidade fazem parte do plano Standard e superiores.",
+          "see_plans": "Ver planos",
+          "audience": "Quem pode contribuir",
+          "suggestions": "Edições sugeridas",
+          "suggestions_hint": "Os colaboradores podem editar texto e blocos na página do aluno e enviar a mudança para revisão.",
+          "feedback": "Feedback",
+          "feedback_hint": "Os colaboradores podem marcar um trecho como erro de digitação, confuso, desatualizado ou errado, ou sugerir uma ideia.",
+          "trusted": "Colaboradores de confiança publicam direto",
+          "trusted_hint": "As edições de quem você marcar como de confiança vão ao ar sem revisão. Você ainda pode restaurar qualquer versão anterior.",
+          "limits": "Para evitar spam, cada pessoa pode enviar até 20 sugestões e 20 feedbacks por hora, com no máximo 25 aguardando revisão por curso. Pessoas bloqueadas não podem contribuir."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "Alunos matriculados",
+            "description": "Pessoas que começaram este curso."
+          },
+          "members": {
+            "title": "Membros da organização",
+            "description": "Qualquer pessoa da sua organização."
+          },
+          "signed_in": {
+            "title": "Qualquer pessoa logada",
+            "description": "Qualquer pessoa com uma conta que possa abrir o curso."
+          }
+        },
+        "stats": {
+          "pending": "Aguardando revisão",
+          "feedback": "Feedback aberto",
+          "contributors": "Colaboradores"
+        },
+        "tabs": {
+          "suggestions": "Sugestões",
+          "feedback": "Feedback",
+          "contributors": "Colaboradores",
+          "settings": "Configurações"
+        },
+        "filters": {
+          "open": "Abertos",
+          "accepted": "Aceitas",
+          "rejected": "Recusadas",
+          "all": "Todos",
+          "resolved": "Resolvidos"
+        },
+        "empty": {
+          "suggestions_open": "Nada para revisar",
+          "suggestions_other": "Nenhuma sugestão aqui",
+          "suggestions_hint": "Quando alguém sugere uma edição na página do aluno, ela aparece aqui.",
+          "feedback_open": "Nenhum feedback aberto",
+          "feedback_resolved": "Nenhum feedback resolvido",
+          "contributors": "Ainda não há colaboradores",
+          "contributors_hint": "As pessoas aparecem aqui quando uma das edições delas é aceita."
+        },
+        "placement": {
+          "clean": "Encaixa na página",
+          "clean_hint": "O texto que ela altera ainda está na página, no mesmo lugar.",
+          "moved": "Reajustada",
+          "moved_hint": "A página mudou em outro ponto; esta edição ainda se aplica sem problemas.",
+          "conflict": "Conflito",
+          "conflict_hint": "O texto que ela altera foi editado desde então.",
+          "outdated": "Desatualizada",
+          "outdated_hint": "A página mudou demais para encaixar esta edição.",
+          "conflict_explain": "A parte da página que esta edição altera foi reescrita desde que foi sugerida. Compare as duas versões e use Editar e aceitar para combiná-las, ou recuse a edição.",
+          "page_now": "A página agora",
+          "suggested": "Sugerido"
+        },
+        "review": {
+          "note": "Nota:",
+          "asked": "Você perguntou:",
+          "auto_published": "Publicada direto",
+          "accept": "Aceitar",
+          "accepted": "Aceita. A página foi atualizada e uma versão foi salva.",
+          "edit_accept": "Editar e aceitar",
+          "edit_title": "Editar e aceitar",
+          "edit_hint": "Ajuste a sugestão antes de ela ir ao ar. O colaborador continua recebendo crédito.",
+          "edit_conflict_hint": "Isto parte da sugestão. Combine-a com o texto atual da página e aceite: ela substitui o texto atual mostrado à esquerda.",
+          "conflict_toast": "A página mudou desde esta sugestão. Revise o conflito e resolva-o.",
+          "reject": "Recusar",
+          "request_changes": "Pedir alterações",
+          "reject_title": "Recusar esta sugestão?",
+          "reject_description": "O colaborador é avisado de que foi recusada, com o seu motivo, se você der um.",
+          "reject_label": "Motivo",
+          "reject_confirm": "Recusar",
+          "changes_title": "Pedir alterações",
+          "changes_description": "O colaborador pode revisar a edição e enviá-la de novo.",
+          "changes_label": "O que deve mudar?",
+          "changes_confirm": "Enviar",
+          "rejected": "Sugestão recusada",
+          "changes_sent": "Devolvida ao colaborador",
+          "revised_toast": "O colaborador alterou esta sugestão. Reveja a nova versão."
+        },
+        "feedback": {
+          "reply_placeholder": "Responder ao aluno…",
+          "replied": "Resposta enviada",
+          "resolve": "Resolver",
+          "reopen": "Reabrir"
+        },
+        "contributors": {
+          "person": "Colaborador",
+          "accepted": "Edições",
+          "last": "Última edição",
+          "trust": "Confiança",
+          "trusted": "De confiança",
+          "blocked": "Bloqueado",
+          "block": "Bloquear",
+          "unblock": "Desbloquear",
+          "edits_one": "{{count}} edição",
+          "edits_other": "{{count}} edições",
+          "trusted_off": "Colaboradores de confiança só publicam sem revisão quando essa configuração está ativada.",
+          "edits_many": "{{count}} edições"
+        }
       }
     },
     "organization": {
@@ -31892,7 +32062,13 @@
       "payments_checkout_failing": "Falhas no checkout",
       "invitation_accepted": "Convite aceito",
       "peer_review_received": "Feedback de colegas recebido",
-      "peer_review_flagged": "Avaliação por pares sinalizada"
+      "peer_review_flagged": "Avaliação por pares sinalizada",
+      "suggestion_submitted": "Edição sugerida",
+      "feedback_submitted": "Feedback de aluno",
+      "suggestion_accepted": "Edição aceita",
+      "suggestion_rejected": "Edição recusada",
+      "suggestion_changes_requested": "Alterações solicitadas",
+      "feedback_reply": "Resposta ao seu feedback"
     },
     "copy": {
       "assignment_graded": "Corrigida: {{assignment}}",
@@ -31957,7 +32133,16 @@
       "payments_checkout_failing": "Os alunos não conseguem comprar agora ({{count}} checkouts com falha)",
       "invitation_accepted": "{{actor}} aceitou seu convite",
       "peer_review_received": "Novo feedback de um colega em {{assignment}}",
-      "peer_review_flagged": "{{actor}} sinalizou uma avaliação por pares em {{assignment}}"
+      "peer_review_flagged": "{{actor}} sinalizou uma avaliação por pares em {{assignment}}",
+      "suggestion_submitted": "{{actor}} sugeriu uma edição em {{activity}}",
+      "suggestion_submitted_many": "{{count}} novas edições sugeridas em {{course}}",
+      "feedback_submitted": "{{actor}} deixou um feedback em {{activity}}",
+      "feedback_submitted_many": "{{count}} novos feedbacks em {{course}}",
+      "suggestion_accepted": "{{actor}} aceitou sua edição em {{activity}}",
+      "suggestion_rejected": "{{actor}} recusou sua edição em {{activity}}",
+      "suggestion_changes_requested": "{{actor}} pediu alterações na sua edição em {{activity}}",
+      "feedback_reply": "{{actor}} respondeu ao seu feedback em {{activity}}",
+      "feedback_reply_many": "{{count}} novas respostas ao seu feedback em {{activity}}"
     },
     "routing": {
       "short": "Quem é avisado",
@@ -32770,6 +32955,155 @@
         "suggested_hint": "Mediana das avaliações por pares (contadas: {{n}}). Use como referência.",
         "closed_new_attempt": "Fechada automaticamente: o aluno começou uma nova tentativa."
       }
+    }
+  },
+  "contributions": {
+    "hint": "Esta página está aberta a melhorias. Passe o mouse sobre um parágrafo ou selecione um texto para sugerir uma edição ou deixar um feedback.",
+    "someone": "Alguém",
+    "actions": {
+      "suggest": "Sugerir uma edição",
+      "feedback": "Dar feedback"
+    },
+    "credits": {
+      "aria": "Escrito com a ajuda de {{names}}",
+      "title": "Melhorado por"
+    },
+    "blocks": {
+      "block": "bloco",
+      "paragraph": "parágrafo",
+      "heading": "título",
+      "list": "lista",
+      "quote": "citação",
+      "code": "bloco de código",
+      "callout": "destaque",
+      "image": "imagem",
+      "video": "vídeo",
+      "audio": "áudio",
+      "pdf": "PDF",
+      "math": "equação",
+      "quiz": "quiz",
+      "embed": "conteúdo incorporado",
+      "table": "tabela",
+      "link_preview": "pré-visualização de link",
+      "badge": "selo",
+      "button": "botão",
+      "flashcard": "flashcard",
+      "flashcards": "flashcards",
+      "scenario": "cenário",
+      "code_playground": "playground de código",
+      "toggle": "seção expansível",
+      "divider": "divisor",
+      "magic_block": "bloco mágico",
+      "h5p": "atividade H5P",
+      "library": "item da biblioteca",
+      "user": "cartão de usuário",
+      "personalized": "bloco personalizado"
+    },
+    "suggest": {
+      "title": "Sugerir uma edição",
+      "text_hint": "Edite o texto aqui mesmo. Selecione palavras para formatá-las, adicionar um link ou transformá-las em título ou lista.",
+      "block_hint": "Mude este {{block}} com os próprios controles dele, como no editor.",
+      "review_note": "A equipe do curso revisa sua edição antes de ela ir ao ar. Você receberá o crédito quando ela for aceita.",
+      "trusted_hint": "Você é um colaborador de confiança: sua edição vai ao ar na hora e você receberá o crédito.",
+      "remove_block": "Remover este {{block}}",
+      "remove_blocks": "Remover estes blocos",
+      "review_changes": "Revisar alterações",
+      "review_title": "Revise sua edição",
+      "review_hint": "Isto é o que muda. Adicione uma nota curta para ajudar a equipe a revisar.",
+      "keep_editing": "Continuar editando",
+      "send": "Enviar para revisão",
+      "publish": "Publicar edição",
+      "unchanged": "Você ainda não mudou nada.",
+      "note_label": "Por que essa mudança?",
+      "note_optional": "Opcional",
+      "note_placeholder": "Por exemplo: faltava um parêntese na fórmula, fonte: a documentação oficial."
+    },
+    "diff": {
+      "title": "Alterações",
+      "inline": "Em linha",
+      "split": "Lado a lado",
+      "before": "Antes",
+      "after": "Depois",
+      "added": "Adiciona um {{block}}",
+      "removed": "Remove um {{block}}",
+      "changed": "Altera um {{block}}",
+      "format_only": "Formatação alterada",
+      "nothing": "Nenhuma alteração."
+    },
+    "feedback": {
+      "title": "Dar feedback",
+      "description": "Conte à equipe do curso o que está errado ou poderia melhorar aqui. Ela pode responder você.",
+      "type_label": "Sobre o que é?",
+      "body_label": "Seu feedback",
+      "send": "Enviar feedback",
+      "types": {
+        "typo": "Erro de digitação",
+        "unclear": "Confuso",
+        "outdated": "Desatualizado",
+        "wrong": "Errado",
+        "suggestion": "Sugestão"
+      },
+      "placeholders": {
+        "typo": "Qual palavra está errada e como deveria ser?",
+        "unclear": "O que é difícil de acompanhar? O que ajudaria?",
+        "outdated": "O que mudou e onde a equipe pode conferir?",
+        "wrong": "O que está incorreto e o que é o certo? Uma fonte ajuda.",
+        "suggestion": "O que melhoraria esta parte?"
+      },
+      "status": {
+        "open": "Aberto",
+        "resolved": "Resolvido"
+      },
+      "team": "{{name}} (equipe do curso)",
+      "you": "Você",
+      "reply": "Responder",
+      "reply_placeholder": "Escreva uma resposta…"
+    },
+    "mine": {
+      "open_one": "Suas contribuições ({{count}} aguardando)",
+      "open_other": "Suas contribuições ({{count}} aguardando)",
+      "title": "Suas contribuições",
+      "description": "Suas edições sugeridas e seus feedbacks nesta página, e o que a equipe do curso respondeu.",
+      "suggestions": "Sugestões",
+      "feedback": "Feedback",
+      "no_suggestions": "Ainda não há sugestões nesta página",
+      "no_feedback": "Ainda não há feedback nesta página",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "Retirar",
+      "revise": "Revisar",
+      "revise_title": "Revise sua edição",
+      "open_many": "Suas contribuições ({{count}} aguardando)"
+    },
+    "status": {
+      "pending": "Em revisão",
+      "accepted": "Aceita",
+      "rejected": "Recusada",
+      "changes_requested": "Alterações solicitadas",
+      "withdrawn": "Retirada"
+    },
+    "toasts": {
+      "suggested": "Obrigado! Sua edição foi enviada para revisão.",
+      "published": "Obrigado! Sua edição está no ar.",
+      "feedback_sent": "Obrigado! Seu feedback foi enviado à equipe do curso.",
+      "withdrawn": "Sugestão retirada"
+    },
+    "errors": {
+      "generic": "Algo deu errado. Tente novamente."
+    },
+    "course": {
+      "title": "Melhorado pela comunidade",
+      "names_more_one": "{{names}} e mais {{count}}",
+      "names_more_other": "{{names}} e mais {{count}}",
+      "edits_one": "{{count}} edição aceita",
+      "edits_other": "{{count}} edições aceitas",
+      "edits_many": "{{count}} edições aceitas",
+      "names_more_many": "{{names}} e mais {{count}}"
+    },
+    "profile": {
+      "title": "Cursos melhorados",
+      "total_one": "{{count}} edição aceita",
+      "total_other": "{{count}} edições aceitas",
+      "total_many": "{{count}} edições aceitas"
     }
   }
 }

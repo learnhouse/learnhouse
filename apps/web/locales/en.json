@@ -5608,7 +5608,9 @@
           "seo": "SEO",
           "certification": "Certification",
           "analytics": "Analytics",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "authors": "Authors",
+          "contributions": "Contributions"
         },
         "access_denied": {
           "title": "Access Denied",
@@ -6863,6 +6865,169 @@
           "source": "Source"
         },
         "tab": "Languages"
+      },
+      "authors": {
+        "title": "Authors",
+        "description": "People from your organization who build this course. They appear in the course's authors line and can edit it, depending on their role.",
+        "search_placeholder": "Search members by name or username to add them as authors…",
+        "already_author": "Already an author",
+        "count_one": "{{count}} author",
+        "count_other": "{{count}} authors",
+        "selected_one": "{{count}} author selected",
+        "selected_other": "{{count}} authors selected",
+        "roles_section": "Author roles",
+        "remove_title_one": "Remove {{count}} author?",
+        "remove_title_other": "Remove {{count}} authors?",
+        "remove_message": "They lose access to edit this course and leave its authors line. You can add them again later.",
+        "roles": {
+          "creator": "Owner",
+          "maintainer": "Maintainer",
+          "contributor": "Editor",
+          "reporter": "Reporter"
+        },
+        "statuses": {
+          "active": "Active",
+          "inactive": "Inactive",
+          "pending": "Requested"
+        },
+        "requests": {
+          "title": "Author requests",
+          "description": "Choose whether members can ask to join this course as authors.",
+          "active": "Active",
+          "open_title": "Accept requests",
+          "open_description": "Members can ask to become authors. Requests show up above for you to approve.",
+          "open_confirm_title": "Accept author requests?",
+          "open_confirm_message": "Members will be able to ask to join this course as authors.",
+          "open_confirm_button": "Accept requests",
+          "closed_title": "No requests",
+          "closed_description": "Only the people you add here are authors.",
+          "closed_confirm_title": "Stop accepting requests?",
+          "closed_confirm_message": "Members will no longer be able to ask to join this course as authors.",
+          "closed_confirm_button": "Stop requests"
+        },
+        "community": {
+          "title": "Community contributors",
+          "description": "People who improve the course from the learner page aren't authors. They're credited on the course page and next to what they helped write.",
+          "open": "Open Contributions",
+          "none": "No one has been credited yet.",
+          "count_one": "{{count}} credited contributor",
+          "count_other": "{{count}} credited contributors"
+        }
+      },
+      "contributions": {
+        "settings": {
+          "title": "Community contributions",
+          "description": "Let learners improve this course like a wiki: they suggest edits or leave feedback right on the page, you review, and every accepted edit is credited.",
+          "enable": "Turn on community contributions",
+          "plan_required": "Community contributions are part of the Standard plan and above.",
+          "see_plans": "See plans",
+          "audience": "Who can contribute",
+          "suggestions": "Suggested edits",
+          "suggestions_hint": "Contributors can edit text and blocks on the learner page and send the change for review.",
+          "feedback": "Feedback",
+          "feedback_hint": "Contributors can flag a passage as a typo, unclear, outdated or wrong, or suggest an idea.",
+          "trusted": "Trusted contributors publish directly",
+          "trusted_hint": "Edits from people you mark as trusted go live without review. You can still restore any earlier version.",
+          "limits": "To prevent spam, each person can send up to 20 suggestions and 20 pieces of feedback an hour, with at most 25 waiting for review per course. Blocked people can't contribute."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "Enrolled learners",
+            "description": "People who started this course."
+          },
+          "members": {
+            "title": "Organization members",
+            "description": "Anyone in your organization."
+          },
+          "signed_in": {
+            "title": "Anyone signed in",
+            "description": "Anyone with an account who can open the course."
+          }
+        },
+        "stats": {
+          "pending": "Waiting for review",
+          "feedback": "Open feedback",
+          "contributors": "Contributors"
+        },
+        "tabs": {
+          "suggestions": "Suggestions",
+          "feedback": "Feedback",
+          "contributors": "Contributors",
+          "settings": "Settings"
+        },
+        "filters": {
+          "open": "Open",
+          "accepted": "Accepted",
+          "rejected": "Declined",
+          "all": "All",
+          "resolved": "Resolved"
+        },
+        "empty": {
+          "suggestions_open": "Nothing to review",
+          "suggestions_other": "No suggestions here",
+          "suggestions_hint": "When someone suggests an edit on the learner page, it shows up here.",
+          "feedback_open": "No open feedback",
+          "feedback_resolved": "No resolved feedback",
+          "contributors": "No contributors yet",
+          "contributors_hint": "People are listed here once one of their edits is accepted."
+        },
+        "placement": {
+          "clean": "Fits the page",
+          "clean_hint": "The text it changes is still on the page, where it was.",
+          "moved": "Rebased",
+          "moved_hint": "The page changed elsewhere; this edit still applies cleanly.",
+          "conflict": "Conflict",
+          "conflict_hint": "The text it changes was edited since.",
+          "outdated": "Outdated",
+          "outdated_hint": "The page changed too much to place this edit.",
+          "conflict_explain": "The part of the page this edit changes was rewritten since it was suggested. Compare both versions, then use Edit, then accept to combine them, or decline it.",
+          "page_now": "The page now",
+          "suggested": "Suggested"
+        },
+        "review": {
+          "note": "Note:",
+          "asked": "You asked:",
+          "auto_published": "Published directly",
+          "accept": "Accept",
+          "accepted": "Accepted. The page was updated and a version saved.",
+          "edit_accept": "Edit, then accept",
+          "edit_title": "Edit, then accept",
+          "edit_hint": "Adjust the suggestion before it goes live. The contributor is still credited.",
+          "edit_conflict_hint": "This starts from the suggestion. Combine it with the page's current text, then accept: it replaces the current text shown on the left.",
+          "conflict_toast": "The page changed since this suggestion. Review the conflict and resolve it.",
+          "reject": "Decline",
+          "request_changes": "Ask for changes",
+          "reject_title": "Decline this suggestion?",
+          "reject_description": "The contributor is told it was declined, with your reason if you give one.",
+          "reject_label": "Reason",
+          "reject_confirm": "Decline",
+          "changes_title": "Ask for changes",
+          "changes_description": "The contributor can revise the edit and send it again.",
+          "changes_label": "What should change?",
+          "changes_confirm": "Send",
+          "rejected": "Suggestion declined",
+          "changes_sent": "Sent back to the contributor",
+          "revised_toast": "The contributor changed this suggestion. Review the new version."
+        },
+        "feedback": {
+          "reply_placeholder": "Reply to the learner…",
+          "replied": "Reply sent",
+          "resolve": "Resolve",
+          "reopen": "Reopen"
+        },
+        "contributors": {
+          "person": "Contributor",
+          "accepted": "Edits",
+          "last": "Last edit",
+          "trust": "Trust",
+          "trusted": "Trusted",
+          "blocked": "Blocked",
+          "block": "Block",
+          "unblock": "Unblock",
+          "edits_one": "{{count}} edit",
+          "edits_other": "{{count}} edits",
+          "trusted_off": "Trusted contributors publish without review only when that setting is on."
+        }
       }
     },
     "organization": {
@@ -31241,7 +31406,13 @@
       "payments_checkout_failing": "Checkout failing",
       "invitation_accepted": "Invitation accepted",
       "peer_review_received": "Peer feedback received",
-      "peer_review_flagged": "Peer review flagged"
+      "peer_review_flagged": "Peer review flagged",
+      "suggestion_submitted": "Suggested edit",
+      "feedback_submitted": "Learner feedback",
+      "suggestion_accepted": "Edit accepted",
+      "suggestion_rejected": "Edit declined",
+      "suggestion_changes_requested": "Changes requested",
+      "feedback_reply": "Reply to your feedback"
     },
     "copy": {
       "assignment_graded": "Graded: {{assignment}}",
@@ -31306,7 +31477,16 @@
       "payments_checkout_failing": "Learners can't buy right now ({{count}} failed checkouts)",
       "invitation_accepted": "{{actor}} accepted your invitation",
       "peer_review_received": "New peer feedback on {{assignment}}",
-      "peer_review_flagged": "{{actor}} flagged a peer review on {{assignment}}"
+      "peer_review_flagged": "{{actor}} flagged a peer review on {{assignment}}",
+      "suggestion_submitted": "{{actor}} suggested an edit to {{activity}}",
+      "suggestion_submitted_many": "{{count}} new suggested edits on {{course}}",
+      "feedback_submitted": "{{actor}} left feedback on {{activity}}",
+      "feedback_submitted_many": "{{count}} new pieces of feedback on {{course}}",
+      "suggestion_accepted": "{{actor}} accepted your edit to {{activity}}",
+      "suggestion_rejected": "{{actor}} declined your edit to {{activity}}",
+      "suggestion_changes_requested": "{{actor}} asked for changes to your edit to {{activity}}",
+      "feedback_reply": "{{actor}} replied to your feedback on {{activity}}",
+      "feedback_reply_many": "{{count}} new replies to your feedback on {{activity}}"
     },
     "routing": {
       "short": "Who's notified",
@@ -32108,6 +32288,151 @@
         "suggested_hint": "Median of the peer reviews (counted: {{n}}). Use it as a guide.",
         "closed_new_attempt": "Closed automatically: the learner started a new attempt."
       }
+    }
+  },
+  "contributions": {
+    "hint": "This page is open to improvements. Hover a paragraph or select text to suggest an edit or leave feedback.",
+    "someone": "Someone",
+    "actions": {
+      "suggest": "Suggest an edit",
+      "feedback": "Give feedback"
+    },
+    "credits": {
+      "aria": "Written with help from {{names}}",
+      "title": "Improved by"
+    },
+    "blocks": {
+      "block": "block",
+      "paragraph": "paragraph",
+      "heading": "heading",
+      "list": "list",
+      "quote": "quote",
+      "code": "code block",
+      "callout": "callout",
+      "image": "image",
+      "video": "video",
+      "audio": "audio",
+      "pdf": "PDF",
+      "math": "equation",
+      "quiz": "quiz",
+      "embed": "embed",
+      "table": "table",
+      "link_preview": "link preview",
+      "badge": "badge",
+      "button": "button",
+      "flashcard": "flashcard",
+      "flashcards": "flashcards",
+      "scenario": "scenario",
+      "code_playground": "code playground",
+      "toggle": "toggle",
+      "divider": "divider",
+      "magic_block": "magic block",
+      "h5p": "H5P activity",
+      "library": "library item",
+      "user": "user card",
+      "personalized": "personalized block"
+    },
+    "suggest": {
+      "title": "Suggest an edit",
+      "text_hint": "Edit the text right here. Select words to format them, add a link, or turn them into a heading or a list.",
+      "block_hint": "Change this {{block}} with its own controls, as in the editor.",
+      "review_note": "The course team reviews your edit before it goes live. You'll be credited when it's accepted.",
+      "trusted_hint": "You're a trusted contributor: your edit goes live right away, and you'll be credited.",
+      "remove_block": "Remove this {{block}}",
+      "remove_blocks": "Remove these blocks",
+      "review_changes": "Review changes",
+      "review_title": "Review your edit",
+      "review_hint": "This is what changes. Add a short note to help the team review it.",
+      "keep_editing": "Keep editing",
+      "send": "Send for review",
+      "publish": "Publish edit",
+      "unchanged": "You haven't changed anything yet.",
+      "note_label": "Why this change?",
+      "note_optional": "Optional",
+      "note_placeholder": "For example: the formula was missing a parenthesis, source: the official docs."
+    },
+    "diff": {
+      "title": "Changes",
+      "inline": "Inline",
+      "split": "Side by side",
+      "before": "Before",
+      "after": "After",
+      "added": "Adds a {{block}}",
+      "removed": "Removes a {{block}}",
+      "changed": "Changes a {{block}}",
+      "format_only": "Formatting changed",
+      "nothing": "No changes."
+    },
+    "feedback": {
+      "title": "Give feedback",
+      "description": "Tell the course team what's wrong or could be better here. They can reply to you.",
+      "type_label": "What's this about?",
+      "body_label": "Your feedback",
+      "send": "Send feedback",
+      "types": {
+        "typo": "Typo",
+        "unclear": "Unclear",
+        "outdated": "Outdated",
+        "wrong": "Wrong",
+        "suggestion": "Suggestion"
+      },
+      "placeholders": {
+        "typo": "Which word is misspelled, and how should it read?",
+        "unclear": "What's hard to follow? What would help?",
+        "outdated": "What changed, and where can the team check it?",
+        "wrong": "What's incorrect, and what's right? A source helps.",
+        "suggestion": "What would make this part better?"
+      },
+      "status": {
+        "open": "Open",
+        "resolved": "Resolved"
+      },
+      "team": "{{name}} (course team)",
+      "you": "You",
+      "reply": "Reply",
+      "reply_placeholder": "Write a reply…"
+    },
+    "mine": {
+      "open_one": "Your contributions ({{count}} waiting)",
+      "open_other": "Your contributions ({{count}} waiting)",
+      "title": "Your contributions",
+      "description": "Your suggested edits and feedback on this page, and what the course team said.",
+      "suggestions": "Suggestions",
+      "feedback": "Feedback",
+      "no_suggestions": "No suggestions on this page yet",
+      "no_feedback": "No feedback on this page yet",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "Withdraw",
+      "revise": "Revise",
+      "revise_title": "Revise your edit"
+    },
+    "status": {
+      "pending": "In review",
+      "accepted": "Accepted",
+      "rejected": "Declined",
+      "changes_requested": "Changes requested",
+      "withdrawn": "Withdrawn"
+    },
+    "toasts": {
+      "suggested": "Thanks! Your edit was sent for review.",
+      "published": "Thanks! Your edit is live.",
+      "feedback_sent": "Thanks! Your feedback was sent to the course team.",
+      "withdrawn": "Suggestion withdrawn"
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again."
+    },
+    "course": {
+      "title": "Improved by the community",
+      "names_more_one": "{{names}} and {{count}} other",
+      "names_more_other": "{{names}} and {{count}} others",
+      "edits_one": "{{count}} accepted edit",
+      "edits_other": "{{count}} accepted edits"
+    },
+    "profile": {
+      "title": "Courses improved",
+      "total_one": "{{count}} accepted edit",
+      "total_other": "{{count}} accepted edits"
     }
   }
 }

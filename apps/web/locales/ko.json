@@ -5592,7 +5592,9 @@
           "seo": "SEO",
           "certification": "인증",
           "analytics": "분석",
-          "schedule": "일정"
+          "schedule": "일정",
+          "authors": "작성자",
+          "contributions": "기여"
         },
         "access_denied": {
           "title": "액세스 거부",
@@ -6851,6 +6853,169 @@
           "source": "원문"
         },
         "tab": "언어"
+      },
+      "authors": {
+        "title": "작성자",
+        "description": "이 코스를 만드는 조직 구성원이에요. 코스의 작성자 줄에 표시되며, 역할에 따라 코스를 수정할 수 있어요.",
+        "search_placeholder": "이름이나 사용자 이름으로 구성원을 검색해 작성자로 추가하세요…",
+        "already_author": "이미 작성자예요",
+        "count_other": "작성자 {{count}}명",
+        "selected_other": "작성자 {{count}}명 선택됨",
+        "roles_section": "작성자 역할",
+        "remove_title_other": "작성자 {{count}}명을 제거할까요?",
+        "remove_message": "이 코스를 수정할 권한을 잃고 작성자 줄에서도 빠져요. 나중에 다시 추가할 수 있어요.",
+        "roles": {
+          "creator": "소유자",
+          "maintainer": "관리자",
+          "contributor": "편집자",
+          "reporter": "보고자"
+        },
+        "statuses": {
+          "active": "활성",
+          "inactive": "비활성",
+          "pending": "요청함"
+        },
+        "requests": {
+          "title": "작성자 요청",
+          "description": "구성원이 이 코스에 작성자로 참여하겠다고 요청할 수 있는지 선택하세요.",
+          "active": "활성",
+          "open_title": "요청 받기",
+          "open_description": "구성원이 작성자가 되겠다고 요청할 수 있어요. 요청은 위에 표시되니 승인해 주세요.",
+          "open_confirm_title": "작성자 요청을 받을까요?",
+          "open_confirm_message": "구성원이 이 코스에 작성자로 참여하겠다고 요청할 수 있게 돼요.",
+          "open_confirm_button": "요청 받기",
+          "closed_title": "요청 안 받음",
+          "closed_description": "여기에서 추가한 사람만 작성자예요.",
+          "closed_confirm_title": "요청 받기를 중단할까요?",
+          "closed_confirm_message": "구성원이 더 이상 이 코스에 작성자로 참여하겠다고 요청할 수 없어요.",
+          "closed_confirm_button": "요청 중단"
+        },
+        "community": {
+          "title": "커뮤니티 기여자",
+          "description": "학습자 페이지에서 코스를 개선하는 사람은 작성자가 아니에요. 코스 페이지와 도움을 준 내용 옆에 이름이 표시돼요.",
+          "open": "기여 열기",
+          "none": "아직 이름이 표시된 사람이 없어요.",
+          "count_other": "이름이 표시된 기여자 {{count}}명",
+          "count_one": "이름이 표시된 기여자 {{count}}명"
+        },
+        "count_one": "작성자 {{count}}명",
+        "remove_title_one": "작성자 {{count}}명을 제거할까요?",
+        "selected_one": "작성자 {{count}}명 선택됨"
+      },
+      "contributions": {
+        "settings": {
+          "title": "커뮤니티 기여",
+          "description": "학습자가 위키처럼 이 코스를 개선하게 해 보세요. 페이지에서 바로 수정을 제안하거나 피드백을 남기고, 내가 검토하며, 수락된 수정에는 모두 기여자 이름이 표시돼요.",
+          "enable": "커뮤니티 기여 켜기",
+          "plan_required": "커뮤니티 기여는 Standard 플랜 이상에서 사용할 수 있어요.",
+          "see_plans": "플랜 보기",
+          "audience": "기여할 수 있는 사람",
+          "suggestions": "수정 제안",
+          "suggestions_hint": "기여자는 학습자 페이지에서 텍스트와 블록을 수정하고 변경 사항을 검토 요청으로 보낼 수 있어요.",
+          "feedback": "피드백",
+          "feedback_hint": "기여자는 문장을 오타, 이해하기 어려움, 오래된 내용, 오류로 표시하거나 아이디어를 제안할 수 있어요.",
+          "trusted": "신뢰할 수 있는 기여자는 바로 게시",
+          "trusted_hint": "신뢰할 수 있는 사람으로 표시한 사람의 수정은 검토 없이 바로 게시돼요. 이전 버전은 언제든 복원할 수 있어요.",
+          "limits": "스팸을 막기 위해 한 사람이 한 시간에 제안 20개, 피드백 20개까지 보낼 수 있고, 코스당 검토 대기는 최대 25개예요. 차단된 사람은 기여할 수 없어요."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "등록한 학습자",
+            "description": "이 코스를 시작한 사람."
+          },
+          "members": {
+            "title": "조직 구성원",
+            "description": "조직의 모든 사람."
+          },
+          "signed_in": {
+            "title": "로그인한 모든 사람",
+            "description": "코스를 열 수 있는 계정이 있는 모든 사람."
+          }
+        },
+        "stats": {
+          "pending": "검토 대기",
+          "feedback": "열린 피드백",
+          "contributors": "기여자"
+        },
+        "tabs": {
+          "suggestions": "제안",
+          "feedback": "피드백",
+          "contributors": "기여자",
+          "settings": "설정"
+        },
+        "filters": {
+          "open": "열림",
+          "accepted": "수락됨",
+          "rejected": "거절됨",
+          "all": "전체",
+          "resolved": "해결됨"
+        },
+        "empty": {
+          "suggestions_open": "검토할 내용이 없어요",
+          "suggestions_other": "여기에는 제안이 없어요",
+          "suggestions_hint": "학습자 페이지에서 누군가 수정을 제안하면 여기에 표시돼요.",
+          "feedback_open": "열린 피드백이 없어요",
+          "feedback_resolved": "해결된 피드백이 없어요",
+          "contributors": "아직 기여자가 없어요",
+          "contributors_hint": "수정이 수락되면 그 사람이 여기에 표시돼요."
+        },
+        "placement": {
+          "clean": "페이지에 맞음",
+          "clean_hint": "변경하려는 텍스트가 페이지의 원래 위치에 그대로 있어요.",
+          "moved": "위치 조정됨",
+          "moved_hint": "페이지의 다른 부분이 바뀌었지만 이 수정은 문제없이 적용돼요.",
+          "conflict": "충돌",
+          "conflict_hint": "변경하려는 텍스트가 그 뒤에 수정되었어요.",
+          "outdated": "오래됨",
+          "outdated_hint": "페이지가 너무 많이 바뀌어 이 수정을 배치할 수 없어요.",
+          "conflict_explain": "이 수정이 바꾸는 부분이 제안된 뒤에 다시 작성되었어요. 두 버전을 비교한 다음 ‘수정 후 수락’으로 합치거나 거절하세요.",
+          "page_now": "현재 페이지",
+          "suggested": "제안 내용"
+        },
+        "review": {
+          "note": "메모:",
+          "asked": "내가 요청한 내용:",
+          "auto_published": "바로 게시됨",
+          "accept": "수락",
+          "accepted": "수락했어요. 페이지가 업데이트되고 버전이 저장되었어요.",
+          "edit_accept": "수정 후 수락",
+          "edit_title": "수정 후 수락",
+          "edit_hint": "게시하기 전에 제안을 다듬으세요. 기여자 이름은 그대로 표시돼요.",
+          "edit_conflict_hint": "제안 내용에서 시작해요. 페이지의 현재 텍스트와 합친 뒤 수락하세요. 왼쪽에 보이는 현재 텍스트가 대체돼요.",
+          "conflict_toast": "이 제안 이후 페이지가 바뀌었어요. 충돌을 확인하고 해결하세요.",
+          "reject": "거절",
+          "request_changes": "변경 요청",
+          "reject_title": "이 제안을 거절할까요?",
+          "reject_description": "기여자에게 거절되었다고 알려요. 사유를 적으면 함께 전달돼요.",
+          "reject_label": "사유",
+          "reject_confirm": "거절",
+          "changes_title": "변경 요청",
+          "changes_description": "기여자가 수정 내용을 고쳐서 다시 보낼 수 있어요.",
+          "changes_label": "무엇을 바꿔야 하나요?",
+          "changes_confirm": "보내기",
+          "rejected": "제안을 거절했어요",
+          "changes_sent": "기여자에게 다시 보냈어요",
+          "revised_toast": "기여자가 이 제안을 변경했습니다. 새 버전을 검토하세요."
+        },
+        "feedback": {
+          "reply_placeholder": "학습자에게 답장…",
+          "replied": "답장을 보냈어요",
+          "resolve": "해결 처리",
+          "reopen": "다시 열기"
+        },
+        "contributors": {
+          "person": "기여자",
+          "accepted": "수정",
+          "last": "마지막 수정",
+          "trust": "신뢰",
+          "trusted": "신뢰함",
+          "blocked": "차단됨",
+          "block": "차단",
+          "unblock": "차단 해제",
+          "edits_other": "수정 {{count}}건",
+          "trusted_off": "신뢰할 수 있는 기여자는 이 설정이 켜져 있을 때만 검토 없이 게시할 수 있어요.",
+          "edits_one": "수정 {{count}}건"
+        }
       }
     },
     "organization": {
@@ -31218,7 +31383,13 @@
       "payments_checkout_failing": "결제 실패",
       "invitation_accepted": "초대 수락됨",
       "peer_review_received": "동료 피드백을 받았습니다",
-      "peer_review_flagged": "동료 평가가 신고되었습니다"
+      "peer_review_flagged": "동료 평가가 신고되었습니다",
+      "suggestion_submitted": "수정 제안",
+      "feedback_submitted": "학습자 피드백",
+      "suggestion_accepted": "수정 수락됨",
+      "suggestion_rejected": "수정 거절됨",
+      "suggestion_changes_requested": "변경 요청됨",
+      "feedback_reply": "내 피드백에 대한 답장"
     },
     "copy": {
       "assignment_graded": "채점 완료: {{assignment}}",
@@ -31283,7 +31454,16 @@
       "payments_checkout_failing": "지금 학습자가 구매할 수 없습니다 (실패한 결제 {{count}}건)",
       "invitation_accepted": "{{actor}}님이 초대를 수락했어요",
       "peer_review_received": "{{assignment}}에 새 동료 피드백이 있습니다",
-      "peer_review_flagged": "{{actor}}님이 {{assignment}}의 동료 평가를 신고했습니다"
+      "peer_review_flagged": "{{actor}}님이 {{assignment}}의 동료 평가를 신고했습니다",
+      "suggestion_submitted": "{{actor}}님이 {{activity}}에 수정을 제안했어요",
+      "suggestion_submitted_many": "{{course}}에 새 수정 제안이 {{count}}개 있어요",
+      "feedback_submitted": "{{actor}}님이 {{activity}}에 피드백을 남겼어요",
+      "feedback_submitted_many": "{{course}}에 새 피드백이 {{count}}개 있어요",
+      "suggestion_accepted": "{{actor}}님이 {{activity}}에 대한 내 수정을 수락했어요",
+      "suggestion_rejected": "{{actor}}님이 {{activity}}에 대한 내 수정을 거절했어요",
+      "suggestion_changes_requested": "{{actor}}님이 {{activity}}에 대한 내 수정에 변경을 요청했어요",
+      "feedback_reply": "{{actor}}님이 {{activity}}의 내 피드백에 답장했어요",
+      "feedback_reply_many": "{{activity}}의 내 피드백에 새 답장이 {{count}}개 있어요"
     },
     "routing": {
       "short": "알림 대상",
@@ -32084,6 +32264,151 @@
         "suggested_hint": "동료 평가의 중앙값입니다 (집계: {{n}}). 참고용으로 활용하세요.",
         "closed_new_attempt": "자동으로 닫혔습니다: 학습자가 새 시도를 시작했습니다."
       }
+    }
+  },
+  "contributions": {
+    "hint": "이 페이지는 누구나 개선할 수 있어요. 문단에 마우스를 올리거나 텍스트를 선택해 수정을 제안하거나 피드백을 남겨 보세요.",
+    "someone": "누군가",
+    "actions": {
+      "suggest": "수정 제안",
+      "feedback": "피드백 남기기"
+    },
+    "credits": {
+      "aria": "{{names}}의 도움으로 작성됨",
+      "title": "개선한 사람"
+    },
+    "blocks": {
+      "block": "블록",
+      "paragraph": "문단",
+      "heading": "제목",
+      "list": "목록",
+      "quote": "인용문",
+      "code": "코드 블록",
+      "callout": "콜아웃",
+      "image": "이미지",
+      "video": "동영상",
+      "audio": "오디오",
+      "pdf": "PDF",
+      "math": "수식",
+      "quiz": "퀴즈",
+      "embed": "임베드",
+      "table": "표",
+      "link_preview": "링크 미리보기",
+      "badge": "배지",
+      "button": "버튼",
+      "flashcard": "플래시카드",
+      "flashcards": "플래시카드",
+      "scenario": "시나리오",
+      "code_playground": "코드 플레이그라운드",
+      "toggle": "토글",
+      "divider": "구분선",
+      "magic_block": "매직 블록",
+      "h5p": "H5P 활동",
+      "library": "라이브러리 항목",
+      "user": "사용자 카드",
+      "personalized": "맞춤형 블록"
+    },
+    "suggest": {
+      "title": "수정 제안",
+      "text_hint": "여기에서 바로 텍스트를 수정하세요. 단어를 선택하면 서식을 적용하거나 링크를 추가하고, 제목이나 목록으로 바꿀 수 있어요.",
+      "block_hint": "편집기와 같이 이 {{block}}의 전용 컨트롤로 변경하세요.",
+      "review_note": "코스 팀이 수정 내용을 검토한 뒤 게시해요. 수락되면 기여자로 이름이 표시돼요.",
+      "trusted_hint": "신뢰할 수 있는 기여자이므로 수정 내용이 바로 게시되고 기여자로 이름이 표시돼요.",
+      "remove_block": "이 {{block}} 삭제",
+      "remove_blocks": "이 블록 삭제",
+      "review_changes": "변경 사항 검토",
+      "review_title": "수정 내용 검토",
+      "review_hint": "아래가 바뀌는 내용이에요. 팀이 검토하기 쉽도록 짧은 메모를 남겨 주세요.",
+      "keep_editing": "계속 수정",
+      "send": "검토 요청",
+      "publish": "수정 게시",
+      "unchanged": "아직 변경한 내용이 없어요.",
+      "note_label": "변경 이유",
+      "note_optional": "선택 사항",
+      "note_placeholder": "예: 수식에 괄호가 빠져 있었어요. 출처: 공식 문서."
+    },
+    "diff": {
+      "title": "변경 사항",
+      "inline": "인라인",
+      "split": "나란히 보기",
+      "before": "변경 전",
+      "after": "변경 후",
+      "added": "{{block}} 추가",
+      "removed": "{{block}} 삭제",
+      "changed": "{{block}} 변경",
+      "format_only": "서식 변경",
+      "nothing": "변경 사항이 없어요."
+    },
+    "feedback": {
+      "title": "피드백 남기기",
+      "description": "여기서 잘못된 점이나 더 나아질 수 있는 점을 코스 팀에 알려 주세요. 팀이 답장할 수 있어요.",
+      "type_label": "어떤 내용인가요?",
+      "body_label": "피드백",
+      "send": "피드백 보내기",
+      "types": {
+        "typo": "오타",
+        "unclear": "이해하기 어려움",
+        "outdated": "오래된 내용",
+        "wrong": "오류",
+        "suggestion": "제안"
+      },
+      "placeholders": {
+        "typo": "어떤 단어가 잘못되었고, 어떻게 고쳐야 하나요?",
+        "unclear": "어떤 부분이 이해하기 어렵나요? 무엇이 도움이 될까요?",
+        "outdated": "무엇이 바뀌었고, 팀이 어디에서 확인할 수 있나요?",
+        "wrong": "무엇이 틀렸고, 올바른 내용은 무엇인가요? 출처가 있으면 도움이 돼요.",
+        "suggestion": "이 부분을 어떻게 하면 더 좋아질까요?"
+      },
+      "status": {
+        "open": "열림",
+        "resolved": "해결됨"
+      },
+      "team": "{{name}}(코스 팀)",
+      "you": "나",
+      "reply": "답장",
+      "reply_placeholder": "답장을 입력하세요…"
+    },
+    "mine": {
+      "open_other": "내 기여 ({{count}}개 대기 중)",
+      "title": "내 기여",
+      "description": "이 페이지에 제안한 수정과 남긴 피드백, 그리고 코스 팀의 답변이에요.",
+      "suggestions": "제안",
+      "feedback": "피드백",
+      "no_suggestions": "이 페이지에는 아직 제안이 없어요",
+      "no_feedback": "이 페이지에는 아직 피드백이 없어요",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "철회",
+      "revise": "수정하기",
+      "revise_title": "수정 내용 고치기",
+      "open_one": "내 기여 ({{count}}개 대기 중)"
+    },
+    "status": {
+      "pending": "검토 중",
+      "accepted": "수락됨",
+      "rejected": "거절됨",
+      "changes_requested": "변경 요청됨",
+      "withdrawn": "철회됨"
+    },
+    "toasts": {
+      "suggested": "감사합니다! 수정 내용을 검토 요청으로 보냈어요.",
+      "published": "감사합니다! 수정 내용이 게시되었어요.",
+      "feedback_sent": "감사합니다! 피드백을 코스 팀에 보냈어요.",
+      "withdrawn": "제안을 철회했어요"
+    },
+    "errors": {
+      "generic": "문제가 발생했어요. 다시 시도해 주세요."
+    },
+    "course": {
+      "title": "커뮤니티가 개선했어요",
+      "names_more_other": "{{names}} 외 {{count}}명",
+      "edits_other": "수락된 수정 {{count}}건",
+      "edits_one": "수락된 수정 {{count}}건",
+      "names_more_one": "{{names}} 외 {{count}}명"
+    },
+    "profile": {
+      "title": "개선한 코스",
+      "total_other": "수락된 수정 {{count}}건",
+      "total_one": "수락된 수정 {{count}}건"
     }
   }
 }

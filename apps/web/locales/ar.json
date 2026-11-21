@@ -5978,7 +5978,9 @@
           "seo": "تحسين محركات البحث",
           "certification": "الشهادات",
           "analytics": "التحليلات",
-          "schedule": "الجدولة"
+          "schedule": "الجدولة",
+          "authors": "المؤلفون",
+          "contributions": "المساهمات"
         },
         "access_denied": {
           "title": "تم رفض الوصول",
@@ -7313,6 +7315,189 @@
           "source": "المصدر"
         },
         "tab": "اللغات"
+      },
+      "authors": {
+        "title": "المؤلفون",
+        "description": "أشخاص من مؤسستك يعدّون هذه الدورة. يظهرون في سطر مؤلفي الدورة ويمكنهم تعديلها بحسب أدوارهم.",
+        "search_placeholder": "ابحث عن الأعضاء بالاسم أو اسم المستخدم لإضافتهم مؤلفين…",
+        "already_author": "مؤلف بالفعل",
+        "count_zero": "لا يوجد مؤلفون",
+        "count_one": "مؤلف واحد",
+        "count_two": "مؤلفان",
+        "count_few": "{{count}} مؤلفين",
+        "count_many": "{{count}} مؤلفًا",
+        "count_other": "{{count}} مؤلف",
+        "selected_zero": "لم يتم تحديد أي مؤلف",
+        "selected_one": "تم تحديد مؤلف واحد",
+        "selected_two": "تم تحديد مؤلفين",
+        "selected_few": "تم تحديد {{count}} مؤلفين",
+        "selected_many": "تم تحديد {{count}} مؤلفًا",
+        "selected_other": "تم تحديد {{count}} مؤلف",
+        "roles_section": "أدوار المؤلفين",
+        "remove_title_zero": "إزالة {{count}} مؤلف؟",
+        "remove_title_one": "إزالة مؤلف واحد؟",
+        "remove_title_two": "إزالة مؤلفين؟",
+        "remove_title_few": "إزالة {{count}} مؤلفين؟",
+        "remove_title_many": "إزالة {{count}} مؤلفًا؟",
+        "remove_title_other": "إزالة {{count}} مؤلف؟",
+        "remove_message": "سيفقدون صلاحية تعديل هذه الدورة ويختفون من سطر مؤلفيها. يمكنك إضافتهم مرة أخرى لاحقًا.",
+        "roles": {
+          "creator": "المالك",
+          "maintainer": "المشرف",
+          "contributor": "محرر",
+          "reporter": "مُبلِّغ"
+        },
+        "statuses": {
+          "active": "نشط",
+          "inactive": "غير نشط",
+          "pending": "تم الطلب"
+        },
+        "requests": {
+          "title": "طلبات التأليف",
+          "description": "اختر ما إذا كان بإمكان الأعضاء طلب الانضمام إلى هذه الدورة بصفتهم مؤلفين.",
+          "active": "مفعّل",
+          "open_title": "قبول الطلبات",
+          "open_description": "يمكن للأعضاء طلب أن يصبحوا مؤلفين. تظهر الطلبات أعلاه لتوافق عليها.",
+          "open_confirm_title": "قبول طلبات التأليف؟",
+          "open_confirm_message": "سيتمكن الأعضاء من طلب الانضمام إلى هذه الدورة بصفتهم مؤلفين.",
+          "open_confirm_button": "قبول الطلبات",
+          "closed_title": "بدون طلبات",
+          "closed_description": "المؤلفون هم فقط من تضيفهم هنا.",
+          "closed_confirm_title": "إيقاف قبول الطلبات؟",
+          "closed_confirm_message": "لن يتمكن الأعضاء بعد الآن من طلب الانضمام إلى هذه الدورة بصفتهم مؤلفين.",
+          "closed_confirm_button": "إيقاف الطلبات"
+        },
+        "community": {
+          "title": "مساهمو المجتمع",
+          "description": "من يحسّنون الدورة من صفحة المتعلم ليسوا مؤلفين. يُذكر اسمهم في صفحة الدورة وبجوار ما ساعدوا في كتابته.",
+          "open": "فتح المساهمات",
+          "none": "لم يُذكر اسم أحد بعد.",
+          "count_zero": "لا يوجد مساهمون مذكورون",
+          "count_one": "مساهم واحد مذكور",
+          "count_two": "مساهمان مذكوران",
+          "count_few": "{{count}} مساهمين مذكورين",
+          "count_many": "{{count}} مساهمًا مذكورًا",
+          "count_other": "{{count}} مساهم مذكور"
+        }
+      },
+      "contributions": {
+        "settings": {
+          "title": "مساهمات المجتمع",
+          "description": "دع المتعلمين يحسّنون هذه الدورة كما في ويكي: يقترحون تعديلات أو يتركون ملاحظات مباشرةً على الصفحة، وأنت تراجع، ويُذكر اسم صاحب كل تعديل مقبول.",
+          "enable": "تفعيل مساهمات المجتمع",
+          "plan_required": "مساهمات المجتمع جزء من خطة Standard وما فوقها.",
+          "see_plans": "عرض الخطط",
+          "audience": "من يمكنه المساهمة",
+          "suggestions": "التعديلات المقترحة",
+          "suggestions_hint": "يمكن للمساهمين تعديل النصوص والكتل في صفحة المتعلم وإرسال التغيير للمراجعة.",
+          "feedback": "الملاحظات",
+          "feedback_hint": "يمكن للمساهمين وسم مقطع بأنه خطأ مطبعي أو غير واضح أو قديم أو خاطئ، أو اقتراح فكرة.",
+          "trusted": "المساهمون الموثوقون ينشرون مباشرةً",
+          "trusted_hint": "تعديلات من تضعهم في خانة الموثوقين تُنشر دون مراجعة. ويمكنك دائمًا استعادة أي نسخة سابقة.",
+          "limits": "لمنع الرسائل المزعجة، يمكن لكل شخص إرسال ما يصل إلى 20 اقتراحًا و20 ملاحظة في الساعة، مع 25 كحد أقصى بانتظار المراجعة لكل دورة. لا يمكن للأشخاص المحظورين المساهمة."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "المتعلمون المسجَّلون",
+            "description": "من بدأوا هذه الدورة."
+          },
+          "members": {
+            "title": "أعضاء المؤسسة",
+            "description": "أي شخص في مؤسستك."
+          },
+          "signed_in": {
+            "title": "أي شخص سجّل الدخول",
+            "description": "أي شخص لديه حساب ويمكنه فتح الدورة."
+          }
+        },
+        "stats": {
+          "pending": "بانتظار المراجعة",
+          "feedback": "ملاحظات مفتوحة",
+          "contributors": "المساهمون"
+        },
+        "tabs": {
+          "suggestions": "الاقتراحات",
+          "feedback": "الملاحظات",
+          "contributors": "المساهمون",
+          "settings": "الإعدادات"
+        },
+        "filters": {
+          "open": "مفتوحة",
+          "accepted": "مقبولة",
+          "rejected": "مرفوضة",
+          "all": "الكل",
+          "resolved": "تم حلّها"
+        },
+        "empty": {
+          "suggestions_open": "لا شيء للمراجعة",
+          "suggestions_other": "لا توجد اقتراحات هنا",
+          "suggestions_hint": "عندما يقترح أحدهم تعديلًا في صفحة المتعلم، يظهر هنا.",
+          "feedback_open": "لا توجد ملاحظات مفتوحة",
+          "feedback_resolved": "لا توجد ملاحظات تم حلّها",
+          "contributors": "لا يوجد مساهمون بعد",
+          "contributors_hint": "يظهر الأشخاص هنا بمجرد قبول أحد تعديلاتهم."
+        },
+        "placement": {
+          "clean": "يناسب الصفحة",
+          "clean_hint": "النص الذي يغيّره لا يزال في الصفحة وفي مكانه.",
+          "moved": "أُعيد ضبط موضعه",
+          "moved_hint": "تغيّرت الصفحة في موضع آخر؛ ما زال هذا التعديل ينطبق دون مشكلة.",
+          "conflict": "تعارض",
+          "conflict_hint": "عُدّل النص الذي يغيّره منذ ذلك الحين.",
+          "outdated": "قديم",
+          "outdated_hint": "تغيّرت الصفحة كثيرًا بحيث يتعذّر وضع هذا التعديل.",
+          "conflict_explain": "أُعيدت كتابة الجزء من الصفحة الذي يغيّره هذا التعديل منذ اقتراحه. قارن النسختين، ثم استخدم تعديل ثم قبول لدمجهما، أو ارفضه.",
+          "page_now": "الصفحة الآن",
+          "suggested": "المقترَح"
+        },
+        "review": {
+          "note": "ملاحظة:",
+          "asked": "سألتَ:",
+          "auto_published": "نُشر مباشرةً",
+          "accept": "قبول",
+          "accepted": "تم القبول. حُدّثت الصفحة وحُفظت نسخة.",
+          "edit_accept": "تعديل ثم قبول",
+          "edit_title": "تعديل ثم قبول",
+          "edit_hint": "اضبط الاقتراح قبل نشره. سيُذكر اسم المساهم رغم ذلك.",
+          "edit_conflict_hint": "يبدأ هذا من الاقتراح. ادمجه مع النص الحالي للصفحة ثم اقبله: سيحلّ محل النص الحالي المعروض على اليسار.",
+          "conflict_toast": "تغيّرت الصفحة منذ هذا الاقتراح. راجع التعارض وأنهِه.",
+          "reject": "رفض",
+          "request_changes": "طلب تغييرات",
+          "reject_title": "رفض هذا الاقتراح؟",
+          "reject_description": "يُبلَّغ المساهم بأنه رُفض، مع سببك إن ذكرته.",
+          "reject_label": "السبب",
+          "reject_confirm": "رفض",
+          "changes_title": "طلب تغييرات",
+          "changes_description": "يمكن للمساهم تنقيح التعديل وإرساله مجددًا.",
+          "changes_label": "ما الذي يجب تغييره؟",
+          "changes_confirm": "إرسال",
+          "rejected": "تم رفض الاقتراح",
+          "changes_sent": "أُعيد إلى المساهم",
+          "revised_toast": "غيّر المساهم هذا الاقتراح. راجع النسخة الجديدة."
+        },
+        "feedback": {
+          "reply_placeholder": "رد على المتعلم…",
+          "replied": "أُرسل الرد",
+          "resolve": "تم الحل",
+          "reopen": "إعادة فتح"
+        },
+        "contributors": {
+          "person": "مساهم",
+          "accepted": "التعديلات",
+          "last": "آخر تعديل",
+          "trust": "الثقة",
+          "trusted": "موثوق",
+          "blocked": "محظور",
+          "block": "حظر",
+          "unblock": "إلغاء الحظر",
+          "edits_zero": "لا توجد تعديلات",
+          "edits_one": "تعديل واحد",
+          "edits_two": "تعديلان",
+          "edits_few": "{{count}} تعديلات",
+          "edits_many": "{{count}} تعديلًا",
+          "edits_other": "{{count}} تعديل",
+          "trusted_off": "لا ينشر المساهمون الموثوقون دون مراجعة إلا عند تفعيل هذا الإعداد."
+        }
       }
     },
     "organization": {
@@ -33793,7 +33978,13 @@
       "payments_checkout_failing": "تعثّر الدفع",
       "invitation_accepted": "تم قبول الدعوة",
       "peer_review_received": "تم استلام ملاحظات من زميل",
-      "peer_review_flagged": "تم الإبلاغ عن تقييم زميل"
+      "peer_review_flagged": "تم الإبلاغ عن تقييم زميل",
+      "suggestion_submitted": "تعديل مقترَح",
+      "feedback_submitted": "ملاحظات متعلم",
+      "suggestion_accepted": "تم قبول التعديل",
+      "suggestion_rejected": "تم رفض التعديل",
+      "suggestion_changes_requested": "مطلوب تغييرات",
+      "feedback_reply": "رد على ملاحظاتك"
     },
     "copy": {
       "assignment_graded": "تم التقييم: {{assignment}}",
@@ -33858,7 +34049,16 @@
       "payments_checkout_failing": "لا يستطيع المتعلمون الشراء حاليًا (عمليات دفع فاشلة: {{count}})",
       "invitation_accepted": "قبل {{actor}} دعوتك",
       "peer_review_received": "ملاحظات جديدة من زميل على {{assignment}}",
-      "peer_review_flagged": "أبلغ {{actor}} عن تقييم زميل في {{assignment}}"
+      "peer_review_flagged": "أبلغ {{actor}} عن تقييم زميل في {{assignment}}",
+      "suggestion_submitted": "اقترح {{actor}} تعديلًا على {{activity}}",
+      "suggestion_submitted_many": "{{count}} تعديلات مقترحة جديدة في {{course}}",
+      "feedback_submitted": "ترك {{actor}} ملاحظات على {{activity}}",
+      "feedback_submitted_many": "{{count}} ملاحظات جديدة في {{course}}",
+      "suggestion_accepted": "قبل {{actor}} تعديلك على {{activity}}",
+      "suggestion_rejected": "رفض {{actor}} تعديلك على {{activity}}",
+      "suggestion_changes_requested": "طلب {{actor}} تغييرات على تعديلك في {{activity}}",
+      "feedback_reply": "رد {{actor}} على ملاحظاتك في {{activity}}",
+      "feedback_reply_many": "{{count}} ردود جديدة على ملاحظاتك في {{activity}}"
     },
     "routing": {
       "short": "من يُخطَر",
@@ -34708,6 +34908,167 @@
         "suggested_hint": "وسيط مراجعات الأقران (المحتسبة: {{n}}). استخدمه كدليل.",
         "closed_new_attempt": "أُغلقت تلقائيًا: بدأ المتعلم محاولة جديدة."
       }
+    }
+  },
+  "contributions": {
+    "hint": "هذه الصفحة مفتوحة للتحسين. مرّر المؤشر فوق فقرة أو حدّد نصًا لاقتراح تعديل أو ترك ملاحظات.",
+    "someone": "شخص ما",
+    "actions": {
+      "suggest": "اقتراح تعديل",
+      "feedback": "إرسال ملاحظات"
+    },
+    "credits": {
+      "aria": "كُتب بمساعدة {{names}}",
+      "title": "حسّنه"
+    },
+    "blocks": {
+      "block": "كتلة",
+      "paragraph": "فقرة",
+      "heading": "عنوان",
+      "list": "قائمة",
+      "quote": "اقتباس",
+      "code": "كتلة كود",
+      "callout": "مربع تنبيه",
+      "image": "صورة",
+      "video": "فيديو",
+      "audio": "صوت",
+      "pdf": "PDF",
+      "math": "معادلة",
+      "quiz": "اختبار",
+      "embed": "محتوى مضمَّن",
+      "table": "جدول",
+      "link_preview": "معاينة رابط",
+      "badge": "شارة",
+      "button": "زر",
+      "flashcard": "بطاقة تعليمية",
+      "flashcards": "بطاقات تعليمية",
+      "scenario": "سيناريو",
+      "code_playground": "ساحة تجربة الكود",
+      "toggle": "قسم قابل للطي",
+      "divider": "فاصل",
+      "magic_block": "كتلة سحرية",
+      "h5p": "نشاط H5P",
+      "library": "عنصر مكتبة",
+      "user": "بطاقة مستخدم",
+      "personalized": "كتلة مخصَّصة"
+    },
+    "suggest": {
+      "title": "اقتراح تعديل",
+      "text_hint": "عدّل النص هنا مباشرةً. حدّد كلمات لتنسيقها أو إضافة رابط أو تحويلها إلى عنوان أو قائمة.",
+      "block_hint": "غيّر هذه الكتلة ({{block}}) بعناصر التحكم الخاصة بها، كما في المحرر.",
+      "review_note": "يراجع فريق الدورة تعديلك قبل نشره. سيُذكر اسمك عند قبوله.",
+      "trusted_hint": "أنت مساهم موثوق: يُنشر تعديلك فورًا ويُذكر اسمك.",
+      "remove_block": "إزالة هذه الكتلة ({{block}})",
+      "remove_blocks": "إزالة هذه الكتل",
+      "review_changes": "مراجعة التغييرات",
+      "review_title": "راجع تعديلك",
+      "review_hint": "هذا ما سيتغيّر. أضف ملاحظة قصيرة لمساعدة الفريق على المراجعة.",
+      "keep_editing": "متابعة التعديل",
+      "send": "إرسال للمراجعة",
+      "publish": "نشر التعديل",
+      "unchanged": "لم تغيّر أي شيء بعد.",
+      "note_label": "لماذا هذا التغيير؟",
+      "note_optional": "اختياري",
+      "note_placeholder": "مثال: كان ينقص قوسٌ في المعادلة، المصدر: التوثيق الرسمي."
+    },
+    "diff": {
+      "title": "التغييرات",
+      "inline": "ضمن النص",
+      "split": "جنبًا إلى جنب",
+      "before": "قبل",
+      "after": "بعد",
+      "added": "يضيف كتلة ({{block}})",
+      "removed": "يزيل كتلة ({{block}})",
+      "changed": "يغيّر كتلة ({{block}})",
+      "format_only": "تغيّر التنسيق",
+      "nothing": "لا توجد تغييرات."
+    },
+    "feedback": {
+      "title": "إرسال ملاحظات",
+      "description": "أخبر فريق الدورة بما هو خاطئ هنا أو بما يمكن تحسينه. يمكنهم الرد عليك.",
+      "type_label": "ما موضوع الملاحظة؟",
+      "body_label": "ملاحظاتك",
+      "send": "إرسال الملاحظات",
+      "types": {
+        "typo": "خطأ مطبعي",
+        "unclear": "غير واضح",
+        "outdated": "قديم",
+        "wrong": "خطأ",
+        "suggestion": "اقتراح"
+      },
+      "placeholders": {
+        "typo": "أي كلمة كُتبت خطأً، وكيف يجب أن تكون؟",
+        "unclear": "ما الذي يصعب فهمه؟ وما الذي سيساعد؟",
+        "outdated": "ما الذي تغيّر، وأين يمكن للفريق التحقق منه؟",
+        "wrong": "ما الخطأ وما الصواب؟ ذكر مصدر يفيد كثيرًا.",
+        "suggestion": "ما الذي سيجعل هذا الجزء أفضل؟"
+      },
+      "status": {
+        "open": "مفتوحة",
+        "resolved": "تم حلّها"
+      },
+      "team": "{{name}} (فريق الدورة)",
+      "you": "أنت",
+      "reply": "رد",
+      "reply_placeholder": "اكتب ردًا…"
+    },
+    "mine": {
+      "open_zero": "مساهماتك ({{count}} بانتظار المراجعة)",
+      "open_one": "مساهماتك ({{count}} بانتظار المراجعة)",
+      "open_two": "مساهماتك ({{count}} بانتظار المراجعة)",
+      "open_few": "مساهماتك ({{count}} بانتظار المراجعة)",
+      "open_many": "مساهماتك ({{count}} بانتظار المراجعة)",
+      "open_other": "مساهماتك ({{count}} بانتظار المراجعة)",
+      "title": "مساهماتك",
+      "description": "التعديلات التي اقترحتها والملاحظات التي تركتها في هذه الصفحة، وما قاله فريق الدورة.",
+      "suggestions": "الاقتراحات",
+      "feedback": "الملاحظات",
+      "no_suggestions": "لا توجد اقتراحات في هذه الصفحة بعد",
+      "no_feedback": "لا توجد ملاحظات في هذه الصفحة بعد",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "سحب",
+      "revise": "تنقيح",
+      "revise_title": "نقّح تعديلك"
+    },
+    "status": {
+      "pending": "قيد المراجعة",
+      "accepted": "مقبول",
+      "rejected": "مرفوض",
+      "changes_requested": "مطلوب تغييرات",
+      "withdrawn": "تم سحبه"
+    },
+    "toasts": {
+      "suggested": "شكرًا لك! أُرسل تعديلك للمراجعة.",
+      "published": "شكرًا لك! تعديلك منشور الآن.",
+      "feedback_sent": "شكرًا لك! أُرسلت ملاحظاتك إلى فريق الدورة.",
+      "withdrawn": "تم سحب الاقتراح"
+    },
+    "errors": {
+      "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+    },
+    "course": {
+      "title": "حسّنه المجتمع",
+      "names_more_zero": "{{names}}",
+      "names_more_one": "{{names}} وشخص آخر",
+      "names_more_two": "{{names}} وشخصان آخران",
+      "names_more_few": "{{names}} و{{count}} أشخاص آخرين",
+      "names_more_many": "{{names}} و{{count}} شخصًا آخر",
+      "names_more_other": "{{names}} و{{count}} شخص آخر",
+      "edits_zero": "لا توجد تعديلات مقبولة",
+      "edits_one": "تعديل واحد مقبول",
+      "edits_two": "تعديلان مقبولان",
+      "edits_few": "{{count}} تعديلات مقبولة",
+      "edits_many": "{{count}} تعديلًا مقبولًا",
+      "edits_other": "{{count}} تعديل مقبول"
+    },
+    "profile": {
+      "title": "الدورات المحسَّنة",
+      "total_zero": "لا توجد تعديلات مقبولة",
+      "total_one": "تعديل واحد مقبول",
+      "total_two": "تعديلان مقبولان",
+      "total_few": "{{count}} تعديلات مقبولة",
+      "total_many": "{{count}} تعديلًا مقبولًا",
+      "total_other": "{{count}} تعديل مقبول"
     }
   }
 }

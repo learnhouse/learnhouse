@@ -5592,7 +5592,9 @@
           "seo": "SEO",
           "certification": "Sertifikasi",
           "analytics": "Analitik",
-          "schedule": "Jadwal"
+          "schedule": "Jadwal",
+          "authors": "Penulis",
+          "contributions": "Kontribusi"
         },
         "access_denied": {
           "title": "Akses Ditolak",
@@ -6851,6 +6853,169 @@
           "source": "Sumber"
         },
         "tab": "Bahasa"
+      },
+      "authors": {
+        "title": "Penulis",
+        "description": "Orang-orang di organisasi Anda yang menyusun kursus ini. Mereka tampil di baris penulis kursus dan bisa menyuntingnya, tergantung peran mereka.",
+        "search_placeholder": "Cari anggota berdasarkan nama atau nama pengguna untuk menambahkannya sebagai penulis…",
+        "already_author": "Sudah menjadi penulis",
+        "count_one": "{{count}} penulis",
+        "count_other": "{{count}} penulis",
+        "selected_one": "{{count}} penulis dipilih",
+        "selected_other": "{{count}} penulis dipilih",
+        "roles_section": "Peran penulis",
+        "remove_title_one": "Hapus {{count}} penulis?",
+        "remove_title_other": "Hapus {{count}} penulis?",
+        "remove_message": "Mereka kehilangan akses untuk menyunting kursus ini dan keluar dari baris penulisnya. Anda bisa menambahkan mereka lagi nanti.",
+        "roles": {
+          "creator": "Pemilik",
+          "maintainer": "Pengelola",
+          "contributor": "Editor",
+          "reporter": "Pelapor"
+        },
+        "statuses": {
+          "active": "Aktif",
+          "inactive": "Nonaktif",
+          "pending": "Diminta"
+        },
+        "requests": {
+          "title": "Permintaan penulis",
+          "description": "Pilih apakah anggota boleh meminta bergabung ke kursus ini sebagai penulis.",
+          "active": "Aktif",
+          "open_title": "Terima permintaan",
+          "open_description": "Anggota bisa meminta menjadi penulis. Permintaan muncul di atas untuk Anda setujui.",
+          "open_confirm_title": "Terima permintaan penulis?",
+          "open_confirm_message": "Anggota akan bisa meminta bergabung ke kursus ini sebagai penulis.",
+          "open_confirm_button": "Terima permintaan",
+          "closed_title": "Tanpa permintaan",
+          "closed_description": "Hanya orang yang Anda tambahkan di sini yang menjadi penulis.",
+          "closed_confirm_title": "Berhenti menerima permintaan?",
+          "closed_confirm_message": "Anggota tidak bisa lagi meminta bergabung ke kursus ini sebagai penulis.",
+          "closed_confirm_button": "Hentikan permintaan"
+        },
+        "community": {
+          "title": "Kontributor komunitas",
+          "description": "Orang yang menyempurnakan kursus dari halaman peserta bukanlah penulis. Mereka dicantumkan di halaman kursus dan di samping bagian yang mereka bantu tulis.",
+          "open": "Buka Kontribusi",
+          "none": "Belum ada yang dicantumkan.",
+          "count_one": "{{count}} kontributor dicantumkan",
+          "count_other": "{{count}} kontributor dicantumkan"
+        }
+      },
+      "contributions": {
+        "settings": {
+          "title": "Kontribusi komunitas",
+          "description": "Biarkan peserta menyempurnakan kursus ini seperti wiki: mereka menyarankan suntingan atau memberi umpan balik langsung di halaman, Anda meninjau, dan setiap suntingan yang diterima dicantumkan.",
+          "enable": "Aktifkan kontribusi komunitas",
+          "plan_required": "Kontribusi komunitas tersedia di paket Standard ke atas.",
+          "see_plans": "Lihat paket",
+          "audience": "Siapa yang bisa berkontribusi",
+          "suggestions": "Suntingan yang disarankan",
+          "suggestions_hint": "Kontributor bisa menyunting teks dan blok di halaman peserta lalu mengirim perubahannya untuk ditinjau.",
+          "feedback": "Umpan balik",
+          "feedback_hint": "Kontributor bisa menandai suatu bagian sebagai salah ketik, kurang jelas, usang, atau salah, atau mengusulkan ide.",
+          "trusted": "Kontributor tepercaya langsung menerbitkan",
+          "trusted_hint": "Suntingan dari orang yang Anda tandai tepercaya tayang tanpa ditinjau. Anda tetap bisa memulihkan versi sebelumnya.",
+          "limits": "Untuk mencegah spam, setiap orang bisa mengirim hingga 20 saran dan 20 umpan balik per jam, dengan maksimal 25 menunggu tinjauan per kursus. Orang yang diblokir tidak bisa berkontribusi."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "Peserta terdaftar",
+            "description": "Orang yang sudah memulai kursus ini."
+          },
+          "members": {
+            "title": "Anggota organisasi",
+            "description": "Siapa saja di organisasi Anda."
+          },
+          "signed_in": {
+            "title": "Siapa saja yang masuk",
+            "description": "Siapa saja dengan akun yang bisa membuka kursus."
+          }
+        },
+        "stats": {
+          "pending": "Menunggu tinjauan",
+          "feedback": "Umpan balik terbuka",
+          "contributors": "Kontributor"
+        },
+        "tabs": {
+          "suggestions": "Saran",
+          "feedback": "Umpan balik",
+          "contributors": "Kontributor",
+          "settings": "Pengaturan"
+        },
+        "filters": {
+          "open": "Terbuka",
+          "accepted": "Diterima",
+          "rejected": "Ditolak",
+          "all": "Semua",
+          "resolved": "Selesai"
+        },
+        "empty": {
+          "suggestions_open": "Tidak ada yang perlu ditinjau",
+          "suggestions_other": "Tidak ada saran di sini",
+          "suggestions_hint": "Saat seseorang menyarankan suntingan di halaman peserta, saran itu muncul di sini.",
+          "feedback_open": "Tidak ada umpan balik terbuka",
+          "feedback_resolved": "Tidak ada umpan balik yang selesai",
+          "contributors": "Belum ada kontributor",
+          "contributors_hint": "Orang akan tercantum di sini setelah salah satu suntingannya diterima."
+        },
+        "placement": {
+          "clean": "Sesuai dengan halaman",
+          "clean_hint": "Teks yang diubah masih ada di halaman, di tempat semula.",
+          "moved": "Disesuaikan ulang",
+          "moved_hint": "Halaman berubah di bagian lain; suntingan ini masih bisa diterapkan dengan mulus.",
+          "conflict": "Konflik",
+          "conflict_hint": "Teks yang diubah sudah disunting sejak itu.",
+          "outdated": "Usang",
+          "outdated_hint": "Halaman terlalu banyak berubah untuk menempatkan suntingan ini.",
+          "conflict_explain": "Bagian halaman yang diubah suntingan ini telah ditulis ulang sejak disarankan. Bandingkan kedua versi, lalu gunakan Sunting lalu terima untuk menggabungkannya, atau tolak.",
+          "page_now": "Halaman sekarang",
+          "suggested": "Disarankan"
+        },
+        "review": {
+          "note": "Catatan:",
+          "asked": "Anda bertanya:",
+          "auto_published": "Langsung diterbitkan",
+          "accept": "Terima",
+          "accepted": "Diterima. Halaman diperbarui dan satu versi disimpan.",
+          "edit_accept": "Sunting lalu terima",
+          "edit_title": "Sunting lalu terima",
+          "edit_hint": "Sesuaikan saran sebelum tayang. Kontributor tetap dicantumkan.",
+          "edit_conflict_hint": "Ini dimulai dari saran. Gabungkan dengan teks halaman saat ini, lalu terima: saran ini menggantikan teks saat ini yang ditampilkan di kiri.",
+          "conflict_toast": "Halaman berubah sejak saran ini dibuat. Tinjau konfliknya dan selesaikan.",
+          "reject": "Tolak",
+          "request_changes": "Minta perubahan",
+          "reject_title": "Tolak saran ini?",
+          "reject_description": "Kontributor diberi tahu bahwa saran ini ditolak, beserta alasan Anda jika ada.",
+          "reject_label": "Alasan",
+          "reject_confirm": "Tolak",
+          "changes_title": "Minta perubahan",
+          "changes_description": "Kontributor bisa merevisi suntingan dan mengirimkannya lagi.",
+          "changes_label": "Apa yang perlu diubah?",
+          "changes_confirm": "Kirim",
+          "rejected": "Saran ditolak",
+          "changes_sent": "Dikirim kembali ke kontributor",
+          "revised_toast": "Kontributor mengubah saran ini. Tinjau versi barunya."
+        },
+        "feedback": {
+          "reply_placeholder": "Balas peserta…",
+          "replied": "Balasan terkirim",
+          "resolve": "Tandai selesai",
+          "reopen": "Buka kembali"
+        },
+        "contributors": {
+          "person": "Kontributor",
+          "accepted": "Suntingan",
+          "last": "Suntingan terakhir",
+          "trust": "Kepercayaan",
+          "trusted": "Tepercaya",
+          "blocked": "Diblokir",
+          "block": "Blokir",
+          "unblock": "Buka blokir",
+          "edits_one": "{{count}} suntingan",
+          "edits_other": "{{count}} suntingan",
+          "trusted_off": "Kontributor tepercaya hanya menerbitkan tanpa tinjauan jika pengaturan ini aktif."
+        }
       }
     },
     "organization": {
@@ -31218,7 +31383,13 @@
       "payments_checkout_failing": "Pembayaran gagal",
       "invitation_accepted": "Undangan diterima",
       "peer_review_received": "Masukan teman diterima",
-      "peer_review_flagged": "Ulasan teman dilaporkan"
+      "peer_review_flagged": "Ulasan teman dilaporkan",
+      "suggestion_submitted": "Suntingan yang disarankan",
+      "feedback_submitted": "Umpan balik peserta",
+      "suggestion_accepted": "Suntingan diterima",
+      "suggestion_rejected": "Suntingan ditolak",
+      "suggestion_changes_requested": "Perlu perubahan",
+      "feedback_reply": "Balasan atas umpan balik Anda"
     },
     "copy": {
       "assignment_graded": "Dinilai: {{assignment}}",
@@ -31283,7 +31454,16 @@
       "payments_checkout_failing": "Pelajar tidak bisa membeli saat ini ({{count}} pembayaran gagal)",
       "invitation_accepted": "{{actor}} menerima undangan Anda",
       "peer_review_received": "Masukan teman baru untuk {{assignment}}",
-      "peer_review_flagged": "{{actor}} melaporkan ulasan teman di {{assignment}}"
+      "peer_review_flagged": "{{actor}} melaporkan ulasan teman di {{assignment}}",
+      "suggestion_submitted": "{{actor}} menyarankan suntingan pada {{activity}}",
+      "suggestion_submitted_many": "{{count}} suntingan baru disarankan di {{course}}",
+      "feedback_submitted": "{{actor}} memberi umpan balik pada {{activity}}",
+      "feedback_submitted_many": "{{count}} umpan balik baru di {{course}}",
+      "suggestion_accepted": "{{actor}} menerima suntingan Anda pada {{activity}}",
+      "suggestion_rejected": "{{actor}} menolak suntingan Anda pada {{activity}}",
+      "suggestion_changes_requested": "{{actor}} meminta perubahan pada suntingan Anda di {{activity}}",
+      "feedback_reply": "{{actor}} membalas umpan balik Anda pada {{activity}}",
+      "feedback_reply_many": "{{count}} balasan baru atas umpan balik Anda pada {{activity}}"
     },
     "routing": {
       "short": "Siapa yang diberi tahu",
@@ -32084,6 +32264,151 @@
         "suggested_hint": "Median tinjauan sejawat (dihitung: {{n}}). Gunakan sebagai panduan.",
         "closed_new_attempt": "Ditutup otomatis: peserta memulai percobaan baru."
       }
+    }
+  },
+  "contributions": {
+    "hint": "Halaman ini terbuka untuk perbaikan. Arahkan kursor ke sebuah paragraf atau pilih teks untuk menyarankan suntingan atau memberi umpan balik.",
+    "someone": "Seseorang",
+    "actions": {
+      "suggest": "Sarankan suntingan",
+      "feedback": "Beri umpan balik"
+    },
+    "credits": {
+      "aria": "Ditulis dengan bantuan {{names}}",
+      "title": "Diperbaiki oleh"
+    },
+    "blocks": {
+      "block": "blok",
+      "paragraph": "paragraf",
+      "heading": "judul",
+      "list": "daftar",
+      "quote": "kutipan",
+      "code": "blok kode",
+      "callout": "kotak sorotan",
+      "image": "gambar",
+      "video": "video",
+      "audio": "audio",
+      "pdf": "PDF",
+      "math": "persamaan",
+      "quiz": "kuis",
+      "embed": "konten sematan",
+      "table": "tabel",
+      "link_preview": "pratinjau tautan",
+      "badge": "lencana",
+      "button": "tombol",
+      "flashcard": "kartu belajar",
+      "flashcards": "kartu belajar",
+      "scenario": "skenario",
+      "code_playground": "area uji kode",
+      "toggle": "bagian lipat",
+      "divider": "pemisah",
+      "magic_block": "blok ajaib",
+      "h5p": "aktivitas H5P",
+      "library": "item pustaka",
+      "user": "kartu pengguna",
+      "personalized": "blok personal"
+    },
+    "suggest": {
+      "title": "Sarankan suntingan",
+      "text_hint": "Sunting teks langsung di sini. Pilih kata untuk memformatnya, menambahkan tautan, atau mengubahnya menjadi judul atau daftar.",
+      "block_hint": "Ubah {{block}} ini dengan kontrolnya sendiri, seperti di editor.",
+      "review_note": "Tim kursus meninjau suntingan Anda sebelum tayang. Anda akan dicantumkan saat suntingan diterima.",
+      "trusted_hint": "Anda kontributor tepercaya: suntingan Anda langsung tayang dan Anda akan dicantumkan.",
+      "remove_block": "Hapus {{block}} ini",
+      "remove_blocks": "Hapus blok-blok ini",
+      "review_changes": "Tinjau perubahan",
+      "review_title": "Tinjau suntingan Anda",
+      "review_hint": "Inilah yang berubah. Tambahkan catatan singkat agar tim lebih mudah meninjaunya.",
+      "keep_editing": "Lanjut menyunting",
+      "send": "Kirim untuk ditinjau",
+      "publish": "Terbitkan suntingan",
+      "unchanged": "Anda belum mengubah apa pun.",
+      "note_label": "Mengapa perubahan ini?",
+      "note_optional": "Opsional",
+      "note_placeholder": "Contoh: rumusnya kurang satu tanda kurung, sumber: dokumentasi resmi."
+    },
+    "diff": {
+      "title": "Perubahan",
+      "inline": "Sebaris",
+      "split": "Berdampingan",
+      "before": "Sebelum",
+      "after": "Sesudah",
+      "added": "Menambahkan {{block}}",
+      "removed": "Menghapus {{block}}",
+      "changed": "Mengubah {{block}}",
+      "format_only": "Format diubah",
+      "nothing": "Tidak ada perubahan."
+    },
+    "feedback": {
+      "title": "Beri umpan balik",
+      "description": "Beri tahu tim kursus apa yang salah atau bisa dibuat lebih baik di sini. Mereka bisa membalas Anda.",
+      "type_label": "Tentang apa ini?",
+      "body_label": "Umpan balik Anda",
+      "send": "Kirim umpan balik",
+      "types": {
+        "typo": "Salah ketik",
+        "unclear": "Kurang jelas",
+        "outdated": "Usang",
+        "wrong": "Salah",
+        "suggestion": "Saran"
+      },
+      "placeholders": {
+        "typo": "Kata mana yang salah eja, dan seharusnya bagaimana?",
+        "unclear": "Bagian mana yang sulit diikuti? Apa yang akan membantu?",
+        "outdated": "Apa yang berubah, dan di mana tim bisa memeriksanya?",
+        "wrong": "Apa yang keliru dan apa yang benar? Sumber akan membantu.",
+        "suggestion": "Apa yang bisa membuat bagian ini lebih baik?"
+      },
+      "status": {
+        "open": "Terbuka",
+        "resolved": "Selesai"
+      },
+      "team": "{{name}} (tim kursus)",
+      "you": "Anda",
+      "reply": "Balas",
+      "reply_placeholder": "Tulis balasan…"
+    },
+    "mine": {
+      "open_one": "Kontribusi Anda ({{count}} menunggu)",
+      "open_other": "Kontribusi Anda ({{count}} menunggu)",
+      "title": "Kontribusi Anda",
+      "description": "Suntingan dan umpan balik yang Anda kirim di halaman ini, serta tanggapan tim kursus.",
+      "suggestions": "Saran",
+      "feedback": "Umpan balik",
+      "no_suggestions": "Belum ada saran di halaman ini",
+      "no_feedback": "Belum ada umpan balik di halaman ini",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "Tarik kembali",
+      "revise": "Revisi",
+      "revise_title": "Revisi suntingan Anda"
+    },
+    "status": {
+      "pending": "Sedang ditinjau",
+      "accepted": "Diterima",
+      "rejected": "Ditolak",
+      "changes_requested": "Perlu perubahan",
+      "withdrawn": "Ditarik"
+    },
+    "toasts": {
+      "suggested": "Terima kasih! Suntingan Anda sudah dikirim untuk ditinjau.",
+      "published": "Terima kasih! Suntingan Anda sudah tayang.",
+      "feedback_sent": "Terima kasih! Umpan balik Anda sudah dikirim ke tim kursus.",
+      "withdrawn": "Saran ditarik"
+    },
+    "errors": {
+      "generic": "Terjadi kesalahan. Silakan coba lagi."
+    },
+    "course": {
+      "title": "Disempurnakan oleh komunitas",
+      "names_more_one": "{{names}} dan {{count}} lainnya",
+      "names_more_other": "{{names}} dan {{count}} lainnya",
+      "edits_one": "{{count}} suntingan diterima",
+      "edits_other": "{{count}} suntingan diterima"
+    },
+    "profile": {
+      "title": "Kursus yang disempurnakan",
+      "total_one": "{{count}} suntingan diterima",
+      "total_other": "{{count}} suntingan diterima"
     }
   }
 }

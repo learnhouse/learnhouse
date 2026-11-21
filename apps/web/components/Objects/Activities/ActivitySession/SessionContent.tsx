@@ -51,7 +51,7 @@ export default function SessionContent({ activity, course, orgslug, orgUuid, ass
         if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_MARKDOWN') return <MarkdownActivity activity={activity} />
         if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_EMBED') return <EmbedActivity activity={activity} />
         if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_RESOURCE') return <ResourceActivity activity={activity} orgslug={orgslug} />
-        return <Canva content={activity.content} activity={activity} courseUuid={course?.course_uuid} orgUuid={orgUuid} />
+        return <Canva content={activity.content} activity={activity} courseUuid={course?.course_uuid} orgUuid={orgUuid} contributions />
       case 'TYPE_VIDEO':
         return <VideoActivity course={course} activity={activity} orgUuid={orgUuid} />
       case 'TYPE_DOCUMENT':

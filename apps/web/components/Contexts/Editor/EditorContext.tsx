@@ -10,6 +10,8 @@ type EditorProviderProps = {
 
 type EditorProviderState = {
   isEditable: boolean
+  /** false: hide AI actions in blocks (see useAISettings). */
+  allowAI?: boolean
 }
 
 function EditorOptionsProvider({ children, options }: EditorProviderProps) {
