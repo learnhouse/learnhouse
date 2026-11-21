@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -510,3 +510,57 @@ class TestWebhookCrud:
 
         assert exc.value.status_code == 404
         assert "Webhook endpoint not found" in exc.value.detail
+
+
+class TestWebhookThrottleRunsAfterAuthorization:
+    """The per-org webhook rate limit used to be counted before the permission
+    check, so any signed-in user could use up another org's hourly budget."""
+
+    async def test_create_refused_before_the_throttle(self, db, org, regular_user, mock_request):
+        throttle = Mock()
+        with pytest.raises(HTTPException) as exc:
+            await webhooks.create_webhook_endpoint(
+                mock_request, db, org.id,
+                WebhookEndpointCreate(url="https://example.com/hook", events=["ping"]),
+                regular_user, throttle=throttle,
+            )
+        assert exc.value.status_code == 403
+        throttle.assert_not_called()
+
+    async def test_create_throttles_an_authorized_caller(self, db, org, admin_user, mock_request):
+        def refuse():
+            raise HTTPException(status_code=429, detail="slow down")
+
+        with patch(
+            "src.services.webhooks.webhooks.require_org_role_permission", new_callable=AsyncMock,
+        ), pytest.raises(HTTPException) as exc:
+            await webhooks.create_webhook_endpoint(
+                mock_request, db, org.id,
+                WebhookEndpointCreate(url="https://example.com/hook", events=["ping"]),
+                admin_user, throttle=refuse,
+            )
+        assert exc.value.status_code == 429
+        assert (await db.execute(webhooks.select(WebhookEndpoint))).scalars().first() is None  # type: ignore[attr-defined]
+
+    async def test_test_event_refused_before_the_throttle(self, db, org, regular_user, mock_request):
+        endpoint = await _make_webhook_endpoint(db, org)
+        throttle = Mock()
+        with pytest.raises(HTTPException) as exc:
+            await webhooks.send_test_event(
+                mock_request, db, org.id, endpoint.webhook_uuid, regular_user, throttle=throttle,
+            )
+        assert exc.value.status_code == 403
+        throttle.assert_not_called()
+
+    async def test_test_event_throttles_an_authorized_caller(self, db, org, admin_user, mock_request):
+        endpoint = await _make_webhook_endpoint(db, org)
+        throttle = Mock()
+        with patch(
+            "src.services.webhooks.webhooks.require_org_admin", new_callable=AsyncMock,
+        ), patch(
+            "src.services.webhooks.dispatch.dispatch_webhooks", new_callable=AsyncMock,
+        ):
+            await webhooks.send_test_event(
+                mock_request, db, org.id, endpoint.webhook_uuid, admin_user, throttle=throttle,
+            )
+        throttle.assert_called_once_with()

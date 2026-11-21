@@ -197,3 +197,29 @@ class TestWebhooksRouter:
 
         assert response.status_code == 200
         assert response.json()[0]["delivery_uuid"] == "delivery_1"
+
+
+class TestWebhookRouterThrottleWiring:
+    @pytest.mark.parametrize(
+        "method,path,service,action",
+        [
+            ("post", "/api/v1/orgs/1/webhooks", "create_webhook_endpoint", "create"),
+            ("post", "/api/v1/orgs/1/webhooks/webhook_test/test", "send_test_event", "test"),
+        ],
+    )
+    async def test_router_hands_the_limit_to_the_service(self, client, method, path, service, action):
+        # The router no longer counts the request itself; the service calls
+        # the throttle once the caller is authorized.
+        async def fake_service(*args, throttle, **kwargs):
+            throttle()
+            return {"detail": "ok"} if action == "test" else _mock_webhook_created()
+
+        with patch(
+            "src.routers.webhooks.check_webhook_mutation_rate_limit", return_value=(False, 1800)
+        ) as rate, patch(f"src.routers.webhooks.{service}", side_effect=fake_service):
+            body = {"url": "https://example.com/hook", "events": ["ping"]} if action == "create" else None
+            response = await getattr(client, method)(path, json=body)
+
+        assert response.status_code == 429
+        assert response.headers["Retry-After"] == "1800"
+        rate.assert_called_once_with(1, action)

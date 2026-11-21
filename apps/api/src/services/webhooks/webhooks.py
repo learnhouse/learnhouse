@@ -6,7 +6,7 @@ import ipaddress
 import secrets
 import socket
 from datetime import datetime
-from typing import List
+from typing import Callable, List, Optional
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -135,7 +135,10 @@ async def create_webhook_endpoint(
     org_id: int,
     webhook_object: WebhookEndpointCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
+    throttle: Optional[Callable[[], None]] = None,
 ) -> WebhookEndpointCreatedResponse:
+    """``throttle`` (the per-org rate limit) runs only once the caller is
+    authorized, so nobody outside the org can spend its budget."""
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
 
@@ -157,6 +160,9 @@ async def create_webhook_endpoint(
     from src.services.demo.guards import require_not_demo_org
 
     await require_not_demo_org(org_id, db_session)
+
+    if throttle is not None:
+        throttle()
 
     _validate_events(webhook_object.events)
     _validate_webhook_url(webhook_object.url)
@@ -363,11 +369,16 @@ async def send_test_event(
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
+    throttle: Optional[Callable[[], None]] = None,
 ) -> dict:
-    """Send a test 'ping' event to verify the webhook endpoint."""
+    """Send a test 'ping' event to verify the webhook endpoint.
+
+    ``throttle`` runs after the authorization check, as on create."""
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
     await require_org_admin(acting_user_id, org_id, db_session)
+    if throttle is not None:
+        throttle()
 
     endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
 
