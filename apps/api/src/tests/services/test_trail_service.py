@@ -562,3 +562,115 @@ class TestTrailService:
 
         assert len(result.runs) == 1
         assert len(result.runs[0].steps) == 1
+
+
+class TestTrailFirstVisit:
+    """GET trail for non-members, and race-safe creation."""
+
+    @pytest.mark.asyncio
+    async def test_non_member_gets_an_empty_trail_and_nothing_is_created(
+        self, db, org, admin_user, mock_request
+    ):
+        from sqlmodel import select
+
+        denied = HTTPException(status_code=403, detail="You are not a member of this organization")
+        with patch("src.services.trail.trail.require_org_membership", new=AsyncMock(side_effect=denied)):
+            read = await get_user_trail_with_orgid(mock_request, admin_user, org.id, db)
+        assert read.id is None and read.runs == []
+        assert read.org_id == org.id and read.user_id == admin_user.id
+        assert (await db.execute(select(Trail))).scalars().all() == []
+
+    @pytest.mark.asyncio
+    async def test_other_membership_errors_still_raise(self, db, org, admin_user, mock_request):
+        boom = HTTPException(status_code=401, detail="no")
+        with patch("src.services.trail.trail.require_org_membership", new=AsyncMock(side_effect=boom)):
+            with pytest.raises(HTTPException) as exc:
+                await get_user_trail_with_orgid(mock_request, admin_user, org.id, db)
+        assert exc.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_member_first_visit_creates_one_trail(self, db, org, admin_user, mock_request):
+        from sqlmodel import select
+
+        first = await get_user_trail_with_orgid(mock_request, admin_user, org.id, db)
+        second = await get_user_trail_with_orgid(mock_request, admin_user, org.id, db)
+        assert first.id is not None and first.id == second.id
+        assert len((await db.execute(select(Trail))).scalars().all()) == 1
+
+    @pytest.mark.asyncio
+    async def test_check_trail_presence_refuses_anonymous_creation(self, db, org, mock_request):
+        with pytest.raises(HTTPException) as exc:
+            await check_trail_presence(
+                org_id=org.id, user_id=0, request=mock_request, user=AnonymousUser(), db_session=db,
+            )
+        assert exc.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_reads_pick_the_oldest_of_legacy_duplicates(self, db, org, admin_user):
+        from src.services.trail.trail import get_or_create_trail
+
+        older = await _make_trail(db, org, admin_user, trail_uuid="trail_old")
+        await _make_trail(db, org, admin_user, trail_uuid="trail_new")
+        assert (await get_or_create_trail(db, org.id, admin_user.id)).id == older.id
+
+    @pytest.mark.asyncio
+    async def test_creation_rechecks_after_taking_the_lock(self, db, org, admin_user, mock_request):
+        """A parallel first visit that committed while we waited on the lock
+        is found by the re-select instead of inserting a duplicate."""
+        from sqlmodel import select
+
+        from src.services.trail import trail as trail_mod
+
+        async def parallel_insert(*_args, **_kwargs):
+            await _make_trail(db, org, admin_user, trail_uuid="trail_parallel")
+
+        with patch.object(trail_mod, "lock_trail_creation", new=AsyncMock(side_effect=parallel_insert)):
+            got = await trail_mod.get_or_create_trail(db, org.id, admin_user.id)
+        assert got.trail_uuid == "trail_parallel"
+        assert len((await db.execute(select(Trail))).scalars().all()) == 1
+
+        await db.delete(got)
+        await db.commit()
+        with patch.object(trail_mod, "lock_trail_creation", new=AsyncMock(side_effect=parallel_insert)):
+            with pytest.raises(HTTPException) as exc:
+                await create_user_trail(
+                    mock_request, admin_user, TrailCreate(org_id=org.id, user_id=admin_user.id), db,
+                )
+        assert exc.value.status_code == 400
+        assert len((await db.execute(select(Trail))).scalars().all()) == 1
+
+    @pytest.mark.asyncio
+    async def test_create_user_trail_creates_for_a_member(self, db, org, admin_user, mock_request):
+        trail = await create_user_trail(
+            mock_request, admin_user, TrailCreate(org_id=org.id, user_id=999), db,
+        )
+        assert trail.id is not None
+        assert trail.user_id == admin_user.id  # the caller, not the body's user_id
+        assert trail.trail_uuid.startswith("trail_")
+
+    @pytest.mark.asyncio
+    async def test_get_or_create_without_commit_flushes(self, db, org, admin_user):
+        from src.services.trail.trail import get_or_create_trail
+
+        trail = await get_or_create_trail(db, org.id, admin_user.id, commit=False)
+        assert trail.id is not None
+        await db.rollback()
+
+    @pytest.mark.asyncio
+    async def test_lock_is_a_postgres_advisory_xact_lock(self):
+        from unittest.mock import MagicMock
+
+        from src.services.trail.trail import lock_trail_creation
+
+        session = MagicMock()
+        session.get_bind.return_value.dialect.name = "postgresql"
+        session.execute = AsyncMock()
+        await lock_trail_creation(session, 3, 7)
+        stmt, params = session.execute.await_args.args
+        assert "pg_advisory_xact_lock(hashtext(:key))" in str(stmt)
+        assert params == {"key": "trail:7:3"}
+
+        session.get_bind.return_value.dialect.name = "sqlite"
+        session.execute.reset_mock()
+        await lock_trail_creation(session, 3, 7)
+        session.execute.assert_not_awaited()

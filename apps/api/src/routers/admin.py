@@ -249,6 +249,11 @@ class UserGroupMemberResponse(BaseModel):
     detail: str
     usergroup_uuid: str
     user_id: int
+    # add: "added" (new member) or "source_added" (already in through rules
+    # or a sub-group, now also by hand). remove: "removed", "kept" (rules or a
+    # sub-group still hold them; see ``sources``) or "absent" (nothing to do).
+    status: Optional[str] = None
+    sources: Optional[List[str]] = None
 
 
 class UpdateUserRequest(BaseModel):
@@ -1230,12 +1235,14 @@ async def api_admin_add_usergroup_member(
     response_model=UserGroupMemberResponse,
     summary="Remove a user from a user group",
     description=(
-        "Remove a user's membership from a cohort/group. The user account itself is preserved. "
+        "Remove a user's direct membership of a cohort/group. The user account itself is preserved. "
+        "Idempotent: `status` is `removed`, `kept` (the group's rules or a sub-group still "
+        "include them) or `absent` (they were not a member). "
         "Requires `usergroups.action_update` permission."
     ),
     responses={
-        200: {"description": "User removed from the cohort.", "model": UserGroupMemberResponse},
-        404: {"description": "User, group, or membership not found"},
+        200: {"description": "Removal applied (see `status`).", "model": UserGroupMemberResponse},
+        404: {"description": "User or group not found"},
     },
 )
 async def api_admin_remove_usergroup_member(

@@ -10,7 +10,6 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import HTTPException
 from sqlalchemy import event
 from sqlmodel import select
 
@@ -218,10 +217,9 @@ async def test_org_plan_reuses_the_config_the_request_already_loaded(db, org):
 
 
 @pytest.mark.asyncio
-async def test_org_plan_without_config_is_404(db, org):
-    with pytest.raises(HTTPException) as exc:
-        await get_org_plan(org.id, db)
-    assert exc.value.status_code == 404
+async def test_org_plan_without_config_is_free(db, org):
+    # A missing config row reads as the free plan (logged), not a 404.
+    assert await get_org_plan(org.id, db) == "free"
 
 
 @pytest.mark.asyncio

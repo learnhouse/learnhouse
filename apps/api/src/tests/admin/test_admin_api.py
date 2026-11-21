@@ -2023,6 +2023,18 @@ class TestBulkEnroll:
         assert result["enrolled"] == []
         assert result["already_enrolled"] == [user.id]
 
+    async def test_reuses_an_existing_trail(self, token_user, user, course, mock_request, db, mock_admin_side_effects):
+        from src.services.trail.trail import get_or_create_trail
+
+        trail = await get_or_create_trail(db, token_user.org_id, user.id)
+        result = await bulk_enroll_users(
+            token_user=token_user, course_uuid=course.course_uuid,
+            user_ids=[user.id], request=mock_request, db_session=db,
+        )
+        assert result["enrolled"] == [user.id]
+        run = (await db.execute(select(TrailRun).where(TrailRun.course_id == course.id))).scalars().one()
+        assert run.trail_id == trail.id
+
     async def test_non_member_skipped(self, token_user, course, mock_request, db, mock_admin_side_effects):
         result = await bulk_enroll_users(
             token_user=token_user, course_uuid=course.course_uuid,
@@ -2279,11 +2291,59 @@ class TestUserGroupMembers:
         )).scalars().first()
         assert row is None
 
-    async def test_remove_non_member(self, token_user, user, usergroup, db, mock_admin_side_effects):
+    async def test_remove_non_member_is_idempotent(self, token_user, user, usergroup, db, mock_admin_side_effects):
+        # Integrations retry: removing someone who is not there is a 200.
+        result = await remove_usergroup_member(
+            token_user, usergroup.usergroup_uuid, user.id, db
+        )
+        assert result["status"] == "absent"
+        mock_admin_side_effects["dispatch_webhooks"].assert_not_awaited()
+
+    async def test_add_and_remove_use_the_membership_model(
+        self, token_user, user, usergroup, db, mock_admin_side_effects
+    ):
+        result = await add_usergroup_member(token_user, usergroup.usergroup_uuid, user.id, db)
+        assert result["status"] == "added"
+        row = (await db.execute(select(UserGroupUser).where(
+            UserGroupUser.usergroup_id == usergroup.id, UserGroupUser.user_id == user.id,
+        ))).scalars().first()
+        assert row.sources == ["manual"]
+        webhooks = mock_admin_side_effects["dispatch_webhooks"]
+        assert webhooks.await_args.kwargs["event_name"] == "usergroup_users_added"
+        result = await remove_usergroup_member(token_user, usergroup.usergroup_uuid, user.id, db)
+        assert result["status"] == "removed"
+        assert webhooks.await_args.kwargs["event_name"] == "usergroup_users_removed"
+
+    async def test_rule_member_is_kept_on_remove_and_gains_manual_on_add(
+        self, token_user, user, usergroup, db, mock_admin_side_effects
+    ):
+        """A member through the group's rules: removal only drops the direct
+        reasons (the sync would otherwise bring them back), and adding by hand
+        records the manual reason without a 'joined' webhook."""
+        now = str(datetime.now())
+        db.add(UserGroupUser(
+            usergroup_id=usergroup.id, user_id=user.id, org_id=usergroup.org_id,
+            creation_date=now, update_date=now, sources=["rule"],
+        ))
+        await db.commit()
+        webhooks = mock_admin_side_effects["dispatch_webhooks"]
+
+        result = await add_usergroup_member(token_user, usergroup.usergroup_uuid, user.id, db)
+        assert result["status"] == "source_added"
+        webhooks.assert_not_awaited()
+
+        result = await remove_usergroup_member(token_user, usergroup.usergroup_uuid, user.id, db)
+        assert result["status"] == "kept"
+        assert result["sources"] == ["rule"]
+        webhooks.assert_not_awaited()
+        row = (await db.execute(select(UserGroupUser).where(
+            UserGroupUser.usergroup_id == usergroup.id, UserGroupUser.user_id == user.id,
+        ))).scalars().first()
+        assert row is not None and row.sources == ["rule"]
+
+    async def test_remove_unknown_group_is_404(self, token_user, user, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
-            await remove_usergroup_member(
-                token_user, usergroup.usergroup_uuid, user.id, db
-            )
+            await remove_usergroup_member(token_user, "usergroup_missing", user.id, db)
         assert exc.value.status_code == 404
 
     async def test_cross_org_group_blocked(self, token_user, user, other_org_usergroup, db, mock_admin_side_effects):

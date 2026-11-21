@@ -187,7 +187,8 @@ async def test_backfill_respects_limit(monkeypatch, db, org, course, chapter, ac
 def _mock_transcode_deps(monkeypatch, *, resolve, fetch=True, transcode=None,
                          s3=True, upload=True):
     monkeypatch.setattr(hls_jobs, "_resolve_source", _aret(resolve))
-    monkeypatch.setattr(hls_jobs, "_fetch_source", lambda src, dst: fetch)
+    outcome = {True: hls_jobs.SOURCE_OK, False: hls_jobs.SOURCE_UNAVAILABLE}.get(fetch, fetch)
+    monkeypatch.setattr(hls_jobs, "_download_source", lambda src, dst: outcome)
     monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", _aret(transcode))
     monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: s3)
     monkeypatch.setattr(hls_jobs, "upload_directory_to_s3_parallel", lambda out, prefix, **k: upload)
@@ -222,6 +223,12 @@ async def test_transcode_activity_fetch_fails(monkeypatch):
     statuses = _mock_transcode_deps(monkeypatch, resolve=_INFO, fetch=False)
     assert await hls_jobs.transcode_activity("act") is False
     assert statuses[-1] == ("failed", {"error": "source_unavailable"})
+
+
+async def test_transcode_activity_missing_source_is_terminal(monkeypatch):
+    statuses = _mock_transcode_deps(monkeypatch, resolve=_INFO, fetch=hls_jobs.SOURCE_MISSING)
+    assert await hls_jobs.transcode_activity("act") is False
+    assert statuses[-1] == ("source_missing", {})
 
 
 async def test_transcode_activity_transcode_fails(monkeypatch):
@@ -334,6 +341,39 @@ def test_fetch_source_local(monkeypatch, tmp_path):
 def test_fetch_source_local_missing(monkeypatch, tmp_path):
     monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: False)
     assert hls_jobs._fetch_source(str(tmp_path / "nope.mp4"), str(tmp_path / "d")) is False
+    assert hls_jobs._download_source(str(tmp_path / "nope.mp4"), str(tmp_path / "d")) == hls_jobs.SOURCE_MISSING
+
+
+@pytest.mark.parametrize("code,expected", [
+    ("404", hls_jobs.SOURCE_MISSING),
+    ("NoSuchKey", hls_jobs.SOURCE_MISSING),
+    ("NotFound", hls_jobs.SOURCE_MISSING),
+    ("403", hls_jobs.SOURCE_UNAVAILABLE),
+    ("SlowDown", hls_jobs.SOURCE_UNAVAILABLE),
+])
+def test_download_source_s3_client_errors(monkeypatch, tmp_path, code, expected):
+    from botocore.exceptions import ClientError
+
+    class _C:
+        def download_file(self, *a, **k):
+            raise ClientError({"Error": {"Code": code, "Message": "x"}}, "HeadObject")
+
+    monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "get_storage_client", lambda: _C())
+    monkeypatch.setattr(hls_jobs, "get_s3_bucket_name", lambda: "b")
+    assert hls_jobs._download_source("x", str(tmp_path / "d")) == expected
+    assert hls_jobs._fetch_source("x", str(tmp_path / "d")) is False
+
+
+def test_download_source_s3_transient_error_is_retryable(monkeypatch, tmp_path):
+    class _C:
+        def download_file(self, *a, **k):
+            raise RuntimeError("net")
+
+    monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(hls_jobs, "get_storage_client", lambda: _C())
+    monkeypatch.setattr(hls_jobs, "get_s3_bucket_name", lambda: "b")
+    assert hls_jobs._download_source("x", str(tmp_path / "d")) == hls_jobs.SOURCE_UNAVAILABLE
 
 
 # --------------------------------------------------------------------------
@@ -518,10 +558,11 @@ async def test_reconcile_requeues_unfinished_skips_ready(monkeypatch, db, org, c
     await _add_video_activity(db, org, course, "fail1", filename="c.mp4", hls_status="failed")
     await _add_video_activity(db, org, course, "rdy1", filename="d.mp4", hls_status="ready")
     await _add_video_activity(db, org, course, "aud1", filename="e.mp4", hls_status="unsupported")
+    await _add_video_activity(db, org, course, "gone1", filename="f.mp4", hls_status="source_missing")
     r = _FakeRedis()
     monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
     out = await hls_jobs.reconcile_unfinished()
-    assert set(r.pushed) == {"todo1", "proc1", "fail1"}  # ready + unsupported skipped
+    assert set(r.pushed) == {"todo1", "proc1", "fail1"}  # ready + unsupported + source_missing skipped
     assert out["requeued"] == 3
 
 

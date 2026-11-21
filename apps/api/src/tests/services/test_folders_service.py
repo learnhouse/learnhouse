@@ -148,3 +148,48 @@ class TestFoldersService:
 
         assert result == {"detail": "Folder deleted"}
         assert exc_info.value.status_code == 404
+
+
+class TestSubfolderCounts:
+    @pytest.mark.asyncio
+    async def test_subfolder_counts_are_batched(self, db, org, course, admin_user, mock_request):
+        from src.services.folders import folders as folders_service
+
+        rbac, webhooks = _bypass()
+        with rbac, webhooks:
+            root = await create_folder(mock_request, FolderCreate(name="Root", org_id=org.id), admin_user, db)
+            full = await create_folder(
+                mock_request, FolderCreate(name="Full", org_id=org.id, parent_folder_uuid=root.folder_uuid),
+                admin_user, db,
+            )
+            await create_folder(
+                mock_request, FolderCreate(name="Empty", org_id=org.id, parent_folder_uuid=root.folder_uuid),
+                admin_user, db,
+            )
+            await create_folder(
+                mock_request, FolderCreate(name="Grandchild", org_id=org.id, parent_folder_uuid=full.folder_uuid),
+                admin_user, db,
+            )
+            await add_folder_content(mock_request, full.folder_uuid, course.course_uuid, admin_user, db)
+
+            calls = []
+            real = folders_service._item_counts
+
+            async def spy(session, folder_ids):
+                calls.append(sorted(folder_ids))
+                return await real(session, folder_ids)
+
+            with patch.object(folders_service, "_item_counts", new=spy):
+                fetched = await get_folder(mock_request, root.folder_uuid, admin_user, db)
+
+        counts = {s.name: s.total_items for s in fetched.subfolders}
+        assert counts == {"Full": 2, "Empty": 0}
+        assert fetched.total_items == 2
+        # One call for the root itself, one batched call for all its sub-folders.
+        assert len(calls) == 2 and len(calls[1]) == 2
+
+    @pytest.mark.asyncio
+    async def test_item_counts_with_no_folders(self, db):
+        from src.services.folders.folders import _item_counts
+
+        assert await _item_counts(db, []) == {}

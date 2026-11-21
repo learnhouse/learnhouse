@@ -26,6 +26,7 @@ import threading
 from datetime import datetime, timezone
 from typing import Optional
 
+from botocore.exceptions import ClientError
 from sqlmodel import select
 
 from src.core.events.database import _async_session_factory
@@ -47,8 +48,16 @@ logger = logging.getLogger(__name__)
 REDIS_QUEUE_KEY = "learnhouse:hls:queue"
 
 # Statuses the reconciler leaves alone. `unsupported` is a source that can never
-# be transcoded (e.g. an audio-only upload), so retrying it is pure noise.
-TERMINAL_STATUSES = frozenset({"ready", "unsupported"})
+# be transcoded (e.g. an audio-only upload), and `source_missing` one whose file
+# is gone from storage (or never resolvable), so retrying either is pure noise.
+# A fresh upload enqueues the job directly, so it still runs.
+TERMINAL_STATUSES = frozenset({"ready", "unsupported", "source_missing"})
+
+# _download_source outcomes.
+SOURCE_OK = "ok"
+SOURCE_MISSING = "missing"
+SOURCE_UNAVAILABLE = "unavailable"
+_MISSING_CODES = frozenset({"404", "NoSuchKey", "NotFound"})
 
 
 @contextlib.contextmanager
@@ -226,24 +235,42 @@ def _safe_filename(filename: str) -> bool:
     return True
 
 
-def _fetch_source(src_key: str, local_path: str) -> bool:
-    """Copy the source video to local_path (stream-download from R2, or local copy)."""
+def _is_missing_object(exc: Exception) -> bool:
+    """True when storage says the object does not exist (not a transient error)."""
+    if not isinstance(exc, ClientError):
+        return False
+    code = str((exc.response or {}).get("Error", {}).get("Code", ""))
+    return code in _MISSING_CODES
+
+
+def _download_source(src_key: str, local_path: str) -> str:
+    """Copy the source video to local_path (stream-download from R2, or local
+    copy). Returns SOURCE_OK, SOURCE_MISSING (the object is gone: retrying is
+    pointless) or SOURCE_UNAVAILABLE (anything else, worth a retry)."""
     if is_s3_enabled():
         client = get_storage_client()
         if not client:
-            return False
+            return SOURCE_UNAVAILABLE
         try:
             client.download_file(get_s3_bucket_name(), src_key, local_path)
-            return True
+            return SOURCE_OK
         except Exception as e:
+            if _is_missing_object(e):
+                logger.warning("HLS: source missing from storage %s", src_key)
+                return SOURCE_MISSING
             logger.error("HLS: failed to download source %s: %s", src_key, e)
-            return False
+            return SOURCE_UNAVAILABLE
     # Local filesystem: the source lives at the content-relative key.
     if os.path.isfile(src_key):
         shutil.copyfile(src_key, local_path)
-        return True
-    logger.error("HLS: local source missing %s", src_key)
-    return False
+        return SOURCE_OK
+    logger.warning("HLS: local source missing %s", src_key)
+    return SOURCE_MISSING
+
+
+def _fetch_source(src_key: str, local_path: str) -> bool:
+    """Boolean form of _download_source, for callers that only need success."""
+    return _download_source(src_key, local_path) == SOURCE_OK
 
 
 async def transcode_activity(activity_uuid: str) -> bool:
@@ -276,7 +303,11 @@ async def transcode_activity(activity_uuid: str) -> bool:
             # basename() is defensive belt-and-suspenders on top of _safe_filename.
             local_src = os.path.join(td, os.path.basename(filename))
             # Blocking I/O off the event loop (matters for the in-process worker).
-            if not await asyncio.to_thread(_fetch_source, src_key, local_src):
+            fetched = await asyncio.to_thread(_download_source, src_key, local_src)
+            if fetched == SOURCE_MISSING:
+                await _set_status(activity_uuid, "source_missing")
+                return False
+            if fetched != SOURCE_OK:
                 await _set_status(activity_uuid, "failed", error="source_unavailable")
                 return False
 
@@ -433,7 +464,10 @@ async def transcode_block(activity_uuid: str, block_uuid: str) -> bool:
     """
     info = await _resolve_block_source(block_uuid)
     if not info:
+        # Terminal, so the reconciler stops re-queueing it (no-op if the block
+        # itself is gone).
         logger.warning("HLS: no transcodable source for block %s", block_uuid)
+        await _set_block_status(block_uuid, "source_missing", reason="unresolvable")
         return False
 
     org_uuid, course_uuid, filename = info["org_uuid"], info["course_uuid"], info["filename"]
@@ -458,7 +492,11 @@ async def transcode_block(activity_uuid: str, block_uuid: str) -> bool:
     try:
         with scratch_dir() as td:
             local_src = os.path.join(td, os.path.basename(filename))
-            if not await asyncio.to_thread(_fetch_source, src_key, local_src):
+            fetched = await asyncio.to_thread(_download_source, src_key, local_src)
+            if fetched == SOURCE_MISSING:
+                await _set_block_status(block_uuid, "source_missing")
+                return False
+            if fetched != SOURCE_OK:
                 await _set_block_status(block_uuid, "failed", error="source_unavailable")
                 return False
 

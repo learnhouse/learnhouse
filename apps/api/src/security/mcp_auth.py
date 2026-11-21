@@ -154,8 +154,14 @@ class MCPAuthMiddleware:
             await self.app(scope, receive, send)
             return
 
-        headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers") or []}
-        authorization = headers.get("authorization", "")
+        # Only the Authorization header is read. Other headers may carry
+        # non-UTF-8 bytes (a User-Agent with 0xf3), and HTTP header values are
+        # latin-1 by definition, so decoding everything as UTF-8 would 500.
+        authorization = ""
+        for key, value in scope.get("headers") or []:
+            if key.lower() == b"authorization":
+                authorization = value.decode("latin-1")
+                break
         if not authorization.lower().startswith("bearer "):
             await _reject(scope, send, 401, None, "Sign in to connect to LearnHouse")
             return
