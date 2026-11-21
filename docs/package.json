@@ -12,7 +12,7 @@
     "@icons-pack/react-simple-icons": "^13.15.1",
     "@phosphor-icons/react": "^2.1.10",
     "@types/mdx": "^2.0.14",
-    "@xyflow/react": "^12.12.1",
+    "@xyflow/react": "^13.0.2",
     "fumadocs-core": "16.19.0",
     "fumadocs-mdx": "15.6.1",
     "next": "16.4.6",
