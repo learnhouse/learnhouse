@@ -5,6 +5,7 @@
 // server. EU visitors see EUR (via Stripe `currency_options`); everyone else
 // falls back to the default USD. Absent a geo header (no CDN), it's USD, a
 // harmless no-op, so this is safe to ship regardless of the edge setup.
+import { readDocumentCookie } from '@/lib/cookies'
 
 export type Region = 'eur' | 'usd'
 
@@ -39,6 +40,6 @@ export function currencyForRegion(region: Region): string | undefined {
 /** Client-side: read a previously-set `LH_region` cookie (default usd). */
 export function getRegionFromCookie(): Region {
   if (typeof document === 'undefined') return 'usd'
-  const match = document.cookie.match(/(?:^|;\s*)LH_region=([^;]*)/)
+  const match = readDocumentCookie().match(/(?:^|;\s*)LH_region=([^;]*)/)
   return match?.[1] === 'eur' ? 'eur' : 'usd'
 }

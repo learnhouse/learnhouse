@@ -3,6 +3,7 @@ import { getConfig, getDeploymentMode } from '@services/config/config'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
+import { readDocumentCookie } from '@/lib/cookies'
 
 // Client-side Cloudflare Turnstile widget. Reads the PUBLIC site key from the
 // runtime config (getConfig; this is a prebuilt image, so process.env.NEXT_PUBLIC_*
@@ -25,7 +26,7 @@ export function getTurnstileSiteKey(): string {
  */
 function isOnCustomDomain(): boolean {
   if (typeof document === 'undefined') return false
-  return document.cookie.split('; ').some((c) => c.startsWith('LH_custom_domain='))
+  return readDocumentCookie().split('; ').some((c) => c.startsWith('LH_custom_domain='))
 }
 
 /**

@@ -67,6 +67,15 @@ const nextConfig = {
   // after rendering, but only from <head> on its first pass) and AI agents.
   htmlLimitedBots:
     /Googlebot|Google-InspectionTool|GoogleOther|Storebot-Google|[\w-]+-Google|Google-[\w-]+|bingbot|BingPreview|msnbot|Chrome-Lighthouse|Lighthouse|Slurp|DuckDuckBot|DuckAssistBot|baiduspider|yandex|sogou|Applebot|facebookexternalhit|facebookcatalog|meta-externalagent|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|SkypeUriPreview|redditbot|Pinterest|Embedly|vkShare|quora link preview|bitlybot|tumblr|ia_archiver|Yeti|SeznamBot|Naver|PetalBot|GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|Claude-SearchBot|anthropic-ai|PerplexityBot|Perplexity-User|CCBot|Amazonbot|MistralAI|cohere|YouBot|ImagesiftBot|Bytespider|googleweblight/i,
+  // Friendly route aliases. As a page-level redirect() they rendered inside the
+  // org layout, so the browser got a 200 that streamed a client redirect and a
+  // hydration error instead of a plain 307.
+  async redirects() {
+    return [
+      { source: '/plays', destination: '/playgrounds', permanent: false },
+      { source: '/copilot', destination: '/messages', permanent: false },
+    ]
+  },
   async rewrites() {
     return [
       // PostHog reverse proxy (EU cloud), served same-origin so adblockers

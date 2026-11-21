@@ -445,7 +445,34 @@ export type DeploymentMode = 'saas' | 'oss' | 'ee'
  * Defaults to 'oss' when cookie is absent (safe fallback, blocks EE features).
  */
 export const getDeploymentMode = (): DeploymentMode => {
-  return (getCookieValue('LH_mode') as DeploymentMode) || 'oss'
+  if (typeof window === 'undefined') {
+    // Server render: there is no document.cookie, so use the instance mode the
+    // root layout resolved for this process (see setServerDeploymentMode).
+    // Falling back to 'oss' here made every mode/plan branch render one thing
+    // on the server and another in the browser (React #418 on sign-in pages).
+    return serverDeploymentMode() || 'oss'
+  }
+  // The same value the server rendered with, written on <html> by the root
+  // layout; the cookie is only a fallback (it can be blocked).
+  const fromHtml = asDeploymentMode(document.documentElement?.getAttribute('data-lh-mode'))
+  return fromHtml || asDeploymentMode(getCookieValue('LH_mode')) || 'oss'
+}
+
+function asDeploymentMode(v: unknown): DeploymentMode | null {
+  return v === 'saas' || v === 'ee' || v === 'oss' ? v : null
+}
+
+// The deployment mode is a property of the instance, not of the request, so a
+// process-wide value is safe to share across concurrent server renders.
+const SERVER_MODE_KEY = '__LH_SERVER_DEPLOYMENT_MODE__'
+
+function serverDeploymentMode(): DeploymentMode | null {
+  return asDeploymentMode((globalThis as any)[SERVER_MODE_KEY])
+}
+
+/** Record the instance mode for server renders. Called by the root layout. */
+export function setServerDeploymentMode(mode: DeploymentMode): void {
+  ;(globalThis as any)[SERVER_MODE_KEY] = mode
 }
 
 /**

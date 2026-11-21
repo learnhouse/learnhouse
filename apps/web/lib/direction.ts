@@ -61,7 +61,12 @@ export function detectClientLanguage(): string {
     /* localStorage can throw in private mode / sandboxed iframes */
   }
 
-  const cookie = document.cookie.match(/(?:^|;\s*)i18next=([^;]*)/)
+  let cookie: RegExpMatchArray | null = null
+  try {
+    cookie = document.cookie.match(/(?:^|;\s*)i18next=([^;]*)/)
+  } catch {
+    /* sandboxed iframe without allow-same-origin: no cookie access */
+  }
   if (cookie) {
     try {
       return decodeURIComponent(cookie[1])

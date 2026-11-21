@@ -4,6 +4,8 @@ import type { Metadata, Viewport } from 'next'
 import Providers from '@components/Providers'
 import ImageFallbackGuard from '@components/Utils/ImageFallbackGuard'
 import { Wix_Madefor_Text, Tajawal } from 'next/font/google'
+import { getInstanceMode } from '@lib/saas'
+import { setServerDeploymentMode } from '@services/config/config'
 import { dirInitScript, embedBgScript, runtimeConfigScript, themeInitScript, translateGuardScript } from '@/lib/headScripts'
 
 // A blocking head script, inline when its source could be read, else the
@@ -59,11 +61,17 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Resolve the deployment mode once (cached for a minute) and use it on both
+  // sides: server renders read it via setServerDeploymentMode, the browser via
+  // data-lh-mode below (the LH_mode cookie can be blocked, e.g. Safari private
+  // mode), so mode- and plan-dependent markup hydrates cleanly.
+  const deploymentMode = await getInstanceMode()
+  setServerDeploymentMode(deploymentMode)
   // `dir` is deliberately absent from the <html> below. React only reconciles
   // attributes present in its virtual tree, so leaving it out means React never
   // clobbers what dir-init.js wrote before paint. `lang="en"` stays as the
@@ -72,6 +80,7 @@ export default function RootLayout({
     <html
       className={`${wixMadeforText.variable} ${tajawal.variable}`}
       lang="en"
+      data-lh-mode={deploymentMode}
       suppressHydrationWarning
     >
       <head>
