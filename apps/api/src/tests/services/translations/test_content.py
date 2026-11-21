@@ -234,3 +234,94 @@ def test_edge_cases_of_the_walk():
         node = child
     node["content"].append({"type": "paragraph", "content": [{"type": "text", "text": "too deep"}]})
     assert c.iter_segments(deep) == []
+
+
+def test_experiences_text_is_translated_and_answers_stay_safe():
+    doc = {"type": "doc", "content": [
+        {"type": "expSort", "attrs": {"blockId": "b1", "title": "Sort", "instructions": "Drag",
+                                      "categories": [{"id": "c1", "label": "Plant", "color": "sky"}],
+                                      "items": [{"id": "i1", "text": "Oak", "categoryId": "c1", "explanation": "A tree"}]}},
+        {"type": "expHotspot", "attrs": {"title": "Find", "imageUrl": "https://x.org/a.png",
+                                         "imageObject": {"file_name": "leaf.png", "label": "Leaf picture"},
+                                         "spots": [{"id": "s1", "label": "Heart", "x": 1, "y": 2}]}},
+        {"type": "expGaps", "attrs": {"title": "Gaps", "text": "Water boils at [[100]] degrees [[Celsius|C]]."}},
+        {"type": "expMythFact", "attrs": {"statements": [{"text": "Bats are blind", "isTrue": False, "explanation": "No"}],
+                                          "labels": {"true": "Fact", "false": "Myth"}}},
+        {"type": "expSpeedRound", "attrs": {"questions": [{"prompt": "Capital?", "options": ["Paris", "42"], "answer": 0}]}},
+        {"type": "expEstimate", "attrs": {"question": "How far?", "unit": "km", "answer": 12, "min": 0, "max": 20}},
+        {"type": "expSpotMistake", "attrs": {"kind": "code", "segments": [{"text": "print(y)", "correction": "print(x)",
+                                                                           "explanation": "y is undefined"}]}},
+        {"type": "expSpotMistake", "attrs": {"kind": "text", "segments": [{"text": "The sun orbits us.", "correction": "We orbit it."}]}},
+        {"type": "expCodeLock", "attrs": {"story": "Escape", "reward": "Free",
+                                          "clues": [{"question": "Gas?", "answer": "oxygen", "hint": "Breathe"},
+                                                    {"question": "Legs?", "answer": "8"}, {"question": "Pi?", "answer": 3.14}]}},
+        {"type": "flipcardGrid", "attrs": {"title": "Deck", "mode": "study"},
+         "content": [{"type": "flipcard", "attrs": {"question": "Q", "answer": "A"}}]},
+        {"type": "scenarios", "attrs": {"title": "Case", "scenarios": [
+            {"id": "1", "text": "Start", "options": [{"id": "o", "text": "Go", "feedback": "Nice"}], "ending": {"tone": "fail", "title": "Oops"}}]}},
+    ]}
+    segs = c.iter_segments(doc)
+    texts = [s.text for s in segs]
+    assert texts == [
+        "Sort", "Drag", "Plant", "Oak", "A tree", "Find", "Heart",
+        "Gaps", "Water boils at [[100]] degrees [[Celsius|C]].", "Bats are blind", "No", "Fact", "Myth",
+        "Capital?", "Paris", "How far?", "km", "y is undefined", "The sun orbits us.", "We orbit it.",
+        "Escape", "Gas?", "Legs?", "Pi?", "oxygen", "Breathe", "Free", "Deck", "Q", "A", "Case", "Start", "Go", "Nice", "Oops",
+    ]
+    public = {p["text"]: p for p in c.extract_segments(doc)}
+    assert public["Water boils at [[100]] degrees [[Celsius|C]]."]["gaps"] == c.GAPS_HINT
+    assert "gaps" not in public["Gaps"]
+    gaps_id = next(s.id for s in segs if s.text.startswith("Water"))
+    good = {s.id: f"T({s.text})" for s in segs if s.id != gaps_id} | {gaps_id: "L'eau bout à [[100]] degrés [[Celsius|C]]."}
+    out, report = c.apply_segments(doc, good)
+    assert report["missing"] == [] and report["warnings"] == {}
+    assert out["content"][2]["attrs"]["text"] == "L'eau bout à [[100]] degrés [[Celsius|C]]."
+    assert out["content"][1]["attrs"]["imageObject"] == {"file_name": "leaf.png", "label": "Leaf picture"}
+    assert out["content"][4]["attrs"]["questions"][0]["answer"] == 0
+    assert out["content"][6]["attrs"]["segments"][0]["text"] == "print(y)"
+    assert out["content"][8]["attrs"]["clues"][1]["answer"] == "8" and out["content"][8]["attrs"]["clues"][2]["answer"] == 3.14
+    assert out["content"][8]["attrs"]["clues"][0]["answer"] == "T(oxygen)"
+    broken = good | {gaps_id: "L'eau bout à 100 degrés [[Celsius]]."}
+    out, report = c.apply_segments(doc, broken)
+    assert out["content"][2]["attrs"]["text"] == doc["content"][2]["attrs"]["text"]
+    assert report["missing"] == [gaps_id] and report["warnings"] == {gaps_id: ["gaps_changed"]}
+
+
+def test_new_experiences_translate_text_and_keep_play_intact():
+    doc = {"type": "doc", "content": [
+        {"type": "expVenn", "attrs": {"title": "Compare", "instructions": "Place", "showNeither": True,
+                                      "sets": {"a": {"label": "Frogs", "color": "emerald"}, "b": {"label": "Toads", "color": "amber"}},
+                                      "items": [{"id": "i1", "text": "Dry skin", "zone": "b", "explanation": "Drier"}]}},
+        {"type": "expLabel", "attrs": {"title": "Label", "instructions": "Drag", "imageUrl": "https://x.org/a.png",
+                                       "pins": [{"id": "p1", "x": 1, "y": 2, "label": "Stem"}], "distractors": ["Wing"]}},
+        {"type": "expWordGuess", "attrs": {"title": "Words", "maxGuesses": 6,
+                                           "words": [{"id": "w1", "answer": "atom", "clue": "Tiny block", "explanation": "All matter"}]}},
+        {"type": "expConfidence", "attrs": {"title": "Sure?", "questions": [
+            {"id": "q1", "prompt": "Closest?", "options": ["Venus", "Mercury"], "answer": 1, "explanation": "Orbit"}]}},
+        {"type": "expMatrix", "attrs": {"title": "Grid", "instructions": "Tick", "mode": "single",
+                                        "rows": [{"id": "r1", "label": "Whale"}], "columns": [{"id": "c1", "label": "Mammal"}],
+                                        "cells": {"r1:c1": True}}},
+        {"type": "expReflect", "attrs": {"title": "Think", "prompt": "Why?", "guidingQuestions": ["Tilt?"], "minWords": 30,
+                                         "modelAnswer": "Because of tilt", "checklist": ["Tilt", "Angle"]}},
+    ]}
+    segs = c.iter_segments(doc)
+    assert [s.text for s in segs] == [
+        "Compare", "Place", "Frogs", "Toads", "Dry skin", "Drier",
+        "Label", "Drag", "Stem", "Wing",
+        "Words", "Tiny block", "All matter",
+        "Sure?", "Closest?", "Venus", "Mercury", "Orbit",
+        "Grid", "Tick", "Whale", "Mammal",
+        "Think", "Why?", "Tilt?", "Because of tilt", "Tilt", "Angle",
+    ]
+    out, report = c.apply_segments(doc, {s.id: f"T({s.text})" for s in segs})
+    assert report["missing"] == []
+    venn, label, word, conf, grid, reflect = (n["attrs"] for n in out["content"])
+    assert venn["sets"] == {"a": {"label": "T(Frogs)", "color": "emerald"}, "b": {"label": "T(Toads)", "color": "amber"}}
+    assert venn["items"][0]["zone"] == "b" and venn["showNeither"] is True
+    assert label["pins"][0]["label"] == "T(Stem)" and label["distractors"] == ["T(Wing)"] and label["pins"][0]["x"] == 1
+    # The word guess answer is kept: tiles, length and letters come from it.
+    assert word["words"][0] == {"id": "w1", "answer": "atom", "clue": "T(Tiny block)", "explanation": "T(All matter)"}
+    assert conf["questions"][0]["answer"] == 1 and conf["questions"][0]["options"] == ["T(Venus)", "T(Mercury)"]
+    assert grid["cells"] == {"r1:c1": True} and grid["rows"][0] == {"id": "r1", "label": "T(Whale)"}
+    assert reflect["modelAnswer"] == "T(Because of tilt)" and reflect["checklist"] == ["T(Tilt)", "T(Angle)"]
+    assert reflect["minWords"] == 30

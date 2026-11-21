@@ -19,6 +19,9 @@
    (components/Objects/Activities/BlockTheme). */
 @import "./block-theme.css";
 
+/* Experiences blocks: motion and canvas resets (styles/experiences.css). */
+@import "./experiences.css";
+
 /* Dark mode: manual only, keyed off <html data-theme="dark">
    (lib/theme/colorScheme.ts). Never follows the OS. */
 @import "./dark.css";
@@ -867,7 +870,7 @@
   height: 100%;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .flipcard-back {
@@ -904,7 +907,7 @@
 .flipcard-grid [data-drop-target] .flipcard-container {
   outline: 2px dashed rgb(34 197 94);
   outline-offset: 4px;
-  border-radius: 14px;
+  border-radius: 18px;
 }
 
 /* Flipcard grid: cards sit side by side instead of each claiming a full row. */
@@ -920,6 +923,21 @@
    the flipcards themselves the grid items. */
 .flipcard-grid-content > [data-node-view-content-react] {
   display: contents;
+}
+
+/* Editor deck: the content element and Tiptap's holder both dissolve, so the
+   cards and the "+ Add card" ghost share one even grid. */
+.flipcard-grid-edit > .flipcard-grid-holder,
+.flipcard-grid-edit > .flipcard-grid-holder > [data-node-view-content-react] {
+  display: contents;
+}
+
+/* A flipcard keeps an (unused) text slot from its original schema. ProseMirror
+   still renders it as an empty line above the card; collapse it so the grid
+   gap is the only space between cards. */
+.react-renderer.node-flipcard > [data-node-view-content-react] {
+  height: 0;
+  overflow: hidden;
 }
 
 /* One column on narrow screens; three cards side by side is unreadable. */

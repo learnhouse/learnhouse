@@ -1,0 +1,779 @@
+/* Experiences blocks (components/Objects/Editor/Extensions/Experiences):
+   motion (completion burst, star pop, wrong-answer shake, progress) and the
+   resets the blocks need inside the lesson canvas. Kept out of block-theme.css,
+   which only holds rules gated by a block-theme scope. Every animation stops
+   under prefers-reduced-motion. */
+/* ── Tactile surfaces ─────────────────────────────────────────────────────
+   One rule carries the whole look: things a learner can move or press are
+   raised (paper with a top highlight, a darker bottom lip and a soft contact
+   shadow); places to drop things are recessed wells; the play area is a flat
+   table. Depth means "you can act on this", never decoration. Light values
+   here; block-theme.css swaps the tokens for dark and tinted lessons. */
+.lh-exp-frame {
+  --exp-table: #f7f8fa;
+  --exp-paper: #ffffff;
+  --exp-well: #eef1f5;
+  --exp-ink: #18181b;
+  --exp-edge: rgba(15, 23, 42, 0.1);
+  --exp-lip: rgba(15, 23, 42, 0.12);
+  --exp-hi: rgba(255, 255, 255, 0.95);
+  --exp-drop: rgba(15, 23, 42, 0.06);
+}
+/* The header icon tile: a small raised plate. */
+.lh-exp-icon {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.05),
+    0 1px 2px rgba(15, 23, 42, 0.05);
+}
+/* A fine paper grain for cards (an inline SVG noise tile, very low opacity). */
+.lh-exp-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+}
+/* The play surface under the header. */
+.lh-exp-table {
+  background: var(--exp-table);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+/* A raised object: chips, cards, tiles, answer options. */
+.lh-exp-raised {
+  background: var(--exp-paper);
+  border: 1px solid var(--exp-edge);
+  border-bottom-color: var(--exp-lip);
+  box-shadow:
+    inset 0 1px 0 var(--exp-hi),
+    0 1px 1px var(--exp-drop);
+  transition:
+    transform 140ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 140ms ease-out,
+    background-color 140ms ease-out,
+    border-color 140ms ease-out;
+}
+/* Interactive raised objects lift on hover and sink when pressed. */
+.lh-exp-press { cursor: pointer; touch-action: manipulation; }
+@media (hover: hover) {
+  .lh-exp-press:hover:not(:disabled):not([aria-disabled='true']) {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 var(--exp-hi),
+      0 1px 2px var(--exp-drop),
+      0 3px 8px -4px var(--exp-drop);
+  }
+}
+.lh-exp-press:active:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 var(--exp-hi), 0 0 0 var(--exp-drop);
+}
+/* Picked up / selected: lifted higher with the block accent edge. */
+.lh-exp-raised[data-picked='true'],
+.lh-exp-raised[aria-pressed='true'] {
+  transform: translateY(-2px);
+  border-color: currentColor;
+  box-shadow:
+    inset 0 1px 0 var(--exp-hi),
+    0 0 0 3px color-mix(in srgb, currentColor 16%, transparent),
+    0 4px 10px -6px var(--exp-drop);
+}
+/* A recessed well: drop zones, trays, the gap in a sentence. */
+.lh-exp-well {
+  background: var(--exp-well);
+  box-shadow:
+    inset 0 1px 1px rgba(15, 23, 42, 0.05),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+  transition: background-color 140ms ease-out, box-shadow 140ms ease-out;
+}
+/* A well that carries a group's colour faintly (set it with a text-* class). */
+.lh-exp-well.lh-exp-tinted { background: color-mix(in srgb, currentColor 7%, var(--exp-well)); }
+.lh-exp-well[data-over='true'] {
+  background: color-mix(in srgb, currentColor 8%, var(--exp-well));
+  box-shadow:
+    inset 0 1px 2px rgba(15, 23, 42, 0.08),
+    inset 0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);
+}
+/* The main action ("Check", "Lock in", "Start"): a dark physical key. */
+.lh-exp-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(180deg, #3a3a40 0%, #27272a 100%);
+  border: 1px solid #18181b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 1px 0 #18181b,
+    0 2px 4px -2px rgba(0, 0, 0, 0.18);
+  transform: translateY(0);
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, opacity 140ms;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.lh-exp-key:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 #09090b, 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.lh-exp-key:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 1px 0 #09090b; }
+.lh-exp-key:focus-visible,
+.lh-exp-press:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+/* Feedback states keep their depth but take a colour (always paired with an icon). */
+.lh-exp-raised[data-result='correct'] {
+  background: #f0fdf4;
+  border-color: #86efac;
+  border-bottom-color: #4ade80;
+  color: #14532d;
+}
+.lh-exp-raised[data-result='wrong'] {
+  background: #fff1f2;
+  border-color: #fda4af;
+  border-bottom-color: #fb7185;
+  color: #881337;
+}
+/* A small snap when something lands in place. */
+.lh-exp-snap { animation: lh-exp-snap 260ms cubic-bezier(0.3, 1.5, 0.5, 1); }
+@keyframes lh-exp-snap {
+  0% { transform: scale(0.94); }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-raised, .lh-exp-key, .lh-exp-well { transition: none; }
+  .lh-exp-press:hover, .lh-exp-press:active, .lh-exp-key:active,
+  .lh-exp-raised[data-picked='true'], .lh-exp-raised[aria-pressed='true'] { transform: none; }
+  .lh-exp-snap { animation: none; }
+}
+
+/* ── Signature moments ────────────────────────────────────────────────────
+   One small physical answer per block. Every one stops (or becomes a plain
+   fade) under prefers-reduced-motion, at the end of this section. */
+
+/* A wrong answer on Check: a short shake first, then the result colour. */
+.lh-exp-raised.lh-exp-wrong-shake {
+  animation: lh-exp-shake 340ms ease-in-out;
+  transition-delay: 0ms, 0ms, 220ms, 220ms;
+}
+/* Correct tiles settle into place one after another (--exp-i = index). */
+.lh-exp-settle {
+  animation: lh-exp-settle 420ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: calc(var(--exp-i, 0) * 70ms);
+}
+@keyframes lh-exp-settle {
+  0% { transform: translateY(-5px); }
+  55% { transform: translateY(1px); }
+  100% { transform: translateY(0); }
+}
+/* A matched pair lifts, then locks down. */
+.lh-exp-lock { animation: lh-exp-lock 420ms cubic-bezier(0.3, 1.3, 0.5, 1); }
+@keyframes lh-exp-lock {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-5px) scale(1.025); }
+  100% { transform: translateY(0) scale(1); }
+}
+/* Sequence: tiles slide to make room while one is dragged (inline transform). */
+.lh-exp-slide { transition: transform 180ms cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 140ms ease-out; }
+/* The colour tab a locked pair shares (Match, connect). */
+.lh-exp-tab {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset -1px 0 0 rgba(0, 0, 0, 0.08);
+}
+/* Memory cards: real 3D flips over a felt-like well. */
+.lh-exp-felt {
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--exp-paper) 40%, transparent), transparent 70%),
+    var(--exp-well);
+}
+.lh-exp-card3d { perspective: 900px; }
+.lh-exp-card3d > .lh-exp-card3d-inner {
+  transform-style: preserve-3d;
+  transition: transform 460ms cubic-bezier(0.3, 1.25, 0.5, 1);
+}
+.lh-exp-card3d[data-open='true'] > .lh-exp-card3d-inner { transform: rotateY(180deg); }
+.lh-exp-card3d-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.lh-exp-card3d-front { transform: rotateY(180deg); }
+.lh-exp-cardback {
+  background:
+    repeating-linear-gradient(45deg, transparent 0 6px, color-mix(in srgb, currentColor 9%, transparent) 6px 7px),
+    var(--exp-paper);
+}
+/* Hotspot: a found marker drops in like a pin, a ring pulses once; a miss ripples. */
+.lh-exp-pin { animation: lh-exp-pin 420ms cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+@keyframes lh-exp-pin {
+  0% { opacity: 0; transform: translateY(-18px) scale(0.7); }
+  60% { opacity: 1; transform: translateY(2px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.lh-exp-pulse { animation: lh-exp-pulse 900ms ease-out 180ms both; }
+@keyframes lh-exp-pulse {
+  0% { opacity: 0.7; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+.lh-exp-ripple { animation: lh-exp-ripple 700ms ease-out both; }
+@keyframes lh-exp-ripple {
+  0% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.3); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+}
+/* Myth or fact: the card flies off with a tilt; a stamp lands. */
+.lh-exp-fly { animation: lh-exp-fly 520ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+@keyframes lh-exp-fly {
+  0% { transform: translateX(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(calc(var(--exp-dir, 1) * 120%)) rotate(calc(var(--exp-dir, 1) * 14deg)); opacity: 0; }
+}
+.lh-exp-deal { animation: lh-exp-deal 300ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards; }
+@keyframes lh-exp-deal {
+  0% { transform: translateY(8px) scale(0.97); opacity: 0.6; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.lh-exp-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 2.5px solid currentColor;
+  border-radius: 8px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  background: color-mix(in srgb, var(--exp-paper, #fff) 80%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 22%, transparent);
+  opacity: 0.9;
+  transform: rotate(var(--exp-rot, -10deg));
+  pointer-events: none;
+}
+.lh-exp-stamp-in { animation: lh-exp-stamp 380ms cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+@keyframes lh-exp-stamp {
+  0% { opacity: 0; transform: rotate(var(--exp-rot, -10deg)) scale(1.9); }
+  100% { opacity: 0.9; transform: rotate(var(--exp-rot, -10deg)) scale(1); }
+}
+/* A raised key tinted by its text colour (Myth / Fact, Again / Hard / Got it). */
+.lh-exp-raised.lh-exp-tint {
+  background: color-mix(in srgb, currentColor 8%, var(--exp-paper));
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
+  border-bottom-color: color-mix(in srgb, currentColor 36%, transparent);
+}
+/* Speed round: the combo rises and fades. */
+.lh-exp-rise { animation: lh-exp-rise 900ms ease-out both; }
+@keyframes lh-exp-rise {
+  0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+  20% { opacity: 1; transform: translateY(0) scale(1.08); }
+  100% { opacity: 0; transform: translateY(-16px) scale(1); }
+}
+/* Estimate: a slider with a recessed track and a raised knob. */
+.lh-exp-range { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; height: 2.5rem; }
+.lh-exp-range:focus-visible { outline: none; }
+.lh-exp-range::-webkit-slider-runnable-track { height: 0.625rem; border-radius: 999px; background: transparent; }
+.lh-exp-range::-moz-range-track { height: 0.625rem; border-radius: 999px; background: transparent; }
+.lh-exp-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.5625rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, #f1f3f6);
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-bottom-color: rgba(15, 23, 42, 0.18);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(15, 23, 42, 0.1);
+  transition: transform 120ms ease-out;
+}
+.lh-exp-range::-moz-range-thumb {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, #f1f3f6);
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-bottom-color: rgba(15, 23, 42, 0.18);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+.lh-exp-range:active::-webkit-slider-thumb { transform: scale(0.94); }
+.lh-exp-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0ea5e9; }
+.lh-exp-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0ea5e9; }
+.lh-exp-range:disabled { cursor: default; }
+.lh-exp-reveal { animation: lh-exp-reveal 700ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes lh-exp-reveal {
+  0% { inset-inline-start: var(--exp-from); }
+  100% { inset-inline-start: var(--exp-to); }
+}
+.lh-exp-bracket { animation: lh-exp-fade 300ms ease-out 650ms both; }
+@keyframes lh-exp-fade { 0% { opacity: 0; } 100% { opacity: 1; } }
+/* Spot the mistake: a highlighter swipe under a marked segment. */
+.lh-exp-mark {
+  background-image: linear-gradient(transparent 58%, var(--exp-mark, rgba(250, 204, 21, 0.55)) 58%, var(--exp-mark, rgba(250, 204, 21, 0.55)) 92%, transparent 92%);
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  background-position: left center;
+  transition: background-size 280ms cubic-bezier(0.3, 0.8, 0.4, 1);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+[dir='rtl'] .lh-exp-mark, .lh-exp-mark:dir(rtl) { background-position: right center; }
+.lh-exp-mark[data-marked='true'] { background-size: 100% 100%; }
+.lh-exp-reveal-in { animation: lh-exp-fade 260ms ease-out both; animation-delay: calc(var(--exp-i, 0) * 80ms); }
+/* Code lock: dials roll to their digit; the shackle pops on unlock. */
+.lh-exp-roll { animation: lh-exp-roll 520ms cubic-bezier(0.25, 1.3, 0.5, 1) both; }
+@keyframes lh-exp-roll {
+  0% { transform: translateY(-140%); }
+  100% { transform: translateY(0); }
+}
+.lh-exp-shackle { transition: transform 420ms cubic-bezier(0.3, 1.6, 0.5, 1); transform-origin: 75% 100%; }
+.lh-exp-shackle[data-open='true'] { transform: translateY(-14%) rotate(-14deg); }
+/* Scenarios: the next step slides in. */
+.lh-exp-slide-in { animation: lh-exp-slide-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes lh-exp-slide-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* Chat bubbles: a subtle paper depth. */
+.lh-exp-bubble {
+  box-shadow: inset 0 1px 0 var(--exp-hi, rgba(255, 255, 255, 0.9)), 0 1px 1px var(--exp-drop, rgba(15, 23, 42, 0.08)), 0 3px 6px -4px var(--exp-drop, rgba(15, 23, 42, 0.1));
+}
+/* Flashcards: a physical index card with a stack edge and a 3D flip. */
+.lh-exp-index {
+  background: var(--exp-paper, #fff);
+  border: 1px solid var(--exp-edge, rgba(15, 23, 42, 0.1));
+  border-bottom-color: var(--exp-lip, rgba(15, 23, 42, 0.16));
+  box-shadow: inset 0 1px 0 var(--exp-hi, #fff), 0 1px 1px var(--exp-drop, rgba(15, 23, 42, 0.08)), 0 10px 22px -12px rgba(15, 23, 42, 0.28);
+}
+.lh-exp-ruled {
+  background-image:
+    linear-gradient(to bottom, transparent 2.6rem, color-mix(in srgb, currentColor 22%, transparent) 2.6rem, color-mix(in srgb, currentColor 22%, transparent) calc(2.6rem + 1px), transparent calc(2.6rem + 1px)),
+    repeating-linear-gradient(to bottom, transparent 0 1.75rem, color-mix(in srgb, currentColor 11%, transparent) 1.75rem calc(1.75rem + 1px));
+  background-position: 0 0, 0 2.6rem;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 100% 100%, 100% calc(100% - 2.6rem);
+}
+.lh-exp-stack { position: relative; isolation: isolate; }
+.lh-exp-stack::before,
+.lh-exp-stack::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--exp-paper, #fff);
+  border: 1px solid var(--exp-edge, rgba(15, 23, 42, 0.1));
+  border-bottom-color: var(--exp-lip, rgba(15, 23, 42, 0.16));
+  box-shadow: 0 1px 2px var(--exp-drop, rgba(15, 23, 42, 0.08));
+}
+.lh-exp-stack::before { inset: 6px 10px -6px 10px; opacity: 0.9; }
+.lh-exp-stack::after { inset: 12px 20px -12px 20px; opacity: 0.7; }
+.lh-exp-stack[data-depth='1']::after, .lh-exp-stack[data-depth='0']::after { display: none; }
+.lh-exp-stack[data-depth='0']::before { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-raised.lh-exp-wrong-shake, .lh-exp-settle, .lh-exp-lock, .lh-exp-pin, .lh-exp-pulse,
+  .lh-exp-ripple, .lh-exp-roll, .lh-exp-reveal, .lh-exp-deal { animation: none; }
+  .lh-exp-slide, .lh-exp-card3d > .lh-exp-card3d-inner, .lh-exp-shackle, .lh-exp-mark { transition: none; }
+  .lh-exp-fly { animation: lh-exp-fade-out 200ms ease-out forwards; }
+  .lh-exp-stamp-in, .lh-exp-rise, .lh-exp-bracket, .lh-exp-reveal-in, .lh-exp-slide-in { animation: lh-exp-fade 200ms ease-out both; }
+  .lh-exp-rise { animation: lh-exp-fade 200ms ease-out both; transform: none; }
+  .lh-exp-slide-in, .lh-exp-reveal-in { transform: none; }
+  .lh-exp-pulse { display: none; }
+}
+@keyframes lh-exp-fade-out { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ── Wave 2: Confidence ── */
+/* The calibration bars grow up from their track, one after another. */
+.lh-exp-grow {
+  transform-origin: 50% 100%;
+  animation: lh-exp-grow 620ms cubic-bezier(0.2, 0.8, 0.3, 1.05) both;
+  animation-delay: calc(120ms + var(--exp-i, 0) * 110ms);
+}
+@keyframes lh-exp-grow {
+  0% { transform: scaleY(0); }
+  100% { transform: scaleY(1); }
+}
+.lh-exp-grow-label { animation: lh-exp-fade 240ms ease-out both; animation-delay: calc(560ms + var(--exp-i, 0) * 110ms); }
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-grow, .lh-exp-grow-label { animation: none; }
+}
+
+/* ── Wave 2: Reflection ── */
+/* Faint ruled lines in the writing well (one per 1.75rem line). */
+.lh-exp-paper-lines {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 calc(1.75rem - 1px), color-mix(in srgb, var(--exp-ink, #18181b) 6%, transparent) calc(1.75rem - 1px) 1.75rem);
+  background-position: 0 0.875rem;
+  background-attachment: local;
+}
+/* The model answer: a paper note with a folded top edge. */
+.lh-exp-note {
+  background: var(--exp-paper, #fff);
+  border: 1px solid var(--exp-edge, rgba(15, 23, 42, 0.1));
+  border-bottom-color: var(--exp-lip, rgba(15, 23, 42, 0.12));
+  box-shadow: inset 0 1px 0 var(--exp-hi, #fff), 0 1px 1px var(--exp-drop, rgba(15, 23, 42, 0.06)), 0 6px 14px -10px rgba(15, 23, 42, 0.18);
+}
+.lh-exp-note::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 10px;
+  border-radius: inherit;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--exp-ink, #18181b) 5%, transparent), transparent);
+  pointer-events: none;
+}
+/* Unfolds from the top like a note being opened: the sheet swings down from its
+   top edge while a crease shadow fades out. */
+.lh-exp-unfold {
+  transform-origin: 50% 0;
+  animation: lh-exp-unfold 560ms cubic-bezier(0.2, 0.8, 0.25, 1) backwards;
+}
+.lh-exp-unfold > * { animation: lh-exp-fade 260ms ease-out 240ms both; }
+@keyframes lh-exp-unfold {
+  0% { opacity: 0.4; transform: perspective(700px) rotateX(-78deg); clip-path: inset(0 0 70% 0 round 12px); box-shadow: 0 0 0 transparent; }
+  55% { opacity: 1; clip-path: inset(0 0 0 0 round 12px); }
+  80% { transform: perspective(700px) rotateX(6deg); }
+  100% { opacity: 1; transform: perspective(700px) rotateX(0); clip-path: inset(0 0 0 0 round 12px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-unfold { animation: lh-exp-fade 200ms ease-out both; transform: none; }
+  .lh-exp-unfold > * { animation: none; }
+}
+
+/* ── Wave 2: Venn ── */
+/* On Check, the overlap (lens) glows softly when everything that belongs to
+   both groups is in it; the stacked "Both" well does the same on phones. */
+.lh-exp-venn-glow {
+  fill: rgba(52, 211, 153, 0.16);
+  stroke: #34d399;
+  stroke-width: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.55));
+  animation: lh-exp-venn-glow 1100ms ease-out both;
+}
+@keyframes lh-exp-venn-glow {
+  0% { opacity: 0; }
+  35% { opacity: 1; filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.7)); }
+  100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.45)); }
+}
+.lh-exp-well.lh-exp-venn-glow-well {
+  box-shadow:
+    inset 0 1px 1px rgba(15, 23, 42, 0.05),
+    inset 0 0 0 2px rgba(52, 211, 153, 0.55),
+    0 0 14px -2px rgba(52, 211, 153, 0.45);
+  animation: lh-exp-fade 600ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-venn-glow { animation: none; filter: none; }
+  .lh-exp-well.lh-exp-venn-glow-well { animation: none; }
+}
+
+/* ── Wave 2: Label ── */
+/* A label slides onto its pin and clicks into place: the tag travels the
+   last few pixels (--exp-from-x, toward the pin), then the pin gives one
+   small press. */
+.lh-exp-label-land { animation: lh-exp-label-land 300ms cubic-bezier(0.25, 1.35, 0.5, 1) both; }
+@keyframes lh-exp-label-land {
+  0% { opacity: 0.4; transform: translateX(var(--exp-from-x, 12px)) scale(0.96); }
+  70% { opacity: 1; transform: translateX(0) scale(1.03); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+.lh-exp-label-click { animation: lh-exp-label-click 260ms cubic-bezier(0.3, 1.6, 0.5, 1) 200ms both; }
+@keyframes lh-exp-label-click {
+  0% { transform: scale(1); }
+  45% { transform: scale(0.84); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-label-land, .lh-exp-label-click { animation: none; }
+}
+
+/* ── Wave 2: Word guess ───────────────────────────────────────────────────
+   Scored tiles carry a shape as well as a colour: in place is solid with a
+   check, in the word is outlined with a dot, not in the word is recessed.
+   On submit the row's tiles flip one after another (--exp-i = index) and
+   take their colour at the halfway turn. */
+.lh-exp-tile { border: 1px solid transparent; }
+.lh-exp-tile[data-score='hit'] {
+  background: #10b981;
+  border-color: #059669;
+  border-bottom-color: #047857;
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 1px rgba(4, 120, 87, 0.15);
+}
+.lh-exp-tile[data-score='near'] {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  color: #78350f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.lh-exp-tile[data-score='miss'] {
+  background: var(--exp-well, #eef1f5);
+  color: #71717a;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.06), inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+.lh-exp-flip {
+  animation: lh-exp-flip 520ms ease-in-out backwards;
+  animation-delay: calc(var(--exp-i, 0) * 110ms);
+}
+@keyframes lh-exp-flip {
+  0% { transform: rotateX(0); background-color: var(--exp-paper, #fff); border-color: var(--exp-edge, rgba(15, 23, 42, 0.1)); color: var(--exp-ink, #18181b); }
+  49% { transform: rotateX(90deg); background-color: var(--exp-paper, #fff); border-color: var(--exp-edge, rgba(15, 23, 42, 0.1)); color: var(--exp-ink, #18181b); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0); }
+}
+.lh-exp-flip .lh-exp-flip-mark {
+  animation: lh-exp-flip-mark 520ms linear backwards;
+  animation-delay: calc(var(--exp-i, 0) * 110ms);
+}
+@keyframes lh-exp-flip-mark {
+  0%, 50% { opacity: 0; }
+  51%, 100% { opacity: 1; }
+}
+/* On-screen keyboard keys take the best known state of their letter. */
+.lh-exp-raised.lh-exp-key-hit { background: #10b981; border-color: #059669; border-bottom-color: #047857; color: #fff; }
+.lh-exp-raised.lh-exp-key-near { background: #fef3c7; border-color: #fcd34d; border-bottom-color: #f59e0b; color: #78350f; }
+.lh-exp-raised.lh-exp-key-miss {
+  background: var(--exp-well, #eef1f5);
+  border-color: transparent;
+  color: #a1a1aa;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.05);
+}
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-tile[data-score='near'],
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-raised.lh-exp-key-near {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: #fcd34d;
+}
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-tile[data-score='miss'],
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-raised.lh-exp-key-miss { color: #71717a; }
+
+/* ── Wave 2: Property grid ────────────────────────────────────────────────
+   A toggle presses in when ticked: it sinks into a well and a crisp mark
+   pops in. After Check: green for a right tick, red with a cross for a
+   wrong one, a dashed outline with a faint check for a missed one. */
+.lh-exp-toggle { --mx-accent: #ea580c; }
+.lh-exp-frame .lh-exp-toggle.lh-exp-raised[data-on='true']:not([data-result]) {
+  transform: translateY(1px);
+  background: var(--exp-well, #eef1f5);
+  border-color: color-mix(in srgb, var(--mx-accent) 35%, transparent);
+  box-shadow: inset 0 2px 3px rgba(15, 23, 42, 0.1), inset 0 0 0 1px color-mix(in srgb, var(--mx-accent) 18%, transparent);
+}
+.lh-exp-toggle[data-on='true'] .lh-exp-toggle-mark {
+  background: var(--mx-accent);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  animation: lh-exp-mark-in 220ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes lh-exp-mark-in {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.lh-exp-toggle[data-result='correct'] .lh-exp-toggle-mark { background: #16a34a; }
+.lh-exp-toggle[data-result='wrong'] .lh-exp-toggle-mark { background: #e11d48; color: #fff; }
+.lh-exp-frame .lh-exp-toggle.lh-exp-raised[data-missed='true'] {
+  border-style: dashed;
+  border-color: #34d399;
+  box-shadow: none;
+}
+.lh-exp-toggle[data-missed='true'] .lh-exp-toggle-mark { color: #059669; opacity: 0.55; }
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-flip, .lh-exp-flip .lh-exp-flip-mark, .lh-exp-toggle[data-on='true'] .lh-exp-toggle-mark { animation: none; }
+  .lh-exp-frame .lh-exp-toggle.lh-exp-raised[data-on='true']:not([data-result]) { transform: none; }
+}
+
+/* The canvas and editor give every ul/ol bullets and a 20px indent
+   (unlayered, so they beat Tailwind utilities). Block UI lists marked
+   list-none take their own utility values back. */
+:is(.canva-content-wrapper, .activity-editor-content-wrapper) .ProseMirror
+  :is([class*='node-exp'], .node-scenarios, .node-flipcardGrid, .node-flipcard) :is(ul, ol).list-none {
+  padding: revert-layer;
+  padding-inline: revert-layer;
+  list-style-type: revert-layer;
+}
+/* Same for tables (Property grid): the canvas draws grey cell borders, a grey
+   header fill, fixed layout and top alignment for prose tables. */
+:is(.canva-content-wrapper, .activity-editor-content-wrapper, .editor-preview-wrapper) .ProseMirror
+  [class*='node-exp'] table {
+  border-collapse: revert-layer;
+  table-layout: revert-layer;
+  overflow: visible;
+}
+:is(.canva-content-wrapper, .activity-editor-content-wrapper, .editor-preview-wrapper) .ProseMirror
+  [class*='node-exp'] :is(td, th) {
+  border: revert-layer;
+  padding: revert-layer;
+  background-color: revert-layer;
+  vertical-align: middle;
+  font-weight: revert-layer;
+  text-align: revert-layer;
+  min-width: 0;
+}
+/* Same for headings: the canvas sizes h1–h6 for prose (20–32px, 24px margin);
+   block headings carry their own size utilities. */
+:is(.canva-content-wrapper, .activity-editor-content-wrapper) .ProseMirror
+  :is([class*='node-exp'], .node-scenarios, .node-flipcardGrid, .node-flipcard) :is(h1, h2, h3, h4, h5, h6) {
+  font-size: revert-layer;
+  font-weight: revert-layer;
+  margin: revert-layer;
+}
+.lh-exp-burst {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: block;
+  overflow: hidden;
+}
+.lh-exp-burst-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(250, 204, 21, 0.18), transparent 60%);
+  animation: lh-exp-glow 900ms ease-out forwards;
+}
+.lh-exp-burst-dot {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 2px;
+  background: var(--lh-exp-c, #f59e0b);
+  opacity: 0;
+  animation: lh-exp-pop 820ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.lh-exp-burst-dot:nth-child(odd) {
+  border-radius: 999px;
+}
+@keyframes lh-exp-pop {
+  0% { opacity: 1; transform: rotate(var(--lh-exp-a)) translateY(0) scale(0.6); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--lh-exp-a)) translateY(calc(var(--lh-exp-d) * -1)) scale(1); }
+}
+@keyframes lh-exp-glow {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.lh-exp-star[data-on] {
+  animation: lh-exp-star 360ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+@keyframes lh-exp-star {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.lh-exp-shake {
+  animation: lh-exp-shake 320ms ease-in-out;
+}
+@keyframes lh-exp-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+.lh-exp-progress-fill {
+  transition: width 300ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-burst-dot { display: none; }
+  .lh-exp-burst-glow { animation-duration: 600ms; }
+  .lh-exp-star[data-on], .lh-exp-shake { animation: none; }
+  .lh-exp-progress-fill { transition: none; }
+}
+
+/* Flashcards (learner): each card sits at a small, stable angle like a hand-laid
+   deck and straightens with a slight lift on hover or keyboard focus. */
+.lh-flip-tilt {
+  transform: rotate(var(--lh-tilt, 0deg));
+  transition: transform 260ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+[dir='rtl'] .lh-flip-tilt { transform: rotate(calc(var(--lh-tilt, 0deg) * -1)); }
+@media (hover: hover) {
+  .lh-flip-tilt:hover, [dir='rtl'] .lh-flip-tilt:hover { transform: rotate(0deg) translateY(-2px); }
+}
+.lh-flip-tilt:focus-within, [dir='rtl'] .lh-flip-tilt:focus-within { transform: rotate(0deg) translateY(-2px); }
+@media (prefers-reduced-motion: reduce) {
+  .lh-flip-tilt { transition: none; }
+  .lh-flip-tilt:hover, .lh-flip-tilt:focus-within { transform: rotate(var(--lh-tilt, 0deg)); }
+}
+
+/* ── Authoring in place (shared/InlineText, shared/authoring) ─────────────
+   The author edits on the learner's own layout, so the edit affordances stay
+   quiet: a dashed underline on hover, a soft ring while typing, dashed "ghost"
+   objects for "+ Add", and small tools (×, handles) that fade in on hover or
+   focus and are always shown on touch screens. */
+.lh-exp-edit {
+  position: relative;
+  border-radius: 4px;
+  cursor: text;
+  transition: background-color 120ms ease-out, box-shadow 120ms ease-out;
+}
+.lh-exp-edit::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 1px;
+  pointer-events: none;
+  opacity: 0;
+  background-image: linear-gradient(to right, currentColor 55%, transparent 0);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  transition: opacity 120ms ease-out;
+}
+@media (hover: hover) {
+  .lh-exp-edit:hover::after { opacity: 0.3; }
+}
+.lh-exp-edit[data-empty]::after { opacity: 0.22; }
+.lh-exp-edit:focus-within {
+  background-color: color-mix(in srgb, #0ea5e9 5%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, #0ea5e9 20%, transparent);
+}
+.lh-exp-edit:focus-within::after { opacity: 0; }
+/* Phones show fields at 16px (styles/mobile.css: no iOS zoom on focus); the
+   copy that sizes a `fit` field follows, so the text never wraps early. */
+@media (max-width: 767px) {
+  .lh-exp-edit > .lh-exp-edit-mirror { font-size: max(16px, 1em); }
+}
+/* "+ Add …": the dashed outline of the object it adds. */
+.lh-exp-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 1px dashed color-mix(in srgb, var(--exp-ink, #18181b) 22%, transparent);
+  background: transparent;
+  color: color-mix(in srgb, var(--exp-ink, #18181b) 50%, transparent);
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 120ms ease-out, background-color 120ms ease-out, color 120ms ease-out;
+}
+@media (hover: hover) {
+  .lh-exp-ghost:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--exp-ink, #18181b) 40%, transparent);
+    background: color-mix(in srgb, var(--exp-paper, #fff) 70%, transparent);
+    color: var(--exp-ink, #18181b);
+  }
+}
+.lh-exp-ghost:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+.lh-exp-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Small edit tools show on hover or focus of their own object (.lh-exp-editobj,
+   the tool's parent), not of an object around it (a chip inside a group). */
+.lh-exp-tool { opacity: 0; transition: opacity 120ms ease-out; }
+.lh-exp-editobj:hover > .lh-exp-tool,
+.lh-exp-editobj:focus-within > .lh-exp-tool,
+.lh-exp-tool:focus-visible,
+.lh-exp-tool[data-on='true'] { opacity: 1; }
+@media (hover: none), (pointer: coarse) {
+  .lh-exp-tool { opacity: 1; }
+}
+.lh-exp-tool:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-edit, .lh-exp-edit::after, .lh-exp-ghost, .lh-exp-tool { transition: none; }
+}
+
+/* Flashcard editor: the grip and ⋯ menu show on hover or focus (always on touch). */
+.lh-card-tool { opacity: 0; transition: opacity 140ms ease-out; }
+.group\/tools:hover .lh-card-tool,
+.group\/tools:focus-within .lh-card-tool,
+[data-menu-open] .lh-card-tool { opacity: 1; }
+@media (hover: none), (pointer: coarse) { .lh-card-tool { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .lh-card-tool { transition: none; } }

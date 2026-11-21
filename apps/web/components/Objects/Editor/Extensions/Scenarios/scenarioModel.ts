@@ -7,11 +7,30 @@
 //   { title, currentScenarioId, scenarios: [{ id, text, imageUrl, options: [{ id, text, nextScenarioId }] }] }
 // `currentScenarioId` is the START step. `nextScenarioId: null` ends the
 // scenario; a step with no options is an ending too.
+//
+// Optional fields added with the Experiences redesign. They are only present
+// when an author set them, so old content normalises (and round-trips) to
+// exactly what was stored:
+//   option.feedback  shown after the learner picks the choice
+//   option.outcome   tone of the ending when the choice ends the story
+//   step.ending      tone + title when the step has no choices
+//   display          'story' (default) | 'chat'
+
+export type Outcome = 'success' | 'neutral' | 'fail'
+export type ScenarioDisplay = 'story' | 'chat'
+export const OUTCOMES: Outcome[] = ['success', 'neutral', 'fail']
 
 export interface ScenarioOption {
   id: string
   text: string
   nextScenarioId: string | null
+  feedback?: string
+  outcome?: Outcome
+}
+
+export interface ScenarioEnding {
+  tone: Outcome
+  title?: string
 }
 
 export interface ScenarioStep {
@@ -19,12 +38,15 @@ export interface ScenarioStep {
   text: string
   imageUrl?: string
   options: ScenarioOption[]
+  ending?: ScenarioEnding
 }
 
 export interface ScenarioData {
   title: string
   scenarios: ScenarioStep[]
   currentScenarioId: string
+  /** Absent on old content; read it through displayOf(). */
+  display?: ScenarioDisplay
 }
 
 export const MAX_STEPS = 40
@@ -32,29 +54,60 @@ export const MAX_CHOICES = 4
 
 const str = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : fallback)
 
-/** Guard whatever is stored (old content, AI output, collab peers) into the shape the UI expects. */
+export const isOutcome = (v: unknown): v is Outcome => v === 'success' || v === 'neutral' || v === 'fail'
+
+function normalizeOption(o: any, i: number, j: number): ScenarioOption {
+  const option: ScenarioOption = {
+    id: str(o.id, `opt_${i}_${j}`),
+    text: str(o.text),
+    nextScenarioId: o.nextScenarioId === null || o.nextScenarioId === undefined || o.nextScenarioId === '' ? null : str(o.nextScenarioId),
+  }
+  // Optional keys only when set, so old options stay byte-for-byte the same.
+  if (typeof o.feedback === 'string') option.feedback = o.feedback
+  if (isOutcome(o.outcome)) option.outcome = o.outcome
+  return option
+}
+
+function normalizeEnding(e: any): ScenarioEnding | undefined {
+  if (!e || typeof e !== 'object' || !isOutcome(e.tone)) return undefined
+  const ending: ScenarioEnding = { tone: e.tone }
+  if (typeof e.title === 'string') ending.title = e.title
+  return ending
+}
+
+/**
+ * Guard whatever is stored (old content, AI output, collab peers) into the
+ * shape the UI expects. No limits are applied here: the API accepts more
+ * steps and choices (100 / 12) than the web editor offers, and those must
+ * still render.
+ */
 export function normalizeScenario(attrs: any): ScenarioData {
   const rawSteps: any[] = Array.isArray(attrs?.scenarios) ? attrs.scenarios : []
   const scenarios: ScenarioStep[] = rawSteps
     .filter((s) => s && typeof s === 'object')
-    .map((s, i) => ({
-      id: str(s.id, String(i + 1)),
-      text: str(s.text),
-      imageUrl: str(s.imageUrl),
-      options: (Array.isArray(s.options) ? s.options : [])
-        .filter((o: any) => o && typeof o === 'object')
-        .map((o: any, j: number) => ({
-          id: str(o.id, `opt_${i}_${j}`),
-          text: str(o.text),
-          nextScenarioId: o.nextScenarioId === null || o.nextScenarioId === undefined || o.nextScenarioId === '' ? null : str(o.nextScenarioId),
-        })),
-    }))
-  return {
+    .map((s, i) => {
+      const step: ScenarioStep = {
+        id: str(s.id, String(i + 1)),
+        text: str(s.text),
+        imageUrl: str(s.imageUrl),
+        options: (Array.isArray(s.options) ? s.options : [])
+          .filter((o: any) => o && typeof o === 'object')
+          .map((o: any, j: number) => normalizeOption(o, i, j)),
+      }
+      const ending = normalizeEnding(s.ending)
+      if (ending) step.ending = ending
+      return step
+    })
+  const data: ScenarioData = {
     title: str(attrs?.title),
     scenarios,
     currentScenarioId: str(attrs?.currentScenarioId, scenarios[0]?.id ?? '1'),
   }
+  if (attrs?.display === 'chat' || attrs?.display === 'story') data.display = attrs.display
+  return data
 }
+
+export const displayOf = (data: Pick<ScenarioData, 'display'>): ScenarioDisplay => (data.display === 'chat' ? 'chat' : 'story')
 
 /** The step learners start on: the stored start if it still exists, else the first step. */
 export function startIdOf(data: ScenarioData): string | null {
@@ -334,3 +387,188 @@ export function excerpt(text: string, max = 60): string {
 }
 
 export const choiceLetter = (i: number) => String.fromCharCode(65 + i)
+
+// ─── Story builder (one list; each choice has a single "Then…" select) ──────
+
+/** Untoned endings (all old content) keep the old green "Scenario complete" card. */
+export const DEFAULT_OUTCOME: Outcome = 'success'
+
+/**
+ * A human title for a step: the first words of its text. Empty when the step
+ * has no text yet (the UI shows "Step n" then). Ids are never shown.
+ */
+export function stepTitle(step: Pick<ScenarioStep, 'text'> | undefined, maxWords = 6, maxChars = 42): string {
+  const flat = (step?.text ?? '').replace(/\s+/g, ' ').trim()
+  if (!flat) return ''
+  const words = flat.split(' ')
+  let out = words.slice(0, maxWords).join(' ')
+  if (out.length > maxChars) out = out.slice(0, maxChars - 1).trimEnd()
+  return out.length < flat.length ? `${out.replace(/[.,;:!?]+$/, '')}…` : out
+}
+
+/** What a choice does next, as one select value. */
+export type ThenValue = 'next' | 'missing' | `go:${string}` | `end:${Outcome}`
+
+export function thenOf(data: ScenarioData, stepId: string, option: ScenarioOption): ThenValue {
+  if (option.nextScenarioId === null) return `end:${option.outcome ?? DEFAULT_OUTCOME}`
+  if (!stepById(data, option.nextScenarioId)) return 'missing'
+  const i = stepIndex(data, stepId)
+  if (i >= 0 && data.scenarios[i + 1]?.id === option.nextScenarioId) return 'next'
+  return `go:${option.nextScenarioId}`
+}
+
+/** The step listed right after `stepId`, if any. */
+export const followingStep = (data: ScenarioData, stepId: string) => {
+  const i = stepIndex(data, stepId)
+  return i >= 0 ? data.scenarios[i + 1] : undefined
+}
+
+/**
+ * Apply a "Then…" choice. 'new' (and 'next' on the last step) creates a step
+ * right after this one and returns its id so the editor can scroll to it.
+ */
+export function applyThen(
+  data: ScenarioData,
+  stepId: string,
+  choiceId: string,
+  value: ThenValue | 'new',
+): { data: ScenarioData; createdId?: string } {
+  const step = stepById(data, stepId)
+  if (!step || !step.options.some((o) => o.id === choiceId)) return { data }
+  // Linking to a step drops a stale ending tone.
+  const linkTo = (target: string) => dropKey(updateChoice(data, stepId, choiceId, { nextScenarioId: target }), stepId, choiceId, 'outcome')
+  if (value === 'missing') return { data }
+  if (value === 'new' || (value === 'next' && !followingStep(data, stepId))) {
+    const r = linkChoiceToNewStep(data, stepId, choiceId)
+    return { data: dropKey(r.data, stepId, choiceId, 'outcome'), createdId: r.id }
+  }
+  if (value === 'next') return { data: linkTo(followingStep(data, stepId)!.id) }
+  if (value.startsWith('go:')) {
+    const target = value.slice(3)
+    return stepById(data, target) ? { data: linkTo(target) } : { data }
+  }
+  const tone = value.slice(4)
+  if (!isOutcome(tone)) return { data }
+  return { data: updateChoice(data, stepId, choiceId, { nextScenarioId: null, outcome: tone }) }
+}
+
+function dropKey(data: ScenarioData, stepId: string, choiceId: string, key: 'outcome' | 'feedback'): ScenarioData {
+  const step = stepById(data, stepId)
+  if (!step) return data
+  return updateStep(data, stepId, {
+    options: step.options.map((o) => {
+      if (o.id !== choiceId) return o
+      const copy = { ...o }
+      delete copy[key]
+      return copy
+    }),
+  })
+}
+
+/** Feedback after a choice; clearing it removes the key (old shape again). */
+export function setChoiceFeedback(data: ScenarioData, stepId: string, choiceId: string, feedback: string): ScenarioData {
+  return feedback.trim() ? updateChoice(data, stepId, choiceId, { feedback }) : dropKey(data, stepId, choiceId, 'feedback')
+}
+
+/** Tone/title of a step that has no choices; `null` removes it. */
+export function setStepEnding(data: ScenarioData, stepId: string, ending: ScenarioEnding | null): ScenarioData {
+  return {
+    ...data,
+    scenarios: data.scenarios.map((s) => {
+      if (s.id !== stepId) return s
+      const copy = { ...s }
+      if (ending) {
+        const next: ScenarioEnding = { tone: ending.tone }
+        if (ending.title && ending.title.trim()) next.title = ending.title
+        copy.ending = next
+      } else delete copy.ending
+      return copy
+    }),
+  }
+}
+
+// ─── Learner player (pure state machine; the view only renders it) ──────────
+
+export interface Visit {
+  stepId: string
+  choiceId: string
+  choiceText: string
+  feedback?: string
+  outcome?: Outcome
+}
+
+export interface EndResult {
+  tone: Outcome
+  /** Author's ending title (step endings), else ''. */
+  title: string
+  /** False for untoned (old) endings: the player shows the old message. */
+  toned: boolean
+  /** 'choice': a choice ended the story; 'step': the learner reached a step with no choices. */
+  via: 'choice' | 'step'
+}
+
+export interface PlayState {
+  stepId: string | null
+  path: Visit[]
+  /** A picked choice whose feedback is showing; Continue applies it. */
+  pending: string | null
+  ended: EndResult | null
+}
+
+function stepEnd(step: ScenarioStep): EndResult {
+  return {
+    tone: step.ending?.tone ?? DEFAULT_OUTCOME,
+    title: step.ending?.title?.trim() ?? '',
+    toned: !!step.ending,
+    via: 'step',
+  }
+}
+
+export function startPlay(data: ScenarioData): PlayState {
+  const start = stepById(data, startIdOf(data))
+  if (!start) return { stepId: null, path: [], pending: null, ended: null }
+  return { stepId: start.id, path: [], pending: null, ended: isEnding(start) ? stepEnd(start) : null }
+}
+
+/** Apply the pending choice: record it, then move on or end. */
+export function continuePlay(data: ScenarioData, state: PlayState): PlayState {
+  const step = stepById(data, state.stepId)
+  const choice = step?.options.find((o) => o.id === state.pending)
+  if (!step || !choice) return { ...state, pending: null }
+  const visit: Visit = { stepId: step.id, choiceId: choice.id, choiceText: choice.text }
+  if (choice.feedback?.trim()) visit.feedback = choice.feedback
+  if (choice.outcome) visit.outcome = choice.outcome
+  const path = [...state.path, visit]
+  const next = stepById(data, choice.nextScenarioId)
+  // A choice that ends the story, or points at a step that no longer exists,
+  // finishes it rather than showing an error to learners.
+  if (!next) {
+    return {
+      stepId: step.id,
+      path,
+      pending: null,
+      ended: { tone: choice.outcome ?? DEFAULT_OUTCOME, title: '', toned: !!choice.outcome, via: 'choice' },
+    }
+  }
+  return { stepId: next.id, path, pending: null, ended: isEnding(next) ? stepEnd(next) : null }
+}
+
+/** Pick a choice: with feedback it waits for Continue, otherwise it moves on at once. */
+export function pickChoice(data: ScenarioData, state: PlayState, choiceId: string): PlayState {
+  if (state.ended || state.pending) return state
+  const step = stepById(data, state.stepId)
+  const choice = step?.options.find((o) => o.id === choiceId)
+  if (!choice) return state
+  const picked = { ...state, pending: choice.id }
+  return choice.feedback?.trim() ? picked : continuePlay(data, picked)
+}
+
+export function backPlay(state: PlayState): PlayState {
+  if (state.pending) return { ...state, pending: null }
+  const last = state.path[state.path.length - 1]
+  if (!last) return state
+  return { stepId: last.stepId, path: state.path.slice(0, -1), pending: null, ended: null }
+}
+
+/** "Step 3": the step the learner is on, counted along their path. */
+export const stepNumber = (state: PlayState) => state.path.length + 1

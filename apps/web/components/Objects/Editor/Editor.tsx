@@ -65,6 +65,7 @@ import Buttons from './Extensions/Buttons/Buttons'
 import Flipcard from './Extensions/Flipcard/Flipcard'
 import FlipcardGrid from './Extensions/Flipcard/FlipcardGrid'
 import Scenarios from './Extensions/Scenarios/Scenarios'
+import { experienceExtensions } from './Extensions/Experiences/extensions'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
 import UserAvatar from '../UserAvatar'
 import UserBlock from './Extensions/Users/UserBlock'
@@ -291,6 +292,7 @@ function Editor(props: EditorProps) {
       Flipcard.configure({ editable: true, activity: stableActivity }),
       FlipcardGrid.configure({ editable: true, activity: stableActivity }),
       Scenarios.configure({ editable: true, activity: stableActivity }),
+      ...experienceExtensions({ editable: true, activity: stableActivity }),
       CodePlayground.configure({ editable: true, activity: stableActivity }),
       DragHandle,
       ToggleBlock, DividerStyle, TableControls, ...TEXT_MARKS,

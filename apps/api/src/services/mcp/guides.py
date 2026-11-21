@@ -73,6 +73,22 @@ a `##` heading every few paragraphs, short sentences (reading ease 50+), concret
 with a quick `quiz` or `flashcards`; use `scenario` for decisions, `exercise` for code, and a graded
 `assignment` (quiz, short answer, number, code tasks) at the end of a chapter or the course.
 
+**Vary the practice (Experiences).** Typed blocks for active learning, each with feedback built in:
+`sort` (categorise, interleave), `sequence` (order steps or events), `match_pairs` (term to
+definition; memory mode is a game), `fill_gaps` (recall words in context), `myth_fact` (tackle
+misconceptions, always explain why), `speed_round` (timed recall of facts already taught), `estimate`
+(ask for a guess *before* explaining: prediction makes the answer stick), `spot_mistake` (find
+errors in a passage or code), `hotspot` (places on an image you know well), `code_lock` (a short
+escape room to close a chapter), `venn` (compare and contrast two ideas: what is only A, only B,
+both), `label_diagram` (name the parts of a picture or diagram), `word_guess` (recall key terms
+from a clue, best for vocabulary), `confidence_check` (answer, then rate how sure you are:
+calibration shows what learners think they know but don't), `property_grid` (which features apply
+to which items, a table of ticks), `reflection` (write it in your own words, then compare with a
+model answer: self-explanation, good to close a page), `flashcards` with `mode: study` for spaced
+review, and `scenario` with `display: chat` for a dialogue simulation (option `feedback` and step
+`ending` tones make the consequences clear). One or two per page is plenty; pick the one that fits
+the idea, not the flashiest.
+
 **Mix media with purpose.** An `embed` or `video` to show, an `image` with real alt text to explain,
 a `callout` for the one thing not to miss, a `toggle` for worked answers and optional depth, a
 `conditional` block to give beginners or a group their own path.
@@ -128,6 +144,11 @@ Example:
 
 - **Ungraded checks inside pages**: `quiz` (single or select-all), `flashcards`, `scenario`
   (branching), `exercise` (runnable code with tests). Learners retry freely.
+- **Interactive Experiences** (typed blocks, also ungraded, scored with stars): `sort`,
+  `sequence`, `match_pairs`, `hotspot`, `fill_gaps`, `myth_fact`, `speed_round`, `estimate`,
+  `spot_mistake`, `code_lock`, `venn`, `label_diagram`, `word_guess`, `confidence_check`,
+  `property_grid`, `reflection` (self-scored against your model answer and key points). Each gives
+  instant feedback with your explanations.
 - **Graded assignments** (`kind: assignment` in build_course, or create_assignment +
   create_assignment_tasks): tasks of type `quiz` (partial_credit optional), `short_answer`
   (accepted_answers, match_mode), `number_answer` (correct_value, tolerance, unit), `form`
@@ -148,7 +169,10 @@ SUCCESS), fenced code, `$$ math $$`, `![alt](https://...)` images (fetched after
 rich blocks as fences: ```quiz, ```flipcards, ```exercise, ```scenario, ```embed, ```button,
 ```badge, ```preview, ```h5p, ```widget. `describe_activity_blocks` shows each fence's syntax;
 typed blocks (learnhouse://blocks) cover everything fences do plus toggles, conditional blocks,
-member cards and dividers.
+member cards, dividers and the interactive Experiences (sort, sequence, match_pairs, hotspot,
+fill_gaps, myth_fact, speed_round, estimate, spot_mistake, code_lock, venn, label_diagram,
+word_guess, confidence_check, property_grid, reflection), which have no fence. Scenarios
+(`display: chat`) and flashcards (`mode: study`) belong to the same family and have fences.
 """,
     ),
 }

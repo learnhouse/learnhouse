@@ -60,7 +60,9 @@ PROMPTS: dict[str, PromptDef] = {
                 "description, 3 to 6 objectives, chapters, and the pages in each) and wait for my "
                 "approval. Once I approve, write the whole course as one build_course spec: rich "
                 "pages (Markdown plus typed blocks: embeds, images with alt text, callouts, "
-                "flashcards, a quiz on every page, toggles for worked answers) and a graded "
+                "flashcards, a quiz on every page, toggles for worked answers, and now and then an "
+                "interactive block such as sort, sequence, fill_gaps or myth_fact where it fits the "
+                "idea) and a graded "
                 "assignment per chapter. Run it with dry_run=true, fix any problem, then build it "
                 "with an idempotency_key. Run score_course and fix the top issues. Keep it as a "
                 "draft and finish with the editor link, so I can review and publish it."
@@ -121,7 +123,8 @@ PROMPTS: dict[str, PromptDef] = {
                 "Run score_course (check_links=true) and read the outline with get_course. Show me the "
                 "score, the weakest areas and a short plan of fixes, and wait for my go-ahead. Then fix "
                 "them with the smallest changes: edit_activity_content for text, add_blocks for quizzes, "
-                "flashcards, callouts or images with alt text, move_course_items for order. Never delete "
+                "flashcards, interactive blocks (sort, sequence, fill_gaps, myth_fact, ...), callouts or "
+                "images with alt text, move_course_items for order. Never delete "
                 "content without asking. Score again and report the before and after."
             ),
         ),
@@ -138,7 +141,10 @@ PROMPTS: dict[str, PromptDef] = {
             template=(
                 "Add assessments to the LearnHouse course '{course}' ({style}).\n\n"
                 "Read learnhouse://guide/assessments, the outline (get_course) and each page as Markdown. "
-                "Propose for each page one quiz or flashcard set that checks its key ideas, and for each "
+                "Propose for each page one quiz, flashcard set or interactive block (sort, sequence, "
+                "match_pairs, fill_gaps, myth_fact, speed_round, estimate, spot_mistake, venn, word_guess, "
+                "confidence_check, property_grid, reflection) that checks its "
+                "key ideas, and for each "
                 "chapter one graded assignment (tasks with answer keys, points, auto_grading when possible). "
                 "After I agree, add the page checks with add_blocks and the assignments with build_course "
                 "(course_uuid set, kind assignment), keep everything unpublished, and run score_course."

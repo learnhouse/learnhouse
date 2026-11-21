@@ -181,6 +181,7 @@ COLORS = (
 )
 ALIGNMENTS = ("left", "center", "right")
 SIZES = ("small", "medium", "large")
+DECK_SETTINGS = ("mode", "title", "shuffle")
 EMBED_HEIGHT = 400
 
 _OPTION = re.compile(r"^\s*(?:[-*+]\s*)?[\[(]\s*([xX✓✔]?)\s*[\])]\s*(.*)$")
@@ -333,11 +334,23 @@ def _card(front: str, back: str, color: str, size: str) -> dict:
 def _flipcards(body: str, inline: Callable[[str], list[dict]]) -> dict:
     columns: int | None = None
     color, size = "blue", "medium"
+    deck: dict[str, Any] = {}
     cards: list[tuple[str, str]] = []
     front: str | None = None
     for line in _lines(body):
         setting = _SETTING.match(line)
         key = setting.group(1).lower() if setting else None
+        # Deck settings (Experiences flashcards). A "Front :: Back" line
+        # stays a card, so a card named "Title :: ..." reads as before.
+        if key in DECK_SETTINGS and "::" not in line:
+            value = setting.group(2).strip()
+            if key == "mode":
+                deck["mode"] = _choice("mode", value, ("grid", "study"))
+            elif key == "shuffle":
+                deck["shuffle"] = _choice("shuffle", value, ("true", "false", "yes", "no")) in ("true", "yes")
+            else:
+                deck["title"] = value[:200]
+            continue
         if key == "columns":
             columns = _number("columns", setting.group(2), 1, 4)
             continue
@@ -384,11 +397,11 @@ def _flipcards(body: str, inline: Callable[[str], list[dict]]) -> dict:
                 f"the card '{_snip(front_text or back_text)}' needs both a front and a back"
             )
         nodes.append(_card(front_plain, back_plain, color, size))
-    if len(nodes) == 1 and columns is None:
+    if len(nodes) == 1 and columns is None and not deck:
         return nodes[0]
     return {
         "type": "flipcardGrid",
-        "attrs": {"columns": columns or min(len(nodes), 3)},
+        "attrs": {"columns": columns or min(len(nodes), 3), **deck},
         "content": nodes,
     }
 
@@ -799,7 +812,7 @@ _ENDS = ("", "end", "finish", "done")
 
 def _scenario(body: str) -> dict:
     raw = body.split("\n")
-    settings, i = _settings(raw, ("title",))
+    settings, i = _settings(raw, ("title", "display"))
     steps: list[dict] = []
     for line in raw[i:]:
         s = line.strip()
@@ -858,15 +871,17 @@ def _scenario(body: str) -> dict:
             options.append({"id": _short_id("opt"), "text": label, "nextScenarioId": nxt})
         out.append({"id": step["id"], "text": text, "imageUrl": step["imageUrl"], "options": options})
     title = (settings.get("title") or SCENARIO_TITLE)[:500]
-    return {
-        "type": "scenarios",
-        "attrs": {"title": title, "scenarios": out, "currentScenarioId": out[0]["id"]},
-    }
+    attrs = {"title": title, "scenarios": out, "currentScenarioId": out[0]["id"]}
+    if "display" in settings:
+        attrs["display"] = _choice("display", settings["display"], ("story", "chat"))
+    return {"type": "scenarios", "attrs": attrs}
 
 
 def _scenario_lines(node: dict) -> list[str]:
     a = node.get("attrs") or {}
     lines = [f"title: {_text_line(a.get('title') or SCENARIO_TITLE)}"]
+    if a.get("display") == "chat":
+        lines.append("display: chat")
     for step in a.get("scenarios") or []:
         lines += ["", f"# {step['id']}", *str(step.get("text") or "").split("\n")]
         if step.get("imageUrl"):
@@ -879,14 +894,18 @@ def _scenario_lines(node: dict) -> list[str]:
 
 def _scenario_key(node: dict) -> Any:
     a = node.get("attrs") or {}
+    # Endings, feedback and outcomes have no fence syntax: a scenario using
+    # them never matches, so Markdown keeps it as a block instead of losing them.
     return (
         a.get("title") or SCENARIO_TITLE,
+        a.get("display") or "story",
         [
             (
                 s.get("id"),
                 s.get("text"),
                 s.get("imageUrl") or "",
-                [(o.get("text"), o.get("nextScenarioId")) for o in s.get("options") or []],
+                s.get("ending"),
+                [(o.get("text"), o.get("nextScenarioId"), o.get("feedback"), o.get("outcome")) for o in s.get("options") or []],
             )
             for s in a.get("scenarios") or []
         ],
@@ -1014,7 +1033,8 @@ def renders(node: dict) -> bool:
         return bool(a.get("question")) and bool(a.get("answer"))
     if t == "flipcardGrid":
         cards = d.children(node)
-        return bool(cards) and all(
+        deck_ok = a.get("mode") in (None, "grid", "study") and "::" not in str(a.get("title") or "")
+        return bool(cards) and deck_ok and all(
             renders(c) and _same_style(c, cards[0]) for c in cards
         )
     if t == "blockEmbed":
@@ -1081,6 +1101,9 @@ def render(node: dict, inline_markdown: Callable[..., str]) -> list[str]:
                 ("columns", a.get("columns") if t == "flipcardGrid" else None, None),
                 ("color", style.get("color"), "blue"),
                 ("size", style.get("size"), "medium"),
+                ("mode", a.get("mode") if t == "flipcardGrid" else None, "grid"),
+                ("title", _text_line(a.get("title")) if t == "flipcardGrid" else None, ""),
+                ("shuffle", "true" if t == "flipcardGrid" and a.get("shuffle") is True else None, None),
             ]
         )
         for card in cards:

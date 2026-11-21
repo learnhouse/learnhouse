@@ -1,0 +1,185 @@
+[
+ {
+  "name": "old scenario (pre-Experiences shape, no new fields)",
+  "nodes": [
+   {
+    "type": "scenarios",
+    "attrs": {
+     "title": "Handle a refund",
+     "currentScenarioId": "1",
+     "scenarios": [
+      {
+       "id": "1",
+       "text": "A customer asks for a refund after 40 days.",
+       "imageUrl": "",
+       "options": [
+        {
+         "id": "a",
+         "text": "Refuse politely",
+         "nextScenarioId": "2"
+        },
+        {
+         "id": "b",
+         "text": "Refund anyway",
+         "nextScenarioId": null
+        }
+       ]
+      },
+      {
+       "id": "2",
+       "text": "They escalate to a manager.",
+       "imageUrl": "",
+       "options": []
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "new scenario (feedback, outcome, ending, chat)",
+  "nodes": [
+   {
+    "type": "scenarios",
+    "attrs": {
+     "title": "Calm an angry caller",
+     "display": "chat",
+     "currentScenarioId": "s1",
+     "scenarios": [
+      {
+       "id": "s1",
+       "text": "The caller is shouting about a late order.",
+       "imageUrl": "",
+       "options": [
+        {
+         "id": "o1",
+         "text": "Apologise and ask for the order number",
+         "nextScenarioId": "s2",
+         "feedback": "Good: you acknowledged them first."
+        },
+        {
+         "id": "o2",
+         "text": "Tell them to calm down",
+         "nextScenarioId": null,
+         "outcome": "fail",
+         "feedback": "That usually makes it worse."
+        }
+       ]
+      },
+      {
+       "id": "s2",
+       "text": "You find the order: it shipped today.",
+       "imageUrl": "",
+       "options": [
+        {
+         "id": "o3",
+         "text": "Offer free shipping next time",
+         "nextScenarioId": "s3"
+        },
+        {
+         "id": "o4",
+         "text": "Read the policy aloud",
+         "nextScenarioId": null,
+         "outcome": "neutral"
+        }
+       ]
+      },
+      {
+       "id": "s3",
+       "text": "The caller thanks you.",
+       "imageUrl": "",
+       "options": [],
+       "ending": {
+        "tone": "success",
+        "title": "Customer kept"
+       }
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "old flipcard grid (columns only)",
+  "nodes": [
+   {
+    "type": "flipcardGrid",
+    "attrs": {
+     "columns": 2
+    },
+    "content": [
+     {
+      "type": "flipcard",
+      "attrs": {
+       "question": "Return window",
+       "answer": "Days a buyer has to ask for a return.",
+       "color": "blue",
+       "alignment": "center",
+       "size": "medium"
+      }
+     },
+     {
+      "type": "flipcard",
+      "attrs": {
+       "question": "Restocking fee",
+       "answer": "Amount kept to cover return costs.",
+       "color": "orange",
+       "alignment": "center",
+       "size": "medium",
+       "style": "soft"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "new flashcards (study mode, title, shuffle)",
+  "nodes": [
+   {
+    "type": "flipcardGrid",
+    "attrs": {
+     "columns": 3,
+     "mode": "study",
+     "title": "Refund terms",
+     "shuffle": true
+    },
+    "content": [
+     {
+      "type": "flipcard",
+      "attrs": {
+       "question": "Chargeback",
+       "answer": "A refund forced by the card issuer.",
+       "color": "red",
+       "alignment": "center",
+       "size": "medium",
+       "style": "solid"
+      }
+     },
+     {
+      "type": "flipcard",
+      "attrs": {
+       "question": "Partial refund",
+       "answer": "Part of the amount goes back.",
+       "color": "green",
+       "alignment": "center",
+       "size": "medium",
+       "style": "outline"
+      }
+     },
+     {
+      "type": "flipcard",
+      "attrs": {
+       "question": "Store credit",
+       "answer": "Value kept for a future purchase.",
+       "color": "teal",
+       "alignment": "center",
+       "size": "medium",
+       "style": "soft"
+      }
+     }
+    ]
+   }
+  ]
+ }
+]

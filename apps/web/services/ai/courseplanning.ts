@@ -1,4 +1,5 @@
 import { getAPIUrl } from '@services/config/config'
+import { EXPERIENCE_NODE_NAMES } from '@components/Objects/Editor/Extensions/Experiences/experienceTypes'
 
 // Feature flag: Enable activity content generation (disabled for now)
 export const ENABLE_ACTIVITY_CONTENT_GENERATION = true
@@ -531,7 +532,9 @@ function validateProseMirrorDoc(content: any): { valid: boolean; error?: string 
     'blockEmbed', 'blockImage', 'blockVideo', 'blockPDF', 'blockMathEquation',
     'table', 'tableRow', 'tableCell', 'tableHeader', 'horizontalRule',
     'hardBreak', 'text', 'scenarios', 'blockUser', 'blockWebPreview', 'button', 'badge',
-    'blockLibrary', 'flipcardGrid'
+    'blockLibrary', 'flipcardGrid',
+    // Experiences blocks (expSort, expSequence, …)
+    ...EXPERIENCE_NODE_NAMES,
   ])
 
   function checkNode(node: any, path: string): { valid: boolean; error?: string } {

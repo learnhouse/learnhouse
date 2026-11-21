@@ -38,6 +38,7 @@ from typing import Any
 from fastapi import HTTPException
 
 from src.services.ai.tools import doc_ops as d
+from src.services.courses.activities import experiences as exp
 from src.services.ai.tools import fences
 
 MAX_CHARS = 200_000
@@ -1104,13 +1105,18 @@ def block_comment(node: dict, path: list[int]) -> list[str]:
     elif t == "flipcard":
         body += [f"Flipcard. Q: {a.get('question') or ''}", f"A: {a.get('answer') or ''}"]
     elif t == "flipcardGrid":
-        body.append(f"Flipcard grid, {len(d.children(node))} cards:")
+        deck = f" \"{a['title']}\"" if a.get("title") else ""
+        study = " (study mode)" if a.get("mode") == "study" else ""
+        body.append(f"Flipcard grid{deck}{study}, {len(d.children(node))} cards:")
         for card in d.children(node)[:30]:
             ca = card.get("attrs") or {}
             body.append(f"- Q: {ca.get('question') or ''} / A: {ca.get('answer') or ''}")
     elif t == "scenarios":
         steps = a.get("scenarios") or []
-        body.append(f"Scenario \"{a.get('title') or ''}\", {len(steps)} steps.")
+        chat = " (chat)" if a.get("display") == "chat" else ""
+        body.append(f"Scenario \"{a.get('title') or ''}\"{chat}, {len(steps)} steps.")
+    elif t in exp.TEXT_PATHS:
+        body += experience_lines(t, a)
     elif t in d.MEDIA_TYPES:
         info = d.summary(node).get("media") or {}
         body.append(f"{t[5:]} file: {info.get('file') or info.get('src') or 'uploaded file'}")
@@ -1135,6 +1141,129 @@ def block_comment(node: dict, path: list[int]) -> list[str]:
         if text:
             body.append(d.clip(text, 500)[0])
     lines = [head] + [_comment_safe(line) for line in body] + ["-->"]
+    return lines
+
+
+_EXPERIENCE_TITLES = {
+    "expSort": "Sort it", "expSequence": "Sequence", "expMatch": "Match pairs", "expHotspot": "Hotspot",
+    "expGaps": "Fill the gaps", "expMythFact": "Myth or fact", "expSpeedRound": "Speed round",
+    "expEstimate": "Estimate", "expSpotMistake": "Spot the mistake", "expCodeLock": "Code lock",
+    "expVenn": "Venn compare", "expLabel": "Label the diagram", "expWordGuess": "Word guess",
+    "expConfidence": "Confidence check", "expMatrix": "Property grid", "expReflect": "Reflection",
+}
+
+
+def _clip(value: Any, limit: int = 300) -> str:
+    return d.clip(" ".join(exp.text(value).split()), limit)[0]
+
+
+def _why(entry: dict, key: str = "explanation") -> str:
+    return f" ({_clip(entry.get(key), 200)})" if exp.text(entry.get(key)) else ""
+
+
+def experience_lines(t: str, a: dict) -> list[str]:  # noqa: C901 - one branch per block type
+    """An Experiences block as readable lines, answers included (what the
+    author wrote), for AI context and exports."""
+    title = _clip(a.get("title"), 200)
+    lines = [_EXPERIENCE_TITLES[t] + (f' "{title}"' if title else "")]
+    if exp.text(a.get("instructions")):
+        lines.append(_clip(a.get("instructions")))
+    limit = 40
+    if t == "expSort":
+        labels = {c.get("id"): _clip(c.get("label"), 120) for c in exp.items(a.get("categories"))}
+        lines.append("Categories: " + " | ".join(labels.values()))
+        for item in exp.items(a.get("items"))[:limit]:
+            lines.append(f"- {_clip(item.get('text'))} -> {labels.get(item.get('categoryId'), '?')}{_why(item)}")
+    elif t == "expSequence":
+        timeline = a.get("variant") == "timeline"
+        lines.append("Correct order" + (" (timeline):" if timeline else ":"))
+        for n, item in enumerate(exp.items(a.get("items"))[:limit], 1):
+            detail = f" [{_clip(item.get('detail'), 80)}]" if exp.text(item.get("detail")) else ""
+            lines.append(f"{n}. {_clip(item.get('text'))}{detail}")
+    elif t == "expMatch":
+        lines.append("Pairs" + (" (memory game):" if a.get("mode") == "memory" else ":"))
+        lines += [f"- {_clip(p.get('left'))} = {_clip(p.get('right'))}" for p in exp.items(a.get("pairs"))[:limit]]
+    elif t == "expHotspot":
+        lines.append(f"Image: {_clip(a.get('imageUrl'), 300) or 'none yet'}" + (" (explore)" if a.get("mode") == "explore" else ""))
+        for spot in exp.items(a.get("spots"))[:limit]:
+            mark = "x" if spot.get("correct", True) else " "
+            lines.append(f"[{mark}] {_clip(spot.get('label'), 120)} at {spot.get('x')}%, {spot.get('y')}%{_why(spot)}")
+    elif t == "expGaps":
+        lines.append(("Word bank. " if a.get("mode") == "bank" else "") + _clip(exp.gaps_text(a.get("text"), answers=True), 2000))
+    elif t == "expMythFact":
+        names = a.get("labels") if isinstance(a.get("labels"), dict) else {}
+        yes, no = exp.text(names.get("true")) or "Fact", exp.text(names.get("false")) or "Myth"
+        for st in exp.items(a.get("statements"))[:limit]:
+            lines.append(f"- [{yes if st.get('isTrue') is True else no}] {_clip(st.get('text'))}{_why(st)}")
+    elif t == "expSpeedRound":
+        seconds = a.get("secondsPerQuestion") or 10
+        lines.append(f"{seconds}s per question, lives: {a.get('lives', 3) or 'unlimited'}")
+        for n, q in enumerate(exp.items(a.get("questions"))[:limit], 1):
+            lines.append(f"{n}. {_clip(q.get('prompt'))}")
+            options = q.get("options") if isinstance(q.get("options"), list) else []
+            lines += [f"   [{'x' if k == q.get('answer') else ' '}] {_clip(o, 200)}" for k, o in enumerate(options)]
+    elif t == "expEstimate":
+        unit = f" {exp.text(a.get('unit'))}" if exp.text(a.get("unit")) else ""
+        lines[0] = f"Estimate: {_clip(a.get('question'))}"
+        lines.append(f"Range {a.get('min')} to {a.get('max')}{unit}, answer {a.get('answer')}{unit} (within {a.get('tolerancePct', 10)}%)")
+        if exp.text(a.get("explanation")):
+            lines.append(_clip(a.get("explanation"), 1000))
+    elif t == "expSpotMistake":
+        for seg in exp.items(a.get("segments"))[:60]:
+            if seg.get("isMistake"):
+                fix = f" -> {_clip(seg.get('correction'), 200)}" if exp.text(seg.get("correction")) else ""
+                lines.append(f"[mistake] {_clip(seg.get('text'))}{fix}{_why(seg)}")
+            else:
+                lines.append(f"- {_clip(seg.get('text'))}")
+    elif t == "expCodeLock":
+        if exp.text(a.get("story")):
+            lines.append(_clip(a.get("story"), 1000))
+        for n, clue in enumerate(exp.items(a.get("clues"))[:limit], 1):
+            hint = f" (hint: {_clip(clue.get('hint'), 200)})" if exp.text(clue.get("hint")) else ""
+            lines.append(f"{n}. {_clip(clue.get('question'))} = {_clip(clue.get('answer'), 60)}{hint}")
+        if exp.text(a.get("reward")):
+            lines.append(f"Reward: {_clip(a.get('reward'), 1000)}")
+    elif t == "expVenn":
+        sets = a.get("sets") if isinstance(a.get("sets"), dict) else {}
+        names = {k: _clip(v.get("label"), 120) if isinstance(v, dict) else "" for k, v in sets.items()}
+        zones = {"a": f"only {names.get('a') or 'A'}", "b": f"only {names.get('b') or 'B'}", "both": "both", "neither": "neither"}
+        lines.append(f"Sets: {names.get('a') or 'A'} | {names.get('b') or 'B'}" + (" (with an outside tray)" if a.get("showNeither") is True else ""))
+        for item in exp.items(a.get("items"))[:limit]:
+            lines.append(f"- {_clip(item.get('text'))} -> {zones.get(item.get('zone'), '?')}{_why(item)}")
+    elif t == "expLabel":
+        lines.append(f"Image: {_clip(a.get('imageUrl'), 300) or 'none yet'}")
+        for n, pin in enumerate(exp.items(a.get("pins"))[:limit], 1):
+            lines.append(f"{n}. {_clip(pin.get('label'), 120)} at {pin.get('x')}%, {pin.get('y')}%")
+        wrong = [_clip(x, 120) for x in a.get("distractors") or [] if exp.text(x)] if isinstance(a.get("distractors"), list) else []
+        if wrong:
+            lines.append("Distractors: " + " | ".join(wrong))
+    elif t == "expWordGuess":
+        lines.append(f"{a.get('maxGuesses') or 6} guesses per word")
+        for n, w in enumerate(exp.items(a.get("words"))[:limit], 1):
+            lines.append(f"{n}. {_clip(w.get('clue'))} = {_clip(w.get('answer'), 60)}{_why(w)}")
+    elif t == "expConfidence":
+        for n, q in enumerate(exp.items(a.get("questions"))[:limit], 1):
+            lines.append(f"{n}. {_clip(q.get('prompt'))}")
+            options = q.get("options") if isinstance(q.get("options"), list) else []
+            lines += [f"   [{'x' if k == q.get('answer') else ' '}] {_clip(o, 200)}" for k, o in enumerate(options)]
+            if exp.text(q.get("explanation")):
+                lines.append(f"   ({_clip(q.get('explanation'), 300)})")
+    elif t == "expMatrix":
+        columns = exp.items(a.get("columns"))
+        cells = a.get("cells") if isinstance(a.get("cells"), dict) else {}
+        lines.append("Columns: " + " | ".join(_clip(c.get("label"), 80) for c in columns) + (" (one per row)" if a.get("mode") == "single" else ""))
+        for row in exp.items(a.get("rows"))[:limit]:
+            ticks = [_clip(c.get("label"), 80) for c in columns if cells.get(f"{row.get('id')}:{c.get('id')}") is True]
+            lines.append(f"- {_clip(row.get('label'), 120)}: {', '.join(ticks) or 'none'}")
+    elif t == "expReflect":
+        lines.append(f"Prompt: {_clip(a.get('prompt'), 1000)}")
+        guiding = [x for x in a.get("guidingQuestions") or [] if exp.text(x)] if isinstance(a.get("guidingQuestions"), list) else []
+        lines += [f"- {_clip(x, 300)}" for x in guiding]
+        lines.append(f"At least {a.get('minWords', 30)} words.")
+        if exp.text(a.get("modelAnswer")):
+            lines.append(f"Model answer: {_clip(a.get('modelAnswer'), 2000)}")
+        points = [x for x in a.get("checklist") or [] if exp.text(x)] if isinstance(a.get("checklist"), list) else []
+        lines += [f"[key point] {_clip(x, 300)}" for x in points]
     return lines
 
 

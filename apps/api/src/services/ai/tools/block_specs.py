@@ -16,6 +16,7 @@ in after the page exists, exactly like images written in Markdown.
 from __future__ import annotations
 
 import re
+import unicodedata
 import uuid
 from typing import Annotated, Any, Literal, Union
 
@@ -27,6 +28,7 @@ from src.services.ai.tools import doc_ops as d
 from src.services.ai.tools import fences
 from src.services.ai.tools import markdown as md
 from src.services.ai.tools.embeds import PROVIDERS, parse_embed
+from src.services.courses.activities import experiences as exp
 from src.services.courses.activities.dynamic_content import FIELDS as RULE_FIELDS
 
 MAX_BLOCKS = 300
@@ -123,11 +125,32 @@ class FlashcardsB(_B):
     cards: list[CardB] = Field(..., min_length=1, max_length=60)
     columns: int = Field(2, ge=1, le=6, description="Cards side by side (several cards).")
     color: Literal[fences.COLORS] = "blue"  # type: ignore[valid-type]
+    mode: Literal["grid", "study"] | None = Field(
+        None, description="grid (default): cards side by side; study: one card at a time with Again / Hard / Got it.",
+    )
+    title: str | None = Field(None, max_length=200, description="Deck title shown above the cards.")
+    shuffle: bool | None = Field(None, description="Shuffle the cards for each learner.")
+    style: Literal["solid", "soft", "outline"] | None = Field(
+        None, description="Card look for the whole deck: solid (default, full colour), soft (tinted) or outline.",
+    )
+    size: Literal["small", "medium", "large"] | None = Field(
+        None, description="Card size for the whole deck (default medium); every card in a deck shares it.",
+    )
+
+
+Outcome = Literal["success", "neutral", "fail"]
 
 
 class ScenarioOptionB(_B):
     text: str = Field(..., min_length=1, max_length=500)
     next: str | None = Field(None, max_length=100, description="id of the step it leads to; null ends the scenario.")
+    feedback: str | None = Field(None, max_length=1000, description="Shown after the learner picks it, before moving on.")
+    outcome: Outcome | None = Field(None, description="How the story ends when next is null.")
+
+
+class ScenarioEndingB(_B):
+    tone: Outcome = "neutral"
+    title: str | None = Field(None, max_length=200, description="Headline of the ending card.")
 
 
 class ScenarioStepB(_B):
@@ -135,12 +158,273 @@ class ScenarioStepB(_B):
     text: str = Field(..., min_length=1, max_length=5000)
     image_url: WebUrl | None = Field(None, max_length=2048)
     options: list[ScenarioOptionB] = Field(default_factory=list, max_length=12)
+    ending: ScenarioEndingB | None = Field(None, description="For a step without options: the ending's tone and title.")
 
 
 class ScenarioB(_B):
     type: Literal["scenario"]
     title: str = Field(fences.SCENARIO_TITLE, max_length=500)
     steps: list[ScenarioStepB] = Field(..., min_length=1, max_length=100, description="The first step starts.")
+    display: Literal["story", "chat"] | None = Field(None, description="story (default): cards; chat: a messaging-style dialogue.")
+
+
+# ─── experiences ─────────────────────────────────────────────────────────────
+# Interactive learning blocks (Extensions/Experiences in the editor). Limits
+# follow the editor; ids and blockId are generated here.
+
+SORT_COLORS = ("sky", "amber", "emerald", "rose")
+_TITLE = Field("", max_length=200, description="Short title shown in the block header.")
+_INSTRUCTIONS = Field("", max_length=500, description="One line telling learners what to do.")
+
+
+class SortCategoryB(_B):
+    label: str = Field(..., min_length=1, max_length=200)
+    color: str | None = Field(None, max_length=30, description="sky, amber, emerald or rose (default: one per slot).")
+
+
+class SortItemB(_B):
+    text: str = Field(..., min_length=1, max_length=500)
+    category: str | int = Field(..., description="The category label it belongs to (or its 0-based index).")
+    explanation: str | None = Field(None, max_length=1000, description="Shown when a learner places it wrongly.")
+
+
+class SortB(_B):
+    type: Literal["sort"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    categories: list[SortCategoryB | Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        ..., min_length=2, max_length=4, description="2 to 4 categories: labels or {label, color}.",
+    )
+    items: list[SortItemB] = Field(..., min_length=2, max_length=20)
+    shuffle: bool = True
+
+
+class SequenceItemB(_B):
+    text: str = Field(..., min_length=1, max_length=500)
+    detail: str | None = Field(None, max_length=200, description="e.g. a year; revealed after checking (timeline).")
+
+
+class SequenceB(_B):
+    type: Literal["sequence"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    items: list[SequenceItemB | Annotated[str, Field(min_length=1, max_length=500)]] = Field(
+        ..., min_length=3, max_length=10, description="3 to 10 steps in the CORRECT order; learners get them shuffled.",
+    )
+    variant: Literal["list", "timeline"] = "list"
+
+
+class PairB(_B):
+    left: str = Field(..., min_length=1, max_length=300)
+    right: str = Field(..., min_length=1, max_length=300)
+
+
+class MatchPairsB(_B):
+    type: Literal["match_pairs"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    pairs: list[PairB] = Field(..., min_length=2, max_length=8)
+    mode: Literal["connect", "memory"] = Field("connect", description="connect: two columns; memory: flip cards to find pairs.")
+
+
+class SpotB(_B):
+    x: float = Field(..., ge=0, le=100, description="Centre, % of the image width from the left.")
+    y: float = Field(..., ge=0, le=100, description="Centre, % of the image height from the top.")
+    r: float = Field(8, ge=2, le=25, description="Radius, % of the image width.")
+    label: str = Field(..., min_length=1, max_length=200)
+    explanation: str | None = Field(None, max_length=1000)
+    correct: bool = Field(True, description="find mode: a spot learners must find.")
+
+
+class HotspotB(_B):
+    type: Literal["hotspot"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    image_url: WebUrl = Field(..., min_length=8, max_length=2048, description="Public image the spots sit on.")
+    spots: list[SpotB] = Field(..., min_length=1, max_length=20)
+    mode: Literal["find", "explore"] = Field("find", description="find: click the right places; explore: a labelled diagram.")
+
+
+class FillGapsB(_B):
+    type: Literal["fill_gaps"]
+    title: str = _TITLE
+    text: str = Field(
+        ..., min_length=1, max_length=10_000,
+        description="Text with gaps as [[answer]] or [[answer|other accepted answer]]; \\[ \\] \\| are literal.",
+    )
+    mode: Literal["type", "bank"] = Field("type", description="type: learners type each answer; bank: they pick from a word bank.")
+    case_sensitive: bool = False
+
+
+class StatementB(_B):
+    text: str = Field(..., min_length=1, max_length=500)
+    is_true: bool = Field(..., description="true: a fact; false: a myth.")
+    explanation: str = Field("", max_length=1000, description="Why, shown right after the answer.")
+
+
+class MythFactB(_B):
+    type: Literal["myth_fact"]
+    title: str = _TITLE
+    statements: list[StatementB] = Field(..., min_length=2, max_length=20)
+    true_label: str = Field("Fact", min_length=1, max_length=40)
+    false_label: str = Field("Myth", min_length=1, max_length=40)
+
+
+class SpeedQuestionB(_B):
+    prompt: str = Field(..., min_length=1, max_length=300)
+    options: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(..., min_length=2, max_length=4)
+    answer: int | str = Field(..., description="The right option: its 0-based index or its exact text.")
+
+
+class SpeedRoundB(_B):
+    type: Literal["speed_round"]
+    title: str = _TITLE
+    questions: list[SpeedQuestionB] = Field(..., min_length=1, max_length=30)
+    seconds_per_question: int = Field(10, ge=3, le=120)
+    lives: int = Field(3, ge=0, le=10, description="Wrong answers allowed; 0 = unlimited.")
+
+
+class EstimateB(_B):
+    type: Literal["estimate"]
+    question: str = Field(..., min_length=1, max_length=500)
+    min: float
+    max: float
+    step: float = Field(1, gt=0)
+    answer: float
+    unit: str = Field("", max_length=30, description="e.g. km, %, years.")
+    tolerance_pct: float = Field(10, ge=0, le=100, description="Guesses this close (% of the answer) earn 3 stars.")
+    explanation: str = Field("", max_length=2000)
+
+
+class MistakeSegmentB(_B):
+    text: str = Field(..., min_length=1, max_length=2000)
+    is_mistake: bool = False
+    correction: str | None = Field(None, max_length=1000)
+    explanation: str | None = Field(None, max_length=1000)
+
+
+class SpotMistakeB(_B):
+    type: Literal["spot_mistake"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    segments: list[MistakeSegmentB] = Field(
+        ..., min_length=2, max_length=80,
+        description="The passage split into sentences (text) or lines (code), in order; mark the wrong ones.",
+    )
+    kind: Literal["text", "code"] = "text"
+
+
+class ClueB(_B):
+    question: str = Field(..., min_length=1, max_length=500)
+    answer: str | int | float = Field(..., description="Short text or a number (up to 40 characters); matched trimmed and case-insensitive.")
+    hint: str | None = Field(None, max_length=500)
+
+
+class CodeLockB(_B):
+    type: Literal["code_lock"]
+    title: str = _TITLE
+    story: str = Field("", max_length=3000, description="The setup learners read first.")
+    clues: list[ClueB] = Field(..., min_length=1, max_length=5, description="Each solved clue opens one dial.")
+    reward: str = Field("", max_length=5000, description="Shown when the lock opens.")
+
+
+VENN_COLORS = ("sky", "amber", "emerald", "rose", "violet")
+
+
+class VennSetB(_B):
+    label: str = Field(..., min_length=1, max_length=200)
+    color: str | None = Field(None, max_length=30, description="sky, amber, emerald, rose or violet (default: sky for a, amber for b).")
+
+
+class VennSetsB(_B):
+    a: VennSetB | Annotated[str, Field(min_length=1, max_length=200)] = Field(..., description="The left circle: a label or {label, color}.")
+    b: VennSetB | Annotated[str, Field(min_length=1, max_length=200)] = Field(..., description="The right circle: a label or {label, color}.")
+
+
+class VennItemB(_B):
+    text: str = Field(..., min_length=1, max_length=500)
+    zone: Literal["a", "b", "both", "neither"] = Field(..., description="a: only in a; b: only in b; both: the overlap; neither: outside both.")
+    explanation: str | None = Field(None, max_length=1000, description="Shown when checking.")
+
+
+class VennB(_B):
+    type: Literal["venn"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    sets: VennSetsB
+    items: list[VennItemB] = Field(..., min_length=3, max_length=16, description="3 to 16; include at least one in both.")
+    show_neither: bool | None = Field(None, description="Show an 'outside both' tray (default: on when an item's zone is neither).")
+
+
+class LabelPinB(_B):
+    x: float = Field(..., ge=0, le=100, description="% of the image width from the left.")
+    y: float = Field(..., ge=0, le=100, description="% of the image height from the top.")
+    label: str = Field(..., min_length=1, max_length=200, description="The label that belongs on this pin.")
+
+
+class LabelDiagramB(_B):
+    type: Literal["label_diagram"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    image_url: WebUrl = Field(..., min_length=8, max_length=2048, description="Public image the pins sit on.")
+    pins: list[LabelPinB] = Field(..., min_length=2, max_length=12)
+    distractors: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        default_factory=list, max_length=4, description="0 to 4 wrong labels mixed into the bank.",
+    )
+
+
+class WordB(_B):
+    answer: str = Field(..., min_length=1, max_length=40, description="2 to 12 letters; spaces and hyphens are shown fixed.")
+    clue: str = Field(..., min_length=1, max_length=500)
+    explanation: str | None = Field(None, max_length=1000, description="Shown once the word is solved or revealed.")
+
+
+class WordGuessB(_B):
+    type: Literal["word_guess"]
+    title: str = _TITLE
+    words: list[WordB] = Field(..., min_length=1, max_length=8)
+    max_guesses: int = Field(6, ge=3, le=8, description="Tries per word.")
+
+
+class ConfidenceQuestionB(_B):
+    prompt: str = Field(..., min_length=1, max_length=500)
+    options: list[Annotated[str, Field(min_length=1, max_length=300)]] = Field(..., min_length=2, max_length=4)
+    answer: int | str = Field(..., description="The right option: its 0-based index or its exact text.")
+    explanation: str = Field(..., min_length=1, max_length=1000, description="Why, shown with the result.")
+
+
+class ConfidenceCheckB(_B):
+    type: Literal["confidence_check"]
+    title: str = _TITLE
+    questions: list[ConfidenceQuestionB] = Field(..., min_length=1, max_length=10)
+
+
+class GridRowB(_B):
+    label: str = Field(..., min_length=1, max_length=200)
+    ticks: list[str | int] = Field(
+        default_factory=list, max_length=6, description="The columns that apply to this row: labels or 0-based indexes.",
+    )
+
+
+class PropertyGridB(_B):
+    type: Literal["property_grid"]
+    title: str = _TITLE
+    instructions: str = _INSTRUCTIONS
+    columns: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(..., min_length=2, max_length=6, description="Property names.")
+    rows: list[GridRowB] = Field(..., min_length=2, max_length=8)
+    mode: Literal["multi", "single"] = Field("multi", description="multi: any number of ticks per row; single: exactly one.")
+
+
+class ReflectionB(_B):
+    type: Literal["reflection"]
+    title: str = _TITLE
+    prompt: str = Field(..., min_length=1, max_length=2000, description="What to write about.")
+    guiding_questions: list[Annotated[str, Field(min_length=1, max_length=300)]] = Field(default_factory=list, max_length=5)
+    min_words: int = Field(30, ge=0, le=500, description="Words to write before the model answer shows.")
+    model_answer: str = Field("", max_length=5000)
+    checklist: list[Annotated[str, Field(min_length=1, max_length=300)]] = Field(
+        default_factory=list, max_length=8, description="Key points learners tick if they covered them (their score).",
+    )
 
 
 class TestB(_B):
@@ -282,7 +566,9 @@ Block = Annotated[
     Union[
         MarkdownB, ParagraphB, HeadingB, ListB, CalloutB, CodeB, TableB, MathB, QuizB, FlashcardsB,
         ScenarioB, ExerciseB, WidgetB, ConditionalB, ToggleB, EmbedB, VideoB, ImageB, AudioB, PdfB,
-        H5pB, WebPreviewB, UserB, DividerB, ButtonB, BadgeB, NodeB,
+        H5pB, WebPreviewB, UserB, DividerB, ButtonB, BadgeB, SortB, SequenceB, MatchPairsB, HotspotB,
+        FillGapsB, MythFactB, SpeedRoundB, EstimateB, SpotMistakeB, CodeLockB, VennB, LabelDiagramB,
+        WordGuessB, ConfidenceCheckB, PropertyGridB, ReflectionB, NodeB,
     ],
     Field(discriminator="type"),
 ]
@@ -392,12 +678,26 @@ class _Builder:
             return [d.quiz_node(questions)]
         if t == "flashcards":
             cards = [
-                {"type": "flipcard", "attrs": {"question": c.front, "answer": c.back, "color": b.color, "alignment": "center", "size": "medium"}}
+                {
+                    "type": "flipcard",
+                    "attrs": {
+                        "question": c.front,
+                        "answer": c.back,
+                        "color": b.color,
+                        "alignment": "center",
+                        "size": b.size or "medium",
+                        # Only written when asked for, so older inputs give the same JSON.
+                        **({"style": b.style} if b.style else {}),
+                    },
+                }
                 for c in b.cards
             ]
-            if len(cards) == 1:
+            # mode, title and shuffle live on the grid, so a deck that sets
+            # them is a grid even with one card; left out, nothing changes.
+            deck = {k: v for k, v in (("mode", b.mode), ("title", b.title), ("shuffle", b.shuffle)) if v is not None}
+            if len(cards) == 1 and not deck:
                 return cards
-            return [{"type": "flipcardGrid", "attrs": {"columns": min(b.columns, len(cards))}, "content": cards}]
+            return [{"type": "flipcardGrid", "attrs": {"columns": min(b.columns, len(cards)), **deck}, "content": cards}]
         if t == "scenario":
             ids = [s.id for s in b.steps]
             if len(set(ids)) != len(ids):
@@ -409,11 +709,20 @@ class _Builder:
                         raise BlockError(f"step '{s.id}' option '{o.text[:40]}' leads to unknown step '{o.next}'; use one of {', '.join(ids)} or null")
                 if s.image_url and not d.is_web_url(s.image_url):
                     raise BlockError(f"step '{s.id}' image_url must be an http(s) URL")
-                steps.append({
+                step: dict[str, Any] = {
                     "id": s.id, "text": s.text, "imageUrl": s.image_url or "",
-                    "options": [{"id": f"opt_{uuid.uuid4().hex[:10]}", "text": o.text, "nextScenarioId": o.next} for o in s.options],
-                })
-            return [{"type": "scenarios", "attrs": {"title": b.title, "scenarios": steps, "currentScenarioId": steps[0]["id"]}}]
+                    "options": [_scenario_option(o) for o in s.options],
+                }
+                if s.ending is not None:
+                    step["ending"] = s.ending.model_dump(exclude_none=True)
+                steps.append(step)
+            attrs = {"title": b.title, "scenarios": steps, "currentScenarioId": steps[0]["id"]}
+            if b.display is not None:
+                attrs["display"] = b.display
+            return [{"type": "scenarios", "attrs": attrs}]
+        if t in EXPERIENCES:
+            node_type, build = EXPERIENCES[t]
+            return [{"type": node_type, "attrs": {"blockId": str(uuid.uuid4()), **build(b)}}]
         if t == "exercise":
             lid, lname = fences.language(b.language)
             attrs: dict[str, Any] = {
@@ -480,6 +789,283 @@ class _Builder:
         if d.kind(node) == "blockQuiz" and isinstance(node.get("attrs"), dict):
             node = {**node, "attrs": {**node["attrs"], "questions": d.fill_quiz_ids(node["attrs"].get("questions"))}}
         return [node]
+
+
+def _scenario_option(o: ScenarioOptionB) -> dict:
+    out: dict[str, Any] = {"id": f"opt_{uuid.uuid4().hex[:10]}", "text": o.text, "nextScenarioId": o.next}
+    if o.feedback is not None:
+        out["feedback"] = o.feedback
+    if o.outcome is not None:
+        out["outcome"] = o.outcome
+    return out
+
+
+def _sid(prefix: str) -> str:
+    return f"{prefix}_{uuid.uuid4().hex[:8]}"
+
+
+def _num(value: float) -> int | float:
+    """Whole numbers stay integers in the stored JSON (10, not 10.0)."""
+    return int(value) if float(value).is_integer() else value
+
+
+def _sort(b: SortB) -> dict:
+    categories = []
+    for i, c in enumerate(b.categories):
+        label, color = (c, None) if isinstance(c, str) else (c.label, c.color)
+        categories.append({"id": _sid("cat"), "label": label.strip(), "color": color if color in SORT_COLORS else SORT_COLORS[i]})
+    keys = [c["label"].casefold() for c in categories]
+    if len(set(keys)) != len(keys):
+        raise BlockError("category labels must be different")
+    items = []
+    for item in b.items:
+        ref = item.category
+        if isinstance(ref, int):
+            index = ref if 0 <= ref < len(categories) else None
+        else:
+            index = keys.index(ref.strip().casefold()) if ref.strip().casefold() in keys else None
+        if index is None:
+            names = ", ".join(c["label"] for c in categories)
+            raise BlockError(f"item '{item.text[:40]}' names unknown category {ref!r}; use one of {names}")
+        out = {"id": _sid("item"), "text": item.text, "categoryId": categories[index]["id"]}
+        if item.explanation and item.explanation.strip():
+            out["explanation"] = item.explanation
+        items.append(out)
+    return {"title": b.title, "instructions": b.instructions, "categories": categories, "items": items, "shuffle": b.shuffle}
+
+
+def _sequence(b: SequenceB) -> dict:
+    items = []
+    for item in b.items:
+        text, detail = (item, None) if isinstance(item, str) else (item.text, item.detail)
+        items.append({"id": _sid("step"), "text": text, **({"detail": detail} if detail and detail.strip() else {})})
+    return {"title": b.title, "instructions": b.instructions, "items": items, "variant": b.variant}
+
+
+def _match(b: MatchPairsB) -> dict:
+    pairs = [{"id": _sid("pair"), "left": p.left, "right": p.right} for p in b.pairs]
+    return {"title": b.title, "instructions": b.instructions, "pairs": pairs, "mode": b.mode}
+
+
+def _hotspot(b: HotspotB) -> dict:
+    if b.mode == "find" and not any(s.correct for s in b.spots):
+        raise BlockError("find mode needs at least one spot with correct: true")
+    spots = []
+    for s in b.spots:
+        spot = {"id": _sid("spot"), "x": _num(s.x), "y": _num(s.y), "r": _num(s.r), "label": s.label, "correct": s.correct}
+        if s.explanation and s.explanation.strip():
+            spot["explanation"] = s.explanation
+        spots.append(spot)
+    # imageObject (an uploaded file's server object) is optional and left
+    # out: a typed hotspot points at a public image URL, like scenario images.
+    return {"title": b.title, "instructions": b.instructions, "imageUrl": b.image_url, "spots": spots, "mode": b.mode}
+
+
+def _gaps(b: FillGapsB) -> dict:
+    if not exp.gap_answers(b.text):
+        raise BlockError("the text has no gap; mark each one as [[answer]] or [[answer|alternative]]")
+    return {"title": b.title, "text": b.text, "mode": b.mode, "caseSensitive": b.case_sensitive}
+
+
+def _myth_fact(b: MythFactB) -> dict:
+    statements = [
+        {"id": _sid("st"), "text": s.text, "isTrue": s.is_true, "explanation": s.explanation} for s in b.statements
+    ]
+    return {"title": b.title, "statements": statements, "labels": {"true": b.true_label, "false": b.false_label}}
+
+
+def _speed_round(b: SpeedRoundB) -> dict:
+    questions = []
+    for n, q in enumerate(b.questions, 1):
+        answer = _option_index(list(q.options), q.answer)
+        if answer is None:
+            raise BlockError(f"question {n} ('{q.prompt[:40]}') answer {q.answer!r} is not one of its options")
+        questions.append({"id": _sid("q"), "prompt": q.prompt, "options": list(q.options), "answer": answer})
+    return {"title": b.title, "questions": questions, "secondsPerQuestion": b.seconds_per_question, "lives": b.lives}
+
+
+def _estimate(b: EstimateB) -> dict:
+    if b.min >= b.max:
+        raise BlockError("min must be below max")
+    if not b.min <= b.answer <= b.max:
+        raise BlockError("answer must be between min and max")
+    if (b.max - b.min) / b.step > 100_000:
+        raise BlockError("the slider would have more than 100000 steps; use a larger step")
+    return {
+        "question": b.question, "min": _num(b.min), "max": _num(b.max), "step": _num(b.step), "answer": _num(b.answer),
+        "unit": b.unit, "tolerancePct": _num(b.tolerance_pct), "explanation": b.explanation,
+    }
+
+
+def _spot_mistake(b: SpotMistakeB) -> dict:
+    if not any(s.is_mistake for s in b.segments):
+        raise BlockError("mark at least one segment with is_mistake: true")
+    segments = []
+    for s in b.segments:
+        segment = {"id": _sid("seg"), "text": s.text, "isMistake": s.is_mistake}
+        for key, value in (("correction", s.correction), ("explanation", s.explanation)):
+            if value and value.strip():
+                segment[key] = value
+        segments.append(segment)
+    return {"title": b.title, "instructions": b.instructions, "segments": segments, "kind": b.kind}
+
+
+def _code_lock(b: CodeLockB) -> dict:
+    clues = []
+    for n, c in enumerate(b.clues, 1):
+        answer = exp.text(_num(c.answer) if isinstance(c.answer, float) else c.answer)
+        if not answer or len(answer) > 40:
+            raise BlockError(f"clue {n} needs a short answer (1 to 40 characters)")
+        clues.append({"id": _sid("clue"), "question": c.question, "answer": answer, "hint": c.hint or ""})
+    return {"title": b.title, "story": b.story, "clues": clues, "reward": b.reward}
+
+
+def _venn(b: VennB) -> dict:
+    sets = {}
+    for key, raw, fallback in (("a", b.sets.a, "sky"), ("b", b.sets.b, "amber")):
+        label, color = (raw, None) if isinstance(raw, str) else (raw.label, raw.color)
+        color = (color or "").strip().lower()
+        sets[key] = {"label": label.strip(), "color": color if color in VENN_COLORS else fallback}
+    if sets["a"]["label"].casefold() == sets["b"]["label"].casefold():
+        raise BlockError("the two sets need different labels")
+    if sets["a"]["color"] == sets["b"]["color"]:
+        sets["b"]["color"] = "rose" if sets["a"]["color"] == "amber" else "amber"
+    neither = any(i.zone == "neither" for i in b.items)
+    if neither and b.show_neither is False:
+        raise BlockError("an item's zone is neither, so show_neither must be true (or leave it out)")
+    items = []
+    for item in b.items:
+        out = {"id": _sid("item"), "text": item.text, "zone": item.zone}
+        if item.explanation and item.explanation.strip():
+            out["explanation"] = item.explanation
+        items.append(out)
+    show = neither if b.show_neither is None else b.show_neither
+    return {"title": b.title, "instructions": b.instructions, "sets": sets, "items": items, "showNeither": show}
+
+
+def _label_diagram(b: LabelDiagramB) -> dict:
+    labels = {p.label.strip().casefold() for p in b.pins}
+    for x in b.distractors:
+        if x.strip().casefold() in labels:
+            raise BlockError(f"distractor '{x[:40]}' is also a pin label; distractors must be wrong labels")
+    pins = [{"id": _sid("pin"), "x": _num(p.x), "y": _num(p.y), "label": p.label.strip()} for p in b.pins]
+    # imageObject (an uploaded file's server object) is left out, as for hotspots.
+    return {
+        "title": b.title, "instructions": b.instructions, "imageUrl": b.image_url, "pins": pins,
+        "distractors": [x.strip() for x in b.distractors],
+    }
+
+
+_FIXED_CHARS = frozenset(" -\u2010\u2011\u2013")
+
+
+def _word_letters(answer: str) -> int | None:
+    """Letters to guess in a word guess answer, or None when it holds
+    something else than letters, spaces and hyphens (as the editor reads it)."""
+    letters = 0
+    for ch in " ".join(answer.split()):
+        cat = unicodedata.category(ch)
+        if cat.startswith("L"):
+            letters += 1
+        elif not (cat.startswith("M") and letters) and ch not in _FIXED_CHARS:
+            return None
+    return letters
+
+
+def _word_guess(b: WordGuessB) -> dict:
+    words = []
+    seen: set[str] = set()
+    for n, w in enumerate(b.words, 1):
+        answer = " ".join(w.answer.split())
+        letters = _word_letters(answer)
+        if letters is None:
+            raise BlockError(f"word {n} answer '{answer[:40]}' may hold only letters, spaces and hyphens")
+        if not 2 <= letters <= 12:
+            raise BlockError(f"word {n} answer '{answer[:40]}' needs 2 to 12 letters")
+        if answer.casefold() in seen:
+            raise BlockError(f"word {n} answer '{answer[:40]}' is used twice")
+        seen.add(answer.casefold())
+        out = {"id": _sid("word"), "answer": answer, "clue": w.clue}
+        if w.explanation and w.explanation.strip():
+            out["explanation"] = w.explanation
+        words.append(out)
+    return {"title": b.title, "words": words, "maxGuesses": b.max_guesses}
+
+
+def _option_index(options: list[str], answer: int | str) -> int | None:
+    if isinstance(answer, int):
+        return answer if 0 <= answer < len(options) else None
+    wanted = answer.strip().casefold()
+    return next((i for i, o in enumerate(options) if o.strip().casefold() == wanted), None)
+
+
+def _confidence_check(b: ConfidenceCheckB) -> dict:
+    questions = []
+    for n, q in enumerate(b.questions, 1):
+        answer = _option_index(list(q.options), q.answer)
+        if answer is None:
+            raise BlockError(f"question {n} ('{q.prompt[:40]}') answer {q.answer!r} is not one of its options")
+        questions.append({"id": _sid("q"), "prompt": q.prompt, "options": list(q.options), "answer": answer, "explanation": q.explanation})
+    return {"title": b.title, "questions": questions}
+
+
+def _property_grid(b: PropertyGridB) -> dict:
+    keys = [c.strip().casefold() for c in b.columns]
+    if len(set(keys)) != len(keys):
+        raise BlockError("column labels must be different")
+    columns = [{"id": _sid("col"), "label": c.strip()} for c in b.columns]
+    rows, cells = [], {}
+    for n, r in enumerate(b.rows, 1):
+        row = {"id": _sid("row"), "label": r.label.strip()}
+        picked: list[int] = []
+        for ref in r.ticks:
+            if isinstance(ref, int):
+                index = ref if 0 <= ref < len(columns) else None
+            else:
+                index = keys.index(ref.strip().casefold()) if ref.strip().casefold() in keys else None
+            if index is None:
+                names = ", ".join(c["label"] for c in columns)
+                raise BlockError(f"row {n} ('{r.label[:40]}') ticks unknown column {ref!r}; use one of {names}")
+            if index not in picked:
+                picked.append(index)
+        if b.mode == "single" and len(picked) != 1:
+            raise BlockError(f"row {n} ('{r.label[:40]}') needs exactly one tick in single mode")
+        for index in picked:
+            cells[f"{row['id']}:{columns[index]['id']}"] = True
+        rows.append(row)
+    if not cells:
+        raise BlockError("tick at least one cell: each row's ticks name the columns that apply")
+    return {"title": b.title, "instructions": b.instructions, "rows": rows, "columns": columns, "cells": cells, "mode": b.mode}
+
+
+def _reflection(b: ReflectionB) -> dict:
+    if not b.model_answer.strip() and not b.checklist:
+        raise BlockError("give a model_answer or a checklist of key points for learners to compare with")
+    return {
+        "title": b.title, "prompt": b.prompt, "guidingQuestions": list(b.guiding_questions), "minWords": b.min_words,
+        "modelAnswer": b.model_answer, "checklist": list(b.checklist),
+    }
+
+
+# typed block -> (editor node, attrs builder)
+EXPERIENCES: dict[str, tuple[str, Any]] = {
+    "sort": ("expSort", _sort),
+    "sequence": ("expSequence", _sequence),
+    "match_pairs": ("expMatch", _match),
+    "hotspot": ("expHotspot", _hotspot),
+    "fill_gaps": ("expGaps", _gaps),
+    "myth_fact": ("expMythFact", _myth_fact),
+    "speed_round": ("expSpeedRound", _speed_round),
+    "estimate": ("expEstimate", _estimate),
+    "spot_mistake": ("expSpotMistake", _spot_mistake),
+    "code_lock": ("expCodeLock", _code_lock),
+    "venn": ("expVenn", _venn),
+    "label_diagram": ("expLabel", _label_diagram),
+    "word_guess": ("expWordGuess", _word_guess),
+    "confidence_check": ("expConfidence", _confidence_check),
+    "property_grid": ("expMatrix", _property_grid),
+    "reflection": ("expReflect", _reflection),
+}
 
 
 def _contains(node: Any, kind: str, depth: int = 0) -> bool:
@@ -631,6 +1217,55 @@ EXAMPLES: dict[str, dict] = {
     "divider": {"type": "divider"},
     "button": {"type": "button", "label": "Open the lab sheet", "url": "https://example.org/lab.pdf", "color": "green"},
     "badge": {"type": "badge", "text": "Key idea", "emoji": "⭐"},
+    "sort": {"type": "sort", "title": "Sort it", "instructions": "Put each thing where it belongs.",
+             "categories": ["Needs light", "Needs no light"], "items": [
+                 {"text": "Photosynthesis", "category": "Needs light"},
+                 {"text": "Cellular respiration", "category": "Needs no light",
+                  "explanation": "Cells respire day and night."}]},
+    "sequence": {"type": "sequence", "title": "Order the steps", "items": [
+        "Light hits the leaf", "Water is split", "Sugar is made"]},
+    "match_pairs": {"type": "match_pairs", "title": "Match the parts", "pairs": [
+        {"left": "Stomata", "right": "Let gases in"}, {"left": "Xylem", "right": "Carries water"}]},
+    "hotspot": {"type": "hotspot", "title": "Find the stomata", "instructions": "Click where gases enter.",
+                "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Leaf_1_web.jpg",
+                "spots": [{"x": 42, "y": 61, "r": 8, "label": "Stomata", "explanation": "Tiny pores under the leaf."}]},
+    "fill_gaps": {"type": "fill_gaps", "title": "Fill the gaps",
+                  "text": "Plants make sugar in the [[chloroplasts|chloroplast]] using [[light]]."},
+    "myth_fact": {"type": "myth_fact", "title": "Myth or fact?", "statements": [
+        {"text": "Plants only breathe at night.", "is_true": False, "explanation": "They respire all the time."},
+        {"text": "Leaves look green because of chlorophyll.", "is_true": True, "explanation": "It reflects green light."}]},
+    "speed_round": {"type": "speed_round", "title": "Quick fire", "questions": [
+        {"prompt": "Gas plants take in", "options": ["CO2", "O2", "N2"], "answer": 0},
+        {"prompt": "Sugar made", "options": ["Glucose", "Salt"], "answer": "Glucose"}], "seconds_per_question": 10},
+    "estimate": {"type": "estimate", "question": "What share of Earth's oxygen comes from the ocean?",
+                 "min": 0, "max": 100, "step": 1, "answer": 50, "unit": "%",
+                 "explanation": "Marine plankton make about half of it."},
+    "spot_mistake": {"type": "spot_mistake", "title": "Spot the mistake", "segments": [
+        {"text": "Plants take in carbon dioxide."},
+        {"text": "They release nitrogen as a by-product.", "is_mistake": True, "correction": "They release oxygen."}]},
+    "code_lock": {"type": "code_lock", "title": "Lab escape", "story": "Answer every clue to open the lab door.",
+                  "clues": [{"question": "How many oxygen atoms in CO2?", "answer": 2, "hint": "Read the formula."}],
+                  "reward": "You are out! Photosynthesis mastered."},
+    "venn": {"type": "venn", "title": "Plants or animals?", "instructions": "Place each fact in the right zone.",
+             "sets": {"a": "Plants", "b": "Animals"}, "items": [
+                 {"text": "Make their own sugar", "zone": "a"},
+                 {"text": "Eat other living things", "zone": "b"},
+                 {"text": "Respire to release energy", "zone": "both", "explanation": "All living cells respire."}]},
+    "label_diagram": {"type": "label_diagram", "title": "Label the leaf", "instructions": "Drag each label onto its pin.",
+                      "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Leaf_1_web.jpg",
+                      "pins": [{"x": 50, "y": 20, "label": "Tip"}, {"x": 50, "y": 90, "label": "Stalk"}],
+                      "distractors": ["Root"]},
+    "word_guess": {"type": "word_guess", "title": "Guess the term", "words": [
+        {"answer": "stomata", "clue": "Tiny pores that let gases in and out of a leaf.", "explanation": "Most sit under the leaf."}]},
+    "confidence_check": {"type": "confidence_check", "title": "How sure are you?", "questions": [
+        {"prompt": "Which gas do plants release in daylight?", "options": ["Oxygen", "Nitrogen", "Methane"], "answer": 0,
+         "explanation": "Photosynthesis splits water and releases oxygen."}]},
+    "property_grid": {"type": "property_grid", "title": "Which parts do what?", "columns": ["Makes sugar", "Carries water"],
+                      "rows": [{"label": "Leaf", "ticks": ["Makes sugar"]}, {"label": "Stem", "ticks": [1]}]},
+    "reflection": {"type": "reflection", "title": "In your own words", "prompt": "Explain why a plant in a dark cupboard wilts.",
+                   "guiding_questions": ["What does the plant need light for?"], "min_words": 30,
+                   "model_answer": "Without light it cannot make sugar, so it runs out of energy.",
+                   "checklist": ["Light powers photosynthesis", "No sugar means no energy"]},
     "node": {"type": "node", "node": {"type": "paragraph", "content": [{"type": "text", "text": "Raw editor JSON"}]}},
 }
 
@@ -647,6 +1282,24 @@ NOTES: dict[str, str] = {
     "conditional": "Rule fields: " + ", ".join(sorted(RULE_FIELDS)) + ". Ops: " + ", ".join(d.RULE_OPS) + ".",
     "user": "Shows a member card; the member must belong to this organization.",
     "node": "Escape hatch: one raw node, checked against the editor schema.",
+    "flashcards": "mode: study shows one card at a time with spaced review (Again / Hard / Got it); best for memorising.",
+    "scenario": "Steps without options end the story; give them an ending {tone, title}. Option feedback explains each choice.",
+    "sort": "Categorisation: 2 to 4 categories, 2 to 20 items; explain the tricky ones.",
+    "sequence": "Ordering steps or events; list them in the right order (learners get them shuffled).",
+    "match_pairs": "Term to definition, cause to effect; memory mode turns it into a card game.",
+    "hotspot": "Coordinates are percentages of the image; use it only when you know where things sit on the image.",
+    "fill_gaps": "Retrieval in context: [[answer|alternative]] marks each gap; bank mode shows a word bank.",
+    "myth_fact": "Tackles misconceptions: always explain why.",
+    "speed_round": "Timed rapid recall of facts already taught; keep prompts and options short.",
+    "estimate": "Prediction before teaching: ask before the explanation, so the reveal sticks.",
+    "spot_mistake": "Error detection: kind code splits by line; give a correction for each mistake.",
+    "code_lock": "A mini escape room: 1 to 5 clues with short answers (a word or number); the reward shows at the end.",
+    "venn": "Compare and contrast two ideas: 3 to 16 facts, each only in a, only in b, in both (the overlap) or neither.",
+    "label_diagram": "Labelling a diagram: pins sit at % coordinates of the image; add 1 to 4 plausible wrong labels.",
+    "word_guess": "Recall a key term from its clue with letter feedback (accent- and case-insensitive); best for vocabulary.",
+    "confidence_check": "Metacognition: learners answer, say how sure they are, then see their calibration; always explain.",
+    "property_grid": "Which properties apply to each row (a feature table); single mode means one tick per row.",
+    "reflection": "Self-explanation: learners write first, then compare with the model answer and tick the key points they covered.",
 }
 
 

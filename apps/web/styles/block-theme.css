@@ -924,3 +924,56 @@
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+/* ── 5. Experiences family ─────────────────────────────────────────────── */
+/* The dark/tinted card surface for Extensions/Experiences/shared. Motion and
+   layout resets live in styles/experiences.css, so light keeps the original
+   look. */
+.lh-bt[data-lh-bt-tone] .lh-exp-frame {
+  background-color: var(--lhb-surface);
+  box-shadow: var(--lhb-shadow);
+}
+/* Tactile tokens (styles/experiences.css) follow the lesson's dark/tinted surfaces. */
+.lh-bt[data-lh-bt-tone] .lh-exp-frame {
+  --exp-table: var(--lhb-surface-2);
+  --exp-paper: var(--lhb-raised, var(--lhb-surface));
+  --exp-well: var(--lhb-surface-3);
+  --exp-ink: var(--lhb-text);
+  --exp-edge: var(--lhb-border, rgba(127, 127, 127, 0.22));
+  --exp-lip: var(--lhb-border-strong, rgba(127, 127, 127, 0.32));
+}
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame {
+  --exp-hi: rgba(255, 255, 255, 0.06);
+  --exp-drop: rgba(0, 0, 0, 0.35);
+}
+.lh-bt[data-lh-bt-tone] .lh-exp-frame .lh-exp-raised[data-result='correct'] {
+  background: var(--lhb-success-soft);
+  border-color: color-mix(in srgb, var(--lhb-success) 45%, transparent);
+  color: var(--lhb-text);
+}
+.lh-bt[data-lh-bt-tone] .lh-exp-frame .lh-exp-raised[data-result='wrong'] {
+  background: var(--lhb-danger-soft);
+  border-color: color-mix(in srgb, var(--lhb-danger) 45%, transparent);
+  color: var(--lhb-text);
+}
+/* The main-action key turns light on a dark lesson, so it still reads as the one key to press. */
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-key {
+  color: #18181b;
+  background: linear-gradient(180deg, #fafafa 0%, #e4e4e7 100%);
+  border-color: #a1a1aa;
+  box-shadow: inset 0 1px 0 #fff, 0 2px 0 #71717a, 0 4px 8px -2px rgba(0, 0, 0, 0.5);
+}
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-key:active:not(:disabled) {
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 #71717a, 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-well {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-range::-webkit-slider-thumb { background: linear-gradient(180deg, #4a4a4f, #38383c); border-color: rgba(255, 255, 255, 0.12); border-bottom-color: rgba(0, 0, 0, 0.5); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 4px rgba(0, 0, 0, 0.5); }
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-range::-moz-range-thumb { background: linear-gradient(180deg, #4a4a4f, #38383c); border-color: rgba(255, 255, 255, 0.12); }
+.lh-bt[data-lh-bt='dark'] .lh-exp-icon {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+}

@@ -385,6 +385,389 @@
    "type": "horizontalRule"
   },
   {
+   "type": "expSort",
+   "attrs": {
+    "blockId": "exp-sort-1",
+    "title": "Renewable or not?",
+    "instructions": "Put each energy source in the right group.",
+    "categories": [
+     {
+      "id": "c1",
+      "label": "Renewable",
+      "color": "green"
+     },
+     {
+      "id": "c2",
+      "label": "Non-renewable",
+      "color": "orange"
+     }
+    ],
+    "items": [
+     {
+      "id": "i1",
+      "text": "Solar",
+      "categoryId": "c1"
+     },
+     {
+      "id": "i2",
+      "text": "Coal",
+      "categoryId": "c2",
+      "explanation": "Coal runs out."
+     }
+    ],
+    "shuffle": true
+   }
+  },
+  {
+   "type": "expSequence",
+   "attrs": {
+    "blockId": "exp-seq-1",
+    "title": "The water cycle",
+    "instructions": "Put the stages in order.",
+    "items": [
+     {
+      "id": "s1",
+      "text": "Evaporation"
+     },
+     {
+      "id": "s2",
+      "text": "Condensation"
+     },
+     {
+      "id": "s3",
+      "text": "Precipitation",
+      "detail": "rain"
+     }
+    ],
+    "variant": "list"
+   }
+  },
+  {
+   "type": "expMatch",
+   "attrs": {
+    "blockId": "exp-match-1",
+    "title": "Countries and capitals",
+    "instructions": "Match each country with its capital.",
+    "pairs": [
+     {
+      "id": "p1",
+      "left": "France",
+      "right": "Paris"
+     },
+     {
+      "id": "p2",
+      "left": "Japan",
+      "right": "Tokyo"
+     }
+    ],
+    "mode": "connect"
+   }
+  },
+  {
+   "type": "expHotspot",
+   "attrs": {
+    "blockId": "exp-hot-1",
+    "title": "Find the valve",
+    "instructions": "Click the valve.",
+    "imageUrl": "https://example.com/engine.png",
+    "spots": [
+     {
+      "id": "h1",
+      "x": 40,
+      "y": 55,
+      "r": 8,
+      "label": "Valve",
+      "explanation": "It controls flow.",
+      "correct": true
+     }
+    ],
+    "mode": "explore"
+   }
+  },
+  {
+   "type": "expGaps",
+   "attrs": {
+    "blockId": "exp-gaps-1",
+    "title": "Photosynthesis",
+    "text": "Plants use [[sunlight|light]] and release [[oxygen]].",
+    "mode": "type",
+    "caseSensitive": false
+   }
+  },
+  {
+   "type": "expMythFact",
+   "attrs": {
+    "blockId": "exp-myth-1",
+    "title": "Myth or fact?",
+    "statements": [
+     {
+      "id": "m1",
+      "text": "Bats are blind.",
+      "isTrue": false,
+      "explanation": "Bats can see."
+     },
+     {
+      "id": "m2",
+      "text": "Lightning can strike twice.",
+      "isTrue": true,
+      "explanation": "Tall buildings get hit often."
+     }
+    ],
+    "labels": {
+     "true": "Fact",
+     "false": "Myth"
+    }
+   }
+  },
+  {
+   "type": "expSpeedRound",
+   "attrs": {
+    "blockId": "exp-speed-1",
+    "title": "Quick maths",
+    "questions": [
+     {
+      "id": "q1",
+      "prompt": "7 × 8",
+      "options": [
+       "54",
+       "56",
+       "64"
+      ],
+      "answer": 1
+     },
+     {
+      "id": "q2",
+      "prompt": "12 + 15",
+      "options": [
+       "27",
+       "25"
+      ],
+      "answer": 0
+     }
+    ],
+    "secondsPerQuestion": 10,
+    "lives": 3
+   }
+  },
+  {
+   "type": "expEstimate",
+   "attrs": {
+    "blockId": "exp-est-1",
+    "question": "How many bones are in an adult human body?",
+    "min": 50,
+    "max": 400,
+    "step": 1,
+    "answer": 206,
+    "unit": "bones",
+    "tolerancePct": 10,
+    "explanation": "An adult has 206 bones."
+   }
+  },
+  {
+   "type": "expSpotMistake",
+   "attrs": {
+    "blockId": "exp-spot-1",
+    "title": "Spot the mistakes",
+    "instructions": "Click every sentence with a mistake.",
+    "segments": [
+     {
+      "id": "t1",
+      "text": "The Sun is a star.",
+      "isMistake": false
+     },
+     {
+      "id": "t2",
+      "text": "Mars is the closest planet to the Sun.",
+      "isMistake": true,
+      "correction": "Mercury is the closest planet to the Sun.",
+      "explanation": "Mars is fourth."
+     }
+    ],
+    "kind": "text"
+   }
+  },
+  {
+   "type": "expCodeLock",
+   "attrs": {
+    "blockId": "exp-lock-1",
+    "title": "Escape the lab",
+    "story": "The door is locked.",
+    "clues": [
+     {
+      "id": "k1",
+      "question": "How many sides does a hexagon have?",
+      "answer": "6",
+      "hint": "Honeycomb."
+     },
+     {
+      "id": "k2",
+      "question": "What is 3 squared?",
+      "answer": "9"
+     }
+    ],
+    "reward": "The door swings open."
+   }
+  },
+  {
+   "type": "expVenn",
+   "attrs": {
+    "blockId": "exp-venn-1",
+    "title": "Venn",
+    "instructions": "Compare",
+    "sets": {
+     "a": {
+      "label": "Cats",
+      "color": "sky"
+     },
+     "b": {
+      "label": "Dogs",
+      "color": "amber"
+     }
+    },
+    "items": [
+     {
+      "id": "i1",
+      "text": "Purrs",
+      "zone": "a"
+     },
+     {
+      "id": "i2",
+      "text": "Fur",
+      "zone": "both",
+      "explanation": "Both"
+     },
+     {
+      "id": "i3",
+      "text": "Barks",
+      "zone": "b"
+     },
+     {
+      "id": "i4",
+      "text": "Feathers",
+      "zone": "neither"
+     }
+    ],
+    "showNeither": true
+   }
+  },
+  {
+   "type": "expLabel",
+   "attrs": {
+    "blockId": "exp-label-1",
+    "title": "Label",
+    "instructions": "Name the parts",
+    "imageUrl": "https://example.com/plant.png",
+    "imageObject": null,
+    "pins": [
+     {
+      "id": "p1",
+      "x": 50,
+      "y": 20,
+      "label": "Flower"
+     },
+     {
+      "id": "p2",
+      "x": 40,
+      "y": 80,
+      "label": "Roots"
+     }
+    ],
+    "distractors": [
+     "Wing"
+    ]
+   }
+  },
+  {
+   "type": "expWordGuess",
+   "attrs": {
+    "blockId": "exp-wordguess-1",
+    "title": "Words",
+    "words": [
+     {
+      "id": "w1",
+      "answer": "atom",
+      "clue": "Smallest unit",
+      "explanation": "Why"
+     },
+     {
+      "id": "w2",
+      "answer": "red-shift",
+      "clue": "Light stretched"
+     }
+    ],
+    "maxGuesses": 6
+   }
+  },
+  {
+   "type": "expConfidence",
+   "attrs": {
+    "blockId": "exp-confidence-1",
+    "title": "Sure?",
+    "questions": [
+     {
+      "id": "q1",
+      "prompt": "2+2",
+      "options": [
+       "3",
+       "4"
+      ],
+      "answer": 1,
+      "explanation": "Count"
+     }
+    ]
+   }
+  },
+  {
+   "type": "expMatrix",
+   "attrs": {
+    "blockId": "exp-matrix-1",
+    "title": "Grid",
+    "instructions": "Tick",
+    "rows": [
+     {
+      "id": "r1",
+      "label": "Bat"
+     },
+     {
+      "id": "r2",
+      "label": "Hen"
+     }
+    ],
+    "columns": [
+     {
+      "id": "c1",
+      "label": "Flies"
+     },
+     {
+      "id": "c2",
+      "label": "Lays eggs"
+     }
+    ],
+    "cells": {
+     "r1:c1": true,
+     "r2:c2": true
+    },
+    "mode": "multi"
+   }
+  },
+  {
+   "type": "expReflect",
+   "attrs": {
+    "blockId": "exp-reflect-1",
+    "title": "Reflect",
+    "prompt": "What did you learn?",
+    "guidingQuestions": [
+     "Why?"
+    ],
+    "minWords": 30,
+    "modelAnswer": "A model answer.",
+    "checklist": [
+     "Point one",
+     "Point two"
+    ]
+   }
+  },
+  {
    "type": "futureBlock",
    "attrs": {
     "x": 1
