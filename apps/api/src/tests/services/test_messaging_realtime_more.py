@@ -148,3 +148,68 @@ async def test_offline_write_survives_a_cancelled_teardown():
     assert not finished.is_set()
     release.set()
     await asyncio.wait_for(finished.wait(), 2)
+
+
+async def test_offline_runs_even_when_unsubscribe_is_re_cancelled():
+    """On disconnect the request's cancel scope re-cancels every await in the
+    teardown. A cancelled unsubscribe used to escape the finally block before
+    ``_go_offline`` was scheduled, so the presence counter drifted."""
+    fake = FakeAsyncRedis([])
+    block = asyncio.Event()
+
+    async def cancelled(**kwargs):
+        raise asyncio.CancelledError
+
+    async def stuck_unsubscribe(*args, **kwargs):
+        await block.wait()
+
+    fake._pubsub.get_message = cancelled
+    fake._pubsub.unsubscribe = stuck_unsubscribe
+    offline = asyncio.Event()
+
+    async def on_offline():
+        offline.set()
+
+    async def consume():
+        with patch("src.services.messaging.realtime.get_async_redis", return_value=fake), \
+             patch("src.services.messaging.realtime.online_user_ids", return_value=set()):
+            await _collect(realtime.event_stream(
+                2, 5, {"type": "hello"}, _no_presence, on_offline, _disconnect_after(5)
+            ))
+
+    consumer = asyncio.create_task(consume())
+    await asyncio.wait_for(offline.wait(), 2)
+    # Cancelled again while the unsubscribe is still pending: the generator
+    # ends, the teardown task keeps going on its own.
+    consumer.cancel()
+    await asyncio.gather(consumer, return_exceptions=True)
+    assert fake.counters == {}
+    block.set()
+    await asyncio.sleep(0)
+    for _ in range(10):
+        if not realtime._offline_tasks:
+            break
+        await asyncio.sleep(0.01)
+    assert not realtime._offline_tasks
+
+
+async def test_teardown_survives_a_cancelled_unsubscribe():
+    fake = FakeAsyncRedis([])
+
+    async def cancelled_unsubscribe(*args, **kwargs):
+        raise asyncio.CancelledError
+
+    fake._pubsub.unsubscribe = cancelled_unsubscribe
+    offline = MagicMock()
+
+    async def on_offline():
+        offline()
+
+    with patch("src.services.messaging.realtime.get_async_redis", return_value=fake), \
+         patch("src.services.messaging.realtime.online_user_ids", return_value=set()):
+        chunks = await _collect(realtime.event_stream(
+            2, 5, {"type": "hello"}, _no_presence, on_offline, _disconnect_after(0)
+        ))
+    assert len(chunks) == 1
+    offline.assert_called_once()
+    assert fake.counters == {}
