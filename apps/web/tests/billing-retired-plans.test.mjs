@@ -23,6 +23,7 @@ process.env.STRIPE_PRICE_PACK_AI_500 = "price_pack_ai";
 
 const stripeCalls = [];
 mock.module("@services/billing/stripe", () => ({
+  getActiveSubscription: async () => null,
   createCheckoutSession: async (...args) => {
     stripeCalls.push(["checkout", ...args]);
     return { id: "cs", url: "https://checkout.example.test" };

@@ -85,8 +85,11 @@ export async function fetchActiveUserOverage(
 /** True if this org/period was already billed, so webhook retries and the
  *  lookback overlap between consecutive invoices never double-charge.
  *  A period's item can only be created after that month ends, so scanning from
- *  the start of the month is complete, and keeps the page count small. */
+ *  the start of the month is complete, and keeps the page count small.
+ *  One customer can pay for several orgs, so the item must match this org:
+ *  matching on the period alone skipped every org after the first. */
 async function alreadyBilled(
+  orgId: string,
   customerId: string,
   year: number,
   month: number,
@@ -100,7 +103,10 @@ async function alreadyBilled(
     })
     .autoPagingToArray({ limit: 1000 });
   return items.some(
-    (it: any) => it?.metadata?.type === "au_overage" && it?.metadata?.au_period === period,
+    (it: any) =>
+      it?.metadata?.type === "au_overage" &&
+      it?.metadata?.au_period === period &&
+      String(it?.metadata?.org_id) === String(orgId),
   );
 }
 
@@ -125,7 +131,7 @@ async function billOverage(params: {
   if (summary.overage_units <= 0) return { billed: false, reason: "no overage" };
 
   const period = periodKey(year, month);
-  if (await alreadyBilled(customerId, year, month)) {
+  if (await alreadyBilled(orgId, customerId, year, month)) {
     return { billed: false, reason: "already billed" };
   }
 

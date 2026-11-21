@@ -14,7 +14,12 @@ import {
   deactivateAllPacksInternally,
   markPackCancelingInternally,
 } from "@services/billing/packs";
-import { planForPriceId, stripeClient as stripe } from "@services/billing/stripe";
+import {
+  findOrgEntitledPlanSubscription,
+  planForPriceId,
+  stripeClient as stripe,
+} from "@services/billing/stripe";
+import { isPlanEndedStatus } from "@services/billing/subscriptionUtils";
 import { billOverageForInvoice } from "@services/billing/activeUserBilling";
 import { captureConversion } from "@services/analytics/serverCapture";
 import {
@@ -31,6 +36,24 @@ async function planFromSubscription(subscription: any): Promise<string | undefin
   const derived = await planForPriceId(subscription?.items?.data?.[0]?.price?.id);
   if (derived && !derived.isPack) return derived.plan;
   return subscription?.metadata?.plan ?? undefined;
+}
+
+// Write the org's plan, treating "org not found" as done. delete-org removes the
+// org before cancelling its subscriptions, so every paid deletion sends a
+// customer.subscription.deleted for an org that is already gone; failing that
+// made Stripe retry it for days. Returns null when the org no longer exists.
+// Every other failure still throws, so Stripe retries it.
+async function writeOrgPlan(orgId: string, plan: string): Promise<any | null> {
+  try {
+    return await updateOrganizationConfigInternally(orgId, plan as any);
+  } catch (err) {
+    // OrgNotFoundError (orgPlan.ts): the API itself said the org is gone.
+    if ((err as { code?: unknown } | null)?.code === "org_not_found") {
+      console.warn(`[webhook] org ${orgId} no longer exists; skipping plan write "${plan}"`);
+      return null;
+    }
+    throw err;
+  }
 }
 
 // Simple in-memory idempotency cache (event_id -> {state, ts}).
@@ -167,6 +190,15 @@ async function handleCheckoutCompleted(session: any) {
     return;
   }
 
+  // The session is read live, but the subscription may have ended since (a
+  // redelivery that lands after cancellation). Never grant from an ended one.
+  if (isPlanEndedStatus(subscription.status)) {
+    console.warn(
+      `checkout.session.completed: subscription ${subscription.id} is ${subscription.status}; nothing to grant`,
+    );
+    return;
+  }
+
   const isPack = subscription.metadata.type === "pack";
 
   if (isPack) {
@@ -198,7 +230,8 @@ async function handleCheckoutCompleted(session: any) {
           `is the matching STRIPE_PRICE_* env set?`,
       );
     }
-    const applied = await updateOrganizationConfigInternally(orgId, plan as any);
+    const applied = await writeOrgPlan(orgId, plan);
+    if (applied === null) return; // org deleted: nothing to convert or email about
     await captureConversion(orgId, plan, subscription, applied);
 
     if (customerEmail) {
@@ -211,26 +244,42 @@ async function handleCheckoutCompleted(session: any) {
   }
 }
 
-async function handleSubscriptionEvent(eventType: string, subscription: any) {
-  const orgId = subscription.metadata?.org_id;
+async function handleSubscriptionEvent(eventType: string, eventSubscription: any) {
+  const orgId = eventSubscription.metadata?.org_id;
   if (!orgId) {
-    console.log(`Subscription event missing org_id for customer ${subscription.customer}`);
+    console.log(`Subscription event missing org_id for customer ${eventSubscription.customer}`);
     return;
   }
 
-  const isPack = subscription.metadata.type === "pack";
+  // Act on the subscription as it is now, not on the event's snapshot. Stripe
+  // doesn't deliver in order and retries for days, so a stale "updated: active"
+  // landing after the deletion would otherwise grant the paid plan back.
+  const subscription = await stripe.subscriptions.retrieve(eventSubscription.id);
+  const isPack = subscription.metadata?.type === "pack";
   const status = subscription.status;
 
   if (isPack) {
     const packId = subscription.metadata.pack_id;
 
     if (eventType === "customer.subscription.deleted") {
-      await deactivatePackInternally(orgId, subscription.id);
+      await deactivatePackInternally(orgId, subscription.id).catch((err) => {
+        // Nothing left to deactivate (the org was deleted, taking its packs
+        // with it): the goal is already met, so ack rather than retry for days.
+        if (err?.message === "No pack found for this subscription") {
+          console.warn(`[webhook] no pack row for ${subscription.id} (org ${orgId}); already gone`);
+          return;
+        }
+        throw err;
+      });
     } else if (
       eventType === "customer.subscription.updated" ||
       eventType === "customer.subscription.created"
     ) {
-      if (subscription.cancel_at_period_end) {
+      if (status === "canceled") {
+        // A stale update for a pack that has since been deleted: the deleted
+        // event deactivates it; never reactivate or mark it from old state.
+        return;
+      } else if (subscription.cancel_at_period_end) {
         // User requested cancellation: mark as canceling but keep active until period end
         await markPackCancelingInternally(orgId, subscription.id);
       } else if (status === "active") {
@@ -247,49 +296,80 @@ async function handleSubscriptionEvent(eventType: string, subscription: any) {
         await deactivatePackInternally(orgId, subscription.id);
       }
     }
-  } else {
-    // Plan subscription
-    if (eventType === "customer.subscription.deleted") {
-      await updateOrganizationConfigInternally(orgId, "free");
-      await deactivateAllPacksInternally(orgId).catch((err) => {
-        console.error(`Failed to deactivate packs for org ${orgId}:`, err);
-      });
-    } else if (
-      eventType === "customer.subscription.updated" ||
-      eventType === "customer.subscription.created"
-    ) {
-      if (subscription.cancel_at_period_end) {
-        // Plan is canceling: keep current plan until period ends
-        console.log(`Plan subscription canceling for org ${orgId}, access continues until period end`);
-      } else if (status === "active") {
-        // Derive from price so billing-portal plan changes reconcile correctly.
-        const plan = await planFromSubscription(subscription);
-        if (plan) {
-          await updateOrganizationConfigInternally(orgId, plan as any);
-        } else {
-          console.warn(`[webhook] could not resolve plan for active subscription ${subscription.id} (org ${orgId}); price id not in catalog?`);
-        }
-      } else if (status === "past_due" || status === "unpaid") {
-        // Payment failed: notify user but keep plan active for grace period
-        console.warn(`Plan subscription ${subscription.id} is ${status} for org ${orgId}`);
-        const customer = await stripe.customers.retrieve(subscription.customer);
-        if (customer?.email) {
-          const price = subscription?.items?.data?.[0]?.price;
-          const amount =
-            typeof price?.unit_amount === "number" && price?.currency
-              ? new Intl.NumberFormat("en-US", { style: "currency", currency: String(price.currency).toUpperCase() }).format(price.unit_amount / 100)
-              : undefined;
-          await sendPaymentFailedMail({
-            email: customer.email,
-            planName: subscription.metadata.plan,
-            orgSlug: subscription.metadata.org_slug,
-            amount,
-          }).catch((err) => console.error("Failed to send payment failed email:", err));
-        }
-      } else if (status === "paused") {
-        console.warn(`Plan subscription ${subscription.id} paused for org ${orgId}, downgrading to free`);
-        await updateOrganizationConfigInternally(orgId, "free");
-      }
+    return;
+  }
+
+  // Plan subscription.
+  if (eventType === "customer.subscription.deleted" || isPlanEndedStatus(status)) {
+    if (status === "incomplete_expired") {
+      // Never paid, so it never granted a plan: nothing to take away, and a
+      // "free" write here would end a running trial.
+      return;
+    }
+    await downgradeEndedPlan(
+      orgId,
+      subscription,
+      eventType === "customer.subscription.deleted" || status === "canceled",
+    );
+    return;
+  }
+
+  if (subscription.cancel_at_period_end) {
+    // Plan is canceling: keep current plan until period ends
+    console.log(`Plan subscription canceling for org ${orgId}, access continues until period end`);
+  } else if (status === "active") {
+    // Derive from price so billing-portal plan changes reconcile correctly.
+    const plan = await planFromSubscription(subscription);
+    if (plan) {
+      await writeOrgPlan(orgId, plan);
+    } else {
+      console.warn(`[webhook] could not resolve plan for active subscription ${subscription.id} (org ${orgId}); price id not in catalog?`);
+    }
+  } else if (status === "past_due") {
+    // Payment failed: notify user but keep plan active for grace period
+    console.warn(`Plan subscription ${subscription.id} is ${status} for org ${orgId}`);
+    const customer = await stripe.customers.retrieve(subscription.customer);
+    if (customer?.email) {
+      const price = subscription?.items?.data?.[0]?.price;
+      const amount =
+        typeof price?.unit_amount === "number" && price?.currency
+          ? new Intl.NumberFormat("en-US", { style: "currency", currency: String(price.currency).toUpperCase() }).format(price.unit_amount / 100)
+          : undefined;
+      await sendPaymentFailedMail({
+        email: customer.email,
+        planName: subscription.metadata.plan,
+        orgSlug: subscription.metadata.org_slug,
+        amount,
+      }).catch((err) => console.error("Failed to send payment failed email:", err));
     }
   }
+}
+
+// A plan subscription ended (deleted, or Stripe gave up on payment: unpaid, or
+// paused). Move the org to Free, unless another of its subscriptions still
+// entitles it to a plan: an org that briefly had two must not lose the plan it
+// is still paying for when the other one is cancelled.
+async function downgradeEndedPlan(orgId: string, subscription: any, canceled: boolean) {
+  const customerId =
+    typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id;
+  const other = await findOrgEntitledPlanSubscription(String(orgId), {
+    excludeId: subscription.id,
+    customerId,
+  });
+  if (other) {
+    const plan = await planFromSubscription(other);
+    console.warn(
+      `[webhook] plan subscription ${subscription.id} ended (${subscription.status}) for org ${orgId}, ` +
+        `but ${other.id} is still live; keeping plan "${plan}"`,
+    );
+    if (plan) await writeOrgPlan(orgId, plan);
+    return;
+  }
+
+  console.warn(`Plan subscription ${subscription.id} is ${subscription.status} for org ${orgId}, downgrading to free`);
+  const written = await writeOrgPlan(orgId, "free");
+  if (written === null || !canceled) return;
+  await deactivateAllPacksInternally(orgId).catch((err) => {
+    console.error(`Failed to deactivate packs for org ${orgId}:`, err);
+  });
 }
