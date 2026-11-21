@@ -125,3 +125,31 @@ describe("signed-in visitor on /signup", () => {
     expect(location(res)).toBeNull();
   });
 });
+
+describe("app subdomain", () => {
+  test("the bare root sends a signed-out visitor to the apex login", async () => {
+    const res = await get("app.platform.test", "/");
+    expect(res.status).toBe(307);
+    expect(location(res)).toBe("https://platform.test/login");
+  });
+
+  test("the bare root sends a signed-in visitor to the apex picker", async () => {
+    expect(location(await get("app.platform.test", "/", "LH_session=1"))).toBe("https://platform.test/home");
+  });
+
+  test("/home there goes to the apex picker instead of looping back to the root", async () => {
+    expect(location(await get("app.platform.test", "/home?welcome=1", "LH_session=1"))).toBe(
+      "https://platform.test/home?welcome=1",
+    );
+  });
+
+  test("its other paths are untouched", async () => {
+    const res = await get("app.platform.test", "/login");
+    expect(location(res)).toBeNull();
+    expect(rewrite(res)).toContain("/auth/login");
+  });
+
+  test("a school subdomain's root is not redirected", async () => {
+    expect(location(await get("acme.platform.test", "/"))).toBeNull();
+  });
+});
