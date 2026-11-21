@@ -35692,6 +35692,29 @@
         }
       }
     },
+    "/api/v1/instance/license": {
+      "get": {
+        "tags": [
+          "instance"
+        ],
+        "summary": "Get license status",
+        "description": "License status of a self-hosted Enterprise install, for the admin banner. Administrators get the full status (notices, term, features); other signed-in users only the mode, status and lock flag.",
+        "operationId": "get_instance_license_api_v1_instance_license_get",
+        "responses": {
+          "200": {
+            "description": "License status for the current deployment.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          }
+        }
+      }
+    },
     "/api/v1/monitoring/feedback": {
       "post": {
         "tags": [
