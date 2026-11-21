@@ -492,6 +492,17 @@ class TestTrialEmails:
         assert row.status == "failed"
         assert await notify.send_stage(db, other_org.id, notify.TRIAL_TIPS) == 0
 
+    async def test_the_demo_org_admins_are_never_mailed(self, db, org, admin_user):
+        # Every demo visitor is an admin of the demo: its "admins" are strangers.
+        assert [a.user_id for a in await notify.org_admins(db, org.id)] == [admin_user.id]
+        org.is_demo = True
+        db.add(org)
+        await db.commit()
+        assert await notify.org_admins(db, org.id) == []
+        with mail() as sent:
+            assert await notify.send_stage(db, org.id, notify.TRIAL_WELCOME) == 0
+        sent.assert_not_called()
+
     async def test_one_failing_org_does_not_stop_the_run(self, db, org, admin_user):
         await trial.begin_trial(db, org.id, now=NOW)
         with patch.object(notify, "send_stage", AsyncMock(side_effect=RuntimeError)):
