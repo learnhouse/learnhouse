@@ -45,6 +45,10 @@ _children: set[asyncio.Task] = set()
 _inflight: dict[str, bool] = {}
 _local_timers: dict[str, asyncio.TimerHandle] = {}
 _local_transcribe: set[str] = set()
+# Caps in-process runs (no Redis) like the consumer's semaphore does. Created
+# on first use so it belongs to the running loop; rebuilt if the loop changes.
+_local_sem: Optional[asyncio.Semaphore] = None
+_local_sem_loop: Optional[asyncio.AbstractEventLoop] = None
 
 
 def concurrency() -> int:
@@ -119,15 +123,34 @@ def _schedule_local(ref: ContentRef, delay: float) -> None:
         _local_timers.pop(ref.key, None)
         transcribe = ref.key in _local_transcribe
         _local_transcribe.discard(ref.key)
-        _spawn(ref, transcribe=transcribe)
+        _track(_run_local(ref, transcribe=transcribe))
 
     _local_timers[ref.key] = loop.call_later(delay, fire)
 
 
-def _spawn(ref: ContentRef, sem: Optional[asyncio.Semaphore] = None, *, transcribe: bool = False) -> None:
-    task = asyncio.create_task(_run(ref, sem, transcribe=transcribe))
+def _local_semaphore() -> asyncio.Semaphore:
+    global _local_sem, _local_sem_loop
+    loop = asyncio.get_running_loop()
+    if _local_sem is None or _local_sem_loop is not loop:
+        _local_sem = asyncio.Semaphore(concurrency())
+        _local_sem_loop = loop
+    return _local_sem
+
+
+async def _run_local(ref: ContentRef, *, transcribe: bool = False) -> None:
+    sem = _local_semaphore()
+    await sem.acquire()
+    await _run(ref, sem, transcribe=transcribe)
+
+
+def _track(coro) -> None:
+    task = asyncio.create_task(coro)
     _children.add(task)
     task.add_done_callback(_children.discard)
+
+
+def _spawn(ref: ContentRef, sem: Optional[asyncio.Semaphore] = None, *, transcribe: bool = False) -> None:
+    _track(_run(ref, sem, transcribe=transcribe))
 
 
 async def _run(ref: ContentRef, sem: Optional[asyncio.Semaphore] = None, *, transcribe: bool = False) -> None:

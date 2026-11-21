@@ -90,7 +90,12 @@ async def event_stream(
     hello: dict,
     is_disconnected: Callable[[], Awaitable[bool]],
 ) -> AsyncGenerator[str, None]:
-    from src.services.messaging.realtime import get_async_redis
+    from src.services.messaging.realtime import (
+        _await_detached,
+        _close_pubsub,
+        _spawn,
+        get_async_redis,
+    )
 
     r = get_async_redis()
     if r is None:
@@ -120,8 +125,6 @@ async def event_stream(
     except asyncio.CancelledError:
         pass
     finally:
-        try:
-            await pubsub.unsubscribe()
-            await pubsub.aclose()
-        except Exception:
-            pass
+        # Cancelled on disconnect, and re-cancelled on every await here: tear
+        # the pubsub down in its own task so the connection is always released.
+        await _await_detached(_spawn(_close_pubsub(pubsub)))

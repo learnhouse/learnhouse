@@ -400,6 +400,24 @@ async def test_event_stream_filters_by_org_and_beats():
         frames = [f async for f in realtime.event_stream(7, None, {"type": "hello"}, AsyncMock(return_value=False))]
     assert len(frames) == 1
 
+    # A re-cancelled unsubscribe (client disconnect) still closes the pubsub.
+    class CancelledUnsubscribe(_PubSub):
+        async def get_message(self, **_):
+            import asyncio
+
+            raise asyncio.CancelledError
+
+        async def unsubscribe(self):
+            import asyncio
+
+            raise asyncio.CancelledError
+
+    cancelled = CancelledUnsubscribe([])
+    redis.pubsub.return_value = cancelled
+    with patch("src.services.messaging.realtime.get_async_redis", return_value=redis):
+        frames = [f async for f in realtime.event_stream(7, None, {"type": "hello"}, AsyncMock(return_value=False))]
+    assert len(frames) == 1
+
 
 # ---------------------------------------------------------------------------
 # Digest

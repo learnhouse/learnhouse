@@ -186,8 +186,13 @@ async def start_magicblock_session(
         await meter.settle(failed=True)
         raise
 
+    body = event_generator(stream, session.session_uuid, meter=meter)
+    # The stream outlives this request's DB session: release it now so a
+    # long LLM stream does not hold a pool connection. The generator never
+    # touches it (metering settles on its own short session).
+    await db_session.close()
     return StreamingResponse(
-        event_generator(stream, session.session_uuid, meter=meter),
+        body,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -301,8 +306,13 @@ async def iterate_magicblock_session(
         await meter.settle(failed=True)
         raise
 
+    body = event_generator(stream, session.session_uuid, meter=meter)
+    # The stream outlives this request's DB session: release it now so a
+    # long LLM stream does not hold a pool connection. The generator never
+    # touches it (metering settles on its own short session).
+    await db_session.close()
     return StreamingResponse(
-        event_generator(stream, session.session_uuid, meter=meter),
+        body,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

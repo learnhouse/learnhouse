@@ -171,6 +171,31 @@ def _sse(event: dict) -> str:
 _offline_tasks: set[asyncio.Task] = set()
 
 
+async def _close_pubsub(pubsub) -> None:
+    try:
+        await pubsub.unsubscribe()
+        await pubsub.aclose()
+    except Exception:
+        pass
+
+
+def _spawn(coro) -> asyncio.Task:
+    """Run ``coro`` as its own task, held by a strong reference until done."""
+    task = asyncio.create_task(coro)
+    _offline_tasks.add(task)
+    task.add_done_callback(_offline_tasks.discard)
+    return task
+
+
+async def _await_detached(*tasks: asyncio.Task) -> None:
+    """Wait for ``tasks`` when we can; if we are cancelled (again), they carry
+    on by themselves."""
+    try:
+        await asyncio.shield(asyncio.gather(*tasks, return_exceptions=True))
+    except asyncio.CancelledError:
+        pass
+
+
 async def _go_offline(r, org_id: int, user_id: int, on_offline, presence_payload) -> None:
     try:
         went_offline = await _disconnect(r, org_id, user_id)
@@ -241,22 +266,12 @@ async def event_stream(
     except asyncio.CancelledError:
         pass
     finally:
-        try:
-            await pubsub.unsubscribe()
-            await pubsub.aclose()
-        except Exception:
-            pass
         # A closed tab cancels this generator, and the request's cancel scope
-        # keeps cancelling every await in here: the offline bookkeeping (a DB
-        # write) was interrupted mid-query, which left the pool terminating
-        # the connection and logging an error. Run it as its own task, outside
-        # that scope, so it always completes.
-        task = asyncio.create_task(_go_offline(r, org_id, user_id, on_offline, presence_payload))
-        _offline_tasks.add(task)
-        task.add_done_callback(_offline_tasks.discard)
-        try:
-            # Wait for it when we can; if we are cancelled again, the shielded
-            # task carries on by itself.
-            await asyncio.shield(task)
-        except asyncio.CancelledError:
-            pass
+        # keeps cancelling every await in here. So nothing is awaited directly:
+        # the offline bookkeeping (presence counter, a DB write) is scheduled
+        # first, then the pubsub teardown, each as its own task outside that
+        # scope, so a re-cancelled unsubscribe can't skip going offline (the
+        # counter would drift and the user stay "online").
+        offline = _spawn(_go_offline(r, org_id, user_id, on_offline, presence_payload))
+        closing = _spawn(_close_pubsub(pubsub))
+        await _await_detached(offline, closing)
