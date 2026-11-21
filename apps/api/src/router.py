@@ -37,6 +37,7 @@ from src.routers.paths import paths as paths_router_module
 from src.routers.messaging import messaging as messaging_router_module
 from src.routers.media import media as media_router_module
 from src.routers.courses import migration as migration_router_module
+from src.routers.courses import peer_review as peer_review_router_module
 from src.routers.communities import communities as communities_router_module
 from src.routers.communities import discussions as discussions_router_module
 from src.routers.courses.activities import activities, blocks
@@ -258,6 +259,15 @@ v1_router.include_router(
 v1_router.include_router(search.router, prefix="/search", tags=["search"])
 v1_router.include_router(seo_router_module.router, prefix="/seo", tags=["seo"])
 v1_router.include_router(landing_router_module.router, prefix="/landing", tags=["landing"])
+# Peer review: registered before the assignments router. Its paths all carry a
+# literal "peer-review" segment and never match the /{assignment_uuid} routes,
+# but going first keeps it that way if a catch-all is ever added there.
+v1_router.include_router(
+    peer_review_router_module.router,
+    prefix="/assignments",
+    tags=["assignments"],
+    dependencies=[Depends(require_authenticated_user_or_api_token)]
+)
 v1_router.include_router(
     assignments.router,
     prefix="/assignments",

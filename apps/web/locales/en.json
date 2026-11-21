@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Standard Feature",
           "description": "Newsletter is available on the Standard plan and higher. Upgrade to send campaigns, welcome series and course updates to your learners by email."
+        },
+        "peer_review": {
+          "title": "Standard Feature",
+          "description": "Peer review is available to organizations on our Standard plan or higher. Upgrade to let learners review each other's work with a rubric."
         }
       },
       "gate": {
@@ -381,6 +385,12 @@
           "note_3": "Next steps for Friday",
           "play_title": "Practice",
           "play_question": "How many sides does a pentagon have?"
+        },
+        "peer_review": {
+          "title": "Learners improve by reviewing each other",
+          "b1": "Every learner reviews a few classmates with your rubric",
+          "b2": "A practice round shows them how you would score",
+          "b3": "See a suggested grade from the reviews, you decide"
         }
       }
     },
@@ -8541,7 +8551,8 @@
             "scim": "SCIM provisioning",
             "audit_logs": "Audit logs",
             "custom_domain": "Custom domain",
-            "remove_watermark": "No LearnHouse watermark"
+            "remove_watermark": "No LearnHouse watermark",
+            "peer_review": "Peer review"
           }
         },
         "next_invoice_label": "Next invoice",
@@ -31228,7 +31239,9 @@
       "plan_downgraded": "Moved to Free",
       "plan_restored": "Plan restored",
       "payments_checkout_failing": "Checkout failing",
-      "invitation_accepted": "Invitation accepted"
+      "invitation_accepted": "Invitation accepted",
+      "peer_review_received": "Peer feedback received",
+      "peer_review_flagged": "Peer review flagged"
     },
     "copy": {
       "assignment_graded": "Graded: {{assignment}}",
@@ -31291,7 +31304,9 @@
       "plan_downgraded": "You're on Free now. Nothing was deleted",
       "plan_restored": "Welcome back to {{plan}}",
       "payments_checkout_failing": "Learners can't buy right now ({{count}} failed checkouts)",
-      "invitation_accepted": "{{actor}} accepted your invitation"
+      "invitation_accepted": "{{actor}} accepted your invitation",
+      "peer_review_received": "New peer feedback on {{assignment}}",
+      "peer_review_flagged": "{{actor}} flagged a peer review on {{assignment}}"
     },
     "routing": {
       "short": "Who's notified",
@@ -31599,6 +31614,500 @@
       "seat_limit_exceeded": "more seats are in use than the license includes",
       "grace_expired": "the license server couldn't be reached for too long",
       "unknown": "the license couldn't be verified"
+    }
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Criterion {{n}}",
+      "points_short_one": "{{count}} pt",
+      "points_short_other": "{{count}} pts",
+      "prompt_strength": "What works well",
+      "prompt_suggestion": "One thing to improve, and how",
+      "prompt_question": "A question for the author"
+    },
+    "learner": {
+      "eyebrow": "Peer review",
+      "card_title": "Review and get feedback from classmates",
+      "steps_label": "Peer review steps",
+      "step_self": "Self-review",
+      "step_practice": "Practice",
+      "step_reviews": "Review classmates",
+      "step_feedback": "Your feedback",
+      "n_of_m": "{{n}} of {{m}}",
+      "done": "Done",
+      "to_do": "To do",
+      "locked": "Locked",
+      "continue": "Continue",
+      "cancel": "Cancel",
+      "back": "Back",
+      "retry": "Try again",
+      "optional": "Optional",
+      "saved": "Saved",
+      "saving": "Saving…",
+      "unsaved": "Unsaved changes",
+      "not_saved": "Not saved",
+      "feedback_count_one": "{{count}} review",
+      "feedback_count_other": "{{count}} reviews",
+      "reviews_due": "Reviews due {{date}}",
+      "reviews_closed_on": "Reviews closed {{date}}",
+      "next_title": "Peer review comes next",
+      "next_body_one": "Once you hand in, you'll review {{count}} classmate's work and get feedback on yours.",
+      "next_body_other": "Once you hand in, you'll review {{count}} classmates' work and get feedback on yours.",
+      "self_title": "Rate your own work",
+      "self_why": "Judging your own work first makes your classmates' feedback easier to compare and act on.",
+      "self_done": "Self-review saved",
+      "self_done_pct": "Self-review saved: you gave yourself {{pct}}%",
+      "edit_self_review": "Edit self-review",
+      "save_self_review": "Save self-review",
+      "self_saved_toast": "Self-review saved",
+      "cal_title": "Practice round",
+      "cal_why": "Scoring a sample first shows you how your instructor reads the rubric, so your reviews are fairer.",
+      "cal_progress": "Sample {{current}} of {{total}}",
+      "cal_sample": "Practice sample",
+      "cal_check": "Compare with the instructor",
+      "cal_you": "You",
+      "cal_instructor": "Instructor",
+      "cal_match": "Same as instructor",
+      "cal_off_by_one": "Off by {{count}} point",
+      "cal_off_by_other": "Off by {{count}} points",
+      "cal_why_title": "Why the instructor scored it this way",
+      "cal_next": "Next sample",
+      "cal_all_done": "Practice done. You're ready to review your classmates.",
+      "cal_none": "There are no practice samples right now.",
+      "go_to_reviews": "Go to reviews",
+      "go_to_practice": "Go to practice",
+      "finish_practice_first": "Finish the practice round first.",
+      "reviews_title": "Review your classmates",
+      "reviews_why": "Reviewing others is where most of the learning happens.",
+      "reviews_done_of": "{{done}} of {{required}} done",
+      "reviews_locked_practice": "Finish the practice round to start reviewing.",
+      "reviews_complete": "You've done all your reviews. Thank you!",
+      "reviews_extra_hint": "Extra reviews are welcome: they help classmates who have fewer.",
+      "start_review": "Start review {{n}} of {{m}}",
+      "continue_review": "Continue your review",
+      "review_another": "Review another",
+      "see_feedback": "See your feedback",
+      "none_title": "Nobody to review yet",
+      "none_body": "We'll give you a classmate's work as soon as someone submits. Check back soon.",
+      "check_again": "Check again",
+      "your_helpfulness": "Classmates rate your reviews {{avg}} / 5 on average.",
+      "review_n_of_m": "Review {{n}} of {{m}}",
+      "extra_review": "Extra review",
+      "classmate_work": "Your classmate's work",
+      "work_of": "{{name}}'s work",
+      "your_review": "Your review",
+      "your_review_hint": "Pick the level that fits best for each criterion, then leave kind, specific comments.",
+      "review_already_submitted": "You already submitted this review.",
+      "review_load_error": "We couldn't load this review.",
+      "comments_heading": "Comments",
+      "pick_a_level": "Pick a level",
+      "add_note": "Add a note",
+      "note_label": "Note on this criterion (optional)",
+      "chars_remaining_one": "{{count}} more character needed",
+      "chars_remaining_other": "{{count}} more characters needed",
+      "chars_ok_one": "{{count}} character",
+      "chars_ok_other": "{{count}} characters",
+      "fix_before_submit": "Some parts are missing. Check the highlighted fields.",
+      "save_draft": "Save draft",
+      "submit_review": "Submit review",
+      "drafts_autosave": "Drafts save automatically",
+      "draft_saved_toast": "Draft saved",
+      "review_submitted_toast": "Review submitted. Thank you!",
+      "no_answer": "No answer",
+      "no_tasks": "There is nothing to show for this submission.",
+      "chosen": "chosen",
+      "media_option": "Option {{n}} (media)",
+      "download_file": "Download the file",
+      "feedback_title": "Your feedback",
+      "feedback_why": "Compare what classmates saw with your own view, then decide what you'll change.",
+      "locked_reviews_one": "Finish {{count}} more review to unlock your feedback",
+      "locked_reviews_other": "Finish {{count}} more reviews to unlock your feedback",
+      "locked_generic": "Your feedback isn't open yet",
+      "locked_due": "It opens on {{date}} at the latest.",
+      "unlocked_by_due_date": "Your feedback opened because the review deadline passed.",
+      "no_feedback_title": "No feedback yet",
+      "no_feedback_body": "Reviews from classmates will show up here as they come in.",
+      "peer_score": "Peer score",
+      "peer_score_how_one": "The middle value (median) of {{count}} classmate review, per criterion.",
+      "peer_score_how_other": "The middle value (median) of {{count}} classmate reviews, per criterion.",
+      "score_needs_more_one": "A peer score appears after {{count}} review.",
+      "score_needs_more_other": "A peer score appears after {{count}} reviews.",
+      "reviewers_disagree": "Reviewers disagreed",
+      "gap_title": "Classmates vs your self-review",
+      "gap_title_peers": "What classmates saw",
+      "legend_peers": "Classmates (median)",
+      "legend_you": "You",
+      "gap_values": "Classmates {{peers}} · You {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: classmates {{peers}}, you {{you}}, out of {{max}}",
+      "gap_aligned": "You and your classmates agree",
+      "gap_self_higher": "You rated yourself higher than classmates did",
+      "gap_self_lower": "You rated yourself lower than classmates did",
+      "reviews_received_one": "{{count}} review received",
+      "reviews_received_other": "{{count}} reviews received",
+      "reviewer_n": "Reviewer {{n}}",
+      "flagged": "Flagged",
+      "how_helpful": "How helpful was this?",
+      "stars_n_one": "{{count}} star",
+      "stars_n_other": "{{count}} stars",
+      "helpful_note_label": "Note for the reviewer",
+      "helpful_note_placeholder": "What helped, or what would have helped more? (optional)",
+      "save_note": "Save note",
+      "thanks_feedback": "Thanks for the feedback",
+      "flag_link": "Report this review",
+      "flag_title": "Report this review",
+      "flag_body": "Your instructor will look at it. Tell them what's wrong, for example rude, off-topic or empty.",
+      "flag_reason": "What's wrong?",
+      "flag_submit": "Report",
+      "flag_sent": "Thanks. Your instructor has been told.",
+      "plan_title": "Your revision plan",
+      "plan_why": "Write down what you'll change. A plan makes feedback turn into better work.",
+      "plan_placeholder": "Based on this feedback, I will…",
+      "save_plan": "Save plan",
+      "plan_saved": "Revision plan saved",
+      "error_generic": "Something went wrong. Please try again.",
+      "error_save": "Your draft couldn't be saved. We'll try again.",
+      "error_submit": "This couldn't be submitted. Please try again.",
+      "error_download": "The file couldn't be downloaded.",
+      "submission_changed": "This classmate started a new attempt, so this review was closed. You can review someone else.",
+      "answer_hidden": "This answer is checked automatically, so it isn't part of the review.",
+      "retry_in_progress": "You started a new attempt. Hand it in to keep reviewing your classmates."
+    },
+    "instructor": {
+      "tab": "Peer review",
+      "setup": "Setup",
+      "unknown_learner": "Learner",
+      "retry": "Try again",
+      "error_title": "Couldn't load peer review",
+      "error_description": "Something went wrong. Check your connection and try again.",
+      "toggle": {
+        "title": "Peer review",
+        "off_hint": "Off. After handing in, learners review a few classmates' work with your rubric and get feedback from them.",
+        "on_hint": "On. Each learner reviews classmates after handing in. Pick a rubric template below and save, and you're ready."
+      },
+      "why": {
+        "title": "Why peer review works",
+        "reviewers_learn": "Writing reviews teaches the reviewer the most, so every learner reviews.",
+        "three_reviewers": "Three or more reviewers give feedback about as reliable as one instructor.",
+        "rubric_practice": "A clear rubric and a short practice round make reviews accurate.",
+        "revise": "Feedback helps most when learners plan what they'll change next.",
+        "dismiss": "Hide this tip"
+      },
+      "sections": {
+        "settings": "Settings",
+        "rubric": "Rubric",
+        "prompts": "Comment prompts",
+        "practice": "Practice round"
+      },
+      "settings": {
+        "reviewing_title": "Reviewing",
+        "reviewing_description": "How many reviews each learner writes and who sees whose name.",
+        "reviews_required": "Reviews per learner",
+        "reviews_required_hint": "3–5 gives reliable feedback. Each work also aims to receive this many.",
+        "anonymity": "Names",
+        "anonymity_hint": "Hidden names make reviews more honest.",
+        "require_reviews": "Review before seeing feedback",
+        "require_reviews_hint": "Learners see their feedback once they've done their reviews, or after the review deadline.",
+        "due_date": "Review deadline",
+        "due_date_hint": "Optional. After this date everyone can see their feedback.",
+        "clear": "Clear",
+        "steps_title": "Extra steps",
+        "steps_description": "Each one is short and makes the feedback more useful.",
+        "self_review": "Self-review",
+        "self_review_hint": "Learners score their own work first, then compare it with what peers said.",
+        "practice": "Practice round",
+        "practice_hint": "Learners score a sample you prepared and see how you scored it. Needs at least one sample.",
+        "helpfulness": "Helpfulness ratings",
+        "helpfulness_hint": "Learners rate each review they receive from 1 to 5 stars.",
+        "revision_plan": "Revision plan",
+        "revision_plan_hint": "Learners write down what they'll change after reading their feedback.",
+        "score_title": "Scores",
+        "score_description": "Peer review never sets a grade on its own.",
+        "min_reviews": "Reviews needed for a score",
+        "min_reviews_hint": "The peer score shows once a work has this many reviews."
+      },
+      "anonymity": {
+        "double_blind": "Both hidden",
+        "double_blind_hint": "Nobody sees who reviewed whom",
+        "anonymous_reviewer": "Reviewer hidden",
+        "anonymous_reviewer_hint": "Reviewers see the author's name",
+        "named": "Names shown",
+        "named_hint": "Everyone sees both names"
+      },
+      "score_mode": {
+        "feedback_only": "Feedback only",
+        "feedback_only_hint": "Reviews are for learning, no grade suggestion",
+        "suggest_grade": "Suggest a grade",
+        "suggest_grade_hint": "You see the peer median and can use it when grading"
+      },
+      "rubric": {
+        "title": "Rubric",
+        "description": "What reviewers score. Each criterion has levels from best to weakest.",
+        "template": "Start from a template",
+        "empty_title": "No rubric yet",
+        "empty_description": "Pick a template to start in one click, then adjust the wording to your assignment.",
+        "add_criterion": "Add criterion",
+        "remove_criterion": "Remove criterion",
+        "move_up": "Move up",
+        "move_down": "Move down",
+        "criterion_title": "Criterion",
+        "criterion_title_placeholder": "e.g. Clear main idea",
+        "criterion_description": "What to look for",
+        "criterion_description_placeholder": "What should a reviewer look for?",
+        "untitled_criterion": "Untitled criterion",
+        "level_label": "Level",
+        "level_label_placeholder": "e.g. Excellent",
+        "points": "Points",
+        "level_description": "What it looks like",
+        "level_description_placeholder": "Optional: what work at this level looks like",
+        "add_level": "Add level",
+        "remove_level": "Remove level",
+        "max_points": "Max points: {{points}}",
+        "summary": "Criteria: {{criteria}} · Max points: {{points}}",
+        "replace_title": "Replace the current rubric?",
+        "replace_message": "The template replaces the criteria you have now. Nothing is saved until you click Save.",
+        "replace_confirm": "Replace"
+      },
+      "templates": {
+        "writing": {
+          "name": "Writing",
+          "blurb": "Essays, reports and written answers",
+          "thesis": {
+            "title": "Main idea",
+            "description": "The main point is clear and stays in focus from start to end."
+          },
+          "evidence": {
+            "title": "Support and evidence",
+            "description": "Claims are backed by examples, facts or sources that fit."
+          },
+          "organization": {
+            "title": "Organization",
+            "description": "Ideas follow a logical order and each paragraph has one job."
+          },
+          "style": {
+            "title": "Clarity and style",
+            "description": "Sentences are clear and easy to read, with few errors."
+          }
+        },
+        "project": {
+          "name": "Project",
+          "blurb": "Builds, designs and hands-on work",
+          "goal": {
+            "title": "Goal and scope",
+            "description": "The project states what it sets out to do and stays within it."
+          },
+          "process": {
+            "title": "Process and decisions",
+            "description": "The steps taken and the reasons behind key choices are explained."
+          },
+          "result": {
+            "title": "Quality of the result",
+            "description": "The final result works, is complete and is carefully made."
+          },
+          "reflection": {
+            "title": "Reflection",
+            "description": "The author says what worked, what didn't and what they would change."
+          }
+        },
+        "presentation": {
+          "name": "Presentation",
+          "blurb": "Talks, slides and videos",
+          "content": {
+            "title": "Content",
+            "description": "The information is accurate, relevant and goes beyond the obvious."
+          },
+          "structure": {
+            "title": "Structure",
+            "description": "It has a clear opening, a logical middle and a strong close."
+          },
+          "delivery": {
+            "title": "Delivery",
+            "description": "The speaker is clear, at a good pace, and keeps attention."
+          },
+          "visuals": {
+            "title": "Visuals",
+            "description": "Slides or visuals support the message and are easy to read."
+          }
+        },
+        "code": {
+          "name": "Code",
+          "blurb": "Programs, scripts and exercises",
+          "correctness": {
+            "title": "Correctness",
+            "description": "The code does what was asked, including edge cases."
+          },
+          "readability": {
+            "title": "Readability",
+            "description": "Names, formatting and comments make the code easy to follow."
+          },
+          "design": {
+            "title": "Structure and design",
+            "description": "The code is split into sensible parts without needless repetition."
+          },
+          "testing": {
+            "title": "Testing",
+            "description": "There are checks or tests that show the code works."
+          }
+        },
+        "scale": {
+          "excellent": "Excellent",
+          "excellent_description": "Fully meets the criterion, with clear strengths",
+          "good": "Good",
+          "good_description": "Meets the criterion with small gaps",
+          "developing": "Developing",
+          "developing_description": "Partly meets the criterion, needs more work",
+          "beginning": "Beginning",
+          "beginning_description": "Barely meets the criterion yet",
+          "strong": "Strong",
+          "strong_description": "Clearly meets the criterion",
+          "adequate": "Adequate",
+          "adequate_description": "Meets the criterion in part",
+          "needs_work": "Needs work",
+          "needs_work_description": "Does not meet the criterion yet"
+        }
+      },
+      "prompts": {
+        "title": "Comment prompts",
+        "description": "The questions reviewers answer in writing. A minimum length stops one-word reviews.",
+        "label": "Question",
+        "label_placeholder": "e.g. What surprised you?",
+        "min_chars": "Min. characters",
+        "min_chars_hint": "0 makes the answer optional.",
+        "add": "Add question",
+        "remove": "Remove question",
+        "reset": "Use the defaults"
+      },
+      "samples": {
+        "title": "Practice samples",
+        "description": "Learners score a sample before reviewing classmates, then see your scores and why. One or two samples is enough.",
+        "practice_off": "The practice round is off in Settings, so learners won't see these samples.",
+        "none_yet": "No samples yet, so the practice round is skipped. Add one to turn it on.",
+        "needs_rubric": "Add rubric criteria first to set your levels for each sample.",
+        "sample_title": "Title",
+        "sample_title_placeholder": "e.g. Sample essay A",
+        "content": "Sample work",
+        "content_hint": "Markdown works",
+        "content_placeholder": "Paste an example answer, ideally a mid-level one with things to improve.",
+        "levels": "Your levels",
+        "levels_hint": "What you would give on each criterion",
+        "pick_level": "Pick a level",
+        "explanation": "Why",
+        "explanation_hint": "Shown after learners score it",
+        "explanation_placeholder": "Explain your scores in a few sentences.",
+        "add": "Add sample",
+        "remove": "Remove sample",
+        "count_hint": "Up to 5 samples"
+      },
+      "errors": {
+        "criteria_min": "Add at least one criterion to turn peer review on.",
+        "criteria_max": "Use at most {{max}} criteria.",
+        "criterion_title": "Give this criterion a name.",
+        "levels_min": "Each criterion needs at least {{min}} levels.",
+        "levels_max": "Use at most {{max}} levels per criterion.",
+        "level_label": "Give this level a name.",
+        "level_points": "Points must be 0 or more.",
+        "prompts_min": "Keep at least one question.",
+        "prompts_max": "Use at most {{max}} questions.",
+        "prompt_label": "Write the question.",
+        "prompt_min_chars": "Use a whole number from 0 to {{max}}.",
+        "reviews_range": "Use a number from {{min}} to {{max}}.",
+        "sample_title": "Give the sample a title.",
+        "sample_content": "Add the sample work.",
+        "sample_levels": "Pick your level for every criterion.",
+        "duplicate": "Two items share the same ID. Remove one and add it again."
+      },
+      "save": {
+        "saving": "Saving peer review…",
+        "saved": "Peer review saved",
+        "error": "Couldn't save peer review",
+        "fix_errors": "Fix the highlighted fields, then save again."
+      },
+      "monitor": {
+        "title": "Monitor",
+        "off_title": "Peer review is off",
+        "off_description": "Turn it on in Setup. Progress, scores and flagged reviews will show up here.",
+        "go_setup": "Go to setup"
+      },
+      "totals": {
+        "submitted": "Handed in",
+        "reviews_done": "Reviews done",
+        "in_progress": "Reviews in progress",
+        "below_target": "Need more reviews",
+        "flagged": "Flagged"
+      },
+      "flagged": {
+        "title": "Flagged reviews",
+        "description": "A learner reported these as unfair or unhelpful. Discard a review to leave it out of the score.",
+        "open": "See all reviews",
+        "count": "Flags: {{n}}"
+      },
+      "submissions": {
+        "title": "Submissions",
+        "learner": "Learner",
+        "reviews": "Reviews received",
+        "received": "{{done}} of {{target}}",
+        "peer_score": "Peer score",
+        "peer_score_tip": "The median of the reviews, per criterion, as a percentage. Discarded reviews are left out.",
+        "self": "Self",
+        "self_tip": "The score the learner gave their own work.",
+        "flags": "Flags",
+        "waiting": "Waiting",
+        "disagree": "Reviewers disagree ({{points}} pts)",
+        "disagree_tip": "The highest and lowest review are far apart. Worth a look before you grade.",
+        "empty_title": "Nothing handed in yet",
+        "empty_description": "Reviews start as soon as learners hand in their work."
+      },
+      "reviewers": {
+        "title": "Reviewers",
+        "reviewer": "Reviewer",
+        "done": "Done",
+        "done_tip": "Reviews written out of the number required. Extra reviews count too.",
+        "helpfulness": "Helpfulness",
+        "helpfulness_tip": "The average star rating authors gave this person's reviews.",
+        "helpfulness_value": "{{value}} out of 5",
+        "bias": "Bias",
+        "bias_tip": "How far this person's scores land from the other reviewers of the same work, on average. Lower is better.",
+        "bias_value": "±{{points}} pts",
+        "calibration": "Practice gap",
+        "calibration_tip": "How far their practice-round scores were from yours, in rubric points per criterion. Lower is better.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "No reviews yet",
+        "empty_description": "Learners appear here once they start reviewing."
+      },
+      "drawer": {
+        "title": "Peer reviews",
+        "close": "Close",
+        "peer_score": "Peer score",
+        "not_enough": "Not enough reviews yet (minimum: {{n}})",
+        "score_basis": "Median of the reviews · counted: {{n}}",
+        "self_score": "Self-review:",
+        "self_short": "self: {{points}}",
+        "apply_grade": "Apply peer score as grade ({{score}})",
+        "apply_hint": "Opens grading with the suggestion shown. Nothing is saved until you grade.",
+        "feedback_only_hint": "Grade suggestions are off (feedback only).",
+        "open_grading": "Open grading",
+        "reviews": "Reviews ({{n}})",
+        "reviewer_n": "Reviewer {{n}}",
+        "no_reviews": "No reviews yet.",
+        "status_assigned": "In progress",
+        "status_discarded": "Discarded",
+        "flagged": "Flagged",
+        "flag_reason": "Flag reason:",
+        "discard_reason": "Discard reason:",
+        "discard_placeholder": "Why are you leaving this review out? Only instructors see this.",
+        "discard": "Discard",
+        "restore": "Restore",
+        "discarded_toast": "Review discarded",
+        "restored_toast": "Review restored",
+        "action_error": "That didn't work. Try again.",
+        "helpfulness": "Rated by the author:",
+        "self_review": "Self-review",
+        "reflection": "Revision plan",
+        "no_reflection": "No revision plan written yet.",
+        "grade_title": "Grade {{name}}",
+        "suggested": "Peer suggestion: {{score}}",
+        "suggested_hint": "Median of the peer reviews (counted: {{n}}). Use it as a guide.",
+        "closed_new_attempt": "Closed automatically: the learner started a new attempt."
+      }
     }
   }
 }

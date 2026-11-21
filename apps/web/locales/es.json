@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Función del plan Standard",
           "description": "El boletín está disponible en el plan Standard y superiores. Mejora tu plan para enviar campañas, series de bienvenida y novedades de cursos a tus estudiantes por correo."
+        },
+        "peer_review": {
+          "title": "Función Standard",
+          "description": "La revisión entre pares está disponible para organizaciones en nuestro plan Standard o superior. Actualiza para que los estudiantes revisen el trabajo de los demás con una rúbrica."
         }
       },
       "gate": {
@@ -381,6 +385,12 @@
           "note_3": "Próximos pasos para el viernes",
           "play_title": "Práctica",
           "play_question": "¿Cuántos lados tiene un pentágono?"
+        },
+        "peer_review": {
+          "title": "Los estudiantes mejoran revisándose entre sí",
+          "b1": "Cada estudiante revisa a algunos compañeros con tu rúbrica",
+          "b2": "Una ronda de práctica les muestra cómo puntuarías tú",
+          "b3": "Ve una nota sugerida a partir de las revisiones; tú decides"
         }
       }
     },
@@ -8663,7 +8673,8 @@
             "scim": "Aprovisionamiento SCIM",
             "audit_logs": "Registros de auditoría",
             "custom_domain": "Dominio personalizado",
-            "remove_watermark": "Sin marca de agua de LearnHouse"
+            "remove_watermark": "Sin marca de agua de LearnHouse",
+            "peer_review": "Revisión entre pares"
           }
         },
         "next_invoice_label": "Próxima factura",
@@ -31879,7 +31890,9 @@
       "plan_downgraded": "Cambio a Gratis",
       "plan_restored": "Plan recuperado",
       "payments_checkout_failing": "Pagos fallidos",
-      "invitation_accepted": "Invitación aceptada"
+      "invitation_accepted": "Invitación aceptada",
+      "peer_review_received": "Comentarios de compañeros recibidos",
+      "peer_review_flagged": "Revisión entre pares denunciada"
     },
     "copy": {
       "assignment_graded": "Calificada: {{assignment}}",
@@ -31942,7 +31955,9 @@
       "plan_downgraded": "Ahora estás en Gratis. No se ha borrado nada",
       "plan_restored": "Te damos de nuevo la bienvenida a {{plan}}",
       "payments_checkout_failing": "Los estudiantes no pueden comprar ahora ({{count}} pagos fallidos)",
-      "invitation_accepted": "{{actor}} aceptó tu invitación"
+      "invitation_accepted": "{{actor}} aceptó tu invitación",
+      "peer_review_received": "Nuevos comentarios de un compañero en {{assignment}}",
+      "peer_review_flagged": "{{actor}} denunció una revisión entre pares en {{assignment}}"
     },
     "routing": {
       "short": "A quién se avisa",
@@ -32250,6 +32265,511 @@
       "seat_limit_exceeded": "hay más puestos en uso de los que incluye la licencia",
       "grace_expired": "no se pudo contactar con el servidor de licencias durante demasiado tiempo",
       "unknown": "no se pudo verificar la licencia"
+    }
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Criterio {{n}}",
+      "points_short_one": "{{count}} pto",
+      "points_short_many": "{{count}} ptos",
+      "points_short_other": "{{count}} ptos",
+      "prompt_strength": "Lo que funciona bien",
+      "prompt_suggestion": "Algo que mejorar, y cómo",
+      "prompt_question": "Una pregunta para el autor"
+    },
+    "learner": {
+      "eyebrow": "Evaluación entre pares",
+      "card_title": "Evalúa a tus compañeros y recibe sus comentarios",
+      "steps_label": "Pasos de la evaluación entre pares",
+      "step_self": "Autoevaluación",
+      "step_practice": "Práctica",
+      "step_reviews": "Evaluar a compañeros",
+      "step_feedback": "Tus comentarios",
+      "n_of_m": "{{n}} de {{m}}",
+      "done": "Hecho",
+      "to_do": "Pendiente",
+      "locked": "Bloqueado",
+      "continue": "Continuar",
+      "cancel": "Cancelar",
+      "back": "Atrás",
+      "retry": "Reintentar",
+      "optional": "Opcional",
+      "saved": "Guardado",
+      "saving": "Guardando…",
+      "unsaved": "Cambios sin guardar",
+      "not_saved": "Sin guardar",
+      "feedback_count_one": "{{count}} evaluación",
+      "feedback_count_many": "{{count}} evaluaciones",
+      "feedback_count_other": "{{count}} evaluaciones",
+      "reviews_due": "Evaluaciones hasta el {{date}}",
+      "reviews_closed_on": "Evaluaciones cerradas el {{date}}",
+      "next_title": "Sigue la evaluación entre pares",
+      "next_body_one": "Cuando entregues, evaluarás el trabajo de {{count}} compañero y recibirás comentarios sobre el tuyo.",
+      "next_body_many": "Cuando entregues, evaluarás el trabajo de {{count}} compañeros y recibirás comentarios sobre el tuyo.",
+      "next_body_other": "Cuando entregues, evaluarás el trabajo de {{count}} compañeros y recibirás comentarios sobre el tuyo.",
+      "self_title": "Evalúa tu propio trabajo",
+      "self_why": "Juzgar primero tu trabajo hace que los comentarios de tus compañeros sean más fáciles de comparar y aprovechar.",
+      "self_done": "Autoevaluación guardada",
+      "self_done_pct": "Autoevaluación guardada: te diste un {{pct}} %",
+      "edit_self_review": "Editar autoevaluación",
+      "save_self_review": "Guardar autoevaluación",
+      "self_saved_toast": "Autoevaluación guardada",
+      "cal_title": "Ronda de práctica",
+      "cal_why": "Puntuar un ejemplo antes te muestra cómo lee la rúbrica tu profesor, y así tus evaluaciones serán más justas.",
+      "cal_progress": "Ejemplo {{current}} de {{total}}",
+      "cal_sample": "Ejemplo de práctica",
+      "cal_check": "Comparar con el profesor",
+      "cal_you": "Tú",
+      "cal_instructor": "Profesor",
+      "cal_match": "Igual que el profesor",
+      "cal_off_by_one": "Diferencia de {{count}} punto",
+      "cal_off_by_many": "Diferencia de {{count}} puntos",
+      "cal_off_by_other": "Diferencia de {{count}} puntos",
+      "cal_why_title": "Por qué el profesor lo puntuó así",
+      "cal_next": "Siguiente ejemplo",
+      "cal_all_done": "Práctica terminada. Ya puedes evaluar a tus compañeros.",
+      "cal_none": "Ahora mismo no hay ejemplos de práctica.",
+      "go_to_reviews": "Ir a las evaluaciones",
+      "go_to_practice": "Ir a la práctica",
+      "finish_practice_first": "Termina primero la ronda de práctica.",
+      "reviews_title": "Evalúa a tus compañeros",
+      "reviews_why": "Evaluar a otros es donde más se aprende.",
+      "reviews_done_of": "{{done}} de {{required}} hechas",
+      "reviews_locked_practice": "Termina la ronda de práctica para empezar a evaluar.",
+      "reviews_complete": "Has hecho todas tus evaluaciones. ¡Gracias!",
+      "reviews_extra_hint": "Las evaluaciones extra son bienvenidas: ayudan a los compañeros que tienen menos.",
+      "start_review": "Empezar evaluación {{n}} de {{m}}",
+      "continue_review": "Continuar tu evaluación",
+      "review_another": "Evaluar otro",
+      "see_feedback": "Ver tus comentarios",
+      "none_title": "Todavía no hay nadie a quien evaluar",
+      "none_body": "Te daremos el trabajo de un compañero en cuanto alguien lo entregue. Vuelve pronto.",
+      "check_again": "Comprobar de nuevo",
+      "your_helpfulness": "Tus compañeros valoran tus evaluaciones con {{avg}} / 5 de media.",
+      "review_n_of_m": "Evaluación {{n}} de {{m}}",
+      "extra_review": "Evaluación extra",
+      "classmate_work": "El trabajo de tu compañero",
+      "work_of": "Trabajo de {{name}}",
+      "your_review": "Tu evaluación",
+      "your_review_hint": "Elige el nivel que mejor encaje en cada criterio y deja comentarios amables y concretos.",
+      "review_already_submitted": "Ya enviaste esta evaluación.",
+      "review_load_error": "No pudimos cargar esta evaluación.",
+      "comments_heading": "Comentarios",
+      "pick_a_level": "Elige un nivel",
+      "add_note": "Añadir una nota",
+      "note_label": "Nota sobre este criterio (opcional)",
+      "chars_remaining_one": "Falta {{count}} carácter",
+      "chars_remaining_many": "Faltan {{count}} caracteres",
+      "chars_remaining_other": "Faltan {{count}} caracteres",
+      "chars_ok_one": "{{count}} carácter",
+      "chars_ok_many": "{{count}} caracteres",
+      "chars_ok_other": "{{count}} caracteres",
+      "fix_before_submit": "Faltan algunas cosas. Revisa los campos resaltados.",
+      "save_draft": "Guardar borrador",
+      "submit_review": "Enviar evaluación",
+      "drafts_autosave": "Los borradores se guardan solos",
+      "draft_saved_toast": "Borrador guardado",
+      "review_submitted_toast": "Evaluación enviada. ¡Gracias!",
+      "no_answer": "Sin respuesta",
+      "no_tasks": "No hay nada que mostrar para esta entrega.",
+      "chosen": "elegida",
+      "media_option": "Opción {{n}} (multimedia)",
+      "download_file": "Descargar el archivo",
+      "feedback_title": "Tus comentarios",
+      "feedback_why": "Compara lo que vieron tus compañeros con tu propia opinión y decide qué vas a cambiar.",
+      "locked_reviews_one": "Termina {{count}} evaluación más para desbloquear tus comentarios",
+      "locked_reviews_many": "Termina {{count}} evaluaciones más para desbloquear tus comentarios",
+      "locked_reviews_other": "Termina {{count}} evaluaciones más para desbloquear tus comentarios",
+      "locked_generic": "Tus comentarios aún no están disponibles",
+      "locked_due": "Se abrirán como tarde el {{date}}.",
+      "unlocked_by_due_date": "Tus comentarios se abrieron porque pasó la fecha límite de las evaluaciones.",
+      "no_feedback_title": "Aún no hay comentarios",
+      "no_feedback_body": "Las evaluaciones de tus compañeros aparecerán aquí según vayan llegando.",
+      "peer_score": "Puntuación de pares",
+      "peer_score_how_one": "La mediana de {{count}} evaluación de un compañero, por criterio.",
+      "peer_score_how_many": "La mediana de {{count}} evaluaciones de compañeros, por criterio.",
+      "peer_score_how_other": "La mediana de {{count}} evaluaciones de compañeros, por criterio.",
+      "score_needs_more_one": "La puntuación de pares aparece tras {{count}} evaluación.",
+      "score_needs_more_many": "La puntuación de pares aparece tras {{count}} evaluaciones.",
+      "score_needs_more_other": "La puntuación de pares aparece tras {{count}} evaluaciones.",
+      "reviewers_disagree": "Los evaluadores no coinciden",
+      "gap_title": "Tus compañeros frente a tu autoevaluación",
+      "gap_title_peers": "Lo que vieron tus compañeros",
+      "legend_peers": "Compañeros (mediana)",
+      "legend_you": "Tú",
+      "gap_values": "Compañeros {{peers}} · Tú {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: compañeros {{peers}}, tú {{you}}, de {{max}}",
+      "gap_aligned": "Tus compañeros y tú coincidís",
+      "gap_self_higher": "Te puntuaste más alto que tus compañeros",
+      "gap_self_lower": "Te puntuaste más bajo que tus compañeros",
+      "reviews_received_one": "{{count}} evaluación recibida",
+      "reviews_received_many": "{{count}} evaluaciones recibidas",
+      "reviews_received_other": "{{count}} evaluaciones recibidas",
+      "reviewer_n": "Evaluador {{n}}",
+      "flagged": "Denunciada",
+      "how_helpful": "¿Qué tan útil fue?",
+      "stars_n_one": "{{count}} estrella",
+      "stars_n_many": "{{count}} estrellas",
+      "stars_n_other": "{{count}} estrellas",
+      "helpful_note_label": "Nota para el evaluador",
+      "helpful_note_placeholder": "¿Qué te ayudó, o qué te habría ayudado más? (opcional)",
+      "save_note": "Guardar nota",
+      "thanks_feedback": "Gracias por tu opinión",
+      "flag_link": "Denunciar esta evaluación",
+      "flag_title": "Denunciar esta evaluación",
+      "flag_body": "Tu profesor la revisará. Cuéntale qué está mal, por ejemplo si es grosera, no viene al caso o está vacía.",
+      "flag_reason": "¿Qué está mal?",
+      "flag_submit": "Denunciar",
+      "flag_sent": "Gracias. Tu profesor ha sido avisado.",
+      "plan_title": "Tu plan de mejora",
+      "plan_why": "Escribe qué vas a cambiar. Un plan convierte los comentarios en mejor trabajo.",
+      "plan_placeholder": "A partir de estos comentarios, voy a…",
+      "save_plan": "Guardar plan",
+      "plan_saved": "Plan de mejora guardado",
+      "error_generic": "Algo salió mal. Inténtalo de nuevo.",
+      "error_save": "No se pudo guardar tu borrador. Lo intentaremos de nuevo.",
+      "error_submit": "No se pudo enviar. Inténtalo de nuevo.",
+      "error_download": "No se pudo descargar el archivo.",
+      "submission_changed": "Esta persona empezó un nuevo intento, así que esta evaluación se cerró. Puedes evaluar a otra persona.",
+      "answer_hidden": "Esta respuesta se corrige automáticamente, así que no forma parte de la revisión.",
+      "retry_in_progress": "Empezaste un nuevo intento. Entrégalo para seguir revisando a tus compañeros."
+    },
+    "instructor": {
+      "tab": "Revisión entre pares",
+      "setup": "Configuración",
+      "unknown_learner": "Estudiante",
+      "retry": "Intentar de nuevo",
+      "error_title": "No se pudo cargar la revisión entre pares",
+      "error_description": "Algo salió mal. Revisa tu conexión e inténtalo de nuevo.",
+      "toggle": {
+        "title": "Revisión entre pares",
+        "off_hint": "Desactivada. Tras entregar, los estudiantes revisan el trabajo de algunos compañeros con tu rúbrica y reciben sus comentarios.",
+        "on_hint": "Activada. Cada estudiante revisa a compañeros tras entregar. Elige una plantilla de rúbrica abajo, guarda y listo."
+      },
+      "why": {
+        "title": "Por qué funciona la revisión entre pares",
+        "reviewers_learn": "Quien escribe revisiones es quien más aprende, por eso todos los estudiantes revisan.",
+        "three_reviewers": "Tres o más revisores dan comentarios casi tan fiables como un instructor.",
+        "rubric_practice": "Una rúbrica clara y una breve ronda de práctica hacen que las revisiones sean precisas.",
+        "revise": "Los comentarios ayudan más cuando los estudiantes planean qué cambiarán después.",
+        "dismiss": "Ocultar este consejo"
+      },
+      "sections": {
+        "settings": "Ajustes",
+        "rubric": "Rúbrica",
+        "prompts": "Preguntas de comentario",
+        "practice": "Ronda de práctica"
+      },
+      "settings": {
+        "reviewing_title": "Revisión",
+        "reviewing_description": "Cuántas revisiones escribe cada estudiante y quién ve el nombre de quién.",
+        "reviews_required": "Revisiones por estudiante",
+        "reviews_required_hint": "3–5 da comentarios fiables. Cada trabajo también intenta recibir esa cantidad.",
+        "anonymity": "Nombres",
+        "anonymity_hint": "Ocultar los nombres hace que las revisiones sean más sinceras.",
+        "require_reviews": "Revisar antes de ver los comentarios",
+        "require_reviews_hint": "Los estudiantes ven sus comentarios cuando terminan sus revisiones o después de la fecha límite de revisión.",
+        "due_date": "Fecha límite de revisión",
+        "due_date_hint": "Opcional. Después de esta fecha todos pueden ver sus comentarios.",
+        "clear": "Borrar",
+        "steps_title": "Pasos extra",
+        "steps_description": "Cada uno es breve y hace que los comentarios sean más útiles.",
+        "self_review": "Autoevaluación",
+        "self_review_hint": "Los estudiantes puntúan primero su propio trabajo y luego lo comparan con lo que dijeron sus compañeros.",
+        "practice": "Ronda de práctica",
+        "practice_hint": "Los estudiantes puntúan un ejemplo que preparaste y ven cómo lo puntuaste. Requiere al menos un ejemplo.",
+        "helpfulness": "Valoración de utilidad",
+        "helpfulness_hint": "Los estudiantes valoran cada revisión que reciben de 1 a 5 estrellas.",
+        "revision_plan": "Plan de mejora",
+        "revision_plan_hint": "Los estudiantes anotan qué cambiarán después de leer sus comentarios.",
+        "score_title": "Puntuaciones",
+        "score_description": "La revisión entre pares nunca pone una nota por sí sola.",
+        "min_reviews": "Revisiones necesarias para una puntuación",
+        "min_reviews_hint": "La puntuación de pares aparece cuando un trabajo tiene esta cantidad de revisiones."
+      },
+      "anonymity": {
+        "double_blind": "Ambos ocultos",
+        "double_blind_hint": "Nadie ve quién revisó a quién",
+        "anonymous_reviewer": "Revisor oculto",
+        "anonymous_reviewer_hint": "Los revisores ven el nombre del autor",
+        "named": "Nombres visibles",
+        "named_hint": "Todos ven ambos nombres"
+      },
+      "score_mode": {
+        "feedback_only": "Solo comentarios",
+        "feedback_only_hint": "Las revisiones son para aprender, sin sugerencia de nota",
+        "suggest_grade": "Sugerir una nota",
+        "suggest_grade_hint": "Ves la mediana de pares y puedes usarla al calificar"
+      },
+      "rubric": {
+        "title": "Rúbrica",
+        "description": "Lo que puntúan los revisores. Cada criterio tiene niveles del mejor al más débil.",
+        "template": "Empezar con una plantilla",
+        "empty_title": "Aún no hay rúbrica",
+        "empty_description": "Elige una plantilla para empezar con un clic y luego adapta el texto a tu tarea.",
+        "add_criterion": "Añadir criterio",
+        "remove_criterion": "Quitar criterio",
+        "move_up": "Subir",
+        "move_down": "Bajar",
+        "criterion_title": "Criterio",
+        "criterion_title_placeholder": "p. ej., Idea principal clara",
+        "criterion_description": "Qué observar",
+        "criterion_description_placeholder": "¿Qué debe observar un revisor?",
+        "untitled_criterion": "Criterio sin título",
+        "level_label": "Nivel",
+        "level_label_placeholder": "p. ej., Excelente",
+        "points": "Puntos",
+        "level_description": "Cómo se ve",
+        "level_description_placeholder": "Opcional: cómo es un trabajo de este nivel",
+        "add_level": "Añadir nivel",
+        "remove_level": "Quitar nivel",
+        "max_points": "Puntos máx.: {{points}}",
+        "summary": "Criterios: {{criteria}} · Puntos máx.: {{points}}",
+        "replace_title": "¿Reemplazar la rúbrica actual?",
+        "replace_message": "La plantilla reemplaza los criterios que tienes ahora. No se guarda nada hasta que hagas clic en Guardar.",
+        "replace_confirm": "Reemplazar"
+      },
+      "templates": {
+        "writing": {
+          "name": "Redacción",
+          "blurb": "Ensayos, informes y respuestas escritas",
+          "thesis": {
+            "title": "Idea principal",
+            "description": "El punto principal es claro y se mantiene de principio a fin."
+          },
+          "evidence": {
+            "title": "Apoyo y evidencia",
+            "description": "Las afirmaciones se respaldan con ejemplos, datos o fuentes adecuados."
+          },
+          "organization": {
+            "title": "Organización",
+            "description": "Las ideas siguen un orden lógico y cada párrafo tiene una función."
+          },
+          "style": {
+            "title": "Claridad y estilo",
+            "description": "Las frases son claras y fáciles de leer, con pocos errores."
+          }
+        },
+        "project": {
+          "name": "Proyecto",
+          "blurb": "Construcciones, diseños y trabajo práctico",
+          "goal": {
+            "title": "Objetivo y alcance",
+            "description": "El proyecto indica lo que se propone y se mantiene dentro de ello."
+          },
+          "process": {
+            "title": "Proceso y decisiones",
+            "description": "Se explican los pasos seguidos y los motivos de las decisiones clave."
+          },
+          "result": {
+            "title": "Calidad del resultado",
+            "description": "El resultado final funciona, está completo y bien hecho."
+          },
+          "reflection": {
+            "title": "Reflexión",
+            "description": "El autor explica qué funcionó, qué no y qué cambiaría."
+          }
+        },
+        "presentation": {
+          "name": "Presentación",
+          "blurb": "Charlas, diapositivas y vídeos",
+          "content": {
+            "title": "Contenido",
+            "description": "La información es precisa, relevante y va más allá de lo obvio."
+          },
+          "structure": {
+            "title": "Estructura",
+            "description": "Tiene un inicio claro, un desarrollo lógico y un cierre sólido."
+          },
+          "delivery": {
+            "title": "Exposición",
+            "description": "Quien presenta habla con claridad, a buen ritmo, y mantiene la atención."
+          },
+          "visuals": {
+            "title": "Apoyos visuales",
+            "description": "Las diapositivas o imágenes apoyan el mensaje y se leen con facilidad."
+          }
+        },
+        "code": {
+          "name": "Código",
+          "blurb": "Programas, scripts y ejercicios",
+          "correctness": {
+            "title": "Corrección",
+            "description": "El código hace lo que se pidió, incluidos los casos límite."
+          },
+          "readability": {
+            "title": "Legibilidad",
+            "description": "Los nombres, el formato y los comentarios hacen que el código sea fácil de seguir."
+          },
+          "design": {
+            "title": "Estructura y diseño",
+            "description": "El código está dividido en partes razonables sin repeticiones innecesarias."
+          },
+          "testing": {
+            "title": "Pruebas",
+            "description": "Hay comprobaciones o pruebas que demuestran que el código funciona."
+          }
+        },
+        "scale": {
+          "excellent": "Excelente",
+          "excellent_description": "Cumple plenamente el criterio, con claras fortalezas",
+          "good": "Bueno",
+          "good_description": "Cumple el criterio con pequeñas carencias",
+          "developing": "En desarrollo",
+          "developing_description": "Cumple el criterio en parte, necesita más trabajo",
+          "beginning": "Inicial",
+          "beginning_description": "Apenas cumple el criterio por ahora",
+          "strong": "Sólido",
+          "strong_description": "Cumple claramente el criterio",
+          "adequate": "Suficiente",
+          "adequate_description": "Cumple el criterio en parte",
+          "needs_work": "Necesita mejorar",
+          "needs_work_description": "Aún no cumple el criterio"
+        }
+      },
+      "prompts": {
+        "title": "Preguntas de comentario",
+        "description": "Las preguntas que los revisores responden por escrito. Una longitud mínima evita revisiones de una sola palabra.",
+        "label": "Pregunta",
+        "label_placeholder": "p. ej., ¿Qué te sorprendió?",
+        "min_chars": "Mín. de caracteres",
+        "min_chars_hint": "Con 0, la respuesta es opcional.",
+        "add": "Añadir pregunta",
+        "remove": "Quitar pregunta",
+        "reset": "Usar las predeterminadas"
+      },
+      "samples": {
+        "title": "Ejemplos de práctica",
+        "description": "Los estudiantes puntúan un ejemplo antes de revisar a sus compañeros y luego ven tus puntuaciones y el porqué. Uno o dos ejemplos bastan.",
+        "practice_off": "La ronda de práctica está desactivada en Ajustes, así que los estudiantes no verán estos ejemplos.",
+        "none_yet": "Aún no hay ejemplos, así que se omite la ronda de práctica. Añade uno para activarla.",
+        "needs_rubric": "Primero añade criterios a la rúbrica para fijar tus niveles en cada ejemplo.",
+        "sample_title": "Título",
+        "sample_title_placeholder": "p. ej., Ensayo de ejemplo A",
+        "content": "Trabajo de ejemplo",
+        "content_hint": "Admite Markdown",
+        "content_placeholder": "Pega una respuesta de ejemplo, idealmente de nivel medio y con cosas que mejorar.",
+        "levels": "Tus niveles",
+        "levels_hint": "Lo que darías en cada criterio",
+        "pick_level": "Elige un nivel",
+        "explanation": "Por qué",
+        "explanation_hint": "Se muestra después de que los estudiantes lo puntúen",
+        "explanation_placeholder": "Explica tus puntuaciones en pocas frases.",
+        "add": "Añadir ejemplo",
+        "remove": "Quitar ejemplo",
+        "count_hint": "Hasta 5 ejemplos"
+      },
+      "errors": {
+        "criteria_min": "Añade al menos un criterio para activar la revisión entre pares.",
+        "criteria_max": "Usa como máximo {{max}} criterios.",
+        "criterion_title": "Ponle un nombre a este criterio.",
+        "levels_min": "Cada criterio necesita al menos {{min}} niveles.",
+        "levels_max": "Usa como máximo {{max}} niveles por criterio.",
+        "level_label": "Ponle un nombre a este nivel.",
+        "level_points": "Los puntos deben ser 0 o más.",
+        "prompts_min": "Deja al menos una pregunta.",
+        "prompts_max": "Usa como máximo {{max}} preguntas.",
+        "prompt_label": "Escribe la pregunta.",
+        "prompt_min_chars": "Usa un número entero de 0 a {{max}}.",
+        "reviews_range": "Usa un número de {{min}} a {{max}}.",
+        "sample_title": "Ponle un título al ejemplo.",
+        "sample_content": "Añade el trabajo de ejemplo.",
+        "sample_levels": "Elige tu nivel para cada criterio.",
+        "duplicate": "Dos elementos tienen el mismo ID. Quita uno y vuelve a añadirlo."
+      },
+      "save": {
+        "saving": "Guardando la revisión entre pares…",
+        "saved": "Revisión entre pares guardada",
+        "error": "No se pudo guardar la revisión entre pares",
+        "fix_errors": "Corrige los campos marcados y vuelve a guardar."
+      },
+      "monitor": {
+        "title": "Seguimiento",
+        "off_title": "La revisión entre pares está desactivada",
+        "off_description": "Actívala en Configuración. El progreso, las puntuaciones y las revisiones marcadas aparecerán aquí.",
+        "go_setup": "Ir a configuración"
+      },
+      "totals": {
+        "submitted": "Entregados",
+        "reviews_done": "Revisiones hechas",
+        "in_progress": "Revisiones en curso",
+        "below_target": "Necesitan más revisiones",
+        "flagged": "Marcadas"
+      },
+      "flagged": {
+        "title": "Revisiones marcadas",
+        "description": "Un estudiante las marcó como injustas o poco útiles. Descarta una revisión para dejarla fuera de la puntuación.",
+        "open": "Ver todas las revisiones",
+        "count": "Marcas: {{n}}"
+      },
+      "submissions": {
+        "title": "Entregas",
+        "learner": "Estudiante",
+        "reviews": "Revisiones recibidas",
+        "received": "{{done}} de {{target}}",
+        "peer_score": "Puntuación de pares",
+        "peer_score_tip": "La mediana de las revisiones, por criterio, en porcentaje. Las revisiones descartadas no se cuentan.",
+        "self": "Propia",
+        "self_tip": "La puntuación que el estudiante dio a su propio trabajo.",
+        "flags": "Marcas",
+        "waiting": "Pendiente",
+        "disagree": "Revisores en desacuerdo ({{points}} pts)",
+        "disagree_tip": "La revisión más alta y la más baja están muy separadas. Conviene mirarla antes de calificar.",
+        "empty_title": "Aún no hay entregas",
+        "empty_description": "Las revisiones empiezan en cuanto los estudiantes entregan su trabajo."
+      },
+      "reviewers": {
+        "title": "Revisores",
+        "reviewer": "Revisor",
+        "done": "Hechas",
+        "done_tip": "Revisiones escritas sobre las requeridas. Las revisiones extra también cuentan.",
+        "helpfulness": "Utilidad",
+        "helpfulness_tip": "La valoración media en estrellas que los autores dieron a las revisiones de esta persona.",
+        "helpfulness_value": "{{value}} de 5",
+        "bias": "Sesgo",
+        "bias_tip": "Cuánto se alejan, de media, las puntuaciones de esta persona de las de otros revisores del mismo trabajo. Cuanto más bajo, mejor.",
+        "bias_value": "±{{points}} pts",
+        "calibration": "Desvío en práctica",
+        "calibration_tip": "Cuánto se alejaron sus puntuaciones de práctica de las tuyas, en puntos de rúbrica por criterio. Cuanto más bajo, mejor.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Aún no hay revisiones",
+        "empty_description": "Los estudiantes aparecen aquí cuando empiezan a revisar."
+      },
+      "drawer": {
+        "title": "Revisiones entre pares",
+        "close": "Cerrar",
+        "peer_score": "Puntuación de pares",
+        "not_enough": "Aún no hay suficientes revisiones (mínimo: {{n}})",
+        "score_basis": "Mediana de las revisiones · contadas: {{n}}",
+        "self_score": "Autoevaluación:",
+        "self_short": "propia: {{points}}",
+        "apply_grade": "Aplicar la puntuación de pares como nota ({{score}})",
+        "apply_hint": "Abre la calificación con la sugerencia mostrada. No se guarda nada hasta que califiques.",
+        "feedback_only_hint": "Las sugerencias de nota están desactivadas (solo comentarios).",
+        "open_grading": "Abrir calificación",
+        "reviews": "Revisiones ({{n}})",
+        "reviewer_n": "Revisor {{n}}",
+        "no_reviews": "Aún no hay revisiones.",
+        "status_assigned": "En curso",
+        "status_discarded": "Descartada",
+        "flagged": "Marcada",
+        "flag_reason": "Motivo de la marca:",
+        "discard_reason": "Motivo del descarte:",
+        "discard_placeholder": "¿Por qué dejas fuera esta revisión? Solo los instructores lo ven.",
+        "discard": "Descartar",
+        "restore": "Restaurar",
+        "discarded_toast": "Revisión descartada",
+        "restored_toast": "Revisión restaurada",
+        "action_error": "Eso no funcionó. Inténtalo de nuevo.",
+        "helpfulness": "Valorada por el autor:",
+        "self_review": "Autoevaluación",
+        "reflection": "Plan de mejora",
+        "no_reflection": "Aún no hay plan de mejora.",
+        "grade_title": "Calificar a {{name}}",
+        "suggested": "Sugerencia de pares: {{score}}",
+        "suggested_hint": "Mediana de las revisiones entre pares (contadas: {{n}}). Úsala como guía.",
+        "closed_new_attempt": "Cerrada automáticamente: el estudiante empezó un nuevo intento."
+      }
     }
   }
 }

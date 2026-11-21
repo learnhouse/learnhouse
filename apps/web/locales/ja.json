@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Standard プランの機能",
           "description": "ニュースレターは Standard プラン以上でご利用いただけます。アップグレードすると、キャンペーン、ウェルカムシリーズ、コースの最新情報を学習者にメールで送信できます。"
+        },
+        "peer_review": {
+          "title": "Standardプラン機能",
+          "description": "ピアレビューはStandardプラン以上の組織で利用できます。アップグレードすると、学習者がルーブリックを使ってお互いの課題をレビューできるようになります。"
         }
       },
       "gate": {
@@ -380,6 +384,12 @@
           "note_3": "金曜日に向けた次のステップ",
           "play_title": "練習",
           "play_question": "五角形の辺はいくつありますか？"
+        },
+        "peer_review": {
+          "title": "互いにレビューして学びを深める",
+          "b1": "学習者はあなたのルーブリックで数人のクラスメイトをレビュー",
+          "b2": "練習ラウンドで、あなたならどう採点するかを確認",
+          "b3": "レビューから推奨成績を表示、最終判断はあなたが"
         }
       }
     },
@@ -8527,7 +8537,8 @@
             "scim": "SCIMプロビジョニング",
             "audit_logs": "監査ログ",
             "custom_domain": "カスタムドメイン",
-            "remove_watermark": "LearnHouse の透かしなし"
+            "remove_watermark": "LearnHouse の透かしなし",
+            "peer_review": "ピアレビュー"
           }
         },
         "next_invoice_label": "次回の請求書",
@@ -31207,7 +31218,9 @@
       "plan_downgraded": "Freeに移行",
       "plan_restored": "プランを復元しました",
       "payments_checkout_failing": "チェックアウトの失敗",
-      "invitation_accepted": "招待が承諾されました"
+      "invitation_accepted": "招待が承諾されました",
+      "peer_review_received": "ピアフィードバックが届きました",
+      "peer_review_flagged": "ピアレビューが報告されました"
     },
     "copy": {
       "assignment_graded": "採点されました：{{assignment}}",
@@ -31270,7 +31283,9 @@
       "plan_downgraded": "現在はFreeです。何も削除されていません",
       "plan_restored": "{{plan}}へおかえりなさい",
       "payments_checkout_failing": "学習者が現在購入できません（失敗したチェックアウト: {{count}}件）",
-      "invitation_accepted": "{{actor}}さんが招待を承諾しました"
+      "invitation_accepted": "{{actor}}さんが招待を承諾しました",
+      "peer_review_received": "{{assignment}} に新しいピアフィードバックがあります",
+      "peer_review_flagged": "{{actor}} さんが {{assignment}} のピアレビューを報告しました"
     },
     "routing": {
       "short": "通知先",
@@ -31577,6 +31592,500 @@
       "seat_limit_exceeded": "ライセンスに含まれる席数を超えて使用されています",
       "grace_expired": "ライセンスサーバーに長時間接続できませんでした",
       "unknown": "ライセンスを確認できませんでした"
+    }
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "評価基準 {{n}}",
+      "points_short_one": "{{count}}点",
+      "points_short_other": "{{count}}点",
+      "prompt_strength": "よくできている点",
+      "prompt_suggestion": "改善できる点を1つと、その方法",
+      "prompt_question": "作成者への質問"
+    },
+    "learner": {
+      "eyebrow": "ピアレビュー",
+      "card_title": "クラスメートの課題をレビューして、フィードバックをもらおう",
+      "steps_label": "ピアレビューのステップ",
+      "step_self": "自己評価",
+      "step_practice": "練習",
+      "step_reviews": "クラスメートをレビュー",
+      "step_feedback": "あなたへのフィードバック",
+      "n_of_m": "{{n}} / {{m}}",
+      "done": "完了",
+      "to_do": "未完了",
+      "locked": "ロック中",
+      "continue": "続ける",
+      "cancel": "キャンセル",
+      "back": "戻る",
+      "retry": "もう一度試す",
+      "optional": "任意",
+      "saved": "保存しました",
+      "saving": "保存中…",
+      "unsaved": "未保存の変更があります",
+      "not_saved": "保存されていません",
+      "feedback_count_one": "{{count}}件のレビュー",
+      "feedback_count_other": "{{count}}件のレビュー",
+      "reviews_due": "レビューの期限は{{date}}です",
+      "reviews_closed_on": "レビューは{{date}}に締め切りました",
+      "next_title": "次はピアレビューです",
+      "next_body_one": "提出すると、{{count}}人のクラスメートの課題をレビューし、あなたの課題へのフィードバックがもらえます。",
+      "next_body_other": "提出すると、{{count}}人のクラスメートの課題をレビューし、あなたの課題へのフィードバックがもらえます。",
+      "self_title": "自分の課題を評価しよう",
+      "self_why": "先に自分の課題を評価しておくと、クラスメートのフィードバックを比べたり活かしたりしやすくなります。",
+      "self_done": "自己評価を保存しました",
+      "self_done_pct": "自己評価を保存しました: 自分への評価は{{pct}}%です",
+      "edit_self_review": "自己評価を編集",
+      "save_self_review": "自己評価を保存",
+      "self_saved_toast": "自己評価を保存しました",
+      "cal_title": "練習ラウンド",
+      "cal_why": "先にサンプルを採点すると、講師がルーブリックをどう見ているかがわかり、あなたのレビューがより公平になります。",
+      "cal_progress": "サンプル {{current}} / {{total}}",
+      "cal_sample": "練習用サンプル",
+      "cal_check": "講師と比べる",
+      "cal_you": "あなた",
+      "cal_instructor": "講師",
+      "cal_match": "講師と同じ",
+      "cal_off_by_one": "{{count}}点の差",
+      "cal_off_by_other": "{{count}}点の差",
+      "cal_why_title": "講師がこの評価にした理由",
+      "cal_next": "次のサンプル",
+      "cal_all_done": "練習は完了です。クラスメートのレビューを始められます。",
+      "cal_none": "現在、練習用のサンプルはありません。",
+      "go_to_reviews": "レビューへ",
+      "go_to_practice": "練習へ",
+      "finish_practice_first": "先に練習ラウンドを終えてください。",
+      "reviews_title": "クラスメートをレビュー",
+      "reviews_why": "他の人の課題をレビューすることが、いちばん学びになります。",
+      "reviews_done_of": "{{required}}件中{{done}}件完了",
+      "reviews_locked_practice": "練習ラウンドを終えるとレビューを始められます。",
+      "reviews_complete": "すべてのレビューが完了しました。ありがとうございます！",
+      "reviews_extra_hint": "追加のレビューも大歓迎です。レビューが少ない人の助けになります。",
+      "start_review": "レビュー {{n}} / {{m}} を始める",
+      "continue_review": "レビューを続ける",
+      "review_another": "もう1件レビューする",
+      "see_feedback": "フィードバックを見る",
+      "none_title": "まだレビューできる課題がありません",
+      "none_body": "誰かが提出したら、すぐにクラスメートの課題をお届けします。またのぞいてみてください。",
+      "check_again": "もう一度確認",
+      "your_helpfulness": "あなたのレビューへのクラスメートの評価は平均 {{avg}} / 5 です。",
+      "review_n_of_m": "レビュー {{n}} / {{m}}",
+      "extra_review": "追加レビュー",
+      "classmate_work": "クラスメートの課題",
+      "work_of": "{{name}}さんの課題",
+      "your_review": "あなたのレビュー",
+      "your_review_hint": "各評価基準でいちばん合うレベルを選び、やさしく具体的なコメントを書きましょう。",
+      "review_already_submitted": "このレビューはすでに提出済みです。",
+      "review_load_error": "このレビューを読み込めませんでした。",
+      "comments_heading": "コメント",
+      "pick_a_level": "レベルを選択",
+      "add_note": "メモを追加",
+      "note_label": "この基準へのメモ（任意）",
+      "chars_remaining_one": "あと{{count}}文字必要です",
+      "chars_remaining_other": "あと{{count}}文字必要です",
+      "chars_ok_one": "{{count}}文字",
+      "chars_ok_other": "{{count}}文字",
+      "fix_before_submit": "未入力の部分があります。ハイライトされた項目を確認してください。",
+      "save_draft": "下書きを保存",
+      "submit_review": "レビューを提出",
+      "drafts_autosave": "下書きは自動で保存されます",
+      "draft_saved_toast": "下書きを保存しました",
+      "review_submitted_toast": "レビューを提出しました。ありがとうございます！",
+      "no_answer": "回答なし",
+      "no_tasks": "この提出物には表示できる内容がありません。",
+      "chosen": "選択済み",
+      "media_option": "選択肢 {{n}}（メディア）",
+      "download_file": "ファイルをダウンロード",
+      "feedback_title": "あなたへのフィードバック",
+      "feedback_why": "クラスメートの見方と自分の見方を比べて、何を直すか決めましょう。",
+      "locked_reviews_one": "あと{{count}}件レビューするとフィードバックが開きます",
+      "locked_reviews_other": "あと{{count}}件レビューするとフィードバックが開きます",
+      "locked_generic": "フィードバックはまだ開いていません",
+      "locked_due": "遅くとも{{date}}に開きます。",
+      "unlocked_by_due_date": "レビューの期限が過ぎたため、フィードバックが開きました。",
+      "no_feedback_title": "フィードバックはまだありません",
+      "no_feedback_body": "クラスメートからのレビューが届くと、ここに表示されます。",
+      "peer_score": "ピアスコア",
+      "peer_score_how_one": "評価基準ごとの、クラスメート{{count}}件のレビューの中央値です。",
+      "peer_score_how_other": "評価基準ごとの、クラスメート{{count}}件のレビューの中央値です。",
+      "score_needs_more_one": "ピアスコアは{{count}}件のレビューが集まると表示されます。",
+      "score_needs_more_other": "ピアスコアは{{count}}件のレビューが集まると表示されます。",
+      "reviewers_disagree": "レビュアーの意見が分かれました",
+      "gap_title": "クラスメートと自己評価の比較",
+      "gap_title_peers": "クラスメートから見た課題",
+      "legend_peers": "クラスメート（中央値）",
+      "legend_you": "あなた",
+      "gap_values": "クラスメート {{peers}} · あなた {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: クラスメート {{peers}}、あなた {{you}}、満点 {{max}}",
+      "gap_aligned": "あなたとクラスメートの評価は一致しています",
+      "gap_self_higher": "クラスメートより自分に高い評価をつけました",
+      "gap_self_lower": "クラスメートより自分に低い評価をつけました",
+      "reviews_received_one": "{{count}}件のレビューを受け取りました",
+      "reviews_received_other": "{{count}}件のレビューを受け取りました",
+      "reviewer_n": "レビュアー {{n}}",
+      "flagged": "報告済み",
+      "how_helpful": "このレビューは役に立ちましたか？",
+      "stars_n_one": "星{{count}}つ",
+      "stars_n_other": "星{{count}}つ",
+      "helpful_note_label": "レビュアーへのメモ",
+      "helpful_note_placeholder": "役に立った点、あるとさらによかった点は？（任意）",
+      "save_note": "メモを保存",
+      "thanks_feedback": "フィードバックありがとうございます",
+      "flag_link": "このレビューを報告",
+      "flag_title": "このレビューを報告",
+      "flag_body": "講師が確認します。失礼な内容、的外れ、空欄など、どこが問題か教えてください。",
+      "flag_reason": "どんな問題ですか？",
+      "flag_submit": "報告する",
+      "flag_sent": "ありがとうございます。講師に伝えました。",
+      "plan_title": "修正プラン",
+      "plan_why": "直すことを書き出しましょう。プランがあれば、フィードバックがより良い課題につながります。",
+      "plan_placeholder": "このフィードバックをもとに、私は…",
+      "save_plan": "プランを保存",
+      "plan_saved": "修正プランを保存しました",
+      "error_generic": "問題が発生しました。もう一度お試しください。",
+      "error_save": "下書きを保存できませんでした。もう一度試します。",
+      "error_submit": "提出できませんでした。もう一度お試しください。",
+      "error_download": "ファイルをダウンロードできませんでした。",
+      "submission_changed": "このクラスメートが新しい回答を始めたため、このレビューは終了しました。別の人をレビューできます。",
+      "answer_hidden": "この回答は自動で採点されるため、レビューの対象外です。",
+      "retry_in_progress": "新しい挑戦を始めています。クラスメートのレビューを続けるには、提出してください。"
+    },
+    "instructor": {
+      "tab": "ピアレビュー",
+      "setup": "設定",
+      "unknown_learner": "学習者",
+      "retry": "再試行",
+      "error_title": "ピアレビューを読み込めませんでした",
+      "error_description": "問題が発生しました。接続を確認して、もう一度お試しください。",
+      "toggle": {
+        "title": "ピアレビュー",
+        "off_hint": "オフ。オンにすると、提出後に学習者があなたのルーブリックで数人のクラスメイトの課題をレビューし、互いにフィードバックを受け取ります。",
+        "on_hint": "オン。各学習者は提出後にクラスメイトをレビューします。下でルーブリックのテンプレートを選んで保存すれば準備完了です。"
+      },
+      "why": {
+        "title": "ピアレビューが効果的な理由",
+        "reviewers_learn": "レビューを書くことで最も学ぶのはレビューする側です。だから全員がレビューします。",
+        "three_reviewers": "3人以上のレビューは、講師1人の評価とほぼ同じくらい信頼できます。",
+        "rubric_practice": "明確なルーブリックと短い練習ラウンドで、レビューが正確になります。",
+        "revise": "次に何を変えるかを学習者が考えると、フィードバックが最も役立ちます。",
+        "dismiss": "このヒントを非表示"
+      },
+      "sections": {
+        "settings": "設定",
+        "rubric": "ルーブリック",
+        "prompts": "コメントの質問",
+        "practice": "練習ラウンド"
+      },
+      "settings": {
+        "reviewing_title": "レビュー",
+        "reviewing_description": "各学習者が書くレビューの数と、誰の名前が誰に見えるか。",
+        "reviews_required": "学習者あたりのレビュー数",
+        "reviews_required_hint": "3〜5件で信頼できるフィードバックになります。各課題もこの件数のレビューを受けることを目指します。",
+        "anonymity": "名前",
+        "anonymity_hint": "名前を隠すと、より率直なレビューになります。",
+        "require_reviews": "フィードバックを見る前にレビュー",
+        "require_reviews_hint": "学習者は自分のレビューを終えるか、レビュー期限を過ぎるとフィードバックを見られます。",
+        "due_date": "レビュー期限",
+        "due_date_hint": "任意。この日以降は全員が自分のフィードバックを見られます。",
+        "clear": "クリア",
+        "steps_title": "追加ステップ",
+        "steps_description": "どれも短時間で、フィードバックをより役立つものにします。",
+        "self_review": "自己評価",
+        "self_review_hint": "学習者はまず自分の課題を採点し、その後クラスメイトの評価と比べます。",
+        "practice": "練習ラウンド",
+        "practice_hint": "学習者はあなたが用意したサンプルを採点し、あなたの採点を確認します。サンプルが1つ以上必要です。",
+        "helpfulness": "役立ち度の評価",
+        "helpfulness_hint": "学習者は受け取った各レビューを星1〜5で評価します。",
+        "revision_plan": "改善プラン",
+        "revision_plan_hint": "学習者はフィードバックを読んだ後、何を変えるかを書き出します。",
+        "score_title": "スコア",
+        "score_description": "ピアレビューだけで成績が決まることはありません。",
+        "min_reviews": "スコアに必要なレビュー数",
+        "min_reviews_hint": "課題のレビューがこの件数に達すると、ピアスコアが表示されます。"
+      },
+      "anonymity": {
+        "double_blind": "両方非表示",
+        "double_blind_hint": "誰が誰をレビューしたか、誰にも見えません",
+        "anonymous_reviewer": "レビュアーを非表示",
+        "anonymous_reviewer_hint": "レビュアーには作成者の名前が見えます",
+        "named": "名前を表示",
+        "named_hint": "全員に両方の名前が見えます"
+      },
+      "score_mode": {
+        "feedback_only": "フィードバックのみ",
+        "feedback_only_hint": "レビューは学びのため。成績の提案はなし",
+        "suggest_grade": "成績を提案",
+        "suggest_grade_hint": "ピアの中央値が表示され、採点時に参考にできます"
+      },
+      "rubric": {
+        "title": "ルーブリック",
+        "description": "レビュアーが採点する項目です。各基準には最高から最低までのレベルがあります。",
+        "template": "テンプレートから始める",
+        "empty_title": "ルーブリックはまだありません",
+        "empty_description": "テンプレートを選べばワンクリックで始められます。その後、課題に合わせて文言を調整してください。",
+        "add_criterion": "基準を追加",
+        "remove_criterion": "基準を削除",
+        "move_up": "上へ移動",
+        "move_down": "下へ移動",
+        "criterion_title": "基準",
+        "criterion_title_placeholder": "例：主張が明確",
+        "criterion_description": "確認するポイント",
+        "criterion_description_placeholder": "レビュアーは何を確認すべきですか？",
+        "untitled_criterion": "無題の基準",
+        "level_label": "レベル",
+        "level_label_placeholder": "例：優秀",
+        "points": "点数",
+        "level_description": "どのような状態か",
+        "level_description_placeholder": "任意：このレベルの課題はどのようなものか",
+        "add_level": "レベルを追加",
+        "remove_level": "レベルを削除",
+        "max_points": "最高点：{{points}}",
+        "summary": "基準：{{criteria}} · 最高点：{{points}}",
+        "replace_title": "現在のルーブリックを置き換えますか？",
+        "replace_message": "テンプレートで今の基準が置き換わります。「保存」をクリックするまで何も保存されません。",
+        "replace_confirm": "置き換える"
+      },
+      "templates": {
+        "writing": {
+          "name": "文章",
+          "blurb": "エッセイ、レポート、記述式の回答",
+          "thesis": {
+            "title": "主張",
+            "description": "主な論点が明確で、最初から最後まで一貫している。"
+          },
+          "evidence": {
+            "title": "裏付けと根拠",
+            "description": "主張が適切な例、事実、出典で裏付けられている。"
+          },
+          "organization": {
+            "title": "構成",
+            "description": "考えが論理的な順序で並び、各段落の役割が1つに絞られている。"
+          },
+          "style": {
+            "title": "わかりやすさと文体",
+            "description": "文が明確で読みやすく、誤りが少ない。"
+          }
+        },
+        "project": {
+          "name": "プロジェクト",
+          "blurb": "制作物、デザイン、実践的な課題",
+          "goal": {
+            "title": "目標と範囲",
+            "description": "プロジェクトの目的が示され、その範囲内に収まっている。"
+          },
+          "process": {
+            "title": "進め方と判断",
+            "description": "取った手順と、主な選択の理由が説明されている。"
+          },
+          "result": {
+            "title": "成果の質",
+            "description": "最終成果が機能し、完成していて、丁寧に作られている。"
+          },
+          "reflection": {
+            "title": "振り返り",
+            "description": "うまくいった点、いかなかった点、変えたい点を作成者が述べている。"
+          }
+        },
+        "presentation": {
+          "name": "プレゼンテーション",
+          "blurb": "発表、スライド、動画",
+          "content": {
+            "title": "内容",
+            "description": "情報が正確で関連性があり、ありきたりな内容にとどまらない。"
+          },
+          "structure": {
+            "title": "構成",
+            "description": "明確な導入、論理的な本論、力強い結びがある。"
+          },
+          "delivery": {
+            "title": "話し方",
+            "description": "話し手の声が明瞭で、テンポがよく、聞き手を引きつけている。"
+          },
+          "visuals": {
+            "title": "ビジュアル",
+            "description": "スライドや図がメッセージを支え、見やすい。"
+          }
+        },
+        "code": {
+          "name": "コード",
+          "blurb": "プログラム、スクリプト、演習",
+          "correctness": {
+            "title": "正しさ",
+            "description": "エッジケースも含めて、求められた通りに動作する。"
+          },
+          "readability": {
+            "title": "読みやすさ",
+            "description": "名前、書式、コメントによってコードが追いやすい。"
+          },
+          "design": {
+            "title": "構造と設計",
+            "description": "コードが適切な単位に分かれ、無駄な重複がない。"
+          },
+          "testing": {
+            "title": "テスト",
+            "description": "コードが動作することを示すチェックやテストがある。"
+          }
+        },
+        "scale": {
+          "excellent": "優秀",
+          "excellent_description": "基準を完全に満たし、明確な強みがある",
+          "good": "良好",
+          "good_description": "基準を満たしているが、小さな不足がある",
+          "developing": "発展途上",
+          "developing_description": "基準を部分的に満たしており、さらに取り組みが必要",
+          "beginning": "初期段階",
+          "beginning_description": "まだ基準をほとんど満たしていない",
+          "strong": "十分",
+          "strong_description": "基準を明確に満たしている",
+          "adequate": "おおむね可",
+          "adequate_description": "基準を部分的に満たしている",
+          "needs_work": "要改善",
+          "needs_work_description": "まだ基準を満たしていない"
+        }
+      },
+      "prompts": {
+        "title": "コメントの質問",
+        "description": "レビュアーが文章で答える質問です。最小文字数を設定すると、一言だけのレビューを防げます。",
+        "label": "質問",
+        "label_placeholder": "例：意外だった点は？",
+        "min_chars": "最小文字数",
+        "min_chars_hint": "0にすると回答は任意になります。",
+        "add": "質問を追加",
+        "remove": "質問を削除",
+        "reset": "デフォルトを使用"
+      },
+      "samples": {
+        "title": "練習用サンプル",
+        "description": "学習者はクラスメイトをレビューする前にサンプルを採点し、あなたのスコアとその理由を確認します。サンプルは1〜2つで十分です。",
+        "practice_off": "設定で練習ラウンドがオフになっているため、学習者にはこれらのサンプルは表示されません。",
+        "none_yet": "サンプルがまだないため、練習ラウンドはスキップされます。追加するとオンになります。",
+        "needs_rubric": "各サンプルのレベルを設定するには、まずルーブリックの基準を追加してください。",
+        "sample_title": "タイトル",
+        "sample_title_placeholder": "例：サンプルエッセイA",
+        "content": "サンプルの課題",
+        "content_hint": "Markdownが使えます",
+        "content_placeholder": "回答例を貼り付けてください。改善点のある中程度のものが理想です。",
+        "levels": "あなたの評価レベル",
+        "levels_hint": "各基準であなたがつけるレベル",
+        "pick_level": "レベルを選択",
+        "explanation": "理由",
+        "explanation_hint": "学習者が採点した後に表示されます",
+        "explanation_placeholder": "スコアの理由を数文で説明してください。",
+        "add": "サンプルを追加",
+        "remove": "サンプルを削除",
+        "count_hint": "サンプルは最大5つ"
+      },
+      "errors": {
+        "criteria_min": "ピアレビューをオンにするには、基準を1つ以上追加してください。",
+        "criteria_max": "基準は最大{{max}}個までです。",
+        "criterion_title": "この基準に名前を付けてください。",
+        "levels_min": "各基準には{{min}}個以上のレベルが必要です。",
+        "levels_max": "レベルは基準ごとに最大{{max}}個までです。",
+        "level_label": "このレベルに名前を付けてください。",
+        "level_points": "点数は0以上にしてください。",
+        "prompts_min": "質問を1つ以上残してください。",
+        "prompts_max": "質問は最大{{max}}個までです。",
+        "prompt_label": "質問を入力してください。",
+        "prompt_min_chars": "0から{{max}}までの整数を入力してください。",
+        "reviews_range": "{{min}}から{{max}}までの数値を入力してください。",
+        "sample_title": "サンプルにタイトルを付けてください。",
+        "sample_content": "サンプルの課題を追加してください。",
+        "sample_levels": "すべての基準でレベルを選んでください。",
+        "duplicate": "2つの項目が同じIDになっています。片方を削除して、もう一度追加してください。"
+      },
+      "save": {
+        "saving": "ピアレビューを保存中…",
+        "saved": "ピアレビューを保存しました",
+        "error": "ピアレビューを保存できませんでした",
+        "fix_errors": "ハイライトされた項目を修正して、もう一度保存してください。"
+      },
+      "monitor": {
+        "title": "モニター",
+        "off_title": "ピアレビューはオフです",
+        "off_description": "「設定」でオンにしてください。進捗、スコア、報告されたレビューがここに表示されます。",
+        "go_setup": "設定へ移動"
+      },
+      "totals": {
+        "submitted": "提出済み",
+        "reviews_done": "完了したレビュー",
+        "in_progress": "進行中のレビュー",
+        "below_target": "レビューが不足",
+        "flagged": "報告あり"
+      },
+      "flagged": {
+        "title": "報告されたレビュー",
+        "description": "学習者が不公平または役に立たないと報告したレビューです。レビューを除外するとスコアに含まれなくなります。",
+        "open": "すべてのレビューを見る",
+        "count": "報告：{{n}}"
+      },
+      "submissions": {
+        "title": "提出物",
+        "learner": "学習者",
+        "reviews": "受け取ったレビュー",
+        "received": "{{done}} / {{target}}",
+        "peer_score": "ピアスコア",
+        "peer_score_tip": "基準ごとのレビューの中央値をパーセントで表示します。除外したレビューは含まれません。",
+        "self": "自己",
+        "self_tip": "学習者が自分の課題につけたスコアです。",
+        "flags": "報告",
+        "waiting": "待機中",
+        "disagree": "レビュアーの評価が分かれています（{{points}}点）",
+        "disagree_tip": "最高と最低のレビューが大きく離れています。採点前に確認する価値があります。",
+        "empty_title": "まだ提出はありません",
+        "empty_description": "学習者が課題を提出するとすぐにレビューが始まります。"
+      },
+      "reviewers": {
+        "title": "レビュアー",
+        "reviewer": "レビュアー",
+        "done": "完了",
+        "done_tip": "必要数のうち書いたレビューの数です。追加のレビューもカウントされます。",
+        "helpfulness": "役立ち度",
+        "helpfulness_tip": "この人のレビューに作成者がつけた星の平均です。",
+        "helpfulness_value": "5点中{{value}}",
+        "bias": "偏り",
+        "bias_tip": "同じ課題の他のレビュアーと比べて、この人のスコアが平均どれだけ離れているか。低いほど良好です。",
+        "bias_value": "±{{points}}点",
+        "calibration": "練習でのずれ",
+        "calibration_tip": "練習ラウンドのスコアがあなたのスコアとどれだけ離れていたか（基準ごとのルーブリック点数）。低いほど良好です。",
+        "calibration_value": "±{{points}}",
+        "empty_title": "まだレビューはありません",
+        "empty_description": "学習者がレビューを始めると、ここに表示されます。"
+      },
+      "drawer": {
+        "title": "ピアレビュー",
+        "close": "閉じる",
+        "peer_score": "ピアスコア",
+        "not_enough": "レビューがまだ足りません（最低：{{n}}）",
+        "score_basis": "レビューの中央値 · 集計数：{{n}}",
+        "self_score": "自己評価：",
+        "self_short": "自己：{{points}}",
+        "apply_grade": "ピアスコアを成績に適用（{{score}}）",
+        "apply_hint": "提案を表示した状態で採点画面を開きます。採点するまで何も保存されません。",
+        "feedback_only_hint": "成績の提案はオフです（フィードバックのみ）。",
+        "open_grading": "採点を開く",
+        "reviews": "レビュー（{{n}}）",
+        "reviewer_n": "レビュアー{{n}}",
+        "no_reviews": "まだレビューはありません。",
+        "status_assigned": "進行中",
+        "status_discarded": "除外済み",
+        "flagged": "報告あり",
+        "flag_reason": "報告理由：",
+        "discard_reason": "除外理由：",
+        "discard_placeholder": "このレビューを除外する理由は？講師にのみ表示されます。",
+        "discard": "除外",
+        "restore": "元に戻す",
+        "discarded_toast": "レビューを除外しました",
+        "restored_toast": "レビューを元に戻しました",
+        "action_error": "うまくいきませんでした。もう一度お試しください。",
+        "helpfulness": "作成者の評価：",
+        "self_review": "自己評価",
+        "reflection": "改善プラン",
+        "no_reflection": "改善プランはまだ書かれていません。",
+        "grade_title": "{{name}}を採点",
+        "suggested": "ピアの提案：{{score}}",
+        "suggested_hint": "ピアレビューの中央値（集計数：{{n}}）。目安としてご利用ください。",
+        "closed_new_attempt": "自動的に終了しました：学習者が新しい提出を始めました。"
+      }
     }
   }
 }

@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Funkcja planu Standard",
           "description": "Newsletter jest dostępny w planie Standard i wyższych. Przejdź na wyższy plan, aby wysyłać uczniom e-mailem kampanie, serie powitalne i aktualizacje kursów."
+        },
+        "peer_review": {
+          "title": "Funkcja Standard",
+          "description": "Ocena koleżeńska jest dostępna dla organizacji z planem Standard lub wyższym. Uaktualnij, aby uczestnicy oceniali nawzajem swoje prace według rubryki."
         }
       },
       "gate": {
@@ -383,6 +387,12 @@
           "note_3": "Kolejne kroki na piątek",
           "play_title": "Ćwiczenia",
           "play_question": "Ile boków ma pięciokąt?"
+        },
+        "peer_review": {
+          "title": "Uczestnicy uczą się, oceniając się nawzajem",
+          "b1": "Każdy uczestnik ocenia kilka osób z grupy według Twojej rubryki",
+          "b2": "Runda próbna pokazuje, jak Ty byś ocenił",
+          "b3": "Zobacz proponowaną ocenę z recenzji, a decyzja należy do Ciebie"
         }
       }
     },
@@ -8799,7 +8809,8 @@
             "scim": "Provisioning SCIM",
             "audit_logs": "Dzienniki audytu",
             "custom_domain": "Własna domena",
-            "remove_watermark": "Bez znaku wodnego LearnHouse"
+            "remove_watermark": "Bez znaku wodnego LearnHouse",
+            "peer_review": "Ocena koleżeńska"
           }
         },
         "next_invoice_label": "Następna faktura",
@@ -32634,7 +32645,9 @@
       "plan_downgraded": "Przejście na plan Bezpłatny",
       "plan_restored": "Plan przywrócony",
       "payments_checkout_failing": "Nieudane płatności",
-      "invitation_accepted": "Zaproszenie przyjęte"
+      "invitation_accepted": "Zaproszenie przyjęte",
+      "peer_review_received": "Otrzymano ocenę koleżeńską",
+      "peer_review_flagged": "Zgłoszono ocenę koleżeńską"
     },
     "copy": {
       "assignment_graded": "Oceniono: {{assignment}}",
@@ -32697,7 +32710,9 @@
       "plan_downgraded": "Korzystasz teraz z planu Bezpłatny. Nic nie zostało usunięte",
       "plan_restored": "Witaj ponownie w planie {{plan}}",
       "payments_checkout_failing": "Uczniowie nie mogą teraz nic kupić (nieudane płatności: {{count}})",
-      "invitation_accepted": "{{actor}} przyjmuje Twoje zaproszenie"
+      "invitation_accepted": "{{actor}} przyjmuje Twoje zaproszenie",
+      "peer_review_received": "Nowa ocena koleżeńska do {{assignment}}",
+      "peer_review_flagged": "{{actor}} zgłosił(a) ocenę koleżeńską do {{assignment}}"
     },
     "routing": {
       "short": "Kto dostaje powiadomienia",
@@ -33007,6 +33022,522 @@
       "seat_limit_exceeded": "w użyciu jest więcej miejsc, niż obejmuje licencja",
       "grace_expired": "serwer licencji był zbyt długo nieosiągalny",
       "unknown": "nie udało się zweryfikować licencji"
+    }
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Kryterium {{n}}",
+      "points_short_one": "{{count}} pkt",
+      "points_short_few": "{{count}} pkt",
+      "points_short_many": "{{count}} pkt",
+      "points_short_other": "{{count}} pkt",
+      "prompt_strength": "Co działa dobrze",
+      "prompt_suggestion": "Jedna rzecz do poprawy i jak to zrobić",
+      "prompt_question": "Pytanie do autora"
+    },
+    "learner": {
+      "eyebrow": "Ocena koleżeńska",
+      "card_title": "Oceniaj prace innych i dostawaj opinie od grupy",
+      "steps_label": "Kroki oceny koleżeńskiej",
+      "step_self": "Samoocena",
+      "step_practice": "Trening",
+      "step_reviews": "Oceń prace innych",
+      "step_feedback": "Twoje opinie",
+      "n_of_m": "{{n}} z {{m}}",
+      "done": "Gotowe",
+      "to_do": "Do zrobienia",
+      "locked": "Zablokowane",
+      "continue": "Dalej",
+      "cancel": "Anuluj",
+      "back": "Wstecz",
+      "retry": "Spróbuj ponownie",
+      "optional": "Opcjonalnie",
+      "saved": "Zapisano",
+      "saving": "Zapisywanie…",
+      "unsaved": "Niezapisane zmiany",
+      "not_saved": "Nie zapisano",
+      "feedback_count_one": "{{count}} ocena",
+      "feedback_count_few": "{{count}} oceny",
+      "feedback_count_many": "{{count}} ocen",
+      "feedback_count_other": "{{count}} oceny",
+      "reviews_due": "Oceny do {{date}}",
+      "reviews_closed_on": "Oceny zamknięto {{date}}",
+      "next_title": "Teraz ocena koleżeńska",
+      "next_body_one": "Po oddaniu pracy ocenisz pracę {{count}} osoby z grupy i dostaniesz opinię o swojej.",
+      "next_body_few": "Po oddaniu pracy ocenisz prace {{count}} osób z grupy i dostaniesz opinię o swojej.",
+      "next_body_many": "Po oddaniu pracy ocenisz prace {{count}} osób z grupy i dostaniesz opinię o swojej.",
+      "next_body_other": "Po oddaniu pracy ocenisz prace {{count}} osoby z grupy i dostaniesz opinię o swojej.",
+      "self_title": "Oceń własną pracę",
+      "self_why": "Gdy najpierw ocenisz siebie, łatwiej porównasz opinie innych i wyciągniesz z nich wnioski.",
+      "self_done": "Samoocena zapisana",
+      "self_done_pct": "Samoocena zapisana: dajesz sobie {{pct}}%",
+      "edit_self_review": "Edytuj samoocenę",
+      "save_self_review": "Zapisz samoocenę",
+      "self_saved_toast": "Samoocena zapisana",
+      "cal_title": "Runda treningowa",
+      "cal_why": "Ocena przykładowej pracy pokazuje, jak prowadzący stosuje kryteria, więc Twoje oceny będą sprawiedliwsze.",
+      "cal_progress": "Przykład {{current}} z {{total}}",
+      "cal_sample": "Przykład treningowy",
+      "cal_check": "Porównaj z prowadzącym",
+      "cal_you": "Ty",
+      "cal_instructor": "Prowadzący",
+      "cal_match": "Tak samo jak prowadzący",
+      "cal_off_by_one": "Różnica: {{count}} punkt",
+      "cal_off_by_few": "Różnica: {{count}} punkty",
+      "cal_off_by_many": "Różnica: {{count}} punktów",
+      "cal_off_by_other": "Różnica: {{count}} punktu",
+      "cal_why_title": "Dlaczego prowadzący ocenił to w ten sposób",
+      "cal_next": "Następny przykład",
+      "cal_all_done": "Trening zakończony. Możesz oceniać prace innych.",
+      "cal_none": "Na razie nie ma przykładów treningowych.",
+      "go_to_reviews": "Przejdź do ocen",
+      "go_to_practice": "Przejdź do treningu",
+      "finish_practice_first": "Najpierw skończ rundę treningową.",
+      "reviews_title": "Oceń prace innych",
+      "reviews_why": "Oceniając innych, uczysz się najwięcej.",
+      "reviews_done_of": "Zrobione: {{done}} z {{required}}",
+      "reviews_locked_practice": "Skończ rundę treningową, żeby zacząć oceniać.",
+      "reviews_complete": "Wszystkie oceny gotowe. Dziękujemy!",
+      "reviews_extra_hint": "Dodatkowe oceny mile widziane: pomagają osobom, które mają ich mniej.",
+      "start_review": "Zacznij ocenę {{n}} z {{m}}",
+      "continue_review": "Kontynuuj ocenę",
+      "review_another": "Oceń kolejną",
+      "see_feedback": "Zobacz swoje opinie",
+      "none_title": "Na razie nie ma kogo oceniać",
+      "none_body": "Damy Ci czyjąś pracę, gdy tylko ktoś ją odda. Zajrzyj tu później.",
+      "check_again": "Sprawdź ponownie",
+      "your_helpfulness": "Inni oceniają Twoje oceny średnio na {{avg}} / 5.",
+      "review_n_of_m": "Ocena {{n}} z {{m}}",
+      "extra_review": "Dodatkowa ocena",
+      "classmate_work": "Praca osoby z Twojej grupy",
+      "work_of": "Praca: {{name}}",
+      "your_review": "Twoja ocena",
+      "your_review_hint": "Przy każdym kryterium wybierz najlepiej pasujący poziom, a potem napisz życzliwe i konkretne komentarze.",
+      "review_already_submitted": "Ta ocena została już wysłana.",
+      "review_load_error": "Nie udało się wczytać tej oceny.",
+      "comments_heading": "Komentarze",
+      "pick_a_level": "Wybierz poziom",
+      "add_note": "Dodaj notatkę",
+      "note_label": "Notatka do tego kryterium (opcjonalnie)",
+      "chars_remaining_one": "Brakuje jeszcze {{count}} znaku",
+      "chars_remaining_few": "Brakuje jeszcze {{count}} znaków",
+      "chars_remaining_many": "Brakuje jeszcze {{count}} znaków",
+      "chars_remaining_other": "Brakuje jeszcze {{count}} znaku",
+      "chars_ok_one": "{{count}} znak",
+      "chars_ok_few": "{{count}} znaki",
+      "chars_ok_many": "{{count}} znaków",
+      "chars_ok_other": "{{count}} znaku",
+      "fix_before_submit": "Czegoś brakuje. Sprawdź zaznaczone pola.",
+      "save_draft": "Zapisz wersję roboczą",
+      "submit_review": "Wyślij ocenę",
+      "drafts_autosave": "Wersje robocze zapisują się automatycznie",
+      "draft_saved_toast": "Wersja robocza zapisana",
+      "review_submitted_toast": "Ocena wysłana. Dziękujemy!",
+      "no_answer": "Brak odpowiedzi",
+      "no_tasks": "Nie ma nic do pokazania dla tej pracy.",
+      "chosen": "wybrano",
+      "media_option": "Opcja {{n}} (media)",
+      "download_file": "Pobierz plik",
+      "feedback_title": "Twoje opinie",
+      "feedback_why": "Porównaj to, co zauważyli inni, ze swoim zdaniem i zdecyduj, co zmienisz.",
+      "locked_reviews_one": "Zrób jeszcze {{count}} ocenę, żeby odblokować swoje opinie",
+      "locked_reviews_few": "Zrób jeszcze {{count}} oceny, żeby odblokować swoje opinie",
+      "locked_reviews_many": "Zrób jeszcze {{count}} ocen, żeby odblokować swoje opinie",
+      "locked_reviews_other": "Zrób jeszcze {{count}} oceny, żeby odblokować swoje opinie",
+      "locked_generic": "Twoje opinie nie są jeszcze dostępne",
+      "locked_due": "Otworzą się najpóźniej {{date}}.",
+      "unlocked_by_due_date": "Twoje opinie się otworzyły, bo minął termin oceniania.",
+      "no_feedback_title": "Brak opinii",
+      "no_feedback_body": "Oceny od innych pojawią się tutaj, gdy tylko wpłyną.",
+      "peer_score": "Wynik koleżeński",
+      "peer_score_how_one": "Mediana (wartość środkowa) z {{count}} oceny koleżeńskiej, osobno dla każdego kryterium.",
+      "peer_score_how_few": "Mediana (wartość środkowa) z {{count}} ocen koleżeńskich, osobno dla każdego kryterium.",
+      "peer_score_how_many": "Mediana (wartość środkowa) z {{count}} ocen koleżeńskich, osobno dla każdego kryterium.",
+      "peer_score_how_other": "Mediana (wartość środkowa) z {{count}} oceny koleżeńskiej, osobno dla każdego kryterium.",
+      "score_needs_more_one": "Wynik koleżeński pojawi się po {{count}} ocenie.",
+      "score_needs_more_few": "Wynik koleżeński pojawi się po {{count}} ocenach.",
+      "score_needs_more_many": "Wynik koleżeński pojawi się po {{count}} ocenach.",
+      "score_needs_more_other": "Wynik koleżeński pojawi się po {{count}} oceny.",
+      "reviewers_disagree": "Oceniający mieli różne zdania",
+      "gap_title": "Grupa a Twoja samoocena",
+      "gap_title_peers": "Co zauważyli inni",
+      "legend_peers": "Grupa (mediana)",
+      "legend_you": "Ty",
+      "gap_values": "Grupa {{peers}} · Ty {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: grupa {{peers}}, ty {{you}}, na {{max}}",
+      "gap_aligned": "Ty i grupa oceniacie podobnie",
+      "gap_self_higher": "Twoja samoocena jest wyższa niż ocena grupy",
+      "gap_self_lower": "Twoja samoocena jest niższa niż ocena grupy",
+      "reviews_received_one": "Otrzymano {{count}} ocenę",
+      "reviews_received_few": "Otrzymano {{count}} oceny",
+      "reviews_received_many": "Otrzymano {{count}} ocen",
+      "reviews_received_other": "Otrzymano {{count}} oceny",
+      "reviewer_n": "Oceniający {{n}}",
+      "flagged": "Zgłoszone",
+      "how_helpful": "Na ile to było pomocne?",
+      "stars_n_one": "{{count}} gwiazdka",
+      "stars_n_few": "{{count}} gwiazdki",
+      "stars_n_many": "{{count}} gwiazdek",
+      "stars_n_other": "{{count}} gwiazdki",
+      "helpful_note_label": "Notatka dla oceniającego",
+      "helpful_note_placeholder": "Co pomogło albo co pomogłoby bardziej? (opcjonalnie)",
+      "save_note": "Zapisz notatkę",
+      "thanks_feedback": "Dzięki za opinię",
+      "flag_link": "Zgłoś tę ocenę",
+      "flag_title": "Zgłoś tę ocenę",
+      "flag_body": "Prowadzący ją sprawdzi. Napisz, co jest nie tak, na przykład niegrzeczny ton, brak związku z tematem albo pusta ocena.",
+      "flag_reason": "Co jest nie tak?",
+      "flag_submit": "Zgłoś",
+      "flag_sent": "Dzięki. Prowadzący został poinformowany.",
+      "plan_title": "Twój plan poprawek",
+      "plan_why": "Zapisz, co zmienisz. Plan sprawia, że opinie zamieniają się w lepszą pracę.",
+      "plan_placeholder": "Na podstawie tych opinii…",
+      "save_plan": "Zapisz plan",
+      "plan_saved": "Plan poprawek zapisany",
+      "error_generic": "Coś poszło nie tak. Spróbuj ponownie.",
+      "error_save": "Nie udało się zapisać wersji roboczej. Spróbujemy jeszcze raz.",
+      "error_submit": "Nie udało się wysłać. Spróbuj ponownie.",
+      "error_download": "Nie udało się pobrać pliku.",
+      "submission_changed": "Ta osoba rozpoczęła nową próbę, więc ta ocena została zamknięta. Możesz ocenić kogoś innego.",
+      "answer_hidden": "Ta odpowiedź jest sprawdzana automatycznie, więc nie podlega ocenie koleżeńskiej.",
+      "retry_in_progress": "Rozpoczęto nowe podejście. Oddaj je, aby dalej oceniać prace innych."
+    },
+    "instructor": {
+      "tab": "Ocena koleżeńska",
+      "setup": "Konfiguracja",
+      "unknown_learner": "Uczestnik",
+      "retry": "Spróbuj ponownie",
+      "error_title": "Nie udało się wczytać oceny koleżeńskiej",
+      "error_description": "Coś poszło nie tak. Sprawdź połączenie i spróbuj ponownie.",
+      "toggle": {
+        "title": "Ocena koleżeńska",
+        "off_hint": "Wyłączona. Po oddaniu pracy uczestnicy oceniają prace kilku osób z grupy według Twojej rubryki i dostają od nich informację zwrotną.",
+        "on_hint": "Włączona. Każdy uczestnik po oddaniu pracy ocenia prace innych. Wybierz poniżej szablon rubryki, zapisz i gotowe."
+      },
+      "why": {
+        "title": "Dlaczego ocena koleżeńska działa",
+        "reviewers_learn": "Najwięcej uczy się ten, kto pisze recenzję, dlatego oceniają wszyscy.",
+        "three_reviewers": "Trzech lub więcej recenzentów daje informację zwrotną niemal tak rzetelną jak jeden prowadzący.",
+        "rubric_practice": "Jasna rubryka i krótka runda próbna sprawiają, że recenzje są trafne.",
+        "revise": "Informacja zwrotna pomaga najbardziej, gdy uczestnicy planują, co zmienią.",
+        "dismiss": "Ukryj tę wskazówkę"
+      },
+      "sections": {
+        "settings": "Ustawienia",
+        "rubric": "Rubryka",
+        "prompts": "Pytania do komentarzy",
+        "practice": "Runda próbna"
+      },
+      "settings": {
+        "reviewing_title": "Recenzowanie",
+        "reviewing_description": "Ile recenzji pisze każdy uczestnik i kto widzi czyje imię.",
+        "reviews_required": "Recenzje na uczestnika",
+        "reviews_required_hint": "3–5 daje rzetelną informację zwrotną. Każda praca też powinna dostać tyle recenzji.",
+        "anonymity": "Imiona",
+        "anonymity_hint": "Ukryte imiona sprawiają, że recenzje są szczersze.",
+        "require_reviews": "Najpierw recenzje, potem informacja zwrotna",
+        "require_reviews_hint": "Uczestnicy widzą swoją informację zwrotną po napisaniu recenzji lub po terminie recenzji.",
+        "due_date": "Termin recenzji",
+        "due_date_hint": "Opcjonalnie. Po tej dacie wszyscy widzą swoją informację zwrotną.",
+        "clear": "Wyczyść",
+        "steps_title": "Dodatkowe kroki",
+        "steps_description": "Każdy z nich jest krótki i sprawia, że informacja zwrotna jest bardziej przydatna.",
+        "self_review": "Samoocena",
+        "self_review_hint": "Uczestnicy najpierw oceniają własną pracę, a potem porównują to z opiniami innych.",
+        "practice": "Runda próbna",
+        "practice_hint": "Uczestnicy oceniają przygotowany przez Ciebie przykład i widzą Twoją ocenę. Wymaga co najmniej jednego przykładu.",
+        "helpfulness": "Oceny przydatności",
+        "helpfulness_hint": "Uczestnicy oceniają każdą otrzymaną recenzję w skali od 1 do 5 gwiazdek.",
+        "revision_plan": "Plan poprawek",
+        "revision_plan_hint": "Po przeczytaniu informacji zwrotnej uczestnicy zapisują, co zmienią.",
+        "score_title": "Wyniki",
+        "score_description": "Ocena koleżeńska nigdy sama nie wystawia oceny.",
+        "min_reviews": "Recenzje potrzebne do wyniku",
+        "min_reviews_hint": "Wynik koleżeński pojawi się, gdy praca dostanie tyle recenzji."
+      },
+      "anonymity": {
+        "double_blind": "Oba ukryte",
+        "double_blind_hint": "Nikt nie wie, kto kogo ocenił",
+        "anonymous_reviewer": "Recenzent ukryty",
+        "anonymous_reviewer_hint": "Recenzenci widzą imię autora",
+        "named": "Imiona widoczne",
+        "named_hint": "Wszyscy widzą oba imiona"
+      },
+      "score_mode": {
+        "feedback_only": "Tylko informacja zwrotna",
+        "feedback_only_hint": "Recenzje służą nauce, bez propozycji oceny",
+        "suggest_grade": "Proponuj ocenę",
+        "suggest_grade_hint": "Widzisz medianę recenzji i możesz z niej skorzystać przy ocenianiu"
+      },
+      "rubric": {
+        "title": "Rubryka",
+        "description": "Co oceniają recenzenci. Każde kryterium ma poziomy od najlepszego do najsłabszego.",
+        "template": "Zacznij od szablonu",
+        "empty_title": "Brak rubryki",
+        "empty_description": "Wybierz szablon, by zacząć jednym kliknięciem, a potem dopasuj treść do zadania.",
+        "add_criterion": "Dodaj kryterium",
+        "remove_criterion": "Usuń kryterium",
+        "move_up": "Przenieś w górę",
+        "move_down": "Przenieś w dół",
+        "criterion_title": "Kryterium",
+        "criterion_title_placeholder": "np. Jasna główna myśl",
+        "criterion_description": "Na co zwrócić uwagę",
+        "criterion_description_placeholder": "Na co recenzent powinien zwrócić uwagę?",
+        "untitled_criterion": "Kryterium bez nazwy",
+        "level_label": "Poziom",
+        "level_label_placeholder": "np. Doskonały",
+        "points": "Punkty",
+        "level_description": "Jak to wygląda",
+        "level_description_placeholder": "Opcjonalnie: jak wygląda praca na tym poziomie",
+        "add_level": "Dodaj poziom",
+        "remove_level": "Usuń poziom",
+        "max_points": "Maks. punktów: {{points}}",
+        "summary": "Kryteria: {{criteria}} · Maks. punktów: {{points}}",
+        "replace_title": "Zastąpić obecną rubrykę?",
+        "replace_message": "Szablon zastąpi Twoje obecne kryteria. Nic nie zostanie zapisane, dopóki nie klikniesz Zapisz.",
+        "replace_confirm": "Zastąp"
+      },
+      "templates": {
+        "writing": {
+          "name": "Tekst pisany",
+          "blurb": "Eseje, raporty i odpowiedzi pisemne",
+          "thesis": {
+            "title": "Główna myśl",
+            "description": "Główna myśl jest jasna i obecna od początku do końca."
+          },
+          "evidence": {
+            "title": "Argumenty i dowody",
+            "description": "Twierdzenia są poparte trafnymi przykładami, faktami lub źródłami."
+          },
+          "organization": {
+            "title": "Układ",
+            "description": "Myśli mają logiczną kolejność, a każdy akapit ma jedno zadanie."
+          },
+          "style": {
+            "title": "Jasność i styl",
+            "description": "Zdania są jasne i łatwe do czytania, z niewielką liczbą błędów."
+          }
+        },
+        "project": {
+          "name": "Projekt",
+          "blurb": "Realizacje, projekty i praca praktyczna",
+          "goal": {
+            "title": "Cel i zakres",
+            "description": "Projekt określa, co chce osiągnąć, i trzyma się tego."
+          },
+          "process": {
+            "title": "Proces i decyzje",
+            "description": "Wyjaśniono wykonane kroki i powody kluczowych wyborów."
+          },
+          "result": {
+            "title": "Jakość wyniku",
+            "description": "Efekt końcowy działa, jest kompletny i starannie wykonany."
+          },
+          "reflection": {
+            "title": "Refleksja",
+            "description": "Autor mówi, co się udało, co nie i co by zmienił."
+          }
+        },
+        "presentation": {
+          "name": "Prezentacja",
+          "blurb": "Wystąpienia, slajdy i filmy",
+          "content": {
+            "title": "Treść",
+            "description": "Informacje są trafne, na temat i wykraczają poza oczywistość."
+          },
+          "structure": {
+            "title": "Struktura",
+            "description": "Ma jasny początek, logiczne rozwinięcie i mocne zakończenie."
+          },
+          "delivery": {
+            "title": "Sposób prezentacji",
+            "description": "Mówca mówi wyraźnie, w dobrym tempie i utrzymuje uwagę."
+          },
+          "visuals": {
+            "title": "Materiały wizualne",
+            "description": "Slajdy lub grafiki wspierają przekaz i są czytelne."
+          }
+        },
+        "code": {
+          "name": "Kod",
+          "blurb": "Programy, skrypty i ćwiczenia",
+          "correctness": {
+            "title": "Poprawność",
+            "description": "Kod robi to, o co proszono, także w przypadkach brzegowych."
+          },
+          "readability": {
+            "title": "Czytelność",
+            "description": "Nazwy, formatowanie i komentarze ułatwiają zrozumienie kodu."
+          },
+          "design": {
+            "title": "Struktura i projekt",
+            "description": "Kod jest podzielony na sensowne części bez zbędnych powtórzeń."
+          },
+          "testing": {
+            "title": "Testy",
+            "description": "Są sprawdzenia lub testy, które pokazują, że kod działa."
+          }
+        },
+        "scale": {
+          "excellent": "Doskonale",
+          "excellent_description": "W pełni spełnia kryterium, z wyraźnymi mocnymi stronami",
+          "good": "Dobrze",
+          "good_description": "Spełnia kryterium z drobnymi brakami",
+          "developing": "W rozwoju",
+          "developing_description": "Częściowo spełnia kryterium, wymaga więcej pracy",
+          "beginning": "Początek",
+          "beginning_description": "Ledwo spełnia kryterium",
+          "strong": "Mocno",
+          "strong_description": "Wyraźnie spełnia kryterium",
+          "adequate": "Wystarczająco",
+          "adequate_description": "Częściowo spełnia kryterium",
+          "needs_work": "Do poprawy",
+          "needs_work_description": "Jeszcze nie spełnia kryterium"
+        }
+      },
+      "prompts": {
+        "title": "Pytania do komentarzy",
+        "description": "Pytania, na które recenzenci odpowiadają na piśmie. Minimalna długość zapobiega recenzjom z jednego słowa.",
+        "label": "Pytanie",
+        "label_placeholder": "np. Co Cię zaskoczyło?",
+        "min_chars": "Min. znaków",
+        "min_chars_hint": "0 oznacza, że odpowiedź jest opcjonalna.",
+        "add": "Dodaj pytanie",
+        "remove": "Usuń pytanie",
+        "reset": "Użyj domyślnych"
+      },
+      "samples": {
+        "title": "Przykłady próbne",
+        "description": "Uczestnicy oceniają przykład przed recenzowaniem innych, a potem widzą Twoje oceny z uzasadnieniem. Wystarczą jeden lub dwa przykłady.",
+        "practice_off": "Runda próbna jest wyłączona w Ustawieniach, więc uczestnicy nie zobaczą tych przykładów.",
+        "none_yet": "Brak przykładów, więc runda próbna jest pomijana. Dodaj jeden, aby ją włączyć.",
+        "needs_rubric": "Najpierw dodaj kryteria rubryki, aby ustawić poziomy dla każdego przykładu.",
+        "sample_title": "Tytuł",
+        "sample_title_placeholder": "np. Przykładowy esej A",
+        "content": "Przykładowa praca",
+        "content_hint": "Działa Markdown",
+        "content_placeholder": "Wklej przykładową odpowiedź, najlepiej średniej jakości, z elementami do poprawy.",
+        "levels": "Twoje poziomy",
+        "levels_hint": "Co dałbyś za każde kryterium",
+        "pick_level": "Wybierz poziom",
+        "explanation": "Dlaczego",
+        "explanation_hint": "Widoczne po ocenie przez uczestników",
+        "explanation_placeholder": "Wyjaśnij swoje oceny w kilku zdaniach.",
+        "add": "Dodaj przykład",
+        "remove": "Usuń przykład",
+        "count_hint": "Maksymalnie 5 przykładów"
+      },
+      "errors": {
+        "criteria_min": "Dodaj co najmniej jedno kryterium, aby włączyć ocenę koleżeńską.",
+        "criteria_max": "Maksymalna liczba kryteriów: {{max}}.",
+        "criterion_title": "Nadaj nazwę temu kryterium.",
+        "levels_min": "Minimalna liczba poziomów w każdym kryterium: {{min}}.",
+        "levels_max": "Maksymalna liczba poziomów w kryterium: {{max}}.",
+        "level_label": "Nadaj nazwę temu poziomowi.",
+        "level_points": "Liczba punktów musi wynosić 0 lub więcej.",
+        "prompts_min": "Zostaw co najmniej jedno pytanie.",
+        "prompts_max": "Maksymalna liczba pytań: {{max}}.",
+        "prompt_label": "Wpisz pytanie.",
+        "prompt_min_chars": "Podaj liczbę całkowitą od 0 do {{max}}.",
+        "reviews_range": "Podaj liczbę od {{min}} do {{max}}.",
+        "sample_title": "Nadaj tytuł przykładowi.",
+        "sample_content": "Dodaj przykładową pracę.",
+        "sample_levels": "Wybierz poziom dla każdego kryterium.",
+        "duplicate": "Dwa elementy mają ten sam identyfikator. Usuń jeden i dodaj go ponownie."
+      },
+      "save": {
+        "saving": "Zapisywanie oceny koleżeńskiej…",
+        "saved": "Ocena koleżeńska zapisana",
+        "error": "Nie udało się zapisać oceny koleżeńskiej",
+        "fix_errors": "Popraw zaznaczone pola i zapisz ponownie."
+      },
+      "monitor": {
+        "title": "Podgląd",
+        "off_title": "Ocena koleżeńska jest wyłączona",
+        "off_description": "Włącz ją w Konfiguracji. Postępy, wyniki i zgłoszone recenzje pojawią się tutaj.",
+        "go_setup": "Przejdź do konfiguracji"
+      },
+      "totals": {
+        "submitted": "Oddane",
+        "reviews_done": "Napisane recenzje",
+        "in_progress": "Recenzje w toku",
+        "below_target": "Potrzebują więcej recenzji",
+        "flagged": "Zgłoszone"
+      },
+      "flagged": {
+        "title": "Zgłoszone recenzje",
+        "description": "Uczestnik zgłosił je jako niesprawiedliwe lub nieprzydatne. Odrzuć recenzję, aby nie liczyła się do wyniku.",
+        "open": "Zobacz wszystkie recenzje",
+        "count": "Zgłoszenia: {{n}}"
+      },
+      "submissions": {
+        "title": "Oddane prace",
+        "learner": "Uczestnik",
+        "reviews": "Otrzymane recenzje",
+        "received": "{{done}} z {{target}}",
+        "peer_score": "Wynik koleżeński",
+        "peer_score_tip": "Mediana recenzji dla każdego kryterium, w procentach. Odrzucone recenzje nie są liczone.",
+        "self": "Samoocena",
+        "self_tip": "Wynik, jaki uczestnik dał własnej pracy.",
+        "flags": "Zgłoszenia",
+        "waiting": "Oczekuje",
+        "disagree": "Recenzenci się nie zgadzają ({{points}} pkt)",
+        "disagree_tip": "Najwyższa i najniższa recenzja bardzo się różnią. Warto się przyjrzeć przed wystawieniem oceny.",
+        "empty_title": "Nic jeszcze nie oddano",
+        "empty_description": "Recenzje zaczynają się, gdy tylko uczestnicy oddadzą swoje prace."
+      },
+      "reviewers": {
+        "title": "Recenzenci",
+        "reviewer": "Recenzent",
+        "done": "Gotowe",
+        "done_tip": "Napisane recenzje w stosunku do wymaganej liczby. Dodatkowe recenzje też się liczą.",
+        "helpfulness": "Przydatność",
+        "helpfulness_tip": "Średnia liczba gwiazdek, jaką autorzy dali recenzjom tej osoby.",
+        "helpfulness_value": "{{value}} z 5",
+        "bias": "Odchylenie",
+        "bias_tip": "Jak bardzo, średnio, oceny tej osoby różnią się od ocen innych recenzentów tej samej pracy. Im mniej, tym lepiej.",
+        "bias_value": "±{{points}} pkt",
+        "calibration": "Różnica w rundzie próbnej",
+        "calibration_tip": "Jak bardzo oceny z rundy próbnej różniły się od Twoich, w punktach rubryki na kryterium. Im mniej, tym lepiej.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Brak recenzji",
+        "empty_description": "Uczestnicy pojawią się tutaj, gdy zaczną recenzować."
+      },
+      "drawer": {
+        "title": "Recenzje koleżeńskie",
+        "close": "Zamknij",
+        "peer_score": "Wynik koleżeński",
+        "not_enough": "Za mało recenzji (minimum: {{n}})",
+        "score_basis": "Mediana recenzji · uwzględnione: {{n}}",
+        "self_score": "Samoocena:",
+        "self_short": "samoocena: {{points}}",
+        "apply_grade": "Użyj wyniku koleżeńskiego jako oceny ({{score}})",
+        "apply_hint": "Otwiera ocenianie z widoczną propozycją. Nic nie zostanie zapisane, dopóki nie wystawisz oceny.",
+        "feedback_only_hint": "Propozycje ocen są wyłączone (tylko informacja zwrotna).",
+        "open_grading": "Otwórz ocenianie",
+        "reviews": "Recenzje ({{n}})",
+        "reviewer_n": "Recenzent {{n}}",
+        "no_reviews": "Brak recenzji.",
+        "status_assigned": "W toku",
+        "status_discarded": "Odrzucona",
+        "flagged": "Zgłoszona",
+        "flag_reason": "Powód zgłoszenia:",
+        "discard_reason": "Powód odrzucenia:",
+        "discard_placeholder": "Dlaczego pomijasz tę recenzję? Widzą to tylko prowadzący.",
+        "discard": "Odrzuć",
+        "restore": "Przywróć",
+        "discarded_toast": "Recenzja odrzucona",
+        "restored_toast": "Recenzja przywrócona",
+        "action_error": "Nie udało się. Spróbuj ponownie.",
+        "helpfulness": "Ocena autora:",
+        "self_review": "Samoocena",
+        "reflection": "Plan poprawek",
+        "no_reflection": "Plan poprawek nie został jeszcze napisany.",
+        "grade_title": "Oceń: {{name}}",
+        "suggested": "Propozycja z recenzji: {{score}}",
+        "suggested_hint": "Mediana recenzji koleżeńskich (uwzględnione: {{n}}). Traktuj ją jako wskazówkę.",
+        "closed_new_attempt": "Zamknięta automatycznie: uczestnik rozpoczął nowe podejście."
+      }
     }
   }
 }

@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Fonctionnalité Standard",
           "description": "La newsletter est disponible à partir de l'offre Standard. Passez à une offre supérieure pour envoyer des campagnes, des séries de bienvenue et des actualités de cours à vos apprenants par e-mail."
+        },
+        "peer_review": {
+          "title": "Fonctionnalité Standard",
+          "description": "L’évaluation par les pairs est disponible pour les organisations avec un plan Standard ou supérieur. Passez à un plan supérieur pour que les apprenants évaluent mutuellement leurs travaux avec une grille."
         }
       },
       "gate": {
@@ -381,6 +385,12 @@
           "note_3": "Prochaines étapes pour vendredi",
           "play_title": "Entraînement",
           "play_question": "Combien de côtés a un pentagone ?"
+        },
+        "peer_review": {
+          "title": "Les apprenants progressent en s’évaluant entre eux",
+          "b1": "Chaque apprenant évalue quelques camarades avec votre grille",
+          "b2": "Un entraînement leur montre comment vous noteriez",
+          "b3": "Obtenez une note suggérée à partir des évaluations, c’est vous qui décidez"
         }
       }
     },
@@ -8663,7 +8673,8 @@
             "scim": "Provisionnement SCIM",
             "audit_logs": "Journaux d'audit",
             "custom_domain": "Domaine personnalisé",
-            "remove_watermark": "Sans filigrane LearnHouse"
+            "remove_watermark": "Sans filigrane LearnHouse",
+            "peer_review": "Évaluation par les pairs"
           }
         },
         "next_invoice_label": "Prochaine facture",
@@ -31879,7 +31890,9 @@
       "plan_downgraded": "Passage au forfait Gratuit",
       "plan_restored": "Forfait rétabli",
       "payments_checkout_failing": "Échecs de paiement",
-      "invitation_accepted": "Invitation acceptée"
+      "invitation_accepted": "Invitation acceptée",
+      "peer_review_received": "Retour d'un pair reçu",
+      "peer_review_flagged": "Évaluation par les pairs signalée"
     },
     "copy": {
       "assignment_graded": "Noté : {{assignment}}",
@@ -31942,7 +31955,9 @@
       "plan_downgraded": "Vous êtes maintenant sur le forfait Gratuit. Rien n’a été supprimé",
       "plan_restored": "Bon retour sur {{plan}}",
       "payments_checkout_failing": "Les apprenants ne peuvent pas acheter pour le moment ({{count}} paiements échoués)",
-      "invitation_accepted": "{{actor}} a accepté votre invitation"
+      "invitation_accepted": "{{actor}} a accepté votre invitation",
+      "peer_review_received": "Nouveau retour d'un pair sur {{assignment}}",
+      "peer_review_flagged": "{{actor}} a signalé une évaluation par les pairs sur {{assignment}}"
     },
     "routing": {
       "short": "Qui est notifié",
@@ -32250,6 +32265,511 @@
       "seat_limit_exceeded": "plus de sièges sont utilisés que la licence n'en inclut",
       "grace_expired": "le serveur de licences est injoignable depuis trop longtemps",
       "unknown": "la licence n'a pas pu être vérifiée"
+    }
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Critère {{n}}",
+      "points_short_one": "{{count}} pt",
+      "points_short_many": "{{count}} pts",
+      "points_short_other": "{{count}} pts",
+      "prompt_strength": "Ce qui fonctionne bien",
+      "prompt_suggestion": "Un point à améliorer, et comment",
+      "prompt_question": "Une question pour l'auteur"
+    },
+    "learner": {
+      "eyebrow": "Évaluation par les pairs",
+      "card_title": "Évalue tes camarades et reçois leurs retours",
+      "steps_label": "Étapes de l'évaluation par les pairs",
+      "step_self": "Auto-évaluation",
+      "step_practice": "Entraînement",
+      "step_reviews": "Évaluer tes camarades",
+      "step_feedback": "Tes retours",
+      "n_of_m": "{{n}} sur {{m}}",
+      "done": "Terminé",
+      "to_do": "À faire",
+      "locked": "Verrouillé",
+      "continue": "Continuer",
+      "cancel": "Annuler",
+      "back": "Retour",
+      "retry": "Réessayer",
+      "optional": "Facultatif",
+      "saved": "Enregistré",
+      "saving": "Enregistrement…",
+      "unsaved": "Modifications non enregistrées",
+      "not_saved": "Non enregistré",
+      "feedback_count_one": "{{count}} évaluation",
+      "feedback_count_many": "{{count}} évaluations",
+      "feedback_count_other": "{{count}} évaluations",
+      "reviews_due": "Évaluations à rendre avant le {{date}}",
+      "reviews_closed_on": "Évaluations closes le {{date}}",
+      "next_title": "L'évaluation par les pairs vient ensuite",
+      "next_body_one": "Une fois ton travail rendu, tu évalueras le travail de {{count}} camarade et tu recevras des retours sur le tien.",
+      "next_body_many": "Une fois ton travail rendu, tu évalueras le travail de {{count}} camarades et tu recevras des retours sur le tien.",
+      "next_body_other": "Une fois ton travail rendu, tu évalueras le travail de {{count}} camarades et tu recevras des retours sur le tien.",
+      "self_title": "Évalue ton propre travail",
+      "self_why": "Commencer par juger ton travail t'aide à comparer les retours de tes camarades et à t'en servir.",
+      "self_done": "Auto-évaluation enregistrée",
+      "self_done_pct": "Auto-évaluation enregistrée : {{pct}} %",
+      "edit_self_review": "Modifier l'auto-évaluation",
+      "save_self_review": "Enregistrer l'auto-évaluation",
+      "self_saved_toast": "Auto-évaluation enregistrée",
+      "cal_title": "Tour d'entraînement",
+      "cal_why": "Noter un exemple d'abord te montre comment ton enseignant lit la grille, pour des évaluations plus justes.",
+      "cal_progress": "Exemple {{current}} sur {{total}}",
+      "cal_sample": "Exemple d'entraînement",
+      "cal_check": "Comparer avec l'enseignant",
+      "cal_you": "Toi",
+      "cal_instructor": "Enseignant",
+      "cal_match": "Identique à l'enseignant",
+      "cal_off_by_one": "Écart de {{count}} point",
+      "cal_off_by_many": "Écart de {{count}} points",
+      "cal_off_by_other": "Écart de {{count}} points",
+      "cal_why_title": "Pourquoi l'enseignant a noté ainsi",
+      "cal_next": "Exemple suivant",
+      "cal_all_done": "Entraînement terminé. Tu peux maintenant évaluer tes camarades.",
+      "cal_none": "Il n'y a pas d'exemple d'entraînement pour le moment.",
+      "go_to_reviews": "Aller aux évaluations",
+      "go_to_practice": "Aller à l'entraînement",
+      "finish_practice_first": "Termine d'abord le tour d'entraînement.",
+      "reviews_title": "Évalue tes camarades",
+      "reviews_why": "C'est en évaluant les autres qu'on apprend le plus.",
+      "reviews_done_of": "{{done}} sur {{required}} terminées",
+      "reviews_locked_practice": "Termine l'entraînement pour commencer à évaluer.",
+      "reviews_complete": "Tu as fait toutes tes évaluations. Merci !",
+      "reviews_extra_hint": "Les évaluations supplémentaires sont les bienvenues : elles aident les camarades qui en ont moins.",
+      "start_review": "Commencer l'évaluation {{n}} sur {{m}}",
+      "continue_review": "Continuer ton évaluation",
+      "review_another": "En évaluer une autre",
+      "see_feedback": "Voir tes retours",
+      "none_title": "Personne à évaluer pour l'instant",
+      "none_body": "Tu recevras le travail d'un camarade dès que quelqu'un le rend. Repasse bientôt.",
+      "check_again": "Vérifier à nouveau",
+      "your_helpfulness": "Tes camarades notent tes évaluations {{avg}} / 5 en moyenne.",
+      "review_n_of_m": "Évaluation {{n}} sur {{m}}",
+      "extra_review": "Évaluation supplémentaire",
+      "classmate_work": "Le travail de ton camarade",
+      "work_of": "Travail de {{name}}",
+      "your_review": "Ton évaluation",
+      "your_review_hint": "Choisis le niveau qui convient le mieux pour chaque critère, puis laisse des commentaires bienveillants et précis.",
+      "review_already_submitted": "Tu as déjà envoyé cette évaluation.",
+      "review_load_error": "Impossible de charger cette évaluation.",
+      "comments_heading": "Commentaires",
+      "pick_a_level": "Choisis un niveau",
+      "add_note": "Ajouter une note",
+      "note_label": "Note sur ce critère (facultatif)",
+      "chars_remaining_one": "Encore {{count}} caractère requis",
+      "chars_remaining_many": "Encore {{count}} caractères requis",
+      "chars_remaining_other": "Encore {{count}} caractères requis",
+      "chars_ok_one": "{{count}} caractère",
+      "chars_ok_many": "{{count}} caractères",
+      "chars_ok_other": "{{count}} caractères",
+      "fix_before_submit": "Il manque des éléments. Vérifie les champs en surbrillance.",
+      "save_draft": "Enregistrer le brouillon",
+      "submit_review": "Envoyer l'évaluation",
+      "drafts_autosave": "Les brouillons s'enregistrent automatiquement",
+      "draft_saved_toast": "Brouillon enregistré",
+      "review_submitted_toast": "Évaluation envoyée. Merci !",
+      "no_answer": "Pas de réponse",
+      "no_tasks": "Il n'y a rien à afficher pour ce rendu.",
+      "chosen": "choisi",
+      "media_option": "Option {{n}} (média)",
+      "download_file": "Télécharger le fichier",
+      "feedback_title": "Tes retours",
+      "feedback_why": "Compare ce que tes camarades ont vu avec ton propre avis, puis décide ce que tu vas changer.",
+      "locked_reviews_one": "Termine encore {{count}} évaluation pour débloquer tes retours",
+      "locked_reviews_many": "Termine encore {{count}} évaluations pour débloquer tes retours",
+      "locked_reviews_other": "Termine encore {{count}} évaluations pour débloquer tes retours",
+      "locked_generic": "Tes retours ne sont pas encore ouverts",
+      "locked_due": "Ils s'ouvrent au plus tard le {{date}}.",
+      "unlocked_by_due_date": "Tes retours sont ouverts parce que la date limite des évaluations est passée.",
+      "no_feedback_title": "Pas encore de retours",
+      "no_feedback_body": "Les évaluations de tes camarades apparaîtront ici au fur et à mesure.",
+      "peer_score": "Note des pairs",
+      "peer_score_how_one": "La valeur médiane de {{count}} évaluation de camarade, par critère.",
+      "peer_score_how_many": "La valeur médiane de {{count}} évaluations de camarades, par critère.",
+      "peer_score_how_other": "La valeur médiane de {{count}} évaluations de camarades, par critère.",
+      "score_needs_more_one": "La note des pairs apparaît après {{count}} évaluation.",
+      "score_needs_more_many": "La note des pairs apparaît après {{count}} évaluations.",
+      "score_needs_more_other": "La note des pairs apparaît après {{count}} évaluations.",
+      "reviewers_disagree": "Les évaluateurs ne sont pas d'accord",
+      "gap_title": "Tes camarades et ton auto-évaluation",
+      "gap_title_peers": "Ce qu'ont vu tes camarades",
+      "legend_peers": "Camarades (médiane)",
+      "legend_you": "Toi",
+      "gap_values": "Camarades {{peers}} · Toi {{you}} / {{max}}",
+      "gap_aria": "{{criterion}} : camarades {{peers}}, toi {{you}}, sur {{max}}",
+      "gap_aligned": "Tes camarades et toi êtes d'accord",
+      "gap_self_higher": "Ta note est plus haute que celle de tes camarades",
+      "gap_self_lower": "Ta note est plus basse que celle de tes camarades",
+      "reviews_received_one": "{{count}} évaluation reçue",
+      "reviews_received_many": "{{count}} évaluations reçues",
+      "reviews_received_other": "{{count}} évaluations reçues",
+      "reviewer_n": "Évaluateur {{n}}",
+      "flagged": "Signalée",
+      "how_helpful": "Dans quelle mesure c'était utile ?",
+      "stars_n_one": "{{count}} étoile",
+      "stars_n_many": "{{count}} étoiles",
+      "stars_n_other": "{{count}} étoiles",
+      "helpful_note_label": "Note pour l'évaluateur",
+      "helpful_note_placeholder": "Qu'est-ce qui a aidé, ou qu'est-ce qui aurait aidé davantage ? (facultatif)",
+      "save_note": "Enregistrer la note",
+      "thanks_feedback": "Merci pour ton retour",
+      "flag_link": "Signaler cette évaluation",
+      "flag_title": "Signaler cette évaluation",
+      "flag_body": "Ton enseignant la regardera. Dis-lui ce qui ne va pas, par exemple impolie, hors sujet ou vide.",
+      "flag_reason": "Qu'est-ce qui ne va pas ?",
+      "flag_submit": "Signaler",
+      "flag_sent": "Merci. Ton enseignant a été prévenu.",
+      "plan_title": "Ton plan de révision",
+      "plan_why": "Note ce que tu vas changer. Un plan transforme les retours en meilleur travail.",
+      "plan_placeholder": "D'après ces retours, je vais…",
+      "save_plan": "Enregistrer le plan",
+      "plan_saved": "Plan de révision enregistré",
+      "error_generic": "Une erreur s'est produite. Réessaie.",
+      "error_save": "Impossible d'enregistrer ton brouillon. Nous allons réessayer.",
+      "error_submit": "Envoi impossible. Réessaie.",
+      "error_download": "Impossible de télécharger le fichier.",
+      "submission_changed": "Cette personne a commencé une nouvelle tentative, cette évaluation a donc été fermée. Vous pouvez évaluer quelqu'un d'autre.",
+      "answer_hidden": "Cette réponse est corrigée automatiquement, elle ne fait donc pas partie de l'évaluation.",
+      "retry_in_progress": "Vous avez commencé une nouvelle tentative. Rendez-la pour continuer à évaluer vos camarades."
+    },
+    "instructor": {
+      "tab": "Évaluation par les pairs",
+      "setup": "Configuration",
+      "unknown_learner": "Apprenant",
+      "retry": "Réessayer",
+      "error_title": "Impossible de charger l’évaluation par les pairs",
+      "error_description": "Une erreur s’est produite. Vérifiez votre connexion et réessayez.",
+      "toggle": {
+        "title": "Évaluation par les pairs",
+        "off_hint": "Désactivée. Après avoir rendu leur travail, les apprenants évaluent celui de quelques camarades avec votre grille et reçoivent leurs retours.",
+        "on_hint": "Activée. Chaque apprenant évalue des camarades après avoir rendu son travail. Choisissez un modèle de grille ci-dessous, enregistrez, et c’est prêt."
+      },
+      "why": {
+        "title": "Pourquoi l’évaluation par les pairs fonctionne",
+        "reviewers_learn": "C’est en rédigeant des évaluations qu’on apprend le plus, donc chaque apprenant évalue.",
+        "three_reviewers": "Trois évaluateurs ou plus donnent des retours à peu près aussi fiables qu’un formateur.",
+        "rubric_practice": "Une grille claire et un court entraînement rendent les évaluations précises.",
+        "revise": "Les retours sont plus utiles quand les apprenants prévoient ce qu’ils vont changer.",
+        "dismiss": "Masquer ce conseil"
+      },
+      "sections": {
+        "settings": "Paramètres",
+        "rubric": "Grille",
+        "prompts": "Questions de commentaire",
+        "practice": "Entraînement"
+      },
+      "settings": {
+        "reviewing_title": "Évaluation",
+        "reviewing_description": "Combien d’évaluations chaque apprenant rédige et qui voit le nom de qui.",
+        "reviews_required": "Évaluations par apprenant",
+        "reviews_required_hint": "3–5 donnent des retours fiables. Chaque travail vise aussi à en recevoir autant.",
+        "anonymity": "Noms",
+        "anonymity_hint": "Masquer les noms rend les évaluations plus honnêtes.",
+        "require_reviews": "Évaluer avant de voir les retours",
+        "require_reviews_hint": "Les apprenants voient leurs retours une fois leurs évaluations terminées, ou après la date limite d’évaluation.",
+        "due_date": "Date limite d’évaluation",
+        "due_date_hint": "Facultatif. Après cette date, tout le monde peut voir ses retours.",
+        "clear": "Effacer",
+        "steps_title": "Étapes supplémentaires",
+        "steps_description": "Chacune est courte et rend les retours plus utiles.",
+        "self_review": "Auto-évaluation",
+        "self_review_hint": "Les apprenants notent d’abord leur propre travail, puis le comparent à l’avis de leurs pairs.",
+        "practice": "Entraînement",
+        "practice_hint": "Les apprenants notent un exemple que vous avez préparé et voient votre note. Nécessite au moins un exemple.",
+        "helpfulness": "Notes d’utilité",
+        "helpfulness_hint": "Les apprenants notent chaque évaluation reçue de 1 à 5 étoiles.",
+        "revision_plan": "Plan de révision",
+        "revision_plan_hint": "Les apprenants écrivent ce qu’ils vont changer après avoir lu leurs retours.",
+        "score_title": "Scores",
+        "score_description": "L’évaluation par les pairs ne fixe jamais une note à elle seule.",
+        "min_reviews": "Évaluations nécessaires pour un score",
+        "min_reviews_hint": "Le score des pairs s’affiche dès qu’un travail a reçu ce nombre d’évaluations."
+      },
+      "anonymity": {
+        "double_blind": "Les deux masqués",
+        "double_blind_hint": "Personne ne voit qui a évalué qui",
+        "anonymous_reviewer": "Évaluateur masqué",
+        "anonymous_reviewer_hint": "Les évaluateurs voient le nom de l’auteur",
+        "named": "Noms visibles",
+        "named_hint": "Tout le monde voit les deux noms"
+      },
+      "score_mode": {
+        "feedback_only": "Retours uniquement",
+        "feedback_only_hint": "Les évaluations servent à apprendre, sans suggestion de note",
+        "suggest_grade": "Suggérer une note",
+        "suggest_grade_hint": "Vous voyez la médiane des pairs et pouvez l’utiliser pour noter"
+      },
+      "rubric": {
+        "title": "Grille",
+        "description": "Ce que les évaluateurs notent. Chaque critère a des niveaux, du meilleur au plus faible.",
+        "template": "Partir d’un modèle",
+        "empty_title": "Pas encore de grille",
+        "empty_description": "Choisissez un modèle pour démarrer en un clic, puis adaptez le texte à votre devoir.",
+        "add_criterion": "Ajouter un critère",
+        "remove_criterion": "Supprimer le critère",
+        "move_up": "Monter",
+        "move_down": "Descendre",
+        "criterion_title": "Critère",
+        "criterion_title_placeholder": "ex. Idée principale claire",
+        "criterion_description": "Points à observer",
+        "criterion_description_placeholder": "Que doit observer l’évaluateur ?",
+        "untitled_criterion": "Critère sans titre",
+        "level_label": "Niveau",
+        "level_label_placeholder": "ex. Excellent",
+        "points": "Points",
+        "level_description": "À quoi ça ressemble",
+        "level_description_placeholder": "Facultatif : à quoi ressemble un travail de ce niveau",
+        "add_level": "Ajouter un niveau",
+        "remove_level": "Supprimer le niveau",
+        "max_points": "Points max : {{points}}",
+        "summary": "Critères : {{criteria}} · Points max : {{points}}",
+        "replace_title": "Remplacer la grille actuelle ?",
+        "replace_message": "Le modèle remplace vos critères actuels. Rien n’est enregistré tant que vous n’avez pas cliqué sur Enregistrer.",
+        "replace_confirm": "Remplacer"
+      },
+      "templates": {
+        "writing": {
+          "name": "Rédaction",
+          "blurb": "Dissertations, rapports et réponses écrites",
+          "thesis": {
+            "title": "Idée principale",
+            "description": "Le propos principal est clair et reste au centre du début à la fin."
+          },
+          "evidence": {
+            "title": "Arguments et preuves",
+            "description": "Les affirmations s’appuient sur des exemples, des faits ou des sources pertinents."
+          },
+          "organization": {
+            "title": "Organisation",
+            "description": "Les idées suivent un ordre logique et chaque paragraphe a un seul rôle."
+          },
+          "style": {
+            "title": "Clarté et style",
+            "description": "Les phrases sont claires et faciles à lire, avec peu d’erreurs."
+          }
+        },
+        "project": {
+          "name": "Projet",
+          "blurb": "Réalisations, conceptions et travaux pratiques",
+          "goal": {
+            "title": "Objectif et périmètre",
+            "description": "Le projet indique ce qu’il vise et s’y tient."
+          },
+          "process": {
+            "title": "Démarche et choix",
+            "description": "Les étapes suivies et les raisons des choix importants sont expliquées."
+          },
+          "result": {
+            "title": "Qualité du résultat",
+            "description": "Le résultat final fonctionne, il est complet et soigné."
+          },
+          "reflection": {
+            "title": "Réflexion",
+            "description": "L’auteur dit ce qui a marché, ce qui n’a pas marché et ce qu’il changerait."
+          }
+        },
+        "presentation": {
+          "name": "Présentation",
+          "blurb": "Exposés, diapositives et vidéos",
+          "content": {
+            "title": "Contenu",
+            "description": "Les informations sont exactes, pertinentes et vont au-delà de l’évidence."
+          },
+          "structure": {
+            "title": "Structure",
+            "description": "Elle a une introduction claire, un développement logique et une conclusion forte."
+          },
+          "delivery": {
+            "title": "Prise de parole",
+            "description": "L’orateur est clair, parle à un bon rythme et retient l’attention."
+          },
+          "visuals": {
+            "title": "Supports visuels",
+            "description": "Les diapositives ou visuels servent le message et sont faciles à lire."
+          }
+        },
+        "code": {
+          "name": "Code",
+          "blurb": "Programmes, scripts et exercices",
+          "correctness": {
+            "title": "Exactitude",
+            "description": "Le code fait ce qui était demandé, y compris dans les cas limites."
+          },
+          "readability": {
+            "title": "Lisibilité",
+            "description": "Les noms, la mise en forme et les commentaires rendent le code facile à suivre."
+          },
+          "design": {
+            "title": "Structure et conception",
+            "description": "Le code est découpé en parties logiques, sans répétitions inutiles."
+          },
+          "testing": {
+            "title": "Tests",
+            "description": "Des vérifications ou des tests montrent que le code fonctionne."
+          }
+        },
+        "scale": {
+          "excellent": "Excellent",
+          "excellent_description": "Répond pleinement au critère, avec de vrais points forts",
+          "good": "Bien",
+          "good_description": "Répond au critère avec de petites lacunes",
+          "developing": "En progrès",
+          "developing_description": "Répond en partie au critère, doit être approfondi",
+          "beginning": "Débutant",
+          "beginning_description": "Répond à peine au critère pour l’instant",
+          "strong": "Solide",
+          "strong_description": "Répond clairement au critère",
+          "adequate": "Suffisant",
+          "adequate_description": "Répond en partie au critère",
+          "needs_work": "À retravailler",
+          "needs_work_description": "Ne répond pas encore au critère"
+        }
+      },
+      "prompts": {
+        "title": "Questions de commentaire",
+        "description": "Les questions auxquelles les évaluateurs répondent par écrit. Une longueur minimale évite les évaluations d’un seul mot.",
+        "label": "Question",
+        "label_placeholder": "ex. Qu’est-ce qui vous a surpris ?",
+        "min_chars": "Caractères min.",
+        "min_chars_hint": "Avec 0, la réponse est facultative.",
+        "add": "Ajouter une question",
+        "remove": "Supprimer la question",
+        "reset": "Utiliser les questions par défaut"
+      },
+      "samples": {
+        "title": "Exemples d’entraînement",
+        "description": "Les apprenants notent un exemple avant d’évaluer leurs camarades, puis voient vos notes et leur justification. Un ou deux exemples suffisent.",
+        "practice_off": "L’entraînement est désactivé dans les Paramètres, les apprenants ne verront donc pas ces exemples.",
+        "none_yet": "Pas encore d’exemple, l’entraînement est donc ignoré. Ajoutez-en un pour l’activer.",
+        "needs_rubric": "Ajoutez d’abord des critères à la grille pour définir vos niveaux pour chaque exemple.",
+        "sample_title": "Titre",
+        "sample_title_placeholder": "ex. Dissertation exemple A",
+        "content": "Travail d’exemple",
+        "content_hint": "Markdown pris en charge",
+        "content_placeholder": "Collez un exemple de réponse, idéalement de niveau moyen avec des points à améliorer.",
+        "levels": "Vos niveaux",
+        "levels_hint": "Ce que vous donneriez pour chaque critère",
+        "pick_level": "Choisir un niveau",
+        "explanation": "Justification",
+        "explanation_hint": "Affichée une fois que les apprenants ont noté",
+        "explanation_placeholder": "Expliquez vos notes en quelques phrases.",
+        "add": "Ajouter un exemple",
+        "remove": "Supprimer l’exemple",
+        "count_hint": "Jusqu’à 5 exemples"
+      },
+      "errors": {
+        "criteria_min": "Ajoutez au moins un critère pour activer l’évaluation par les pairs.",
+        "criteria_max": "Utilisez au maximum {{max}} critères.",
+        "criterion_title": "Donnez un nom à ce critère.",
+        "levels_min": "Chaque critère doit avoir au moins {{min}} niveaux.",
+        "levels_max": "Utilisez au maximum {{max}} niveaux par critère.",
+        "level_label": "Donnez un nom à ce niveau.",
+        "level_points": "Les points doivent être de 0 ou plus.",
+        "prompts_min": "Gardez au moins une question.",
+        "prompts_max": "Utilisez au maximum {{max}} questions.",
+        "prompt_label": "Rédigez la question.",
+        "prompt_min_chars": "Saisissez un nombre entier de 0 à {{max}}.",
+        "reviews_range": "Saisissez un nombre de {{min}} à {{max}}.",
+        "sample_title": "Donnez un titre à l’exemple.",
+        "sample_content": "Ajoutez le travail d’exemple.",
+        "sample_levels": "Choisissez votre niveau pour chaque critère.",
+        "duplicate": "Deux éléments ont le même identifiant. Supprimez-en un et ajoutez-le à nouveau."
+      },
+      "save": {
+        "saving": "Enregistrement de l’évaluation par les pairs…",
+        "saved": "Évaluation par les pairs enregistrée",
+        "error": "Impossible d’enregistrer l’évaluation par les pairs",
+        "fix_errors": "Corrigez les champs en surbrillance, puis enregistrez à nouveau."
+      },
+      "monitor": {
+        "title": "Suivi",
+        "off_title": "L’évaluation par les pairs est désactivée",
+        "off_description": "Activez-la dans Configuration. La progression, les scores et les évaluations signalées s’afficheront ici.",
+        "go_setup": "Aller à la configuration"
+      },
+      "totals": {
+        "submitted": "Rendus",
+        "reviews_done": "Évaluations terminées",
+        "in_progress": "Évaluations en cours",
+        "below_target": "Évaluations insuffisantes",
+        "flagged": "Signalées"
+      },
+      "flagged": {
+        "title": "Évaluations signalées",
+        "description": "Un apprenant les a signalées comme injustes ou peu utiles. Écartez une évaluation pour l’exclure du score.",
+        "open": "Voir toutes les évaluations",
+        "count": "Signalements : {{n}}"
+      },
+      "submissions": {
+        "title": "Travaux rendus",
+        "learner": "Apprenant",
+        "reviews": "Évaluations reçues",
+        "received": "{{done}} sur {{target}}",
+        "peer_score": "Score des pairs",
+        "peer_score_tip": "La médiane des évaluations, par critère, en pourcentage. Les évaluations écartées ne sont pas comptées.",
+        "self": "Auto",
+        "self_tip": "Le score que l’apprenant a donné à son propre travail.",
+        "flags": "Signalements",
+        "waiting": "En attente",
+        "disagree": "Évaluateurs en désaccord ({{points}} pts)",
+        "disagree_tip": "L’évaluation la plus haute et la plus basse sont très éloignées. À regarder avant de noter.",
+        "empty_title": "Rien n’a encore été rendu",
+        "empty_description": "Les évaluations commencent dès que les apprenants rendent leur travail."
+      },
+      "reviewers": {
+        "title": "Évaluateurs",
+        "reviewer": "Évaluateur",
+        "done": "Terminées",
+        "done_tip": "Évaluations rédigées par rapport au nombre requis. Les évaluations en plus comptent aussi.",
+        "helpfulness": "Utilité",
+        "helpfulness_tip": "La note moyenne en étoiles donnée par les auteurs aux évaluations de cette personne.",
+        "helpfulness_value": "{{value}} sur 5",
+        "bias": "Écart",
+        "bias_tip": "L’écart moyen entre les scores de cette personne et ceux des autres évaluateurs du même travail. Plus c’est bas, mieux c’est.",
+        "bias_value": "±{{points}} pts",
+        "calibration": "Écart à l’entraînement",
+        "calibration_tip": "L’écart entre ses scores d’entraînement et les vôtres, en points de grille par critère. Plus c’est bas, mieux c’est.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Pas encore d’évaluations",
+        "empty_description": "Les apprenants apparaissent ici dès qu’ils commencent à évaluer."
+      },
+      "drawer": {
+        "title": "Évaluations par les pairs",
+        "close": "Fermer",
+        "peer_score": "Score des pairs",
+        "not_enough": "Pas encore assez d’évaluations (minimum : {{n}})",
+        "score_basis": "Médiane des évaluations · comptées : {{n}}",
+        "self_score": "Auto-évaluation :",
+        "self_short": "auto : {{points}}",
+        "apply_grade": "Utiliser le score des pairs comme note ({{score}})",
+        "apply_hint": "Ouvre la notation avec la suggestion affichée. Rien n’est enregistré tant que vous ne notez pas.",
+        "feedback_only_hint": "Les suggestions de note sont désactivées (retours uniquement).",
+        "open_grading": "Ouvrir la notation",
+        "reviews": "Évaluations ({{n}})",
+        "reviewer_n": "Évaluateur {{n}}",
+        "no_reviews": "Pas encore d’évaluations.",
+        "status_assigned": "En cours",
+        "status_discarded": "Écartée",
+        "flagged": "Signalée",
+        "flag_reason": "Motif du signalement :",
+        "discard_reason": "Motif de l’exclusion :",
+        "discard_placeholder": "Pourquoi écartez-vous cette évaluation ? Seuls les formateurs le voient.",
+        "discard": "Écarter",
+        "restore": "Restaurer",
+        "discarded_toast": "Évaluation écartée",
+        "restored_toast": "Évaluation restaurée",
+        "action_error": "Cela n’a pas fonctionné. Réessayez.",
+        "helpfulness": "Note de l’auteur :",
+        "self_review": "Auto-évaluation",
+        "reflection": "Plan de révision",
+        "no_reflection": "Aucun plan de révision rédigé pour l’instant.",
+        "grade_title": "Noter {{name}}",
+        "suggested": "Suggestion des pairs : {{score}}",
+        "suggested_hint": "Médiane des évaluations par les pairs (comptées : {{n}}). À utiliser comme repère.",
+        "closed_new_attempt": "Fermée automatiquement : l'apprenant a commencé une nouvelle tentative."
+      }
     }
   }
 }

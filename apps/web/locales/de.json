@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Standard-Funktion",
           "description": "Der Newsletter ist ab dem Standard-Tarif verfügbar. Führe ein Upgrade durch, um Kampagnen, Willkommensserien und Kurs-Updates per E-Mail an deine Lernenden zu senden."
+        },
+        "peer_review": {
+          "title": "Standard-Funktion",
+          "description": "Peer-Review ist für Organisationen mit unserem Standard-Plan oder höher verfügbar. Upgraden Sie, damit Lernende ihre Arbeiten gegenseitig anhand eines Bewertungsrasters beurteilen."
         }
       },
       "gate": {
@@ -381,6 +385,12 @@
           "note_3": "Nächste Schritte für Freitag",
           "play_title": "Übung",
           "play_question": "Wie viele Seiten hat ein Fünfeck?"
+        },
+        "peer_review": {
+          "title": "Lernende werden besser, indem sie sich gegenseitig bewerten",
+          "b1": "Alle Lernenden bewerten einige Mitlernende mit Ihrem Bewertungsraster",
+          "b2": "Eine Übungsrunde zeigt ihnen, wie Sie bewerten würden",
+          "b3": "Sehen Sie eine Notenempfehlung aus den Reviews, Sie entscheiden"
         }
       }
     },
@@ -8551,7 +8561,8 @@
             "scim": "SCIM-Bereitstellung",
             "audit_logs": "Audit-Logs",
             "custom_domain": "Eigene Domain",
-            "remove_watermark": "Ohne LearnHouse-Wasserzeichen"
+            "remove_watermark": "Ohne LearnHouse-Wasserzeichen",
+            "peer_review": "Peer-Review"
           }
         },
         "next_invoice_label": "Nächste Rechnung",
@@ -31248,7 +31259,9 @@
       "plan_downgraded": "In den kostenlosen Tarif gewechselt",
       "plan_restored": "Tarif wiederhergestellt",
       "payments_checkout_failing": "Checkout schlägt fehl",
-      "invitation_accepted": "Einladung angenommen"
+      "invitation_accepted": "Einladung angenommen",
+      "peer_review_received": "Peer-Feedback erhalten",
+      "peer_review_flagged": "Peer-Review gemeldet"
     },
     "copy": {
       "assignment_graded": "Bewertet: {{assignment}}",
@@ -31311,7 +31324,9 @@
       "plan_downgraded": "Du nutzt jetzt den kostenlosen Tarif. Nichts wurde gelöscht",
       "plan_restored": "Willkommen zurück bei {{plan}}",
       "payments_checkout_failing": "Lernende können gerade nichts kaufen ({{count}} fehlgeschlagene Checkouts)",
-      "invitation_accepted": "{{actor}} hat deine Einladung angenommen"
+      "invitation_accepted": "{{actor}} hat deine Einladung angenommen",
+      "peer_review_received": "Neues Peer-Feedback zu {{assignment}}",
+      "peer_review_flagged": "{{actor}} hat ein Peer-Review zu {{assignment}} gemeldet"
     },
     "routing": {
       "short": "Wer benachrichtigt wird",
@@ -31619,6 +31634,500 @@
       "seat_limit_exceeded": "es werden mehr Plätze genutzt, als die Lizenz umfasst",
       "grace_expired": "der Lizenzserver war zu lange nicht erreichbar",
       "unknown": "die Lizenz konnte nicht überprüft werden"
+    }
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Kriterium {{n}}",
+      "points_short_one": "{{count}} Pkt.",
+      "points_short_other": "{{count}} Pkt.",
+      "prompt_strength": "Das funktioniert gut",
+      "prompt_suggestion": "Eine Sache zum Verbessern, und wie",
+      "prompt_question": "Eine Frage zur Arbeit"
+    },
+    "learner": {
+      "eyebrow": "Peer-Review",
+      "card_title": "Bewerte andere und erhalte Feedback",
+      "steps_label": "Schritte der Peer-Review",
+      "step_self": "Selbstbewertung",
+      "step_practice": "Übung",
+      "step_reviews": "Andere bewerten",
+      "step_feedback": "Dein Feedback",
+      "n_of_m": "{{n}} von {{m}}",
+      "done": "Erledigt",
+      "to_do": "Offen",
+      "locked": "Gesperrt",
+      "continue": "Weiter",
+      "cancel": "Abbrechen",
+      "back": "Zurück",
+      "retry": "Erneut versuchen",
+      "optional": "Optional",
+      "saved": "Gespeichert",
+      "saving": "Speichern…",
+      "unsaved": "Ungespeicherte Änderungen",
+      "not_saved": "Nicht gespeichert",
+      "feedback_count_one": "{{count}} Bewertung",
+      "feedback_count_other": "{{count}} Bewertungen",
+      "reviews_due": "Bewertungen fällig bis {{date}}",
+      "reviews_closed_on": "Bewertungen geschlossen am {{date}}",
+      "next_title": "Als Nächstes folgt die Peer-Review",
+      "next_body_one": "Nach deiner Abgabe bewertest du die Arbeit von {{count}} Mitlernenden und erhältst Feedback zu deiner.",
+      "next_body_other": "Nach deiner Abgabe bewertest du die Arbeiten von {{count}} Mitlernenden und erhältst Feedback zu deiner.",
+      "self_title": "Bewerte deine eigene Arbeit",
+      "self_why": "Wenn du deine Arbeit zuerst selbst einschätzt, kannst du das Feedback der anderen leichter vergleichen und nutzen.",
+      "self_done": "Selbstbewertung gespeichert",
+      "self_done_pct": "Selbstbewertung gespeichert: {{pct}} %",
+      "edit_self_review": "Selbstbewertung bearbeiten",
+      "save_self_review": "Selbstbewertung speichern",
+      "self_saved_toast": "Selbstbewertung gespeichert",
+      "cal_title": "Übungsrunde",
+      "cal_why": "Wenn du zuerst ein Beispiel bewertest, siehst du, wie deine Lehrkraft das Raster liest. So werden deine Bewertungen fairer.",
+      "cal_progress": "Beispiel {{current}} von {{total}}",
+      "cal_sample": "Übungsbeispiel",
+      "cal_check": "Mit der Lehrkraft vergleichen",
+      "cal_you": "Du",
+      "cal_instructor": "Lehrkraft",
+      "cal_match": "Wie die Lehrkraft",
+      "cal_off_by_one": "{{count}} Punkt Abweichung",
+      "cal_off_by_other": "{{count}} Punkte Abweichung",
+      "cal_why_title": "Warum die Lehrkraft so bewertet hat",
+      "cal_next": "Nächstes Beispiel",
+      "cal_all_done": "Übung geschafft. Du kannst jetzt andere bewerten.",
+      "cal_none": "Im Moment gibt es keine Übungsbeispiele.",
+      "go_to_reviews": "Zu den Bewertungen",
+      "go_to_practice": "Zur Übung",
+      "finish_practice_first": "Schließe zuerst die Übungsrunde ab.",
+      "reviews_title": "Bewerte andere",
+      "reviews_why": "Beim Bewerten anderer lernst du am meisten.",
+      "reviews_done_of": "{{done}} von {{required}} erledigt",
+      "reviews_locked_practice": "Schließe die Übungsrunde ab, um mit dem Bewerten zu starten.",
+      "reviews_complete": "Du hast alle Bewertungen abgegeben. Danke!",
+      "reviews_extra_hint": "Zusätzliche Bewertungen sind willkommen: Sie helfen Mitlernenden, die weniger haben.",
+      "start_review": "Bewertung {{n}} von {{m}} starten",
+      "continue_review": "Bewertung fortsetzen",
+      "review_another": "Weitere bewerten",
+      "see_feedback": "Dein Feedback ansehen",
+      "none_title": "Noch niemand zu bewerten",
+      "none_body": "Sobald jemand abgibt, bekommst du eine Arbeit zugeteilt. Schau bald wieder vorbei.",
+      "check_again": "Erneut prüfen",
+      "your_helpfulness": "Andere bewerten deine Bewertungen im Schnitt mit {{avg}} / 5.",
+      "review_n_of_m": "Bewertung {{n}} von {{m}}",
+      "extra_review": "Zusätzliche Bewertung",
+      "classmate_work": "Die Arbeit einer Person aus deinem Kurs",
+      "work_of": "Arbeit von {{name}}",
+      "your_review": "Deine Bewertung",
+      "your_review_hint": "Wähle für jedes Kriterium die passendste Stufe und schreibe freundliche, konkrete Kommentare.",
+      "review_already_submitted": "Du hast diese Bewertung schon abgegeben.",
+      "review_load_error": "Diese Bewertung konnte nicht geladen werden.",
+      "comments_heading": "Kommentare",
+      "pick_a_level": "Stufe wählen",
+      "add_note": "Notiz hinzufügen",
+      "note_label": "Notiz zu diesem Kriterium (optional)",
+      "chars_remaining_one": "Noch {{count}} Zeichen nötig",
+      "chars_remaining_other": "Noch {{count}} Zeichen nötig",
+      "chars_ok_one": "{{count}} Zeichen",
+      "chars_ok_other": "{{count}} Zeichen",
+      "fix_before_submit": "Es fehlt noch etwas. Prüfe die markierten Felder.",
+      "save_draft": "Entwurf speichern",
+      "submit_review": "Bewertung abgeben",
+      "drafts_autosave": "Entwürfe werden automatisch gespeichert",
+      "draft_saved_toast": "Entwurf gespeichert",
+      "review_submitted_toast": "Bewertung abgegeben. Danke!",
+      "no_answer": "Keine Antwort",
+      "no_tasks": "Für diese Abgabe gibt es nichts anzuzeigen.",
+      "chosen": "gewählt",
+      "media_option": "Option {{n}} (Medien)",
+      "download_file": "Datei herunterladen",
+      "feedback_title": "Dein Feedback",
+      "feedback_why": "Vergleiche, was andere gesehen haben, mit deiner eigenen Sicht und entscheide, was du ändern willst.",
+      "locked_reviews_one": "Gib noch {{count}} Bewertung ab, um dein Feedback freizuschalten",
+      "locked_reviews_other": "Gib noch {{count}} Bewertungen ab, um dein Feedback freizuschalten",
+      "locked_generic": "Dein Feedback ist noch nicht freigeschaltet",
+      "locked_due": "Spätestens am {{date}} wird es freigeschaltet.",
+      "unlocked_by_due_date": "Dein Feedback wurde freigeschaltet, weil die Frist für die Bewertungen abgelaufen ist.",
+      "no_feedback_title": "Noch kein Feedback",
+      "no_feedback_body": "Bewertungen von Mitlernenden erscheinen hier, sobald sie eintreffen.",
+      "peer_score": "Peer-Wertung",
+      "peer_score_how_one": "Der mittlere Wert (Median) aus {{count}} Bewertung von Mitlernenden, pro Kriterium.",
+      "peer_score_how_other": "Der mittlere Wert (Median) aus {{count}} Bewertungen von Mitlernenden, pro Kriterium.",
+      "score_needs_more_one": "Eine Peer-Wertung erscheint nach {{count}} Bewertung.",
+      "score_needs_more_other": "Eine Peer-Wertung erscheint nach {{count}} Bewertungen.",
+      "reviewers_disagree": "Die Bewertenden waren sich uneinig",
+      "gap_title": "Die anderen und deine Selbstbewertung",
+      "gap_title_peers": "Was die anderen gesehen haben",
+      "legend_peers": "Andere (Median)",
+      "legend_you": "Du",
+      "gap_values": "Andere {{peers}} · Du {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: andere {{peers}}, du {{you}}, von {{max}}",
+      "gap_aligned": "Du und die anderen seid euch einig",
+      "gap_self_higher": "Du hast dich höher bewertet als die anderen",
+      "gap_self_lower": "Du hast dich niedriger bewertet als die anderen",
+      "reviews_received_one": "{{count}} Bewertung erhalten",
+      "reviews_received_other": "{{count}} Bewertungen erhalten",
+      "reviewer_n": "Bewertende Person {{n}}",
+      "flagged": "Gemeldet",
+      "how_helpful": "Wie hilfreich war das?",
+      "stars_n_one": "{{count}} Stern",
+      "stars_n_other": "{{count}} Sterne",
+      "helpful_note_label": "Notiz an die bewertende Person",
+      "helpful_note_placeholder": "Was hat geholfen, oder was hätte mehr geholfen? (optional)",
+      "save_note": "Notiz speichern",
+      "thanks_feedback": "Danke für dein Feedback",
+      "flag_link": "Diese Bewertung melden",
+      "flag_title": "Diese Bewertung melden",
+      "flag_body": "Deine Lehrkraft schaut sich das an. Sag, was nicht stimmt, zum Beispiel unhöflich, am Thema vorbei oder leer.",
+      "flag_reason": "Was stimmt nicht?",
+      "flag_submit": "Melden",
+      "flag_sent": "Danke. Deine Lehrkraft wurde informiert.",
+      "plan_title": "Dein Überarbeitungsplan",
+      "plan_why": "Schreib auf, was du ändern willst. Mit einem Plan wird aus Feedback eine bessere Arbeit.",
+      "plan_placeholder": "Aufgrund dieses Feedbacks werde ich…",
+      "save_plan": "Plan speichern",
+      "plan_saved": "Überarbeitungsplan gespeichert",
+      "error_generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+      "error_save": "Dein Entwurf konnte nicht gespeichert werden. Wir versuchen es erneut.",
+      "error_submit": "Das konnte nicht abgegeben werden. Bitte versuche es erneut.",
+      "error_download": "Die Datei konnte nicht heruntergeladen werden.",
+      "submission_changed": "Diese Person hat einen neuen Versuch gestartet, daher wurde dieses Review geschlossen. Du kannst jemand anderen bewerten.",
+      "answer_hidden": "Diese Antwort wird automatisch bewertet und ist daher nicht Teil des Reviews.",
+      "retry_in_progress": "Du hast einen neuen Versuch begonnen. Gib ihn ab, um weiter deine Mitlernenden zu bewerten."
+    },
+    "instructor": {
+      "tab": "Peer-Review",
+      "setup": "Einrichtung",
+      "unknown_learner": "Lernende Person",
+      "retry": "Erneut versuchen",
+      "error_title": "Peer-Review konnte nicht geladen werden",
+      "error_description": "Etwas ist schiefgelaufen. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      "toggle": {
+        "title": "Peer-Review",
+        "off_hint": "Aus. Nach der Abgabe bewerten Lernende einige Arbeiten von Mitlernenden mit Ihrem Bewertungsraster und erhalten Feedback von ihnen.",
+        "on_hint": "An. Alle Lernenden bewerten nach der Abgabe Arbeiten von Mitlernenden. Wählen Sie unten eine Rastervorlage, speichern Sie, und schon kann es losgehen."
+      },
+      "why": {
+        "title": "Warum Peer-Review funktioniert",
+        "reviewers_learn": "Wer Reviews schreibt, lernt am meisten. Deshalb bewerten alle Lernenden.",
+        "three_reviewers": "Drei oder mehr Bewertende geben ungefähr so verlässliches Feedback wie eine Lehrkraft.",
+        "rubric_practice": "Ein klares Bewertungsraster und eine kurze Übungsrunde machen Reviews genau.",
+        "revise": "Feedback hilft am meisten, wenn Lernende planen, was sie als Nächstes ändern.",
+        "dismiss": "Tipp ausblenden"
+      },
+      "sections": {
+        "settings": "Einstellungen",
+        "rubric": "Bewertungsraster",
+        "prompts": "Kommentarfragen",
+        "practice": "Übungsrunde"
+      },
+      "settings": {
+        "reviewing_title": "Bewerten",
+        "reviewing_description": "Wie viele Reviews alle Lernenden schreiben und wer welche Namen sieht.",
+        "reviews_required": "Reviews pro Lernendem",
+        "reviews_required_hint": "3–5 ergibt verlässliches Feedback. Jede Arbeit soll auch so viele erhalten.",
+        "anonymity": "Namen",
+        "anonymity_hint": "Verborgene Namen machen Reviews ehrlicher.",
+        "require_reviews": "Erst bewerten, dann Feedback sehen",
+        "require_reviews_hint": "Lernende sehen ihr Feedback, sobald sie ihre Reviews erledigt haben, oder nach der Review-Frist.",
+        "due_date": "Review-Frist",
+        "due_date_hint": "Optional. Nach diesem Datum können alle ihr Feedback sehen.",
+        "clear": "Löschen",
+        "steps_title": "Zusätzliche Schritte",
+        "steps_description": "Jeder ist kurz und macht das Feedback nützlicher.",
+        "self_review": "Selbstbewertung",
+        "self_review_hint": "Lernende bewerten zuerst ihre eigene Arbeit und vergleichen sie dann mit dem Urteil der anderen.",
+        "practice": "Übungsrunde",
+        "practice_hint": "Lernende bewerten ein von Ihnen vorbereitetes Beispiel und sehen, wie Sie es bewertet haben. Erfordert mindestens ein Beispiel.",
+        "helpfulness": "Nützlichkeit bewerten",
+        "helpfulness_hint": "Lernende bewerten jedes erhaltene Review mit 1 bis 5 Sternen.",
+        "revision_plan": "Überarbeitungsplan",
+        "revision_plan_hint": "Lernende notieren nach dem Lesen ihres Feedbacks, was sie ändern werden.",
+        "score_title": "Punktzahlen",
+        "score_description": "Peer-Review legt nie allein eine Note fest.",
+        "min_reviews": "Reviews für eine Punktzahl",
+        "min_reviews_hint": "Die Peer-Punktzahl erscheint, sobald eine Arbeit so viele Reviews hat."
+      },
+      "anonymity": {
+        "double_blind": "Beide verborgen",
+        "double_blind_hint": "Niemand sieht, wer wen bewertet hat",
+        "anonymous_reviewer": "Bewertende verborgen",
+        "anonymous_reviewer_hint": "Bewertende sehen, von wem die Arbeit ist",
+        "named": "Namen sichtbar",
+        "named_hint": "Alle sehen beide Namen"
+      },
+      "score_mode": {
+        "feedback_only": "Nur Feedback",
+        "feedback_only_hint": "Reviews dienen dem Lernen, keine Notenempfehlung",
+        "suggest_grade": "Note vorschlagen",
+        "suggest_grade_hint": "Sie sehen den Peer-Median und können ihn bei der Benotung nutzen"
+      },
+      "rubric": {
+        "title": "Bewertungsraster",
+        "description": "Was Bewertende beurteilen. Jedes Kriterium hat Stufen von der besten bis zur schwächsten.",
+        "template": "Mit einer Vorlage beginnen",
+        "empty_title": "Noch kein Bewertungsraster",
+        "empty_description": "Wählen Sie eine Vorlage, um mit einem Klick zu starten, und passen Sie dann den Text an Ihre Aufgabe an.",
+        "add_criterion": "Kriterium hinzufügen",
+        "remove_criterion": "Kriterium entfernen",
+        "move_up": "Nach oben",
+        "move_down": "Nach unten",
+        "criterion_title": "Kriterium",
+        "criterion_title_placeholder": "z. B. Klare Kernaussage",
+        "criterion_description": "Worauf achten",
+        "criterion_description_placeholder": "Worauf sollen Bewertende achten?",
+        "untitled_criterion": "Unbenanntes Kriterium",
+        "level_label": "Stufe",
+        "level_label_placeholder": "z. B. Ausgezeichnet",
+        "points": "Punkte",
+        "level_description": "So sieht es aus",
+        "level_description_placeholder": "Optional: wie eine Arbeit auf dieser Stufe aussieht",
+        "add_level": "Stufe hinzufügen",
+        "remove_level": "Stufe entfernen",
+        "max_points": "Max. Punkte: {{points}}",
+        "summary": "Kriterien: {{criteria}} · Max. Punkte: {{points}}",
+        "replace_title": "Aktuelles Bewertungsraster ersetzen?",
+        "replace_message": "Die Vorlage ersetzt Ihre aktuellen Kriterien. Gespeichert wird erst, wenn Sie auf Speichern klicken.",
+        "replace_confirm": "Ersetzen"
+      },
+      "templates": {
+        "writing": {
+          "name": "Schreiben",
+          "blurb": "Aufsätze, Berichte und schriftliche Antworten",
+          "thesis": {
+            "title": "Kernaussage",
+            "description": "Die Hauptaussage ist klar und bleibt von Anfang bis Ende im Mittelpunkt."
+          },
+          "evidence": {
+            "title": "Begründung und Belege",
+            "description": "Aussagen werden mit passenden Beispielen, Fakten oder Quellen gestützt."
+          },
+          "organization": {
+            "title": "Aufbau",
+            "description": "Die Gedanken folgen einer logischen Reihenfolge, und jeder Absatz hat eine Aufgabe."
+          },
+          "style": {
+            "title": "Klarheit und Stil",
+            "description": "Die Sätze sind klar und gut lesbar, mit wenigen Fehlern."
+          }
+        },
+        "project": {
+          "name": "Projekt",
+          "blurb": "Umsetzungen, Entwürfe und praktische Arbeiten",
+          "goal": {
+            "title": "Ziel und Umfang",
+            "description": "Das Projekt sagt, was es erreichen will, und bleibt in diesem Rahmen."
+          },
+          "process": {
+            "title": "Vorgehen und Entscheidungen",
+            "description": "Die einzelnen Schritte und die Gründe für wichtige Entscheidungen werden erklärt."
+          },
+          "result": {
+            "title": "Qualität des Ergebnisses",
+            "description": "Das Endergebnis funktioniert, ist vollständig und sorgfältig gemacht."
+          },
+          "reflection": {
+            "title": "Reflexion",
+            "description": "Die Person beschreibt, was funktioniert hat, was nicht und was sie ändern würde."
+          }
+        },
+        "presentation": {
+          "name": "Präsentation",
+          "blurb": "Vorträge, Folien und Videos",
+          "content": {
+            "title": "Inhalt",
+            "description": "Die Informationen sind korrekt, relevant und gehen über das Offensichtliche hinaus."
+          },
+          "structure": {
+            "title": "Aufbau",
+            "description": "Es gibt einen klaren Einstieg, einen logischen Mittelteil und einen starken Schluss."
+          },
+          "delivery": {
+            "title": "Vortrag",
+            "description": "Die Person spricht deutlich, in gutem Tempo, und hält die Aufmerksamkeit."
+          },
+          "visuals": {
+            "title": "Visualisierung",
+            "description": "Folien oder Grafiken unterstützen die Botschaft und sind gut lesbar."
+          }
+        },
+        "code": {
+          "name": "Code",
+          "blurb": "Programme, Skripte und Übungen",
+          "correctness": {
+            "title": "Korrektheit",
+            "description": "Der Code tut, was verlangt wurde, auch in Grenzfällen."
+          },
+          "readability": {
+            "title": "Lesbarkeit",
+            "description": "Namen, Formatierung und Kommentare machen den Code leicht nachvollziehbar."
+          },
+          "design": {
+            "title": "Struktur und Design",
+            "description": "Der Code ist sinnvoll aufgeteilt, ohne unnötige Wiederholungen."
+          },
+          "testing": {
+            "title": "Tests",
+            "description": "Es gibt Prüfungen oder Tests, die zeigen, dass der Code funktioniert."
+          }
+        },
+        "scale": {
+          "excellent": "Ausgezeichnet",
+          "excellent_description": "Erfüllt das Kriterium vollständig, mit klaren Stärken",
+          "good": "Gut",
+          "good_description": "Erfüllt das Kriterium mit kleinen Lücken",
+          "developing": "In Entwicklung",
+          "developing_description": "Erfüllt das Kriterium teilweise, braucht noch Arbeit",
+          "beginning": "Am Anfang",
+          "beginning_description": "Erfüllt das Kriterium bisher kaum",
+          "strong": "Stark",
+          "strong_description": "Erfüllt das Kriterium klar",
+          "adequate": "Ausreichend",
+          "adequate_description": "Erfüllt das Kriterium teilweise",
+          "needs_work": "Ausbaufähig",
+          "needs_work_description": "Erfüllt das Kriterium noch nicht"
+        }
+      },
+      "prompts": {
+        "title": "Kommentarfragen",
+        "description": "Die Fragen, die Bewertende schriftlich beantworten. Eine Mindestlänge verhindert Ein-Wort-Reviews.",
+        "label": "Frage",
+        "label_placeholder": "z. B. Was hat Sie überrascht?",
+        "min_chars": "Min. Zeichen",
+        "min_chars_hint": "Bei 0 ist die Antwort optional.",
+        "add": "Frage hinzufügen",
+        "remove": "Frage entfernen",
+        "reset": "Standardfragen verwenden"
+      },
+      "samples": {
+        "title": "Übungsbeispiele",
+        "description": "Lernende bewerten ein Beispiel, bevor sie Mitlernende bewerten, und sehen dann Ihre Bewertung samt Begründung. Ein oder zwei Beispiele reichen.",
+        "practice_off": "Die Übungsrunde ist in den Einstellungen ausgeschaltet, daher sehen Lernende diese Beispiele nicht.",
+        "none_yet": "Noch keine Beispiele, daher wird die Übungsrunde übersprungen. Fügen Sie eines hinzu, um sie zu aktivieren.",
+        "needs_rubric": "Fügen Sie zuerst Kriterien zum Bewertungsraster hinzu, um Ihre Stufen für jedes Beispiel festzulegen.",
+        "sample_title": "Titel",
+        "sample_title_placeholder": "z. B. Beispielaufsatz A",
+        "content": "Beispielarbeit",
+        "content_hint": "Markdown wird unterstützt",
+        "content_placeholder": "Fügen Sie eine Beispielantwort ein, am besten eine mittelmäßige mit Verbesserungspotenzial.",
+        "levels": "Ihre Stufen",
+        "levels_hint": "Was Sie bei jedem Kriterium geben würden",
+        "pick_level": "Stufe wählen",
+        "explanation": "Begründung",
+        "explanation_hint": "Wird angezeigt, nachdem Lernende bewertet haben",
+        "explanation_placeholder": "Erklären Sie Ihre Bewertung in wenigen Sätzen.",
+        "add": "Beispiel hinzufügen",
+        "remove": "Beispiel entfernen",
+        "count_hint": "Bis zu 5 Beispiele"
+      },
+      "errors": {
+        "criteria_min": "Fügen Sie mindestens ein Kriterium hinzu, um Peer-Review einzuschalten.",
+        "criteria_max": "Verwenden Sie höchstens {{max}} Kriterien.",
+        "criterion_title": "Geben Sie diesem Kriterium einen Namen.",
+        "levels_min": "Jedes Kriterium braucht mindestens {{min}} Stufen.",
+        "levels_max": "Verwenden Sie höchstens {{max}} Stufen pro Kriterium.",
+        "level_label": "Geben Sie dieser Stufe einen Namen.",
+        "level_points": "Punkte müssen 0 oder mehr sein.",
+        "prompts_min": "Behalten Sie mindestens eine Frage.",
+        "prompts_max": "Verwenden Sie höchstens {{max}} Fragen.",
+        "prompt_label": "Schreiben Sie die Frage.",
+        "prompt_min_chars": "Verwenden Sie eine ganze Zahl von 0 bis {{max}}.",
+        "reviews_range": "Verwenden Sie eine Zahl von {{min}} bis {{max}}.",
+        "sample_title": "Geben Sie dem Beispiel einen Titel.",
+        "sample_content": "Fügen Sie die Beispielarbeit hinzu.",
+        "sample_levels": "Wählen Sie Ihre Stufe für jedes Kriterium.",
+        "duplicate": "Zwei Einträge haben dieselbe ID. Entfernen Sie einen und fügen Sie ihn erneut hinzu."
+      },
+      "save": {
+        "saving": "Peer-Review wird gespeichert…",
+        "saved": "Peer-Review gespeichert",
+        "error": "Peer-Review konnte nicht gespeichert werden",
+        "fix_errors": "Korrigieren Sie die markierten Felder und speichern Sie erneut."
+      },
+      "monitor": {
+        "title": "Übersicht",
+        "off_title": "Peer-Review ist aus",
+        "off_description": "Schalten Sie es unter Einrichtung ein. Fortschritt, Punktzahlen und gemeldete Reviews erscheinen dann hier.",
+        "go_setup": "Zur Einrichtung"
+      },
+      "totals": {
+        "submitted": "Abgegeben",
+        "reviews_done": "Reviews erledigt",
+        "in_progress": "Reviews in Arbeit",
+        "below_target": "Brauchen mehr Reviews",
+        "flagged": "Gemeldet"
+      },
+      "flagged": {
+        "title": "Gemeldete Reviews",
+        "description": "Lernende haben diese als unfair oder nicht hilfreich gemeldet. Verwerfen Sie ein Review, um es aus der Punktzahl herauszunehmen.",
+        "open": "Alle Reviews ansehen",
+        "count": "Meldungen: {{n}}"
+      },
+      "submissions": {
+        "title": "Abgaben",
+        "learner": "Lernende Person",
+        "reviews": "Erhaltene Reviews",
+        "received": "{{done}} von {{target}}",
+        "peer_score": "Peer-Punktzahl",
+        "peer_score_tip": "Der Median der Reviews pro Kriterium, in Prozent. Verworfene Reviews werden nicht berücksichtigt.",
+        "self": "Selbst",
+        "self_tip": "Die Punktzahl, die sich die Person für die eigene Arbeit gegeben hat.",
+        "flags": "Meldungen",
+        "waiting": "Ausstehend",
+        "disagree": "Bewertende uneinig ({{points}} Pkt.)",
+        "disagree_tip": "Das höchste und das niedrigste Review liegen weit auseinander. Vor der Benotung lohnt sich ein Blick.",
+        "empty_title": "Noch nichts abgegeben",
+        "empty_description": "Reviews beginnen, sobald Lernende ihre Arbeit abgeben."
+      },
+      "reviewers": {
+        "title": "Bewertende",
+        "reviewer": "Bewertende Person",
+        "done": "Erledigt",
+        "done_tip": "Geschriebene Reviews im Verhältnis zur geforderten Anzahl. Zusätzliche Reviews zählen auch.",
+        "helpfulness": "Nützlichkeit",
+        "helpfulness_tip": "Die durchschnittliche Sternebewertung, die Autoren den Reviews dieser Person gegeben haben.",
+        "helpfulness_value": "{{value}} von 5",
+        "bias": "Abweichung",
+        "bias_tip": "Wie weit die Punktzahlen dieser Person im Schnitt von denen anderer Bewertender derselben Arbeit abweichen. Niedriger ist besser.",
+        "bias_value": "±{{points}} Pkt.",
+        "calibration": "Übungsabweichung",
+        "calibration_tip": "Wie weit die Punktzahlen in der Übungsrunde von Ihren abwichen, in Rasterpunkten pro Kriterium. Niedriger ist besser.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Noch keine Reviews",
+        "empty_description": "Lernende erscheinen hier, sobald sie mit dem Bewerten beginnen."
+      },
+      "drawer": {
+        "title": "Peer-Reviews",
+        "close": "Schließen",
+        "peer_score": "Peer-Punktzahl",
+        "not_enough": "Noch nicht genug Reviews (Minimum: {{n}})",
+        "score_basis": "Median der Reviews · gezählt: {{n}}",
+        "self_score": "Selbstbewertung:",
+        "self_short": "selbst: {{points}}",
+        "apply_grade": "Peer-Punktzahl als Note übernehmen ({{score}})",
+        "apply_hint": "Öffnet die Benotung mit dem angezeigten Vorschlag. Gespeichert wird erst, wenn Sie benoten.",
+        "feedback_only_hint": "Notenvorschläge sind aus (nur Feedback).",
+        "open_grading": "Benotung öffnen",
+        "reviews": "Reviews ({{n}})",
+        "reviewer_n": "Bewerter {{n}}",
+        "no_reviews": "Noch keine Reviews.",
+        "status_assigned": "In Arbeit",
+        "status_discarded": "Verworfen",
+        "flagged": "Gemeldet",
+        "flag_reason": "Meldegrund:",
+        "discard_reason": "Grund fürs Verwerfen:",
+        "discard_placeholder": "Warum lassen Sie dieses Review weg? Nur Lehrkräfte sehen das.",
+        "discard": "Verwerfen",
+        "restore": "Wiederherstellen",
+        "discarded_toast": "Review verworfen",
+        "restored_toast": "Review wiederhergestellt",
+        "action_error": "Das hat nicht geklappt. Versuchen Sie es erneut.",
+        "helpfulness": "Vom Autor bewertet:",
+        "self_review": "Selbstbewertung",
+        "reflection": "Überarbeitungsplan",
+        "no_reflection": "Noch kein Überarbeitungsplan geschrieben.",
+        "grade_title": "{{name}} benoten",
+        "suggested": "Peer-Vorschlag: {{score}}",
+        "suggested_hint": "Median der Peer-Reviews (gezählt: {{n}}). Als Orientierung nutzen.",
+        "closed_new_attempt": "Automatisch geschlossen: Die lernende Person hat einen neuen Versuch gestartet."
+      }
     }
   }
 }

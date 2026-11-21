@@ -5508,6 +5508,290 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assignments/peer-review/reviews/{review_uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a review I was assigned
+         * @description The review plus the reviewee's submission (answer keys stripped, file names replaced by review file URLs). Reviewee identity follows the anonymity setting. Reviewer only.
+         */
+        get: operations["api_get_review_api_v1_assignments_peer_review_reviews__review_uuid__get"];
+        /**
+         * Save or submit a peer review
+         * @description Saves a draft. With `submit: true`, every criterion must be scored and each prompt meet its minimum length; the reviewee is notified.
+         */
+        put: operations["api_save_review_api_v1_assignments_peer_review_reviews__review_uuid__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/peer-review/reviews/{review_uuid}/files/{task_uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the reviewee's file for a task
+         * @description Streams the uploaded file under a neutral name. Only for the assigned reviewer and course instructors.
+         */
+        get: operations["api_get_review_file_api_v1_assignments_peer_review_reviews__review_uuid__files__task_uuid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/peer-review/reviews/{review_uuid}/rate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rate how helpful a review was */
+        post: operations["api_rate_review_api_v1_assignments_peer_review_reviews__review_uuid__rate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/peer-review/reviews/{review_uuid}/flag": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Flag a review I received
+         * @description Marks the review for the instructors and notifies them.
+         */
+        post: operations["api_flag_review_api_v1_assignments_peer_review_reviews__review_uuid__flag_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read peer review settings
+         * @description Defaults when none are saved. Practice-sample answers are stripped for learners.
+         */
+        get: operations["api_get_settings_api_v1_assignments__assignment_uuid__peer_review_settings_get"];
+        /**
+         * Save peer review settings
+         * @description Upsert (instructors). Turning peer review on needs a 1-10 criteria rubric and the peer_review plan feature.
+         */
+        put: operations["api_update_settings_api_v1_assignments__assignment_uuid__peer_review_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Peer review dashboard */
+        get: operations["api_get_overview_api_v1_assignments__assignment_uuid__peer_review_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/submissions/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every review of one learner's current attempt */
+        get: operations["api_get_submission_api_v1_assignments__assignment_uuid__peer_review_submissions__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/reviews/{review_uuid}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Discard a peer review */
+        post: operations["api_discard_review_api_v1_assignments__assignment_uuid__peer_review_reviews__review_uuid__discard_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/reviews/{review_uuid}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore a discarded peer review */
+        post: operations["api_restore_review_api_v1_assignments__assignment_uuid__peer_review_reviews__review_uuid__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My peer review state
+         * @description 404 when peer review is off for the assignment, 403 when the org's plan lost it.
+         */
+        get: operations["api_get_me_api_v1_assignments__assignment_uuid__peer_review_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/next": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get my next review to write
+         * @description My open review if any, else a fresh pick (fewest reviews first), else `{review: null, reason: "none_available"}`.
+         */
+        post: operations["api_next_review_api_v1_assignments__assignment_uuid__peer_review_me_next_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/self": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit my self-review */
+        post: operations["api_self_review_api_v1_assignments__assignment_uuid__peer_review_me_self_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/calibration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Practice samples */
+        get: operations["api_list_calibration_api_v1_assignments__assignment_uuid__peer_review_me_calibration_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/calibration/{sample_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Score a practice sample
+         * @description Stores my levels and returns them next to the instructor's, with the explanation.
+         */
+        post: operations["api_submit_calibration_api_v1_assignments__assignment_uuid__peer_review_me_calibration__sample_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/reflection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save my revision plan */
+        put: operations["api_save_reflection_api_v1_assignments__assignment_uuid__peer_review_me_reflection_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/assignments/": {
         parameters: {
             query?: never;
@@ -23439,6 +23723,157 @@ export interface components {
              * @default false
              */
             enabled?: boolean;
+        };
+        /** PeerCalibrationBody */
+        PeerCalibrationBody: {
+            /** Scores */
+            scores?: {
+                [key: string]: string;
+            };
+        };
+        /** PeerDiscardBody */
+        PeerDiscardBody: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** PeerFlagBody */
+        PeerFlagBody: {
+            /** Reason */
+            reason: string;
+        };
+        /** PeerRateBody */
+        PeerRateBody: {
+            /** Helpfulness */
+            helpfulness: number;
+            /** Note */
+            note?: string | null;
+        };
+        /** PeerReflectionBody */
+        PeerReflectionBody: {
+            /** Plan */
+            plan: string;
+        };
+        /** PeerReviewCalibrationSampleIn */
+        PeerReviewCalibrationSampleIn: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Content
+             * @default
+             */
+            content?: string;
+            /** Scores */
+            scores?: {
+                [key: string]: string;
+            };
+            /** Explanation */
+            explanation?: string | null;
+        };
+        /** PeerReviewCriterionIn */
+        PeerReviewCriterionIn: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Description */
+            description?: string | null;
+            /** Levels */
+            levels: components["schemas"]["PeerReviewLevelIn"][];
+        };
+        /** PeerReviewLevelIn */
+        PeerReviewLevelIn: {
+            /** Id */
+            id: string;
+            /** Points */
+            points: number;
+            /** Label */
+            label: string;
+            /** Description */
+            description?: string | null;
+        };
+        /** PeerReviewPromptIn */
+        PeerReviewPromptIn: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Min Chars
+             * @default 0
+             */
+            min_chars?: number;
+        };
+        /** PeerReviewSaveBody */
+        PeerReviewSaveBody: {
+            /** Scores */
+            scores?: {
+                [key: string]: string;
+            };
+            /** Comments */
+            comments?: {
+                [key: string]: string;
+            };
+            /** Criterion Comments */
+            criterion_comments?: {
+                [key: string]: string;
+            } | null;
+            /**
+             * Submit
+             * @default false
+             */
+            submit?: boolean;
+        };
+        /**
+         * PeerReviewSettingsUpdate
+         * @description Upsert body. Fields left out keep their current value; ``prompts``
+         *     sent as null goes back to the default prompts.
+         */
+        PeerReviewSettingsUpdate: {
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Reviews Required */
+            reviews_required?: number | null;
+            /** Require Reviews To See Feedback */
+            require_reviews_to_see_feedback?: boolean | null;
+            /** Review Due Date */
+            review_due_date?: string | null;
+            /** Anonymity */
+            anonymity?: ("double_blind" | "anonymous_reviewer" | "named") | null;
+            /** Self Review Enabled */
+            self_review_enabled?: boolean | null;
+            /** Calibration Enabled */
+            calibration_enabled?: boolean | null;
+            /** Helpfulness Enabled */
+            helpfulness_enabled?: boolean | null;
+            /** Revision Plan Enabled */
+            revision_plan_enabled?: boolean | null;
+            /** Prompts */
+            prompts?: components["schemas"]["PeerReviewPromptIn"][] | null;
+            /** Rubric */
+            rubric?: components["schemas"]["PeerReviewCriterionIn"][] | null;
+            /** Score Mode */
+            score_mode?: ("feedback_only" | "suggest_grade") | null;
+            /** Min Reviews For Score */
+            min_reviews_for_score?: number | null;
+            /** Calibration Samples */
+            calibration_samples?: components["schemas"]["PeerReviewCalibrationSampleIn"][] | null;
+        };
+        /** PeerSelfReviewBody */
+        PeerSelfReviewBody: {
+            /** Scores */
+            scores?: {
+                [key: string]: string;
+            };
+            /** Comments */
+            comments?: {
+                [key: string]: string;
+            };
+            /** Criterion Comments */
+            criterion_comments?: {
+                [key: string]: string;
+            } | null;
         };
         /** Permission */
         Permission: {
@@ -41843,6 +42278,963 @@ export interface operations {
                         [key: string]: unknown;
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_review_api_v1_assignments_peer_review_reviews__review_uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_save_review_api_v1_assignments_peer_review_reviews__review_uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerReviewSaveBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Already submitted, withdrawn, or the reviewee started a new attempt */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid scores or comments */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_get_review_file_api_v1_assignments_peer_review_reviews__review_uuid__files__task_uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_uuid: string;
+                task_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_rate_review_api_v1_assignments_peer_review_reviews__review_uuid__rate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerRateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The review is not submitted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_flag_review_api_v1_assignments_peer_review_reviews__review_uuid__flag_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerFlagBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The review is not submitted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_settings_api_v1_assignments__assignment_uuid__peer_review_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_update_settings_api_v1_assignments__assignment_uuid__peer_review_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerReviewSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid settings */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_get_overview_api_v1_assignments__assignment_uuid__peer_review_overview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_submission_api_v1_assignments__assignment_uuid__peer_review_submissions__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_discard_review_api_v1_assignments__assignment_uuid__peer_review_reviews__review_uuid__discard_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+                review_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerDiscardBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_restore_review_api_v1_assignments__assignment_uuid__peer_review_reviews__review_uuid__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+                review_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The review is not discarded */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_me_api_v1_assignments__assignment_uuid__peer_review_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_next_review_api_v1_assignments__assignment_uuid__peer_review_me_next_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Practice round not finished */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_self_review_api_v1_assignments__assignment_uuid__peer_review_me_self_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerSelfReviewBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid scores or comments */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_list_calibration_api_v1_assignments__assignment_uuid__peer_review_me_calibration_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_submit_calibration_api_v1_assignments__assignment_uuid__peer_review_me_calibration__sample_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+                sample_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerCalibrationBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Already scored */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_save_reflection_api_v1_assignments__assignment_uuid__peer_review_me_reflection_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeerReflectionBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not allowed, or the organization's plan does not include peer review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Assignment, review or peer review settings not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
