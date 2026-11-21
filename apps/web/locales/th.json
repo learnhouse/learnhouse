@@ -4426,7 +4426,9 @@
       "view_content": "ดูเนื้อหา"
     },
     "checkout_paused": "สินค้านี้ยังชำระเงินไม่ได้ชั่วคราว เราแจ้งองค์กรแล้ว โปรดลองอีกครั้งภายหลัง",
-    "checkout_paused_short": "ไม่พร้อมใช้งานชั่วคราว"
+    "checkout_paused_short": "ไม่พร้อมใช้งานชั่วคราว",
+    "checkout_not_for_sale": "สินค้านี้ยังไม่เปิดให้ซื้อ",
+    "checkout_not_for_sale_short": "ยังไม่พร้อมจำหน่าย"
   },
   "account": {
     "title": "การตั้งค่าบัญชี",

@@ -292,6 +292,16 @@ async def test_admin_routing_defaults_and_overrides(db, org, admin_user, regular
         assert await emit.emit_admin(db, "join_request", org_id=org.id, title="x") == []
 
 
+async def test_emit_admin_skips_the_demo_org(db, org, admin_user, regular_user):
+    """Every demo visitor is an admin there: an admin broadcast reaches strangers."""
+    org.is_demo = True
+    db.add(org)
+    await db.commit()
+    rows = await emit.emit_admin(db, "join_request", org_id=org.id, title="Join?", extra_user_ids=[regular_user.id])
+    assert rows == []
+    assert (await db.execute(select(Notification))).scalars().all() == []
+
+
 async def test_course_author_who_left_org_is_skipped(db, org, admin_user):
     db.add(ResourceAuthor(resource_uuid="course_y", user_id=99, authorship=ResourceAuthorshipEnum.CREATOR,
                           authorship_status=ResourceAuthorshipStatusEnum.ACTIVE))

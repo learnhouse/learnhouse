@@ -230,8 +230,16 @@ async def emit_admin(
     extra_user_ids: Iterable[int] = (),
     **kwargs: Any,
 ) -> list:
-    """Notify whoever the org routes this admin event to. Never raises."""
+    """Notify whoever the org routes this admin event to. Never raises.
+
+    Nothing for the shared demo org: every visitor joins it as an admin, so an
+    admin broadcast there reaches strangers who only clicked "try the demo".
+    """
+    from src.services.demo.guards import is_demo_org
+
     try:
+        if await is_demo_org(org_id, db):
+            return []
         ids = set(await admin_recipients(db, org_id, type_, course_uuid=course_uuid)) | set(extra_user_ids)
     except Exception:
         logger.warning("Resolving recipients for %s failed", type_, exc_info=True)

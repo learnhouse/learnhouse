@@ -4426,7 +4426,9 @@
       "view_content": "Lihat konten"
     },
     "checkout_paused": "Pembayaran untuk produk ini sementara tidak tersedia. Organisasi sudah diberi tahu; silakan coba lagi nanti.",
-    "checkout_paused_short": "Sementara tidak tersedia"
+    "checkout_paused_short": "Sementara tidak tersedia",
+    "checkout_not_for_sale": "Produk ini belum tersedia untuk dibeli.",
+    "checkout_not_for_sale_short": "Belum tersedia"
   },
   "account": {
     "title": "Pengaturan akun",

@@ -4528,7 +4528,9 @@
       "owned_count_many": "Vous possédez {{count}} offres"
     },
     "checkout_paused": "Le paiement est temporairement indisponible pour ce produit. L’organisation a été prévenue ; veuillez réessayer plus tard.",
-    "checkout_paused_short": "Temporairement indisponible"
+    "checkout_paused_short": "Temporairement indisponible",
+    "checkout_not_for_sale": "Ce produit n’est pas encore disponible à l’achat.",
+    "checkout_not_for_sale_short": "Pas encore disponible"
   },
   "account": {
     "title": "Paramètres du compte",

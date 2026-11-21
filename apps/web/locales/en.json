@@ -4441,7 +4441,9 @@
       "unavailable_body": "This organization has not enabled their store yet."
     },
     "checkout_paused": "Checkout is temporarily unavailable for this product. The organization has been told; please try again later.",
-    "checkout_paused_short": "Temporarily unavailable"
+    "checkout_paused_short": "Temporarily unavailable",
+    "checkout_not_for_sale": "This product is not available for purchase yet.",
+    "checkout_not_for_sale_short": "Not available yet"
   },
   "account": {
     "title": "Account settings",

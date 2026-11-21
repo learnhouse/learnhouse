@@ -84,6 +84,12 @@ def due_trial_stage(trial: OrgTrial, now: datetime) -> Optional[str]:
 
 
 async def org_admins(db_session: AsyncSession, org_id: int) -> list[Admin]:
+    """The org's admins with an email address. None for the shared demo org:
+    every visitor is an admin there, so mailing its admins mails strangers."""
+    from src.services.demo.guards import is_demo_org
+
+    if await is_demo_org(org_id, db_session):
+        return []
     rows = (
         await db_session.execute(
             select(User)

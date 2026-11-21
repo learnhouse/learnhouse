@@ -1297,7 +1297,10 @@ async def delete_user_by_id(
         org = (await db_session.execute(
             select(Organization).where(Organization.id == org_id)
         )).scalars().first()
-        if not org:
+        # The shared demo org is never deleted with a visitor's account: every
+        # visitor is an admin there, so the first one to delete their account
+        # alone in it would take the demo down. Their membership goes below.
+        if not org or org.is_demo:
             continue
 
         # Capture every member so we can invalidate their cached sessions; their

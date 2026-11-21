@@ -4447,7 +4447,9 @@
       "view_content": "İçeriği görüntüle"
     },
     "checkout_paused": "Bu ürün için ödeme geçici olarak kullanılamıyor. Organizasyona bilgi verildi; lütfen daha sonra tekrar deneyin.",
-    "checkout_paused_short": "Geçici olarak kullanılamıyor"
+    "checkout_paused_short": "Geçici olarak kullanılamıyor",
+    "checkout_not_for_sale": "Bu ürün henüz satın alınamıyor.",
+    "checkout_not_for_sale_short": "Henüz mevcut değil"
   },
   "account": {
     "title": "Hesap ayarları",

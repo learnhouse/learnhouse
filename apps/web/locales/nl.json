@@ -4447,7 +4447,9 @@
       "view_content": "Inhoud bekijken"
     },
     "checkout_paused": "Afrekenen is tijdelijk niet mogelijk voor dit product. De organisatie is op de hoogte gebracht; probeer het later opnieuw.",
-    "checkout_paused_short": "Tijdelijk niet beschikbaar"
+    "checkout_paused_short": "Tijdelijk niet beschikbaar",
+    "checkout_not_for_sale": "Dit product is nog niet te koop.",
+    "checkout_not_for_sale_short": "Nog niet beschikbaar"
   },
   "account": {
     "title": "Accountinstellingen",

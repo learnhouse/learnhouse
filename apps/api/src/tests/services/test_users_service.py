@@ -277,6 +277,45 @@ class TestDeleteUserById:
         "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
         new_callable=AsyncMock,
     )
+    async def test_delete_user_never_deletes_the_demo_org(
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, act_as_backoffice
+    ):
+        """A demo visitor alone as admin deletes their account; the demo stays."""
+        demo = Organization(
+            id=778, name="Demo", slug="demo", email="demo@org.com", org_uuid="org_demo",
+            is_demo=True, creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        visitor = User(
+            id=21, username="visitor", first_name="V", last_name="V", email="visitor@test.com",
+            password="hashed", user_uuid="user_visitor",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add_all([demo, visitor])
+        await db.commit()
+        db.add(UserOrganization(
+            user_id=21, org_id=778, role_id=1,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        result = await delete_user_by_id(mock_request, db, admin_user, 21)
+        assert result == {"detail": "User deleted successfully"}
+
+        assert (await db.exec(select(Organization).where(Organization.id == 778))).first() is not None
+        assert (await db.exec(select(User).where(User.id == 21))).first() is None
+        assert (
+            await db.exec(select(UserOrganization).where(UserOrganization.user_id == 21))
+        ).first() is None
+
+    @pytest.mark.asyncio
+    @patch(
+        "src.services.users.users.authorization_verify_if_user_is_anon",
+        new_callable=AsyncMock,
+    )
+    @patch(
+        "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
+        new_callable=AsyncMock,
+    )
     async def test_delete_user_skips_missing_admin_org(
         self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, act_as_backoffice
     ):
