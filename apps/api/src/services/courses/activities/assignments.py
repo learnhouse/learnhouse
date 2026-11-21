@@ -3929,6 +3929,14 @@ async def retry_assignment_submission(
     await db_session.commit()
     await db_session.refresh(assignment_user_submission)
 
+    # Peer review: the wiped attempt can't be reviewed any more, so close the
+    # open review tasks pointing at it (submitted reviews stay as history).
+    from src.services.courses.activities.peer_review import close_superseded_reviews
+
+    await close_superseded_reviews(
+        db_session, assignment.id, int(current_user.id), assignment_user_submission.attempt_number
+    )
+
     # Revoke any course certificate previously issued. If this assignment was the
     # final activity, a new certificate is re-issued once the retry attempt is
     # graded and the course is again fully complete. Emits certificate_revoked.

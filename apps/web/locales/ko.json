@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Standard 기능",
           "description": "뉴스레터는 Standard 플랜 이상에서 사용할 수 있습니다. 업그레이드하면 학습자에게 캠페인, 환영 시리즈, 코스 업데이트를 이메일로 보낼 수 있습니다."
+        },
+        "peer_review": {
+          "title": "Standard 기능",
+          "description": "동료 평가는 Standard 플랜 이상의 조직에서 사용할 수 있습니다. 업그레이드하면 학습자들이 루브릭으로 서로의 과제를 평가할 수 있습니다."
         }
       },
       "gate": {
@@ -380,6 +384,12 @@
           "note_3": "금요일까지 할 일",
           "play_title": "연습",
           "play_question": "오각형의 변은 몇 개인가요?"
+        },
+        "peer_review": {
+          "title": "서로 평가하며 실력이 느는 학습자",
+          "b1": "모든 학습자가 내 루브릭으로 동료 몇 명을 평가",
+          "b2": "연습 라운드에서 내가 어떻게 채점하는지 보여 줌",
+          "b3": "평가를 바탕으로 추천 성적 확인, 결정은 내가"
         }
       }
     },
@@ -7970,7 +7980,8 @@
             "scim": "SCIM 프로비저닝",
             "audit_logs": "감사 로그",
             "custom_domain": "커스텀 도메인",
-            "remove_watermark": "LearnHouse 워터마크 없음"
+            "remove_watermark": "LearnHouse 워터마크 없음",
+            "peer_review": "동료 평가"
           }
         },
         "next_invoice_label": "다음 청구서",
@@ -29367,7 +29378,9 @@
       "plan_downgraded": "무료 플랜으로 변경됨",
       "plan_restored": "플랜 복원됨",
       "payments_checkout_failing": "결제 실패",
-      "invitation_accepted": "초대 수락됨"
+      "invitation_accepted": "초대 수락됨",
+      "peer_review_received": "동료 피드백을 받았습니다",
+      "peer_review_flagged": "동료 평가가 신고되었습니다"
     },
     "copy": {
       "assignment_graded": "채점 완료: {{assignment}}",
@@ -29430,7 +29443,9 @@
       "plan_downgraded": "이제 무료 플랜을 사용 중입니다. 삭제된 것은 없습니다",
       "plan_restored": "{{plan}}에 다시 오신 것을 환영합니다",
       "payments_checkout_failing": "지금 학습자가 구매할 수 없습니다 (실패한 결제 {{count}}건)",
-      "invitation_accepted": "{{actor}}님이 초대를 수락했어요"
+      "invitation_accepted": "{{actor}}님이 초대를 수락했어요",
+      "peer_review_received": "{{assignment}}에 새 동료 피드백이 있습니다",
+      "peer_review_flagged": "{{actor}}님이 {{assignment}}의 동료 평가를 신고했습니다"
     },
     "routing": {
       "short": "알림 대상",
@@ -29699,5 +29714,499 @@
     "copied_link": "앱 링크를 복사했어요",
     "copy_failed": "이미지를 복사하지 못했어요. 다운로드를 시도해 보세요.",
     "download_failed": "이미지를 저장하지 못했어요."
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "기준 {{n}}",
+      "points_short_one": "{{count}}점",
+      "points_short_other": "{{count}}점",
+      "prompt_strength": "잘한 점",
+      "prompt_suggestion": "개선할 점 하나와 방법",
+      "prompt_question": "작성자에게 묻고 싶은 점"
+    },
+    "learner": {
+      "eyebrow": "동료 평가",
+      "card_title": "친구들의 과제를 평가하고 피드백을 받아 보세요",
+      "steps_label": "동료 평가 단계",
+      "step_self": "자기 평가",
+      "step_practice": "연습",
+      "step_reviews": "친구 평가하기",
+      "step_feedback": "내 피드백",
+      "n_of_m": "{{n}}/{{m}}",
+      "done": "완료",
+      "to_do": "할 일",
+      "locked": "잠김",
+      "continue": "계속",
+      "cancel": "취소",
+      "back": "뒤로",
+      "retry": "다시 시도",
+      "optional": "선택",
+      "saved": "저장됨",
+      "saving": "저장 중…",
+      "unsaved": "저장하지 않은 변경 사항",
+      "not_saved": "저장되지 않음",
+      "feedback_count_one": "평가 {{count}}개",
+      "feedback_count_other": "평가 {{count}}개",
+      "reviews_due": "평가 마감 {{date}}",
+      "reviews_closed_on": "평가가 {{date}}에 마감되었어요",
+      "next_title": "다음은 동료 평가예요",
+      "next_body_one": "제출하고 나면 친구 {{count}}명의 과제를 평가하고, 내 과제에 대한 피드백도 받게 돼요.",
+      "next_body_other": "제출하고 나면 친구 {{count}}명의 과제를 평가하고, 내 과제에 대한 피드백도 받게 돼요.",
+      "self_title": "내 과제를 스스로 평가해 보세요",
+      "self_why": "먼저 내 과제를 평가해 보면 친구들의 피드백을 비교하고 활용하기가 더 쉬워져요.",
+      "self_done": "자기 평가를 저장했어요",
+      "self_done_pct": "자기 평가를 저장했어요: 스스로 {{pct}}%를 줬어요",
+      "edit_self_review": "자기 평가 수정",
+      "save_self_review": "자기 평가 저장",
+      "self_saved_toast": "자기 평가를 저장했어요",
+      "cal_title": "연습 라운드",
+      "cal_why": "먼저 샘플을 채점해 보면 강사가 채점 기준을 어떻게 보는지 알 수 있어서, 내 평가가 더 공정해져요.",
+      "cal_progress": "샘플 {{current}}/{{total}}",
+      "cal_sample": "연습용 샘플",
+      "cal_check": "강사와 비교하기",
+      "cal_you": "나",
+      "cal_instructor": "강사",
+      "cal_match": "강사와 같아요",
+      "cal_off_by_one": "{{count}}점 차이",
+      "cal_off_by_other": "{{count}}점 차이",
+      "cal_why_title": "강사가 이렇게 채점한 이유",
+      "cal_next": "다음 샘플",
+      "cal_all_done": "연습이 끝났어요. 이제 친구들을 평가할 준비가 됐어요.",
+      "cal_none": "지금은 연습용 샘플이 없어요.",
+      "go_to_reviews": "평가하러 가기",
+      "go_to_practice": "연습하러 가기",
+      "finish_practice_first": "먼저 연습 라운드를 끝내 주세요.",
+      "reviews_title": "친구들 평가하기",
+      "reviews_why": "다른 사람의 과제를 평가할 때 가장 많이 배워요.",
+      "reviews_done_of": "{{required}}개 중 {{done}}개 완료",
+      "reviews_locked_practice": "연습 라운드를 끝내면 평가를 시작할 수 있어요.",
+      "reviews_complete": "모든 평가를 마쳤어요. 고마워요!",
+      "reviews_extra_hint": "추가 평가도 환영해요. 평가를 적게 받은 친구들에게 도움이 돼요.",
+      "start_review": "평가 {{n}}/{{m}} 시작하기",
+      "continue_review": "평가 이어서 하기",
+      "review_another": "하나 더 평가하기",
+      "see_feedback": "내 피드백 보기",
+      "none_title": "아직 평가할 과제가 없어요",
+      "none_body": "누군가 제출하면 바로 친구의 과제를 보내 드릴게요. 잠시 후 다시 확인해 보세요.",
+      "check_again": "다시 확인",
+      "your_helpfulness": "친구들이 내 평가에 평균 {{avg}} / 5점을 줬어요.",
+      "review_n_of_m": "평가 {{n}}/{{m}}",
+      "extra_review": "추가 평가",
+      "classmate_work": "친구의 과제",
+      "work_of": "{{name}}님의 과제",
+      "your_review": "내 평가",
+      "your_review_hint": "기준마다 가장 알맞은 수준을 고른 뒤, 따뜻하고 구체적인 코멘트를 남겨 주세요.",
+      "review_already_submitted": "이미 이 평가를 제출했어요.",
+      "review_load_error": "이 평가를 불러오지 못했어요.",
+      "comments_heading": "코멘트",
+      "pick_a_level": "수준 선택",
+      "add_note": "메모 추가",
+      "note_label": "이 기준에 대한 메모 (선택)",
+      "chars_remaining_one": "{{count}}자 더 필요해요",
+      "chars_remaining_other": "{{count}}자 더 필요해요",
+      "chars_ok_one": "{{count}}자",
+      "chars_ok_other": "{{count}}자",
+      "fix_before_submit": "비어 있는 부분이 있어요. 표시된 항목을 확인해 주세요.",
+      "save_draft": "임시 저장",
+      "submit_review": "평가 제출",
+      "drafts_autosave": "임시 저장은 자동으로 돼요",
+      "draft_saved_toast": "임시 저장했어요",
+      "review_submitted_toast": "평가를 제출했어요. 고마워요!",
+      "no_answer": "답변 없음",
+      "no_tasks": "이 제출물에는 보여 줄 내용이 없어요.",
+      "chosen": "선택됨",
+      "media_option": "선택지 {{n}} (미디어)",
+      "download_file": "파일 다운로드",
+      "feedback_title": "내 피드백",
+      "feedback_why": "친구들이 본 것과 내 생각을 비교해 보고, 무엇을 고칠지 정해 보세요.",
+      "locked_reviews_one": "평가 {{count}}개를 더 하면 내 피드백이 열려요",
+      "locked_reviews_other": "평가 {{count}}개를 더 하면 내 피드백이 열려요",
+      "locked_generic": "내 피드백이 아직 열리지 않았어요",
+      "locked_due": "늦어도 {{date}}에는 열려요.",
+      "unlocked_by_due_date": "평가 마감일이 지나서 내 피드백이 열렸어요.",
+      "no_feedback_title": "아직 피드백이 없어요",
+      "no_feedback_body": "친구들의 평가가 도착하면 여기에 표시돼요.",
+      "peer_score": "동료 점수",
+      "peer_score_how_one": "기준별로 친구 평가 {{count}}개의 중간값(중앙값)이에요.",
+      "peer_score_how_other": "기준별로 친구 평가 {{count}}개의 중간값(중앙값)이에요.",
+      "score_needs_more_one": "평가가 {{count}}개 모이면 동료 점수가 표시돼요.",
+      "score_needs_more_other": "평가가 {{count}}개 모이면 동료 점수가 표시돼요.",
+      "reviewers_disagree": "평가자들의 의견이 갈렸어요",
+      "gap_title": "친구들 평가 vs 내 자기 평가",
+      "gap_title_peers": "친구들이 본 내 과제",
+      "legend_peers": "친구들 (중앙값)",
+      "legend_you": "나",
+      "gap_values": "친구들 {{peers}} · 나 {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: 친구들 {{peers}}, 나 {{you}}, 만점 {{max}}",
+      "gap_aligned": "나와 친구들의 평가가 비슷해요",
+      "gap_self_higher": "친구들보다 나를 더 높게 평가했어요",
+      "gap_self_lower": "친구들보다 나를 더 낮게 평가했어요",
+      "reviews_received_one": "받은 평가 {{count}}개",
+      "reviews_received_other": "받은 평가 {{count}}개",
+      "reviewer_n": "평가자 {{n}}",
+      "flagged": "신고됨",
+      "how_helpful": "이 평가는 얼마나 도움이 됐나요?",
+      "stars_n_one": "별 {{count}}개",
+      "stars_n_other": "별 {{count}}개",
+      "helpful_note_label": "평가자에게 남기는 메모",
+      "helpful_note_placeholder": "어떤 점이 도움이 됐나요? 무엇이 더 있었다면 좋았을까요? (선택)",
+      "save_note": "메모 저장",
+      "thanks_feedback": "피드백 고마워요",
+      "flag_link": "이 평가 신고하기",
+      "flag_title": "이 평가 신고하기",
+      "flag_body": "강사가 확인할 거예요. 무례하거나, 주제에서 벗어나거나, 내용이 비어 있는 등 무엇이 문제인지 알려 주세요.",
+      "flag_reason": "무엇이 문제인가요?",
+      "flag_submit": "신고",
+      "flag_sent": "고마워요. 강사에게 전달했어요.",
+      "plan_title": "내 수정 계획",
+      "plan_why": "무엇을 고칠지 적어 보세요. 계획이 있으면 피드백이 더 나은 결과물로 이어져요.",
+      "plan_placeholder": "이 피드백을 바탕으로 나는…",
+      "save_plan": "계획 저장",
+      "plan_saved": "수정 계획을 저장했어요",
+      "error_generic": "문제가 생겼어요. 다시 시도해 주세요.",
+      "error_save": "임시 저장하지 못했어요. 다시 시도할게요.",
+      "error_submit": "제출하지 못했어요. 다시 시도해 주세요.",
+      "error_download": "파일을 다운로드하지 못했어요.",
+      "submission_changed": "이 동료가 새 시도를 시작해서 이 평가는 종료되었습니다. 다른 사람을 평가할 수 있어요.",
+      "answer_hidden": "이 답변은 자동으로 채점되므로 평가 대상이 아닙니다.",
+      "retry_in_progress": "새 시도를 시작했습니다. 동료 평가를 계속하려면 먼저 제출하세요."
+    },
+    "instructor": {
+      "tab": "동료 평가",
+      "setup": "설정",
+      "unknown_learner": "학습자",
+      "retry": "다시 시도",
+      "error_title": "동료 평가를 불러오지 못했습니다",
+      "error_description": "문제가 발생했습니다. 연결 상태를 확인하고 다시 시도하세요.",
+      "toggle": {
+        "title": "동료 평가",
+        "off_hint": "꺼짐. 켜면 학습자가 제출 후 내 루브릭으로 동료 몇 명의 과제를 평가하고, 동료에게서 피드백을 받습니다.",
+        "on_hint": "켜짐. 각 학습자는 제출 후 동료를 평가합니다. 아래에서 루브릭 템플릿을 고르고 저장하면 준비 끝입니다."
+      },
+      "why": {
+        "title": "동료 평가가 효과적인 이유",
+        "reviewers_learn": "평가를 쓰면서 가장 많이 배우는 사람은 평가자입니다. 그래서 모든 학습자가 평가합니다.",
+        "three_reviewers": "평가자가 3명 이상이면 강사 한 명의 평가만큼 신뢰할 수 있습니다.",
+        "rubric_practice": "명확한 루브릭과 짧은 연습 라운드가 평가를 정확하게 만듭니다.",
+        "revise": "학습자가 다음에 무엇을 바꿀지 계획할 때 피드백이 가장 도움이 됩니다.",
+        "dismiss": "이 팁 숨기기"
+      },
+      "sections": {
+        "settings": "설정",
+        "rubric": "루브릭",
+        "prompts": "코멘트 질문",
+        "practice": "연습 라운드"
+      },
+      "settings": {
+        "reviewing_title": "평가",
+        "reviewing_description": "학습자 한 명이 쓰는 평가 수와 누가 누구의 이름을 볼 수 있는지 설정합니다.",
+        "reviews_required": "학습자당 평가 수",
+        "reviews_required_hint": "3–5개면 신뢰할 만한 피드백이 됩니다. 각 과제도 이만큼의 평가를 받는 것을 목표로 합니다.",
+        "anonymity": "이름",
+        "anonymity_hint": "이름을 숨기면 더 솔직한 평가가 나옵니다.",
+        "require_reviews": "피드백 보기 전에 평가하기",
+        "require_reviews_hint": "학습자는 자신의 평가를 마치거나 평가 마감일이 지나면 피드백을 볼 수 있습니다.",
+        "due_date": "평가 마감일",
+        "due_date_hint": "선택 사항. 이 날짜 이후에는 모두가 자신의 피드백을 볼 수 있습니다.",
+        "clear": "지우기",
+        "steps_title": "추가 단계",
+        "steps_description": "모두 짧고, 피드백을 더 유용하게 만들어 줍니다.",
+        "self_review": "자기 평가",
+        "self_review_hint": "학습자가 먼저 자신의 과제를 채점한 뒤 동료의 평가와 비교합니다.",
+        "practice": "연습 라운드",
+        "practice_hint": "학습자가 내가 준비한 샘플을 채점하고 내 채점 결과를 확인합니다. 샘플이 하나 이상 필요합니다.",
+        "helpfulness": "유용성 평가",
+        "helpfulness_hint": "학습자가 받은 평가마다 별 1~5개로 평가합니다.",
+        "revision_plan": "수정 계획",
+        "revision_plan_hint": "학습자가 피드백을 읽은 뒤 무엇을 바꿀지 적습니다.",
+        "score_title": "점수",
+        "score_description": "동료 평가만으로 성적이 정해지지는 않습니다.",
+        "min_reviews": "점수에 필요한 평가 수",
+        "min_reviews_hint": "과제가 이만큼의 평가를 받으면 동료 점수가 표시됩니다."
+      },
+      "anonymity": {
+        "double_blind": "모두 숨김",
+        "double_blind_hint": "누가 누구를 평가했는지 아무도 모릅니다",
+        "anonymous_reviewer": "평가자 숨김",
+        "anonymous_reviewer_hint": "평가자는 작성자의 이름을 볼 수 있습니다",
+        "named": "이름 표시",
+        "named_hint": "모두가 양쪽 이름을 볼 수 있습니다"
+      },
+      "score_mode": {
+        "feedback_only": "피드백만",
+        "feedback_only_hint": "평가는 학습용이며, 성적 제안은 없습니다",
+        "suggest_grade": "성적 제안",
+        "suggest_grade_hint": "동료 중앙값을 보고 채점할 때 참고할 수 있습니다"
+      },
+      "rubric": {
+        "title": "루브릭",
+        "description": "평가자가 채점하는 항목입니다. 각 기준에는 가장 좋은 것부터 가장 약한 것까지 수준이 있습니다.",
+        "template": "템플릿으로 시작",
+        "empty_title": "아직 루브릭이 없습니다",
+        "empty_description": "템플릿을 고르면 한 번에 시작할 수 있습니다. 그런 다음 과제에 맞게 문구를 다듬으세요.",
+        "add_criterion": "기준 추가",
+        "remove_criterion": "기준 삭제",
+        "move_up": "위로 이동",
+        "move_down": "아래로 이동",
+        "criterion_title": "기준",
+        "criterion_title_placeholder": "예: 명확한 핵심 주장",
+        "criterion_description": "확인할 점",
+        "criterion_description_placeholder": "평가자는 무엇을 확인해야 하나요?",
+        "untitled_criterion": "제목 없는 기준",
+        "level_label": "수준",
+        "level_label_placeholder": "예: 우수",
+        "points": "점수",
+        "level_description": "어떤 모습인지",
+        "level_description_placeholder": "선택 사항: 이 수준의 과제는 어떤 모습인지",
+        "add_level": "수준 추가",
+        "remove_level": "수준 삭제",
+        "max_points": "최고 점수: {{points}}",
+        "summary": "기준: {{criteria}} · 최고 점수: {{points}}",
+        "replace_title": "현재 루브릭을 바꿀까요?",
+        "replace_message": "템플릿이 지금 있는 기준을 대체합니다. 저장을 클릭하기 전까지는 아무것도 저장되지 않습니다.",
+        "replace_confirm": "바꾸기"
+      },
+      "templates": {
+        "writing": {
+          "name": "글쓰기",
+          "blurb": "에세이, 보고서, 서술형 답안",
+          "thesis": {
+            "title": "핵심 주장",
+            "description": "핵심 요점이 분명하고 처음부터 끝까지 일관됩니다."
+          },
+          "evidence": {
+            "title": "뒷받침과 근거",
+            "description": "주장이 알맞은 예시, 사실, 출처로 뒷받침됩니다."
+          },
+          "organization": {
+            "title": "구성",
+            "description": "생각이 논리적인 순서를 따르고, 각 문단은 한 가지 역할을 합니다."
+          },
+          "style": {
+            "title": "명확성과 문체",
+            "description": "문장이 명확하고 읽기 쉬우며 오류가 적습니다."
+          }
+        },
+        "project": {
+          "name": "프로젝트",
+          "blurb": "제작물, 디자인, 실습 과제",
+          "goal": {
+            "title": "목표와 범위",
+            "description": "프로젝트가 하려는 일을 밝히고 그 범위 안에 머뭅니다."
+          },
+          "process": {
+            "title": "과정과 결정",
+            "description": "거친 단계와 주요 선택의 이유가 설명되어 있습니다."
+          },
+          "result": {
+            "title": "결과물의 품질",
+            "description": "최종 결과물이 작동하고, 완성되어 있으며, 꼼꼼하게 만들어졌습니다."
+          },
+          "reflection": {
+            "title": "되돌아보기",
+            "description": "작성자가 잘된 점, 안 된 점, 바꾸고 싶은 점을 말합니다."
+          }
+        },
+        "presentation": {
+          "name": "발표",
+          "blurb": "강연, 슬라이드, 동영상",
+          "content": {
+            "title": "내용",
+            "description": "정보가 정확하고 관련 있으며, 뻔한 수준을 넘어섭니다."
+          },
+          "structure": {
+            "title": "구조",
+            "description": "명확한 시작, 논리적인 중간, 인상적인 마무리가 있습니다."
+          },
+          "delivery": {
+            "title": "전달",
+            "description": "발표자가 또렷하고 알맞은 속도로 말하며 주의를 끕니다."
+          },
+          "visuals": {
+            "title": "시각 자료",
+            "description": "슬라이드나 시각 자료가 메시지를 뒷받침하고 보기 쉽습니다."
+          }
+        },
+        "code": {
+          "name": "코드",
+          "blurb": "프로그램, 스크립트, 연습 문제",
+          "correctness": {
+            "title": "정확성",
+            "description": "코드가 엣지 케이스를 포함해 요구한 대로 동작합니다."
+          },
+          "readability": {
+            "title": "가독성",
+            "description": "이름, 형식, 주석 덕분에 코드를 따라가기 쉽습니다."
+          },
+          "design": {
+            "title": "구조와 설계",
+            "description": "코드가 적절한 단위로 나뉘어 있고 불필요한 반복이 없습니다."
+          },
+          "testing": {
+            "title": "테스트",
+            "description": "코드가 동작함을 보여 주는 검사나 테스트가 있습니다."
+          }
+        },
+        "scale": {
+          "excellent": "우수",
+          "excellent_description": "기준을 완전히 충족하며 강점이 뚜렷함",
+          "good": "좋음",
+          "good_description": "기준을 충족하지만 작은 부족함이 있음",
+          "developing": "발전 중",
+          "developing_description": "기준을 일부 충족하며 더 노력이 필요함",
+          "beginning": "시작 단계",
+          "beginning_description": "아직 기준을 거의 충족하지 못함",
+          "strong": "뛰어남",
+          "strong_description": "기준을 분명히 충족함",
+          "adequate": "보통",
+          "adequate_description": "기준을 일부 충족함",
+          "needs_work": "보완 필요",
+          "needs_work_description": "아직 기준을 충족하지 못함"
+        }
+      },
+      "prompts": {
+        "title": "코멘트 질문",
+        "description": "평가자가 글로 답하는 질문입니다. 최소 길이를 정하면 한 단어짜리 평가를 막을 수 있습니다.",
+        "label": "질문",
+        "label_placeholder": "예: 무엇이 놀라웠나요?",
+        "min_chars": "최소 글자 수",
+        "min_chars_hint": "0이면 답변은 선택 사항이 됩니다.",
+        "add": "질문 추가",
+        "remove": "질문 삭제",
+        "reset": "기본값 사용"
+      },
+      "samples": {
+        "title": "연습 샘플",
+        "description": "학습자는 동료를 평가하기 전에 샘플을 채점하고, 내 점수와 그 이유를 확인합니다. 샘플은 한두 개면 충분합니다.",
+        "practice_off": "설정에서 연습 라운드가 꺼져 있어 학습자에게 이 샘플이 보이지 않습니다.",
+        "none_yet": "아직 샘플이 없어 연습 라운드를 건너뜁니다. 샘플을 추가하면 켜집니다.",
+        "needs_rubric": "각 샘플의 수준을 정하려면 먼저 루브릭 기준을 추가하세요.",
+        "sample_title": "제목",
+        "sample_title_placeholder": "예: 샘플 에세이 A",
+        "content": "샘플 과제",
+        "content_hint": "Markdown 사용 가능",
+        "content_placeholder": "예시 답안을 붙여 넣으세요. 개선할 점이 있는 중간 수준의 답안이 가장 좋습니다.",
+        "levels": "내 수준 평가",
+        "levels_hint": "각 기준에 내가 줄 수준",
+        "pick_level": "수준 선택",
+        "explanation": "이유",
+        "explanation_hint": "학습자가 채점한 뒤에 표시됩니다",
+        "explanation_placeholder": "몇 문장으로 점수의 이유를 설명하세요.",
+        "add": "샘플 추가",
+        "remove": "샘플 삭제",
+        "count_hint": "샘플은 최대 5개"
+      },
+      "errors": {
+        "criteria_min": "동료 평가를 켜려면 기준을 하나 이상 추가하세요.",
+        "criteria_max": "기준은 최대 {{max}}개까지 사용할 수 있습니다.",
+        "criterion_title": "이 기준의 이름을 입력하세요.",
+        "levels_min": "각 기준에는 수준이 {{min}}개 이상 필요합니다.",
+        "levels_max": "기준당 수준은 최대 {{max}}개까지 사용할 수 있습니다.",
+        "level_label": "이 수준의 이름을 입력하세요.",
+        "level_points": "점수는 0 이상이어야 합니다.",
+        "prompts_min": "질문을 하나 이상 남겨 두세요.",
+        "prompts_max": "질문은 최대 {{max}}개까지 사용할 수 있습니다.",
+        "prompt_label": "질문을 입력하세요.",
+        "prompt_min_chars": "0부터 {{max}}까지의 정수를 입력하세요.",
+        "reviews_range": "{{min}}부터 {{max}}까지의 숫자를 입력하세요.",
+        "sample_title": "샘플에 제목을 입력하세요.",
+        "sample_content": "샘플 과제를 추가하세요.",
+        "sample_levels": "모든 기준에 대해 수준을 선택하세요.",
+        "duplicate": "두 항목의 ID가 같습니다. 하나를 삭제한 뒤 다시 추가하세요."
+      },
+      "save": {
+        "saving": "동료 평가 저장 중…",
+        "saved": "동료 평가를 저장했습니다",
+        "error": "동료 평가를 저장하지 못했습니다",
+        "fix_errors": "강조 표시된 항목을 수정한 뒤 다시 저장하세요."
+      },
+      "monitor": {
+        "title": "모니터",
+        "off_title": "동료 평가가 꺼져 있습니다",
+        "off_description": "설정에서 켜세요. 진행 상황, 점수, 신고된 평가가 여기에 표시됩니다.",
+        "go_setup": "설정으로 이동"
+      },
+      "totals": {
+        "submitted": "제출 완료",
+        "reviews_done": "완료된 평가",
+        "in_progress": "진행 중인 평가",
+        "below_target": "평가가 더 필요함",
+        "flagged": "신고됨"
+      },
+      "flagged": {
+        "title": "신고된 평가",
+        "description": "학습자가 불공정하거나 도움이 되지 않는다고 신고한 평가입니다. 평가를 제외하면 점수에 반영되지 않습니다.",
+        "open": "모든 평가 보기",
+        "count": "신고: {{n}}"
+      },
+      "submissions": {
+        "title": "제출물",
+        "learner": "학습자",
+        "reviews": "받은 평가",
+        "received": "{{target}}개 중 {{done}}개",
+        "peer_score": "동료 점수",
+        "peer_score_tip": "기준별 평가의 중앙값을 백분율로 나타낸 것입니다. 제외된 평가는 포함되지 않습니다.",
+        "self": "자기",
+        "self_tip": "학습자가 자신의 과제에 준 점수입니다.",
+        "flags": "신고",
+        "waiting": "대기 중",
+        "disagree": "평가자 간 의견 차이 ({{points}}점)",
+        "disagree_tip": "가장 높은 평가와 가장 낮은 평가의 차이가 큽니다. 채점 전에 확인해 보세요.",
+        "empty_title": "아직 제출된 과제가 없습니다",
+        "empty_description": "학습자가 과제를 제출하면 바로 평가가 시작됩니다."
+      },
+      "reviewers": {
+        "title": "평가자",
+        "reviewer": "평가자",
+        "done": "완료",
+        "done_tip": "필요한 수 중 작성한 평가 수입니다. 추가 평가도 포함됩니다.",
+        "helpfulness": "유용성",
+        "helpfulness_tip": "작성자들이 이 사람의 평가에 준 평균 별점입니다.",
+        "helpfulness_value": "5점 중 {{value}}점",
+        "bias": "편향",
+        "bias_tip": "같은 과제를 평가한 다른 평가자들과 비교해 이 사람의 점수가 평균적으로 얼마나 차이 나는지 보여 줍니다. 낮을수록 좋습니다.",
+        "bias_value": "±{{points}}점",
+        "calibration": "연습 차이",
+        "calibration_tip": "연습 라운드 점수가 내 점수와 얼마나 차이 났는지 기준별 루브릭 점수로 보여 줍니다. 낮을수록 좋습니다.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "아직 평가가 없습니다",
+        "empty_description": "학습자가 평가를 시작하면 여기에 표시됩니다."
+      },
+      "drawer": {
+        "title": "동료 평가",
+        "close": "닫기",
+        "peer_score": "동료 점수",
+        "not_enough": "아직 평가가 부족합니다 (최소: {{n}})",
+        "score_basis": "평가의 중앙값 · 집계: {{n}}",
+        "self_score": "자기 평가:",
+        "self_short": "자기: {{points}}",
+        "apply_grade": "동료 점수를 성적으로 적용 ({{score}})",
+        "apply_hint": "제안이 표시된 채로 채점 화면을 엽니다. 채점하기 전까지는 아무것도 저장되지 않습니다.",
+        "feedback_only_hint": "성적 제안이 꺼져 있습니다 (피드백만).",
+        "open_grading": "채점 열기",
+        "reviews": "평가 ({{n}})",
+        "reviewer_n": "평가자 {{n}}",
+        "no_reviews": "아직 평가가 없습니다.",
+        "status_assigned": "진행 중",
+        "status_discarded": "제외됨",
+        "flagged": "신고됨",
+        "flag_reason": "신고 사유:",
+        "discard_reason": "제외 사유:",
+        "discard_placeholder": "이 평가를 제외하는 이유는 무엇인가요? 강사에게만 표시됩니다.",
+        "discard": "제외",
+        "restore": "복원",
+        "discarded_toast": "평가를 제외했습니다",
+        "restored_toast": "평가를 복원했습니다",
+        "action_error": "작업에 실패했습니다. 다시 시도하세요.",
+        "helpfulness": "작성자의 평가:",
+        "self_review": "자기 평가",
+        "reflection": "수정 계획",
+        "no_reflection": "아직 작성된 수정 계획이 없습니다.",
+        "grade_title": "{{name}} 채점",
+        "suggested": "동료 제안: {{score}}",
+        "suggested_hint": "동료 평가의 중앙값입니다 (집계: {{n}}). 참고용으로 활용하세요.",
+        "closed_new_attempt": "자동으로 닫혔습니다: 학습자가 새 시도를 시작했습니다."
+      }
+    }
   }
 }

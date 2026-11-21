@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Funkcia plánu Standard",
           "description": "Newsletter je dostupný v pláne Standard a vyšších. Prejdite na vyšší plán a posielajte študentom e-mailom kampane, uvítacie série a novinky z kurzov."
+        },
+        "peer_review": {
+          "title": "Štandardná funkcia",
+          "description": "Vzájomné hodnotenie je dostupné pre organizácie na pláne Standard alebo vyššom. Navýšte si plán, aby si študenti mohli navzájom hodnotiť práce podľa rubriky."
         }
       },
       "gate": {
@@ -383,6 +387,12 @@
           "note_3": "Ďalšie kroky na piatok",
           "play_title": "Precvičovanie",
           "play_question": "Koľko strán má päťuholník?"
+        },
+        "peer_review": {
+          "title": "Študenti sa zlepšujú tým, že sa hodnotia navzájom",
+          "b1": "Každý študent ohodnotí niekoľko spolužiakov podľa vašej rubriky",
+          "b2": "Cvičné kolo im ukáže, ako by ste hodnotili vy",
+          "b3": "Z hodnotení uvidíte navrhovanú známku, rozhodnete vy"
         }
       }
     },
@@ -8240,7 +8250,8 @@
             "scim": "Provisioning SCIM",
             "audit_logs": "Auditné záznamy",
             "custom_domain": "Vlastná doména",
-            "remove_watermark": "Bez vodoznaku LearnHouse"
+            "remove_watermark": "Bez vodoznaku LearnHouse",
+            "peer_review": "Vzájomné hodnotenie"
           }
         },
         "next_invoice_label": "Ďalšia faktúra",
@@ -30792,7 +30803,9 @@
       "plan_downgraded": "Prechod na Free",
       "plan_restored": "Plán obnovený",
       "payments_checkout_failing": "Zlyhávajúce platby",
-      "invitation_accepted": "Pozvánka prijatá"
+      "invitation_accepted": "Pozvánka prijatá",
+      "peer_review_received": "Prijatá spätná väzba od spolužiaka",
+      "peer_review_flagged": "Nahlásené vzájomné hodnotenie"
     },
     "copy": {
       "assignment_graded": "Ohodnotené: {{assignment}}",
@@ -30855,7 +30868,9 @@
       "plan_downgraded": "Teraz máte Free. Nič sa nevymazalo",
       "plan_restored": "Vitajte späť v pláne {{plan}}",
       "payments_checkout_failing": "Študenti teraz nemôžu nakupovať (neúspešné platby: {{count}})",
-      "invitation_accepted": "Pozvánku prijal(a): {{actor}}"
+      "invitation_accepted": "Pozvánku prijal(a): {{actor}}",
+      "peer_review_received": "Nová spätná väzba od spolužiaka k {{assignment}}",
+      "peer_review_flagged": "{{actor}} nahlásil(a) vzájomné hodnotenie k {{assignment}}"
     },
     "routing": {
       "short": "Koho upozorniť",
@@ -31127,5 +31142,521 @@
     "copied_link": "Odkaz na aplikáciu skopírovaný",
     "copy_failed": "Obrázok sa nepodarilo skopírovať. Skúste Stiahnuť.",
     "download_failed": "Obrázok sa nepodarilo uložiť."
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Kritérium {{n}}",
+      "points_short_one": "{{count}} bod",
+      "points_short_few": "{{count}} body",
+      "points_short_many": "{{count}} bodu",
+      "points_short_other": "{{count}} bodov",
+      "prompt_strength": "Čo sa vydarilo",
+      "prompt_suggestion": "Jedna vec na zlepšenie a ako na to",
+      "prompt_question": "Otázka pre autora"
+    },
+    "learner": {
+      "eyebrow": "Vzájomné hodnotenie",
+      "card_title": "Hodnoťte spolužiakov a získajte od nich spätnú väzbu",
+      "steps_label": "Kroky vzájomného hodnotenia",
+      "step_self": "Sebahodnotenie",
+      "step_practice": "Tréning",
+      "step_reviews": "Hodnotenie spolužiakov",
+      "step_feedback": "Vaša spätná väzba",
+      "n_of_m": "{{n}} z {{m}}",
+      "done": "Hotovo",
+      "to_do": "Treba urobiť",
+      "locked": "Zamknuté",
+      "continue": "Pokračovať",
+      "cancel": "Zrušiť",
+      "back": "Späť",
+      "retry": "Skúsiť znova",
+      "optional": "Voliteľné",
+      "saved": "Uložené",
+      "saving": "Ukladá sa…",
+      "unsaved": "Neuložené zmeny",
+      "not_saved": "Neuložené",
+      "feedback_count_one": "{{count}} hodnotenie",
+      "feedback_count_few": "{{count}} hodnotenia",
+      "feedback_count_many": "{{count}} hodnotenia",
+      "feedback_count_other": "{{count}} hodnotení",
+      "reviews_due": "Hodnotenia do {{date}}",
+      "reviews_closed_on": "Hodnotenia uzavreté {{date}}",
+      "next_title": "Nasleduje vzájomné hodnotenie",
+      "next_body_one": "Po odovzdaní ohodnotíte prácu {{count}} spolužiaka a dostanete spätnú väzbu k svojej.",
+      "next_body_few": "Po odovzdaní ohodnotíte práce {{count}} spolužiakov a dostanete spätnú väzbu k svojej.",
+      "next_body_many": "Po odovzdaní ohodnotíte práce {{count}} spolužiaka a dostanete spätnú väzbu k svojej.",
+      "next_body_other": "Po odovzdaní ohodnotíte práce {{count}} spolužiakov a dostanete spätnú väzbu k svojej.",
+      "self_title": "Ohodnoťte vlastnú prácu",
+      "self_why": "Keď najprv posúdite seba, spätnú väzbu spolužiakov ľahšie porovnáte a využijete.",
+      "self_done": "Sebahodnotenie uložené",
+      "self_done_pct": "Sebahodnotenie uložené: dali ste si {{pct}} %",
+      "edit_self_review": "Upraviť sebahodnotenie",
+      "save_self_review": "Uložiť sebahodnotenie",
+      "self_saved_toast": "Sebahodnotenie uložené",
+      "cal_title": "Tréningové kolo",
+      "cal_why": "Keď ohodnotíte ukážku, uvidíte, ako vyučujúci používa kritériá, a vaše hodnotenia budú férovejšie.",
+      "cal_progress": "Ukážka {{current}} z {{total}}",
+      "cal_sample": "Tréningová ukážka",
+      "cal_check": "Porovnať s vyučujúcim",
+      "cal_you": "Vy",
+      "cal_instructor": "Vyučujúci",
+      "cal_match": "Rovnako ako vyučujúci",
+      "cal_off_by_one": "Rozdiel: {{count}} bod",
+      "cal_off_by_few": "Rozdiel: {{count}} body",
+      "cal_off_by_many": "Rozdiel: {{count}} bodu",
+      "cal_off_by_other": "Rozdiel: {{count}} bodov",
+      "cal_why_title": "Prečo to vyučujúci ohodnotil takto",
+      "cal_next": "Ďalšia ukážka",
+      "cal_all_done": "Tréning je hotový. Môžete hodnotiť spolužiakov.",
+      "cal_none": "Momentálne nie sú žiadne tréningové ukážky.",
+      "go_to_reviews": "Prejsť na hodnotenia",
+      "go_to_practice": "Prejsť na tréning",
+      "finish_practice_first": "Najprv dokončite tréningové kolo.",
+      "reviews_title": "Ohodnoťte spolužiakov",
+      "reviews_why": "Pri hodnotení druhých sa naučíte najviac.",
+      "reviews_done_of": "Hotovo {{done}} z {{required}}",
+      "reviews_locked_practice": "Ak chcete začať hodnotiť, dokončite tréningové kolo.",
+      "reviews_complete": "Všetky hodnotenia máte hotové. Ďakujeme!",
+      "reviews_extra_hint": "Extra hodnotenia sú vítané: pomáhajú spolužiakom, ktorí ich majú menej.",
+      "start_review": "Začať hodnotenie {{n}} z {{m}}",
+      "continue_review": "Pokračovať v hodnotení",
+      "review_another": "Ohodnotiť ďalšiu prácu",
+      "see_feedback": "Zobraziť spätnú väzbu",
+      "none_title": "Zatiaľ nie je koho hodnotiť",
+      "none_body": "Prácu spolužiaka vám dáme, hneď ako ju niekto odovzdá. Skúste to neskôr.",
+      "check_again": "Skontrolovať znova",
+      "your_helpfulness": "Spolužiaci hodnotia vaše hodnotenia priemerne {{avg}} / 5.",
+      "review_n_of_m": "Hodnotenie {{n}} z {{m}}",
+      "extra_review": "Extra hodnotenie",
+      "classmate_work": "Práca vášho spolužiaka",
+      "work_of": "Práca: {{name}}",
+      "your_review": "Vaše hodnotenie",
+      "your_review_hint": "Pri každom kritériu vyberte úroveň, ktorá sedí najlepšie, a potom napíšte milé a konkrétne komentáre.",
+      "review_already_submitted": "Toto hodnotenie ste už odoslali.",
+      "review_load_error": "Hodnotenie sa nepodarilo načítať.",
+      "comments_heading": "Komentáre",
+      "pick_a_level": "Vyberte úroveň",
+      "add_note": "Pridať poznámku",
+      "note_label": "Poznámka k tomuto kritériu (voliteľné)",
+      "chars_remaining_one": "Chýba ešte {{count}} znak",
+      "chars_remaining_few": "Chýbajú ešte {{count}} znaky",
+      "chars_remaining_many": "Chýba ešte {{count}} znaku",
+      "chars_remaining_other": "Chýba ešte {{count}} znakov",
+      "chars_ok_one": "{{count}} znak",
+      "chars_ok_few": "{{count}} znaky",
+      "chars_ok_many": "{{count}} znaku",
+      "chars_ok_other": "{{count}} znakov",
+      "fix_before_submit": "Niečo chýba. Skontrolujte zvýraznené polia.",
+      "save_draft": "Uložiť koncept",
+      "submit_review": "Odoslať hodnotenie",
+      "drafts_autosave": "Koncepty sa ukladajú automaticky",
+      "draft_saved_toast": "Koncept uložený",
+      "review_submitted_toast": "Hodnotenie odoslané. Ďakujeme!",
+      "no_answer": "Bez odpovede",
+      "no_tasks": "K tomuto odovzdaniu nie je čo zobraziť.",
+      "chosen": "vybrané",
+      "media_option": "Možnosť {{n}} (médiá)",
+      "download_file": "Stiahnuť súbor",
+      "feedback_title": "Vaša spätná väzba",
+      "feedback_why": "Porovnajte, čo videli spolužiaci, so svojím pohľadom a rozhodnite sa, čo zmeníte.",
+      "locked_reviews_one": "Dokončite ešte {{count}} hodnotenie a odomknete svoju spätnú väzbu",
+      "locked_reviews_few": "Dokončite ešte {{count}} hodnotenia a odomknete svoju spätnú väzbu",
+      "locked_reviews_many": "Dokončite ešte {{count}} hodnotenia a odomknete svoju spätnú väzbu",
+      "locked_reviews_other": "Dokončite ešte {{count}} hodnotení a odomknete svoju spätnú väzbu",
+      "locked_generic": "Vaša spätná väzba ešte nie je dostupná",
+      "locked_due": "Otvorí sa najneskôr {{date}}.",
+      "unlocked_by_due_date": "Vaša spätná väzba sa otvorila, lebo uplynul termín hodnotenia.",
+      "no_feedback_title": "Zatiaľ žiadna spätná väzba",
+      "no_feedback_body": "Hodnotenia od spolužiakov sa tu objavia, hneď ako prídu.",
+      "peer_score": "Skóre od spolužiakov",
+      "peer_score_how_one": "Stredná hodnota (medián) z {{count}} hodnotenia spolužiaka pre každé kritérium.",
+      "peer_score_how_few": "Stredná hodnota (medián) z {{count}} hodnotení spolužiakov pre každé kritérium.",
+      "peer_score_how_many": "Stredná hodnota (medián) z {{count}} hodnotenia spolužiakov pre každé kritérium.",
+      "peer_score_how_other": "Stredná hodnota (medián) z {{count}} hodnotení spolužiakov pre každé kritérium.",
+      "score_needs_more_one": "Skóre od spolužiakov sa zobrazí po {{count}} hodnotení.",
+      "score_needs_more_few": "Skóre od spolužiakov sa zobrazí po {{count}} hodnoteniach.",
+      "score_needs_more_many": "Skóre od spolužiakov sa zobrazí po {{count}} hodnotenia.",
+      "score_needs_more_other": "Skóre od spolužiakov sa zobrazí po {{count}} hodnoteniach.",
+      "reviewers_disagree": "Hodnotitelia sa nezhodli",
+      "gap_title": "Spolužiaci a vaše sebahodnotenie",
+      "gap_title_peers": "Čo videli spolužiaci",
+      "legend_peers": "Spolužiaci (medián)",
+      "legend_you": "Vy",
+      "gap_values": "Spolužiaci {{peers}} · Vy {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: spolužiaci {{peers}}, vy {{you}}, z {{max}}",
+      "gap_aligned": "Vy a vaši spolužiaci sa zhodujete",
+      "gap_self_higher": "Seba ste ohodnotili vyššie ako spolužiaci",
+      "gap_self_lower": "Seba ste ohodnotili nižšie ako spolužiaci",
+      "reviews_received_one": "Prijaté {{count}} hodnotenie",
+      "reviews_received_few": "Prijaté {{count}} hodnotenia",
+      "reviews_received_many": "Prijaté {{count}} hodnotenia",
+      "reviews_received_other": "Prijatých {{count}} hodnotení",
+      "reviewer_n": "Hodnotiteľ {{n}}",
+      "flagged": "Nahlásené",
+      "how_helpful": "Ako veľmi to pomohlo?",
+      "stars_n_one": "{{count}} hviezdička",
+      "stars_n_few": "{{count}} hviezdičky",
+      "stars_n_many": "{{count}} hviezdičky",
+      "stars_n_other": "{{count}} hviezdičiek",
+      "helpful_note_label": "Poznámka pre hodnotiteľa",
+      "helpful_note_placeholder": "Čo pomohlo, alebo čo by pomohlo viac? (voliteľné)",
+      "save_note": "Uložiť poznámku",
+      "thanks_feedback": "Ďakujeme za spätnú väzbu",
+      "flag_link": "Nahlásiť toto hodnotenie",
+      "flag_title": "Nahlásiť toto hodnotenie",
+      "flag_body": "Vyučujúci sa naň pozrie. Napíšte mu, čo je zlé, napríklad nezdvorilý tón, nesúvisiaci obsah alebo prázdne hodnotenie.",
+      "flag_reason": "Čo je zlé?",
+      "flag_submit": "Nahlásiť",
+      "flag_sent": "Ďakujeme. Vyučujúci o tom vie.",
+      "plan_title": "Váš plán úprav",
+      "plan_why": "Napíšte si, čo zmeníte. Plán pomáha premeniť spätnú väzbu na lepšiu prácu.",
+      "plan_placeholder": "Na základe tejto spätnej väzby…",
+      "save_plan": "Uložiť plán",
+      "plan_saved": "Plán úprav uložený",
+      "error_generic": "Niečo sa pokazilo. Skúste to znova.",
+      "error_save": "Koncept sa nepodarilo uložiť. Skúsime to znova.",
+      "error_submit": "Odoslanie sa nepodarilo. Skúste to znova.",
+      "error_download": "Súbor sa nepodarilo stiahnuť.",
+      "submission_changed": "Tento spolužiak začal nový pokus, preto bolo toto hodnotenie uzavreté. Môžete ohodnotiť niekoho iného.",
+      "answer_hidden": "Táto odpoveď sa kontroluje automaticky, preto nie je súčasťou hodnotenia.",
+      "retry_in_progress": "Začali ste nový pokus. Odovzdajte ho, aby ste mohli ďalej hodnotiť spolužiakov."
+    },
+    "instructor": {
+      "tab": "Vzájomné hodnotenie",
+      "setup": "Nastavenie",
+      "unknown_learner": "Študent",
+      "retry": "Skúsiť znova",
+      "error_title": "Vzájomné hodnotenie sa nepodarilo načítať",
+      "error_description": "Niečo sa pokazilo. Skontrolujte pripojenie a skúste to znova.",
+      "toggle": {
+        "title": "Vzájomné hodnotenie",
+        "off_hint": "Vypnuté. Po odovzdaní študenti ohodnotia práce niekoľkých spolužiakov podľa vašej rubriky a dostanú od nich spätnú väzbu.",
+        "on_hint": "Zapnuté. Každý študent po odovzdaní hodnotí spolužiakov. Vyberte nižšie šablónu rubriky, uložte a je hotovo."
+      },
+      "why": {
+        "title": "Prečo vzájomné hodnotenie funguje",
+        "reviewers_learn": "Písanie hodnotení naučí najviac samotného hodnotiteľa, preto hodnotí každý študent.",
+        "three_reviewers": "Traja alebo viacerí hodnotitelia dajú spätnú väzbu takmer takú spoľahlivú ako jeden vyučujúci.",
+        "rubric_practice": "Jasná rubrika a krátke cvičné kolo robia hodnotenia presnými.",
+        "revise": "Spätná väzba pomôže najviac, keď si študenti naplánujú, čo zmenia.",
+        "dismiss": "Skryť tento tip"
+      },
+      "sections": {
+        "settings": "Nastavenia",
+        "rubric": "Rubrika",
+        "prompts": "Otázky na komentáre",
+        "practice": "Cvičné kolo"
+      },
+      "settings": {
+        "reviewing_title": "Hodnotenie",
+        "reviewing_description": "Koľko hodnotení napíše každý študent a kto vidí čie meno.",
+        "reviews_required": "Hodnotenia na študenta",
+        "reviews_required_hint": "3–5 dáva spoľahlivú spätnú väzbu. Každá práca by mala dostať rovnaký počet hodnotení.",
+        "anonymity": "Mená",
+        "anonymity_hint": "Skryté mená robia hodnotenia úprimnejšími.",
+        "require_reviews": "Najprv hodnotiť, potom vidieť spätnú väzbu",
+        "require_reviews_hint": "Študenti uvidia svoju spätnú väzbu, keď dokončia svoje hodnotenia, alebo po termíne hodnotenia.",
+        "due_date": "Termín hodnotenia",
+        "due_date_hint": "Voliteľné. Po tomto dátume uvidí každý svoju spätnú väzbu.",
+        "clear": "Vymazať",
+        "steps_title": "Kroky navyše",
+        "steps_description": "Každý je krátky a robí spätnú väzbu užitočnejšou.",
+        "self_review": "Sebahodnotenie",
+        "self_review_hint": "Študenti najprv ohodnotia vlastnú prácu a potom ju porovnajú s tým, čo povedali spolužiaci.",
+        "practice": "Cvičné kolo",
+        "practice_hint": "Študenti ohodnotia vami pripravenú ukážku a uvidia, ako ste ju ohodnotili vy. Treba aspoň jednu ukážku.",
+        "helpfulness": "Hodnotenie užitočnosti",
+        "helpfulness_hint": "Študenti ohodnotia každé prijaté hodnotenie 1 až 5 hviezdičkami.",
+        "revision_plan": "Plán úprav",
+        "revision_plan_hint": "Po prečítaní spätnej väzby si študenti zapíšu, čo zmenia.",
+        "score_title": "Skóre",
+        "score_description": "Vzájomné hodnotenie nikdy samo neudelí známku.",
+        "min_reviews": "Hodnotenia potrebné na skóre",
+        "min_reviews_hint": "Skóre od spolužiakov sa zobrazí, keď má práca tento počet hodnotení."
+      },
+      "anonymity": {
+        "double_blind": "Obe skryté",
+        "double_blind_hint": "Nikto nevidí, kto koho hodnotil",
+        "anonymous_reviewer": "Hodnotiteľ skrytý",
+        "anonymous_reviewer_hint": "Hodnotitelia vidia meno autora",
+        "named": "Mená viditeľné",
+        "named_hint": "Všetci vidia obe mená"
+      },
+      "score_mode": {
+        "feedback_only": "Len spätná väzba",
+        "feedback_only_hint": "Hodnotenia slúžia na učenie, bez návrhu známky",
+        "suggest_grade": "Navrhnúť známku",
+        "suggest_grade_hint": "Vidíte medián od spolužiakov a môžete ho použiť pri známkovaní"
+      },
+      "rubric": {
+        "title": "Rubrika",
+        "description": "Čo hodnotitelia hodnotia. Každé kritérium má úrovne od najlepšej po najslabšiu.",
+        "template": "Začať zo šablóny",
+        "empty_title": "Zatiaľ žiadna rubrika",
+        "empty_description": "Vyberte šablónu a začnite jedným kliknutím, potom upravte znenie podľa zadania.",
+        "add_criterion": "Pridať kritérium",
+        "remove_criterion": "Odstrániť kritérium",
+        "move_up": "Posunúť vyššie",
+        "move_down": "Posunúť nižšie",
+        "criterion_title": "Kritérium",
+        "criterion_title_placeholder": "napr. Jasná hlavná myšlienka",
+        "criterion_description": "Na čo sa zamerať",
+        "criterion_description_placeholder": "Na čo by sa mal hodnotiteľ zamerať?",
+        "untitled_criterion": "Kritérium bez názvu",
+        "level_label": "Úroveň",
+        "level_label_placeholder": "napr. Výborné",
+        "points": "Body",
+        "level_description": "Ako to vyzerá",
+        "level_description_placeholder": "Voliteľné: ako vyzerá práca na tejto úrovni",
+        "add_level": "Pridať úroveň",
+        "remove_level": "Odstrániť úroveň",
+        "max_points": "Max. bodov: {{points}}",
+        "summary": "Kritériá: {{criteria}} · Max. bodov: {{points}}",
+        "replace_title": "Nahradiť aktuálnu rubriku?",
+        "replace_message": "Šablóna nahradí vaše súčasné kritériá. Nič sa neuloží, kým nekliknete na Uložiť.",
+        "replace_confirm": "Nahradiť"
+      },
+      "templates": {
+        "writing": {
+          "name": "Písanie",
+          "blurb": "Eseje, správy a písomné odpovede",
+          "thesis": {
+            "title": "Hlavná myšlienka",
+            "description": "Hlavná myšlienka je jasná a drží sa od začiatku do konca."
+          },
+          "evidence": {
+            "title": "Podklady a dôkazy",
+            "description": "Tvrdenia podopierajú vhodné príklady, fakty alebo zdroje."
+          },
+          "organization": {
+            "title": "Usporiadanie",
+            "description": "Myšlienky idú v logickom poradí a každý odsek má jednu úlohu."
+          },
+          "style": {
+            "title": "Zrozumiteľnosť a štýl",
+            "description": "Vety sú jasné, ľahko sa čítajú a majú málo chýb."
+          }
+        },
+        "project": {
+          "name": "Projekt",
+          "blurb": "Výtvory, návrhy a praktická práca",
+          "goal": {
+            "title": "Cieľ a rozsah",
+            "description": "Projekt uvádza, čo chce dosiahnuť, a drží sa toho."
+          },
+          "process": {
+            "title": "Postup a rozhodnutia",
+            "description": "Kroky a dôvody kľúčových rozhodnutí sú vysvetlené."
+          },
+          "result": {
+            "title": "Kvalita výsledku",
+            "description": "Výsledok funguje, je úplný a starostlivo urobený."
+          },
+          "reflection": {
+            "title": "Reflexia",
+            "description": "Autor uvádza, čo fungovalo, čo nie a čo by zmenil."
+          }
+        },
+        "presentation": {
+          "name": "Prezentácia",
+          "blurb": "Prednášky, snímky a videá",
+          "content": {
+            "title": "Obsah",
+            "description": "Informácie sú presné, k veci a idú nad rámec samozrejmého."
+          },
+          "structure": {
+            "title": "Štruktúra",
+            "description": "Má jasný úvod, logický stred a silný záver."
+          },
+          "delivery": {
+            "title": "Prejav",
+            "description": "Rečník hovorí zrozumiteľne, primeraným tempom a udrží pozornosť."
+          },
+          "visuals": {
+            "title": "Vizuály",
+            "description": "Snímky alebo vizuály podporujú posolstvo a dobre sa čítajú."
+          }
+        },
+        "code": {
+          "name": "Kód",
+          "blurb": "Programy, skripty a cvičenia",
+          "correctness": {
+            "title": "Správnosť",
+            "description": "Kód robí to, čo sa žiadalo, vrátane hraničných prípadov."
+          },
+          "readability": {
+            "title": "Čitateľnosť",
+            "description": "Názvy, formátovanie a komentáre robia kód ľahko pochopiteľným."
+          },
+          "design": {
+            "title": "Štruktúra a návrh",
+            "description": "Kód je rozdelený na rozumné časti bez zbytočného opakovania."
+          },
+          "testing": {
+            "title": "Testovanie",
+            "description": "Sú tu kontroly alebo testy, ktoré ukazujú, že kód funguje."
+          }
+        },
+        "scale": {
+          "excellent": "Výborné",
+          "excellent_description": "Plne spĺňa kritérium s jasnými silnými stránkami",
+          "good": "Dobré",
+          "good_description": "Spĺňa kritérium s menšími medzerami",
+          "developing": "Rozvíjajúce sa",
+          "developing_description": "Čiastočne spĺňa kritérium, treba viac práce",
+          "beginning": "Začiatočné",
+          "beginning_description": "Kritérium zatiaľ spĺňa len sotva",
+          "strong": "Silné",
+          "strong_description": "Jasne spĺňa kritérium",
+          "adequate": "Dostatočné",
+          "adequate_description": "Čiastočne spĺňa kritérium",
+          "needs_work": "Treba zlepšiť",
+          "needs_work_description": "Kritérium zatiaľ nespĺňa"
+        }
+      },
+      "prompts": {
+        "title": "Otázky na komentáre",
+        "description": "Otázky, na ktoré hodnotitelia odpovedajú písomne. Minimálna dĺžka zabráni jednoslovným hodnoteniam.",
+        "label": "Otázka",
+        "label_placeholder": "napr. Čo vás prekvapilo?",
+        "min_chars": "Min. znakov",
+        "min_chars_hint": "0 znamená, že odpoveď je voliteľná.",
+        "add": "Pridať otázku",
+        "remove": "Odstrániť otázku",
+        "reset": "Použiť predvolené"
+      },
+      "samples": {
+        "title": "Cvičné ukážky",
+        "description": "Študenti ohodnotia ukážku pred hodnotením spolužiakov a potom uvidia vaše hodnotenie aj dôvody. Stačí jedna alebo dve ukážky.",
+        "practice_off": "Cvičné kolo je v Nastaveniach vypnuté, takže študenti tieto ukážky neuvidia.",
+        "none_yet": "Zatiaľ žiadne ukážky, takže cvičné kolo sa preskočí. Pridajte jednu a zapne sa.",
+        "needs_rubric": "Najprv pridajte kritériá rubriky, aby ste mohli nastaviť úrovne pre každú ukážku.",
+        "sample_title": "Názov",
+        "sample_title_placeholder": "napr. Ukážková esej A",
+        "content": "Ukážková práca",
+        "content_hint": "Funguje Markdown",
+        "content_placeholder": "Vložte ukážkovú odpoveď, ideálne priemernú, s vecami na zlepšenie.",
+        "levels": "Vaše úrovne",
+        "levels_hint": "Čo by ste dali v každom kritériu",
+        "pick_level": "Vyberte úroveň",
+        "explanation": "Prečo",
+        "explanation_hint": "Zobrazí sa, keď ju študenti ohodnotia",
+        "explanation_placeholder": "Vysvetlite svoje hodnotenie v niekoľkých vetách.",
+        "add": "Pridať ukážku",
+        "remove": "Odstrániť ukážku",
+        "count_hint": "Najviac 5 ukážok"
+      },
+      "errors": {
+        "criteria_min": "Pridajte aspoň jedno kritérium, aby ste mohli zapnúť vzájomné hodnotenie.",
+        "criteria_max": "Maximálny počet kritérií: {{max}}.",
+        "criterion_title": "Pomenujte toto kritérium.",
+        "levels_min": "Minimálny počet úrovní v každom kritériu: {{min}}.",
+        "levels_max": "Maximálny počet úrovní v kritériu: {{max}}.",
+        "level_label": "Pomenujte túto úroveň.",
+        "level_points": "Body musia byť 0 alebo viac.",
+        "prompts_min": "Ponechajte aspoň jednu otázku.",
+        "prompts_max": "Maximálny počet otázok: {{max}}.",
+        "prompt_label": "Napíšte otázku.",
+        "prompt_min_chars": "Zadajte celé číslo od 0 do {{max}}.",
+        "reviews_range": "Zadajte číslo od {{min}} do {{max}}.",
+        "sample_title": "Pomenujte ukážku.",
+        "sample_content": "Pridajte ukážkovú prácu.",
+        "sample_levels": "Vyberte úroveň pre každé kritérium.",
+        "duplicate": "Dve položky majú rovnaké ID. Jednu odstráňte a pridajte ju znova."
+      },
+      "save": {
+        "saving": "Ukladá sa vzájomné hodnotenie…",
+        "saved": "Vzájomné hodnotenie uložené",
+        "error": "Vzájomné hodnotenie sa nepodarilo uložiť",
+        "fix_errors": "Opravte zvýraznené polia a uložte znova."
+      },
+      "monitor": {
+        "title": "Prehľad",
+        "off_title": "Vzájomné hodnotenie je vypnuté",
+        "off_description": "Zapnite ho v Nastavení. Priebeh, skóre a nahlásené hodnotenia sa zobrazia tu.",
+        "go_setup": "Prejsť na nastavenie"
+      },
+      "totals": {
+        "submitted": "Odovzdané",
+        "reviews_done": "Dokončené hodnotenia",
+        "in_progress": "Rozpracované hodnotenia",
+        "below_target": "Potrebujú viac hodnotení",
+        "flagged": "Nahlásené"
+      },
+      "flagged": {
+        "title": "Nahlásené hodnotenia",
+        "description": "Študent ich nahlásil ako nespravodlivé alebo neužitočné. Hodnotenie zamietnite, ak ho nechcete započítať do skóre.",
+        "open": "Zobraziť všetky hodnotenia",
+        "count": "Nahlásenia: {{n}}"
+      },
+      "submissions": {
+        "title": "Odovzdané práce",
+        "learner": "Študent",
+        "reviews": "Prijaté hodnotenia",
+        "received": "{{done}} z {{target}}",
+        "peer_score": "Skóre od spolužiakov",
+        "peer_score_tip": "Medián hodnotení pre každé kritérium v percentách. Zamietnuté hodnotenia sa nezapočítavajú.",
+        "self": "Vlastné",
+        "self_tip": "Skóre, ktoré študent dal vlastnej práci.",
+        "flags": "Nahlásenia",
+        "waiting": "Čaká sa",
+        "disagree": "Hodnotitelia sa nezhodujú ({{points}} b.)",
+        "disagree_tip": "Najvyššie a najnižšie hodnotenie sú ďaleko od seba. Pred známkovaním sa oplatí pozrieť.",
+        "empty_title": "Zatiaľ nič odovzdané",
+        "empty_description": "Hodnotenia sa začnú, len čo študenti odovzdajú svoje práce."
+      },
+      "reviewers": {
+        "title": "Hodnotitelia",
+        "reviewer": "Hodnotiteľ",
+        "done": "Hotovo",
+        "done_tip": "Napísané hodnotenia z požadovaného počtu. Hodnotenia navyše sa tiež počítajú.",
+        "helpfulness": "Užitočnosť",
+        "helpfulness_tip": "Priemerný počet hviezdičiek, ktoré autori dali hodnoteniam tejto osoby.",
+        "helpfulness_value": "{{value}} z 5",
+        "bias": "Odchýlka",
+        "bias_tip": "Ako ďaleko sú v priemere hodnotenia tejto osoby od ostatných hodnotiteľov tej istej práce. Menej je lepšie.",
+        "bias_value": "±{{points}} b.",
+        "calibration": "Rozdiel v cvičnom kole",
+        "calibration_tip": "Ako ďaleko boli ich hodnotenia v cvičnom kole od vašich, v bodoch rubriky na kritérium. Menej je lepšie.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Zatiaľ žiadne hodnotenia",
+        "empty_description": "Študenti sa tu zobrazia, keď začnú hodnotiť."
+      },
+      "drawer": {
+        "title": "Hodnotenia od spolužiakov",
+        "close": "Zavrieť",
+        "peer_score": "Skóre od spolužiakov",
+        "not_enough": "Zatiaľ málo hodnotení (minimum: {{n}})",
+        "score_basis": "Medián hodnotení · započítané: {{n}}",
+        "self_score": "Sebahodnotenie:",
+        "self_short": "vlastné: {{points}}",
+        "apply_grade": "Použiť skóre od spolužiakov ako známku ({{score}})",
+        "apply_hint": "Otvorí známkovanie so zobrazeným návrhom. Nič sa neuloží, kým neohodnotíte.",
+        "feedback_only_hint": "Návrhy známok sú vypnuté (len spätná väzba).",
+        "open_grading": "Otvoriť známkovanie",
+        "reviews": "Hodnotenia ({{n}})",
+        "reviewer_n": "Hodnotiteľ {{n}}",
+        "no_reviews": "Zatiaľ žiadne hodnotenia.",
+        "status_assigned": "Rozpracované",
+        "status_discarded": "Zamietnuté",
+        "flagged": "Nahlásené",
+        "flag_reason": "Dôvod nahlásenia:",
+        "discard_reason": "Dôvod zamietnutia:",
+        "discard_placeholder": "Prečo toto hodnotenie vynechávate? Vidia to len vyučujúci.",
+        "discard": "Zamietnuť",
+        "restore": "Obnoviť",
+        "discarded_toast": "Hodnotenie zamietnuté",
+        "restored_toast": "Hodnotenie obnovené",
+        "action_error": "Nepodarilo sa. Skúste to znova.",
+        "helpfulness": "Hodnotenie od autora:",
+        "self_review": "Sebahodnotenie",
+        "reflection": "Plán úprav",
+        "no_reflection": "Plán úprav zatiaľ nie je napísaný.",
+        "grade_title": "Ohodnotiť: {{name}}",
+        "suggested": "Návrh od spolužiakov: {{score}}",
+        "suggested_hint": "Medián hodnotení od spolužiakov (započítané: {{n}}). Berte ho ako pomôcku.",
+        "closed_new_attempt": "Automaticky uzavreté: študent začal nový pokus."
+      }
+    }
   }
 }

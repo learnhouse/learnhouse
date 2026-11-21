@@ -70,6 +70,17 @@ export const queryKeys = {
     // 'assignments-all' prefix, which every assignment mutation invalidates.
     byCourse: (courseUuid: string) => ['assignments-all', 'course', courseUuid] as const,
   },
+  // Peer review on an assignment. Everything sits under ['peer-review', uuid]
+  // so invalidating `all(uuid)` refreshes the learner and instructor views.
+  peerReview: {
+    all: (assignmentUuid: string) => ['peer-review', assignmentUuid] as const,
+    settings: (assignmentUuid: string) => ['peer-review', assignmentUuid, 'settings'] as const,
+    me: (assignmentUuid: string) => ['peer-review', assignmentUuid, 'me'] as const,
+    calibration: (assignmentUuid: string) => ['peer-review', assignmentUuid, 'calibration'] as const,
+    review: (reviewUuid: string) => ['peer-review', 'review', reviewUuid] as const,
+    overview: (assignmentUuid: string) => ['peer-review', assignmentUuid, 'overview'] as const,
+    submission: (assignmentUuid: string, userId: number | string) => ['peer-review', assignmentUuid, 'submission', String(userId)] as const,
+  },
   editorTemplates: {
     list: (orgId: number) => ['editor-templates', orgId] as const,
   },

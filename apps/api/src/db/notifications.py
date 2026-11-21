@@ -64,6 +64,7 @@ NOTIFICATION_TYPE_META: dict[str, TypeMeta] = {
     # assignments, deadlines, required training
     "assignment_graded": TypeMeta("assignments"),
     "assignment_due": TypeMeta("assignments", priority="important"),
+    "peer_review_received": TypeMeta("assignments"),
     "training_assigned": TypeMeta("assignments"),
     "training_due": TypeMeta("assignments", priority="important"),
     "training_overdue": TypeMeta("assignments", priority="important"),
@@ -102,6 +103,7 @@ NOTIFICATION_TYPE_META: dict[str, TypeMeta] = {
     "board_breakout": TypeMeta("boards"),
     # ---- admin / teacher (dashboard) ----
     "submission_to_grade": TypeMeta("teaching", "admin", default_roles=("course_authors",)),
+    "peer_review_flagged": TypeMeta("teaching", "admin", default_roles=("course_authors",)),
     "training_overdue_report": TypeMeta("teaching", "admin", default_roles=("admins",)),
     "member_joined": TypeMeta("people", "admin", default_roles=("admins",)),
     # To whoever sent the invitation, not routable.
@@ -133,6 +135,7 @@ NOTIFICATION_LINKS: dict[str, str] = {
     "message": "/messages?c={conversation}",
     "assignment_graded": "/course/{course}/activity/{activity}",
     "assignment_due": "/course/{course}/activity/{activity}",
+    "peer_review_received": "/course/{course}/activity/{activity}",
     "training_assigned": "/course/{course} | /path/{path}",
     "training_due": "/course/{course} | /path/{path}",
     "training_overdue": "/course/{course} | /path/{path}",
@@ -164,6 +167,7 @@ NOTIFICATION_LINKS: dict[str, str] = {
     "board_hand_raise": "/board/{board}",
     "board_breakout": "/board/{board}",
     "submission_to_grade": "/dash/assignments/{assignment}?subpage=submissions",
+    "peer_review_flagged": "/dash/assignments/{assignment}?subpage=peer-review",
     "training_overdue_report": "/dash/training",
     "member_joined": "/dash/users/settings/users",
     "invitation_accepted": "/dash/users/settings/users",
