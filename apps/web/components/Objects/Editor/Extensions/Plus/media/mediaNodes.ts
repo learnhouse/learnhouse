@@ -11,8 +11,8 @@
  HTML parses back to the same document.
 
  Node views follow blockImage: the atoms load on the client only (their
- code is a separate chunk); the quote is imported directly, like the
- callout, so its text is in the server HTML.
+ code is a separate chunk); the quote's view is a lazy chunk too, with a
+ fallback that draws its learner markup, so its text is in the server HTML.
 */
 import { mergeAttributes, Node } from '@tiptap/core'
 import type { DOMOutputSpec } from '@tiptap/pm/model'
@@ -49,13 +49,16 @@ import {
   safeUrl,
   STAT_COLUMNS,
 } from './mediaModel'
-import QuoteBlockView from './views/QuoteBlockView'
+import { lazyView } from '../lazyView'
+import QuoteFallback from './views/QuoteFallback'
 
 const GalleryView = dynamic(() => import('./views/GalleryView'), { ssr: false })
 const ImageCompareView = dynamic(() => import('./views/ImageCompareView'), { ssr: false })
 const ChartView = dynamic(() => import('./views/ChartView'), { ssr: false })
 const StatHighlightsView = dynamic(() => import('./views/StatHighlightsView'), { ssr: false })
 const FileCardView = dynamic(() => import('./views/FileCardView'), { ssr: false })
+// The quote's text is content: its fallback draws the learner markup around it.
+const QuoteBlockView = lazyView('QuoteBlockView', () => import('./views/QuoteBlockView'), QuoteFallback)
 
 export interface MediaLabels {
   before: string

@@ -14,7 +14,8 @@ import React, { useMemo } from 'react'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import { FileCode } from '@phosphor-icons/react'
 import { lowlight } from '../../editorLowlight'
-import { CopyButton, codePreProps } from './CodeBlock'
+import { codePreProps } from './CodeBlock'
+import { CopyButton } from './CopyButton'
 import { codeLineOptions, hastToLines, needsLineMarkup, type Hast } from './codeBlockModel'
 
 function hastToReact(node: Hast, key: number): React.ReactNode {

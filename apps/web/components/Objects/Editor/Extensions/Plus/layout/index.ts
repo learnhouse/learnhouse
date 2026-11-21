@@ -6,7 +6,7 @@ import type { PlusExtensionFactory } from '../types'
 import { createLayoutNodes, type LayoutLabels } from './layoutNodes'
 import './layout.css'
 
-export { layoutSlashItems } from './slashItems'
+// Slash items: ./slashItems (editor only, gathered in ../slashItems).
 export { hydrateTableOfContents } from './tocDom'
 
 export const layoutLabels = (): LayoutLabels => ({

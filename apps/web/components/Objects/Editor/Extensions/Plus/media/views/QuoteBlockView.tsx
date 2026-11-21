@@ -11,28 +11,9 @@ import { useTranslation } from 'react-i18next'
 import EditorBlockFrame from '../../../../Blocks/ui/EditorBlockFrame'
 import { BlockPopover, BlockToolbarButton, CommitInput, Segmented, SettingsField } from '../../../../Blocks/ui/BlockChrome'
 import { cn } from '@/lib/utils'
-import { oneOf, QUOTE_VARIANTS, safeUrl, type QuoteVariant } from '../mediaModel'
+import { oneOf, QUOTE_VARIANTS, safeUrl } from '../mediaModel'
+import { QUOTE_FRAME as FRAME, QUOTE_TEXT as TEXT, initials } from './quoteStyles'
 import { commitAttrs, InlineInput, useIsEditable } from './shared'
-
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('')
-
-const FRAME: Record<QuoteVariant, string> = {
-  pull: 'px-4 py-5 text-center sm:px-10',
-  testimonial: 'rounded-2xl bg-white p-5 ring-1 ring-inset ring-neutral-200/80 sm:p-6',
-  highlight: 'rounded-e-2xl border-s-4 border-amber-400 bg-amber-50/70 px-5 py-4',
-}
-
-const TEXT: Record<QuoteVariant, string> = {
-  pull: 'text-xl font-medium leading-snug text-neutral-800 sm:text-2xl [&_p]:my-1',
-  testimonial: 'text-[17px] leading-relaxed text-neutral-800 [&_p]:my-1',
-  highlight: 'text-[17px] leading-relaxed text-neutral-900 [&_p]:my-1',
-}
 
 export default function QuoteBlockView(props: NodeViewProps) {
   const { t } = useTranslation()

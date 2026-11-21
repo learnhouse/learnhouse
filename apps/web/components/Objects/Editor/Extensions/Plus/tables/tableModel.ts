@@ -304,3 +304,13 @@ export function cardLabelsCss(id: string, model: TableModel): string {
   const narrow = ".lh-bt:is([data-lh-bt-size='xs'],[data-lh-bt-size='sm'])"
   return `@media (max-width: 640px){${rules.join('')}}${rules.map((r) => `${narrow} ${r}`).join('')}`
 }
+
+/**
+ * Per-table CSS for the sorted column's header: its colour and arrow. Scoped
+ * to the table's id with :where(), so it weighs what a stylesheet rule would.
+ */
+export function sortHeaderCss(id: string, col: number, dir: SortDir): string {
+  const table = `:is(.activity-editor-content-wrapper,.canva-content-wrapper,.editor-preview-wrapper) .ProseMirror table[data-lh-sort-col]`
+  const cell = `:where(#${id.replace(/[^\w-]/g, '')})>tbody>tr:first-child>:nth-child(${col + 1})`
+  return `${table}${cell}{color:#2563eb}${table}[data-lh-sort-dir]${cell}::after{content:'${dir === 'asc' ? ' \\2191' : ' \\2193'}'}`
+}

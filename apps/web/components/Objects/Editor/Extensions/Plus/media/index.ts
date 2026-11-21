@@ -6,7 +6,7 @@ import { createMediaNodes } from './mediaNodes'
 import { mediaLabels } from './labels'
 import './media.css'
 
-export { mediaSlashItems } from './slashItems'
+// Slash items: ./slashItems (editor only, gathered in ../slashItems).
 
 const t = (key: string, fallback: string, vars?: Record<string, unknown>) => String(i18n.t(key, { defaultValue: fallback, ...(vars ?? {}) }))
 

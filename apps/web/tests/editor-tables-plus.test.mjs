@@ -40,7 +40,8 @@ const C = await import(`${TABLES}tableCommands.ts`);
 const { makeStaticTable } = await import(`${TABLES}StaticTable.tsx`);
 const { DEFAULT_TABLE_LABELS } = await import(`${TABLES}tableView.ts`);
 const T = await import(`${TABLES}templates.tsx`);
-const { tableExtensions, tableSlashItems } = await import(`${TABLES}index.ts`);
+const { tableExtensions } = await import(`${TABLES}index.ts`);
+const { tableTemplateItems: tableSlashItems } = await import(`${TABLES}templates.tsx`);
 
 const base = StarterKit.configure({ codeBlock: false, undoRedo: false });
 const stockSchema = getSchema([base, Table, TableRow, TableHeader, TableCell]);

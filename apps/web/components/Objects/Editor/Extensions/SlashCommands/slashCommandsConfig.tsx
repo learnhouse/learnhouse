@@ -50,7 +50,7 @@ import { EDITOR_EVENTS, emitEditorEvent } from '../../Templates/templateContent'
 import { presetById } from '../Dynamic/dynamicRules'
 import { requestAIEditor } from '../../AI/aiEditorBridge'
 import { experienceRegistry, insertExperience } from '../Experiences/registry'
-import { plusSlashItems } from '../Plus'
+import { plusSlashItems } from '../Plus/slashItems'
 
 /** Slash items for the Experiences family, built from its registry. */
 const experienceSlashCommands: SlashCommandItem[] = experienceRegistry.map((entry) => {

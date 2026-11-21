@@ -3,10 +3,9 @@
 // defaults render exactly as before), typed cells, learner sorting/totals,
 // the editor's typed-cell decorations and TSV/CSV paste, and slash templates.
 import i18n from '@/lib/i18n'
-import type { PlusExtensionFactory, SlashCommandItem } from '../types'
+import type { PlusExtensionFactory } from '../types'
 import { createTableNodes } from './tableNodes'
 import { createTableEditing } from './tablePlugins'
-import { tableTemplateItems } from './templates'
 import type { TableViewLabels } from './tableView'
 import './tables.css'
 
@@ -31,7 +30,7 @@ export const tableExtensions: PlusExtensionFactory = ({ mode }) => [
     : []),
 ]
 
-export const tableSlashItems: SlashCommandItem[] = tableTemplateItems
+// Slash templates: ./templates (editor only, gathered in ../slashItems).
 
 export * from './tableCommands'
 export { CELL_TYPES, CELL_COLORS, TABLE_VARIANTS, TABLE_TOTALS, NUMBER_FORMATS, cellTypeOf } from './tableAttrs'

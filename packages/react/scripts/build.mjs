@@ -367,12 +367,22 @@ async function main() {
   const rootCss = await readFile(path.join(pkgDir, 'src/index.css'), 'utf8')
   const { appendFile } = await import('node:fs/promises')
   await appendFile(path.join(distDir, 'styles.css'), `\n${rootCss}`)
-  // CSS that web components import themselves (the video player's) lands next
-  // to the JS; fold it into the one stylesheet consumers import.
-  for (const [file] of Object.entries(metafile.outputs)) {
-    if (!file.endsWith('.css')) continue
+  // CSS that web components import themselves (the video player's, the block
+  // stylesheets) lands next to the JS; fold it into the one stylesheet
+  // consumers import. esbuild writes it once per chunk that imports it (the
+  // entries and the canvas each get the same block CSS), so each stylesheet
+  // goes in once: widest output first, then any output that adds a new one.
+  const cssOutputs = Object.entries(metafile.outputs)
+    .filter(([file]) => file.endsWith('.css'))
+    .sort(([, a], [, b]) => Object.keys(b.inputs).length - Object.keys(a.inputs).length)
+  const foldedCss = new Set()
+  for (const [file, output] of cssOutputs) {
     const abs = path.resolve(pkgDir, file)
-    await appendFile(path.join(distDir, 'styles.css'), `\n${await readFile(abs, 'utf8')}`)
+    const inputs = Object.keys(output.inputs)
+    if (inputs.some((input) => !foldedCss.has(input))) {
+      await appendFile(path.join(distDir, 'styles.css'), `\n${await readFile(abs, 'utf8')}`)
+      for (const input of inputs) foldedCss.add(input)
+    }
     await rm(abs)
     await rm(`${abs}.map`, { force: true })
   }
