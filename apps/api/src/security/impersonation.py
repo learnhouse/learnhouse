@@ -387,6 +387,12 @@ _DENIED: tuple[tuple[Optional[frozenset], re.Pattern], ...] = (
     (_ALL, re.compile(r"^/api/v1/admin/[^/]+/auth/")),
     (_ALL, re.compile(r"^/api/v1/(admin/[^/]+/users/[^/]+|orgs/\d+/users)/export")),
     (_ALL, re.compile(r"^/api/v1/(audit|ee/audit_logs)(/.*)?/export")),
+    # Shortening retention purges the audit history on the next cleanup run,
+    # including the record of this very session.
+    (_WRITES, re.compile(r"^/api/v1/ee/audit_logs/settings/?$")),
+    # A scheduled agent keeps running as the owner after the session ends.
+    # Describing a schedule only previews it.
+    (_WRITES, re.compile(r"^/api/v1/ai/atlas/scheduled(?!/describe/?$)(/|$)")),
     (_ALL, re.compile(r"^/api/v1/ee/(backoffice|superadmin)(/|$)")),
     (_WRITES, re.compile(r"^/api/v1/ee/license(/|$)")),
     (_ALL, re.compile(r"^/api/v1/mcp(/|$)")),
