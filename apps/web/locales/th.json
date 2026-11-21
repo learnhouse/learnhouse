@@ -915,9 +915,6 @@
     "unlock_certificate_message": "ทำกิจกรรมให้ครบทั้งหมดเพื่อรับใบประกาศนียบัตร",
     "chapter": "บท",
     "chapters": "บท",
-    "co_created_by": "ร่วมสร้างโดย",
-    "created_on": "สร้างเมื่อ",
-    "last_updated": "อัปเดตล่าสุดเมื่อ",
     "public": "สาธารณะ",
     "public_desc": "ทุกคนบนอินเทอร์เน็ตสามารถมองเห็นได้",
     "private": "ส่วนตัว",
@@ -930,7 +927,6 @@
     "clipboard_read_error": "อ่านข้อมูลจากคลิปบอร์ดไม่สำเร็จ",
     "enter_to_add": "กด Enter เพื่อเพิ่ม...",
     "select_visibility": "เลือกการมองเห็น",
-    "and_x_more": "และอีก {{count}} อย่าง",
     "update": "อัปเดต",
     "updates": "อัปเดต",
     "new_update": "อัปเดตใหม่",
@@ -1312,6 +1308,20 @@
       "available_in": "มีภาษา{{languages}}",
       "language_filter": "ภาษา",
       "all_languages": "ทุกภาษา"
+    },
+    "by_authors": "โดย {{names}}",
+    "others_count_one": "อีก {{count}} คน",
+    "others_count_other": "อีก {{count}} คน",
+    "authors_count_one": "ผู้เขียน {{count}} คน",
+    "authors_count_other": "ผู้เขียน {{count}} คน",
+    "show_all_authors": "ดูผู้เขียนทั้งหมด",
+    "created_short": "สร้างเมื่อ {{date}}",
+    "updated_short": "อัปเดต {{when}}",
+    "author_role": {
+      "creator": "ผู้สร้าง",
+      "maintainer": "ผู้ดูแล",
+      "contributor": "ผู้ร่วมสร้าง",
+      "reporter": "ผู้รายงาน"
     }
   },
   "communities": {

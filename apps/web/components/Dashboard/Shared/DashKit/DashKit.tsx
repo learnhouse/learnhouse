@@ -744,46 +744,69 @@ export function ConfirmDialog({
   )
 }
 
-// Overlapping author avatars with a "+N" tail.
+// Overlapping author avatars with a "+N" tail. A person without a picture
+// (or whose picture fails to load) shows `initials` (default: first letter of
+// `label`) on `tint` (default: neutral grey).
+type AvatarStackPerson = { key: string; src: string; label: string; initials?: string; tint?: string }
+
+function AvatarStackItem({ person, size, showTitle }: { person: AvatarStackPerson; size: number; showTitle: boolean }) {
+  const [failedSrc, setFailedSrc] = React.useState<string | null>(null)
+  const title = showTitle ? person.label : undefined
+  if (person.src && failedSrc !== person.src) {
+    return (
+      <img
+        src={person.src}
+        alt={person.label}
+        title={title}
+        onError={() => setFailedSrc(person.src)}
+        style={{ width: size, height: size }}
+        className="rounded-full object-cover ring-2 ring-white bg-neutral-100 shrink-0"
+      />
+    )
+  }
+  return (
+    <span
+      title={title}
+      role="img"
+      aria-label={person.label}
+      style={{ width: size, height: size }}
+      className={`rounded-full ring-2 ring-white text-[10px] font-bold flex items-center justify-center uppercase shrink-0 select-none ${person.tint ?? 'bg-neutral-200 text-neutral-600'}`}
+    >
+      {person.initials ?? person.label.slice(0, 1)}
+    </span>
+  )
+}
+
 export function AvatarStack({
   people,
   max = 3,
   size = 22,
+  showTitles = true,
+  overlap = 'tight',
 }: {
-  people: { key: string; src: string; label: string }[]
+  people: AvatarStackPerson[]
   max?: number
   size?: number
+  /** Native title tooltips; turn off when the stack already opens a richer popover. */
+  showTitles?: boolean
+  /** 'loose' overlaps less so initials stay readable. */
+  overlap?: 'tight' | 'loose'
 }) {
   const shown = people.slice(0, max)
   const rest = people.length - shown.length
   if (!people.length) return null
   return (
-    <div className="flex items-center -space-x-1.5 rtl:space-x-reverse">
-      {shown.map((p) =>
-        p.src ? (
-          <img
-            key={p.key}
-            src={p.src}
-            alt={p.label}
-            title={p.label}
-            style={{ width: size, height: size }}
-            className="rounded-full object-cover ring-2 ring-white bg-neutral-100"
-          />
-        ) : (
-          <span
-            key={p.key}
-            title={p.label}
-            style={{ width: size, height: size }}
-            className="rounded-full ring-2 ring-white bg-neutral-200 text-neutral-600 text-[10px] font-bold flex items-center justify-center uppercase"
-          >
-            {p.label.slice(0, 1)}
-          </span>
-        )
-      )}
+    <div className={`flex items-center ${overlap === 'loose' ? '-space-x-1' : '-space-x-1.5'} rtl:space-x-reverse`}>
+      {shown.map((p, i) => (
+        // Earlier avatars sit on top, so the overlap covers the next one's edge, not this one's initials.
+        <span key={p.key} className="relative inline-flex" style={{ zIndex: shown.length - i }}>
+          <AvatarStackItem person={p} size={size} showTitle={showTitles} />
+        </span>
+      ))}
       {rest > 0 && (
         <span
           style={{ width: size, height: size }}
-          className="rounded-full ring-2 ring-white bg-neutral-100 text-neutral-500 text-[10px] font-bold flex items-center justify-center tabular-nums"
+          className="rounded-full ring-2 ring-white bg-neutral-100 text-neutral-500 text-[10px] font-bold flex items-center justify-center tabular-nums shrink-0"
         >
           +{rest}
         </span>

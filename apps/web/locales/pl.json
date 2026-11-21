@@ -920,9 +920,6 @@
     "unlock_certificate_message": "Ukończ wszystkie aktywności, aby odblokować certyfikat",
     "chapter": "Rozdział",
     "chapters": "Rozdziały",
-    "co_created_by": "Współtworzony przez",
-    "created_on": "Utworzono dnia",
-    "last_updated": "Ostatnia aktualizacja",
     "public": "Publiczny",
     "public_desc": "Dostępny dla każdego w Internecie",
     "private": "Prywatny",
@@ -935,7 +932,6 @@
     "clipboard_read_error": "Nie udało się odczytać schowka",
     "enter_to_add": "Naciśnij Enter, aby dodać...",
     "select_visibility": "Wybierz widoczność",
-    "and_x_more": "i {{count}} więcej",
     "update": "aktualizacja",
     "updates": "aktualizacje",
     "new_update": "Nowa aktualizacja",
@@ -1347,6 +1343,24 @@
       "available_in": "Dostępne w: {{languages}}",
       "language_filter": "Język",
       "all_languages": "Wszystkie języki"
+    },
+    "by_authors": "Autorstwo: {{names}}",
+    "others_count_few": "{{count}} inne osoby",
+    "others_count_many": "{{count}} innych osób",
+    "others_count_one": "{{count}} inna osoba",
+    "others_count_other": "{{count}} innej osoby",
+    "authors_count_few": "{{count}} autorzy",
+    "authors_count_many": "{{count}} autorów",
+    "authors_count_one": "{{count}} autor",
+    "authors_count_other": "{{count}} autora",
+    "show_all_authors": "Pokaż wszystkich autorów",
+    "created_short": "Utworzono {{date}}",
+    "updated_short": "Zaktualizowano {{when}}",
+    "author_role": {
+      "creator": "Twórca",
+      "maintainer": "Opiekun",
+      "contributor": "Współtwórca",
+      "reporter": "Zgłaszający"
     }
   },
   "communities": {

@@ -916,9 +916,6 @@
     "unlock_certificate_message": "Schließen Sie alle Aktivitäten ab, um Ihr Zertifikat freizuschalten",
     "chapter": "Kapitel",
     "chapters": "Kapitel",
-    "co_created_by": "Miterstellt von",
-    "created_on": "Erstellt am",
-    "last_updated": "Zuletzt aktualisiert",
     "public": "Öffentlich",
     "public_desc": "Im Internet sichtbar",
     "private": "Privat",
@@ -931,7 +928,6 @@
     "clipboard_read_error": "Zwischenablage konnte nicht gelesen werden",
     "enter_to_add": "Enter zum Hinzufügen...",
     "select_visibility": "Sichtbarkeit wählen",
-    "and_x_more": "& {{count}} weitere",
     "update": "Update",
     "updates": "Updates",
     "new_update": "Neues Update",
@@ -1313,6 +1309,20 @@
       "available_in": "Verfügbar in {{languages}}",
       "language_filter": "Sprache",
       "all_languages": "Alle Sprachen"
+    },
+    "by_authors": "Von {{names}}",
+    "others_count_one": "{{count}} weiteren Person",
+    "others_count_other": "{{count}} weiteren",
+    "authors_count_one": "{{count}} Autor",
+    "authors_count_other": "{{count}} Autoren",
+    "show_all_authors": "Alle Autoren anzeigen",
+    "created_short": "Erstellt am {{date}}",
+    "updated_short": "Aktualisiert {{when}}",
+    "author_role": {
+      "creator": "Ersteller",
+      "maintainer": "Verwalter",
+      "contributor": "Mitwirkender",
+      "reporter": "Berichterstatter"
     }
   },
   "communities": {
