@@ -228,12 +228,16 @@ export interface RestoreOptions {
  * `learnhouse restore` and `learnhouse backup --restore`.
  */
 export async function restoreBackup(archivePath: string, options: RestoreOptions = {}) {
+  const { dir: installDir, config } = loadInstall()
+  // `backups/...` as printed by backup/update works from any directory.
+  if (!fs.existsSync(archivePath) && !path.isAbsolute(archivePath) && fs.existsSync(path.join(installDir, archivePath))) {
+    archivePath = path.join(installDir, archivePath)
+  }
   if (!fs.existsSync(archivePath)) {
     p.log.error(`Backup file not found: ${archivePath}`)
     process.exit(1)
   }
 
-  const { dir: installDir, config } = loadInstall()
   const dbContainer = requireLocalDb(installDir, config, 'Restore')
   const layout = stackLayout(config)
   const interactive = !!process.stdin.isTTY && !!process.stdout.isTTY

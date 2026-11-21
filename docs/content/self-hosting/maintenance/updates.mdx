@@ -116,7 +116,7 @@ Once migrations have run, going back to the old image is not safe on its own: th
 # List available backups
 ls ~/.learnhouse/<name>/backups/
 
-# Restore the database
+# Restore the database (the path is relative to the installation directory)
 npx learnhouse restore backups/db-pre-upgrade-<timestamp>.sql.gz
 
 # Revert the image tag in docker-compose.yml to the previous version
@@ -125,6 +125,8 @@ npx learnhouse restore backups/db-pre-upgrade-<timestamp>.sql.gz
 # Start on the old image
 npx learnhouse start
 ```
+
+With an external database, `restore` refuses to touch it. Load the dump with your provider's tools instead, for example `gunzip -c backups/db-pre-upgrade-<timestamp>.sql.gz | psql "<connection string>"`.
 
 Backups are named `db-pre-upgrade-<timestamp>.sql.gz` when created by `update`, and `learnhouse-backup-<timestamp>.tar.gz` when created by the `backup` command. The pre-upgrade dump contains only the database. To also keep your `.env` and uploaded files, run `npx learnhouse backup` before updating.
 

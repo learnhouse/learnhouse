@@ -158,6 +158,10 @@ services:
       # HOSTNAME needs to be set explicitly for the container
       - HOSTNAME=0.0.0.0
       - LEARNHOUSE_API_URL=http://localhost:9000
+      # Server-side rendering calls the API inside the container instead of
+      # going back out through the public URL (which may not resolve or
+      # hairpin from inside Docker).
+      - LEARNHOUSE_INTERNAL_API_URL=http://localhost:9000
 ${appVolumes}${appDependsOn}
     networks:
       - learnhouse-network-${id}

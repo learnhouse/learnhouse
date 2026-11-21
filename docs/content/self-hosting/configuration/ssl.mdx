@@ -22,7 +22,9 @@ Both ports must be free on the server and reachable from the internet.
 
 ## Option 2: Your own reverse proxy
 
-Choose **I'll handle SSL myself** in the wizard when TLS ends in a proxy you run (or a service like Cloudflare). LearnHouse then serves plain HTTP on the port you picked, and the generated URLs use `https://`. Point your proxy at that port.
+Choose **I'll handle SSL myself** in the wizard (or pass `--https manual` to `setup --ci`) when TLS ends in a proxy you run (or a service like Cloudflare). LearnHouse then serves plain HTTP on the port you picked, and the generated URLs use `https://`. Point your proxy at that port.
+
+If the proxy runs on the same server, it needs ports 80 and 443 itself, so give LearnHouse another port (for example 8080) and use that port below instead of 80.
 
 ### Caddy
 
@@ -73,25 +75,23 @@ If you use Traefik as your reverse proxy, route your domain to the LearnHouse po
 
 ## Variables to check
 
-The setup wizard writes the domain-related variables for you. If you configure SSL by hand, or add it later, check these in `.env`:
+The setup wizard writes all of these for you. If you configure SSL by hand, check them in `.env`:
 
 | Variable | Value for HTTPS |
 | --- | --- |
-| `NEXT_PUBLIC_LEARNHOUSE_HTTPS` | `true` (the web app only accepts lowercase `true`) |
+| `NEXT_PUBLIC_LEARNHOUSE_HTTPS` | `true` |
 | `NEXT_PUBLIC_LEARNHOUSE_API_URL`, `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL`, `NEXTAUTH_URL` | `https://` URLs |
 | `NEXT_PUBLIC_COLLAB_URL` | `wss://learn.example.com/collab` |
-| `LEARNHOUSE_SSL` | `true`. The wizard does not write this one. The API uses it for links it builds outside a request, for example in background emails. |
+| `LEARNHOUSE_SSL` | `true`. The API uses it for links it builds outside a request, for example in background emails. |
+| `LEARNHOUSE_FRONTEND_DOMAIN`, `LEARNHOUSE_MEDIA_URL` | Your domain, and `https://learn.example.com`. Links and logos in emails are built from them. |
 | `LEARNHOUSE_ALLOWED_REGEXP` | A pattern for your own domain, for example `^https://(?:[a-z0-9-]+\.)*example\.com$`. The default matches any origin. |
 
 <Callout type="warning">
-To switch an existing installation from HTTP to HTTPS, or to another domain, re-run `npx learnhouse setup` on the same installation instead of editing the URLs one by one. The wizard regenerates every URL, the cookie domain and the proxy configuration, and keeps your data and secrets.
+To switch an existing installation from HTTP to HTTPS, or to another domain, re-run `npx learnhouse setup` on the same installation instead of editing the URLs one by one. The wizard regenerates every URL and the proxy configuration, and keeps your data, your secrets and any variables you added to `.env` yourself.
 </Callout>
 
 ## Cookie Domain
 
-The `LEARNHOUSE_COOKIE_DOMAIN` variable controls which domain cookies are scoped to. This is important for authentication to work correctly.
+A Community install serves one organization on one domain, so session cookies are host-only and `LEARNHOUSE_COOKIE_DOMAIN` is not used (the API logs a warning if it is set). Older CLI versions wrote it; re-running `setup` removes it.
 
-- The setup wizard sets it to `.<top domain>`, for example `.example.com` for `learn.example.com`, and to `.localhost` for local installs
-- A leading dot (`.example.com`) lets cookies work across subdomains, which is required if you use multi-organization mode with subdomains
-- Outside development mode, the API logs a warning for a parent cookie domain such as `.example.com`, because every subdomain then shares the session cookie. Set `LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD=true` to acknowledge it. A single-label value such as `.com` stops the API from starting.
-- The wizard uses the last two labels of your domain. For a domain under a two-part suffix such as `learn.school.co.uk`, that gives `.co.uk`; set `LEARNHOUSE_COOKIE_DOMAIN` to `.school.co.uk` or `learn.school.co.uk` instead.
+`LEARNHOUSE_COOKIE_DOMAIN` only matters for Enterprise multi-organization mode, where organizations live on subdomains. There, a parent value such as `.example.com` makes the API log a warning until you set `LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD=true`, and a single-label value such as `.com` stops it from starting.

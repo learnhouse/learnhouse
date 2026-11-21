@@ -20,7 +20,7 @@ const COMMUNITY_CATEGORIES: Categories = {
       'NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL', 'NEXT_PUBLIC_LEARNHOUSE_DOMAIN',
       'NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN', 'NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG',
       'NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG', 'NEXT_PUBLIC_LEARNHOUSE_HTTPS',
-      'NEXTAUTH_URL',
+      'NEXTAUTH_URL', 'LEARNHOUSE_FRONTEND_DOMAIN', 'LEARNHOUSE_SSL', 'LEARNHOUSE_MEDIA_URL',
     ],
   },
   database: {
@@ -35,7 +35,6 @@ const COMMUNITY_CATEGORIES: Categories = {
     keys: [
       'NEXTAUTH_SECRET', 'LEARNHOUSE_AUTH_JWT_SECRET_KEY',
       'LEARNHOUSE_INITIAL_ADMIN_EMAIL', 'LEARNHOUSE_INITIAL_ADMIN_PASSWORD',
-      'LEARNHOUSE_COOKIE_DOMAIN',
     ],
   },
   ai: {
@@ -54,7 +53,8 @@ const COMMUNITY_CATEGORIES: Categories = {
     label: 'S3 Storage',
     keys: [
       'LEARNHOUSE_CONTENT_DELIVERY_TYPE', 'LEARNHOUSE_S3_API_BUCKET_NAME',
-      'LEARNHOUSE_S3_API_ENDPOINT_URL',
+      'LEARNHOUSE_S3_API_ENDPOINT_URL', 'AWS_DEFAULT_REGION', 'LEARNHOUSE_S3_API_REGION', 'AWS_ACCESS_KEY_ID',
+      'AWS_SECRET_ACCESS_KEY',
     ],
   },
   oauth: {
@@ -93,7 +93,7 @@ const ENTERPRISE_CATEGORIES: Categories = {
 // only reads its password when the data volume is first created.
 const DB_PASSWORD_KEYS = new Set(['POSTGRES_PASSWORD', 'DB_PASSWORD'])
 // Derived URLs and proxy configs are generated from these at setup.
-const DERIVED_KEYS = new Set(['LEARNHOUSE_DOMAIN', 'DOMAIN', 'AGENCY_DOMAIN'])
+const DERIVED_KEYS = new Set(['LEARNHOUSE_DOMAIN', 'HTTP_PORT', 'DOMAIN', 'AGENCY_DOMAIN'])
 
 export function isSecret(key: string): boolean {
   const upper = key.toUpperCase()
@@ -223,7 +223,7 @@ export async function envCommand() {
       )
     }
     if (DERIVED_KEYS.has(key)) {
-      p.log.warn('The URLs, cookie domain and proxy config were generated from the domain at setup; re-run `npx learnhouse setup` to change the domain everywhere.')
+      p.log.warn('The URLs, cookie domain and proxy config were generated from the domain at setup; re-run `npx learnhouse setup` to change the domain or port everywhere.')
     }
 
     // Secrets: hidden input, and the current value is never echoed back as a placeholder.

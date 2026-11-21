@@ -28,7 +28,7 @@ Choose a name for the installation. Installations live in `~/.learnhouse/<name>`
 
 ## Step 2: Domain Configuration
 
-- **Domain**: hostname (default: `localhost`)
+- **Domain**: hostname or the server's IP address (default: `localhost`). For an IP address, automatic SSL is not offered: Let's Encrypt does not issue certificates for IPs.
 - **HTTPS** (only asked for a domain other than `localhost`):
   - **Automatic SSL** (recommended): Let's Encrypt certificates through Caddy. The wizard asks for an email address for Let's Encrypt notices.
   - **I'll handle SSL myself**: you terminate TLS in your own reverse proxy or a service like Cloudflare. LearnHouse runs on plain HTTP behind it, and the generated URLs use `https://`.
@@ -71,7 +71,7 @@ Select any of these integrations:
 | --- | --- |
 | **AI (Gemini)** | Gemini API key |
 | **Email (Resend or SMTP)** | Provider; a Resend API key, or SMTP host, port (default `587`), username, password and TLS toggle; then the system "From" address |
-| **S3 Storage** | Bucket name and endpoint URL (leave empty for AWS S3) |
+| **S3 Storage** | Bucket name, endpoint URL (leave empty for AWS S3), region, and access keys (leave empty to use the server's credentials, for example an instance role) |
 | **Google OAuth** | Client ID and Client Secret |
 
 API keys and secrets are entered without echo. To use another AI provider, edit `.env` after setup (see [AI Setup](/self-hosting/configuration/ai-setup)).

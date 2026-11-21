@@ -88,6 +88,8 @@ program
   .option('--org-slug <slug>', 'Organization slug used in URLs (default: "default")')
   .option('--channel <channel>', 'Release channel: stable or dev (default: "stable")')
   .option('--no-start', 'Skip starting services after setup')
+  .option('--https <mode>', 'Community HTTPS: auto (Let\'s Encrypt via Caddy), manual (TLS ends at your own proxy) or off (default)')
+  .option('--ssl-email <email>', "Let's Encrypt contact email for --https auto (default: --admin-email)")
   // ── Enterprise Edition ──
   .option('--edition <edition>', 'Edition to deploy: community (default) or enterprise')
   .option('--license <key>', 'EE license key, also the image-registry password (or set LEARNHOUSE_LICENSE_KEY)')

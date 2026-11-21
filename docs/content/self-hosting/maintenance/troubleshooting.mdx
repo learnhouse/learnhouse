@@ -73,7 +73,7 @@ lsof -i :80
 lsof -i :443
 ```
 
-Stop the conflicting service, or reconfigure LearnHouse to use a different port by re-running `npx learnhouse setup` (or change `HTTP_PORT` with `npx learnhouse env`).
+Stop the conflicting service, or reconfigure LearnHouse to use a different port by re-running `npx learnhouse setup` (for example `npx learnhouse setup --ci --port 8080` on an existing install). Changing `HTTP_PORT` alone is not enough: the port is also part of the public URLs in `.env`.
 
 ## Storage Permission Errors
 
@@ -96,7 +96,7 @@ Stop the conflicting service, or reconfigure LearnHouse to use a different port 
 
 - Verify `LEARNHOUSE_AUTH_JWT_SECRET_KEY` is set (at least 32 characters) and has not changed. Changing it signs every user out.
 - Verify `LEARNHOUSE_COOKIE_DOMAIN` matches your actual domain. An incorrect cookie domain prevents authentication from working.
-- If using SSL, make sure the public URLs in `.env` (`NEXT_PUBLIC_LEARNHOUSE_API_URL`, `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL`, `NEXTAUTH_URL`) use `https://`, and that `NEXT_PUBLIC_LEARNHOUSE_HTTPS` is set to lowercase `true`.
+- If using SSL, make sure the public URLs in `.env` (`NEXT_PUBLIC_LEARNHOUSE_API_URL`, `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL`, `NEXTAUTH_URL`) use `https://`, and that `NEXT_PUBLIC_LEARNHOUSE_HTTPS` is set to `true`.
 - Users who don't open LearnHouse for 30 days must sign in again. Change this with `LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS`.
 
 ## Performance Issues

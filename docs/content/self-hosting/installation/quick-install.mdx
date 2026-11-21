@@ -49,8 +49,13 @@ For scripts, cloud-init or CI, use `--ci`. The admin password is required:
 ```bash
 LEARNHOUSE_ADMIN_PASSWORD=change-me-please npx learnhouse@latest setup --ci \
   --domain learn.yourdomain.com \
-  --admin-email admin@yourdomain.com
+  --admin-email admin@yourdomain.com \
+  --https auto
 ```
+
+`--https auto` gets a Let's Encrypt certificate through Caddy (ports 80 and 443 must be free and reachable; `--ssl-email` sets the contact, which defaults to `--admin-email`). Use `--https manual` when TLS ends at your own proxy, or leave it out for plain HTTP. Without `--port`, `--ci` takes the first free port from 80 (443 with `--https auto`) and prints it.
+
+The domain can also be the server's IP address, for example to try LearnHouse before DNS is set up. Let's Encrypt does not issue certificates for IP addresses, so use HTTP or your own proxy there.
 
 See [`setup` flags](/cli/commands#setup) for every option.
 

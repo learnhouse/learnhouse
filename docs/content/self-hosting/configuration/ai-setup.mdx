@@ -43,10 +43,9 @@ Any OpenAI-compatible endpoint (Azure OpenAI, Together, local servers) also work
 
 ## Enabling AI
 
-Set the provider, an API key, and the feature flag in your `.env` file:
+Set the provider and an API key in your `.env` file:
 
 ```env
-LEARNHOUSE_IS_AI_ENABLED=true
 LEARNHOUSE_AI_PROVIDER=google           # google | openai | anthropic | deepseek | moonshot | mistral | openrouter | bedrock | ollama
 LEARNHOUSE_AI_API_KEY=your-api-key      # the single key, whatever the provider
 ```
@@ -276,7 +275,7 @@ limit, further AI requests are rejected until the window resets.
 
 | Variable | Description |
 | --- | --- |
-| `LEARNHOUSE_IS_AI_ENABLED` | Master switch for all AI features (`true`/`false`). |
+| `LEARNHOUSE_IS_AI_ENABLED` | Kept for older configurations; AI features depend on a configured provider key, not on this flag. Without a key, nothing is sent to an AI provider and content is not indexed for AI search. |
 | `LEARNHOUSE_AI_PROVIDER` | `google`, `openai`, `anthropic`, `deepseek`, `moonshot`, `mistral`, `openrouter`, `bedrock`, or `ollama`. Defaults to `google`. |
 | `LEARNHOUSE_AI_API_KEY` | API key for the chosen provider. Not required for `ollama` or `bedrock`. |
 | `LEARNHOUSE_AI_BASE_URL` | Optional. Custom endpoint for OpenAI-compatible / local providers (e.g. Ollama). Auto-set for OpenRouter. |

@@ -16,6 +16,9 @@ export interface FeaturesConfig {
   s3Enabled: boolean
   s3BucketName?: string
   s3EndpointUrl?: string
+  s3AccessKeyId?: string
+  s3SecretAccessKey?: string
+  s3Region?: string
   googleOAuthEnabled: boolean
   googleClientId?: string
   googleClientSecret?: string
@@ -136,6 +139,27 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
     })
     if (p.isCancel(endpoint)) { p.cancel(); process.exit(0) }
     if (endpoint) config.s3EndpointUrl = endpoint as string
+
+    const region = await p.text({
+      message: 'S3 region? (leave empty for us-east-1 or a provider that ignores it)',
+      placeholder: 'us-east-1',
+    })
+    if (p.isCancel(region)) { p.cancel(); process.exit(0) }
+    if (region) config.s3Region = region as string
+
+    const accessKeyId = await p.text({
+      message: 'S3 access key ID? (leave empty to use the host\'s credentials, e.g. an instance role)',
+    })
+    if (p.isCancel(accessKeyId)) { p.cancel(); process.exit(0) }
+    if (accessKeyId) {
+      config.s3AccessKeyId = accessKeyId as string
+      const secret = await p.password({
+        message: 'S3 secret access key?',
+        validate: (v) => validateRequired(v ?? ''),
+      })
+      if (p.isCancel(secret)) { p.cancel(); process.exit(0) }
+      config.s3SecretAccessKey = secret as string
+    }
   }
 
   if (config.googleOAuthEnabled) {

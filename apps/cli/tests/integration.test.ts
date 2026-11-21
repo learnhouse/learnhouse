@@ -152,8 +152,8 @@ describe('CLI integration: live install (command coverage)', () => {
       ['a port out of range',
         `setup --ci --name err-port --domain localhost --port 0 --admin-email admin@ok.dev --admin-password ${TEST_ADMIN_PASSWORD}`,
         /port|between/i],
-      ['a domain that is an IP address',
-        `setup --ci --name err-ip --domain 192.168.1.1 --port 8080 --admin-email admin@ok.dev --admin-password ${TEST_ADMIN_PASSWORD}`,
+      ['an out-of-range IP address as the domain',
+        `setup --ci --name err-ip --domain 192.168.1.300 --port 8080 --admin-email admin@ok.dev --admin-password ${TEST_ADMIN_PASSWORD}`,
         /domain|valid/i],
     ]
 

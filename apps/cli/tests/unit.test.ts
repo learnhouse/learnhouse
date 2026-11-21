@@ -872,8 +872,13 @@ describe('validateDomain', () => {
     expect(validateDomain('bad-.example.com')).toMatch(/valid domain/i)
   })
 
-  it('rejects an IP address (not a domain name)', () => {
-    expect(validateDomain('192.168.1.1')).toMatch(/valid domain/i)
+  it('accepts a server IPv4 address', () => {
+    expect(validateDomain('192.168.1.1')).toBeUndefined()
+    expect(validateDomain('203.0.113.7')).toBeUndefined()
+  })
+
+  it('rejects an out-of-range IPv4 address', () => {
+    expect(validateDomain('192.168.1.256')).toMatch(/valid IP/i)
   })
 })
 
@@ -1703,10 +1708,10 @@ describe('CLI: setup --ci input validation', () => {
     expect(fs.existsSync(installDir('val-highport'))).toBe(false)
   })
 
-  it('exits 1 with domain error when an IP address is used as --domain (IPs not valid domains)', () => {
-    const r = setupBad('val-baddom', ['--domain', '192.168.1.1', '--port', '9179', '--admin-password', 'testpassword1'])
+  it('exits 1 with domain error when --domain is an out-of-range IP address', () => {
+    const r = setupBad('val-baddom', ['--domain', '192.168.1.300', '--port', '9179', '--admin-password', 'testpassword1'])
     expect(r.status).toBe(1)
-    expect(r.stdout + r.stderr).toMatch(/domain|valid/i)
+    expect(r.stdout + r.stderr).toMatch(/valid IP/i)
     expect(fs.existsSync(installDir('val-baddom'))).toBe(false)
   })
 

@@ -466,6 +466,20 @@ describe('backup / restore: real tar, stubbed database', () => {
     expect(restoreDirs()).toEqual([])
   })
 
+  it('restore finds backups/<file> in the install dir from any working directory', async () => {
+    const sql = 'CREATE TABLE from_install_dir (id int);\n'
+    fs.mkdirSync(path.join(installDir, 'backups'), { recursive: true })
+    fs.writeFileSync(path.join(installDir, 'backups', 'db-pre-upgrade-1.sql.gz'), zlib.gzipSync(sql))
+    const cwd = process.cwd()
+    process.chdir(os.tmpdir())
+    try {
+      await expect(restoreCommand(path.join('backups', 'db-pre-upgrade-1.sql.gz'), { yes: true })).resolves.toBeUndefined()
+    } finally {
+      process.chdir(cwd)
+    }
+    expect(restoredSql).toEqual([sql])
+  })
+
   it('a stale extracted folder in the install dir cannot be picked up by a later restore', async () => {
     // Leftovers of an earlier, aborted run at the old fixed path and at a
     // mkdtemp-style path. Each run must extract into its own fresh dir.
