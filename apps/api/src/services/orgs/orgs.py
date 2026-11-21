@@ -873,6 +873,13 @@ async def purge_org(org: Organization, db_session: AsyncSession) -> None:
     cleanup, so both delete exactly the same way."""
     from src.routers.users import _invalidate_session_cache
 
+    # Last line of defence: every caller checks first, but the shared demo org
+    # is torn down only by its own teardown, never through here.
+    if org.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The demo organization cannot be deleted.",
+        )
     affected_users = (await db_session.execute(
         select(UserOrganization.user_id).where(UserOrganization.org_id == org.id)
     )).scalars().all()
@@ -978,6 +985,14 @@ async def wipe_org_content(
         raise HTTPException(
             status_code=404,
             detail="Organization not found",
+        )
+
+    # Shared: every visitor is an admin of the demo, so one of them would wipe
+    # it for everybody (and its bundle media in storage) until the refresh.
+    if org.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The demo organization's content cannot be wiped.",
         )
 
     # RBAC check - verifies the caller is an admin of THIS organization

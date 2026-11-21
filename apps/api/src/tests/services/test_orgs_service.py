@@ -519,6 +519,31 @@ class TestWipeOrgContent:
         )).first() is not None
 
 
+    @pytest.mark.asyncio
+    async def test_wipe_org_content_refuses_the_demo_org(self, mock_request, db, org, admin_user, course):
+        org.is_demo = True
+        db.add(org)
+        await db.commit()
+        with pytest.raises(HTTPException) as exc:
+            await wipe_org_content(mock_request, org.id, admin_user, db)
+        assert exc.value.status_code == 403
+        assert (await db.exec(select(Course).where(Course.org_id == org.id))).first() is not None
+
+
+class TestPurgeOrg:
+    @pytest.mark.asyncio
+    async def test_purge_org_refuses_the_demo_org(self, db, org):
+        from src.services.orgs.orgs import purge_org
+
+        org.is_demo = True
+        db.add(org)
+        await db.commit()
+        with pytest.raises(HTTPException) as exc:
+            await purge_org(org, db)
+        assert exc.value.status_code == 403
+        assert (await db.exec(select(Organization).where(Organization.id == org.id))).first() is not None
+
+
 # leave_org (self-service member departure)
 class TestLeaveOrg:
     @pytest.mark.asyncio
