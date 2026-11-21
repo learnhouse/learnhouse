@@ -604,6 +604,34 @@ async def test_agent_tools(db, org, admin_user, regular_user):
     assert out.status == "denied"
 
 
+async def test_routing_tools_respect_api_token_rights(db, org, admin_user):
+    """A token made by an admin still needs the organizations right: a
+    read-only token may look at the routing but never change it."""
+    from src.services.ai.tools import ToolContext, ToolRegistry, make_synthetic_request, run_tool
+    from src.services.ai.tools import notifications as tools
+
+    registry = ToolRegistry()
+    registry.register_all(tools.SPECS)
+
+    def token(rights):
+        user = APITokenUser(id=7, user_uuid="apitoken_x", username="t", org_id=org.id, rights=rights,
+                            created_by_user_id=admin_user.id)
+        return ToolContext(request=make_synthetic_request(), db_session=db, user=user, org=org, org_slug=org.slug,
+                           mode="execute", scope_key="t", surface="mcp")
+
+    change = {"routing": {"join_request": ["maintainers"]}}
+    read_only = token({"organizations": {"action_read": True}})
+    out = await run_tool(registry, "get_notification_routing", {}, read_only)
+    assert out.status == "executed", out.reason
+    out = await run_tool(registry, "update_notification_routing", change, read_only)
+    assert out.status == "denied" and out.denied_code == "missing_right"
+    out = await run_tool(registry, "get_notification_routing", {}, token({}))
+    assert out.denied_code == "missing_right"
+    out = await run_tool(registry, "update_notification_routing", change,
+                         token({"organizations": {"action_read": True, "action_update": True}}))
+    assert out.status == "executed", out.reason
+
+
 async def test_scheduler_logs_digests(engine):
     from sqlalchemy.ext.asyncio import async_sessionmaker
     from sqlmodel.ext.asyncio.session import AsyncSession

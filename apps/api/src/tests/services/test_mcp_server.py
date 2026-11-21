@@ -452,3 +452,16 @@ async def test_prompts():
         await handlers.get_prompt(ctx_for(None), types.GetPromptRequestParams(name="nope"))
 
 
+
+
+def test_every_token_write_tool_checks_token_rights():
+    """A tool API tokens may run that changes data must name the token right
+    it needs: without one, a read-only token passes the rights gate."""
+    from src.services.ai.tools import get_mcp_registry
+
+    unguarded = [
+        spec.name
+        for spec in get_mcp_registry().specs()
+        if spec.api_tokens and spec.tier is not ActionTier.READ and not spec.rights_bucket
+    ]
+    assert unguarded == []
