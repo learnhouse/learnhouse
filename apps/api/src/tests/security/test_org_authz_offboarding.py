@@ -416,10 +416,19 @@ class TestPlanGatedServing:
         from src.services.orgs.custom_domains import resolve_org_by_domain
 
         await self._domain(db, org)
-        await _org_config(db, org, plan="standard")
+        await _org_config(db, org, plan="pro")
         with _saas():
             result = await resolve_org_by_domain(db, "learn.example.com")
         assert result.org_id == org.id
+
+    async def test_domain_not_served_on_standard(self, db, org):
+        """Custom domains are a Pro feature, like the plan table says."""
+        from src.services.orgs.custom_domains import resolve_org_by_domain
+
+        await self._domain(db, org)
+        await _org_config(db, org, plan="standard")
+        with _saas():
+            assert await resolve_org_by_domain(db, "learn.example.com") is None
 
     async def test_domain_served_when_plan_lookup_errors(self, db, org):
         from src.services.orgs.custom_domains import resolve_org_by_domain

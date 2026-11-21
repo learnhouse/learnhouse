@@ -4,6 +4,8 @@ FastAPI dependencies for plan-based feature restrictions.
 Provides dependency functions to enforce plan requirements at the router level.
 """
 
+import logging
+
 from fastapi import Depends, HTTPException, Request
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -12,6 +14,8 @@ from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
 from src.core.events.database import get_db_session
 from src.db.communities.communities import Community
 from src.security.features_utils.plans import PlanLevel, plan_meets_requirement
+
+logger = logging.getLogger(__name__)
 
 
 def _check_mode_bypass(feature_name: str) -> bool | None:
@@ -77,8 +81,9 @@ async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     Returns:
         The organization's plan level
 
-    Raises:
-        HTTPException: 404 if organization config not found
+    An org without an OrganizationConfig row is treated as "free" (the
+    lowest plan, so nothing paid unlocks) rather than 404ing every page that
+    checks a plan.
     """
     from src.services.orgs.org_config_lookup import get_session_org_config
 
@@ -86,10 +91,8 @@ async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     org_config = await get_session_org_config(db_session, org_id)
 
     if org_config is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization configuration not found",
-        )
+        logger.warning("Organization %s has no configuration; treating its plan as free", org_id)
+        return "free"
 
     # Support both v1 (cloud.plan) and v2 (plan) config formats
     config = org_config.config or {}

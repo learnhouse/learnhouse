@@ -7,7 +7,6 @@ a learner in a course, so this is the session-side counterpart: same effect
 """
 
 from datetime import datetime
-from uuid import uuid4
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel
@@ -19,7 +18,6 @@ from src.core.ee_hooks import notify_ee_learner_progress
 from src.db.courses.courses import Course
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
-from src.db.trails import Trail
 from src.db.users import PublicUser
 from src.security.org_auth import enforce_org_mfa, get_user_org, is_org_admin
 from src.services.analytics import events as analytics_events
@@ -76,20 +74,9 @@ async def enroll_org_member(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User is already enrolled in this course")
 
     now = str(datetime.now())
-    trail = (
-        await db_session.execute(select(Trail).where(Trail.org_id == org_id, Trail.user_id == user_id))
-    ).scalars().first()
-    if not trail:
-        trail = Trail(
-            org_id=org_id,
-            user_id=user_id,
-            trail_uuid=f"trail_{uuid4()}",
-            creation_date=now,
-            update_date=now,
-        )
-        db_session.add(trail)
-        await db_session.commit()
-        await db_session.refresh(trail)
+    from src.services.trail.trail import get_or_create_trail
+
+    trail = await get_or_create_trail(db_session, org_id, user_id)
 
     db_session.add(
         TrailRun(
