@@ -40,8 +40,8 @@ class UserGroup(UserGroupBase, table=True):
     )
 
 class UserGroupCreate(UserGroupBase):
-    org_id: int = Field(default=None, foreign_key="organization.id")
-    pass
+    # Required: a body without it failed later as a 500 building the row.
+    org_id: int = Field(foreign_key="organization.id")
 
 class UserGroupUpdate(SQLModel):
     name: Optional[str] = None

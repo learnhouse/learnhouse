@@ -255,8 +255,11 @@ async def _deliver_webhooks(
                         events=ep.events or [],
                     ))
 
-        # All HTTP work happens outside the DB session.
-        for ep_info in endpoints:
+        # All HTTP work happens outside the DB session. Endpoints are served
+        # side by side (the semaphore still bounds open requests): one slow or
+        # failing endpoint, retried for up to ~35 s, must not hold back every
+        # other endpoint's delivery of the same event.
+        async def _deliver_one(ep_info: _EndpointInfo) -> None:
             try:
                 await _deliver_to_endpoint(ep_info, event_name, org_id, data)
             except Exception:
@@ -267,6 +270,8 @@ async def _deliver_webhooks(
                     org_id,
                     exc_info=True,
                 )
+
+        await asyncio.gather(*(_deliver_one(ep_info) for ep_info in endpoints))
 
     except Exception:
         logger.warning(

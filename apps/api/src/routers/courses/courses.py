@@ -1,7 +1,7 @@
-from typing import List, Optional
+from typing import Annotated, List, Optional
 import json
 import os
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request, Path, Query, BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 
@@ -635,8 +635,9 @@ async def api_update_course_drip_schedule(
 )
 async def api_get_course_by_orgslug(
     request: Request,
-    page: int,
-    limit: int,
+    # page < 1 or a negative limit made a negative SQL OFFSET/LIMIT and a 500.
+    page: Annotated[int, Path(ge=1, description="Page number (1-based)")],
+    limit: Annotated[int, Path(ge=0, description="Items per page (capped at 100)")],
     org_slug: str,
     include_unpublished: bool = False,
     lang: Optional[str] = Query(None, max_length=200, description="Preferred languages, most preferred first (e.g. fr,en). Serves published translations."),

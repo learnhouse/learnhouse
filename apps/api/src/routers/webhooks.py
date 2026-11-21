@@ -88,9 +88,11 @@ async def api_create_webhook_endpoint(
     The signing secret is only returned once upon creation.
     Store it securely as it cannot be retrieved later.
     """
-    _enforce_webhook_rate_limit(org_id, "create")
+    # Throttled inside, after the permission check: counting first let any
+    # signed-in user spend another org's hourly budget.
     return await create_webhook_endpoint(
-        request, db_session, org_id, webhook_object, current_user
+        request, db_session, org_id, webhook_object, current_user,
+        throttle=lambda: _enforce_webhook_rate_limit(org_id, "create"),
     )
 
 
@@ -239,9 +241,9 @@ async def api_send_test_event(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Send a test 'ping' event to verify the webhook endpoint is reachable."""
-    _enforce_webhook_rate_limit(org_id, "test")
     return await send_test_event(
-        request, db_session, org_id, webhook_uuid, current_user
+        request, db_session, org_id, webhook_uuid, current_user,
+        throttle=lambda: _enforce_webhook_rate_limit(org_id, "test"),
     )
 
 

@@ -1,5 +1,5 @@
 from typing import Optional, Union
-from pydantic import BaseModel
+from pydantic import BaseModel, Field as PydanticField
 from sqlalchemy import JSON, Column, ForeignKey, Integer, String, Index
 from sqlmodel import Field, SQLModel
 from src.db.roles import Rights
@@ -8,7 +8,7 @@ from src.db.roles import Rights
 class APITokenBase(SQLModel):
     """Base model for API tokens"""
     name: str = Field(max_length=100)
-    description: Optional[str] = Field(default=None, max_length=500)
+    description: Optional[str] = PydanticField(default=None, max_length=500)
     rights: Optional[Union[Rights, dict]] = Field(default=None, sa_column=Column(JSON))
 
 
@@ -41,15 +41,20 @@ class APIToken(APITokenBase, table=True):
 class APITokenCreate(BaseModel):
     """Model for creating a new API token"""
     name: str
-    description: Optional[str] = None
+    # The column holds 500 characters; longer used to fail as a 500.
+    description: Optional[str] = PydanticField(default=None, max_length=500)
     rights: Optional[Union[Rights, dict]] = None
     expires_at: Optional[str] = None
 
 
 class APITokenUpdate(BaseModel):
-    """Model for updating an API token"""
+    """Model for updating an API token.
+
+    Omitted fields are left as they are. ``description`` and ``expires_at``
+    can be cleared by sending ``null`` (or an empty string).
+    """
     name: Optional[str] = None
-    description: Optional[str] = None
+    description: Optional[str] = PydanticField(default=None, max_length=500)
     rights: Optional[Union[Rights, dict]] = None
     expires_at: Optional[str] = None
 

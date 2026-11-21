@@ -551,7 +551,8 @@ class TestRequireApiToken:
         from src.db.users import AnonymousUser
         with pytest.raises(HTTPException) as exc:
             _require_api_token(AnonymousUser())
-        assert exc.value.status_code == 403
+        assert exc.value.status_code == 401
+        assert exc.value.headers == {"WWW-Authenticate": "Bearer"}
 
 
 class TestResolveOrgSlug:
@@ -2735,3 +2736,137 @@ class TestCourseAnalytics:
         with pytest.raises(HTTPException) as exc:
             await get_course_analytics(token_user, "missing", db)
         assert exc.value.status_code == 404
+
+
+# ── API sweep: lookups, profile edits and the webhooks admin calls fire ────
+
+
+def _events(mock_dispatch) -> list:
+    return [c.kwargs["event_name"] for c in mock_dispatch.await_args_list]
+
+
+class TestEmailCaseInsensitivity:
+
+    async def test_lookup_by_email_ignores_case(self, token_user, learner_user, db):
+        found = await get_user_by_email(token_user, "  LEARNER@Example.com ", db)
+        assert found.id == learner_user.id
+
+    async def test_profile_edit_refuses_another_users_address_in_other_case(
+        self, token_user, learner_user, second_user, db
+    ):
+        with pytest.raises(HTTPException) as exc:
+            await update_user_profile(token_user, second_user.id, {"email": "Learner@EXAMPLE.com"}, db)
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Email already in use"
+
+    async def test_profile_edit_may_change_the_case_of_its_own_address(self, token_user, second_user, db):
+        result = await update_user_profile(token_user, second_user.id, {"email": "Bob@Example.com"}, db)
+        assert result.email == "Bob@Example.com"
+
+
+class TestAdminProgressWebhooks:
+    """Progress driven through the Admin API fires the same webhooks as the app."""
+
+    async def test_enroll_fires_course_enrolled(
+        self, token_user, learner_user, course, db, mock_request, mock_admin_side_effects
+    ):
+        await enroll_user(mock_request, token_user, learner_user.id, course.course_uuid, db)
+
+        dispatch = mock_admin_side_effects["dispatch_webhooks"]
+        dispatch.assert_awaited_once_with(
+            event_name="course_enrolled",
+            org_id=course.org_id,
+            data={
+                "user": {"user_uuid": learner_user.user_uuid, "email": learner_user.email, "username": learner_user.username},
+                "course": {"course_uuid": course.course_uuid, "name": course.name},
+            },
+        )
+
+    async def test_bulk_enroll_fires_one_event_per_new_enrollment(
+        self, token_user, learner_user, second_user, course, db, mock_request, mock_admin_side_effects
+    ):
+        await enroll_user(mock_request, token_user, learner_user.id, course.course_uuid, db)
+        dispatch = mock_admin_side_effects["dispatch_webhooks"]
+        dispatch.reset_mock()
+
+        result = await bulk_enroll_users(
+            token_user, course.course_uuid, [learner_user.id, second_user.id, 4242], mock_request, db
+        )
+
+        assert result["enrolled"] == [second_user.id]
+        assert _events(dispatch) == ["course_enrolled"]
+        assert dispatch.await_args.kwargs["data"]["user"]["user_uuid"] == second_user.user_uuid
+
+    async def test_completing_the_last_activity_fires_activity_then_course_completed(
+        self, token_user, learner_user, course, activity, chapter_activity, db, mock_request, mock_admin_side_effects
+    ):
+        with patch(
+            "src.services.admin.admin.check_course_completion_and_create_certificate",
+            new_callable=AsyncMock, return_value=False,
+        ), patch(
+            "src.services.admin.admin.is_course_fully_completed", new_callable=AsyncMock, return_value=True,
+        ):
+            await complete_activity(mock_request, token_user, learner_user.id, activity.activity_uuid, db)
+            dispatch = mock_admin_side_effects["dispatch_webhooks"]
+            assert _events(dispatch) == ["activity_completed", "course_completed"]
+            assert dispatch.await_args_list[0].kwargs["data"]["activity"] == {
+                "activity_uuid": activity.activity_uuid,
+                "activity_type": activity.activity_type,
+            }
+
+            # Marking it done again announces nothing new.
+            dispatch.reset_mock()
+            again = await complete_activity(mock_request, token_user, learner_user.id, activity.activity_uuid, db)
+            assert again["is_new_completion"] is False
+            dispatch.assert_not_awaited()
+
+    async def test_complete_course_fires_course_completed_once(
+        self, token_user, learner_user, course, activity, chapter_activity, db, mock_request, mock_admin_side_effects
+    ):
+        with patch(
+            "src.services.admin.admin.check_course_completion_and_create_certificate",
+            new_callable=AsyncMock, return_value=False,
+        ), patch(
+            "src.services.admin.admin.is_course_fully_completed", new_callable=AsyncMock, return_value=True,
+        ):
+            await complete_course(mock_request, token_user, learner_user.id, course.course_uuid, db)
+            dispatch = mock_admin_side_effects["dispatch_webhooks"]
+            assert _events(dispatch) == ["course_completed"]
+
+            dispatch.reset_mock()
+            again = await complete_course(mock_request, token_user, learner_user.id, course.course_uuid, db)
+            assert again["completed_count"] == 0
+            dispatch.assert_not_awaited()
+
+    async def test_role_change_fires_user_role_changed(
+        self, token_user, user, second_user, student_role, db, mock_admin_side_effects
+    ):
+        db.add(Role(
+            id=3, name="Teacher", description="", rights={}, org_id=token_user.org_id,
+            role_type=RoleTypeEnum.TYPE_ORGANIZATION, role_uuid="role_teacher_3",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        await change_user_role(token_user, second_user.id, 3, db)
+
+        mock_admin_side_effects["dispatch_webhooks"].assert_awaited_once_with(
+            event_name="user_role_changed",
+            org_id=token_user.org_id,
+            data={"user_id": second_user.id, "org_id": token_user.org_id, "new_role_uuid": "role_teacher_3"},
+        )
+
+    async def test_group_course_events_carry_the_group_id(
+        self, token_user, usergroup, course, db, mock_admin_side_effects
+    ):
+        await add_course_to_usergroup(token_user, usergroup.usergroup_uuid, course.course_uuid, db)
+        await remove_course_from_usergroup(token_user, usergroup.usergroup_uuid, course.course_uuid, db)
+
+        calls = mock_admin_side_effects["dispatch_webhooks"].await_args_list
+        assert [c.kwargs["event_name"] for c in calls] == ["usergroup_resources_added", "usergroup_resources_removed"]
+        for c in calls:
+            assert c.kwargs["data"] == {
+                "usergroup_id": usergroup.id,
+                "usergroup_uuid": usergroup.usergroup_uuid,
+                "resource_uuids": [course.course_uuid],
+            }

@@ -342,6 +342,42 @@ async def update_api_token(
             detail="API token not found",
         )
 
+    # A revoked token stays revoked; editing it would only mislead.
+    if not token.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot update a revoked token",
+        )
+
+    # Same name rules as creation: the column holds 100 characters (longer
+    # failed as a 500) and active names are unique within the org.
+    if token_data.name is not None:
+        name = token_data.name.strip()
+        if not name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token name is required and cannot be empty",
+            )
+        if len(name) > 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token name cannot exceed 100 characters",
+            )
+        duplicate = (await db_session.execute(
+            select(APIToken).where(
+                APIToken.name == name,
+                APIToken.org_id == org_id,
+                APIToken.is_active == True,  # noqa: E712
+                APIToken.id != token.id,
+            )
+        )).scalars().first()
+        if duplicate:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"An active API token with the name '{name}' already exists in this organization",
+            )
+        token_data.name = name
+
     _validate_expires_at(token_data.expires_at)
 
     # VERIFICATION 5: Validate rights if being updated
@@ -351,10 +387,13 @@ async def update_api_token(
         await validate_rights_structure(token_data.rights, user_rights)
 
     before = _audit_fields(token)
-    # Update fields
+    # Update fields. ``null`` (or "") clears the two optional fields; for the
+    # others it means "leave as is", as before.
     update_data = token_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
-        if value is not None:
+        if key in ("expires_at", "description") and not value:
+            setattr(token, key, None)
+        elif value is not None:
             if key == "rights" and isinstance(value, Rights):
                 value = value.model_dump()
             setattr(token, key, value)

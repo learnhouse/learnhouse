@@ -114,6 +114,14 @@ class TestUsergroupsRouter:
             response = await client.request("DELETE", "/api/v1/usergroups/1/remove_resources?resource_uuids=course_test")
         assert response.status_code == 200
 
+    async def test_create_without_org_id_is_a_validation_error(self, client):
+        # Used to pass validation and fail building the row (500).
+        with patch("src.routers.usergroups.create_usergroup", new_callable=AsyncMock) as svc:
+            response = await client.post("/api/v1/usergroups/", json={"name": "UG", "description": ""})
+        assert response.status_code == 422
+        assert response.json()["detail"][0]["loc"] == ["body", "org_id"]
+        svc.assert_not_awaited()
+
     async def test_add_users_rejects_non_numeric_ids(self, client):
         # Non-numeric user_ids must be rejected with 422 before reaching the
         # service (which does int(uid) and would otherwise 500).

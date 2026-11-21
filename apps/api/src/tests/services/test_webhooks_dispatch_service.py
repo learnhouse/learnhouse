@@ -261,6 +261,37 @@ class TestWebhookDispatchHelpers:
         mock_error.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_a_slow_endpoint_does_not_hold_back_the_others(self, db, org, admin_user):
+        import asyncio
+
+        await _make_endpoint(db, org, admin_user, webhook_uuid="slow", events=["course_created"])
+        await _make_endpoint(db, org, admin_user, webhook_uuid="fast", events=["course_created"])
+        fast_done = asyncio.Event()
+        failures = []
+
+        async def deliver(ep, *args):
+            if ep.webhook_uuid == "slow":
+                # Waits on the other endpoint: deadlocks if delivery is serial.
+                try:
+                    await asyncio.wait_for(fast_done.wait(), timeout=2)
+                except asyncio.TimeoutError:
+                    failures.append("fast endpoint waited for the slow one")
+                raise RuntimeError("slow endpoint gave up")
+            fast_done.set()
+
+        with patch(
+            "src.services.webhooks.dispatch._async_session_factory",
+            _make_fake_session_factory(db),
+        ), patch(
+            "src.services.webhooks.dispatch._deliver_to_endpoint", side_effect=deliver,
+        ), patch("src.services.webhooks.dispatch.logger.error") as mock_error:
+            await dispatch._deliver_webhooks("course_created", org.id, {}, None)
+
+        assert failures == []
+        assert fast_done.is_set()
+        mock_error.assert_called_once()
+
+    @pytest.mark.asyncio
     async def test_deliver_webhooks_logs_warning_on_session_failure(self):
         broken_factory = MagicMock(side_effect=RuntimeError("boom"))
 
