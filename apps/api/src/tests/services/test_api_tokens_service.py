@@ -518,6 +518,7 @@ class TestUpdateApiTokenRightsObject:
         # (not a dict), which triggers the isinstance(value, Rights) branch at line 287.
         fake_token_data = MagicMock()
         fake_token_data.rights = rights_obj
+        fake_token_data.name = None
         fake_token_data.expires_at = None
         fake_token_data.model_dump.return_value = {"rights": rights_obj}
 
@@ -547,3 +548,86 @@ class TestUpdateApiTokenRightsObject:
         # The returned rights may be re-parsed as Rights or dict depending on Pydantic union
         # handling; what matters is the function didn't raise and the token was updated.
         assert updated is not None
+
+
+class TestUpdateApiTokenValidation:
+    """PUT /api-tokens/{uuid}: same name rules as creation, null clears the
+    optional fields, revoked tokens stay untouched."""
+
+    async def _update(self, mock_request, db, org, admin_user, token_uuid, payload):
+        with patch(
+            "src.services.api_tokens.api_tokens.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.api_tokens.api_tokens.require_org_role_permission"
+        ):
+            return await update_api_token(
+                mock_request, db, org.id, token_uuid, APITokenUpdate(**payload), admin_user
+            )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "name,status",
+        [("   ", 400), ("x" * 101, 400), ("Taken", 409)],
+    )
+    async def test_name_rules(self, mock_request, db, org, admin_user, name, status):
+        await _make_token(db, org, token_uuid="apitoken_taken", name="Taken", token_prefix="lh_taken")
+        token = await _make_token(db, org, token_uuid="apitoken_edit", name="Edit me", token_prefix="lh_edit")
+
+        with pytest.raises(HTTPException) as exc:
+            await self._update(mock_request, db, org, admin_user, token.token_uuid, {"name": name})
+        assert exc.value.status_code == status
+
+    @pytest.mark.asyncio
+    async def test_name_is_trimmed_and_may_reuse_a_revoked_name(self, mock_request, db, org, admin_user):
+        await _make_token(db, org, token_uuid="apitoken_old", name="Reused", token_prefix="lh_old", is_active=False)
+        token = await _make_token(db, org, token_uuid="apitoken_edit", name="Edit me", token_prefix="lh_edit")
+
+        updated = await self._update(mock_request, db, org, admin_user, token.token_uuid, {"name": "  Reused  "})
+        assert updated.name == "Reused"
+        # Keeping its own name is not a conflict.
+        again = await self._update(mock_request, db, org, admin_user, token.token_uuid, {"name": "Reused"})
+        assert again.name == "Reused"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("cleared", [None, ""])
+    async def test_null_clears_expiry_and_description(self, mock_request, db, org, admin_user, cleared):
+        token = await _make_token(
+            db, org, token_uuid="apitoken_exp", token_prefix="lh_exp",
+            expires_at="2020-01-01T00:00:00", description="old",
+        )
+
+        updated = await self._update(
+            mock_request, db, org, admin_user, token.token_uuid,
+            {"expires_at": cleared, "description": cleared},
+        )
+        assert updated.expires_at is None
+        assert updated.description is None
+
+    @pytest.mark.asyncio
+    async def test_omitted_fields_are_left_alone(self, mock_request, db, org, admin_user):
+        token = await _make_token(
+            db, org, token_uuid="apitoken_keep", token_prefix="lh_keep",
+            expires_at="2030-01-01T00:00:00", description="keep",
+        )
+
+        updated = await self._update(mock_request, db, org, admin_user, token.token_uuid, {"name": None})
+        assert updated.name == "Test Token"
+        assert updated.expires_at == "2030-01-01T00:00:00"
+        assert updated.description == "keep"
+
+    @pytest.mark.asyncio
+    async def test_revoked_token_cannot_be_updated(self, mock_request, db, org, admin_user):
+        token = await _make_token(db, org, token_uuid="apitoken_gone", token_prefix="lh_gone", is_active=False)
+
+        with pytest.raises(HTTPException) as exc:
+            await self._update(mock_request, db, org, admin_user, token.token_uuid, {"name": "Back"})
+        assert exc.value.status_code == 400
+
+    def test_description_is_capped_at_the_column_size(self):
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            APITokenCreate(name="t", description="x" * 501)
+        with pytest.raises(ValidationError):
+            APITokenUpdate(description="x" * 501)
