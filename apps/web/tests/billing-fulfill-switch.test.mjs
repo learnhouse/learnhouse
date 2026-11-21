@@ -71,6 +71,8 @@ function subscription(overrides = {}) {
   return {
     id: "sub_test",
     status: "active",
+    // Listed through the caller's own customer, so they are the payer.
+    customer: "cus_test",
     created: 1,
     metadata: { org_id: "4242", plan: "pro", billing: "monthly" },
     items: { data: [{ id: "si_test", price: { id: "price_test_pro" } }] },

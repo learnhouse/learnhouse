@@ -292,6 +292,19 @@ export async function getActiveSubscription(email: string, orgId: string) {
   return findOrgPlanSubscription(email, orgId);
 }
 
+// Finding the org's subscription by org id shows admins one another admin pays
+// for, but changing or cancelling it would act on that admin's card: only the
+// payer (any of the customers on their email) may do that.
+async function assertPaidByCaller(email: string, subscription: any): Promise<void> {
+  const customerId =
+    typeof subscription?.customer === "string" ? subscription.customer : subscription?.customer?.id;
+  if (customerId && (await listCustomerIdsByEmail(email)).includes(customerId)) return;
+  throw Object.assign(
+    new Error("This subscription is paid by another admin of this organization. Ask them to change it."),
+    { status: 403 },
+  );
+}
+
 export async function switchSubscriptionPlan(
   email: string,
   orgId: string,
@@ -305,6 +318,7 @@ export async function switchSubscriptionPlan(
 
   const subscription = await getActiveSubscription(email, orgId);
   if (!subscription) throw new Error("No active subscription found for this organization");
+  await assertPaidByCaller(email, subscription);
 
   const oldPlan = subscription.metadata.plan || "free";
 
@@ -458,6 +472,7 @@ export async function switchSubscriptionPlan(
 export async function cancelSubscription(email: string, orgId: string) {
   const subscription = await getActiveSubscription(email, orgId);
   if (!subscription) throw new Error("No active subscription found for this organization");
+  await assertPaidByCaller(email, subscription);
 
   // Cancelling also drops any downgrade scheduled earlier.
   await releaseSchedule(subscription);

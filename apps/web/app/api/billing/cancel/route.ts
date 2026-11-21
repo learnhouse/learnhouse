@@ -30,6 +30,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, cancelAtPeriodEnd: canceled?.cancel_at_period_end ?? true });
   } catch (err: any) {
     console.error("[billing/cancel] failed:", err);
-    return NextResponse.json({ error: err?.message ?? "Cancellation failed" }, { status: 500 });
+    return NextResponse.json({ error: err?.message ?? "Cancellation failed" }, { status: err?.status === 403 ? 403 : 500 });
   }
 }

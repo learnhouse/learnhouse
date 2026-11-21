@@ -86,6 +86,7 @@ function sub(id, overrides = {}) {
     id,
     status: "active",
     created: 1,
+    customer: "cus_owner",
     metadata: { org_id: "4242", plan: "pro", billing: "monthly" },
     items: { data: [{ id: `si_${id}`, price: { id: "price_test_pro" } }] },
     ...overrides,
@@ -164,6 +165,10 @@ describe("findOrgEntitledPlanSubscription", () => {
 });
 
 describe("a downgrade scheduled earlier", () => {
+  beforeEach(() => {
+    customersByEmail = { "owner@example.test": ["cus_owner"] };
+  });
+
   function scheduled(schedule) {
     return sub("sub_sched", { metadata: { org_id: "4242", plan: "standard", billing: "monthly" }, schedule });
   }
@@ -187,6 +192,30 @@ describe("a downgrade scheduled earlier", () => {
     searchResults = [sub("sub_plain")];
     await cancelSubscription("owner@example.test", "4242");
     expect(releases).toHaveLength(0);
+    expect(calls).toEqual(["update"]);
+  });
+});
+
+describe("changing a subscription another admin pays for", () => {
+  test("switching is refused with 403 and nothing is changed", async () => {
+    searchResults = [sub("sub_theirs")];
+    customersByEmail = { "other-admin@example.test": ["cus_other"] };
+    const err = await switchSubscriptionPlan("other-admin@example.test", "4242", "standard", "monthly").catch((e) => e);
+    expect(err.status).toBe(403);
+    expect(calls).toEqual([]);
+  });
+
+  test("cancelling is refused with 403 and nothing is changed", async () => {
+    searchResults = [sub("sub_theirs", { customer: { id: "cus_owner" } })];
+    const err = await cancelSubscription("other-admin@example.test", "4242").catch((e) => e);
+    expect(err.status).toBe(403);
+    expect(calls).toEqual([]);
+  });
+
+  test("the payer can still cancel", async () => {
+    searchResults = [sub("sub_mine", { customer: { id: "cus_owner" } })];
+    customersByEmail = { "owner@example.test": ["cus_owner"] };
+    await cancelSubscription("owner@example.test", "4242");
     expect(calls).toEqual(["update"]);
   });
 });
