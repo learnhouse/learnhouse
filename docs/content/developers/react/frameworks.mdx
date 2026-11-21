@@ -50,7 +50,8 @@ const lh = createClient({
 export default async function LessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const activity = await lh.activities.get(id)
-  // Media blocks need the course uuid. Skip this call if you already store it.
+  // Media blocks need the org and course uuids. Skip these calls if you already store them.
+  const org = await lh.orgs.get(process.env.LEARNHOUSE_ORG_SLUG!)
   const course = await lh.GET('/api/v1/courses/id/{course_id}', {
     params: { path: { course_id: activity.course_id! } },
   })
@@ -59,6 +60,7 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
     <LearnHouseActivity
       baseUrl={process.env.NEXT_PUBLIC_LEARNHOUSE_URL!}
       activity={activity}
+      orgId={org.org_uuid}
       courseId={course.course_uuid}
     />
   )

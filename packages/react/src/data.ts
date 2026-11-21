@@ -36,20 +36,21 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
   const retry = useCallback(() => setAttempt((n) => n + 1), [])
 
   const local = activityProp !== undefined || content !== undefined
-  // A local activity still needs its course (for media URLs: they carry the
-  // org and course uuids) unless the caller passed orgId. Without the org,
-  // blocks would request content/orgs/undefined/... until the course loads.
+  // A local activity renders at once (so a server render contains the
+  // lesson). Media URLs carry the org and course uuids: pass orgId to have
+  // them right from the first render; without courseId the course is
+  // resolved from the activity's course_id in the background.
   const propCourseId = (activityProp as any)?.course_id ?? null
-  const needsCourse = local && !!client && !orgId && (!!courseId || (activityProp !== undefined && propCourseId != null))
+  const resolveCourse = local && !!client && !courseId && activityProp !== undefined && propCourseId != null
   const [state, setState] = useState<{ status: Status; activity: any; course: any; error: Error | null }>({
-    status: local && !needsCourse ? 'ready' : 'loading',
+    status: local ? 'ready' : 'loading',
     activity: null,
     course: null,
     error: null,
   })
 
   useEffect(() => {
-    if (local && !courseId && !needsCourse) return
+    if (local && !courseId && !resolveCourse) return
     if (!client) {
       setState({ status: 'error', activity: null, course: null, error: new Error('Pass `baseUrl`, or render inside <LearnHouseProvider>') })
       return
@@ -61,7 +62,7 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
 
     const controller = new AbortController()
     const signal = controller.signal
-    setState((s) => ({ ...s, status: local && !needsCourse ? s.status : 'loading', error: null }))
+    setState((s) => ({ ...s, status: local ? s.status : 'loading', error: null }))
 
     ;(async () => {
       // With a course uuid, the course and the activity load in parallel.
@@ -97,7 +98,7 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
       })
 
     return () => controller.abort()
-  }, [client, local, needsCourse, propCourseId, activityId, activityName, courseId, attempt])
+  }, [client, local, resolveCourse, propCourseId, activityId, activityName, courseId, attempt])
 
   const activity = useMemo<LearnHouseActivityData | null>(() => {
     let base: any = state.activity
