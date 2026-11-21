@@ -63,7 +63,11 @@ async def get_calendar_events(
     seen: set[str] = set()
     for key, source in registered_sources().items():
         try:
-            produced = await source(ctx)
+            # A savepoint per source: a SQL error in one rolls back only its
+            # own work, so the shared session stays usable for the next
+            # source instead of raising PendingRollbackError for all of them.
+            async with db_session.begin_nested():
+                produced = await source(ctx)
         except HTTPException:
             raise
         except Exception:

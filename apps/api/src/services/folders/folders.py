@@ -395,6 +395,25 @@ async def _build_breadcrumbs(db_session: AsyncSession, folder: Folder) -> List[F
     return crumbs
 
 
+async def _item_counts(db_session: AsyncSession, folder_ids: List[int]) -> dict[int, int]:
+    """Sub-folders + leaf content per folder, in one grouped query per kind
+    (not two COUNTs per folder). Folders with nothing map to 0."""
+    from sqlalchemy import func
+
+    counts = {folder_id: 0 for folder_id in folder_ids}
+    if not folder_ids:
+        return counts
+    for column in (Folder.parent_folder_id, FolderContent.folder_id):
+        rows = (
+            await db_session.execute(
+                select(column, func.count()).where(column.in_(folder_ids)).group_by(column)
+            )
+        ).all()
+        for folder_id, count in rows:
+            counts[folder_id] += int(count)
+    return counts
+
+
 async def _folder_to_read(
     db_session: AsyncSession,
     folder: Folder,
@@ -403,27 +422,18 @@ async def _folder_to_read(
     viewer_id: Optional[int] = None,
     request: Optional[Request] = None,
     current_user=None,
+    total_items: Optional[int] = None,
 ) -> FolderRead:
-    from sqlalchemy import func
-
     subfolders: List[FolderRead] = []
     items: List[FolderContentItem] = []
     breadcrumbs: List[FolderBreadcrumb] = []
 
-    # Always compute a lightweight total count (sub-folders + leaf content) so
+    # Always carry a lightweight total count (sub-folders + leaf content) so
     # cards show the right number even for nested folders rendered without
-    # their children loaded.
-    sub_count = (
-        await db_session.execute(
-            select(func.count()).select_from(Folder).where(Folder.parent_folder_id == folder.id)
-        )
-    ).scalar() or 0
-    content_count = (
-        await db_session.execute(
-            select(func.count()).select_from(FolderContent).where(FolderContent.folder_id == folder.id)
-        )
-    ).scalar() or 0
-    total_items = int(sub_count) + int(content_count)
+    # their children loaded. Callers rendering many folders pass it in from
+    # one batched _item_counts call.
+    if total_items is None:
+        total_items = (await _item_counts(db_session, [folder.id]))[folder.id]
 
     if with_children:
         sort_mode = await _get_folders_sort_mode(db_session, folder.org_id)
@@ -433,6 +443,7 @@ async def _folder_to_read(
         sub_rows = (await db_session.execute(sub_stmt)).scalars().all()
         if current_user is not None and viewer_id is not None:
             await prime_resource_access(request, db_session, current_user, sub_rows, "folder_uuid")
+        visible_subs = []
         for sub in sub_rows:
             if not include_private and not sub.public:
                 continue
@@ -442,8 +453,14 @@ async def _folder_to_read(
                 and not await _can_read(request, current_user, db_session, sub.folder_uuid)
             ):
                 continue
+            visible_subs.append(sub)
+        sub_counts = await _item_counts(db_session, [sub.id for sub in visible_subs])
+        for sub in visible_subs:
             subfolders.append(
-                await _folder_to_read(db_session, sub, include_private, with_children=False)
+                await _folder_to_read(
+                    db_session, sub, include_private, with_children=False,
+                    total_items=sub_counts[sub.id],
+                )
             )
 
         content_rows = (

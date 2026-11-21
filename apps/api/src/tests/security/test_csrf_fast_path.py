@@ -59,3 +59,26 @@ def test_writes_are_still_checked():
     client.cookies.set(JWT_COOKIE_NAME, "t")
     assert client.post("/x", headers={"origin": "https://evil.example"}).status_code == 403
     assert client.post("/x", headers={"origin": "https://good.example"}).text == "ok"
+
+
+def test_mcp_paths_skip_dispatch():
+    """POST /mcp may stream SSE and is bearer-only: it never enters
+    BaseHTTPMiddleware, even with a cookie and a foreign Origin."""
+    app = Starlette(routes=[
+        Route("/mcp", _ok, methods=["POST"]),
+        Route("/mcp/platform", _ok, methods=["POST"]),
+        Route("/mcpx", _ok, methods=["POST"]),
+    ])
+    app.add_middleware(CSRFProtectionMiddleware)
+    with patch("src.security.csrf.get_learnhouse_config", return_value=_config()), patch(
+        "src.core.middleware.cors.get_learnhouse_config", return_value=_config()
+    ):
+        app.middleware_stack = app.build_middleware_stack()
+    client = TestClient(app)
+    client.cookies.set(JWT_COOKIE_NAME, "t")
+    evil = {"origin": "https://evil.example"}
+    with patch.object(CSRFProtectionMiddleware, "dispatch", side_effect=AssertionError("dispatch ran")):
+        assert client.post("/mcp", headers=evil).text == "ok"
+        assert client.post("/mcp/platform", headers=evil).text == "ok"
+    # A lookalike path is still checked.
+    assert client.post("/mcpx", headers=evil).status_code == 403

@@ -201,10 +201,19 @@ class TestPendingAndComplete:
         assert response.json() == {"fields": []}
 
     @pytest.mark.asyncio
-    async def test_pending_requires_membership(self, client, db, org):
+    async def test_pending_is_empty_for_non_members(self, client, db, org):
+        # The web app calls this for any signed-in visitor: a non-member gets
+        # an empty list, not a 403, and never sees the org's fields.
+        await _make_config(db, org)
+        with patch("src.services.orgs.orgs.rbac_check", new_callable=AsyncMock):
+            await client.put(
+                f"/api/v1/orgs/{org.id}/config/signup-fields",
+                json={"fields": [TEXT_FIELD]},
+            )
         with patch("src.security.org_auth.is_org_member", return_value=False):
             response = await client.get(f"/api/v1/orgs/{org.id}/signup-fields/pending")
-        assert response.status_code == 403
+        assert response.status_code == 200
+        assert response.json() == {"fields": []}
 
     @pytest.mark.asyncio
     async def test_complete_stores_answers_and_clears_pending(

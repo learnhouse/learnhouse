@@ -157,3 +157,32 @@ def test_principal_from_request_fallbacks():
         assert principal_from_request(SimpleNamespace(scope={"state": "odd"})) is principal
     finally:
         current_mcp_principal.reset(token)
+
+
+async def test_non_utf8_header_bytes_do_not_crash(config, session_factory):
+    """Only Authorization is read, as latin-1: a stray 0xf3 in another header
+    must not raise UnicodeDecodeError (a 500)."""
+    inner = _Inner()
+    app = MCPAuthMiddleware(inner)
+    sent = []
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message):
+        sent.append(message)
+
+    scope = {
+        "type": "http", "method": "POST", "path": "/mcp", "scheme": "http",
+        "server": ("api.test", 80), "query_string": b"", "root_path": "",
+        "headers": [
+            (b"host", b"api.test"),
+            (b"user-agent", b"Agent \xf3"),
+            (b"Authorization", b"Bearer lh_abc"),
+        ],
+    }
+    token_user = APITokenUser(org_id=5, token_name="CI", rights={})
+    with patch.object(mcp_auth, "validate_api_token", new_callable=AsyncMock, return_value=token_user):
+        await app(scope, receive, send)
+    assert sent[0]["status"] == 200
+    assert inner.seen[0][0].org_id == 5

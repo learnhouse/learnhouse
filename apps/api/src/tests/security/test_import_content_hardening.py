@@ -392,6 +392,15 @@ class TestImportExtensionAllowlist:
         with patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"):
             assert await import_service._org_may_host_scorm(org.id, db) is False
 
+    async def test_plan_lookup_error_may_not_host_scorm_on_saas(self, db, org):
+        from fastapi import HTTPException
+
+        with patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"), patch(
+            "src.services.courses.transfer.import_service.get_org_plan",
+            side_effect=HTTPException(status_code=404, detail="gone"),
+        ):
+            assert await import_service._org_may_host_scorm(org.id, db) is False
+
     async def test_block_file_with_unsafe_extension_is_dropped(
         self, db, org, course, chapter, tmp_path, monkeypatch
     ):

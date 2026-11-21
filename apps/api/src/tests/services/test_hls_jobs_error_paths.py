@@ -109,7 +109,7 @@ async def test_transcode_activity_succeeds_when_redis_writes_fail(monkeypatch):
     monkeypatch.setattr(hls_jobs, "_resolve_source", _aret(
         {"org_uuid": "O", "course_uuid": "C", "filename": "v.mp4"}
     ))
-    monkeypatch.setattr(hls_jobs, "_fetch_source", lambda src, dst: True)
+    monkeypatch.setattr(hls_jobs, "_download_source", lambda src, dst: hls_jobs.SOURCE_OK)
     monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", _aret(
         {"master": "master.m3u8", "renditions": ["480p"], "thumbnails": None}
     ))
@@ -150,7 +150,7 @@ async def test_transcode_activity_holds_and_releases_its_lease(monkeypatch):
     monkeypatch.setattr(hls_jobs, "_resolve_source", _aret(
         {"org_uuid": "O", "course_uuid": "C", "filename": "v.mp4"}
     ))
-    monkeypatch.setattr(hls_jobs, "_fetch_source", lambda src, dst: True)
+    monkeypatch.setattr(hls_jobs, "_download_source", lambda src, dst: hls_jobs.SOURCE_OK)
     monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", _aret(
         {"master": "master.m3u8", "renditions": ["480p"], "thumbnails": None}
     ))
@@ -197,7 +197,7 @@ async def test_transcode_block_unsupported_source_is_terminal(monkeypatch):
     monkeypatch.setattr(hls_jobs, "_resolve_block_source", _aret(
         {"org_uuid": "o", "course_uuid": "c", "activity_uuid": "a", "filename": "v.mp4"}
     ))
-    monkeypatch.setattr(hls_jobs, "_fetch_source", lambda *a: True)
+    monkeypatch.setattr(hls_jobs, "_download_source", lambda *a: hls_jobs.SOURCE_OK)
     monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", _aret({"unsupported": "no_video_stream"}))
     uploads = []
     monkeypatch.setattr(hls_jobs, "_upload_output", lambda *a: uploads.append(a))
