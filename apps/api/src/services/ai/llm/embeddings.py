@@ -52,6 +52,24 @@ def _resolve_embedding_provider(cfg) -> str:
     return (getattr(cfg, "provider", None) or "").strip().lower() or DEFAULT_PROVIDER
 
 
+def embeddings_configured() -> bool:
+    """Whether ``build_embedding_model`` has the credentials it needs. Mirrors
+    its provider resolution without building a client, so a self-host with no
+    AI key can skip embedding work instead of failing it."""
+    cfg = get_learnhouse_config().ai_config
+    prov = _resolve_embedding_provider(cfg)
+    main_provider = (getattr(cfg, "provider", None) or "").strip().lower() or DEFAULT_PROVIDER
+    api_key = getattr(cfg, "api_key", None)
+    gemini_key = getattr(cfg, "gemini_api_key", None)
+    if prov in _GOOGLE_ALIASES:
+        return bool(gemini_key or (api_key if main_provider in _GOOGLE_ALIASES else None))
+    if prov == "ollama":
+        return True
+    if prov in _OPENAI_ALIASES:
+        return bool(api_key)
+    return bool(gemini_key)
+
+
 def build_embedding_model() -> EmbeddingModel:
     """Build a Pydantic AI ``EmbeddingModel`` for the configured (embedding) provider."""
     cfg = get_learnhouse_config().ai_config

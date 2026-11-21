@@ -253,6 +253,9 @@ def test_send_email_drops_demo_recipients(monkeypatch):
 def test_send_email_still_delivers_to_real_recipients(monkeypatch):
     """The guard must not swallow ordinary transactional mail."""
     from src.services.email import transport as email_utils
+    from config.config import get_learnhouse_config
+
+    monkeypatch.setattr(get_learnhouse_config().mailing_config, "resend_api_key", "test-key")
 
     calls = []
     monkeypatch.setattr(
@@ -267,6 +270,27 @@ def test_send_email_still_delivers_to_real_recipients(monkeypatch):
     email_utils.send_message("real.person@example.com", "Subject", "<p>Body</p>")
     assert len(calls) == 1
 
+
+
+def test_send_email_without_any_provider_configured_does_not_call_resend(monkeypatch, caplog):
+    """A fresh self-host has no email settings: fail fast, no provider call."""
+    import logging
+
+    from fastapi import HTTPException
+
+    from config.config import get_learnhouse_config
+    from src.services.email import transport as email_utils
+
+    mailing = get_learnhouse_config().mailing_config
+    monkeypatch.setattr(mailing, "email_provider", "resend")
+    monkeypatch.setattr(mailing, "resend_api_key", None)
+    calls = []
+    monkeypatch.setattr(email_utils, "_send_email_resend", lambda *a, **k: calls.append(a))
+    with caplog.at_level(logging.WARNING), pytest.raises(HTTPException) as exc:
+        email_utils.send_message("real.person@example.com", "Reset", "<p>Body</p>")
+    assert exc.value.status_code == 503
+    assert calls == []
+    assert "Email is not configured" in caplog.text
 
 # ---------------------------------------------------------------------------
 # explore + nudges

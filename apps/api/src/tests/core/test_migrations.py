@@ -376,20 +376,98 @@ class TestPostgresOnlyParts:
         assert "SELECT pg_advisory_lock(:k)" in conn.statements
         assert "waiting" in caplog.text
 
-    def test_pgvector_missing_only_warns(self, caplog):
+    def test_pgvector_missing_only_warns(self, caplog, monkeypatch):
+        monkeypatch.setattr(migrations, "_pgvector_missing", False)
         engine = MagicMock()
         engine.dialect.name = "postgresql"
         engine.begin.side_effect = RuntimeError("no vector")
         with caplog.at_level(logging.WARNING):
-            migrations._ensure_extensions(engine)
+            assert migrations._ensure_extensions(engine) is False
         assert "pgvector extension not available" in caplog.text
+        assert migrations.pgvector_available() is False
 
-    def test_pgvector_created(self):
+    def test_pgvector_created(self, monkeypatch):
+        monkeypatch.setattr(migrations, "_pgvector_missing", True)
         engine = MagicMock()
         engine.dialect.name = "postgresql"
-        migrations._ensure_extensions(engine)
+        assert migrations._ensure_extensions(engine) is True
         executed = engine.begin.return_value.__enter__.return_value.execute.call_args.args[0]
         assert "CREATE EXTENSION IF NOT EXISTS vector" in str(executed)
+        assert migrations.pgvector_available() is True
+
+    def test_non_postgres_has_no_extension_step(self):
+        engine = MagicMock()
+        engine.dialect.name = "sqlite"
+        assert migrations._ensure_extensions(engine) is True
+        engine.begin.assert_not_called()
+
+
+def _models_with_vector() -> MetaData:
+    from pgvector.sqlalchemy import Vector
+
+    md = _models()
+    Table(
+        "embedding", md,
+        Column("id", Integer, primary_key=True),
+        Column("widget_id", Integer),
+        Column("vec", Vector(3)),
+        Index("ix_embedding_widget", "widget_id"),
+    )
+    return md
+
+
+class TestWithoutPgvector:
+    """A database without pgvector still gets every other table."""
+
+    @pytest.fixture(autouse=True)
+    def _no_pgvector(self, monkeypatch):
+        monkeypatch.setattr(migrations, "_ensure_extensions", lambda engine: False)
+
+    def test_vector_tables_are_found(self):
+        assert migrations._vector_tables(_models_with_vector()) == {"embedding"}
+
+    def test_empty_database_skips_the_vector_table(self, db_url):
+        report = ensure_schema(db_url, metadata=_models_with_vector())
+        assert report.state == "empty"
+        tables = set(_tables(db_url))
+        assert {"widget", "gadget"} <= tables
+        assert "embedding" not in tables
+
+    def test_unstamped_and_stamped_paths_skip_it_too(self, db_url):
+        ensure_schema(db_url, metadata=_models())
+        engine = create_engine(db_url)
+        with engine.begin() as c:
+            c.execute(text("DROP TABLE alembic_version"))
+        engine.dispose()
+        report = ensure_schema(db_url, metadata=_models_with_vector())
+        assert report.state == "unstamped" and report.reconciled == []
+        with patch.object(migrations.command, "upgrade"):
+            report = ensure_schema(db_url, metadata=_models_with_vector())
+        assert report.state == "stamped" and report.reconciled == []
+        assert "embedding" not in _tables(db_url)
+
+    def test_reconcile_leaves_excluded_columns_and_indexes(self, db_url):
+        from pgvector.sqlalchemy import Vector
+
+        engine = create_engine(db_url)
+        with engine.begin() as c:
+            c.execute(text("CREATE TABLE embedding (id INTEGER PRIMARY KEY, widget_id INTEGER)"))
+        md = MetaData()
+        Table(
+            "embedding", md,
+            Column("id", Integer, primary_key=True),
+            Column("widget_id", Integer),
+            Column("vec", Vector(3)),
+            Index("ix_embedding_widget", "widget_id"),
+        )
+        with engine.begin() as c:
+            applied, _ = reconcile(c, md, exclude_tables=frozenset({"embedding"}))
+        engine.dispose()
+        assert applied == []
+
+    @pytest.mark.parametrize("diff", [["modify_type"], ("remove_table",), ("remove_table", MagicMock())])
+    def test_diff_table_of_other_kinds(self, diff):
+        assert migrations._diff_table(diff) is None
 
 
 class TestStartupHook:

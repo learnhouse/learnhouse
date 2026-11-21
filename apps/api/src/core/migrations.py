@@ -152,24 +152,57 @@ def _migration_lock(connection: Connection) -> Iterator[None]:
         connection.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": ADVISORY_LOCK_KEY})
 
 
-def _ensure_extensions(engine) -> None:
+# Set once a startup finds the database without pgvector; AI search then
+# neither creates nor indexes into its vector table.
+_pgvector_missing = False
+
+
+def pgvector_available() -> bool:
+    """False when this process found the database without pgvector."""
+    return not _pgvector_missing
+
+
+def _ensure_extensions(engine) -> bool:
+    """Create the pgvector extension. Returns whether it is available."""
+    global _pgvector_missing
     if engine.dialect.name != "postgresql":
-        return
+        return True
     try:
         with engine.begin() as connection:
             connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     except Exception as exc:
+        _pgvector_missing = True
         logger.warning(
             "pgvector extension not available; RAG features will be disabled. "
             "Install pgvector on your PostgreSQL server to enable the course chatbot. Error: %s",
             exc,
         )
+        return False
+    _pgvector_missing = False
+    return True
 
 
-def reconcile(connection: Connection, metadata: MetaData, *, indexes: bool = True) -> tuple[list[str], list[str]]:
+def _vector_tables(metadata: MetaData) -> set[str]:
+    """Tables with a pgvector column; they can't exist without the extension."""
+    from pgvector.sqlalchemy import Vector
+
+    return {
+        table.name for table in metadata.tables.values()
+        if any(isinstance(column.type, Vector) for column in table.columns)
+    }
+
+
+def reconcile(
+    connection: Connection,
+    metadata: MetaData,
+    *,
+    indexes: bool = True,
+    exclude_tables: frozenset[str] = frozenset(),
+) -> tuple[list[str], list[str]]:
     """Add the tables, columns (and indexes) the models have and the database
     lacks. Returns (applied, skipped) descriptions; anything that could lose
-    data (drops, type or nullability changes) is only reported."""
+    data (drops, type or nullability changes) is only reported. Tables in
+    ``exclude_tables`` are left alone."""
     diffs = compare_metadata(MigrationContext.configure(connection), metadata)
     operations = Operations(MigrationContext.configure(connection))
     applied: list[str] = []
@@ -179,6 +212,8 @@ def reconcile(connection: Connection, metadata: MetaData, *, indexes: bool = Tru
     ordered = sorted(diffs, key=lambda d: 0 if isinstance(d, tuple) and d[0] == "add_table" else 1)
     for diff in ordered:
         kind = diff[0] if isinstance(diff, tuple) else None
+        if exclude_tables and _diff_table(diff) in exclude_tables:
+            continue
         if kind == "add_table":
             table = diff[1]
             table.create(connection, checkfirst=True)
@@ -210,6 +245,20 @@ def reconcile(connection: Connection, metadata: MetaData, *, indexes: bool = Tru
             # nullability differences are reported, never applied.
             skipped.append(str(diff)[:200])
     return applied, skipped
+
+
+def _diff_table(diff) -> Optional[str]:
+    """Name of the table an autogenerate diff is about, when it says."""
+    if not isinstance(diff, tuple) or len(diff) < 2:
+        return None
+    kind, target = diff[0], diff[1]
+    if kind == "add_table":
+        return target.name
+    if kind == "add_index":
+        return target.table.name
+    if kind == "add_column":
+        return diff[2]
+    return None
 
 
 # Unique indexes the app relies on that migrations build concurrently: each
@@ -329,7 +378,7 @@ def ensure_schema(url: Optional[str] = None, *, metadata: Optional[MetaData] = N
     metadata = metadata if metadata is not None else load_models()
     engine = create_engine(sync_database_url(url), poolclass=NullPool)
     try:
-        _ensure_extensions(engine)
+        exclude = frozenset() if _ensure_extensions(engine) else frozenset(_vector_tables(metadata))
         heads = head_revisions()
         deferred: list[tuple[str, str, list[str]]] = []
         with engine.connect() as lock_connection, _migration_lock(lock_connection):
@@ -338,18 +387,22 @@ def ensure_schema(url: Optional[str] = None, *, metadata: Optional[MetaData] = N
                 has_tables = any(inspect(connection).has_table(name) for name in metadata.tables)
                 if not report.before and not has_tables:
                     report.state = "empty"
-                    metadata.create_all(connection)
+                    metadata.create_all(
+                        connection, tables=[t for t in metadata.sorted_tables if t.name not in exclude]
+                    )
                     command.stamp(alembic_config(connection), "heads")
                 elif not report.before:
                     report.state = "unstamped"
-                    report.reconciled, report.skipped = reconcile(connection, metadata)
+                    report.reconciled, report.skipped = reconcile(connection, metadata, exclude_tables=exclude)
                     command.stamp(alembic_config(connection), "heads")
                 else:
                     command.upgrade(alembic_config(connection, deferred), "heads")
                     # Safety net for a migration someone forgot. Indexes are
                     # left to migrations here: building one can lock a large
                     # table for a while on a live database.
-                    report.reconciled, report.skipped = reconcile(connection, metadata, indexes=False)
+                    report.reconciled, report.skipped = reconcile(
+                        connection, metadata, indexes=False, exclude_tables=exclude
+                    )
                 report.after = current_revisions(connection)
                 if report.after != heads:
                     raise SchemaMigrationError(f"database at {report.after} after migrating, expected {heads}")

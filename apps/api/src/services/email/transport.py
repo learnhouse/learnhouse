@@ -98,8 +98,16 @@ def send_message(
 
     if mailing.email_provider == "smtp":
         return _send_email_smtp(sender, to_addr, subject, body, mailing, headers, text)
-    else:
-        return _send_email_resend(sender, to_addr, subject, body, mailing, headers, text)
+    if not mailing.resend_api_key:
+        # Nothing configured (a fresh self-host): don't hand the address to a
+        # provider that can only refuse it.
+        logger.warning(
+            "Email is not configured; not sending %r. Set LEARNHOUSE_EMAIL_PROVIDER "
+            "with SMTP or Resend settings to enable it.",
+            subject,
+        )
+        raise HTTPException(status_code=503, detail="Email service temporarily unavailable")
+    return _send_email_resend(sender, to_addr, subject, body, mailing, headers, text)
 
 
 # Transient provider hiccups (read timeouts, connection resets, 5xx) usually

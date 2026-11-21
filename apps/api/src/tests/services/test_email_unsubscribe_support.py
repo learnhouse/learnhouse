@@ -137,7 +137,10 @@ class TestSendEmailHeaders:
         assert "List-Unsubscribe-Post: List-Unsubscribe=One-Click" in sent["message"]
 
     def test_send_email_forwards_headers_to_the_provider(self, monkeypatch):
+        from config.config import get_learnhouse_config
         from src.services.email import transport as email_utils
+
+        monkeypatch.setattr(get_learnhouse_config().mailing_config, "resend_api_key", "test-key")
 
         captured = {}
 
