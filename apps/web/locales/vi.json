@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Tính năng gói Standard",
           "description": "Bản tin có sẵn trên gói Standard trở lên. Hãy nâng cấp để gửi chiến dịch, chuỗi email chào mừng và cập nhật khóa học cho học viên qua email."
+        },
+        "peer_review": {
+          "title": "Tính năng Standard",
+          "description": "Đánh giá chéo chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để học viên đánh giá bài của nhau theo một bảng tiêu chí."
         }
       },
       "gate": {
@@ -380,6 +384,12 @@
           "note_3": "Việc cần làm cho thứ Sáu",
           "play_title": "Luyện tập",
           "play_question": "Hình ngũ giác có bao nhiêu cạnh?"
+        },
+        "peer_review": {
+          "title": "Học viên tiến bộ nhờ đánh giá lẫn nhau",
+          "b1": "Mỗi học viên đánh giá vài bạn cùng lớp theo bảng tiêu chí của bạn",
+          "b2": "Vòng luyện tập cho họ thấy bạn sẽ chấm như thế nào",
+          "b3": "Xem điểm gợi ý từ các bài đánh giá, bạn là người quyết định"
         }
       }
     },
@@ -7970,7 +7980,8 @@
             "scim": "Cấp phát SCIM",
             "audit_logs": "Nhật ký kiểm tra",
             "custom_domain": "Tên miền tùy chỉnh",
-            "remove_watermark": "Không có hình mờ LearnHouse"
+            "remove_watermark": "Không có hình mờ LearnHouse",
+            "peer_review": "Đánh giá đồng đẳng"
           }
         },
         "next_invoice_label": "Hóa đơn tiếp theo",
@@ -29367,7 +29378,9 @@
       "plan_downgraded": "Đã chuyển sang Miễn phí",
       "plan_restored": "Đã khôi phục gói",
       "payments_checkout_failing": "Thanh toán thất bại",
-      "invitation_accepted": "Lời mời đã được chấp nhận"
+      "invitation_accepted": "Lời mời đã được chấp nhận",
+      "peer_review_received": "Đã nhận nhận xét từ bạn học",
+      "peer_review_flagged": "Bài đánh giá chéo bị báo cáo"
     },
     "copy": {
       "assignment_graded": "Đã chấm điểm: {{assignment}}",
@@ -29430,7 +29443,9 @@
       "plan_downgraded": "Bạn đang dùng gói Miễn phí. Không có gì bị xóa",
       "plan_restored": "Chào mừng bạn quay lại {{plan}}",
       "payments_checkout_failing": "Học viên hiện không thể mua ({{count}} lượt thanh toán thất bại)",
-      "invitation_accepted": "{{actor}} đã chấp nhận lời mời của bạn"
+      "invitation_accepted": "{{actor}} đã chấp nhận lời mời của bạn",
+      "peer_review_received": "Nhận xét mới từ bạn học về {{assignment}}",
+      "peer_review_flagged": "{{actor}} đã báo cáo một bài đánh giá chéo trong {{assignment}}"
     },
     "routing": {
       "short": "Ai nhận thông báo",
@@ -29699,5 +29714,499 @@
     "copied_link": "Đã sao chép liên kết ứng dụng",
     "copy_failed": "Không thể sao chép hình ảnh. Hãy thử Tải xuống.",
     "download_failed": "Không thể lưu hình ảnh."
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Tiêu chí {{n}}",
+      "points_short_one": "{{count}} điểm",
+      "points_short_other": "{{count}} điểm",
+      "prompt_strength": "Điểm làm tốt",
+      "prompt_suggestion": "Một điểm cần cải thiện và cách làm",
+      "prompt_question": "Một câu hỏi cho tác giả"
+    },
+    "learner": {
+      "eyebrow": "Đánh giá chéo",
+      "card_title": "Nhận xét bài của bạn học và nhận phản hồi cho bài của mình",
+      "steps_label": "Các bước đánh giá chéo",
+      "step_self": "Tự đánh giá",
+      "step_practice": "Luyện tập",
+      "step_reviews": "Đánh giá bạn học",
+      "step_feedback": "Phản hồi của bạn",
+      "n_of_m": "{{n}}/{{m}}",
+      "done": "Xong",
+      "to_do": "Cần làm",
+      "locked": "Đã khóa",
+      "continue": "Tiếp tục",
+      "cancel": "Hủy",
+      "back": "Quay lại",
+      "retry": "Thử lại",
+      "optional": "Tùy chọn",
+      "saved": "Đã lưu",
+      "saving": "Đang lưu…",
+      "unsaved": "Thay đổi chưa lưu",
+      "not_saved": "Chưa lưu",
+      "feedback_count_one": "{{count}} đánh giá",
+      "feedback_count_other": "{{count}} đánh giá",
+      "reviews_due": "Hạn đánh giá {{date}}",
+      "reviews_closed_on": "Đã đóng đánh giá vào {{date}}",
+      "next_title": "Tiếp theo là đánh giá chéo",
+      "next_body_one": "Sau khi nộp bài, bạn sẽ đánh giá bài của {{count}} bạn học và nhận phản hồi cho bài của mình.",
+      "next_body_other": "Sau khi nộp bài, bạn sẽ đánh giá bài của {{count}} bạn học và nhận phản hồi cho bài của mình.",
+      "self_title": "Tự chấm bài của bạn",
+      "self_why": "Tự đánh giá trước giúp bạn dễ so sánh và áp dụng phản hồi của bạn học hơn.",
+      "self_done": "Đã lưu phần tự đánh giá",
+      "self_done_pct": "Đã lưu phần tự đánh giá: bạn tự chấm {{pct}}%",
+      "edit_self_review": "Sửa phần tự đánh giá",
+      "save_self_review": "Lưu phần tự đánh giá",
+      "self_saved_toast": "Đã lưu phần tự đánh giá",
+      "cal_title": "Vòng luyện tập",
+      "cal_why": "Chấm thử một bài mẫu giúp bạn hiểu cách giảng viên đọc thang chấm, nhờ đó đánh giá của bạn công bằng hơn.",
+      "cal_progress": "Bài mẫu {{current}}/{{total}}",
+      "cal_sample": "Bài mẫu luyện tập",
+      "cal_check": "So với giảng viên",
+      "cal_you": "Bạn",
+      "cal_instructor": "Giảng viên",
+      "cal_match": "Giống giảng viên",
+      "cal_off_by_one": "Lệch {{count}} điểm",
+      "cal_off_by_other": "Lệch {{count}} điểm",
+      "cal_why_title": "Vì sao giảng viên chấm như vậy",
+      "cal_next": "Bài mẫu tiếp theo",
+      "cal_all_done": "Luyện tập xong rồi. Bạn đã sẵn sàng đánh giá bạn học.",
+      "cal_none": "Hiện chưa có bài mẫu luyện tập.",
+      "go_to_reviews": "Đến phần đánh giá",
+      "go_to_practice": "Đến phần luyện tập",
+      "finish_practice_first": "Hãy hoàn thành vòng luyện tập trước.",
+      "reviews_title": "Đánh giá bạn học",
+      "reviews_why": "Đánh giá bài của người khác là lúc bạn học được nhiều nhất.",
+      "reviews_done_of": "Xong {{done}}/{{required}}",
+      "reviews_locked_practice": "Hoàn thành vòng luyện tập để bắt đầu đánh giá.",
+      "reviews_complete": "Bạn đã đánh giá xong hết. Cảm ơn bạn!",
+      "reviews_extra_hint": "Đánh giá thêm luôn được chào đón: nó giúp những bạn còn ít nhận xét.",
+      "start_review": "Bắt đầu đánh giá {{n}}/{{m}}",
+      "continue_review": "Tiếp tục đánh giá",
+      "review_another": "Đánh giá thêm bài khác",
+      "see_feedback": "Xem phản hồi của bạn",
+      "none_title": "Chưa có bài để đánh giá",
+      "none_body": "Khi có bạn nộp bài, chúng tôi sẽ gửi bài đó cho bạn. Lát nữa hãy quay lại nhé.",
+      "check_again": "Kiểm tra lại",
+      "your_helpfulness": "Bạn học chấm các đánh giá của bạn trung bình {{avg}}/5.",
+      "review_n_of_m": "Đánh giá {{n}}/{{m}}",
+      "extra_review": "Đánh giá thêm",
+      "classmate_work": "Bài của bạn học",
+      "work_of": "Bài của {{name}}",
+      "your_review": "Đánh giá của bạn",
+      "your_review_hint": "Chọn mức phù hợp nhất cho từng tiêu chí, rồi viết nhận xét tử tế và cụ thể.",
+      "review_already_submitted": "Bạn đã gửi đánh giá này rồi.",
+      "review_load_error": "Không tải được đánh giá này.",
+      "comments_heading": "Nhận xét",
+      "pick_a_level": "Chọn một mức",
+      "add_note": "Thêm ghi chú",
+      "note_label": "Ghi chú cho tiêu chí này (tùy chọn)",
+      "chars_remaining_one": "Cần thêm {{count}} ký tự",
+      "chars_remaining_other": "Cần thêm {{count}} ký tự",
+      "chars_ok_one": "{{count}} ký tự",
+      "chars_ok_other": "{{count}} ký tự",
+      "fix_before_submit": "Còn thiếu một số phần. Hãy kiểm tra các ô được đánh dấu.",
+      "save_draft": "Lưu bản nháp",
+      "submit_review": "Gửi đánh giá",
+      "drafts_autosave": "Bản nháp tự động lưu",
+      "draft_saved_toast": "Đã lưu bản nháp",
+      "review_submitted_toast": "Đã gửi đánh giá. Cảm ơn bạn!",
+      "no_answer": "Không có câu trả lời",
+      "no_tasks": "Bài nộp này chưa có gì để hiển thị.",
+      "chosen": "đã chọn",
+      "media_option": "Lựa chọn {{n}} (phương tiện)",
+      "download_file": "Tải tệp xuống",
+      "feedback_title": "Phản hồi của bạn",
+      "feedback_why": "So sánh điều bạn học thấy với góc nhìn của bạn, rồi quyết định sẽ sửa gì.",
+      "locked_reviews_one": "Hoàn thành thêm {{count}} đánh giá để mở phản hồi của bạn",
+      "locked_reviews_other": "Hoàn thành thêm {{count}} đánh giá để mở phản hồi của bạn",
+      "locked_generic": "Phản hồi của bạn chưa mở",
+      "locked_due": "Muộn nhất sẽ mở vào {{date}}.",
+      "unlocked_by_due_date": "Phản hồi của bạn đã mở vì đã qua hạn đánh giá.",
+      "no_feedback_title": "Chưa có phản hồi",
+      "no_feedback_body": "Đánh giá từ bạn học sẽ hiện ở đây khi có.",
+      "peer_score": "Điểm từ bạn học",
+      "peer_score_how_one": "Giá trị trung vị của {{count}} đánh giá từ bạn học, theo từng tiêu chí.",
+      "peer_score_how_other": "Giá trị trung vị của {{count}} đánh giá từ bạn học, theo từng tiêu chí.",
+      "score_needs_more_one": "Điểm từ bạn học sẽ hiện sau khi có {{count}} đánh giá.",
+      "score_needs_more_other": "Điểm từ bạn học sẽ hiện sau khi có {{count}} đánh giá.",
+      "reviewers_disagree": "Người đánh giá có ý kiến khác nhau",
+      "gap_title": "Bạn học so với phần tự đánh giá của bạn",
+      "gap_title_peers": "Điều bạn học nhìn thấy",
+      "legend_peers": "Bạn học (trung vị)",
+      "legend_you": "Bạn",
+      "gap_values": "Bạn học {{peers}} · Bạn {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: bạn học {{peers}}, bạn {{you}}, trên {{max}}",
+      "gap_aligned": "Bạn và các bạn học đồng ý với nhau",
+      "gap_self_higher": "Bạn tự chấm cao hơn các bạn học",
+      "gap_self_lower": "Bạn tự chấm thấp hơn các bạn học",
+      "reviews_received_one": "Đã nhận {{count}} đánh giá",
+      "reviews_received_other": "Đã nhận {{count}} đánh giá",
+      "reviewer_n": "Người đánh giá {{n}}",
+      "flagged": "Đã báo cáo",
+      "how_helpful": "Đánh giá này hữu ích đến đâu?",
+      "stars_n_one": "{{count}} sao",
+      "stars_n_other": "{{count}} sao",
+      "helpful_note_label": "Ghi chú cho người đánh giá",
+      "helpful_note_placeholder": "Điều gì đã giúp ích, hoặc điều gì sẽ giúp ích hơn? (tùy chọn)",
+      "save_note": "Lưu ghi chú",
+      "thanks_feedback": "Cảm ơn phản hồi của bạn",
+      "flag_link": "Báo cáo đánh giá này",
+      "flag_title": "Báo cáo đánh giá này",
+      "flag_body": "Giảng viên sẽ xem xét. Hãy cho họ biết vấn đề, ví dụ thiếu lịch sự, lạc đề hoặc để trống.",
+      "flag_reason": "Có vấn đề gì?",
+      "flag_submit": "Báo cáo",
+      "flag_sent": "Cảm ơn bạn. Giảng viên đã được thông báo.",
+      "plan_title": "Kế hoạch chỉnh sửa của bạn",
+      "plan_why": "Hãy ghi lại điều bạn sẽ sửa. Có kế hoạch thì phản hồi mới thành bài làm tốt hơn.",
+      "plan_placeholder": "Dựa trên phản hồi này, mình sẽ…",
+      "save_plan": "Lưu kế hoạch",
+      "plan_saved": "Đã lưu kế hoạch chỉnh sửa",
+      "error_generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+      "error_save": "Không lưu được bản nháp của bạn. Chúng tôi sẽ thử lại.",
+      "error_submit": "Không gửi được. Vui lòng thử lại.",
+      "error_download": "Không tải được tệp.",
+      "submission_changed": "Bạn học này đã bắt đầu lần làm mới, nên bài đánh giá này đã đóng. Bạn có thể đánh giá người khác.",
+      "answer_hidden": "Câu trả lời này được chấm tự động nên không nằm trong phần đánh giá.",
+      "retry_in_progress": "Bạn đã bắt đầu một lần làm mới. Hãy nộp bài để tiếp tục đánh giá bạn học."
+    },
+    "instructor": {
+      "tab": "Đánh giá chéo",
+      "setup": "Thiết lập",
+      "unknown_learner": "Học viên",
+      "retry": "Thử lại",
+      "error_title": "Không thể tải đánh giá chéo",
+      "error_description": "Đã xảy ra lỗi. Hãy kiểm tra kết nối và thử lại.",
+      "toggle": {
+        "title": "Đánh giá chéo",
+        "off_hint": "Đang tắt. Khi bật, sau khi nộp bài, học viên sẽ đánh giá bài của vài bạn cùng lớp theo bảng tiêu chí của bạn và nhận phản hồi từ các bạn.",
+        "on_hint": "Đang bật. Mỗi học viên đánh giá bạn cùng lớp sau khi nộp bài. Chọn một mẫu bảng tiêu chí bên dưới và lưu là xong."
+      },
+      "why": {
+        "title": "Vì sao đánh giá chéo hiệu quả",
+        "reviewers_learn": "Người viết đánh giá là người học được nhiều nhất, nên học viên nào cũng tham gia đánh giá.",
+        "three_reviewers": "Từ ba người đánh giá trở lên cho phản hồi đáng tin cậy gần bằng một giảng viên.",
+        "rubric_practice": "Bảng tiêu chí rõ ràng và một vòng luyện tập ngắn giúp đánh giá chính xác.",
+        "revise": "Phản hồi hữu ích nhất khi học viên lên kế hoạch cho những gì sẽ sửa tiếp theo.",
+        "dismiss": "Ẩn mẹo này"
+      },
+      "sections": {
+        "settings": "Cài đặt",
+        "rubric": "Bảng tiêu chí",
+        "prompts": "Câu hỏi nhận xét",
+        "practice": "Vòng luyện tập"
+      },
+      "settings": {
+        "reviewing_title": "Đánh giá",
+        "reviewing_description": "Mỗi học viên viết bao nhiêu bài đánh giá và ai thấy tên của ai.",
+        "reviews_required": "Số bài đánh giá mỗi học viên",
+        "reviews_required_hint": "3–5 bài cho phản hồi đáng tin cậy. Mỗi bài nộp cũng hướng tới nhận được chừng ấy bài đánh giá.",
+        "anonymity": "Tên",
+        "anonymity_hint": "Ẩn tên giúp đánh giá trung thực hơn.",
+        "require_reviews": "Đánh giá trước khi xem phản hồi",
+        "require_reviews_hint": "Học viên thấy phản hồi của mình khi đã hoàn thành phần đánh giá, hoặc sau hạn đánh giá.",
+        "due_date": "Hạn đánh giá",
+        "due_date_hint": "Không bắt buộc. Sau ngày này mọi người đều có thể xem phản hồi của mình.",
+        "clear": "Xóa",
+        "steps_title": "Bước bổ sung",
+        "steps_description": "Mỗi bước đều ngắn và giúp phản hồi hữu ích hơn.",
+        "self_review": "Tự đánh giá",
+        "self_review_hint": "Học viên tự chấm bài của mình trước, rồi so sánh với nhận xét của bạn cùng lớp.",
+        "practice": "Vòng luyện tập",
+        "practice_hint": "Học viên chấm một bài mẫu bạn chuẩn bị và xem bạn đã chấm thế nào. Cần ít nhất một bài mẫu.",
+        "helpfulness": "Đánh giá mức hữu ích",
+        "helpfulness_hint": "Học viên chấm từ 1 đến 5 sao cho mỗi bài đánh giá nhận được.",
+        "revision_plan": "Kế hoạch chỉnh sửa",
+        "revision_plan_hint": "Học viên ghi lại những gì sẽ sửa sau khi đọc phản hồi.",
+        "score_title": "Điểm",
+        "score_description": "Đánh giá chéo không bao giờ tự quyết định điểm.",
+        "min_reviews": "Số bài đánh giá cần để có điểm",
+        "min_reviews_hint": "Điểm đánh giá chéo hiện khi bài nộp có đủ số bài đánh giá này."
+      },
+      "anonymity": {
+        "double_blind": "Ẩn cả hai",
+        "double_blind_hint": "Không ai biết ai đã đánh giá ai",
+        "anonymous_reviewer": "Ẩn người đánh giá",
+        "anonymous_reviewer_hint": "Người đánh giá thấy tên tác giả",
+        "named": "Hiện tên",
+        "named_hint": "Mọi người thấy tên của cả hai bên"
+      },
+      "score_mode": {
+        "feedback_only": "Chỉ phản hồi",
+        "feedback_only_hint": "Đánh giá chỉ để học, không gợi ý điểm",
+        "suggest_grade": "Gợi ý điểm",
+        "suggest_grade_hint": "Bạn thấy trung vị điểm của bạn cùng lớp và có thể dùng khi chấm"
+      },
+      "rubric": {
+        "title": "Bảng tiêu chí",
+        "description": "Những gì người đánh giá chấm điểm. Mỗi tiêu chí có các mức từ tốt nhất đến yếu nhất.",
+        "template": "Bắt đầu từ mẫu",
+        "empty_title": "Chưa có bảng tiêu chí",
+        "empty_description": "Chọn một mẫu để bắt đầu chỉ với một cú nhấp, rồi chỉnh câu chữ cho phù hợp với bài tập.",
+        "add_criterion": "Thêm tiêu chí",
+        "remove_criterion": "Xóa tiêu chí",
+        "move_up": "Di chuyển lên",
+        "move_down": "Di chuyển xuống",
+        "criterion_title": "Tiêu chí",
+        "criterion_title_placeholder": "VD: Ý chính rõ ràng",
+        "criterion_description": "Cần xem xét gì",
+        "criterion_description_placeholder": "Người đánh giá nên chú ý điều gì?",
+        "untitled_criterion": "Tiêu chí chưa đặt tên",
+        "level_label": "Mức",
+        "level_label_placeholder": "VD: Xuất sắc",
+        "points": "Điểm",
+        "level_description": "Biểu hiện",
+        "level_description_placeholder": "Không bắt buộc: bài ở mức này trông như thế nào",
+        "add_level": "Thêm mức",
+        "remove_level": "Xóa mức",
+        "max_points": "Điểm tối đa: {{points}}",
+        "summary": "Tiêu chí: {{criteria}} · Điểm tối đa: {{points}}",
+        "replace_title": "Thay thế bảng tiêu chí hiện tại?",
+        "replace_message": "Mẫu sẽ thay thế các tiêu chí bạn đang có. Chưa có gì được lưu cho đến khi bạn nhấp Lưu.",
+        "replace_confirm": "Thay thế"
+      },
+      "templates": {
+        "writing": {
+          "name": "Bài viết",
+          "blurb": "Bài luận, báo cáo và câu trả lời viết",
+          "thesis": {
+            "title": "Ý chính",
+            "description": "Luận điểm chính rõ ràng và được giữ xuyên suốt từ đầu đến cuối."
+          },
+          "evidence": {
+            "title": "Lập luận và dẫn chứng",
+            "description": "Các nhận định được hỗ trợ bằng ví dụ, dữ kiện hoặc nguồn phù hợp."
+          },
+          "organization": {
+            "title": "Bố cục",
+            "description": "Ý tưởng theo trình tự hợp lý và mỗi đoạn văn có một nhiệm vụ."
+          },
+          "style": {
+            "title": "Độ rõ ràng và văn phong",
+            "description": "Câu văn rõ ràng, dễ đọc và ít lỗi."
+          }
+        },
+        "project": {
+          "name": "Dự án",
+          "blurb": "Sản phẩm, thiết kế và bài thực hành",
+          "goal": {
+            "title": "Mục tiêu và phạm vi",
+            "description": "Dự án nêu rõ mục tiêu cần đạt và không vượt ra ngoài phạm vi đó."
+          },
+          "process": {
+            "title": "Quy trình và quyết định",
+            "description": "Các bước đã làm và lý do đằng sau những lựa chọn quan trọng được giải thích."
+          },
+          "result": {
+            "title": "Chất lượng kết quả",
+            "description": "Kết quả cuối cùng hoạt động được, hoàn chỉnh và được làm cẩn thận."
+          },
+          "reflection": {
+            "title": "Tự nhìn lại",
+            "description": "Tác giả nói rõ điều gì hiệu quả, điều gì chưa và họ sẽ thay đổi gì."
+          }
+        },
+        "presentation": {
+          "name": "Thuyết trình",
+          "blurb": "Bài nói, slide và video",
+          "content": {
+            "title": "Nội dung",
+            "description": "Thông tin chính xác, liên quan và đi xa hơn những điều hiển nhiên."
+          },
+          "structure": {
+            "title": "Cấu trúc",
+            "description": "Có phần mở đầu rõ ràng, phần giữa logic và phần kết ấn tượng."
+          },
+          "delivery": {
+            "title": "Cách trình bày",
+            "description": "Người nói rõ ràng, tốc độ vừa phải và giữ được sự chú ý."
+          },
+          "visuals": {
+            "title": "Hình ảnh",
+            "description": "Slide hoặc hình ảnh hỗ trợ thông điệp và dễ đọc."
+          }
+        },
+        "code": {
+          "name": "Mã nguồn",
+          "blurb": "Chương trình, script và bài tập",
+          "correctness": {
+            "title": "Tính đúng đắn",
+            "description": "Mã chạy đúng yêu cầu, kể cả các trường hợp biên."
+          },
+          "readability": {
+            "title": "Dễ đọc",
+            "description": "Cách đặt tên, định dạng và chú thích giúp dễ theo dõi mã."
+          },
+          "design": {
+            "title": "Cấu trúc và thiết kế",
+            "description": "Mã được chia thành các phần hợp lý, không lặp lại thừa."
+          },
+          "testing": {
+            "title": "Kiểm thử",
+            "description": "Có các bước kiểm tra hoặc kiểm thử cho thấy mã hoạt động."
+          }
+        },
+        "scale": {
+          "excellent": "Xuất sắc",
+          "excellent_description": "Đáp ứng đầy đủ tiêu chí, có điểm mạnh rõ rệt",
+          "good": "Tốt",
+          "good_description": "Đáp ứng tiêu chí, còn thiếu sót nhỏ",
+          "developing": "Đang phát triển",
+          "developing_description": "Đáp ứng một phần tiêu chí, cần cố gắng thêm",
+          "beginning": "Mới bắt đầu",
+          "beginning_description": "Hầu như chưa đáp ứng tiêu chí",
+          "strong": "Vững",
+          "strong_description": "Đáp ứng rõ ràng tiêu chí",
+          "adequate": "Đạt",
+          "adequate_description": "Đáp ứng một phần tiêu chí",
+          "needs_work": "Cần cải thiện",
+          "needs_work_description": "Chưa đáp ứng tiêu chí"
+        }
+      },
+      "prompts": {
+        "title": "Câu hỏi nhận xét",
+        "description": "Những câu hỏi người đánh giá trả lời bằng văn bản. Độ dài tối thiểu giúp tránh các nhận xét chỉ một từ.",
+        "label": "Câu hỏi",
+        "label_placeholder": "VD: Điều gì khiến bạn bất ngờ?",
+        "min_chars": "Số ký tự tối thiểu",
+        "min_chars_hint": "Đặt 0 để câu trả lời là không bắt buộc.",
+        "add": "Thêm câu hỏi",
+        "remove": "Xóa câu hỏi",
+        "reset": "Dùng mặc định"
+      },
+      "samples": {
+        "title": "Bài mẫu luyện tập",
+        "description": "Học viên chấm một bài mẫu trước khi đánh giá bạn cùng lớp, rồi xem điểm của bạn và lý do. Một hoặc hai bài mẫu là đủ.",
+        "practice_off": "Vòng luyện tập đang tắt trong Cài đặt, nên học viên sẽ không thấy các bài mẫu này.",
+        "none_yet": "Chưa có bài mẫu nên vòng luyện tập sẽ bị bỏ qua. Thêm một bài để bật.",
+        "needs_rubric": "Hãy thêm tiêu chí vào bảng tiêu chí trước để đặt mức cho từng bài mẫu.",
+        "sample_title": "Tiêu đề",
+        "sample_title_placeholder": "VD: Bài luận mẫu A",
+        "content": "Bài mẫu",
+        "content_hint": "Hỗ trợ Markdown",
+        "content_placeholder": "Dán một câu trả lời mẫu, tốt nhất là bài ở mức trung bình còn điểm cần cải thiện.",
+        "levels": "Mức của bạn",
+        "levels_hint": "Mức bạn sẽ cho ở mỗi tiêu chí",
+        "pick_level": "Chọn mức",
+        "explanation": "Lý do",
+        "explanation_hint": "Hiển thị sau khi học viên chấm",
+        "explanation_placeholder": "Giải thích điểm của bạn trong vài câu.",
+        "add": "Thêm bài mẫu",
+        "remove": "Xóa bài mẫu",
+        "count_hint": "Tối đa 5 bài mẫu"
+      },
+      "errors": {
+        "criteria_min": "Thêm ít nhất một tiêu chí để bật đánh giá chéo.",
+        "criteria_max": "Dùng tối đa {{max}} tiêu chí.",
+        "criterion_title": "Hãy đặt tên cho tiêu chí này.",
+        "levels_min": "Mỗi tiêu chí cần ít nhất {{min}} mức.",
+        "levels_max": "Dùng tối đa {{max}} mức cho mỗi tiêu chí.",
+        "level_label": "Hãy đặt tên cho mức này.",
+        "level_points": "Điểm phải từ 0 trở lên.",
+        "prompts_min": "Giữ lại ít nhất một câu hỏi.",
+        "prompts_max": "Dùng tối đa {{max}} câu hỏi.",
+        "prompt_label": "Hãy viết câu hỏi.",
+        "prompt_min_chars": "Dùng một số nguyên từ 0 đến {{max}}.",
+        "reviews_range": "Dùng một số từ {{min}} đến {{max}}.",
+        "sample_title": "Hãy đặt tiêu đề cho bài mẫu.",
+        "sample_content": "Hãy thêm nội dung bài mẫu.",
+        "sample_levels": "Hãy chọn mức của bạn cho mọi tiêu chí.",
+        "duplicate": "Có hai mục trùng ID. Xóa một mục rồi thêm lại."
+      },
+      "save": {
+        "saving": "Đang lưu đánh giá chéo…",
+        "saved": "Đã lưu đánh giá chéo",
+        "error": "Không thể lưu đánh giá chéo",
+        "fix_errors": "Sửa các trường được đánh dấu, rồi lưu lại."
+      },
+      "monitor": {
+        "title": "Theo dõi",
+        "off_title": "Đánh giá chéo đang tắt",
+        "off_description": "Bật trong Thiết lập. Tiến độ, điểm và các bài đánh giá bị báo cáo sẽ hiện ở đây.",
+        "go_setup": "Đi tới thiết lập"
+      },
+      "totals": {
+        "submitted": "Đã nộp",
+        "reviews_done": "Đánh giá đã xong",
+        "in_progress": "Đánh giá đang làm",
+        "below_target": "Cần thêm đánh giá",
+        "flagged": "Bị báo cáo"
+      },
+      "flagged": {
+        "title": "Đánh giá bị báo cáo",
+        "description": "Học viên đã báo cáo các đánh giá này là không công bằng hoặc không hữu ích. Loại bỏ một đánh giá để không tính vào điểm.",
+        "open": "Xem tất cả đánh giá",
+        "count": "Báo cáo: {{n}}"
+      },
+      "submissions": {
+        "title": "Bài nộp",
+        "learner": "Học viên",
+        "reviews": "Đánh giá nhận được",
+        "received": "{{done}} / {{target}}",
+        "peer_score": "Điểm đánh giá chéo",
+        "peer_score_tip": "Trung vị của các bài đánh giá theo từng tiêu chí, tính theo phần trăm. Không tính các đánh giá đã loại bỏ.",
+        "self": "Tự chấm",
+        "self_tip": "Điểm học viên tự chấm cho bài của mình.",
+        "flags": "Báo cáo",
+        "waiting": "Đang chờ",
+        "disagree": "Người đánh giá chênh lệch ({{points}} điểm)",
+        "disagree_tip": "Đánh giá cao nhất và thấp nhất cách nhau xa. Nên xem qua trước khi chấm điểm.",
+        "empty_title": "Chưa có bài nộp",
+        "empty_description": "Việc đánh giá bắt đầu ngay khi học viên nộp bài."
+      },
+      "reviewers": {
+        "title": "Người đánh giá",
+        "reviewer": "Người đánh giá",
+        "done": "Đã xong",
+        "done_tip": "Số bài đánh giá đã viết so với số yêu cầu. Bài đánh giá thêm cũng được tính.",
+        "helpfulness": "Mức hữu ích",
+        "helpfulness_tip": "Số sao trung bình các tác giả chấm cho bài đánh giá của người này.",
+        "helpfulness_value": "{{value}} / 5",
+        "bias": "Độ lệch",
+        "bias_tip": "Trung bình điểm của người này lệch bao nhiêu so với những người đánh giá khác cùng bài. Càng thấp càng tốt.",
+        "bias_value": "±{{points}} điểm",
+        "calibration": "Độ lệch khi luyện tập",
+        "calibration_tip": "Điểm ở vòng luyện tập của họ lệch bao nhiêu so với điểm của bạn, tính theo điểm tiêu chí cho mỗi tiêu chí. Càng thấp càng tốt.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Chưa có đánh giá",
+        "empty_description": "Học viên sẽ hiện ở đây khi bắt đầu đánh giá."
+      },
+      "drawer": {
+        "title": "Đánh giá chéo",
+        "close": "Đóng",
+        "peer_score": "Điểm đánh giá chéo",
+        "not_enough": "Chưa đủ đánh giá (tối thiểu: {{n}})",
+        "score_basis": "Trung vị các bài đánh giá · đã tính: {{n}}",
+        "self_score": "Tự đánh giá:",
+        "self_short": "tự chấm: {{points}}",
+        "apply_grade": "Dùng điểm đánh giá chéo làm điểm ({{score}})",
+        "apply_hint": "Mở phần chấm điểm với gợi ý được hiển thị. Chưa có gì được lưu cho đến khi bạn chấm.",
+        "feedback_only_hint": "Gợi ý điểm đang tắt (chỉ phản hồi).",
+        "open_grading": "Mở chấm điểm",
+        "reviews": "Đánh giá ({{n}})",
+        "reviewer_n": "Người đánh giá {{n}}",
+        "no_reviews": "Chưa có đánh giá.",
+        "status_assigned": "Đang làm",
+        "status_discarded": "Đã loại bỏ",
+        "flagged": "Bị báo cáo",
+        "flag_reason": "Lý do báo cáo:",
+        "discard_reason": "Lý do loại bỏ:",
+        "discard_placeholder": "Vì sao bạn loại bỏ đánh giá này? Chỉ giảng viên thấy nội dung này.",
+        "discard": "Loại bỏ",
+        "restore": "Khôi phục",
+        "discarded_toast": "Đã loại bỏ đánh giá",
+        "restored_toast": "Đã khôi phục đánh giá",
+        "action_error": "Không thực hiện được. Hãy thử lại.",
+        "helpfulness": "Tác giả chấm:",
+        "self_review": "Tự đánh giá",
+        "reflection": "Kế hoạch chỉnh sửa",
+        "no_reflection": "Chưa viết kế hoạch chỉnh sửa.",
+        "grade_title": "Chấm điểm {{name}}",
+        "suggested": "Gợi ý từ đánh giá chéo: {{score}}",
+        "suggested_hint": "Trung vị các bài đánh giá chéo (đã tính: {{n}}). Hãy dùng làm tham khảo.",
+        "closed_new_attempt": "Đã tự động đóng: học viên đã bắt đầu lần làm mới."
+      }
+    }
   }
 }

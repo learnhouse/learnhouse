@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Fitur Standard",
           "description": "Newsletter tersedia di paket Standard dan yang lebih tinggi. Tingkatkan paket untuk mengirim kampanye, rangkaian sambutan, dan pembaruan kursus ke pelajar Anda lewat email."
+        },
+        "peer_review": {
+          "title": "Fitur Standard",
+          "description": "Tinjauan sejawat hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade agar pelajar dapat meninjau hasil kerja satu sama lain dengan rubrik."
         }
       },
       "gate": {
@@ -380,6 +384,12 @@
           "note_3": "Langkah berikutnya untuk Jumat",
           "play_title": "Latihan",
           "play_question": "Berapa jumlah sisi segi lima?"
+        },
+        "peer_review": {
+          "title": "Pelajar berkembang dengan saling meninjau",
+          "b1": "Setiap pelajar meninjau beberapa teman dengan rubrik Anda",
+          "b2": "Ronde latihan menunjukkan cara Anda memberi skor",
+          "b3": "Lihat saran nilai dari tinjauan, Anda yang memutuskan"
         }
       }
     },
@@ -7970,7 +7980,8 @@
             "scim": "Provisioning SCIM",
             "audit_logs": "Log audit",
             "custom_domain": "Domain kustom",
-            "remove_watermark": "Tanpa watermark LearnHouse"
+            "remove_watermark": "Tanpa watermark LearnHouse",
+            "peer_review": "Tinjauan sejawat"
           }
         },
         "next_invoice_label": "Faktur berikutnya",
@@ -29367,7 +29378,9 @@
       "plan_downgraded": "Pindah ke Gratis",
       "plan_restored": "Paket dipulihkan",
       "payments_checkout_failing": "Pembayaran gagal",
-      "invitation_accepted": "Undangan diterima"
+      "invitation_accepted": "Undangan diterima",
+      "peer_review_received": "Masukan teman diterima",
+      "peer_review_flagged": "Ulasan teman dilaporkan"
     },
     "copy": {
       "assignment_graded": "Dinilai: {{assignment}}",
@@ -29430,7 +29443,9 @@
       "plan_downgraded": "Anda sekarang di paket Gratis. Tidak ada yang dihapus",
       "plan_restored": "Selamat datang kembali di {{plan}}",
       "payments_checkout_failing": "Pelajar tidak bisa membeli saat ini ({{count}} pembayaran gagal)",
-      "invitation_accepted": "{{actor}} menerima undangan Anda"
+      "invitation_accepted": "{{actor}} menerima undangan Anda",
+      "peer_review_received": "Masukan teman baru untuk {{assignment}}",
+      "peer_review_flagged": "{{actor}} melaporkan ulasan teman di {{assignment}}"
     },
     "routing": {
       "short": "Siapa yang diberi tahu",
@@ -29699,5 +29714,499 @@
     "copied_link": "Tautan aplikasi disalin",
     "copy_failed": "Gambar tidak dapat disalin. Coba Unduh.",
     "download_failed": "Gambar tidak dapat disimpan."
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Kriteria {{n}}",
+      "points_short_one": "{{count}} poin",
+      "points_short_other": "{{count}} poin",
+      "prompt_strength": "Yang sudah bagus",
+      "prompt_suggestion": "Satu hal yang bisa diperbaiki, dan caranya",
+      "prompt_question": "Pertanyaan untuk penulis"
+    },
+    "learner": {
+      "eyebrow": "Penilaian sejawat",
+      "card_title": "Nilai karya teman dan dapatkan masukan dari mereka",
+      "steps_label": "Langkah penilaian sejawat",
+      "step_self": "Penilaian diri",
+      "step_practice": "Latihan",
+      "step_reviews": "Nilai teman",
+      "step_feedback": "Masukan untukmu",
+      "n_of_m": "{{n}} dari {{m}}",
+      "done": "Selesai",
+      "to_do": "Belum dikerjakan",
+      "locked": "Terkunci",
+      "continue": "Lanjut",
+      "cancel": "Batal",
+      "back": "Kembali",
+      "retry": "Coba lagi",
+      "optional": "Opsional",
+      "saved": "Tersimpan",
+      "saving": "Menyimpan…",
+      "unsaved": "Perubahan belum disimpan",
+      "not_saved": "Belum tersimpan",
+      "feedback_count_one": "{{count}} ulasan",
+      "feedback_count_other": "{{count}} ulasan",
+      "reviews_due": "Batas penilaian {{date}}",
+      "reviews_closed_on": "Penilaian ditutup {{date}}",
+      "next_title": "Selanjutnya penilaian sejawat",
+      "next_body_one": "Setelah mengumpulkan, kamu akan menilai karya {{count}} teman dan mendapat masukan untuk karyamu.",
+      "next_body_other": "Setelah mengumpulkan, kamu akan menilai karya {{count}} teman dan mendapat masukan untuk karyamu.",
+      "self_title": "Nilai karyamu sendiri",
+      "self_why": "Menilai karya sendiri lebih dulu membuat masukan dari teman lebih mudah dibandingkan dan diterapkan.",
+      "self_done": "Penilaian diri tersimpan",
+      "self_done_pct": "Penilaian diri tersimpan: kamu memberi dirimu {{pct}}%",
+      "edit_self_review": "Ubah penilaian diri",
+      "save_self_review": "Simpan penilaian diri",
+      "self_saved_toast": "Penilaian diri tersimpan",
+      "cal_title": "Sesi latihan",
+      "cal_why": "Menilai contoh lebih dulu membantumu memahami cara pengajar membaca rubrik, jadi penilaianmu lebih adil.",
+      "cal_progress": "Contoh {{current}} dari {{total}}",
+      "cal_sample": "Contoh latihan",
+      "cal_check": "Bandingkan dengan pengajar",
+      "cal_you": "Kamu",
+      "cal_instructor": "Pengajar",
+      "cal_match": "Sama dengan pengajar",
+      "cal_off_by_one": "Selisih {{count}} poin",
+      "cal_off_by_other": "Selisih {{count}} poin",
+      "cal_why_title": "Alasan pengajar memberi nilai ini",
+      "cal_next": "Contoh berikutnya",
+      "cal_all_done": "Latihan selesai. Kamu siap menilai teman.",
+      "cal_none": "Belum ada contoh latihan saat ini.",
+      "go_to_reviews": "Ke penilaian",
+      "go_to_practice": "Ke latihan",
+      "finish_practice_first": "Selesaikan sesi latihan dulu.",
+      "reviews_title": "Nilai teman sekelasmu",
+      "reviews_why": "Menilai karya orang lain adalah cara belajar yang paling efektif.",
+      "reviews_done_of": "{{done}} dari {{required}} selesai",
+      "reviews_locked_practice": "Selesaikan sesi latihan untuk mulai menilai.",
+      "reviews_complete": "Semua penilaianmu sudah selesai. Terima kasih!",
+      "reviews_extra_hint": "Penilaian tambahan sangat diterima: ini membantu teman yang masih sedikit menerima ulasan.",
+      "start_review": "Mulai penilaian {{n}} dari {{m}}",
+      "continue_review": "Lanjutkan penilaianmu",
+      "review_another": "Nilai yang lain",
+      "see_feedback": "Lihat masukan untukmu",
+      "none_title": "Belum ada yang bisa dinilai",
+      "none_body": "Begitu ada yang mengumpulkan, kami akan memberimu karya teman. Cek lagi sebentar lagi.",
+      "check_again": "Cek lagi",
+      "your_helpfulness": "Teman menilai ulasanmu rata-rata {{avg}} / 5.",
+      "review_n_of_m": "Penilaian {{n}} dari {{m}}",
+      "extra_review": "Penilaian tambahan",
+      "classmate_work": "Karya temanmu",
+      "work_of": "Karya {{name}}",
+      "your_review": "Penilaianmu",
+      "your_review_hint": "Pilih tingkat yang paling pas untuk tiap kriteria, lalu tulis komentar yang ramah dan spesifik.",
+      "review_already_submitted": "Kamu sudah mengirim penilaian ini.",
+      "review_load_error": "Penilaian ini tidak bisa dimuat.",
+      "comments_heading": "Komentar",
+      "pick_a_level": "Pilih tingkat",
+      "add_note": "Tambah catatan",
+      "note_label": "Catatan untuk kriteria ini (opsional)",
+      "chars_remaining_one": "Kurang {{count}} karakter lagi",
+      "chars_remaining_other": "Kurang {{count}} karakter lagi",
+      "chars_ok_one": "{{count}} karakter",
+      "chars_ok_other": "{{count}} karakter",
+      "fix_before_submit": "Ada bagian yang belum diisi. Cek kolom yang disorot.",
+      "save_draft": "Simpan draf",
+      "submit_review": "Kirim penilaian",
+      "drafts_autosave": "Draf tersimpan otomatis",
+      "draft_saved_toast": "Draf tersimpan",
+      "review_submitted_toast": "Penilaian terkirim. Terima kasih!",
+      "no_answer": "Tidak ada jawaban",
+      "no_tasks": "Tidak ada yang bisa ditampilkan untuk pengumpulan ini.",
+      "chosen": "dipilih",
+      "media_option": "Opsi {{n}} (media)",
+      "download_file": "Unduh file",
+      "feedback_title": "Masukan untukmu",
+      "feedback_why": "Bandingkan apa yang dilihat teman dengan pandanganmu sendiri, lalu tentukan apa yang akan kamu ubah.",
+      "locked_reviews_one": "Selesaikan {{count}} penilaian lagi untuk membuka masukanmu",
+      "locked_reviews_other": "Selesaikan {{count}} penilaian lagi untuk membuka masukanmu",
+      "locked_generic": "Masukan untukmu belum terbuka",
+      "locked_due": "Paling lambat terbuka pada {{date}}.",
+      "unlocked_by_due_date": "Masukanmu terbuka karena batas penilaian sudah lewat.",
+      "no_feedback_title": "Belum ada masukan",
+      "no_feedback_body": "Ulasan dari teman akan muncul di sini begitu masuk.",
+      "peer_score": "Skor sejawat",
+      "peer_score_how_one": "Nilai tengah (median) dari {{count}} ulasan teman, per kriteria.",
+      "peer_score_how_other": "Nilai tengah (median) dari {{count}} ulasan teman, per kriteria.",
+      "score_needs_more_one": "Skor sejawat muncul setelah ada {{count}} ulasan.",
+      "score_needs_more_other": "Skor sejawat muncul setelah ada {{count}} ulasan.",
+      "reviewers_disagree": "Penilai berbeda pendapat",
+      "gap_title": "Teman vs penilaian dirimu",
+      "gap_title_peers": "Yang dilihat teman",
+      "legend_peers": "Teman (median)",
+      "legend_you": "Kamu",
+      "gap_values": "Teman {{peers}} · Kamu {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: teman {{peers}}, kamu {{you}}, dari {{max}}",
+      "gap_aligned": "Penilaianmu dan teman-temanmu sejalan",
+      "gap_self_higher": "Kamu menilai dirimu lebih tinggi daripada teman-temanmu",
+      "gap_self_lower": "Kamu menilai dirimu lebih rendah daripada teman-temanmu",
+      "reviews_received_one": "{{count}} ulasan diterima",
+      "reviews_received_other": "{{count}} ulasan diterima",
+      "reviewer_n": "Penilai {{n}}",
+      "flagged": "Dilaporkan",
+      "how_helpful": "Seberapa membantu ulasan ini?",
+      "stars_n_one": "{{count}} bintang",
+      "stars_n_other": "{{count}} bintang",
+      "helpful_note_label": "Catatan untuk penilai",
+      "helpful_note_placeholder": "Apa yang membantu, atau apa yang akan lebih membantu? (opsional)",
+      "save_note": "Simpan catatan",
+      "thanks_feedback": "Terima kasih atas masukannya",
+      "flag_link": "Laporkan ulasan ini",
+      "flag_title": "Laporkan ulasan ini",
+      "flag_body": "Pengajarmu akan memeriksanya. Ceritakan masalahnya, misalnya kasar, tidak relevan, atau kosong.",
+      "flag_reason": "Apa masalahnya?",
+      "flag_submit": "Laporkan",
+      "flag_sent": "Terima kasih. Pengajarmu sudah diberi tahu.",
+      "plan_title": "Rencana revisimu",
+      "plan_why": "Tulis apa yang akan kamu ubah. Dengan rencana, masukan jadi karya yang lebih baik.",
+      "plan_placeholder": "Berdasarkan masukan ini, aku akan…",
+      "save_plan": "Simpan rencana",
+      "plan_saved": "Rencana revisi tersimpan",
+      "error_generic": "Terjadi kesalahan. Coba lagi.",
+      "error_save": "Drafmu tidak bisa disimpan. Kami akan mencoba lagi.",
+      "error_submit": "Tidak bisa dikirim. Coba lagi.",
+      "error_download": "File tidak bisa diunduh.",
+      "submission_changed": "Teman sekelas ini memulai percobaan baru, jadi penilaian ini ditutup. Kamu bisa menilai orang lain.",
+      "answer_hidden": "Jawaban ini dinilai otomatis, jadi tidak termasuk dalam ulasan.",
+      "retry_in_progress": "Kamu memulai percobaan baru. Kumpulkan dulu untuk lanjut mengulas teman-temanmu."
+    },
+    "instructor": {
+      "tab": "Tinjauan sejawat",
+      "setup": "Pengaturan awal",
+      "unknown_learner": "Pelajar",
+      "retry": "Coba lagi",
+      "error_title": "Tinjauan sejawat tidak dapat dimuat",
+      "error_description": "Terjadi kesalahan. Periksa koneksi Anda lalu coba lagi.",
+      "toggle": {
+        "title": "Tinjauan sejawat",
+        "off_hint": "Nonaktif. Setelah mengumpulkan, pelajar meninjau hasil kerja beberapa teman dengan rubrik Anda dan mendapat masukan dari mereka.",
+        "on_hint": "Aktif. Setiap pelajar meninjau teman setelah mengumpulkan. Pilih templat rubrik di bawah lalu simpan, dan semuanya siap."
+      },
+      "why": {
+        "title": "Mengapa tinjauan sejawat berhasil",
+        "reviewers_learn": "Menulis tinjauan paling banyak mengajari peninjaunya sendiri, jadi setiap pelajar ikut meninjau.",
+        "three_reviewers": "Tiga peninjau atau lebih memberi masukan yang kira-kira sama andalnya dengan satu pengajar.",
+        "rubric_practice": "Rubrik yang jelas dan ronde latihan singkat membuat tinjauan akurat.",
+        "revise": "Masukan paling membantu saat pelajar merencanakan apa yang akan mereka ubah berikutnya.",
+        "dismiss": "Sembunyikan tips ini"
+      },
+      "sections": {
+        "settings": "Pengaturan",
+        "rubric": "Rubrik",
+        "prompts": "Pertanyaan komentar",
+        "practice": "Ronde latihan"
+      },
+      "settings": {
+        "reviewing_title": "Peninjauan",
+        "reviewing_description": "Berapa tinjauan yang ditulis setiap pelajar dan siapa yang melihat nama siapa.",
+        "reviews_required": "Tinjauan per pelajar",
+        "reviews_required_hint": "3–5 memberi masukan yang andal. Setiap hasil kerja juga diupayakan menerima sebanyak ini.",
+        "anonymity": "Nama",
+        "anonymity_hint": "Nama yang disembunyikan membuat tinjauan lebih jujur.",
+        "require_reviews": "Tinjau dulu sebelum melihat masukan",
+        "require_reviews_hint": "Pelajar melihat masukan mereka setelah menyelesaikan tinjauan, atau setelah batas waktu tinjauan.",
+        "due_date": "Batas waktu tinjauan",
+        "due_date_hint": "Opsional. Setelah tanggal ini semua orang dapat melihat masukan mereka.",
+        "clear": "Hapus",
+        "steps_title": "Langkah tambahan",
+        "steps_description": "Masing-masing singkat dan membuat masukan lebih berguna.",
+        "self_review": "Tinjauan diri",
+        "self_review_hint": "Pelajar memberi skor pada hasil kerja sendiri terlebih dahulu, lalu membandingkannya dengan pendapat teman.",
+        "practice": "Ronde latihan",
+        "practice_hint": "Pelajar memberi skor pada contoh yang Anda siapkan dan melihat skor dari Anda. Perlu minimal satu contoh.",
+        "helpfulness": "Penilaian manfaat",
+        "helpfulness_hint": "Pelajar menilai setiap tinjauan yang mereka terima dengan 1 sampai 5 bintang.",
+        "revision_plan": "Rencana revisi",
+        "revision_plan_hint": "Pelajar menuliskan apa yang akan mereka ubah setelah membaca masukan.",
+        "score_title": "Skor",
+        "score_description": "Tinjauan sejawat tidak pernah menentukan nilai dengan sendirinya.",
+        "min_reviews": "Tinjauan yang dibutuhkan untuk skor",
+        "min_reviews_hint": "Skor sejawat muncul setelah hasil kerja mendapat tinjauan sebanyak ini."
+      },
+      "anonymity": {
+        "double_blind": "Keduanya disembunyikan",
+        "double_blind_hint": "Tidak ada yang tahu siapa meninjau siapa",
+        "anonymous_reviewer": "Peninjau disembunyikan",
+        "anonymous_reviewer_hint": "Peninjau melihat nama penulis",
+        "named": "Nama ditampilkan",
+        "named_hint": "Semua orang melihat kedua nama"
+      },
+      "score_mode": {
+        "feedback_only": "Hanya masukan",
+        "feedback_only_hint": "Tinjauan untuk belajar, tanpa saran nilai",
+        "suggest_grade": "Sarankan nilai",
+        "suggest_grade_hint": "Anda melihat median skor sejawat dan bisa memakainya saat menilai"
+      },
+      "rubric": {
+        "title": "Rubrik",
+        "description": "Apa yang diberi skor oleh peninjau. Setiap kriteria memiliki tingkat dari yang terbaik hingga terlemah.",
+        "template": "Mulai dari templat",
+        "empty_title": "Belum ada rubrik",
+        "empty_description": "Pilih templat untuk mulai dengan satu klik, lalu sesuaikan kata-katanya dengan tugas Anda.",
+        "add_criterion": "Tambah kriteria",
+        "remove_criterion": "Hapus kriteria",
+        "move_up": "Pindah ke atas",
+        "move_down": "Pindah ke bawah",
+        "criterion_title": "Kriteria",
+        "criterion_title_placeholder": "mis. Gagasan utama yang jelas",
+        "criterion_description": "Yang perlu diperhatikan",
+        "criterion_description_placeholder": "Apa yang perlu diperhatikan peninjau?",
+        "untitled_criterion": "Kriteria tanpa judul",
+        "level_label": "Tingkat",
+        "level_label_placeholder": "mis. Sangat baik",
+        "points": "Poin",
+        "level_description": "Seperti apa",
+        "level_description_placeholder": "Opsional: seperti apa hasil kerja di tingkat ini",
+        "add_level": "Tambah tingkat",
+        "remove_level": "Hapus tingkat",
+        "max_points": "Poin maksimal: {{points}}",
+        "summary": "Kriteria: {{criteria}} · Poin maksimal: {{points}}",
+        "replace_title": "Ganti rubrik saat ini?",
+        "replace_message": "Templat akan menggantikan kriteria yang Anda miliki sekarang. Tidak ada yang disimpan sampai Anda mengklik Simpan.",
+        "replace_confirm": "Ganti"
+      },
+      "templates": {
+        "writing": {
+          "name": "Tulisan",
+          "blurb": "Esai, laporan, dan jawaban tertulis",
+          "thesis": {
+            "title": "Gagasan utama",
+            "description": "Poin utamanya jelas dan tetap menjadi fokus dari awal sampai akhir."
+          },
+          "evidence": {
+            "title": "Dukungan dan bukti",
+            "description": "Klaim didukung contoh, fakta, atau sumber yang sesuai."
+          },
+          "organization": {
+            "title": "Susunan",
+            "description": "Gagasan mengikuti urutan yang logis dan setiap paragraf punya satu tugas."
+          },
+          "style": {
+            "title": "Kejelasan dan gaya",
+            "description": "Kalimatnya jelas dan mudah dibaca, dengan sedikit kesalahan."
+          }
+        },
+        "project": {
+          "name": "Proyek",
+          "blurb": "Karya buatan, desain, dan kerja praktik",
+          "goal": {
+            "title": "Tujuan dan cakupan",
+            "description": "Proyek menyatakan apa yang ingin dicapai dan tetap dalam cakupan itu."
+          },
+          "process": {
+            "title": "Proses dan keputusan",
+            "description": "Langkah yang diambil dan alasan di balik pilihan penting dijelaskan."
+          },
+          "result": {
+            "title": "Kualitas hasil",
+            "description": "Hasil akhirnya berfungsi, lengkap, dan dibuat dengan cermat."
+          },
+          "reflection": {
+            "title": "Refleksi",
+            "description": "Penulis menyebutkan apa yang berhasil, apa yang tidak, dan apa yang akan diubah."
+          }
+        },
+        "presentation": {
+          "name": "Presentasi",
+          "blurb": "Ceramah, slide, dan video",
+          "content": {
+            "title": "Isi",
+            "description": "Informasinya akurat, relevan, dan lebih dari sekadar hal yang sudah jelas."
+          },
+          "structure": {
+            "title": "Struktur",
+            "description": "Ada pembukaan yang jelas, bagian tengah yang logis, dan penutup yang kuat."
+          },
+          "delivery": {
+            "title": "Penyampaian",
+            "description": "Pembicara jelas, temponya pas, dan menjaga perhatian."
+          },
+          "visuals": {
+            "title": "Visual",
+            "description": "Slide atau visual mendukung pesan dan mudah dibaca."
+          }
+        },
+        "code": {
+          "name": "Kode",
+          "blurb": "Program, skrip, dan latihan",
+          "correctness": {
+            "title": "Ketepatan",
+            "description": "Kode melakukan apa yang diminta, termasuk untuk kasus khusus."
+          },
+          "readability": {
+            "title": "Keterbacaan",
+            "description": "Penamaan, format, dan komentar membuat kode mudah diikuti."
+          },
+          "design": {
+            "title": "Struktur dan desain",
+            "description": "Kode dibagi menjadi bagian yang masuk akal tanpa pengulangan yang tidak perlu."
+          },
+          "testing": {
+            "title": "Pengujian",
+            "description": "Ada pemeriksaan atau tes yang menunjukkan kode berfungsi."
+          }
+        },
+        "scale": {
+          "excellent": "Sangat baik",
+          "excellent_description": "Memenuhi kriteria sepenuhnya, dengan kekuatan yang jelas",
+          "good": "Baik",
+          "good_description": "Memenuhi kriteria dengan sedikit kekurangan",
+          "developing": "Berkembang",
+          "developing_description": "Memenuhi sebagian kriteria, perlu kerja lebih lanjut",
+          "beginning": "Permulaan",
+          "beginning_description": "Baru sedikit memenuhi kriteria",
+          "strong": "Kuat",
+          "strong_description": "Jelas memenuhi kriteria",
+          "adequate": "Cukup",
+          "adequate_description": "Memenuhi sebagian kriteria",
+          "needs_work": "Perlu perbaikan",
+          "needs_work_description": "Belum memenuhi kriteria"
+        }
+      },
+      "prompts": {
+        "title": "Pertanyaan komentar",
+        "description": "Pertanyaan yang dijawab peninjau secara tertulis. Panjang minimum mencegah tinjauan satu kata.",
+        "label": "Pertanyaan",
+        "label_placeholder": "mis. Apa yang membuat Anda terkejut?",
+        "min_chars": "Min. karakter",
+        "min_chars_hint": "0 membuat jawaban menjadi opsional.",
+        "add": "Tambah pertanyaan",
+        "remove": "Hapus pertanyaan",
+        "reset": "Gunakan bawaan"
+      },
+      "samples": {
+        "title": "Contoh latihan",
+        "description": "Pelajar memberi skor pada contoh sebelum meninjau teman, lalu melihat skor Anda beserta alasannya. Satu atau dua contoh sudah cukup.",
+        "practice_off": "Ronde latihan dinonaktifkan di Pengaturan, jadi pelajar tidak akan melihat contoh ini.",
+        "none_yet": "Belum ada contoh, jadi ronde latihan dilewati. Tambahkan satu untuk mengaktifkannya.",
+        "needs_rubric": "Tambahkan kriteria rubrik terlebih dahulu untuk menetapkan tingkat Anda bagi setiap contoh.",
+        "sample_title": "Judul",
+        "sample_title_placeholder": "mis. Contoh esai A",
+        "content": "Contoh hasil kerja",
+        "content_hint": "Mendukung Markdown",
+        "content_placeholder": "Tempel contoh jawaban, sebaiknya yang tingkat menengah dan masih bisa diperbaiki.",
+        "levels": "Tingkat Anda",
+        "levels_hint": "Apa yang akan Anda berikan pada setiap kriteria",
+        "pick_level": "Pilih tingkat",
+        "explanation": "Alasan",
+        "explanation_hint": "Ditampilkan setelah pelajar memberi skor",
+        "explanation_placeholder": "Jelaskan skor Anda dalam beberapa kalimat.",
+        "add": "Tambah contoh",
+        "remove": "Hapus contoh",
+        "count_hint": "Maksimal 5 contoh"
+      },
+      "errors": {
+        "criteria_min": "Tambahkan minimal satu kriteria untuk mengaktifkan tinjauan sejawat.",
+        "criteria_max": "Kriteria maksimal: {{max}}.",
+        "criterion_title": "Beri nama kriteria ini.",
+        "levels_min": "Tingkat minimal per kriteria: {{min}}.",
+        "levels_max": "Tingkat maksimal per kriteria: {{max}}.",
+        "level_label": "Beri nama tingkat ini.",
+        "level_points": "Poin harus 0 atau lebih.",
+        "prompts_min": "Pertahankan minimal satu pertanyaan.",
+        "prompts_max": "Pertanyaan maksimal: {{max}}.",
+        "prompt_label": "Tulis pertanyaannya.",
+        "prompt_min_chars": "Gunakan bilangan bulat dari 0 sampai {{max}}.",
+        "reviews_range": "Gunakan angka dari {{min}} sampai {{max}}.",
+        "sample_title": "Beri judul pada contoh.",
+        "sample_content": "Tambahkan contoh hasil kerja.",
+        "sample_levels": "Pilih tingkat Anda untuk setiap kriteria.",
+        "duplicate": "Dua item memiliki ID yang sama. Hapus salah satunya lalu tambahkan lagi."
+      },
+      "save": {
+        "saving": "Menyimpan tinjauan sejawat…",
+        "saved": "Tinjauan sejawat disimpan",
+        "error": "Tinjauan sejawat tidak dapat disimpan",
+        "fix_errors": "Perbaiki kolom yang ditandai, lalu simpan lagi."
+      },
+      "monitor": {
+        "title": "Pantau",
+        "off_title": "Tinjauan sejawat nonaktif",
+        "off_description": "Aktifkan di Pengaturan awal. Progres, skor, dan tinjauan yang dilaporkan akan muncul di sini.",
+        "go_setup": "Buka pengaturan awal"
+      },
+      "totals": {
+        "submitted": "Dikumpulkan",
+        "reviews_done": "Tinjauan selesai",
+        "in_progress": "Tinjauan berlangsung",
+        "below_target": "Perlu tinjauan lagi",
+        "flagged": "Dilaporkan"
+      },
+      "flagged": {
+        "title": "Tinjauan yang dilaporkan",
+        "description": "Seorang pelajar melaporkan tinjauan ini tidak adil atau tidak membantu. Buang tinjauan agar tidak dihitung dalam skor.",
+        "open": "Lihat semua tinjauan",
+        "count": "Laporan: {{n}}"
+      },
+      "submissions": {
+        "title": "Kiriman",
+        "learner": "Pelajar",
+        "reviews": "Tinjauan diterima",
+        "received": "{{done}} dari {{target}}",
+        "peer_score": "Skor sejawat",
+        "peer_score_tip": "Median tinjauan per kriteria, dalam persen. Tinjauan yang dibuang tidak dihitung.",
+        "self": "Diri",
+        "self_tip": "Skor yang diberikan pelajar untuk hasil kerjanya sendiri.",
+        "flags": "Laporan",
+        "waiting": "Menunggu",
+        "disagree": "Peninjau tidak sepakat ({{points}} poin)",
+        "disagree_tip": "Tinjauan tertinggi dan terendah berbeda jauh. Layak dicek sebelum Anda menilai.",
+        "empty_title": "Belum ada yang dikumpulkan",
+        "empty_description": "Tinjauan dimulai begitu pelajar mengumpulkan hasil kerja mereka."
+      },
+      "reviewers": {
+        "title": "Peninjau",
+        "reviewer": "Peninjau",
+        "done": "Selesai",
+        "done_tip": "Tinjauan yang ditulis dari jumlah yang diwajibkan. Tinjauan tambahan juga dihitung.",
+        "helpfulness": "Manfaat",
+        "helpfulness_tip": "Rata-rata bintang yang diberikan penulis untuk tinjauan orang ini.",
+        "helpfulness_value": "{{value}} dari 5",
+        "bias": "Bias",
+        "bias_tip": "Seberapa jauh rata-rata skor orang ini dari peninjau lain untuk hasil kerja yang sama. Makin rendah makin baik.",
+        "bias_value": "±{{points}} poin",
+        "calibration": "Selisih latihan",
+        "calibration_tip": "Seberapa jauh skor mereka di ronde latihan dari skor Anda, dalam poin rubrik per kriteria. Makin rendah makin baik.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Belum ada tinjauan",
+        "empty_description": "Pelajar muncul di sini begitu mereka mulai meninjau."
+      },
+      "drawer": {
+        "title": "Tinjauan sejawat",
+        "close": "Tutup",
+        "peer_score": "Skor sejawat",
+        "not_enough": "Tinjauan belum cukup (minimal: {{n}})",
+        "score_basis": "Median tinjauan · dihitung: {{n}}",
+        "self_score": "Tinjauan diri:",
+        "self_short": "diri: {{points}}",
+        "apply_grade": "Terapkan skor sejawat sebagai nilai ({{score}})",
+        "apply_hint": "Membuka penilaian dengan saran yang ditampilkan. Tidak ada yang disimpan sampai Anda menilai.",
+        "feedback_only_hint": "Saran nilai dinonaktifkan (hanya masukan).",
+        "open_grading": "Buka penilaian",
+        "reviews": "Tinjauan ({{n}})",
+        "reviewer_n": "Peninjau {{n}}",
+        "no_reviews": "Belum ada tinjauan.",
+        "status_assigned": "Berlangsung",
+        "status_discarded": "Dibuang",
+        "flagged": "Dilaporkan",
+        "flag_reason": "Alasan laporan:",
+        "discard_reason": "Alasan dibuang:",
+        "discard_placeholder": "Mengapa Anda tidak menghitung tinjauan ini? Hanya pengajar yang melihat ini.",
+        "discard": "Buang",
+        "restore": "Pulihkan",
+        "discarded_toast": "Tinjauan dibuang",
+        "restored_toast": "Tinjauan dipulihkan",
+        "action_error": "Tidak berhasil. Coba lagi.",
+        "helpfulness": "Dinilai oleh penulis:",
+        "self_review": "Tinjauan diri",
+        "reflection": "Rencana revisi",
+        "no_reflection": "Belum ada rencana revisi.",
+        "grade_title": "Nilai {{name}}",
+        "suggested": "Saran sejawat: {{score}}",
+        "suggested_hint": "Median tinjauan sejawat (dihitung: {{n}}). Gunakan sebagai panduan.",
+        "closed_new_attempt": "Ditutup otomatis: peserta memulai percobaan baru."
+      }
+    }
   }
 }

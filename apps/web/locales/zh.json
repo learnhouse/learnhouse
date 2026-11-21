@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Standard 功能",
           "description": "新闻通讯适用于 Standard 及更高方案。升级后即可通过邮件向学员发送营销活动、欢迎系列和课程更新。"
+        },
+        "peer_review": {
+          "title": "标准功能",
+          "description": "同伴互评仅适用于标准方案及以上的组织。升级后，学员可以按照评分量表互相评审作业。"
         }
       },
       "gate": {
@@ -380,6 +384,12 @@
           "note_3": "周五的下一步安排",
           "play_title": "练习",
           "play_question": "五边形有几条边？"
+        },
+        "peer_review": {
+          "title": "学员在互评中共同进步",
+          "b1": "每位学员用你的评分量表评审几位同学",
+          "b2": "练习环节让他们了解你会如何评分",
+          "b3": "查看基于互评的建议成绩，由你来决定"
         }
       }
     },
@@ -7972,7 +7982,8 @@
             "scim": "SCIM 同步",
             "audit_logs": "审计日志",
             "custom_domain": "自定义域名",
-            "remove_watermark": "无 LearnHouse 水印"
+            "remove_watermark": "无 LearnHouse 水印",
+            "peer_review": "同伴互评"
           }
         },
         "next_invoice_label": "下一张账单",
@@ -29369,7 +29380,9 @@
       "plan_downgraded": "已转为免费版",
       "plan_restored": "方案已恢复",
       "payments_checkout_failing": "结账失败",
-      "invitation_accepted": "邀请已接受"
+      "invitation_accepted": "邀请已接受",
+      "peer_review_received": "收到同伴反馈",
+      "peer_review_flagged": "同伴互评被举报"
     },
     "copy": {
       "assignment_graded": "已批改：{{assignment}}",
@@ -29432,7 +29445,9 @@
       "plan_downgraded": "你现在使用的是免费版，没有删除任何内容",
       "plan_restored": "欢迎回到 {{plan}}",
       "payments_checkout_failing": "学员目前无法购买（{{count}} 次结账失败）",
-      "invitation_accepted": "{{actor}} 接受了你的邀请"
+      "invitation_accepted": "{{actor}} 接受了你的邀请",
+      "peer_review_received": "{{assignment}} 有新的同伴反馈",
+      "peer_review_flagged": "{{actor}} 举报了 {{assignment}} 中的一条同伴互评"
     },
     "routing": {
       "short": "通知对象",
@@ -29701,5 +29716,499 @@
     "copied_link": "应用链接已复制",
     "copy_failed": "无法复制图片，请改用下载。",
     "download_failed": "无法保存图片。"
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "评分标准 {{n}}",
+      "points_short_one": "{{count}} 分",
+      "points_short_other": "{{count}} 分",
+      "prompt_strength": "做得好的地方",
+      "prompt_suggestion": "一个可以改进的地方，以及怎么改",
+      "prompt_question": "想问作者的一个问题"
+    },
+    "learner": {
+      "eyebrow": "同伴互评",
+      "card_title": "评价同学的作业，也获得同学的反馈",
+      "steps_label": "同伴互评步骤",
+      "step_self": "自评",
+      "step_practice": "练习",
+      "step_reviews": "评价同学",
+      "step_feedback": "你的反馈",
+      "n_of_m": "{{n}} / {{m}}",
+      "done": "已完成",
+      "to_do": "待完成",
+      "locked": "未解锁",
+      "continue": "继续",
+      "cancel": "取消",
+      "back": "返回",
+      "retry": "重试",
+      "optional": "选填",
+      "saved": "已保存",
+      "saving": "正在保存…",
+      "unsaved": "有未保存的更改",
+      "not_saved": "未保存",
+      "feedback_count_one": "{{count}} 条评价",
+      "feedback_count_other": "{{count}} 条评价",
+      "reviews_due": "评价截止时间：{{date}}",
+      "reviews_closed_on": "评价已于 {{date}} 截止",
+      "next_title": "接下来是同伴互评",
+      "next_body_one": "提交后，你将评价 {{count}} 位同学的作业，并收到对你作业的反馈。",
+      "next_body_other": "提交后，你将评价 {{count}} 位同学的作业，并收到对你作业的反馈。",
+      "self_title": "给自己的作业打分",
+      "self_why": "先评价自己的作业，之后更容易对比并用好同学的反馈。",
+      "self_done": "自评已保存",
+      "self_done_pct": "自评已保存：你给自己打了 {{pct}}%",
+      "edit_self_review": "修改自评",
+      "save_self_review": "保存自评",
+      "self_saved_toast": "自评已保存",
+      "cal_title": "练习环节",
+      "cal_why": "先给样例打分，能帮你了解老师如何理解评分标准，让你的评价更公平。",
+      "cal_progress": "样例 {{current}} / {{total}}",
+      "cal_sample": "练习样例",
+      "cal_check": "与老师对比",
+      "cal_you": "你",
+      "cal_instructor": "老师",
+      "cal_match": "与老师一致",
+      "cal_off_by_one": "相差 {{count}} 分",
+      "cal_off_by_other": "相差 {{count}} 分",
+      "cal_why_title": "老师为什么这样打分",
+      "cal_next": "下一个样例",
+      "cal_all_done": "练习完成，你可以开始评价同学了。",
+      "cal_none": "目前没有练习样例。",
+      "go_to_reviews": "去评价",
+      "go_to_practice": "去练习",
+      "finish_practice_first": "请先完成练习环节。",
+      "reviews_title": "评价你的同学",
+      "reviews_why": "评价别人的作业，是收获最大的学习方式。",
+      "reviews_done_of": "已完成 {{done}} / {{required}}",
+      "reviews_locked_practice": "完成练习环节后即可开始评价。",
+      "reviews_complete": "你已完成所有评价，谢谢！",
+      "reviews_extra_hint": "欢迎多评几份：这能帮到收到评价较少的同学。",
+      "start_review": "开始第 {{n}} / {{m}} 份评价",
+      "continue_review": "继续你的评价",
+      "review_another": "再评一份",
+      "see_feedback": "查看你的反馈",
+      "none_title": "暂时没有可评价的作业",
+      "none_body": "一有人提交，我们就会把同学的作业发给你。稍后再来看看吧。",
+      "check_again": "再看看",
+      "your_helpfulness": "同学给你的评价平均打了 {{avg}} / 5 分。",
+      "review_n_of_m": "第 {{n}} / {{m}} 份评价",
+      "extra_review": "额外评价",
+      "classmate_work": "同学的作业",
+      "work_of": "{{name}} 的作业",
+      "your_review": "你的评价",
+      "your_review_hint": "为每条标准选出最贴切的等级，再写下友善、具体的评语。",
+      "review_already_submitted": "你已经提交过这份评价了。",
+      "review_load_error": "无法加载这份评价。",
+      "comments_heading": "评语",
+      "pick_a_level": "选择等级",
+      "add_note": "添加备注",
+      "note_label": "对这条标准的备注（选填）",
+      "chars_remaining_one": "还需要 {{count}} 个字符",
+      "chars_remaining_other": "还需要 {{count}} 个字符",
+      "chars_ok_one": "{{count}} 个字符",
+      "chars_ok_other": "{{count}} 个字符",
+      "fix_before_submit": "有些内容还没填。请检查高亮的字段。",
+      "save_draft": "保存草稿",
+      "submit_review": "提交评价",
+      "drafts_autosave": "草稿会自动保存",
+      "draft_saved_toast": "草稿已保存",
+      "review_submitted_toast": "评价已提交，谢谢！",
+      "no_answer": "未作答",
+      "no_tasks": "这份提交暂时没有可显示的内容。",
+      "chosen": "已选",
+      "media_option": "选项 {{n}}（媒体）",
+      "download_file": "下载文件",
+      "feedback_title": "你的反馈",
+      "feedback_why": "对比同学看到的和你自己的看法，再决定要改什么。",
+      "locked_reviews_one": "再完成 {{count}} 份评价即可解锁你的反馈",
+      "locked_reviews_other": "再完成 {{count}} 份评价即可解锁你的反馈",
+      "locked_generic": "你的反馈还未开放",
+      "locked_due": "最迟将于 {{date}} 开放。",
+      "unlocked_by_due_date": "评价截止时间已过，你的反馈已开放。",
+      "no_feedback_title": "还没有反馈",
+      "no_feedback_body": "同学的评价送达后会显示在这里。",
+      "peer_score": "同伴得分",
+      "peer_score_how_one": "按每条标准，取 {{count}} 条同学评价的中间值（中位数）。",
+      "peer_score_how_other": "按每条标准，取 {{count}} 条同学评价的中间值（中位数）。",
+      "score_needs_more_one": "收到 {{count}} 条评价后将显示同伴得分。",
+      "score_needs_more_other": "收到 {{count}} 条评价后将显示同伴得分。",
+      "reviewers_disagree": "评价者意见不一",
+      "gap_title": "同学评价与你的自评对比",
+      "gap_title_peers": "同学看到的你的作业",
+      "legend_peers": "同学（中位数）",
+      "legend_you": "你",
+      "gap_values": "同学 {{peers}} · 你 {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}：同学 {{peers}}，你 {{you}}，满分 {{max}}",
+      "gap_aligned": "你和同学的看法一致",
+      "gap_self_higher": "你给自己的评分比同学高",
+      "gap_self_lower": "你给自己的评分比同学低",
+      "reviews_received_one": "收到 {{count}} 条评价",
+      "reviews_received_other": "收到 {{count}} 条评价",
+      "reviewer_n": "评价者 {{n}}",
+      "flagged": "已举报",
+      "how_helpful": "这条评价有多大帮助？",
+      "stars_n_one": "{{count}} 星",
+      "stars_n_other": "{{count}} 星",
+      "helpful_note_label": "给评价者的留言",
+      "helpful_note_placeholder": "哪些地方有帮助，或者还希望多些什么？（选填）",
+      "save_note": "保存留言",
+      "thanks_feedback": "谢谢你的反馈",
+      "flag_link": "举报这条评价",
+      "flag_title": "举报这条评价",
+      "flag_body": "老师会查看。请说明问题所在，例如言辞不当、跑题或内容为空。",
+      "flag_reason": "有什么问题？",
+      "flag_submit": "举报",
+      "flag_sent": "谢谢，已通知老师。",
+      "plan_title": "你的修改计划",
+      "plan_why": "写下你打算改什么。有了计划，反馈才能变成更好的作业。",
+      "plan_placeholder": "根据这些反馈，我会…",
+      "save_plan": "保存计划",
+      "plan_saved": "修改计划已保存",
+      "error_generic": "出了点问题，请重试。",
+      "error_save": "草稿未能保存，我们会再试一次。",
+      "error_submit": "提交失败，请重试。",
+      "error_download": "文件下载失败。",
+      "submission_changed": "这位同学开始了新的尝试，因此这次互评已关闭。你可以评价其他人。",
+      "answer_hidden": "此答案为自动评分，因此不在互评范围内。",
+      "retry_in_progress": "你已开始新的一次作答。提交后才能继续评阅同学的作业。"
+    },
+    "instructor": {
+      "tab": "同伴互评",
+      "setup": "设置",
+      "unknown_learner": "学员",
+      "retry": "重试",
+      "error_title": "无法加载同伴互评",
+      "error_description": "出了点问题。请检查网络连接后重试。",
+      "toggle": {
+        "title": "同伴互评",
+        "off_hint": "已关闭。开启后，学员提交作业后会用你的评分量表评审几位同学的作业，并收到同学的反馈。",
+        "on_hint": "已开启。每位学员提交后都会评审同学的作业。在下方选择一个评分量表模板并保存，就可以开始了。"
+      },
+      "why": {
+        "title": "同伴互评为何有效",
+        "reviewers_learn": "写评审时收获最多的是评审者自己，所以每位学员都要参与评审。",
+        "three_reviewers": "三位或以上评审者给出的反馈，可靠程度与一位讲师相当。",
+        "rubric_practice": "清晰的评分量表加上简短的练习环节，能让评审更准确。",
+        "revise": "当学员规划下一步要改什么时，反馈最有帮助。",
+        "dismiss": "隐藏此提示"
+      },
+      "sections": {
+        "settings": "设置",
+        "rubric": "评分量表",
+        "prompts": "评语问题",
+        "practice": "练习环节"
+      },
+      "settings": {
+        "reviewing_title": "评审",
+        "reviewing_description": "每位学员要写多少份评审，以及谁能看到谁的名字。",
+        "reviews_required": "每位学员的评审数",
+        "reviews_required_hint": "3–5 份即可获得可靠的反馈。每份作业也力求收到这么多评审。",
+        "anonymity": "姓名",
+        "anonymity_hint": "隐藏姓名能让评审更坦诚。",
+        "require_reviews": "先评审再看反馈",
+        "require_reviews_hint": "学员完成自己的评审后，或在评审截止日期过后，才能看到收到的反馈。",
+        "due_date": "评审截止日期",
+        "due_date_hint": "可选。在此日期之后，所有人都能看到自己的反馈。",
+        "clear": "清除",
+        "steps_title": "额外步骤",
+        "steps_description": "每一步都很简短，能让反馈更有用。",
+        "self_review": "自评",
+        "self_review_hint": "学员先给自己的作业打分，再与同学的评价进行对比。",
+        "practice": "练习环节",
+        "practice_hint": "学员给你准备的样例打分，然后查看你的评分。至少需要一个样例。",
+        "helpfulness": "有用度评分",
+        "helpfulness_hint": "学员为收到的每份评审打 1 到 5 星。",
+        "revision_plan": "修改计划",
+        "revision_plan_hint": "学员读完反馈后，写下自己打算修改的地方。",
+        "score_title": "分数",
+        "score_description": "同伴互评不会单独决定成绩。",
+        "min_reviews": "得出分数所需的评审数",
+        "min_reviews_hint": "作业收到这么多评审后，才会显示同伴分数。"
+      },
+      "anonymity": {
+        "double_blind": "双方隐藏",
+        "double_blind_hint": "没有人知道谁评审了谁",
+        "anonymous_reviewer": "隐藏评审者",
+        "anonymous_reviewer_hint": "评审者能看到作者的名字",
+        "named": "显示姓名",
+        "named_hint": "所有人都能看到双方的名字"
+      },
+      "score_mode": {
+        "feedback_only": "仅反馈",
+        "feedback_only_hint": "评审仅用于学习，不提供成绩建议",
+        "suggest_grade": "建议成绩",
+        "suggest_grade_hint": "你会看到同伴评分的中位数，评分时可作参考"
+      },
+      "rubric": {
+        "title": "评分量表",
+        "description": "评审者要打分的内容。每项标准都有从最好到最弱的等级。",
+        "template": "从模板开始",
+        "empty_title": "还没有评分量表",
+        "empty_description": "选择一个模板即可一键开始，然后根据你的作业调整措辞。",
+        "add_criterion": "添加标准",
+        "remove_criterion": "删除标准",
+        "move_up": "上移",
+        "move_down": "下移",
+        "criterion_title": "标准",
+        "criterion_title_placeholder": "例如：中心思想清晰",
+        "criterion_description": "关注要点",
+        "criterion_description_placeholder": "评审者应该关注什么？",
+        "untitled_criterion": "未命名标准",
+        "level_label": "等级",
+        "level_label_placeholder": "例如：优秀",
+        "points": "分值",
+        "level_description": "具体表现",
+        "level_description_placeholder": "可选：这个等级的作业是什么样的",
+        "add_level": "添加等级",
+        "remove_level": "删除等级",
+        "max_points": "满分：{{points}}",
+        "summary": "标准：{{criteria}} · 满分：{{points}}",
+        "replace_title": "替换当前的评分量表？",
+        "replace_message": "模板会替换你现有的标准。在点击“保存”之前不会保存任何内容。",
+        "replace_confirm": "替换"
+      },
+      "templates": {
+        "writing": {
+          "name": "写作",
+          "blurb": "论文、报告和书面回答",
+          "thesis": {
+            "title": "中心思想",
+            "description": "主要观点清晰，并且从头到尾紧扣主题。"
+          },
+          "evidence": {
+            "title": "论据与证据",
+            "description": "观点有恰当的例子、事实或来源作为支撑。"
+          },
+          "organization": {
+            "title": "结构",
+            "description": "思路按逻辑顺序展开，每个段落只承担一项任务。"
+          },
+          "style": {
+            "title": "清晰度与文风",
+            "description": "句子清楚易读，错误很少。"
+          }
+        },
+        "project": {
+          "name": "项目",
+          "blurb": "制作、设计和动手实践类作业",
+          "goal": {
+            "title": "目标与范围",
+            "description": "项目说明了要实现什么，并且没有超出这个范围。"
+          },
+          "process": {
+            "title": "过程与决策",
+            "description": "说明了所采取的步骤以及关键选择背后的原因。"
+          },
+          "result": {
+            "title": "成果质量",
+            "description": "最终成果可以正常使用、完整，并且制作用心。"
+          },
+          "reflection": {
+            "title": "反思",
+            "description": "作者说明了哪些做得好、哪些不足，以及会做哪些改变。"
+          }
+        },
+        "presentation": {
+          "name": "演示",
+          "blurb": "演讲、幻灯片和视频",
+          "content": {
+            "title": "内容",
+            "description": "信息准确、切题，并且不止于显而易见的内容。"
+          },
+          "structure": {
+            "title": "结构",
+            "description": "开场清晰，中间部分有逻辑，结尾有力。"
+          },
+          "delivery": {
+            "title": "表达",
+            "description": "讲者表达清楚，节奏得当，能抓住听众的注意力。"
+          },
+          "visuals": {
+            "title": "视觉呈现",
+            "description": "幻灯片或图像能支持要传达的信息，并且易于阅读。"
+          }
+        },
+        "code": {
+          "name": "代码",
+          "blurb": "程序、脚本和练习",
+          "correctness": {
+            "title": "正确性",
+            "description": "代码能完成要求的功能，包括边界情况。"
+          },
+          "readability": {
+            "title": "可读性",
+            "description": "命名、格式和注释让代码易于理解。"
+          },
+          "design": {
+            "title": "结构与设计",
+            "description": "代码拆分合理，没有不必要的重复。"
+          },
+          "testing": {
+            "title": "测试",
+            "description": "有检查或测试证明代码可以正常工作。"
+          }
+        },
+        "scale": {
+          "excellent": "优秀",
+          "excellent_description": "完全达到标准，优点突出",
+          "good": "良好",
+          "good_description": "达到标准，略有不足",
+          "developing": "进步中",
+          "developing_description": "部分达到标准，还需努力",
+          "beginning": "起步",
+          "beginning_description": "目前勉强达到标准",
+          "strong": "出色",
+          "strong_description": "明确达到标准",
+          "adequate": "合格",
+          "adequate_description": "部分达到标准",
+          "needs_work": "需改进",
+          "needs_work_description": "尚未达到标准"
+        }
+      },
+      "prompts": {
+        "title": "评语问题",
+        "description": "评审者需要书面回答的问题。设置最少字数可以避免只写一个词的评审。",
+        "label": "问题",
+        "label_placeholder": "例如：哪里让你感到意外？",
+        "min_chars": "最少字数",
+        "min_chars_hint": "设为 0 表示可以不回答。",
+        "add": "添加问题",
+        "remove": "删除问题",
+        "reset": "使用默认问题"
+      },
+      "samples": {
+        "title": "练习样例",
+        "description": "学员在评审同学之前先给样例打分，然后查看你的评分及理由。一两个样例就够了。",
+        "practice_off": "练习环节已在设置中关闭，学员不会看到这些样例。",
+        "none_yet": "还没有样例，因此会跳过练习环节。添加一个即可开启。",
+        "needs_rubric": "请先添加评分量表标准，才能为每个样例设定等级。",
+        "sample_title": "标题",
+        "sample_title_placeholder": "例如：样例文章 A",
+        "content": "样例作业",
+        "content_hint": "支持 Markdown",
+        "content_placeholder": "粘贴一个示例答案，最好是有改进空间的中等水平答案。",
+        "levels": "你的评级",
+        "levels_hint": "你在每项标准上会给出的等级",
+        "pick_level": "选择等级",
+        "explanation": "理由",
+        "explanation_hint": "学员打分后显示",
+        "explanation_placeholder": "用几句话解释你的评分。",
+        "add": "添加样例",
+        "remove": "删除样例",
+        "count_hint": "最多 5 个样例"
+      },
+      "errors": {
+        "criteria_min": "至少添加一项标准才能开启同伴互评。",
+        "criteria_max": "最多只能有 {{max}} 项标准。",
+        "criterion_title": "请为这项标准命名。",
+        "levels_min": "每项标准至少需要 {{min}} 个等级。",
+        "levels_max": "每项标准最多只能有 {{max}} 个等级。",
+        "level_label": "请为这个等级命名。",
+        "level_points": "分值必须大于或等于 0。",
+        "prompts_min": "请至少保留一个问题。",
+        "prompts_max": "最多只能有 {{max}} 个问题。",
+        "prompt_label": "请填写问题。",
+        "prompt_min_chars": "请输入 0 到 {{max}} 之间的整数。",
+        "reviews_range": "请输入 {{min}} 到 {{max}} 之间的数字。",
+        "sample_title": "请为样例添加标题。",
+        "sample_content": "请添加样例作业。",
+        "sample_levels": "请为每项标准选择你的等级。",
+        "duplicate": "有两个项目的 ID 相同。请删除其中一个后重新添加。"
+      },
+      "save": {
+        "saving": "正在保存同伴互评…",
+        "saved": "同伴互评已保存",
+        "error": "无法保存同伴互评",
+        "fix_errors": "请修正标出的字段，然后再次保存。"
+      },
+      "monitor": {
+        "title": "监控",
+        "off_title": "同伴互评已关闭",
+        "off_description": "请在“设置”中开启。进度、分数和被举报的评审都会显示在这里。",
+        "go_setup": "前往设置"
+      },
+      "totals": {
+        "submitted": "已提交",
+        "reviews_done": "已完成评审",
+        "in_progress": "进行中的评审",
+        "below_target": "需要更多评审",
+        "flagged": "被举报"
+      },
+      "flagged": {
+        "title": "被举报的评审",
+        "description": "学员认为这些评审不公平或没有帮助。舍弃某份评审后，它将不计入分数。",
+        "open": "查看所有评审",
+        "count": "举报：{{n}}"
+      },
+      "submissions": {
+        "title": "提交记录",
+        "learner": "学员",
+        "reviews": "收到的评审",
+        "received": "{{done}} / {{target}}",
+        "peer_score": "同伴分数",
+        "peer_score_tip": "按每项标准取评审的中位数，以百分比显示。已舍弃的评审不计入。",
+        "self": "自评",
+        "self_tip": "学员给自己作业打的分数。",
+        "flags": "举报",
+        "waiting": "等待中",
+        "disagree": "评审意见分歧（{{points}} 分）",
+        "disagree_tip": "最高和最低的评审相差很大，评分前值得看一看。",
+        "empty_title": "还没有人提交",
+        "empty_description": "学员一提交作业，评审就会开始。"
+      },
+      "reviewers": {
+        "title": "评审者",
+        "reviewer": "评审者",
+        "done": "已完成",
+        "done_tip": "已写评审数与要求数的对比。额外的评审也会计入。",
+        "helpfulness": "有用度",
+        "helpfulness_tip": "作者给此人评审的平均星级。",
+        "helpfulness_value": "{{value}} / 5",
+        "bias": "偏差",
+        "bias_tip": "此人的评分与同一作业其他评审者的评分平均相差多少。越低越好。",
+        "bias_value": "±{{points}} 分",
+        "calibration": "练习偏差",
+        "calibration_tip": "此人在练习环节的评分与你的评分相差多少，以每项标准的量表分值计算。越低越好。",
+        "calibration_value": "±{{points}}",
+        "empty_title": "还没有评审",
+        "empty_description": "学员开始评审后会显示在这里。"
+      },
+      "drawer": {
+        "title": "同伴评审",
+        "close": "关闭",
+        "peer_score": "同伴分数",
+        "not_enough": "评审数量还不够（最少：{{n}}）",
+        "score_basis": "评审的中位数 · 计入：{{n}}",
+        "self_score": "自评：",
+        "self_short": "自评：{{points}}",
+        "apply_grade": "将同伴分数用作成绩（{{score}}）",
+        "apply_hint": "打开评分并显示建议。在你评分之前不会保存任何内容。",
+        "feedback_only_hint": "成绩建议已关闭（仅反馈）。",
+        "open_grading": "打开评分",
+        "reviews": "评审（{{n}}）",
+        "reviewer_n": "评审者 {{n}}",
+        "no_reviews": "还没有评审。",
+        "status_assigned": "进行中",
+        "status_discarded": "已舍弃",
+        "flagged": "被举报",
+        "flag_reason": "举报原因：",
+        "discard_reason": "舍弃原因：",
+        "discard_placeholder": "为什么不计入这份评审？只有讲师能看到。",
+        "discard": "舍弃",
+        "restore": "恢复",
+        "discarded_toast": "评审已舍弃",
+        "restored_toast": "评审已恢复",
+        "action_error": "操作没有成功，请重试。",
+        "helpfulness": "作者评分：",
+        "self_review": "自评",
+        "reflection": "修改计划",
+        "no_reflection": "还没有写修改计划。",
+        "grade_title": "为 {{name}} 评分",
+        "suggested": "同伴建议：{{score}}",
+        "suggested_hint": "同伴评审的中位数（计入：{{n}}）。仅供参考。",
+        "closed_new_attempt": "已自动关闭：学员开始了新的尝试。"
+      }
+    }
   }
 }

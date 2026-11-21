@@ -1,6 +1,6 @@
 'use client';
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { ChartBar, BookOpen, Book, CalendarBlank, CheckCircle, Eye, EyeSlash, StackSimple, ShieldCheck, UserGear, Backpack, Lightning, Link as LinkIcon, GearSix } from '@phosphor-icons/react'
+import { ChartBar, BookOpen, Book, CalendarBlank, CheckCircle, Eye, EyeSlash, StackSimple, ShieldCheck, UserGear, Backpack, Lightning, Link as LinkIcon, GearSix, UsersThree } from '@phosphor-icons/react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip';
@@ -28,9 +28,10 @@ import { AIMarkIcon } from '@components/Objects/AI/AIBrand';
 const AssignmentSubmissionsSubPage = dynamic(() => import('./subpages/AssignmentSubmissionsSubPage'))
 const AssignmentAnalyticsSubPage = dynamic(() => import('./subpages/AssignmentAnalyticsSubPage'))
 const AssignmentGeneralSubPage = dynamic(() => import('./subpages/AssignmentGeneralSubPage'))
+const AssignmentPeerReviewSubPage = dynamic(() => import('./subpages/AssignmentPeerReviewSubPage'))
 
-type SubPage = 'general' | 'editor' | 'submissions' | 'analytics'
-const SUBPAGES: SubPage[] = ['general', 'editor', 'submissions', 'analytics']
+type SubPage = 'general' | 'editor' | 'submissions' | 'peer-review' | 'analytics'
+const SUBPAGES: SubPage[] = ['general', 'editor', 'submissions', 'peer-review', 'analytics']
 
 function AssignmentEdit() {
     const { t } = useTranslation()
@@ -66,6 +67,7 @@ function AssignmentEdit() {
         { key: 'general', label: t('dashboard.assignments.detail.tabs.general'), Icon: GearSix },
         { key: 'editor', label: t('dashboard.assignments.detail.tabs.editor'), Icon: StackSimple },
         { key: 'submissions', label: t('dashboard.assignments.detail.tabs.submissions'), Icon: UserGear },
+        { key: 'peer-review', label: t('peer_review.instructor.tab'), Icon: UsersThree },
         { key: 'analytics', label: t('dashboard.assignments.detail.tabs.analytics'), Icon: ChartBar },
     ]
 
@@ -115,6 +117,7 @@ function AssignmentEdit() {
                     {selectedSubPage === 'general' && <AssignmentGeneralSubPage />}
                     {selectedSubPage === 'editor' && <AssignmentEditorSubPage assignmentuuid={params.assignmentuuid} />}
                     {selectedSubPage === 'submissions' && <AssignmentSubmissionsSubPage assignment_uuid={params.assignmentuuid} />}
+                    {selectedSubPage === 'peer-review' && <AssignmentPeerReviewSubPage />}
                     {selectedSubPage === 'analytics' && <AssignmentAnalyticsSubPage assignment_uuid={params.assignmentuuid} />}
                 </div>
             </AssignmentProvider>

@@ -94,6 +94,51 @@ async def notify_submission_to_grade(db: AsyncSession, *, assignment, course, ac
     )
 
 
+@_never_raise
+async def notify_peer_review_received(db: AsyncSession, *, assignment, course, activity, reviewee_id: int):
+    """A classmate submitted a peer review of the learner's work. No actor:
+    the reviewer may be anonymous, and the actor would name them. Repeats
+    collapse into one unread row per assignment."""
+    from src.services.notifications.emit import emit
+
+    return await emit(
+        db, "peer_review_received", [reviewee_id],
+        org_id=course.org_id,
+        title=f"New peer feedback: {assignment.title}",
+        body=course.name,
+        params={"assignment": assignment.title, "course": course.name},
+        path=activity_path(course.course_uuid, activity.activity_uuid),
+        data={
+            "course_uuid": course.course_uuid,
+            "assignment_uuid": assignment.assignment_uuid,
+            "activity_uuid": activity.activity_uuid,
+        },
+        image=course.thumbnail_image or None,
+        group_key=f"peer_review_received:{assignment.id}",
+    )
+
+
+@_never_raise
+async def notify_peer_review_flagged(db: AsyncSession, *, assignment, course, reviewee_id: int, reason: str):
+    """A learner flagged a review they received. Goes to the course's graders."""
+    from src.services.notifications.emit import emit_admin
+
+    learner = await _user(db, reviewee_id)
+    excerpt = (reason or "").strip()[:SNIPPET]
+    return await emit_admin(
+        db, "peer_review_flagged",
+        org_id=course.org_id,
+        course_uuid=course.course_uuid,
+        title=f"Peer review flagged: {assignment.title}",
+        body=excerpt or course.name,
+        params={"actor": _name(learner), "assignment": assignment.title, "course": course.name, "reason": excerpt},
+        path=f"/dash/assignments/{assignment.assignment_uuid.removeprefix('assignment_')}?subpage=peer-review",
+        data={"course_uuid": course.course_uuid, "assignment_uuid": assignment.assignment_uuid},
+        image=course.thumbnail_image or None,
+        actor_id=reviewee_id,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Learning paths
 # ---------------------------------------------------------------------------
