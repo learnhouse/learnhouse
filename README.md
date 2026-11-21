@@ -74,28 +74,18 @@ Podcasts, certificates on completion, learning paths, communities, collections, 
 
 ## 📦 What's inside
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <b>📚 Teach</b><br />
-      Courses, chapters and collections<br />
-      Block editor with live collaboration<br />
-      Quizzes, assignments and grading<br />
-      Code exercises with auto-grading<br />
-      Podcasts and video<br />
-      Learning paths and certificates
-    </td>
-    <td width="50%" valign="top">
-      <b>⚙️ Run</b><br />
-      Communities and discussions<br />
-      User groups, roles and permissions<br />
-      Custom branding and landing pages<br />
-      SEO: metadata, sitemaps, Open Graph<br />
-      AI course planner and tutor<br />
-      REST API, webhooks and MCP server
-    </td>
-  </tr>
-</table>
+| Area | What you get |
+| --- | --- |
+| 📝 **Editor** | Block editor with live collaboration, templates and version history |
+| 📚 **Courses** | Chapters, collections, a shared library, learning paths and certificates |
+| 🧪 **Assessments** | Quizzes, assignments, code exercises graded in 30+ languages |
+| 🤖 **AI** | Course planner, lesson tutor and grading help, with Gemini or a local model through Ollama |
+| 🎙️ **Media** | Video, PDFs and podcasts with an RSS feed |
+| 💬 **Communities** | Discussion boards for your learners |
+| 👥 **People** | Invites, user groups, roles and permissions |
+| 🎨 **Your brand** | Your logo and colors, a landing page builder and SEO |
+| 🌍 **Languages** | Interface in 22 languages |
+| 🔌 **Integrations** | REST API, API tokens, webhooks and an MCP server |
 
 ## 🧩 Build on it
 
