@@ -165,7 +165,7 @@ export const GENERAL_PLANS: Plan[] = [
     features: [
       { label: "Unlimited Members", limitKey: "members" },
       { label: "10 Admin seats", limitKey: "admin_seats" },
-      { label: "Advanced AI", badge: "2,000 Credits", badgeLimitKey: "ai_credits" },
+      { label: "Advanced AI", badge: "3,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Certifications" },
       { label: "Paths" },
       { label: "Plays" },

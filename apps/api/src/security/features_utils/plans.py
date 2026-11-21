@@ -233,7 +233,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     },
     "pro": {
         "features": {
-            "ai": {"enabled": True, "limit": 2000},
+            "ai": {"enabled": True, "limit": 3000},
             "analytics": {"enabled": True, "limit": 0},
             "api": {"enabled": True, "limit": 0},
             "assignments": {"enabled": True, "limit": 0},
@@ -368,7 +368,7 @@ AI_CREDIT_LIMITS: dict[str, int] = {
     "personal": 500,
     "personal-family": 3000,
     "standard": 1000,
-    "pro": 2000,
+    "pro": 3000,
     "business": 10000,
     "enterprise": -1,
 }

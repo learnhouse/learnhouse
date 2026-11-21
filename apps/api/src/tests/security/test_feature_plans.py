@@ -75,7 +75,7 @@ class TestFeaturePlans:
         ("mode", "plan", "feature", "expected"),
         [
             ("saas", "standard", "members", 0),
-            ("saas", "pro", "ai", 2000),
+            ("saas", "pro", "ai", 3000),
             ("saas", "missing", "ai", 0),
             ("saas", "free", "missing", 0),
             ("ee", "standard", "members", 0),
