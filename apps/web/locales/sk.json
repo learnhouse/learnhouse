@@ -15612,8 +15612,8 @@
       },
       "locked": {
         "title": "Súčasť pokročilej analytiky",
-        "hint": "Prejdite na Enterprise a zobrazte si tento pohľad pre svoju akadémiu.",
-        "short": "Enterprise"
+        "hint": "Prejdite na Pro a zobrazte si tento pohľad pre svoju akadémiu.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Zatiaľ nie je čo zobraziť",

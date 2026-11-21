@@ -15038,8 +15038,8 @@
       },
       "locked": {
         "title": "Onderdeel van geavanceerde analytics",
-        "hint": "Upgrade naar Enterprise om deze weergave voor je academie te zien.",
-        "short": "Enterprise"
+        "hint": "Upgrade naar Pro om deze weergave voor je academie te zien.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Nog niets te tonen",

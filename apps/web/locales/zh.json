@@ -15005,8 +15005,8 @@
       },
       "locked": {
         "title": "高级数据分析的一部分",
-        "hint": "升级到 Enterprise 即可在您的学院中查看此视图。",
-        "short": "Enterprise"
+        "hint": "升级到 Pro 即可在您的学院中查看此视图。",
+        "short": "Pro"
       },
       "empty": {
         "title": "暂无内容可显示",

@@ -15612,8 +15612,8 @@
       },
       "locked": {
         "title": "Część zaawansowanej analityki",
-        "hint": "Przejdź na Enterprise, aby zobaczyć ten widok dla swojej akademii.",
-        "short": "Enterprise"
+        "hint": "Przejdź na Pro, aby zobaczyć ten widok dla swojej akademii.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Na razie nic do pokazania",
