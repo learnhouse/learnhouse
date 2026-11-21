@@ -147,9 +147,12 @@ async function saveLogin(
       await page.waitForTimeout(15_000)
     }
   }
+  // Login lands through a redirect chain (/ -> /home or the org page); let it
+  // settle so the evaluate below doesn't run in a context that's being torn down.
+  await page.waitForLoadState('networkidle').catch(() => undefined)
   // Bake the dismissed-onboarding flag into the saved state so every context
   // reusing this storageState (including ad-hoc ones) skips the first-run UI.
-  await page.evaluate(() => {
+  const bakeOnboarding = () => page.evaluate(() => {
     try {
       window.localStorage.setItem(
         'lh_onboarding',
@@ -166,6 +169,15 @@ async function saveLogin(
       /* ignore */
     }
   })
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await bakeOnboarding()
+      break
+    } catch (e) {
+      if (attempt === 3 || !/context was destroyed|navigation/i.test(String(e))) throw e
+      await page.waitForLoadState('load').catch(() => undefined)
+    }
+  }
   await context.storageState({ path: statePath })
   await context.close()
 }

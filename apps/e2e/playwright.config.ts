@@ -9,7 +9,16 @@ import { BASE_URL } from './core/instance'
  * (workers: 1) because they share one instance/org and create courses + users
  * that would otherwise race. `testDir: './features'` auto-discovers every
  * feature module's specs.
+ *
+ * Every module runs in desktop Chromium. The learner module (features/learner)
+ * also runs across the browser/device matrix below, since learners show up on
+ * every engine and screen size. Those extra projects only exist when
+ * E2E_BROWSERS=all (CI installs Chromium only); pick one with
+ * `E2E_BROWSERS=all bunx playwright test --project=<name>`.
  */
+const LEARNER = /features\/learner\/.*\.spec\.ts$/
+const MATRIX = process.env.E2E_BROWSERS === 'all'
+
 export default defineConfig({
   testDir: './features',
   globalSetup: './global-setup.ts',
@@ -40,5 +49,34 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    ...(MATRIX
+      ? [
+          {
+            name: 'firefox',
+            testMatch: LEARNER,
+            use: { ...devices['Desktop Firefox'] },
+          },
+          {
+            name: 'webkit',
+            testMatch: LEARNER,
+            use: { ...devices['Desktop Safari'] },
+          },
+          {
+            name: 'iphone',
+            testMatch: LEARNER,
+            use: { ...devices['iPhone 15'] },
+          },
+          {
+            name: 'android',
+            testMatch: LEARNER,
+            use: { ...devices['Pixel 7'] },
+          },
+          {
+            name: 'tablet',
+            testMatch: LEARNER,
+            use: { ...devices['iPad (gen 7)'] },
+          },
+        ]
+      : []),
   ],
 })
