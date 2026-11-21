@@ -80,6 +80,9 @@ async def test_openai_apps_challenge(client):
 async def test_register_errors_and_rate_limit(app, client):
     resp = await client.post("/oauth/register", content=b"not json", headers={"content-type": "application/json"})
     assert resp.status_code == 400 and resp.json()["error"] == "invalid_client_metadata"
+    # A non-string grant type is a 400, not a 500.
+    resp = await client.post("/oauth/register", json={"redirect_uris": [REDIRECT], "grant_types": ["authorization_code", {}]})
+    assert resp.status_code == 400 and resp.json()["error"] == "invalid_client_metadata"
     with patch.object(mcp_oauth, "check_rate_limit", return_value=(False, 99, 60)):
         assert (await client.post("/oauth/register", json={})).status_code == 429
     with patch.object(mcp_oauth, "check_rate_limit", side_effect=RuntimeError("redis down")):
