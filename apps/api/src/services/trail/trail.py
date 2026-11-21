@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
+from sqlalchemy import text
 from sqlmodel import select, func, delete as sql_delete
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.chapter_activities import ChapterActivity
@@ -106,6 +107,67 @@ async def _build_trail_read(
     return TrailRead(**trail.model_dump(), runs=trail_runs)
 
 
+def _trail_query(org_id: int, user_id: int):
+    """The user's trail in an org. No unique index backs (user, org), so a
+    legacy duplicate may exist: order by id so every reader gets the same one."""
+    return (
+        select(Trail)
+        .where(Trail.org_id == org_id, Trail.user_id == user_id)
+        .order_by(Trail.id)  # type: ignore[arg-type]
+    )
+
+
+async def _find_trail(db_session: AsyncSession, org_id: int, user_id: int) -> Optional[Trail]:
+    return (await db_session.execute(_trail_query(org_id, user_id))).scalars().first()
+
+
+async def lock_trail_creation(db_session: AsyncSession, org_id: int, user_id: int) -> None:
+    """Serialize trail creation for one (user, org) until the transaction ends.
+
+    Two parallel first visits used to both miss the select and both insert,
+    leaving duplicate trails. A transaction-scoped advisory lock (Postgres
+    only; other databases, the test SQLite included, have no concurrency to
+    guard) makes the second caller wait for the first one's commit, after
+    which its re-select finds the row."""
+    if db_session.get_bind().dialect.name != "postgresql":
+        return
+    await db_session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
+        {"key": f"trail:{user_id}:{org_id}"},
+    )
+
+
+async def get_or_create_trail(
+    db_session: AsyncSession, org_id: int, user_id: int, *, commit: bool = True
+) -> Trail:
+    """The user's trail in ``org_id``, created if missing, race-safe.
+
+    ``commit=False`` flushes instead (the caller commits, and the lock is held
+    until then). Does no permission check."""
+    trail = await _find_trail(db_session, org_id, user_id)
+    if trail is not None:
+        return trail
+    await lock_trail_creation(db_session, org_id, user_id)
+    trail = await _find_trail(db_session, org_id, user_id)
+    if trail is not None:
+        return trail
+    now = str(datetime.now())
+    trail = Trail(
+        org_id=org_id,
+        user_id=user_id,
+        trail_uuid=f"trail_{uuid4()}",
+        creation_date=now,
+        update_date=now,
+    )
+    db_session.add(trail)
+    if commit:
+        await db_session.commit()
+        await db_session.refresh(trail)
+    else:
+        await db_session.flush()
+    return trail
+
+
 async def create_user_trail(
     request: Request,
     user: PublicUser | AnonymousUser,
@@ -118,18 +180,21 @@ async def create_user_trail(
             detail="Anonymous users cannot access this endpoint",
         )
 
-    statement = select(Trail).where(
-        Trail.org_id == trail_object.org_id, Trail.user_id == user.id
-    )
-    trail = (await db_session.execute(statement)).scalars().first()
-
-    if trail:
+    if await _find_trail(db_session, trail_object.org_id, user.id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Trail already exists",
         )
 
     await require_org_membership(user.id, trail_object.org_id, db_session)
+
+    # A parallel call may have created it since: re-check under the lock.
+    await lock_trail_creation(db_session, trail_object.org_id, user.id)
+    if await _find_trail(db_session, trail_object.org_id, user.id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Trail already exists",
+        )
 
     trail = Trail.model_validate(trail_object)
 
@@ -159,7 +224,7 @@ async def get_user_trails(
             detail="Anonymous users cannot access this endpoint",
         )
 
-    statement = select(Trail).where(Trail.user_id == user.id)
+    statement = select(Trail).where(Trail.user_id == user.id).order_by(Trail.id)  # type: ignore[arg-type]
     trail = (await db_session.execute(statement)).scalars().first()
 
     if not trail:
@@ -180,22 +245,19 @@ async def check_trail_presence(
     user: PublicUser,
     db_session: AsyncSession,
 ):
-    statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user_id)
-    trail = (await db_session.execute(statement)).scalars().first()
-
-    if not trail:
-        trail = await create_user_trail(
-            request,
-            user,
-            TrailCreate(
-                org_id=org_id,
-                user_id=user.id,
-            ),
-            db_session,
-        )
+    """The user's trail in the org, created on first use. Creating one needs
+    org membership (403 otherwise); an existing trail is returned as is."""
+    trail = await _find_trail(db_session, org_id, user_id)
+    if trail:
         return trail
 
-    return trail
+    if isinstance(user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot access this endpoint",
+        )
+    await require_org_membership(user.id, org_id, db_session)
+    return await get_or_create_trail(db_session, org_id, user.id)
 
 
 async def get_user_trail_with_orgid(
@@ -208,13 +270,18 @@ async def get_user_trail_with_orgid(
             detail="Anonymous users cannot access this endpoint",
         )
 
-    trail = await check_trail_presence(
-        org_id=org_id,
-        user_id=user.id,
-        request=request,
-        user=user,
-        db_session=db_session,
-    )
+    trail = await _find_trail(db_session, org_id, user.id)
+    if trail is None:
+        try:
+            await require_org_membership(user.id, org_id, db_session)
+        except HTTPException as e:
+            if e.status_code != status.HTTP_403_FORBIDDEN:
+                raise
+            # A signed-in visitor who is not a member (or a member the org's
+            # two-factor policy still blocks) has no progress here: an empty
+            # trail, and nothing is created for them.
+            return TrailRead(org_id=org_id, user_id=user.id, runs=[])
+        trail = await get_or_create_trail(db_session, org_id, user.id)
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
     trail_runs_raw = (await db_session.execute(statement)).scalars().all()
@@ -461,10 +528,7 @@ async def remove_activity_from_trail(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
 
-    statement = select(Trail).where(
-        Trail.org_id == course.org_id, Trail.user_id == user.id
-    )
-    trail = (await db_session.execute(statement)).scalars().first()
+    trail = await _find_trail(db_session, course.org_id, user.id)
 
     if not trail:
         raise HTTPException(
@@ -604,10 +668,7 @@ async def remove_course_from_trail(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
 
-    statement = select(Trail).where(
-        Trail.org_id == course.org_id, Trail.user_id == user.id
-    )
-    trail = (await db_session.execute(statement)).scalars().first()
+    trail = await _find_trail(db_session, course.org_id, user.id)
 
     if not trail:
         raise HTTPException(

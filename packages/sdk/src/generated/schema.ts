@@ -2247,7 +2247,7 @@ export interface paths {
         };
         /**
          * List unanswered required signup fields
-         * @description Required custom signup fields the authenticated user has not answered yet. Google sign-in skips the signup form, so those users are asked to complete their profile afterwards. Returns an empty list when there is nothing outstanding.
+         * @description Required custom signup fields the authenticated user has not answered yet. Google sign-in skips the signup form, so those users are asked to complete their profile afterwards. Returns an empty list when there is nothing outstanding, and for a caller who is not a member of the organization (nothing to complete there).
          */
         get: operations["api_get_pending_signup_fields_api_v1_orgs__org_id__signup_fields_pending_get"];
         put?: never;
@@ -32857,13 +32857,6 @@ export interface operations {
             };
             /** @description Not authenticated */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Caller is not a member of this organization */
-            403: {
                 headers: {
                     [name: string]: unknown;
                 };

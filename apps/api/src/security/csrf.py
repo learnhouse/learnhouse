@@ -127,6 +127,13 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if scope["type"] != "http" or scope.get("method") not in STATE_CHANGING_METHODS:
             await self.app(scope, receive, send)
             return
+        # MCP is bearer-only (its auth middleware never reads a cookie), and a
+        # POST there can stream SSE, which BaseHTTPMiddleware breaks ("No
+        # response returned"). Nothing to forge, so it skips CSRF entirely.
+        path = scope.get("path", "")
+        if path == "/mcp" or path.startswith("/mcp/"):
+            await self.app(scope, receive, send)
+            return
         await super().__call__(scope, receive, send)
 
     def _extract_origin_from_url(self, url: str) -> str | None:
