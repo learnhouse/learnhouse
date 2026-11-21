@@ -27,6 +27,8 @@ Test event sent to verify endpoint connectivity. Fired by the **Send test event*
 
 ## Learning progress
 
+Progress events fire the same way whether the learner acts in LearnHouse or your server records the progress through the [Admin API](/reference/headless) (enrolling, bulk enrolling, completing an activity or a whole course).
+
 ### `course_completed`
 
 Triggered when a user completes all activities in a course.
@@ -196,6 +198,18 @@ Triggered when a user is removed from the organization.
 
 ```json
 { "user_id": "integer", "org_id": "integer" }
+```
+
+### `user_anonymized`
+
+Triggered when a user's personal data is erased through the Admin API (`POST /api/v1/admin/{org_slug}/users/{user_id}/anonymize`).
+
+```json
+{
+  "user_id": "integer",
+  "anonymized_email": "string",
+  "api_tokens_revoked": "integer"
+}
 ```
 
 ## Course lifecycle
@@ -452,9 +466,33 @@ Triggered when users are added to a user group.
 }
 ```
 
+### `usergroup_users_removed`
+
+Triggered when users are removed from a user group through the Admin API.
+
+```json
+{
+  "usergroup_id": "integer",
+  "usergroup_uuid": "string",
+  "user_ids": "list[integer]"
+}
+```
+
 ### `usergroup_resources_added`
 
 Triggered when resources are assigned to a user group.
+
+```json
+{
+  "usergroup_id": "integer",
+  "usergroup_uuid": "string",
+  "resource_uuids": "list[string]"
+}
+```
+
+### `usergroup_resources_removed`
+
+Triggered when resources are unassigned from a user group through the Admin API.
 
 ```json
 {

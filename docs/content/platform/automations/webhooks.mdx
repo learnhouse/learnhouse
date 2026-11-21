@@ -40,7 +40,7 @@ Each endpoint card has a switch to make it **Active** or **Inactive**. Expand th
 ### Limits
 
 - At most **20 endpoints per organization**. Endpoints created by Zapier count toward this limit.
-- Creating endpoints and sending test events share a rate limit of **20 per hour** per organization.
+- Creating endpoints and sending test events are each limited to **20 per hour** per organization. Only requests from someone allowed to manage the organization's webhooks count.
 - Creating, updating and rotating secrets need a role that can update the organization.
 
 ## Payload format
@@ -177,7 +177,7 @@ If your framework parses the body into a dict before you see it (Express without
 - **Transport**: `POST` with a 10-second timeout. Redirects are not followed.
 - **Retries**: Up to **3 attempts** per event: the first try, then a retry after **1 s**, then a last one after **4 s**. Any non-2xx response, timeout, or network error triggers a retry.
 - **Success**: A response with an HTTP status in `2xx` marks the delivery as successful and stops further retries.
-- **Ordering**: Deliveries are fire-and-forget and may arrive slightly out of order under load. Use the `timestamp` field if you need strict ordering.
+- **Ordering**: Deliveries are fire-and-forget and may arrive slightly out of order under load. Each endpoint is served independently, so a slow or failing endpoint does not delay the others. Use the `timestamp` field if you need strict ordering.
 - **Delivery logs**: The most recent **200 attempts per endpoint** are retained. Each log entry records the HTTP status, the start of the response body (LearnHouse reads up to 8 KB and stores the first 500 characters), the attempt number, and any transport-level error.
 - **Plan**: If the organization drops below the Pro plan, deliveries stop.
 

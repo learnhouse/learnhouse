@@ -72,6 +72,9 @@ they are exempt from the org's sign-in method and two-factor rules inside that o
 vouches for the learner. See
 [Signed-in learners](/developers/react/learners).
 
+Like every Admin API route (`/api/v1/admin/{org_slug}/...`), it only takes an API token: a request without
+credentials gets `401`, and a user session gets `403`.
+
 ## API tokens
 
 <Callout type="info">
@@ -121,7 +124,9 @@ A token can never do more than the user who created it. Its rights are capped by
 The **API Access** tab lists each token with its **Token Prefix**, **Status** (Active or Revoked), **Last Used** and **Expires** dates.
 
 - **Regenerate** issues a new secret for the same token. The old value stops working immediately.
-- **Revoke** disables the token immediately. This cannot be undone.
+- **Revoke** disables the token immediately. This cannot be undone, and a revoked token can no longer be edited or regenerated.
+
+Through the API, `PUT /api/v1/orgs/{org_id}/api-tokens/{token_uuid}` changes a token's name, description, rights or expiry. Omitted fields stay as they are; send `"expires_at": null` to remove the expiry. Names follow the same rules as at creation.
 
 Creating and regenerating tokens is limited to 10 per hour per IP address.
 
