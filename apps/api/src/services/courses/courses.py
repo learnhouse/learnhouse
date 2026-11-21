@@ -353,8 +353,10 @@ async def get_courses_orgslug(
     include_unpublished: bool = False,
     language: Optional[str] = None,
 ) -> List[CourseRead]:
-    # Cap limit to prevent excessive DB reads
-    limit = min(limit, 100)
+    # Cap limit to prevent excessive DB reads; never let a caller produce a
+    # negative OFFSET or LIMIT (Postgres rejects both).
+    limit = max(0, min(limit, 100))
+    page = max(1, page)
     from src.services.courses.translations.locales import normalize_locale
 
     language = normalize_locale(language) if language else None

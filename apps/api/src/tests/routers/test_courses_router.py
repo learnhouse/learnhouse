@@ -160,6 +160,36 @@ class TestGetCoursesByOrgSlug:
         assert body[0]["course_uuid"] == "course_test"
 
 
+    @pytest.mark.parametrize("page,limit", [(0, 10), (-1, 10), (1, -5)])
+    async def test_out_of_range_pagination_is_a_validation_error(self, client, page, limit):
+        # These used to reach the database as a negative OFFSET/LIMIT (500).
+        with patch(
+            "src.routers.courses.courses.get_courses_orgslug",
+            new_callable=AsyncMock,
+        ) as svc:
+            response = await client.get(
+                f"/api/v1/courses/org_slug/test-org/page/{page}/limit/{limit}"
+            )
+
+        assert response.status_code == 422
+        svc.assert_not_awaited()
+
+    async def test_service_clamps_page_and_limit(self, db, org, admin_user, mock_request):
+        from src.db.courses.courses import Course
+        from src.services.courses.courses import get_courses_orgslug
+
+        db.add(Course(
+            name="Listed", description="d", public=True, published=True,
+            open_to_contributors=False, org_id=org.id, course_uuid="course_clamped",
+            creation_date="2024-01-01", update_date="2024-01-01",
+        ))
+        await db.commit()
+
+        listed = await get_courses_orgslug(mock_request, admin_user, org.slug, db, page=0, limit=10)
+        assert [c.course_uuid for c in listed] == ["course_clamped"]
+        assert await get_courses_orgslug(mock_request, admin_user, org.slug, db, page=1, limit=-5) == []
+
+
 class TestGetCoursesCount:
     async def test_get_courses_count(self, client):
         with patch(
