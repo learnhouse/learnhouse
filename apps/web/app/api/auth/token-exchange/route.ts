@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfig } from '@services/config/config'
+import { getConfig, getServerBackendUrl } from '@services/config/config'
 import {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
@@ -8,7 +8,7 @@ import {
   getCookieOptions,
 } from '@services/auth/cookies'
 
-const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
+const BACKEND_URL = getServerBackendUrl('http://localhost:1338')
 // Dormant cross-domain handoff safety valve. Post learnhouse.app deprecation the
 // .io apex and org subdomains share .{top_domain} cookies, so this route is no
 // longer used by the app (handleGoToOrg navigates directly). No hardcoded .app

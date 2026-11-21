@@ -7,10 +7,12 @@ export PYTHONIOENCODING=utf-8
 # Wait for database and redis if connection strings point to external services
 # (In docker-compose, depends_on handles this, but useful for standalone)
 if [ -n "$LEARNHOUSE_SQL_CONNECTION_STRING" ]; then
-    DB_HOST=$(echo "$LEARNHOUSE_SQL_CONNECTION_STRING" | sed -n 's/.*@\([^:]*\):\([0-9]*\)\/.*/\1/p')
+    DB_HOST=$(echo "$LEARNHOUSE_SQL_CONNECTION_STRING" | sed -n 's/.*@\([^:/]*\).*/\1/p')
+    DB_PORT=$(echo "$LEARNHOUSE_SQL_CONNECTION_STRING" | sed -n 's/.*@[^:/]*:\([0-9]*\).*/\1/p')
+    DB_PORT=${DB_PORT:-5432}
     if [ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1" ] && [ "$DB_HOST" != "db" ]; then
-        echo "Waiting for external database at $DB_HOST..."
-        timeout 30 sh -c 'until nc -z '"$DB_HOST"' 5432; do sleep 1; done' || true
+        echo "Waiting for external database at $DB_HOST:$DB_PORT..."
+        timeout 30 sh -c 'until nc -z '"$DB_HOST"' '"$DB_PORT"'; do sleep 1; done' || true
     fi
 fi
 

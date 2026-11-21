@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getBackendUrl } from '@services/config/config'
+import { getServerBackendUrl } from '@services/config/config'
 
 // Allow large file uploads (videos, SCORM packages up to 5GB) to pass through
 export const maxDuration = 3600 // 60 minutes
@@ -15,7 +15,7 @@ const SKIP_RESPONSE_HEADERS = new Set(['connection', 'keep-alive', 'transfer-enc
 async function proxyToBackend(request: NextRequest): Promise<Response> {
   const path = request.nextUrl.pathname
   const search = request.nextUrl.search
-  const backendUrl = `${getBackendUrl().replace(/\/+$/, '')}${path}${search}`
+  const backendUrl = `${getServerBackendUrl()}${path}${search}`
 
   // Forward all request headers except hop-by-hop ones
   const headers = new Headers()
