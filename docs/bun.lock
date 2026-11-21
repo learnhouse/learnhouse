@@ -13,7 +13,7 @@
         "fumadocs-mdx": "15.6.3",
         "next": "16.4.6",
         "next-sitemap": "^4.2.3",
-        "posthog-js": "^1.451.0",
+        "posthog-js": "^1.451.2",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
         "shiki": "^4.6.0",
@@ -37,7 +37,7 @@
     "dompurify": ">=3.4.18",
     "katex": "^0.19.1",
     "sharp": ">=0.35.5",
-    "source-map-js": ">=1.2.2",
+    "source-map-js": ">=1.2.3",
     "zod": "4.6.7",
   },
   "packages": {
@@ -713,7 +713,7 @@
 
     "source-map": ["source-map@0.7.6", "", {}, "sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ=="],
 
-    "source-map-js": ["source-map-js@1.2.2", "", {}, "sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw=="],
+    "source-map-js": ["source-map-js@1.2.4", "", {}, "sha512-J7ZjMvHd9O1fcT/5V09QWaaSl2BbWx3F6O08spde82Namf9UB0GxRVIPiNbVsdKkoizHiSpTodo3vp2bAy91MA=="],
 
     "space-separated-tokens": ["space-separated-tokens@2.0.2", "", {}, "sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q=="],
 
