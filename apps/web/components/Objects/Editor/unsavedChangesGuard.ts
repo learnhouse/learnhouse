@@ -25,6 +25,14 @@ export function getEditorContentSnapshot(content: unknown): string {
   // would be a real cost. `this` is the object the key belongs to, which is
   // how an `attrs` value finds out which node type it hangs off.
   return JSON.stringify(content ?? null, function (this: any, key, value) {
+    // The editor appends an empty paragraph to the end of the document (the
+    // trailing node) on its first transaction, without anyone typing. Leave
+    // trailing empty paragraphs out so that alone doesn't count as an edit.
+    if (key === "content" && this?.type === "doc" && Array.isArray(value)) {
+      let end = value.length;
+      while (end > 0 && isEmptyParagraph(value[end - 1])) end--;
+      return end === value.length ? value : value.slice(0, end);
+    }
     if (key !== "attrs" || !value || typeof value !== "object") return value;
     // Own-property only: node types come from stored content, and a node typed
     // "__proto__" would otherwise resolve to Object.prototype.
@@ -42,6 +50,14 @@ export function getEditorContentSnapshot(content: unknown): string {
     }
     return kept;
   });
+}
+
+function isEmptyParagraph(node: any): boolean {
+  return (
+    !!node &&
+    node.type === "paragraph" &&
+    !(Array.isArray(node.content) && node.content.length > 0)
+  );
 }
 
 export function hasEditorContentChanged(

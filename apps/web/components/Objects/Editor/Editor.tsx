@@ -384,6 +384,10 @@ function Editor(props: EditorProps) {
   const autosaveSave = React.useCallback(async (): Promise<SaveOutcome> => {
     if (!editor) return 'failed'
     const content = editor.getJSON()
+    // Nothing real changed since the last save (the empty paragraph the
+    // editor appends on load, an H5P frame reporting its height): writing it
+    // would add a version and move the activity's "last updated" date.
+    if (!hasEditorContentChanged(savedContentSnapshotRef.current, content)) return 'saved'
     const result = await props.setContent(content, false, { quiet: true })
     if (result?.hasConflict) {
       setConflictInfo(result.conflictInfo ?? null)

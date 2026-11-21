@@ -297,6 +297,22 @@ describe('activity room saves', () => {
     assert.equal(rooms.inspect(UUID)!.needsYdocSave, true)
   })
 
+  it('stores only the ydoc when a client just adds the trailing empty paragraph', async () => {
+    const api = fakeApi({ content: doc('a'), version: 1 })
+    const { rooms, live } = await setup(api)
+    await rooms.store(UUID)
+    // What the editor's trailing node does on open: an empty paragraph at the end
+    edit(live, (f) => f.push([new Y.XmlElement('paragraph')]), 11, rooms)
+    await rooms.store(UUID)
+    assert.equal(api.puts.at(-1)!.content, undefined, 'no new version for the trailing paragraph')
+    assert.equal(api.state.version, 1)
+    // A real edit after it is still saved as content
+    edit(live, (f) => appendParagraph(f, 'b'), 11, rooms)
+    await rooms.store(UUID)
+    assert.ok(api.puts.at(-1)!.content)
+    assert.equal(api.state.version, 2)
+  })
+
   it('ignores the server\'s own writes', async () => {
     const api = fakeApi({ content: doc('a'), version: 1 })
     const { rooms } = await setup(api)

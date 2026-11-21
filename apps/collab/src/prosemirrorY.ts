@@ -303,9 +303,20 @@ export function canonicalize(node: PMNode): PMNode {
         merged.push(child)
       }
     }
-    out.content = merged
+    // The editor keeps an empty paragraph at the end of the document so there
+    // is always somewhere to type after a block (TipTap's trailing node). It
+    // appears on load without anyone editing, so it isn't content: ignoring it
+    // keeps opening an activity from saving a new version.
+    if (node.type === 'doc') {
+      while (merged.length > 0 && isEmptyParagraph(merged[merged.length - 1])) merged.pop()
+    }
+    if (merged.length > 0) out.content = merged
   }
   return out
+}
+
+function isEmptyParagraph(node: any): boolean {
+  return node?.type === 'paragraph' && !(node.content && node.content.length > 0)
 }
 
 function sortKeys(value: any): any {
