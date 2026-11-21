@@ -47047,7 +47047,7 @@
           "tools/org"
         ],
         "summary": "Who is notified about admin events",
-        "description": "For each admin notification type (submissions to grade, join requests, sync errors…), which roles receive it in this organization.\n\nTier: read. Toolset: org.",
+        "description": "For each admin notification type (submissions to grade, join requests, sync errors…), which roles receive it in this organization.\n\nTier: read. Toolset: org.\nToken right needed: organizations.action_read.",
         "operationId": "tool_get_notification_routing",
         "parameters": [
           {
@@ -47115,7 +47115,7 @@
           "tools/org"
         ],
         "summary": "Change who is notified about admin events",
-        "description": "Choose which roles (admins, maintainers, course_authors) receive each admin notification type.\n\nTier: edit. Toolset: org.",
+        "description": "Choose which roles (admins, maintainers, course_authors) receive each admin notification type.\n\nTier: edit. Toolset: org.\nToken right needed: organizations.action_update.",
         "operationId": "tool_update_notification_routing",
         "parameters": [
           {

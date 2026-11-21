@@ -14546,6 +14546,7 @@ export interface paths {
          * @description For each admin notification type (submissions to grade, join requests, sync errors…), which roles receive it in this organization.
          *
          *     Tier: read. Toolset: org.
+         *     Token right needed: organizations.action_read.
          */
         post: operations["tool_get_notification_routing"];
         delete?: never;
@@ -14568,6 +14569,7 @@ export interface paths {
          * @description Choose which roles (admins, maintainers, course_authors) receive each admin notification type.
          *
          *     Tier: edit. Toolset: org.
+         *     Token right needed: organizations.action_update.
          */
         post: operations["tool_update_notification_routing"];
         delete?: never;
