@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 import {
   ExperienceFooter,
   ExperienceFrame,
+  buzz,
   newId,
   useEnsureBlockId,
   useExperienceEditable,
@@ -310,6 +311,7 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
       const next = answerQuestion(r, questions, choice, el, seconds, relaxed)
       roundRef.current = next
       setRound(next)
+      buzz(next.last?.correct ? 'correct' : 'wrong')
       const right = q.options[q.answer]
       if (next.last?.correct) setLive(k('live_correct', { points: next.last.points }))
       else if (choice === null) setLive(k('live_timeout', { answer: right }))
@@ -422,7 +424,7 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
   if (!questions.length) {
     return (
       <ExperienceFrame {...frame}>
-        <p className="m-0 rounded-xl bg-neutral-50 px-4 py-6 text-center text-sm text-neutral-500">{k('empty')}</p>
+        <p className="m-0 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[14px] text-neutral-500">{k('empty')}</p>
       </ExperienceFrame>
     )
   }
@@ -440,7 +442,7 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
     <ExperienceFrame {...frame} instructions={k('instructions')} footer={footer} live={live} celebrate={phase === 'end' && (stars === 3 || isNewBest)}>
       {phase === 'start' && (
         <div className="flex flex-col items-center gap-4 py-2 text-center">
-          <p className="m-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-neutral-600">
+          <p className="m-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[14px] text-neutral-600">
             <span>{k('meta_questions', { count: total })}</span>
             {!relaxed && (
               <span className="inline-flex items-center gap-1">
@@ -454,7 +456,7 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
             </span>
           </p>
           {best > 0 && (
-            <p className="m-0 inline-flex items-center gap-1 text-xs font-medium text-amber-700">
+            <p className="m-0 inline-flex items-center gap-1 text-[12px] font-medium text-amber-700">
               <Trophy size={13} weight="fill" aria-hidden />
               {k('best', { count: best })}
             </p>
@@ -466,20 +468,25 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
             onClick={toggleRelaxed}
             className="inline-flex items-center gap-2.5 rounded-xl px-2 py-1 text-start outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
           >
-            <span className={cn('relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors motion-reduce:transition-none', relaxed ? 'bg-emerald-500' : 'bg-neutral-300')}>
+            <span
+              className={cn(
+                'relative inline-flex h-6 w-10 shrink-0 rounded-full transition-colors motion-reduce:transition-none',
+                relaxed ? 'bg-emerald-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]' : 'lh-exp-well',
+              )}
+            >
               <span
                 className={cn(
-                  'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-[inset-inline-start] motion-reduce:transition-none',
+                  'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-[inset_0_1px_0_#fff,0_1px_2px_rgba(15,23,42,0.25),0_0_0_1px_rgba(15,23,42,0.08)] transition-[inset-inline-start] motion-reduce:transition-none',
                   relaxed ? 'start-[1.125rem]' : 'start-0.5',
                 )}
               />
             </span>
             <span className="flex flex-col">
-              <span className="text-sm font-medium text-neutral-800">{k('relaxed')}</span>
-              <span className="text-xs text-neutral-500">{k('relaxed_hint')}</span>
+              <span className="text-[14px] font-medium text-neutral-800">{k('relaxed')}</span>
+              <span className="text-[12px] text-neutral-500">{k('relaxed_hint')}</span>
             </span>
           </button>
-          <button type="button" className={buttonClass('primary', 'lg')} onClick={start}>
+          <button type="button" className="lh-exp-key min-h-11 px-6" onClick={start}>
             <Play size={15} weight="fill" aria-hidden />
             {k('start')}
           </button>
@@ -492,20 +499,20 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
             <Lives total={data.lives} left={round.livesLeft} />
             <div className="flex items-center gap-2">
               {multiplierFor(round.combo) > 1 && (
-                <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-bold tabular-nums text-orange-600 animate-in zoom-in-75 duration-200 motion-reduce:zoom-in-100">
+                <span key={multiplierFor(round.combo)} className="lh-exp-snap inline-block rounded-full bg-orange-50 px-2 py-0.5 text-[12px] font-bold tabular-nums text-orange-600">
                   {k('combo', { n: multiplierFor(round.combo) })}
                 </span>
               )}
-              <span className="text-sm font-semibold tabular-nums text-neutral-800">{k('points', { count: round.score })}</span>
+              <span className="text-[14px] font-semibold tabular-nums text-neutral-800">{k('points', { count: round.score })}</span>
             </div>
           </div>
           <div className="flex items-start gap-3">
             {relaxed ? (
-              <span className="inline-flex shrink-0 items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">{k('relaxed')}</span>
+              <span className="inline-flex shrink-0 items-center rounded-full bg-emerald-50 px-2 py-1 text-[12px] font-medium text-emerald-700">{k('relaxed')}</span>
             ) : (
-              <span className="relative inline-flex h-12 w-12 shrink-0 items-center justify-center" aria-hidden>
-                <svg viewBox="0 0 48 48" className="absolute inset-0 -rotate-90">
-                  <circle cx="24" cy="24" r={RING_R} fill="none" strokeWidth="4" className="stroke-neutral-100" />
+              <span className="lh-exp-well relative inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full" aria-hidden>
+                <svg viewBox="0 0 48 48" className="absolute inset-1 -rotate-90">
+                  <circle cx="24" cy="24" r={RING_R} fill="none" strokeWidth="4" className="stroke-neutral-200" />
                   <circle
                     ref={ringRef}
                     cx="24"
@@ -520,12 +527,12 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
                     className="text-orange-500"
                   />
                 </svg>
-                <span ref={numRef} className="text-sm font-bold tabular-nums text-neutral-800">
+                <span ref={numRef} className="lh-exp-raised relative inline-flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold tabular-nums text-neutral-800">
                   {round.last ? 0 : seconds}
                 </span>
               </span>
             )}
-            <h4 ref={promptRef} tabIndex={-1} className="m-0 min-w-0 flex-1 self-center text-base leading-snug font-semibold text-neutral-900 outline-none [overflow-wrap:anywhere] sm:text-lg">
+            <h4 ref={promptRef} tabIndex={-1} className="m-0 min-w-0 flex-1 self-center text-[15px] leading-snug font-semibold text-neutral-900 outline-none [overflow-wrap:anywhere] sm:text-lg">
               {question.prompt}
             </h4>
           </div>
@@ -541,19 +548,19 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
                   type="button"
                   disabled={!!last}
                   onClick={() => answer(i)}
+                  data-result={state === 'right' ? 'correct' : state === 'wrong' ? 'wrong' : undefined}
                   className={cn(
-                    'flex min-h-12 items-center gap-2.5 rounded-xl px-3 py-2.5 text-start text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-500/40 motion-reduce:transition-none',
-                    state === 'idle' && 'bg-white text-neutral-800 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] hover:bg-orange-50/60 active:scale-[0.99]',
-                    state === 'right' && 'bg-emerald-50 text-emerald-800 ring-2 ring-emerald-400',
-                    state === 'wrong' && 'bg-rose-50 text-rose-800 ring-2 ring-rose-400 lh-exp-shake',
-                    state === 'dim' && 'bg-neutral-50 text-neutral-400',
+                    'lh-exp-raised lh-exp-press flex min-h-12 items-center gap-2.5 rounded-xl px-3 py-2.5 text-start text-[14px] font-medium outline-none disabled:cursor-default',
+                    state === 'idle' && 'text-neutral-800',
+                    state === 'wrong' && 'lh-exp-shake',
+                    state === 'dim' && 'text-neutral-400 opacity-60',
                   )}
                 >
                   <span
                     aria-hidden
                     className={cn(
-                      'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold',
-                      state === 'right' ? 'bg-emerald-500 text-white' : state === 'wrong' ? 'bg-rose-500 text-white' : 'bg-neutral-100 text-neutral-500',
+                      'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[12px] font-bold',
+                      state === 'right' ? 'bg-emerald-500 text-white' : state === 'wrong' ? 'bg-rose-500 text-white' : 'lh-exp-well text-neutral-500',
                     )}
                   >
                     {state === 'right' ? <Check size={12} weight="bold" /> : state === 'wrong' ? <X size={12} weight="bold" /> : i + 1}
@@ -566,16 +573,19 @@ function SpeedRoundPlayer({ data, frame, blockId, source }: { data: SpeedRoundDa
           <div className="flex min-h-9 items-center justify-center">
             {round.last &&
               (round.last.correct ? (
-                <span className="text-sm font-bold tabular-nums text-emerald-600 animate-in fade-in slide-in-from-bottom-1 duration-200 motion-reduce:slide-in-from-bottom-0">
+                <span key={round.index} className="lh-exp-rise inline-flex items-center gap-1.5 text-[14px] font-bold tabular-nums text-emerald-600">
                   {k('plus_points', { count: round.last.points })}
+                  {multiplierFor(round.combo) > 1 && (
+                    <span className="rounded-full bg-orange-50 px-1.5 py-px text-[12px] text-orange-600">{k('combo', { n: multiplierFor(round.combo) })}</span>
+                  )}
                 </span>
               ) : (
-                <span className="text-sm font-medium text-rose-600 animate-in fade-in duration-200">
+                <span className="text-[14px] font-medium text-rose-600 animate-in fade-in duration-200">
                   {round.last.choice === null ? k('time_up') : k('wrong')}
                 </span>
               ))}
             {round.last && relaxed && (
-              <button ref={nextRef} type="button" className={buttonClass('primary', 'md', 'ms-3')} onClick={goNext}>
+              <button ref={nextRef} type="button" className="lh-exp-key ms-3" onClick={goNext}>
                 {round.index + 1 >= total || round.livesLeft === 0 ? k('see_results') : k('next')}
                 <ArrowRight size={14} weight="bold" aria-hidden className="rtl:rotate-180" />
               </button>
@@ -622,7 +632,7 @@ function SpeedRoundResults({ round, questions, best, isNewBest }: { round: Round
     <div className="flex flex-col gap-4 animate-in fade-in duration-300">
       <div className="flex flex-col items-center gap-1 text-center">
         <p className="m-0 text-3xl font-bold tabular-nums text-neutral-900">{k('points', { count: round.score })}</p>
-        <p className="m-0 text-sm text-neutral-500">
+        <p className="m-0 text-[13px] text-neutral-500">
           {k('result', { correct: round.correct, total: questions.length })} · {k('best_combo', { count: round.bestCombo })}
         </p>
         <p className={cn('m-0 mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold', isNewBest ? 'bg-amber-50 text-amber-700' : 'text-neutral-500')}>
@@ -632,11 +642,11 @@ function SpeedRoundResults({ round, questions, best, isNewBest }: { round: Round
       </div>
       {review.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <h4 className="m-0 text-sm font-semibold text-neutral-800">{k('review_title')}</h4>
+          <h4 className="m-0 text-[14px] font-semibold text-neutral-800">{k('review_title')}</h4>
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {review.map(({ q, choice, reached }) => (
-              <li key={q.id} className="flex flex-col gap-1 rounded-xl bg-neutral-50 p-3">
-                <p className="m-0 text-sm font-medium text-neutral-900 [overflow-wrap:anywhere]">{q.prompt}</p>
+              <li key={q.id} className="flex flex-col gap-1 rounded-xl bg-white p-3 shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08))]">
+                <p className="m-0 text-[14px] font-medium text-neutral-900 [overflow-wrap:anywhere]">{q.prompt}</p>
                 <p className="m-0 inline-flex items-start gap-1 text-sm text-emerald-700">
                   <Check size={14} weight="bold" aria-hidden className="mt-0.5 shrink-0" />
                   <span className="[overflow-wrap:anywhere]">{k('correct_answer', { answer: q.options[q.answer] })}</span>

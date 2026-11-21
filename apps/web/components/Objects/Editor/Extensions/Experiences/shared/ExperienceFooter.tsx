@@ -2,7 +2,6 @@
 import React from 'react'
 import { ArrowCounterClockwise } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
 import { cn } from '@/lib/utils'
 import { Stars } from './Stars'
 
@@ -23,7 +22,7 @@ export function ExperienceFooter({ stars, score, progress, onRetry, retryLabel, 
   const { t } = useTranslation()
   const pct = progress && progress.total > 0 ? Math.round((Math.min(progress.done, progress.total) / progress.total) * 100) : 0
   return (
-    <div className={cn('lh-exp-footer flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-neutral-100 px-4 py-3 sm:px-5', className)}>
+    <div className={cn('lh-exp-footer flex flex-wrap items-center gap-x-4 gap-y-2 px-4 pt-1 pb-3.5 sm:px-5', className)}>
       {progress && progress.total > 0 && (
         <div className="flex min-w-[8rem] flex-1 items-center gap-2.5">
           <div
@@ -32,9 +31,9 @@ export function ExperienceFooter({ stars, score, progress, onRetry, retryLabel, 
             aria-valuemax={progress.total}
             aria-valuenow={Math.min(progress.done, progress.total)}
             aria-label={t('activities.experiences.common.progress_label', 'Progress')}
-            className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100"
+            className="lh-exp-well h-2 flex-1 overflow-hidden rounded-full"
           >
-            <div className="lh-exp-progress-fill h-full rounded-full bg-neutral-900" style={{ width: `${pct}%` }} />
+            <div className="lh-exp-progress-fill h-full rounded-full bg-gradient-to-b from-neutral-700 to-neutral-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]" style={{ width: `${pct}%` }} />
           </div>
           <span className="shrink-0 text-xs font-medium tabular-nums text-neutral-500">
             {t('activities.experiences.common.progress', {
@@ -58,7 +57,7 @@ export function ExperienceFooter({ stars, score, progress, onRetry, retryLabel, 
       )}
       {children}
       {onRetry && (
-        <button type="button" onClick={onRetry} className={buttonClass('secondary', 'sm', 'ms-auto')}>
+        <button type="button" onClick={onRetry} className="lh-exp-raised lh-exp-press ms-auto inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] font-medium text-neutral-700">
           <ArrowCounterClockwise size={14} weight="bold" aria-hidden />
           {retryLabel ?? t('activities.experiences.common.try_again', 'Try again')}
         </button>

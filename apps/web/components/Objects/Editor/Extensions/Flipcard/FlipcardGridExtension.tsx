@@ -84,9 +84,9 @@ function GridLearner(props: any) {
   return (
     <NodeViewWrapper {...gridWrapperProps(props, columns)} data-view={view}>
       {showBar && (
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2" contentEditable={false}>
-          <span aria-hidden className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-            <Cards size={17} weight="duotone" />
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2" contentEditable={false}>
+          <span aria-hidden className="lh-exp-icon inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+            <Cards size={20} weight="duotone" />
           </span>
           <div className="min-w-0 flex-1">
             {deck.title && <h3 className="m-0 truncate text-[15px] font-semibold text-neutral-900">{deck.title}</h3>}
@@ -113,7 +113,7 @@ function GridLearner(props: any) {
         <NodeViewContent className="flipcard-grid-content" />
       </div>
       {view === 'study' && (
-        <div className="rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.07)] sm:p-5" contentEditable={false}>
+        <div className="lh-exp-frame rounded-2xl bg-white p-3 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.05),0_10px_28px_-14px_rgba(15,23,42,0.16)] sm:p-4" contentEditable={false}>
           <FlashcardStudy cards={cards} shuffle={deck.shuffle} memorySource={props} />
         </div>
       )}
@@ -213,7 +213,7 @@ function GridEditor(props: any) {
           />
         )}
         {panel === 'study' && (
-          <div className="rounded-2xl bg-white p-4 ring-1 ring-neutral-200/70 sm:p-5" contentEditable={false}>
+          <div className="lh-exp-frame rounded-2xl bg-white p-3 ring-1 ring-neutral-200/70 sm:p-4" contentEditable={false}>
             <FlashcardStudy cards={cards} shuffle={deck.shuffle} memorySource="editor-preview" />
           </div>
         )}
@@ -347,7 +347,7 @@ function ListEditor({
     'min-h-8 w-full rounded-lg bg-white px-2.5 py-1.5 text-[13px] leading-snug text-neutral-800 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] outline-none placeholder:text-neutral-400 focus:shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_0_3px_rgba(14,165,233,0.12)]'
   return (
     <div contentEditable={false} className="rounded-xl bg-neutral-50 p-2 ring-1 ring-neutral-200/70 sm:p-3" data-testid="flashcards-list">
-      <div className="mb-1.5 hidden grid-cols-[1.75rem_1fr_1fr_1.75rem] gap-2 px-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-400 sm:grid">
+      <div className="mb-1.5 hidden grid-cols-[1.75rem_1fr_1fr_1.75rem] gap-2 px-0.5 text-[12px] font-medium text-neutral-500 sm:grid">
         <span />
         <span>{t('editor.experiences.flashcards.question', 'Question')}</span>
         <span>{t('editor.experiences.flashcards.answer', 'Answer')}</span>

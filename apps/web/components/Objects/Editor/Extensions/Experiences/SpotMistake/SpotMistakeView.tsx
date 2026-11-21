@@ -9,7 +9,6 @@ import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Check, Code, Flag, MagnifyingGlass, TextAlignLeft, WarningCircle, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
 import { cn } from '@/lib/utils'
 import { CommitInput, Segmented, TEXTAREA_CLASS } from '../../../Blocks/ui/BlockChrome'
 import {
@@ -238,6 +237,7 @@ function SegmentButton({
   verdict,
   onToggle,
   lineNo,
+  order = 0,
 }: {
   seg: MistakeSegment
   kind: SpotMistakeKind
@@ -245,6 +245,8 @@ function SegmentButton({
   verdict: Verdict
   onToggle: () => void
   lineNo?: number
+  /** Position among the marked segments, for the staggered reveal on Check. */
+  order?: number
 }) {
   const { t } = useTranslation()
   const k = 'activities.experiences.spot_mistake.'
@@ -261,33 +263,48 @@ function SegmentButton({
     verdict === 'falseAlarm' ? t(`${k}status_false_alarm`) :
     !checked && selected ? t(`${k}status_flagged`) : ''
 
+  // Highlighter ink per state; the swipe itself is .lh-exp-mark.
+  const ink =
+    verdict === 'hit' ? 'rgba(52, 211, 153, 0.45)' :
+    verdict === 'miss' ? 'rgba(251, 113, 133, 0.42)' :
+    !checked && selected ? 'rgba(250, 204, 21, 0.6)' : undefined
+  const marked = verdict === 'hit' || verdict === 'miss' || (!checked && selected)
   return (
     <button
       type="button"
       aria-pressed={checked ? undefined : selected}
       aria-disabled={checked || undefined}
       onClick={() => !checked && onToggle()}
+      data-marked={marked ? 'true' : undefined}
+      style={
+        {
+          '--exp-mark': ink,
+          '--exp-i': order,
+          transitionDelay: checked && verdict === 'miss' ? `${order * 80}ms` : undefined,
+        } as React.CSSProperties
+      }
       className={cn(
-        'group text-start outline-none transition-colors focus-visible:ring-2 focus-visible:ring-orange-500/50',
+        'lh-exp-mark group text-start outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50',
         code
           ? 'flex w-full items-start gap-3 rounded-md px-2 py-0.5 font-mono text-[13px] leading-6 whitespace-pre-wrap'
-          : 'me-1 inline rounded-md px-1 py-0.5 text-[15px] leading-8 [box-decoration-break:clone] [-webkit-box-decoration-break:clone]',
-        !checked && !selected && 'hover:bg-orange-50',
-        !checked && selected && 'bg-orange-100 text-orange-950 underline decoration-orange-500 decoration-2 underline-offset-4',
-        verdict === 'hit' && 'bg-emerald-50 text-emerald-950 underline decoration-emerald-500 decoration-2 underline-offset-4',
-        verdict === 'miss' && 'bg-rose-50 text-rose-950 underline decoration-rose-500 decoration-dashed decoration-2 underline-offset-4',
-        verdict === 'falseAlarm' && 'bg-neutral-100 text-neutral-500 line-through decoration-neutral-400',
+          : 'me-1 inline rounded-md px-0.5 py-0.5 text-[15px] leading-8',
+        !checked && !selected && 'hover:bg-amber-50',
+        !checked && selected && 'text-neutral-950',
+        verdict === 'hit' && 'text-emerald-950',
+        verdict === 'miss' && 'text-rose-950',
+        verdict === 'falseAlarm' && 'text-neutral-500 line-through decoration-neutral-400',
         checked && 'cursor-default',
       )}
     >
       {code && lineNo !== undefined && (
-        <span aria-hidden className="w-6 shrink-0 select-none text-end text-[11px] leading-6 text-neutral-300 tabular-nums">{lineNo}</span>
+        <span aria-hidden className="w-6 shrink-0 select-none text-end text-[11px] leading-6 text-neutral-400 tabular-nums">{lineNo}</span>
       )}
       {icon && (
         <span
           className={cn(
             'me-1 inline-flex h-4 w-4 translate-y-[2px] items-center justify-center rounded-full align-baseline text-white',
             code && 'mt-1 translate-y-0',
+            checked && 'lh-exp-reveal-in',
             verdict === 'hit' && 'bg-emerald-600',
             verdict === 'miss' && 'bg-rose-600',
             verdict === 'falseAlarm' && 'bg-neutral-400',
@@ -328,16 +345,19 @@ function SpotMistakePlayer({
     <div className="flex flex-col gap-4">
       <div
         dir={code ? 'ltr' : 'auto'}
-        className={cn(code ? 'overflow-x-auto rounded-xl bg-neutral-50 py-2' : 'text-neutral-800 [overflow-wrap:anywhere]')}
+        className={cn(
+          code ? 'overflow-x-auto rounded-xl bg-white py-2 shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08))]' : 'text-neutral-800 [overflow-wrap:anywhere]',
+        )}
         role="group"
         aria-label={t(`${k}passage_aria`)}
       >
         {segments.map((seg, index) => {
           const line = index + 1
+          const order = segments.slice(0, index).filter((s) => !isBlankSegment(s) && (s.isMistake || selected.has(s.id))).length
           if (isBlankSegment(seg)) {
             return code ? (
               <div key={seg.id} className="flex gap-3 px-2 font-mono text-[13px] leading-6" aria-hidden>
-                <span className="w-6 shrink-0 text-end text-[11px] text-neutral-300 tabular-nums">{line}</span>
+                <span className="w-6 shrink-0 text-end text-[11px] text-neutral-400 tabular-nums">{line}</span>
               </div>
             ) : null
           }
@@ -350,6 +370,7 @@ function SpotMistakePlayer({
               verdict={verdictOf(seg, score, selected)}
               onToggle={() => onToggle(seg.id)}
               lineNo={code ? line : undefined}
+              order={order}
             />
           )
         })}
@@ -357,15 +378,15 @@ function SpotMistakePlayer({
 
       {!score ? (
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" className={buttonClass('primary', 'sm')} onClick={onCheck}>
+          <button type="button" className="lh-exp-key" onClick={onCheck}>
             <Check size={13} weight="bold" aria-hidden />
             {t(`${k}check`)}
           </button>
-          <span className="text-xs text-neutral-400">{t(`${k}flagged_count`, { n: selected.size })}</span>
+          <span className="text-[13px] text-neutral-500">{t(`${k}flagged_count`, { n: selected.size })}</span>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-1.5 text-xs font-medium">
+          <div className="flex flex-wrap gap-1.5 text-[12px] font-medium">
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-800">
               <Check size={12} weight="bold" aria-hidden />
               {t(`${k}hits`, { n: score.hits.length })}

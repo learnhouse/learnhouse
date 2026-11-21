@@ -38,6 +38,7 @@ import { pickFile } from '../../../Blocks/nodeViewUtils'
 import {
   ExperienceFooter,
   ExperienceFrame,
+  buzz,
   useEnsureBlockId,
   useExperienceEditable,
   useExperienceMemory,
@@ -142,7 +143,7 @@ function Stage({
     <div
       ref={stageRef}
       dir="ltr"
-      className={cn('relative w-full overflow-hidden rounded-xl bg-neutral-50 select-none', className)}
+      className={cn('relative w-full overflow-hidden rounded-xl bg-neutral-50 shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08)),0_2px_6px_-3px_var(--exp-drop,rgba(0,0,0,0.12))] select-none', className)}
       {...rest}
     >
       {src ? (
@@ -530,6 +531,7 @@ function FindPlayer({ spots, src, game, alt, onComplete }: { spots: HotspotSpot[
     if (hit) {
       const next = new Set(game.found).add(hit.id)
       game.setFound(next)
+      buzz('correct')
       if (isComplete(spots, next)) onComplete(game.misses)
       game.setFeedback({ kind: 'hit', spot: hit })
       setMiss(null)
@@ -538,6 +540,7 @@ function FindPlayer({ spots, src, game, alt, onComplete }: { spots: HotspotSpot[
       return
     } else {
       game.setMisses((m) => m + 1)
+      buzz('wrong')
       game.setFeedback({ kind: 'miss', hint: missHint(game.targets, game.found, x, y, aspect) })
       setMiss((prev) => ({ x, y, n: (prev?.n ?? 0) + 1 }))
     }
@@ -583,8 +586,10 @@ function FindPlayer({ spots, src, game, alt, onComplete }: { spots: HotspotSpot[
       >
         {spots.map((spot, i) =>
           game.found.has(spot.id) ? (
-            <span key={spot.id} style={spotStyle(spot)} className="pointer-events-none absolute flex items-center justify-center rounded-full border-2 border-white bg-emerald-500/25 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white">
+            <span key={spot.id} style={spotStyle(spot)} className="pointer-events-none absolute flex items-center justify-center">
+              <span aria-hidden className="absolute inset-0 rounded-full border-2 border-white/90 bg-emerald-500/20 shadow-[0_0_0_1px_rgba(0,0,0,0.18)]" />
+              <span aria-hidden className="lh-exp-pulse absolute inset-0 rounded-full border-2 border-emerald-400" />
+              <span className="lh-exp-pin relative flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_0_rgba(4,120,87,0.9),0_6px_10px_-2px_rgba(0,0,0,0.35)]">
                 <Check size={14} weight="bold" aria-hidden />
                 <span className="sr-only">{i + 1}</span>
               </span>
@@ -592,14 +597,20 @@ function FindPlayer({ spots, src, game, alt, onComplete }: { spots: HotspotSpot[
           ) : null,
         )}
         {miss && (
-          <span
-            key={miss.n}
-            aria-hidden
-            style={{ left: `${miss.x}%`, top: `${miss.y}%`, transform: 'translate(-50%, -50%)' }}
-            className="pointer-events-none absolute flex h-7 w-7 items-center justify-center rounded-full bg-rose-500/90 text-white shadow"
-          >
-            <X size={14} weight="bold" />
-          </span>
+          <React.Fragment key={miss.n}>
+            <span
+              aria-hidden
+              style={{ left: `${miss.x}%`, top: `${miss.y}%`, transform: 'translate(-50%, -50%)' }}
+              className="lh-exp-ripple pointer-events-none absolute h-14 w-14 rounded-full border-2 border-white/90 bg-white/20 shadow-[0_0_0_1px_rgba(0,0,0,0.12)]"
+            />
+            <span
+              aria-hidden
+              style={{ left: `${miss.x}%`, top: `${miss.y}%`, transform: 'translate(-50%, -50%)' }}
+              className="pointer-events-none absolute flex h-5 w-5 items-center justify-center rounded-full bg-rose-500/85 text-white shadow-sm transition-opacity"
+            >
+              <X size={11} weight="bold" />
+            </span>
+          </React.Fragment>
         )}
         {keyboard && !game.complete && (
           <span
@@ -611,7 +622,7 @@ function FindPlayer({ spots, src, game, alt, onComplete }: { spots: HotspotSpot[
           </span>
         )}
       </Stage>
-      <p className="m-0 text-[11px] text-neutral-400">{t(`${k}keyboard_help`)}</p>
+      <p className="m-0 text-[12px] text-neutral-400">{t(`${k}keyboard_help`)}</p>
 
       {fb?.kind === 'hit' && (
         <div className="flex items-start gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900">
@@ -670,7 +681,7 @@ function ExplorePlayer({ spots, src, game, alt }: { spots: HotspotSpot[]; src: s
               onClick={() => open(isOpen ? null : spot.id)}
               style={{ left: `${spot.x}%`, top: `${spot.y}%`, transform: 'translate(-50%, -50%)' }}
               className={cn(
-                'absolute flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-md outline-none transition-transform focus-visible:ring-4 focus-visible:ring-teal-500/40 motion-safe:hover:scale-110',
+                'absolute flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_2px_0_rgba(0,0,0,0.25),0_6px_10px_-2px_rgba(0,0,0,0.35)] outline-none transition-transform focus-visible:ring-4 focus-visible:ring-teal-500/40 motion-safe:hover:scale-110 motion-safe:active:scale-95',
                 isOpen ? 'bg-neutral-900' : seen ? 'bg-teal-700' : 'bg-teal-500',
               )}
             >
@@ -689,7 +700,7 @@ function ExplorePlayer({ spots, src, game, alt }: { spots: HotspotSpot[]; src: s
               bottom: current.y > 55 ? `calc(${100 - current.y}% + 22px)` : undefined,
               transform: 'translateX(-50%)',
             }}
-            className="absolute z-10 w-[min(18rem,80%)] rounded-xl bg-white p-3 text-start shadow-[0_8px_24px_rgba(0,0,0,0.14),0_0_0_1px_rgba(0,0,0,0.06)]"
+            className="lh-exp-raised lh-exp-slide-in absolute z-10 w-[min(18rem,80%)] rounded-xl p-3 text-start shadow-[0_10px_28px_rgba(0,0,0,0.18)]"
             dir="auto"
           >
             <div className="flex items-start gap-2">
@@ -705,14 +716,17 @@ function ExplorePlayer({ spots, src, game, alt }: { spots: HotspotSpot[]; src: s
           </div>
         )}
       </Stage>
-      <ol className="m-0 grid list-none gap-1.5 p-0 sm:grid-cols-2" aria-label={t(`${k}legend`)}>
+      <ol className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2" aria-label={t(`${k}legend`)}>
         {spots.map((spot, i) => (
           <li key={spot.id}>
             <button
               type="button"
               aria-pressed={game.opened === spot.id}
               onClick={() => open(game.opened === spot.id ? null : spot.id)}
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-start text-[13px] text-neutral-700 outline-none hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-teal-500/40"
+              className={cn(
+                'lh-exp-raised lh-exp-press flex min-h-10 w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-start text-[14px] outline-none',
+                game.opened === spot.id ? 'text-teal-700' : 'text-neutral-700',
+              )}
             >
               <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white', game.viewed.has(spot.id) ? 'bg-teal-700' : 'bg-teal-500')}>{i + 1}</span>
               <span className="min-w-0 flex-1 truncate">{spot.label}</span>
@@ -801,7 +815,7 @@ export default function HotspotView(props: NodeViewProps) {
         {!learner ? (
           <HotspotEditor props={props} attrs={attrs} spots={spots} mode={mode} src={src} commit={commit} />
         ) : spots.length === 0 ? (
-          <p className="m-0 text-sm text-neutral-500">{t(`${k}empty`)}</p>
+          <p className="m-0 text-[14px] text-neutral-500">{t(`${k}empty`)}</p>
         ) : mode === 'find' ? (
           <FindPlayer spots={spots} src={src} game={game} alt={title} onComplete={onComplete} />
         ) : (

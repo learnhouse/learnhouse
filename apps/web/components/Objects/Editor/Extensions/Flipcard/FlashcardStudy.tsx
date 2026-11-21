@@ -13,9 +13,8 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowClockwise, ArrowCounterClockwise, CheckCircle, Confetti } from '@phosphor-icons/react'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
 import { cn } from '@/lib/utils'
-import { Celebrate, useExperienceMemory } from '../Experiences/shared'
+import { Celebrate, buzz, useExperienceMemory } from '../Experiences/shared'
 import { flipcardFaces } from './flipcardStyles'
 import {
   type Rating,
@@ -72,6 +71,7 @@ export function FlashcardStudy({ cards, shuffle, memorySource }: { cards: StudyD
   const rate = (r: Rating) => {
     if (!flipped) return
     const next = rateCard(session, r)
+    buzz(r === 'again' ? 'wrong' : 'correct')
     setSession(next)
     setFlipped(false)
     persist(next)
@@ -115,7 +115,7 @@ export function FlashcardStudy({ cards, shuffle, memorySource }: { cards: StudyD
   }
 
   if (cards.length === 0) {
-    return <p className="py-6 text-center text-sm text-neutral-500">{t('activities.experiences.flashcards.empty', 'No cards yet.')}</p>
+    return <p className="py-6 text-center text-[14px] text-neutral-500">{t('activities.experiences.flashcards.empty', 'No cards yet.')}</p>
   }
 
   const progressBar = (
@@ -126,9 +126,12 @@ export function FlashcardStudy({ cards, shuffle, memorySource }: { cards: StudyD
         aria-valuemax={progress.total}
         aria-valuenow={progress.known}
         aria-label={t('activities.experiences.flashcards.known_progress', { known: progress.known, total: progress.total, defaultValue: '{{known}} of {{total}} known' })}
-        className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-100"
+        className="lh-exp-well h-2 flex-1 overflow-hidden rounded-full"
       >
-        <div className="h-full rounded-full bg-emerald-500 transition-[width] duration-500 ease-out motion-reduce:transition-none" style={{ width: `${progress.pct}%` }} />
+        <div
+          className="h-full rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] transition-[width] duration-500 ease-out motion-reduce:transition-none"
+          style={{ width: `${progress.pct}%` }}
+        />
       </div>
       <span className="flex-none text-[12px] font-medium tabular-nums text-neutral-500">
         {t('activities.experiences.flashcards.known_progress', { known: progress.known, total: progress.total, defaultValue: '{{known}} of {{total}} known' })}
@@ -140,10 +143,10 @@ export function FlashcardStudy({ cards, shuffle, memorySource }: { cards: StudyD
     const allKnownBefore = session.reviews === 0
     const missed = session.missed.filter((k) => byKey.has(k))
     return (
-      <div className="relative flex flex-col gap-4" data-testid="flashcards-finish">
+      <div className="lh-exp-table relative flex flex-col gap-4 px-3 py-4 sm:px-5 sm:py-5" data-testid="flashcards-finish">
         {progressBar}
-        <div className="rounded-2xl bg-neutral-50 px-5 py-7 text-center ring-1 ring-neutral-200/70">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-600/15">
+        <div className="lh-exp-slide-in px-2 py-5 text-center">
+          <div className="lh-exp-snap mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-200 border-b-emerald-300 bg-gradient-to-b from-emerald-50 to-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_2px_0_rgba(15,23,42,0.06),0_8px_16px_-8px_rgba(15,23,42,0.3)]">
             {allKnownBefore ? <CheckCircle size={28} weight="duotone" className="text-emerald-600" /> : <Confetti size={28} weight="duotone" className="text-emerald-600" />}
           </div>
           <h4 className="m-0 text-center text-lg font-bold text-neutral-900">
@@ -162,12 +165,16 @@ export function FlashcardStudy({ cards, shuffle, memorySource }: { cards: StudyD
           )}
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             {missed.length > 0 && (
-              <button type="button" onClick={() => restart({ only: missed })} className={buttonClass('primary', 'sm')}>
+              <button type="button" onClick={() => restart({ only: missed })} className="lh-exp-key">
                 <ArrowClockwise size={14} weight="bold" />
                 {t('activities.experiences.flashcards.study_missed', 'Study missed cards')}
               </button>
             )}
-            <button type="button" onClick={() => restart({ forget: true })} className={buttonClass(missed.length ? 'secondary' : 'primary', 'sm')}>
+            <button
+              type="button"
+              onClick={() => restart({ forget: true })}
+              className={missed.length ? 'lh-exp-raised lh-exp-press inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3.5 text-[14px] font-semibold text-neutral-800' : 'lh-exp-key'}
+            >
               <ArrowCounterClockwise size={14} weight="bold" />
               {t('activities.experiences.flashcards.study_again', 'Study all again')}
             </button>
@@ -184,9 +191,14 @@ export function FlashcardStudy({ cards, shuffle, memorySource }: { cards: StudyD
     : t('activities.experiences.flashcards.tap_to_flip', 'Tap the card or press Space to flip')
 
   return (
-    <div ref={rootRef} className="flex flex-col gap-4" onKeyDown={onKeyDown} data-testid="flashcards-study">
+    <div ref={rootRef} className="lh-exp-table flex flex-col gap-4 px-3 py-4 sm:px-5 sm:py-5" onKeyDown={onKeyDown} data-testid="flashcards-study">
       {progressBar}
-      <div className="flipcard-container mx-auto h-60 w-full max-w-xl max-sm:h-52" data-lhb-keep="">
+      {/* An index card on top of the rest of the deck (its edges peek out below). */}
+      <div
+        className="lh-exp-stack flipcard-container mx-auto mb-3 h-60 w-full max-w-xl rounded-2xl max-sm:h-52"
+        data-depth={Math.min(2, Math.max(0, progress.total - progress.known - 1))}
+        data-lhb-keep=""
+      >
         <div
           role="button"
           tabIndex={0}
@@ -208,11 +220,13 @@ export function FlashcardStudy({ cards, shuffle, memorySource }: { cards: StudyD
                 aria-hidden={hidden || undefined}
                 className={cn(
                   back ? 'flipcard-back' : 'flipcard-front',
-                  'flex flex-col border-2 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_8px_24px_-8px_rgba(0,0,0,0.18)] max-sm:p-4',
+                  'flex flex-col rounded-2xl border-2 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_2px_0_rgba(15,23,42,0.08),0_14px_28px_-14px_rgba(15,23,42,0.35)] max-sm:p-4',
+                  // Faint ruled lines on the question side only, like an index card.
+                  !back && 'lh-exp-ruled',
                   back ? faces.back : faces.front,
                 )}
               >
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] opacity-70">
+                <span className="text-[12px] font-medium opacity-75">
                   {back ? t('activities.experiences.flashcards.answer_side', 'Answer') : t('activities.experiences.flashcards.question_side', 'Question')}
                 </span>
                 <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto">
@@ -231,7 +245,7 @@ export function FlashcardStudy({ cards, shuffle, memorySource }: { cards: StudyD
           })}
         </div>
       </div>
-      <p className="m-0 text-center text-[12.5px] text-neutral-500" aria-live="polite">
+      <p className="m-0 text-center text-[13px] text-neutral-500" aria-live="polite">
         {hint}
       </p>
       <div className={cn('grid grid-cols-3 gap-2 transition-opacity', flipped ? 'opacity-100' : 'pointer-events-none opacity-40')} aria-hidden={!flipped || undefined}>
@@ -251,22 +265,22 @@ function RateButton({ k, tone, label, onClick, disabled }: { k: string; tone: 'r
       disabled={disabled}
       aria-keyshortcuts={k}
       className={cn(
-        'inline-flex h-11 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold ring-1 transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2',
-        tone === 'rose' && 'bg-rose-50 text-rose-700 ring-rose-600/15 hover:bg-rose-100/70 focus-visible:ring-rose-500/50',
-        tone === 'amber' && 'bg-amber-50 text-amber-800 ring-amber-600/15 hover:bg-amber-100/70 focus-visible:ring-amber-500/50',
-        tone === 'emerald' && 'bg-emerald-50 text-emerald-700 ring-emerald-600/15 hover:bg-emerald-100/70 focus-visible:ring-emerald-500/50',
+        'lh-exp-raised lh-exp-press lh-exp-tint inline-flex h-12 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold focus-visible:outline-none',
+        tone === 'rose' && 'text-rose-700',
+        tone === 'amber' && 'text-amber-700',
+        tone === 'emerald' && 'text-emerald-700',
       )}
     >
       {label}
-      <kbd className="hidden h-5 min-w-5 items-center justify-center rounded-md bg-white/80 px-1 font-sans text-[10.5px] font-semibold opacity-70 ring-1 ring-black/5 sm:inline-flex">{k}</kbd>
+      <kbd className="lh-exp-well hidden h-5 min-w-5 items-center justify-center rounded-md px-1 font-sans text-[11px] font-semibold opacity-80 sm:inline-flex">{k}</kbd>
     </button>
   )
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-neutral-200/70">
-      <dt className="text-[11px] font-medium text-neutral-500">{label}</dt>
+    <div className="rounded-xl bg-white px-3 py-2 shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08))]">
+      <dt className="text-[12px] font-medium text-neutral-500">{label}</dt>
       <dd className="m-0 text-lg font-semibold tabular-nums text-neutral-900">{value}</dd>
     </div>
   )

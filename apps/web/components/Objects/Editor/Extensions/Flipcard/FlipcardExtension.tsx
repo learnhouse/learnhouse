@@ -150,9 +150,11 @@ const FlipcardExtension: React.FC = (props: any) => {
       <div
         className={cn(
           isBack ? 'flipcard-back' : 'flipcard-front',
-          // Subtle depth: a hairline plus a soft, low shadow (lifted a touch on hover for learners).
-          'border-2 p-6 flex flex-col items-center justify-center text-center rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.06),0_6px_18px_-8px_rgba(0,0,0,0.22)] transition-shadow',
-          !isEditable && 'group-hover/card:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_14px_28px_-10px_rgba(0,0,0,0.28)]',
+          // A physical card: three even rows (side label, centred text, hint), a hairline edge,
+          // a faint top sheen and a layered soft shadow that lifts a touch on hover for learners.
+          'grid grid-rows-[1.5rem_minmax(0,1fr)_1.5rem] gap-2 overflow-hidden border p-5 text-center rounded-2xl transition-[box-shadow,transform] duration-200',
+          'shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_1px_2px_rgba(15,23,42,0.08),0_6px_14px_-6px_rgba(15,23,42,0.18),0_18px_32px_-18px_rgba(15,23,42,0.28)]',
+          !isEditable && 'group-hover/card:shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_2px_4px_rgba(15,23,42,0.08),0_10px_20px_-8px_rgba(15,23,42,0.22),0_26px_44px_-20px_rgba(15,23,42,0.32)]',
           facePad,
           isBack ? faces.back : faces.front,
           hidden && 'pointer-events-none',
@@ -160,14 +162,15 @@ const FlipcardExtension: React.FC = (props: any) => {
         aria-hidden={hidden || undefined}
         inert={hidden || undefined}
       >
+        <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/[0.14] to-transparent" />
         {/* Which side is up, at a glance: "Question" / "Answer" and the turn icon. */}
-        <div className={cn('flex w-full items-center justify-between gap-2 mb-2 max-md:mb-1 select-none pointer-events-none', compact && 'max-md:hidden')}>
-          <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] opacity-70">
+        <div className={cn('relative flex w-full items-center justify-between gap-2 select-none pointer-events-none', compact && 'max-md:invisible')}>
+          <span className="text-[12px] font-medium opacity-75">
             {isBack ? t('activities.experiences.flashcards.answer_side', 'Answer') : t('activities.experiences.flashcards.question_side', 'Question')}
           </span>
           <ArrowClockwise weight="duotone" size={ICON_SIZE[size] - 4} className={cn('opacity-60', isBack && 'rotate-180')} />
         </div>
-        <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-y-auto overscroll-contain">
+        <div className="relative flex min-h-0 w-full items-center justify-center overflow-y-auto overscroll-contain">
           {isEditable ? (
             <DraftText
               ref={isBack ? backRef : frontRef}
@@ -194,7 +197,7 @@ const FlipcardExtension: React.FC = (props: any) => {
             </p>
           )}
         </div>
-        <div className={cn('mt-3 max-md:mt-1.5 select-none pointer-events-none', compact && 'max-md:hidden')}>
+        <div className={cn('relative flex items-center justify-center select-none pointer-events-none', compact && 'max-md:invisible')}>
           <span className="inline-flex items-center gap-1 rounded-full bg-current/10 px-2 py-0.5 text-[11px] font-medium">
             <ArrowClockwise size={11} weight="bold" aria-hidden className={cn(isBack && '-scale-x-100')} />
             {isBack ? t('activities.click_to_flip_back') : t('activities.click_to_flip')}
@@ -210,7 +213,7 @@ const FlipcardExtension: React.FC = (props: any) => {
     // Self-contained coloured cards: the same in every block theme.
     <div data-lhb-keep="" className={cn('flipcard-container group/card relative', sizeClass, mobileClass, !isEditable && 'lh-press')}>
       <div
-        className={cn('flipcard-inner cursor-pointer', flipped && 'flipped', !isEditable && 'rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2')}
+        className={cn('flipcard-inner cursor-pointer', flipped && 'flipped', !isEditable && 'rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2')}
         {...(isEditable
           ? {
               // Clicking the text edits it; clicking anywhere else on the card turns it over.

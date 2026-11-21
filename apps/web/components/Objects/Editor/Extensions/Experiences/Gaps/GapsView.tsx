@@ -15,6 +15,7 @@ import { Segmented, TEXTAREA_CLASS } from '../../../Blocks/ui/BlockChrome'
 import {
   ExperienceFooter,
   ExperienceFrame,
+  buzz,
   useEnsureBlockId,
   useExperienceEditable,
   useExperienceMemory,
@@ -200,10 +201,10 @@ function GapsEditor({
       </div>
 
       <div className="rounded-xl bg-neutral-50 px-3 py-3">
-        <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium tracking-wide text-neutral-400 uppercase">
+        <div className="mb-1.5 flex items-center gap-1.5 text-[12px] font-medium text-neutral-500">
           <TextT size={12} aria-hidden />
           {t(`${k}preview_label`)}
-          <span className="ms-auto normal-case tracking-normal">{t(`${k}gap_count`, { n: parsed.gaps.length })}</span>
+          <span className="ms-auto font-normal text-neutral-400">{t(`${k}gap_count`, { n: parsed.gaps.length })}</span>
         </div>
         <p className="m-0 text-sm leading-7 whitespace-pre-wrap text-neutral-800 [overflow-wrap:anywhere]" dir="auto">
           {parsed.tokens.map((tok, i) =>
@@ -259,9 +260,10 @@ function TypeGap({
     <span className="mx-0.5 inline-flex flex-wrap items-center gap-1 align-baseline">
       <span
         className={cn(
-          'inline-flex items-center gap-1 rounded-md bg-white px-1 shadow-[0_0_0_1px_rgba(0,0,0,0.15)]',
-          checked && result && 'bg-emerald-50 shadow-[0_0_0_1.5px_rgba(5,150,105,0.6)]',
-          checked && !result && 'bg-rose-50 shadow-[0_0_0_1.5px_rgba(225,29,72,0.6)]',
+          'inline-flex items-center gap-1 rounded-lg px-1 transition-colors focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),inset_0_0_0_2px_rgba(14,165,233,0.55)]',
+          !checked && 'lh-exp-well',
+          checked && result && 'bg-emerald-50 shadow-[inset_0_0_0_1.5px_rgba(5,150,105,0.55)]',
+          checked && !result && 'lh-exp-shake bg-rose-50 shadow-[inset_0_0_0_1.5px_rgba(225,29,72,0.55)]',
         )}
       >
         <input
@@ -276,7 +278,7 @@ function TypeGap({
           aria-label={t('activities.experiences.gaps.gap_aria', { n: gap.index + 1 })}
           aria-invalid={checked && !result ? true : undefined}
           style={{ width: inputWidth(gap) }}
-          className="h-7 min-w-0 bg-transparent px-1 text-center text-[15px] text-neutral-900 outline-none placeholder:text-neutral-300"
+          className="h-8 min-w-0 bg-transparent px-1 text-center text-[15px] text-neutral-900 outline-none placeholder:text-neutral-400"
           placeholder="…"
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
@@ -342,16 +344,29 @@ function BankGap({
             : t('activities.experiences.gaps.slot_empty_aria', { n: gap.index + 1 })
         }
         style={{ minWidth: inputWidth(gap) }}
+        data-over={(armed || over) && !chip ? 'true' : undefined}
         className={cn(
-          'inline-flex h-8 items-center justify-center gap-1 rounded-md px-2 text-[15px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-500/50',
-          chip ? 'bg-white font-medium text-neutral-900 shadow-[0_0_0_1px_rgba(0,0,0,0.15)]' : 'border border-dashed border-neutral-300 bg-neutral-50 text-neutral-300',
-          (armed || over) && !chip && 'border-sky-400 bg-sky-50',
-          checked && result && 'bg-emerald-50 shadow-[0_0_0_1.5px_rgba(5,150,105,0.6)] disabled:opacity-100',
-          checked && !result && 'bg-rose-50 shadow-[0_0_0_1.5px_rgba(225,29,72,0.6)]',
+          'lh-exp-well inline-flex min-h-9 items-center justify-center rounded-lg p-0.5 align-middle text-[15px] text-sky-500 outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 disabled:opacity-100',
+          !chip && 'px-2',
+          !checked && 'cursor-pointer',
         )}
       >
-        {chip ? chip.text : '…'}
-        {checked && <ResultIcon ok={!!result} />}
+        {chip ? (
+          <span
+            key={chip.id}
+            data-result={checked ? (result ? 'correct' : 'wrong') : undefined}
+            className={cn(
+              'lh-exp-raised inline-flex h-8 w-full items-center justify-center gap-1 rounded-md px-2 font-medium',
+              !checked && 'lh-exp-snap text-neutral-900',
+              checked && !result && 'lh-exp-wrong-shake',
+            )}
+          >
+            {chip.text}
+            {checked && <ResultIcon ok={!!result} />}
+          </span>
+        ) : (
+          <span className="text-neutral-400">…</span>
+        )}
       </button>
       {checked && !result && (
         <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[13px] font-medium text-emerald-800">
@@ -429,6 +444,7 @@ function GapsPlayer({ tokens, gaps, mode, caseSensitive, game, onChecked }: {
 
   const doCheck = () => {
     const grade = game.check(mode)
+    buzz(grade.correct === grade.total ? 'correct' : 'wrong')
     onChecked(grade.correct, grade.total)
   }
 
@@ -508,8 +524,8 @@ function GapsPlayer({ tokens, gaps, mode, caseSensitive, game, onChecked }: {
       />
 
       {mode === 'bank' && !checked && (
-        <div className="rounded-xl bg-neutral-50 p-3">
-          <div className="mb-2 text-[11px] font-medium text-neutral-500" id={bankLabelId}>
+        <div className="lh-exp-well rounded-2xl p-3">
+          <div className="mb-2 text-[12px] text-neutral-500" id={bankLabelId}>
             {game.armedChip ? t(`${k}bank_armed`) : t(`${k}bank_help`)}
           </div>
           <ul className="m-0 flex min-h-9 list-none flex-wrap gap-2 p-0" aria-labelledby={bankLabelId}>
@@ -526,8 +542,8 @@ function GapsPlayer({ tokens, gaps, mode, caseSensitive, game, onChecked }: {
                     }}
                     onClick={() => game.setArmedChip(game.armedChip === chip.id ? null : chip.id)}
                     className={cn(
-                      'inline-flex h-8 cursor-grab items-center rounded-lg bg-white px-3 text-[14px] font-medium text-neutral-800 shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.05)] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-500/50 active:cursor-grabbing',
-                      game.armedChip === chip.id && 'bg-sky-600 text-white shadow-none',
+                      'lh-exp-raised lh-exp-press inline-flex min-h-10 cursor-grab items-center rounded-lg px-3 text-[14px] font-medium outline-none active:cursor-grabbing',
+                      game.armedChip === chip.id ? 'text-sky-700' : 'text-neutral-800',
                     )}
                   >
                     {chip.text}
@@ -535,26 +551,26 @@ function GapsPlayer({ tokens, gaps, mode, caseSensitive, game, onChecked }: {
                 </li>
               ),
             )}
-            {usedChips.size === game.bank.length && <li className="text-xs text-neutral-400">{t(`${k}bank_empty`)}</li>}
+            {usedChips.size === game.bank.length && <li className="self-center text-[13px] text-neutral-500">{t(`${k}bank_empty`)}</li>}
           </ul>
         </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
         {!checked ? (
-          <button type="button" className={buttonClass('primary', 'sm')} onClick={doCheck} disabled={filled === 0}>
+          <button type="button" className="lh-exp-key" onClick={doCheck} disabled={filled === 0}>
             <Check size={13} weight="bold" aria-hidden />
             {t(`${k}check`)}
           </button>
         ) : (
           game.results?.some((r) => !r) && (
-            <button type="button" className={buttonClass('primary', 'sm')} onClick={game.retry}>
+            <button type="button" className="lh-exp-key" onClick={game.retry}>
               {t(`${k}fix_wrong`)}
             </button>
           )
         )}
         {!checked && filled < gaps.length && (
-          <span className="text-xs text-neutral-400">{t(`${k}filled`, { done: filled, total: gaps.length })}</span>
+          <span className="text-[13px] text-neutral-500">{t(`${k}filled`, { done: filled, total: gaps.length })}</span>
         )}
       </div>
     </div>

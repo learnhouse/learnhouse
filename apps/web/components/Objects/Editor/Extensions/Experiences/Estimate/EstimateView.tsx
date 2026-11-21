@@ -246,13 +246,21 @@ function EstimatePlayer({ data, frame }: { data: EstimateData; frame: FrameBase 
   return (
     <ExperienceFrame {...frame} instructions={k('instructions')} footer={footer} live={live} celebrate={phase === 'done' && stars === 3}>
       <div className="flex flex-col gap-4">
-        <p className="m-0 text-base leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere] sm:text-lg">
+        <p className="m-0 text-[15px] leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere] sm:text-lg">
           {data.question || k('no_question')}
         </p>
 
         {phase === 'guess' ? (
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
+              <div className="relative min-w-0 flex-1">
+                {/* Recessed track with the filled part up to the knob. */}
+                <div aria-hidden className="lh-exp-well pointer-events-none absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 overflow-hidden rounded-full">
+                  <div
+                    className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]"
+                    style={{ width: `calc(${((guess - range.min) / Math.max(1e-9, range.max - range.min)) * 100}% + ${0.875 - (((guess - range.min) / Math.max(1e-9, range.max - range.min)) * 1.75)}rem)` }}
+                  />
+                </div>
               <input
                 ref={sliderRef}
                 type="range"
@@ -268,8 +276,9 @@ function EstimatePlayer({ data, frame }: { data: EstimateData; frame: FrameBase 
                   setClampNote(false)
                 }}
                 onKeyDown={(e) => e.stopPropagation()}
-                className="h-2 min-w-0 flex-1 cursor-pointer accent-indigo-600"
+                className="lh-exp-range relative block w-full min-w-0"
               />
+              </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <input
                   type="text"
@@ -285,19 +294,19 @@ function EstimatePlayer({ data, frame }: { data: EstimateData; frame: FrameBase 
                       commitTyped()
                     }
                   }}
-                  className={cn(FIELD_CLASS, 'w-24 text-end tabular-nums')}
+                  className={cn(FIELD_CLASS, 'h-10 w-24 text-end text-[14px] tabular-nums')}
                 />
-                {data.unit && <span className="text-sm text-neutral-500">{data.unit}</span>}
+                {data.unit && <span className="text-[13px] text-neutral-500">{data.unit}</span>}
               </div>
             </div>
-            <div className="flex justify-between text-xs tabular-nums text-neutral-400">
+            <div className="-mt-2 flex justify-between text-[12px] tabular-nums text-neutral-400">
               <span>{withUnit(range.min)}</span>
               <span>{withUnit(range.max)}</span>
             </div>
             {clampNote && (
-              <p className="m-0 text-xs text-amber-700">{k('clamped', { min: withUnit(range.min), max: withUnit(range.max) })}</p>
+              <p className="m-0 text-[12px] text-amber-700">{k('clamped', { min: withUnit(range.min), max: withUnit(range.max) })}</p>
             )}
-            <button type="button" className={buttonClass('primary', 'lg', 'self-start')} onClick={lockIn}>
+            <button type="button" className="lh-exp-key min-h-11 self-start px-5" onClick={lockIn}>
               <LockSimple size={15} weight="bold" aria-hidden />
               {k('lock_in')}
             </button>
@@ -310,18 +319,18 @@ function EstimatePlayer({ data, frame }: { data: EstimateData; frame: FrameBase 
                 <div className="flex flex-wrap items-center gap-2">
                   <span
                     className={cn(
-                      'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold',
+                      'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold',
                       stars === 3 ? 'bg-emerald-50 text-emerald-700' : stars > 0 ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700',
                     )}
                   >
                     {exact ? <Target size={14} weight="bold" aria-hidden /> : dir === 'low' ? <ArrowUp size={14} weight="bold" aria-hidden /> : <ArrowDown size={14} weight="bold" aria-hidden />}
                     {exact ? k('spot_on') : k('you_were_off', { pct: formatPct(pct) })}
                   </span>
-                  {!exact && <span className="text-sm text-neutral-500">{dir === 'low' ? k('too_low') : k('too_high')}</span>}
+                  {!exact && <span className="text-[13px] text-neutral-500">{dir === 'low' ? k('too_low') : k('too_high')}</span>}
                 </div>
-                <p className="m-0 text-sm text-neutral-700">{k('answer_is', { answer: withUnit(data.answer) })}</p>
+                <p className="m-0 text-[14px] text-neutral-700">{k('answer_is', { answer: withUnit(data.answer) })}</p>
                 {data.explanation.trim() && (
-                  <p className="m-0 rounded-xl bg-indigo-50/60 px-4 py-3 text-sm leading-relaxed text-neutral-700 [overflow-wrap:anywhere]">{data.explanation}</p>
+                  <p className="m-0 rounded-xl bg-indigo-50/60 px-4 py-3 text-[14px] leading-relaxed text-neutral-700 [overflow-wrap:anywhere]">{data.explanation}</p>
                 )}
               </div>
             )}
@@ -355,24 +364,42 @@ function RevealTrack({
   const bandStart = axis.pos(answer - band) * 100
   const bandEnd = axis.pos(answer + band) * 100
   const at = (v: number) => `${axis.pos(v) * 100}%`
+  const lo = Math.min(axis.pos(guess), axis.pos(answer)) * 100
+  const hi = Math.max(axis.pos(guess), axis.pos(answer)) * 100
   return (
-    <div className="flex flex-col gap-2 pt-7 pb-1" aria-hidden>
-      <div className="relative h-2 rounded-full bg-neutral-100">
-        {done && band > 0 && (
-          <div className="absolute inset-y-0 rounded-full bg-emerald-200/80 animate-in fade-in duration-300" style={{ insetInlineStart: `${bandStart}%`, width: `${Math.max(0, bandEnd - bandStart)}%` }} />
+    <div className="flex flex-col gap-2 pt-8 pb-1" aria-hidden>
+      <div className="relative">
+        <div className="lh-exp-well relative h-2.5 overflow-hidden rounded-full">
+          {done && band > 0 && (
+            <div className="absolute inset-y-0 rounded-full bg-emerald-300/70 animate-in fade-in duration-300" style={{ insetInlineStart: `${bandStart}%`, width: `${Math.max(0, bandEnd - bandStart)}%` }} />
+          )}
+        </div>
+        {/* The gap between guess and answer, bracketed under the track. */}
+        {done && hi - lo > 1 && (
+          <span
+            className="lh-exp-bracket absolute top-full mt-1.5 h-2 rounded-b-md border-x-2 border-b-2 border-indigo-300"
+            style={{ insetInlineStart: `${lo}%`, width: `${hi - lo}%` }}
+          />
         )}
-        {/* The learner's guess. */}
-        <span className="absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-white bg-neutral-500 shadow rtl:translate-x-1/2 ltr:-translate-x-1/2" style={{ insetInlineStart: at(guess) }} />
+        {/* The learner's guess: a raised knob left where it was locked in. */}
+        <span
+          className="absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border border-black/15 border-b-black/25 bg-gradient-to-b from-white to-neutral-100 shadow-[inset_0_1px_0_#fff,0_2px_3px_rgba(15,23,42,0.18)] rtl:translate-x-1/2 ltr:-translate-x-1/2"
+          style={{ insetInlineStart: at(guess) }}
+        >
+          <span className="absolute inset-1.5 rounded-full bg-neutral-400" />
+        </span>
         {/* The true value, travelling. */}
         <span className="absolute top-1/2 flex -translate-y-1/2 flex-col items-center rtl:translate-x-1/2 ltr:-translate-x-1/2" style={{ insetInlineStart: at(shown) }}>
-          <span className="absolute bottom-3 whitespace-nowrap rounded-md bg-indigo-600 px-1.5 py-0.5 text-xs font-bold tabular-nums text-white">{label(done ? answer : shown)}</span>
-          <span className="h-5 w-5 rounded-full border-2 border-white bg-indigo-600 shadow" />
+          <span className="absolute bottom-4 whitespace-nowrap rounded-md bg-gradient-to-b from-indigo-500 to-indigo-600 px-1.5 py-0.5 text-[12px] font-bold tabular-nums text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_2px_4px_-1px_rgba(49,46,129,0.4)]">
+            {label(done ? answer : shown)}
+          </span>
+          <span className="h-6 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_0_2px_#fff,0_2px_4px_rgba(49,46,129,0.35)]" />
         </span>
       </div>
-      <div className="flex justify-between text-xs tabular-nums text-neutral-400">
+      <div className="mt-2 flex justify-between text-[12px] tabular-nums text-neutral-400">
         <span>{label(axis.min)}</span>
         <span className="inline-flex items-center gap-1 text-neutral-500">
-          <span className="h-2 w-2 rounded-full bg-neutral-500" />
+          <span className="h-2 w-2 rounded-full bg-neutral-400" />
           {k('your_guess', { value: label(guess) })}
         </span>
         <span>{label(axis.max)}</span>

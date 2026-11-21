@@ -26,6 +26,7 @@ import {
   ExperienceFooter,
   ExperienceFrame,
   Stars,
+  buzz,
   newId,
   useEnsureBlockId,
   useExperienceEditable,
@@ -67,17 +68,8 @@ const TONE = 'media' as const
 const MISS_MS = 900
 const SHAKE_MS = 450
 
-/** Colours for locked pairs, in match order (each also gets a number and a check). */
-const PAIR_CLASS = [
-  'bg-emerald-50 text-emerald-900 ring-emerald-300',
-  'bg-sky-50 text-sky-900 ring-sky-300',
-  'bg-amber-50 text-amber-900 ring-amber-300',
-  'bg-teal-50 text-teal-900 ring-teal-300',
-  'bg-lime-50 text-lime-900 ring-lime-300',
-  'bg-cyan-50 text-cyan-900 ring-cyan-300',
-  'bg-orange-50 text-orange-900 ring-orange-300',
-  'bg-indigo-50 text-indigo-900 ring-indigo-300',
-]
+/** Colour tabs for locked pairs, in match order (each also gets a number and a check). */
+const PAIR_TAB = ['bg-emerald-500', 'bg-sky-500', 'bg-amber-500', 'bg-violet-500', 'bg-lime-600', 'bg-cyan-600', 'bg-orange-500', 'bg-indigo-500']
 
 type Frame = {
   tone: typeof TONE
@@ -238,6 +230,7 @@ function ConnectPlayer({ data, frame, source }: { data: MatchData; frame: Frame;
     if (r.state === state) return
     setState(r.state)
     setSelected(null)
+    buzz(r.correct ? 'correct' : 'wrong')
     if (r.correct) {
       const finished = connectDone(data, r.state)
       if (finished) {
@@ -334,21 +327,24 @@ function ConnectPlayer({ data, frame, source }: { data: MatchData; frame: Frame;
         aria-pressed={locked ? undefined : isSel}
         aria-disabled={locked || undefined}
         aria-label={locked ? `${textOf(side, id)}, ${t('activities.experiences.match.matched', 'matched')}` : undefined}
+        data-picked={!locked && (isSel || drag?.over === key) ? 'true' : undefined}
+        data-result={shaking ? 'wrong' : undefined}
         className={cn(
-          'relative flex min-h-11 w-full min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 py-2 text-start text-[13px] leading-snug font-medium ring-1 transition-[background-color,box-shadow,opacity] outline-none select-none focus-visible:ring-2 focus-visible:ring-sky-500/60',
-          locked
-            ? PAIR_CLASS[matchIndex % PAIR_CLASS.length]
-            : shaking
-              ? 'lh-exp-shake bg-rose-50 text-rose-900 ring-2 ring-rose-400'
-              : 'bg-white text-neutral-800 shadow-[0_1px_1px_rgba(0,0,0,0.05)] ring-neutral-200 hover:ring-neutral-300',
-          isSel && 'ring-2 ring-indigo-500 bg-indigo-50/60',
-          drag?.over === key && !locked && 'ring-2 ring-indigo-400',
+          'lh-exp-raised relative flex min-h-12 w-full min-w-0 touch-manipulation items-center gap-2 overflow-hidden rounded-xl py-2 pe-3 text-start text-[14px] leading-snug font-medium outline-none select-none',
+          locked ? 'lh-exp-lock ps-9 text-neutral-800' : 'lh-exp-press ps-3',
+          !locked && !shaking && (isSel || drag?.over === key ? 'text-indigo-700' : 'text-neutral-800'),
+          shaking && 'lh-exp-shake',
           drag?.id === key && 'opacity-40',
-          !locked && 'cursor-pointer',
         )}
       >
         {locked && (
-          <span aria-hidden className="pointer-events-none inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-white/80 px-1 text-[10px] font-bold tabular-nums">
+          <span
+            aria-hidden
+            className={cn(
+              'lh-exp-tab pointer-events-none absolute inset-y-0 start-0 inline-flex w-6 items-center justify-center text-[11px] font-bold tabular-nums text-white',
+              PAIR_TAB[matchIndex % PAIR_TAB.length],
+            )}
+          >
             {matchIndex + 1}
           </span>
         )}
@@ -378,7 +374,7 @@ function ConnectPlayer({ data, frame, source }: { data: MatchData; frame: Frame;
   return (
     <ExperienceFrame {...frame} title={data.title} instructions={data.instructions} footer={footer} celebrate={stars === 3} live={live}>
       <div className="flex flex-col gap-3">
-        <p className="m-0 text-[12px] leading-snug text-neutral-500">
+        <p className="m-0 text-[13px] leading-snug text-neutral-500">
           {done ? (
             <span className={cn('inline-flex items-center gap-1.5 font-medium', state.mistakes === 0 ? 'text-emerald-700' : 'text-neutral-700')}>
               <ResultIcon ok size={15} label="" />
@@ -433,6 +429,7 @@ function MemoryPlayer({ data, frame, source }: { data: MatchData; frame: Frame; 
     if (r.result === 'ignored') return
     window.clearTimeout(missTimer.current)
     setState(r.state)
+    if (r.result === 'miss' || r.result === 'match') buzz(r.result === 'match' ? 'correct' : 'wrong')
     if (r.result === 'miss') {
       setLive(t('activities.experiences.match.no_pair', 'Not a pair.'))
       missTimer.current = window.setTimeout(() => setState((s) => closeMiss(s)), MISS_MS)
@@ -495,7 +492,7 @@ function MemoryPlayer({ data, frame, source }: { data: MatchData; frame: Frame; 
         </span>
       )}
       {done && newBest && (
-        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
           {t('activities.experiences.match.new_best', 'New best!')}
         </span>
       )}
@@ -505,7 +502,7 @@ function MemoryPlayer({ data, frame, source }: { data: MatchData; frame: Frame; 
   return (
     <ExperienceFrame {...frame} title={data.title} instructions={data.instructions} footer={footer} celebrate={stars === 3} live={live}>
       <div className="flex flex-col gap-3">
-        <p className="m-0 text-[12px] leading-snug text-neutral-500">
+        <p className="m-0 text-[13px] leading-snug text-neutral-500">
           {done ? (
             <span className="inline-flex items-center gap-1.5 font-medium text-emerald-700">
               <ResultIcon ok size={15} label="" />
@@ -515,7 +512,7 @@ function MemoryPlayer({ data, frame, source }: { data: MatchData; frame: Frame; 
             t('activities.experiences.match.memory_hint', 'Flip two cards at a time to find the pairs.')
           )}
         </p>
-        <div ref={gridRef} role="group" aria-label={t('activities.experiences.match.cards_label', 'Cards')} className={cn('grid gap-2 sm:gap-3', cols)}>
+        <div ref={gridRef} role="group" aria-label={t('activities.experiences.match.cards_label', 'Cards')} className={cn('lh-exp-well lh-exp-felt grid gap-2.5 rounded-2xl p-2.5 sm:gap-3 sm:p-3', cols)}>
           {deck.map((c, i) => {
             const matched = state.matched.includes(c.key)
             const open = matched || state.open.includes(i)
@@ -534,27 +531,29 @@ function MemoryPlayer({ data, frame, source }: { data: MatchData; frame: Frame; 
                 onKeyDown={(e) => keyDown(e, i)}
                 aria-label={label}
                 aria-disabled={matched || undefined}
-                className="group relative min-h-20 touch-manipulation rounded-xl outline-none perspective-midrange focus-visible:ring-2 focus-visible:ring-sky-500/60 sm:min-h-24"
+                data-open={open ? 'true' : undefined}
+                className={cn(
+                  'lh-exp-card3d group relative min-h-20 touch-manipulation rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 sm:min-h-24',
+                  !open && 'transition-transform duration-150 hover:-translate-y-px active:translate-y-px motion-reduce:transform-none',
+                )}
               >
-                <span
-                  className={cn(
-                    'pointer-events-none absolute inset-0 transition-transform duration-300 ease-out transform-3d motion-reduce:transition-none',
-                    open && 'rotate-y-180',
-                  )}
-                >
+                <span className="lh-exp-card3d-inner pointer-events-none absolute inset-0">
                   {/* Back (face down) */}
                   <span
                     aria-hidden
-                    className="absolute inset-0 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-300 ring-1 ring-indigo-100 backface-hidden group-hover:bg-indigo-100/70"
+                    className="lh-exp-card3d-face lh-exp-raised lh-exp-cardback absolute inset-0 flex items-center justify-center rounded-xl text-indigo-400"
                   >
-                    <Question size={22} weight="bold" />
+                    <span className="lh-exp-well inline-flex h-9 w-9 items-center justify-center rounded-full">
+                      <Question size={18} weight="bold" />
+                    </span>
                   </span>
                   {/* Front (face up) */}
                   <span
                     aria-hidden
+                    data-result={matched ? 'correct' : missed ? 'wrong' : undefined}
                     className={cn(
-                      'absolute inset-0 flex rotate-y-180 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-center text-[13px] leading-snug font-medium ring-1 backface-hidden',
-                      matched ? 'bg-emerald-50 text-emerald-900 ring-emerald-300' : missed ? 'bg-rose-50 text-rose-900 ring-2 ring-rose-300' : 'bg-white text-neutral-800 ring-neutral-200',
+                      'lh-exp-card3d-face lh-exp-card3d-front lh-exp-raised absolute inset-0 flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-center text-[14px] leading-snug font-medium',
+                      !matched && !missed && 'text-neutral-800',
                     )}
                   >
                     {matched && <Check size={14} weight="bold" className="shrink-0 text-emerald-600" />}

@@ -17,13 +17,13 @@ import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { ArrowCounterClockwise, Stack, Trash, Tray } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
 import { cn } from '@/lib/utils'
 import { CommitInput, FIELD_CLASS } from '../../../Blocks/ui/BlockChrome'
 import {
   ExperienceFooter,
   ExperienceFrame,
   Stars,
+  buzz,
   newId,
   useEnsureBlockId,
   useExperienceEditable,
@@ -55,18 +55,18 @@ import {
   type SortData,
   type SortPlacement,
 } from './sortModel'
-import { AddRowButton, BlockHints, DragGhost, FormSection, ICON_BTN, NotReady, RESULT_CLASS, ResultIcon, RowHints, contentKey } from './kit'
+import { AddRowButton, BlockHints, DragGhost, FormSection, ICON_BTN, NotReady, ResultIcon, RowHints, contentKey } from './kit'
 import { focusSibling, useTapDrag } from './useTapDrag'
 
 const TONE = 'interactive' as const
 const TRAY = '__tray__'
 
 /** Per-group colours (dot, zone surface, zone while a chip hovers it). */
-const COLOR: Record<SortColor, { dot: string; zone: string; over: string; text: string }> = {
-  sky: { dot: 'bg-sky-500', zone: 'bg-sky-50/50 ring-sky-200', over: 'bg-sky-50 ring-2 ring-sky-400', text: 'text-sky-800' },
-  amber: { dot: 'bg-amber-500', zone: 'bg-amber-50/50 ring-amber-200', over: 'bg-amber-50 ring-2 ring-amber-400', text: 'text-amber-800' },
-  emerald: { dot: 'bg-emerald-500', zone: 'bg-emerald-50/50 ring-emerald-200', over: 'bg-emerald-50 ring-2 ring-emerald-400', text: 'text-emerald-800' },
-  rose: { dot: 'bg-rose-500', zone: 'bg-rose-50/50 ring-rose-200', over: 'bg-rose-50 ring-2 ring-rose-400', text: 'text-rose-800' },
+const COLOR: Record<SortColor, { dot: string; zone: string; text: string }> = {
+  sky: { dot: 'bg-sky-500', zone: 'text-sky-500', text: 'text-sky-800' },
+  amber: { dot: 'bg-amber-500', zone: 'text-amber-500', text: 'text-amber-800' },
+  emerald: { dot: 'bg-emerald-500', zone: 'text-emerald-500', text: 'text-emerald-800' },
+  rose: { dot: 'bg-rose-500', zone: 'text-rose-500', text: 'text-rose-800' },
 }
 
 type Frame = {
@@ -288,6 +288,7 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
   const onCheck = () => {
     const c = checkSort(data, placement)
     setCheck(c)
+    buzz(c.perfect ? 'correct' : 'wrong')
     setSelected(null)
     setLive(
       c.perfect
@@ -359,13 +360,14 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
         onKeyDown={(e) => chipKeyDown(e, id)}
         aria-pressed={check ? undefined : isSel}
         aria-disabled={check ? true : undefined}
+        data-result={result === 'correct' || result === 'wrong' ? result : undefined}
         className={cn(
-          'inline-flex max-w-full min-w-0 touch-manipulation items-center gap-1.5 rounded-xl px-3 py-2 text-start text-[13px] leading-snug font-medium ring-1 transition-[box-shadow,background-color,opacity] outline-none select-none focus-visible:ring-2 focus-visible:ring-sky-500/60',
-          result === 'correct' ? RESULT_CLASS.correct : result === 'wrong' ? RESULT_CLASS.wrong : 'bg-white text-neutral-800 shadow-[0_1px_1px_rgba(0,0,0,0.05)] ring-neutral-200',
-          !check && 'cursor-grab hover:ring-neutral-300 active:cursor-grabbing',
-          isSel && 'ring-2 ring-neutral-900',
+          'lh-exp-raised inline-flex min-h-10 max-w-full min-w-0 touch-manipulation items-center gap-1.5 rounded-xl px-3 py-2 text-start text-[14px] leading-snug font-medium outline-none select-none',
+          !check && 'lh-exp-press cursor-grab active:cursor-grabbing',
+          isSel ? 'text-sky-700' : !result && 'text-neutral-800',
           drag?.id === id && 'opacity-40',
-          inZone && !result && 'bg-white/90',
+          inZone && !check && 'lh-exp-snap',
+          result === 'wrong' && 'lh-exp-wrong-shake',
         )}
       >
         {result && result !== 'unplaced' && (
@@ -402,7 +404,7 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
     <ExperienceFrame {...frame} title={data.title} instructions={data.instructions} footer={footer} celebrate={!!check?.perfect} live={live}>
       <div ref={rootRef} className="flex flex-col gap-4">
         {!check && (
-          <p className="m-0 text-[12px] leading-snug text-neutral-500">
+          <p className="m-0 text-[13px] leading-snug text-neutral-500">
             {selected
               ? t('activities.experiences.sort.selected_hint', { item: textOf(selected), defaultValue: 'Now tap a group for “{{item}}”.' })
               : t('activities.experiences.sort.hint', 'Drag each item into a group, or tap an item and then a group.')}
@@ -416,16 +418,16 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
             role="group"
             aria-label={t('activities.experiences.sort.tray_label', 'Items to sort')}
             onClick={() => selected && placement[selected] && doPlace(selected, null)}
+            data-over={drag?.over === TRAY ? 'true' : undefined}
             className={cn(
-              'flex min-h-14 flex-wrap items-center gap-2 rounded-2xl bg-neutral-50 p-3 ring-1 ring-neutral-100 transition-colors',
-              drag?.over === TRAY && 'bg-neutral-100 ring-2 ring-neutral-300',
+              'lh-exp-well flex min-h-16 flex-wrap items-center gap-2 rounded-2xl p-3 text-neutral-400',
               selected && placement[selected] && 'cursor-pointer',
             )}
           >
             {tray.length ? (
               tray.map((id) => chip(id, false))
             ) : (
-              <span className="flex items-center gap-2 text-[13px] text-neutral-400">
+              <span className="flex items-center gap-2 text-[13px] text-neutral-500">
                 <Tray size={16} aria-hidden />
                 {t('activities.experiences.sort.tray_empty', 'All placed. Check your answers when you are ready.')}
               </span>
@@ -437,7 +439,7 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
                   e.stopPropagation()
                   doPlace(selected, null)
                 }}
-                className={buttonClass('ghost', 'sm', 'ms-auto')}
+                className="lh-exp-raised lh-exp-press ms-auto inline-flex h-8 items-center rounded-lg px-3 text-[13px] font-medium text-neutral-700"
               >
                 {t('activities.experiences.sort.back_to_tray', 'Back to the tray')}
               </button>
@@ -458,17 +460,14 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
                 role="group"
                 aria-label={t('activities.experiences.sort.group_label', { group: c.label, defaultValue: 'Group: {{group}}' })}
                 onClick={() => target && selected && doPlace(selected, c.id)}
-                className={cn(
-                  'flex min-h-28 min-w-0 flex-col gap-2 rounded-2xl p-3 ring-1 transition-[background-color,box-shadow]',
-                  over ? COLOR[c.color].over : COLOR[c.color].zone,
-                  target && 'cursor-pointer',
-                )}
+                data-over={over || target ? 'true' : undefined}
+                className={cn('lh-exp-well lh-exp-tinted flex min-h-32 min-w-0 flex-col gap-2 rounded-2xl p-3', COLOR[c.color].zone, target && 'cursor-pointer')}
               >
                 <div className="flex items-center gap-2">
                   <span aria-hidden className={cn('h-2.5 w-2.5 shrink-0 rounded-full', COLOR[c.color].dot)} />
                   <span className={cn('min-w-0 flex-1 text-[13px] font-semibold [overflow-wrap:anywhere]', COLOR[c.color].text)}>{c.label}</span>
                   {!check && (
-                    <kbd aria-hidden className="hidden rounded bg-white/80 px-1.5 text-[10px] font-medium text-neutral-400 ring-1 ring-neutral-200 sm:inline">
+                    <kbd aria-hidden className="lh-exp-raised hidden rounded-md px-1.5 text-[11px] font-medium text-neutral-500 sm:inline">
                       {ci + 1}
                     </kbd>
                   )}
@@ -481,13 +480,13 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
                       e.stopPropagation()
                       doPlace(selected, c.id)
                     }}
-                    className="mt-auto inline-flex h-8 items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-white/70 px-2 text-[12px] font-medium text-neutral-600 outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-500/50"
+                    className="lh-exp-raised lh-exp-press mt-auto inline-flex min-h-10 items-center justify-center rounded-xl px-3 text-[13px] font-medium text-neutral-700 outline-none"
                   >
                     {t('activities.experiences.sort.place_here', { item: textOf(selected), defaultValue: 'Put “{{item}}” here' })}
                   </button>
                 )}
                 {!ids.length && !target && (
-                  <span className="m-auto text-[12px] text-neutral-400">{t('activities.experiences.sort.zone_empty', 'Drop items here')}</span>
+                  <span className="m-auto text-[13px] text-neutral-400">{t('activities.experiences.sort.zone_empty', 'Drop items here')}</span>
                 )}
               </div>
             )
@@ -497,18 +496,18 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
         {/* Check / results */}
         {!check ? (
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" onClick={onCheck} disabled={!ready} className={buttonClass('primary', 'sm')}>
+            <button type="button" onClick={onCheck} disabled={!ready} className="lh-exp-key">
               {t('activities.experiences.sort.check', 'Check')}
             </button>
             {!ready && (
-              <span className="text-[12px] text-neutral-400">
+              <span className="text-[13px] text-neutral-500">
                 {t('activities.experiences.sort.place_all', 'Place every item to check.')}
               </span>
             )}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className={cn('m-0 flex items-center gap-2 text-[13px] font-medium', check.perfect ? 'text-emerald-700' : 'text-neutral-700')}>
+            <p className={cn('m-0 flex items-center gap-2 text-[14px] font-medium', check.perfect ? 'text-emerald-700' : 'text-neutral-700')}>
               <ResultIcon ok={check.perfect} size={16} label="" />
               {check.perfect
                 ? t('activities.experiences.sort.perfect', 'Perfect! Everything is in the right group.')
@@ -517,7 +516,7 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
             {wrong.length > 0 && (
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {wrong.map((it) => (
-                  <li key={it.id} className="rounded-xl bg-rose-50/60 px-3 py-2 text-[13px] leading-relaxed text-neutral-700 ring-1 ring-rose-100">
+                  <li key={it.id} className="rounded-xl bg-rose-50/70 px-3 py-2 text-[13px] leading-relaxed text-neutral-700">
                     <span className="font-medium text-neutral-900">
                       {t('activities.experiences.sort.belongs_in', { item: it.text, group: groupOf(it.categoryId), defaultValue: '“{{item}}” belongs in {{group}}.' })}
                     </span>
@@ -528,7 +527,7 @@ function SortPlayer({ data, frame, source }: { data: SortData; frame: Frame; sou
             )}
             {!check.perfect && (
               <div>
-                <button type="button" onClick={onRetryWrong} className={buttonClass('primary', 'sm')}>
+                <button type="button" onClick={onRetryWrong} className="lh-exp-key">
                   <ArrowCounterClockwise size={14} weight="bold" aria-hidden />
                   {t('activities.experiences.sort.retry_wrong', 'Retry wrong ones')}
                 </button>

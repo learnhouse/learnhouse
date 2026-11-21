@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import {
   ExperienceFooter,
   ExperienceFrame,
+  buzz,
   newId,
   useEnsureBlockId,
   useExperienceEditable,
@@ -249,6 +250,8 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
   const drag = React.useRef<{ id: number; x: number; y: number; locked: boolean } | null>(null)
   // Card width and direction, measured when a drag starts (not during render).
   const [dragBox, setDragBox] = React.useState({ width: 300, rtl: false })
+  // The answered card flying off the top of the deck while the next one is dealt.
+  const [leaving, setLeaving] = React.useState<{ key: number; text: string; dir: 1 | -1; stamp: string; ok: boolean } | null>(null)
 
   const card = deck[state.index]
   const revealed = isRevealed(state)
@@ -271,6 +274,7 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
     setState(next)
     setDx(0)
     const ok = next.answers[next.answers.length - 1]?.correct
+    buzz(ok ? 'correct' : 'wrong')
     const label = card.isTrue ? labels.true : labels.false
     setLive(
       `${t(ok ? 'activities.experiences.myth_fact.correct' : 'activities.experiences.myth_fact.wrong')}. ${t('activities.experiences.myth_fact.answer_was', { label })}`,
@@ -280,6 +284,12 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
 
   const goNext = () => {
     const next = nextCard(state)
+    if (card && answer && !reduced) {
+      // Off it goes, toward the side the learner picked (end = fact).
+      const guess = answer.correct ? card.isTrue : !card.isTrue
+      const dir = ((guess ? 1 : -1) * (isRtl() ? -1 : 1)) as 1 | -1
+      setLeaving({ key: state.index, text: card.text, dir, stamp: card.isTrue ? labels.true : labels.false, ok: answer.correct })
+    }
     setState(next)
     setLive('')
     if (isFinished(next, deck)) {
@@ -357,7 +367,7 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
   if (!deck.length) {
     return (
       <ExperienceFrame {...frame} instructions={undefined}>
-        <p className="m-0 rounded-xl bg-neutral-50 px-4 py-6 text-center text-sm text-neutral-500">{t('activities.experiences.myth_fact.empty')}</p>
+        <p className="m-0 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[14px] text-neutral-500">{t('activities.experiences.myth_fact.empty')}</p>
       </ExperienceFrame>
     )
   }
@@ -373,7 +383,7 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
       <span
         className={cn(
           'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
-          state.streak >= 2 ? 'bg-orange-50 text-orange-600' : 'bg-neutral-100 text-neutral-500',
+          state.streak >= 2 ? 'bg-orange-50 text-orange-600' : 'text-neutral-500',
         )}
       >
         <Fire size={13} weight={state.streak >= 2 ? 'fill' : 'regular'} aria-hidden />
@@ -395,9 +405,12 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
       ) : (
         <div className="mx-auto flex max-w-md flex-col items-stretch gap-4" onKeyDown={onKeyDown}>
           <div className="relative">
-            {/* The rest of the deck, peeking out underneath. */}
+            {/* The rest of the deck, peeking out underneath (up to two cards). */}
+            {deck.length - state.index > 2 && (
+              <div aria-hidden className="lh-exp-raised absolute inset-x-6 -bottom-3.5 top-3.5 rounded-2xl" />
+            )}
             {deck.length - state.index > 1 && (
-              <div aria-hidden className="absolute inset-x-3 -bottom-2 top-2 rounded-2xl bg-neutral-100 shadow-[0_0_0_1px_rgba(0,0,0,0.05)]" />
+              <div aria-hidden className="lh-exp-raised absolute inset-x-3 -bottom-[7px] top-[7px] rounded-2xl" />
             )}
             <div
               key={card.id}
@@ -412,28 +425,35 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
               onPointerCancel={(e) => endDrag(e, true)}
               style={{
                 transform: dx || tilt ? `translateX(${dx}px) rotate(${tilt}deg)` : undefined,
+                transition: dragging ? 'none' : undefined,
                 touchAction: 'pan-y',
               }}
               className={cn(
-                'relative flex min-h-[11rem] select-none flex-col justify-center gap-3 rounded-2xl bg-white p-5 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05),0_0_0_1px_rgba(0,0,0,0.08),0_8px_24px_-12px_rgba(0,0,0,0.18)] outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40',
+                'lh-exp-raised relative flex min-h-[12rem] select-none flex-col justify-center gap-3 rounded-2xl px-5 pt-12 pb-6 text-center shadow-[inset_0_1px_0_var(--exp-hi),0_1px_2px_var(--exp-drop),0_12px_28px_-14px_rgba(15,23,42,0.3)] outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40',
                 !revealed && 'cursor-grab active:cursor-grabbing',
-                !dragging && 'transition-transform duration-200 ease-out motion-reduce:transition-none',
-                'animate-in fade-in zoom-in-95 duration-200 motion-reduce:zoom-in-100',
-                answer && (answer.correct ? 'ring-2 ring-emerald-400/70' : 'ring-2 ring-rose-400/70'),
+                'lh-exp-deal',
               )}
             >
-              {/* Side labels that grow as the card is dragged toward them. */}
+              {/* Side stamps that ink in as the card is dragged toward them. */}
               {dragging && (
                 <span
                   aria-hidden
-                  style={{ opacity: pull }}
-                  className={cn(
-                    'absolute top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide',
-                    towardEnd ? 'end-3 bg-emerald-50 text-emerald-700' : 'start-3 bg-rose-50 text-rose-700',
-                  )}
+                  style={{ opacity: pull, ['--exp-rot' as string]: towardEnd ? '8deg' : '-8deg' }}
+                  className={cn('lh-exp-stamp absolute top-3', towardEnd ? 'end-3 text-emerald-600' : 'start-3 text-rose-600')}
                 >
-                  {towardEnd ? <Check size={12} weight="bold" /> : <X size={12} weight="bold" />}
+                  {towardEnd ? <Check size={14} weight="bold" /> : <X size={14} weight="bold" />}
                   {towardEnd ? labels.true : labels.false}
+                </span>
+              )}
+              {/* The verdict, stamped once the card is answered. */}
+              {answer && (
+                <span
+                  aria-hidden
+                  style={{ ['--exp-rot' as string]: card.isTrue ? '9deg' : '-9deg' }}
+                  className={cn('lh-exp-stamp lh-exp-stamp-in absolute top-2.5 end-3', card.isTrue ? 'text-emerald-600' : 'text-rose-600')}
+                >
+                  {card.isTrue ? <Check size={14} weight="bold" /> : <X size={14} weight="bold" />}
+                  {card.isTrue ? labels.true : labels.false}
                 </span>
               )}
               <p className="m-0 text-center text-lg leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere] sm:text-xl">{card.text}</p>
@@ -441,24 +461,41 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
                 <div className="flex flex-col items-center gap-1.5 animate-in fade-in duration-200">
                   <span
                     className={cn(
-                      'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold',
+                      'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold',
                       answer.correct ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700',
                     )}
                   >
                     {answer.correct ? <Check size={14} weight="bold" aria-hidden /> : <X size={14} weight="bold" aria-hidden />}
                     {answer.correct ? t('activities.experiences.myth_fact.correct') : t('activities.experiences.myth_fact.wrong')}
-                    <span className="font-normal opacity-80">· {card.isTrue ? labels.true : labels.false}</span>
+                    <span className="sr-only">· {card.isTrue ? labels.true : labels.false}</span>
                   </span>
                   {card.explanation.trim() && (
-                    <p className="m-0 text-sm leading-relaxed text-neutral-600 [overflow-wrap:anywhere]">{card.explanation}</p>
+                    <p className="m-0 text-center text-[14px] leading-relaxed text-neutral-600 [overflow-wrap:anywhere]">{card.explanation}</p>
                   )}
                 </div>
               )}
             </div>
+            {leaving && (
+              <div
+                key={`leaving-${leaving.key}`}
+                aria-hidden
+                onAnimationEnd={() => setLeaving(null)}
+                style={{ ['--exp-dir' as string]: leaving.dir }}
+                className="lh-exp-raised lh-exp-fly pointer-events-none absolute inset-0 z-10 flex flex-col justify-center rounded-2xl px-5 pt-12 pb-6 text-center shadow-[0_18px_36px_-14px_rgba(15,23,42,0.35)]"
+              >
+                <span
+                  style={{ ['--exp-rot' as string]: leaving.stamp === labels.true ? '9deg' : '-9deg' }}
+                  className={cn('lh-exp-stamp absolute top-3 end-3', leaving.stamp === labels.true ? 'text-emerald-600' : 'text-rose-600')}
+                >
+                  {leaving.stamp}
+                </span>
+                <p className="m-0 text-lg leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere] sm:text-xl">{leaving.text}</p>
+              </div>
+            )}
           </div>
 
           {revealed ? (
-            <button ref={nextRef} type="button" className={buttonClass('primary', 'lg', 'self-center')} onClick={goNext}>
+            <button ref={nextRef} type="button" className="lh-exp-key min-h-11 self-center px-5" onClick={goNext}>
               {state.index + 1 >= deck.length ? t('activities.experiences.myth_fact.see_results') : t('activities.experiences.myth_fact.next')}
               <ArrowRight size={15} weight="bold" aria-hidden className="rtl:rotate-180" />
             </button>
@@ -467,7 +504,7 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
               <button
                 type="button"
                 onClick={() => decide(false)}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-rose-50 text-sm font-semibold text-rose-700 ring-1 ring-rose-200 transition-colors outline-none hover:bg-rose-100 focus-visible:ring-2 focus-visible:ring-rose-400 active:scale-[0.98]"
+                className="lh-exp-raised lh-exp-press lh-exp-tint inline-flex h-12 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold text-rose-700 outline-none"
               >
                 <X size={16} weight="bold" aria-hidden />
                 {labels.false}
@@ -475,14 +512,14 @@ function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFa
               <button
                 type="button"
                 onClick={() => decide(true)}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-50 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-200 transition-colors outline-none hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.98]"
+                className="lh-exp-raised lh-exp-press lh-exp-tint inline-flex h-12 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold text-emerald-700 outline-none"
               >
                 <Check size={16} weight="bold" aria-hidden />
                 {labels.true}
               </button>
             </div>
           )}
-          <p className="m-0 text-center text-xs text-neutral-400">
+          <p className="m-0 text-center text-[12px] text-neutral-400">
             {t('activities.experiences.myth_fact.card_of', { current: Math.min(state.index + 1, deck.length), total: deck.length })}
           </p>
         </div>
@@ -507,11 +544,11 @@ function MythFactResults({ state, deck, labels }: { state: ReturnType<typeof new
       </div>
       {missed.length ? (
         <div className="flex flex-col gap-2">
-          <h4 className="m-0 text-sm font-semibold text-neutral-800">{t('activities.experiences.myth_fact.review_title')}</h4>
+          <h4 className="m-0 text-[14px] font-semibold text-neutral-800">{t('activities.experiences.myth_fact.review_title')}</h4>
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {missed.map((s) => (
-              <li key={s.id} className="flex flex-col gap-1 rounded-xl bg-neutral-50 p-3">
-                <p className="m-0 text-sm font-medium text-neutral-900 [overflow-wrap:anywhere]">{s.text}</p>
+              <li key={s.id} className="flex flex-col gap-1 rounded-xl bg-white p-3 shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08))]">
+                <p className="m-0 text-[14px] font-medium text-neutral-900 [overflow-wrap:anywhere]">{s.text}</p>
                 <p
                   className={cn(
                     'm-0 inline-flex items-center gap-1 text-xs font-semibold',

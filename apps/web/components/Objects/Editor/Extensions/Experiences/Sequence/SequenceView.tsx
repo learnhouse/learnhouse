@@ -17,14 +17,14 @@ import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { CaretDown, CaretUp, DotsSixVertical, ListNumbers, Trash } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
 import { cn } from '@/lib/utils'
 import { CommitInput, FIELD_CLASS, Segmented } from '../../../Blocks/ui/BlockChrome'
-import { dropEdge, usePointerReorder } from '../../../Blocks/ui/usePointerReorder'
+import { dropEdge, usePointerReorder, type ReorderState } from '../../../Blocks/ui/usePointerReorder'
 import {
   ExperienceFooter,
   ExperienceFrame,
   Stars,
+  buzz,
   newId,
   useEnsureBlockId,
   useExperienceEditable,
@@ -52,12 +52,63 @@ import {
   type SequenceData,
   type SequenceVariant,
 } from './sequenceModel'
-import { AddRowButton, BlockHints, FormSection, ICON_BTN, NotReady, RESULT_CLASS, ResultIcon, RowHints, contentKey } from '../Sort/kit'
+import { AddRowButton, BlockHints, FormSection, ICON_BTN, NotReady, ResultIcon, RowHints, contentKey } from '../Sort/kit'
+
+/**
+ How far each tile slides while one is dragged, so the others make room and
+ the dragged tile sits in the slot it would drop into. Heights are read once
+ when the drag starts; nothing moves in the DOM until the drop.
+*/
+function useSlideOffsets(listRef: React.RefObject<HTMLElement | null>, drag: ReorderState | null): { offsets: number[]; still: boolean } {
+  const [steps, setSteps] = React.useState<number[] | null>(null)
+  // The frame the tiles are re-ordered for real must not animate back from
+  // their slid positions: transitions are off for that one frame.
+  const [lastDrag, setLastDrag] = React.useState(drag)
+  const [still, setStill] = React.useState(false)
+  if (lastDrag !== drag) {
+    setLastDrag(drag)
+    if (lastDrag && !drag) setStill(true)
+    if (!drag && steps) setSteps(null)
+  }
+  React.useEffect(() => {
+    if (!still) return
+    const id = requestAnimationFrame(() => setStill(false))
+    return () => cancelAnimationFrame(id)
+  }, [still])
+  React.useLayoutEffect(() => {
+    if (!drag || steps) return
+    const els = Array.from(listRef.current?.querySelectorAll<HTMLElement>(':scope > [data-reorder-item]') ?? [])
+    if (els.length < 2) return
+    const tops = els.map((el) => el.offsetTop)
+    const gap = tops[1] - tops[0] - els[0].offsetHeight
+    // Each tile's step is its height plus the gap after it.
+    setSteps(els.map((el, i) => (i < els.length - 1 ? tops[i + 1] - tops[i] : el.offsetHeight + gap)))
+  }, [drag, steps, listRef])
+  if (!drag || !steps || drag.from === drag.over) return { offsets: [], still }
+  const { from, over } = drag
+  const out = steps.map(() => 0)
+  if (over > from) {
+    for (let i = from + 1; i <= over; i++) {
+      out[i] = -steps[from]
+      out[from] += steps[i]
+    }
+  } else {
+    for (let i = over; i < from; i++) {
+      out[i] = steps[from]
+      out[from] -= steps[i]
+    }
+  }
+  return { offsets: out, still }
+}
 
 const TONE = 'info' as const
 
 const GRIP =
   'flex h-8 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-neutral-300 outline-none transition-colors hover:text-neutral-500 focus-visible:text-neutral-600 focus-visible:ring-2 focus-visible:ring-sky-500/50 active:cursor-grabbing'
+
+/** The learner's grip: a ridged, thumb-sized handle at the start of the tile. */
+const TILE_GRIP =
+  'flex h-10 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-neutral-400 outline-none transition-colors hover:bg-neutral-100 hover:text-neutral-600 focus-visible:text-neutral-700 focus-visible:ring-2 focus-visible:ring-sky-500/50 active:cursor-grabbing'
 
 type Frame = {
   tone: typeof TONE
@@ -250,6 +301,7 @@ function SequencePlayer({ data, frame, source }: { data: SequenceData; frame: Fr
   }
 
   const { drag, gripProps } = usePointerReorder({ containerRef: listRef, count: order.length, onMove: move })
+  const { offsets: slide, still } = useSlideOffsets(listRef, drag)
 
   // Keep focus on the arrow button after its row moved (or on its sibling at an edge).
   const moveBy = (id: string, delta: -1 | 1) => {
@@ -282,6 +334,7 @@ function SequencePlayer({ data, frame, source }: { data: SequenceData; frame: Fr
   const onCheck = () => {
     const c = checkSequence(data, order)
     setCheck(c)
+    buzz(c.perfect ? 'correct' : 'wrong')
     setSelected(null)
     const isFinal = c.perfect || attempt >= SEQUENCE_MAX_ATTEMPTS
     const msg = c.perfect
@@ -343,7 +396,7 @@ function SequencePlayer({ data, frame, source }: { data: SequenceData; frame: Fr
     <ExperienceFrame {...frame} title={data.title} instructions={data.instructions} footer={footer} celebrate={!!check?.perfect && stars === 3} live={live}>
       <div className="flex flex-col gap-4">
         {!check && (
-          <p className="m-0 text-[12px] leading-snug text-neutral-500">
+          <p className="m-0 text-[13px] leading-snug text-neutral-500">
             {selected
               ? t('activities.experiences.sequence.selected_hint', { item: textOf(selected), defaultValue: 'Tap the step whose place “{{item}}” should take.' })
               : t('activities.experiences.sequence.hint', 'Drag the steps into order or use the arrows. You can also tap a step, then tap where it goes.')}
@@ -358,21 +411,30 @@ function SequencePlayer({ data, frame, source }: { data: SequenceData; frame: Fr
         >
           {order.map((id, i) => {
             const ok = check ? check.positions[id] : undefined
-            const edge = dropEdge(drag, i)
             const it = byId.get(id)
             const isSel = selected === id
+            const dragging = drag?.from === i
+            const offset = slide[i] ?? 0
             return (
               <li
                 key={id}
                 data-reorder-item=""
                 data-seq-id={id}
+                data-picked={dragging || isSel ? 'true' : undefined}
+                data-result={ok === true ? 'correct' : ok === false ? 'wrong' : undefined}
+                style={
+                  {
+                    '--exp-i': i,
+                    ...(drag ? { transform: `translateY(${offset - (dragging ? 3 : 0)}px)`, zIndex: dragging ? 2 : undefined } : null),
+                    ...(still ? { transition: 'none' } : null),
+                  } as React.CSSProperties
+                }
                 className={cn(
-                  'relative flex min-w-0 items-center gap-2 rounded-xl px-2 py-1.5 ring-1 transition-[background-color,box-shadow,opacity]',
-                  ok === true ? RESULT_CLASS.correct : ok === false ? RESULT_CLASS.wrong : 'bg-white shadow-[0_1px_1px_rgba(0,0,0,0.04)] ring-neutral-200',
-                  isSel && 'ring-2 ring-neutral-900',
-                  drag?.from === i && 'opacity-50',
-                  edge === 'before' && 'before:absolute before:inset-x-2 before:-top-1.5 before:h-0.5 before:rounded before:bg-blue-500',
-                  edge === 'after' && 'after:absolute after:inset-x-2 after:-bottom-1.5 after:h-0.5 after:rounded after:bg-blue-500',
+                  'lh-exp-raised relative flex min-h-12 min-w-0 items-center gap-1.5 rounded-xl py-1 ps-1 pe-1.5',
+                  ok === undefined && (isSel || dragging ? 'text-sky-700' : 'text-neutral-800'),
+                  drag && 'lh-exp-slide',
+                  ok === true && 'lh-exp-settle',
+                  ok === false && 'lh-exp-wrong-shake',
                 )}
               >
                 {timeline && (
@@ -388,17 +450,17 @@ function SequencePlayer({ data, frame, source }: { data: SequenceData; frame: Fr
                   <button
                     type="button"
                     {...gripProps(i, id)}
-                    className={GRIP}
+                    className={TILE_GRIP}
                     aria-label={t('activities.experiences.sequence.grip', { item: it?.text ?? '', defaultValue: 'Move “{{item}}” (drag or arrow keys)' })}
                   >
-                    <DotsSixVertical size={14} weight="bold" aria-hidden className="pointer-events-none" />
+                    <DotsSixVertical size={16} weight="bold" aria-hidden className="pointer-events-none" />
                   </button>
                 )}
                 <span
                   aria-hidden
                   className={cn(
-                    'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums',
-                    ok === undefined ? 'bg-blue-50 text-blue-700' : 'bg-white/80 text-neutral-700',
+                    'lh-exp-well inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums text-neutral-600',
+                    check && 'ms-2',
                   )}
                 >
                   {i + 1}
@@ -409,14 +471,14 @@ function SequencePlayer({ data, frame, source }: { data: SequenceData; frame: Fr
                   disabled={!!check}
                   aria-pressed={check ? undefined : isSel}
                   aria-label={`${t('activities.experiences.sequence.position', { n: i + 1, defaultValue: 'Position {{n}}' })}: ${it?.text ?? ''}`}
-                  className="flex min-w-0 flex-1 touch-manipulation flex-col items-start gap-0.5 rounded-lg px-1 py-1 text-start text-[13px] leading-snug font-medium text-inherit outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 disabled:cursor-default"
+                  className="flex min-h-10 min-w-0 flex-1 touch-manipulation flex-col items-start justify-center gap-0.5 rounded-lg px-1.5 py-1 text-start text-[14px] leading-snug font-medium text-inherit outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 disabled:cursor-default"
                 >
                   <span className="pointer-events-none [overflow-wrap:anywhere]">{it?.text}</span>
                   {timeline && check && it?.detail && (
-                    <span className="pointer-events-none rounded-md bg-blue-50 px-1.5 py-px text-[11px] font-semibold tabular-nums text-blue-700">{it.detail}</span>
+                    <span className="pointer-events-none rounded-md bg-blue-50 px-1.5 py-px text-[12px] font-semibold tabular-nums text-blue-700">{it.detail}</span>
                   )}
                   {final && ok === false && (
-                    <span className="pointer-events-none text-[11px] font-medium text-rose-700">
+                    <span className="pointer-events-none text-[12px] font-medium text-rose-700">
                       {t('activities.experiences.sequence.goes_at', { n: positions[id], defaultValue: 'Goes at #{{n}}' })}
                     </span>
                   )}
@@ -459,13 +521,13 @@ function SequencePlayer({ data, frame, source }: { data: SequenceData; frame: Fr
 
         {!check ? (
           <div>
-            <button type="button" onClick={onCheck} className={buttonClass('primary', 'sm')}>
+            <button type="button" onClick={onCheck} className="lh-exp-key">
               {t('activities.experiences.sequence.check', 'Check order')}
             </button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className={cn('m-0 flex items-center gap-2 text-[13px] font-medium', check.perfect ? 'text-emerald-700' : 'text-neutral-700')}>
+            <p className={cn('m-0 flex items-center gap-2 text-[14px] font-medium', check.perfect ? 'text-emerald-700' : 'text-neutral-700')}>
               <ResultIcon ok={check.perfect} size={16} label="" />
               {check.perfect
                 ? t('activities.experiences.sequence.perfect', 'Perfect order!')
@@ -473,16 +535,16 @@ function SequencePlayer({ data, frame, source }: { data: SequenceData; frame: Fr
             </p>
             {!final && (
               <div className="flex flex-wrap items-center gap-3">
-                <button type="button" onClick={onSecondTry} className={buttonClass('primary', 'sm')}>
+                <button type="button" onClick={onSecondTry} className="lh-exp-key">
                   {t('activities.experiences.sequence.second_try', 'Try once more')}
                 </button>
-                <span className="text-[12px] text-neutral-500">
+                <span className="text-[13px] text-neutral-500">
                   {t('activities.experiences.sequence.second_try_hint', 'Fix the steps marked wrong, then check again.')}
                 </span>
               </div>
             )}
             {final && !check.perfect && (
-              <p className="m-0 text-[12px] text-neutral-500">{t('activities.experiences.sequence.answer_shown', 'The correct positions are shown.')}</p>
+              <p className="m-0 text-[13px] text-neutral-500">{t('activities.experiences.sequence.answer_shown', 'The correct positions are shown.')}</p>
             )}
           </div>
         )}

@@ -3,6 +3,375 @@
    resets the blocks need inside the lesson canvas. Kept out of block-theme.css,
    which only holds rules gated by a block-theme scope. Every animation stops
    under prefers-reduced-motion. */
+/* ── Tactile surfaces ─────────────────────────────────────────────────────
+   One rule carries the whole look: things a learner can move or press are
+   raised (paper with a top highlight, a darker bottom lip and a soft contact
+   shadow); places to drop things are recessed wells; the play area is a flat
+   table. Depth means "you can act on this", never decoration. Light values
+   here; block-theme.css swaps the tokens for dark and tinted lessons. */
+.lh-exp-frame {
+  --exp-table: #f7f8fa;
+  --exp-paper: #ffffff;
+  --exp-well: #eef1f5;
+  --exp-ink: #18181b;
+  --exp-edge: rgba(15, 23, 42, 0.1);
+  --exp-lip: rgba(15, 23, 42, 0.16);
+  --exp-hi: rgba(255, 255, 255, 0.95);
+  --exp-drop: rgba(15, 23, 42, 0.08);
+}
+/* The header icon tile: a small raised plate. */
+.lh-exp-icon {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.05),
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 4px 10px -4px rgba(15, 23, 42, 0.14);
+}
+/* The play surface under the header. */
+.lh-exp-table {
+  background: var(--exp-table);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+/* A raised object: chips, cards, tiles, answer options. */
+.lh-exp-raised {
+  background: var(--exp-paper);
+  border: 1px solid var(--exp-edge);
+  border-bottom-color: var(--exp-lip);
+  box-shadow:
+    inset 0 1px 0 var(--exp-hi),
+    0 1px 1px var(--exp-drop),
+    0 3px 6px -3px var(--exp-drop);
+  transition:
+    transform 140ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 140ms ease-out,
+    background-color 140ms ease-out,
+    border-color 140ms ease-out;
+}
+/* Interactive raised objects lift on hover and sink when pressed. */
+.lh-exp-press { cursor: pointer; touch-action: manipulation; }
+@media (hover: hover) {
+  .lh-exp-press:hover:not(:disabled):not([aria-disabled='true']) {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 var(--exp-hi),
+      0 2px 2px var(--exp-drop),
+      0 6px 12px -4px var(--exp-drop);
+  }
+}
+.lh-exp-press:active:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 var(--exp-hi), 0 0 0 var(--exp-drop);
+}
+/* Picked up / selected: lifted higher with the block accent edge. */
+.lh-exp-raised[data-picked='true'],
+.lh-exp-raised[aria-pressed='true'] {
+  transform: translateY(-2px);
+  border-color: currentColor;
+  box-shadow:
+    inset 0 1px 0 var(--exp-hi),
+    0 0 0 3px color-mix(in srgb, currentColor 18%, transparent),
+    0 8px 16px -6px var(--exp-drop);
+}
+/* A recessed well: drop zones, trays, the gap in a sentence. */
+.lh-exp-well {
+  background: var(--exp-well);
+  box-shadow:
+    inset 0 1px 2px rgba(15, 23, 42, 0.08),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+  transition: background-color 140ms ease-out, box-shadow 140ms ease-out;
+}
+/* A well that carries a group's colour faintly (set it with a text-* class). */
+.lh-exp-well.lh-exp-tinted { background: color-mix(in srgb, currentColor 7%, var(--exp-well)); }
+.lh-exp-well[data-over='true'] {
+  background: color-mix(in srgb, currentColor 8%, var(--exp-well));
+  box-shadow:
+    inset 0 1px 2px rgba(15, 23, 42, 0.08),
+    inset 0 0 0 2px color-mix(in srgb, currentColor 45%, transparent);
+}
+/* The main action ("Check", "Lock in", "Start"): a dark physical key. */
+.lh-exp-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(180deg, #2b2b30 0%, #18181b 100%);
+  border: 1px solid #09090b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 2px 0 #09090b,
+    0 4px 8px -2px rgba(0, 0, 0, 0.25);
+  transform: translateY(0);
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, opacity 140ms;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.lh-exp-key:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 #09090b, 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.lh-exp-key:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 1px 0 #09090b; }
+.lh-exp-key:focus-visible,
+.lh-exp-press:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+/* Feedback states keep their depth but take a colour (always paired with an icon). */
+.lh-exp-raised[data-result='correct'] {
+  background: #f0fdf4;
+  border-color: #86efac;
+  border-bottom-color: #4ade80;
+  color: #14532d;
+}
+.lh-exp-raised[data-result='wrong'] {
+  background: #fff1f2;
+  border-color: #fda4af;
+  border-bottom-color: #fb7185;
+  color: #881337;
+}
+/* A small snap when something lands in place. */
+.lh-exp-snap { animation: lh-exp-snap 260ms cubic-bezier(0.3, 1.5, 0.5, 1); }
+@keyframes lh-exp-snap {
+  0% { transform: scale(0.94); }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-raised, .lh-exp-key, .lh-exp-well { transition: none; }
+  .lh-exp-press:hover, .lh-exp-press:active, .lh-exp-key:active,
+  .lh-exp-raised[data-picked='true'], .lh-exp-raised[aria-pressed='true'] { transform: none; }
+  .lh-exp-snap { animation: none; }
+}
+
+/* ── Signature moments ────────────────────────────────────────────────────
+   One small physical answer per block. Every one stops (or becomes a plain
+   fade) under prefers-reduced-motion, at the end of this section. */
+
+/* A wrong answer on Check: a short shake first, then the result colour. */
+.lh-exp-raised.lh-exp-wrong-shake {
+  animation: lh-exp-shake 340ms ease-in-out;
+  transition-delay: 0ms, 0ms, 220ms, 220ms;
+}
+/* Correct tiles settle into place one after another (--exp-i = index). */
+.lh-exp-settle {
+  animation: lh-exp-settle 420ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: calc(var(--exp-i, 0) * 70ms);
+}
+@keyframes lh-exp-settle {
+  0% { transform: translateY(-5px); }
+  55% { transform: translateY(1px); }
+  100% { transform: translateY(0); }
+}
+/* A matched pair lifts, then locks down. */
+.lh-exp-lock { animation: lh-exp-lock 420ms cubic-bezier(0.3, 1.3, 0.5, 1); }
+@keyframes lh-exp-lock {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-5px) scale(1.025); }
+  100% { transform: translateY(0) scale(1); }
+}
+/* Sequence: tiles slide to make room while one is dragged (inline transform). */
+.lh-exp-slide { transition: transform 180ms cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 140ms ease-out; }
+/* The colour tab a locked pair shares (Match, connect). */
+.lh-exp-tab {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset -1px 0 0 rgba(0, 0, 0, 0.08);
+}
+/* Memory cards: real 3D flips over a felt-like well. */
+.lh-exp-felt {
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--exp-paper) 40%, transparent), transparent 70%),
+    var(--exp-well);
+}
+.lh-exp-card3d { perspective: 900px; }
+.lh-exp-card3d > .lh-exp-card3d-inner {
+  transform-style: preserve-3d;
+  transition: transform 460ms cubic-bezier(0.3, 1.25, 0.5, 1);
+}
+.lh-exp-card3d[data-open='true'] > .lh-exp-card3d-inner { transform: rotateY(180deg); }
+.lh-exp-card3d-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.lh-exp-card3d-front { transform: rotateY(180deg); }
+.lh-exp-cardback {
+  background:
+    repeating-linear-gradient(45deg, transparent 0 6px, color-mix(in srgb, currentColor 9%, transparent) 6px 7px),
+    var(--exp-paper);
+}
+/* Hotspot: a found marker drops in like a pin, a ring pulses once; a miss ripples. */
+.lh-exp-pin { animation: lh-exp-pin 420ms cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+@keyframes lh-exp-pin {
+  0% { opacity: 0; transform: translateY(-18px) scale(0.7); }
+  60% { opacity: 1; transform: translateY(2px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.lh-exp-pulse { animation: lh-exp-pulse 900ms ease-out 180ms both; }
+@keyframes lh-exp-pulse {
+  0% { opacity: 0.7; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+.lh-exp-ripple { animation: lh-exp-ripple 700ms ease-out both; }
+@keyframes lh-exp-ripple {
+  0% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.3); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+}
+/* Myth or fact: the card flies off with a tilt; a stamp lands. */
+.lh-exp-fly { animation: lh-exp-fly 520ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+@keyframes lh-exp-fly {
+  0% { transform: translateX(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(calc(var(--exp-dir, 1) * 120%)) rotate(calc(var(--exp-dir, 1) * 14deg)); opacity: 0; }
+}
+.lh-exp-deal { animation: lh-exp-deal 300ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards; }
+@keyframes lh-exp-deal {
+  0% { transform: translateY(8px) scale(0.97); opacity: 0.6; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.lh-exp-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 2.5px solid currentColor;
+  border-radius: 8px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  background: color-mix(in srgb, var(--exp-paper, #fff) 80%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 22%, transparent);
+  opacity: 0.9;
+  transform: rotate(var(--exp-rot, -10deg));
+  pointer-events: none;
+}
+.lh-exp-stamp-in { animation: lh-exp-stamp 380ms cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+@keyframes lh-exp-stamp {
+  0% { opacity: 0; transform: rotate(var(--exp-rot, -10deg)) scale(1.9); }
+  100% { opacity: 0.9; transform: rotate(var(--exp-rot, -10deg)) scale(1); }
+}
+/* A raised key tinted by its text colour (Myth / Fact, Again / Hard / Got it). */
+.lh-exp-raised.lh-exp-tint {
+  background: color-mix(in srgb, currentColor 8%, var(--exp-paper));
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
+  border-bottom-color: color-mix(in srgb, currentColor 36%, transparent);
+}
+/* Speed round: the combo rises and fades. */
+.lh-exp-rise { animation: lh-exp-rise 900ms ease-out both; }
+@keyframes lh-exp-rise {
+  0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+  20% { opacity: 1; transform: translateY(0) scale(1.08); }
+  100% { opacity: 0; transform: translateY(-16px) scale(1); }
+}
+/* Estimate: a slider with a recessed track and a raised knob. */
+.lh-exp-range { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; height: 2.5rem; }
+.lh-exp-range:focus-visible { outline: none; }
+.lh-exp-range::-webkit-slider-runnable-track { height: 0.625rem; border-radius: 999px; background: transparent; }
+.lh-exp-range::-moz-range-track { height: 0.625rem; border-radius: 999px; background: transparent; }
+.lh-exp-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.5625rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, #f1f3f6);
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-bottom-color: rgba(15, 23, 42, 0.26);
+  box-shadow: inset 0 1px 0 #fff, 0 2px 3px rgba(15, 23, 42, 0.18), 0 6px 12px -4px rgba(15, 23, 42, 0.25);
+  transition: transform 120ms ease-out;
+}
+.lh-exp-range::-moz-range-thumb {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, #f1f3f6);
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-bottom-color: rgba(15, 23, 42, 0.26);
+  box-shadow: inset 0 1px 0 #fff, 0 2px 3px rgba(15, 23, 42, 0.18), 0 6px 12px -4px rgba(15, 23, 42, 0.25);
+}
+.lh-exp-range:active::-webkit-slider-thumb { transform: scale(0.94); }
+.lh-exp-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0ea5e9; }
+.lh-exp-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0ea5e9; }
+.lh-exp-range:disabled { cursor: default; }
+.lh-exp-reveal { animation: lh-exp-reveal 700ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes lh-exp-reveal {
+  0% { inset-inline-start: var(--exp-from); }
+  100% { inset-inline-start: var(--exp-to); }
+}
+.lh-exp-bracket { animation: lh-exp-fade 300ms ease-out 650ms both; }
+@keyframes lh-exp-fade { 0% { opacity: 0; } 100% { opacity: 1; } }
+/* Spot the mistake: a highlighter swipe under a marked segment. */
+.lh-exp-mark {
+  background-image: linear-gradient(transparent 58%, var(--exp-mark, rgba(250, 204, 21, 0.55)) 58%, var(--exp-mark, rgba(250, 204, 21, 0.55)) 92%, transparent 92%);
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  background-position: left center;
+  transition: background-size 280ms cubic-bezier(0.3, 0.8, 0.4, 1);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+[dir='rtl'] .lh-exp-mark, .lh-exp-mark:dir(rtl) { background-position: right center; }
+.lh-exp-mark[data-marked='true'] { background-size: 100% 100%; }
+.lh-exp-reveal-in { animation: lh-exp-fade 260ms ease-out both; animation-delay: calc(var(--exp-i, 0) * 80ms); }
+/* Code lock: dials roll to their digit; the shackle pops on unlock. */
+.lh-exp-roll { animation: lh-exp-roll 520ms cubic-bezier(0.25, 1.3, 0.5, 1) both; }
+@keyframes lh-exp-roll {
+  0% { transform: translateY(-140%); }
+  100% { transform: translateY(0); }
+}
+.lh-exp-shackle { transition: transform 420ms cubic-bezier(0.3, 1.6, 0.5, 1); transform-origin: 75% 100%; }
+.lh-exp-shackle[data-open='true'] { transform: translateY(-14%) rotate(-14deg); }
+/* Scenarios: the next step slides in. */
+.lh-exp-slide-in { animation: lh-exp-slide-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes lh-exp-slide-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* Chat bubbles: a subtle paper depth. */
+.lh-exp-bubble {
+  box-shadow: inset 0 1px 0 var(--exp-hi, rgba(255, 255, 255, 0.9)), 0 1px 1px var(--exp-drop, rgba(15, 23, 42, 0.08)), 0 3px 6px -4px var(--exp-drop, rgba(15, 23, 42, 0.1));
+}
+/* Flashcards: a physical index card with a stack edge and a 3D flip. */
+.lh-exp-index {
+  background: var(--exp-paper, #fff);
+  border: 1px solid var(--exp-edge, rgba(15, 23, 42, 0.1));
+  border-bottom-color: var(--exp-lip, rgba(15, 23, 42, 0.16));
+  box-shadow: inset 0 1px 0 var(--exp-hi, #fff), 0 1px 1px var(--exp-drop, rgba(15, 23, 42, 0.08)), 0 10px 22px -12px rgba(15, 23, 42, 0.28);
+}
+.lh-exp-ruled {
+  background-image:
+    linear-gradient(to bottom, transparent 2.6rem, color-mix(in srgb, currentColor 22%, transparent) 2.6rem, color-mix(in srgb, currentColor 22%, transparent) calc(2.6rem + 1px), transparent calc(2.6rem + 1px)),
+    repeating-linear-gradient(to bottom, transparent 0 1.75rem, color-mix(in srgb, currentColor 11%, transparent) 1.75rem calc(1.75rem + 1px));
+  background-position: 0 0, 0 2.6rem;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 100% 100%, 100% calc(100% - 2.6rem);
+}
+.lh-exp-stack { position: relative; isolation: isolate; }
+.lh-exp-stack::before,
+.lh-exp-stack::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--exp-paper, #fff);
+  border: 1px solid var(--exp-edge, rgba(15, 23, 42, 0.1));
+  border-bottom-color: var(--exp-lip, rgba(15, 23, 42, 0.16));
+  box-shadow: 0 1px 2px var(--exp-drop, rgba(15, 23, 42, 0.08));
+}
+.lh-exp-stack::before { inset: 6px 10px -6px 10px; opacity: 0.9; }
+.lh-exp-stack::after { inset: 12px 20px -12px 20px; opacity: 0.7; }
+.lh-exp-stack[data-depth='1']::after, .lh-exp-stack[data-depth='0']::after { display: none; }
+.lh-exp-stack[data-depth='0']::before { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-raised.lh-exp-wrong-shake, .lh-exp-settle, .lh-exp-lock, .lh-exp-pin, .lh-exp-pulse,
+  .lh-exp-ripple, .lh-exp-roll, .lh-exp-reveal, .lh-exp-deal { animation: none; }
+  .lh-exp-slide, .lh-exp-card3d > .lh-exp-card3d-inner, .lh-exp-shackle, .lh-exp-mark { transition: none; }
+  .lh-exp-fly { animation: lh-exp-fade-out 200ms ease-out forwards; }
+  .lh-exp-stamp-in, .lh-exp-rise, .lh-exp-bracket, .lh-exp-reveal-in, .lh-exp-slide-in { animation: lh-exp-fade 200ms ease-out both; }
+  .lh-exp-rise { animation: lh-exp-fade 200ms ease-out both; transform: none; }
+  .lh-exp-slide-in, .lh-exp-reveal-in { transform: none; }
+  .lh-exp-pulse { display: none; }
+}
+@keyframes lh-exp-fade-out { 0% { opacity: 1; } 100% { opacity: 0; } }
+
 /* The canvas and editor give every ul/ol bullets and a 20px indent
    (unlayered, so they beat Tailwind utilities). Block UI lists marked
    list-none take their own utility values back. */

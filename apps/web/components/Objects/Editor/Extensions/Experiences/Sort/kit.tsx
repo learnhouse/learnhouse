@@ -18,7 +18,7 @@ export function FormSection({ title, hint, children, end }: { title: React.React
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h4 className="m-0 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{title}</h4>
+        <h4 className="m-0 text-[13px] font-semibold text-neutral-700">{title}</h4>
         {end}
       </div>
       {hint && <p className="m-0 -mt-1 text-[12px] leading-snug text-neutral-400">{hint}</p>}
@@ -114,7 +114,7 @@ export function DragGhost({ x, y, children }: { x: number; y: number; children: 
   return createPortal(
     <div
       aria-hidden
-      className="pointer-events-none fixed z-[1000] max-w-[16rem] -translate-x-1/2 -translate-y-1/2 rotate-[-2deg] rounded-xl bg-white px-3 py-2 text-sm font-medium text-neutral-900 shadow-[0_8px_24px_rgba(0,0,0,0.16),0_0_0_1px_rgba(0,0,0,0.08)]"
+      className="pointer-events-none fixed z-[1000] max-w-[16rem] -translate-x-1/2 -translate-y-1/2 rotate-[-3deg] rounded-xl border border-black/10 border-b-black/20 bg-white px-3 py-2 text-sm font-medium text-neutral-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_14px_28px_-8px_rgba(15,23,42,0.35),0_4px_8px_-2px_rgba(15,23,42,0.12)]"
       style={{ left: x, top: y }}
     >
       {children}

@@ -22,4 +22,5 @@ export {
 } from './hooks'
 export { newId, newBlockId, shuffle, starsFromRatio, normalizeAnswer, answersMatch, clamp, asArray, asString, asNumber } from './utils'
 export { jsonAttr, blockIdAttr } from './attrs'
+export { buzz } from './feel'
 export type { BlockTone } from '../../../Blocks/ui/BlockChrome'

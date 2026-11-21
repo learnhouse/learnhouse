@@ -14,8 +14,7 @@
 */
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowCounterClockwise, ArrowLeft, ArrowRight, ChatCircleText, CheckCircle, Flag, GitBranch, XCircle } from '@phosphor-icons/react'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import { ArrowBendDownRight, ArrowCounterClockwise, ArrowLeft, ArrowRight, ChatCircleText, CheckCircle, Flag, GitBranch, XCircle } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import {
   type EndResult,
@@ -35,10 +34,23 @@ import {
   stepTitle,
 } from './scenarioModel'
 
+/** Outcome tones: a raised medallion badge on the ending card. */
 const TONE_STYLE: Record<Outcome, { ring: string; chip: string; icon: React.ReactNode }> = {
-  success: { ring: 'bg-emerald-50 ring-emerald-600/15', chip: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle weight="duotone" size={28} className="text-emerald-600" /> },
-  neutral: { ring: 'bg-sky-50 ring-sky-600/15', chip: 'bg-sky-100 text-sky-700', icon: <Flag weight="duotone" size={26} className="text-sky-600" /> },
-  fail: { ring: 'bg-rose-50 ring-rose-600/15', chip: 'bg-rose-100 text-rose-700', icon: <XCircle weight="duotone" size={28} className="text-rose-600" /> },
+  success: {
+    ring: 'border-emerald-200 border-b-emerald-300 bg-gradient-to-b from-emerald-50 to-emerald-100',
+    chip: 'bg-emerald-100 text-emerald-700',
+    icon: <CheckCircle weight="duotone" size={30} className="text-emerald-600" />,
+  },
+  neutral: {
+    ring: 'border-sky-200 border-b-sky-300 bg-gradient-to-b from-sky-50 to-sky-100',
+    chip: 'bg-sky-100 text-sky-700',
+    icon: <Flag weight="duotone" size={28} className="text-sky-600" />,
+  },
+  fail: {
+    ring: 'border-rose-200 border-b-rose-300 bg-gradient-to-b from-rose-50 to-rose-100',
+    chip: 'bg-rose-100 text-rose-700',
+    icon: <XCircle weight="duotone" size={30} className="text-rose-600" />,
+  },
 }
 
 export interface ScenarioPlayerProps {
@@ -110,13 +122,13 @@ export function ScenarioPlayer({ data, display, onStatus }: ScenarioPlayerProps)
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center" data-testid="scenario-player">
         <GitBranch weight="duotone" size={24} className="text-neutral-300" />
-        <p className="text-sm text-neutral-500">{t('editor.blocks_v2.scenarios.empty_player', 'This scenario has no steps yet.')}</p>
+        <p className="text-[14px] text-neutral-500">{t('editor.blocks_v2.scenarios.empty_player', 'This scenario has no steps yet.')}</p>
       </div>
     )
   }
 
   const counter = (
-    <span className="inline-flex h-6 items-center rounded-full bg-neutral-100 px-2 text-[11.5px] font-semibold tabular-nums text-neutral-600">
+    <span className="inline-flex h-6 items-center rounded-full bg-neutral-100 px-2 text-[12px] font-semibold tabular-nums text-neutral-600">
       {t('activities.experiences.scenarios.step_counter', { n: stepNumber(state), defaultValue: 'Step {{n}}' })}
     </span>
   )
@@ -124,7 +136,7 @@ export function ScenarioPlayer({ data, display, onStatus }: ScenarioPlayerProps)
     <button
       type="button"
       onClick={() => setState((s) => backPlay(s))}
-      className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+      className="lh-exp-raised lh-exp-press inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-[13px] font-medium text-neutral-600 focus-visible:outline-none"
     >
       <ArrowLeft size={13} className="rtl:rotate-180" />
       {t('activities.experiences.scenarios.back', 'Back')}
@@ -177,15 +189,11 @@ function ChoiceButtons({ data, state, onChoose, compact }: Pick<LayoutProps, 'da
             aria-pressed={picked || undefined}
             onClick={() => onChoose(option.id)}
             className={cn(
-              'group text-start transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lhb-accent-line,rgb(96_165_250/0.5))]',
-              compact
-                ? 'max-w-full rounded-2xl rounded-ee-md border px-3.5 py-2 text-[14px] font-medium'
-                : 'w-full rounded-xl border p-3',
-              picked
-                ? 'border-[var(--lhb-accent-line,var(--color-blue-300))] bg-[var(--lhb-accent-soft,var(--color-blue-50))] text-[var(--lhb-text,var(--color-blue-900))]'
-                : 'border-neutral-200 bg-white text-neutral-700 hover:border-[var(--lhb-accent-line,var(--color-blue-300))] hover:bg-[var(--lhb-accent-soft,var(--color-blue-50))]',
-              dimmed && 'opacity-45',
-              !state.pending && 'active:scale-[0.99]',
+              'lh-exp-raised group text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lhb-accent-line,rgb(96_165_250/0.5))]',
+              !state.pending && 'lh-exp-press',
+              compact ? 'min-h-10 max-w-full rounded-2xl rounded-ee-md px-3.5 py-2 text-[14px] font-medium' : 'min-h-12 w-full rounded-xl p-3',
+              picked ? 'text-[var(--lhb-accent,var(--color-blue-600))]' : 'text-neutral-700',
+              dimmed && 'opacity-50',
             )}
           >
             {compact ? (
@@ -194,11 +202,14 @@ function ChoiceButtons({ data, state, onChoose, compact }: Pick<LayoutProps, 'da
               <span className="flex items-center gap-3">
                 <span
                   aria-hidden
-                  className="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-neutral-100 text-sm font-bold text-neutral-600 transition-colors group-hover:bg-white group-hover:text-[var(--lhb-accent,var(--color-blue-600))]"
+                  className={cn(
+                    'lh-exp-well flex h-7 w-7 flex-none items-center justify-center rounded-lg text-[13px] font-bold transition-colors',
+                    picked ? 'text-[var(--lhb-accent,var(--color-blue-600))]' : 'text-neutral-500 group-hover:text-[var(--lhb-accent,var(--color-blue-600))]',
+                  )}
                 >
                   {choiceLetter(i)}
                 </span>
-                <span className="min-w-0 flex-1 break-words text-[15px] font-medium">{option.text || '…'}</span>
+                <span className={cn('min-w-0 flex-1 break-words text-[15px] font-medium', picked && 'text-neutral-900')}>{option.text || '…'}</span>
                 <ArrowRight
                   aria-hidden
                   size={16}
@@ -220,12 +231,12 @@ function FeedbackCallout({ text, onContinue }: { text: string; onContinue: () =>
     ref.current?.focus({ preventScroll: true })
   }, [])
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-amber-50/70 p-3.5 ring-1 ring-amber-600/10 animate-in fade-in-0 slide-in-from-bottom-1 duration-200 sm:flex-row sm:items-center">
+    <div className="lh-exp-slide-in flex flex-col gap-3 rounded-xl bg-amber-50/80 p-3.5 sm:flex-row sm:items-center">
       <p className="m-0 min-w-0 flex-1 whitespace-pre-wrap text-[14px] leading-relaxed text-neutral-800">
         <span className="me-1.5 font-semibold text-amber-800">{t('activities.experiences.scenarios.feedback', 'Feedback')}:</span>
         {text}
       </p>
-      <button ref={ref} type="button" onClick={onContinue} className={buttonClass('primary', 'sm', 'flex-none self-end sm:self-auto')}>
+      <button ref={ref} type="button" onClick={onContinue} className="lh-exp-key flex-none self-end sm:self-auto">
         {t('activities.experiences.scenarios.continue', 'Continue')}
         <ArrowRight size={13} weight="bold" className="rtl:rotate-180" />
       </button>
@@ -240,7 +251,7 @@ function StepImage({ url }: { url?: string }) {
     <img
       src={url}
       alt={t('editor.scenarios.illustration_alt')}
-      className="mb-4 h-48 w-full rounded-xl object-cover ring-1 ring-black/5 max-sm:h-40"
+      className="mb-4 h-48 w-full rounded-xl object-cover shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.06))] max-sm:h-40"
       onError={(e) => {
         e.currentTarget.style.display = 'none'
       }}
@@ -252,10 +263,15 @@ function StoryLayout({ data, state, onChoose, onContinue, onRestart, counter, ba
   const step = stepById(data, state.stepId)!
   const pending = state.pending ? step.options.find((o) => o.id === state.pending) : undefined
   const showStep = !(state.ended && state.ended.via === 'choice')
+  const lastVisit = state.path[state.path.length - 1]
   return (
     <div className="flex flex-col gap-3">
+      {/* The choice just made stays lifted on top while the next step slides in. */}
+      {lastVisit && !state.pending && (
+        <LastChoice key={`last:${state.path.length}`} text={lastVisit.choiceText} />
+      )}
       {showStep && (
-        <div key={`${step.id}:${state.path.length}`} className="animate-in fade-in-0 duration-200">
+        <div key={`${step.id}:${state.path.length}`} className={cn(state.path.length > 0 && 'lh-exp-slide-in')}>
           <div className="mb-2 flex items-center gap-2">
             {counter}
             <span className="flex-1" />
@@ -270,6 +286,20 @@ function StoryLayout({ data, state, onChoose, onContinue, onRestart, counter, ba
       <ChoiceButtons data={data} state={state} onChoose={onChoose} />
       {pending?.feedback && <FeedbackCallout text={pending.feedback} onContinue={onContinue} />}
       {state.ended && <EndingCard data={data} state={state} onRestart={onRestart} />}
+    </div>
+  )
+}
+
+function LastChoice({ text }: { text: string }) {
+  const { t } = useTranslation()
+  return (
+    <div
+      data-picked="true"
+      className="lh-exp-raised flex min-w-0 items-center gap-2 self-start rounded-xl px-3 py-2 text-[13px] font-medium text-[var(--lhb-accent,var(--color-blue-600))]"
+    >
+      <ArrowBendDownRight aria-hidden size={14} weight="bold" className="flex-none rtl:-scale-x-100" />
+      <span className="sr-only">{t('activities.experiences.scenarios.you', 'You')}: </span>
+      <span className="min-w-0 break-words text-neutral-700">{text || '…'}</span>
     </div>
   )
 }
@@ -291,7 +321,7 @@ function ChatLayout({ data, state, onChoose, onContinue, onRestart, counter, bac
         <span className="flex-1" />
         {back}
       </div>
-      <ol className="m-0 flex list-none flex-col gap-2.5 rounded-2xl bg-neutral-50 p-3 ring-1 ring-neutral-200/60 sm:p-4" aria-label={t('activities.experiences.scenarios.conversation', 'Conversation')}>
+      <ol className="m-0 flex list-none flex-col gap-2.5 p-0 sm:p-1" aria-label={t('activities.experiences.scenarios.conversation', 'Conversation')}>
         {state.path.map((v, i) => (
           <React.Fragment key={i}>
             <Bubble side="them" text={stepById(data, v.stepId)?.text ?? ''} image={stepById(data, v.stepId)?.imageUrl} />
@@ -314,16 +344,16 @@ function Bubble({ side, text, image, fresh }: { side: 'them' | 'me' | 'note'; te
   const { t } = useTranslation()
   if (side === 'note') {
     return (
-      <li className={cn('mx-auto max-w-[90%] rounded-lg bg-amber-50 px-3 py-1.5 text-center text-[12.5px] leading-snug text-amber-900 ring-1 ring-amber-600/10', fresh && 'animate-in fade-in-0')}>
+      <li className={cn('mx-auto max-w-[90%] rounded-lg bg-amber-50 px-3 py-1.5 text-center text-[13px] leading-snug text-amber-900', fresh && 'animate-in fade-in-0')}>
         {text}
       </li>
     )
   }
   const me = side === 'me'
   return (
-    <li className={cn('flex items-end gap-2', me ? 'justify-end' : 'justify-start', fresh && 'animate-in fade-in-0 slide-in-from-bottom-1 duration-200')}>
+    <li className={cn('flex items-end gap-2', me ? 'justify-end' : 'justify-start', fresh && 'lh-exp-slide-in')}>
       {!me && (
-        <span aria-hidden className="mb-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-full bg-white text-neutral-500 ring-1 ring-neutral-200">
+        <span aria-hidden className="lh-exp-raised mb-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-full text-neutral-500">
           <ChatCircleText size={14} weight="duotone" />
         </span>
       )}
@@ -331,9 +361,10 @@ function Bubble({ side, text, image, fresh }: { side: 'them' | 'me' | 'note'; te
         dir="auto"
         className={cn(
           'max-w-[82%] whitespace-pre-wrap break-words px-3.5 py-2 text-[14px] leading-relaxed',
+          'lh-exp-bubble',
           me
-            ? 'rounded-2xl rounded-ee-md bg-[var(--lhb-accent,var(--color-blue-600))] text-white'
-            : 'rounded-2xl rounded-es-md bg-white text-neutral-800 shadow-[0_1px_1px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.06)]',
+            ? 'rounded-2xl rounded-ee-md bg-[var(--lhb-accent,var(--color-blue-600))] bg-[linear-gradient(180deg,rgba(255,255,255,0.12),transparent)] text-white'
+            : 'rounded-2xl rounded-es-md border border-[var(--exp-edge,rgba(0,0,0,0.08))] bg-white text-neutral-800',
         )}
       >
         <span className="sr-only">{me ? t('activities.experiences.scenarios.you', 'You') : t('activities.experiences.scenarios.narrator', 'Story')}: </span>
@@ -352,12 +383,23 @@ function EndingCard({ data, state, onRestart }: { data: ScenarioData; state: Pla
   const tone = TONE_STYLE[end.tone]
   const body = !end.toned ? t('editor.scenarios.complete_message') : t(`activities.experiences.scenarios.ending_${end.tone}_body`)
   return (
-    <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-neutral-200/80 animate-in fade-in-0 zoom-in-95 duration-200 sm:p-6" data-testid="scenario-ending" data-tone={end.tone}>
-      <div className={cn('mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full ring-1', tone.ring)}>{tone.icon}</div>
+    <div
+      className="lh-exp-slide-in rounded-2xl bg-white p-5 text-center shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08)),0_2px_6px_-3px_var(--exp-drop,rgba(0,0,0,0.1))] sm:p-6"
+      data-testid="scenario-ending"
+      data-tone={end.tone}
+    >
+      <div
+        className={cn(
+          'lh-exp-snap mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_2px_0_rgba(15,23,42,0.06),0_8px_16px_-8px_rgba(15,23,42,0.3)]',
+          tone.ring,
+        )}
+      >
+        {tone.icon}
+      </div>
       <h4 className="m-0 text-center text-lg font-bold text-neutral-900">{endingTitle(t, end)}</h4>
       <p className="mx-auto mt-1.5 mb-0 max-w-md text-center text-[14px] leading-relaxed text-neutral-600">{body}</p>
       <PathRecap data={data} path={state.path} />
-      <button type="button" onClick={onRestart} className={buttonClass('primary', 'sm', 'mt-5')}>
+      <button type="button" onClick={onRestart} className="lh-exp-key mt-5">
         <ArrowCounterClockwise size={14} weight="bold" />
         {t('activities.experiences.scenarios.restart', 'Restart')}
       </button>
@@ -370,13 +412,13 @@ function PathRecap({ data, path }: { data: ScenarioData; path: Visit[] }) {
   if (path.length === 0) return null
   return (
     <div className="mt-4 text-start">
-      <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{t('activities.experiences.scenarios.your_path', 'Your path')}</div>
+      <div className="mb-2 text-[12px] font-medium text-neutral-500">{t('activities.experiences.scenarios.your_path', 'Your path')}</div>
       <ol className="m-0 flex list-none flex-col gap-1.5 p-0">
         {path.map((v, i) => {
           const title = stepTitle(stepById(data, v.stepId))
           return (
             <li key={i} className="flex gap-2.5 rounded-lg bg-neutral-50 px-3 py-2 text-[13px]">
-              <span aria-hidden className="mt-px flex h-5 min-w-5 flex-none items-center justify-center rounded-full bg-white text-[10.5px] font-semibold tabular-nums text-neutral-500 ring-1 ring-neutral-200">
+              <span aria-hidden className="lh-exp-well mt-px flex h-5 min-w-5 flex-none items-center justify-center rounded-full text-[11px] font-semibold tabular-nums text-neutral-500">
                 {i + 1}
               </span>
               <span className="min-w-0 flex-1">

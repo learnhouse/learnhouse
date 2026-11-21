@@ -90,15 +90,15 @@ export function ExperienceFrame({
       data-preview={editable && preview ? 'true' : undefined}
       aria-label={title || undefined}
       className={cn(
-        'lh-exp-frame relative isolate my-2 w-full min-w-0 overflow-hidden rounded-2xl bg-white text-start shadow-[0_1px_2px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.07)]',
+        'lh-exp-frame relative isolate my-3 w-full min-w-0 overflow-hidden rounded-2xl bg-white text-start shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.05),0_10px_28px_-14px_rgba(15,23,42,0.16)]',
         editable && preview && 'outline-2 outline-offset-2 outline-dashed outline-sky-300',
         className,
       )}
     >
-      <header className="flex items-start gap-3 px-4 pt-4 sm:px-5">
+      <header className="flex items-center gap-3 px-4 pt-4 sm:px-5">
         <span
           aria-hidden
-          className={cn('lh-exp-icon mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl [&>svg]:h-5 [&>svg]:w-5', toneClass.soft)}
+          className={cn('lh-exp-icon inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [&>svg]:h-5 [&>svg]:w-5', toneClass.soft)}
         >
           {icon}
         </span>
@@ -151,7 +151,15 @@ export function ExperienceFrame({
           </button>
         )}
       </header>
-      <div className={cn('lh-exp-body px-4 pt-3 pb-4 sm:px-5', bodyClassName)}>{children}</div>
+      <div
+        className={cn(
+          'lh-exp-body',
+          authoring ? 'px-4 pt-3 pb-4 sm:px-5' : 'lh-exp-table mx-3 mt-3 mb-3 px-3 py-4 sm:mx-4 sm:px-4 sm:py-5',
+          bodyClassName,
+        )}
+      >
+        {children}
+      </div>
       {footer}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {live ?? ''}
