@@ -107,19 +107,22 @@ function TemplateCard({ tpl, org, orgslug, token, onOpen }: { tpl: LandingTempla
   const name = t(`landingBuilder.templates.${tpl.id}.name`, { defaultValue: tpl.name })
   return (
     <div ref={ref} className="group flex flex-col gap-3" data-testid={`gallery-template-${tpl.id}`}>
-      <button
-        type="button"
-        onClick={onOpen}
-        className="relative block overflow-hidden rounded-2xl bg-white text-start nice-shadow transition-transform duration-200 ease-lh-out hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900"
-        aria-label={t('landingBuilder.gallery.open', { name })}
-      >
+      {/* The preview renders a real page (with its own buttons), so it sits
+          beside the click target instead of inside a <button>. */}
+      <div className="relative block overflow-hidden rounded-2xl bg-white text-start nice-shadow transition-transform duration-200 ease-lh-out hover:-translate-y-0.5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-900">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="absolute inset-0 z-10 rounded-2xl outline-none"
+          aria-label={t('landingBuilder.gallery.open', { name })}
+        />
         <div ref={box} className="w-full" data-lh-user-content="">
           <ScaledPage doc={seen ? doc ?? null : null} org={org} orgslug={orgslug} scale={w / PREVIEW_WIDTH} className="aspect-[16/11] w-full" />
         </div>
         <span className="pointer-events-none absolute inset-x-3 bottom-3 flex translate-y-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-900/90 py-2 text-[13px] font-semibold text-white opacity-0 backdrop-blur transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
           {t('landingBuilder.gallery.preview')} <ArrowRight size={13} weight="bold" className="rtl:rotate-180" />
         </span>
-      </button>
+      </div>
       <div className="flex items-start justify-between gap-3 px-0.5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
