@@ -52,8 +52,8 @@ dependencies = [
     "regex==2026.11.9",
     "mcp==2.3.0",
     "fakeredis==2.40.0",
-    "mailchecker>=6",
-    "pycrdt>=0.14.13",
+    "mailchecker==6.0.21",
+    "pycrdt==0.14.13",
 ]
 
 [tool.ruff]
