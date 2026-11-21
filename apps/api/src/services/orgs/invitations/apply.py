@@ -15,7 +15,6 @@ import contextlib
 import logging
 from datetime import datetime
 from typing import Iterable, Optional
-from uuid import uuid4
 
 from fastapi import HTTPException, Request
 from sqlalchemy import func, update
@@ -28,7 +27,6 @@ from src.db.org_invitations import InvitationStatus, OrgInvitation, OrgInviteCod
 from src.db.organizations import Organization
 from src.db.roles import Role
 from src.db.trail_runs import TrailRun
-from src.db.trails import Trail
 from src.db.user_organizations import UserOrganization
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup
@@ -237,13 +235,9 @@ async def _grant_courses(db_session: AsyncSession, org_id: int, user_id: int, co
     if not todo:
         return []
     now = str(datetime.now())
-    trail = (await db_session.execute(
-        select(Trail).where(Trail.org_id == org_id, Trail.user_id == user_id)
-    )).scalars().first()
-    if trail is None:
-        trail = Trail(org_id=org_id, user_id=user_id, trail_uuid=f"trail_{uuid4()}", creation_date=now, update_date=now)
-        db_session.add(trail)
-        await db_session.flush()
+    from src.services.trail.trail import get_or_create_trail
+
+    trail = await get_or_create_trail(db_session, org_id, user_id, commit=False)
     for course in todo:
         db_session.add(TrailRun(
             trail_id=trail.id, course_id=course.id, org_id=org_id, user_id=user_id,

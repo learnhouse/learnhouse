@@ -898,7 +898,7 @@ async def _org_plan_includes_custom_domains(org_id: int, db_session: AsyncSessio
     from src.security.features_utils.plan_check import check_org_plan
 
     try:
-        await check_org_plan(org_id, "standard", "Custom Domains", db_session)
+        await check_org_plan(org_id, "pro", "Custom Domains", db_session)
     except HTTPException as exc:
         return exc.status_code != status.HTTP_403_FORBIDDEN
     except Exception:

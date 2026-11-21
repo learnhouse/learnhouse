@@ -340,6 +340,34 @@ async def test_a_failing_source_does_not_break_the_calendar(db, org, regular_use
     assert [e.id for e in events] == ["ok:1"]
 
 
+async def test_a_sql_error_in_one_source_does_not_poison_the_next(db, org, regular_user, mock_request, only_assignments):
+    """Sources share the session: a failed statement in one must not leave the
+    session in PendingRollbackError for every later source."""
+    from sqlalchemy import text
+
+    async def bad_sql(ctx):
+        # A failed flush (duplicate primary key) leaves a plain session
+        # needing a rollback, like an aborted Postgres transaction does.
+        from src.db.organizations import Organization
+
+        ctx.db_session.add(Organization(id=org.id + 1000, name="x", slug=org.slug, email="x@x.test", org_uuid=org.org_uuid))
+        await ctx.db_session.flush()
+        return []
+
+    async def reads_db(ctx):
+        org_id = (await ctx.db_session.execute(text("SELECT 1"))).scalar()
+        return [CalendarEvent(id=f"db:{org_id}", type="db", title="Read", starts_at="2026-11-03", all_day=True)]
+
+    calendar_sources.register_source(bad_sql, key="test.bad_sql")
+    calendar_sources.register_source(reads_db, key="test.reads_db")
+    try:
+        events = await _events(mock_request, org, regular_user, db)
+    finally:
+        calendar_sources.unregister_source("test.bad_sql")
+        calendar_sources.unregister_source("test.reads_db")
+    assert [e.id for e in events] == ["db:1"]
+
+
 async def test_access_errors_from_a_source_are_not_swallowed(db, org, regular_user, mock_request, only_assignments):
     async def denied(ctx):
         raise HTTPException(status_code=403, detail="no")

@@ -108,10 +108,8 @@ class TestPlanCheck:
 
         await db.execute(sa_delete(OrganizationConfig).where(OrganizationConfig.org_id == org.id))
         await db.commit()
-        with pytest.raises(HTTPException) as exc:
-            await get_org_plan(org.id, db)
-
-        assert exc.value.status_code == 404
+        # No config row: treated as free (logged), never a 404.
+        assert await get_org_plan(org.id, db) == "free"
 
     @pytest.mark.asyncio
     async def test_require_plan_from_path_and_query(self, db, org):

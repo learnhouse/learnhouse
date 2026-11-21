@@ -1165,12 +1165,12 @@ async def api_update_org_signup_fields_config(
         "Required custom signup fields the authenticated user has not answered "
         "yet. Google sign-in skips the signup form, so those users are asked to "
         "complete their profile afterwards. Returns an empty list when there is "
-        "nothing outstanding."
+        "nothing outstanding, and for a caller who is not a member of the "
+        "organization (nothing to complete there)."
     ),
     responses={
         200: {"description": "Required fields still awaiting an answer."},
         401: {"description": "Not authenticated"},
-        403: {"description": "Caller is not a member of this organization"},
     },
 )
 async def api_get_pending_signup_fields(
@@ -1187,10 +1187,11 @@ async def api_get_pending_signup_fields(
         missing_required_fields,
     )
 
+    # The web app asks for every signed-in visitor of the org's pages; a
+    # non-member simply has nothing to complete (and learns nothing about
+    # the org's fields).
     if not await is_org_member(current_user.id, org_id, db_session):
-        raise HTTPException(
-            status_code=403, detail="You must be a member of this organization"
-        )
+        return {"fields": []}
 
     fields = await get_org_signup_fields(org_id, db_session)
     if not fields:

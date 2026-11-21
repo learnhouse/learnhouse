@@ -164,7 +164,7 @@ async def test_transcode_block_happy_path(monkeypatch):
     monkeypatch.setattr(hls_jobs, "_resolve_block_source", hls_jobs_aret({
         "org_uuid": "org_1", "course_uuid": "course_1", "activity_uuid": "act_1", "filename": "v.mp4",
     }))
-    monkeypatch.setattr(hls_jobs, "_fetch_source", lambda *a, **k: True)
+    monkeypatch.setattr(hls_jobs, "_download_source", lambda *a, **k: hls_jobs.SOURCE_OK)
     async def fake_transcode(src, out):
         return {"master": "master.m3u8", "renditions": ["720p", "480p"], "thumbnails": {"url": "thumbnails/sprite.jpg"}}
     monkeypatch.setattr(hls_jobs, "transcode_source_to_hls", fake_transcode)
@@ -188,7 +188,7 @@ async def test_transcode_block_source_unavailable(monkeypatch):
     monkeypatch.setattr(hls_jobs, "_resolve_block_source", hls_jobs_aret({
         "org_uuid": "o", "course_uuid": "c", "activity_uuid": "a", "filename": "v.mp4",
     }))
-    monkeypatch.setattr(hls_jobs, "_fetch_source", lambda *a, **k: False)
+    monkeypatch.setattr(hls_jobs, "_download_source", lambda *a, **k: hls_jobs.SOURCE_UNAVAILABLE)
     ok = await hls_jobs.transcode_block("a", "b")
     assert ok is False
     assert statuses[-1][1] == "failed"
@@ -196,8 +196,38 @@ async def test_transcode_block_source_unavailable(monkeypatch):
 
 
 async def test_transcode_block_no_source_returns_false(monkeypatch):
+    statuses = []
+    async def fake_status(uuid, status, **extra):
+        statuses.append((uuid, status, extra))
+    monkeypatch.setattr(hls_jobs, "_set_block_status", fake_status)
     monkeypatch.setattr(hls_jobs, "_resolve_block_source", hls_jobs_aret(None))
     assert await hls_jobs.transcode_block("a", "b") is False
+    # Terminal, so the reconciler stops re-queueing it forever.
+    assert statuses == [("b", "source_missing", {"reason": "unresolvable"})]
+    assert "source_missing" in hls_jobs.TERMINAL_STATUSES
+
+
+async def test_transcode_block_missing_source_is_terminal(monkeypatch):
+    statuses = []
+    async def fake_status(uuid, status, **extra):
+        statuses.append((uuid, status, extra))
+    monkeypatch.setattr(hls_jobs, "_set_block_status", fake_status)
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: None)
+    monkeypatch.setattr(hls_jobs, "_resolve_block_source", hls_jobs_aret({
+        "org_uuid": "o", "course_uuid": "c", "activity_uuid": "a", "filename": "v.mp4",
+    }))
+    monkeypatch.setattr(hls_jobs, "_download_source", lambda *a, **k: hls_jobs.SOURCE_MISSING)
+    assert await hls_jobs.transcode_block("a", "b") is False
+    assert statuses[-1] == ("b", "source_missing", {})
+
+
+async def test_reconcile_skips_source_missing_block(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    await _add_video_block(db, org, course, activity, "block_gone", hls={"status": "source_missing"})
+    r = _FakeRedis()
+    monkeypatch.setattr(hls_jobs, "get_redis_client", lambda: r)
+    result = await hls_jobs.reconcile_unfinished()
+    assert r.pushed == [] and result["requeued"] == 0
 
 
 def _mock_common_transcode(monkeypatch, statuses):
@@ -207,7 +237,7 @@ def _mock_common_transcode(monkeypatch, statuses):
     monkeypatch.setattr(hls_jobs, "_resolve_block_source", hls_jobs_aret({
         "org_uuid": "o", "course_uuid": "c", "activity_uuid": "a", "filename": "v.mp4",
     }))
-    monkeypatch.setattr(hls_jobs, "_fetch_source", lambda *a, **k: True)
+    monkeypatch.setattr(hls_jobs, "_download_source", lambda *a, **k: hls_jobs.SOURCE_OK)
 
 
 async def test_transcode_block_with_redis_and_s3(monkeypatch):
