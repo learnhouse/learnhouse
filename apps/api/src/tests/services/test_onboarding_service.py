@@ -494,6 +494,20 @@ class TestHub:
             out = await hub.hub_summary(db, admin_user.id)
         assert out["orgs"][0]["poc_ends_at"] is None and out["orgs"][0]["status"] == "free"
 
+    async def test_running_trial_reads_as_trial(self, db, org, admin_user):
+        from datetime import timezone
+
+        from src.db.org_plan_state import OrgTrial, TrialStatus
+
+        await set_plan(db, org.id, "pro")
+        now = datetime.now(timezone.utc)
+        db.add(OrgTrial(org_id=org.id, plan="pro", status=TrialStatus.ACTIVE, started_at=now, ends_at=now + timedelta(days=14)))
+        await db.commit()
+        extras = {"lifecycle": None, "poc": None, "usage": {}, "license": None}
+        with saas(), redis(), patch("src.services.onboarding.hub._ee_extras", new=AsyncMock(return_value=extras)):
+            out = await hub.hub_summary(db, admin_user.id)
+        assert out["orgs"][0]["status"] == "trial"
+
     async def test_no_orgs(self, db):
         await add_user(db, 20, "lonely@x.com")
         with redis():

@@ -14,6 +14,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core import deployment_mode
 from src.db.org_onboarding import OrgOnboarding
+from src.db.org_plan_state import OrgTrial, TrialStatus
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
@@ -62,6 +63,13 @@ async def hub_summary(db_session: AsyncSession, user_id: int) -> dict:
         for r in (await db_session.execute(select(OrgOnboarding).where(OrgOnboarding.org_id.in_(org_ids)))).scalars().all()
     } if org_ids else {}
     mode = deployment_mode.get_deployment_mode()
+    # Orgs on a running trial: the plan overview reports these as "trial", and
+    # so must the hub, or a trialing org reads as a paid one.
+    trialing = set(
+        (await db_session.execute(
+            select(OrgTrial.org_id).where(OrgTrial.org_id.in_(org_ids), OrgTrial.status == TrialStatus.ACTIVE)
+        )).scalars().all()
+    ) if org_ids and mode == "saas" else set()
 
     orgs = []
     for org, role_id, cfg in rows:
@@ -80,7 +88,8 @@ async def hub_summary(db_session: AsyncSession, user_id: int) -> dict:
         if manages and not org.is_demo:
             if mode == "saas":
                 extras = await _ee_extras(org.id, db_session, mode, False)
-                entry["status"] = _status(mode, plan or "free", extras["lifecycle"])
+                lifecycle = "trial" if org.id in trialing else extras["lifecycle"]
+                entry["status"] = _status(mode, plan or "free", lifecycle)
                 poc = extras.get("poc")
                 if poc and poc.get("state") == "active":
                     entry["poc_ends_at"] = poc.get("ends_at")

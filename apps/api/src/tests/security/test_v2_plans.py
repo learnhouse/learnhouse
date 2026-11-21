@@ -141,3 +141,18 @@ class TestPlanCheckGrace:
         ), patch("src.services.orgs.org_config_lookup.get_session_org_config", AsyncMock(return_value=None)):
             with pytest.raises(HTTPException):
                 await dep(request, object())
+
+
+def test_upgrade_message_never_names_a_personal_plan_to_an_org():
+    from src.security.features_utils.plan_check import _plan_to_buy
+
+    # A free org gated on a Personal-tier feature is pointed at Standard.
+    assert _plan_to_buy("personal", "free") == "standard"
+    assert _plan_to_buy("personal-family", "free") == "standard"
+    # Creators already on the personal line keep their own ladder.
+    assert _plan_to_buy("personal-family", "personal") == "personal-family"
+    # Business-line requirements are shown as-is.
+    assert _plan_to_buy("pro", "free") == "pro"
+    # At or above Standard (or an unknown plan name) the requirement is kept / Standard named.
+    assert _plan_to_buy("personal", "enterprise") == "personal"
+    assert _plan_to_buy("personal", "mystery") == "standard"

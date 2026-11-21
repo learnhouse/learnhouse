@@ -128,6 +128,18 @@ async def _meets_plan_or_legacy(
     return bool(org_config) and _legacy_pro_grant(org_config.config or {}, current_plan, feature_key)
 
 
+def _plan_to_buy(required_plan: str, current_plan: str) -> str:
+    """The plan an upgrade message should name. Personal plans are a separate
+    line for individual creators that organizations can't buy into, so an org
+    on the business line is pointed at the cheapest business plan instead."""
+    from src.security.features_utils.plans import PLAN_HIERARCHY
+
+    if required_plan in ("personal", "personal-family") and current_plan not in ("personal", "personal-family"):
+        below_standard = PLAN_HIERARCHY.index(current_plan) < PLAN_HIERARCHY.index("standard") if current_plan in PLAN_HIERARCHY else True
+        return "standard" if below_standard else required_plan
+    return required_plan
+
+
 async def check_org_plan(
     org_id: int,
     required_plan: PlanLevel,
@@ -144,7 +156,7 @@ async def check_org_plan(
     if not await _meets_plan_or_legacy(org_id, current_plan, required_plan, feature_name, db_session):
         raise HTTPException(
             status_code=403,
-            detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+            detail=f"{feature_name} requires a {_plan_to_buy(required_plan, current_plan).capitalize()} plan or higher. "
             f"Your organization is currently on the {current_plan.capitalize()} plan.",
         )
     return True
@@ -203,7 +215,7 @@ def require_plan(required_plan: PlanLevel, feature_name: str):
         if not await _meets_plan_or_legacy(org_id, current_plan, required_plan, feature_name, db_session):
             raise HTTPException(
                 status_code=403,
-                detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+                detail=f"{feature_name} requires a {_plan_to_buy(required_plan, current_plan).capitalize()} plan or higher. "
                 f"Your organization is currently on the {current_plan.capitalize()} plan.",
             )
 
@@ -255,7 +267,7 @@ def require_plan_for_usergroups(required_plan: PlanLevel, feature_name: str):
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
                 status_code=403,
-                detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+                detail=f"{feature_name} requires a {_plan_to_buy(required_plan, current_plan).capitalize()} plan or higher. "
                 f"Your organization is currently on the {current_plan.capitalize()} plan.",
             )
 
@@ -342,7 +354,7 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
                 status_code=403,
-                detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+                detail=f"{feature_name} requires a {_plan_to_buy(required_plan, current_plan).capitalize()} plan or higher. "
                 f"Your organization is currently on the {current_plan.capitalize()} plan.",
             )
 
@@ -400,7 +412,7 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
                 status_code=403,
-                detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+                detail=f"{feature_name} requires a {_plan_to_buy(required_plan, current_plan).capitalize()} plan or higher. "
                 f"Your organization is currently on the {current_plan.capitalize()} plan.",
             )
 
@@ -445,7 +457,7 @@ def require_plan_for_paths(required_plan: PlanLevel, feature_name: str):
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(
                 status_code=403,
-                detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+                detail=f"{feature_name} requires a {_plan_to_buy(required_plan, current_plan).capitalize()} plan or higher. "
                 f"Your organization is currently on the {current_plan.capitalize()} plan.",
             )
         return True
