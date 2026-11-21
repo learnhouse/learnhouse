@@ -39,7 +39,7 @@ import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
 import { plusExtensions } from '@components/Objects/Editor/Extensions/Plus'
 import Link from 'next/link'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getCourseThumbnailMediaDirectory, hasMediaIds } from '@services/media/media'
 import { getLinkExtension } from './EditorConf'
 import WebPreview from './Extensions/WebPreview/WebPreview'
 
@@ -652,7 +652,7 @@ function Editor(props: EditorProps) {
                   <ThumbnailImage
                     className="activity-editor-info-thumbnail"
                     src={
-                      (props.course.thumbnail_image &&
+                      (props.course.thumbnail_image && hasMediaIds(props.org?.org_uuid) &&
                         getCourseThumbnailMediaDirectory(
                           props.org?.org_uuid,
                           props.course.course_uuid,

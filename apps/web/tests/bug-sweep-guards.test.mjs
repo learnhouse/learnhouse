@@ -5,10 +5,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 
 import {
   getActivityBlockMediaDirectory,
-  getActivityMediaDirectory,
-  getActivityVideoStreamUrl,
   getCourseThumbnailMediaDirectory,
-  getVideoBlockStreamUrl,
+  hasMediaIds,
 } from '../services/media/media.ts'
 import { isMissingActivityId } from '../services/courses/activities.ts'
 import { isOrgFeatureEnabled } from '../lib/features/orgFeature.ts'
@@ -30,22 +28,15 @@ afterEach(() => {
 })
 
 describe('media URL builders while ids are loading', () => {
-  test('missing org uuid gives no URL instead of content/orgs//...', () => {
-    for (const org of ['', undefined, null, 'undefined']) {
-      expect(getCourseThumbnailMediaDirectory(org, 'course_1', 'thumb.png')).toBeNull()
-      expect(getActivityVideoStreamUrl(org, 'course_1', 'activity_1', 'v.mp4')).toBeNull()
-      expect(getVideoBlockStreamUrl(org, 'course_1', 'activity_1', 'block_1', 'v.mp4')).toBeNull()
-      expect(getActivityMediaDirectory(org, 'course_1', 'activity_1', 'f.pdf', 'documentpdf')).toBeUndefined()
-      expect(getActivityBlockMediaDirectory(org, 'course_1', 'activity_1', 'block_1', 'i.png', 'imageBlock')).toBeUndefined()
+  test('missing ids are detected before a URL is built', () => {
+    for (const org of ['', undefined, null, 'undefined', 'null']) {
+      expect(hasMediaIds(org, 'course_1')).toBe(false)
     }
+    expect(hasMediaIds('org_1', '')).toBe(false)
+    expect(hasMediaIds('org_1', 'course_1', 'activity_1')).toBe(true)
   })
 
-  test('missing course or activity uuid gives no URL', () => {
-    expect(getCourseThumbnailMediaDirectory('org_1', '', 'thumb.png')).toBeNull()
-    expect(getActivityBlockMediaDirectory('org_1', 'course_1', undefined, 'block_1', 'i.png', 'imageBlock')).toBeUndefined()
-  })
-
-  test('complete ids still build the URL', () => {
+  test('builders keep their return values (the SDK compiles them in)', () => {
     expect(getCourseThumbnailMediaDirectory('org_1', 'course_1', 'thumb.png')).toBe(
       'https://api.platform.test/content/orgs/org_1/courses/course_1/thumbnails/thumb.png',
     )
