@@ -209,6 +209,16 @@ async def get_ee_paid_locked_activity_ids(request, course_id: int, user, db_sess
     return None
 
 
+async def get_ee_paid_locked_activity_ids_many(request, course_ids: list[int], user, db_session) -> dict | None:
+    """``get_ee_paid_locked_activity_ids`` for several courses at once:
+    {course_id: ids}. None when the EE has no bulk hook (callers then ask
+    course by course)."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "paid_locked_activity_ids_many"):
+        return await hooks.paid_locked_activity_ids_many(request, course_ids, user, db_session)
+    return None
+
+
 def notify_ee_course_content_changed(course_id: int) -> None:
     """Tell EE a course's content changed (title, activities, publication,
     assignment due dates) so LTI can update the LMS gradebook columns placed

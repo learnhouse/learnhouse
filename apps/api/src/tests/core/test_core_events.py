@@ -517,3 +517,16 @@ async def test_periodic_migration_cleanup_logs_and_exits(monkeypatch, caplog):
             await events._periodic_migration_cleanup()
 
     assert "Periodic migration cleanup failed" in caplog.text
+
+
+async def test_paid_locked_activity_ids_many_uses_the_bulk_hook_when_there(monkeypatch):
+    monkeypatch.setattr(ee_hooks, "get_ee_hooks", lambda: None)
+    assert await ee_hooks.get_ee_paid_locked_activity_ids_many(None, [1, 2], None, None) is None
+
+    monkeypatch.setattr(ee_hooks, "get_ee_hooks", lambda: SimpleNamespace())
+    assert await ee_hooks.get_ee_paid_locked_activity_ids_many(None, [1, 2], None, None) is None
+
+    bulk = AsyncMock(return_value={1: {5}, 2: set()})
+    monkeypatch.setattr(ee_hooks, "get_ee_hooks", lambda: SimpleNamespace(paid_locked_activity_ids_many=bulk))
+    assert await ee_hooks.get_ee_paid_locked_activity_ids_many("req", [1, 2], "user", "db") == {1: {5}, 2: set()}
+    bulk.assert_awaited_once_with("req", [1, 2], "user", "db")
