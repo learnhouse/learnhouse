@@ -75,6 +75,13 @@ LEGACY_PRO_FEATURES: frozenset[str] = frozenset({"live_sessions", "required_trai
 # ============================================================================
 # Each plan defines: features (enabled + limits), general settings, cloud flags.
 # limit=0 means unlimited for that feature.
+#
+# members.limit on a paid plan is the number of members the subscription
+# includes, not a wall: paid orgs can keep adding people, and each member past
+# the included count who is active in a month is billed (see
+# src/security/features_utils/active_users.py). Only Free is hard-capped.
+# members.admin_limit counts every role with dashboard access, instructors
+# included; Free allows two so the owner can work with one teammate.
 
 PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     "free": {
@@ -88,7 +95,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "collaboration": {"enabled": False, "limit": 0},
             "courses": {"enabled": True, "limit": 1},
 
-            "members": {"admin_limit": 1, "enabled": True, "limit": 10},
+            "members": {"admin_limit": 2, "enabled": True, "limit": 10},
             "payments": {"enabled": False},
 
             "usergroups": {"enabled": False, "limit": 0},
@@ -202,7 +209,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "collaboration": {"enabled": True, "limit": 0},
             "courses": {"enabled": True, "limit": 0},
 
-            "members": {"admin_limit": 3, "enabled": True, "limit": 0},
+            "members": {"admin_limit": 3, "enabled": True, "limit": 300},
             "payments": {"enabled": True},
 
             "usergroups": {"enabled": True, "limit": 0},
@@ -240,7 +247,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "collaboration": {"enabled": True, "limit": 0},
             "courses": {"enabled": True, "limit": 0},
 
-            "members": {"admin_limit": 10, "enabled": True, "limit": 0},
+            "members": {"admin_limit": 10, "enabled": True, "limit": 1000},
             "payments": {"enabled": True},
 
             "usergroups": {"enabled": True, "limit": 0},
@@ -278,7 +285,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "collaboration": {"enabled": True, "limit": 0},
             "courses": {"enabled": True, "limit": 0},
 
-            "members": {"admin_limit": 25, "enabled": True, "limit": 0},
+            "members": {"admin_limit": 25, "enabled": True, "limit": 2000},
             "payments": {"enabled": True},
 
             "usergroups": {"enabled": True, "limit": 0},

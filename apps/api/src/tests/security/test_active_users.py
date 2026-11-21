@@ -610,11 +610,19 @@ class TestPlanHistory:
 
     async def test_unlimited_plan_wins_over_a_numeric_limit(self, db):
         from src.services.orgs.plan_history import resolve_plan_for_month
+        await _add_plan_change(db, ORG, "standard", _utc(2026, 3, 1))
+        await _add_plan_change(db, ORG, "enterprise", _utc(2026, 7, 15))
+        with _saas():
+            plan, limit = await resolve_plan_for_month(ORG, 2026, 7, "enterprise", db)
+        assert (plan, limit) == ("enterprise", 0)  # 0 == unlimited
+
+    async def test_larger_included_count_wins_inside_the_month(self, db):
+        from src.services.orgs.plan_history import resolve_plan_for_month
         await _add_plan_change(db, ORG, "free", _utc(2026, 3, 1))
         await _add_plan_change(db, ORG, "standard", _utc(2026, 7, 15))
         with _saas():
             plan, limit = await resolve_plan_for_month(ORG, 2026, 7, "standard", db)
-        assert (plan, limit) == ("standard", 0)  # 0 == unlimited
+        assert (plan, limit) == ("standard", 300)
 
     async def test_history_starting_after_the_month_falls_back(self, db):
         """An org whose first recorded change is later than the billed month."""
@@ -676,8 +684,8 @@ class TestSummaryUsesPlanHistory:
         assert summary["plan_limit"] == 10
         assert summary["overage_units"] == 0
 
-    async def test_paid_plans_have_no_member_overage(self, db, org):
-        """Every paid business plan includes unlimited members."""
+    async def test_members_within_the_included_count_cost_nothing(self, db, org):
+        """Pro includes 1,000 members: 15 active ones are all covered."""
         from src.security.features_utils.active_users import get_active_user_summary
         await _add_plan_change(db, ORG, "pro", _utc(2026, 3, 1))
         for user_id in range(1100, 1115):
@@ -685,7 +693,7 @@ class TestSummaryUsesPlanHistory:
             await _add_days(db, ORG, user_id, [date(2026, 7, 4), date(2026, 7, 5)])
         with _saas():
             summary = await get_active_user_summary(ORG, db, year=2026, month=7)
-        assert summary["plan_limit"] == 0
+        assert summary["plan_limit"] == 1000
         assert summary["members_beyond_included"] == 0
         assert summary["overage_units"] == 0
 

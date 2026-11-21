@@ -24,9 +24,10 @@ from src.db.org_plan_state import OrgTrial, TrialStatus
 
 logger = logging.getLogger(__name__)
 
-# The plan a trial unlocks: the one that shows the full product (certificates,
-# paths, live sessions, custom domains, analytics) without Enterprise-only
-# contract features. Change it here and nowhere else.
+# The plan a trial unlocks: Pro, the branded-academy plan (certificates, paths,
+# Plays, custom domains, API). Business-only features (live sessions, company
+# seats, required training, SSO, LTI, SCORM, audit logs) stay locked during a
+# trial. Change it here and nowhere else.
 TRIAL_PLAN = "pro"
 TRIAL_DAYS = 14
 # AI credits a trial gets in all, instead of the trial plan's monthly

@@ -254,6 +254,12 @@ async def preview_downgrade(
     def _over(count: int, limit: int) -> dict:
         return {"count": count, "limit": limit, "over": bool(limit) and count > limit}
 
+    # Only Free stops new members at its limit; a paid plan's member count is
+    # what the subscription includes, and extra active members are billed.
+    members_state = _over(members, limits.get("members", 0))
+    if to_plan != "free":
+        members_state["over"] = False
+
     return {
         "to_plan": to_plan,
         "features": features,
@@ -264,7 +270,7 @@ async def preview_downgrade(
             "made_private": [_course_ref(c) for c in made_private],
             "drip_paused": drip_courses,
         },
-        "members": _over(members, limits.get("members", 0)),
+        "members": members_state,
         "admins": _over(admins, limits.get("admin_seats", 0)),
     }
 

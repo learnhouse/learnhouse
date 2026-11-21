@@ -222,7 +222,8 @@ const STATIC_HIGHLIGHTS: Record<CardPlanId, [Icon, string, string][]> = {
   ],
 }
 
-/** The short list on a plan card: members (with admin seats), AI credits, then what the plan adds. */
+/** The short list on a plan card: members (with admin seats), AI credits, then what the plan adds.
+ * Paid plans include a member count; going past it bills extra active members, it never blocks. */
 export function planHighlights(t: TFn, planId: CardPlanId, limits?: PlanLimits): Highlight[] {
   const P = 'billing.flow.cards'
   const out: Highlight[] = []
@@ -235,7 +236,7 @@ export function planHighlights(t: TFn, planId: CardPlanId, limits?: PlanLimits):
       icon: Users,
       label: !members
         ? t(`${P}.members_unlimited`, { defaultValue: 'Unlimited members' })
-        : t(`${P}.members_up_to`, { count: members, formatted: members.toLocaleString() }),
+        : t(`${P}.members_included`, { formatted: members.toLocaleString() }),
       chip: admins ? t(`${P}.admin_chip`, { count: admins, formatted: admins.toLocaleString() }) : undefined,
     })
     const credits = planLimit(planId, 'ai_credits', limits)

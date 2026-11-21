@@ -16401,6 +16401,7 @@
         "members_unlimited": "Unlimited members",
         "members_up_to_one": "Up to {{formatted}} member",
         "members_up_to_other": "Up to {{formatted}} members",
+        "members_included": "含 {{formatted}} 名成员",
         "admin_chip_one": "{{formatted}} admin seat",
         "admin_chip_other": "{{formatted}} admin seats",
         "credits_month": "{{formatted}} AI credits a month",

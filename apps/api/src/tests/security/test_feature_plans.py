@@ -37,7 +37,7 @@ class TestFeaturePlans:
             "enterprise",
         ]
         assert FEATURE_PLAN_REQUIREMENTS["boards"] == "personal"
-        assert PLAN_LIMITS["standard"]["members"] == 0
+        assert PLAN_LIMITS["standard"]["members"] == 300
         assert AI_CREDIT_LIMITS["enterprise"] == -1
         assert PLAN_FEATURE_CONFIGS["free"]["cloud"]["plan"] == "free"
 
@@ -74,7 +74,7 @@ class TestFeaturePlans:
     @pytest.mark.parametrize(
         ("mode", "plan", "feature", "expected"),
         [
-            ("saas", "standard", "members", 0),
+            ("saas", "standard", "members", 300),
             ("saas", "pro", "ai", 2000),
             ("saas", "missing", "ai", 0),
             ("saas", "free", "missing", 0),
@@ -106,7 +106,7 @@ class TestFeaturePlans:
     @pytest.mark.parametrize(
         ("mode", "plan", "feature", "expected"),
         [
-            ("saas", "standard", "members", 0),
+            ("saas", "standard", "members", 300),
             ("saas", "pro", "admin_seats", 10),
             ("saas", "missing", "members", 10),
             ("saas", "free", "missing", 0),
@@ -150,7 +150,7 @@ class TestFeaturePlans:
         for feature, cfg in PLAN_FEATURE_CONFIGS["pro"]["features"].items():
             if cfg.get("enabled"):
                 assert PLAN_FEATURE_CONFIGS["business"]["features"][feature]["enabled"] is True
-        assert PLAN_LIMITS["business"] == {"courses": 0, "members": 0, "admin_seats": 25}
+        assert PLAN_LIMITS["business"] == {"courses": 0, "members": 2000, "admin_seats": 25}
         assert AI_CREDIT_LIMITS["business"] == 10000
         assert get_plan_config("business")["cloud"] == {"plan": "business", "custom_domain": True}
         with _patch_mode("saas"):

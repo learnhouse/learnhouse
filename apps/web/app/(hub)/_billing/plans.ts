@@ -136,7 +136,7 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Free",
     inheritsBadge: BADGE.free,
     features: [
-      { label: "Unlimited Members", limitKey: "members" },
+      { label: "300 Members", limitKey: "members" },
       { label: "3 Admin seats", limitKey: "admin_seats" },
       { label: "Standard AI", badge: "1,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Unlimited Courses" },
@@ -163,7 +163,7 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Standard",
     inheritsBadge: BADGE.standard,
     features: [
-      { label: "Unlimited Members", limitKey: "members" },
+      { label: "1,000 Members", limitKey: "members" },
       { label: "10 Admin seats", limitKey: "admin_seats" },
       { label: "Advanced AI", badge: "2,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Certifications" },
@@ -190,7 +190,7 @@ export const GENERAL_PLANS: Plan[] = [
     inheritsFrom: "Pro",
     inheritsBadge: BADGE.pro,
     features: [
-      { label: "Unlimited Members", limitKey: "members" },
+      { label: "2,000 Members", limitKey: "members" },
       { label: "25 Admin seats", limitKey: "admin_seats" },
       { label: "Business AI", badge: "10,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Company seats" },

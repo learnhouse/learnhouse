@@ -364,9 +364,18 @@ class TestDowngradeRules:
         assert [c["id"] for c in preview["courses"]["made_private"]] == [2]
         assert preview["courses"]["drip_paused"] == 1
         assert preview["members"] == {"count": 1, "limit": 10, "over": False}
-        assert preview["admins"]["limit"] == 1
+        assert preview["admins"]["limit"] == 2
         up = await downgrade.preview_downgrade(db, org.id, "standard", "pro")
         assert up["courses"]["made_private"] == [] and up["courses"]["kept"] is None
+
+    async def test_preview_paid_member_limit_never_blocks(self, db, org, admin_user, regular_user):
+        # Two members against a limit of one: only Free would stop new joins.
+        tight = {plan: {**downgrade.PLAN_LIMITS[plan], "members": 1} for plan in ("standard", "free")}
+        with patch.dict(downgrade.PLAN_LIMITS, tight):
+            paid = await downgrade.preview_downgrade(db, org.id, "pro", "standard")
+            free = await downgrade.preview_downgrade(db, org.id, "pro", "free")
+        assert paid["members"] == {"count": 2, "limit": 1, "over": False}
+        assert free["members"] == {"count": 2, "limit": 1, "over": True}
 
 
 # ── expiry job ───────────────────────────────────────────────────────────

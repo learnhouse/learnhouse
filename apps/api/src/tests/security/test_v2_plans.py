@@ -30,9 +30,14 @@ def _saas(plan, **extra):
 
 
 class TestCatalog:
-    def test_paid_plans_include_unlimited_members(self):
-        for plan in ("standard", "pro", "business", "enterprise"):
-            assert PLAN_LIMITS[plan]["members"] == 0, plan
+    def test_paid_plans_include_members(self):
+        # Included members per the pricing page; extra active members are billed.
+        assert [PLAN_LIMITS[p]["members"] for p in ("standard", "pro", "business")] == [300, 1000, 2000]
+        assert PLAN_LIMITS["enterprise"]["members"] == 0
+
+    def test_free_has_two_admin_seats(self):
+        # The owner plus one teammate (an instructor takes a seat).
+        assert PLAN_LIMITS["free"]["admin_seats"] == 2
 
     def test_admin_seats(self):
         assert [PLAN_LIMITS[p]["admin_seats"] for p in ("standard", "pro", "business")] == [3, 10, 25]
