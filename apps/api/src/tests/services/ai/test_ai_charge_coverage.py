@@ -50,7 +50,7 @@ COVERED = {
     ("services/ai/rag/embedding_service.py", "generate_embeddings"): "rag_indexing",
     ("services/ai/rag/embedding_service.py", "embed_single_text"): "ask_ai / mcp_tools / messaging_agent",
     ("services/ai/rag/query_service.py", "search_course_content"): "ask_ai / mcp_tools / messaging_agent",
-    ("services/ai/rag/pipeline.py", "_store"): "rag_indexing",
+    ("services/ai/rag/pipeline.py", "_embed"): "rag_indexing",
     # Helpers called only inside a charge.
     ("services/ai/base.py", "ask_ai"): "ask_ai",
     ("services/ai/base.py", "ask_ai_stream"): "ask_ai / editor_ai / messaging_agent",
@@ -350,13 +350,20 @@ async def test_rag_indexing_is_metered_but_free(strict_models, monkeypatch):
         return [[0.0] * 3 for _ in texts]
 
     monkeypatch.setattr(pipeline, "generate_embeddings", fake_embeddings)
-    monkeypatch.setattr(pipeline.store, "current_hash", AsyncMock(return_value=None))
     monkeypatch.setattr(pipeline.store, "replace", AsyncMock())
     segment = SimpleNamespace(text="hello world " * 50, source_type=SimpleNamespace(value="text"), block_uuid=None,
                               locator=None, chapter_name=None)
     extraction = SimpleNamespace(ref=SimpleNamespace(key="k"), segments=[segment], org_id=5, course_id=1,
                                  activity_id=2, activity_uuid="a", activity_name="A", chapter_name="C", course_name="Co")
-    await pipeline._store(extraction, AsyncMock())
+    from contextlib import asynccontextmanager
+
+    @asynccontextmanager
+    async def no_db():
+        yield AsyncMock()
+
+    monkeypatch.setattr(pipeline, "_session", no_db)
+    chunks = pipeline._chunks(extraction)
+    await pipeline._store(extraction, chunks, pipeline._hash(chunks))
     meter = _settled(strict_models, "rag_indexing")
     assert meter.credits == 0 and meter.cost_usd > 0 and seen
 
