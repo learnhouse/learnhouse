@@ -102,6 +102,7 @@ export default function StandaloneAssignment({ activity, course, fallback = null
               activityid={activity.activity_uuid}
               course={course}
               orgslug=""
+              submitFromEventOnly
             />
           </div>
         </AssignmentSubmissionProvider>

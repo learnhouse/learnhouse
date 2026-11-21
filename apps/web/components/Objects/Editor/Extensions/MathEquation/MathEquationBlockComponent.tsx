@@ -4,7 +4,9 @@ import React, { lazy, Suspense } from 'react'
 const BlockMath = lazy(() => {
   // Load katex CSS when the component is first used
   import('katex/dist/katex.min.css')
-  return import('react-katex').then(m => ({ default: m.BlockMath }))
+  // react-katex is CommonJS: webpack exposes its named exports, Vite's
+  // pre-bundling (apps embedding @learnhouse/react) only exposes `default`.
+  return import('react-katex').then((m) => ({ default: m.BlockMath ?? (m as any).default?.BlockMath as typeof m.BlockMath }))
 })
 import { FloppyDisk, Sigma, ArrowSquareOut, CaretDown, BookOpen, Lightbulb } from '@phosphor-icons/react'
 import Link from 'next/link'

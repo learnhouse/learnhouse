@@ -11,6 +11,7 @@ import { LearnHouseInternalContext, useLearnHouseInternal } from './context'
 import { LearnHouseProvider, useLearnHouseDefaults } from './provider'
 import { Completion } from './completion'
 import { useActivitySource } from './data'
+import { PortalContainerContext } from './portal'
 import { useRendererEvents } from './events'
 import { applyLocale, createI18n, setCurrentI18n } from './i18n'
 import { isRtl, resolveMode, themeToStyle } from './theme'
@@ -112,6 +113,8 @@ function ActivityView(props: LearnHouseActivityProps) {
   const watchEnd = (props.trackCompletion ?? false) || completion === 'scroll'
 
   const rootRef = useRef<HTMLDivElement>(null)
+  // Dialogs and popovers mount here, inside the styled and themed root.
+  const [portalHost, setPortalHost] = useState<HTMLDivElement | null>(null)
   const { sentinelRef } = useRendererEvents(rootRef, internal.emit, {
     enabled: source.status === 'ready',
     activityId: activity?.activity_uuid,
@@ -213,8 +216,11 @@ function ActivityView(props: LearnHouseActivityProps) {
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
         <div ref={rootRef} className={rootClass} style={rootStyle} dir={dir} lang={locale} data-lh-status={source.status}>
-          <div className="lh-activity-body">{body}</div>
-          {signedIn && <SharedToaster />}
+          <PortalContainerContext.Provider value={portalHost}>
+            <div className="lh-activity-body">{body}</div>
+            {signedIn && <SharedToaster />}
+          </PortalContainerContext.Provider>
+          <div ref={setPortalHost} className="lh-portal-host" />
         </div>
       </QueryClientProvider>
     </I18nextProvider>

@@ -36,15 +36,20 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
   const retry = useCallback(() => setAttempt((n) => n + 1), [])
 
   const local = activityProp !== undefined || content !== undefined
+  // A local activity still needs its course (for media URLs: they carry the
+  // org and course uuids) unless the caller passed orgId. Without the org,
+  // blocks would request content/orgs/undefined/... until the course loads.
+  const propCourseId = (activityProp as any)?.course_id ?? null
+  const needsCourse = local && !!client && !orgId && (!!courseId || (activityProp !== undefined && propCourseId != null))
   const [state, setState] = useState<{ status: Status; activity: any; course: any; error: Error | null }>({
-    status: local ? 'ready' : 'loading',
+    status: local && !needsCourse ? 'ready' : 'loading',
     activity: null,
     course: null,
     error: null,
   })
 
   useEffect(() => {
-    if (local && !courseId) return
+    if (local && !courseId && !needsCourse) return
     if (!client) {
       setState({ status: 'error', activity: null, course: null, error: new Error('Pass `baseUrl`, or render inside <LearnHouseProvider>') })
       return
@@ -56,7 +61,7 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
 
     const controller = new AbortController()
     const signal = controller.signal
-    setState((s) => ({ ...s, status: local ? s.status : 'loading', error: null }))
+    setState((s) => ({ ...s, status: local && !needsCourse ? s.status : 'loading', error: null }))
 
     ;(async () => {
       // With a course uuid, the course and the activity load in parallel.
@@ -71,9 +76,10 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
             { signal, courseMeta: metaPromise ?? undefined },
           )
       let course = metaPromise ? await metaPromise : null
-      if (!course && activity?.course_id != null) {
+      const ownCourseId = activity?.course_id ?? (local ? propCourseId : null)
+      if (!course && ownCourseId != null) {
         // Only the activity was given: find its course for media URLs.
-        const base = await client.GET('/api/v1/courses/id/{course_id}', { params: { path: { course_id: activity.course_id } }, signal })
+        const base = await client.GET('/api/v1/courses/id/{course_id}', { params: { path: { course_id: ownCourseId } }, signal })
         course = await client.courses.getMeta((base as any).course_uuid, { slim: true, signal })
       }
       return { activity, course }
@@ -84,11 +90,14 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
       })
       .catch((error: Error) => {
         if (signal.aborted) return
-        setState({ status: 'error', activity: null, course: null, error })
+        // The caller already has the activity: render it even when its
+        // course can't be read (media URLs then can't be built, as before).
+        if (local) setState({ status: 'ready', activity: null, course: null, error: null })
+        else setState({ status: 'error', activity: null, course: null, error })
       })
 
     return () => controller.abort()
-  }, [client, local, activityId, activityName, courseId, attempt])
+  }, [client, local, needsCourse, propCourseId, activityId, activityName, courseId, attempt])
 
   const activity = useMemo<LearnHouseActivityData | null>(() => {
     let base: any = state.activity

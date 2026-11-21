@@ -129,6 +129,49 @@ describe('LearnHouseProvider with a learner session', () => {
     expect(seen.status).toBe('authenticated')
   })
 
+  it('applies a session passed directly under React StrictMode', async () => {
+    const token = jwt({ sub: 'lea@example.com', exp: inMinutes(15) })
+    const calls = mockApi(learnerApi())
+    let seen: any = null
+    function Probe() {
+      seen = useLearnHouseSession()
+      return null
+    }
+    render(
+      <React.StrictMode>
+        <LearnHouseProvider baseUrl={BASE} session={token}>
+          <Probe />
+          <LearnHouseActivity activityId="activity_x" courseId="course_test" />
+        </LearnHouseProvider>
+      </React.StrictMode>,
+    )
+    await screen.findByText('Hello learner', {}, { timeout: 30000 })
+    await waitFor(() => expect(seen?.data?.user?.id).toBe(9))
+    expect(seen.status).toBe('authenticated')
+    const api = calls.filter((c) => c.url.startsWith(BASE))
+    expect(api.every((c) => c.auth === `Bearer ${token}`)).toBe(true)
+  }, 60000)
+
+  it('applies a session from getSession under React StrictMode', async () => {
+    const token = jwt({ sub: 'lea@example.com', exp: inMinutes(15) })
+    const calls = mockApi(learnerApi())
+    let seen: any = null
+    function Probe() {
+      seen = useLearnHouseSession()
+      return null
+    }
+    render(
+      <React.StrictMode>
+        <LearnHouseProvider baseUrl={BASE} getSession={async () => ({ access_token: token, expires_at: inMinutes(15) })}>
+          <Probe />
+        </LearnHouseProvider>
+      </React.StrictMode>,
+    )
+    await waitFor(() => expect(seen?.status).toBe('authenticated'))
+    await waitFor(() => expect(seen?.data?.user?.id).toBe(9))
+    expect(calls.some((c) => c.url.includes('/users/session') && c.auth === `Bearer ${token}`)).toBe(true)
+  })
+
   it('fetches a new session and retries once when the API answers 401', async () => {
     const stale = jwt({ sub: 'lea@example.com', exp: inMinutes(15), n: 1 })
     const fresh = jwt({ sub: 'lea@example.com', exp: inMinutes(15), n: 2 })

@@ -65,9 +65,10 @@ export function LearnHouseProvider(props: LearnHouseProviderProps) {
     setCurrent(store.session)
     return store.subscribe(setCurrent)
   }, [store])
-  useEffect(() => () => {
-    if (ownStore) store.dispose()
-  }, [store, ownStore])
+  // No store.dispose() on unmount: a disposed store ignores every later
+  // session, and React StrictMode (dev) unmounts and remounts each effect
+  // once, so the remounted provider would never see a session. Unsubscribing
+  // above is enough; timers below clean themselves up.
   useEffect(() => {
     if (ownStore) store.setSource(hasGetSession ? () => getSessionRef.current?.() : undefined)
   }, [store, ownStore, hasGetSession])

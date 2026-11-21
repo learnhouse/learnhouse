@@ -18,6 +18,8 @@ import { execFileSync } from 'node:child_process'
 import postcss from 'postcss'
 import tailwind from '@tailwindcss/postcss'
 import prefixSelector from 'postcss-prefix-selector'
+import { rewriteCredentials } from './credentials.mjs'
+import { WEB_IMPORT_SHIMS } from './build-config.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const pkgDir = path.resolve(here, '..')
@@ -82,13 +84,25 @@ const NODE_BUILTINS = new Set(['fs', 'path', 'os', 'crypto', 'url', 'util', 'str
 const packageName = (spec) =>
   spec.startsWith('@') ? spec.split('/').slice(0, 2).join('/') : spec.split('/')[0]
 
+const LOADERS = { '.ts': 'ts', '.tsx': 'tsx', '.js': 'js', '.jsx': 'jsx', '.mjs': 'js' }
+
 const sourcePlugin = {
   name: 'learnhouse-web-source',
   setup(b) {
+    b.onLoad({ filter: /\.(m?jsx?|tsx?)$/ }, async (args) => {
+      if (!args.path.startsWith(webDir + path.sep)) return
+      if (args.path.includes(`${path.sep}node_modules${path.sep}`)) return
+      const code = await readFile(args.path, 'utf8')
+      const out = rewriteCredentials(code)
+      if (out === code) return
+      return { contents: out, loader: LOADERS[path.extname(args.path)], resolveDir: path.dirname(args.path) }
+    })
     b.onResolve({ filter: /.*/ }, async (args) => {
       if (args.kind === 'entry-point') return
       const shim = SHIMS[args.path]
       if (shim) return { path: shim }
+      const webShim = WEB_IMPORT_SHIMS[args.path]
+      if (webShim && args.importer.startsWith(webDir + path.sep)) return { path: webShim }
       const web = resolveWebPath(args.path)
       const target = web ?? (args.path.startsWith('.') ? path.resolve(args.resolveDir, args.path) : null)
       if (target && shimForFile(target)) return { path: shimForFile(target) }
@@ -220,6 +234,10 @@ async function buildJs({ write = true } = {}) {
       // provider supplies real values at runtime.
       'process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL': 'undefined',
       'process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL': 'undefined',
+      // Any other environment read (getConfig's fallback, server-only URLs).
+      // Next.js polyfills `process` in the browser; Vite, webpack 5 and plain
+      // <script type="module"> pages do not, so it would throw on load.
+      'process.env': '{}',
     },
     banner: { js: '"use client";' },
     // 'use client' directives inside web modules are meaningless once bundled.
@@ -279,21 +297,22 @@ export async function externalDependencies(metafile) {
   return { deps: Object.fromEntries(Object.entries(deps).sort(([a], [b]) => a.localeCompare(b))), missing }
 }
 
-async function buildCss() {
+/** Web source files in the bundle, for Tailwind's class scanning. */
+export function cssSources(metafile) {
+  return Object.keys(metafile.inputs)
+    .map((f) => path.resolve(pkgDir, f))
+    .filter((f) => f.startsWith(webDir + path.sep) && !f.includes(`${path.sep}node_modules${path.sep}`) && /\.(t|j)sx?$/.test(f))
+    .sort()
+}
+
+async function buildCss(metafile) {
   // The package stylesheet is the web app's own globals.css, compiled by the
   // same Tailwind setup, with class scanning narrowed to what the renderer
   // ships and every rule scoped under SCOPE so it can't touch the host page.
   const globals = await readFile(path.join(webDir, 'styles/globals.css'), 'utf8')
-  const sources = [
-    'components/Objects/Activities',
-    'components/Objects/Editor/Extensions',
-    'components/Objects/StyledElements',
-    'components/Contexts',
-    'lib',
-    'services',
-    // Learner-side assignment task editors (rendered for signed-in learners).
-    'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes',
-  ].map((dir) => `@source '${path.join(webDir, dir)}';`)
+  // Scan exactly the web modules the bundle contains, so a class used by
+  // any shipped component (dialogs in components/ui, block chrome...) exists.
+  const sources = cssSources(metafile).map((file) => `@source '${file}';`)
   const input = globals
     .replace(/@import ['"]tailwindcss['"];/, `@import 'tailwindcss' source(none);\n${sources.join('\n')}\n@source '${path.join(pkgDir, 'src')}';`)
     .replace(/@source ['"]\.\.\/ee['"];/, '')
@@ -343,7 +362,7 @@ async function main() {
   if (missing.length) {
     throw new Error(`Bundle imports packages apps/web does not declare: ${missing.join(', ')}`)
   }
-  const cssBytes = await buildCss()
+  const cssBytes = await buildCss(metafile)
   // The renderer root's own rules are scoped already; append them unprefixed.
   const rootCss = await readFile(path.join(pkgDir, 'src/index.css'), 'utf8')
   const { appendFile } = await import('node:fs/promises')

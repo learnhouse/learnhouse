@@ -225,6 +225,57 @@ describe('fetching from an instance', () => {
     await screen.findByText('Fetched body')
   })
 
+  const imageDoc = {
+    type: 'doc',
+    content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'Body with an image' }] },
+      { type: 'blockImage', attrs: { blockObject: { block_uuid: 'block_img', content: { file_id: 'chart', file_format: 'png' } }, size: { width: 400 }, alignment: 'center' } },
+    ],
+  }
+  const imageSrcs = () => Array.from(document.querySelectorAll('img')).map((img) => img.getAttribute('src') ?? '')
+
+  it('waits for the course before rendering a prefetched activity, so media URLs carry the org', async () => {
+    let releaseMeta!: () => void
+    const metaGate = new Promise<void>((resolve) => (releaseMeta = resolve))
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input instanceof Request ? input.url : input)
+      if (url.includes(`/courses/${COURSE}/meta`)) {
+        await metaGate
+        return new Response(JSON.stringify(meta), { status: 200, headers: { 'content-type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({ detail: 'Not Found' }), { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<LearnHouseActivity baseUrl={BASE} activity={{ ...activity, content: imageDoc }} courseId={COURSE} />)
+    await new Promise((r) => setTimeout(r, 50))
+    expect(screen.queryByText('Body with an image')).toBeNull()
+    releaseMeta()
+    await screen.findByText('Body with an image')
+    await waitFor(() => expect(imageSrcs().some((src) => src.includes(`/orgs/${ORG}/`))).toBe(true))
+    expect(imageSrcs().some((src) => src.includes('undefined'))).toBe(false)
+  })
+
+  it('resolves the course of a prefetched activity passed without courseId', async () => {
+    const fetchMock = mockFetch({ '/courses/id/11': { course_uuid: COURSE }, [`/courses/${COURSE}/meta`]: meta })
+    render(<LearnHouseActivity baseUrl={BASE} activity={{ ...activity, content: imageDoc }} />)
+    await screen.findByText('Body with an image')
+    await waitFor(() => expect(imageSrcs().some((src) => src.includes(`/orgs/${ORG}/courses/${COURSE}/`))).toBe(true))
+    const urls = fetchMock.mock.calls.map(([u]) => String(u instanceof Request ? u.url : u))
+    expect(urls.some((u) => u.includes('/courses/id/11'))).toBe(true)
+  })
+
+  it('still renders a prefetched activity when its course cannot be read', async () => {
+    mockFetch({})
+    render(<LearnHouseActivity baseUrl={BASE} activity={{ ...activity, content: imageDoc }} />)
+    await screen.findByText('Body with an image')
+  })
+
+  it('renders a prefetched activity at once when orgId is given', async () => {
+    mockFetch({ [`/courses/${COURSE}/meta`]: meta })
+    render(<LearnHouseActivity baseUrl={BASE} activity={{ ...activity, content: imageDoc }} courseId={COURSE} orgId={ORG} />)
+    expect(screen.getByText('Body with an image')).toBeTruthy()
+  })
+
   it('shows errorFallback with retry on failure', async () => {
     mockFetch({})
     const onError = vi.fn()
