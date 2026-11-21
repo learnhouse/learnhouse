@@ -372,10 +372,20 @@
   :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr > :is(td, th):last-child {
     border-block-end: 0;
   }
-  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th)::before {
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr > :is(td, th)::before {
     font-size: 0.75rem;
     font-weight: 600;
     color: color-mix(in srgb, currentColor 60%, transparent);
+  }
+  /* Totals card: the label as its title, then only the computed values. */
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tfoot > tr > td {
+    text-align: start;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tfoot > tr > td.lh-table-totals-label::before {
+    display: none;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tfoot > tr > td:not(.lh-table-totals-label, .lh-table-totals-value) {
+    display: none;
   }
   :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th) > p,
   :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th)::after {
@@ -426,10 +436,20 @@
 .lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr > :is(td, th):last-child {
   border-block-end: 0;
 }
-.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th)::before {
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr > :is(td, th)::before {
   font-size: 0.75rem;
   font-weight: 600;
   color: color-mix(in srgb, currentColor 60%, transparent);
+}
+/* Totals card: the label as its title, then only the computed values. */
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tfoot > tr > td {
+  text-align: start;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tfoot > tr > td.lh-table-totals-label::before {
+  display: none;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tfoot > tr > td:not(.lh-table-totals-label, .lh-table-totals-value) {
+  display: none;
 }
 .lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th) > p,
 .lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th)::after {
