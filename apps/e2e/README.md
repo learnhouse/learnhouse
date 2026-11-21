@@ -81,6 +81,9 @@ bunx playwright test 06-manual-grading            # one spec by name
 | `E2E_CLI` | `npx --yes learnhouse@latest` | CLI used to boot (override for a local build). |
 | `E2E_SKIP_BOOT` | unset | `1` to skip booting (assumes instance already up). |
 | `E2E_KEEP` | unset | `1` to keep the instance running after the suite. |
+| `E2E_BROWSERS` | unset | `all` adds the learner module's Firefox, WebKit, iPhone, Android and tablet projects (CI runs Chromium only). |
+| `E2E_MAILPIT_URL` | unset | Mailpit UI/API URL; turns on the learner email journeys (password reset, magic link). |
+| `E2E_GUARD_STACKS` | unset | `1` prints the stack of every page error the guard sees. |
 
 ### Reliability notes
 
@@ -135,3 +138,20 @@ server-verify dispatch, CODE grading, retry caps, due dates, permissions).
 > instance (it passes against `learnhouse dev` / a branch-built image).
 > CODE task type is covered by backend tests only (Judge0 isn't available on a
 > self-host).
+
+## Feature coverage: learner
+
+`features/learner` walks what a learner does, page by page, and fails on
+crashes, API 5xx, raw i18n keys or sideways scrolling (`core/guard.ts`):
+public browsing, signup / login / reset / magic link / 2FA, enrolling and
+progress, every activity type and block, member-only and drip access,
+certificates, paths, communities, account settings, all 22 locales with RTL,
+slow network, offline and blocked storage, and sandboxed embeds.
+
+```bash
+bunx playwright test features/learner                              # Chromium
+E2E_BROWSERS=all bunx playwright test features/learner --project=webkit
+```
+
+Install the extra browsers first (`bunx playwright install firefox webkit`).
+

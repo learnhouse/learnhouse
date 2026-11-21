@@ -1,9 +1,13 @@
 node_modules/
 .auth/
 test-results/
+test-results-*/
 playwright-report/
 playwright/.cache/
 *.log
 
 # Recorded walkthroughs (demo/formative-demo.ts). Regenerate, do not commit.
 demo/output/
+.probe*.mjs
+.login-probe.mjs
+.env.*.sh
