@@ -90,7 +90,7 @@ export function ExperienceFrame({
       data-preview={editable && preview ? 'true' : undefined}
       aria-label={title || undefined}
       className={cn(
-        'lh-exp-frame relative isolate my-3 w-full min-w-0 overflow-hidden rounded-2xl bg-white text-start shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.05),0_10px_28px_-14px_rgba(15,23,42,0.16)]',
+        'lh-exp-frame relative isolate my-3 w-full min-w-0 overflow-hidden rounded-2xl bg-white text-start shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.04),0_6px_18px_-12px_rgba(15,23,42,0.1)]',
         editable && preview && 'outline-2 outline-offset-2 outline-dashed outline-sky-300',
         className,
       )}

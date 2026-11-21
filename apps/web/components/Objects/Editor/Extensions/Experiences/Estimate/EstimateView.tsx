@@ -257,7 +257,7 @@ function EstimatePlayer({ data, frame }: { data: EstimateData; frame: FrameBase 
                 {/* Recessed track with the filled part up to the knob. */}
                 <div aria-hidden className="lh-exp-well pointer-events-none absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 overflow-hidden rounded-full">
                   <div
-                    className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]"
+                    className="absolute inset-y-0 start-0 rounded-full bg-indigo-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                     style={{ width: `calc(${((guess - range.min) / Math.max(1e-9, range.max - range.min)) * 100}% + ${0.875 - (((guess - range.min) / Math.max(1e-9, range.max - range.min)) * 1.75)}rem)` }}
                   />
                 </div>
@@ -383,7 +383,7 @@ function RevealTrack({
         )}
         {/* The learner's guess: a raised knob left where it was locked in. */}
         <span
-          className="absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border border-black/15 border-b-black/25 bg-gradient-to-b from-white to-neutral-100 shadow-[inset_0_1px_0_#fff,0_2px_3px_rgba(15,23,42,0.18)] rtl:translate-x-1/2 ltr:-translate-x-1/2"
+          className="absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border border-black/10 border-b-black/15 bg-white shadow-[inset_0_1px_0_#fff,0_1px_2px_rgba(15,23,42,0.1)] rtl:translate-x-1/2 ltr:-translate-x-1/2"
           style={{ insetInlineStart: at(guess) }}
         >
           <span className="absolute inset-1.5 rounded-full bg-neutral-400" />

@@ -15,17 +15,23 @@
   --exp-well: #eef1f5;
   --exp-ink: #18181b;
   --exp-edge: rgba(15, 23, 42, 0.1);
-  --exp-lip: rgba(15, 23, 42, 0.16);
+  --exp-lip: rgba(15, 23, 42, 0.12);
   --exp-hi: rgba(255, 255, 255, 0.95);
-  --exp-drop: rgba(15, 23, 42, 0.08);
+  --exp-drop: rgba(15, 23, 42, 0.06);
 }
 /* The header icon tile: a small raised plate. */
 .lh-exp-icon {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
     inset 0 0 0 1px rgba(15, 23, 42, 0.05),
-    0 1px 2px rgba(15, 23, 42, 0.08),
-    0 4px 10px -4px rgba(15, 23, 42, 0.14);
+    0 1px 2px rgba(15, 23, 42, 0.05);
+}
+/* A fine paper grain for cards (an inline SVG noise tile, very low opacity). */
+.lh-exp-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
 }
 /* The play surface under the header. */
 .lh-exp-table {
@@ -40,8 +46,7 @@
   border-bottom-color: var(--exp-lip);
   box-shadow:
     inset 0 1px 0 var(--exp-hi),
-    0 1px 1px var(--exp-drop),
-    0 3px 6px -3px var(--exp-drop);
+    0 1px 1px var(--exp-drop);
   transition:
     transform 140ms cubic-bezier(0.2, 0.7, 0.3, 1),
     box-shadow 140ms ease-out,
@@ -55,8 +60,8 @@
     transform: translateY(-1px);
     box-shadow:
       inset 0 1px 0 var(--exp-hi),
-      0 2px 2px var(--exp-drop),
-      0 6px 12px -4px var(--exp-drop);
+      0 1px 2px var(--exp-drop),
+      0 3px 8px -4px var(--exp-drop);
   }
 }
 .lh-exp-press:active:not(:disabled):not([aria-disabled='true']) {
@@ -70,14 +75,14 @@
   border-color: currentColor;
   box-shadow:
     inset 0 1px 0 var(--exp-hi),
-    0 0 0 3px color-mix(in srgb, currentColor 18%, transparent),
-    0 8px 16px -6px var(--exp-drop);
+    0 0 0 3px color-mix(in srgb, currentColor 16%, transparent),
+    0 4px 10px -6px var(--exp-drop);
 }
 /* A recessed well: drop zones, trays, the gap in a sentence. */
 .lh-exp-well {
   background: var(--exp-well);
   box-shadow:
-    inset 0 1px 2px rgba(15, 23, 42, 0.08),
+    inset 0 1px 1px rgba(15, 23, 42, 0.05),
     inset 0 0 0 1px rgba(15, 23, 42, 0.05);
   transition: background-color 140ms ease-out, box-shadow 140ms ease-out;
 }
@@ -101,19 +106,19 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(180deg, #2b2b30 0%, #18181b 100%);
-  border: 1px solid #09090b;
+  background: linear-gradient(180deg, #3a3a40 0%, #27272a 100%);
+  border: 1px solid #18181b;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 2px 0 #09090b,
-    0 4px 8px -2px rgba(0, 0, 0, 0.25);
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 1px 0 #18181b,
+    0 2px 4px -2px rgba(0, 0, 0, 0.18);
   transform: translateY(0);
   transition: transform 90ms ease-out, box-shadow 90ms ease-out, opacity 140ms;
   cursor: pointer;
   touch-action: manipulation;
 }
 .lh-exp-key:active:not(:disabled) {
-  transform: translateY(2px);
+  transform: translateY(1px);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 #09090b, 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .lh-exp-key:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 1px 0 #09090b; }
@@ -274,8 +279,8 @@
   border-radius: 999px;
   background: linear-gradient(180deg, #ffffff, #f1f3f6);
   border: 1px solid rgba(15, 23, 42, 0.14);
-  border-bottom-color: rgba(15, 23, 42, 0.26);
-  box-shadow: inset 0 1px 0 #fff, 0 2px 3px rgba(15, 23, 42, 0.18), 0 6px 12px -4px rgba(15, 23, 42, 0.25);
+  border-bottom-color: rgba(15, 23, 42, 0.18);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(15, 23, 42, 0.1);
   transition: transform 120ms ease-out;
 }
 .lh-exp-range::-moz-range-thumb {
@@ -284,8 +289,8 @@
   border-radius: 999px;
   background: linear-gradient(180deg, #ffffff, #f1f3f6);
   border: 1px solid rgba(15, 23, 42, 0.14);
-  border-bottom-color: rgba(15, 23, 42, 0.26);
-  box-shadow: inset 0 1px 0 #fff, 0 2px 3px rgba(15, 23, 42, 0.18), 0 6px 12px -4px rgba(15, 23, 42, 0.25);
+  border-bottom-color: rgba(15, 23, 42, 0.18);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(15, 23, 42, 0.1);
 }
 .lh-exp-range:active::-webkit-slider-thumb { transform: scale(0.94); }
 .lh-exp-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0ea5e9; }
@@ -452,4 +457,20 @@
   .lh-exp-burst-glow { animation-duration: 600ms; }
   .lh-exp-star[data-on], .lh-exp-shake { animation: none; }
   .lh-exp-progress-fill { transition: none; }
+}
+
+/* Flashcards (learner): each card sits at a small, stable angle like a hand-laid
+   deck and straightens with a slight lift on hover or keyboard focus. */
+.lh-flip-tilt {
+  transform: rotate(var(--lh-tilt, 0deg));
+  transition: transform 260ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+[dir='rtl'] .lh-flip-tilt { transform: rotate(calc(var(--lh-tilt, 0deg) * -1)); }
+@media (hover: hover) {
+  .lh-flip-tilt:hover, [dir='rtl'] .lh-flip-tilt:hover { transform: rotate(0deg) translateY(-2px); }
+}
+.lh-flip-tilt:focus-within, [dir='rtl'] .lh-flip-tilt:focus-within { transform: rotate(0deg) translateY(-2px); }
+@media (prefers-reduced-motion: reduce) {
+  .lh-flip-tilt { transition: none; }
+  .lh-flip-tilt:hover, .lh-flip-tilt:focus-within { transform: rotate(var(--lh-tilt, 0deg)); }
 }

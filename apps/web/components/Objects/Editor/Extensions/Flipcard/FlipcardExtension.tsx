@@ -69,6 +69,16 @@ export const ControlDivider = () => <div aria-hidden className="w-px h-4 bg-neut
 
 const ICON_SIZE: Record<FlipcardSize, number> = { small: 16, medium: 20, large: 24 }
 
+/** A small, stable tilt per card (about ±0.9°), seeded by its text so it never jumps. */
+export function cardTilt(seed: string): number {
+  let h = 2166136261
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619)
+  const unit = ((h >>> 0) % 1000) / 999 // 0..1
+  const deg = (unit * 2 - 1) * 0.9
+  // Never almost-straight: keep at least 0.35° so the deck reads as hand-laid.
+  return Math.abs(deg) < 0.35 ? (deg < 0 ? -0.35 : 0.35) : Math.round(deg * 100) / 100
+}
+
 const FlipcardExtension: React.FC = (props: any) => {
   const { t } = useTranslation()
   const editorState = useEditorProvider() as any
@@ -153,8 +163,8 @@ const FlipcardExtension: React.FC = (props: any) => {
           // A physical card: three even rows (side label, centred text, hint), a hairline edge,
           // a faint top sheen and a layered soft shadow that lifts a touch on hover for learners.
           'grid grid-rows-[1.5rem_minmax(0,1fr)_1.5rem] gap-2 overflow-hidden border p-5 text-center rounded-2xl transition-[box-shadow,transform] duration-200',
-          'shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_1px_2px_rgba(15,23,42,0.08),0_6px_14px_-6px_rgba(15,23,42,0.18),0_18px_32px_-18px_rgba(15,23,42,0.28)]',
-          !isEditable && 'group-hover/card:shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_2px_4px_rgba(15,23,42,0.08),0_10px_20px_-8px_rgba(15,23,42,0.22),0_26px_44px_-20px_rgba(15,23,42,0.32)]',
+          'shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(15,23,42,0.06),0_4px_12px_-8px_rgba(15,23,42,0.16)]',
+          !isEditable && 'group-hover/card:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_3px_rgba(15,23,42,0.07),0_8px_18px_-10px_rgba(15,23,42,0.2)]',
           facePad,
           isBack ? faces.back : faces.front,
           hidden && 'pointer-events-none',
@@ -162,7 +172,8 @@ const FlipcardExtension: React.FC = (props: any) => {
         aria-hidden={hidden || undefined}
         inert={hidden || undefined}
       >
-        <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/[0.14] to-transparent" />
+        <span aria-hidden className="lh-exp-grain pointer-events-none absolute inset-0 rounded-2xl" />
+        <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1/3 rounded-t-2xl bg-gradient-to-b from-white/[0.07] to-transparent" />
         {/* Which side is up, at a glance: "Question" / "Answer" and the turn icon. */}
         <div className={cn('relative flex w-full items-center justify-between gap-2 select-none pointer-events-none', compact && 'max-md:invisible')}>
           <span className="text-[12px] font-medium opacity-75">
@@ -211,7 +222,11 @@ const FlipcardExtension: React.FC = (props: any) => {
 
   const card = (
     // Self-contained coloured cards: the same in every block theme.
-    <div data-lhb-keep="" className={cn('flipcard-container group/card relative', sizeClass, mobileClass, !isEditable && 'lh-press')}>
+    <div
+      data-lhb-keep=""
+      className={cn('flipcard-container group/card relative', sizeClass, mobileClass, !isEditable && 'lh-press lh-flip-tilt')}
+      style={!isEditable ? ({ ['--lh-tilt' as any]: `${cardTilt(`${question}|${answer}`)}deg` } as React.CSSProperties) : undefined}
+    >
       <div
         className={cn('flipcard-inner cursor-pointer', flipped && 'flipped', !isEditable && 'rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2')}
         {...(isEditable

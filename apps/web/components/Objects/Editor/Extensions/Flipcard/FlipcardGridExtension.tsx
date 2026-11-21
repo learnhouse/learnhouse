@@ -113,7 +113,7 @@ function GridLearner(props: any) {
         <NodeViewContent className="flipcard-grid-content" />
       </div>
       {view === 'study' && (
-        <div className="lh-exp-frame rounded-2xl bg-white p-3 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.05),0_10px_28px_-14px_rgba(15,23,42,0.16)] sm:p-4" contentEditable={false}>
+        <div className="lh-exp-frame rounded-2xl bg-white p-3 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.04),0_6px_18px_-12px_rgba(15,23,42,0.1)] sm:p-4" contentEditable={false}>
           <FlashcardStudy cards={cards} shuffle={deck.shuffle} memorySource={props} />
         </div>
       )}
