@@ -17,7 +17,6 @@ if (SENTRY_DSN) {
         "";
 
       if (msg.includes("Failed to find Server Action")) return null;
-      if (msg.includes("Organization not found")) return null;
       if (msg.includes("Organization has no config")) return null;
 
       // Auth links carry reset codes / tokens / OAuth codes in the query.

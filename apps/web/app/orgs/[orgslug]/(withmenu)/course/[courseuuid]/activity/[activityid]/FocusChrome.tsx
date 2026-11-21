@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { ArrowsIn } from '@phosphor-icons/react'
 import { getUriWithOrg } from '@services/config/config'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getCourseThumbnailMediaDirectory, hasMediaIds } from '@services/media/media'
 import { ShortcutHint } from '@components/Objects/Shortcuts/ShortcutHint'
 import { useCourseProgress } from '@components/Pages/Courses/courseProgress'
 import { coursePath } from '@/lib/seo/paths'
@@ -135,9 +135,11 @@ interface FocusTopBarProps {
 export function FocusTopBar({ course, orgUuid, orgslug, courseuuid, activityName, activityId, trailData, dark, idle, actions, onExit }: FocusTopBarProps) {
   const { t } = useTranslation()
   const model = useCourseProgress({ course, trailData, orgslug, currentActivityId: activityId })
-  const thumb = course?.thumbnail_image
-    ? getCourseThumbnailMediaDirectory(orgUuid || '', course.course_uuid, course.thumbnail_image)
-    : '/empty_thumbnail.png'
+  // Null until the org uuid is known: show the placeholder, not orgs//...
+  const thumb =
+    (course?.thumbnail_image && hasMediaIds(orgUuid, course.course_uuid) &&
+      getCourseThumbnailMediaDirectory(orgUuid, course.course_uuid, course.thumbnail_image)) ||
+    '/empty_thumbnail.png'
   const position = model.currentIndex >= 0 ? `${model.currentIndex + 1} / ${model.total}` : ''
 
   return (

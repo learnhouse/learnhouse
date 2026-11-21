@@ -17202,6 +17202,10 @@
       "body_other": "Ihr Zahlungsanbieter hat seit {{date}} {{count}} Checkouts abgelehnt. Ihr Stripe-Konto ist möglicherweise getrennt oder braucht Ihre Aufmerksamkeit. Bis das behoben ist, sehen Lernende, dass der Checkout vorübergehend nicht verfügbar ist.",
       "recheck": "Erneut prüfen",
       "fix": "Zahlungseinstellungen öffnen"
+    },
+    "impersonating": {
+      "title": "Zahlungen sind während einer Identitätsübernahme nicht verfügbar",
+      "body": "Zahlungseinstellungen, Kunden und Stripe-Daten bleiben den Admins der Organisation vorbehalten. Beende die Identitätsübernahme, um Zahlungen zu verwalten."
     }
   },
   "lti": {

@@ -17161,6 +17161,10 @@
       "body_other": "Penyedia pembayaran Anda menolak {{count}} pembayaran sejak {{date}}. Akun Stripe Anda mungkin terputus atau perlu diperiksa. Sampai masalah ini diperbaiki, pelajar akan melihat bahwa pembayaran sementara tidak tersedia.",
       "recheck": "Periksa lagi",
       "fix": "Buka pengaturan pembayaran"
+    },
+    "impersonating": {
+      "title": "Pembayaran tidak tersedia saat menyamar",
+      "body": "Pengaturan pembayaran, pelanggan, dan data Stripe hanya untuk admin organisasi itu sendiri. Akhiri penyamaran untuk mengelola pembayaran."
     }
   },
   "lti": {

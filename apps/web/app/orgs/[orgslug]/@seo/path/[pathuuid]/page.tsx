@@ -10,7 +10,7 @@ import { seoImageUrl } from '@/lib/seo/meta'
 export default async function PathSeo({ params }: { params: Promise<{ orgslug: string; pathuuid: string }> }) {
   const { orgslug, pathuuid } = await params
   const [ctx, resolved] = await Promise.all([getSeoContext(orgslug), resolvePublicKey(orgslug, 'path', pathuuid)])
-  if (!resolved || resolved.restricted || ctx.seo.indexing_disabled) return null
+  if (!resolved || resolved.restricted || ctx.degraded || ctx.seo.indexing_disabled) return null
   const path = await getPath(resolved.uuid, undefined).catch(() => null)
   if (!path?.public || !path?.published) return null
   const seo = path.seo || {}

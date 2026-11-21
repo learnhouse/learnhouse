@@ -17513,6 +17513,10 @@
       "body_other": "Seu provedor de pagamento recusou {{count}} checkouts desde {{date}}. Sua conta Stripe pode estar desconectada ou precisar de atenção. Até que isso seja resolvido, os alunos veem que o checkout está temporariamente indisponível.",
       "recheck": "Verificar novamente",
       "fix": "Abrir configurações de pagamento"
+    },
+    "impersonating": {
+      "title": "Os pagamentos não estão disponíveis durante a personificação",
+      "body": "As configurações de pagamento, os clientes e os dados do Stripe são privados para os administradores da organização. Encerre a personificação para gerenciar os pagamentos."
     }
   },
   "lti": {

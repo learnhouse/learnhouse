@@ -21,7 +21,10 @@
       if (stored) return stored;
     } catch { /* private mode / sandboxed iframe */ }
 
-    var cookie = document.cookie.match(/(?:^|;\s*)i18next=([^;]*)/);
+    var cookie = null;
+    try {
+      cookie = document.cookie.match(/(?:^|;\s*)i18next=([^;]*)/);
+    } catch { /* Safari throws SecurityError when cookies are blocked */ }
     if (cookie) {
       try { return decodeURIComponent(cookie[1]) } catch { /* malformed */ }
     }

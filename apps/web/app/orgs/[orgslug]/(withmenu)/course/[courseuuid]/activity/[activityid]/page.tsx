@@ -1,6 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation'
 import { Metadata } from 'next'
-import { getActivityWithAuthHeader } from '@services/courses/activities'
+import { getActivityWithAuthHeader, isMissingActivityId } from '@services/courses/activities'
 import { getCourseMetadata } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
@@ -33,6 +33,8 @@ async function courseKey(orgslug: string, courseKey: string, activityid: string)
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
+  // /activity/null and friends: a link built before its data loaded.
+  if (isMissingActivityId(params.activityid)) notFound()
   // `?lang=fr`: one language version of the lesson (see the course page).
   const requestedLang = parseLangParam((await props.searchParams)?.lang)
   const { uuid, resolved } = await courseKey(params.orgslug, params.courseuuid, params.activityid)
@@ -105,6 +107,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 const ActivityPage = async (props: MetadataProps) => {
   const { activityid, courseuuid, orgslug } = await props.params
+  if (isMissingActivityId(activityid)) notFound()
   const { uuid } = await courseKey(orgslug, courseuuid, activityid)
   return <ActivityClient activityid={activityid} courseuuid={uuid} orgslug={orgslug} activity={null} course={null} />
 }

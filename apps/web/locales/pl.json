@@ -17864,6 +17864,10 @@
       "body_other": "Od {{date}} twój dostawca płatności odrzucił {{count}} płatności. Twoje konto Stripe może być odłączone lub wymagać uwagi. Dopóki problem nie zostanie rozwiązany, uczniowie widzą, że płatność jest tymczasowo niedostępna.",
       "recheck": "Sprawdź ponownie",
       "fix": "Otwórz ustawienia płatności"
+    },
+    "impersonating": {
+      "title": "Płatności są niedostępne podczas podszywania się",
+      "body": "Ustawienia płatności, klienci i dane Stripe są widoczne tylko dla administratorów organizacji. Zakończ podszywanie się, aby zarządzać płatnościami."
     }
   },
   "lti": {

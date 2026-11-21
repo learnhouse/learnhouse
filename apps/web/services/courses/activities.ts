@@ -206,6 +206,16 @@ export async function deleteActivity(activity_uuid: any, access_token: string) {
   return res
 }
 
+/**
+ * An activity id that can't name a real activity: empty, or a stringified
+ * missing value ("null", "undefined") from a link built before data loaded.
+ */
+export function isMissingActivityId(activity_uuid: unknown): boolean {
+  if (activity_uuid === null || activity_uuid === undefined) return true
+  const id = String(activity_uuid).replace(/^activity_/, '').trim()
+  return id === '' || id === 'null' || id === 'undefined'
+}
+
 export async function getActivityWithAuthHeader(
   activity_uuid: any,
   next: any,
@@ -213,6 +223,8 @@ export async function getActivityWithAuthHeader(
   // Learner content language list (`fr,en`): localized name/content when published.
   lang?: string
 ) {
+  // Don't ask the API for /activities/activity_null.
+  if (isMissingActivityId(activity_uuid)) return null
   const result = await fetch(
     `${getAPIUrl()}activities/activity_${activity_uuid}${lang ? `?lang=${encodeURIComponent(lang)}` : ''}`,
     RequestBodyWithAuthHeader('GET', null, next, access_token || undefined)

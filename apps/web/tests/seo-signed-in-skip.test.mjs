@@ -22,6 +22,7 @@ mock.module("@services/courses/activities", () => ({
     calls.push(["activity", ...args]);
     return null;
   },
+  isMissingActivityId: (id) => !id || id === "null" || id === "undefined",
 }));
 mock.module("@services/courses/courses", () => ({
   getCourseMetadata: async (...args) => {

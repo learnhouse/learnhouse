@@ -17229,6 +17229,10 @@
       "body_other": "Your payment provider refused {{count}} checkouts since {{date}}. Your Stripe account may be disconnected or need attention. Until it's fixed, learners see that checkout is temporarily unavailable.",
       "recheck": "Check again",
       "fix": "Open payment settings"
+    },
+    "impersonating": {
+      "title": "Payments aren't available while impersonating",
+      "body": "Payment settings, customers and Stripe data stay private to the organization's own admins. End the impersonation to manage payments."
     }
   },
   "lti": {

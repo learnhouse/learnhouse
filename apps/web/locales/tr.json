@@ -17202,6 +17202,10 @@
       "body_other": "Ödeme sağlayıcınız {{date}} tarihinden bu yana {{count}} ödemeyi reddetti. Stripe hesabınızın bağlantısı kesilmiş olabilir veya ilgilenmeniz gerekebilir. Sorun giderilene kadar öğrenciler ödemenin geçici olarak kullanılamadığını görür.",
       "recheck": "Tekrar kontrol et",
       "fix": "Ödeme ayarlarını aç"
+    },
+    "impersonating": {
+      "title": "Kimliğe bürünme sırasında ödemeler kullanılamaz",
+      "body": "Ödeme ayarları, müşteriler ve Stripe verileri yalnızca kuruluşun kendi yöneticilerine açıktır. Ödemeleri yönetmek için kimliğe bürünmeyi sonlandırın."
     }
   },
   "lti": {
