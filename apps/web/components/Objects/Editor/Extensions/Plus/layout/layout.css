@@ -23,24 +23,7 @@
   display: block;
 }
 
-.lh-tabs-panels[data-active='0'] > [data-node-view-content] > .node-tabItem:not(:nth-child(1)),
-.lh-tabs-panels[data-active='0'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(1)),
-.lh-tabs-panels[data-active='1'] > [data-node-view-content] > .node-tabItem:not(:nth-child(2)),
-.lh-tabs-panels[data-active='1'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(2)),
-.lh-tabs-panels[data-active='2'] > [data-node-view-content] > .node-tabItem:not(:nth-child(3)),
-.lh-tabs-panels[data-active='2'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(3)),
-.lh-tabs-panels[data-active='3'] > [data-node-view-content] > .node-tabItem:not(:nth-child(4)),
-.lh-tabs-panels[data-active='3'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(4)),
-.lh-tabs-panels[data-active='4'] > [data-node-view-content] > .node-tabItem:not(:nth-child(5)),
-.lh-tabs-panels[data-active='4'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(5)),
-.lh-tabs-panels[data-active='5'] > [data-node-view-content] > .node-tabItem:not(:nth-child(6)),
-.lh-tabs-panels[data-active='5'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(6)),
-.lh-tabs-panels[data-active='6'] > [data-node-view-content] > .node-tabItem:not(:nth-child(7)),
-.lh-tabs-panels[data-active='6'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(7)),
-.lh-tabs-panels[data-active='7'] > [data-node-view-content] > .node-tabItem:not(:nth-child(8)),
-.lh-tabs-panels[data-active='7'] > [data-node-view-content] > [data-node-view-content-react] > .node-tabItem:not(:nth-child(8)) {
-  display: none;
-}
+/* Only the open panel shows: TabsView writes that one rule for its own panels. */
 
 .lh-tabs-tab::placeholder {
   font-weight: 600;

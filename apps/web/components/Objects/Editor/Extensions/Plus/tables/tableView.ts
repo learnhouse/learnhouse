@@ -11,7 +11,7 @@
 import { TableView } from '@tiptap/extension-table'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import type { EditorView, ViewMutationRecord } from '@tiptap/pm/view'
-import { cardLabelsCss, computeTotals, readTableModel, sortRowOrder, type SortDir, type TableModel } from './tableModel'
+import { cardLabelsCss, computeTotals, readTableModel, sortHeaderCss, sortRowOrder, type SortDir, type TableModel } from './tableModel'
 
 export interface TableViewLabels {
   total: string
@@ -57,6 +57,7 @@ export class PlusTableView extends TableView {
   sortBar: HTMLElement | null = null
   live: HTMLElement | null = null
   cardStyle: HTMLStyleElement | null = null
+  sortStyle: HTMLStyleElement | null = null
   sort: { col: number; dir: SortDir } | null = null
   /** Row elements in document order, captured before the first move. */
   originalRows: HTMLElement[] | null = null
@@ -245,9 +246,16 @@ export class PlusTableView extends TableView {
     if (this.sort) {
       this.table.setAttribute('data-lh-sort-col', String(this.sort.col + 1))
       this.table.setAttribute('data-lh-sort-dir', this.sort.dir)
+      if (!this.sortStyle) {
+        this.sortStyle = document.createElement('style')
+        this.dom.appendChild(this.sortStyle)
+      }
+      this.sortStyle.textContent = sortHeaderCss(this.id, this.sort.col, this.sort.dir)
     } else {
       this.table.removeAttribute('data-lh-sort-col')
       this.table.removeAttribute('data-lh-sort-dir')
+      this.sortStyle?.remove()
+      this.sortStyle = null
     }
   }
 

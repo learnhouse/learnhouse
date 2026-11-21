@@ -10,7 +10,7 @@ import React, { useId, useMemo, useState } from 'react'
 import { useReactNodeView } from '@tiptap/react'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import { tableDataAttrs } from './tableAttrs'
-import { cardLabelsCss, computeTotals, readTableModel, sortRowOrder, type SortDir } from './tableModel'
+import { cardLabelsCss, computeTotals, readTableModel, sortHeaderCss, sortRowOrder, type SortDir } from './tableModel'
 import { wrapperClassNames, type TableViewLabels } from './tableView'
 
 const CELL_MIN_WIDTH = 25
@@ -51,7 +51,7 @@ export function makeStaticTable(getLabels: () => TableViewLabels) {
     const order = canSort && sort ? sortRowOrder(model, sort.col, sort.dir) : rows.map((_, i) => i)
     const totals = computeTotals(model, attrs.totals)
     const caption = typeof attrs.caption === 'string' ? attrs.caption.trim() : ''
-    const cardsCss = attrs.variant === 'cards' ? cardLabelsCss(id, model) : ''
+    const css = (attrs.variant === 'cards' ? cardLabelsCss(id, model) : '') + (canSort && sort ? sortHeaderCss(id, sort.col, sort.dir) : '')
     const columnName = (col: number) => model.columnLabels[col] || labels.column(col + 1)
 
     const onHeaderClick = (e: React.MouseEvent) => {
@@ -141,7 +141,7 @@ export function makeStaticTable(getLabels: () => TableViewLabels) {
             {sort ? labels.sorted(columnName(sort.col), sort.dir === 'asc' ? labels.ascending : labels.descending) : ''}
           </div>
         )}
-        {cardsCss && <style>{cardsCss}</style>}
+        {css && <style>{css}</style>}
       </div>
     )
   }

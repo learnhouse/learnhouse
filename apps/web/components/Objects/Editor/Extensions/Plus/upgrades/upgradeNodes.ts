@@ -19,8 +19,13 @@ import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import { TEXT_ALIGN_ATTR, TEXT_ALIGN_TYPES, TEXT_ALIGNMENTS } from '../../../Blocks/schema/blockAttrs'
 import type { PlusContext } from '../types'
 import { BUTTON_GROUP_ALIGNMENTS, buttonGroupAlignmentOf, INLINE_MATH_INPUT, isInlineMathCandidate } from './upgradesModel'
-import ButtonGroupView from './views/ButtonGroupView'
-import InlineMathView from './views/InlineMathView'
+import { lazyView } from '../lazyView'
+import { ButtonGroupFallback, InlineMathFallback } from './views/fallbacks'
+
+// Lazy chunks (the KaTeX loader and the authoring popovers); the fallbacks
+// are the views' learner markup.
+const ButtonGroupView = lazyView('ButtonGroupView', () => import('./views/ButtonGroupView'), ButtonGroupFallback)
+const InlineMathView = lazyView('InlineMathView', () => import('./views/InlineMathView'), InlineMathFallback)
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

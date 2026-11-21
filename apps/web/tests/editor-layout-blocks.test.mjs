@@ -41,7 +41,8 @@ const { createLayoutNodes, layoutBlockIdsKey } = await import(`${LAYOUT}layoutNo
 const { checklistStore, isTicked } = await import(`${LAYOUT}checklistStore.ts`);
 const { hydrateTableOfContents, headingsFromDom } = await import(`${LAYOUT}tocDom.ts`);
 const S = await import(`${LAYOUT}shared.tsx`);
-const { layoutExtensions, layoutSlashItems, layoutLabels } = await import(`${LAYOUT}index.ts`);
+const { layoutExtensions, layoutLabels } = await import(`${LAYOUT}index.ts`);
+const { layoutSlashItems } = await import(`${LAYOUT}slashItems.tsx`);
 
 const fixtures = JSON.parse(readFileSync(new URL("./fixtures/editor-blocks/layout-blocks.json", import.meta.url), "utf8"));
 const EVERY = fixtures.find((f) => f.name === "every-layout-block").content;

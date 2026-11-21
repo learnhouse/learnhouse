@@ -6,6 +6,6 @@ import type { PlusExtensionFactory } from '../types'
 import { createUpgradeNodes } from './upgradeNodes'
 import './upgrades.css'
 
-export { upgradesSlashItems } from './slashItems'
+// Slash items: ./slashItems (editor only, gathered in ../slashItems).
 
 export const upgradesExtensions: PlusExtensionFactory = (ctx) => createUpgradeNodes(ctx)

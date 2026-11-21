@@ -18,7 +18,12 @@ import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
 import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicBlock'
 // Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from '@components/Objects/Editor/editorLowlight'
-import { LHCodeBlock as CodeBlockLowlight, ToggleBlock, DividerStyle, TEXT_MARKS } from '@components/Objects/Editor/Blocks/extensions'
+// Straight from their files: the Blocks/extensions barrel also carries the
+// editor's table toolbar, which learners never need.
+import { LHCodeBlock as CodeBlockLowlight } from '@components/Objects/Editor/Blocks/extensions/CodeBlock'
+import { ToggleBlock } from '@components/Objects/Editor/Blocks/extensions/ToggleBlock'
+import { DividerStyle } from '@components/Objects/Editor/Blocks/extensions/DividerStyle'
+import { TEXT_MARKS } from '@components/Objects/Editor/Blocks/marks/textMarks'
 import { NoTextInput } from '@components/Objects/Editor/Extensions/NoTextInput/NoTextInput'
 import EmbedObjects from '@components/Objects/Editor/Extensions/EmbedObjects/EmbedObjects'
 import Badges from '@components/Objects/Editor/Extensions/Badges/Badges'

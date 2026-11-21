@@ -8,9 +8,10 @@
  a link list (computed when an editor is at hand, else a placeholder that
  tocDom.hydrateTableOfContents fills).
 
- Node views: the container views are imported directly, like the toggle and
- callout, so their content is in the server HTML; the table of contents (an
- atom that needs the DOM) loads on the client only.
+ Node views: the container views are lazy chunks whose fallbacks draw the
+ same learner markup with the content inside, so their text is in the server
+ HTML and nothing moves when a view loads; the table of contents (an atom
+ that needs the DOM) loads on the client only.
 */
 import { Extension, mergeAttributes, Node } from '@tiptap/core'
 import type { DOMOutputSpec } from '@tiptap/pm/model'
@@ -37,13 +38,30 @@ import {
   outlineEntries,
   toneOf,
 } from './layoutModel'
-import TabsView, { TabItemView } from './views/TabsView'
-import ColumnsView, { ColumnView } from './views/ColumnsView'
-import AccordionView from './views/AccordionView'
-import TimelineView, { TimelineItemView } from './views/TimelineView'
-import KeyTakeawaysView from './views/KeyTakeawaysView'
-import ChecklistView, { ChecklistItemView } from './views/ChecklistView'
+import { lazyView } from '../lazyView'
+import { TabItemView } from './views/TabItemView'
+import { ColumnView } from './views/ColumnView'
+import {
+  AccordionFallback,
+  ChecklistFallback,
+  ChecklistItemFallback,
+  ColumnsFallback,
+  KeyTakeawaysFallback,
+  TabsFallback,
+  TimelineFallback,
+  TimelineItemFallback,
+} from './views/fallbacks'
 
+// The views (and their editing UI) are lazy chunks; the fallbacks draw the
+// same learner markup, content included, until a chunk has loaded.
+const TabsView = lazyView('TabsView', () => import('./views/TabsView'), TabsFallback)
+const ColumnsView = lazyView('ColumnsView', () => import('./views/ColumnsView'), ColumnsFallback)
+const AccordionView = lazyView('AccordionView', () => import('./views/AccordionView'), AccordionFallback)
+const TimelineView = lazyView('TimelineView', () => import('./views/TimelineView'), TimelineFallback)
+const TimelineItemView = lazyView('TimelineItemView', () => import('./views/TimelineView').then((m) => ({ default: m.TimelineItemView })), TimelineItemFallback)
+const KeyTakeawaysView = lazyView('KeyTakeawaysView', () => import('./views/KeyTakeawaysView'), KeyTakeawaysFallback)
+const ChecklistView = lazyView('ChecklistView', () => import('./views/ChecklistView'), ChecklistFallback)
+const ChecklistItemView = lazyView('ChecklistItemView', () => import('./views/ChecklistView').then((m) => ({ default: m.ChecklistItemView })), ChecklistItemFallback)
 const TocView = dynamic(() => import('./views/TocView'), { ssr: false })
 
 export interface LayoutLabels {

@@ -138,10 +138,4 @@ export default function ColumnsView(props: NodeViewProps) {
   )
 }
 
-export function ColumnView() {
-  return (
-    <NodeViewWrapper className="lh-column">
-      <NodeViewContent className="lh-column-body" />
-    </NodeViewWrapper>
-  )
-}
+export { ColumnView } from './ColumnView'

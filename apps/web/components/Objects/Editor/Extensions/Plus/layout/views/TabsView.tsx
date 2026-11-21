@@ -25,6 +25,16 @@ function titlesOf(node: NodeViewProps['node']): string[] {
   return out
 }
 
+/**
+ * Hides every panel but the open one. Written per block (the panels' own id,
+ * with no specificity of its own) instead of one stylesheet rule per index.
+ */
+function panelsCss(id: string, active: number): string {
+  const panels = `.lh-tabs-panels[data-active]:where(#${id})>[data-node-view-content]`
+  const others = `.node-tabItem:not(:nth-child(${active + 1}))`
+  return `${panels}>${others},${panels}>[data-node-view-content-react]>${others}{display:none}`
+}
+
 const TAB_CLASSES: Record<TabVariant, { bar: string; tab: string; active: string; idle: string; panels: string }> = {
   line: {
     bar: 'gap-1 shadow-[inset_0_-1px_0_var(--lhb-border,rgba(0,0,0,0.08))]',
@@ -62,6 +72,7 @@ export default function TabsView(props: NodeViewProps) {
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const barRef = React.useRef<HTMLDivElement>(null)
   const baseId = React.useId()
+  const panelsId = `lh-tabs-${baseId.replace(/[^\w-]/g, '')}`
   const classes = TAB_CLASSES[variant]
   const tabLabel = (i: number) => titles[i]?.trim() || t('activities.tabs.untitled', 'Tab {{n}}', { n: i + 1 })
 
@@ -248,7 +259,8 @@ export default function TabsView(props: NodeViewProps) {
         forceToolbar={settingsOpen}
       >
         {bar}
-        <div className={cn('lh-tabs-panels', hydrated && classes.panels)} data-active={hydrated ? active : undefined}>
+        {hydrated && <style>{panelsCss(panelsId, active)}</style>}
+        <div id={panelsId} className={cn('lh-tabs-panels', hydrated && classes.panels)} data-active={hydrated ? active : undefined}>
           <NodeViewContent className="lh-tabs-content" />
         </div>
       </EditorBlockFrame>
@@ -292,17 +304,4 @@ function TabTitleInput({ id, value, placeholder, ariaLabel, className, onCommit 
   )
 }
 
-/** One panel. Its title is only shown in the no-JS / print form (CSS). */
-export function TabItemView(props: NodeViewProps) {
-  const { t } = useTranslation()
-  const hydrated = useHydrated()
-  const title = typeof props.node.attrs.title === 'string' ? props.node.attrs.title.trim() : ''
-  return (
-    <NodeViewWrapper className="lh-tab-panel" role={hydrated ? 'tabpanel' : undefined} aria-label={title || undefined}>
-      <h3 className="lh-tab-title" contentEditable={false}>
-        {title || t('activities.tabs.tab', 'Tab')}
-      </h3>
-      <NodeViewContent className="lh-tab-body" />
-    </NodeViewWrapper>
-  )
-}
+export { TabItemView } from './TabItemView'
