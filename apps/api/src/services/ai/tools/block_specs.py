@@ -130,6 +130,12 @@ class FlashcardsB(_B):
     )
     title: str | None = Field(None, max_length=200, description="Deck title shown above the cards.")
     shuffle: bool | None = Field(None, description="Shuffle the cards for each learner.")
+    style: Literal["solid", "soft", "outline"] | None = Field(
+        None, description="Card look for the whole deck: solid (default, full colour), soft (tinted) or outline.",
+    )
+    size: Literal["small", "medium", "large"] | None = Field(
+        None, description="Card size for the whole deck (default medium); every card in a deck shares it.",
+    )
 
 
 Outcome = Literal["success", "neutral", "fail"]
@@ -672,7 +678,18 @@ class _Builder:
             return [d.quiz_node(questions)]
         if t == "flashcards":
             cards = [
-                {"type": "flipcard", "attrs": {"question": c.front, "answer": c.back, "color": b.color, "alignment": "center", "size": "medium"}}
+                {
+                    "type": "flipcard",
+                    "attrs": {
+                        "question": c.front,
+                        "answer": c.back,
+                        "color": b.color,
+                        "alignment": "center",
+                        "size": b.size or "medium",
+                        # Only written when asked for, so older inputs give the same JSON.
+                        **({"style": b.style} if b.style else {}),
+                    },
+                }
                 for c in b.cards
             ]
             # mode, title and shuffle live on the grid, so a deck that sets

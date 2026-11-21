@@ -100,6 +100,19 @@ def test_single_flashcard_and_video_kinds():
     assert raw_quiz.doc["content"][0]["attrs"]["questions"][0]["question_id"]
 
 
+def test_flashcards_deck_style_and_size_apply_to_every_card():
+    deck = bs.to_converted(bs.parse_blocks([{
+        "type": "flashcards", "style": "soft", "size": "large",
+        "cards": [{"front": "a", "back": "b"}, {"front": "c", "back": "d"}],
+    }]))
+    cards = deck.doc["content"][0]["content"]
+    assert {c["attrs"]["style"] for c in cards} == {"soft"}
+    assert {c["attrs"]["size"] for c in cards} == {"large"}
+    plain = bs.to_converted(bs.parse_blocks([{"type": "flashcards", "cards": [{"front": "a", "back": "b"}, {"front": "c", "back": "d"}]}]))
+    first = plain.doc["content"][0]["content"][0]["attrs"]
+    assert "style" not in first and first["size"] == "medium"
+
+
 @pytest.mark.parametrize("provider", PROVIDERS)
 def test_every_provider_link_becomes_its_player(provider):
     parsed = parse_embed(EXAMPLES[provider])
