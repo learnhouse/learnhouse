@@ -6,7 +6,7 @@ import DripGate from '@components/Objects/Courses/DripGate'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import { getActivityHlsThumbnailsUrl, getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
+import { getActivityHlsThumbnailsUrl, getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory, hasMediaIds } from '@services/media/media'
 import './theater.css'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
@@ -962,7 +962,7 @@ function ActivityClient(props: ActivityClientProps) {
                       <BackIcon size={20} className="shrink-0 text-gray-500 rtl:rotate-180" />
                       <img
                         className="w-[44px] h-[25px] shrink-0 rounded object-cover ring-1 ring-black/5"
-                        src={(course.thumbnail_image &&
+                        src={(course.thumbnail_image && hasMediaIds(org?.org_uuid) &&
                           getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)) ||
                           '/empty_thumbnail.png'}
                         onError={(e) => {
@@ -1008,7 +1008,7 @@ function ActivityClient(props: ActivityClientProps) {
                               >
                                 <img
                                   className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] shrink-0 rounded-md drop-shadow-md object-cover"
-                                  src={(course.thumbnail_image &&
+                                  src={(course.thumbnail_image && hasMediaIds(org?.org_uuid) &&
                                     getCourseThumbnailMediaDirectory(
                                       org?.org_uuid,
                                       course.course_uuid,

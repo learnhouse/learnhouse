@@ -15,7 +15,7 @@ import {
   TextT,
 } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
-import { getActivityBlockMediaDirectory } from '@services/media/media'
+import { getActivityBlockMediaDirectory, hasMediaIds } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -105,11 +105,12 @@ function ImageBlockComponent(props: NodeViewProps) {
   const extOptions = props.extension.options as any
   const orgUuid: string | undefined = extOptions.orgUuid || org?.org_uuid || course?.courseStructure?.org_uuid
   const courseUuid: string | undefined = extOptions.courseUuid || course?.courseStructure?.course_uuid
-  const uploadedImageUrl = blockObject?.content
+  const blockActivityUuid = blockObject?.content?.activity_uuid || activity?.activity_uuid
+  const uploadedImageUrl = blockObject?.content && hasMediaIds(orgUuid, courseUuid, blockActivityUuid, blockObject.block_uuid)
     ? getActivityBlockMediaDirectory(
         orgUuid,
         courseUuid,
-        blockObject.content.activity_uuid || activity?.activity_uuid,
+        blockActivityUuid,
         blockObject.block_uuid,
         fileId || '',
         'imageBlock'

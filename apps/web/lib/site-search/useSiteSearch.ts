@@ -120,7 +120,7 @@ export function normalizeSiteResults(
           label: [a.user.first_name, a.user.last_name].filter(Boolean).join(' ') || a.user.username || '',
         })),
       href: link(coursePath(c)),
-      imageUrl: c.thumbnail_image
+      imageUrl: orgUuid && c.thumbnail_image
         ? safeImageSrc(getCourseThumbnailMediaDirectory(orgUuid, c.course_uuid, c.thumbnail_image))
         : undefined,
     })
@@ -140,7 +140,7 @@ export function normalizeSiteResults(
       courseName: a.course_name || undefined,
       chapterName: a.chapter_name || undefined,
       href: link(`/course/${course}/activity/${activity}`),
-      imageUrl: a.course_thumbnail_image
+      imageUrl: orgUuid && a.course_thumbnail_image
         ? safeImageSrc(
             getCourseThumbnailMediaDirectory(orgUuid, a.course_uuid, a.course_thumbnail_image),
           )

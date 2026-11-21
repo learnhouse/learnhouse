@@ -10,12 +10,13 @@ function getMediaUrl() {
 /**
  * True when every id a media path needs is present. While the org (or a
  * course/activity) is still loading its uuid is '' or undefined, and building
- * the URL anyway yields `content/orgs//courses/...` or `orgs/undefined/...`,
- * which the media server 404s. Builders return null/undefined instead so
- * callers render their placeholder and skip the request.
+ * a URL anyway yields `content/orgs//courses/...`, which 404s. Callers check
+ * this first and show their placeholder instead.
  */
-function hasIds(...ids: unknown[]): boolean {
-  return ids.every((id) => typeof id === 'string' ? id !== '' && id !== 'undefined' && id !== 'null' : id != null && id !== '')
+export function hasMediaIds(...ids: unknown[]): boolean {
+  return ids.every((id) =>
+    typeof id === 'string' ? id !== '' && id !== 'undefined' && id !== 'null' : id != null
+  )
 }
 
 function getApiUrl() {
@@ -39,8 +40,7 @@ export function getActivityVideoStreamUrl(
   courseUUID: string | null | undefined,
   activityUUID: string | null | undefined,
   filename: string
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, activityUUID)) return null
+) {
   return `${getApiUrl()}api/v1/stream/video/${orgUUID}/${courseUUID}/${activityUUID}/${filename}`
 }
 
@@ -53,8 +53,7 @@ export function getActivityHlsMasterUrl(
   orgUUID: string | null | undefined,
   courseUUID: string | null | undefined,
   activityUUID: string | null | undefined
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, activityUUID)) return null
+) {
   return `${getApiUrl()}api/v1/stream/hls/${orgUUID}/${courseUUID}/${activityUUID}/master.m3u8`
 }
 
@@ -67,8 +66,7 @@ export function getActivityHlsThumbnailsUrl(
   courseUUID: string | null | undefined,
   activityUUID: string | null | undefined,
   spritePath: string
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, activityUUID)) return null
+) {
   return `${getApiUrl()}api/v1/stream/hls/${orgUUID}/${courseUUID}/${activityUUID}/${spritePath}`
 }
 
@@ -81,8 +79,7 @@ export function getActivityCaptionUrl(
   courseUUID: string | null | undefined,
   activityUUID: string | null | undefined,
   lang: string
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, activityUUID)) return null
+) {
   return `${getApiUrl()}api/v1/stream/captions/${orgUUID}/${courseUUID}/${activityUUID}/${lang}.vtt`
 }
 
@@ -96,8 +93,7 @@ export function getVideoBlockStreamUrl(
   activityUUID: string | null | undefined,
   blockUUID: string | null | undefined,
   filename: string
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, activityUUID, blockUUID)) return null
+) {
   return `${getApiUrl()}api/v1/stream/block/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${filename}`
 }
 
@@ -110,8 +106,7 @@ export function getVideoBlockHlsMasterUrl(
   courseUUID: string | null | undefined,
   activityUUID: string | null | undefined,
   blockUUID: string | null | undefined
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, activityUUID, blockUUID)) return null
+) {
   return `${getApiUrl()}api/v1/stream/block-hls/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/master.m3u8`
 }
 
@@ -122,8 +117,7 @@ export function getVideoBlockHlsThumbnailsUrl(
   activityUUID: string | null | undefined,
   blockUUID: string | null | undefined,
   spritePath: string
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, activityUUID, blockUUID)) return null
+) {
   return `${getApiUrl()}api/v1/stream/block-hls/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${spritePath}`
 }
 
@@ -137,8 +131,7 @@ export function getAudioBlockStreamUrl(
   activityUUID: string | null | undefined,
   blockUUID: string | null | undefined,
   filename: string
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, activityUUID, blockUUID)) return null
+) {
   return `${getApiUrl()}api/v1/stream/block/audio/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${filename}`
 }
 
@@ -146,8 +139,7 @@ export function getCourseThumbnailMediaDirectory(
   orgUUID: string | null | undefined,
   courseUUID: string | null | undefined,
   fileId: string | null | undefined
-): string | null {
-  if (!hasIds(orgUUID, courseUUID, fileId)) return null
+) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/thumbnails/${fileId}`
   return uri
 }
@@ -229,8 +221,7 @@ export function getActivityBlockMediaDirectory(
   blockId: any,
   fileId: any,
   type: string
-): string | undefined {
-  if (!hasIds(orgUUID, courseId, activityId)) return undefined
+) {
   if (type == 'pdfBlock') {
     let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseId}/activities/${activityId}/dynamic/blocks/pdfBlock/${blockId}/${fileId}`
     return uri
@@ -294,8 +285,7 @@ export function getActivityMediaDirectory(
   activityUUID: string | null | undefined,
   fileId: string,
   activityType: string
-): string | undefined {
-  if (!hasIds(orgUUID, courseUUID, activityUUID)) return undefined
+) {
   if (activityType == 'video') {
     let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/activities/${activityUUID}/video/${fileId}`
     return uri
@@ -350,7 +340,7 @@ export function getScormContentUrl(
   courseUUID: string,
   activityUUID: string,
   filePath: string
-): string {
+) {
   // Use local proxy route to serve SCORM content from same origin
   // This is required for the SCORM API to work properly in iframes
   return `/api/scorm/${activityUUID}/content/${filePath}`
