@@ -1468,6 +1468,9 @@ export function MarkStatus(props: {
       type="button"
       role="checkbox"
       aria-checked="true"
+      // A role=checkbox button gets no name from its contents in Chromium or
+      // WebKit; without this screen readers announce an unlabeled checkbox.
+      aria-label={t('activities.mark_as_complete')}
       onClick={!isLoading ? unmarkActivityAsCompleteFront : undefined}
       disabled={isLoading}
       title={t('activities.nav.undo_hint', 'Completed. Click to mark as not done')}
@@ -1481,6 +1484,7 @@ export function MarkStatus(props: {
       type="button"
       role="checkbox"
       aria-checked="false"
+      aria-label={t('activities.mark_as_complete')}
       aria-keyshortcuts="m"
       onClick={!isLoading ? markActivityAsCompleteFront : undefined}
       disabled={isLoading}

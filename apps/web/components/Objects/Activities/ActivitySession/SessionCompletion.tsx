@@ -135,6 +135,8 @@ export function CompletionToggle({
       type="button"
       role="checkbox"
       aria-checked="true"
+      // A role=checkbox button gets no name from its contents; name it.
+      aria-label={t('activities.mark_as_complete')}
       onClick={unmark}
       disabled={busy}
       title={t('activities.nav.undo_hint')}
@@ -145,7 +147,7 @@ export function CompletionToggle({
       {t('common.completed')}
     </button>
   ) : (
-    <button type="button" role="checkbox" aria-checked="false" onClick={mark} disabled={busy} className={controlClass('todo')} data-session-complete="todo">
+    <button type="button" role="checkbox" aria-checked="false" aria-label={t('activities.mark_as_complete')} onClick={mark} disabled={busy} className={controlClass('todo')} data-session-complete="todo">
       {busy ? (
         <CircleNotch size={16} className="shrink-0 animate-spin" />
       ) : (

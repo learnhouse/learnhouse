@@ -814,10 +814,8 @@
       "try_again": "重试",
       "org_full": "该组织目前已满员。请联系其管理员腾出名额。"
     },
-    "login_failed_forgot": "忘记密码？",
-    "login_failed_reset": "重置密码",
-    "login_failed_magic": "改为通过邮件发送登录链接",
-    "login_failed_google_hint": "使用 Google 注册的？请使用下方的「使用 Google 继续」。",
+    "login_failed_reset_password": "重置密码",
+    "login_failed_email_link": "给我发送登录链接",
     "email_verified_set_password": "您的邮箱已验证。为了您的安全，此前设置的密码已被移除：请设置新密码以使用密码登录。",
     "set_new_password": "设置新密码",
     "invited_by_email_cta": "通过邮件收到邀请？用该邮箱注册",

@@ -814,10 +814,8 @@
       "try_again": "다시 시도",
       "org_full": "이 조직은 지금 정원이 찼습니다. 관리자에게 자리를 마련해 달라고 요청하세요."
     },
-    "login_failed_forgot": "비밀번호를 잊으셨나요?",
-    "login_failed_reset": "재설정하기",
-    "login_failed_magic": "대신 로그인 링크를 이메일로 받기",
-    "login_failed_google_hint": "Google로 가입하셨나요? 아래의 Google로 계속하기를 사용하세요.",
+    "login_failed_reset_password": "비밀번호 재설정",
+    "login_failed_email_link": "로그인 링크를 이메일로 받기",
     "email_verified_set_password": "이메일이 인증되었습니다. 보안을 위해 인증 전에 설정된 비밀번호가 삭제되었습니다. 비밀번호로 로그인하려면 새 비밀번호를 설정하세요.",
     "set_new_password": "새 비밀번호 설정",
     "invited_by_email_cta": "이메일로 초대받으셨나요? 그 주소로 가입하세요",

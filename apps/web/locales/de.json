@@ -815,10 +815,8 @@
       "try_again": "Erneut versuchen",
       "org_full": "Diese Organisation ist gerade voll. Bitten Sie die Administration, Platz zu schaffen."
     },
-    "login_failed_forgot": "Passwort vergessen?",
-    "login_failed_reset": "Zurücksetzen",
-    "login_failed_magic": "Stattdessen einen Anmeldelink senden",
-    "login_failed_google_hint": "Mit Google registriert? Nutze unten „Mit Google fortfahren“.",
+    "login_failed_reset_password": "Passwort zurücksetzen",
+    "login_failed_email_link": "Anmeldelink per E-Mail senden",
     "email_verified_set_password": "Ihre E-Mail wurde bestätigt. Zu Ihrer Sicherheit wurde das zuvor festgelegte Passwort entfernt: Wählen Sie ein neues, um sich mit einem Passwort anzumelden.",
     "set_new_password": "Neues Passwort festlegen",
     "invited_by_email_cta": "Per E-Mail eingeladen? Registrieren Sie sich mit dieser Adresse",

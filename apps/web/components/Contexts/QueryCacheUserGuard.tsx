@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
@@ -13,10 +13,18 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
  * sign-in that completes without a reload. When the signed-in user changes,
  * drop everything cached for the previous one so nothing leaks across users.
  */
+// Sign-in pages finish with a full page load of their own. A router refresh
+// started there gets cancelled by that load, and Safari reports the cancel as a
+// failure, so Next falls back to a hard load of the refreshed URL instead: the
+// sign-in's own navigation is lost (a magic link then reloads, is redeemed
+// twice and fails as "already used").
+const LEAVES_WITH_FULL_LOAD = /^\/(auth|login|signup|redirect_from_auth)(\/|$)/
+
 export default function QueryCacheUserGuard() {
   const session = useLHSession() as any
   const queryClient = useQueryClient()
   const router = useRouter()
+  const pathname = usePathname()
   const status: string | undefined = session?.status
   // 'anon' for signed out; the user's id once signed in. Unknown while loading.
   const identity =
@@ -31,10 +39,10 @@ export default function QueryCacheUserGuard() {
     if (identity === null) return
     if (previous.current !== null && previous.current !== identity) {
       queryClient.clear()
-      router.refresh()
+      if (!LEAVES_WITH_FULL_LOAD.test(pathname || '')) router.refresh()
     }
     previous.current = identity
-  }, [identity, queryClient, router])
+  }, [identity, queryClient, router, pathname])
 
   return null
 }

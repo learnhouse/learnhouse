@@ -815,10 +815,8 @@
       "try_again": "Tekrar dene",
       "org_full": "Bu kuruluş şu anda dolu. Yöneticisinden yer açmasını isteyin."
     },
-    "login_failed_forgot": "Şifrenizi mi unuttunuz?",
-    "login_failed_reset": "Sıfırlayın",
-    "login_failed_magic": "Bunun yerine giriş bağlantısı gönder",
-    "login_failed_google_hint": "Google ile mi kaydoldunuz? Aşağıdan Google ile devam edin.",
+    "login_failed_reset_password": "Şifreyi sıfırla",
+    "login_failed_email_link": "Bana giriş bağlantısı gönder",
     "email_verified_set_password": "E-postanız doğrulandı. Güvenliğiniz için daha önce belirlenen şifre kaldırıldı: şifreyle giriş yapmak için yeni bir şifre seçin.",
     "set_new_password": "Yeni şifre belirle",
     "invited_by_email_cta": "E-postayla mı davet edildiniz? O adresle kaydolun",

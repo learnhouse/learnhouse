@@ -815,10 +815,8 @@
       "try_again": "Riprova",
       "org_full": "Questa organizzazione al momento è piena. Chiedi al suo amministratore di fare spazio."
     },
-    "login_failed_forgot": "Password dimenticata?",
-    "login_failed_reset": "Reimpostala",
-    "login_failed_magic": "Inviami invece un link di accesso",
-    "login_failed_google_hint": "Registrato con Google? Usa Continua con Google qui sotto.",
+    "login_failed_reset_password": "Reimposta password",
+    "login_failed_email_link": "Inviami un link di accesso",
     "email_verified_set_password": "La tua email è stata verificata. Per la tua sicurezza, la password impostata in precedenza è stata rimossa: scegline una nuova per accedere con una password.",
     "set_new_password": "Imposta una nuova password",
     "invited_by_email_cta": "Invitato via email? Registrati con quell'indirizzo",

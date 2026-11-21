@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
+from sqlmodel import select
 
 from src.db.courses.activities import Activity, ActivitySubTypeEnum, ActivityTypeEnum
 from src.db.courses.courses import Course
@@ -407,9 +408,11 @@ class TestTrailService:
         assert mock_webhooks.await_count == 1
 
     @pytest.mark.asyncio
-    async def test_add_course_to_trail_rejects_missing_trail(
+    async def test_add_course_to_trail_creates_missing_trail(
         self, db, org, admin_user, mock_request
     ):
+        # A learner's first enrollment (straight from the API, before anything
+        # read their trail) creates the trail instead of failing with 404.
         course = await _make_course(
             db,
             org,
@@ -417,16 +420,27 @@ class TestTrailService:
             course_uuid="course_without_trail",
             name="Course Without Trail",
         )
+        trail_query = select(Trail).where(
+            Trail.user_id == admin_user.id, Trail.org_id == org.id
+        )
+        assert (await db.execute(trail_query)).scalars().first() is None
 
-        with pytest.raises(HTTPException) as exc_info:
-            await add_course_to_trail(
+        with patch(
+            "src.services.trail.trail.track",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.trail.trail.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ):
+            result = await add_course_to_trail(
                 mock_request,
                 admin_user,
                 course.course_uuid,
                 db,
             )
 
-        assert exc_info.value.status_code == 404
+        assert (await db.execute(trail_query)).scalars().first() is not None
+        assert [run.course_id for run in result.runs] == [course.id]
 
     @pytest.mark.asyncio
     async def test_remove_course_from_trail_deletes_course_steps_and_checks_missing_trail(

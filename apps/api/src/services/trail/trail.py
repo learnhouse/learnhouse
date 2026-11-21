@@ -530,15 +530,12 @@ async def add_course_to_trail(
             status_code=status.HTTP_400_BAD_REQUEST, detail="TrailRun already exists"
         )
 
-    statement = select(Trail).where(
-        Trail.org_id == course.org_id, Trail.user_id == user.id
+    # A learner's first enrollment creates their trail, as completing an
+    # activity or reading the trail already does. Only API clients hit this:
+    # the web app reads the trail (creating it) before it enrolls.
+    trail = await check_trail_presence(
+        course.org_id, user.id, request, user, db_session
     )
-    trail = (await db_session.execute(statement)).scalars().first()
-
-    if not trail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found"
-        )
 
     statement = select(TrailRun).where(
         TrailRun.trail_id == trail.id, TrailRun.course_id == course.id, TrailRun.user_id == user.id

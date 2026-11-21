@@ -316,6 +316,8 @@ function ActivityIndicators(props: Props) {
             <button
               type="button"
               aria-haspopup="dialog"
+              // The text label is hidden on phones; keep the button named there.
+              aria-label={t('activities.progress.all_chapters', 'All chapters')}
               className="shrink-0 inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20"
             >
               <ListBullets size={15} weight="bold" />

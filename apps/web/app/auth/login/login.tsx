@@ -519,19 +519,20 @@ const LoginClient = (props: LoginClientProps) => {
             </AuthNotice>
           ) : isGenericError ? (
             <AuthNotice tone="danger" onDismiss={dismissError}>
-              {error}
+              {/* The API's message is English-only and also explains lockouts,
+                  which have their own notice; say it plainly in the UI language. */}
+              {errorType === 'INVALID_CREDENTIALS' ? t('auth.wrong_email_password') : error}
               {/* Only ~3 in 10 people who hit a wrong password ever got in.
                   The API can't say why it failed (no account enumeration), so
-                  offer every way back in right here. */}
+                  offer the ways back in right here. */}
               {errorType === 'INVALID_CREDENTIALS' && (
                 <span className="mt-1.5 block" data-testid="login-recovery">
-                  {t('auth.login_failed_forgot', { defaultValue: 'Forgot your password?' })}{' '}
                   <Link
                     href={forgotHref}
                     onClick={() => track(AnalyticsEvent.LoginRecoveryClicked, { action: 'reset_password' })}
                     className="font-semibold underline underline-offset-2 hover:no-underline"
                   >
-                    {t('auth.login_failed_reset', { defaultValue: 'Reset it' })}
+                    {t('auth.login_failed_reset_password')}
                   </Link>
                   {magicLoginAllowed && (
                     <>
@@ -545,14 +546,9 @@ const LoginClient = (props: LoginClientProps) => {
                         }}
                         className="font-semibold underline underline-offset-2 hover:no-underline text-start"
                       >
-                        {t('auth.login_failed_magic', { defaultValue: 'Email me a login link instead' })}
+                        {t('auth.login_failed_email_link')}
                       </button>
                     </>
-                  )}
-                  {googleAllowed && (
-                    <span className="mt-1 block opacity-80">
-                      {t('auth.login_failed_google_hint', { defaultValue: 'Signed up with Google? Use Continue with Google below.' })}
-                    </span>
                   )}
                 </span>
               )}
