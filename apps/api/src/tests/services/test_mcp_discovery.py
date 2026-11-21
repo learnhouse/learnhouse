@@ -354,7 +354,7 @@ async def test_dual_manager_streams_only_progress_requests(monkeypatch):
     await dual.handle_request({"type": "http", "method": "POST", "headers": sse}, _receiver(b'{"params":{"_meta":{"progressToken":1}}}'), None)
     await dual.handle_request({"type": "http", "method": "POST", "headers": sse}, _receiver(b'{"method":"tools/list"}'), None)
     await dual.handle_request({"type": "http", "method": "POST", "headers": [(b"accept", b"application/json")]}, _receiver(b'{"progressToken":2}'), None)
-    await dual.handle_request({"type": "http", "method": "GET", "headers": []}, _receiver(b""), None)
+    await dual.handle_request({"type": "http", "method": "DELETE", "headers": []}, _receiver(b""), None)
     assert stream.seen == [b'{"params":{"_meta":{"progressToken":1}}}']
     assert plain.seen == [b'{"method":"tools/list"}', b'{"progressToken":2}', b""]
     # A body read in chunks arrives whole; one over the cap streams through the rest untouched.
@@ -365,3 +365,21 @@ async def test_dual_manager_streams_only_progress_requests(monkeypatch):
     assert plain.seen[-1] == b"abcdef"
     manager = srv.build_mcp_session_manager(_registry())
     assert isinstance(manager, srv.DualSessionManager)
+
+
+async def test_dual_manager_answers_get_with_405():
+    """Stateless: no event stream to offer, so GET is a 405 instead of an
+    empty stream the SDK would hold open forever."""
+    plain, stream = _Manager(), _Manager()
+    dual = srv.DualSessionManager(plain, stream)
+    sent = []
+
+    async def send(message):
+        sent.append(message)
+
+    await dual.handle_request({"type": "http", "method": "GET", "headers": [(b"accept", b"text/event-stream")]}, _receiver(b""), send)
+    assert plain.seen == [] and stream.seen == []
+    assert sent[0]["status"] == 405
+    assert (b"allow", b"POST, DELETE, OPTIONS") in sent[0]["headers"]
+    body = json.loads(sent[1]["body"])
+    assert body["error"]["code"] == -32600 and body["id"] is None
