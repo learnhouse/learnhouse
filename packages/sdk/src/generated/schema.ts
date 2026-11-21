@@ -15019,7 +15019,10 @@ export interface components {
         };
         /**
          * APITokenUpdate
-         * @description Model for updating an API token
+         * @description Model for updating an API token.
+         *
+         *     Omitted fields are left as they are. ``description`` and ``expires_at``
+         *     can be cleared by sending ``null`` (or an empty string).
          */
         APITokenUpdate: {
             /** Name */
@@ -26635,7 +26638,7 @@ export interface components {
             /** Description */
             description: string;
             /** Org Id */
-            org_id?: number;
+            org_id: number;
         };
         /** UserGroupOrgConfig */
         UserGroupOrgConfig: {
@@ -39344,7 +39347,9 @@ export interface operations {
             };
             header?: never;
             path: {
+                /** @description Page number (1-based) */
                 page: number;
+                /** @description Items per page (capped at 100) */
                 limit: number;
                 org_slug: string;
             };

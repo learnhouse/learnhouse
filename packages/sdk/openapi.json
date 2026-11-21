@@ -14504,8 +14504,11 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-based)",
               "title": "Page"
-            }
+            },
+            "description": "Page number (1-based)"
           },
           {
             "name": "limit",
@@ -14513,8 +14516,11 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 0,
+              "description": "Items per page (capped at 100)",
               "title": "Limit"
-            }
+            },
+            "description": "Items per page (capped at 100)"
           },
           {
             "name": "org_slug",
@@ -48613,7 +48619,8 @@
           "description": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 500
               },
               {
                 "type": "null"
@@ -48854,7 +48861,8 @@
           "description": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 500
               },
               {
                 "type": "null"
@@ -48891,7 +48899,7 @@
         },
         "type": "object",
         "title": "APITokenUpdate",
-        "description": "Model for updating an API token"
+        "description": "Model for updating an API token.\n\nOmitted fields are left as they are. ``description`` and ``expires_at``\ncan be cleared by sending ``null`` (or an empty string)."
       },
       "AccessBody": {
         "properties": {
@@ -77711,7 +77719,8 @@
         "type": "object",
         "required": [
           "name",
-          "description"
+          "description",
+          "org_id"
         ],
         "title": "UserGroupCreate"
       },
