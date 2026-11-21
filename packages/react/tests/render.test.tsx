@@ -234,7 +234,7 @@ describe('fetching from an instance', () => {
   }
   const imageSrcs = () => Array.from(document.querySelectorAll('img')).map((img) => img.getAttribute('src') ?? '')
 
-  it('waits for the course before rendering a prefetched activity, so media URLs carry the org', async () => {
+  it('renders a prefetched activity at once, and media URLs carry the org once the course loads', async () => {
     let releaseMeta!: () => void
     const metaGate = new Promise<void>((resolve) => (releaseMeta = resolve))
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -247,12 +247,15 @@ describe('fetching from an instance', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
     render(<LearnHouseActivity baseUrl={BASE} activity={{ ...activity, content: imageDoc }} courseId={COURSE} />)
-    await new Promise((r) => setTimeout(r, 50))
-    expect(screen.queryByText('Body with an image')).toBeNull()
+    expect(screen.getByText('Body with an image')).toBeTruthy()
     releaseMeta()
-    await screen.findByText('Body with an image')
-    await waitFor(() => expect(imageSrcs().some((src) => src.includes(`/orgs/${ORG}/`))).toBe(true))
-    expect(imageSrcs().some((src) => src.includes('undefined'))).toBe(false)
+    await waitFor(() => expect(imageSrcs().some((src) => src.includes(`/orgs/${ORG}/courses/${COURSE}/`))).toBe(true))
+  })
+
+  it('server-renders a prefetched activity', async () => {
+    const { renderToString } = await import('react-dom/server')
+    const html = renderToString(<LearnHouseActivity baseUrl={BASE} activity={activity} courseId={COURSE} />)
+    expect(html).toContain('Fetched body')
   })
 
   it('resolves the course of a prefetched activity passed without courseId', async () => {

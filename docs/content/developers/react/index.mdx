@@ -83,7 +83,7 @@ export function Lesson() {
   <Tabs.Tab>
     ```tsx
     // An activity you already fetched, for example on the server with @learnhouse/sdk.
-    <LearnHouseActivity activity={activity} courseId="course_…" />
+    <LearnHouseActivity activity={activity} orgId="org_…" courseId="course_…" />
     ```
   </Tabs.Tab>
   <Tabs.Tab>
@@ -95,7 +95,8 @@ export function Lesson() {
 </Tabs>
 
 `courseId` and `orgId` tell image, video, audio and PDF blocks where their files live. Without them, text blocks still
-render, but media blocks can't find their files.
+render, but media blocks can't find their files. With `activity`, a missing `courseId` is looked up from the activity, and
+a missing `orgId` from the course once it loads; passing both lets media load from the first render.
 
 ## Share one setup with a provider
 
