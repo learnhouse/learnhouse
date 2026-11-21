@@ -476,7 +476,15 @@ async def test_sitemap_threads_pages_switches_and_paywalls(db, org, mock_request
         data = await seo_service.sitemap_data(db, org.slug, mock_request)
     assert data["discussions"] == [] and data["activities"] == [] and [c["key"] for c in data["communities"]] == ["club"]
     open_id = (await db.execute(select(Activity).where(Activity.activity_uuid == "activity_open"))).scalars().first().id
-    with patch("src.core.ee_hooks.get_ee_paid_locked_activity_ids", AsyncMock(return_value={open_id})):
+    with patch("src.core.ee_hooks.get_ee_paid_locked_activity_ids_many", AsyncMock(return_value=None)), \
+            patch("src.core.ee_hooks.get_ee_paid_locked_activity_ids", AsyncMock(return_value={open_id})):
+        data = await seo_service.sitemap_data(db, org.slug)
+    assert [a["key"] for a in data["activities"]] == ["video"]
+    # An EE that answers for every course at once: one call, same result
+    course_id = (await db.execute(select(Activity).where(Activity.activity_uuid == "activity_open"))).scalars().first().course_id
+    per_course = AsyncMock(side_effect=AssertionError("asked course by course"))
+    with patch("src.core.ee_hooks.get_ee_paid_locked_activity_ids_many", AsyncMock(return_value={course_id: {open_id}})), \
+            patch("src.core.ee_hooks.get_ee_paid_locked_activity_ids", per_course):
         data = await seo_service.sitemap_data(db, org.slug)
     assert [a["key"] for a in data["activities"]] == ["video"]
 

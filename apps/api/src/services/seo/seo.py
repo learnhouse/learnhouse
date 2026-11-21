@@ -291,7 +291,7 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str, request: Optiona
     a paywall (lessons of sold courses, threads of sold communities). Threads
     nobody answered past the org's thin-thread age are left out too.
     """
-    from src.core.ee_hooks import get_ee_paid_locked_activity_ids
+    from src.core.ee_hooks import get_ee_paid_locked_activity_ids, get_ee_paid_locked_activity_ids_many
     from src.services.seo.indexnow import thread_segment
     from src.services.seo.public import _anon_locked, _comment_counts, feature_indexable, is_thin_thread
 
@@ -348,8 +348,15 @@ async def sitemap_data(db_session: AsyncSession, org_slug: str, request: Optiona
         ).all()
         # Lessons sold behind a paywall show the offer, not the lesson: skip them.
         locked_by_course: dict[int, Any] = {}
-        for course_id in {row[2] for row in activities}:
-            locked = await get_ee_paid_locked_activity_ids(request, course_id, AnonymousUser(), db_session)
+        course_ids = sorted({row[2] for row in activities})
+        # One call for every course when the EE can answer in bulk (an org
+        # that sells nothing then costs one query, not one per course).
+        bulk = await get_ee_paid_locked_activity_ids_many(request, course_ids, AnonymousUser(), db_session)
+        for course_id in course_ids:
+            if bulk is not None:
+                locked = bulk.get(course_id)
+            else:
+                locked = await get_ee_paid_locked_activity_ids(request, course_id, AnonymousUser(), db_session)
             if locked is None:
                 locked = "all" if await _anon_locked(request, db_session, listed[course_id].course_uuid) else set()
             locked_by_course[course_id] = locked
