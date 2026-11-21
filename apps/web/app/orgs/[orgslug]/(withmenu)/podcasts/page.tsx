@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { buildListMetadata } from '@/lib/seo/pageMetadata'
 import { getOrgPodcasts } from '@services/podcasts/podcasts'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 import { getServerSession } from '@/lib/auth/server'
 import PodcastsClient from './podcasts'
 
@@ -20,10 +20,7 @@ export default async function PodcastsPage({ params }: { params: PageParams }) {
   const { orgslug } = await params
   const [session, org] = await Promise.all([
     getServerSession(),
-    getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
+    getOrgOr404(orgslug),
   ])
   const access_token = session?.tokens?.access_token
 

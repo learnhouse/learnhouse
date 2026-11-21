@@ -19349,6 +19349,10 @@
       "body_other": "Il tuo provider di pagamento ha rifiutato {{count}} checkout dal {{date}}. Il tuo account Stripe potrebbe essere scollegato o richiedere attenzione. Finché non viene risolto, gli studenti vedono che il checkout non è temporaneamente disponibile.",
       "recheck": "Controlla di nuovo",
       "fix": "Apri impostazioni pagamenti"
+    },
+    "impersonating": {
+      "title": "I pagamenti non sono disponibili durante l'impersonificazione",
+      "body": "Impostazioni di pagamento, clienti e dati Stripe restano riservati agli amministratori dell'organizzazione. Termina l'impersonificazione per gestire i pagamenti."
     }
   },
   "lti": {

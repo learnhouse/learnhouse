@@ -1,7 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 import { getServerSession } from '@/lib/auth/server'
 import Trail from './trail'
 
@@ -14,10 +14,7 @@ type MetadataProps = {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
+  const org = await getOrgOr404(params.orgslug)
   return {
     title: 'Trail | ' + org.name,
     description:

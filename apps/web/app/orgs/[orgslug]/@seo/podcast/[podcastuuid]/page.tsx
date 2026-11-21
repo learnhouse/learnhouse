@@ -9,7 +9,7 @@ import { seoImageUrl } from '@/lib/seo/meta'
 export default async function PodcastSeo({ params }: { params: Promise<{ orgslug: string; podcastuuid: string }> }) {
   const { orgslug, podcastuuid } = await params
   const [ctx, resolved] = await Promise.all([getSeoContext(orgslug), resolvePublicKey(orgslug, 'podcast', podcastuuid)])
-  if (!resolved || resolved.restricted || ctx.seo.indexing_disabled) return null
+  if (!resolved || resolved.restricted || ctx.degraded || ctx.seo.indexing_disabled) return null
   const meta = await getPodcastMeta(resolved.uuid, null).catch(() => null)
   const podcast = meta?.podcast
   if (!podcast?.public || !podcast?.published) return null

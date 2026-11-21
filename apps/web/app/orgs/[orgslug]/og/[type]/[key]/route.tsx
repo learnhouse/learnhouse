@@ -5,7 +5,7 @@ import { getPodcastMeta } from '@services/podcasts/podcasts'
 import { getCommunity } from '@services/communities/communities'
 import { getFolderById } from '@services/folders/folders'
 import { orgThemeColors } from '@/lib/theme/orgTheme'
-import { getSeoContext } from '@/lib/seo/context.server'
+import { getSeoContext, type SeoContext } from '@/lib/seo/context.server'
 import { resolvePublicKey } from '@/lib/seo/resolve.server'
 import { OG_SIZE, PAGE_CARDS, brandColor, clampText, readableOn, titleFontSize } from '@/lib/seo/ogCard'
 import { THREAD_SEGMENT_RE, type SeoResourceType } from '@/lib/seo/paths'
@@ -98,9 +98,20 @@ async function logoDataUri(url?: string): Promise<string | null> {
 
 export async function GET(_req: Request, { params }: { params: Promise<{ orgslug: string; type: string; key: string }> }) {
   const { orgslug, type, key } = await params
-  const ctx = await getSeoContext(orgslug)
+  let ctx: SeoContext
+  try {
+    ctx = await getSeoContext(orgslug)
+  } catch (error: any) {
+    // getSeoContext calls notFound() for an unknown org slug.
+    if (String(error?.digest || '') === 'NEXT_HTTP_ERROR_FALLBACK;404') {
+      return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } })
+    }
+    throw error
+  }
   let card: Card | null = null
-  if (type === 'page') {
+  if (ctx.degraded) {
+    // Org lookup failed (API down): neutral card below, never cached.
+  } else if (type === 'page') {
     // Catalog pages (/courses, /paths, ...): a fixed set, so the URL can't be
     // used to render arbitrary text on the org's domain.
     const page = PAGE_CARDS[key]
@@ -166,5 +177,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orgslug
     </div>
   )
 
-  return new ImageResponse(element, { ...OG_SIZE, headers: { 'Cache-Control': CACHE } })
+  return new ImageResponse(element, { ...OG_SIZE, headers: { 'Cache-Control': ctx.degraded ? 'no-store' : CACHE } })
 }

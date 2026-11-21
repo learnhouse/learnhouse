@@ -166,7 +166,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     thumbnails:
       hlsReady && hlsMeta?.thumbnails?.url && blockObject && orgUuid && courseUuid && activityUuid
         ? {
-            url: getVideoBlockHlsThumbnailsUrl(orgUuid, courseUuid, activityUuid, blockObject.block_uuid, hlsMeta.thumbnails.url),
+            url: getVideoBlockHlsThumbnailsUrl(orgUuid, courseUuid, activityUuid, blockObject.block_uuid, hlsMeta.thumbnails.url) ?? '',
             interval: hlsMeta.thumbnails.interval,
             width: hlsMeta.thumbnails.width,
             height: hlsMeta.thumbnails.height,

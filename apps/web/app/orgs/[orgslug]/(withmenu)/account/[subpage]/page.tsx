@@ -1,4 +1,4 @@
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
@@ -28,10 +28,7 @@ const getSubpageTitle = (subpage: string): string => {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
+  const org = await getOrgOr404(params.orgslug)
 
   const title = `${getSubpageTitle(params.subpage)} | ${org.name}`
   const description = `Manage your account settings at ${org.name}`
@@ -81,10 +78,7 @@ const AccountSubPage = async (props: { params: Promise<{ orgslug: string; subpag
     redirect('/account/general?section=public')
   }
 
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
+  const org = await getOrgOr404(params.orgslug)
 
   return (
     <AccountClient

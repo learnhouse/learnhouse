@@ -19702,6 +19702,10 @@
       "body_other": "Od {{date}} váš poskytovateľ platieb odmietol {{count}} platieb. Váš účet Stripe môže byť odpojený alebo vyžaduje pozornosť. Kým sa to nevyrieši, študenti vidia, že platba je dočasne nedostupná.",
       "recheck": "Skontrolovať znova",
       "fix": "Otvoriť nastavenia platieb"
+    },
+    "impersonating": {
+      "title": "Platby nie sú dostupné počas vystupovania za iného používateľa",
+      "body": "Nastavenia platieb, zákazníci a údaje Stripe sú dostupné len správcom organizácie. Ukončite vystupovanie za používateľa, ak chcete spravovať platby."
     }
   },
   "lti": {

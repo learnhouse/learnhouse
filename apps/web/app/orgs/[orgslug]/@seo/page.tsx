@@ -8,7 +8,7 @@ import { fetchPublishedLanding } from '@/lib/seo/landingData.server'
 export default async function HomeSeo({ params }: { params: Promise<{ orgslug: string }> }) {
   const { orgslug } = await params
   const [ctx, landing] = await Promise.all([getSeoContext(orgslug), fetchPublishedLanding(orgslug, '')])
-  if (ctx.seo.indexing_disabled) return null
+  if (ctx.degraded || ctx.seo.indexing_disabled) return null
   const socials = ctx.org?.socials && typeof ctx.org.socials === 'object' ? Object.values(ctx.org.socials) : []
   return (
     <SeoScripts

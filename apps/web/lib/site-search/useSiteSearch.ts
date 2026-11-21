@@ -120,7 +120,7 @@ export function normalizeSiteResults(
           label: [a.user.first_name, a.user.last_name].filter(Boolean).join(' ') || a.user.username || '',
         })),
       href: link(coursePath(c)),
-      imageUrl: c.thumbnail_image
+      imageUrl: orgUuid && c.thumbnail_image
         ? safeImageSrc(getCourseThumbnailMediaDirectory(orgUuid, c.course_uuid, c.thumbnail_image))
         : undefined,
     })
@@ -140,7 +140,7 @@ export function normalizeSiteResults(
       courseName: a.course_name || undefined,
       chapterName: a.chapter_name || undefined,
       href: link(`/course/${course}/activity/${activity}`),
-      imageUrl: a.course_thumbnail_image
+      imageUrl: orgUuid && a.course_thumbnail_image
         ? safeImageSrc(
             getCourseThumbnailMediaDirectory(orgUuid, a.course_uuid, a.course_thumbnail_image),
           )
@@ -164,7 +164,8 @@ export function normalizeSiteResults(
       subtitle: com.description || undefined,
       updatedAt: com.update_date || undefined,
       href: link(resourcePath('community', com)),
-      imageUrl: com.thumbnail_image
+      // No org uuid yet (org still loading): no URL rather than orgs//...
+      imageUrl: orgUuid && com.thumbnail_image
         ? safeImageSrc(
             getCommunityThumbnailMediaDirectory(orgUuid, com.community_uuid, com.thumbnail_image),
           )
@@ -210,7 +211,7 @@ export function normalizeSiteResults(
       title: p.name,
       subtitle: p.description || undefined,
       href: link(resourcePath('podcast', p)),
-      imageUrl: p.thumbnail_image
+      imageUrl: orgUuid && p.thumbnail_image
         ? safeImageSrc(getPodcastThumbnailMediaDirectory(orgUuid, p.podcast_uuid, p.thumbnail_image))
         : undefined,
     })

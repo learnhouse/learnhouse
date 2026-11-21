@@ -120,9 +120,11 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
     return base
   }, [state.activity, activityProp, content, transformContent])
 
-  const course = state.course ?? { course_uuid: courseId, org_uuid: orgId }
+  const course = state.course ?? { course_uuid: courseId, org_uuid: orgId || undefined }
+  // `||`, not `??`: an empty org-id attribute ('') must not win over the
+  // course's own org_uuid, or media URLs come out as content/orgs//...
   const org = useMemo(
-    () => ({ id: course?.org_id ?? activity?.org_id, org_uuid: course?.org_uuid ?? orgId }),
+    () => ({ id: course?.org_id ?? activity?.org_id, org_uuid: course?.org_uuid || orgId || undefined }),
     [course?.org_id, course?.org_uuid, activity?.org_id, orgId],
   )
 

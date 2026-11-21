@@ -2,12 +2,13 @@ import { SeoScripts } from '@components/SEO/SeoScripts'
 import { getLiveSessions } from '@ee/services/live_sessions/live_sessions'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { breadcrumbJsonLd, eventJsonLd } from '@/lib/seo/jsonld'
+import { isOrgFeatureEnabled } from '@/lib/features/orgFeature'
 
 /** Upcoming public live sessions as Events (Google event results). */
 export default async function LiveSeo({ params }: { params: Promise<{ orgslug: string }> }) {
   const { orgslug } = await params
   const ctx = await getSeoContext(orgslug)
-  if (ctx.seo.indexing_disabled || !ctx.org?.id) return null
+  if (ctx.degraded || ctx.seo.indexing_disabled || !ctx.org?.id || !isOrgFeatureEnabled(ctx.org, 'live_sessions')) return null
   const sessions = await getLiveSessions(ctx.org.id, 'upcoming', undefined, { limit: 20 }).catch(() => [])
   const events = await Promise.all(
     (sessions || [])
