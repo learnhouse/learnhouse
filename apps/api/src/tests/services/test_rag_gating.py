@@ -50,6 +50,12 @@ class TestOrgsUsingAi:
         assert await orgs_using_ai([org.id, other_org.id], db) == {org.id}
         assert await orgs_using_ai([], db) == set()
 
+    async def test_nothing_without_pgvector(self, db, org, ai_on, monkeypatch):
+        from src.core import migrations
+
+        monkeypatch.setattr(migrations, "_pgvector_missing", True)
+        assert await orgs_using_ai([org.id], db) == set()
+
     async def test_nothing_without_an_embeddings_provider(self, db, org, ai_on):
         with patch("src.services.ai.llm.embeddings.embeddings_configured", return_value=False):
             assert await orgs_using_ai([org.id], db) == set()
