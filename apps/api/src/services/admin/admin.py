@@ -34,6 +34,7 @@ from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.user_organizations import UserOrganization
 from src.db.users import (
+    AnonymousUser,
     APITokenUser,
     OrgMemberUserRead,
     BackofficeAPITokenUser,
@@ -79,7 +80,17 @@ from src.services.security.profile_validation import validate_profile_fields
 
 
 def _require_api_token(current_user) -> APITokenUser:
-    """Ensure the current user is an API token."""
+    """Ensure the current user is an API token.
+
+    No credentials at all is a 401 (as everywhere else in the API); a user
+    session, which is authenticated but the wrong kind, is a 403.
+    """
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="This endpoint requires API token authentication",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not isinstance(current_user, APITokenUser):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -89,6 +100,18 @@ def _require_api_token(current_user) -> APITokenUser:
 
 
 _TOKEN_ACTIONS = frozenset({"create", "read", "update", "delete"})
+
+
+async def _dispatch_learner_event(event_name: str, user: User, course: Course, extra: Optional[dict] = None) -> None:
+    """Fire a learning-progress webhook with the payload the learner-side
+    routes (src.services.trail.trail) send, so a headless integration that
+    drives progress through this API gets the same events as the app."""
+    data = {
+        "user": {"user_uuid": user.user_uuid, "email": user.email, "username": user.username},
+        **(extra or {}),
+        "course": {"course_uuid": course.course_uuid, "name": course.name},
+    }
+    await dispatch_webhooks(event_name=event_name, org_id=course.org_id, data=data)
 
 
 def _require_token_right(token_user, resource: str, action: str) -> None:
@@ -522,7 +545,7 @@ async def enroll_user(
     """Enroll a user in a course on their behalf."""
     _require_token_right(token_user, "courses", "update")
 
-    await _get_user_in_org(user_id, token_user.org_id, db_session)
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
     course = (await db_session.execute(
         select(Course).where(
@@ -578,6 +601,7 @@ async def enroll_user(
         user_id=user_id,
         properties={"course_uuid": course.course_uuid},
     )
+    await _dispatch_learner_event(analytics_events.COURSE_ENROLLED, user, course)
 
     trail_runs_raw = list((await db_session.execute(
         select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user_id)
@@ -726,7 +750,7 @@ async def complete_activity(
     """Mark an activity as completed on behalf of a user."""
     _require_token_right(token_user, "courses", "update")
 
-    await _get_user_in_org(user_id, token_user.org_id, db_session)
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
     activity = (await db_session.execute(
         select(Activity).where(Activity.activity_uuid == activity_uuid)
@@ -813,6 +837,10 @@ async def complete_activity(
                 "activity_type": activity.activity_type if activity.activity_type else "",
             },
         )
+        await _dispatch_learner_event(
+            analytics_events.ACTIVITY_COMPLETED, user, course,
+            {"activity": {"activity_uuid": activity_uuid, "activity_type": activity.activity_type or ""}},
+        )
 
     # Check course completion. The completion signal must come from actual
     # completion (is_course_fully_completed), NOT from the certificate helper's
@@ -837,6 +865,10 @@ async def complete_activity(
             user_id=user_id,
             properties={"course_uuid": course.course_uuid},
         )
+        # Only on the completion that finished the course, as in the app;
+        # re-marking a done activity must not re-announce the course.
+        if is_new:
+            await _dispatch_learner_event(analytics_events.COURSE_COMPLETED, user, course)
 
     notify_ee_learner_progress(user_id, course.id)
 
@@ -904,7 +936,7 @@ async def complete_course(
     """Mark all activities in a course as completed for a user."""
     _require_token_right(token_user, "courses", "update")
 
-    await _get_user_in_org(user_id, token_user.org_id, db_session)
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
     course = (await db_session.execute(
         select(Course).where(
@@ -1019,6 +1051,8 @@ async def complete_course(
             user_id=user_id,
             properties={"course_uuid": course.course_uuid},
         )
+        if new_count:
+            await _dispatch_learner_event(analytics_events.COURSE_COMPLETED, user, course)
 
     notify_ee_learner_progress(user_id, course.id)
 
@@ -1529,7 +1563,8 @@ async def get_user_by_email(
         select(User)
         .join(UserOrganization, UserOrganization.user_id == User.id)  # type: ignore
         .where(
-            User.email == email,
+            # Addresses are unique case-insensitively (signup, provisioning).
+            func.lower(User.email) == email.strip().lower(),
             UserOrganization.org_id == token_user.org_id,
         )
     )).scalars().first()
@@ -1970,6 +2005,10 @@ async def bulk_enroll_users(
 
     await db_session.commit()
 
+    enrolled_users = {
+        u.id: u
+        for u in (await db_session.execute(select(User).where(User.id.in_(enrolled)))).scalars().all()
+    }
     for user_id in enrolled:
         await track(
             event_name=analytics_events.COURSE_ENROLLED,
@@ -1977,6 +2016,7 @@ async def bulk_enroll_users(
             user_id=user_id,
             properties={"course_uuid": course.course_uuid},
         )
+        await _dispatch_learner_event(analytics_events.COURSE_ENROLLED, enrolled_users[user_id], course)
 
     return {
         "enrolled": enrolled,
@@ -2385,9 +2425,14 @@ async def update_user_profile(
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
     await _check_token_can_edit_account(user, token_user.org_id, db_session)
 
-    if "email" in updates and updates["email"] != user.email:
+    if "email" in updates and updates["email"] is not None and updates["email"] != user.email:
+        # Case-insensitive, like signup and provisioning: otherwise a token
+        # could give this account another user's address in different case.
         existing = (await db_session.execute(
-            select(User).where(User.email == updates["email"], User.id != user_id)
+            select(User).where(
+                func.lower(User.email) == str(updates["email"]).strip().lower(),
+                User.id != user_id,
+            )
         )).scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="Email already in use")
@@ -2499,6 +2544,13 @@ async def change_user_role(
     membership.update_date = str(datetime.now())
     db_session.add(membership)
     await db_session.commit()
+
+    # Same event and payload as a role change made in the dashboard.
+    await dispatch_webhooks(
+        event_name="user_role_changed",
+        org_id=token_user.org_id,
+        data={"user_id": user_id, "org_id": token_user.org_id, "new_role_uuid": role.role_uuid},
+    )
 
     try:
         from src.routers.users import _invalidate_session_cache
@@ -2702,6 +2754,7 @@ async def add_course_to_usergroup(
         event_name="usergroup_resources_added",
         org_id=token_user.org_id,
         data={
+            "usergroup_id": group.id,
             "usergroup_uuid": group.usergroup_uuid,
             "resource_uuids": [course.course_uuid],
         },
@@ -2741,6 +2794,7 @@ async def remove_course_from_usergroup(
         event_name="usergroup_resources_removed",
         org_id=token_user.org_id,
         data={
+            "usergroup_id": group.id,
             "usergroup_uuid": group.usergroup_uuid,
             "resource_uuids": [course_uuid],
         },

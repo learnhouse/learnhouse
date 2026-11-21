@@ -57,7 +57,20 @@ from src.services.admin.admin import (
 )
 
 
-router = APIRouter()
+# Every route takes an lh_ API token for this org. Documented once here so
+# each operation lists the statuses it shares with the rest.
+router = APIRouter(
+    responses={
+        401: {"description": "No credentials, or an invalid, expired or revoked API token"},
+        403: {
+            "description": (
+                "Not an API token (user sessions are refused), the token's org does "
+                "not match org_slug, the org's plan lacks the Admin API, or the token "
+                "lacks the right this endpoint needs"
+            )
+        },
+    }
+)
 
 
 # ── Response models for OpenAPI documentation ────────────────────────────────
@@ -253,10 +266,11 @@ class UserGroupMemberResponse(BaseModel):
 
 class UpdateUserRequest(BaseModel):
     """Fields that can be updated via the admin profile PATCH."""
-    username: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    # Same bounds as provisioning: an empty username broke the account.
+    username: Optional[str] = Field(default=None, min_length=1, max_length=150)
+    first_name: Optional[str] = Field(default=None, max_length=150)
+    last_name: Optional[str] = Field(default=None, max_length=150)
+    email: Optional[EmailStr] = Field(default=None, max_length=320)
     avatar_image: Optional[str] = None
     bio: Optional[str] = None
     details: Optional[Dict[str, Any]] = None

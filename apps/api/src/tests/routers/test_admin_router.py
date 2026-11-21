@@ -669,3 +669,21 @@ class TestAdminRouter:
             response = await client.get("/api/v1/admin/acme/trails/2/courses/course_1")
         assert response.status_code == 200
         assert response.json()["user_id"] == 2
+
+    @pytest.mark.parametrize(
+        "body",
+        [{"username": ""}, {"username": "x" * 151}, {"first_name": "x" * 151}, {"last_name": "x" * 151}],
+    )
+    async def test_profile_patch_bounds_match_provisioning(self, client, api_user, body):
+        with _admin_context(api_user), patch(
+            "src.routers.admin.update_user_profile", new_callable=AsyncMock
+        ) as svc:
+            response = await client.patch("/api/v1/admin/acme/users/2", json=body)
+        assert response.status_code == 422
+        svc.assert_not_awaited()
+
+    def test_openapi_documents_401_and_403_on_every_route(self, app):
+        paths = app.openapi()["paths"]
+        for path, ops in paths.items():
+            for op in ops.values():
+                assert {"401", "403"} <= set(op["responses"]), path
