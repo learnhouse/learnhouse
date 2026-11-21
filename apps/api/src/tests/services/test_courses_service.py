@@ -670,6 +670,76 @@ class TestDeleteCourse:
             {"sections": [None, {"type": "featured-courses", "courses": None}]}, "course_test"
         ) is False
 
+    async def _contributor_delete(self, db, course, user, mock_request, *, admin=False, role=False,
+                                  authorship=ResourceAuthorshipEnum.CONTRIBUTOR):
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=user.id,
+                authorship=authorship,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        await db.commit()
+        mod = "src.services.courses.courses"
+        with patch(f"{mod}.check_resource_access", new_callable=AsyncMock), \
+             patch(f"{mod}.authorization_verify_based_on_org_admin_status", new=AsyncMock(return_value=admin)), \
+             patch(f"{mod}.authorization_verify_based_on_roles", new=AsyncMock(return_value=role)) as roles, \
+             patch(f"{mod}.decrease_feature_usage"), \
+             patch(f"{mod}.delete_storage_directory", create=True):
+            try:
+                return await delete_course(mock_request, course.course_uuid, user, db), roles
+            except HTTPException as exc:
+                return exc, roles
+
+    @pytest.mark.asyncio
+    async def test_contributor_cannot_delete_the_course(
+        self, db, org, course, regular_user, mock_request, bypass_webhooks
+    ):
+        result, roles = await self._contributor_delete(db, course, regular_user, mock_request)
+        assert isinstance(result, HTTPException) and result.status_code == 403
+        assert "Contributors can't delete a course" in result.detail
+        # Only the role's general right counts, not the "own" right authorship gives.
+        assert roles.await_args.kwargs == {"ignore_authorship": True}
+        assert await db.get(Course, course.id) is not None
+
+    @pytest.mark.asyncio
+    async def test_contributor_who_is_org_admin_can_delete(
+        self, db, org, course, regular_user, mock_request, bypass_webhooks
+    ):
+        result, _ = await self._contributor_delete(db, course, regular_user, mock_request, admin=True)
+        assert result == {"detail": "Course deleted"}
+
+    @pytest.mark.asyncio
+    async def test_contributor_with_a_general_delete_role_can_delete(
+        self, db, org, course, regular_user, mock_request, bypass_webhooks
+    ):
+        result, _ = await self._contributor_delete(db, course, regular_user, mock_request, role=True)
+        assert result == {"detail": "Course deleted"}
+
+    @pytest.mark.asyncio
+    async def test_course_maintainer_can_delete(
+        self, db, org, course, regular_user, mock_request, bypass_webhooks
+    ):
+        result, roles = await self._contributor_delete(
+            db, course, regular_user, mock_request, authorship=ResourceAuthorshipEnum.MAINTAINER
+        )
+        assert result == {"detail": "Course deleted"}
+        roles.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_api_token_delete_skips_the_contributor_check(self, db, org, course, mock_request):
+        from src.services.courses.courses import _refuse_contributor_course_delete
+
+        token = APITokenUser(
+            id=-1, user_uuid="apitoken_x", username="token", org_id=org.id, rights={}, token_name="t", created_by_user_id=1,
+        )
+        with patch("src.services.courses.courses.select") as select_mock:
+            await _refuse_contributor_course_delete(mock_request, db, token, course.course_uuid)
+        select_mock.assert_not_called()
+
     @pytest.mark.asyncio
     async def test_delete_course_not_found(
         self, db, org, admin_user, mock_request, bypass_rbac, bypass_webhooks
@@ -2031,6 +2101,9 @@ class TestGetUserCoursesAndRights:
         assert maintainer_rights["permissions"]["manage_access"] is True
         assert contributor_rights["ownership"]["is_contributor"] is True
         assert contributor_rights["permissions"]["update"] is True
+        # Contributors edit the course but can't delete it; maintainers can.
+        assert contributor_rights["permissions"]["delete"] is False
+        assert maintainer_rights["permissions"]["delete"] is True
 
     @pytest.mark.asyncio
     async def test_get_course_user_rights_not_found(

@@ -405,7 +405,13 @@ async def authorization_verify_based_on_roles(
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: AsyncSession,
+    ignore_authorship: bool = False,
 ):
+    """True if one of the user's roles in the resource's org grants ``action``.
+
+    ``ignore_authorship`` skips the "own" rights, so only a role's general
+    right counts (e.g. ``courses.action_delete``, not ``action_delete_own``).
+    """
     # Backoffice bypass - full access to all resources
     if (await is_user_backoffice_staff(user_id, db_session) and not backoffice_org_bypass_blocked(user_id)):
         return True
@@ -443,7 +449,7 @@ async def authorization_verify_based_on_roles(
 
     # Check if user is the author of the resource for "own" permissions
     is_author = False
-    if action in ["update", "delete", "read"]:
+    if action in ["update", "delete", "read"] and not ignore_authorship:
         is_author = await authorization_verify_if_user_is_author(
             request, user_id, action, element_uuid, db_session
         )

@@ -338,6 +338,35 @@ class TestRBACRuntime:
             )
 
     @pytest.mark.asyncio
+    async def test_authorization_verify_based_on_roles_can_ignore_own_rights(self):
+        own_only = Role(
+            name="own-delete",
+            description="",
+            rights={"courses": {"action_delete": False, "action_delete_own": True}},
+            org_id=None,
+            role_uuid="role_own_delete",
+        )
+
+        async def verify(ignore: bool):
+            session = AsyncMock()
+            with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="courses"), \
+                patch("src.security.rbac.rbac.get_element_organization_id", new_callable=AsyncMock, return_value=1), \
+                patch("src.security.rbac.rbac._load_applicable_roles", new_callable=AsyncMock, return_value=[own_only]), \
+                patch("src.security.rbac.rbac.is_user_backoffice_staff", return_value=False), \
+                patch("src.security.rbac.rbac.authorization_verify_if_user_is_author",
+                      new_callable=AsyncMock, return_value=True) as author:
+                allowed = await authorization_verify_based_on_roles(
+                    request=_request(), user_id=7, action="delete", element_uuid="course_1",
+                    db_session=session, ignore_authorship=ignore,
+                )
+            return allowed, author
+
+        allowed, author = await verify(False)
+        assert allowed is True and author.await_count == 1
+        allowed, author = await verify(True)
+        assert allowed is False and author.await_count == 0
+
+    @pytest.mark.asyncio
     async def test_authorization_verify_based_on_roles_backoffice_bypass(self):
         session = AsyncMock()
 

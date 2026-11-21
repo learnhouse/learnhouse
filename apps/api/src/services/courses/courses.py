@@ -38,6 +38,7 @@ from src.security.org_auth import require_org_create_permission
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
+    authorization_verify_based_on_roles,
 )
 from src.security.rbac import (
     AccessAction,
@@ -1299,6 +1300,47 @@ async def _remove_course_from_org_landing(
         invalidate_org_cache(org_slug)
 
 
+async def _refuse_contributor_course_delete(
+    request: Request,
+    db_session: AsyncSession,
+    current_user: PublicUser | AnonymousUser,
+    course_uuid: str,
+) -> None:
+    """A contributor edits a course but may not delete it.
+
+    The generic write check lets any active author through, which includes
+    contributors, and the same check guards chapter and activity deletes that
+    contributors do need. So deleting the whole course gets this extra step:
+    a user whose only claim is a contributor row needs to be an org
+    admin/maintainer or hold a role with the general course delete right.
+    """
+    user_id = getattr(current_user, "id", None)
+    if isinstance(current_user, APITokenUser) or not user_id:
+        return
+    author = (await db_session.execute(
+        select(ResourceAuthor).where(
+            ResourceAuthor.resource_uuid == course_uuid,
+            ResourceAuthor.user_id == user_id,
+        )
+    )).scalars().first()
+    if not (
+        author
+        and author.authorship == ResourceAuthorshipEnum.CONTRIBUTOR
+        and author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+    ):
+        return
+    if await authorization_verify_based_on_org_admin_status(request, user_id, "delete", course_uuid, db_session):
+        return
+    if await authorization_verify_based_on_roles(
+        request, user_id, "delete", course_uuid, db_session, ignore_authorship=True
+    ):
+        return
+    raise HTTPException(
+        status_code=403,
+        detail="Contributors can't delete a course. Ask its creator or an org admin.",
+    )
+
+
 async def delete_course(
     request: Request,
     course_uuid: str,
@@ -1316,6 +1358,7 @@ async def delete_course(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+    await _refuse_contributor_course_delete(request, db_session, current_user, course.course_uuid)
 
     # Clean up content files from storage
     org_statement = select(Organization).where(Organization.id == course.org_id)
@@ -2138,8 +2181,10 @@ async def get_course_user_rights(
     if is_course_owner or is_admin or is_maintainer_role:
         rights["permissions"]["update"] = True
 
-    # DELETE permissions (course deletion)
-    if is_course_owner or is_admin or is_maintainer_role:
+    # DELETE permissions (course deletion). Contributors edit the course but
+    # can't delete it; delete_course refuses them too.
+    can_delete_as_author = rights["ownership"]["is_creator"] or rights["ownership"]["is_maintainer"]
+    if can_delete_as_author or is_admin or is_maintainer_role:
         rights["permissions"]["delete"] = True
 
     # CONTENT CREATION permissions (activities, assignments, chapters, etc.)
