@@ -220,9 +220,9 @@ export default function AccountNotes() {
               <header className="flex flex-wrap items-center gap-3 border-b border-neutral-100 px-4 py-3 sm:px-5">
                 <img
                   src={
-                    group.course.thumbnail_image
-                      ? getCourseThumbnailMediaDirectory(org?.org_uuid, group.course.course_uuid, group.course.thumbnail_image)
-                      : '/empty_thumbnail.png'
+                    (group.course.thumbnail_image &&
+                      getCourseThumbnailMediaDirectory(org?.org_uuid, group.course.course_uuid, group.course.thumbnail_image)) ||
+                    '/empty_thumbnail.png'
                   }
                   onError={(e) => {
                     if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'

@@ -94,7 +94,7 @@ export function CourseThumb({
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image)}
+        src={getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image) ?? undefined}
         alt={course.name}
         className={`rounded-lg object-cover flex-shrink-0 bg-neutral-100 ${className}`}
         style={{ width: size, height: size }}

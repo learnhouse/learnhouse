@@ -11,7 +11,7 @@ const ITEM_TYPES: Record<string, SeoResourceType> = { courses: 'course', podcast
 export default async function FolderSeo({ params }: { params: Promise<{ orgslug: string; folderid: string }> }) {
   const { orgslug, folderid } = await params
   const [ctx, resolved] = await Promise.all([getSeoContext(orgslug), resolvePublicKey(orgslug, 'folder', folderid)])
-  if (!resolved || resolved.restricted || ctx.seo.indexing_disabled) return null
+  if (!resolved || resolved.restricted || ctx.degraded || ctx.seo.indexing_disabled) return null
   const folder = await getFolderById(resolved.uuid, undefined, null).catch(() => null)
   if (!folder?.folder_uuid || folder.public === false || folder.seo?.robots_noindex) return null
   const url = await ctx.url(`/library/folder/${resolved.canonical_key}`)

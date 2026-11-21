@@ -158,7 +158,7 @@ export function useActivitySummary({
       courseHref: getUriWithOrg(orgslug, key),
       activityHref: getUriWithOrg(orgslug, `/course/${cCourse}/activity/${cleanActivityUuid(activityUuid)}`),
       endHref: getUriWithOrg(orgslug, `/course/${cCourse}/activity/end`),
-      thumbnail: c?.thumbnail_image && orgUuid ? getCourseThumbnailMediaDirectory(orgUuid, c.course_uuid, c.thumbnail_image) : '',
+      thumbnail: (c?.thumbnail_image && orgUuid && getCourseThumbnailMediaDirectory(orgUuid, c.course_uuid, c.thumbnail_image)) || '',
       org,
       trail: trail.data ?? null,
     }

@@ -102,13 +102,13 @@ const CourseInfo = memo(({ course, org, dark = false }: { course: any, org: any,
     <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-shrink">
       <img
         className="w-[35px] sm:w-[45px] h-[20px] sm:h-[26px] rounded-md object-cover flex-shrink-0"
-        src={course.thumbnail_image
-          ? getCourseThumbnailMediaDirectory(
-              org?.org_uuid,
-              course.course_uuid,
-              course.thumbnail_image
-            )
-          : '/empty_thumbnail.png'
+        src={(course.thumbnail_image &&
+          getCourseThumbnailMediaDirectory(
+            org?.org_uuid,
+            course.course_uuid,
+            course.thumbnail_image
+          )) ||
+          '/empty_thumbnail.png'
         }
         onError={(e) => {
           if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'

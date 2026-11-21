@@ -42,7 +42,6 @@ if (SENTRY_DSN) {
         "";
 
       if (msg.includes("Failed to find Server Action")) return null;
-      if (msg.includes("Organization not found")) return null;
       if (msg.includes("Organization has no config")) return null;
       // Next.js internal: raised when a client/bot sends a malformed
       // Next-Router-State-Tree header. Handled by Next (falls back to full

@@ -135,9 +135,10 @@ interface FocusTopBarProps {
 export function FocusTopBar({ course, orgUuid, orgslug, courseuuid, activityName, activityId, trailData, dark, idle, actions, onExit }: FocusTopBarProps) {
   const { t } = useTranslation()
   const model = useCourseProgress({ course, trailData, orgslug, currentActivityId: activityId })
-  const thumb = course?.thumbnail_image
-    ? getCourseThumbnailMediaDirectory(orgUuid || '', course.course_uuid, course.thumbnail_image)
-    : '/empty_thumbnail.png'
+  // Null until the org uuid is known: show the placeholder, not orgs//...
+  const thumb =
+    (course?.thumbnail_image && getCourseThumbnailMediaDirectory(orgUuid, course.course_uuid, course.thumbnail_image)) ||
+    '/empty_thumbnail.png'
   const position = model.currentIndex >= 0 ? `${model.currentIndex + 1} / ${model.total}` : ''
 
   return (

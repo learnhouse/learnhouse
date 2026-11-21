@@ -655,11 +655,15 @@ function Editor(props: EditorProps) {
                 <Link target="_blank" href={`/course/${course_uuid}`}>
                   <ThumbnailImage
                     className="activity-editor-info-thumbnail"
-                    src={`${props.course.thumbnail_image ? getCourseThumbnailMediaDirectory(
-                      props.org?.org_uuid,
-                      props.course.course_uuid,
-                      props.course.thumbnail_image
-                    ) : getUriWithOrg(props.org?.slug, '/empty_thumbnail.png')}`}
+                    src={
+                      (props.course.thumbnail_image &&
+                        getCourseThumbnailMediaDirectory(
+                          props.org?.org_uuid,
+                          props.course.course_uuid,
+                          props.course.thumbnail_image
+                        )) ||
+                      getUriWithOrg(props.org?.slug, '/empty_thumbnail.png')
+                    }
                     alt={props.course.name}
                   />
                 </Link>

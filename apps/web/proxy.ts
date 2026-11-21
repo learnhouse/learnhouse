@@ -128,9 +128,16 @@ async function resolveTenant(req: NextRequest, instance: InstanceInfo): Promise<
     const mod = await import('@ee/services/tenancy/resolveMulti.middleware')
     return await mod.resolveMultiFromRequest(req, instance)
   } catch (err) {
+    // A custom domain whose org lookup failed: never guess another org for it.
+    if (isTenantUnavailable(err)) throw err
     console.warn('[proxy] EE multi-tenant resolver unavailable; falling back to default org', err)
     return { slug: instance.default_org_slug, source: 'default' }
   }
+}
+
+/** The EE resolver's TenantUnavailableError (matched by name: EE is optional). */
+function isTenantUnavailable(err: unknown): boolean {
+  return (err as { name?: string } | null)?.name === 'TenantUnavailableError'
 }
 
 /**
@@ -317,7 +324,18 @@ export const config = {
 }
 
 export default async function proxy(req: NextRequest) {
-  const response = await route(req)
+  let response: Awaited<ReturnType<typeof route>>
+  try {
+    response = await route(req)
+  } catch (err) {
+    if (!isTenantUnavailable(err)) throw err
+    // Custom domain lookup timed out / failed with nothing cached: ask the
+    // visitor (and crawlers) to retry rather than serving the wrong org.
+    return new NextResponse('This site is temporarily unavailable. Please try again in a moment.', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Retry-After': '10', 'Cache-Control': 'no-store' },
+    })
+  }
   // Signed in for the server but not for the client: give the client its
   // marker back so it restores the session (see lib/auth/sessionMarker).
   if (response && !isThirdPartyRelayPath(req.nextUrl.pathname)) healSessionMarker(req, response)

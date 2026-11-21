@@ -1,5 +1,6 @@
 import { SeoScripts } from '@components/SEO/SeoScripts'
-import { getActivityWithAuthHeader } from '@services/courses/activities'
+import { getActivityWithAuthHeader, isMissingActivityId } from '@services/courses/activities'
+import { notFound } from 'next/navigation'
 import { hasSessionCookie } from '@/lib/auth/server'
 import { getCourseMetadata } from '@services/courses/courses'
 import { getSeoContext } from '@/lib/seo/context.server'
@@ -30,13 +31,14 @@ export default async function ActivitySeo({
   // `?lang=fr`: the French version of the lesson when it is published.
   const requestedLang = parseLangParam((await searchParams)?.lang)
   if (activityid === 'end') return null
+  if (isMissingActivityId(activityid)) notFound()
   // Structured data is for crawlers, which are never signed in. A signed-in
   // reader's page already fetched the lesson and course with their token
   // (generateMetadata); the anonymous copies here were a second pair of
   // fetches on every lesson load.
   if (await hasSessionCookie()) return null
   const [ctx, resolved] = await Promise.all([getSeoContext(orgslug), resolvePublicKey(orgslug, 'course', courseuuid)])
-  if (!resolved || resolved.restricted || ctx.seo.indexing_disabled) return null
+  if (!resolved || resolved.restricted || ctx.degraded || ctx.seo.indexing_disabled) return null
   // Anonymous view only: lessons a signed-out visitor can't open aren't indexed.
   const [course, activity] = await Promise.all([
     getCourseMetadata(resolved.bare_uuid, null, null, { slim: true, lang: requestedLang ?? undefined }).catch(() => null),

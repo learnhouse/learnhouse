@@ -11,6 +11,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUserGroups } from '@services/usergroups/usergroups'
 import { asArray } from '@services/utils/ts/requests'
+import { queryKeys } from '@/lib/query/keys'
 import { DripSchedule, getDripSchedule, updateDripSchedule } from '@services/courses/drip'
 import {
   DEFAULT_DRIP_SETTINGS,
@@ -179,8 +180,9 @@ function ScheduleEditor(props: {
   const org = useOrg() as any
 
   const { data: groups } = useQuery({
-    queryKey: ['usergroups', org?.id],
-    queryFn: async () => asArray<{ usergroup_uuid: string; name: string }>(await getUserGroups(org.id, access_token)),
+    queryKey: queryKeys.usergroups.list(org?.id),
+    queryFn: () => getUserGroups(org.id, access_token),
+    select: (res: any) => asArray<{ usergroup_uuid: string; name: string }>(res),
     enabled: !!(org?.id && access_token),
     staleTime: 60_000,
   })

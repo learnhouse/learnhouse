@@ -66,10 +66,10 @@ export function resolveActivityVideoSource(args: VideoSourceArgs): VideoSource {
   if (!filename || !filename.trim()) return { src: '', isHls: false }
   if (!orgUuid || !courseUuid || !activityUuid) return { src: '', isHls: false }
   if (hlsReady) {
-    return { src: getActivityHlsMasterUrl(orgUuid, courseUuid, activityUuid), isHls: true }
+    return { src: getActivityHlsMasterUrl(orgUuid, courseUuid, activityUuid) ?? '', isHls: true }
   }
   return {
-    src: getActivityVideoStreamUrl(orgUuid, courseUuid, activityUuid, filename),
+    src: getActivityVideoStreamUrl(orgUuid, courseUuid, activityUuid, filename) ?? '',
     isHls: false,
   }
 }
@@ -113,8 +113,10 @@ export function resolveHlsThumbnails(
     return null
   }
   const rows = pos(t.rows) ? t.rows : 1
+  const url = getActivityHlsThumbnailsUrl(ids.orgUuid, ids.courseUuid, ids.activityUuid, t.url)
+  if (!url) return null
   return {
-    url: getActivityHlsThumbnailsUrl(ids.orgUuid, ids.courseUuid, ids.activityUuid, t.url),
+    url,
     interval: t.interval,
     width: t.width,
     height: t.height,
@@ -194,7 +196,7 @@ export function resolveActivityCaptions(
     .map((l) => ({
       code: l.code as string,
       label: l.label || (l.code as string),
-      url: getActivityCaptionUrl(ids.orgUuid, ids.courseUuid, ids.activityUuid, l.code as string),
+      url: getActivityCaptionUrl(ids.orgUuid, ids.courseUuid, ids.activityUuid, l.code as string) ?? '',
     }))
 }
 
