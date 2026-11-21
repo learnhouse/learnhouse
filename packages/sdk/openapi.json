@@ -3,7 +3,7 @@
   "info": {
     "title": "LearnHouse",
     "description": "LearnHouse is an open-source platform tailored for learning experiences.",
-    "version": "1.4.4"
+    "version": "1.4.5"
   },
   "paths": {
     "/content/{file_path}": {
@@ -212,7 +212,7 @@
           "users"
         ],
         "summary": "Create user in organization",
-        "description": "Create a user and attach them to the given organization. Rejected if the organization is invite-only; use the invite-code endpoint instead.",
+        "description": "Create a user and attach them to the given organization. On an invite-only organization the address must have a pending invitation: the account is then created on its own (`invitation_pending: true`) and the invitation applies once the email is verified.",
         "operationId": "api_create_user_with_orgid_api_v1_users__org_id__post",
         "parameters": [
           {
@@ -223,6 +223,25 @@
               "type": "integer",
               "title": "Org Id"
             }
+          },
+          {
+            "name": "next",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Page to land on after verifying the email (relative path).",
+              "title": "Next"
+            },
+            "description": "Page to land on after verifying the email (relative path)."
           }
         ],
         "requestBody": {
@@ -237,17 +256,17 @@
         },
         "responses": {
           "200": {
-            "description": "User created and attached to the organization.",
+            "description": "User created (and attached to the organization unless `invitation_pending`).",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserRead"
+                  "$ref": "#/components/schemas/UserSignupRead"
                 }
               }
             }
           },
           "403": {
-            "description": "Organization is invite-only; an invite code is required"
+            "description": "Organization is invite-only and the address has no invitation"
           },
           "422": {
             "description": "Validation Error",
@@ -269,7 +288,7 @@
           "users"
         ],
         "summary": "Create user with invite code",
-        "description": "Create a user and attach them to the given organization using an invite code. Only valid when the organization is configured as invite-only.",
+        "description": "Create a user and attach them to the given organization using an invite code, which applies its role, user groups and courses (open or invite-only organizations).",
         "operationId": "api_create_user_with_orgid_and_invite_api_v1_users__org_id__invite__invite_code__post",
         "parameters": [
           {
@@ -289,6 +308,25 @@
               "type": "integer",
               "title": "Org Id"
             }
+          },
+          {
+            "name": "next",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Page to land on after verifying the email (relative path).",
+              "title": "Next"
+            },
+            "description": "Page to land on after verifying the email (relative path)."
           }
         ],
         "requestBody": {
@@ -312,8 +350,8 @@
               }
             }
           },
-          "403": {
-            "description": "Organization does not require an invite code"
+          "400": {
+            "description": "Invite code is incorrect"
           },
           "422": {
             "description": "Validation Error",
@@ -337,15 +375,36 @@
         "summary": "Create user without organization",
         "description": "Create a user account that is not attached to any organization at creation time.",
         "operationId": "api_create_user_without_org_api_v1_users__post",
+        "parameters": [
+          {
+            "name": "next",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Page to land on after verifying the email (relative path).",
+              "title": "Next"
+            },
+            "description": "Page to land on after verifying the email (relative path)."
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UserCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -4092,6 +4151,22 @@
               ],
               "title": "Invite Code"
             }
+          },
+          {
+            "name": "invite_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Invite Token"
+            }
           }
         ],
         "requestBody": {
@@ -4120,7 +4195,7 @@
             "description": "Third-party authentication failed"
           },
           "403": {
-            "description": "Organization is invite-only and no valid invite was provided"
+            "description": "Organization is invite-only and no valid invite was provided (detail code INVITE_REQUIRED), or `invite_token` belongs to another address (detail code INVITE_EMAIL_MISMATCH, with invited_email_hint)"
           },
           "422": {
             "description": "Validation Error",
@@ -8430,6 +8505,123 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/config/ai/settings": {
+      "get": {
+        "tags": [
+          "orgs",
+          "Feature Configuration"
+        ],
+        "summary": "Get organization AI settings",
+        "description": "The AI master switch, one switch per AI feature (with its group), who may use Ask AI and the monthly credit cap. Admin only.",
+        "operationId": "api_get_org_ai_settings_api_v1_orgs__org_id__config_ai_settings_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Organization ID",
+              "title": "Org Id"
+            },
+            "description": "Organization ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI settings.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Caller is not an organization administrator"
+          },
+          "404": {
+            "description": "Organization not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "orgs",
+          "Feature Configuration"
+        ],
+        "summary": "Update organization AI settings",
+        "description": "Turn AI or single AI features on or off, limit Ask AI to course staff and set a monthly credit cap (0 = none). Omitted fields keep their value. Admin only.",
+        "operationId": "api_update_org_ai_settings_api_v1_orgs__org_id__config_ai_settings_put",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Organization ID",
+              "title": "Org Id"
+            },
+            "description": "Organization ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AISettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated AI settings.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown feature or invalid value"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Caller is not an organization administrator"
+          },
+          "404": {
+            "description": "Organization not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/config/communities": {
       "put": {
         "tags": [
@@ -8979,6 +9171,892 @@
           },
           "404": {
             "description": "Organization not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations": {
+      "get": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "List invitations",
+        "description": "Email invitations of the organization with their status, role, groups, courses, sender and expiry.",
+        "operationId": "api_list_invitations_api_v1_orgs__org_id__invitations_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "pending, accepted, declined, revoked or expired",
+              "title": "Status"
+            },
+            "description": "pending, accepted, declined, revoked or expired"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by email",
+              "title": "Q"
+            },
+            "description": "Filter by email"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of invitations, the counts per status and older invitations still pending.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api List Invitations Api V1 Orgs  Org Id  Invitations Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Invite people",
+        "description": "Email personal invitations with a role, user groups, courses, a note and an expiry. Existing members are skipped unless update_existing_members is set.",
+        "operationId": "api_create_invitations_api_v1_orgs__org_id__invitations_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One result per address and a summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Create Invitations Api V1 Orgs  Org Id  Invitations Post"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No valid address, too many at once, or an invalid message or expiry"
+          },
+          "403": {
+            "description": "Not allowed to grant that role, or a plan limit"
+          },
+          "404": {
+            "description": "Role, user group or course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Daily invitation limit reached"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations/options": {
+      "get": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Invitation options",
+        "description": "The roles the caller may grant (and which take an admin seat or may go on an invite code), plan capacity and expiry bounds.",
+        "operationId": "api_invitation_options_api_v1_orgs__org_id__invitations_options_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Options.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Invitation Options Api V1 Orgs  Org Id  Invitations Options Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations/preview": {
+      "post": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Preview invitations",
+        "description": "Which addresses are new, already invited, already members or invalid, and whether the plan has room. Sends nothing.",
+        "operationId": "api_preview_invitations_api_v1_orgs__org_id__invitations_preview_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationPreview"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preview.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Preview Invitations Api V1 Orgs  Org Id  Invitations Preview Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations/bulk": {
+      "post": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Resend or revoke several invitations",
+        "operationId": "api_bulk_invitations_api_v1_orgs__org_id__invitations_bulk_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationBulk"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One result per invitation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Bulk Invitations Api V1 Orgs  Org Id  Invitations Bulk Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations/{invitation_uuid}": {
+      "patch": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Change a pending invitation",
+        "description": "Change the role, user groups, courses, note or expiry of a pending invitation.",
+        "operationId": "api_update_invitation_api_v1_orgs__org_id__invitations__invitation_uuid__patch",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "invitation_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Invitation Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The invitation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Update Invitation Api V1 Orgs  Org Id  Invitations  Invitation Uuid  Patch"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Not pending"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations/{invitation_uuid}/resend": {
+      "post": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Resend an invitation",
+        "description": "Emails a new personal link (the previous one stops working) and restarts the expiry.",
+        "operationId": "api_resend_invitation_api_v1_orgs__org_id__invitations__invitation_uuid__resend_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "invitation_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Invitation Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/InvitationResend"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The invitation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Resend Invitation Api V1 Orgs  Org Id  Invitations  Invitation Uuid  Resend Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Accepted, declined or revoked"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations/{invitation_uuid}/link": {
+      "post": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Get a shareable link for an invitation",
+        "description": "Mints a new personal link to share by hand; the link in the earlier email stops working.",
+        "operationId": "api_invitation_link_api_v1_orgs__org_id__invitations__invitation_uuid__link_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "invitation_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Invitation Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The link.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Invitation Link Api V1 Orgs  Org Id  Invitations  Invitation Uuid  Link Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Not pending"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invitations/{invitation_uuid}/revoke": {
+      "post": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Revoke an invitation",
+        "operationId": "api_revoke_invitation_api_v1_orgs__org_id__invitations__invitation_uuid__revoke_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "invitation_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Invitation Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The invitation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Revoke Invitation Api V1 Orgs  Org Id  Invitations  Invitation Uuid  Revoke Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Already accepted, declined or revoked"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invite-codes": {
+      "get": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "List invite codes",
+        "description": "Shareable invite codes with their role, groups, courses, uses and expiry.",
+        "operationId": "api_list_invite_codes_api_v1_orgs__org_id__invite_codes_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invite codes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {},
+                  "title": "Response Api List Invite Codes Api V1 Orgs  Org Id  Invite Codes Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Create an invite code",
+        "description": "A shareable code with a non-management role, optional groups, courses, use cap and expiry.",
+        "operationId": "api_create_invite_code_api_v1_orgs__org_id__invite_codes_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteCodeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Create Invite Code Api V1 Orgs  Org Id  Invite Codes Post"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Role not allowed on a code, or too many live codes"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "404": {
+            "description": "Role, user group or course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/invite-codes/{code_uuid}": {
+      "patch": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Change an invite code",
+        "operationId": "api_update_invite_code_api_v1_orgs__org_id__invite_codes__code_uuid__patch",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "code_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteCodeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Update Invite Code Api V1 Orgs  Org Id  Invite Codes  Code Uuid  Patch"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Delete an invite code",
+        "operationId": "api_delete_invite_code_api_v1_orgs__org_id__invite_codes__code_uuid__delete",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "code_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Delete Invite Code Api V1 Orgs  Org Id  Invite Codes  Code Uuid  Delete"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not an administrator or maintainer of this organization"
+          },
+          "404": {
+            "description": "Not found"
           },
           "422": {
             "description": "Validation Error",
@@ -9557,6 +10635,57 @@
           },
           "404": {
             "description": "Organization not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/trial": {
+      "get": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Get the organization's trial",
+        "description": "The organization's free trial (SaaS): its plan, status (active, converted, expired, ended), dates and whole days left. `trial` is null when the organization never had one, including on self-hosted installs. Admins and maintainers only.",
+        "operationId": "api_get_trial_api_v1_orgs__org_id__trial_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trial, or null.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Get Trial Api V1 Orgs  Org Id  Trial Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Caller is not an administrator or maintainer of the organization"
           },
           "422": {
             "description": "Validation Error",
@@ -14657,6 +15786,412 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Api Sitemap Data Api V1 Seo Sitemap  Org Slug  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/seo/thread/{org_slug}/{community_key}/{ref}": {
+      "get": {
+        "tags": [
+          "seo"
+        ],
+        "summary": "Resolve a community thread URL",
+        "description": "Maps `<id>-<slug>` (or a legacy discussion uuid) inside a community to the thread, with its readable `segment`, whether this caller is shut out (`restricted`) and whether search engines may index it (`indexable`: public, not sold, org/community switches, thin-thread rule).",
+        "operationId": "api_thread_lookup_api_v1_seo_thread__org_slug___community_key___ref__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "community_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Community Key"
+            }
+          },
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ref"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Thread Lookup Api V1 Seo Thread  Org Slug   Community Key   Ref  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/seo/thread-jsonld/{org_slug}/{community_key}/{ref}": {
+      "get": {
+        "tags": [
+          "seo"
+        ],
+        "summary": "Structured data facts of an indexable thread",
+        "description": "Thread, author and top replies as an anonymous visitor sees them; 404 unless the thread is indexable.",
+        "operationId": "api_thread_jsonld_api_v1_seo_thread_jsonld__org_slug___community_key___ref__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "community_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Community Key"
+            }
+          },
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ref"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Thread Jsonld Api V1 Seo Thread Jsonld  Org Slug   Community Key   Ref  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/seo/feed/{org_slug}": {
+      "get": {
+        "tags": [
+          "seo"
+        ],
+        "summary": "Public feed items",
+        "description": "Items of a public feed (`kind`: org, courses, communities, community, podcast, course_updates) as an anonymous visitor sees them. 404 when the org turned feeds off or the resource isn't public.",
+        "operationId": "api_feed_data_api_v1_seo_feed__org_slug__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 32,
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Key"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 8,
+              "default": "new",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Label"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Feed Data Api V1 Seo Feed  Org Slug  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/seo/llms/{org_slug}": {
+      "get": {
+        "tags": [
+          "seo"
+        ],
+        "summary": "Public content summary for llms.txt",
+        "description": "The org and its indexable public content; `full=true` adds outlines. 404 when AI access is off.",
+        "operationId": "api_llms_data_api_v1_seo_llms__org_slug__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "full",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Full"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Llms Data Api V1 Seo Llms  Org Slug  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/seo/markdown/{org_slug}/{resource_type}/{key}": {
+      "get": {
+        "tags": [
+          "seo"
+        ],
+        "summary": "One public page as data for its Markdown alternate",
+        "description": "`sub` is the lesson key (activity) or the thread segment (thread). 404 unless the page is indexable.",
+        "operationId": "api_markdown_data_api_v1_seo_markdown__org_slug___resource_type___key__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "resource_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Type"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key"
+            }
+          },
+          {
+            "name": "sub",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sub"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Markdown Data Api V1 Seo Markdown  Org Slug   Resource Type   Key  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/seo/indexnow-key/{org_slug}": {
+      "get": {
+        "tags": [
+          "seo"
+        ],
+        "summary": "The org's IndexNow key (when IndexNow is on)",
+        "description": "Served by the web app at `/{key}.txt` so search engines can verify submissions. 404 when off.",
+        "operationId": "api_indexnow_key_api_v1_seo_indexnow_key__org_slug__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api Indexnow Key Api V1 Seo Indexnow Key  Org Slug  Get"
                 }
               }
             }
@@ -34298,7 +35833,7 @@
         },
         "responses": {
           "200": {
-            "description": "Organization created.",
+            "description": "Organization created, or (``reused: true``) the one this user just created: a retry with the same Idempotency-Key, or the same name within 10 minutes unless ``allow_duplicate``.",
             "content": {
               "application/json": {
                 "schema": {
@@ -34381,6 +35916,54 @@
           },
           "409": {
             "description": "Starter content was already applied"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/onboarding/orgs/{org_id}/first-course": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Create a first course from the template",
+        "description": "One click from the launch plan or the dashboard: adds a private, editable course shaped by the organization's goal (no AI, free on every plan) and returns it.",
+        "operationId": "api_first_course_api_v1_onboarding_orgs__org_id__first_course_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The new course.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Api First Course Api V1 Onboarding Orgs  Org Id  First Course Post"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator, or the plan has no room for another course"
           },
           "422": {
             "description": "Validation Error",
@@ -34768,6 +36351,156 @@
           },
           "404": {
             "description": "No pending invitation"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invite-links/peek": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Read an invitation link",
+        "description": "The organization and invited address behind a personal invitation link, and whether that address has an account.",
+        "operationId": "api_peek_invite_link_api_v1_invite_links_peek_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Invitation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Api Peek Invite Link Api V1 Invite Links Peek Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Link used, withdrawn or expired"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invite-links/signup": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Create an account from an invitation link",
+        "description": "Creates the invited address's account (verified, since the link was mailed to it) and makes it a member of the organization. Single use.",
+        "operationId": "api_signup_with_invite_link_api_v1_invite_links_signup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteSignupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Account created and joined.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Api Signup With Invite Link Api V1 Invite Links Signup Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Link used, withdrawn or expired"
+          },
+          "409": {
+            "description": "An account exists for this address, or the link is being redeemed"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invite-links/accept": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Accept an invitation link",
+        "description": "Join the organization while signed in as the invited address. Single use.",
+        "operationId": "api_accept_invite_link_api_v1_invite_links_accept_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Joined (or already a member).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Api Accept Invite Link Api V1 Invite Links Accept Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in as a different address"
+          },
+          "404": {
+            "description": "Link used, withdrawn or expired"
           },
           "422": {
             "description": "Validation Error",
@@ -41030,7 +42763,7 @@
           "tools/people"
         ],
         "summary": "List invite links",
-        "description": "The organization's invite links (at most 6): code_uuid, the user group each adds people to, and expiry. The secret codes stay on the signups page; use code_uuid with delete_invite_code.\n\nTier: read. Toolset: people.\nToken right needed: organizations.action_update.",
+        "description": "The organization's invite links (at most 6): code_uuid, the user group each adds people to, and expiry. The secret codes stay on the signups page; use code_uuid with delete_invite_code.\n\nTier: read. Toolset: people.\nToken right needed: organizations.action_create.",
         "operationId": "tool_list_invite_codes",
         "parameters": [
           {
@@ -41098,7 +42831,7 @@
           "tools/people"
         ],
         "summary": "Create invite link",
-        "description": "Create a shareable invite link anyone can use to join, optionally adding them to a user group and expiring sooner than a year. At most 6 links per organization. Returns the join link: share it only with its audience.\n\nTier: create. Toolset: people.\nToken right needed: organizations.action_update.\nMay need the token creator's approval: the first call answers 409 with approval_id and approval_url; once approved, repeat the same call with the X-Approval-Id header.",
+        "description": "Create a shareable invite link anyone can use to join, optionally adding them to a user group and expiring sooner than a year. At most 6 links per organization. Returns the join link: share it only with its audience.\n\nTier: create. Toolset: people.\nToken right needed: organizations.action_create.\nMay need the token creator's approval: the first call answers 409 with approval_id and approval_url; once approved, repeat the same call with the X-Approval-Id header.",
         "operationId": "tool_create_invite_code",
         "parameters": [
           {
@@ -46806,6 +48539,55 @@
         ],
         "title": "AIScenarioHistoryItem"
       },
+      "AISettingsUpdate": {
+        "properties": {
+          "ai_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Enabled"
+          },
+          "features": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Features"
+          },
+          "ask_ai_staff_only": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ask Ai Staff Only"
+          },
+          "monthly_credit_cap": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000000,
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Credit Cap"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AISettingsUpdate"
+      },
       "APIOrgConfig": {
         "properties": {
           "enabled": {
@@ -48640,7 +50422,7 @@
               }
             ],
             "title": "Enabled",
-            "description": "AI features for the whole organization."
+            "description": "AI for the whole organization (master switch)."
           },
           "copilot_enabled": {
             "anyOf": [
@@ -48652,7 +50434,75 @@
               }
             ],
             "title": "Copilot Enabled",
-            "description": "The AI writing assistant in editors."
+            "description": "Ask AI for learners (same as features.ask_ai)."
+          },
+          "features": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "propertyNames": {
+                  "enum": [
+                    "atlas",
+                    "atlas_scheduled",
+                    "ai_editor",
+                    "course_builder",
+                    "editor_ai",
+                    "magic_blocks",
+                    "quiz_generation",
+                    "assignment_generation",
+                    "course_import",
+                    "seo",
+                    "ask_ai",
+                    "ai_grading",
+                    "messaging_agents",
+                    "plays",
+                    "translations",
+                    "image_generation",
+                    "voice",
+                    "video_ai",
+                    "live_session_summary",
+                    "boards",
+                    "landing_builder",
+                    "newsletter",
+                    "mcp_tools"
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Features",
+            "description": "One switch per AI feature, merged into the current ones: atlas, atlas_scheduled, ai_editor, course_builder, editor_ai, magic_blocks, quiz_generation, assignment_generation, course_import, seo, ask_ai, ai_grading, messaging_agents, plays, translations, image_generation, voice, video_ai, live_session_summary, boards, landing_builder, newsletter, mcp_tools. get_org_settings lists them by group."
+          },
+          "ask_ai_staff_only": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ask Ai Staff Only",
+            "description": "Limit Ask AI to members whose role opens the dashboard."
+          },
+          "monthly_credit_cap": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000000,
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Credit Cap",
+            "description": "AI credits the organization may spend per month; 0 removes the cap."
           }
         },
         "additionalProperties": false,
@@ -56226,6 +58076,11 @@
               }
             ],
             "title": "Goal"
+          },
+          "allow_duplicate": {
+            "type": "boolean",
+            "title": "Allow Duplicate",
+            "default": false
           }
         },
         "type": "object",
@@ -61859,6 +63714,477 @@
         ],
         "title": "InsertOp"
       },
+      "InvitationBulk": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "resend",
+              "revoke"
+            ],
+            "title": "Action"
+          },
+          "invitation_uuids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Invitation Uuids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "invitation_uuids"
+        ],
+        "title": "InvitationBulk"
+      },
+      "InvitationCreate": {
+        "properties": {
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "role_uuid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Uuid"
+          },
+          "usergroup_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Usergroup Ids"
+          },
+          "course_uuids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Course Uuids"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "expires_in_days": {
+            "type": "integer",
+            "maximum": 90,
+            "minimum": 1,
+            "title": "Expires In Days",
+            "default": 14
+          },
+          "emails": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Emails",
+            "description": "Addresses, as a list or pasted text"
+          },
+          "update_existing_members": {
+            "type": "boolean",
+            "title": "Update Existing Members",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "emails"
+        ],
+        "title": "InvitationCreate"
+      },
+      "InvitationPreview": {
+        "properties": {
+          "emails": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Emails"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "role_uuid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Uuid"
+          },
+          "update_existing_members": {
+            "type": "boolean",
+            "title": "Update Existing Members",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "emails"
+        ],
+        "title": "InvitationPreview"
+      },
+      "InvitationResend": {
+        "properties": {
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 90,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In Days"
+          }
+        },
+        "type": "object",
+        "title": "InvitationResend"
+      },
+      "InvitationUpdate": {
+        "properties": {
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "role_uuid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Uuid"
+          },
+          "usergroup_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array",
+                "maxItems": 25
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usergroup Ids"
+          },
+          "course_uuids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 25
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Uuids"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 90,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In Days"
+          }
+        },
+        "type": "object",
+        "title": "InvitationUpdate"
+      },
+      "InviteCodeCreate": {
+        "properties": {
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "role_uuid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Uuid"
+          },
+          "usergroup_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Usergroup Ids"
+          },
+          "course_uuids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Course Uuids"
+          },
+          "max_uses": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Uses"
+          },
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 365,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In Days"
+          }
+        },
+        "type": "object",
+        "title": "InviteCodeCreate"
+      },
+      "InviteCodeUpdate": {
+        "properties": {
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "role_uuid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Uuid"
+          },
+          "usergroup_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array",
+                "maxItems": 25
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usergroup Ids"
+          },
+          "course_uuids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 25
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Uuids"
+          },
+          "max_uses": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Uses"
+          },
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 365,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In Days"
+          }
+        },
+        "type": "object",
+        "title": "InviteCodeUpdate",
+        "description": "Only the fields sent are changed; ``max_uses``/``expires_in_days`` sent\nas null remove the cap or the expiry."
+      },
+      "InviteSignupBody": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Password"
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "First Name",
+            "default": ""
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Last Name",
+            "default": ""
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "InviteSignupBody"
+      },
       "JoinBody": {
         "properties": {
           "code": {
@@ -63363,6 +65689,18 @@
               }
             ],
             "title": "Org Slug"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 512
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next"
           }
         },
         "type": "object",
@@ -65317,6 +67655,7 @@
               "personal-family",
               "standard",
               "pro",
+              "business",
               "enterprise",
               "oss"
             ],
@@ -65816,7 +68155,15 @@
               "noindex_communities": false,
               "indexing_disabled": false,
               "robots_extra_rules": "",
-              "organization_type": ""
+              "organization_type": "",
+              "ai_crawler_policy": "allow",
+              "ai_crawlers_blocked": [],
+              "indexable_features": {},
+              "thin_thread_noindex_days": 90,
+              "feeds_enabled": true,
+              "llms_txt_enabled": true,
+              "indexnow_enabled": false,
+              "indexnow_key": ""
             }
           }
         },
@@ -69000,6 +71347,18 @@
               }
             ],
             "title": "Org Id"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 512
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next"
           }
         },
         "type": "object",
@@ -70777,6 +73136,18 @@
             "type": "string",
             "format": "email",
             "title": "Email"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 512
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next"
           }
         },
         "type": "object",
@@ -70893,6 +73264,59 @@
           "organization_type": {
             "type": "string",
             "title": "Organization Type",
+            "default": ""
+          },
+          "ai_crawler_policy": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "block_training",
+              "block_all"
+            ],
+            "title": "Ai Crawler Policy",
+            "default": "allow"
+          },
+          "ai_crawlers_blocked": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Ai Crawlers Blocked"
+          },
+          "indexable_features": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Indexable Features"
+          },
+          "thin_thread_noindex_days": {
+            "type": "integer",
+            "maximum": 3650,
+            "minimum": 0,
+            "title": "Thin Thread Noindex Days",
+            "default": 90
+          },
+          "feeds_enabled": {
+            "type": "boolean",
+            "title": "Feeds Enabled",
+            "default": true
+          },
+          "llms_txt_enabled": {
+            "type": "boolean",
+            "title": "Llms Txt Enabled",
+            "default": true
+          },
+          "indexnow_enabled": {
+            "type": "boolean",
+            "title": "Indexnow Enabled",
+            "default": false
+          },
+          "indexnow_key": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Indexnow Key",
             "default": ""
           }
         },
@@ -72802,6 +75226,21 @@
           "both"
         ],
         "title": "ThumbnailType"
+      },
+      "TokenBody": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "TokenBody"
       },
       "ToolListing": {
         "properties": {
@@ -75569,7 +78008,7 @@
           },
           "is_backoffice_staff": {
             "type": "boolean",
-            "title": "Is Backoffice",
+            "title": "Is Backoffice Staff",
             "default": false
           },
           "ui_preferences": {
@@ -75583,6 +78022,11 @@
               }
             ],
             "title": "Ui Preferences"
+          },
+          "is_superadmin": {
+            "type": "boolean",
+            "title": "Is Superadmin",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -75592,7 +78036,8 @@
           "last_name",
           "email",
           "id",
-          "user_uuid"
+          "user_uuid",
+          "is_superadmin"
         ],
         "title": "UserRead"
       },
@@ -75776,6 +78221,159 @@
           "roles"
         ],
         "title": "UserSession"
+      },
+      "UserSignupRead": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "first_name": {
+            "type": "string",
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "avatar_image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Image",
+            "default": ""
+          },
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio",
+            "default": ""
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          },
+          "extra_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra Metadata"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_uuid": {
+            "type": "string",
+            "title": "User Uuid"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified",
+            "default": false
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "signup_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signup Method"
+          },
+          "is_backoffice_staff": {
+            "type": "boolean",
+            "title": "Is Backoffice Staff",
+            "default": false
+          },
+          "ui_preferences": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui Preferences"
+          },
+          "invitation_pending": {
+            "type": "boolean",
+            "title": "Invitation Pending",
+            "default": false
+          },
+          "is_superadmin": {
+            "type": "boolean",
+            "title": "Is Superadmin",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "first_name",
+          "last_name",
+          "email",
+          "id",
+          "user_uuid",
+          "is_superadmin"
+        ],
+        "title": "UserSignupRead"
       },
       "UserUpdate": {
         "properties": {

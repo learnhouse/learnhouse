@@ -1,0 +1,58 @@
+name: SDK Schema
+permissions:
+  contents: read
+
+# @learnhouse/sdk ships a snapshot of the API's OpenAPI schema and the types
+# generated from it. Any API change that adds or changes a public route must
+# come with a regenerated snapshot (`bun run --cwd packages/sdk generate`).
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "apps/api/**"
+      - "packages/sdk/**"
+      - ".github/workflows/sdk-schema.yaml"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "packages/sdk/**"
+      - ".github/workflows/sdk-schema.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.13.7"
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+
+      - name: Install API dependencies
+        run: uv sync --frozen
+        working-directory: apps/api
+
+      - uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install package dependencies
+        run: bun install --frozen-lockfile
+        working-directory: packages
+
+      - name: Generated schema is up to date
+        run: bun run --cwd sdk generate:check
+        working-directory: packages
