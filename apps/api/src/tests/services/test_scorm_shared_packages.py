@@ -6,7 +6,6 @@ in their content. Export, import and clone used to copy only the activities'
 own folders, so the copy of a SCORM course had nothing to play.
 """
 
-import io
 import os
 import zipfile
 from types import SimpleNamespace
