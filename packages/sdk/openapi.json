@@ -18203,6 +18203,966 @@
         }
       }
     },
+    "/api/v1/assignments/peer-review/reviews/{review_uuid}": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Read a review I was assigned",
+        "description": "The review plus the reviewee's submission (answer keys stripped, file names replaced by review file URLs). Reviewee identity follows the anonymity setting. Reviewer only.",
+        "operationId": "api_get_review_api_v1_assignments_peer_review_reviews__review_uuid__get",
+        "parameters": [
+          {
+            "name": "review_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Review Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Save or submit a peer review",
+        "description": "Saves a draft. With `submit: true`, every criterion must be scored and each prompt meet its minimum length; the reviewee is notified.",
+        "operationId": "api_save_review_api_v1_assignments_peer_review_reviews__review_uuid__put",
+        "parameters": [
+          {
+            "name": "review_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Review Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeerReviewSaveBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "409": {
+            "description": "Already submitted, withdrawn, or the reviewee started a new attempt"
+          },
+          "422": {
+            "description": "Invalid scores or comments"
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/peer-review/reviews/{review_uuid}/files/{task_uuid}": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Download the reviewee's file for a task",
+        "description": "Streams the uploaded file under a neutral name. Only for the assigned reviewer and course instructors.",
+        "operationId": "api_get_review_file_api_v1_assignments_peer_review_reviews__review_uuid__files__task_uuid__get",
+        "parameters": [
+          {
+            "name": "review_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Review Uuid"
+            }
+          },
+          {
+            "name": "task_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/peer-review/reviews/{review_uuid}/rate": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Rate how helpful a review was",
+        "operationId": "api_rate_review_api_v1_assignments_peer_review_reviews__review_uuid__rate_post",
+        "parameters": [
+          {
+            "name": "review_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Review Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeerRateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "409": {
+            "description": "The review is not submitted"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/peer-review/reviews/{review_uuid}/flag": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Flag a review I received",
+        "description": "Marks the review for the instructors and notifies them.",
+        "operationId": "api_flag_review_api_v1_assignments_peer_review_reviews__review_uuid__flag_post",
+        "parameters": [
+          {
+            "name": "review_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Review Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeerFlagBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "409": {
+            "description": "The review is not submitted"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/settings": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Read peer review settings",
+        "description": "Defaults when none are saved. Practice-sample answers are stripped for learners.",
+        "operationId": "api_get_settings_api_v1_assignments__assignment_uuid__peer_review_settings_get",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Save peer review settings",
+        "description": "Upsert (instructors). Turning peer review on needs a 1-10 criteria rubric and the peer_review plan feature.",
+        "operationId": "api_update_settings_api_v1_assignments__assignment_uuid__peer_review_settings_put",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeerReviewSettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Invalid settings"
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/overview": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Peer review dashboard",
+        "operationId": "api_get_overview_api_v1_assignments__assignment_uuid__peer_review_overview_get",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/submissions/{user_id}": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Every review of one learner's current attempt",
+        "operationId": "api_get_submission_api_v1_assignments__assignment_uuid__peer_review_submissions__user_id__get",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/reviews/{review_uuid}/discard": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Discard a peer review",
+        "operationId": "api_discard_review_api_v1_assignments__assignment_uuid__peer_review_reviews__review_uuid__discard_post",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          },
+          {
+            "name": "review_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Review Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeerDiscardBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/reviews/{review_uuid}/restore": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Restore a discarded peer review",
+        "operationId": "api_restore_review_api_v1_assignments__assignment_uuid__peer_review_reviews__review_uuid__restore_post",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          },
+          {
+            "name": "review_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Review Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "409": {
+            "description": "The review is not discarded"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "My peer review state",
+        "description": "404 when peer review is off for the assignment, 403 when the org's plan lost it.",
+        "operationId": "api_get_me_api_v1_assignments__assignment_uuid__peer_review_me_get",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/next": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Get my next review to write",
+        "description": "My open review if any, else a fresh pick (fewest reviews first), else `{review: null, reason: \"none_available\"}`.",
+        "operationId": "api_next_review_api_v1_assignments__assignment_uuid__peer_review_me_next_post",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "409": {
+            "description": "Practice round not finished"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/self": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Submit my self-review",
+        "operationId": "api_self_review_api_v1_assignments__assignment_uuid__peer_review_me_self_post",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeerSelfReviewBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Invalid scores or comments"
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/calibration": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Practice samples",
+        "operationId": "api_list_calibration_api_v1_assignments__assignment_uuid__peer_review_me_calibration_get",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/calibration/{sample_id}": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Score a practice sample",
+        "description": "Stores my levels and returns them next to the instructor's, with the explanation.",
+        "operationId": "api_submit_calibration_api_v1_assignments__assignment_uuid__peer_review_me_calibration__sample_id__post",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          },
+          {
+            "name": "sample_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sample Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeerCalibrationBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "409": {
+            "description": "Already scored"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_uuid}/peer-review/me/reflection": {
+      "put": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Save my revision plan",
+        "operationId": "api_save_reflection_api_v1_assignments__assignment_uuid__peer_review_me_reflection_put",
+        "parameters": [
+          {
+            "name": "assignment_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Assignment Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeerReflectionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not allowed, or the organization's plan does not include peer review"
+          },
+          "404": {
+            "description": "Assignment, review or peer review settings not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/assignments/": {
       "post": {
         "tags": [
@@ -69556,6 +70516,515 @@
         },
         "type": "object",
         "title": "PaymentOrgConfig"
+      },
+      "PeerCalibrationBody": {
+        "properties": {
+          "scores": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Scores"
+          }
+        },
+        "type": "object",
+        "title": "PeerCalibrationBody"
+      },
+      "PeerDiscardBody": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "PeerDiscardBody"
+      },
+      "PeerFlagBody": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "PeerFlagBody"
+      },
+      "PeerRateBody": {
+        "properties": {
+          "helpfulness": {
+            "type": "integer",
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Helpfulness"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "helpfulness"
+        ],
+        "title": "PeerRateBody"
+      },
+      "PeerReflectionBody": {
+        "properties": {
+          "plan": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Plan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan"
+        ],
+        "title": "PeerReflectionBody"
+      },
+      "PeerReviewCalibrationSampleIn": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Content",
+            "default": ""
+          },
+          "scores": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Scores"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "PeerReviewCalibrationSampleIn"
+      },
+      "PeerReviewCriterionIn": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "levels": {
+            "items": {
+              "$ref": "#/components/schemas/PeerReviewLevelIn"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Levels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "levels"
+        ],
+        "title": "PeerReviewCriterionIn"
+      },
+      "PeerReviewLevelIn": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "points": {
+            "type": "number",
+            "maximum": 1000,
+            "minimum": 0,
+            "title": "Points"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "points",
+          "label"
+        ],
+        "title": "PeerReviewLevelIn"
+      },
+      "PeerReviewPromptIn": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "min_chars": {
+            "type": "integer",
+            "maximum": 2000,
+            "minimum": 0,
+            "title": "Min Chars",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "PeerReviewPromptIn"
+      },
+      "PeerReviewSaveBody": {
+        "properties": {
+          "scores": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Scores"
+          },
+          "comments": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Comments"
+          },
+          "criterion_comments": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Criterion Comments"
+          },
+          "submit": {
+            "type": "boolean",
+            "title": "Submit",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "PeerReviewSaveBody"
+      },
+      "PeerReviewSettingsUpdate": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "reviews_required": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviews Required"
+          },
+          "require_reviews_to_see_feedback": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Require Reviews To See Feedback"
+          },
+          "review_due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Due Date"
+          },
+          "anonymity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "double_blind",
+                  "anonymous_reviewer",
+                  "named"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anonymity"
+          },
+          "self_review_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Self Review Enabled"
+          },
+          "calibration_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calibration Enabled"
+          },
+          "helpfulness_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Helpfulness Enabled"
+          },
+          "revision_plan_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision Plan Enabled"
+          },
+          "prompts": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PeerReviewPromptIn"
+                },
+                "type": "array",
+                "maxItems": 5,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompts"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PeerReviewCriterionIn"
+                },
+                "type": "array",
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rubric"
+          },
+          "score_mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "feedback_only",
+                  "suggest_grade"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Mode"
+          },
+          "min_reviews_for_score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Reviews For Score"
+          },
+          "calibration_samples": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PeerReviewCalibrationSampleIn"
+                },
+                "type": "array",
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calibration Samples"
+          }
+        },
+        "type": "object",
+        "title": "PeerReviewSettingsUpdate",
+        "description": "Upsert body. Fields left out keep their current value; ``prompts``\nsent as null goes back to the default prompts."
+      },
+      "PeerSelfReviewBody": {
+        "properties": {
+          "scores": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Scores"
+          },
+          "comments": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Comments"
+          },
+          "criterion_comments": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Criterion Comments"
+          }
+        },
+        "type": "object",
+        "title": "PeerSelfReviewBody"
       },
       "Permission": {
         "properties": {

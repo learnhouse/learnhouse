@@ -37,6 +37,7 @@ import {
   ArrowsClockwise,
   Steps,
   UsersThree,
+  ChatsTeardrop,
 } from '@phosphor-icons/react'
 import type { IconProps } from '@phosphor-icons/react'
 import type { ComponentType } from 'react'
@@ -67,6 +68,7 @@ export type FeatureKey =
   | 'scorm'
   | 'seo'
   | 'drip'
+  | 'peer_review'
   | 'company_seats'
   | 'scim'
   | 'required_training'
@@ -255,6 +257,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.drip.title',
     descriptionKey: 'common.plans.feature_restricted.drip.description',
     Icon: CalendarDots,
+    upsellPlan: 'standard',
+  },
+  peer_review: {
+    titleKey: 'common.plans.feature_restricted.peer_review.title',
+    descriptionKey: 'common.plans.feature_restricted.peer_review.description',
+    Icon: ChatsTeardrop,
     upsellPlan: 'standard',
   },
   // Non-plan-gated; upsellPlan kept at 'free' so the upgrade card never fires.

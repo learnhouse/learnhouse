@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Standard-functie",
           "description": "De nieuwsbrief is beschikbaar vanaf het Standard-abonnement. Upgrade om campagnes, welkomstreeksen en cursusupdates per e-mail naar je cursisten te sturen."
+        },
+        "peer_review": {
+          "title": "Standard-functie",
+          "description": "Peer review is beschikbaar voor organisaties met een Standard-plan of hoger. Upgrade zodat cursisten elkaars werk beoordelen met een rubric."
         }
       },
       "gate": {
@@ -381,6 +385,12 @@
           "note_3": "Volgende stappen voor vrijdag",
           "play_title": "Oefenen",
           "play_question": "Hoeveel zijden heeft een vijfhoek?"
+        },
+        "peer_review": {
+          "title": "Cursisten leren door elkaar te beoordelen",
+          "b1": "Elke cursist beoordeelt een paar medecursisten met jouw rubric",
+          "b2": "Een oefenronde laat zien hoe jij zou scoren",
+          "b3": "Zie een voorgesteld cijfer op basis van de beoordelingen, jij beslist"
         }
       }
     },
@@ -8551,7 +8561,8 @@
             "scim": "SCIM-provisioning",
             "audit_logs": "Auditlogs",
             "custom_domain": "Eigen domein",
-            "remove_watermark": "Geen LearnHouse-watermerk"
+            "remove_watermark": "Geen LearnHouse-watermerk",
+            "peer_review": "Peerreview"
           }
         },
         "next_invoice_label": "Volgende factuur",
@@ -31248,7 +31259,9 @@
       "plan_downgraded": "Overgestapt naar Gratis",
       "plan_restored": "Abonnement hersteld",
       "payments_checkout_failing": "Afrekenen mislukt",
-      "invitation_accepted": "Uitnodiging geaccepteerd"
+      "invitation_accepted": "Uitnodiging geaccepteerd",
+      "peer_review_received": "Peerfeedback ontvangen",
+      "peer_review_flagged": "Peerreview gemeld"
     },
     "copy": {
       "assignment_graded": "Beoordeeld: {{assignment}}",
@@ -31311,7 +31324,9 @@
       "plan_downgraded": "Je zit nu op Gratis. Er is niets verwijderd",
       "plan_restored": "Welkom terug bij {{plan}}",
       "payments_checkout_failing": "Cursisten kunnen nu niets kopen ({{count}} mislukte betalingen)",
-      "invitation_accepted": "{{actor}} heeft je uitnodiging geaccepteerd"
+      "invitation_accepted": "{{actor}} heeft je uitnodiging geaccepteerd",
+      "peer_review_received": "Nieuwe peerfeedback op {{assignment}}",
+      "peer_review_flagged": "{{actor}} heeft een peerreview op {{assignment}} gemeld"
     },
     "routing": {
       "short": "Wie een melding krijgt",
@@ -31619,6 +31634,500 @@
       "seat_limit_exceeded": "er zijn meer plaatsen in gebruik dan de licentie omvat",
       "grace_expired": "de licentieserver was te lang onbereikbaar",
       "unknown": "de licentie kon niet worden geverifieerd"
+    }
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Criterium {{n}}",
+      "points_short_one": "{{count}} pt",
+      "points_short_other": "{{count}} pt",
+      "prompt_strength": "Wat goed werkt",
+      "prompt_suggestion": "Eén ding om te verbeteren, en hoe",
+      "prompt_question": "Een vraag aan de maker"
+    },
+    "learner": {
+      "eyebrow": "Peer review",
+      "card_title": "Beoordeel medestudenten en krijg feedback",
+      "steps_label": "Stappen van de peer review",
+      "step_self": "Zelfbeoordeling",
+      "step_practice": "Oefenen",
+      "step_reviews": "Medestudenten beoordelen",
+      "step_feedback": "Jouw feedback",
+      "n_of_m": "{{n}} van {{m}}",
+      "done": "Klaar",
+      "to_do": "Te doen",
+      "locked": "Vergrendeld",
+      "continue": "Doorgaan",
+      "cancel": "Annuleren",
+      "back": "Terug",
+      "retry": "Opnieuw proberen",
+      "optional": "Optioneel",
+      "saved": "Opgeslagen",
+      "saving": "Opslaan…",
+      "unsaved": "Niet-opgeslagen wijzigingen",
+      "not_saved": "Niet opgeslagen",
+      "feedback_count_one": "{{count}} beoordeling",
+      "feedback_count_other": "{{count}} beoordelingen",
+      "reviews_due": "Beoordelingen uiterlijk {{date}}",
+      "reviews_closed_on": "Beoordelingen gesloten op {{date}}",
+      "next_title": "Hierna volgt de peer review",
+      "next_body_one": "Na het inleveren beoordeel je het werk van {{count}} medestudent en krijg je feedback op het jouwe.",
+      "next_body_other": "Na het inleveren beoordeel je het werk van {{count}} medestudenten en krijg je feedback op het jouwe.",
+      "self_title": "Beoordeel je eigen werk",
+      "self_why": "Als je eerst je eigen werk beoordeelt, kun je de feedback van medestudenten makkelijker vergelijken en gebruiken.",
+      "self_done": "Zelfbeoordeling opgeslagen",
+      "self_done_pct": "Zelfbeoordeling opgeslagen: {{pct}}%",
+      "edit_self_review": "Zelfbeoordeling bewerken",
+      "save_self_review": "Zelfbeoordeling opslaan",
+      "self_saved_toast": "Zelfbeoordeling opgeslagen",
+      "cal_title": "Oefenronde",
+      "cal_why": "Als je eerst een voorbeeld beoordeelt, zie je hoe je docent de rubric leest. Zo worden je beoordelingen eerlijker.",
+      "cal_progress": "Voorbeeld {{current}} van {{total}}",
+      "cal_sample": "Oefenvoorbeeld",
+      "cal_check": "Vergelijk met de docent",
+      "cal_you": "Jij",
+      "cal_instructor": "Docent",
+      "cal_match": "Gelijk aan de docent",
+      "cal_off_by_one": "{{count}} punt verschil",
+      "cal_off_by_other": "{{count}} punten verschil",
+      "cal_why_title": "Waarom de docent het zo beoordeelde",
+      "cal_next": "Volgend voorbeeld",
+      "cal_all_done": "Oefenen klaar. Je kunt nu medestudenten beoordelen.",
+      "cal_none": "Er zijn op dit moment geen oefenvoorbeelden.",
+      "go_to_reviews": "Naar de beoordelingen",
+      "go_to_practice": "Naar het oefenen",
+      "finish_practice_first": "Maak eerst de oefenronde af.",
+      "reviews_title": "Beoordeel je medestudenten",
+      "reviews_why": "Door anderen te beoordelen leer je het meest.",
+      "reviews_done_of": "{{done}} van {{required}} klaar",
+      "reviews_locked_practice": "Maak de oefenronde af om te beginnen met beoordelen.",
+      "reviews_complete": "Je hebt al je beoordelingen gedaan. Bedankt!",
+      "reviews_extra_hint": "Extra beoordelingen zijn welkom: ze helpen medestudenten die er minder hebben.",
+      "start_review": "Beoordeling {{n}} van {{m}} starten",
+      "continue_review": "Je beoordeling voortzetten",
+      "review_another": "Nog een beoordelen",
+      "see_feedback": "Bekijk je feedback",
+      "none_title": "Nog niemand om te beoordelen",
+      "none_body": "Zodra iemand inlevert, krijg je het werk van een medestudent. Kom straks terug.",
+      "check_again": "Opnieuw controleren",
+      "your_helpfulness": "Medestudenten beoordelen jouw beoordelingen gemiddeld met {{avg}} / 5.",
+      "review_n_of_m": "Beoordeling {{n}} van {{m}}",
+      "extra_review": "Extra beoordeling",
+      "classmate_work": "Het werk van je medestudent",
+      "work_of": "Werk van {{name}}",
+      "your_review": "Jouw beoordeling",
+      "your_review_hint": "Kies voor elk criterium het niveau dat het best past en laat vriendelijke, concrete opmerkingen achter.",
+      "review_already_submitted": "Je hebt deze beoordeling al ingediend.",
+      "review_load_error": "We konden deze beoordeling niet laden.",
+      "comments_heading": "Opmerkingen",
+      "pick_a_level": "Kies een niveau",
+      "add_note": "Notitie toevoegen",
+      "note_label": "Notitie bij dit criterium (optioneel)",
+      "chars_remaining_one": "Nog {{count}} teken nodig",
+      "chars_remaining_other": "Nog {{count}} tekens nodig",
+      "chars_ok_one": "{{count}} teken",
+      "chars_ok_other": "{{count}} tekens",
+      "fix_before_submit": "Er ontbreekt iets. Controleer de gemarkeerde velden.",
+      "save_draft": "Concept opslaan",
+      "submit_review": "Beoordeling indienen",
+      "drafts_autosave": "Concepten worden automatisch opgeslagen",
+      "draft_saved_toast": "Concept opgeslagen",
+      "review_submitted_toast": "Beoordeling ingediend. Bedankt!",
+      "no_answer": "Geen antwoord",
+      "no_tasks": "Er valt niets te tonen voor deze inzending.",
+      "chosen": "gekozen",
+      "media_option": "Optie {{n}} (media)",
+      "download_file": "Het bestand downloaden",
+      "feedback_title": "Jouw feedback",
+      "feedback_why": "Vergelijk wat medestudenten zagen met je eigen kijk en bepaal wat je gaat aanpassen.",
+      "locked_reviews_one": "Doe nog {{count}} beoordeling om je feedback te ontgrendelen",
+      "locked_reviews_other": "Doe nog {{count}} beoordelingen om je feedback te ontgrendelen",
+      "locked_generic": "Je feedback is nog niet open",
+      "locked_due": "Uiterlijk op {{date}} gaat hij open.",
+      "unlocked_by_due_date": "Je feedback is geopend omdat de deadline voor beoordelingen voorbij is.",
+      "no_feedback_title": "Nog geen feedback",
+      "no_feedback_body": "Beoordelingen van medestudenten verschijnen hier zodra ze binnenkomen.",
+      "peer_score": "Peerscore",
+      "peer_score_how_one": "De middelste waarde (mediaan) van {{count}} beoordeling van een medestudent, per criterium.",
+      "peer_score_how_other": "De middelste waarde (mediaan) van {{count}} beoordelingen van medestudenten, per criterium.",
+      "score_needs_more_one": "Een peerscore verschijnt na {{count}} beoordeling.",
+      "score_needs_more_other": "Een peerscore verschijnt na {{count}} beoordelingen.",
+      "reviewers_disagree": "De beoordelaars waren het oneens",
+      "gap_title": "Medestudenten en je zelfbeoordeling",
+      "gap_title_peers": "Wat medestudenten zagen",
+      "legend_peers": "Medestudenten (mediaan)",
+      "legend_you": "Jij",
+      "gap_values": "Medestudenten {{peers}} · Jij {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: medestudenten {{peers}}, jij {{you}}, van {{max}}",
+      "gap_aligned": "Jij en je medestudenten zijn het eens",
+      "gap_self_higher": "Je beoordeelde jezelf hoger dan je medestudenten",
+      "gap_self_lower": "Je beoordeelde jezelf lager dan je medestudenten",
+      "reviews_received_one": "{{count}} beoordeling ontvangen",
+      "reviews_received_other": "{{count}} beoordelingen ontvangen",
+      "reviewer_n": "Beoordelaar {{n}}",
+      "flagged": "Gemeld",
+      "how_helpful": "Hoe nuttig was dit?",
+      "stars_n_one": "{{count}} ster",
+      "stars_n_other": "{{count}} sterren",
+      "helpful_note_label": "Notitie voor de beoordelaar",
+      "helpful_note_placeholder": "Wat hielp, of wat had meer geholpen? (optioneel)",
+      "save_note": "Notitie opslaan",
+      "thanks_feedback": "Bedankt voor je feedback",
+      "flag_link": "Deze beoordeling melden",
+      "flag_title": "Deze beoordeling melden",
+      "flag_body": "Je docent bekijkt het. Vertel wat er mis is, bijvoorbeeld onbeleefd, naast het onderwerp of leeg.",
+      "flag_reason": "Wat is er mis?",
+      "flag_submit": "Melden",
+      "flag_sent": "Bedankt. Je docent is op de hoogte gebracht.",
+      "plan_title": "Jouw verbeterplan",
+      "plan_why": "Schrijf op wat je gaat aanpassen. Met een plan wordt feedback beter werk.",
+      "plan_placeholder": "Op basis van deze feedback ga ik…",
+      "save_plan": "Plan opslaan",
+      "plan_saved": "Verbeterplan opgeslagen",
+      "error_generic": "Er ging iets mis. Probeer het opnieuw.",
+      "error_save": "Je concept kon niet worden opgeslagen. We proberen het opnieuw.",
+      "error_submit": "Dit kon niet worden ingediend. Probeer het opnieuw.",
+      "error_download": "Het bestand kon niet worden gedownload.",
+      "submission_changed": "Deze medestudent is aan een nieuwe poging begonnen, dus deze review is gesloten. Je kunt iemand anders reviewen.",
+      "answer_hidden": "Dit antwoord wordt automatisch nagekeken en hoort daarom niet bij de review.",
+      "retry_in_progress": "Je bent een nieuwe poging begonnen. Lever die in om je medestudenten verder te reviewen."
+    },
+    "instructor": {
+      "tab": "Peer review",
+      "setup": "Instellen",
+      "unknown_learner": "Cursist",
+      "retry": "Opnieuw proberen",
+      "error_title": "Peer review kon niet worden geladen",
+      "error_description": "Er ging iets mis. Controleer je verbinding en probeer het opnieuw.",
+      "toggle": {
+        "title": "Peer review",
+        "off_hint": "Uit. Na het inleveren beoordelen cursisten het werk van een paar medecursisten met jouw rubric en krijgen ze feedback van hen.",
+        "on_hint": "Aan. Elke cursist beoordeelt medecursisten na het inleveren. Kies hieronder een rubricsjabloon, sla op en je bent klaar."
+      },
+      "why": {
+        "title": "Waarom peer review werkt",
+        "reviewers_learn": "Wie beoordelingen schrijft, leert er het meest van. Daarom beoordeelt elke cursist.",
+        "three_reviewers": "Drie of meer beoordelaars geven ongeveer even betrouwbare feedback als één docent.",
+        "rubric_practice": "Een duidelijke rubric en een korte oefenronde maken beoordelingen nauwkeurig.",
+        "revise": "Feedback helpt het meest als cursisten plannen wat ze hierna gaan veranderen.",
+        "dismiss": "Deze tip verbergen"
+      },
+      "sections": {
+        "settings": "Instellingen",
+        "rubric": "Rubric",
+        "prompts": "Feedbackvragen",
+        "practice": "Oefenronde"
+      },
+      "settings": {
+        "reviewing_title": "Beoordelen",
+        "reviewing_description": "Hoeveel beoordelingen elke cursist schrijft en wie wiens naam ziet.",
+        "reviews_required": "Beoordelingen per cursist",
+        "reviews_required_hint": "3–5 geeft betrouwbare feedback. Elk werk krijgt er bij voorkeur ook zoveel.",
+        "anonymity": "Namen",
+        "anonymity_hint": "Verborgen namen maken beoordelingen eerlijker.",
+        "require_reviews": "Eerst beoordelen, dan feedback zien",
+        "require_reviews_hint": "Cursisten zien hun feedback zodra ze hun beoordelingen hebben gedaan, of na de deadline voor beoordelingen.",
+        "due_date": "Deadline voor beoordelingen",
+        "due_date_hint": "Optioneel. Na deze datum kan iedereen zijn feedback zien.",
+        "clear": "Wissen",
+        "steps_title": "Extra stappen",
+        "steps_description": "Elke stap is kort en maakt de feedback nuttiger.",
+        "self_review": "Zelfbeoordeling",
+        "self_review_hint": "Cursisten scoren eerst hun eigen werk en vergelijken dat daarna met wat medecursisten zeiden.",
+        "practice": "Oefenronde",
+        "practice_hint": "Cursisten scoren een voorbeeld dat jij hebt voorbereid en zien hoe jij het scoorde. Vereist minstens één voorbeeld.",
+        "helpfulness": "Waardering van feedback",
+        "helpfulness_hint": "Cursisten geven elke ontvangen beoordeling 1 tot 5 sterren.",
+        "revision_plan": "Verbeterplan",
+        "revision_plan_hint": "Cursisten schrijven op wat ze gaan veranderen na het lezen van hun feedback.",
+        "score_title": "Scores",
+        "score_description": "Peer review bepaalt nooit zelf een cijfer.",
+        "min_reviews": "Beoordelingen nodig voor een score",
+        "min_reviews_hint": "De peerscore verschijnt zodra een werk zoveel beoordelingen heeft."
+      },
+      "anonymity": {
+        "double_blind": "Beide verborgen",
+        "double_blind_hint": "Niemand ziet wie wie beoordeelde",
+        "anonymous_reviewer": "Beoordelaar verborgen",
+        "anonymous_reviewer_hint": "Beoordelaars zien de naam van de maker",
+        "named": "Namen zichtbaar",
+        "named_hint": "Iedereen ziet beide namen"
+      },
+      "score_mode": {
+        "feedback_only": "Alleen feedback",
+        "feedback_only_hint": "Beoordelingen zijn om van te leren, geen cijfervoorstel",
+        "suggest_grade": "Cijfer voorstellen",
+        "suggest_grade_hint": "Je ziet de peermediaan en kunt die gebruiken bij het geven van cijfers"
+      },
+      "rubric": {
+        "title": "Rubric",
+        "description": "Wat beoordelaars scoren. Elk criterium heeft niveaus van sterkst tot zwakst.",
+        "template": "Beginnen met een sjabloon",
+        "empty_title": "Nog geen rubric",
+        "empty_description": "Kies een sjabloon om met één klik te starten en pas de tekst daarna aan je opdracht aan.",
+        "add_criterion": "Criterium toevoegen",
+        "remove_criterion": "Criterium verwijderen",
+        "move_up": "Omhoog",
+        "move_down": "Omlaag",
+        "criterion_title": "Criterium",
+        "criterion_title_placeholder": "bijv. Duidelijke hoofdgedachte",
+        "criterion_description": "Waar op te letten",
+        "criterion_description_placeholder": "Waar moet een beoordelaar op letten?",
+        "untitled_criterion": "Naamloos criterium",
+        "level_label": "Niveau",
+        "level_label_placeholder": "bijv. Uitstekend",
+        "points": "Punten",
+        "level_description": "Hoe het eruitziet",
+        "level_description_placeholder": "Optioneel: hoe werk op dit niveau eruitziet",
+        "add_level": "Niveau toevoegen",
+        "remove_level": "Niveau verwijderen",
+        "max_points": "Max. punten: {{points}}",
+        "summary": "Criteria: {{criteria}} · Max. punten: {{points}}",
+        "replace_title": "Huidige rubric vervangen?",
+        "replace_message": "Het sjabloon vervangt je huidige criteria. Er wordt niets opgeslagen tot je op Opslaan klikt.",
+        "replace_confirm": "Vervangen"
+      },
+      "templates": {
+        "writing": {
+          "name": "Schrijven",
+          "blurb": "Essays, verslagen en schriftelijke antwoorden",
+          "thesis": {
+            "title": "Hoofdgedachte",
+            "description": "Het hoofdpunt is duidelijk en blijft van begin tot eind centraal."
+          },
+          "evidence": {
+            "title": "Onderbouwing en bewijs",
+            "description": "Beweringen worden gesteund door passende voorbeelden, feiten of bronnen."
+          },
+          "organization": {
+            "title": "Opbouw",
+            "description": "Ideeën volgen een logische volgorde en elke alinea heeft één taak."
+          },
+          "style": {
+            "title": "Helderheid en stijl",
+            "description": "Zinnen zijn duidelijk en goed leesbaar, met weinig fouten."
+          }
+        },
+        "project": {
+          "name": "Project",
+          "blurb": "Bouwprojecten, ontwerpen en praktisch werk",
+          "goal": {
+            "title": "Doel en afbakening",
+            "description": "Het project zegt wat het wil bereiken en blijft daarbinnen."
+          },
+          "process": {
+            "title": "Proces en keuzes",
+            "description": "De genomen stappen en de redenen achter belangrijke keuzes worden uitgelegd."
+          },
+          "result": {
+            "title": "Kwaliteit van het resultaat",
+            "description": "Het eindresultaat werkt, is compleet en zorgvuldig gemaakt."
+          },
+          "reflection": {
+            "title": "Reflectie",
+            "description": "De maker vertelt wat werkte, wat niet en wat hij of zij anders zou doen."
+          }
+        },
+        "presentation": {
+          "name": "Presentatie",
+          "blurb": "Lezingen, slides en video's",
+          "content": {
+            "title": "Inhoud",
+            "description": "De informatie klopt, is relevant en gaat verder dan het voor de hand liggende."
+          },
+          "structure": {
+            "title": "Opbouw",
+            "description": "Er is een duidelijke opening, een logisch middenstuk en een sterk slot."
+          },
+          "delivery": {
+            "title": "Voordracht",
+            "description": "De spreker is duidelijk, heeft een goed tempo en houdt de aandacht vast."
+          },
+          "visuals": {
+            "title": "Beeldmateriaal",
+            "description": "Slides of beelden ondersteunen de boodschap en zijn goed leesbaar."
+          }
+        },
+        "code": {
+          "name": "Code",
+          "blurb": "Programma's, scripts en oefeningen",
+          "correctness": {
+            "title": "Juistheid",
+            "description": "De code doet wat er gevraagd werd, ook in randgevallen."
+          },
+          "readability": {
+            "title": "Leesbaarheid",
+            "description": "Namen, opmaak en commentaar maken de code makkelijk te volgen."
+          },
+          "design": {
+            "title": "Structuur en ontwerp",
+            "description": "De code is opgedeeld in logische delen zonder onnodige herhaling."
+          },
+          "testing": {
+            "title": "Testen",
+            "description": "Er zijn controles of tests die laten zien dat de code werkt."
+          }
+        },
+        "scale": {
+          "excellent": "Uitstekend",
+          "excellent_description": "Voldoet volledig aan het criterium, met duidelijke sterke punten",
+          "good": "Goed",
+          "good_description": "Voldoet aan het criterium met kleine hiaten",
+          "developing": "In ontwikkeling",
+          "developing_description": "Voldoet deels aan het criterium, heeft meer werk nodig",
+          "beginning": "Beginnend",
+          "beginning_description": "Voldoet nog nauwelijks aan het criterium",
+          "strong": "Sterk",
+          "strong_description": "Voldoet duidelijk aan het criterium",
+          "adequate": "Voldoende",
+          "adequate_description": "Voldoet deels aan het criterium",
+          "needs_work": "Moet beter",
+          "needs_work_description": "Voldoet nog niet aan het criterium"
+        }
+      },
+      "prompts": {
+        "title": "Feedbackvragen",
+        "description": "De vragen die beoordelaars schriftelijk beantwoorden. Een minimale lengte voorkomt beoordelingen van één woord.",
+        "label": "Vraag",
+        "label_placeholder": "bijv. Wat verraste je?",
+        "min_chars": "Min. tekens",
+        "min_chars_hint": "Bij 0 is het antwoord optioneel.",
+        "add": "Vraag toevoegen",
+        "remove": "Vraag verwijderen",
+        "reset": "Standaardvragen gebruiken"
+      },
+      "samples": {
+        "title": "Oefenvoorbeelden",
+        "description": "Cursisten scoren een voorbeeld voordat ze medecursisten beoordelen en zien daarna jouw scores en waarom. Een of twee voorbeelden is genoeg.",
+        "practice_off": "De oefenronde staat uit in Instellingen, dus cursisten zien deze voorbeelden niet.",
+        "none_yet": "Nog geen voorbeelden, dus de oefenronde wordt overgeslagen. Voeg er een toe om hem aan te zetten.",
+        "needs_rubric": "Voeg eerst rubriccriteria toe om je niveaus per voorbeeld in te stellen.",
+        "sample_title": "Titel",
+        "sample_title_placeholder": "bijv. Voorbeeldessay A",
+        "content": "Voorbeeldwerk",
+        "content_hint": "Markdown werkt",
+        "content_placeholder": "Plak een voorbeeldantwoord, het liefst een gemiddeld antwoord met verbeterpunten.",
+        "levels": "Jouw niveaus",
+        "levels_hint": "Wat jij per criterium zou geven",
+        "pick_level": "Kies een niveau",
+        "explanation": "Waarom",
+        "explanation_hint": "Getoond nadat cursisten het hebben gescoord",
+        "explanation_placeholder": "Leg je scores in een paar zinnen uit.",
+        "add": "Voorbeeld toevoegen",
+        "remove": "Voorbeeld verwijderen",
+        "count_hint": "Maximaal 5 voorbeelden"
+      },
+      "errors": {
+        "criteria_min": "Voeg minstens één criterium toe om peer review aan te zetten.",
+        "criteria_max": "Gebruik maximaal {{max}} criteria.",
+        "criterion_title": "Geef dit criterium een naam.",
+        "levels_min": "Elk criterium heeft minstens {{min}} niveaus nodig.",
+        "levels_max": "Gebruik maximaal {{max}} niveaus per criterium.",
+        "level_label": "Geef dit niveau een naam.",
+        "level_points": "Punten moeten 0 of meer zijn.",
+        "prompts_min": "Houd minstens één vraag.",
+        "prompts_max": "Gebruik maximaal {{max}} vragen.",
+        "prompt_label": "Schrijf de vraag.",
+        "prompt_min_chars": "Gebruik een geheel getal van 0 tot {{max}}.",
+        "reviews_range": "Gebruik een getal van {{min}} tot {{max}}.",
+        "sample_title": "Geef het voorbeeld een titel.",
+        "sample_content": "Voeg het voorbeeldwerk toe.",
+        "sample_levels": "Kies je niveau voor elk criterium.",
+        "duplicate": "Twee items hebben dezelfde ID. Verwijder er een en voeg hem opnieuw toe."
+      },
+      "save": {
+        "saving": "Peer review opslaan…",
+        "saved": "Peer review opgeslagen",
+        "error": "Peer review kon niet worden opgeslagen",
+        "fix_errors": "Herstel de gemarkeerde velden en sla opnieuw op."
+      },
+      "monitor": {
+        "title": "Overzicht",
+        "off_title": "Peer review staat uit",
+        "off_description": "Zet het aan bij Instellen. Voortgang, scores en gemelde beoordelingen verschijnen dan hier.",
+        "go_setup": "Naar instellen"
+      },
+      "totals": {
+        "submitted": "Ingeleverd",
+        "reviews_done": "Beoordelingen klaar",
+        "in_progress": "Beoordelingen bezig",
+        "below_target": "Meer beoordelingen nodig",
+        "flagged": "Gemeld"
+      },
+      "flagged": {
+        "title": "Gemelde beoordelingen",
+        "description": "Een cursist heeft deze gemeld als oneerlijk of niet nuttig. Verwerp een beoordeling om die buiten de score te laten.",
+        "open": "Alle beoordelingen bekijken",
+        "count": "Meldingen: {{n}}"
+      },
+      "submissions": {
+        "title": "Inzendingen",
+        "learner": "Cursist",
+        "reviews": "Ontvangen beoordelingen",
+        "received": "{{done}} van {{target}}",
+        "peer_score": "Peerscore",
+        "peer_score_tip": "De mediaan van de beoordelingen, per criterium, als percentage. Verworpen beoordelingen tellen niet mee.",
+        "self": "Zelf",
+        "self_tip": "De score die de cursist zijn eigen werk gaf.",
+        "flags": "Meldingen",
+        "waiting": "Wachten",
+        "disagree": "Beoordelaars oneens ({{points}} ptn)",
+        "disagree_tip": "De hoogste en laagste beoordeling liggen ver uit elkaar. Even kijken voordat je een cijfer geeft.",
+        "empty_title": "Nog niets ingeleverd",
+        "empty_description": "Beoordelingen starten zodra cursisten hun werk inleveren."
+      },
+      "reviewers": {
+        "title": "Beoordelaars",
+        "reviewer": "Beoordelaar",
+        "done": "Klaar",
+        "done_tip": "Geschreven beoordelingen ten opzichte van het vereiste aantal. Extra beoordelingen tellen ook mee.",
+        "helpfulness": "Nut",
+        "helpfulness_tip": "De gemiddelde sterrenwaardering die makers aan de beoordelingen van deze persoon gaven.",
+        "helpfulness_value": "{{value}} van 5",
+        "bias": "Afwijking",
+        "bias_tip": "Hoe ver de scores van deze persoon gemiddeld afwijken van die van andere beoordelaars van hetzelfde werk. Lager is beter.",
+        "bias_value": "±{{points}} ptn",
+        "calibration": "Oefenafwijking",
+        "calibration_tip": "Hoe ver de scores in de oefenronde van die van jou afweken, in rubricpunten per criterium. Lager is beter.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Nog geen beoordelingen",
+        "empty_description": "Cursisten verschijnen hier zodra ze beginnen met beoordelen."
+      },
+      "drawer": {
+        "title": "Peer reviews",
+        "close": "Sluiten",
+        "peer_score": "Peerscore",
+        "not_enough": "Nog niet genoeg beoordelingen (minimum: {{n}})",
+        "score_basis": "Mediaan van de beoordelingen · meegeteld: {{n}}",
+        "self_score": "Zelfbeoordeling:",
+        "self_short": "zelf: {{points}}",
+        "apply_grade": "Peerscore als cijfer gebruiken ({{score}})",
+        "apply_hint": "Opent het beoordelen met het getoonde voorstel. Er wordt niets opgeslagen tot je een cijfer geeft.",
+        "feedback_only_hint": "Cijfervoorstellen staan uit (alleen feedback).",
+        "open_grading": "Beoordelen openen",
+        "reviews": "Beoordelingen ({{n}})",
+        "reviewer_n": "Beoordelaar {{n}}",
+        "no_reviews": "Nog geen beoordelingen.",
+        "status_assigned": "Bezig",
+        "status_discarded": "Verworpen",
+        "flagged": "Gemeld",
+        "flag_reason": "Reden van melding:",
+        "discard_reason": "Reden van verwerpen:",
+        "discard_placeholder": "Waarom laat je deze beoordeling weg? Alleen docenten zien dit.",
+        "discard": "Verwerpen",
+        "restore": "Herstellen",
+        "discarded_toast": "Beoordeling verworpen",
+        "restored_toast": "Beoordeling hersteld",
+        "action_error": "Dat lukte niet. Probeer het opnieuw.",
+        "helpfulness": "Gewaardeerd door de maker:",
+        "self_review": "Zelfbeoordeling",
+        "reflection": "Verbeterplan",
+        "no_reflection": "Nog geen verbeterplan geschreven.",
+        "grade_title": "{{name}} beoordelen",
+        "suggested": "Peervoorstel: {{score}}",
+        "suggested_hint": "Mediaan van de peerbeoordelingen (meegeteld: {{n}}). Gebruik het als richtlijn.",
+        "closed_new_attempt": "Automatisch gesloten: de cursist is een nieuwe poging gestart."
+      }
     }
   }
 }

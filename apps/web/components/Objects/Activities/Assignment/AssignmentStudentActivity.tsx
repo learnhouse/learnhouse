@@ -16,6 +16,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { sortTasksByOrder } from '@/lib/assignments/taskOrder'
 import { ASSIGNMENT_SUBMIT_EVENT, taskSubmissionHasAnswer } from './assignmentUI'
+import PeerReviewCard from './PeerReview/PeerReviewCard'
 
 type ParsedDueDate = { at: Date; hasTime: boolean }
 
@@ -161,6 +162,11 @@ function AssignmentStudentActivity() {
   const submissionStatus = Array.isArray(submission) && submission.length > 0 ? submission[0]?.submission_status : null
   const isSubmitted = submissionStatus === 'SUBMITTED'
   const isAwaitingSubmission = !isSubmitted && !isGraded
+  // Peer review (opt-in per assignment). The card makes one GET /peer-review/me
+  // and renders nothing when peer review is off. Handed in: the stepper sits
+  // above the tasks; before that, a one-line "what comes next" by the hand-in bar.
+  const assignmentUuid = assignments?.assignment_object?.assignment_uuid as string | undefined
+  const isHandedIn = isSubmitted || isGraded || submissionStatus === 'LATE'
 
   // One status for the whole assignment, in the learner's words.
   const status = isGraded
@@ -343,6 +349,8 @@ function AssignmentStudentActivity() {
         </div>
       )}
 
+      {isHandedIn && <PeerReviewCard assignmentUuid={assignmentUuid} submissionStatus={submissionStatus} />}
+
       {tasks.map((task: any, index: number) => {
         const taskSubmission = taskSubmissionsMap ? taskSubmissionsMap[task.assignment_task_uuid] : null;
         const taskGrade = taskSubmission?.grade ?? 0;
@@ -441,6 +449,8 @@ function AssignmentStudentActivity() {
           </section>
         )
       })}
+
+      {!isHandedIn && !isPastDue && tasks.length > 0 && <PeerReviewCard assignmentUuid={assignmentUuid} submissionStatus={submissionStatus} />}
 
       {/* Where the work ends: hand it in, or see where it stands. The button
           opens the same confirmation as the activity bar's submit control. */}

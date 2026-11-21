@@ -176,6 +176,10 @@
         "newsletter": {
           "title": "Standard Özelliği",
           "description": "Bülten, Standard ve üzeri planlarda kullanılabilir. Öğrencilerinize e-postayla kampanyalar, hoş geldin serileri ve kurs güncellemeleri göndermek için planınızı yükseltin."
+        },
+        "peer_review": {
+          "title": "Standart Özellik",
+          "description": "Akran değerlendirmesi, Standard plan ve üzeri organizasyonlar için kullanılabilir. Öğrencilerin birbirlerinin çalışmalarını bir rubrikle değerlendirmesi için yükseltin."
         }
       },
       "gate": {
@@ -381,6 +385,12 @@
           "note_3": "Cuma için sonraki adımlar",
           "play_title": "Alıştırma",
           "play_question": "Bir beşgenin kaç kenarı vardır?"
+        },
+        "peer_review": {
+          "title": "Öğrenciler birbirini değerlendirerek gelişir",
+          "b1": "Her öğrenci rubriğinizle birkaç sınıf arkadaşını değerlendirir",
+          "b2": "Bir deneme turu, sizin nasıl puanlayacağınızı gösterir",
+          "b3": "Değerlendirmelerden önerilen notu görün, kararı siz verin"
         }
       }
     },
@@ -8551,7 +8561,8 @@
             "scim": "SCIM ile kullanıcı sağlama",
             "audit_logs": "Denetim kayıtları",
             "custom_domain": "Özel alan adı",
-            "remove_watermark": "LearnHouse filigranı yok"
+            "remove_watermark": "LearnHouse filigranı yok",
+            "peer_review": "Akran değerlendirmesi"
           }
         },
         "next_invoice_label": "Sonraki fatura",
@@ -31248,7 +31259,9 @@
       "plan_downgraded": "Ücretsiz plana geçildi",
       "plan_restored": "Plan geri yüklendi",
       "payments_checkout_failing": "Ödemeler başarısız oluyor",
-      "invitation_accepted": "Davet kabul edildi"
+      "invitation_accepted": "Davet kabul edildi",
+      "peer_review_received": "Akran geri bildirimi alındı",
+      "peer_review_flagged": "Akran değerlendirmesi bildirildi"
     },
     "copy": {
       "assignment_graded": "Notlandırıldı: {{assignment}}",
@@ -31311,7 +31324,9 @@
       "plan_downgraded": "Artık Ücretsiz plandasınız. Hiçbir şey silinmedi",
       "plan_restored": "{{plan}} planına tekrar hoş geldiniz",
       "payments_checkout_failing": "Öğrenciler şu anda satın alamıyor ({{count}} başarısız ödeme)",
-      "invitation_accepted": "{{actor}} davetinizi kabul etti"
+      "invitation_accepted": "{{actor}} davetinizi kabul etti",
+      "peer_review_received": "{{assignment}} için yeni akran geri bildirimi",
+      "peer_review_flagged": "{{actor}}, {{assignment}} içindeki bir akran değerlendirmesini bildirdi"
     },
     "routing": {
       "short": "Kimlere bildirilir",
@@ -31619,6 +31634,500 @@
       "seat_limit_exceeded": "lisansın içerdiğinden daha fazla koltuk kullanılıyor",
       "grace_expired": "lisans sunucusuna çok uzun süre ulaşılamadı",
       "unknown": "lisans doğrulanamadı"
+    }
+  },
+  "peer_review": {
+    "common": {
+      "criterion_n": "Kriter {{n}}",
+      "points_short_one": "{{count}} puan",
+      "points_short_other": "{{count}} puan",
+      "prompt_strength": "İyi giden yönler",
+      "prompt_suggestion": "Geliştirilecek bir şey ve nasıl",
+      "prompt_question": "Yazara bir soru"
+    },
+    "learner": {
+      "eyebrow": "Akran değerlendirmesi",
+      "card_title": "Sınıf arkadaşlarını değerlendir, geri bildirim al",
+      "steps_label": "Akran değerlendirmesi adımları",
+      "step_self": "Öz değerlendirme",
+      "step_practice": "Alıştırma",
+      "step_reviews": "Arkadaşlarını değerlendir",
+      "step_feedback": "Geri bildirimin",
+      "n_of_m": "{{n}} / {{m}}",
+      "done": "Tamamlandı",
+      "to_do": "Yapılacak",
+      "locked": "Kilitli",
+      "continue": "Devam et",
+      "cancel": "İptal",
+      "back": "Geri",
+      "retry": "Tekrar dene",
+      "optional": "İsteğe bağlı",
+      "saved": "Kaydedildi",
+      "saving": "Kaydediliyor…",
+      "unsaved": "Kaydedilmemiş değişiklikler",
+      "not_saved": "Kaydedilmedi",
+      "feedback_count_one": "{{count}} değerlendirme",
+      "feedback_count_other": "{{count}} değerlendirme",
+      "reviews_due": "Değerlendirmeler için son tarih: {{date}}",
+      "reviews_closed_on": "Değerlendirmeler {{date}} tarihinde kapandı",
+      "next_title": "Sırada akran değerlendirmesi var",
+      "next_body_one": "Ödevini teslim ettikten sonra {{count}} sınıf arkadaşının çalışmasını değerlendirecek ve kendi çalışmana geri bildirim alacaksın.",
+      "next_body_other": "Ödevini teslim ettikten sonra {{count}} sınıf arkadaşının çalışmasını değerlendirecek ve kendi çalışmana geri bildirim alacaksın.",
+      "self_title": "Kendi çalışmanı değerlendir",
+      "self_why": "Önce kendini değerlendirmek, arkadaşlarının geri bildirimini karşılaştırmayı ve ona göre hareket etmeyi kolaylaştırır.",
+      "self_done": "Öz değerlendirme kaydedildi",
+      "self_done_pct": "Öz değerlendirme kaydedildi: kendine %{{pct}} verdin",
+      "edit_self_review": "Öz değerlendirmeyi düzenle",
+      "save_self_review": "Öz değerlendirmeyi kaydet",
+      "self_saved_toast": "Öz değerlendirme kaydedildi",
+      "cal_title": "Alıştırma turu",
+      "cal_why": "Önce bir örneği puanlamak, eğitmeninin rubriği nasıl okuduğunu gösterir. Böylece değerlendirmelerin daha adil olur.",
+      "cal_progress": "Örnek {{current}} / {{total}}",
+      "cal_sample": "Alıştırma örneği",
+      "cal_check": "Eğitmenle karşılaştır",
+      "cal_you": "Sen",
+      "cal_instructor": "Eğitmen",
+      "cal_match": "Eğitmenle aynı",
+      "cal_off_by_one": "{{count}} puan fark",
+      "cal_off_by_other": "{{count}} puan fark",
+      "cal_why_title": "Eğitmen neden bu puanı verdi",
+      "cal_next": "Sonraki örnek",
+      "cal_all_done": "Alıştırma bitti. Arkadaşlarını değerlendirmeye hazırsın.",
+      "cal_none": "Şu anda alıştırma örneği yok.",
+      "go_to_reviews": "Değerlendirmelere git",
+      "go_to_practice": "Alıştırmaya git",
+      "finish_practice_first": "Önce alıştırma turunu bitir.",
+      "reviews_title": "Arkadaşlarını değerlendir",
+      "reviews_why": "Öğrenmenin çoğu başkalarını değerlendirirken olur.",
+      "reviews_done_of": "{{done}} / {{required}} tamamlandı",
+      "reviews_locked_practice": "Değerlendirmeye başlamak için alıştırma turunu bitir.",
+      "reviews_complete": "Tüm değerlendirmelerini yaptın. Teşekkürler!",
+      "reviews_extra_hint": "Ek değerlendirmeler çok makbule geçer: daha az değerlendirme alan arkadaşlarına yardımcı olur.",
+      "start_review": "{{n}} / {{m}}. değerlendirmeye başla",
+      "continue_review": "Değerlendirmene devam et",
+      "review_another": "Bir tane daha değerlendir",
+      "see_feedback": "Geri bildirimini gör",
+      "none_title": "Henüz değerlendirilecek kimse yok",
+      "none_body": "Biri ödevini teslim eder etmez sana bir arkadaşının çalışmasını vereceğiz. Biraz sonra tekrar bak.",
+      "check_again": "Tekrar kontrol et",
+      "your_helpfulness": "Arkadaşların değerlendirmelerini ortalama {{avg}} / 5 puanlıyor.",
+      "review_n_of_m": "Değerlendirme {{n}} / {{m}}",
+      "extra_review": "Ek değerlendirme",
+      "classmate_work": "Sınıf arkadaşının çalışması",
+      "work_of": "{{name}} adlı kişinin çalışması",
+      "your_review": "Değerlendirmen",
+      "your_review_hint": "Her kriter için en uygun seviyeyi seç, sonra nazik ve somut yorumlar yaz.",
+      "review_already_submitted": "Bu değerlendirmeyi zaten gönderdin.",
+      "review_load_error": "Bu değerlendirme yüklenemedi.",
+      "comments_heading": "Yorumlar",
+      "pick_a_level": "Bir seviye seç",
+      "add_note": "Not ekle",
+      "note_label": "Bu kriter için not (isteğe bağlı)",
+      "chars_remaining_one": "{{count}} karakter daha gerekli",
+      "chars_remaining_other": "{{count}} karakter daha gerekli",
+      "chars_ok_one": "{{count}} karakter",
+      "chars_ok_other": "{{count}} karakter",
+      "fix_before_submit": "Bazı yerler eksik. Vurgulanan alanları kontrol et.",
+      "save_draft": "Taslağı kaydet",
+      "submit_review": "Değerlendirmeyi gönder",
+      "drafts_autosave": "Taslaklar otomatik kaydedilir",
+      "draft_saved_toast": "Taslak kaydedildi",
+      "review_submitted_toast": "Değerlendirme gönderildi. Teşekkürler!",
+      "no_answer": "Cevap yok",
+      "no_tasks": "Bu teslim için gösterilecek bir şey yok.",
+      "chosen": "seçildi",
+      "media_option": "Seçenek {{n}} (medya)",
+      "download_file": "Dosyayı indir",
+      "feedback_title": "Geri bildirimin",
+      "feedback_why": "Arkadaşlarının gördüklerini kendi bakışınla karşılaştır, sonra neyi değiştireceğine karar ver.",
+      "locked_reviews_one": "Geri bildirimini açmak için {{count}} değerlendirme daha yap",
+      "locked_reviews_other": "Geri bildirimini açmak için {{count}} değerlendirme daha yap",
+      "locked_generic": "Geri bildirimin henüz açık değil",
+      "locked_due": "En geç {{date}} tarihinde açılır.",
+      "unlocked_by_due_date": "Değerlendirme süresi geçtiği için geri bildirimin açıldı.",
+      "no_feedback_title": "Henüz geri bildirim yok",
+      "no_feedback_body": "Arkadaşlarından gelen değerlendirmeler geldikçe burada görünecek.",
+      "peer_score": "Akran puanı",
+      "peer_score_how_one": "Her kriter için {{count}} arkadaş değerlendirmesinin ortanca (medyan) değeri.",
+      "peer_score_how_other": "Her kriter için {{count}} arkadaş değerlendirmesinin ortanca (medyan) değeri.",
+      "score_needs_more_one": "Akran puanı {{count}} değerlendirmeden sonra görünür.",
+      "score_needs_more_other": "Akran puanı {{count}} değerlendirmeden sonra görünür.",
+      "reviewers_disagree": "Değerlendirenler aynı fikirde değildi",
+      "gap_title": "Arkadaşların ve öz değerlendirmen",
+      "gap_title_peers": "Arkadaşların ne gördü",
+      "legend_peers": "Arkadaşlar (medyan)",
+      "legend_you": "Sen",
+      "gap_values": "Arkadaşlar {{peers}} · Sen {{you}} / {{max}}",
+      "gap_aria": "{{criterion}}: arkadaşlar {{peers}}, sen {{you}}, üzerinden {{max}}",
+      "gap_aligned": "Sen ve arkadaşların aynı fikirdesiniz",
+      "gap_self_higher": "Kendine arkadaşlarından daha yüksek puan verdin",
+      "gap_self_lower": "Kendine arkadaşlarından daha düşük puan verdin",
+      "reviews_received_one": "{{count}} değerlendirme alındı",
+      "reviews_received_other": "{{count}} değerlendirme alındı",
+      "reviewer_n": "Değerlendiren {{n}}",
+      "flagged": "Bildirildi",
+      "how_helpful": "Bu ne kadar yardımcı oldu?",
+      "stars_n_one": "{{count}} yıldız",
+      "stars_n_other": "{{count}} yıldız",
+      "helpful_note_label": "Değerlendirene not",
+      "helpful_note_placeholder": "Ne işe yaradı ya da neyi daha çok işe yarardı? (isteğe bağlı)",
+      "save_note": "Notu kaydet",
+      "thanks_feedback": "Geri bildirimin için teşekkürler",
+      "flag_link": "Bu değerlendirmeyi bildir",
+      "flag_title": "Bu değerlendirmeyi bildir",
+      "flag_body": "Eğitmenin buna bakacak. Neyin yanlış olduğunu anlat, örneğin kaba, konu dışı ya da boş.",
+      "flag_reason": "Sorun ne?",
+      "flag_submit": "Bildir",
+      "flag_sent": "Teşekkürler. Eğitmenine haber verildi.",
+      "plan_title": "Düzeltme planın",
+      "plan_why": "Neyi değiştireceğini yaz. Plan, geri bildirimi daha iyi bir çalışmaya dönüştürür.",
+      "plan_placeholder": "Bu geri bildirime göre…",
+      "save_plan": "Planı kaydet",
+      "plan_saved": "Düzeltme planı kaydedildi",
+      "error_generic": "Bir şeyler ters gitti. Lütfen tekrar dene.",
+      "error_save": "Taslağın kaydedilemedi. Tekrar deneyeceğiz.",
+      "error_submit": "Gönderilemedi. Lütfen tekrar dene.",
+      "error_download": "Dosya indirilemedi.",
+      "submission_changed": "Bu sınıf arkadaşın yeni bir denemeye başladı, bu yüzden bu değerlendirme kapatıldı. Başka birini değerlendirebilirsin.",
+      "answer_hidden": "Bu cevap otomatik olarak değerlendirilir, bu yüzden incelemeye dahil değildir.",
+      "retry_in_progress": "Yeni bir denemeye başladın. Arkadaşlarını değerlendirmeye devam etmek için onu teslim et."
+    },
+    "instructor": {
+      "tab": "Akran değerlendirmesi",
+      "setup": "Kurulum",
+      "unknown_learner": "Öğrenci",
+      "retry": "Tekrar dene",
+      "error_title": "Akran değerlendirmesi yüklenemedi",
+      "error_description": "Bir şeyler ters gitti. Bağlantınızı kontrol edip tekrar deneyin.",
+      "toggle": {
+        "title": "Akran değerlendirmesi",
+        "off_hint": "Kapalı. Teslimden sonra öğrenciler rubriğinizle birkaç sınıf arkadaşının çalışmasını değerlendirir ve onlardan geri bildirim alır.",
+        "on_hint": "Açık. Her öğrenci teslimden sonra sınıf arkadaşlarını değerlendirir. Aşağıdan bir rubrik şablonu seçip kaydedin, hazırsınız."
+      },
+      "why": {
+        "title": "Akran değerlendirmesi neden işe yarar",
+        "reviewers_learn": "Değerlendirme yazmak en çok yazana öğretir, bu yüzden her öğrenci değerlendirir.",
+        "three_reviewers": "Üç veya daha fazla değerlendirici, neredeyse bir eğitmen kadar güvenilir geri bildirim verir.",
+        "rubric_practice": "Net bir rubrik ve kısa bir deneme turu değerlendirmeleri isabetli kılar.",
+        "revise": "Geri bildirim, öğrenciler neyi değiştireceklerini planladığında en çok işe yarar.",
+        "dismiss": "Bu ipucunu gizle"
+      },
+      "sections": {
+        "settings": "Ayarlar",
+        "rubric": "Rubrik",
+        "prompts": "Yorum soruları",
+        "practice": "Deneme turu"
+      },
+      "settings": {
+        "reviewing_title": "Değerlendirme",
+        "reviewing_description": "Her öğrencinin kaç değerlendirme yazacağı ve kimin kimin adını göreceği.",
+        "reviews_required": "Öğrenci başına değerlendirme",
+        "reviews_required_hint": "3–5 güvenilir geri bildirim sağlar. Her çalışma da bu kadar değerlendirme almayı hedefler.",
+        "anonymity": "İsimler",
+        "anonymity_hint": "Gizli isimler değerlendirmeleri daha dürüst yapar.",
+        "require_reviews": "Geri bildirimden önce değerlendir",
+        "require_reviews_hint": "Öğrenciler kendi değerlendirmelerini bitirince veya değerlendirme son tarihinden sonra geri bildirimlerini görür.",
+        "due_date": "Değerlendirme son tarihi",
+        "due_date_hint": "İsteğe bağlı. Bu tarihten sonra herkes geri bildirimini görebilir.",
+        "clear": "Temizle",
+        "steps_title": "Ek adımlar",
+        "steps_description": "Her biri kısadır ve geri bildirimi daha faydalı hale getirir.",
+        "self_review": "Öz değerlendirme",
+        "self_review_hint": "Öğrenciler önce kendi çalışmalarını puanlar, sonra arkadaşlarının söyledikleriyle karşılaştırır.",
+        "practice": "Deneme turu",
+        "practice_hint": "Öğrenciler hazırladığınız bir örneği puanlar ve sizin nasıl puanladığınızı görür. En az bir örnek gerekir.",
+        "helpfulness": "Faydalılık puanları",
+        "helpfulness_hint": "Öğrenciler aldıkları her değerlendirmeye 1 ile 5 yıldız arasında puan verir.",
+        "revision_plan": "Düzeltme planı",
+        "revision_plan_hint": "Öğrenciler geri bildirimlerini okuduktan sonra neyi değiştireceklerini yazar.",
+        "score_title": "Puanlar",
+        "score_description": "Akran değerlendirmesi hiçbir zaman tek başına not vermez.",
+        "min_reviews": "Puan için gereken değerlendirme",
+        "min_reviews_hint": "Akran puanı, bir çalışma bu sayıda değerlendirme aldığında görünür."
+      },
+      "anonymity": {
+        "double_blind": "İkisi de gizli",
+        "double_blind_hint": "Kimin kimi değerlendirdiğini kimse görmez",
+        "anonymous_reviewer": "Değerlendirici gizli",
+        "anonymous_reviewer_hint": "Değerlendiriciler yazarın adını görür",
+        "named": "İsimler görünür",
+        "named_hint": "Herkes iki ismi de görür"
+      },
+      "score_mode": {
+        "feedback_only": "Yalnızca geri bildirim",
+        "feedback_only_hint": "Değerlendirmeler öğrenme içindir, not önerisi yok",
+        "suggest_grade": "Not öner",
+        "suggest_grade_hint": "Akran medyanını görür ve not verirken kullanabilirsiniz"
+      },
+      "rubric": {
+        "title": "Rubrik",
+        "description": "Değerlendiricilerin puanladığı şeyler. Her ölçütün en iyiden en zayıfa seviyeleri vardır.",
+        "template": "Bir şablonla başla",
+        "empty_title": "Henüz rubrik yok",
+        "empty_description": "Tek tıkla başlamak için bir şablon seçin, sonra ifadeleri ödevinize göre düzenleyin.",
+        "add_criterion": "Ölçüt ekle",
+        "remove_criterion": "Ölçütü kaldır",
+        "move_up": "Yukarı taşı",
+        "move_down": "Aşağı taşı",
+        "criterion_title": "Ölçüt",
+        "criterion_title_placeholder": "örn. Net ana fikir",
+        "criterion_description": "Nelere bakılmalı",
+        "criterion_description_placeholder": "Değerlendirici nelere bakmalı?",
+        "untitled_criterion": "Adsız ölçüt",
+        "level_label": "Seviye",
+        "level_label_placeholder": "örn. Mükemmel",
+        "points": "Puan",
+        "level_description": "Nasıl görünür",
+        "level_description_placeholder": "İsteğe bağlı: bu seviyedeki bir çalışma nasıl görünür",
+        "add_level": "Seviye ekle",
+        "remove_level": "Seviyeyi kaldır",
+        "max_points": "En yüksek puan: {{points}}",
+        "summary": "Ölçüt: {{criteria}} · En yüksek puan: {{points}}",
+        "replace_title": "Mevcut rubrik değiştirilsin mi?",
+        "replace_message": "Şablon, şu anki ölçütlerinizin yerine geçer. Kaydet'e tıklayana kadar hiçbir şey kaydedilmez.",
+        "replace_confirm": "Değiştir"
+      },
+      "templates": {
+        "writing": {
+          "name": "Yazı",
+          "blurb": "Denemeler, raporlar ve yazılı cevaplar",
+          "thesis": {
+            "title": "Ana fikir",
+            "description": "Ana fikir nettir ve baştan sona odakta kalır."
+          },
+          "evidence": {
+            "title": "Destek ve kanıt",
+            "description": "İddialar uygun örnekler, olgular veya kaynaklarla desteklenir."
+          },
+          "organization": {
+            "title": "Düzen",
+            "description": "Fikirler mantıklı bir sırayı izler ve her paragrafın tek bir işi vardır."
+          },
+          "style": {
+            "title": "Açıklık ve üslup",
+            "description": "Cümleler açık ve kolay okunur, az hata içerir."
+          }
+        },
+        "project": {
+          "name": "Proje",
+          "blurb": "Yapımlar, tasarımlar ve uygulamalı çalışmalar",
+          "goal": {
+            "title": "Amaç ve kapsam",
+            "description": "Proje neyi amaçladığını belirtir ve bunun içinde kalır."
+          },
+          "process": {
+            "title": "Süreç ve kararlar",
+            "description": "Atılan adımlar ve önemli seçimlerin nedenleri açıklanır."
+          },
+          "result": {
+            "title": "Sonucun kalitesi",
+            "description": "Nihai sonuç çalışır, eksiksizdir ve özenle yapılmıştır."
+          },
+          "reflection": {
+            "title": "Yansıtma",
+            "description": "Yazar neyin işe yaradığını, neyin yaramadığını ve neyi değiştireceğini anlatır."
+          }
+        },
+        "presentation": {
+          "name": "Sunum",
+          "blurb": "Konuşmalar, slaytlar ve videolar",
+          "content": {
+            "title": "İçerik",
+            "description": "Bilgiler doğru, konuyla ilgili ve bariz olanın ötesindedir."
+          },
+          "structure": {
+            "title": "Yapı",
+            "description": "Net bir girişi, mantıklı bir gelişmesi ve güçlü bir kapanışı vardır."
+          },
+          "delivery": {
+            "title": "Anlatım",
+            "description": "Konuşmacı açık konuşur, iyi bir tempoyla ilerler ve dikkati canlı tutar."
+          },
+          "visuals": {
+            "title": "Görseller",
+            "description": "Slaytlar veya görseller mesajı destekler ve kolay okunur."
+          }
+        },
+        "code": {
+          "name": "Kod",
+          "blurb": "Programlar, betikler ve alıştırmalar",
+          "correctness": {
+            "title": "Doğruluk",
+            "description": "Kod, uç durumlar dahil istenen şeyi yapar."
+          },
+          "readability": {
+            "title": "Okunabilirlik",
+            "description": "Adlar, biçimlendirme ve yorumlar kodu kolay takip edilir kılar."
+          },
+          "design": {
+            "title": "Yapı ve tasarım",
+            "description": "Kod, gereksiz tekrar olmadan mantıklı parçalara ayrılmıştır."
+          },
+          "testing": {
+            "title": "Test",
+            "description": "Kodun çalıştığını gösteren kontroller veya testler vardır."
+          }
+        },
+        "scale": {
+          "excellent": "Mükemmel",
+          "excellent_description": "Ölçütü tamamen karşılar, belirgin güçlü yönleri vardır",
+          "good": "İyi",
+          "good_description": "Ölçütü küçük eksiklerle karşılar",
+          "developing": "Gelişiyor",
+          "developing_description": "Ölçütü kısmen karşılar, daha fazla çalışma gerekir",
+          "beginning": "Başlangıç",
+          "beginning_description": "Ölçütü henüz zar zor karşılar",
+          "strong": "Güçlü",
+          "strong_description": "Ölçütü açıkça karşılar",
+          "adequate": "Yeterli",
+          "adequate_description": "Ölçütü kısmen karşılar",
+          "needs_work": "Geliştirilmeli",
+          "needs_work_description": "Ölçütü henüz karşılamıyor"
+        }
+      },
+      "prompts": {
+        "title": "Yorum soruları",
+        "description": "Değerlendiricilerin yazılı olarak cevapladığı sorular. En az uzunluk, tek kelimelik değerlendirmeleri önler.",
+        "label": "Soru",
+        "label_placeholder": "örn. Sizi ne şaşırttı?",
+        "min_chars": "En az karakter",
+        "min_chars_hint": "0, cevabı isteğe bağlı yapar.",
+        "add": "Soru ekle",
+        "remove": "Soruyu kaldır",
+        "reset": "Varsayılanları kullan"
+      },
+      "samples": {
+        "title": "Deneme örnekleri",
+        "description": "Öğrenciler sınıf arkadaşlarını değerlendirmeden önce bir örneği puanlar, sonra sizin puanlarınızı ve nedenlerini görür. Bir veya iki örnek yeterlidir.",
+        "practice_off": "Deneme turu Ayarlar'da kapalı, bu yüzden öğrenciler bu örnekleri görmez.",
+        "none_yet": "Henüz örnek yok, bu yüzden deneme turu atlanıyor. Açmak için bir örnek ekleyin.",
+        "needs_rubric": "Her örnek için seviyelerinizi belirlemek üzere önce rubrik ölçütleri ekleyin.",
+        "sample_title": "Başlık",
+        "sample_title_placeholder": "örn. Örnek deneme A",
+        "content": "Örnek çalışma",
+        "content_hint": "Markdown kullanılabilir",
+        "content_placeholder": "Örnek bir cevap yapıştırın, tercihen geliştirilecek yanları olan orta seviye bir cevap.",
+        "levels": "Seviyeleriniz",
+        "levels_hint": "Her ölçütte vereceğiniz seviye",
+        "pick_level": "Bir seviye seçin",
+        "explanation": "Neden",
+        "explanation_hint": "Öğrenciler puanladıktan sonra gösterilir",
+        "explanation_placeholder": "Puanlarınızı birkaç cümleyle açıklayın.",
+        "add": "Örnek ekle",
+        "remove": "Örneği kaldır",
+        "count_hint": "En fazla 5 örnek"
+      },
+      "errors": {
+        "criteria_min": "Akran değerlendirmesini açmak için en az bir ölçüt ekleyin.",
+        "criteria_max": "En fazla ölçüt sayısı: {{max}}.",
+        "criterion_title": "Bu ölçüte bir ad verin.",
+        "levels_min": "Her ölçüt için en az seviye sayısı: {{min}}.",
+        "levels_max": "Ölçüt başına en fazla seviye sayısı: {{max}}.",
+        "level_label": "Bu seviyeye bir ad verin.",
+        "level_points": "Puan 0 veya daha fazla olmalı.",
+        "prompts_min": "En az bir soru bırakın.",
+        "prompts_max": "En fazla soru sayısı: {{max}}.",
+        "prompt_label": "Soruyu yazın.",
+        "prompt_min_chars": "0 ile {{max}} arasında bir tam sayı girin.",
+        "reviews_range": "{{min}} ile {{max}} arasında bir sayı girin.",
+        "sample_title": "Örneğe bir başlık verin.",
+        "sample_content": "Örnek çalışmayı ekleyin.",
+        "sample_levels": "Her ölçüt için seviyenizi seçin.",
+        "duplicate": "İki öğe aynı kimliğe sahip. Birini kaldırıp yeniden ekleyin."
+      },
+      "save": {
+        "saving": "Akran değerlendirmesi kaydediliyor…",
+        "saved": "Akran değerlendirmesi kaydedildi",
+        "error": "Akran değerlendirmesi kaydedilemedi",
+        "fix_errors": "İşaretli alanları düzeltip tekrar kaydedin."
+      },
+      "monitor": {
+        "title": "İzleme",
+        "off_title": "Akran değerlendirmesi kapalı",
+        "off_description": "Kurulum'dan açın. İlerleme, puanlar ve bildirilen değerlendirmeler burada görünecek.",
+        "go_setup": "Kuruluma git"
+      },
+      "totals": {
+        "submitted": "Teslim edilen",
+        "reviews_done": "Tamamlanan değerlendirmeler",
+        "in_progress": "Devam eden değerlendirmeler",
+        "below_target": "Daha fazla değerlendirme gerekiyor",
+        "flagged": "Bildirilen"
+      },
+      "flagged": {
+        "title": "Bildirilen değerlendirmeler",
+        "description": "Bir öğrenci bunları haksız veya faydasız olarak bildirdi. Puana dahil edilmemesi için değerlendirmeyi geçersiz sayın.",
+        "open": "Tüm değerlendirmeleri gör",
+        "count": "Bildirim: {{n}}"
+      },
+      "submissions": {
+        "title": "Teslimler",
+        "learner": "Öğrenci",
+        "reviews": "Alınan değerlendirmeler",
+        "received": "{{done}} / {{target}}",
+        "peer_score": "Akran puanı",
+        "peer_score_tip": "Ölçüt başına değerlendirmelerin medyanı, yüzde olarak. Geçersiz sayılan değerlendirmeler dahil edilmez.",
+        "self": "Öz",
+        "self_tip": "Öğrencinin kendi çalışmasına verdiği puan.",
+        "flags": "Bildirimler",
+        "waiting": "Bekleniyor",
+        "disagree": "Değerlendiriciler ayrışıyor ({{points}} puan)",
+        "disagree_tip": "En yüksek ve en düşük değerlendirme arasında büyük fark var. Not vermeden önce göz atmaya değer.",
+        "empty_title": "Henüz teslim yok",
+        "empty_description": "Değerlendirmeler, öğrenciler çalışmalarını teslim eder etmez başlar."
+      },
+      "reviewers": {
+        "title": "Değerlendiriciler",
+        "reviewer": "Değerlendirici",
+        "done": "Tamamlanan",
+        "done_tip": "Gereken sayıya göre yazılan değerlendirmeler. Fazladan değerlendirmeler de sayılır.",
+        "helpfulness": "Faydalılık",
+        "helpfulness_tip": "Yazarların bu kişinin değerlendirmelerine verdiği ortalama yıldız puanı.",
+        "helpfulness_value": "5 üzerinden {{value}}",
+        "bias": "Sapma",
+        "bias_tip": "Bu kişinin puanlarının, aynı çalışmanın diğer değerlendiricilerinden ortalama ne kadar uzak olduğu. Düşük olması daha iyidir.",
+        "bias_value": "±{{points}} puan",
+        "calibration": "Deneme farkı",
+        "calibration_tip": "Deneme turundaki puanlarının sizinkinden ne kadar uzak olduğu, ölçüt başına rubrik puanı olarak. Düşük olması daha iyidir.",
+        "calibration_value": "±{{points}}",
+        "empty_title": "Henüz değerlendirme yok",
+        "empty_description": "Öğrenciler değerlendirmeye başladığında burada görünür."
+      },
+      "drawer": {
+        "title": "Akran değerlendirmeleri",
+        "close": "Kapat",
+        "peer_score": "Akran puanı",
+        "not_enough": "Henüz yeterli değerlendirme yok (en az: {{n}})",
+        "score_basis": "Değerlendirmelerin medyanı · sayılan: {{n}}",
+        "self_score": "Öz değerlendirme:",
+        "self_short": "öz: {{points}}",
+        "apply_grade": "Akran puanını not olarak uygula ({{score}})",
+        "apply_hint": "Öneri gösterilerek not verme ekranı açılır. Not verene kadar hiçbir şey kaydedilmez.",
+        "feedback_only_hint": "Not önerileri kapalı (yalnızca geri bildirim).",
+        "open_grading": "Not vermeyi aç",
+        "reviews": "Değerlendirmeler ({{n}})",
+        "reviewer_n": "Değerlendirici {{n}}",
+        "no_reviews": "Henüz değerlendirme yok.",
+        "status_assigned": "Devam ediyor",
+        "status_discarded": "Geçersiz sayıldı",
+        "flagged": "Bildirildi",
+        "flag_reason": "Bildirim nedeni:",
+        "discard_reason": "Geçersiz sayma nedeni:",
+        "discard_placeholder": "Bu değerlendirmeyi neden dışarıda bırakıyorsunuz? Bunu yalnızca eğitmenler görür.",
+        "discard": "Geçersiz say",
+        "restore": "Geri yükle",
+        "discarded_toast": "Değerlendirme geçersiz sayıldı",
+        "restored_toast": "Değerlendirme geri yüklendi",
+        "action_error": "Bu işe yaramadı. Tekrar deneyin.",
+        "helpfulness": "Yazarın puanı:",
+        "self_review": "Öz değerlendirme",
+        "reflection": "Düzeltme planı",
+        "no_reflection": "Henüz düzeltme planı yazılmadı.",
+        "grade_title": "Not ver: {{name}}",
+        "suggested": "Akran önerisi: {{score}}",
+        "suggested_hint": "Akran değerlendirmelerinin medyanı (sayılan: {{n}}). Bir rehber olarak kullanın.",
+        "closed_new_attempt": "Otomatik olarak kapatıldı: öğrenci yeni bir denemeye başladı."
+      }
     }
   }
 }

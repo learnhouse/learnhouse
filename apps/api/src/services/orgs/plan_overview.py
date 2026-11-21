@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 # usage meters) must all appear here; tests enforce it so a new feature can't
 # be left off the page.
 FEATURE_AREAS: dict[str, tuple[str, ...]] = {
-    "content": ("courses", "assignments", "folders", "paths", "podcasts", "boards", "playgrounds", "versioning", "scorm"),
+    "content": ("courses", "assignments", "peer_review", "folders", "paths", "podcasts", "boards", "playgrounds", "versioning", "scorm"),
     "engagement": ("communities", "messaging", "live_sessions", "collaboration", "newsletter"),
     "people": ("usergroups", "roles", "required_training", "company_seats", "payments"),
     "ai": ("ai",),
