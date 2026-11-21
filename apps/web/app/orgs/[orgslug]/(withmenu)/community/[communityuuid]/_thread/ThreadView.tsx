@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getServerSession } from '@/lib/auth/server'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 import { getCommunity } from '@services/communities/communities'
 import { getDiscussion } from '@services/communities/discussions'
 import ResourcePaywall from '@ee/components/Payments/ResourcePaywall'
@@ -24,7 +24,7 @@ export default async function ThreadView({
 }) {
   const [session, org] = await Promise.all([
     getServerSession(),
-    getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] }),
+    getOrgOr404(orgslug),
   ])
   const access_token = session?.tokens?.access_token
 

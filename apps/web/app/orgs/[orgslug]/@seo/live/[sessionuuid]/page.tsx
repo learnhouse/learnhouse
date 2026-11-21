@@ -3,12 +3,13 @@ import { getLiveSession } from '@ee/services/live_sessions/live_sessions'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { breadcrumbJsonLd, eventJsonLd } from '@/lib/seo/jsonld'
 import { featureIndexable } from '@/lib/seo/meta'
+import { isOrgFeatureEnabled } from '@/lib/features/orgFeature'
 
 /** A public live session: Event + breadcrumbs. Members-only sessions get none. */
 export default async function LiveSessionSeo({ params }: { params: Promise<{ orgslug: string; sessionuuid: string }> }) {
   const { orgslug, sessionuuid } = await params
   const ctx = await getSeoContext(orgslug)
-  if (!featureIndexable(ctx.seo, 'live')) return null
+  if (ctx.degraded || !featureIndexable(ctx.seo, 'live') || !isOrgFeatureEnabled(ctx.org, 'live_sessions')) return null
   const s = await getLiveSession(sessionuuid.startsWith('livesession_') ? sessionuuid : `livesession_${sessionuuid}`).catch(() => null)
   if (!s || s.access !== 'public') return null
   const url = await ctx.url(`/live/${sessionuuid.replace(/^livesession_/, '')}`)

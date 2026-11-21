@@ -215,19 +215,24 @@ async def api_ai_start_activity_chat_session_stream(
         context["ai_model"],
     )
 
+    body = activity_chat_event_generator(
+        stream,
+        context["chat_session"]["aichat_uuid"],
+        context["activity"].activity_uuid,
+        context["user_message"],
+        context["ai_friendly_text"],
+        context["ai_model"],
+        org_id=getattr(context.get("course", None), "org_id", None),
+        user_id=resolve_acting_user_id(current_user),
+        meter=context.get("meter"),
+        course_uuid=getattr(context.get("course", None), "course_uuid", None),
+    )
+    # The stream outlives this request's DB session: release it now so a
+    # long LLM stream does not hold a pool connection. The generator never
+    # touches it (metering settles on its own short session).
+    await db_session.close()
     return StreamingResponse(
-        activity_chat_event_generator(
-            stream,
-            context["chat_session"]["aichat_uuid"],
-            context["activity"].activity_uuid,
-            context["user_message"],
-            context["ai_friendly_text"],
-            context["ai_model"],
-            org_id=getattr(context.get("course", None), "org_id", None),
-            user_id=resolve_acting_user_id(current_user),
-            meter=context.get("meter"),
-            course_uuid=getattr(context.get("course", None), "course_uuid", None),
-        ),
+        body,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -274,19 +279,24 @@ async def api_ai_send_activity_chat_message_stream(
         context["ai_model"],
     )
 
+    body = activity_chat_event_generator(
+        stream,
+        context["chat_session"]["aichat_uuid"],
+        context["activity"].activity_uuid,
+        context["user_message"],
+        context["ai_friendly_text"],
+        context["ai_model"],
+        org_id=getattr(context.get("course", None), "org_id", None),
+        user_id=resolve_acting_user_id(current_user),
+        meter=context.get("meter"),
+        course_uuid=getattr(context.get("course", None), "course_uuid", None),
+    )
+    # The stream outlives this request's DB session: release it now so a
+    # long LLM stream does not hold a pool connection. The generator never
+    # touches it (metering settles on its own short session).
+    await db_session.close()
     return StreamingResponse(
-        activity_chat_event_generator(
-            stream,
-            context["chat_session"]["aichat_uuid"],
-            context["activity"].activity_uuid,
-            context["user_message"],
-            context["ai_friendly_text"],
-            context["ai_model"],
-            org_id=getattr(context.get("course", None), "org_id", None),
-            user_id=resolve_acting_user_id(current_user),
-            meter=context.get("meter"),
-            course_uuid=getattr(context.get("course", None), "course_uuid", None),
-        ),
+        body,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -515,18 +525,23 @@ async def api_editor_ai_start_chat_session_stream(
         context["ai_model"],
     )
 
+    body = editor_chat_event_generator(
+        stream,
+        context["chat_session"]["aichat_uuid"],
+        context["activity"].activity_uuid,
+        context["user_message"],
+        context["ai_friendly_text"],
+        context["ai_model"],
+        org_id=getattr(context.get("course", None), "org_id", None),
+        user_id=resolve_acting_user_id(current_user),
+        meter=context.get("meter"),
+    )
+    # The stream outlives this request's DB session: release it now so a
+    # long LLM stream does not hold a pool connection. The generator never
+    # touches it (metering settles on its own short session).
+    await db_session.close()
     return StreamingResponse(
-        editor_chat_event_generator(
-            stream,
-            context["chat_session"]["aichat_uuid"],
-            context["activity"].activity_uuid,
-            context["user_message"],
-            context["ai_friendly_text"],
-            context["ai_model"],
-            org_id=getattr(context.get("course", None), "org_id", None),
-            user_id=resolve_acting_user_id(current_user),
-            meter=context.get("meter"),
-        ),
+        body,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -573,18 +588,23 @@ async def api_editor_ai_send_message_stream(
         context["ai_model"],
     )
 
+    body = editor_chat_event_generator(
+        stream,
+        context["chat_session"]["aichat_uuid"],
+        context["activity"].activity_uuid,
+        context["user_message"],
+        context["ai_friendly_text"],
+        context["ai_model"],
+        org_id=getattr(context.get("course", None), "org_id", None),
+        user_id=resolve_acting_user_id(current_user),
+        meter=context.get("meter"),
+    )
+    # The stream outlives this request's DB session: release it now so a
+    # long LLM stream does not hold a pool connection. The generator never
+    # touches it (metering settles on its own short session).
+    await db_session.close()
     return StreamingResponse(
-        editor_chat_event_generator(
-            stream,
-            context["chat_session"]["aichat_uuid"],
-            context["activity"].activity_uuid,
-            context["user_message"],
-            context["ai_friendly_text"],
-            context["ai_model"],
-            org_id=getattr(context.get("course", None), "org_id", None),
-            user_id=resolve_acting_user_id(current_user),
-            meter=context.get("meter"),
-        ),
+        body,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

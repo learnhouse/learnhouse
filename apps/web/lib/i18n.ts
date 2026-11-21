@@ -48,6 +48,16 @@ async function loadLocale(lng: string) {
   }
 }
 
+// Safari with "Block all cookies" throws a SecurityError on any document.cookie
+// access, and the detector reads/writes it unguarded. Probe once and leave the
+// cookie out of detection when it's blocked.
+let cookieOk = true
+try {
+  void document.cookie
+} catch {
+  cookieOk = false
+}
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -60,8 +70,10 @@ i18n
       escapeValue: false, // react already safes from xss
     },
     detection: {
-      order: ['localStorage', 'cookie', 'querystring', 'navigator', 'path', 'subdomain'],
-      caches: ['localStorage', 'cookie'],
+      order: cookieOk
+        ? ['localStorage', 'cookie', 'querystring', 'navigator', 'path', 'subdomain']
+        : ['localStorage', 'querystring', 'navigator', 'path', 'subdomain'],
+      caches: cookieOk ? ['localStorage', 'cookie'] : ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
       lookupCookie: 'i18next',
     },

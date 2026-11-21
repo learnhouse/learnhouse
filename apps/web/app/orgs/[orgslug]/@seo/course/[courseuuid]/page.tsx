@@ -32,7 +32,7 @@ export default async function CourseSeo({
     getServerSession(),
   ])
   // Only public, published courses get structured data (others aren't indexed).
-  if (!resolved || resolved.restricted || ctx.seo.indexing_disabled) return null
+  if (!resolved || resolved.restricted || ctx.degraded || ctx.seo.indexing_disabled) return null
   const course = await getCourseMetadata(resolved.bare_uuid, null, session?.tokens?.access_token, {
     slim: true,
     lang: requestedLang ?? undefined,
@@ -47,7 +47,7 @@ export default async function CourseSeo({
       <link
         rel="preload"
         as="image"
-        href={getCourseThumbnailMediaDirectory(ctx.org.org_uuid, course.course_uuid, course.thumbnail_image)}
+        href={getCourseThumbnailMediaDirectory(ctx.org.org_uuid, course.course_uuid, course.thumbnail_image) ?? undefined}
         fetchPriority="high"
       />
     ) : null

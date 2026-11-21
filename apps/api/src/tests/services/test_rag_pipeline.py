@@ -232,3 +232,49 @@ class TestStore:
         await db.commit()
         assert await store.current_hash(ContentRef.course(course.id), db) is None
         assert await store.current_hash(ContentRef.activity(1), db) is None
+
+
+class TestSessionScope:
+    """No connection is held across the embeddings call (Sentry: idle in
+    transaction, autoflush errors and pool exhaustion during indexing)."""
+
+    async def test_embeddings_run_with_no_session_open(self, db, org, course, chapter):
+        from contextlib import asynccontextmanager
+
+        open_sessions = []
+
+        @asynccontextmanager
+        async def tracked():
+            open_sessions.append(1)
+            try:
+                yield db
+            finally:
+                open_sessions.pop()
+
+        seen = []
+
+        async def embeddings(texts):
+            seen.append(len(open_sessions))
+            return await _fake_embeddings(texts)
+
+        await _page_activity(db, org, course, chapter, 40, "Scoped text")
+        with patch.object(pipeline, "_session", new=tracked), \
+             patch.object(pipeline, "generate_embeddings", new=AsyncMock(side_effect=embeddings)):
+            assert await pipeline.run(ContentRef.activity(40)) == 2
+        assert seen == [0]
+        assert open_sessions == []
+        assert len(await _rows(db, activity_id=40)) == 2
+
+    async def test_refused_charge_embeds_nothing_and_keeps_rows(self, session, embed, org, course, chapter):
+        activity = await _page_activity(session, org, course, chapter, 41, "Before")
+        await pipeline.run(ContentRef.activity(41))
+        activity.content = _page("After")
+        session.add(activity)
+        await session.commit()
+        embed.reset_mock()
+
+        with patch.object(pipeline.metering, "start", new=AsyncMock(side_effect=RuntimeError("gate"))):
+            with pytest.raises(RuntimeError, match="gate"):
+                await pipeline.run(ContentRef.activity(41))
+        embed.assert_not_awaited()
+        assert "Before" in [r.chunk_text for r in await _rows(session, activity_id=41)]

@@ -1,12 +1,12 @@
 import { Metadata } from 'next'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 import PathCertificatePage from '@components/Pages/Paths/PathCertificatePage'
 
 type PageParams = Promise<{ orgslug: string; uuid: string }>
 
 export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
   const { orgslug } = await params
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
+  const org = await getOrgOr404(orgslug)
   return {
     title: `Path certificate | ${org?.name}`,
     robots: { index: false, follow: false },

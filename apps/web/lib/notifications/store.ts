@@ -52,6 +52,9 @@ let countsTimer: ReturnType<typeof setTimeout> | null = null
 // fetch or a late `hello` can never bring a cleared badge back.
 let mutation = 0
 let lastMutationAt = 0
+// The token the stream gave up on after a 401 (null: not stopped for auth).
+// A refreshed token restarts it; a 403 (no access to this org) never retries.
+let authStoppedToken: string | null = null
 
 function set(next: Partial<Snapshot>) {
   snapshot = { ...snapshot, ...next }
@@ -117,10 +120,21 @@ async function streamLoop(signal: AbortSignal) {
   let backoff = 3_000
   while (!signal.aborted && token) {
     const started = Date.now()
+    // The token this attempt used: a refresh while it is in flight must not
+    // be recorded as the one that failed.
+    const usedToken = token
     try {
-      await openNotificationStream(orgId, token, onLeaderEvent, signal)
-    } catch {
-      // Fall through to polling until the next attempt.
+      await openNotificationStream(orgId, usedToken, onLeaderEvent, signal)
+    } catch (err: any) {
+      // Retrying can't fix an auth failure: stop (as the messaging stream
+      // does) instead of hammering the API. Counts keep polling.
+      if (!signal.aborted && (err?.status === 401 || err?.status === 403)) {
+        if (err.status === 401) authStoppedToken = usedToken
+        set({ live: false })
+        channel?.postMessage({ kind: 'live', live: false })
+        return
+      }
+      // Otherwise fall through to polling until the next attempt.
     }
     if (signal.aborted) return
     set({ live: false })
@@ -147,6 +161,7 @@ function onFocus() {
 
 function start(nextKey: string) {
   key = nextKey
+  authStoppedToken = null
   abort = new AbortController()
   const signal = abort.signal
   void refreshCounts()
@@ -196,7 +211,9 @@ function acquire(nextToken: string, nextOrgId: number | undefined, userId: numbe
   orgId = nextOrgId
   const nextKey = `${userId}:${nextOrgId ?? 'all'}`
   refs += 1
-  if (key !== nextKey) {
+  // Same stream, but it stopped on a 401 and the session has a new token now.
+  const tokenRefreshed = key === nextKey && authStoppedToken !== null && authStoppedToken !== nextToken
+  if (key !== nextKey || tokenRefreshed) {
     if (key) stop()
     start(nextKey)
   }

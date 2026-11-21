@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getServerAPIUrl } from '@services/config/config'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { isOrgFeatureEnabled } from '@/lib/features/orgFeature'
 import { buildLlmsTxt } from '@/lib/seo/markdown'
 import { fetchLlmsData } from '@/lib/seo/publicData.server'
 import { fetchSitemapData } from '@/lib/seo/sitemapData.server'
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
   if (sitemap?.pages?.length) {
     extra.push({ title: 'Pages', links: sitemap.pages.map((p: any) => ({ name: p.name, url: `${base}/p/${encodeURIComponent(p.key)}` })) })
   }
-  if (featureIndexable(seo, 'live') && org.id) {
+  if (featureIndexable(seo, 'live') && org.id && isOrgFeatureEnabled(org, 'live_sessions')) {
     try {
       const res = await fetch(`${getServerAPIUrl()}live_sessions/org/${org.id}?scope=upcoming&limit=50`, {
         next: { revalidate: 600 },

@@ -19,7 +19,7 @@ const SEGMENT: Record<ListKind, string> = {
  */
 export async function ListPageSeo({ orgslug, title, path, kind }: { orgslug: string; title: string; path: string; kind?: ListKind }) {
   const ctx = await getSeoContext(orgslug)
-  if (ctx.seo.indexing_disabled) return null
+  if (ctx.degraded || ctx.seo.indexing_disabled) return null
   const pageUrl = await ctx.url(path)
   let list = null
   if (kind) {

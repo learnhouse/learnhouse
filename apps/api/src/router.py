@@ -179,7 +179,7 @@ v1_router.include_router(
     custom_domains.router,
     prefix="/orgs",
     tags=["custom-domains"],
-    dependencies=[Depends(require_authenticated_user), Depends(require_plan("standard", "Custom Domains"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan("pro", "Custom Domains"))]
 )
 # Public domain resolution endpoint (no auth required)
 v1_router.include_router(

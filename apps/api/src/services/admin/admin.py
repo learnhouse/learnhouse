@@ -40,7 +40,7 @@ from src.db.users import (
     User,
     UserRead,
 )
-from src.services.trail.trail import _build_trail_read
+from src.services.trail.trail import _build_trail_read, get_or_create_trail
 from src.core.ee_hooks import notify_ee_learner_progress
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
@@ -533,21 +533,8 @@ async def enroll_user(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    # Ensure trail exists
-    trail = (await db_session.execute(
-        select(Trail).where(Trail.org_id == token_user.org_id, Trail.user_id == user_id)
-    )).scalars().first()
-    if not trail:
-        trail = Trail(
-            org_id=token_user.org_id,
-            user_id=user_id,
-            trail_uuid=f"trail_{uuid4()}",
-            creation_date=str(datetime.now()),
-            update_date=str(datetime.now()),
-        )
-        db_session.add(trail)
-        await db_session.commit()
-        await db_session.refresh(trail)
+    # Ensure trail exists (race-safe against a parallel first enrollment)
+    trail = await get_or_create_trail(db_session, token_user.org_id, user_id)
 
     # Check for existing enrollment
     existing = (await db_session.execute(
@@ -652,6 +639,7 @@ async def get_user_enrollments(
 
     trail = (await db_session.execute(
         select(Trail).where(Trail.org_id == token_user.org_id, Trail.user_id == user_id)
+        .order_by(Trail.id)  # type: ignore[arg-type]
     )).scalars().first()
     if not trail:
         return TrailRead(
@@ -738,21 +726,8 @@ async def complete_activity(
     if not course or course.org_id != token_user.org_id:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    # Ensure trail exists
-    trail = (await db_session.execute(
-        select(Trail).where(Trail.org_id == token_user.org_id, Trail.user_id == user_id)
-    )).scalars().first()
-    if not trail:
-        trail = Trail(
-            org_id=token_user.org_id,
-            user_id=user_id,
-            trail_uuid=f"trail_{uuid4()}",
-            creation_date=str(datetime.now()),
-            update_date=str(datetime.now()),
-        )
-        db_session.add(trail)
-        await db_session.commit()
-        await db_session.refresh(trail)
+    # Ensure trail exists (race-safe against a parallel first enrollment)
+    trail = await get_or_create_trail(db_session, token_user.org_id, user_id)
 
     # Ensure trail run exists
     trailrun = (await db_session.execute(
@@ -915,21 +890,8 @@ async def complete_course(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    # Ensure trail exists
-    trail = (await db_session.execute(
-        select(Trail).where(Trail.org_id == token_user.org_id, Trail.user_id == user_id)
-    )).scalars().first()
-    if not trail:
-        trail = Trail(
-            org_id=token_user.org_id,
-            user_id=user_id,
-            trail_uuid=f"trail_{uuid4()}",
-            creation_date=str(datetime.now()),
-            update_date=str(datetime.now()),
-        )
-        db_session.add(trail)
-        await db_session.commit()
-        await db_session.refresh(trail)
+    # Ensure trail exists (race-safe against a parallel first enrollment)
+    trail = await get_or_create_trail(db_session, token_user.org_id, user_id)
 
     # Ensure trail run exists
     trailrun = (await db_session.execute(
@@ -1132,7 +1094,7 @@ async def get_user_trail_detail(
         select(Trail).where(
             Trail.org_id == token_user.org_id,
             Trail.user_id == user_id,
-        )
+        ).order_by(Trail.id)  # type: ignore[arg-type]
     )).scalars().first()
 
     empty_shell = {
@@ -1927,33 +1889,23 @@ async def bulk_enroll_users(
         return {"enrolled": enrolled, "already_enrolled": already_enrolled, "skipped": skipped}
 
     now = datetime.now()
-    trails_by_user: dict[int, Trail] = {
-        t.user_id: t
-        for t in (await db_session.execute(
-            select(Trail).where(
-                Trail.org_id == token_user.org_id,
-                Trail.user_id.in_(to_enroll),
-            )
-        )).scalars().all()
-    }
+    trails_by_user: dict[int, Trail] = {}
+    for t in (await db_session.execute(
+        select(Trail).where(
+            Trail.org_id == token_user.org_id,
+            Trail.user_id.in_(to_enroll),
+        ).order_by(Trail.id)  # type: ignore[arg-type]
+    )).scalars().all():
+        trails_by_user.setdefault(t.user_id, t)  # oldest wins on legacy duplicates
 
-    # Create missing trails in one flush
-    new_trails = []
-    for user_id in to_enroll:
+    # Create missing trails (each under its creation lock, flushed; the lock
+    # is held until this transaction commits). Locks are taken in id order so
+    # two overlapping bulk enrolls can't deadlock each other.
+    for user_id in sorted(to_enroll):
         if user_id not in trails_by_user:
-            t = Trail(
-                org_id=token_user.org_id,
-                user_id=user_id,
-                trail_uuid=f"trail_{uuid4()}",
-                creation_date=str(now),
-                update_date=str(now),
+            trails_by_user[user_id] = await get_or_create_trail(
+                db_session, token_user.org_id, user_id, commit=False
             )
-            new_trails.append(t)
-            db_session.add(t)
-    if new_trails:
-        await db_session.flush()
-        for t in new_trails:
-            trails_by_user[t.user_id] = t
 
     # Batch-insert all trail runs
     for user_id in to_enroll:
@@ -2225,47 +2177,63 @@ async def add_usergroup_member(
     user_id: int,
     db_session: AsyncSession,
 ) -> dict:
-    """Add a user to a user group. User and group must both be in the token's org."""
+    """Add a user to a user group by hand. User and group must both be in the
+    token's org.
+
+    Goes through the same membership model as the dashboard: a ``manual``
+    source is added to the person's row (a member through rules or a
+    sub-group gets the manual reason on top), then parent groups' inherited
+    membership is refreshed. 400 when they are already a direct member."""
+    from src.services.usergroups.membership import (
+        DIRECT_SOURCES,
+        add_source,
+        notify_members,
+        refresh_ancestors,
+        rows_for,
+        sources_of,
+    )
+
     _require_token_right(token_user, "usergroups", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
-    existing = (await db_session.execute(
-        select(UserGroupUser).where(
-            UserGroupUser.usergroup_id == group.id,
-            UserGroupUser.user_id == user_id,
-        )
-    )).scalars().first()
-    if existing:
+    row = (await rows_for(db_session, group.id)).get(user_id)
+    if row is not None and set(sources_of(row)) & set(DIRECT_SOURCES):
         raise HTTPException(status_code=400, detail="User is already in this group")
 
-    now = datetime.now()
-    member = UserGroupUser(
-        usergroup_id=group.id if group.id is not None else 0,
-        user_id=user_id,
-        org_id=token_user.org_id,
-        creation_date=str(now),
-        update_date=str(now),
+    status = await add_source(
+        db_session, group, user_id, "manual", actor_id=token_user.created_by_user_id or None,
+        row=row, lookup=False,
     )
-    db_session.add(member)
     await db_session.commit()
 
-    await dispatch_webhooks(
-        event_name="usergroup_users_added",
-        org_id=token_user.org_id,
-        data={
-            "usergroup_id": group.id,
-            "usergroup_uuid": group.usergroup_uuid,
-            "user_ids": [user_id],
-        },
-    )
+    if status == "added":
+        await refresh_ancestors(db_session, group)
+        await notify_members(db_session, group, [user_id], "joined")
+        await dispatch_webhooks(
+            event_name="usergroup_users_added",
+            org_id=token_user.org_id,
+            data={
+                "usergroup_id": group.id,
+                "usergroup_uuid": group.usergroup_uuid,
+                "user_ids": [user_id],
+            },
+        )
 
     return {
         "detail": "User added to group",
         "usergroup_uuid": usergroup_uuid,
         "user_id": user_id,
+        "status": status,
     }
+
+
+_REMOVE_DETAILS = {
+    "removed": "User removed from group",
+    "kept": "User stays in the group through its rules or a sub-group",
+    "absent": "User is not a member of this group",
+}
 
 
 async def remove_usergroup_member(
@@ -2274,39 +2242,52 @@ async def remove_usergroup_member(
     user_id: int,
     db_session: AsyncSession,
 ) -> dict:
-    """Remove a user from a user group."""
+    """Remove a user's direct membership of a user group. Idempotent.
+
+    Like the dashboard, only the direct reasons (manual, code, import, domain)
+    are dropped: someone the group's rules or a sub-group still put there
+    stays (``kept``), so the next sync can't bring back a removal that never
+    really happened. ``status`` is ``removed``, ``kept`` or ``absent``; a
+    retry of an already-applied removal gets ``absent`` with a 200. 404 only
+    for an unknown user or group."""
+    from src.services.usergroups.membership import (
+        DIRECT_SOURCES,
+        refresh_ancestors,
+        remove_sources,
+        rows_for,
+        sources_of,
+    )
+
     _require_token_right(token_user, "usergroups", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
-    member = (await db_session.execute(
-        select(UserGroupUser).where(
-            UserGroupUser.usergroup_id == group.id,
-            UserGroupUser.user_id == user_id,
-        )
-    )).scalars().first()
-    if not member:
-        raise HTTPException(status_code=404, detail="User is not a member of this group")
-
-    await db_session.delete(member)
-    await db_session.commit()
-
-    await dispatch_webhooks(
-        event_name="usergroup_users_removed",
-        org_id=token_user.org_id,
-        data={
-            "usergroup_id": group.id,
-            "usergroup_uuid": group.usergroup_uuid,
-            "user_ids": [user_id],
-        },
-    )
-
-    return {
-        "detail": "User removed from group",
+    row = (await rows_for(db_session, group.id)).get(user_id)
+    status = await remove_sources(db_session, group, user_id, DIRECT_SOURCES, row=row, lookup=False)
+    result: dict = {
+        "detail": _REMOVE_DETAILS[status],
         "usergroup_uuid": usergroup_uuid,
         "user_id": user_id,
+        "status": status,
     }
+    if status == "kept":
+        result["sources"] = sources_of(row)
+    await db_session.commit()
+
+    if status == "removed":
+        await refresh_ancestors(db_session, group)
+        await dispatch_webhooks(
+            event_name="usergroup_users_removed",
+            org_id=token_user.org_id,
+            data={
+                "usergroup_id": group.id,
+                "usergroup_uuid": group.usergroup_uuid,
+                "user_ids": [user_id],
+            },
+        )
+
+    return result
 
 # -- Certification endpoints (read-only) --------------------------------------
 

@@ -15,7 +15,7 @@ import {
   TextT,
 } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
-import { getActivityBlockMediaDirectory } from '@services/media/media'
+import { getActivityBlockMediaDirectory, hasMediaIds } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -99,15 +99,22 @@ function ImageBlockComponent(props: NodeViewProps) {
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
 
-  const uploadedImageUrl = blockObject?.content
+  // Ids passed at configure() time win: the Org/Course contexts may still be
+  // loading (or absent on the student page). Until every id is known the
+  // builder returns undefined and no <img> request is made.
+  const extOptions = props.extension.options as any
+  const orgUuid: string | undefined = extOptions.orgUuid || org?.org_uuid || course?.courseStructure?.org_uuid
+  const courseUuid: string | undefined = extOptions.courseUuid || course?.courseStructure?.course_uuid
+  const blockActivityUuid = blockObject?.content?.activity_uuid || activity?.activity_uuid
+  const uploadedImageUrl = blockObject?.content && hasMediaIds(orgUuid, courseUuid, blockActivityUuid, blockObject.block_uuid)
     ? getActivityBlockMediaDirectory(
-        org?.org_uuid,
-        course?.courseStructure?.course_uuid,
-        blockObject.content.activity_uuid || activity?.activity_uuid,
+        orgUuid,
+        courseUuid,
+        blockActivityUuid,
         blockObject.block_uuid,
         fileId || '',
         'imageBlock'
-      )
+      ) || null
     : null
 
   const imageUrl = unsplashUrl || uploadedImageUrl
@@ -265,7 +272,9 @@ function ImageBlockComponent(props: NodeViewProps) {
   }
 
   // ─── Editor: empty ───
-  if (!imageUrl) {
+  // (An uploaded image whose URL can't be built yet is not empty: don't offer
+  // the picker, just wait for the ids.)
+  if (!imageUrl && !blockObject?.content) {
     return (
       <NodeViewWrapper className="block-image w-full">
         <BlockChrome tone="media"
@@ -460,13 +469,17 @@ function ImageBlockComponent(props: NodeViewProps) {
               }}
             >
               <div className="relative">
-                <img
-                  src={imageUrl}
-                  alt={view.alt}
-                  className="rounded-lg max-w-full h-auto"
-                  style={{ width: '100%' }}
-                  draggable={false}
-                />
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={view.alt}
+                    className="rounded-lg max-w-full h-auto"
+                    style={{ width: '100%' }}
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="rounded-lg bg-neutral-100 aspect-video w-full animate-pulse" />
+                )}
                 {replacing && (
                   <div className="absolute inset-x-2 bottom-2">
                     <MediaSourcePicker

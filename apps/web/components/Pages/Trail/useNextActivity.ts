@@ -41,7 +41,8 @@ export function useNextActivities(summaries: RunSummary[], limit = 12): Record<s
     let found: NextActivity | null = null
     course.chapters.some((chapter: any, chapterIndex: number) =>
       (Array.isArray(chapter.activities) ? chapter.activities : []).some((activity: any) => {
-        if (doneIds.has(activity.id) || activity.is_locked) return false
+        // No uuid yet: a link to it would be /activity/null.
+        if (doneIds.has(activity.id) || activity.is_locked || !activity.activity_uuid) return false
         found = {
           activity,
           chapter,

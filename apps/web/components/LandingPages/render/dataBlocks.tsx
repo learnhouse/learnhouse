@@ -17,6 +17,7 @@ import { getCommunityThumbnailMediaDirectory, getCourseThumbnailMediaDirectory, 
 import { getUriWithOrg } from '@services/config/config'
 import { resourcePath } from '@/lib/seo/paths'
 import { formatCurrency } from '@/lib/format'
+import { isOrgFeatureEnabled } from '@/lib/features/orgFeature'
 import { resolvePricingPlan, safeHref, type LandingOffer } from './helpers'
 import type { LandingNode } from '../model/types'
 import { rootProps, useRender } from './context'
@@ -255,6 +256,8 @@ export function LiveSessionsBlock({ node }: { node: LandingNode }) {
   const { org, orgslug, accessToken, labels, mode } = useRender()
   const p = node.props || {}
   const limit = Number(p.limit) || 4
+  // The API 404s live sessions for orgs whose plan doesn't include them.
+  const liveEnabled = isOrgFeatureEnabled(org, 'live_sessions')
   const { data, isLoading } = useQuery({
     queryKey: ['landing-block', 'live', org?.id, limit, !!accessToken],
     queryFn: async () => {
@@ -265,7 +268,7 @@ export function LiveSessionsBlock({ node }: { node: LandingNode }) {
         return []
       }
     },
-    enabled: !!org?.id,
+    enabled: !!org?.id && liveEnabled,
     staleTime: STALE,
   })
   if (isLoading) return <div className={`lhp-${node.id}`}><Skeleton count={2} columns={2} /></div>

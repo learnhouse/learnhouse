@@ -25,7 +25,7 @@ export default async function CommunitySeo({
   const { orgslug, communityuuid } = await params
   const view = communityFeedView(await searchParams)
   const [ctx, resolved] = await Promise.all([getSeoContext(orgslug), resolvePublicKey(orgslug, 'community', communityuuid)])
-  if (!resolved || resolved.restricted || ctx.seo.indexing_disabled || ctx.seo.noindex_communities) return null
+  if (!resolved || resolved.restricted || ctx.degraded || ctx.seo.indexing_disabled || ctx.seo.noindex_communities) return null
   const [community, discussions] = await Promise.all([
     getCommunity(resolved.uuid, null).catch(() => null),
     getDiscussions(resolved.uuid, view.apiSort, view.page, PAGE_SIZE, null, undefined, view.label ?? undefined).catch(() => []),
