@@ -294,8 +294,11 @@ def test_magic_link_email_sanitizes_org_and_user_names():
     assert "https://acme.test/auth/magic?token=tok" in call["body"]
 
 
-def test_send_email_strips_breaks_from_subject():
+def test_send_email_strips_breaks_from_subject(monkeypatch):
     from src.services.email import transport as email_utils
+    from config.config import get_learnhouse_config
+
+    monkeypatch.setattr(get_learnhouse_config().mailing_config, "resend_api_key", "test-key")
 
     with patch.object(email_utils, "_send_email_resend", return_value=True) as resend, \
             patch.object(email_utils, "_send_email_smtp", return_value=True) as smtp:
