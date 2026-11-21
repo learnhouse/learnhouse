@@ -322,7 +322,11 @@ async def register_client(payload: Any, db_session: AsyncSession) -> dict[str, A
     redirect_uris = [validate_redirect_uri(u) for u in redirect_uris]
 
     grant_types = payload.get("grant_types") or ["authorization_code", "refresh_token"]
-    if not isinstance(grant_types, list) or "authorization_code" not in grant_types:
+    if (
+        not isinstance(grant_types, list)
+        or not all(isinstance(g, str) for g in grant_types)
+        or "authorization_code" not in grant_types
+    ):
         raise OAuthError(
             "invalid_client_metadata", "grant_types must include authorization_code"
         )
@@ -841,21 +845,24 @@ async def _exchange_refresh(
     if grant is None or grant.client_id != client.client_id:
         raise OAuthError("invalid_grant", "refresh_token was not issued to this client")
 
+    if grant.revoked_at is not None:
+        # Disconnected (revoked, replaced or cut off): its tokens were revoked
+        # with it, which is not a replay.
+        raise OAuthError("invalid_grant", "refresh_token expired or was revoked")
     if token.revoked_at is not None:
         # A rotated-out refresh token came back: someone holds a copy. Kill the
         # whole grant so neither copy works (OAuth 2.1 section 4.3.1).
-        if grant.revoked_at is None:
-            logger.warning("mcp-oauth: refresh token replay, revoking grant %s", grant.grant_uuid)
-            await _revoke_grant(grant.id, db_session)
-            await db_session.commit()
-            audit_event(
-                request, action="integrations.mcp.refresh_replay", org_id=grant.org_id, actor=grant.user_id,
-                target_type="mcp_app", target_id=grant.grant_uuid, target_name=client.client_name,
-                outcome="denied", reason="refresh_token_reused", details={"connection_revoked": True},
-                via="system",
-            )
+        logger.warning("mcp-oauth: refresh token replay, revoking grant %s", grant.grant_uuid)
+        await _revoke_grant(grant.id, db_session)
+        await db_session.commit()
+        audit_event(
+            request, action="integrations.mcp.refresh_replay", org_id=grant.org_id, actor=grant.user_id,
+            target_type="mcp_app", target_id=grant.grant_uuid, target_name=client.client_name,
+            outcome="denied", reason="refresh_token_reused", details={"connection_revoked": True},
+            via="system",
+        )
         raise OAuthError("invalid_grant", "refresh_token was already used")
-    if grant.revoked_at is not None or token.expires_at < _now():
+    if token.expires_at < _now():
         raise OAuthError("invalid_grant", "refresh_token expired or was revoked")
     if not await _grant_user_still_valid(grant, db_session):
         # Ended for good: a later reconnect starts a new connection rather

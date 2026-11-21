@@ -5,7 +5,8 @@ The inbox and preferences are personal data, so like their HTTP routes they
 refuse API tokens (``api_tokens=False``): Atlas and signed-in MCP clients
 read the person's own notifications, a token made by someone never does.
 The routing of admin events is org configuration: admins and maintainers,
-API tokens included when their creator is one.
+API tokens included when their creator is one and the token holds the
+organizations right.
 """
 
 from __future__ import annotations
@@ -167,7 +168,8 @@ SPECS: list[ToolSpec] = [
         description="For each admin notification type (submissions to grade, join requests, sync errors…), which roles receive it in this organization.",
         params_model=NoParams,
         tier=ActionTier.READ,
-        rights_bucket=None,
+        # API tokens need the organizations right, like the org settings tools.
+        rights_bucket="organizations",
         access_action=AccessAction.READ,
         execute=_routing,
         preflight=_require_staff,
@@ -180,7 +182,8 @@ SPECS: list[ToolSpec] = [
         description="Choose which roles (admins, maintainers, course_authors) receive each admin notification type.",
         params_model=UpdateRoutingParams,
         tier=ActionTier.EDIT,
-        rights_bucket=None,
+        # Without a bucket any token, read-only ones included, could change it.
+        rights_bucket="organizations",
         access_action=AccessAction.UPDATE,
         execute=_update_routing,
         preflight=_require_staff,

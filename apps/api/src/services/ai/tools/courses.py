@@ -14,7 +14,7 @@ from typing import Any, Literal
 from urllib.parse import urlsplit
 
 from fastapi import HTTPException
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 from sqlalchemy import and_, func, or_
 from sqlmodel import select
 from starlette.datastructures import Headers, UploadFile
@@ -185,8 +185,13 @@ class OutlinePage(BaseModel):
 class OutlineChapter(BaseModel):
     name: str = Field(..., min_length=1, max_length=200, description="Chapter name.")
     description: str = Field("", max_length=1000, description="Optional chapter description.")
+    # "pages" too: create_activities calls them that, and a model mixing the
+    # two up used to get a course with every page silently dropped.
     activities: list[OutlinePage] = Field(
-        default_factory=list, max_length=MAX_PAGES, description="The chapter's pages, in order."
+        default_factory=list,
+        max_length=MAX_PAGES,
+        validation_alias=AliasChoices("activities", "pages"),
+        description="The chapter's pages, in order.",
     )
 
 

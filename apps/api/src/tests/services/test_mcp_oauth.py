@@ -218,6 +218,9 @@ async def test_register_confidential_client(db):
         {"redirect_uris": [REDIRECT] * 11},
         {"redirect_uris": [REDIRECT], "grant_types": ["client_credentials"]},
         {"redirect_uris": [REDIRECT], "grant_types": ["authorization_code", "password"]},
+        # Not strings: must be refused, not crash on set() of a dict.
+        {"redirect_uris": [REDIRECT], "grant_types": ["authorization_code", {}]},
+        {"redirect_uris": [REDIRECT], "grant_types": ["authorization_code", ["refresh_token"]]},
         {"redirect_uris": [REDIRECT], "response_types": ["token"]},
         {"redirect_uris": [REDIRECT], "token_endpoint_auth_method": "private_key_jwt"},
     ],
@@ -590,6 +593,13 @@ async def test_revoke_token(db, org, admin_user, mcp_config, frontend):
     assert await oauth.verify_access_token(tokens["access_token"], "https://api.example.com/mcp", db) is not None
     await oauth.revoke_token({"token": tokens["refresh_token"], "client_id": client["client_id"]}, None, db)
     assert await oauth.verify_access_token(tokens["access_token"], "https://api.example.com/mcp", db) is None
+    # A disconnected app's refresh token is revoked, not replayed.
+    with pytest.raises(oauth.OAuthError) as e:
+        await oauth.exchange_token(
+            {"grant_type": "refresh_token", "client_id": client["client_id"], "refresh_token": tokens["refresh_token"]},
+            None, make_request(), db,
+        )
+    assert e.value.description == "refresh_token expired or was revoked"
 
 
 # ─── resource server ─────────────────────────────────────────────────────────

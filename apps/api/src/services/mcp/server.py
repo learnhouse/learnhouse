@@ -221,6 +221,9 @@ class DualSessionManager:
             yield
 
     async def handle_request(self, scope, receive, send) -> None:
+        if scope.get("method") == "GET":
+            await _no_event_stream(send)
+            return
         if scope.get("method") != "POST":
             await self.json_manager.handle_request(scope, receive, send)
             return
@@ -243,6 +246,36 @@ class DualSessionManager:
         streaming = b'"progressToken"' in body and b"text/event-stream" in accept
         manager = self.stream_manager if streaming else self.json_manager
         await manager.handle_request(scope, _replay([{"type": "http.request", "body": body, "more_body": more}], receive), send)
+
+
+_NO_STREAM_BODY = json.dumps(
+    {
+        "jsonrpc": "2.0",
+        "id": None,
+        "error": {
+            "code": -32600,
+            "message": "Method Not Allowed: this server is stateless and offers no event stream; send requests with POST",
+        },
+    }
+).encode()
+
+
+async def _no_event_stream(send) -> None:
+    """405 for GET. A stateless server never has anything to push, and the
+    SDK would otherwise hold an empty event stream open for good, one per
+    client reconnect. The transport spec allows exactly this answer."""
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 405,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"allow", b"POST, DELETE, OPTIONS"),
+                (b"content-length", str(len(_NO_STREAM_BODY)).encode()),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": _NO_STREAM_BODY})
 
 
 def _replay(messages: list[dict], receive=None):
