@@ -2,9 +2,10 @@
 /*
  "Match pairs" (node expMatch).
 
- Author: a list of pairs (item ↔ its match, stacked on phones), the game mode
- (connect / memory), inline hints, and "Preview as learner" in the frame
- header.
+ Author: edit in place on the learner's two columns of tiles, one row per
+ pair, each row tagged with its pair number (the answer key). "+ Add pair"
+ adds a row, × removes one; the game mode (connect / memory) sits behind the
+ header gear.
 
  Learner, connect: two columns. Tap an item, then its match (either side
  first), or drag one card onto the other. Correct pairs lock in with a shared
@@ -18,13 +19,19 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowsLeftRight, Check, LinkSimple, Question, Trash, X } from '@phosphor-icons/react'
+import { Check, LinkSimple, Question, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS, Segmented } from '../../../Blocks/ui/BlockChrome'
+import { Segmented, SettingsField } from '../../../Blocks/ui/BlockChrome'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   Stars,
   buzz,
   newId,
@@ -61,7 +68,7 @@ import {
   type MemoryCard,
   type MemoryState,
 } from './matchModel'
-import { AddRowButton, BlockHints, DragGhost, FormSection, ICON_BTN, NotReady, ResultIcon, RowHints, contentKey } from '../Sort/kit'
+import { DragGhost, InlineHint, NotReady, ResultIcon, contentKey } from '../Sort/kit'
 import { focusSibling, useTapDrag } from '../Sort/useTapDrag'
 
 const TONE = 'media' as const
@@ -99,7 +106,7 @@ export default function MatchView(props: NodeViewProps) {
   }
   const playable = React.useMemo(() => playableMatch(data), [data])
   let body: React.ReactNode
-  if (editable && !preview) body = <MatchEditor data={data} commit={commit} frame={frame} />
+  if (editable && !preview) body = <MatchAuthor data={data} commit={commit} frame={frame} />
   else if (!isPlayable(playable))
     body = (
       <ExperienceFrame {...frame} title={data.title} instructions={data.instructions}>
@@ -111,7 +118,13 @@ export default function MatchView(props: NodeViewProps) {
   return <NodeViewWrapper className="block-exp-match">{body}</NodeViewWrapper>
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+type Side = 'l' | 'r'
+
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// The learner's two columns of raised tiles, one row per pair (the answer
+// key: each row carries the numbered tab a matched pair gets). Text is edited
+// in the tiles; "+ Add pair" adds a row, × removes one. The game mode lives
+// behind the header gear.
 
 const ISSUE_FALLBACK: Record<string, string> = {
   too_few_pairs: 'Add at least 2 pairs.',
@@ -122,88 +135,166 @@ const ISSUE_FALLBACK: Record<string, string> = {
   duplicate_pair: 'This pair appears twice.',
 }
 
-function MatchEditor({ data, commit, frame }: { data: MatchData; commit: (_p: CommitPatch<Record<string, any>>) => void; frame: Frame }) {
+function MatchAuthor({ data, commit, frame }: { data: MatchData; commit: (_p: CommitPatch<Record<string, any>>) => void; frame: Frame }) {
   const { t } = useTranslation()
   const issues = React.useMemo(() => validateMatch(data), [data])
   const issueText = (code: string) => t(`editor.experiences.match.issues.${code}`, ISSUE_FALLBACK[code] ?? code)
   const edit = (fn: (_d: MatchData) => MatchData) => commit((live) => ({ pairs: fn(normalizeMatch(live)).pairs }))
   const canRemove = data.pairs.length > MATCH_LIMITS.minPairs
+  const rootRef = React.useRef<HTMLDivElement>(null)
+
+  // Focus moves to a new or neighbouring row once it has rendered.
+  const pendingFocus = React.useRef<string | null>(null)
+  const tryFocus = () => {
+    const sel = pendingFocus.current
+    const el = sel ? rootRef.current?.querySelector<HTMLElement>(sel) : null
+    if (el) {
+      pendingFocus.current = null
+      el.focus()
+    }
+  }
+  React.useEffect(tryFocus)
+  const focusLater = (selector: string) => {
+    pendingFocus.current = selector
+    requestAnimationFrame(tryFocus)
+  }
+
+  const add = () => {
+    const id = newId()
+    edit((d) => addPair(d, id))
+    focusLater(`[data-pair-id="${id}"] [data-side="l"] textarea`)
+  }
+  const remove = (index: number) => {
+    const p = data.pairs[index]
+    const next = data.pairs[index + 1] ?? data.pairs[index - 1]
+    edit((d) => removePair(d, p.id))
+    focusLater(next ? `[data-pair-id="${next.id}"] [data-side="l"] textarea` : '[data-add-pair]')
+  }
+
+  const tile = (side: Side, index: number) => {
+    const p = data.pairs[index]
+    const n = index + 1
+    return (
+      <div
+        data-side={side}
+        className="lh-exp-raised relative flex min-h-12 w-full min-w-0 items-center gap-2 overflow-hidden rounded-xl py-2 ps-9 pe-3 text-start text-[14px] leading-snug font-medium text-neutral-800"
+      >
+        <span
+          aria-hidden
+          className={cn(
+            'lh-exp-tab pointer-events-none absolute inset-y-0 start-0 inline-flex w-6 items-center justify-center text-[11px] font-bold tabular-nums text-white',
+            PAIR_TAB[index % PAIR_TAB.length],
+          )}
+        >
+          {n}
+        </span>
+        <InlineText
+          value={side === 'l' ? p.left : p.right}
+          onCommit={(v) => edit((d) => updatePair(d, p.id, side === 'l' ? { left: v } : { right: v }))}
+          ariaLabel={
+            side === 'l'
+              ? t('editor.experiences.match.left_label', { n, defaultValue: 'Pair {{n}}: item' })
+              : t('editor.experiences.match.right_label', { n, defaultValue: 'Pair {{n}}: match' })
+          }
+          placeholder={side === 'l' ? t('editor.experiences.match.left_placeholder', 'Item') : t('editor.experiences.match.right_placeholder', 'Its match')}
+          maxLength={120}
+          onEnter={
+            side === 'l'
+              ? () => rootRef.current?.querySelector<HTMLElement>(`[data-pair-id="${p.id}"] [data-side="r"] textarea`)?.focus()
+              : () => (document.activeElement as HTMLElement | null)?.blur()
+          }
+          className="min-w-0 flex-1 [overflow-wrap:anywhere]"
+        />
+      </div>
+    )
+  }
+
+  const settings = (
+    <SettingsGear>
+      <SettingsField
+        label={t('editor.experiences.match.mode_label', 'Game')}
+        hint={
+          data.mode === 'memory'
+            ? t('editor.experiences.match.mode_memory_hint', 'Face-down cards: learners flip two at a time to find the pairs.')
+            : t('editor.experiences.match.mode_connect_hint', 'Two columns: learners tap an item, then its match.')
+        }
+      >
+        <Segmented<MatchMode>
+          value={data.mode}
+          onChange={(mode) => commit({ mode })}
+          ariaLabel={t('editor.experiences.match.mode_label', 'Game')}
+          options={[
+            { value: 'connect', label: t('editor.experiences.match.mode_connect', 'Connect') },
+            { value: 'memory', label: t('editor.experiences.match.mode_memory', 'Memory') },
+          ]}
+        />
+      </SettingsField>
+    </SettingsGear>
+  )
 
   return (
     <ExperienceFrame
       {...frame}
+      wysiwyg
       title={data.title}
       onTitleChange={(title) => commit({ title })}
       instructions={data.instructions}
       onInstructionsChange={(instructions) => commit({ instructions })}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
     >
-      <div className="flex flex-col gap-5">
-        <BlockHints issues={issues} text={issueText} />
-
-        <FormSection title={t('editor.experiences.match.mode_label', 'Game')}>
-          <Segmented<MatchMode>
-            value={data.mode}
-            onChange={(mode) => commit({ mode })}
-            ariaLabel={t('editor.experiences.match.mode_label', 'Game')}
-            options={[
-              { value: 'connect', label: t('editor.experiences.match.mode_connect', 'Connect') },
-              { value: 'memory', label: t('editor.experiences.match.mode_memory', 'Memory') },
-            ]}
-          />
-          <p className="m-0 text-[12px] leading-snug text-neutral-400">
-            {data.mode === 'memory'
-              ? t('editor.experiences.match.mode_memory_hint', 'Face-down cards: learners flip two at a time to find the pairs.')
-              : t('editor.experiences.match.mode_connect_hint', 'Two columns: learners tap an item, then its match.')}
-          </p>
-        </FormSection>
-
-        <FormSection title={t('editor.experiences.match.pairs_heading', 'Pairs')}>
-          {data.pairs.map((p, i) => (
-            <div key={p.id} className="flex flex-col gap-1 rounded-xl bg-neutral-50/80 p-2 ring-1 ring-neutral-100">
-              <div className="flex items-start gap-1.5 sm:items-center">
-                <div className="grid min-w-0 flex-1 grid-cols-1 items-center gap-1.5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-                  <CommitInput
-                    value={p.left}
-                    onCommit={(left) => edit((d) => updatePair(d, p.id, { left }))}
-                    placeholder={t('editor.experiences.match.left_placeholder', 'Item')}
-                    aria-label={t('editor.experiences.match.left_label', { n: i + 1, defaultValue: 'Pair {{n}}: item' })}
-                    className={cn(FIELD_CLASS, 'h-9')}
-                  />
-                  <ArrowsLeftRight size={14} aria-hidden className="mx-auto hidden text-neutral-300 sm:block" />
-                  <CommitInput
-                    value={p.right}
-                    onCommit={(right) => edit((d) => updatePair(d, p.id, { right }))}
-                    placeholder={t('editor.experiences.match.right_placeholder', 'Its match')}
-                    aria-label={t('editor.experiences.match.right_label', { n: i + 1, defaultValue: 'Pair {{n}}: match' })}
-                    className={cn(FIELD_CLASS, 'h-9')}
+      <div ref={rootRef} className="flex flex-col gap-3">
+        <p className="m-0 text-[13px] leading-snug text-neutral-500">
+          {data.mode === 'memory'
+            ? t('editor.experiences.match.author_memory_hint', 'Each row is a pair. In memory mode learners see them as face-down cards.')
+            : t('editor.experiences.match.author_connect_hint', 'Each row is a pair. Learners get the matches shuffled and connect them.')}
+        </p>
+        {issues.some((i) => !i.id) && (
+          <div className="flex flex-col gap-1">
+            {issues
+              .filter((i) => !i.id)
+              .map((i) => (
+                <InlineHint key={i.code} severity={i.severity}>
+                  {issueText(i.code)}
+                </InlineHint>
+              ))}
+          </div>
+        )}
+        <div role="list" aria-label={t('editor.experiences.match.pairs_heading', 'Pairs')} className="flex flex-col gap-2">
+          {data.pairs.map((p, index) => {
+            const rowIssues = issues.filter((i) => i.id === p.id)
+            return (
+              <div key={p.id} role="listitem" data-pair-id={p.id} className="flex flex-col gap-1">
+                <div className={cn('relative grid grid-cols-2 gap-x-3 sm:gap-x-6', EDIT_OBJECT)}>
+                  {tile('l', index)}
+                  {tile('r', index)}
+                  <RemoveX
+                    floating
+                    disabled={!canRemove}
+                    onClick={() => remove(index)}
+                    label={t('editor.experiences.match.remove_pair_n', { n: index + 1, defaultValue: 'Remove pair {{n}}' })}
                   />
                 </div>
-                <button
-                  type="button"
-                  className={ICON_BTN}
-                  disabled={!canRemove}
-                  onClick={() => edit((d) => removePair(d, p.id))}
-                  aria-label={t('editor.experiences.match.remove_pair', 'Remove pair')}
-                  title={t('editor.experiences.match.remove_pair', 'Remove pair')}
-                >
-                  <Trash size={15} aria-hidden />
-                </button>
+                {rowIssues.map((i) => (
+                  <InlineHint key={i.code} severity={i.severity}>
+                    {issueText(i.code)}
+                  </InlineHint>
+                ))}
               </div>
-              <RowHints issues={issues} id={p.id} text={issueText} />
-            </div>
-          ))}
-          <AddRowButton disabled={data.pairs.length >= MATCH_LIMITS.maxPairs} onClick={() => edit((d) => addPair(d, newId()))}>
-            {t('editor.experiences.match.add_pair', 'Add pair')}
-          </AddRowButton>
-        </FormSection>
+            )
+          })}
+          {data.pairs.length < MATCH_LIMITS.maxPairs && (
+            <AddGhost data-add-pair="" onClick={add} className="min-h-12 w-full rounded-xl px-3 text-[14px]">
+              {t('editor.experiences.match.add_pair', 'Add pair')}
+            </AddGhost>
+          )}
+        </div>
       </div>
     </ExperienceFrame>
   )
 }
 
 // ─── Learner: connect ───────────────────────────────────────────────────────
-
-type Side = 'l' | 'r'
 
 function ConnectPlayer({ data, frame, source }: { data: MatchData; frame: Frame; source: NodeViewProps }) {
   const { t } = useTranslation()

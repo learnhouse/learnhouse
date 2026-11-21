@@ -925,6 +925,13 @@
   display: contents;
 }
 
+/* Editor deck: the content element and Tiptap's holder both dissolve, so the
+   cards and the "+ Add card" ghost share one even grid. */
+.flipcard-grid-edit > .flipcard-grid-holder,
+.flipcard-grid-edit > .flipcard-grid-holder > [data-node-view-content-react] {
+  display: contents;
+}
+
 /* A flipcard keeps an (unused) text slot from its original schema. ProseMirror
    still renders it as an empty line above the card; collapse it so the grid
    gap is the only space between cards. */

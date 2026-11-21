@@ -1,8 +1,8 @@
 'use client'
 /*
- Flipcard, in the block's original look: a coloured card with a turn icon,
- the text in the middle, "Click to flip" underneath, and a row of small grey
- controls under the card in the editor.
+ Flipcard: a coloured card with a turn icon, the text in the middle and
+ "Click to flip" underneath. In the editor the card looks exactly as learners
+ see it; a small grip (top edge, deck cards only) and a ⋯ menu appear on hover.
 
  Learners click (or press Enter/Space on) the card to flip it; the flip is a
  3D turn, or a short cross-fade under prefers-reduced-motion.
@@ -10,19 +10,20 @@
  Authors edit the text right on the card (click the text; click elsewhere on
  the card to turn it over and edit the other side). Text commits on blur;
  every setting is read from node attrs (no local copies), so undo and
- collaborators' edits show at once. Inside a flipcardGrid the card's control
- row also has a drag grip, duplicate and delete.
+ collaborators' edits show at once. The ⋯ menu holds flip, look, duplicate,
+ move and delete; inside a deck every card uses the deck's size so the grid
+ stays even.
 */
 import { NodeViewWrapper } from '@tiptap/react'
 import React from 'react'
 import {
   ArrowClockwise,
-  ArrowsInSimple,
-  ArrowsOutSimple,
+  ArrowLeft,
+  ArrowRight,
   Copy,
   DotsSixVertical,
+  DotsThree,
   Palette,
-  Square,
   SquaresFour,
   TextAlignCenter,
   TextAlignLeft,
@@ -86,11 +87,10 @@ const FlipcardExtension: React.FC = (props: any) => {
   const { question = '', answer = '', alignment = 'center' } = props.node.attrs
   const color = props.node.attrs.color
   const style = props.node.attrs.style
-  const size = resolveFlipcardSize(props.node.attrs.size)
   const faces = flipcardFaces(color, style)
 
   const [side, setSide] = React.useState<Side>('front')
-  const [styleOpen, setStyleOpen] = React.useState(false)
+  const [menuOpen, setMenuOpen] = React.useState(false)
   const frontRef = React.useRef<DraftTextHandle>(null)
   const backRef = React.useRef<DraftTextHandle>(null)
   const wrapperRef = React.useRef<HTMLDivElement>(null)
@@ -104,6 +104,8 @@ const FlipcardExtension: React.FC = (props: any) => {
   const inGrid = !!place
   // Two cards share a phone's width in a compact grid, so they shrink further.
   const compact = inGrid && isCompactFlipcardGrid(place!.grid)
+  // Every card in a deck takes the deck's size (its first card's), so the grid stays even.
+  const size = resolveFlipcardSize(inGrid ? place!.grid.firstChild?.attrs?.size : props.node.attrs.size)
 
   const update = (attrs: Record<string, unknown>) => props.updateAttributes(attrs)
   // Positions are read at event time: a node view isn't re-rendered when only its position changes.
@@ -220,6 +222,123 @@ const FlipcardExtension: React.FC = (props: any) => {
 
   const flipFromCard = () => setSide(flipped ? 'front' : 'back')
 
+  // ── author: grip (deck cards) and ⋯ menu, shown on hover/focus, always on touch ──
+  const toolBtn =
+    'inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-neutral-600 shadow-[0_1px_2px_rgba(15,23,42,0.12),0_0_0_1px_rgba(15,23,42,0.06)] backdrop-blur outline-none hover:bg-white hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-sky-500/50'
+  const menuItem =
+    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-[13px] text-neutral-700 outline-none hover:bg-neutral-100 focus-visible:bg-neutral-100 disabled:pointer-events-none disabled:opacity-40'
+  const cardIndex = place?.index ?? 0
+  const cardCount = place?.grid.childCount ?? 1
+  const moveTo = (to: number) => {
+    const p = currentPlace()
+    if (p && to >= 0 && to < p.grid.childCount) moveCardInGrid(props.editor, p.gridPos, p.index, to)
+  }
+  const authorTools = isEditable ? (
+    <div contentEditable={false} className="lh-card-tools pointer-events-none absolute inset-0 z-10">
+      {inGrid && cardCount > 1 && (
+        <div
+          {...reorder.gripProps(cardIndex, `card-${cardIndex}`)}
+          role="button"
+          tabIndex={0}
+          aria-label={t('editor.blocks_v2.flipcard.drag', 'Drag to reorder (arrow keys move it)')}
+          title={t('editor.blocks_v2.flipcard.drag', 'Drag to reorder (arrow keys move it)')}
+          className="lh-card-tool pointer-events-auto absolute inset-x-10 top-0 flex h-8 cursor-grab touch-none items-start justify-center pt-1 outline-none active:cursor-grabbing focus-visible:[&>span]:ring-2 focus-visible:[&>span]:ring-sky-500/50"
+        >
+          <span className="inline-flex h-4 items-center rounded-full bg-white/85 px-2 text-neutral-500 shadow-[0_0_0_1px_rgba(15,23,42,0.06)]">
+            <DotsSixVertical weight="bold" size={12} className="rotate-90" />
+          </span>
+        </div>
+      )}
+      <div className="lh-card-tool pointer-events-auto absolute end-2 top-2">
+        <BlockPopover
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          align="end"
+          width={256}
+          trigger={
+            <button type="button" aria-label={t('editor.blocks_v2.flipcard.card_menu', 'Card options')} title={t('editor.blocks_v2.flipcard.card_menu', 'Card options')} className={toolBtn}>
+              <DotsThree weight="bold" size={16} />
+            </button>
+          }
+        >
+          <div className="-m-1 flex flex-col gap-0.5">
+            <button type="button" className={menuItem} onClick={() => { turn(flipped ? 'front' : 'back', true); setMenuOpen(false) }}>
+              <ArrowClockwise size={14} />
+              {flipped ? t('editor.blocks_v2.flipcard.show_front', 'Show the front') : t('editor.blocks_v2.flipcard.show_back', 'Show the back')}
+            </button>
+            {inGrid ? (
+              <>
+                <button
+                  type="button"
+                  className={menuItem}
+                  onClick={() => {
+                    const p = currentPlace()
+                    if (p) insertCard(props.editor, p.gridPos, { ...props.node.attrs }, p.index)
+                    setMenuOpen(false)
+                  }}
+                >
+                  <Copy size={14} />
+                  {t('editor.drag_handle.duplicate', 'Duplicate')}
+                </button>
+                <button type="button" className={menuItem} disabled={cardIndex === 0} onClick={() => { moveTo(cardIndex - 1); setMenuOpen(false) }}>
+                  <ArrowLeft size={14} className="rtl:-scale-x-100" />
+                  {t('editor.blocks_v2.flipcard.move_earlier', 'Move earlier')}
+                </button>
+                <button type="button" className={menuItem} disabled={cardIndex >= cardCount - 1} onClick={() => { moveTo(cardIndex + 1); setMenuOpen(false) }}>
+                  <ArrowRight size={14} className="rtl:-scale-x-100" />
+                  {t('editor.blocks_v2.flipcard.move_later', 'Move later')}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className={menuItem}
+                onClick={() => {
+                  const p = typeof props.getPos === 'function' ? props.getPos() : null
+                  if (typeof p === 'number') groupIntoGrid(props.editor, p)
+                  setMenuOpen(false)
+                }}
+              >
+                <SquaresFour size={14} />
+                {t('activities.group_into_grid')}
+              </button>
+            )}
+            <div aria-hidden className="my-1 h-px bg-neutral-100" />
+            <div className="px-1 pb-1">
+              <FlipcardStylePicker look={{ color, style, size }} onChange={(patch: FlipcardLook) => update({ ...patch })} showSize={!inGrid} />
+            </div>
+            {!inGrid && (
+              <div className="flex gap-1 px-1 pb-1">
+                {(['left', 'center', 'right'] as const).map((a) => (
+                  <CardControl key={a} active={alignment === a} onClick={() => update({ alignment: a })} title={t(`activities.align_${a}`)} aria-label={t(`activities.align_${a}`)}>
+                    {a === 'left' ? <TextAlignLeft weight="duotone" size={12} /> : a === 'center' ? <TextAlignCenter weight="duotone" size={12} /> : <TextAlignRight weight="duotone" size={12} />}
+                  </CardControl>
+                ))}
+              </div>
+            )}
+            {inGrid && (
+              <>
+                <div aria-hidden className="my-1 h-px bg-neutral-100" />
+                <button
+                  type="button"
+                  className={cn(menuItem, 'text-rose-600 hover:bg-rose-50 focus-visible:bg-rose-50')}
+                  onClick={() => {
+                    const p = currentPlace()
+                    setMenuOpen(false)
+                    if (p) deleteCard(props.editor, p.gridPos, p.index)
+                  }}
+                >
+                  <Trash size={14} />
+                  {t('editor.blocks_v2.flipcard.delete_card', 'Delete card')}
+                </button>
+              </>
+            )}
+          </div>
+        </BlockPopover>
+      </div>
+    </div>
+  ) : null
+
   const card = (
     // Self-contained coloured cards: the same in every block theme.
     <div
@@ -253,6 +372,7 @@ const FlipcardExtension: React.FC = (props: any) => {
         {face('front')}
         {face('back')}
       </div>
+      {authorTools}
     </div>
   )
 
@@ -270,107 +390,15 @@ const FlipcardExtension: React.FC = (props: any) => {
     )
   }
 
-  // ── author: the original control row under the card ──
-  const sizeIcons: Record<FlipcardSize, React.ReactNode> = {
-    small: <ArrowsInSimple weight="duotone" size={12} />,
-    medium: <Square weight="duotone" size={12} />,
-    large: <ArrowsOutSimple weight="duotone" size={12} />,
-  }
-  const controls = (
-    <div
-      contentEditable={false}
-      className={cn('flex flex-wrap mt-3 gap-1 justify-center transition-opacity', styleOpen ? 'opacity-100' : 'opacity-60 hover:opacity-100 focus-within:opacity-100')}
-    >
-      {inGrid && (
-        <>
-          <CardControl
-            {...reorder.gripProps(place!.index, `card-${place!.index}`)}
-            aria-label={t('editor.blocks_v2.flipcard.drag', 'Drag to reorder (arrow keys move it)')}
-            title={t('editor.blocks_v2.flipcard.drag', 'Drag to reorder (arrow keys move it)')}
-            className="cursor-grab touch-none active:cursor-grabbing"
-          >
-            <DotsSixVertical weight="bold" size={12} />
-          </CardControl>
-          <ControlDivider />
-        </>
-      )}
-      {!inGrid && (
-        <>
-          {(['left', 'center', 'right'] as const).map((a) => (
-            <CardControl key={a} active={alignment === a} onClick={() => update({ alignment: a })} title={t(`activities.align_${a}`)} aria-label={t(`activities.align_${a}`)}>
-              {a === 'left' ? <TextAlignLeft weight="duotone" size={12} /> : a === 'center' ? <TextAlignCenter weight="duotone" size={12} /> : <TextAlignRight weight="duotone" size={12} />}
-            </CardControl>
-          ))}
-          <ControlDivider />
-        </>
-      )}
-      {(['small', 'medium', 'large'] as FlipcardSize[]).map((s) => (
-        <CardControl key={s} active={size === s} onClick={() => update({ size: s })} title={t(`activities.size_${s}`)} aria-label={t(`activities.size_${s}`)}>
-          {sizeIcons[s]}
-        </CardControl>
-      ))}
-      <ControlDivider />
-      <BlockPopover
-        open={styleOpen}
-        onOpenChange={setStyleOpen}
-        align="center"
-        width={264}
-        title={t('editor.blocks_v2.flipcard.look', 'Card look')}
-        trigger={
-          <CardControl title={t('activities.change_color')} aria-label={t('activities.change_color')}>
-            <Palette weight="duotone" size={12} />
-          </CardControl>
-        }
-      >
-        <FlipcardStylePicker look={{ color, style, size }} onChange={(patch: FlipcardLook) => update({ ...patch })} showSize={false} />
-      </BlockPopover>
-      <CardControl onClick={() => turn(flipped ? 'front' : 'back', true)} title={t('activities.preview_flip')} aria-label={t('activities.preview_flip')}>
-        <ArrowClockwise weight="duotone" size={12} />
-      </CardControl>
-      {!inGrid ? (
-        <CardControl
-          onClick={() => {
-            const p = typeof props.getPos === 'function' ? props.getPos() : null
-            if (typeof p === 'number') groupIntoGrid(props.editor, p)
-          }}
-          title={t('activities.group_into_grid')}
-          aria-label={t('activities.group_into_grid')}
-        >
-          <SquaresFour weight="duotone" size={12} />
-        </CardControl>
-      ) : (
-        <>
-          <CardControl
-            onClick={() => {
-              const p = currentPlace()
-              if (p) insertCard(props.editor, p.gridPos, { ...props.node.attrs }, p.index)
-            }}
-            title={t('editor.drag_handle.duplicate', 'Duplicate')}
-            aria-label={t('editor.drag_handle.duplicate', 'Duplicate')}
-          >
-            <Copy weight="duotone" size={12} />
-          </CardControl>
-          <CardControl
-            onClick={() => {
-              const p = currentPlace()
-              if (p) deleteCard(props.editor, p.gridPos, p.index)
-            }}
-            title={t('editor.blocks_v2.flipcard.delete_card', 'Delete card')}
-            aria-label={t('editor.blocks_v2.flipcard.delete_card', 'Delete card')}
-            className="hover:!bg-red-100 hover:!text-red-600"
-          >
-            <Trash weight="duotone" size={12} />
-          </CardControl>
-        </>
-      )}
-    </div>
-  )
-
   if (inGrid) {
     return (
-      <NodeViewWrapper ref={wrapperRef} data-reorder-item="" className={cn('flipcard-wrapper flex w-full flex-col transition-opacity', reorder.drag && 'opacity-50')}>
+      <NodeViewWrapper
+        ref={wrapperRef}
+        data-reorder-item=""
+        data-menu-open={menuOpen || undefined}
+        className={cn('flipcard-wrapper group/tools flex w-full flex-col transition-opacity', reorder.drag && reorder.drag.from === cardIndex && 'opacity-50')}
+      >
         {card}
-        {controls}
       </NodeViewWrapper>
     )
   }
@@ -378,9 +406,8 @@ const FlipcardExtension: React.FC = (props: any) => {
   return (
     <NodeViewWrapper className={cn('flipcard-wrapper flex my-4', alignment === 'left' ? 'justify-start' : alignment === 'right' ? 'justify-end' : 'justify-center')}>
       <EditorBlockFrame editable node={props.node} editor={props.editor} getPos={props.getPos} selected={props.selected} tone="interactive">
-        <div className="flex flex-col">
+        <div className="group/tools flex flex-col" data-menu-open={menuOpen || undefined}>
           {card}
-          {controls}
         </div>
       </EditorBlockFrame>
     </NodeViewWrapper>

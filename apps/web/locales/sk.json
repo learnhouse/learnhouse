@@ -14844,7 +14844,12 @@
         "color_amber": "Jantárová",
         "color_green": "Zelená",
         "color_teal": "Tyrkysová",
-        "color_neutral": "Grafitová"
+        "color_neutral": "Grafitová",
+        "card_menu": "Možnosti karty",
+        "show_front": "Zobraziť prednú stranu",
+        "show_back": "Zobraziť zadnú stranu",
+        "move_earlier": "Posunúť skôr",
+        "move_later": "Posunúť neskôr"
       },
       "scenarios": {
         "add_choice": "Pridať voľbu",
@@ -15530,7 +15535,6 @@
         "title_placeholder": "Názov hry Mýtus alebo fakt",
         "empty": "Zatiaľ žiadne tvrdenia. Začnite príkladom alebo pridajte vlastné.",
         "fill_example": "Použiť príklad",
-        "add": "Pridať tvrdenie",
         "label_true": "Označenie pre pravdu",
         "label_false": "Označenie pre nepravdu",
         "statement_placeholder": "Tvrdenie, ktoré študenti posudzujú",
@@ -15551,7 +15555,12 @@
           "lightning_why": "Do vysokých budov udrie blesk mnohokrát za rok.",
           "bats": "Netopiere sú slepé.",
           "bats_why": "Netopiere vidia a mnohé sa navyše orientujú echolokáciou."
-        }
+        },
+        "add_card": "Pridať kartu",
+        "mark_answer": "Označiť „{{label}}“ ako odpoveď",
+        "switch_answer": "Odpoveď: {{label}}. Prepnúť na {{other}}",
+        "prev_card": "Predchádzajúca karta",
+        "next_card": "Ďalšia karta"
       },
       "speed_round": {
         "name": "Rýchle kolo",
@@ -15730,7 +15739,9 @@
           "c3_a": "Menia potravu na energiu, ktorú bunka využije.",
           "c4_q": "Membrána",
           "c4_a": "Riadi, čo do bunky vstupuje a čo z nej vychádza."
-        }
+        },
+        "panel_list": "Zoznam",
+        "columns": "Kariet v riadku"
       },
       "category": "Zážitky",
       "toolbar_label": "Zážitky",
@@ -15750,7 +15761,9 @@
         "add": "Pridať",
         "remove": "Odstrániť",
         "move_up": "Posunúť hore",
-        "move_down": "Posunúť dole"
+        "move_down": "Posunúť dole",
+        "settings": "Nastavenia",
+        "answer_key_hint": "Upravujete kľúč odpovedí. Pomocou náhľadu si to vyskúšajte ako študent."
       },
       "sort": {
         "title": "Triedenie",
@@ -15776,7 +15789,6 @@
         "explanation_placeholder": "Prečo tam patrí (zobrazí sa pri chybe, nepovinné)",
         "group_label": "Názov skupiny {{n}}",
         "group_placeholder": "Skupina {{n}}",
-        "groups_heading": "Skupiny",
         "issues": {
           "duplicate_item": "Iná položka má rovnaký text.",
           "empty_category": "Pomenujte túto skupinu alebo ju odstráňte.",
@@ -15788,14 +15800,21 @@
           "too_many_items": "Použite najviac 20 položiek; študenti uvidia len prvých 20.",
           "unused_category": "Do tejto skupiny zatiaľ nepatrí žiadna položka."
         },
-        "item_group": "Správna skupina",
         "item_placeholder": "Položka {{n}}",
-        "items_heading": "Položky",
-        "items_hint": "Vyberte správnu skupinu pre každú položku. Študenti ich uvidia zamiešané.",
-        "pick_group": "Vyberte skupinu",
-        "remove_group": "Odstrániť skupinu",
-        "remove_item": "Odstrániť položku",
-        "shuffle_label": "Zamiešať položky pre študentov"
+        "shuffle_label": "Zamiešať položky pre študentov",
+        "moved": "„{{item}}“ presunuté do {{group}}.",
+        "move_item": "Presunúť „{{item}}“",
+        "move_hint": "Potiahnite do inej skupiny alebo stlačte 1–4",
+        "item_label": "Položka {{n}}",
+        "why": "Prečo?",
+        "why_label": "Prečo „{{item}}“ patrí sem",
+        "why_heading": "Prečo „{{item}}“ patrí sem (zobrazí sa, keď sa študent pomýli)",
+        "remove_named": "Odstrániť „{{item}}“",
+        "remove_group_named": "Odstrániť skupinu „{{group}}“",
+        "shuffle_hint": "Vypnuté: študenti uvidia položky v poradí, v akom ste ich pridali.",
+        "unplaced": "Zatiaľ bez skupiny",
+        "author_hint": "Každá položka je vo svojej správnej skupine. Presuňte ju potiahnutím alebo ťuknite na jej úchyt a potom na skupinu.",
+        "author_selected": "Teraz ťuknite na skupinu, do ktorej patrí „{{item}}“."
       },
       "sequence": {
         "title": "Poradie",
@@ -15861,9 +15880,11 @@
         "mode_memory": "Pexeso",
         "mode_memory_hint": "Karty lícom nadol: študenti otáčajú vždy dve a hľadajú páry.",
         "pairs_heading": "Páry",
-        "remove_pair": "Odstrániť pár",
         "right_label": "Pár {{n}}: priradenie",
-        "right_placeholder": "Jej pár"
+        "right_placeholder": "Jej pár",
+        "author_memory_hint": "Každý riadok je dvojica. V pamäťovom režime ich študenti vidia ako otočené karty.",
+        "author_connect_hint": "Každý riadok je dvojica. Študenti dostanú zodpovedajúce položky zamiešané a spájajú ich.",
+        "remove_pair_n": "Odstrániť dvojicu {{n}}"
       },
       "hotspot": {
         "title": "Body na obrázku",

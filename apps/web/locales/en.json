@@ -14341,7 +14341,12 @@
         "color_amber": "Amber",
         "color_green": "Green",
         "color_teal": "Teal",
-        "color_neutral": "Graphite"
+        "color_neutral": "Graphite",
+        "card_menu": "Card options",
+        "show_front": "Show the front",
+        "show_back": "Show the back",
+        "move_earlier": "Move earlier",
+        "move_later": "Move later"
       },
       "scenarios": {
         "add_choice": "Add choice",
@@ -14948,7 +14953,6 @@
         "title_placeholder": "Myth or fact title",
         "empty": "No statements yet. Start from an example or add your own.",
         "fill_example": "Use an example",
-        "add": "Add statement",
         "label_true": "Label for true",
         "label_false": "Label for false",
         "statement_placeholder": "A statement learners judge",
@@ -14969,7 +14973,12 @@
           "lightning_why": "Tall buildings are struck many times a year.",
           "bats": "Bats are blind.",
           "bats_why": "Bats can see, and many also find their way by echolocation."
-        }
+        },
+        "add_card": "Add card",
+        "mark_answer": "Mark “{{label}}” as the answer",
+        "switch_answer": "Answer: {{label}}. Switch to {{other}}",
+        "prev_card": "Previous card",
+        "next_card": "Next card"
       },
       "speed_round": {
         "name": "Speed round",
@@ -15148,7 +15157,9 @@
           "c3_a": "Turn food into energy the cell can use.",
           "c4_q": "Membrane",
           "c4_a": "Controls what goes in and out of the cell."
-        }
+        },
+        "panel_list": "List",
+        "columns": "Cards per row"
       },
       "category": "Experiences",
       "toolbar_label": "Experiences",
@@ -15168,7 +15179,9 @@
         "add": "Add",
         "remove": "Remove",
         "move_up": "Move up",
-        "move_down": "Move down"
+        "move_down": "Move down",
+        "settings": "Settings",
+        "answer_key_hint": "You’re editing the answer key. Preview to try it as a learner."
       },
       "sort": {
         "title": "Sort it",
@@ -15194,7 +15207,6 @@
         "explanation_placeholder": "Why it belongs there (shown when wrong, optional)",
         "group_label": "Group {{n}} name",
         "group_placeholder": "Group {{n}}",
-        "groups_heading": "Groups",
         "issues": {
           "duplicate_item": "Another item has the same text.",
           "empty_category": "Name this group, or remove it.",
@@ -15206,14 +15218,21 @@
           "too_many_items": "Use at most 20 items; learners only see the first 20.",
           "unused_category": "No item belongs to this group yet."
         },
-        "item_group": "Correct group",
         "item_placeholder": "Item {{n}}",
-        "items_heading": "Items",
-        "items_hint": "Pick the correct group for each item. Learners see them shuffled.",
-        "pick_group": "Pick a group",
-        "remove_group": "Remove group",
-        "remove_item": "Remove item",
-        "shuffle_label": "Shuffle items for learners"
+        "shuffle_label": "Shuffle items for learners",
+        "moved": "Moved “{{item}}” to {{group}}.",
+        "move_item": "Move “{{item}}”",
+        "move_hint": "Drag to another group, or press 1–4",
+        "item_label": "Item {{n}}",
+        "why": "Why?",
+        "why_label": "Why “{{item}}” belongs here",
+        "why_heading": "Why “{{item}}” belongs here (shown when a learner gets it wrong)",
+        "remove_named": "Remove “{{item}}”",
+        "remove_group_named": "Remove group “{{group}}”",
+        "shuffle_hint": "Off: learners get the items in the order you added them.",
+        "unplaced": "Not in a group yet",
+        "author_hint": "Each item sits in its correct group. Drag an item, or tap its handle and then a group, to move it.",
+        "author_selected": "Now tap the group “{{item}}” belongs in."
       },
       "sequence": {
         "title": "Sequence",
@@ -15279,9 +15298,11 @@
         "mode_memory": "Memory",
         "mode_memory_hint": "Face-down cards: learners flip two at a time to find the pairs.",
         "pairs_heading": "Pairs",
-        "remove_pair": "Remove pair",
         "right_label": "Pair {{n}}: match",
-        "right_placeholder": "Its match"
+        "right_placeholder": "Its match",
+        "author_memory_hint": "Each row is a pair. In memory mode learners see them as face-down cards.",
+        "author_connect_hint": "Each row is a pair. Learners get the matches shuffled and connect them.",
+        "remove_pair_n": "Remove pair {{n}}"
       },
       "hotspot": {
         "title": "Hotspot",

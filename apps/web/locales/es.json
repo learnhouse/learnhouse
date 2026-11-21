@@ -14585,7 +14585,12 @@
         "color_green": "Verde",
         "color_teal": "Verde azulado",
         "color_neutral": "Grafito",
-        "grid_label_many": "Tarjetas giratorias · {{count}}"
+        "grid_label_many": "Tarjetas giratorias · {{count}}",
+        "card_menu": "Opciones de la tarjeta",
+        "show_front": "Mostrar el anverso",
+        "show_back": "Mostrar el reverso",
+        "move_earlier": "Mover antes",
+        "move_later": "Mover después"
       },
       "scenarios": {
         "add_choice": "Añadir opción",
@@ -15232,7 +15237,6 @@
         "title_placeholder": "Título de Mito o realidad",
         "empty": "Aún no hay afirmaciones. Empieza con un ejemplo o añade las tuyas.",
         "fill_example": "Usar un ejemplo",
-        "add": "Añadir afirmación",
         "label_true": "Etiqueta para verdadero",
         "label_false": "Etiqueta para falso",
         "statement_placeholder": "Una afirmación que los alumnos deben juzgar",
@@ -15253,7 +15257,12 @@
           "lightning_why": "Los edificios altos reciben muchos rayos al año.",
           "bats": "Los murciélagos son ciegos.",
           "bats_why": "Los murciélagos ven, y muchos además se orientan por ecolocalización."
-        }
+        },
+        "add_card": "Añadir tarjeta",
+        "mark_answer": "Marcar «{{label}}» como respuesta",
+        "switch_answer": "Respuesta: {{label}}. Cambiar a {{other}}",
+        "prev_card": "Tarjeta anterior",
+        "next_card": "Tarjeta siguiente"
       },
       "speed_round": {
         "name": "Ronda rápida",
@@ -15432,7 +15441,9 @@
           "c3_a": "Convierten el alimento en energía que la célula puede usar.",
           "c4_q": "Membrana",
           "c4_a": "Controla lo que entra y sale de la célula."
-        }
+        },
+        "panel_list": "Lista",
+        "columns": "Tarjetas por fila"
       },
       "category": "Experiencias",
       "toolbar_label": "Experiencias",
@@ -15452,7 +15463,9 @@
         "add": "Añadir",
         "remove": "Quitar",
         "move_up": "Subir",
-        "move_down": "Bajar"
+        "move_down": "Bajar",
+        "settings": "Ajustes",
+        "answer_key_hint": "Estás editando la clave de respuestas. Usa la vista previa para probarlo como estudiante."
       },
       "sort": {
         "title": "Clasificar",
@@ -15478,7 +15491,6 @@
         "explanation_placeholder": "Por qué va ahí (se muestra si la respuesta es incorrecta, opcional)",
         "group_label": "Nombre del grupo {{n}}",
         "group_placeholder": "Grupo {{n}}",
-        "groups_heading": "Grupos",
         "issues": {
           "duplicate_item": "Otro elemento tiene el mismo texto.",
           "empty_category": "Ponle nombre a este grupo o elimínalo.",
@@ -15490,14 +15502,21 @@
           "too_many_items": "Usa como máximo 20 elementos; los alumnos solo ven los 20 primeros.",
           "unused_category": "Todavía no hay ningún elemento en este grupo."
         },
-        "item_group": "Grupo correcto",
         "item_placeholder": "Elemento {{n}}",
-        "items_heading": "Elementos",
-        "items_hint": "Elige el grupo correcto para cada elemento. Los alumnos los ven desordenados.",
-        "pick_group": "Elige un grupo",
-        "remove_group": "Eliminar grupo",
-        "remove_item": "Eliminar elemento",
-        "shuffle_label": "Desordenar los elementos para los alumnos"
+        "shuffle_label": "Desordenar los elementos para los alumnos",
+        "moved": "«{{item}}» movido a {{group}}.",
+        "move_item": "Mover «{{item}}»",
+        "move_hint": "Arrastra a otro grupo o pulsa 1–4",
+        "item_label": "Elemento {{n}}",
+        "why": "¿Por qué?",
+        "why_label": "Por qué «{{item}}» va aquí",
+        "why_heading": "Por qué «{{item}}» va aquí (se muestra cuando un estudiante falla)",
+        "remove_named": "Quitar «{{item}}»",
+        "remove_group_named": "Quitar el grupo «{{group}}»",
+        "shuffle_hint": "Desactivado: los estudiantes ven los elementos en el orden en que los añadiste.",
+        "unplaced": "Aún sin grupo",
+        "author_hint": "Cada elemento está en su grupo correcto. Arrastra un elemento, o toca su asa y luego un grupo, para moverlo.",
+        "author_selected": "Ahora toca el grupo al que pertenece «{{item}}»."
       },
       "sequence": {
         "title": "Secuencia",
@@ -15563,9 +15582,11 @@
         "mode_memory": "Memoria",
         "mode_memory_hint": "Cartas boca abajo: los alumnos dan la vuelta a dos a la vez para encontrar las parejas.",
         "pairs_heading": "Parejas",
-        "remove_pair": "Eliminar pareja",
         "right_label": "Pareja {{n}}: correspondencia",
-        "right_placeholder": "Su correspondencia"
+        "right_placeholder": "Su correspondencia",
+        "author_memory_hint": "Cada fila es una pareja. En modo memoria los estudiantes las ven como cartas boca abajo.",
+        "author_connect_hint": "Cada fila es una pareja. Los estudiantes reciben las parejas mezcladas y las conectan.",
+        "remove_pair_n": "Quitar la pareja {{n}}"
       },
       "hotspot": {
         "title": "Zonas activas",

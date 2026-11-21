@@ -14356,7 +14356,12 @@
         "color_amber": "Amber",
         "color_green": "Groen",
         "color_teal": "Blauwgroen",
-        "color_neutral": "Grafiet"
+        "color_neutral": "Grafiet",
+        "card_menu": "Kaartopties",
+        "show_front": "Voorkant tonen",
+        "show_back": "Achterkant tonen",
+        "move_earlier": "Naar voren",
+        "move_later": "Naar achteren"
       },
       "scenarios": {
         "add_choice": "Keuze toevoegen",
@@ -14964,7 +14969,6 @@
         "title_placeholder": "Titel van Mythe of feit",
         "empty": "Nog geen stellingen. Begin met een voorbeeld of voeg je eigen toe.",
         "fill_example": "Voorbeeld gebruiken",
-        "add": "Stelling toevoegen",
         "label_true": "Label voor waar",
         "label_false": "Label voor onwaar",
         "statement_placeholder": "Een stelling die cursisten beoordelen",
@@ -14985,7 +14989,12 @@
           "lightning_why": "Hoge gebouwen worden meerdere keren per jaar getroffen.",
           "bats": "Vleermuizen zijn blind.",
           "bats_why": "Vleermuizen kunnen zien, en veel soorten vinden ook hun weg met echolocatie."
-        }
+        },
+        "add_card": "Kaart toevoegen",
+        "mark_answer": "“{{label}}” als antwoord markeren",
+        "switch_answer": "Antwoord: {{label}}. Wisselen naar {{other}}",
+        "prev_card": "Vorige kaart",
+        "next_card": "Volgende kaart"
       },
       "speed_round": {
         "name": "Snelle ronde",
@@ -15164,7 +15173,9 @@
           "c3_a": "Zetten voedsel om in energie die de cel kan gebruiken.",
           "c4_q": "Membraan",
           "c4_a": "Bepaalt wat de cel in en uit gaat."
-        }
+        },
+        "panel_list": "Lijst",
+        "columns": "Kaarten per rij"
       },
       "category": "Ervaringen",
       "toolbar_label": "Ervaringen",
@@ -15184,7 +15195,9 @@
         "add": "Toevoegen",
         "remove": "Verwijderen",
         "move_up": "Omhoog",
-        "move_down": "Omlaag"
+        "move_down": "Omlaag",
+        "settings": "Instellingen",
+        "answer_key_hint": "Je bewerkt de antwoordsleutel. Gebruik het voorbeeld om het als leerling te proberen."
       },
       "sort": {
         "title": "Sorteren",
@@ -15210,7 +15223,6 @@
         "explanation_placeholder": "Waarom het daar hoort (getoond bij een fout antwoord, optioneel)",
         "group_label": "Naam van groep {{n}}",
         "group_placeholder": "Groep {{n}}",
-        "groups_heading": "Groepen",
         "issues": {
           "duplicate_item": "Een ander item heeft dezelfde tekst.",
           "empty_category": "Geef deze groep een naam of verwijder hem.",
@@ -15222,14 +15234,21 @@
           "too_many_items": "Gebruik maximaal 20 items; cursisten zien alleen de eerste 20.",
           "unused_category": "Er hoort nog geen item bij deze groep."
         },
-        "item_group": "Juiste groep",
         "item_placeholder": "Item {{n}}",
-        "items_heading": "Items",
-        "items_hint": "Kies de juiste groep voor elk item. Cursisten zien ze door elkaar.",
-        "pick_group": "Kies een groep",
-        "remove_group": "Groep verwijderen",
-        "remove_item": "Item verwijderen",
-        "shuffle_label": "Items voor cursisten husselen"
+        "shuffle_label": "Items voor cursisten husselen",
+        "moved": "“{{item}}” verplaatst naar {{group}}.",
+        "move_item": "“{{item}}” verplaatsen",
+        "move_hint": "Sleep naar een andere groep of druk op 1–4",
+        "item_label": "Item {{n}}",
+        "why": "Waarom?",
+        "why_label": "Waarom “{{item}}” hier hoort",
+        "why_heading": "Waarom “{{item}}” hier hoort (getoond als een leerling het fout heeft)",
+        "remove_named": "“{{item}}” verwijderen",
+        "remove_group_named": "Groep “{{group}}” verwijderen",
+        "shuffle_hint": "Uit: leerlingen krijgen de items in de volgorde waarin je ze hebt toegevoegd.",
+        "unplaced": "Nog niet in een groep",
+        "author_hint": "Elk item staat in de juiste groep. Sleep een item, of tik op de greep en daarna op een groep, om het te verplaatsen.",
+        "author_selected": "Tik nu op de groep waar “{{item}}” bij hoort."
       },
       "sequence": {
         "title": "Volgorde",
@@ -15295,9 +15314,11 @@
         "mode_memory": "Memory",
         "mode_memory_hint": "Omgedraaide kaarten: cursisten draaien er steeds twee om om de paren te vinden.",
         "pairs_heading": "Paren",
-        "remove_pair": "Paar verwijderen",
         "right_label": "Paar {{n}}: tegenhanger",
-        "right_placeholder": "Tegenhanger"
+        "right_placeholder": "Tegenhanger",
+        "author_memory_hint": "Elke rij is een paar. In memorymodus zien leerlingen ze als omgekeerde kaarten.",
+        "author_connect_hint": "Elke rij is een paar. Leerlingen krijgen de koppelingen gehusseld en verbinden ze.",
+        "remove_pair_n": "Paar {{n}} verwijderen"
       },
       "hotspot": {
         "title": "Hotspot",

@@ -14322,7 +14322,12 @@
         "color_amber": "Kuning tua",
         "color_green": "Hijau",
         "color_teal": "Teal",
-        "color_neutral": "Grafit"
+        "color_neutral": "Grafit",
+        "card_menu": "Opsi kartu",
+        "show_front": "Tampilkan sisi depan",
+        "show_back": "Tampilkan sisi belakang",
+        "move_earlier": "Pindah lebih awal",
+        "move_later": "Pindah lebih akhir"
       },
       "scenarios": {
         "add_choice": "Tambah pilihan",
@@ -14929,7 +14934,6 @@
         "title_placeholder": "Judul Mitos atau fakta",
         "empty": "Belum ada pernyataan. Mulai dari contoh atau tambahkan sendiri.",
         "fill_example": "Pakai contoh",
-        "add": "Tambah pernyataan",
         "label_true": "Label untuk benar",
         "label_false": "Label untuk salah",
         "statement_placeholder": "Pernyataan yang dinilai peserta",
@@ -14950,7 +14954,12 @@
           "lightning_why": "Gedung tinggi tersambar petir berkali-kali setiap tahun.",
           "bats": "Kelelawar itu buta.",
           "bats_why": "Kelelawar bisa melihat, dan banyak yang juga mencari jalan dengan ekolokasi."
-        }
+        },
+        "add_card": "Tambah kartu",
+        "mark_answer": "Tandai “{{label}}” sebagai jawaban",
+        "switch_answer": "Jawaban: {{label}}. Ganti ke {{other}}",
+        "prev_card": "Kartu sebelumnya",
+        "next_card": "Kartu berikutnya"
       },
       "speed_round": {
         "name": "Ronde cepat",
@@ -15129,7 +15138,9 @@
           "c3_a": "Mengubah makanan menjadi energi yang dapat dipakai sel.",
           "c4_q": "Membran",
           "c4_a": "Mengatur apa yang masuk dan keluar dari sel."
-        }
+        },
+        "panel_list": "Daftar",
+        "columns": "Kartu per baris"
       },
       "category": "Pengalaman",
       "toolbar_label": "Pengalaman",
@@ -15149,7 +15160,9 @@
         "add": "Tambah",
         "remove": "Hapus",
         "move_up": "Naikkan",
-        "move_down": "Turunkan"
+        "move_down": "Turunkan",
+        "settings": "Pengaturan",
+        "answer_key_hint": "Anda sedang menyunting kunci jawaban. Gunakan pratinjau untuk mencobanya sebagai pelajar."
       },
       "sort": {
         "title": "Kelompokkan",
@@ -15175,7 +15188,6 @@
         "explanation_placeholder": "Alasan item masuk ke grup ini (ditampilkan saat salah, opsional)",
         "group_label": "Nama grup {{n}}",
         "group_placeholder": "Grup {{n}}",
-        "groups_heading": "Grup",
         "issues": {
           "duplicate_item": "Ada item lain dengan teks yang sama.",
           "empty_category": "Beri nama grup ini, atau hapus.",
@@ -15187,14 +15199,21 @@
           "too_many_items": "Gunakan maksimal 20 item; peserta hanya melihat 20 item pertama.",
           "unused_category": "Belum ada item yang masuk ke grup ini."
         },
-        "item_group": "Grup yang benar",
         "item_placeholder": "Item {{n}}",
-        "items_heading": "Item",
-        "items_hint": "Pilih grup yang benar untuk setiap item. Peserta melihatnya dalam urutan acak.",
-        "pick_group": "Pilih grup",
-        "remove_group": "Hapus grup",
-        "remove_item": "Hapus item",
-        "shuffle_label": "Acak item untuk peserta"
+        "shuffle_label": "Acak item untuk peserta",
+        "moved": "“{{item}}” dipindahkan ke {{group}}.",
+        "move_item": "Pindahkan “{{item}}”",
+        "move_hint": "Seret ke grup lain, atau tekan 1–4",
+        "item_label": "Item {{n}}",
+        "why": "Kenapa?",
+        "why_label": "Kenapa “{{item}}” masuk di sini",
+        "why_heading": "Kenapa “{{item}}” masuk di sini (ditampilkan saat pelajar salah)",
+        "remove_named": "Hapus “{{item}}”",
+        "remove_group_named": "Hapus grup “{{group}}”",
+        "shuffle_hint": "Mati: pelajar melihat item sesuai urutan Anda menambahkannya.",
+        "unplaced": "Belum ada di grup",
+        "author_hint": "Setiap item ada di grup yang benar. Seret item, atau ketuk pegangannya lalu sebuah grup, untuk memindahkannya.",
+        "author_selected": "Sekarang ketuk grup tempat “{{item}}” berada."
       },
       "sequence": {
         "title": "Urutan",
@@ -15260,9 +15279,11 @@
         "mode_memory": "Memori",
         "mode_memory_hint": "Kartu tertutup: peserta membuka dua kartu sekaligus untuk menemukan pasangannya.",
         "pairs_heading": "Pasangan",
-        "remove_pair": "Hapus pasangan",
         "right_label": "Pasangan {{n}}: pasangannya",
-        "right_placeholder": "Pasangannya"
+        "right_placeholder": "Pasangannya",
+        "author_memory_hint": "Setiap baris adalah satu pasangan. Dalam mode memori pelajar melihatnya sebagai kartu tertutup.",
+        "author_connect_hint": "Setiap baris adalah satu pasangan. Pelajar menerima pasangannya secara acak lalu menghubungkannya.",
+        "remove_pair_n": "Hapus pasangan {{n}}"
       },
       "hotspot": {
         "title": "Titik gambar",

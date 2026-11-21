@@ -2,9 +2,11 @@
 /*
  "Sort it" (node expSort): learners put item chips into the right group.
 
- Author: a single-column form (groups, items with their correct group and an
- optional explanation, shuffle toggle) with inline hints, and "Preview as
- learner" in the frame header.
+ Author: edit in place on the learner's layout. Every chip already sits in
+ its correct group (the answer key); group names and chip text are edited
+ where they are, "+ Add item" / "+ Add group" ghosts add, × removes, and a
+ chip moves by drag or by tapping its handle and then a group. "Why?" on a
+ chip opens its explanation. Shuffle lives behind the header gear.
 
  Learner: chips in a tray; drag one onto a group (mouse, pen, touch
  press-and-hold) or tap a chip, then tap a group. Keyboard: Tab to a chip,
@@ -15,13 +17,19 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowCounterClockwise, Stack, Trash, Tray } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, DotsSixVertical, Stack, Tray } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS } from '../../../Blocks/ui/BlockChrome'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
+  SettingsToggle,
   Stars,
   buzz,
   newId,
@@ -50,12 +58,14 @@ import {
   updateCategory,
   updateItem,
   validateSort,
+  type SortCategory,
   type SortCheck,
   type SortColor,
+  type SortItem,
   type SortData,
   type SortPlacement,
 } from './sortModel'
-import { AddRowButton, BlockHints, DragGhost, FormSection, ICON_BTN, NotReady, ResultIcon, RowHints, contentKey } from './kit'
+import { DragGhost, InlineHint, NotReady, ResultIcon, contentKey } from './kit'
 import { focusSibling, useTapDrag } from './useTapDrag'
 
 const TONE = 'interactive' as const
@@ -99,7 +109,7 @@ export default function SortView(props: NodeViewProps) {
   return (
     <NodeViewWrapper className="block-exp-sort">
       {editable && !preview ? (
-        <SortEditor data={data} commit={commit} frame={frame} />
+        <SortAuthor data={data} commit={commit} frame={frame} />
       ) : (
         <SortPlayer key={contentKey(playable)} data={playable} frame={frame} source={props} />
       )}
@@ -107,9 +117,12 @@ export default function SortView(props: NodeViewProps) {
   )
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// The learner's layout with every chip already in its correct group (the
+// answer key). Text is edited where it sits; chips move by drag or by tapping
+// their handle and then a group (keys 1–4 on a focused handle move it too).
 
-function SortEditor({ data, commit, frame }: { data: SortData; commit: (_p: CommitPatch<Record<string, any>>) => void; frame: Frame }) {
+function SortAuthor({ data, commit, frame }: { data: SortData; commit: (_p: CommitPatch<Record<string, any>>) => void; frame: Frame }) {
   const { t } = useTranslation()
   const issues = React.useMemo(() => validateSort(data), [data])
   const edit = (fn: (_d: SortData) => SortData) =>
@@ -118,116 +131,338 @@ function SortEditor({ data, commit, frame }: { data: SortData; commit: (_p: Comm
       return { categories: next.categories, items: next.items }
     })
   const issueText = (code: string) => t(`editor.experiences.sort.issues.${code}`, ISSUE_FALLBACK[code] ?? code)
+  const [selected, setSelected] = React.useState<string | null>(null)
+  const [why, setWhy] = React.useState<string | null>(null)
+  const [live, setLive] = React.useState('')
+  const rootRef = React.useRef<HTMLDivElement>(null)
+
+  // Focus moves to a new or neighbouring object once it has rendered.
+  const pendingFocus = React.useRef<string | null>(null)
+  const tryFocus = () => {
+    const sel = pendingFocus.current
+    const el = sel ? rootRef.current?.querySelector<HTMLElement>(sel) : null
+    if (el) {
+      pendingFocus.current = null
+      el.focus()
+    }
+  }
+  React.useEffect(tryFocus)
+  const focusLater = (selector: string) => {
+    pendingFocus.current = selector
+    requestAnimationFrame(tryFocus)
+  }
+
+  const catIds = new Set(data.categories.map((c) => c.id))
+  const itemIndex = new Map(data.items.map((it, i) => [it.id, i]))
+  const itemName = (it: SortItem) =>
+    it.text.trim() || t('editor.experiences.sort.item_placeholder', { n: (itemIndex.get(it.id) ?? 0) + 1, defaultValue: 'Item {{n}}' })
+  const groupName = (c: SortCategory) =>
+    c.label.trim() || t('editor.experiences.sort.group_placeholder', { n: data.categories.indexOf(c) + 1, defaultValue: 'Group {{n}}' })
   const canRemoveCat = data.categories.length > SORT_LIMITS.minCategories
   const canRemoveItem = data.items.length > SORT_LIMITS.minItems
+  const canAddItem = data.items.length < SORT_LIMITS.maxItems
+
+  const move = (itemId: string, categoryId: string) => {
+    const it = data.items.find((x) => x.id === itemId)
+    const c = data.categories.find((x) => x.id === categoryId)
+    setSelected(null)
+    if (!it || !c) return
+    if (it.categoryId !== categoryId) edit((d) => updateItem(d, itemId, { categoryId }))
+    setLive(t('editor.experiences.sort.moved', { item: itemName(it), group: groupName(c), defaultValue: 'Moved “{{item}}” to {{group}}.' }))
+    focusLater(`[data-chip-id="${itemId}"] [data-grip]`)
+  }
+  const { drag, itemProps } = useTapDrag({ onDrop: (id, target) => catIds.has(target) && move(id, target) })
+
+  const addItemTo = (categoryId: string) => {
+    const id = newId()
+    edit((d) => addItem(d, id, categoryId))
+    focusLater(`[data-chip-id="${id}"] textarea`)
+  }
+  const removeItemAt = (it: SortItem) => {
+    const siblings = data.items.filter((x) => x.categoryId === it.categoryId)
+    const i = siblings.indexOf(it)
+    const next = siblings[i + 1] ?? siblings[i - 1]
+    edit((d) => removeItem(d, it.id))
+    if (why === it.id) setWhy(null)
+    if (selected === it.id) setSelected(null)
+    focusLater(next ? `[data-chip-id="${next.id}"] [data-grip]` : `[data-add-item="${it.categoryId}"]`)
+  }
+  const addGroup = () => {
+    const id = newId()
+    edit((d) => addCategory(d, id))
+    focusLater(`[data-group-id="${id}"] textarea`)
+  }
+  const removeGroup = (c: SortCategory) => {
+    const rest = data.categories.filter((x) => x.id !== c.id)
+    edit((d) => removeCategory(d, c.id))
+    focusLater(rest[0] ? `[data-group-id="${rest[0].id}"] textarea` : '[data-add-group]')
+  }
+
+  const gripKeyDown = (e: React.KeyboardEvent<HTMLElement>, it: SortItem) => {
+    if (e.key === 'Escape') {
+      setSelected(null)
+      return
+    }
+    const n = Number(e.key)
+    if (Number.isInteger(n) && n >= 1 && n <= data.categories.length) {
+      e.preventDefault()
+      move(it.id, data.categories[n - 1].id)
+      return
+    }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && canRemoveItem) {
+      e.preventDefault()
+      removeItemAt(it)
+      return
+    }
+    focusSibling(e, '[data-grip]', rootRef.current)
+  }
+
+  const chip = (it: SortItem) => {
+    const dp = itemProps(it.id)
+    const isSel = selected === it.id
+    const name = itemName(it)
+    const hasWhy = !!it.explanation?.trim()
+    const n = (itemIndex.get(it.id) ?? 0) + 1
+    return (
+      <React.Fragment key={it.id}>
+        <div
+          {...dp}
+          data-sort-chip=""
+          data-chip-id={it.id}
+          onPointerDown={(e) => {
+            if ((e.target as HTMLElement).closest('textarea,[data-no-drag]')) return
+            dp.onPointerDown(e)
+          }}
+          data-picked={isSel ? 'true' : undefined}
+          className={cn(
+            'lh-exp-raised relative inline-flex min-h-10 max-w-full min-w-0 cursor-grab touch-manipulation items-center rounded-xl px-3 py-2 text-start text-[14px] leading-snug font-medium select-none active:cursor-grabbing',
+            EDIT_OBJECT,
+            isSel ? 'text-sky-700' : 'text-neutral-800',
+            drag?.id === it.id && 'opacity-40',
+          )}
+        >
+          <button
+            type="button"
+            data-grip=""
+            aria-pressed={isSel}
+            aria-label={t('editor.experiences.sort.move_item', { item: name, defaultValue: 'Move “{{item}}”' })}
+            title={t('editor.experiences.sort.move_hint', 'Drag to another group, or press 1–4')}
+            onClick={(e) => {
+              e.stopPropagation()
+              setSelected(isSel ? null : it.id)
+            }}
+            onKeyDown={(e) => gripKeyDown(e, it)}
+            data-on={isSel ? 'true' : undefined}
+            className="lh-exp-tool absolute inset-y-0 start-0 inline-flex w-3 cursor-grab items-center justify-center rounded-s-xl text-neutral-300 outline-none hover:text-neutral-500"
+          >
+            <DotsSixVertical size={12} weight="bold" aria-hidden />
+          </button>
+          <InlineText
+            fit
+            value={it.text}
+            onCommit={(text) => edit((d) => updateItem(d, it.id, { text }))}
+            ariaLabel={t('editor.experiences.sort.item_label', { n, defaultValue: 'Item {{n}}' })}
+            placeholder={t('editor.experiences.sort.item_placeholder', { n, defaultValue: 'Item {{n}}' })}
+            maxLength={120}
+          />
+          <button
+            type="button"
+            data-no-drag=""
+            aria-expanded={why === it.id}
+            aria-label={t('editor.experiences.sort.why_label', { item: name, defaultValue: 'Why “{{item}}” belongs here' })}
+            title={t('editor.experiences.sort.why_label', { item: name, defaultValue: 'Why “{{item}}” belongs here' })}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              setWhy(why === it.id ? null : it.id)
+            }}
+            data-on={hasWhy || why === it.id ? 'true' : undefined}
+            className={cn(
+              'lh-exp-tool lh-exp-raised absolute -end-2 -bottom-2 z-10 inline-flex h-5 items-center rounded-full px-1.5 text-[10px] leading-none font-semibold outline-none',
+              hasWhy ? 'text-amber-700' : 'text-neutral-400 hover:text-neutral-700',
+            )}
+          >
+            {t('editor.experiences.sort.why', 'Why?')}
+          </button>
+          <RemoveX
+            floating
+            disabled={!canRemoveItem}
+            onClick={() => removeItemAt(it)}
+            label={t('editor.experiences.sort.remove_named', { item: name, defaultValue: 'Remove “{{item}}”' })}
+          />
+        </div>
+        {why === it.id && (
+          <div className="basis-full rounded-xl bg-[color-mix(in_srgb,var(--exp-paper)_80%,transparent)] px-3 py-2 shadow-[inset_0_0_0_1px_var(--exp-edge)]">
+            <span className="mb-0.5 block text-[11px] font-semibold text-neutral-400">
+              {t('editor.experiences.sort.why_heading', { item: name, defaultValue: 'Why “{{item}}” belongs here (shown when a learner gets it wrong)' })}
+            </span>
+            <InlineText
+              multiline
+              autoFocus
+              value={it.explanation ?? ''}
+              onCommit={(explanation) => edit((d) => updateItem(d, it.id, { explanation }))}
+              ariaLabel={t('editor.experiences.sort.explanation_label', 'Explanation')}
+              placeholder={t('editor.experiences.sort.explanation_placeholder', 'Why it belongs there (shown when wrong, optional)')}
+              maxLength={300}
+              className="text-[13px] leading-relaxed text-neutral-600"
+            />
+          </div>
+        )}
+      </React.Fragment>
+    )
+  }
+
+  const hintsFor = (ids: string[]) =>
+    issues
+      .filter((i) => i.id && ids.includes(i.id))
+      .map((i) => {
+        const it = data.items.find((x) => x.id === i.id)
+        return (
+          <InlineHint key={`${i.id}:${i.code}`} severity={i.severity}>
+            {it ? `${itemName(it)}: ${issueText(i.code)}` : issueText(i.code)}
+          </InlineHint>
+        )
+      })
+
+  const orphans = data.items.filter((it) => !catIds.has(it.categoryId))
+  const sel = selected ? data.items.find((x) => x.id === selected) : undefined
+  const zoneCols = data.categories.length >= 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'
+  const settings = (
+    <SettingsGear>
+      <SettingsToggle
+        checked={data.shuffle}
+        onChange={(shuffle) => commit({ shuffle })}
+        label={t('editor.experiences.sort.shuffle_label', 'Shuffle items for learners')}
+        hint={t('editor.experiences.sort.shuffle_hint', 'Off: learners get the items in the order you added them.')}
+      />
+    </SettingsGear>
+  )
 
   return (
     <ExperienceFrame
       {...frame}
+      wysiwyg
       title={data.title}
       onTitleChange={(title) => commit({ title })}
       instructions={data.instructions}
       onInstructionsChange={(instructions) => commit({ instructions })}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
+      live={live}
     >
-      <div className="flex flex-col gap-5">
-        <BlockHints issues={issues} text={issueText} />
+      <div ref={rootRef} className="flex flex-col gap-4">
+        <p className="m-0 text-[13px] leading-snug text-neutral-500">
+          {sel
+            ? t('editor.experiences.sort.author_selected', { item: itemName(sel), defaultValue: 'Now tap the group “{{item}}” belongs in.' })
+            : t('editor.experiences.sort.author_hint', 'Each item sits in its correct group. Drag an item, or tap its handle and then a group, to move it.')}
+        </p>
+        {issues.some((i) => !i.id) && (
+          <div className="flex flex-col gap-1">
+            {issues
+              .filter((i) => !i.id)
+              .map((i) => (
+                <InlineHint key={i.code} severity={i.severity}>
+                  {issueText(i.code)}
+                </InlineHint>
+              ))}
+          </div>
+        )}
 
-        <FormSection title={t('editor.experiences.sort.groups_heading', 'Groups')}>
-          {data.categories.map((c, i) => (
-            <div key={c.id} className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className={ICON_BTN}
-                  onClick={() => edit((d) => updateCategory(d, c.id, { color: SORT_COLORS[(SORT_COLORS.indexOf(c.color) + 1) % SORT_COLORS.length] }))}
-                  aria-label={t('editor.experiences.sort.change_color', 'Change colour')}
-                  title={t('editor.experiences.sort.change_color', 'Change colour')}
-                >
-                  <span aria-hidden className={cn('h-3.5 w-3.5 rounded-full', COLOR[c.color].dot)} />
-                </button>
-                <CommitInput
-                  value={c.label}
-                  onCommit={(label) => edit((d) => updateCategory(d, c.id, { label }))}
-                  placeholder={t('editor.experiences.sort.group_placeholder', { n: i + 1, defaultValue: 'Group {{n}}' })}
-                  aria-label={t('editor.experiences.sort.group_label', { n: i + 1, defaultValue: 'Group {{n}} name' })}
-                  className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1')}
-                />
-                <button
-                  type="button"
-                  className={ICON_BTN}
-                  disabled={!canRemoveCat}
-                  onClick={() => edit((d) => removeCategory(d, c.id))}
-                  aria-label={t('editor.experiences.sort.remove_group', 'Remove group')}
-                  title={t('editor.experiences.sort.remove_group', 'Remove group')}
-                >
-                  <Trash size={15} aria-hidden />
-                </button>
-              </div>
-              <RowHints issues={issues} id={c.id} text={issueText} />
-            </div>
-          ))}
-          <AddRowButton disabled={data.categories.length >= SORT_LIMITS.maxCategories} onClick={() => edit((d) => addCategory(d, newId()))}>
-            {t('editor.experiences.sort.add_group', 'Add group')}
-          </AddRowButton>
-        </FormSection>
+        {/* Items whose group is gone: the learner's tray, until each is placed. */}
+        {orphans.length > 0 && (
+          <div role="group" aria-label={t('editor.experiences.sort.unplaced', 'Not in a group yet')} className="lh-exp-well flex min-h-16 flex-wrap items-center gap-2 rounded-2xl p-3">
+            <span className="basis-full text-[12px] font-medium text-amber-700">{t('editor.experiences.sort.unplaced', 'Not in a group yet')}</span>
+            {orphans.map(chip)}
+          </div>
+        )}
 
-        <FormSection title={t('editor.experiences.sort.items_heading', 'Items')} hint={t('editor.experiences.sort.items_hint', 'Pick the correct group for each item. Learners see them shuffled.')}>
-          {data.items.map((it, i) => (
-            <div key={it.id} className="flex flex-col gap-1.5 rounded-xl bg-neutral-50/80 p-2 ring-1 ring-neutral-100">
-              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
-                <CommitInput
-                  value={it.text}
-                  onCommit={(text) => edit((d) => updateItem(d, it.id, { text }))}
-                  placeholder={t('editor.experiences.sort.item_placeholder', { n: i + 1, defaultValue: 'Item {{n}}' })}
-                  aria-label={t('editor.experiences.sort.item_placeholder', { n: i + 1, defaultValue: 'Item {{n}}' })}
-                  className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1')}
-                />
-                <div className="flex items-center gap-1.5">
-                  <select
-                    value={it.categoryId}
-                    onChange={(e) => edit((d) => updateItem(d, it.id, { categoryId: e.target.value }))}
-                    aria-label={t('editor.experiences.sort.item_group', 'Correct group')}
-                    className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1 sm:w-40 sm:flex-none')}
-                  >
-                    {!data.categories.some((c) => c.id === it.categoryId) && <option value="">{t('editor.experiences.sort.pick_group', 'Pick a group')}</option>}
-                    {data.categories.map((c, ci) => (
-                      <option key={c.id} value={c.id}>
-                        {c.label.trim() || t('editor.experiences.sort.group_placeholder', { n: ci + 1, defaultValue: 'Group {{n}}' })}
-                      </option>
-                    ))}
-                  </select>
+        <div className={cn('grid grid-cols-1 gap-3', zoneCols)}>
+          {data.categories.map((c, ci) => {
+            const items = data.items.filter((it) => it.categoryId === c.id)
+            const target = !!sel && sel.categoryId !== c.id
+            return (
+              <div
+                key={c.id}
+                data-group-id={c.id}
+                data-drop-target={c.id}
+                role="group"
+                aria-label={t('activities.experiences.sort.group_label', { group: groupName(c), defaultValue: 'Group: {{group}}' })}
+                onClick={(e) => {
+                  if (!target || !sel || (e.target as HTMLElement).closest('textarea,button,[data-sort-chip]')) return
+                  move(sel.id, c.id)
+                }}
+                data-over={drag?.over === c.id || target ? 'true' : undefined}
+                className={cn('lh-exp-well lh-exp-tinted relative flex min-h-32 min-w-0 flex-col gap-2 rounded-2xl p-3', EDIT_OBJECT, COLOR[c.color].zone, target && 'cursor-pointer')}
+              >
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    className={ICON_BTN}
-                    disabled={!canRemoveItem}
-                    onClick={() => edit((d) => removeItem(d, it.id))}
-                    aria-label={t('editor.experiences.sort.remove_item', 'Remove item')}
-                    title={t('editor.experiences.sort.remove_item', 'Remove item')}
+                    data-no-drag=""
+                    onClick={() => edit((d) => updateCategory(d, c.id, { color: SORT_COLORS[(SORT_COLORS.indexOf(c.color) + 1) % SORT_COLORS.length] }))}
+                    aria-label={t('editor.experiences.sort.change_color', 'Change colour')}
+                    title={t('editor.experiences.sort.change_color', 'Change colour')}
+                    className="-m-1 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full outline-none hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-sky-500/40"
                   >
-                    <Trash size={15} aria-hidden />
+                    <span aria-hidden className={cn('h-2.5 w-2.5 rounded-full', COLOR[c.color].dot)} />
                   </button>
+                  <InlineText
+                    value={c.label}
+                    onCommit={(label) => edit((d) => updateCategory(d, c.id, { label }))}
+                    ariaLabel={t('editor.experiences.sort.group_label', { n: ci + 1, defaultValue: 'Group {{n}} name' })}
+                    placeholder={t('editor.experiences.sort.group_placeholder', { n: ci + 1, defaultValue: 'Group {{n}}' })}
+                    maxLength={60}
+                    className={cn('min-w-0 flex-1 text-[13px] font-semibold', COLOR[c.color].text)}
+                  />
+                  <kbd aria-hidden className="lh-exp-raised hidden rounded-md px-1.5 text-[11px] font-medium text-neutral-500 sm:inline">
+                    {ci + 1}
+                  </kbd>
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  {items.map(chip)}
+                  {canAddItem && (
+                    <AddGhost data-add-item={c.id} onClick={() => addItemTo(c.id)} className="min-h-10 rounded-xl px-3">
+                      {t('editor.experiences.sort.add_item', 'Add item')}
+                    </AddGhost>
+                  )}
+                </div>
+                {target && sel && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      move(sel.id, c.id)
+                    }}
+                    className="lh-exp-raised lh-exp-press mt-auto inline-flex min-h-10 items-center justify-center rounded-xl px-3 text-[13px] font-medium text-neutral-700 outline-none"
+                  >
+                    {t('activities.experiences.sort.place_here', { item: itemName(sel), defaultValue: 'Put “{{item}}” here' })}
+                  </button>
+                )}
+                {hintsFor([c.id, ...items.map((it) => it.id)])}
+                <RemoveX
+                  floating
+                  disabled={!canRemoveCat}
+                  onClick={() => removeGroup(c)}
+                  label={t('editor.experiences.sort.remove_group_named', { group: groupName(c), defaultValue: 'Remove group “{{group}}”' })}
+                />
               </div>
-              <CommitInput
-                value={it.explanation ?? ''}
-                onCommit={(explanation) => edit((d) => updateItem(d, it.id, { explanation }))}
-                placeholder={t('editor.experiences.sort.explanation_placeholder', 'Why it belongs there (shown when wrong, optional)')}
-                aria-label={t('editor.experiences.sort.explanation_label', 'Explanation')}
-                className={cn(FIELD_CLASS, 'h-8 text-[12px]')}
-              />
-              <RowHints issues={issues} id={it.id} text={issueText} />
-            </div>
-          ))}
-          <AddRowButton disabled={data.items.length >= SORT_LIMITS.maxItems} onClick={() => edit((d) => addItem(d, newId()))}>
-            {t('editor.experiences.sort.add_item', 'Add item')}
-          </AddRowButton>
-        </FormSection>
+            )
+          })}
+          {data.categories.length < SORT_LIMITS.maxCategories && (
+            <AddGhost data-add-group="" onClick={addGroup} className="col-span-full min-h-11 rounded-2xl px-3">
+              {t('editor.experiences.sort.add_group', 'Add group')}
+            </AddGhost>
+          )}
+        </div>
+        {orphans.length > 0 && hintsFor(orphans.map((it) => it.id))}
 
-        <label className="flex cursor-pointer items-center gap-2 text-[13px] text-neutral-700">
-          <input type="checkbox" checked={data.shuffle} onChange={(e) => commit({ shuffle: e.target.checked })} className="h-4 w-4 accent-neutral-900" />
-          {t('editor.experiences.sort.shuffle_label', 'Shuffle items for learners')}
-        </label>
+        {/* What learners see under the groups, inert here. */}
+        <div aria-hidden className="flex flex-wrap items-center gap-3">
+          <button type="button" tabIndex={-1} disabled className="lh-exp-key">
+            {t('activities.experiences.sort.check', 'Check')}
+          </button>
+        </div>
       </div>
+      {drag && <DragGhost x={drag.x} y={drag.y}>{itemName(data.items.find((x) => x.id === drag.id) ?? { id: '', text: '', categoryId: '' })}</DragGhost>}
     </ExperienceFrame>
   )
 }

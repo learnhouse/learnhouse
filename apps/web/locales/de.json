@@ -14356,7 +14356,12 @@
         "color_amber": "Bernstein",
         "color_green": "Grün",
         "color_teal": "Petrol",
-        "color_neutral": "Graphit"
+        "color_neutral": "Graphit",
+        "card_menu": "Kartenoptionen",
+        "show_front": "Vorderseite zeigen",
+        "show_back": "Rückseite zeigen",
+        "move_earlier": "Nach vorne",
+        "move_later": "Nach hinten"
       },
       "scenarios": {
         "add_choice": "Auswahl hinzufügen",
@@ -14964,7 +14969,6 @@
         "title_placeholder": "Titel für Mythos oder Fakt",
         "empty": "Noch keine Aussagen. Starte mit einem Beispiel oder füge eigene hinzu.",
         "fill_example": "Beispiel verwenden",
-        "add": "Aussage hinzufügen",
         "label_true": "Bezeichnung für wahr",
         "label_false": "Bezeichnung für falsch",
         "statement_placeholder": "Eine Aussage, die Lernende beurteilen",
@@ -14985,7 +14989,12 @@
           "lightning_why": "Hohe Gebäude werden mehrmals im Jahr getroffen.",
           "bats": "Fledermäuse sind blind.",
           "bats_why": "Fledermäuse können sehen, und viele orientieren sich zusätzlich per Echoortung."
-        }
+        },
+        "add_card": "Karte hinzufügen",
+        "mark_answer": "„{{label}}“ als Antwort markieren",
+        "switch_answer": "Antwort: {{label}}. Zu {{other}} wechseln",
+        "prev_card": "Vorherige Karte",
+        "next_card": "Nächste Karte"
       },
       "speed_round": {
         "name": "Schnellrunde",
@@ -15164,7 +15173,9 @@
           "c3_a": "Wandeln Nahrung in Energie um, die die Zelle nutzen kann.",
           "c4_q": "Membran",
           "c4_a": "Regelt, was in die Zelle hinein- und herausgeht."
-        }
+        },
+        "panel_list": "Liste",
+        "columns": "Karten pro Reihe"
       },
       "category": "Lernerlebnisse",
       "toolbar_label": "Lernerlebnisse",
@@ -15184,7 +15195,9 @@
         "add": "Hinzufügen",
         "remove": "Entfernen",
         "move_up": "Nach oben",
-        "move_down": "Nach unten"
+        "move_down": "Nach unten",
+        "settings": "Einstellungen",
+        "answer_key_hint": "Du bearbeitest den Lösungsschlüssel. Nutze die Vorschau, um es als Lernende auszuprobieren."
       },
       "sort": {
         "title": "Zuordnen",
@@ -15210,7 +15223,6 @@
         "explanation_placeholder": "Warum es dorthin gehört (wird bei falscher Antwort angezeigt, optional)",
         "group_label": "Name von Gruppe {{n}}",
         "group_placeholder": "Gruppe {{n}}",
-        "groups_heading": "Gruppen",
         "issues": {
           "duplicate_item": "Ein anderes Element hat denselben Text.",
           "empty_category": "Benenne diese Gruppe oder entferne sie.",
@@ -15222,14 +15234,21 @@
           "too_many_items": "Verwende höchstens 20 Elemente; Lernende sehen nur die ersten 20.",
           "unused_category": "Dieser Gruppe ist noch kein Element zugeordnet."
         },
-        "item_group": "Richtige Gruppe",
         "item_placeholder": "Element {{n}}",
-        "items_heading": "Elemente",
-        "items_hint": "Wähle für jedes Element die richtige Gruppe. Lernende sehen sie gemischt.",
-        "pick_group": "Gruppe wählen",
-        "remove_group": "Gruppe entfernen",
-        "remove_item": "Element entfernen",
-        "shuffle_label": "Elemente für Lernende mischen"
+        "shuffle_label": "Elemente für Lernende mischen",
+        "moved": "„{{item}}“ nach {{group}} verschoben.",
+        "move_item": "„{{item}}“ verschieben",
+        "move_hint": "In eine andere Gruppe ziehen oder 1–4 drücken",
+        "item_label": "Element {{n}}",
+        "why": "Warum?",
+        "why_label": "Warum „{{item}}“ hierher gehört",
+        "why_heading": "Warum „{{item}}“ hierher gehört (wird bei falscher Antwort angezeigt)",
+        "remove_named": "„{{item}}“ entfernen",
+        "remove_group_named": "Gruppe „{{group}}“ entfernen",
+        "shuffle_hint": "Aus: Lernende sehen die Elemente in der Reihenfolge, in der du sie hinzugefügt hast.",
+        "unplaced": "Noch in keiner Gruppe",
+        "author_hint": "Jedes Element liegt in seiner richtigen Gruppe. Ziehe ein Element oder tippe auf seinen Griff und dann auf eine Gruppe, um es zu verschieben.",
+        "author_selected": "Tippe jetzt auf die Gruppe, in die „{{item}}“ gehört."
       },
       "sequence": {
         "title": "Reihenfolge",
@@ -15295,9 +15314,11 @@
         "mode_memory": "Memory",
         "mode_memory_hint": "Verdeckte Karten: Lernende decken immer zwei auf, um die Paare zu finden.",
         "pairs_heading": "Paare",
-        "remove_pair": "Paar entfernen",
         "right_label": "Paar {{n}}: Gegenstück",
-        "right_placeholder": "Gegenstück"
+        "right_placeholder": "Gegenstück",
+        "author_memory_hint": "Jede Zeile ist ein Paar. Im Memory-Modus sehen Lernende sie als verdeckte Karten.",
+        "author_connect_hint": "Jede Zeile ist ein Paar. Lernende bekommen die Gegenstücke gemischt und verbinden sie.",
+        "remove_pair_n": "Paar {{n}} entfernen"
       },
       "hotspot": {
         "title": "Hotspot",

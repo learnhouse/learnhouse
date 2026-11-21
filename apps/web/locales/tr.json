@@ -14356,7 +14356,12 @@
         "color_amber": "Kehribar",
         "color_green": "Yeşil",
         "color_teal": "Camgöbeği",
-        "color_neutral": "Grafit"
+        "color_neutral": "Grafit",
+        "card_menu": "Kart seçenekleri",
+        "show_front": "Ön yüzü göster",
+        "show_back": "Arka yüzü göster",
+        "move_earlier": "Öne taşı",
+        "move_later": "Sona taşı"
       },
       "scenarios": {
         "add_choice": "Seçenek ekle",
@@ -14964,7 +14969,6 @@
         "title_placeholder": "Mit mi gerçek mi başlığı",
         "empty": "Henüz ifade yok. Bir örnekle başlayın veya kendinizinkini ekleyin.",
         "fill_example": "Örnek kullan",
-        "add": "İfade ekle",
         "label_true": "Doğru etiketi",
         "label_false": "Yanlış etiketi",
         "statement_placeholder": "Öğrencilerin değerlendireceği bir ifade",
@@ -14985,7 +14989,12 @@
           "lightning_why": "Yüksek binalara yılda birçok kez yıldırım düşer.",
           "bats": "Yarasalar kördür.",
           "bats_why": "Yarasalar görebilir; birçoğu ayrıca ekolokasyonla yön bulur."
-        }
+        },
+        "add_card": "Kart ekle",
+        "mark_answer": "“{{label}}” seçeneğini cevap olarak işaretle",
+        "switch_answer": "Cevap: {{label}}. {{other}} olarak değiştir",
+        "prev_card": "Önceki kart",
+        "next_card": "Sonraki kart"
       },
       "speed_round": {
         "name": "Hız turu",
@@ -15164,7 +15173,9 @@
           "c3_a": "Besini hücrenin kullanabileceği enerjiye çevirir.",
           "c4_q": "Zar",
           "c4_a": "Hücreye neyin girip çıkacağını denetler."
-        }
+        },
+        "panel_list": "Liste",
+        "columns": "Satır başına kart"
       },
       "category": "Deneyimler",
       "toolbar_label": "Deneyimler",
@@ -15184,7 +15195,9 @@
         "add": "Ekle",
         "remove": "Kaldır",
         "move_up": "Yukarı taşı",
-        "move_down": "Aşağı taşı"
+        "move_down": "Aşağı taşı",
+        "settings": "Ayarlar",
+        "answer_key_hint": "Cevap anahtarını düzenliyorsunuz. Öğrenci olarak denemek için önizlemeyi kullanın."
       },
       "sort": {
         "title": "Sınıflandır",
@@ -15210,7 +15223,6 @@
         "explanation_placeholder": "Neden bu gruba ait olduğu (yanlış yapıldığında gösterilir, isteğe bağlı)",
         "group_label": "Grup {{n}} adı",
         "group_placeholder": "Grup {{n}}",
-        "groups_heading": "Gruplar",
         "issues": {
           "duplicate_item": "Başka bir öğe de aynı metne sahip.",
           "empty_category": "Bu gruba bir ad verin veya grubu kaldırın.",
@@ -15222,14 +15234,21 @@
           "too_many_items": "En fazla 20 öğe kullanın; öğrenciler yalnızca ilk 20 öğeyi görür.",
           "unused_category": "Bu gruba henüz hiçbir öğe ait değil."
         },
-        "item_group": "Doğru grup",
         "item_placeholder": "Öğe {{n}}",
-        "items_heading": "Öğeler",
-        "items_hint": "Her öğe için doğru grubu seçin. Öğrenciler bunları karışık sırayla görür.",
-        "pick_group": "Grup seçin",
-        "remove_group": "Grubu kaldır",
-        "remove_item": "Öğeyi kaldır",
-        "shuffle_label": "Öğeleri öğrenciler için karıştır"
+        "shuffle_label": "Öğeleri öğrenciler için karıştır",
+        "moved": "“{{item}}”, {{group}} grubuna taşındı.",
+        "move_item": "“{{item}}” öğesini taşı",
+        "move_hint": "Başka bir gruba sürükleyin veya 1–4 tuşlarına basın",
+        "item_label": "Öğe {{n}}",
+        "why": "Neden?",
+        "why_label": "“{{item}}” neden burada",
+        "why_heading": "“{{item}}” neden burada (öğrenci yanlış yaptığında gösterilir)",
+        "remove_named": "“{{item}}” öğesini kaldır",
+        "remove_group_named": "“{{group}}” grubunu kaldır",
+        "shuffle_hint": "Kapalı: öğrenciler öğeleri sizin eklediğiniz sırayla görür.",
+        "unplaced": "Henüz bir grupta değil",
+        "author_hint": "Her öğe doğru grubunda duruyor. Taşımak için bir öğeyi sürükleyin ya da tutamacına, sonra bir gruba dokunun.",
+        "author_selected": "Şimdi “{{item}}” öğesinin ait olduğu gruba dokunun."
       },
       "sequence": {
         "title": "Sıralama",
@@ -15295,9 +15314,11 @@
         "mode_memory": "Hafıza",
         "mode_memory_hint": "Kapalı kartlar: öğrenciler çiftleri bulmak için her seferinde iki kart çevirir.",
         "pairs_heading": "Çiftler",
-        "remove_pair": "Çifti kaldır",
         "right_label": "Çift {{n}}: eş",
-        "right_placeholder": "Eşi"
+        "right_placeholder": "Eşi",
+        "author_memory_hint": "Her satır bir eşleşmedir. Hafıza modunda öğrenciler bunları kapalı kartlar olarak görür.",
+        "author_connect_hint": "Her satır bir eşleşmedir. Öğrenciler eşleri karışık olarak alır ve birleştirir.",
+        "remove_pair_n": "{{n}}. eşleşmeyi kaldır"
       },
       "hotspot": {
         "title": "Görselde bul",

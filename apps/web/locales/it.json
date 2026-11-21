@@ -14585,7 +14585,12 @@
         "color_green": "Verde",
         "color_teal": "Verde acqua",
         "color_neutral": "Grafite",
-        "grid_label_many": "Carte girevoli · {{count}}"
+        "grid_label_many": "Carte girevoli · {{count}}",
+        "card_menu": "Opzioni della scheda",
+        "show_front": "Mostra il fronte",
+        "show_back": "Mostra il retro",
+        "move_earlier": "Sposta prima",
+        "move_later": "Sposta dopo"
       },
       "scenarios": {
         "add_choice": "Aggiungi scelta",
@@ -15232,7 +15237,6 @@
         "title_placeholder": "Titolo di Mito o realtà",
         "empty": "Ancora nessuna affermazione. Parti da un esempio o aggiungi le tue.",
         "fill_example": "Usa un esempio",
-        "add": "Aggiungi affermazione",
         "label_true": "Etichetta per vero",
         "label_false": "Etichetta per falso",
         "statement_placeholder": "Un'affermazione da valutare",
@@ -15253,7 +15257,12 @@
           "lightning_why": "I grattacieli vengono colpiti molte volte all’anno.",
           "bats": "I pipistrelli sono ciechi.",
           "bats_why": "I pipistrelli vedono, e molti si orientano anche con l’ecolocalizzazione."
-        }
+        },
+        "add_card": "Aggiungi carta",
+        "mark_answer": "Segna “{{label}}” come risposta",
+        "switch_answer": "Risposta: {{label}}. Passa a {{other}}",
+        "prev_card": "Carta precedente",
+        "next_card": "Carta successiva"
       },
       "speed_round": {
         "name": "Round lampo",
@@ -15432,7 +15441,9 @@
           "c3_a": "Trasformano il cibo in energia utilizzabile dalla cellula.",
           "c4_q": "Membrana",
           "c4_a": "Controlla ciò che entra ed esce dalla cellula."
-        }
+        },
+        "panel_list": "Elenco",
+        "columns": "Schede per riga"
       },
       "category": "Esperienze",
       "toolbar_label": "Esperienze",
@@ -15452,7 +15463,9 @@
         "add": "Aggiungi",
         "remove": "Rimuovi",
         "move_up": "Sposta su",
-        "move_down": "Sposta giù"
+        "move_down": "Sposta giù",
+        "settings": "Impostazioni",
+        "answer_key_hint": "Stai modificando le soluzioni. Usa l’anteprima per provarlo come studente."
       },
       "sort": {
         "title": "Classifica",
@@ -15478,7 +15491,6 @@
         "explanation_placeholder": "Perché va lì (mostrato in caso di errore, facoltativo)",
         "group_label": "Nome del gruppo {{n}}",
         "group_placeholder": "Gruppo {{n}}",
-        "groups_heading": "Gruppi",
         "issues": {
           "duplicate_item": "Un altro elemento ha lo stesso testo.",
           "empty_category": "Dai un nome a questo gruppo o rimuovilo.",
@@ -15490,14 +15502,21 @@
           "too_many_items": "Usa al massimo 20 elementi; gli studenti vedono solo i primi 20.",
           "unused_category": "Nessun elemento appartiene ancora a questo gruppo."
         },
-        "item_group": "Gruppo corretto",
         "item_placeholder": "Elemento {{n}}",
-        "items_heading": "Elementi",
-        "items_hint": "Scegli il gruppo corretto per ogni elemento. Gli studenti li vedono in ordine casuale.",
-        "pick_group": "Scegli un gruppo",
-        "remove_group": "Rimuovi gruppo",
-        "remove_item": "Rimuovi elemento",
-        "shuffle_label": "Mescola gli elementi per gli studenti"
+        "shuffle_label": "Mescola gli elementi per gli studenti",
+        "moved": "“{{item}}” spostato in {{group}}.",
+        "move_item": "Sposta “{{item}}”",
+        "move_hint": "Trascina in un altro gruppo o premi 1–4",
+        "item_label": "Elemento {{n}}",
+        "why": "Perché?",
+        "why_label": "Perché “{{item}}” va qui",
+        "why_heading": "Perché “{{item}}” va qui (mostrato quando uno studente sbaglia)",
+        "remove_named": "Rimuovi “{{item}}”",
+        "remove_group_named": "Rimuovi il gruppo “{{group}}”",
+        "shuffle_hint": "Disattivato: gli studenti vedono gli elementi nell’ordine in cui li hai aggiunti.",
+        "unplaced": "Non ancora in un gruppo",
+        "author_hint": "Ogni elemento è nel suo gruppo corretto. Trascina un elemento, oppure tocca la sua maniglia e poi un gruppo, per spostarlo.",
+        "author_selected": "Ora tocca il gruppo a cui appartiene “{{item}}”."
       },
       "sequence": {
         "title": "Sequenza",
@@ -15563,9 +15582,11 @@
         "mode_memory": "Memory",
         "mode_memory_hint": "Carte coperte: gli studenti ne girano due alla volta per trovare le coppie.",
         "pairs_heading": "Coppie",
-        "remove_pair": "Rimuovi coppia",
         "right_label": "Coppia {{n}}: abbinamento",
-        "right_placeholder": "Il suo abbinamento"
+        "right_placeholder": "Il suo abbinamento",
+        "author_memory_hint": "Ogni riga è una coppia. In modalità memoria gli studenti le vedono come carte coperte.",
+        "author_connect_hint": "Ogni riga è una coppia. Gli studenti ricevono gli abbinamenti mescolati e li collegano.",
+        "remove_pair_n": "Rimuovi la coppia {{n}}"
       },
       "hotspot": {
         "title": "Hotspot",

@@ -14585,7 +14585,12 @@
         "color_green": "Vert",
         "color_teal": "Sarcelle",
         "color_neutral": "Graphite",
-        "grid_label_many": "Cartes à retourner · {{count}}"
+        "grid_label_many": "Cartes à retourner · {{count}}",
+        "card_menu": "Options de la carte",
+        "show_front": "Afficher le recto",
+        "show_back": "Afficher le verso",
+        "move_earlier": "Déplacer avant",
+        "move_later": "Déplacer après"
       },
       "scenarios": {
         "add_choice": "Ajouter un choix",
@@ -15232,7 +15237,6 @@
         "title_placeholder": "Titre de Mythe ou fait",
         "empty": "Aucune affirmation pour l'instant. Partez d'un exemple ou ajoutez les vôtres.",
         "fill_example": "Utiliser un exemple",
-        "add": "Ajouter une affirmation",
         "label_true": "Libellé pour vrai",
         "label_false": "Libellé pour faux",
         "statement_placeholder": "Une affirmation que les apprenants doivent juger",
@@ -15253,7 +15257,12 @@
           "lightning_why": "Les grands immeubles sont frappés plusieurs fois par an.",
           "bats": "Les chauves-souris sont aveugles.",
           "bats_why": "Les chauves-souris voient, et beaucoup s’orientent aussi par écholocation."
-        }
+        },
+        "add_card": "Ajouter une carte",
+        "mark_answer": "Marquer « {{label}} » comme réponse",
+        "switch_answer": "Réponse : {{label}}. Passer à {{other}}",
+        "prev_card": "Carte précédente",
+        "next_card": "Carte suivante"
       },
       "speed_round": {
         "name": "Manche rapide",
@@ -15432,7 +15441,9 @@
           "c3_a": "Transforment les nutriments en énergie utilisable par la cellule.",
           "c4_q": "Membrane",
           "c4_a": "Contrôle ce qui entre et sort de la cellule."
-        }
+        },
+        "panel_list": "Liste",
+        "columns": "Cartes par ligne"
       },
       "category": "Expériences",
       "toolbar_label": "Expériences",
@@ -15452,7 +15463,9 @@
         "add": "Ajouter",
         "remove": "Supprimer",
         "move_up": "Monter",
-        "move_down": "Descendre"
+        "move_down": "Descendre",
+        "settings": "Réglages",
+        "answer_key_hint": "Vous modifiez le corrigé. Utilisez l’aperçu pour l’essayer comme un apprenant."
       },
       "sort": {
         "title": "Classer",
@@ -15478,7 +15491,6 @@
         "explanation_placeholder": "Pourquoi il va là (affiché en cas d’erreur, facultatif)",
         "group_label": "Nom du groupe {{n}}",
         "group_placeholder": "Groupe {{n}}",
-        "groups_heading": "Groupes",
         "issues": {
           "duplicate_item": "Un autre élément a le même texte.",
           "empty_category": "Nommez ce groupe ou supprimez-le.",
@@ -15490,14 +15502,21 @@
           "too_many_items": "Utilisez 20 éléments au maximum ; les apprenants ne voient que les 20 premiers.",
           "unused_category": "Aucun élément n’appartient encore à ce groupe."
         },
-        "item_group": "Bon groupe",
         "item_placeholder": "Élément {{n}}",
-        "items_heading": "Éléments",
-        "items_hint": "Choisissez le bon groupe pour chaque élément. Les apprenants les voient mélangés.",
-        "pick_group": "Choisir un groupe",
-        "remove_group": "Supprimer le groupe",
-        "remove_item": "Supprimer l’élément",
-        "shuffle_label": "Mélanger les éléments pour les apprenants"
+        "shuffle_label": "Mélanger les éléments pour les apprenants",
+        "moved": "« {{item}} » déplacé vers {{group}}.",
+        "move_item": "Déplacer « {{item}} »",
+        "move_hint": "Faites glisser vers un autre groupe, ou appuyez sur 1–4",
+        "item_label": "Élément {{n}}",
+        "why": "Pourquoi ?",
+        "why_label": "Pourquoi « {{item}} » va ici",
+        "why_heading": "Pourquoi « {{item}} » va ici (affiché quand un apprenant se trompe)",
+        "remove_named": "Supprimer « {{item}} »",
+        "remove_group_named": "Supprimer le groupe « {{group}} »",
+        "shuffle_hint": "Désactivé : les apprenants voient les éléments dans l’ordre où vous les avez ajoutés.",
+        "unplaced": "Pas encore dans un groupe",
+        "author_hint": "Chaque élément est dans son bon groupe. Faites glisser un élément, ou touchez sa poignée puis un groupe, pour le déplacer.",
+        "author_selected": "Touchez maintenant le groupe auquel appartient « {{item}} »."
       },
       "sequence": {
         "title": "Séquence",
@@ -15563,9 +15582,11 @@
         "mode_memory": "Memory",
         "mode_memory_hint": "Cartes face cachée : les apprenants en retournent deux à la fois pour trouver les paires.",
         "pairs_heading": "Paires",
-        "remove_pair": "Supprimer la paire",
         "right_label": "Paire {{n}} : correspondant",
-        "right_placeholder": "Son correspondant"
+        "right_placeholder": "Son correspondant",
+        "author_memory_hint": "Chaque ligne est une paire. En mode mémoire, les apprenants les voient comme des cartes face cachée.",
+        "author_connect_hint": "Chaque ligne est une paire. Les apprenants reçoivent les correspondances mélangées et les relient.",
+        "remove_pair_n": "Supprimer la paire {{n}}"
       },
       "hotspot": {
         "title": "Zones cliquables",

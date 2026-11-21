@@ -22,6 +22,7 @@ import { BLOCK_TONE, type BlockTone } from '../../../Blocks/ui/BlockChrome'
 import DraftText from '../../../Blocks/ui/DraftText'
 import { cn } from '@/lib/utils'
 import { Celebrate } from './Celebrate'
+import { InlineText } from './InlineText'
 
 export interface ExperienceFrameProps {
   tone: BlockTone
@@ -54,6 +55,11 @@ export interface ExperienceFrameProps {
   live?: string
   className?: string
   bodyClassName?: string
+  /**
+   * Edit in place: while authoring, the body keeps the learner's table
+   * surface and spacing, and the title / instructions use InlineText.
+   */
+  wysiwyg?: boolean
 }
 
 export function ExperienceFrame({
@@ -78,6 +84,7 @@ export function ExperienceFrame({
   live,
   className,
   bodyClassName,
+  wysiwyg = false,
 }: ExperienceFrameProps) {
   const { t } = useTranslation()
   const authoring = editable && !preview
@@ -103,7 +110,16 @@ export function ExperienceFrame({
           {icon}
         </span>
         <div className="min-w-0 flex-1">
-          {authoring && onTitleChange ? (
+          {authoring && onTitleChange && wysiwyg ? (
+            <InlineText
+              value={title}
+              onCommit={onTitleChange}
+              maxLength={120}
+              placeholder={titlePlaceholder ?? t('editor.experiences.common.title_placeholder', 'Block title')}
+              ariaLabel={t('editor.experiences.common.title_label', 'Title')}
+              className="text-[15px] leading-snug font-semibold text-neutral-900"
+            />
+          ) : authoring && onTitleChange ? (
             <DraftText
               value={title}
               onCommit={onTitleChange}
@@ -116,7 +132,16 @@ export function ExperienceFrame({
           ) : (
             title && <h3 className="m-0 text-[15px] leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere]">{title}</h3>
           )}
-          {authoring && onInstructionsChange ? (
+          {authoring && onInstructionsChange && wysiwyg ? (
+            <InlineText
+              value={instructions ?? ''}
+              onCommit={onInstructionsChange}
+              maxLength={240}
+              placeholder={instructionsPlaceholder ?? t('editor.experiences.common.instructions_placeholder', 'One line telling learners what to do')}
+              ariaLabel={t('editor.experiences.common.instructions_label', 'Instructions')}
+              className="mt-0.5 text-[13px] leading-relaxed text-neutral-500"
+            />
+          ) : authoring && onInstructionsChange ? (
             <DraftText
               value={instructions ?? ''}
               onCommit={onInstructionsChange}
@@ -154,7 +179,7 @@ export function ExperienceFrame({
       <div
         className={cn(
           'lh-exp-body',
-          authoring ? 'px-4 pt-3 pb-4 sm:px-5' : 'lh-exp-table mx-3 mt-3 mb-3 px-3 py-4 sm:mx-4 sm:px-4 sm:py-5',
+          authoring && !wysiwyg ? 'px-4 pt-3 pb-4 sm:px-5' : 'lh-exp-table mx-3 mt-3 mb-3 px-3 py-4 sm:mx-4 sm:px-4 sm:py-5',
           bodyClassName,
         )}
       >

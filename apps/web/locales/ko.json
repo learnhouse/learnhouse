@@ -14322,7 +14322,12 @@
         "color_amber": "호박색",
         "color_green": "초록",
         "color_teal": "청록",
-        "color_neutral": "흑연색"
+        "color_neutral": "흑연색",
+        "card_menu": "카드 옵션",
+        "show_front": "앞면 보기",
+        "show_back": "뒷면 보기",
+        "move_earlier": "앞으로 이동",
+        "move_later": "뒤로 이동"
       },
       "scenarios": {
         "add_choice": "선택지 추가",
@@ -14929,7 +14934,6 @@
         "title_placeholder": "미신 or 사실 제목",
         "empty": "아직 문장이 없습니다. 예시로 시작하거나 직접 추가해 보세요.",
         "fill_example": "예시 사용",
-        "add": "문장 추가",
         "label_true": "참 라벨",
         "label_false": "거짓 라벨",
         "statement_placeholder": "학습자가 판단할 문장",
@@ -14950,7 +14954,12 @@
           "lightning_why": "높은 건물에는 1년에 여러 번 번개가 칩니다.",
           "bats": "박쥐는 앞을 못 본다.",
           "bats_why": "박쥐는 볼 수 있고, 많은 박쥐가 반향정위로도 길을 찾습니다."
-        }
+        },
+        "add_card": "카드 추가",
+        "mark_answer": "‘{{label}}’을(를) 정답으로 표시",
+        "switch_answer": "정답: {{label}}. {{other}}(으)로 바꾸기",
+        "prev_card": "이전 카드",
+        "next_card": "다음 카드"
       },
       "speed_round": {
         "name": "스피드 라운드",
@@ -15129,7 +15138,9 @@
           "c3_a": "음식을 세포가 쓸 수 있는 에너지로 바꾼다.",
           "c4_q": "세포막",
           "c4_a": "세포 안팎으로 드나드는 것을 조절한다."
-        }
+        },
+        "panel_list": "목록",
+        "columns": "한 줄당 카드 수"
       },
       "category": "체험 학습",
       "toolbar_label": "체험 학습",
@@ -15149,7 +15160,9 @@
         "add": "추가",
         "remove": "삭제",
         "move_up": "위로",
-        "move_down": "아래로"
+        "move_down": "아래로",
+        "settings": "설정",
+        "answer_key_hint": "정답 키를 편집하고 있습니다. 미리보기로 학습자처럼 시도해 보세요."
       },
       "sort": {
         "title": "분류하기",
@@ -15175,7 +15188,6 @@
         "explanation_placeholder": "이 그룹에 속하는 이유(틀렸을 때 표시, 선택 사항)",
         "group_label": "그룹 {{n}} 이름",
         "group_placeholder": "그룹 {{n}}",
-        "groups_heading": "그룹",
         "issues": {
           "duplicate_item": "같은 텍스트의 다른 항목이 있습니다.",
           "empty_category": "이 그룹의 이름을 입력하거나 삭제하세요.",
@@ -15187,14 +15199,21 @@
           "too_many_items": "항목은 최대 20개까지 사용하세요. 학습자에게는 처음 20개만 표시됩니다.",
           "unused_category": "아직 이 그룹에 속한 항목이 없습니다."
         },
-        "item_group": "정답 그룹",
         "item_placeholder": "항목 {{n}}",
-        "items_heading": "항목",
-        "items_hint": "각 항목의 올바른 그룹을 고르세요. 학습자에게는 섞여서 표시됩니다.",
-        "pick_group": "그룹 선택",
-        "remove_group": "그룹 삭제",
-        "remove_item": "항목 삭제",
-        "shuffle_label": "학습자에게 항목을 섞어서 표시"
+        "shuffle_label": "학습자에게 항목을 섞어서 표시",
+        "moved": "‘{{item}}’을(를) {{group}}(으)로 옮겼습니다.",
+        "move_item": "‘{{item}}’ 이동",
+        "move_hint": "다른 그룹으로 끌어오거나 1–4를 누르세요",
+        "item_label": "항목 {{n}}",
+        "why": "이유",
+        "why_label": "‘{{item}}’이(가) 여기에 속하는 이유",
+        "why_heading": "‘{{item}}’이(가) 여기에 속하는 이유 (학습자가 틀렸을 때 표시)",
+        "remove_named": "‘{{item}}’ 삭제",
+        "remove_group_named": "‘{{group}}’ 그룹 삭제",
+        "shuffle_hint": "끄기: 학습자는 추가한 순서대로 항목을 봅니다.",
+        "unplaced": "아직 그룹에 없음",
+        "author_hint": "각 항목은 올바른 그룹에 들어 있습니다. 항목을 끌거나, 손잡이를 탭한 다음 그룹을 탭해서 옮기세요.",
+        "author_selected": "이제 ‘{{item}}’이(가) 속한 그룹을 탭하세요."
       },
       "sequence": {
         "title": "순서 맞추기",
@@ -15260,9 +15279,11 @@
         "mode_memory": "기억력",
         "mode_memory_hint": "뒤집힌 카드: 학습자가 두 장씩 뒤집어 짝을 찾습니다.",
         "pairs_heading": "짝",
-        "remove_pair": "짝 삭제",
         "right_label": "짝 {{n}}: 짝",
-        "right_placeholder": "짝"
+        "right_placeholder": "짝",
+        "author_memory_hint": "각 행이 한 쌍입니다. 기억력 모드에서는 학습자에게 뒤집힌 카드로 보입니다.",
+        "author_connect_hint": "각 행이 한 쌍입니다. 학습자는 섞인 짝을 받아 서로 연결합니다.",
+        "remove_pair_n": "{{n}}번 쌍 삭제"
       },
       "hotspot": {
         "title": "핫스폿",

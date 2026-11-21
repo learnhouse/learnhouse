@@ -693,3 +693,87 @@
   .lh-flip-tilt { transition: none; }
   .lh-flip-tilt:hover, .lh-flip-tilt:focus-within { transform: rotate(var(--lh-tilt, 0deg)); }
 }
+
+/* ── Authoring in place (shared/InlineText, shared/authoring) ─────────────
+   The author edits on the learner's own layout, so the edit affordances stay
+   quiet: a dashed underline on hover, a soft ring while typing, dashed "ghost"
+   objects for "+ Add", and small tools (×, handles) that fade in on hover or
+   focus and are always shown on touch screens. */
+.lh-exp-edit {
+  position: relative;
+  border-radius: 4px;
+  cursor: text;
+  transition: background-color 120ms ease-out, box-shadow 120ms ease-out;
+}
+.lh-exp-edit::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 1px;
+  pointer-events: none;
+  opacity: 0;
+  background-image: linear-gradient(to right, currentColor 55%, transparent 0);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  transition: opacity 120ms ease-out;
+}
+@media (hover: hover) {
+  .lh-exp-edit:hover::after { opacity: 0.3; }
+}
+.lh-exp-edit[data-empty]::after { opacity: 0.22; }
+.lh-exp-edit:focus-within {
+  background-color: color-mix(in srgb, #0ea5e9 5%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, #0ea5e9 20%, transparent);
+}
+.lh-exp-edit:focus-within::after { opacity: 0; }
+/* Phones show fields at 16px (styles/mobile.css: no iOS zoom on focus); the
+   copy that sizes a `fit` field follows, so the text never wraps early. */
+@media (max-width: 767px) {
+  .lh-exp-edit > .lh-exp-edit-mirror { font-size: max(16px, 1em); }
+}
+/* "+ Add …": the dashed outline of the object it adds. */
+.lh-exp-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 1px dashed color-mix(in srgb, var(--exp-ink, #18181b) 22%, transparent);
+  background: transparent;
+  color: color-mix(in srgb, var(--exp-ink, #18181b) 50%, transparent);
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 120ms ease-out, background-color 120ms ease-out, color 120ms ease-out;
+}
+@media (hover: hover) {
+  .lh-exp-ghost:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--exp-ink, #18181b) 40%, transparent);
+    background: color-mix(in srgb, var(--exp-paper, #fff) 70%, transparent);
+    color: var(--exp-ink, #18181b);
+  }
+}
+.lh-exp-ghost:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+.lh-exp-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Small edit tools show on hover or focus of their own object (.lh-exp-editobj,
+   the tool's parent), not of an object around it (a chip inside a group). */
+.lh-exp-tool { opacity: 0; transition: opacity 120ms ease-out; }
+.lh-exp-editobj:hover > .lh-exp-tool,
+.lh-exp-editobj:focus-within > .lh-exp-tool,
+.lh-exp-tool:focus-visible,
+.lh-exp-tool[data-on='true'] { opacity: 1; }
+@media (hover: none), (pointer: coarse) {
+  .lh-exp-tool { opacity: 1; }
+}
+.lh-exp-tool:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-edit, .lh-exp-edit::after, .lh-exp-ghost, .lh-exp-tool { transition: none; }
+}
+
+/* Flashcard editor: the grip and ⋯ menu show on hover or focus (always on touch). */
+.lh-card-tool { opacity: 0; transition: opacity 140ms ease-out; }
+.group\/tools:hover .lh-card-tool,
+.group\/tools:focus-within .lh-card-tool,
+[data-menu-open] .lh-card-tool { opacity: 1; }
+@media (hover: none), (pointer: coarse) { .lh-card-tool { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .lh-card-tool { transition: none; } }

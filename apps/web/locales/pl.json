@@ -14844,7 +14844,12 @@
         "color_amber": "Bursztynowy",
         "color_green": "Zielony",
         "color_teal": "Morski",
-        "color_neutral": "Grafitowy"
+        "color_neutral": "Grafitowy",
+        "card_menu": "Opcje karty",
+        "show_front": "Pokaż przód",
+        "show_back": "Pokaż tył",
+        "move_earlier": "Przesuń wcześniej",
+        "move_later": "Przesuń później"
       },
       "scenarios": {
         "add_choice": "Dodaj wybór",
@@ -15530,7 +15535,6 @@
         "title_placeholder": "Tytuł ćwiczenia Mit czy fakt",
         "empty": "Brak stwierdzeń. Zacznij od przykładu lub dodaj własne.",
         "fill_example": "Użyj przykładu",
-        "add": "Dodaj stwierdzenie",
         "label_true": "Etykieta dla prawdy",
         "label_false": "Etykieta dla fałszu",
         "statement_placeholder": "Stwierdzenie do oceny przez uczących się",
@@ -15551,7 +15555,12 @@
           "lightning_why": "W wysokie budynki pioruny trafiają wiele razy w roku.",
           "bats": "Nietoperze są ślepe.",
           "bats_why": "Nietoperze widzą, a wiele z nich orientuje się też dzięki echolokacji."
-        }
+        },
+        "add_card": "Dodaj kartę",
+        "mark_answer": "Oznacz „{{label}}” jako odpowiedź",
+        "switch_answer": "Odpowiedź: {{label}}. Zmień na {{other}}",
+        "prev_card": "Poprzednia karta",
+        "next_card": "Następna karta"
       },
       "speed_round": {
         "name": "Szybka runda",
@@ -15730,7 +15739,9 @@
           "c3_a": "Zamieniają pokarm w energię, z której korzysta komórka.",
           "c4_q": "Błona",
           "c4_a": "Kontroluje, co wchodzi do komórki i co z niej wychodzi."
-        }
+        },
+        "panel_list": "Lista",
+        "columns": "Karty w rzędzie"
       },
       "category": "Doświadczenia",
       "toolbar_label": "Doświadczenia",
@@ -15750,7 +15761,9 @@
         "add": "Dodaj",
         "remove": "Usuń",
         "move_up": "W górę",
-        "move_down": "W dół"
+        "move_down": "W dół",
+        "settings": "Ustawienia",
+        "answer_key_hint": "Edytujesz klucz odpowiedzi. Użyj podglądu, aby wypróbować to jako uczeń."
       },
       "sort": {
         "title": "Sortowanie",
@@ -15776,7 +15789,6 @@
         "explanation_placeholder": "Dlaczego tu pasuje (pokazywane przy błędnej odpowiedzi, opcjonalne)",
         "group_label": "Nazwa grupy {{n}}",
         "group_placeholder": "Grupa {{n}}",
-        "groups_heading": "Grupy",
         "issues": {
           "duplicate_item": "Inny element ma ten sam tekst.",
           "empty_category": "Nazwij tę grupę lub ją usuń.",
@@ -15788,14 +15800,21 @@
           "too_many_items": "Użyj maksymalnie 20 elementów; uczący się widzą tylko pierwsze 20.",
           "unused_category": "Do tej grupy nie należy jeszcze żaden element."
         },
-        "item_group": "Właściwa grupa",
         "item_placeholder": "Element {{n}}",
-        "items_heading": "Elementy",
-        "items_hint": "Wybierz właściwą grupę dla każdego elementu. Uczący się widzą je w losowej kolejności.",
-        "pick_group": "Wybierz grupę",
-        "remove_group": "Usuń grupę",
-        "remove_item": "Usuń element",
-        "shuffle_label": "Mieszaj elementy dla uczących się"
+        "shuffle_label": "Mieszaj elementy dla uczących się",
+        "moved": "Przeniesiono „{{item}}” do {{group}}.",
+        "move_item": "Przenieś „{{item}}”",
+        "move_hint": "Przeciągnij do innej grupy lub naciśnij 1–4",
+        "item_label": "Element {{n}}",
+        "why": "Dlaczego?",
+        "why_label": "Dlaczego „{{item}}” należy tutaj",
+        "why_heading": "Dlaczego „{{item}}” należy tutaj (widoczne, gdy uczeń się pomyli)",
+        "remove_named": "Usuń „{{item}}”",
+        "remove_group_named": "Usuń grupę „{{group}}”",
+        "shuffle_hint": "Wyłączone: uczniowie widzą elementy w kolejności, w jakiej je dodano.",
+        "unplaced": "Jeszcze bez grupy",
+        "author_hint": "Każdy element jest w swojej poprawnej grupie. Przeciągnij element albo dotknij jego uchwytu, a potem grupy, aby go przenieść.",
+        "author_selected": "Teraz dotknij grupy, do której należy „{{item}}”."
       },
       "sequence": {
         "title": "Kolejność",
@@ -15861,9 +15880,11 @@
         "mode_memory": "Memory",
         "mode_memory_hint": "Zakryte karty: uczący się odkrywają po dwie, aby znaleźć pary.",
         "pairs_heading": "Pary",
-        "remove_pair": "Usuń parę",
         "right_label": "Para {{n}}: dopasowanie",
-        "right_placeholder": "Dopasowanie"
+        "right_placeholder": "Dopasowanie",
+        "author_memory_hint": "Każdy wiersz to para. W trybie memory uczniowie widzą je jako zakryte karty.",
+        "author_connect_hint": "Każdy wiersz to para. Uczniowie dostają dopasowania w losowej kolejności i je łączą.",
+        "remove_pair_n": "Usuń parę {{n}}"
       },
       "hotspot": {
         "title": "Punkty na obrazie",

@@ -14322,7 +14322,12 @@
         "color_amber": "Hổ phách",
         "color_green": "Xanh lá",
         "color_teal": "Xanh mòng két",
-        "color_neutral": "Than chì"
+        "color_neutral": "Than chì",
+        "card_menu": "Tùy chọn thẻ",
+        "show_front": "Hiện mặt trước",
+        "show_back": "Hiện mặt sau",
+        "move_earlier": "Chuyển lên trước",
+        "move_later": "Chuyển ra sau"
       },
       "scenarios": {
         "add_choice": "Thêm lựa chọn",
@@ -14929,7 +14934,6 @@
         "title_placeholder": "Tiêu đề Lầm tưởng hay sự thật",
         "empty": "Chưa có nhận định nào. Hãy bắt đầu từ ví dụ hoặc tự thêm.",
         "fill_example": "Dùng ví dụ",
-        "add": "Thêm nhận định",
         "label_true": "Nhãn cho đúng",
         "label_false": "Nhãn cho sai",
         "statement_placeholder": "Một nhận định để người học đánh giá",
@@ -14950,7 +14954,12 @@
           "lightning_why": "Các tòa nhà cao bị sét đánh nhiều lần mỗi năm.",
           "bats": "Dơi bị mù.",
           "bats_why": "Dơi nhìn thấy được, và nhiều loài còn định hướng bằng tiếng vang."
-        }
+        },
+        "add_card": "Thêm thẻ",
+        "mark_answer": "Đánh dấu “{{label}}” là đáp án",
+        "switch_answer": "Đáp án: {{label}}. Chuyển sang {{other}}",
+        "prev_card": "Thẻ trước",
+        "next_card": "Thẻ tiếp theo"
       },
       "speed_round": {
         "name": "Vòng tốc độ",
@@ -15129,7 +15138,9 @@
           "c3_a": "Biến thức ăn thành năng lượng cho tế bào sử dụng.",
           "c4_q": "Màng tế bào",
           "c4_a": "Kiểm soát những gì ra vào tế bào."
-        }
+        },
+        "panel_list": "Danh sách",
+        "columns": "Số thẻ mỗi hàng"
       },
       "category": "Trải nghiệm",
       "toolbar_label": "Trải nghiệm",
@@ -15149,7 +15160,9 @@
         "add": "Thêm",
         "remove": "Xóa",
         "move_up": "Lên",
-        "move_down": "Xuống"
+        "move_down": "Xuống",
+        "settings": "Cài đặt",
+        "answer_key_hint": "Bạn đang chỉnh sửa đáp án. Dùng xem trước để thử với vai trò người học."
       },
       "sort": {
         "title": "Phân loại",
@@ -15175,7 +15188,6 @@
         "explanation_placeholder": "Lý do mục thuộc nhóm đó (hiển thị khi trả lời sai, không bắt buộc)",
         "group_label": "Tên nhóm {{n}}",
         "group_placeholder": "Nhóm {{n}}",
-        "groups_heading": "Các nhóm",
         "issues": {
           "duplicate_item": "Một mục khác có cùng nội dung.",
           "empty_category": "Đặt tên cho nhóm này hoặc xóa nó.",
@@ -15187,14 +15199,21 @@
           "too_many_items": "Dùng tối đa 20 mục; người học chỉ thấy 20 mục đầu tiên.",
           "unused_category": "Chưa có mục nào thuộc nhóm này."
         },
-        "item_group": "Nhóm đúng",
         "item_placeholder": "Mục {{n}}",
-        "items_heading": "Các mục",
-        "items_hint": "Chọn nhóm đúng cho từng mục. Người học sẽ thấy chúng bị xáo trộn.",
-        "pick_group": "Chọn nhóm",
-        "remove_group": "Xóa nhóm",
-        "remove_item": "Xóa mục",
-        "shuffle_label": "Xáo trộn các mục cho người học"
+        "shuffle_label": "Xáo trộn các mục cho người học",
+        "moved": "Đã chuyển “{{item}}” sang {{group}}.",
+        "move_item": "Di chuyển “{{item}}”",
+        "move_hint": "Kéo sang nhóm khác, hoặc nhấn 1–4",
+        "item_label": "Mục {{n}}",
+        "why": "Tại sao?",
+        "why_label": "Vì sao “{{item}}” thuộc về đây",
+        "why_heading": "Vì sao “{{item}}” thuộc về đây (hiển thị khi người học làm sai)",
+        "remove_named": "Xóa “{{item}}”",
+        "remove_group_named": "Xóa nhóm “{{group}}”",
+        "shuffle_hint": "Tắt: người học thấy các mục theo thứ tự bạn đã thêm.",
+        "unplaced": "Chưa thuộc nhóm nào",
+        "author_hint": "Mỗi mục đang nằm đúng nhóm của nó. Kéo một mục, hoặc chạm vào tay cầm rồi chạm vào một nhóm, để di chuyển.",
+        "author_selected": "Giờ hãy chạm vào nhóm mà “{{item}}” thuộc về."
       },
       "sequence": {
         "title": "Sắp xếp thứ tự",
@@ -15260,9 +15279,11 @@
         "mode_memory": "Lật thẻ",
         "mode_memory_hint": "Thẻ úp: người học lật hai thẻ mỗi lượt để tìm các cặp.",
         "pairs_heading": "Các cặp",
-        "remove_pair": "Xóa cặp",
         "right_label": "Cặp {{n}}: mục tương ứng",
-        "right_placeholder": "Mục tương ứng"
+        "right_placeholder": "Mục tương ứng",
+        "author_memory_hint": "Mỗi hàng là một cặp. Ở chế độ trí nhớ, người học thấy chúng dưới dạng thẻ úp.",
+        "author_connect_hint": "Mỗi hàng là một cặp. Người học nhận các vế ghép bị xáo trộn và nối chúng lại.",
+        "remove_pair_n": "Xóa cặp {{n}}"
       },
       "hotspot": {
         "title": "Điểm trên ảnh",

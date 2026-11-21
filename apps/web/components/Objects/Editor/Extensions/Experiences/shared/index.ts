@@ -7,6 +7,20 @@ export { ExperienceFrame, type ExperienceFrameProps } from './ExperienceFrame'
 export { ExperienceFooter, type ExperienceFooterProps } from './ExperienceFooter'
 export { Celebrate, type CelebrateProps } from './Celebrate'
 export { Stars, type StarsProps } from './Stars'
+export { InlineText, type InlineTextProps, type InlineTextHandle } from './InlineText'
+export {
+  AddGhost,
+  RemoveX,
+  CorrectMark,
+  SettingsGear,
+  SettingsToggle,
+  AnswerKeyHint,
+  EDIT_OBJECT,
+  type AddGhostProps,
+  type RemoveXProps,
+  type CorrectMarkProps,
+  type SettingsGearProps,
+} from './authoring'
 export {
   useLiveAttrs,
   readLiveAttrs,

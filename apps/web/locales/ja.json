@@ -14324,7 +14324,12 @@
         "color_amber": "アンバー",
         "color_green": "グリーン",
         "color_teal": "ティール",
-        "color_neutral": "グラファイト"
+        "color_neutral": "グラファイト",
+        "card_menu": "カードのオプション",
+        "show_front": "表を表示",
+        "show_back": "裏を表示",
+        "move_earlier": "前へ移動",
+        "move_later": "後ろへ移動"
       },
       "scenarios": {
         "add_choice": "選択肢を追加",
@@ -14931,7 +14936,6 @@
         "title_placeholder": "「迷信か事実か」のタイトル",
         "empty": "まだ文がありません。例から始めるか、自分で追加してください。",
         "fill_example": "例を使う",
-        "add": "文を追加",
         "label_true": "「正しい」のラベル",
         "label_false": "「誤り」のラベル",
         "statement_placeholder": "受講者が判断する文",
@@ -14952,7 +14956,12 @@
           "lightning_why": "高いビルには年に何度も雷が落ちます。",
           "bats": "コウモリは目が見えない。",
           "bats_why": "コウモリは目が見え、多くは反響定位でも進路を見つけます。"
-        }
+        },
+        "add_card": "カードを追加",
+        "mark_answer": "「{{label}}」を正解にする",
+        "switch_answer": "正解：{{label}}。{{other}}に切り替え",
+        "prev_card": "前のカード",
+        "next_card": "次のカード"
       },
       "speed_round": {
         "name": "スピードラウンド",
@@ -15131,7 +15140,9 @@
           "c3_a": "食べ物を細胞が使えるエネルギーに変える。",
           "c4_q": "細胞膜",
           "c4_a": "細胞に出入りするものを調節する。"
-        }
+        },
+        "panel_list": "リスト",
+        "columns": "1行のカード数"
       },
       "category": "エクスペリエンス",
       "toolbar_label": "エクスペリエンス",
@@ -15151,7 +15162,9 @@
         "add": "追加",
         "remove": "削除",
         "move_up": "上へ",
-        "move_down": "下へ"
+        "move_down": "下へ",
+        "settings": "設定",
+        "answer_key_hint": "解答キーを編集しています。プレビューで学習者として試せます。"
       },
       "sort": {
         "title": "分類",
@@ -15177,7 +15190,6 @@
         "explanation_placeholder": "そのグループに入る理由（不正解時に表示、任意）",
         "group_label": "グループ {{n}} の名前",
         "group_placeholder": "グループ {{n}}",
-        "groups_heading": "グループ",
         "issues": {
           "duplicate_item": "同じテキストの項目が他にあります。",
           "empty_category": "このグループに名前を付けるか、削除してください。",
@@ -15189,14 +15201,21 @@
           "too_many_items": "項目は20個までにしてください。学習者には最初の20個だけが表示されます。",
           "unused_category": "このグループに属する項目がまだありません。"
         },
-        "item_group": "正しいグループ",
         "item_placeholder": "項目 {{n}}",
-        "items_heading": "項目",
-        "items_hint": "各項目の正しいグループを選んでください。学習者にはシャッフルして表示されます。",
-        "pick_group": "グループを選択",
-        "remove_group": "グループを削除",
-        "remove_item": "項目を削除",
-        "shuffle_label": "学習者向けに項目をシャッフル"
+        "shuffle_label": "学習者向けに項目をシャッフル",
+        "moved": "「{{item}}」を{{group}}に移動しました。",
+        "move_item": "「{{item}}」を移動",
+        "move_hint": "別のグループへドラッグするか、1〜4を押します",
+        "item_label": "項目 {{n}}",
+        "why": "理由",
+        "why_label": "「{{item}}」がここに入る理由",
+        "why_heading": "「{{item}}」がここに入る理由（学習者が間違えたときに表示）",
+        "remove_named": "「{{item}}」を削除",
+        "remove_group_named": "グループ「{{group}}」を削除",
+        "shuffle_hint": "オフ：学習者には追加した順に項目が表示されます。",
+        "unplaced": "まだグループにありません",
+        "author_hint": "各項目は正しいグループに入っています。項目をドラッグするか、ハンドルをタップしてからグループをタップして移動します。",
+        "author_selected": "「{{item}}」が入るグループをタップしてください。"
       },
       "sequence": {
         "title": "並べ替え",
@@ -15262,9 +15281,11 @@
         "mode_memory": "神経衰弱",
         "mode_memory_hint": "裏向きのカード：学習者は2枚ずつめくってペアを見つけます。",
         "pairs_heading": "ペア",
-        "remove_pair": "ペアを削除",
         "right_label": "ペア {{n}}：対応する項目",
-        "right_placeholder": "対応する項目"
+        "right_placeholder": "対応する項目",
+        "author_memory_hint": "各行が1つのペアです。メモリーモードでは、学習者には裏向きのカードとして表示されます。",
+        "author_connect_hint": "各行が1つのペアです。学習者には対応する語がシャッフルされて表示され、線でつなぎます。",
+        "remove_pair_n": "ペア {{n}} を削除"
       },
       "hotspot": {
         "title": "ホットスポット",

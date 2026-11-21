@@ -14324,7 +14324,12 @@
         "color_amber": "琥珀色",
         "color_green": "绿色",
         "color_teal": "青绿色",
-        "color_neutral": "石墨色"
+        "color_neutral": "石墨色",
+        "card_menu": "卡片选项",
+        "show_front": "显示正面",
+        "show_back": "显示背面",
+        "move_earlier": "前移",
+        "move_later": "后移"
       },
       "scenarios": {
         "add_choice": "添加选项",
@@ -14931,7 +14936,6 @@
         "title_placeholder": "“是谣言还是事实”标题",
         "empty": "还没有陈述。从示例开始，或添加你自己的。",
         "fill_example": "使用示例",
-        "add": "添加陈述",
         "label_true": "“正确”标签",
         "label_false": "“错误”标签",
         "statement_placeholder": "供学员判断的陈述",
@@ -14952,7 +14956,12 @@
           "lightning_why": "高楼每年会被闪电击中很多次。",
           "bats": "蝙蝠是瞎子。",
           "bats_why": "蝙蝠看得见，很多蝙蝠还会用回声定位来辨别方向。"
-        }
+        },
+        "add_card": "添加卡片",
+        "mark_answer": "将“{{label}}”标为答案",
+        "switch_answer": "答案：{{label}}。切换为{{other}}",
+        "prev_card": "上一张卡片",
+        "next_card": "下一张卡片"
       },
       "speed_round": {
         "name": "速答挑战",
@@ -15131,7 +15140,9 @@
           "c3_a": "把食物转化为细胞可用的能量。",
           "c4_q": "细胞膜",
           "c4_a": "控制物质进出细胞。"
-        }
+        },
+        "panel_list": "列表",
+        "columns": "每行卡片数"
       },
       "category": "互动体验",
       "toolbar_label": "互动体验",
@@ -15151,7 +15162,9 @@
         "add": "添加",
         "remove": "移除",
         "move_up": "上移",
-        "move_down": "下移"
+        "move_down": "下移",
+        "settings": "设置",
+        "answer_key_hint": "你正在编辑答案。预览可以以学习者身份试一试。"
       },
       "sort": {
         "title": "分类",
@@ -15177,7 +15190,6 @@
         "explanation_placeholder": "为什么属于该分组（答错时显示，可选）",
         "group_label": "分组 {{n}} 名称",
         "group_placeholder": "分组 {{n}}",
-        "groups_heading": "分组",
         "issues": {
           "duplicate_item": "另一个项目的文本相同。",
           "empty_category": "为此分组命名，或将其删除。",
@@ -15189,14 +15201,21 @@
           "too_many_items": "最多使用 20 个项目；学员只能看到前 20 个。",
           "unused_category": "还没有项目属于此分组。"
         },
-        "item_group": "正确分组",
         "item_placeholder": "项目 {{n}}",
-        "items_heading": "项目",
-        "items_hint": "为每个项目选择正确的分组。学员看到的顺序是打乱的。",
-        "pick_group": "选择分组",
-        "remove_group": "删除分组",
-        "remove_item": "删除项目",
-        "shuffle_label": "为学员打乱项目顺序"
+        "shuffle_label": "为学员打乱项目顺序",
+        "moved": "已将“{{item}}”移到{{group}}。",
+        "move_item": "移动“{{item}}”",
+        "move_hint": "拖到另一个分组，或按 1–4",
+        "item_label": "项目 {{n}}",
+        "why": "为什么？",
+        "why_label": "“{{item}}”为什么属于这里",
+        "why_heading": "“{{item}}”为什么属于这里（学习者答错时显示）",
+        "remove_named": "删除“{{item}}”",
+        "remove_group_named": "删除分组“{{group}}”",
+        "shuffle_hint": "关闭：学习者按你添加的顺序看到项目。",
+        "unplaced": "尚未分组",
+        "author_hint": "每个项目都已放在正确的分组中。拖动项目，或点按它的手柄再点按一个分组，即可移动。",
+        "author_selected": "现在点按“{{item}}”所属的分组。"
       },
       "sequence": {
         "title": "排序",
@@ -15262,9 +15281,11 @@
         "mode_memory": "记忆",
         "mode_memory_hint": "背面朝上的卡片：学员每次翻开两张，找出所有配对。",
         "pairs_heading": "配对",
-        "remove_pair": "删除配对",
         "right_label": "配对 {{n}}：配对项",
-        "right_placeholder": "它的配对项"
+        "right_placeholder": "它的配对项",
+        "author_memory_hint": "每一行是一对。在记忆模式下，学习者看到的是背面朝上的卡片。",
+        "author_connect_hint": "每一行是一对。学习者拿到打乱顺序的配对项并把它们连起来。",
+        "remove_pair_n": "删除第 {{n}} 对"
       },
       "hotspot": {
         "title": "图片热点",

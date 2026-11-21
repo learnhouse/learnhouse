@@ -36,10 +36,12 @@ interface Props {
   autoFocus?: boolean
   dir?: 'auto' | 'ltr' | 'rtl'
   onFocusChange?: (_focused: boolean) => void
+  /** Every change to the local draft (typing, Escape, remote updates). */
+  onDraftChange?: (_draft: string) => void
 }
 
 export const DraftText = React.forwardRef<DraftTextHandle, Props>(function DraftText(
-  { value, onCommit, placeholder, ariaLabel, className, onEnter, onEmptyBackspace, multiline = true, maxLength, autoFocus, dir = 'auto', onFocusChange },
+  { value, onCommit, placeholder, ariaLabel, className, onEnter, onEmptyBackspace, multiline = true, maxLength, autoFocus, dir = 'auto', onFocusChange, onDraftChange },
   ref,
 ) {
   const [draft, setDraft] = React.useState(value)
@@ -66,6 +68,11 @@ export const DraftText = React.forwardRef<DraftTextHandle, Props>(function Draft
     }
   }
   React.useEffect(() => clearPause, [])
+  const onDraftChangeRef = React.useRef(onDraftChange)
+  onDraftChangeRef.current = onDraftChange
+  React.useEffect(() => {
+    onDraftChangeRef.current?.(draft)
+  }, [draft])
 
   React.useEffect(() => {
     if (!editing.current) {

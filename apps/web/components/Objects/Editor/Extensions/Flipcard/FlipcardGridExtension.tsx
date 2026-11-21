@@ -6,18 +6,19 @@
  time with Again / Hard / Got it (FlashcardStudy). The deck's `mode` attr
  picks where they start; a Grid / Study toggle sits above the deck.
 
- Authors edit the cards in place as before (each card has its own control
- row, see FlipcardExtension) or as a list (question | answer rows, Add card,
- paste "term – definition" lines). The control row under the deck keeps the
- column count, add card, style every card and ungroup, plus deck settings
- (start mode, shuffle) and paste. A deck title sits on top.
+ Authors edit the deck as learners see it: an even grid of cards, edited in
+ place (each card's grip and ⋯ menu appear on hover, see FlipcardExtension),
+ with a faded "+ Add card" in the next cell. Or as a list (question | answer
+ rows). One header holds the title, a Cards / List switch, Preview (study
+ mode) and a gear with columns, the look of every card, start mode, shuffle,
+ paste a list and ungroup.
 
  The cards stay child nodes (NodeViewContent) in every view: the list and
  study views only hide them, so ProseMirror's content is never unmounted.
 */
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import React from 'react'
-import { Cards, ClipboardText, GearSix, ListBullets, Palette, Plus, Rows, Shuffle, SquaresFour, Trash } from '@phosphor-icons/react'
+import { Cards, ClipboardText, Eye, GearSix, ListBullets, PencilSimple, Plus, Rows, Shuffle, SquaresFour, Trash } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
@@ -26,7 +27,7 @@ import EditorBlockFrame from '../../Blocks/ui/EditorBlockFrame'
 import { BlockPopover, Segmented, TEXTAREA_CLASS } from '../../Blocks/ui/BlockChrome'
 import DraftText from '../../Blocks/ui/DraftText'
 import { isCompactFlipcardGrid } from './compactGrid'
-import { CardControl, ControlDivider } from './FlipcardExtension'
+import { CardControl } from './FlipcardExtension'
 import { FlipcardStylePicker, type FlipcardLook } from './FlipcardStylePicker'
 import { FlashcardStudy, type StudyDeckCard } from './FlashcardStudy'
 import { type GridMode, parseBulkCards, resolveDeckAttrs, toStudyCards } from './flashcardStudyModel'
@@ -128,7 +129,6 @@ function GridEditor(props: any) {
   const deck = resolveDeckAttrs(props.node.attrs)
   const columns: number = props.node.attrs.columns || 2
   const [panel, setPanel] = React.useState<Panel>('cards')
-  const [lookOpen, setLookOpen] = React.useState(false)
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [pasteOpen, setPasteOpen] = React.useState(false)
   const cards = React.useMemo(() => deckCards(props.node), [props.node])
@@ -159,13 +159,17 @@ function GridEditor(props: any) {
   }
 
   const label = t('editor.blocks_v2.flipcard.grid_label', { count: props.node.childCount, defaultValue: 'Flipcards · {{count}}' })
+  const preview = panel === 'study'
+  const sectionLabel = 'text-xs font-medium text-neutral-600'
+  const headerBtn =
+    'inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-500/40'
 
   return (
     <NodeViewWrapper {...gridWrapperProps(props, columns)}>
       <EditorBlockFrame editable node={props.node} editor={props.editor} getPos={props.getPos} selected={props.selected} tone="interactive" label={label}>
-        <div className="mb-3 flex flex-wrap items-center gap-2" contentEditable={false}>
-          <span aria-hidden className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-            <Cards size={17} weight="duotone" />
+        <div className="mb-4 flex pt-6 flex-wrap items-center gap-x-3 gap-y-2" contentEditable={false}>
+          <span aria-hidden className="lh-exp-icon inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+            <Cards size={20} weight="duotone" />
           </span>
           <div className="min-w-[10rem] flex-1">
             <DraftText
@@ -175,119 +179,74 @@ function GridEditor(props: any) {
               placeholder={t('editor.experiences.flashcards.title_placeholder', 'Deck title (optional)')}
               ariaLabel={t('editor.experiences.flashcards.title_label', 'Deck title')}
               onCommit={(v) => props.updateAttributes({ title: v })}
-              className="rounded-md px-1.5 py-1 text-[15px] font-semibold text-neutral-900 placeholder:font-medium placeholder:text-neutral-400 hover:bg-neutral-50 focus:bg-white"
+              className="rounded-md text-[15px] font-semibold text-neutral-900 placeholder:font-medium placeholder:text-neutral-400 hover:bg-neutral-50 focus:bg-white"
             />
+            <p className="m-0 text-[12px] text-neutral-500">
+              {t('activities.experiences.flashcards.card_count', { count: cards.length, defaultValue: 'Cards: {{count}}' })}
+            </p>
           </div>
-          <div className="w-full sm:w-[19rem]">
-            <Segmented<Panel>
-              ariaLabel={t('editor.experiences.flashcards.panel_label', 'Edit view')}
-              value={panel}
-              onChange={setPanel}
-              options={[
-                { value: 'cards', label: <><SquaresFour size={13} weight="duotone" />{t('editor.experiences.flashcards.panel_cards', 'Cards')}</> },
-                { value: 'list', label: <><ListBullets size={13} />{t('editor.experiences.flashcards.edit_list', 'Edit as list')}</> },
-                { value: 'study', label: <><Cards size={13} weight="duotone" />{t('editor.experiences.flashcards.panel_study', 'Study')}</> },
-              ]}
-            />
-          </div>
-        </div>
-
-        {/* The column count rides a CSS variable rather than a Tailwind class:
-            Tiptap injects its own content holder inside this element, so the grid
-            has to be declared in CSS where that holder can be dissolved. */}
-        <div className={panel === 'cards' ? undefined : 'hidden'}>
-          <NodeViewContent className="flipcard-grid-content" />
-        </div>
-
-        {panel === 'list' && (
-          <ListEditor
-            cards={cards}
-            onChange={(i, patch) => {
-              const pos = gridPos()
-              if (typeof pos === 'number') updateCardAttrs(props.editor, pos, i, patch)
-            }}
-            onDelete={(i) => {
-              const pos = gridPos()
-              if (typeof pos === 'number') deleteCard(props.editor, pos, i)
-            }}
-          />
-        )}
-        {panel === 'study' && (
-          <div className="lh-exp-frame rounded-2xl bg-white p-3 ring-1 ring-neutral-200/70 sm:p-4" contentEditable={false}>
-            <FlashcardStudy cards={cards} shuffle={deck.shuffle} memorySource="editor-preview" />
-          </div>
-        )}
-
-        {panel !== 'study' && (
-          <div
-            className={cn(
-              'mt-3 flex flex-wrap justify-center gap-1 transition-opacity',
-              lookOpen || settingsOpen || pasteOpen || panel === 'list' ? 'opacity-100' : 'opacity-60 hover:opacity-100 focus-within:opacity-100',
+          <div className="flex items-center gap-1.5">
+            {!preview && (
+              <div className="w-[9.5rem]">
+                <Segmented<Panel>
+                  ariaLabel={t('editor.experiences.flashcards.panel_label', 'Edit view')}
+                  value={panel}
+                  onChange={setPanel}
+                  options={[
+                    { value: 'cards', label: <><SquaresFour size={13} weight="duotone" />{t('editor.experiences.flashcards.panel_cards', 'Cards')}</> },
+                    { value: 'list', label: <><ListBullets size={13} />{t('editor.experiences.flashcards.panel_list', 'List')}</> },
+                  ]}
+                />
+              </div>
             )}
-            contentEditable={false}
-          >
-            {panel === 'cards' &&
-              COLUMN_OPTIONS.map((value) => (
-                <CardControl
-                  key={value}
-                  active={columns === value}
-                  onClick={() => props.updateAttributes({ columns: value })}
-                  title={t(`activities.grid_columns_${value}`)}
-                  aria-label={t(`activities.grid_columns_${value}`)}
-                >
-                  <ColumnsGlyph n={value} />
-                </CardControl>
-              ))}
-            {panel === 'cards' && <ControlDivider />}
-            <CardControl onClick={addCard} title={t('activities.add_card')} aria-label={t('activities.add_card')}>
-              <Plus weight="bold" size={12} />
-            </CardControl>
-            <BlockPopover
-              open={pasteOpen}
-              onOpenChange={setPasteOpen}
-              align="center"
-              width={320}
-              title={t('editor.experiences.flashcards.paste_title', 'Paste a list')}
-              trigger={
-                <CardControl title={t('editor.experiences.flashcards.paste_title', 'Paste a list')} aria-label={t('editor.experiences.flashcards.paste_title', 'Paste a list')}>
-                  <ClipboardText weight="duotone" size={12} />
-                </CardControl>
-              }
+            <button
+              type="button"
+              aria-pressed={preview}
+              onClick={() => setPanel(preview ? 'cards' : 'study')}
+              className={cn(headerBtn, preview ? 'bg-neutral-900 text-white hover:bg-neutral-800' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900')}
             >
-              <PasteForm onAdd={paste} />
-            </BlockPopover>
-            <BlockPopover
-              open={lookOpen}
-              onOpenChange={setLookOpen}
-              align="center"
-              title={t('editor.blocks_v2.flipcard.look_all', 'Style every card')}
-              width={264}
-              trigger={
-                <CardControl title={t('editor.blocks_v2.flipcard.look_all', 'Style every card')} aria-label={t('editor.blocks_v2.flipcard.look_all', 'Style every card')}>
-                  <Palette weight="duotone" size={12} />
-                </CardControl>
-              }
-            >
-              <FlipcardStylePicker look={{ color: first.color, style: first.style, size: first.size }} onChange={applyAll} />
-            </BlockPopover>
+              {preview ? <PencilSimple size={13} weight="bold" aria-hidden /> : <Eye size={13} weight="bold" aria-hidden />}
+              {preview ? t('editor.experiences.common.back_to_editing', 'Back to editing') : t('editor.experiences.common.preview', 'Preview')}
+            </button>
             <BlockPopover
               open={settingsOpen}
               onOpenChange={setSettingsOpen}
-              align="center"
-              width={264}
+              align="end"
+              width={288}
               title={t('editor.experiences.flashcards.settings', 'Deck settings')}
               trigger={
-                <CardControl
-                  active={deck.mode === 'study' || deck.shuffle ? true : undefined}
-                  title={t('editor.experiences.flashcards.settings', 'Deck settings')}
+                <button
+                  type="button"
                   aria-label={t('editor.experiences.flashcards.settings', 'Deck settings')}
+                  title={t('editor.experiences.flashcards.settings', 'Deck settings')}
+                  className={cn(headerBtn, 'w-8 justify-center bg-neutral-100 px-0 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900')}
                 >
-                  <GearSix weight="duotone" size={12} />
-                </CardControl>
+                  <GearSix size={15} weight="duotone" />
+                </button>
               }
             >
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-neutral-600">{t('editor.experiences.flashcards.mode_label', 'Learners start in')}</span>
+                <span className={sectionLabel}>{t('editor.experiences.flashcards.columns', 'Cards per row')}</span>
+                <div className="flex gap-1">
+                  {COLUMN_OPTIONS.map((value) => (
+                    <CardControl
+                      key={value}
+                      active={columns === value}
+                      onClick={() => props.updateAttributes({ columns: value })}
+                      title={t(`activities.grid_columns_${value}`)}
+                      aria-label={t(`activities.grid_columns_${value}`)}
+                    >
+                      <ColumnsGlyph n={value} />
+                    </CardControl>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <span className={sectionLabel}>{t('editor.blocks_v2.flipcard.look_all', 'Style every card')}</span>
+                <FlipcardStylePicker look={{ color: first.color, style: first.style, size: first.size }} onChange={applyAll} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <span className={sectionLabel}>{t('editor.experiences.flashcards.mode_label', 'Learners start in')}</span>
                 <Segmented<GridMode>
                   ariaLabel={t('editor.experiences.flashcards.mode_label', 'Learners start in')}
                   value={deck.mode}
@@ -314,19 +273,96 @@ function GridEditor(props: any) {
                   <span className="text-[11px] leading-snug text-neutral-400">{t('editor.experiences.flashcards.shuffle_hint', 'Each learner sees the cards in a new order.')}</span>
                 </span>
               </label>
+              <div aria-hidden className="h-px bg-neutral-100" />
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSettingsOpen(false)
+                    setPasteOpen(true)
+                  }}
+                  className={buttonClass('secondary', 'sm')}
+                >
+                  <ClipboardText size={13} weight="duotone" />
+                  {t('editor.experiences.flashcards.paste_title', 'Paste a list')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const pos = gridPos()
+                    setSettingsOpen(false)
+                    if (typeof pos === 'number') ungroupGrid(props.editor, pos)
+                  }}
+                  className={buttonClass('secondary', 'sm')}
+                >
+                  <Rows size={13} weight="duotone" />
+                  {t('activities.ungroup_cards')}
+                </button>
+              </div>
             </BlockPopover>
-            <CardControl
-              onClick={() => {
+          </div>
+        </div>
+
+        {/* The column count rides a CSS variable rather than a Tailwind class:
+            Tiptap injects its own content holder inside the content element, so
+            the grid is declared in CSS where that holder can be dissolved. The
+            "+ Add card" ghost is the grid's last cell. */}
+        <div className={panel !== 'cards' ? 'hidden' : undefined}>
+        <div className="flipcard-grid-content flipcard-grid-edit">
+          <NodeViewContent className="flipcard-grid-holder" />
+          <button
+            type="button"
+            contentEditable={false}
+            onClick={addCard}
+            className="flex h-48 w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-neutral-200 text-[13px] font-medium text-neutral-500 outline-none transition-colors hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40 max-md:h-36"
+          >
+            <Plus size={14} weight="bold" aria-hidden />
+            {t('activities.add_card')}
+          </button>
+        </div>
+        </div>
+
+        {panel === 'list' && (
+          <>
+            <ListEditor
+              cards={cards}
+              onChange={(i, patch) => {
                 const pos = gridPos()
-                if (typeof pos === 'number') ungroupGrid(props.editor, pos)
+                if (typeof pos === 'number') updateCardAttrs(props.editor, pos, i, patch)
               }}
-              title={t('activities.ungroup_cards')}
-              aria-label={t('activities.ungroup_cards')}
-            >
-              <Rows weight="duotone" size={12} />
-            </CardControl>
+              onDelete={(i) => {
+                const pos = gridPos()
+                if (typeof pos === 'number') deleteCard(props.editor, pos, i)
+              }}
+            />
+            <div className="mt-2 flex flex-wrap gap-1.5" contentEditable={false}>
+              <button type="button" onClick={addCard} className={buttonClass('secondary', 'sm')}>
+                <Plus size={12} weight="bold" />
+                {t('activities.add_card')}
+              </button>
+              <button type="button" onClick={() => setPasteOpen(true)} className={buttonClass('secondary', 'sm')}>
+                <ClipboardText size={13} weight="duotone" />
+                {t('editor.experiences.flashcards.paste_title', 'Paste a list')}
+              </button>
+            </div>
+          </>
+        )}
+        {preview && (
+          <div className="lh-exp-frame rounded-2xl bg-white p-3 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.04)] sm:p-4" contentEditable={false}>
+            <FlashcardStudy cards={cards} shuffle={deck.shuffle} memorySource="editor-preview" />
           </div>
         )}
+
+        <BlockPopover
+          open={pasteOpen}
+          onOpenChange={setPasteOpen}
+          align="center"
+          width={320}
+          title={t('editor.experiences.flashcards.paste_title', 'Paste a list')}
+          trigger={<span aria-hidden className="block h-0 w-full" />}
+        >
+          <PasteForm onAdd={paste} />
+        </BlockPopover>
       </EditorBlockFrame>
     </NodeViewWrapper>
   )

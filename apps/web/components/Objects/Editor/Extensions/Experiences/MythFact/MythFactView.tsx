@@ -1,6 +1,7 @@
 'use client'
 /*
- Myth or fact. Authors list statements and mark each one fact or myth;
+ Myth or fact. Authors edit the card stack in place (statement, answer
+ stamp / keys, explanation) and page through it with arrows and dots;
  learners get one card at a time and answer by swiping (pointer events, with
  a distance threshold and a tilt), with the two buttons, or with the arrow
  keys. Each answer reveals the explanation; the end screen shows the score,
@@ -8,16 +9,24 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowRight, Check, Fire, Plus, SealQuestion, Trash, WarningCircle, X } from '@phosphor-icons/react'
+import { ArrowRight, CaretLeft, CaretRight, Check, Fire, SealQuestion, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { CommitInput, FIELD_CLASS, Segmented } from '../../../Blocks/ui/BlockChrome'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import { CommitInput, SettingsField } from '../../../Blocks/ui/BlockChrome'
+import { InlineHint } from '../Sort/kit'
 import { cn } from '@/lib/utils'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  CorrectMark,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   buzz,
+  type InlineTextHandle,
   newId,
   useEnsureBlockId,
   useExperienceEditable,
@@ -78,13 +87,7 @@ export default function MythFactView(props: NodeViewProps) {
   return (
     <NodeViewWrapper className="block-exp-myth-fact">
       {editable && !preview ? (
-        <ExperienceFrame
-          {...frame}
-          onTitleChange={(title) => commit({ title })}
-          titlePlaceholder={t('editor.experiences.myth_fact.title_placeholder')}
-        >
-          <MythFactForm data={data} labels={labels} commit={commit} />
-        </ExperienceFrame>
+        <MythFactAuthor data={data} labels={labels} commit={commit} frame={frame} />
       ) : (
         <MythFactPlayer key={JSON.stringify(data.statements)} data={data} labels={labels} frame={frame} blockId={attrs.blockId} source={props} />
       )}
@@ -93,6 +96,10 @@ export default function MythFactView(props: NodeViewProps) {
 }
 
 // ---- authoring -----------------------------------------------------------
+// The learner's card stack, with the current card editable in place: the
+// statement, the answer (the stamp on the card, or the Myth / Fact keys under
+// it) and the explanation learners see after answering. Arrows and dots move
+// between cards. Custom label wording lives behind the header gear.
 
 /** The registry's example (what the slash menu inserts), minus its fresh blockId. */
 function exampleAttrs(t: TFunction): Record<string, unknown> {
@@ -100,141 +107,271 @@ function exampleAttrs(t: TFunction): Record<string, unknown> {
   return attrs
 }
 
-function Hint({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="m-0 flex items-start gap-1.5 text-xs leading-snug text-amber-700">
-      <WarningCircle size={14} weight="fill" className="mt-px shrink-0" aria-hidden />
-      <span>{children}</span>
-    </p>
-  )
-}
+type FrameBase = Omit<React.ComponentProps<typeof ExperienceFrame>, 'children'>
 
-function MythFactForm({ data, labels, commit }: { data: MythFactData; labels: Labels; commit: (_p: any) => void }) {
+function MythFactAuthor({ data, labels, commit, frame }: { data: MythFactData; labels: Labels; commit: (_p: any) => void; frame: FrameBase }) {
   const { t } = useTranslation()
+  const [index, setIndex] = React.useState(0)
+  const [live, setLive] = React.useState('')
+  const count = data.statements.length
+  const i = Math.min(index, Math.max(0, count - 1))
+  const card = data.statements[i]
   const issues = validateMythFact(data)
-  const rowIssue = (id: string) => issues.find((i) => 'id' in i && i.id === id)
-  const deckIssues = issues.filter((i) => !('id' in i))
+  const cardIssue = card ? issues.find((x) => 'id' in x && x.id === card.id) : undefined
+  const deckIssues = issues.filter((x) => !('id' in x))
+  const issueText = (x: MythFactIssue) => t(`editor.experiences.myth_fact.issue_${x.kind}`, { max: MAX_STATEMENTS })
   const editStatements = (fn: (_list: Statement[]) => Statement[]) =>
-    commit((live: any) => ({ statements: fn(normalizeMythFact(live).statements) }))
+    commit((liveAttrs: any) => ({ statements: fn(normalizeMythFact(liveAttrs).statements) }))
   const patch = (id: string, p: Partial<Statement>) => editStatements((list) => list.map((s) => (s.id === id ? { ...s, ...p } : s)))
-  const issueText = (i: MythFactIssue) => t(`editor.experiences.myth_fact.issue_${i.kind}`, { max: MAX_STATEMENTS })
 
-  if (!data.statements.length) {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-xl bg-neutral-50 px-4 py-6 text-center">
-        <p className="m-0 text-sm text-neutral-500">{t('editor.experiences.myth_fact.empty')}</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <button type="button" className={buttonClass('primary', 'sm')} onClick={() => commit(exampleAttrs(t))}>
+  // Focus the statement of a card once it is on top (after add / remove).
+  const statementRef = React.useRef<InlineTextHandle>(null)
+  const pendingFocus = React.useRef<string | null>(null)
+  React.useEffect(() => {
+    if (pendingFocus.current && card?.id === pendingFocus.current) {
+      pendingFocus.current = null
+      statementRef.current?.focus()
+    }
+  })
+
+  const go = (n: number) => {
+    const next = Math.max(0, Math.min(count - 1, n))
+    setIndex(next)
+    setLive(t('activities.experiences.myth_fact.card_of', { current: next + 1, total: count }))
+  }
+  const add = () => {
+    const id = newId()
+    editStatements((list) => [...list, { id, text: '', isTrue: true, explanation: '' }])
+    setIndex(count)
+    pendingFocus.current = id
+  }
+  const remove = () => {
+    if (!card) return
+    const target = data.statements[i + 1] ?? data.statements[i - 1]
+    editStatements((list) => list.filter((s) => s.id !== card.id))
+    setIndex(data.statements[i + 1] ? i : Math.max(0, i - 1))
+    pendingFocus.current = target?.id ?? null
+  }
+  const setAnswer = (isTrue: boolean) => {
+    if (!card || card.isTrue === isTrue) return
+    patch(card.id, { isTrue })
+    setLive(t('activities.experiences.myth_fact.answer_was', { label: isTrue ? labels.true : labels.false }))
+  }
+
+  const settings = (
+    <SettingsGear>
+      <SettingsField label={t('editor.experiences.myth_fact.label_true')}>
+        <CommitInput
+          value={data.labels.true}
+          placeholder={t('activities.experiences.myth_fact.fact')}
+          maxLength={24}
+          onCommit={(v) => commit((l: any) => ({ labels: { ...normalizeMythFact(l).labels, true: v } }))}
+        />
+      </SettingsField>
+      <SettingsField label={t('editor.experiences.myth_fact.label_false')}>
+        <CommitInput
+          value={data.labels.false}
+          placeholder={t('activities.experiences.myth_fact.myth')}
+          maxLength={24}
+          onCommit={(v) => commit((l: any) => ({ labels: { ...normalizeMythFact(l).labels, false: v } }))}
+        />
+      </SettingsField>
+    </SettingsGear>
+  )
+
+  const shell = (children: React.ReactNode) => (
+    <ExperienceFrame
+      {...frame}
+      wysiwyg
+      onTitleChange={(title) => commit({ title })}
+      titlePlaceholder={t('editor.experiences.myth_fact.title_placeholder')}
+      instructions={t('activities.experiences.myth_fact.instructions')}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
+      live={live}
+    >
+      {children}
+    </ExperienceFrame>
+  )
+
+  if (!card) {
+    return shell(
+      <div className="mx-auto flex max-w-md flex-col items-stretch gap-3">
+        <AddGhost onClick={add} className="min-h-[12rem] w-full rounded-2xl text-[14px]">
+          {t('editor.experiences.myth_fact.add_card', 'Add card')}
+        </AddGhost>
+        <p className="m-0 text-center text-[13px] text-neutral-500">
+          {t('editor.experiences.myth_fact.empty')}{' '}
+          <button type="button" onClick={() => commit(exampleAttrs(t))} className="font-medium text-neutral-800 underline decoration-dashed underline-offset-2 hover:text-neutral-950">
             {t('editor.experiences.myth_fact.fill_example')}
           </button>
-          <button
-            type="button"
-            className={buttonClass('secondary', 'sm')}
-            onClick={() => editStatements((list) => [...list, { id: newId(), text: '', isTrue: true, explanation: '' }])}
-          >
-            <Plus size={14} weight="bold" aria-hidden />
-            {t('editor.experiences.myth_fact.add')}
-          </button>
-        </div>
+        </p>
+      </div>,
+    )
+  }
+
+  const answerKey = (isTrue: boolean) => {
+    const on = card.isTrue === isTrue
+    return (
+      <div className="relative">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={on}
+          tabIndex={on ? 0 : -1}
+          onClick={() => setAnswer(isTrue)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+              e.preventDefault()
+              setAnswer(!card.isTrue)
+              const other = e.currentTarget.closest('[role="radiogroup"]')?.querySelector<HTMLElement>(`[data-answer="${!isTrue}"]`)
+              other?.focus()
+            }
+          }}
+          data-answer={String(isTrue)}
+          data-picked={on ? 'true' : undefined}
+          className={cn(
+            'lh-exp-raised lh-exp-press lh-exp-tint inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[14px] font-semibold outline-none',
+            isTrue ? 'text-emerald-700' : 'text-rose-700',
+            !on && 'opacity-55 hover:opacity-90',
+          )}
+        >
+          {isTrue ? <Check size={16} weight="bold" aria-hidden /> : <X size={16} weight="bold" aria-hidden />}
+          {isTrue ? labels.true : labels.false}
+        </button>
+        <CorrectMark
+          checked={on}
+          onChange={() => setAnswer(isTrue)}
+          label={t('editor.experiences.myth_fact.mark_answer', { label: isTrue ? labels.true : labels.false, defaultValue: 'Mark “{{label}}” as the answer' })}
+          className={cn('absolute -top-2 -end-2 h-5 w-5', !on && 'bg-[var(--exp-paper)]')}
+        />
       </div>
     )
   }
 
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-2">
-        <label className="flex min-w-0 flex-col gap-1">
-          <span className="text-xs font-medium text-neutral-600">{t('editor.experiences.myth_fact.label_true')}</span>
-          <CommitInput
-            value={data.labels.true}
-            placeholder={t('activities.experiences.myth_fact.fact')}
-            maxLength={24}
-            onCommit={(v) => commit((live: any) => ({ labels: { ...normalizeMythFact(live).labels, true: v } }))}
+  return shell(
+    <div className="mx-auto flex max-w-md flex-col items-stretch gap-4">
+      <div className="relative">
+        {count - i > 2 && <div aria-hidden className="lh-exp-raised absolute inset-x-6 -bottom-3.5 top-3.5 rounded-2xl" />}
+        {count - i > 1 && <div aria-hidden className="lh-exp-raised absolute inset-x-3 -bottom-[7px] top-[7px] rounded-2xl" />}
+        <div
+          key={card.id}
+          role="group"
+          aria-label={t('activities.experiences.myth_fact.card_of', { current: i + 1, total: count })}
+          className={cn(
+            'lh-exp-raised relative flex min-h-[12rem] flex-col justify-center gap-3 rounded-2xl px-5 pt-12 pb-6 text-center shadow-[inset_0_1px_0_var(--exp-hi),0_1px_2px_var(--exp-drop),0_12px_28px_-14px_rgba(15,23,42,0.3)]',
+            EDIT_OBJECT,
+          )}
+        >
+          {/* The answer, stamped on the card as learners see it after answering. Click to switch. */}
+          <button
+            type="button"
+            onClick={() => setAnswer(!card.isTrue)}
+            aria-label={t('editor.experiences.myth_fact.switch_answer', {
+              label: card.isTrue ? labels.true : labels.false,
+              other: card.isTrue ? labels.false : labels.true,
+              defaultValue: 'Answer: {{label}}. Switch to {{other}}',
+            })}
+            title={t('editor.experiences.myth_fact.switch_answer', {
+              label: card.isTrue ? labels.true : labels.false,
+              other: card.isTrue ? labels.false : labels.true,
+              defaultValue: 'Answer: {{label}}. Switch to {{other}}',
+            })}
+            className="absolute end-3 top-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+          >
+            <span
+              aria-hidden
+              style={{ ['--exp-rot' as string]: card.isTrue ? '9deg' : '-9deg' }}
+              className={cn('lh-exp-stamp', card.isTrue ? 'text-emerald-600' : 'text-rose-600')}
+            >
+              {card.isTrue ? <Check size={14} weight="bold" /> : <X size={14} weight="bold" />}
+              {card.isTrue ? labels.true : labels.false}
+            </span>
+          </button>
+          <InlineText
+            ref={statementRef}
+            value={card.text}
+            onCommit={(text) => patch(card.id, { text })}
+            ariaLabel={t('editor.experiences.myth_fact.statement_label', { n: i + 1 })}
+            placeholder={t('editor.experiences.myth_fact.statement_placeholder')}
+            maxLength={300}
+            className="text-center text-lg leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere] sm:text-xl"
           />
-        </label>
-        <label className="flex min-w-0 flex-col gap-1">
-          <span className="text-xs font-medium text-neutral-600">{t('editor.experiences.myth_fact.label_false')}</span>
-          <CommitInput
-            value={data.labels.false}
-            placeholder={t('activities.experiences.myth_fact.myth')}
-            maxLength={24}
-            onCommit={(v) => commit((live: any) => ({ labels: { ...normalizeMythFact(live).labels, false: v } }))}
+          <InlineText
+            multiline
+            value={card.explanation}
+            onCommit={(explanation) => patch(card.id, { explanation })}
+            ariaLabel={t('editor.experiences.myth_fact.explanation_label', { n: i + 1 })}
+            placeholder={t('editor.experiences.myth_fact.explanation_placeholder')}
+            maxLength={400}
+            className="text-center text-[14px] leading-relaxed text-neutral-600 [overflow-wrap:anywhere]"
           />
-        </label>
+          <RemoveX floating onClick={remove} label={t('editor.experiences.myth_fact.remove', { n: i + 1 })} />
+        </div>
       </div>
 
-      <ol className="m-0 flex list-none flex-col gap-2 p-0">
-        {data.statements.map((s, i) => {
-          const issue = rowIssue(s.id)
-          return (
-            <li key={s.id} className="flex flex-col gap-2 rounded-xl bg-neutral-50 p-3">
-              <div className="flex items-start gap-2">
-                <span className="mt-1.5 w-5 shrink-0 text-center text-xs font-semibold tabular-nums text-neutral-400">{i + 1}</span>
-                <CommitInput
-                  value={s.text}
-                  onCommit={(text) => patch(s.id, { text })}
-                  placeholder={t('editor.experiences.myth_fact.statement_placeholder')}
-                  aria-label={t('editor.experiences.myth_fact.statement_label', { n: i + 1 })}
-                  maxLength={300}
-                  className={cn(FIELD_CLASS, 'flex-1')}
-                />
-                <button
-                  type="button"
-                  className={buttonClass('danger-ghost', 'icon', 'shrink-0')}
-                  aria-label={t('editor.experiences.myth_fact.remove', { n: i + 1 })}
-                  onClick={() => editStatements((list) => list.filter((x) => x.id !== s.id))}
-                >
-                  <Trash size={14} aria-hidden />
-                </button>
-              </div>
-              <div className="flex flex-col gap-2 ps-7 sm:flex-row sm:items-center">
-                <div className="w-full sm:w-48 sm:shrink-0">
-                  <Segmented
-                    value={s.isTrue ? 'true' : 'false'}
-                    ariaLabel={t('editor.experiences.myth_fact.answer_label', { n: i + 1 })}
-                    onChange={(v) => patch(s.id, { isTrue: v === 'true' })}
-                    options={[
-                      { value: 'false', label: <><X size={12} weight="bold" aria-hidden className="text-rose-500" />{labels.false}</> },
-                      { value: 'true', label: <><Check size={12} weight="bold" aria-hidden className="text-emerald-600" />{labels.true}</> },
-                    ]}
-                  />
-                </div>
-                <CommitInput
-                  value={s.explanation}
-                  onCommit={(explanation) => patch(s.id, { explanation })}
-                  placeholder={t('editor.experiences.myth_fact.explanation_placeholder')}
-                  aria-label={t('editor.experiences.myth_fact.explanation_label', { n: i + 1 })}
-                  maxLength={400}
-                  className={cn(FIELD_CLASS, 'min-w-0 flex-1')}
-                />
-              </div>
-              {issue && <div className="ps-7"><Hint>{issueText(issue)}</Hint></div>}
-            </li>
-          )
-        })}
-      </ol>
+      <div role="radiogroup" aria-label={t('editor.experiences.myth_fact.answer_label', { n: i + 1 })} className="grid grid-cols-2 gap-3">
+        {answerKey(false)}
+        {answerKey(true)}
+      </div>
+      {cardIssue && <InlineHint severity="warning">{issueText(cardIssue)}</InlineHint>}
 
-      {deckIssues.map((i) => (
-        <Hint key={i.kind}>{issueText(i)}</Hint>
-      ))}
-
-      {data.statements.length < MAX_STATEMENTS && (
+      <div className="flex flex-wrap items-center justify-center gap-1">
         <button
           type="button"
-          className={buttonClass('secondary', 'sm', 'self-start')}
-          onClick={() => editStatements((list) => [...list, { id: newId(), text: '', isTrue: true, explanation: '' }])}
+          onClick={() => go(i - 1)}
+          disabled={i === 0}
+          aria-label={t('editor.experiences.myth_fact.prev_card', 'Previous card')}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-neutral-500 outline-none hover:bg-neutral-200/60 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40 disabled:pointer-events-none disabled:opacity-30"
         >
-          <Plus size={14} weight="bold" aria-hidden />
-          {t('editor.experiences.myth_fact.add')}
+          <CaretLeft size={14} weight="bold" aria-hidden className="rtl:rotate-180" />
         </button>
-      )}
-    </div>
+        <div className="flex flex-wrap items-center justify-center">
+          {data.statements.map((s, n) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => go(n)}
+              aria-label={t('activities.experiences.myth_fact.card_of', { current: n + 1, total: count })}
+              aria-current={n === i ? 'true' : undefined}
+              className="group inline-flex h-7 items-center justify-center px-[3px] outline-none"
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  'block h-1.5 rounded-full transition-all group-focus-visible:ring-2 group-focus-visible:ring-sky-500/40',
+                  n === i ? 'w-4 bg-neutral-700' : 'w-1.5 bg-neutral-300 group-hover:bg-neutral-400',
+                  !s.text.trim() && n !== i && 'bg-amber-300',
+                )}
+              />
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => go(i + 1)}
+          disabled={i >= count - 1}
+          aria-label={t('editor.experiences.myth_fact.next_card', 'Next card')}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-neutral-500 outline-none hover:bg-neutral-200/60 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40 disabled:pointer-events-none disabled:opacity-30"
+        >
+          <CaretRight size={14} weight="bold" aria-hidden className="rtl:rotate-180" />
+        </button>
+        {count < MAX_STATEMENTS && (
+          <AddGhost onClick={add} iconSize={12} className="ms-1 h-7 rounded-lg px-2 text-[12px]">
+            {t('editor.experiences.myth_fact.add_card', 'Add card')}
+          </AddGhost>
+        )}
+      </div>
+      {deckIssues.map((x) => (
+        <InlineHint key={x.kind} severity="warning">
+          {issueText(x)}
+        </InlineHint>
+      ))}
+    </div>,
   )
 }
 
 // ---- learner -------------------------------------------------------------
-
-type FrameBase = Omit<React.ComponentProps<typeof ExperienceFrame>, 'children'>
 
 function MythFactPlayer({ data, labels, frame, blockId, source }: { data: MythFactData; labels: Labels; frame: FrameBase; blockId: string; source: unknown }) {
   const { t } = useTranslation()

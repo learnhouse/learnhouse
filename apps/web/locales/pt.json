@@ -14585,7 +14585,12 @@
         "color_amber": "Âmbar",
         "color_green": "Verde",
         "color_teal": "Verde-azulado",
-        "color_neutral": "Grafite"
+        "color_neutral": "Grafite",
+        "card_menu": "Opções do cartão",
+        "show_front": "Mostrar a frente",
+        "show_back": "Mostrar o verso",
+        "move_earlier": "Mover para antes",
+        "move_later": "Mover para depois"
       },
       "scenarios": {
         "add_choice": "Adicionar escolha",
@@ -15232,7 +15237,6 @@
         "title_placeholder": "Título de Mito ou fato",
         "empty": "Nenhuma afirmação ainda. Comece com um exemplo ou adicione as suas.",
         "fill_example": "Usar um exemplo",
-        "add": "Adicionar afirmação",
         "label_true": "Rótulo para verdadeiro",
         "label_false": "Rótulo para falso",
         "statement_placeholder": "Uma afirmação para os alunos avaliarem",
@@ -15253,7 +15257,12 @@
           "lightning_why": "Prédios altos são atingidos muitas vezes por ano.",
           "bats": "Morcegos são cegos.",
           "bats_why": "Morcegos enxergam, e muitos também se orientam por ecolocalização."
-        }
+        },
+        "add_card": "Adicionar cartão",
+        "mark_answer": "Marcar “{{label}}” como resposta",
+        "switch_answer": "Resposta: {{label}}. Mudar para {{other}}",
+        "prev_card": "Cartão anterior",
+        "next_card": "Próximo cartão"
       },
       "speed_round": {
         "name": "Rodada relâmpago",
@@ -15432,7 +15441,9 @@
           "c3_a": "Transformam o alimento em energia que a célula usa.",
           "c4_q": "Membrana",
           "c4_a": "Controla o que entra e sai da célula."
-        }
+        },
+        "panel_list": "Lista",
+        "columns": "Cartões por linha"
       },
       "category": "Experiências",
       "toolbar_label": "Experiências",
@@ -15452,7 +15463,9 @@
         "add": "Adicionar",
         "remove": "Remover",
         "move_up": "Mover para cima",
-        "move_down": "Mover para baixo"
+        "move_down": "Mover para baixo",
+        "settings": "Definições",
+        "answer_key_hint": "Você está editando o gabarito. Use a pré-visualização para testar como aluno."
       },
       "sort": {
         "title": "Classificar",
@@ -15478,7 +15491,6 @@
         "explanation_placeholder": "Por que ele pertence a esse grupo (exibido quando errado, opcional)",
         "group_label": "Nome do grupo {{n}}",
         "group_placeholder": "Grupo {{n}}",
-        "groups_heading": "Grupos",
         "issues": {
           "duplicate_item": "Outro item tem o mesmo texto.",
           "empty_category": "Dê um nome a este grupo ou remova-o.",
@@ -15490,14 +15502,21 @@
           "too_many_items": "Use no máximo 20 itens; os alunos só veem os 20 primeiros.",
           "unused_category": "Nenhum item pertence a este grupo ainda."
         },
-        "item_group": "Grupo correto",
         "item_placeholder": "Item {{n}}",
-        "items_heading": "Itens",
-        "items_hint": "Escolha o grupo correto para cada item. Os alunos os veem embaralhados.",
-        "pick_group": "Escolha um grupo",
-        "remove_group": "Remover grupo",
-        "remove_item": "Remover item",
-        "shuffle_label": "Embaralhar itens para os alunos"
+        "shuffle_label": "Embaralhar itens para os alunos",
+        "moved": "“{{item}}” movido para {{group}}.",
+        "move_item": "Mover “{{item}}”",
+        "move_hint": "Arraste para outro grupo ou pressione 1–4",
+        "item_label": "Item {{n}}",
+        "why": "Por quê?",
+        "why_label": "Por que “{{item}}” fica aqui",
+        "why_heading": "Por que “{{item}}” fica aqui (mostrado quando um aluno erra)",
+        "remove_named": "Remover “{{item}}”",
+        "remove_group_named": "Remover o grupo “{{group}}”",
+        "shuffle_hint": "Desligado: os alunos veem os itens na ordem em que você os adicionou.",
+        "unplaced": "Ainda sem grupo",
+        "author_hint": "Cada item está no seu grupo correto. Arraste um item, ou toque na alça dele e depois num grupo, para movê-lo.",
+        "author_selected": "Agora toque no grupo a que “{{item}}” pertence."
       },
       "sequence": {
         "title": "Sequência",
@@ -15563,9 +15582,11 @@
         "mode_memory": "Memória",
         "mode_memory_hint": "Cartas viradas para baixo: os alunos viram duas de cada vez para encontrar os pares.",
         "pairs_heading": "Pares",
-        "remove_pair": "Remover par",
         "right_label": "Par {{n}}: correspondência",
-        "right_placeholder": "Correspondência"
+        "right_placeholder": "Correspondência",
+        "author_memory_hint": "Cada linha é um par. No modo memória os alunos os veem como cartas viradas para baixo.",
+        "author_connect_hint": "Cada linha é um par. Os alunos recebem os pares embaralhados e os ligam.",
+        "remove_pair_n": "Remover o par {{n}}"
       },
       "hotspot": {
         "title": "Pontos na imagem",
