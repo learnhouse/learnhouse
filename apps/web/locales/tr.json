@@ -916,9 +916,6 @@
     "unlock_certificate_message": "Sertifikanızı açmak için tüm aktiviteleri tamamlayın",
     "chapter": "Bölüm",
     "chapters": "Bölümler",
-    "co_created_by": "Birlikte oluşturuldu:",
-    "created_on": "Oluşturulma tarihi:",
-    "last_updated": "Son güncelleme:",
     "public": "Genel",
     "public_desc": "İnternetteki herkes tarafından görülebilir",
     "private": "Özel",
@@ -931,7 +928,6 @@
     "clipboard_read_error": "Pano okunamadı",
     "enter_to_add": "Eklemek için Enter tuşuna basın...",
     "select_visibility": "Görünürlüğü seçin",
-    "and_x_more": "ve {{count}} tane daha",
     "update": "güncelleme",
     "updates": "güncellemeler",
     "new_update": "Yeni Güncelleme",
@@ -1313,6 +1309,20 @@
       "available_in": "{{languages}} dilinde mevcut",
       "language_filter": "Dil",
       "all_languages": "Tüm diller"
+    },
+    "by_authors": "Hazırlayan: {{names}}",
+    "others_count_one": "{{count}} kişi daha",
+    "others_count_other": "{{count}} kişi daha",
+    "authors_count_one": "{{count}} yazar",
+    "authors_count_other": "{{count}} yazar",
+    "show_all_authors": "Tüm yazarları göster",
+    "created_short": "Oluşturuldu: {{date}}",
+    "updated_short": "{{when}} güncellendi",
+    "author_role": {
+      "creator": "Oluşturucu",
+      "maintainer": "Sorumlu",
+      "contributor": "Katkıda Bulunan",
+      "reporter": "Raporlayıcı"
     }
   },
   "communities": {

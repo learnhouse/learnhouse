@@ -916,9 +916,6 @@
     "unlock_certificate_message": "برای دریافت گواهینامه خود، تمام فعالیت‌ها را تکمیل کنید",
     "chapter": "فصل",
     "chapters": "فصل‌ها",
-    "co_created_by": "به طور مشترک ایجاد شده توسط",
-    "created_on": "ایجاد شده در",
-    "last_updated": "آخرین به‌روزرسانی",
     "public": "عمومی",
     "public_desc": "قابل مشاهده در اینترنت",
     "private": "خصوصی",
@@ -931,7 +928,6 @@
     "clipboard_read_error": "خواندن از کلیپ‌بورد ناموفق بود",
     "enter_to_add": "برای افزودن Enter را فشار دهید...",
     "select_visibility": "انتخاب قابلیت مشاهده",
-    "and_x_more": "و {{count}} مورد دیگر",
     "update": "به‌روزرسانی",
     "updates": "به‌روزرسانی‌ها",
     "new_update": "به‌روزرسانی جدید",
@@ -1313,6 +1309,20 @@
       "available_in": "در دسترس به زبان‌های {{languages}}",
       "language_filter": "زبان",
       "all_languages": "همه زبان‌ها"
+    },
+    "by_authors": "از {{names}}",
+    "others_count_one": "{{count}} نفر دیگر",
+    "others_count_other": "{{count}} نفر دیگر",
+    "authors_count_one": "{{count}} نویسنده",
+    "authors_count_other": "{{count}} نویسنده",
+    "show_all_authors": "نمایش همه نویسندگان",
+    "created_short": "ایجاد {{date}}",
+    "updated_short": "به‌روزرسانی {{when}}",
+    "author_role": {
+      "creator": "سازنده",
+      "maintainer": "نگهدارنده",
+      "contributor": "مشارکت‌کننده",
+      "reporter": "گزارش‌دهنده"
     }
   },
   "communities": {

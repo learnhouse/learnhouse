@@ -916,9 +916,6 @@
     "unlock_certificate_message": "अपना प्रमाणपत्र अनलॉक करने के लिए सभी गतिविधियां पूरी करें",
     "chapter": "अध्याय",
     "chapters": "अध्याय",
-    "co_created_by": "सह-निर्मित",
-    "created_on": "बनाया गया",
-    "last_updated": "पिछला अपडेट",
     "public": "सार्वजनिक",
     "public_desc": "इंटरनेट पर देखने के लिए उपलब्ध",
     "private": "निजी",
@@ -931,7 +928,6 @@
     "clipboard_read_error": "क्लिपबोर्ड से पढ़ा नहीं जा सका",
     "enter_to_add": "जोड़ने के लिए Enter दबाएं...",
     "select_visibility": "दृश्यता चुनें",
-    "and_x_more": "और {{count}} और",
     "update": "अपडेट",
     "updates": "अपडेट",
     "new_update": "नया अपडेट",
@@ -1313,6 +1309,20 @@
       "available_in": "{{languages}} में उपलब्ध",
       "language_filter": "भाषा",
       "all_languages": "सभी भाषाएं"
+    },
+    "by_authors": "{{names}} द्वारा",
+    "others_count_one": "{{count}} अन्य",
+    "others_count_other": "{{count}} अन्य",
+    "authors_count_one": "{{count}} लेखक",
+    "authors_count_other": "{{count}} लेखक",
+    "show_all_authors": "सभी लेखक देखें",
+    "created_short": "{{date}} को बनाया गया",
+    "updated_short": "{{when}} अपडेट किया गया",
+    "author_role": {
+      "creator": "निर्माता",
+      "maintainer": "मेंटेनर",
+      "contributor": "योगदानकर्ता",
+      "reporter": "रिपोर्टर"
     }
   },
   "communities": {

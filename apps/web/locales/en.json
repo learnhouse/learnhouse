@@ -916,9 +916,6 @@
     "unlock_certificate_message": "Complete all activities to unlock your certificate",
     "chapter": "Chapter",
     "chapters": "Chapters",
-    "co_created_by": "Co-created by",
-    "created_on": "Created on",
-    "last_updated": "Last updated",
     "public": "Public",
     "public_desc": "Available to see on the internet",
     "private": "Private",
@@ -931,7 +928,6 @@
     "clipboard_read_error": "Failed to read from clipboard",
     "enter_to_add": "Enter to add...",
     "select_visibility": "Select visibility",
-    "and_x_more": "& {{count}} more",
     "update": "update",
     "updates": "updates",
     "new_update": "New Update",
@@ -1311,6 +1307,20 @@
       "available_in": "Available in {{languages}}",
       "language_filter": "Language",
       "all_languages": "All languages"
+    },
+    "by_authors": "By {{names}}",
+    "others_count_one": "{{count}} other",
+    "others_count_other": "{{count}} others",
+    "authors_count_one": "{{count}} author",
+    "authors_count_other": "{{count}} authors",
+    "show_all_authors": "Show all authors",
+    "created_short": "Created {{date}}",
+    "updated_short": "Updated {{when}}",
+    "author_role": {
+      "creator": "Creator",
+      "maintainer": "Maintainer",
+      "contributor": "Contributor",
+      "reporter": "Reporter"
     }
   },
   "communities": {

@@ -915,9 +915,6 @@
     "unlock_certificate_message": "모든 활동을 완료하여 수료증을 받으세요",
     "chapter": "장",
     "chapters": "장",
-    "co_created_by": "공동 제작:",
-    "created_on": "생성일:",
-    "last_updated": "최근 업데이트:",
     "public": "공개",
     "public_desc": "웹에서 누구나 볼 수 있음",
     "private": "비공개",
@@ -930,7 +927,6 @@
     "clipboard_read_error": "클립보드를 읽지 못했습니다",
     "enter_to_add": "Enter 키로 추가...",
     "select_visibility": "공개 설정 선택",
-    "and_x_more": "외 {{count}}건",
     "update": "업데이트",
     "updates": "업데이트",
     "new_update": "새 업데이트",
@@ -1312,6 +1308,20 @@
       "available_in": "{{languages}}(으)로 제공",
       "language_filter": "언어",
       "all_languages": "모든 언어"
+    },
+    "by_authors": "작성: {{names}}",
+    "others_count_one": "외 {{count}}명",
+    "others_count_other": "외 {{count}}명",
+    "authors_count_one": "작성자 {{count}}명",
+    "authors_count_other": "작성자 {{count}}명",
+    "show_all_authors": "모든 작성자 보기",
+    "created_short": "{{date}} 생성",
+    "updated_short": "{{when}} 업데이트",
+    "author_role": {
+      "creator": "생성자",
+      "maintainer": "유지관리자",
+      "contributor": "기여자",
+      "reporter": "리포터"
     }
   },
   "communities": {
