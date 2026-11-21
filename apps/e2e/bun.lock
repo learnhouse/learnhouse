@@ -5,7 +5,7 @@
     "": {
       "name": "@learnhouse/e2e",
       "devDependencies": {
-        "@playwright/test": "^1.65.0",
+        "@playwright/test": "^1.65.1",
         "@types/node": "^26.6.6",
         "typescript": "^6.0.3",
       },
