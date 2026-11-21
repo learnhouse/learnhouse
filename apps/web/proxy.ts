@@ -464,6 +464,21 @@ async function route(req: NextRequest) {
     return NextResponse.redirect(new URL(`/${search}`, req.url))
   }
 
+  // app.{domain} is the platform's own address, not a school: there is no
+  // "app" org, so its root and /home would resolve to a 404 (and /home on an
+  // org host bounces to /). People still type it, so send them to the hub on
+  // the apex: the picker when signed in, the login page otherwise.
+  if (instance.tenancy === 'multi' && (pathname === '/' || pathname === '/home' || pathname === '/home/')) {
+    const apexHost = instance.frontend_domain.split(':')[0].toLowerCase()
+    const host = (req.headers.get('host') || '').split(':')[0].toLowerCase()
+    if (host === `app.${apexHost}`) {
+      const dest = req.cookies.get('LH_session')?.value ? '/home' : '/login'
+      return NextResponse.redirect(
+        new URL(`${dest}${search}`, `${req.nextUrl.protocol}//${instance.frontend_domain}`),
+      )
+    }
+  }
+
   const HUB_ROOT_PATHS = ['/home', '/organizations', '/account', '/billing', '/subscriptions', '/new']
   const isHubRoot = HUB_ROOT_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
