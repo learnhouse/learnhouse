@@ -212,3 +212,36 @@ class TestConsumer:
         assert queue.concurrency() == 4
         monkeypatch.setenv("LEARNHOUSE_RAG_CONCURRENCY", "x")
         assert queue.concurrency() == 2
+
+
+class TestLocalConcurrencyCap:
+    async def test_in_process_runs_are_capped(self, no_redis, monkeypatch):
+        monkeypatch.setenv("LEARNHOUSE_RAG_CONCURRENCY", "2")
+        monkeypatch.setattr(queue, "_local_sem", None)
+        active = 0
+        peak = 0
+        release = asyncio.Event()
+
+        async def run(ref, transcribe):
+            nonlocal active, peak
+            active += 1
+            peak = max(peak, active)
+            await release.wait()
+            active -= 1
+
+        with patch("src.services.ai.rag.pipeline.run", new=run):
+            for activity_id in range(1, 6):
+                queue.enqueue(ContentRef.activity(activity_id), delay=0)
+            await asyncio.sleep(0.05)
+            assert peak == 2 and active == 2
+            release.set()
+            await asyncio.gather(*list(queue._children), return_exceptions=True)
+        assert peak == 2 and active == 0
+
+    async def test_semaphore_is_rebuilt_for_a_new_loop(self, monkeypatch):
+        stale = asyncio.Semaphore(1)
+        monkeypatch.setattr(queue, "_local_sem", stale)
+        monkeypatch.setattr(queue, "_local_sem_loop", object())
+        fresh = queue._local_semaphore()
+        assert fresh is not stale
+        assert queue._local_semaphore() is fresh

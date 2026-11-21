@@ -44,7 +44,11 @@ async def _org_of(ref: ContentRef, db) -> int | None:
 
 
 async def run(ref: ContentRef, *, transcribe: bool = True) -> int:
-    """Index one ref. Returns the number of chunks it now has."""
+    """Index one ref. Returns the number of chunks it now has.
+
+    No connection is held across a provider call: the reads (org gate,
+    extraction, current hash) use one short session, the embeddings call runs
+    with none open, and the row swap gets a fresh short session."""
     async with _session() as db:
         org_id = await _org_of(ref, db)
         if org_id is None:
@@ -56,7 +60,18 @@ async def run(ref: ContentRef, *, transcribe: bool = True) -> int:
         if extraction is None:
             # Deleted since it was queued; its rows went with it (FK cascade).
             return 0
-        count = await _store(extraction, db)
+        chunks = _chunks(extraction)
+        content_hash = _hash(chunks)
+        unchanged = bool(chunks) and await store.current_hash(ref, db) == content_hash
+        if unchanged:
+            await store.rename(
+                ref, db,
+                course_id=extraction.course_id,
+                course_name=extraction.course_name,
+                activity_name=extraction.activity_name,
+                chapter_name=extraction.chapter_name,
+            )
+    count = len(chunks) if unchanged else await _store(extraction, chunks, content_hash)
 
     if transcribe and extraction.pending_media:
         transcribed = False
@@ -96,28 +111,30 @@ def _hash(chunks) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
 
 
-async def _store(extraction: Extraction, db) -> int:
+async def _embed(org_id: int, texts: list[str]) -> list:
+    """Embed under a "rag_indexing" charge. The meter's reads (feature gate,
+    reservation) use their own short session, closed before the provider call.
+    Same lifecycle as ``metering.charge``: refunded in full if the call fails."""
+    async with _session() as db:
+        meter = await metering.start("rag_indexing", org_id=org_id, db=db, units=len(texts))
+    with metering.use_meter(meter):
+        try:
+            vectors = await generate_embeddings(texts)
+        except BaseException:
+            await meter.settle(failed=True)
+            raise
+    await meter.settle()
+    return vectors
+
+
+async def _store(extraction: Extraction, chunks: list, content_hash: str) -> int:
     ref = extraction.ref
-    chunks = _chunks(extraction)
-    content_hash = _hash(chunks)
-
-    if chunks and await store.current_hash(ref, db) == content_hash:
-        await store.rename(
-            ref, db,
-            course_id=extraction.course_id,
-            course_name=extraction.course_name,
-            activity_name=extraction.activity_name,
-            chapter_name=extraction.chapter_name,
-        )
-        return len(chunks)
-
     # Embed before touching the table, so a provider failure leaves the
     # previous rows searchable. Keeping the index fresh is platform work: its
     # cost is metered for the reports but not charged ("rag_indexing").
     vectors: list = []
     if chunks:
-        async with metering.charge("rag_indexing", org_id=extraction.org_id, db=db, units=len(chunks)):
-            vectors = await generate_embeddings([text for text, _, _ in chunks])
+        vectors = await _embed(extraction.org_id, [text for text, _, _ in chunks])
     now = str(datetime.now())
     rows = [
         CourseEmbedding(
@@ -140,6 +157,7 @@ async def _store(extraction: Extraction, db) -> int:
         )
         for (text, index, segment), vector in zip(chunks, vectors)
     ]
-    await store.replace(ref, rows, db)
+    async with _session() as db:
+        await store.replace(ref, rows, db)
     logger.info("RAG: indexed %s chunks for %s", len(rows), ref.key)
     return len(rows)
