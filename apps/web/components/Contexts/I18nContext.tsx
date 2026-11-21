@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import i18n from '../../lib/i18n'
+import i18n, { markHydrated } from '../../lib/i18n'
 import { applyDocumentDirection } from '../../lib/direction'
 
 export default function I18nProvider({ children }: { children: React.ReactNode }) {
@@ -18,6 +18,9 @@ export default function I18nProvider({ children }: { children: React.ReactNode }
   // that script was blocked, or i18next resolved a different fallback than the
   // raw detector value. It runs post-hydration, so it can't cause a mismatch.
   useEffect(() => {
+    // Hydration is done: the visitor's language bundle may now apply (see
+    // markHydrated in lib/i18n.ts).
+    markHydrated()
     applyDocumentDirection(i18n.language)
 
     const handleLanguageChanged = (lng: string) => {

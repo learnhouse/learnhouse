@@ -31,6 +31,7 @@ import {
   setActiveImpersonation,
   type ImpersonationSession,
 } from '@/lib/auth/impersonation'
+import { readDocumentCookie, writeDocumentCookie } from '@/lib/cookies'
 
 // Types matching NextAuth's session structure
 export interface Session {
@@ -197,12 +198,12 @@ function setOAuthStateCookie(csrf: string): void {
   // 5 minute expiry matching the state validation window
   const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString()
   const value = JSON.stringify({ csrf, timestamp: Date.now() })
-  document.cookie = `${OAUTH_STATE_COOKIE}=${encodeURIComponent(value)}; path=/${sameSiteAttr}${secureAttr}${domainAttr}; expires=${expires}`
+  writeDocumentCookie(`${OAUTH_STATE_COOKIE}=${encodeURIComponent(value)}; path=/${sameSiteAttr}${secureAttr}${domainAttr}; expires=${expires}`)
 }
 
 function getOAuthStateCookie(): { csrf: string; timestamp: number } | null {
   try {
-    const cookies = document.cookie.split(';')
+    const cookies = readDocumentCookie().split(';')
     for (const cookie of cookies) {
       const [name, ...rest] = cookie.trim().split('=')
       if (name === OAUTH_STATE_COOKIE) {
@@ -271,7 +272,7 @@ export async function startGoogleOAuth(callbackUrl: string): Promise<SignInResul
 
 function clearOAuthStateCookie(): void {
   const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
-  document.cookie = `${OAUTH_STATE_COOKIE}=; path=/${sameSiteAttr}${secureAttr}${domainAttr}; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+  writeDocumentCookie(`${OAUTH_STATE_COOKIE}=; path=/${sameSiteAttr}${secureAttr}${domainAttr}; expires=Thu, 01 Jan 1970 00:00:00 GMT`)
 }
 
 function clearSessionMarker(): void {
@@ -279,8 +280,8 @@ function clearSessionMarker(): void {
 
   const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
   const expired = 'expires=Thu, 01 Jan 1970 00:00:00 GMT'
-  document.cookie = `LH_session=; path=/${sameSiteAttr}${secureAttr}${domainAttr}; ${expired}`
-  document.cookie = `LH_session=; path=/${sameSiteAttr}${secureAttr}; ${expired}`
+  writeDocumentCookie(`LH_session=; path=/${sameSiteAttr}${secureAttr}${domainAttr}; ${expired}`)
+  writeDocumentCookie(`LH_session=; path=/${sameSiteAttr}${secureAttr}; ${expired}`)
 }
 
 // Session Provider Component
@@ -413,7 +414,7 @@ export function SessionProvider({
   // names like `LH_session_backup`, falsely reporting a session.
   const hasSessionMarker = useCallback((): boolean => {
     if (typeof document === 'undefined') return false
-    return document.cookie.split('; ').some((c) => c.startsWith('LH_session='))
+    return readDocumentCookie().split('; ').some((c) => c.startsWith('LH_session='))
   }, [])
 
   // Refresh access token using refresh token cookie.

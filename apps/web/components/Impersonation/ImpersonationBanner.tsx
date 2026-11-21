@@ -23,6 +23,7 @@ import {
   type ImpersonationSwitch,
   type ImpersonationTargets,
 } from '@/lib/auth/impersonation'
+import { readDocumentCookie } from '@/lib/cookies'
 
 // The badge every page shows while impersonating, and its control center:
 // "Viewing as Lea Fontaine · Admin · End". Clicking it opens a small menu to
@@ -35,7 +36,7 @@ const STATUS_POLL_MS = 30_000
 const RETURNED_NOTE_MS = 8_000
 
 function readCookie(name: string): string | null {
-  const raw = document.cookie.split('; ').find((c) => c.startsWith(`${name}=`))?.split('=')[1]
+  const raw = readDocumentCookie().split('; ').find((c) => c.startsWith(`${name}=`))?.split('=')[1]
   return raw ? decodeURIComponent(raw) : null
 }
 

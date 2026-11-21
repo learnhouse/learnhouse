@@ -1,11 +1,12 @@
 'use client'
 import { getConfig } from '@services/config/config'
 import { safeHref, safeInternalPath } from '@services/security/url'
+import { readDocumentCookie } from '@/lib/cookies'
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const m = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'))
+  const m = readDocumentCookie().match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'))
   try {
     return m ? decodeURIComponent(m[1]) : null
   } catch {

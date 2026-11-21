@@ -35,6 +35,34 @@ const resources = {
   en: { common: en },
 };
 
+// The server always renders English (it can't read the visitor's
+// localStorage pick). If a locale bundle lands before React hydrates, the first
+// client render is in that language and hydration fails (React #418), which
+// throws away the server HTML. So bundles that arrive before hydration wait
+// here until I18nProvider has mounted (markHydrated) and the browser is idle:
+// Suspense boundaries hydrate in later tasks than the root, and idle time is
+// the first point where all of that work is done.
+let hydrated = typeof window === 'undefined'
+let releaseScheduled = false
+let pendingBundles: Array<() => void> = []
+
+function releasePendingBundles() {
+  hydrated = true
+  const run = pendingBundles
+  pendingBundles = []
+  run.forEach((add) => add())
+}
+
+export function markHydrated() {
+  if (hydrated || releaseScheduled) return
+  releaseScheduled = true
+  const idle = (window as any).requestIdleCallback as
+    | ((cb: () => void, opts?: { timeout: number }) => number)
+    | undefined
+  if (idle) idle(releasePendingBundles, { timeout: 1500 })
+  else window.setTimeout(releasePendingBundles, 300)
+}
+
 async function loadLocale(lng: string) {
   const code = lng.split('-')[0]
   if (code === 'en' || !LOCALE_LOADERS[code]) return;
@@ -42,11 +70,27 @@ async function loadLocale(lng: string) {
 
   try {
     const mod = await LOCALE_LOADERS[code]();
-    i18n.addResourceBundle(code, 'common', mod.default, true, true);
+    const add = () => i18n.addResourceBundle(code, 'common', mod.default, true, true);
+    if (hydrated) add();
+    else pendingBundles.push(add);
   } catch (e) {
     console.warn(`Failed to load locale: ${lng}`, e);
   }
 }
+
+// A sandboxed iframe without allow-same-origin throws on any document.cookie
+// access, and the detector's cookie lookup doesn't catch it: i18n init failed
+// and embedded pages rendered nothing. Leave cookies out when they can't be read.
+function cookiesReadable(): boolean {
+  if (typeof document === 'undefined') return true
+  try {
+    void document.cookie
+    return true
+  } catch {
+    return false
+  }
+}
+const canUseCookies = cookiesReadable()
 
 i18n
   .use(LanguageDetector)
@@ -60,8 +104,10 @@ i18n
       escapeValue: false, // react already safes from xss
     },
     detection: {
-      order: ['localStorage', 'cookie', 'querystring', 'navigator', 'path', 'subdomain'],
-      caches: ['localStorage', 'cookie'],
+      order: canUseCookies
+        ? ['localStorage', 'cookie', 'querystring', 'navigator', 'path', 'subdomain']
+        : ['localStorage', 'querystring', 'navigator', 'path', 'subdomain'],
+      caches: canUseCookies ? ['localStorage', 'cookie'] : ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
       lookupCookie: 'i18next',
     },

@@ -5,6 +5,7 @@
 // backoffice staff member's own session (it asks with ?scope=platform). These helpers keep
 // that split in one place, and turn "the impersonation ended" into a trip
 // back to the console instead of a sign-out of the backoffice staff member.
+import { readDocumentCookie } from '@/lib/cookies'
 
 export type ImpersonationMode = 'read_only' | 'full'
 
@@ -148,7 +149,7 @@ export function consoleUrl(returnUrl: string | null | undefined, frontendDomain?
   const path = returnUrl && returnUrl.startsWith('/backoffice') ? returnUrl : '/backoffice'
   if (typeof window === 'undefined') return path
   const { protocol, hostname, port } = window.location
-  const tenancy = document.cookie.split('; ').find((c) => c.startsWith('LH_tenancy='))?.split('=')[1]
+  const tenancy = readDocumentCookie().split('; ').find((c) => c.startsWith('LH_tenancy='))?.split('=')[1]
   if (tenancy !== 'multi' || !frontendDomain || hostname.startsWith('admin.')) return path
   // Multi-tenant: the console lives on admin.{domain}.
   const host = frontendDomain.includes(':') || !port ? frontendDomain : `${frontendDomain}:${port}`
