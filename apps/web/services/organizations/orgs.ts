@@ -1,4 +1,4 @@
-import { cache } from 'react'
+import { cache } from '@/lib/react-cache'
 import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyFormWithAuthHeader,

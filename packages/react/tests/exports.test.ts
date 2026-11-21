@@ -46,4 +46,37 @@ describe('public surface', () => {
     const files = readdirSync(dist, { recursive: true }).filter((f) => String(f).endsWith('.js'))
     for (const file of files) expect(readFileSync(path.join(dist, String(file)), 'utf8')).not.toMatch(/posthog/i)
   })
+
+  // On a host site the API allows any origin only without credentials, so a
+  // fetch that sends cookies cross-origin fails CORS (assignments, media...).
+  it('sends no credentialed requests from the bundle', async () => {
+    const { rewriteCredentials } = await import('../scripts/credentials.mjs')
+    expect(rewriteCredentials(`fetch(u, { credentials: 'include' }); x = {credentials:"include"}; xhr.withCredentials = true`)).toBe(
+      `fetch(u, { credentials: 'same-origin' }); x = {credentials: 'same-origin'}; xhr.withCredentials = false`,
+    )
+    const dist = path.join(import.meta.dirname, '../dist')
+    const files = readdirSync(dist, { recursive: true }).filter((f) => String(f).endsWith('.js'))
+    for (const file of files) {
+      const code = readFileSync(path.join(dist, String(file)), 'utf8')
+      expect(code, String(file)).not.toMatch(/credentials:\s*["']include["']/)
+      expect(code, String(file)).not.toMatch(/withCredentials\s*=\s*(!0|true)/)
+    }
+  })
+
+  // Vite, webpack 5 and plain module scripts have no `process` global.
+  it('reads no process.env at runtime', () => {
+    const dist = path.join(import.meta.dirname, '../dist')
+    const files = readdirSync(dist, { recursive: true }).filter((f) => String(f).endsWith('.js'))
+    for (const file of files) expect(readFileSync(path.join(dist, String(file)), 'utf8'), String(file)).not.toMatch(/process\.env/)
+  })
+
+  // React.cache is React 19 only; the peer range includes React 18.
+  it('imports no React 19-only API by name', () => {
+    const dist = path.join(import.meta.dirname, '../dist')
+    const files = readdirSync(dist, { recursive: true }).filter((f) => String(f).endsWith('.js'))
+    for (const file of files) {
+      const code = readFileSync(path.join(dist, String(file)), 'utf8')
+      expect(code, String(file)).not.toMatch(/import\s*\{[^}]*\b(cache|use|useActionState|useOptimistic|useFormStatus)\b[^}]*\}\s*from\s*["']react(-dom)?["']/)
+    }
+  })
 })

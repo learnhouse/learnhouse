@@ -45,6 +45,9 @@ export default function AssignmentTools(props: {
   assignment: any
   dark?: boolean
   compact?: boolean
+  /** Open the submit confirmation only from ASSIGNMENT_SUBMIT_EVENT (the
+   * learner view's own "Submit for grading" card), without a second button. */
+  submitFromEventOnly?: boolean
 }) {
   const { t } = useTranslation();
   const opts = { dark: props.dark, compact: props.compact }
@@ -243,6 +246,7 @@ export default function AssignmentTools(props: {
             : t('assignments.submit_assignment_title')
         }
         dialogTrigger={
+          props.submitFromEventOnly ? undefined :
           // Completion is automatic here: handing in is the action, not a toggle.
           <button type="button" className={navControlClass('primary', opts)}>
             <BookOpenCheck size={16} className="shrink-0" />
