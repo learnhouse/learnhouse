@@ -5029,7 +5029,9 @@
           "seo": "SEO",
           "certification": "认证",
           "analytics": "分析",
-          "schedule": "发布计划"
+          "schedule": "发布计划",
+          "authors": "作者",
+          "contributions": "贡献"
         },
         "access_denied": {
           "title": "拒绝访问",
@@ -6288,6 +6290,169 @@
           "source": "原文"
         },
         "tab": "语言"
+      },
+      "authors": {
+        "title": "作者",
+        "description": "你所在组织中制作这门课程的成员。他们会显示在课程的作者栏，并可根据角色编辑课程。",
+        "search_placeholder": "按姓名或用户名搜索成员，将其添加为作者…",
+        "already_author": "已是作者",
+        "count_other": "{{count}} 位作者",
+        "selected_other": "已选择 {{count}} 位作者",
+        "roles_section": "作者角色",
+        "remove_title_other": "移除 {{count}} 位作者？",
+        "remove_message": "他们将失去编辑这门课程的权限，并从作者栏中移除。你之后可以再次添加。",
+        "roles": {
+          "creator": "所有者",
+          "maintainer": "维护者",
+          "contributor": "编辑",
+          "reporter": "报告者"
+        },
+        "statuses": {
+          "active": "活跃",
+          "inactive": "未启用",
+          "pending": "已申请"
+        },
+        "requests": {
+          "title": "作者申请",
+          "description": "选择成员是否可以申请以作者身份加入这门课程。",
+          "active": "已开启",
+          "open_title": "接受申请",
+          "open_description": "成员可以申请成为作者。申请会显示在上方，等你审批。",
+          "open_confirm_title": "接受作者申请？",
+          "open_confirm_message": "成员将可以申请以作者身份加入这门课程。",
+          "open_confirm_button": "接受申请",
+          "closed_title": "不接受申请",
+          "closed_description": "只有你在这里添加的人才是作者。",
+          "closed_confirm_title": "停止接受申请？",
+          "closed_confirm_message": "成员将不能再申请以作者身份加入这门课程。",
+          "closed_confirm_button": "停止接受"
+        },
+        "community": {
+          "title": "社区贡献者",
+          "description": "在学员页面上帮助完善课程的人不是作者。他们会在课程页面以及所参与撰写的内容旁获得署名。",
+          "open": "打开“贡献”",
+          "none": "还没有人获得署名。",
+          "count_other": "{{count}} 位获得署名的贡献者",
+          "count_one": "{{count}} 位获得署名的贡献者"
+        },
+        "count_one": "{{count}} 位作者",
+        "remove_title_one": "移除 {{count}} 位作者？",
+        "selected_one": "已选择 {{count}} 位作者"
+      },
+      "contributions": {
+        "settings": {
+          "title": "社区贡献",
+          "description": "让学员像维基一样完善这门课程：他们直接在页面上建议修改或留下反馈，由你审核，每一处被采纳的修改都会署名。",
+          "enable": "开启社区贡献",
+          "plan_required": "社区贡献包含在 Standard 及以上套餐中。",
+          "see_plans": "查看套餐",
+          "audience": "谁可以贡献",
+          "suggestions": "修改建议",
+          "suggestions_hint": "贡献者可以在学员页面编辑文字和内容块，并提交审核。",
+          "feedback": "反馈",
+          "feedback_hint": "贡献者可以把某段内容标记为错别字、不清楚、已过时或有错误，也可以提出想法。",
+          "trusted": "受信任的贡献者直接发布",
+          "trusted_hint": "你标记为受信任的人所做的修改无需审核即可发布。你仍可恢复任何历史版本。",
+          "limits": "为防止垃圾内容，每人每小时最多可提交 20 条修改建议和 20 条反馈，每门课程最多 25 条待审核。被屏蔽的人无法贡献。"
+        },
+        "audience": {
+          "enrolled": {
+            "title": "已报名的学员",
+            "description": "已开始学习这门课程的人。"
+          },
+          "members": {
+            "title": "组织成员",
+            "description": "你组织中的任何人。"
+          },
+          "signed_in": {
+            "title": "任何已登录的人",
+            "description": "任何有账号并能打开这门课程的人。"
+          }
+        },
+        "stats": {
+          "pending": "待审核",
+          "feedback": "待处理反馈",
+          "contributors": "贡献者"
+        },
+        "tabs": {
+          "suggestions": "修改建议",
+          "feedback": "反馈",
+          "contributors": "贡献者",
+          "settings": "设置"
+        },
+        "filters": {
+          "open": "待处理",
+          "accepted": "已采纳",
+          "rejected": "已拒绝",
+          "all": "全部",
+          "resolved": "已解决"
+        },
+        "empty": {
+          "suggestions_open": "没有需要审核的内容",
+          "suggestions_other": "这里没有修改建议",
+          "suggestions_hint": "有人在学员页面建议修改后，会显示在这里。",
+          "feedback_open": "没有待处理的反馈",
+          "feedback_resolved": "没有已解决的反馈",
+          "contributors": "还没有贡献者",
+          "contributors_hint": "当某人的修改被采纳后，他们会列在这里。"
+        },
+        "placement": {
+          "clean": "与页面吻合",
+          "clean_hint": "它要修改的文字仍在页面上原来的位置。",
+          "moved": "已重新定位",
+          "moved_hint": "页面其他地方有改动，但这处修改仍可顺利应用。",
+          "conflict": "冲突",
+          "conflict_hint": "它要修改的文字在此之后被编辑过。",
+          "outdated": "已过时",
+          "outdated_hint": "页面改动太大，无法定位这处修改。",
+          "conflict_explain": "这处修改涉及的页面部分在建议提出后被改写了。对比两个版本，然后用“编辑后采纳”合并它们，或拒绝这条建议。",
+          "page_now": "页面现状",
+          "suggested": "建议内容"
+        },
+        "review": {
+          "note": "备注：",
+          "asked": "你提出的要求：",
+          "auto_published": "已直接发布",
+          "accept": "采纳",
+          "accepted": "已采纳。页面已更新，并保存了一个版本。",
+          "edit_accept": "编辑后采纳",
+          "edit_title": "编辑后采纳",
+          "edit_hint": "发布前先调整这条建议。贡献者仍会获得署名。",
+          "edit_conflict_hint": "这里从建议内容开始。把它与页面当前的文字合并后再采纳：它会替换左侧显示的当前文字。",
+          "conflict_toast": "这条建议提出后页面有了改动。请查看冲突并解决。",
+          "reject": "拒绝",
+          "request_changes": "要求修改",
+          "reject_title": "拒绝这条建议？",
+          "reject_description": "贡献者会收到被拒绝的通知；如果你填写了原因，也会一并告知。",
+          "reject_label": "原因",
+          "reject_confirm": "拒绝",
+          "changes_title": "要求修改",
+          "changes_description": "贡献者可以修改后重新提交。",
+          "changes_label": "需要改什么？",
+          "changes_confirm": "发送",
+          "rejected": "建议已拒绝",
+          "changes_sent": "已退回给贡献者",
+          "revised_toast": "贡献者修改了此建议。请查看新版本。"
+        },
+        "feedback": {
+          "reply_placeholder": "回复学员…",
+          "replied": "回复已发送",
+          "resolve": "标记为已解决",
+          "reopen": "重新打开"
+        },
+        "contributors": {
+          "person": "贡献者",
+          "accepted": "修改",
+          "last": "最近修改",
+          "trust": "信任",
+          "trusted": "受信任",
+          "blocked": "已屏蔽",
+          "block": "屏蔽",
+          "unblock": "取消屏蔽",
+          "edits_other": "{{count}} 处修改",
+          "trusted_off": "只有开启此设置后，受信任的贡献者才能免审核发布。",
+          "edits_one": "{{count}} 处修改"
+        }
       }
     },
     "organization": {
@@ -29369,7 +29534,13 @@
       "plan_downgraded": "已转为免费版",
       "plan_restored": "方案已恢复",
       "payments_checkout_failing": "结账失败",
-      "invitation_accepted": "邀请已接受"
+      "invitation_accepted": "邀请已接受",
+      "suggestion_submitted": "修改建议",
+      "feedback_submitted": "学员反馈",
+      "suggestion_accepted": "修改已采纳",
+      "suggestion_rejected": "修改已拒绝",
+      "suggestion_changes_requested": "需要修改",
+      "feedback_reply": "对你反馈的回复"
     },
     "copy": {
       "assignment_graded": "已批改：{{assignment}}",
@@ -29432,7 +29603,16 @@
       "plan_downgraded": "你现在使用的是免费版，没有删除任何内容",
       "plan_restored": "欢迎回到 {{plan}}",
       "payments_checkout_failing": "学员目前无法购买（{{count}} 次结账失败）",
-      "invitation_accepted": "{{actor}} 接受了你的邀请"
+      "invitation_accepted": "{{actor}} 接受了你的邀请",
+      "suggestion_submitted": "{{actor}} 对 {{activity}} 提出了修改建议",
+      "suggestion_submitted_many": "{{course}} 有 {{count}} 条新的修改建议",
+      "feedback_submitted": "{{actor}} 在 {{activity}} 留下了反馈",
+      "feedback_submitted_many": "{{course}} 有 {{count}} 条新反馈",
+      "suggestion_accepted": "{{actor}} 采纳了你对 {{activity}} 的修改",
+      "suggestion_rejected": "{{actor}} 拒绝了你对 {{activity}} 的修改",
+      "suggestion_changes_requested": "{{actor}} 要求修改你对 {{activity}} 的修改",
+      "feedback_reply": "{{actor}} 回复了你在 {{activity}} 的反馈",
+      "feedback_reply_many": "你在 {{activity}} 的反馈有 {{count}} 条新回复"
     },
     "routing": {
       "short": "通知对象",
@@ -29739,6 +29919,151 @@
       "seat_limit_exceeded": "正在使用的席位超出了许可证包含的数量",
       "grace_expired": "许可证服务器长时间无法连接",
       "unknown": "无法验证许可证"
+    }
+  },
+  "contributions": {
+    "hint": "这个页面欢迎大家一起改进。将鼠标悬停在段落上，或选中文字，即可建议修改或留下反馈。",
+    "someone": "某人",
+    "actions": {
+      "suggest": "建议修改",
+      "feedback": "提交反馈"
+    },
+    "credits": {
+      "aria": "由 {{names}} 协助撰写",
+      "title": "改进者"
+    },
+    "blocks": {
+      "block": "内容块",
+      "paragraph": "段落",
+      "heading": "标题",
+      "list": "列表",
+      "quote": "引用",
+      "code": "代码块",
+      "callout": "提示框",
+      "image": "图片",
+      "video": "视频",
+      "audio": "音频",
+      "pdf": "PDF",
+      "math": "公式",
+      "quiz": "测验",
+      "embed": "嵌入内容",
+      "table": "表格",
+      "link_preview": "链接预览",
+      "badge": "徽章",
+      "button": "按钮",
+      "flashcard": "记忆卡片",
+      "flashcards": "记忆卡片",
+      "scenario": "情景",
+      "code_playground": "代码演练场",
+      "toggle": "折叠块",
+      "divider": "分隔线",
+      "magic_block": "魔法块",
+      "h5p": "H5P 活动",
+      "library": "资源库项目",
+      "user": "用户卡片",
+      "personalized": "个性化内容块"
+    },
+    "suggest": {
+      "title": "建议修改",
+      "text_hint": "直接在这里编辑文字。选中文字即可设置格式、添加链接，或改成标题或列表。",
+      "block_hint": "像在编辑器里一样，用它自己的控件修改这个{{block}}。",
+      "review_note": "课程团队会先审核你的修改，再正式发布。修改被采纳后，你会获得署名。",
+      "trusted_hint": "你是受信任的贡献者：修改会立即发布，并为你署名。",
+      "remove_block": "删除这个{{block}}",
+      "remove_blocks": "删除这些内容块",
+      "review_changes": "查看更改",
+      "review_title": "查看你的修改",
+      "review_hint": "以下是变动内容。添加一条简短说明，帮助团队更快审核。",
+      "keep_editing": "继续编辑",
+      "send": "提交审核",
+      "publish": "发布修改",
+      "unchanged": "你还没有做任何修改。",
+      "note_label": "为什么要这样改？",
+      "note_optional": "选填",
+      "note_placeholder": "例如：公式少了一个括号，来源：官方文档。"
+    },
+    "diff": {
+      "title": "更改内容",
+      "inline": "行内",
+      "split": "并排",
+      "before": "修改前",
+      "after": "修改后",
+      "added": "新增{{block}}",
+      "removed": "删除{{block}}",
+      "changed": "修改{{block}}",
+      "format_only": "仅格式有变化",
+      "nothing": "没有更改。"
+    },
+    "feedback": {
+      "title": "提交反馈",
+      "description": "告诉课程团队这里哪里有问题，或哪里可以做得更好。他们可以回复你。",
+      "type_label": "反馈类型",
+      "body_label": "你的反馈",
+      "send": "发送反馈",
+      "types": {
+        "typo": "错别字",
+        "unclear": "不清楚",
+        "outdated": "已过时",
+        "wrong": "有错误",
+        "suggestion": "建议"
+      },
+      "placeholders": {
+        "typo": "哪个词写错了？应该怎么写？",
+        "unclear": "哪里不好理解？怎样会更好？",
+        "outdated": "有什么变化？团队可以在哪里核实？",
+        "wrong": "哪里不对？正确的是什么？附上来源会很有帮助。",
+        "suggestion": "怎样能让这一部分更好？"
+      },
+      "status": {
+        "open": "待处理",
+        "resolved": "已解决"
+      },
+      "team": "{{name}}（课程团队）",
+      "you": "你",
+      "reply": "回复",
+      "reply_placeholder": "写下你的回复…"
+    },
+    "mine": {
+      "open_other": "你的贡献（{{count}} 条待处理）",
+      "title": "你的贡献",
+      "description": "你在此页面提出的修改建议和反馈，以及课程团队的回复。",
+      "suggestions": "修改建议",
+      "feedback": "反馈",
+      "no_suggestions": "此页面还没有修改建议",
+      "no_feedback": "此页面还没有反馈",
+      "reviewer_said": "{{name}}：",
+      "withdraw": "撤回",
+      "revise": "修改",
+      "revise_title": "修改你的建议",
+      "open_one": "你的贡献（{{count}} 条待处理）"
+    },
+    "status": {
+      "pending": "审核中",
+      "accepted": "已采纳",
+      "rejected": "已拒绝",
+      "changes_requested": "需要修改",
+      "withdrawn": "已撤回"
+    },
+    "toasts": {
+      "suggested": "谢谢！你的修改已提交审核。",
+      "published": "谢谢！你的修改已发布。",
+      "feedback_sent": "谢谢！你的反馈已发送给课程团队。",
+      "withdrawn": "建议已撤回"
+    },
+    "errors": {
+      "generic": "出了点问题，请重试。"
+    },
+    "course": {
+      "title": "由社区共同完善",
+      "names_more_other": "{{names}} 等 {{count}} 人",
+      "edits_other": "{{count}} 处已采纳的修改",
+      "edits_one": "{{count}} 处已采纳的修改",
+      "names_more_one": "{{names}} 等 {{count}} 人"
+    },
+    "profile": {
+      "title": "已完善的课程",
+      "total_other": "{{count}} 处已采纳的修改",
+      "total_one": "{{count}} 处已采纳的修改"
     }
   }
 }

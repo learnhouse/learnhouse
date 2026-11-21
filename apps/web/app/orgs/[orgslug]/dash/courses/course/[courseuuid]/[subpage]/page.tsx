@@ -21,6 +21,7 @@ const EditCourseStructure = dynamic(() => import('@components/Dashboard/Pages/Co
 const EditCourseGeneral = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'), { loading: tabLoading })
 const EditCourseAccess = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'), { loading: tabLoading })
 const EditCourseContributors = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'), { loading: tabLoading })
+const EditCourseContributions = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseContributions/EditCourseContributions'), { loading: tabLoading })
 const EditCourseCertification = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'), { loading: tabLoading })
 const EditCourseSEO = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'), { loading: tabLoading })
 const EditCourseSchedule = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSchedule/EditCourseSchedule'), { loading: tabLoading })
@@ -85,6 +86,8 @@ function CourseEditorTabPage(props: { params: Promise<CourseOverviewParams> }) {
       return hasPermission('manage_access') ? <EditCourseAccess orgslug={params.orgslug} /> : null
     case 'contributors':
       return hasPermission('manage_contributors') ? <EditCourseContributors orgslug={params.orgslug} /> : null
+    case 'contributions':
+      return hasPermission('update') ? <EditCourseContributions orgslug={params.orgslug} /> : null
     case 'seo':
       return hasPermission('update') ? (
         <FeatureGate feature="seo">

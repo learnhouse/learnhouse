@@ -5049,7 +5049,9 @@
           "seo": "SEO",
           "certification": "Certificering",
           "analytics": "Analyses",
-          "schedule": "Planning"
+          "schedule": "Planning",
+          "authors": "Auteurs",
+          "contributions": "Bijdragen"
         },
         "access_denied": {
           "title": "Toegang geweigerd",
@@ -6308,6 +6310,169 @@
           "source": "Bron"
         },
         "tab": "Talen"
+      },
+      "authors": {
+        "title": "Auteurs",
+        "description": "Mensen uit je organisatie die deze cursus maken. Ze staan in de auteursregel van de cursus en kunnen hem bewerken, afhankelijk van hun rol.",
+        "search_placeholder": "Zoek leden op naam of gebruikersnaam om ze als auteur toe te voegen…",
+        "already_author": "Al auteur",
+        "count_one": "{{count}} auteur",
+        "count_other": "{{count}} auteurs",
+        "selected_one": "{{count}} auteur geselecteerd",
+        "selected_other": "{{count}} auteurs geselecteerd",
+        "roles_section": "Auteursrollen",
+        "remove_title_one": "{{count}} auteur verwijderen?",
+        "remove_title_other": "{{count}} auteurs verwijderen?",
+        "remove_message": "Ze verliezen de toegang om deze cursus te bewerken en verdwijnen uit de auteursregel. Je kunt ze later weer toevoegen.",
+        "roles": {
+          "creator": "Eigenaar",
+          "maintainer": "Beheerder",
+          "contributor": "Redacteur",
+          "reporter": "Melder"
+        },
+        "statuses": {
+          "active": "Actief",
+          "inactive": "Inactief",
+          "pending": "Aangevraagd"
+        },
+        "requests": {
+          "title": "Auteursaanvragen",
+          "description": "Kies of leden kunnen vragen om als auteur deel te nemen aan deze cursus.",
+          "active": "Actief",
+          "open_title": "Aanvragen accepteren",
+          "open_description": "Leden kunnen vragen om auteur te worden. Aanvragen verschijnen hierboven zodat je ze kunt goedkeuren.",
+          "open_confirm_title": "Auteursaanvragen accepteren?",
+          "open_confirm_message": "Leden kunnen dan vragen om als auteur deel te nemen aan deze cursus.",
+          "open_confirm_button": "Aanvragen accepteren",
+          "closed_title": "Geen aanvragen",
+          "closed_description": "Alleen de mensen die je hier toevoegt, zijn auteur.",
+          "closed_confirm_title": "Stoppen met aanvragen accepteren?",
+          "closed_confirm_message": "Leden kunnen dan niet meer vragen om als auteur deel te nemen aan deze cursus.",
+          "closed_confirm_button": "Aanvragen stoppen"
+        },
+        "community": {
+          "title": "Community-bijdragers",
+          "description": "Mensen die de cursus verbeteren vanaf de cursistenpagina zijn geen auteurs. Ze worden vermeld op de cursuspagina en naast wat ze hebben helpen schrijven.",
+          "open": "Bijdragen openen",
+          "none": "Er is nog niemand vermeld.",
+          "count_one": "{{count}} vermelde bijdrager",
+          "count_other": "{{count}} vermelde bijdragers"
+        }
+      },
+      "contributions": {
+        "settings": {
+          "title": "Community-bijdragen",
+          "description": "Laat cursisten deze cursus verbeteren zoals een wiki: ze stellen wijzigingen voor of geven feedback direct op de pagina, jij beoordeelt, en elke geaccepteerde wijziging wordt vermeld.",
+          "enable": "Community-bijdragen inschakelen",
+          "plan_required": "Community-bijdragen zijn onderdeel van het Standard-abonnement en hoger.",
+          "see_plans": "Abonnementen bekijken",
+          "audience": "Wie mag bijdragen",
+          "suggestions": "Voorgestelde wijzigingen",
+          "suggestions_hint": "Bijdragers kunnen tekst en blokken op de cursistenpagina bewerken en de wijziging ter beoordeling versturen.",
+          "feedback": "Feedback",
+          "feedback_hint": "Bijdragers kunnen een passage markeren als typfout, onduidelijk, verouderd of onjuist, of een idee voorstellen.",
+          "trusted": "Vertrouwde bijdragers publiceren direct",
+          "trusted_hint": "Wijzigingen van mensen die je als vertrouwd markeert, gaan live zonder beoordeling. Je kunt altijd een eerdere versie terugzetten.",
+          "limits": "Om spam te voorkomen kan iedereen per uur maximaal 20 voorstellen en 20 stukken feedback versturen, met hooguit 25 in afwachting van beoordeling per cursus. Geblokkeerde mensen kunnen niet bijdragen."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "Ingeschreven cursisten",
+            "description": "Mensen die aan deze cursus zijn begonnen."
+          },
+          "members": {
+            "title": "Leden van de organisatie",
+            "description": "Iedereen in je organisatie."
+          },
+          "signed_in": {
+            "title": "Iedereen die is ingelogd",
+            "description": "Iedereen met een account die de cursus kan openen."
+          }
+        },
+        "stats": {
+          "pending": "Wacht op beoordeling",
+          "feedback": "Open feedback",
+          "contributors": "Bijdragers"
+        },
+        "tabs": {
+          "suggestions": "Voorstellen",
+          "feedback": "Feedback",
+          "contributors": "Bijdragers",
+          "settings": "Instellingen"
+        },
+        "filters": {
+          "open": "Open",
+          "accepted": "Geaccepteerd",
+          "rejected": "Afgewezen",
+          "all": "Alle",
+          "resolved": "Opgelost"
+        },
+        "empty": {
+          "suggestions_open": "Niets te beoordelen",
+          "suggestions_other": "Geen voorstellen hier",
+          "suggestions_hint": "Wanneer iemand op de cursistenpagina een wijziging voorstelt, verschijnt die hier.",
+          "feedback_open": "Geen open feedback",
+          "feedback_resolved": "Geen opgeloste feedback",
+          "contributors": "Nog geen bijdragers",
+          "contributors_hint": "Mensen verschijnen hier zodra een van hun wijzigingen is geaccepteerd."
+        },
+        "placement": {
+          "clean": "Past op de pagina",
+          "clean_hint": "De tekst die wordt gewijzigd staat nog op de pagina, op dezelfde plek.",
+          "moved": "Opnieuw geplaatst",
+          "moved_hint": "De pagina is elders gewijzigd; deze wijziging past nog steeds netjes.",
+          "conflict": "Conflict",
+          "conflict_hint": "De tekst die wordt gewijzigd is sindsdien bewerkt.",
+          "outdated": "Verouderd",
+          "outdated_hint": "De pagina is te veel veranderd om deze wijziging te plaatsen.",
+          "conflict_explain": "Het deel van de pagina dat deze wijziging aanpast, is herschreven sinds het voorstel. Vergelijk beide versies en gebruik dan Bewerken en accepteren om ze te combineren, of wijs het af.",
+          "page_now": "De pagina nu",
+          "suggested": "Voorgesteld"
+        },
+        "review": {
+          "note": "Notitie:",
+          "asked": "Je vroeg:",
+          "auto_published": "Direct gepubliceerd",
+          "accept": "Accepteren",
+          "accepted": "Geaccepteerd. De pagina is bijgewerkt en er is een versie opgeslagen.",
+          "edit_accept": "Bewerken en accepteren",
+          "edit_title": "Bewerken en accepteren",
+          "edit_hint": "Pas het voorstel aan voordat het live gaat. De bijdrager wordt nog steeds vermeld.",
+          "edit_conflict_hint": "Dit begint bij het voorstel. Combineer het met de huidige tekst van de pagina en accepteer dan: het vervangt de huidige tekst links.",
+          "conflict_toast": "De pagina is veranderd sinds dit voorstel. Bekijk het conflict en los het op.",
+          "reject": "Afwijzen",
+          "request_changes": "Wijzigingen vragen",
+          "reject_title": "Dit voorstel afwijzen?",
+          "reject_description": "De bijdrager hoort dat het is afgewezen, met jouw reden als je die geeft.",
+          "reject_label": "Reden",
+          "reject_confirm": "Afwijzen",
+          "changes_title": "Wijzigingen vragen",
+          "changes_description": "De bijdrager kan de wijziging herzien en opnieuw versturen.",
+          "changes_label": "Wat moet er anders?",
+          "changes_confirm": "Versturen",
+          "rejected": "Voorstel afgewezen",
+          "changes_sent": "Teruggestuurd naar de bijdrager",
+          "revised_toast": "De bijdrager heeft deze suggestie gewijzigd. Bekijk de nieuwe versie."
+        },
+        "feedback": {
+          "reply_placeholder": "Antwoord de cursist…",
+          "replied": "Antwoord verstuurd",
+          "resolve": "Oplossen",
+          "reopen": "Heropenen"
+        },
+        "contributors": {
+          "person": "Bijdrager",
+          "accepted": "Wijzigingen",
+          "last": "Laatste wijziging",
+          "trust": "Vertrouwen",
+          "trusted": "Vertrouwd",
+          "blocked": "Geblokkeerd",
+          "block": "Blokkeren",
+          "unblock": "Deblokkeren",
+          "edits_one": "{{count}} wijziging",
+          "edits_other": "{{count}} wijzigingen",
+          "trusted_off": "Vertrouwde bijdragers publiceren alleen zonder beoordeling als deze instelling aan staat."
+        }
       }
     },
     "organization": {
@@ -29410,7 +29575,13 @@
       "plan_downgraded": "Overgestapt naar Gratis",
       "plan_restored": "Abonnement hersteld",
       "payments_checkout_failing": "Afrekenen mislukt",
-      "invitation_accepted": "Uitnodiging geaccepteerd"
+      "invitation_accepted": "Uitnodiging geaccepteerd",
+      "suggestion_submitted": "Voorgestelde wijziging",
+      "feedback_submitted": "Feedback van cursist",
+      "suggestion_accepted": "Wijziging geaccepteerd",
+      "suggestion_rejected": "Wijziging afgewezen",
+      "suggestion_changes_requested": "Wijzigingen gevraagd",
+      "feedback_reply": "Antwoord op je feedback"
     },
     "copy": {
       "assignment_graded": "Beoordeeld: {{assignment}}",
@@ -29473,7 +29644,16 @@
       "plan_downgraded": "Je zit nu op Gratis. Er is niets verwijderd",
       "plan_restored": "Welkom terug bij {{plan}}",
       "payments_checkout_failing": "Cursisten kunnen nu niets kopen ({{count}} mislukte betalingen)",
-      "invitation_accepted": "{{actor}} heeft je uitnodiging geaccepteerd"
+      "invitation_accepted": "{{actor}} heeft je uitnodiging geaccepteerd",
+      "suggestion_submitted": "{{actor}} stelde een wijziging voor in {{activity}}",
+      "suggestion_submitted_many": "{{count}} nieuwe voorgestelde wijzigingen in {{course}}",
+      "feedback_submitted": "{{actor}} liet feedback achter op {{activity}}",
+      "feedback_submitted_many": "{{count}} nieuwe stukken feedback in {{course}}",
+      "suggestion_accepted": "{{actor}} accepteerde je wijziging in {{activity}}",
+      "suggestion_rejected": "{{actor}} wees je wijziging in {{activity}} af",
+      "suggestion_changes_requested": "{{actor}} vroeg om aanpassingen aan je wijziging in {{activity}}",
+      "feedback_reply": "{{actor}} antwoordde op je feedback bij {{activity}}",
+      "feedback_reply_many": "{{count}} nieuwe antwoorden op je feedback bij {{activity}}"
     },
     "routing": {
       "short": "Wie een melding krijgt",
@@ -29781,6 +29961,151 @@
       "seat_limit_exceeded": "er zijn meer plaatsen in gebruik dan de licentie omvat",
       "grace_expired": "de licentieserver was te lang onbereikbaar",
       "unknown": "de licentie kon niet worden geverifieerd"
+    }
+  },
+  "contributions": {
+    "hint": "Deze pagina staat open voor verbeteringen. Beweeg over een alinea of selecteer tekst om een wijziging voor te stellen of feedback te geven.",
+    "someone": "Iemand",
+    "actions": {
+      "suggest": "Wijziging voorstellen",
+      "feedback": "Feedback geven"
+    },
+    "credits": {
+      "aria": "Geschreven met hulp van {{names}}",
+      "title": "Verbeterd door"
+    },
+    "blocks": {
+      "block": "blok",
+      "paragraph": "alinea",
+      "heading": "kop",
+      "list": "lijst",
+      "quote": "citaat",
+      "code": "codeblok",
+      "callout": "uitgelicht blok",
+      "image": "afbeelding",
+      "video": "video",
+      "audio": "audio",
+      "pdf": "PDF",
+      "math": "formule",
+      "quiz": "quiz",
+      "embed": "insluiting",
+      "table": "tabel",
+      "link_preview": "linkvoorbeeld",
+      "badge": "badge",
+      "button": "knop",
+      "flashcard": "flashcard",
+      "flashcards": "flashcards",
+      "scenario": "scenario",
+      "code_playground": "codespeeltuin",
+      "toggle": "uitklapblok",
+      "divider": "scheidingslijn",
+      "magic_block": "magisch blok",
+      "h5p": "H5P-activiteit",
+      "library": "bibliotheekitem",
+      "user": "gebruikerskaart",
+      "personalized": "gepersonaliseerd blok"
+    },
+    "suggest": {
+      "title": "Wijziging voorstellen",
+      "text_hint": "Bewerk de tekst hier meteen. Selecteer woorden om ze op te maken, een link toe te voegen of er een kop of lijst van te maken.",
+      "block_hint": "Pas dit {{block}} aan met de eigen opties, zoals in de editor.",
+      "review_note": "Het cursusteam beoordeelt je wijziging voordat die live gaat. Je wordt vermeld zodra die is geaccepteerd.",
+      "trusted_hint": "Je bent een vertrouwde bijdrager: je wijziging gaat meteen live en je wordt vermeld.",
+      "remove_block": "Dit {{block}} verwijderen",
+      "remove_blocks": "Deze blokken verwijderen",
+      "review_changes": "Wijzigingen bekijken",
+      "review_title": "Bekijk je wijziging",
+      "review_hint": "Dit verandert er. Voeg een korte notitie toe zodat het team het makkelijker kan beoordelen.",
+      "keep_editing": "Verder bewerken",
+      "send": "Ter beoordeling versturen",
+      "publish": "Wijziging publiceren",
+      "unchanged": "Je hebt nog niets gewijzigd.",
+      "note_label": "Waarom deze wijziging?",
+      "note_optional": "Optioneel",
+      "note_placeholder": "Bijvoorbeeld: er ontbrak een haakje in de formule, bron: de officiële documentatie."
+    },
+    "diff": {
+      "title": "Wijzigingen",
+      "inline": "Inline",
+      "split": "Naast elkaar",
+      "before": "Voor",
+      "after": "Na",
+      "added": "Voegt een {{block}} toe",
+      "removed": "Verwijdert een {{block}}",
+      "changed": "Wijzigt een {{block}}",
+      "format_only": "Opmaak gewijzigd",
+      "nothing": "Geen wijzigingen."
+    },
+    "feedback": {
+      "title": "Feedback geven",
+      "description": "Vertel het cursusteam wat hier niet klopt of beter kan. Zij kunnen je antwoorden.",
+      "type_label": "Waar gaat het over?",
+      "body_label": "Je feedback",
+      "send": "Feedback versturen",
+      "types": {
+        "typo": "Typfout",
+        "unclear": "Onduidelijk",
+        "outdated": "Verouderd",
+        "wrong": "Onjuist",
+        "suggestion": "Suggestie"
+      },
+      "placeholders": {
+        "typo": "Welk woord is fout gespeld en hoe moet het zijn?",
+        "unclear": "Wat is moeilijk te volgen? Wat zou helpen?",
+        "outdated": "Wat is er veranderd en waar kan het team dat controleren?",
+        "wrong": "Wat klopt er niet en wat is wel juist? Een bron helpt.",
+        "suggestion": "Wat zou dit deel beter maken?"
+      },
+      "status": {
+        "open": "Open",
+        "resolved": "Opgelost"
+      },
+      "team": "{{name}} (cursusteam)",
+      "you": "Jij",
+      "reply": "Antwoorden",
+      "reply_placeholder": "Schrijf een antwoord…"
+    },
+    "mine": {
+      "open_one": "Jouw bijdragen ({{count}} in afwachting)",
+      "open_other": "Jouw bijdragen ({{count}} in afwachting)",
+      "title": "Jouw bijdragen",
+      "description": "Je voorgestelde wijzigingen en feedback op deze pagina, en wat het cursusteam zei.",
+      "suggestions": "Voorstellen",
+      "feedback": "Feedback",
+      "no_suggestions": "Nog geen voorstellen op deze pagina",
+      "no_feedback": "Nog geen feedback op deze pagina",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "Intrekken",
+      "revise": "Herzien",
+      "revise_title": "Herzie je wijziging"
+    },
+    "status": {
+      "pending": "In beoordeling",
+      "accepted": "Geaccepteerd",
+      "rejected": "Afgewezen",
+      "changes_requested": "Wijzigingen gevraagd",
+      "withdrawn": "Ingetrokken"
+    },
+    "toasts": {
+      "suggested": "Bedankt! Je wijziging is ter beoordeling verstuurd.",
+      "published": "Bedankt! Je wijziging is live.",
+      "feedback_sent": "Bedankt! Je feedback is naar het cursusteam gestuurd.",
+      "withdrawn": "Voorstel ingetrokken"
+    },
+    "errors": {
+      "generic": "Er ging iets mis. Probeer het opnieuw."
+    },
+    "course": {
+      "title": "Verbeterd door de community",
+      "names_more_one": "{{names}} en {{count}} ander",
+      "names_more_other": "{{names}} en {{count}} anderen",
+      "edits_one": "{{count}} geaccepteerde wijziging",
+      "edits_other": "{{count}} geaccepteerde wijzigingen"
+    },
+    "profile": {
+      "title": "Verbeterde cursussen",
+      "total_one": "{{count}} geaccepteerde wijziging",
+      "total_other": "{{count}} geaccepteerde wijzigingen"
     }
   }
 }

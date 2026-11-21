@@ -22,6 +22,9 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "ai": "free",
     "analytics": "standard",
     "collaboration": "standard",
+    # Course contributions: learners suggest edits and give feedback from the
+    # learner page, authors review them. Same tier as live collaboration.
+    "contributions": "standard",
     "communities": "standard",
     "drip": "standard",
     "payments": "standard",

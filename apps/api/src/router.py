@@ -42,6 +42,7 @@ from src.routers.communities import discussions as discussions_router_module
 from src.routers.courses.activities import activities, blocks
 from src.routers.courses.activities import collab as activity_collab_router_module
 from src.routers.courses.activities import comments as activity_comments_router_module
+from src.routers.courses import contributions as contributions_router_module
 from src.routers import learner_notes as learner_notes_router_module
 from src.routers.courses import translations as course_translations_router_module
 from src.routers.podcasts import podcasts as podcasts_router_module
@@ -288,6 +289,7 @@ v1_router.include_router(
     dependencies=[Depends(get_non_api_token_user)],
 )
 v1_router.include_router(activity_comments_router_module.router, prefix="/activities", tags=["activity-comments"])
+v1_router.include_router(contributions_router_module.router, prefix="/contributions", tags=["contributions"])
 # Private learner notes: session users only, every handler scoped to the caller.
 v1_router.include_router(
     learner_notes_router_module.router,

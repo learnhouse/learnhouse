@@ -190,7 +190,8 @@ function MagicEditor(props: MagicNodeViewProps) {
   const { track } = useLHAnalytics('editor')
   const accessToken: string | undefined = session?.data?.tokens?.access_token
   const rf = org?.config?.config?.resolved_features
-  const canUseAI = rf?.ai?.enabled === true
+  const editorOptions = useEditorProvider() as any
+  const canUseAI = rf?.ai?.enabled === true && editorOptions?.allowAI !== false
 
   const htmlContent: string | null = node.attrs.htmlContent
   const sessionUuid: string | null = node.attrs.sessionUuid
