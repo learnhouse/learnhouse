@@ -8,6 +8,27 @@ import "server-only";
 import { getServerAPIUrl } from "@services/config/config";
 import type { LearnHousePlanType } from "./plans";
 
+// The org (or its config) no longer exists. Retrying can't fix that, so the
+// webhook acks these instead of making Stripe redeliver for days. Only the
+// API's own "not found" answer counts: a bare 404 can also mean a wrong API URL,
+// which is a deploy fault and must keep failing loud.
+export class OrgNotFoundError extends Error {
+  readonly code = "org_not_found";
+  constructor(orgId: unknown) {
+    super(`Organization ${orgId} not found`);
+    this.name = "OrgNotFoundError";
+  }
+}
+
+function isApiOrgNotFoundBody(body: string): boolean {
+  try {
+    const detail = JSON.parse(body)?.detail;
+    return detail === "Organization not found" || detail === "Organization config not found";
+  } catch {
+    return false;
+  }
+}
+
 export async function updateOrganizationConfigInternally(org_id: any, plan: LearnHousePlanType) {
   console.log(`[updateOrgConfig] Updating org ${org_id} to plan "${plan}"`);
 
@@ -48,6 +69,9 @@ export async function updateOrganizationConfigInternally(org_id: any, plan: Lear
 
   if (!result.ok) {
     const body = await result.text().catch(() => "");
+    if (result.status === 404 && isApiOrgNotFoundBody(body)) {
+      throw new OrgNotFoundError(org_id);
+    }
     console.error(`[updateOrgConfig] Failed: ${result.status} ${result.statusText}`, body);
     throw new Error(`Failed to update org plan: ${result.status} ${result.statusText}`);
   }

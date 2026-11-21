@@ -18,6 +18,7 @@ import {
 } from "./plans";
 import {
   selectOrgPlanSubscription,
+  selectOrgEntitledSubscription,
   selectCheckoutCustomerId,
   planFromPriceId,
   effectivePlanForSubscription,
@@ -99,19 +100,72 @@ async function listCustomerIdsByEmail(email: string): Promise<string[]> {
   return customers.data.map((c: any) => c.id);
 }
 
-// Find the org's PLAN subscription (never a pack) across every customer that
-// shares this email. Selection/ranking lives in subscriptionUtils so it can be
-// unit-tested without the Stripe SDK.
-async function findOrgPlanSubscription(email: string, orgId: string): Promise<any | null> {
-  const customerIds = await listCustomerIdsByEmail(email);
-  if (customerIds.length === 0) return null;
-
-  const allSubs: any[] = [];
-  for (const customerId of customerIds) {
-    const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
-    allSubs.push(...subs.data);
+// Every subscription carrying this org id in its metadata, whoever pays for it.
+// `orgId` must be a plain integer: it is interpolated into a search query.
+async function searchOrgSubscriptions(orgId: string): Promise<any[]> {
+  if (!/^\d+$/.test(orgId)) throw new Error(`Invalid org id: ${orgId}`);
+  const found: any[] = [];
+  let page: string | undefined;
+  for (let i = 0; i < 20; i++) {
+    const res = await stripe.subscriptions.search({
+      query: `metadata['org_id']:'${orgId}'`,
+      limit: 100,
+      ...(page ? { page } : {}),
+    });
+    found.push(...res.data);
+    if (!res.has_more || !res.next_page) break;
+    page = res.next_page;
   }
-  return selectOrgPlanSubscription(allSubs, orgId);
+  return found;
+}
+
+// Find the org's PLAN subscription (never a pack). The org is looked up by
+// metadata, so a subscription another admin pays for is found too: missing it
+// let a second admin buy a second subscription for the same org. Stripe search
+// lags writes by up to a minute, so the caller's own customers are scanned as
+// well, which covers a subscription they started moments ago. Selection and
+// ranking live in subscriptionUtils so they can be unit-tested without the SDK.
+async function findOrgPlanSubscription(email: string, orgId: string): Promise<any | null> {
+  const byId = new Map<string, any>();
+  if (/^\d+$/.test(orgId)) {
+    for (const sub of await searchOrgSubscriptions(orgId)) byId.set(sub.id, sub);
+  }
+  for (const customerId of await listCustomerIdsByEmail(email)) {
+    const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
+    for (const sub of subs.data) byId.set(sub.id, sub);
+  }
+  return selectOrgPlanSubscription(Array.from(byId.values()), orgId);
+}
+
+/**
+ * The org's plan subscription that still entitles it to a plan (active,
+ * trialing or past_due), other than `excludeId`. The webhook asks this before
+ * moving an org to Free when one of its subscriptions ends, so a second live
+ * subscription keeps its plan. `customerId` (the ended subscription's payer) is
+ * scanned too, because search can miss a subscription created a minute ago.
+ */
+export async function findOrgEntitledPlanSubscription(
+  orgId: string,
+  opts: { excludeId?: string; customerId?: string } = {},
+): Promise<any | null> {
+  const byId = new Map<string, any>();
+  for (const sub of await searchOrgSubscriptions(orgId)) byId.set(sub.id, sub);
+  if (opts.customerId) {
+    const subs = await stripe.subscriptions.list({ customer: opts.customerId, status: "all", limit: 100 });
+    for (const sub of subs.data) byId.set(sub.id, sub);
+  }
+  if (opts.excludeId) byId.delete(opts.excludeId);
+  return selectOrgEntitledSubscription(Array.from(byId.values()), orgId);
+}
+
+// A scheduled downgrade puts the subscription under a schedule, and the
+// schedule wins at period end: an upgrade made on top of it is reverted to the
+// downgrade's price, and Stripe refuses cancel_at_period_end outright. Release
+// the schedule first; the subscription keeps its current price and period.
+async function releaseSchedule(subscription: any): Promise<void> {
+  const schedule = subscription?.schedule;
+  if (!schedule) return;
+  await stripe.subscriptionSchedules.release(typeof schedule === "string" ? schedule : schedule.id);
 }
 
 // Resolve the customer to use for a new checkout: reuse the one that already
@@ -233,8 +287,8 @@ export async function getCustomerPortal(email: string) {
 }
 
 export async function getActiveSubscription(email: string, orgId: string) {
-  // Resolves the org's plan subscription across ALL customers for this email,
-  // including recoverable states (past_due/unpaid) and excluding pack subs.
+  // Resolves the org's plan subscription by org id plus ALL customers for this
+  // email, including recoverable states (past_due/unpaid) and excluding packs.
   return findOrgPlanSubscription(email, orgId);
 }
 
@@ -352,6 +406,8 @@ export async function switchSubscriptionPlan(
   // error_if_incomplete leaves the subscription untouched when the charge fails
   // or needs the customer to authenticate. Preserve existing metadata (e.g.
   // org_slug, used by the cancellation email) and only override plan/billing.
+  // An upgrade replaces any downgrade scheduled earlier.
+  await releaseSchedule(subscription);
   try {
     await stripe.subscriptions.update(subscription.id, {
       items: [{
@@ -403,6 +459,8 @@ export async function cancelSubscription(email: string, orgId: string) {
   const subscription = await getActiveSubscription(email, orgId);
   if (!subscription) throw new Error("No active subscription found for this organization");
 
+  // Cancelling also drops any downgrade scheduled earlier.
+  await releaseSchedule(subscription);
   const canceled = await stripe.subscriptions.update(subscription.id, {
     cancel_at_period_end: true,
   });
@@ -763,17 +821,7 @@ export async function listChargeableOrgSubscriptions(orgId: string, callerEmail?
     byId.set(sub.id, sub);
   };
 
-  let page: string | undefined;
-  for (let i = 0; i < 20; i++) {
-    const res = await stripe.subscriptions.search({
-      query: `metadata['org_id']:'${orgId}'`,
-      limit: 100,
-      ...(page ? { page } : {}),
-    });
-    res.data.forEach(keep);
-    if (!res.has_more || !res.next_page) break;
-    page = res.next_page;
-  }
+  (await searchOrgSubscriptions(orgId)).forEach(keep);
 
   if (callerEmail) {
     for (const customerId of await listCustomerIdsByEmail(callerEmail)) {
@@ -1062,7 +1110,9 @@ export async function reconcileAllOrgPlans(): Promise<{
   let errors = 0;
 
   for (const [orgId, subs] of Array.from(subsByOrg)) {
-    const best = selectOrgPlanSubscription(subs, orgId);
+    // unpaid subscriptions grant nothing (Stripe stopped retrying); past_due
+    // keeps the plan as a grace period, matching the webhook.
+    const best = selectOrgEntitledSubscription(subs, orgId);
     const plan = effectivePlanForSubscription(best, PRICE_TO_PLAN);
     try {
       await updateOrganizationConfigInternally(orgId, plan as any);

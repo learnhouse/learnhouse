@@ -51,6 +51,7 @@ const fakeStripe = {
   },
   customers: { list: async () => ({ data: [{ id: "cus_test" }] }) },
   subscriptions: {
+    search: async () => ({ data: [], has_more: false, next_page: null }),
     list: async () => ({ data: orgSubscriptions }),
     update: async (id, params) => {
       if (subscriptionUpdateError) throw subscriptionUpdateError;

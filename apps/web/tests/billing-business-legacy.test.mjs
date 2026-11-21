@@ -81,8 +81,10 @@ const fakeStripe = {
   },
   promotionCodes: { list: async () => ({ data: [] }) },
   subscriptions: {
+    search: async () => ({ data: [], has_more: false, next_page: null }),
     list: async () => ({ data: orgSubscriptions }),
-    retrieve: async () => orgSubscriptions[0],
+    // The webhook reads the subscription live; serve the event's own object.
+    retrieve: async () => orgSubscriptions[0] ?? currentEvent?.data?.object,
     update: async (id, params) => {
       subscriptionUpdates.push({ id, params });
       return { id };

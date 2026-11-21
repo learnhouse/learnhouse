@@ -62,6 +62,39 @@ export function selectOrgPlanSubscription<T extends Subscriptionish>(
   return [...matches].sort((a, b) => rank(a) - rank(b) || (b.created ?? 0) - (a.created ?? 0))[0];
 }
 
+// Statuses that still entitle the org to its plan. past_due keeps the plan as a
+// grace period (the customer gets a payment-failed email). unpaid does not:
+// Stripe has given up retrying, so it stays switchable/cancelable (above) but
+// grants nothing.
+export const PLAN_GRANTING_STATUSES = ["active", "trialing", "past_due"] as const;
+
+export function isPlanGrantingStatus(status: string | undefined): boolean {
+  return status !== undefined && (PLAN_GRANTING_STATUSES as readonly string[]).includes(status);
+}
+
+// Statuses after which a subscription grants no plan. incomplete_expired is
+// left out on purpose: that subscription never had a successful payment, so it
+// never granted a plan, and writing "free" for it would end a running trial.
+export const PLAN_ENDED_STATUSES = ["canceled", "unpaid", "paused"] as const;
+
+export function isPlanEndedStatus(status: string | undefined): boolean {
+  return status !== undefined && (PLAN_ENDED_STATUSES as readonly string[]).includes(status);
+}
+
+/**
+ * The org's plan subscription that currently entitles it to a plan, or null.
+ * Same ranking as selectOrgPlanSubscription, minus `unpaid`.
+ */
+export function selectOrgEntitledSubscription<T extends Subscriptionish>(
+  subs: readonly T[],
+  orgId: string | number,
+): T | null {
+  return selectOrgPlanSubscription(
+    subs.filter((s) => isPlanGrantingStatus(s?.status)),
+    orgId,
+  );
+}
+
 /**
  * Pick the customer to use for a NEW checkout. Reuse a customer that already
  * holds a subscription (any product) so we don't fragment the user across
