@@ -110,7 +110,7 @@ From a source checkout, run it from `apps/api`: `uv run python cli.py lms-import
 
 | Option | Commands | Meaning |
 | --- | --- | --- |
-| `--source` | all | `auto` (default), `moodle`, `canvas`, `blackboard`, `brightspace`, `openedx`, `common_cartridge` |
+| `--source` | all | `auto` (default), `moodle`, `canvas`, `blackboard`, `brightspace`, `openedx`, `common_cartridge`. A named source that finds nothing in the export is refused, with the format the export looks like. |
 | `--quiz-mode` | `convert`, `push` | `assignment` (default) or `page` |
 | `--skip-hidden` | `convert` | Leave out hidden sections and items instead of importing them unpublished |
 | `--unpublished` | `convert` | Import every activity unpublished |

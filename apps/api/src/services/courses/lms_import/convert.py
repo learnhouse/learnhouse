@@ -60,6 +60,7 @@ def source_choices() -> list[tuple[str, str]]:
 
 
 def read_course(root: str, source: str = "auto") -> ir.Course:
+    forced = source != "auto"
     if source == "auto":
         candidates = detect(root)
         if not candidates:
@@ -77,8 +78,21 @@ def read_course(root: str, source: str = "auto") -> ir.Course:
         raise
     except Exception as e:
         raise ConversionError(f"Could not read the {module.LABEL} export: {error_text(e)}") from e
+    if forced and not course.sections and not _detected_as(module, root):
+        # A reader handed another platform's export finds nothing in it: say
+        # so, instead of creating an empty course.
+        others = [d for d in detect(root) if d.key != module.KEY]
+        hint = f" It looks like a {others[0].label} export." if others else ""
+        raise ConversionError(f"This is not a {module.LABEL} export.{hint}")
     course.source = module.KEY
     return course
+
+
+def _detected_as(module, root: str) -> bool:
+    try:
+        return int(module.detect(root) or 0) > 0
+    except Exception:
+        return False
 
 
 def read_export(root: str, source: str, work_dir: str, limits: ExtractLimits = DEFAULT_LIMITS) -> ir.Course:
