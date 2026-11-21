@@ -13,13 +13,19 @@ import {
   Crosshair,
   Gauge,
   GitBranch,
+  Intersect,
   Lightning,
   LinkSimple,
   ListNumbers,
   LockKey,
   MagnifyingGlass,
+  NotePencil,
   Scales,
   Stack,
+  Table,
+  Tag,
+  Target,
+  TextAa,
   Textbox,
 } from '@phosphor-icons/react'
 import type { BlockTone } from '../../Blocks/ui/BlockChrome'
@@ -31,6 +37,12 @@ import { exampleSequence } from './Sequence/sequenceModel'
 import { exampleMatch } from './Match/matchModel'
 import { defaultGapsContent } from './Gaps/gapsModel'
 import { defaultSpotMistakeContent } from './SpotMistake/spotMistakeModel'
+import { exampleVenn } from './Venn/vennModel'
+import { exampleLabel } from './Label/labelModel'
+import { exampleWordGuess } from './WordGuess/wordGuessModel'
+import { exampleConfidence } from './Confidence/confidenceModel'
+import { exampleMatrix } from './Matrix/matrixModel'
+import { exampleReflect } from './Reflect/reflectModel'
 
 type T = TFunction | ((_key: string, _fallback?: any) => string)
 
@@ -86,6 +98,11 @@ function gapsContent(t: T) {
 function spotMistakeContent(t: T) {
   return { type: 'expSpotMistake', attrs: { blockId: newBlockId(), ...defaultSpotMistakeContent(plainT(t)) } }
 }
+
+// Wave 2: every block owns its example (editor.experiences.<block>.example.*).
+const ownExample =
+  (nodeName: string, example: (_t: (_key: string, _fallback: string) => string) => Record<string, any>) =>
+  (t: T) => ({ type: nodeName, attrs: { blockId: newBlockId(), ...example(fallbackT(t)) } })
 
 function mythFactContent(t: T) {
   const s = (key: string, en: string, isTrue: boolean, why: string) => ({
@@ -252,6 +269,12 @@ const ICONS: Record<string, ExperienceEntry['icon']> = {
   estimate: Gauge,
   spotMistake: MagnifyingGlass,
   codeLock: LockKey,
+  venn: Intersect,
+  label: Tag,
+  wordGuess: TextAa,
+  confidence: Target,
+  matrix: Table,
+  reflect: NotePencil,
 }
 
 const CONTENT: Record<string, (_t: T) => Record<string, any>> = {
@@ -265,6 +288,12 @@ const CONTENT: Record<string, (_t: T) => Record<string, any>> = {
   estimate: estimateContent,
   spotMistake: spotMistakeContent,
   codeLock: codeLockContent,
+  venn: ownExample('expVenn', exampleVenn),
+  label: ownExample('expLabel', exampleLabel),
+  wordGuess: ownExample('expWordGuess', exampleWordGuess),
+  confidence: ownExample('expConfidence', exampleConfidence),
+  matrix: ownExample('expMatrix', exampleMatrix),
+  reflect: ownExample('expReflect', exampleReflect),
 }
 
 const EN: Record<string, [string, string, string[]]> = {
@@ -278,6 +307,12 @@ const EN: Record<string, [string, string, string[]]> = {
   estimate: ['Estimate', 'Make a guess first, then see the real answer.', ['estimate', 'guess', 'predict', 'number', 'slider']],
   spotMistake: ['Spot the mistake', 'Find the errors in a text or a piece of code.', ['mistake', 'error', 'spot', 'proofread', 'bug', 'wrong']],
   codeLock: ['Code lock', 'Solve clues to open a lock, like an escape room.', ['code', 'lock', 'escape', 'puzzle', 'clues', 'riddle']],
+  venn: ['Venn compare', 'Compare two ideas: see what they share and what sets them apart.', ['venn', 'compare', 'contrast', 'overlap', 'similarities', 'differences']],
+  label: ['Label the diagram', 'Name the parts of a picture to learn how they fit together.', ['label', 'diagram', 'image', 'parts', 'pins', 'anatomy']],
+  wordGuess: ['Word guess', 'Recall key terms from a clue, letter by letter.', ['word', 'guess', 'wordle', 'letters', 'vocabulary', 'spelling']],
+  confidence: ['Confidence check', 'Answer, then rate how sure you are, to spot what you only think you know.', ['confidence', 'sure', 'calibration', 'metacognition', 'quiz', 'certainty']],
+  matrix: ['Property grid', 'Tick which properties fit each item to compare them side by side.', ['grid', 'matrix', 'table', 'properties', 'compare', 'checkbox']],
+  reflect: ['Reflection', 'Explain it in your own words, then compare with a model answer.', ['reflection', 'reflect', 'write', 'explain', 'self-explanation', 'journal']],
 }
 
 export const experienceRegistry: ExperienceEntry[] = [

@@ -338,5 +338,264 @@
     }
    }
   ]
+ },
+ {
+  "name": "venn: neither tray on",
+  "nodes": [
+   {
+    "type": "expVenn",
+    "attrs": {
+     "blockId": "6f1c2a4e-bbbb-4b7a-9c1d-000000000001",
+     "title": "Venn",
+     "instructions": "Compare",
+     "sets": {
+      "a": {
+       "label": "Cats",
+       "color": "sky"
+      },
+      "b": {
+       "label": "Dogs",
+       "color": "amber"
+      }
+     },
+     "items": [
+      {
+       "id": "i1",
+       "text": "Purrs",
+       "zone": "a"
+      },
+      {
+       "id": "i2",
+       "text": "Fur",
+       "zone": "both",
+       "explanation": "Both"
+      },
+      {
+       "id": "i3",
+       "text": "Barks",
+       "zone": "b"
+      },
+      {
+       "id": "i4",
+       "text": "Feathers",
+       "zone": "neither"
+      }
+     ],
+     "showNeither": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "label diagram: image URL with a distractor",
+  "nodes": [
+   {
+    "type": "expLabel",
+    "attrs": {
+     "blockId": "6f1c2a4e-bbbb-4b7a-9c1d-000000000002",
+     "title": "Label",
+     "instructions": "Name the parts",
+     "imageUrl": "https://example.com/plant.png",
+     "imageObject": null,
+     "pins": [
+      {
+       "id": "p1",
+       "x": 50,
+       "y": 20,
+       "label": "Flower"
+      },
+      {
+       "id": "p2",
+       "x": 40,
+       "y": 80,
+       "label": "Roots"
+      }
+     ],
+     "distractors": [
+      "Wing"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "word guess: two words, one hyphenated",
+  "nodes": [
+   {
+    "type": "expWordGuess",
+    "attrs": {
+     "blockId": "6f1c2a4e-bbbb-4b7a-9c1d-000000000003",
+     "title": "Words",
+     "words": [
+      {
+       "id": "w1",
+       "answer": "atom",
+       "clue": "Smallest unit",
+       "explanation": "Why"
+      },
+      {
+       "id": "w2",
+       "answer": "red-shift",
+       "clue": "Light stretched"
+      }
+     ],
+     "maxGuesses": 6
+    }
+   }
+  ]
+ },
+ {
+  "name": "confidence check: one question",
+  "nodes": [
+   {
+    "type": "expConfidence",
+    "attrs": {
+     "blockId": "6f1c2a4e-bbbb-4b7a-9c1d-000000000004",
+     "title": "Sure?",
+     "questions": [
+      {
+       "id": "q1",
+       "prompt": "2+2",
+       "options": [
+        "3",
+        "4"
+       ],
+       "answer": 1,
+       "explanation": "Count"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "property grid: multi mode",
+  "nodes": [
+   {
+    "type": "expMatrix",
+    "attrs": {
+     "blockId": "6f1c2a4e-bbbb-4b7a-9c1d-000000000005",
+     "title": "Grid",
+     "instructions": "Tick",
+     "rows": [
+      {
+       "id": "r1",
+       "label": "Bat"
+      },
+      {
+       "id": "r2",
+       "label": "Hen"
+      }
+     ],
+     "columns": [
+      {
+       "id": "c1",
+       "label": "Flies"
+      },
+      {
+       "id": "c2",
+       "label": "Lays eggs"
+      }
+     ],
+     "cells": {
+      "r1:c1": true,
+      "r2:c2": true
+     },
+     "mode": "multi"
+    }
+   }
+  ]
+ },
+ {
+  "name": "reflection: model answer and checklist",
+  "nodes": [
+   {
+    "type": "expReflect",
+    "attrs": {
+     "blockId": "6f1c2a4e-bbbb-4b7a-9c1d-000000000006",
+     "title": "Reflect",
+     "prompt": "What did you learn?",
+     "guidingQuestions": [
+      "Why?"
+     ],
+     "minWords": 30,
+     "modelAnswer": "A model answer.",
+     "checklist": [
+      "Point one",
+      "Point two"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "property grid: single mode, label without image",
+  "nodes": [
+   {
+    "type": "expMatrix",
+    "attrs": {
+     "blockId": "6f1c2a4e-bbbb-4b7a-9c1d-000000000007",
+     "title": "Which state?",
+     "instructions": "",
+     "rows": [
+      {
+       "id": "r1",
+       "label": "Ice"
+      },
+      {
+       "id": "r2",
+       "label": "Steam"
+      }
+     ],
+     "columns": [
+      {
+       "id": "c1",
+       "label": "Solid"
+      },
+      {
+       "id": "c2",
+       "label": "Gas"
+      }
+     ],
+     "cells": {
+      "r1:c1": true,
+      "r2:c2": true
+     },
+     "mode": "single"
+    }
+   },
+   {
+    "type": "expLabel",
+    "attrs": {
+     "blockId": "6f1c2a4e-bbbb-4b7a-9c1d-000000000008",
+     "title": "Label",
+     "instructions": "",
+     "imageUrl": "",
+     "imageObject": {
+      "block_uuid": "block_x",
+      "content": {
+       "file_id": "f1",
+       "file_format": "png",
+       "activity_uuid": "activity_y"
+      }
+     },
+     "pins": [
+      {
+       "id": "p1",
+       "x": 10,
+       "y": 10,
+       "label": "A"
+      },
+      {
+       "id": "p2",
+       "x": 90,
+       "y": 90,
+       "label": "B"
+      }
+     ],
+     "distractors": []
+    }
+   }
+  ]
  }
 ]

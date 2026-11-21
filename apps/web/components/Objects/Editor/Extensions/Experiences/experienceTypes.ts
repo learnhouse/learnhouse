@@ -13,7 +13,7 @@ export interface ExperienceType {
   tone: BlockTone
 }
 
-/** The 10 new nodes (Scenarios and Flashcards are older nodes, see registry). */
+/** The new nodes (Scenarios and Flashcards are older nodes, see registry). */
 export const NEW_EXPERIENCE_TYPES: readonly ExperienceType[] = [
   { id: 'sort', nodeName: 'expSort', i18n: 'sort', tone: 'interactive' },
   { id: 'sequence', nodeName: 'expSequence', i18n: 'sequence', tone: 'info' },
@@ -25,6 +25,13 @@ export const NEW_EXPERIENCE_TYPES: readonly ExperienceType[] = [
   { id: 'estimate', nodeName: 'expEstimate', i18n: 'estimate', tone: 'people' },
   { id: 'spotMistake', nodeName: 'expSpotMistake', i18n: 'spot_mistake', tone: 'dynamic' },
   { id: 'codeLock', nodeName: 'expCodeLock', i18n: 'code_lock', tone: 'code' },
+  // Wave 2
+  { id: 'venn', nodeName: 'expVenn', i18n: 'venn', tone: 'info' },
+  { id: 'label', nodeName: 'expLabel', i18n: 'label', tone: 'embed' },
+  { id: 'wordGuess', nodeName: 'expWordGuess', i18n: 'word_guess', tone: 'link' },
+  { id: 'confidence', nodeName: 'expConfidence', i18n: 'confidence', tone: 'people' },
+  { id: 'matrix', nodeName: 'expMatrix', i18n: 'matrix', tone: 'math' },
+  { id: 'reflect', nodeName: 'expReflect', i18n: 'reflect', tone: 'document' },
 ]
 
 export const EXPERIENCE_NODE_NAMES: readonly string[] = NEW_EXPERIENCE_TYPES.map((x) => x.nodeName)
@@ -99,6 +106,37 @@ export function experienceSummary(type: string, attrs: Record<string, any> | nul
       break
     case 'expCodeLock':
       lines = list(a.clues).map((c) => `${str(c?.question)} → ${str(c?.answer)}`)
+      break
+    case 'expVenn': {
+      const sets = a.sets && typeof a.sets === 'object' ? a.sets : {}
+      const zone = (z: unknown) =>
+        z === 'a' ? str(sets.a?.label) : z === 'b' ? str(sets.b?.label) : z === 'both' ? `${str(sets.a?.label)} ∩ ${str(sets.b?.label)}` : '∅'
+      lines = list(a.items).map((i) => `${str(i?.text)} → ${zone(i?.zone)}`)
+      break
+    }
+    case 'expLabel':
+      lines = list(a.pins).map((p, n) => `${n + 1}. ${str(p?.label)}`)
+      break
+    case 'expWordGuess':
+      lines = list(a.words).map((w) => `${str(w?.clue)} → ${str(w?.answer)}`)
+      break
+    case 'expConfidence':
+      lines = list(a.questions).map((q) => {
+        const right = list(q?.options)[Number(q?.answer)]
+        return right !== undefined ? `${str(q?.prompt)} → ${str(right)}` : str(q?.prompt)
+      })
+      break
+    case 'expMatrix': {
+      const cells = a.cells && typeof a.cells === 'object' ? a.cells : {}
+      const cols = list(a.columns)
+      lines = list(a.rows).map((r) => {
+        const ticked = cols.filter((c) => cells[`${str(r?.id)}:${str(c?.id)}`]).map((c) => str(c?.label))
+        return `${str(r?.label)}: ${ticked.join(', ')}`
+      })
+      break
+    }
+    case 'expReflect':
+      lines = [str(a.prompt), ...list(a.checklist).map((c) => `• ${str(c)}`)]
       break
     default:
       lines = []

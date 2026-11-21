@@ -609,6 +609,165 @@
    }
   },
   {
+   "type": "expVenn",
+   "attrs": {
+    "blockId": "exp-venn-1",
+    "title": "Venn",
+    "instructions": "Compare",
+    "sets": {
+     "a": {
+      "label": "Cats",
+      "color": "sky"
+     },
+     "b": {
+      "label": "Dogs",
+      "color": "amber"
+     }
+    },
+    "items": [
+     {
+      "id": "i1",
+      "text": "Purrs",
+      "zone": "a"
+     },
+     {
+      "id": "i2",
+      "text": "Fur",
+      "zone": "both",
+      "explanation": "Both"
+     },
+     {
+      "id": "i3",
+      "text": "Barks",
+      "zone": "b"
+     },
+     {
+      "id": "i4",
+      "text": "Feathers",
+      "zone": "neither"
+     }
+    ],
+    "showNeither": true
+   }
+  },
+  {
+   "type": "expLabel",
+   "attrs": {
+    "blockId": "exp-label-1",
+    "title": "Label",
+    "instructions": "Name the parts",
+    "imageUrl": "https://example.com/plant.png",
+    "imageObject": null,
+    "pins": [
+     {
+      "id": "p1",
+      "x": 50,
+      "y": 20,
+      "label": "Flower"
+     },
+     {
+      "id": "p2",
+      "x": 40,
+      "y": 80,
+      "label": "Roots"
+     }
+    ],
+    "distractors": [
+     "Wing"
+    ]
+   }
+  },
+  {
+   "type": "expWordGuess",
+   "attrs": {
+    "blockId": "exp-wordguess-1",
+    "title": "Words",
+    "words": [
+     {
+      "id": "w1",
+      "answer": "atom",
+      "clue": "Smallest unit",
+      "explanation": "Why"
+     },
+     {
+      "id": "w2",
+      "answer": "red-shift",
+      "clue": "Light stretched"
+     }
+    ],
+    "maxGuesses": 6
+   }
+  },
+  {
+   "type": "expConfidence",
+   "attrs": {
+    "blockId": "exp-confidence-1",
+    "title": "Sure?",
+    "questions": [
+     {
+      "id": "q1",
+      "prompt": "2+2",
+      "options": [
+       "3",
+       "4"
+      ],
+      "answer": 1,
+      "explanation": "Count"
+     }
+    ]
+   }
+  },
+  {
+   "type": "expMatrix",
+   "attrs": {
+    "blockId": "exp-matrix-1",
+    "title": "Grid",
+    "instructions": "Tick",
+    "rows": [
+     {
+      "id": "r1",
+      "label": "Bat"
+     },
+     {
+      "id": "r2",
+      "label": "Hen"
+     }
+    ],
+    "columns": [
+     {
+      "id": "c1",
+      "label": "Flies"
+     },
+     {
+      "id": "c2",
+      "label": "Lays eggs"
+     }
+    ],
+    "cells": {
+     "r1:c1": true,
+     "r2:c2": true
+    },
+    "mode": "multi"
+   }
+  },
+  {
+   "type": "expReflect",
+   "attrs": {
+    "blockId": "exp-reflect-1",
+    "title": "Reflect",
+    "prompt": "What did you learn?",
+    "guidingQuestions": [
+     "Why?"
+    ],
+    "minWords": 30,
+    "modelAnswer": "A model answer.",
+    "checklist": [
+     "Point one",
+     "Point two"
+    ]
+   }
+  },
+  {
    "type": "futureBlock",
    "attrs": {
     "x": 1

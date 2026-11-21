@@ -19,7 +19,7 @@ const { EXPERIENCE_NODE_NAMES } = await import("../components/Objects/Editor/Ext
 
 const ext = (path) => import(`../components/Objects/Editor/Extensions/Experiences/${path}`).then((m) => m.default);
 const NODES = await Promise.all(
-  ["Sort/Sort", "Sequence/Sequence", "Match/Match", "Hotspot/Hotspot", "Gaps/Gaps", "MythFact/MythFact", "SpeedRound/SpeedRound", "Estimate/Estimate", "SpotMistake/SpotMistake", "CodeLock/CodeLock"].map(ext),
+  ["Sort/Sort", "Sequence/Sequence", "Match/Match", "Hotspot/Hotspot", "Gaps/Gaps", "MythFact/MythFact", "SpeedRound/SpeedRound", "Estimate/Estimate", "SpotMistake/SpotMistake", "CodeLock/CodeLock", "Venn/Venn", "Label/Label", "WordGuess/WordGuess", "Confidence/Confidence", "Matrix/Matrix", "Reflect/Reflect"].map(ext),
 );
 const OLDER = await Promise.all(["Flipcard/Flipcard", "Flipcard/FlipcardGrid", "Scenarios/Scenarios"].map((p) => import(`../components/Objects/Editor/Extensions/${p}`).then((m) => m.default)));
 const schema = getSchema([StarterKit.configure({ codeBlock: false, link: false, undoRedo: false }), ...NODES, ...OLDER]);
@@ -38,9 +38,9 @@ describe("Experiences fixtures", () => {
     }
   });
 
-  test("registry: 12 entries, each inserting a valid, filled-in, translated block", () => {
-    expect(experienceRegistry.length).toBe(12);
-    expect(new Set(experienceRegistry.map((e) => e.slashId)).size).toBe(12);
+  test("registry: 18 entries, each inserting a valid, filled-in, translated block", () => {
+    expect(experienceRegistry.length).toBe(18);
+    expect(new Set(experienceRegistry.map((e) => e.slashId)).size).toBe(18);
     for (const entry of experienceRegistry) {
       expect(typeof lookup(entry.titleKey)).toBe("string");
       expect(typeof lookup(entry.descriptionKey)).toBe("string");
@@ -56,6 +56,15 @@ describe("Experiences fixtures", () => {
     const a = experienceRegistry[2].defaultContent(t).attrs.blockId;
     const b = experienceRegistry[2].defaultContent(t).attrs.blockId;
     expect(a).not.toBe(b);
+  });
+
+  test("every node is registered in the shared extension list and the gallery draws a preview for every entry", async () => {
+    const src = readFileSync(new URL("../components/Objects/Editor/Extensions/Experiences/extensions.ts", import.meta.url), "utf8");
+    const gallery = readFileSync(new URL("../components/Objects/Editor/Extensions/Experiences/ExperiencesGallery.tsx", import.meta.url), "utf8");
+    const preload = readFileSync(new URL("../components/Objects/Editor/editorPreload.ts", import.meta.url), "utf8");
+    for (const node of NODES) expect(src).toContain(`./${node.name.replace(/^exp/, "")}/`);
+    for (const entry of experienceRegistry) expect(gallery).toContain(`case '${entry.id}':`);
+    for (const name of EXPERIENCE_NODE_NAMES) expect(preload).toContain(`${name}: () =>`);
   });
 
   test("insertExperience adds after a selected block instead of replacing it", () => {

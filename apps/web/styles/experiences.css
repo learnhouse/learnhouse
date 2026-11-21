@@ -377,6 +377,207 @@
 }
 @keyframes lh-exp-fade-out { 0% { opacity: 1; } 100% { opacity: 0; } }
 
+/* ── Wave 2: Confidence ── */
+/* The calibration bars grow up from their track, one after another. */
+.lh-exp-grow {
+  transform-origin: 50% 100%;
+  animation: lh-exp-grow 620ms cubic-bezier(0.2, 0.8, 0.3, 1.05) both;
+  animation-delay: calc(120ms + var(--exp-i, 0) * 110ms);
+}
+@keyframes lh-exp-grow {
+  0% { transform: scaleY(0); }
+  100% { transform: scaleY(1); }
+}
+.lh-exp-grow-label { animation: lh-exp-fade 240ms ease-out both; animation-delay: calc(560ms + var(--exp-i, 0) * 110ms); }
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-grow, .lh-exp-grow-label { animation: none; }
+}
+
+/* ── Wave 2: Reflection ── */
+/* Faint ruled lines in the writing well (one per 1.75rem line). */
+.lh-exp-paper-lines {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 calc(1.75rem - 1px), color-mix(in srgb, var(--exp-ink, #18181b) 6%, transparent) calc(1.75rem - 1px) 1.75rem);
+  background-position: 0 0.875rem;
+  background-attachment: local;
+}
+/* The model answer: a paper note with a folded top edge. */
+.lh-exp-note {
+  background: var(--exp-paper, #fff);
+  border: 1px solid var(--exp-edge, rgba(15, 23, 42, 0.1));
+  border-bottom-color: var(--exp-lip, rgba(15, 23, 42, 0.12));
+  box-shadow: inset 0 1px 0 var(--exp-hi, #fff), 0 1px 1px var(--exp-drop, rgba(15, 23, 42, 0.06)), 0 6px 14px -10px rgba(15, 23, 42, 0.18);
+}
+.lh-exp-note::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 10px;
+  border-radius: inherit;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--exp-ink, #18181b) 5%, transparent), transparent);
+  pointer-events: none;
+}
+/* Unfolds from the top like a note being opened: the sheet swings down from its
+   top edge while a crease shadow fades out. */
+.lh-exp-unfold {
+  transform-origin: 50% 0;
+  animation: lh-exp-unfold 560ms cubic-bezier(0.2, 0.8, 0.25, 1) backwards;
+}
+.lh-exp-unfold > * { animation: lh-exp-fade 260ms ease-out 240ms both; }
+@keyframes lh-exp-unfold {
+  0% { opacity: 0.4; transform: perspective(700px) rotateX(-78deg); clip-path: inset(0 0 70% 0 round 12px); box-shadow: 0 0 0 transparent; }
+  55% { opacity: 1; clip-path: inset(0 0 0 0 round 12px); }
+  80% { transform: perspective(700px) rotateX(6deg); }
+  100% { opacity: 1; transform: perspective(700px) rotateX(0); clip-path: inset(0 0 0 0 round 12px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-unfold { animation: lh-exp-fade 200ms ease-out both; transform: none; }
+  .lh-exp-unfold > * { animation: none; }
+}
+
+/* ── Wave 2: Venn ── */
+/* On Check, the overlap (lens) glows softly when everything that belongs to
+   both groups is in it; the stacked "Both" well does the same on phones. */
+.lh-exp-venn-glow {
+  fill: rgba(52, 211, 153, 0.16);
+  stroke: #34d399;
+  stroke-width: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.55));
+  animation: lh-exp-venn-glow 1100ms ease-out both;
+}
+@keyframes lh-exp-venn-glow {
+  0% { opacity: 0; }
+  35% { opacity: 1; filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.7)); }
+  100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.45)); }
+}
+.lh-exp-well.lh-exp-venn-glow-well {
+  box-shadow:
+    inset 0 1px 1px rgba(15, 23, 42, 0.05),
+    inset 0 0 0 2px rgba(52, 211, 153, 0.55),
+    0 0 14px -2px rgba(52, 211, 153, 0.45);
+  animation: lh-exp-fade 600ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-venn-glow { animation: none; filter: none; }
+  .lh-exp-well.lh-exp-venn-glow-well { animation: none; }
+}
+
+/* ── Wave 2: Label ── */
+/* A label slides onto its pin and clicks into place: the tag travels the
+   last few pixels (--exp-from-x, toward the pin), then the pin gives one
+   small press. */
+.lh-exp-label-land { animation: lh-exp-label-land 300ms cubic-bezier(0.25, 1.35, 0.5, 1) both; }
+@keyframes lh-exp-label-land {
+  0% { opacity: 0.4; transform: translateX(var(--exp-from-x, 12px)) scale(0.96); }
+  70% { opacity: 1; transform: translateX(0) scale(1.03); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+.lh-exp-label-click { animation: lh-exp-label-click 260ms cubic-bezier(0.3, 1.6, 0.5, 1) 200ms both; }
+@keyframes lh-exp-label-click {
+  0% { transform: scale(1); }
+  45% { transform: scale(0.84); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-label-land, .lh-exp-label-click { animation: none; }
+}
+
+/* ── Wave 2: Word guess ───────────────────────────────────────────────────
+   Scored tiles carry a shape as well as a colour: in place is solid with a
+   check, in the word is outlined with a dot, not in the word is recessed.
+   On submit the row's tiles flip one after another (--exp-i = index) and
+   take their colour at the halfway turn. */
+.lh-exp-tile { border: 1px solid transparent; }
+.lh-exp-tile[data-score='hit'] {
+  background: #10b981;
+  border-color: #059669;
+  border-bottom-color: #047857;
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 1px rgba(4, 120, 87, 0.15);
+}
+.lh-exp-tile[data-score='near'] {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  color: #78350f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.lh-exp-tile[data-score='miss'] {
+  background: var(--exp-well, #eef1f5);
+  color: #71717a;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.06), inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+.lh-exp-flip {
+  animation: lh-exp-flip 520ms ease-in-out backwards;
+  animation-delay: calc(var(--exp-i, 0) * 110ms);
+}
+@keyframes lh-exp-flip {
+  0% { transform: rotateX(0); background-color: var(--exp-paper, #fff); border-color: var(--exp-edge, rgba(15, 23, 42, 0.1)); color: var(--exp-ink, #18181b); }
+  49% { transform: rotateX(90deg); background-color: var(--exp-paper, #fff); border-color: var(--exp-edge, rgba(15, 23, 42, 0.1)); color: var(--exp-ink, #18181b); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0); }
+}
+.lh-exp-flip .lh-exp-flip-mark {
+  animation: lh-exp-flip-mark 520ms linear backwards;
+  animation-delay: calc(var(--exp-i, 0) * 110ms);
+}
+@keyframes lh-exp-flip-mark {
+  0%, 50% { opacity: 0; }
+  51%, 100% { opacity: 1; }
+}
+/* On-screen keyboard keys take the best known state of their letter. */
+.lh-exp-raised.lh-exp-key-hit { background: #10b981; border-color: #059669; border-bottom-color: #047857; color: #fff; }
+.lh-exp-raised.lh-exp-key-near { background: #fef3c7; border-color: #fcd34d; border-bottom-color: #f59e0b; color: #78350f; }
+.lh-exp-raised.lh-exp-key-miss {
+  background: var(--exp-well, #eef1f5);
+  border-color: transparent;
+  color: #a1a1aa;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.05);
+}
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-tile[data-score='near'],
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-raised.lh-exp-key-near {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: #fcd34d;
+}
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-tile[data-score='miss'],
+.lh-bt[data-lh-bt='dark'] .lh-exp-frame .lh-exp-raised.lh-exp-key-miss { color: #71717a; }
+
+/* ── Wave 2: Property grid ────────────────────────────────────────────────
+   A toggle presses in when ticked: it sinks into a well and a crisp mark
+   pops in. After Check: green for a right tick, red with a cross for a
+   wrong one, a dashed outline with a faint check for a missed one. */
+.lh-exp-toggle { --mx-accent: #ea580c; }
+.lh-exp-frame .lh-exp-toggle.lh-exp-raised[data-on='true']:not([data-result]) {
+  transform: translateY(1px);
+  background: var(--exp-well, #eef1f5);
+  border-color: color-mix(in srgb, var(--mx-accent) 35%, transparent);
+  box-shadow: inset 0 2px 3px rgba(15, 23, 42, 0.1), inset 0 0 0 1px color-mix(in srgb, var(--mx-accent) 18%, transparent);
+}
+.lh-exp-toggle[data-on='true'] .lh-exp-toggle-mark {
+  background: var(--mx-accent);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  animation: lh-exp-mark-in 220ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes lh-exp-mark-in {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.lh-exp-toggle[data-result='correct'] .lh-exp-toggle-mark { background: #16a34a; }
+.lh-exp-toggle[data-result='wrong'] .lh-exp-toggle-mark { background: #e11d48; color: #fff; }
+.lh-exp-frame .lh-exp-toggle.lh-exp-raised[data-missed='true'] {
+  border-style: dashed;
+  border-color: #34d399;
+  box-shadow: none;
+}
+.lh-exp-toggle[data-missed='true'] .lh-exp-toggle-mark { color: #059669; opacity: 0.55; }
+@media (prefers-reduced-motion: reduce) {
+  .lh-exp-flip, .lh-exp-flip .lh-exp-flip-mark, .lh-exp-toggle[data-on='true'] .lh-exp-toggle-mark { animation: none; }
+  .lh-exp-frame .lh-exp-toggle.lh-exp-raised[data-on='true']:not([data-result]) { transform: none; }
+}
+
 /* The canvas and editor give every ul/ol bullets and a 20px indent
    (unlayered, so they beat Tailwind utilities). Block UI lists marked
    list-none take their own utility values back. */
@@ -385,6 +586,24 @@
   padding: revert-layer;
   padding-inline: revert-layer;
   list-style-type: revert-layer;
+}
+/* Same for tables (Property grid): the canvas draws grey cell borders, a grey
+   header fill, fixed layout and top alignment for prose tables. */
+:is(.canva-content-wrapper, .activity-editor-content-wrapper, .editor-preview-wrapper) .ProseMirror
+  [class*='node-exp'] table {
+  border-collapse: revert-layer;
+  table-layout: revert-layer;
+  overflow: visible;
+}
+:is(.canva-content-wrapper, .activity-editor-content-wrapper, .editor-preview-wrapper) .ProseMirror
+  [class*='node-exp'] :is(td, th) {
+  border: revert-layer;
+  padding: revert-layer;
+  background-color: revert-layer;
+  vertical-align: middle;
+  font-weight: revert-layer;
+  text-align: revert-layer;
+  min-width: 0;
 }
 /* Same for headings: the canvas sizes h1–h6 for prose (20–32px, 24px margin);
    block headings carry their own size utilities. */

@@ -61,7 +61,7 @@ export function ExperiencesGallery({ editor, onInserted, className }: Props) {
         role="group"
         aria-label={t('editor.experiences.gallery.title')}
         onKeyDown={onKeyDown}
-        className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+        className="-m-1 grid max-h-[min(64vh,540px)] grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-1 sm:grid-cols-3"
       >
         {experienceRegistry.map((entry) => {
           const Icon = entry.icon
@@ -213,6 +213,73 @@ export function ExperiencePreview({ id }: { id: string }) {
           {[26, 36, 46].map((x) => (
             <rect key={x} x={x - 3.5} y="24" width="7" height="10" rx="2" fill="white" opacity={0.9} />
           ))}
+        </svg>
+      )
+    case 'venn':
+      return (
+        <svg {...common}>
+          <circle cx="28" cy="22" r="15" {...soft} />
+          <circle cx="44" cy="22" r="15" {...soft} />
+          <path d="M36 9.5 A15 15 0 0 1 36 34.5 A15 15 0 0 1 36 9.5 Z" {...solid} opacity={0.55} />
+          <rect x="15" y="19" width="10" height="6" rx="3" {...solid} />
+          <rect x="47" y="19" width="10" height="6" rx="3" {...solid} />
+        </svg>
+      )
+    case 'label':
+      return (
+        <svg {...common}>
+          <rect x="6" y="5" width="38" height="34" rx="5" {...soft} />
+          <circle cx="18" cy="16" r="3" {...solid} />
+          <circle cx="32" cy="30" r="3" {...solid} />
+          <path d="M21 16 H48 M35 30 H48" {...line} opacity={0.45} />
+          <rect x="48" y="12" width="18" height="8" rx="3" {...solid} />
+          <rect x="48" y="26" width="18" height="8" rx="3" stroke="currentColor" strokeWidth="1.6" strokeDasharray="3 2" />
+        </svg>
+      )
+    case 'wordGuess':
+      return (
+        <svg {...common}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <rect key={`a${i}`} x={9 + i * 11} y="6" width="9" height="9" rx="2" {...(i === 0 || i === 3 ? solid : soft)} opacity={i === 3 ? 0.55 : undefined} />
+          ))}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <rect key={`b${i}`} x={9 + i * 11} y="18" width="9" height="9" rx="2" {...(i < 2 ? solid : soft)} />
+          ))}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <rect key={`c${i}`} x={9 + i * 11} y="30" width="9" height="9" rx="2" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.4" />
+          ))}
+        </svg>
+      )
+    case 'confidence':
+      return (
+        <svg {...common}>
+          <rect x="10" y="32" width="52" height="2" rx="1" {...soft} />
+          <rect x="16" y="22" width="9" height="10" rx="2" {...soft} />
+          <rect x="31" y="15" width="9" height="17" rx="2" {...solid} opacity={0.6} />
+          <rect x="46" y="7" width="9" height="25" rx="2" {...solid} />
+          <path d="M14 38 H27 M29 38 H42 M44 38 H57" {...line} opacity={0.35} />
+        </svg>
+      )
+    case 'matrix':
+      return (
+        <svg {...common}>
+          {[0, 1, 2].map((r) =>
+            [0, 1, 2, 3].map((c) => {
+              const on = (r + c) % 3 === 0 || (r === 1 && c === 2)
+              return <rect key={`${r}-${c}`} x={14 + c * 12} y={6 + r * 12} width="9" height="9" rx="2.5" {...(on ? solid : soft)} />
+            }),
+          )}
+          <rect x="4" y="7" width="6" height="2" rx="1" {...solid} opacity={0.5} />
+          <rect x="4" y="19" width="6" height="2" rx="1" {...solid} opacity={0.5} />
+          <rect x="4" y="31" width="6" height="2" rx="1" {...solid} opacity={0.5} />
+        </svg>
+      )
+    case 'reflect':
+      return (
+        <svg {...common}>
+          <rect x="10" y="5" width="40" height="34" rx="4" {...soft} />
+          <path d="M16 14 H42 M16 21 H44 M16 28 H32" {...line} opacity={0.55} />
+          <path d="M50 30 L60 12 L64 14 L54 32 L49 34 Z" {...solid} />
         </svg>
       )
     default:

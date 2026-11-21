@@ -30,6 +30,12 @@ const COMPONENT_LOADERS: Record<string, () => Promise<unknown>> = {
   expEstimate: () => import('./Extensions/Experiences/Estimate/EstimateView'),
   expSpotMistake: () => import('./Extensions/Experiences/SpotMistake/SpotMistakeView'),
   expCodeLock: () => import('./Extensions/Experiences/CodeLock/CodeLockView'),
+  expVenn: () => import('./Extensions/Experiences/Venn/VennView'),
+  expLabel: () => import('./Extensions/Experiences/Label/LabelView'),
+  expWordGuess: () => import('./Extensions/Experiences/WordGuess/WordGuessView'),
+  expConfidence: () => import('./Extensions/Experiences/Confidence/ConfidenceView'),
+  expMatrix: () => import('./Extensions/Experiences/Matrix/MatrixView'),
+  expReflect: () => import('./Extensions/Experiences/Reflect/ReflectView'),
 }
 
 function collectNodeTypes(node: any, types: Set<string>): void {

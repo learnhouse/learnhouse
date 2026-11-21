@@ -52,6 +52,8 @@ const BLOCK_EXTENSIONS = await Promise.all([
   "Experiences/Sort/Sort", "Experiences/Sequence/Sequence", "Experiences/Match/Match", "Experiences/Hotspot/Hotspot",
   "Experiences/Gaps/Gaps", "Experiences/MythFact/MythFact", "Experiences/SpeedRound/SpeedRound",
   "Experiences/Estimate/Estimate", "Experiences/SpotMistake/SpotMistake", "Experiences/CodeLock/CodeLock",
+  "Experiences/Venn/Venn", "Experiences/Label/Label", "Experiences/WordGuess/WordGuess",
+  "Experiences/Confidence/Confidence", "Experiences/Matrix/Matrix", "Experiences/Reflect/Reflect",
 ].map(ext));
 
 // Same schema-defining extensions as Editor.tsx (plugins-only ones left out)
@@ -122,6 +124,12 @@ const EVERY_BLOCK = {
     { type: "expEstimate", attrs: { blockId: "b-est", question: "How many?", min: 0, max: 100, step: 1, answer: 42, unit: "things", tolerancePct: 10, explanation: "Because" } },
     { type: "expSpotMistake", attrs: { blockId: "b-spot", title: "Spot", instructions: "", segments: [{ id: "s1", text: "Fine.", isMistake: false }, { id: "s2", text: "Wrong.", isMistake: true, correction: "Right.", explanation: "Why" }], kind: "code" } },
     { type: "expCodeLock", attrs: { blockId: "b-lock", title: "Lock", story: "Locked", clues: [{ id: "c1", question: "1+1?", answer: "2", hint: "Count" }], reward: "Open!" } },
+    { type: "expVenn",  attrs: {"blockId": "b-venn", "title": "Venn", "instructions": "Compare", "sets": {"a": {"label": "Cats", "color": "sky"}, "b": {"label": "Dogs", "color": "amber"}}, "items": [{"id": "i1", "text": "Purrs", "zone": "a"}, {"id": "i2", "text": "Fur", "zone": "both", "explanation": "Both"}, {"id": "i3", "text": "Barks", "zone": "b"}, {"id": "i4", "text": "Feathers", "zone": "neither"}], "showNeither": true}},
+    { type: "expLabel",  attrs: {"blockId": "b-label", "title": "Label", "instructions": "Name the parts", "imageUrl": "https://example.com/plant.png", "imageObject": null, "pins": [{"id": "p1", "x": 50, "y": 20, "label": "Flower"}, {"id": "p2", "x": 40, "y": 80, "label": "Roots"}], "distractors": ["Wing"]}},
+    { type: "expWordGuess",  attrs: {"blockId": "b-word", "title": "Words", "words": [{"id": "w1", "answer": "atom", "clue": "Smallest unit", "explanation": "Why"}, {"id": "w2", "answer": "red-shift", "clue": "Light stretched"}], "maxGuesses": 6}},
+    { type: "expConfidence",  attrs: {"blockId": "b-conf", "title": "Sure?", "questions": [{"id": "q1", "prompt": "2+2", "options": ["3", "4"], "answer": 1, "explanation": "Count"}]}},
+    { type: "expMatrix",  attrs: {"blockId": "b-matrix", "title": "Grid", "instructions": "Tick", "rows": [{"id": "r1", "label": "Bat"}, {"id": "r2", "label": "Hen"}], "columns": [{"id": "c1", "label": "Flies"}, {"id": "c2", "label": "Lays eggs"}], "cells": {"r1:c1": true, "r2:c2": true}, "mode": "multi"}},
+    { type: "expReflect",  attrs: {"blockId": "b-reflect", "title": "Reflect", "prompt": "What did you learn?", "guidingQuestions": ["Why?"], "minWords": 30, "modelAnswer": "A model answer.", "checklist": ["Point one", "Point two"]}},
     { type: "paragraph" },
   ],
 };
