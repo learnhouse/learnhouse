@@ -14402,7 +14402,9 @@
         "callouts": "Upozornenia",
         "dynamic": "Dynamický obsah",
         "ui": "Prvky UI",
-        "tables": "Tabuľky"
+        "tables": "Tabuľky",
+        "layout": "Rozloženie",
+        "data": "Dáta a médiá"
       },
       "no_results": "Nenašli sa žiadne výsledky"
     },

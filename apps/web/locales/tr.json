@@ -13924,7 +13924,9 @@
         "callouts": "Bildirim Kutuları",
         "dynamic": "Dinamik içerik",
         "ui": "Arayüz Öğeleri",
-        "tables": "Tablolar"
+        "tables": "Tablolar",
+        "layout": "Düzen",
+        "data": "Veri ve medya"
       },
       "no_results": "Sonuç bulunamadı"
     },

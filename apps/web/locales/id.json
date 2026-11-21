@@ -13890,7 +13890,9 @@
         "callouts": "Callout",
         "dynamic": "Konten dinamis",
         "ui": "Elemen UI",
-        "tables": "Tabel"
+        "tables": "Tabel",
+        "layout": "Tata letak",
+        "data": "Data & media"
       },
       "no_results": "Tidak ada hasil"
     },

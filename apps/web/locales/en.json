@@ -13909,7 +13909,9 @@
         "callouts": "Callouts",
         "dynamic": "Dynamic content",
         "ui": "UI Elements",
-        "tables": "Tables"
+        "tables": "Tables",
+        "layout": "Layout",
+        "data": "Data & media"
       },
       "no_results": "No results found"
     },

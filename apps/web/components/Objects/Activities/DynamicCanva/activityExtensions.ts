@@ -28,10 +28,7 @@ import FlipcardGrid from '@components/Objects/Editor/Extensions/Flipcard/Flipcar
 import Scenarios from '@components/Objects/Editor/Extensions/Scenarios/Scenarios'
 import { experienceExtensions } from '@components/Objects/Editor/Extensions/Experiences/extensions'
 import CodePlayground from '@components/Objects/Editor/Extensions/CodePlayground/CodePlayground'
-import { Table } from '@tiptap/extension-table'
-import TableHeader from '@tiptap/extension-table-header'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
+import { plusExtensions } from '@components/Objects/Editor/Extensions/Plus'
 import UserBlock from '@components/Objects/Editor/Extensions/Users/UserBlock'
 import { getLinkExtension } from '@components/Objects/Editor/EditorConf'
 import { CustomHeading } from './CustomHeadingExtenstion'
@@ -138,9 +135,7 @@ export function getActivityExtensions(props: ActivityExtensionOptions): Extensio
       editable: isEditable,
       activity: props.activity,
     }),
-    Table.configure({
-      resizable: true,
-    }),
+    ...plusExtensions({ mode: 'learner', activity: props.activity }),
     getLinkExtension(),
     WebPreview.configure({
       editable: true,
@@ -172,9 +167,6 @@ export function getActivityExtensions(props: ActivityExtensionOptions): Extensio
     ConditionalBlock,
     DynamicVariable,
     CommunityTag,
-    TableRow,
-    TableHeader,
-    TableCell,
     ToggleBlock,
     DividerStyle,
     ...TEXT_MARKS,

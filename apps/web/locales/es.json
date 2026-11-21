@@ -14148,7 +14148,9 @@
         "callouts": "Avisos",
         "dynamic": "Contenido dinámico",
         "ui": "Elementos de interfaz",
-        "tables": "Tablas"
+        "tables": "Tablas",
+        "layout": "Diseño",
+        "data": "Datos y medios"
       },
       "no_results": "No se encontraron resultados"
     },

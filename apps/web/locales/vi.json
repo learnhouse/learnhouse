@@ -13890,7 +13890,9 @@
         "callouts": "Hộp chú thích",
         "dynamic": "Nội dung động",
         "ui": "Thành phần giao diện",
-        "tables": "Bảng"
+        "tables": "Bảng",
+        "layout": "Bố cục",
+        "data": "Dữ liệu & phương tiện"
       },
       "no_results": "Không tìm thấy kết quả"
     },

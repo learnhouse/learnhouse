@@ -17,10 +17,7 @@ import PDFBlock from './Extensions/PDF/PDFBlock'
 import H5PBlock from './Extensions/H5P/H5PBlock'
 import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
-import { Table } from '@tiptap/extension-table'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TableRow from '@tiptap/extension-table-row'
+import { plusExtensions } from '@components/Objects/Editor/Extensions/Plus'
 import { getLinkExtension } from './EditorConf'
 import WebPreview from './Extensions/WebPreview/WebPreview'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
@@ -132,12 +129,7 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         editable: false,
         activity: activity,
       }),
-      Table.configure({
-        resizable: false,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
+      ...plusExtensions({ mode: 'preview', activity: activity }),
       ToggleBlock,
       DividerStyle,
       ...TEXT_MARKS,

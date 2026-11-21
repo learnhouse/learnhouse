@@ -13924,7 +13924,9 @@
         "callouts": "Hinweisboxen",
         "dynamic": "Dynamische Inhalte",
         "ui": "UI-Elemente",
-        "tables": "Tabellen"
+        "tables": "Tabellen",
+        "layout": "Layout",
+        "data": "Daten & Medien"
       },
       "no_results": "Keine Ergebnisse gefunden"
     },

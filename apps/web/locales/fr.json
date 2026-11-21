@@ -14148,7 +14148,9 @@
         "callouts": "Encadrés",
         "dynamic": "Contenu dynamique",
         "ui": "Éléments d'interface",
-        "tables": "Tableaux"
+        "tables": "Tableaux",
+        "layout": "Mise en page",
+        "data": "Données et médias"
       },
       "no_results": "Aucun résultat trouvé"
     },

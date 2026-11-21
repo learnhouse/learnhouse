@@ -14402,7 +14402,9 @@
         "callouts": "Wywołania",
         "dynamic": "Treść dynamiczna",
         "ui": "Elementy interfejsu",
-        "tables": "Tabele"
+        "tables": "Tabele",
+        "layout": "Układ",
+        "data": "Dane i multimedia"
       },
       "no_results": "Nie znaleziono wyników"
     },

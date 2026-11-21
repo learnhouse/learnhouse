@@ -13892,7 +13892,9 @@
         "callouts": "提示框",
         "dynamic": "动态内容",
         "ui": "界面元素",
-        "tables": "表格"
+        "tables": "表格",
+        "layout": "布局",
+        "data": "数据与媒体"
       },
       "no_results": "未找到结果"
     },

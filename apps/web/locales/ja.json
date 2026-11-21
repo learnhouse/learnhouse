@@ -13892,7 +13892,9 @@
         "callouts": "コールアウト",
         "dynamic": "動的コンテンツ",
         "ui": "UI要素",
-        "tables": "表"
+        "tables": "表",
+        "layout": "レイアウト",
+        "data": "データとメディア"
       },
       "no_results": "結果が見つかりません"
     },

@@ -13924,7 +13924,9 @@
         "callouts": "Infovakken",
         "dynamic": "Dynamische content",
         "ui": "UI-elementen",
-        "tables": "Tabellen"
+        "tables": "Tabellen",
+        "layout": "Indeling",
+        "data": "Data & media"
       },
       "no_results": "Geen resultaten gevonden"
     },

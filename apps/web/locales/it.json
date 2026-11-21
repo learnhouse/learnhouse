@@ -14148,7 +14148,9 @@
         "callouts": "Riquadri",
         "dynamic": "Contenuto dinamico",
         "ui": "Elementi UI",
-        "tables": "Tabelle"
+        "tables": "Tabelle",
+        "layout": "Layout",
+        "data": "Dati e media"
       },
       "no_results": "Nessun risultato trovato"
     },
