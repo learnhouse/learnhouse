@@ -86,7 +86,7 @@ export default function LicenseBanner() {
             className={`flex items-center gap-2.5 border-b px-4 py-2 text-[13px] leading-snug sm:px-10 ${tone.bar}`}
           >
             {tone.icon}
-            <span className="min-w-0 flex-1">{licenseBannerText(item, t, locale)}</span>
+            <span className="min-w-0 flex-1">{licenseBannerText(item, (key, options) => String(t(key, options as never)), locale)}</span>
             {item.dismissible && (
               <button
                 type="button"
