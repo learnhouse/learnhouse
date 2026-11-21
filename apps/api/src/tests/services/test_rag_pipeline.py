@@ -26,6 +26,13 @@ async def _fake_embeddings(texts):
     return [[0.1] * 768 for _ in texts]
 
 
+
+@pytest.fixture(autouse=True)
+def _embeddings_configured():
+    """These tests stub the embedding calls; pretend a provider is configured."""
+    with patch("src.services.ai.llm.embeddings.embeddings_configured", return_value=True):
+        yield
+
 @pytest.fixture
 def embed():
     with patch.object(pipeline, "generate_embeddings", new=AsyncMock(side_effect=_fake_embeddings)) as mock:

@@ -180,6 +180,29 @@ class TestStorageClientHelpers:
         assert "config" in call_kwargs
 
 
+    @pytest.mark.parametrize(
+        "env, expected",
+        [
+            ({}, "auto"),
+            ({"AWS_DEFAULT_REGION": "eu-west-1"}, "eu-west-1"),
+            ({"AWS_REGION": "us-west-2", "AWS_DEFAULT_REGION": "eu-west-1"}, "us-west-2"),
+            ({"LEARNHOUSE_S3_API_REGION": "eu-central-1", "AWS_REGION": "us-west-2"}, "eu-central-1"),
+        ],
+    )
+    def test_s3_client_region(self, monkeypatch, env, expected):
+        for key in ("LEARNHOUSE_S3_API_REGION", "AWS_REGION", "AWS_DEFAULT_REGION"):
+            monkeypatch.delenv(key, raising=False)
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        monkeypatch.setattr(storage_utils, "_s3_client", None)
+        fake_config = _make_config(content_delivery="s3api", endpoint_url="https://s3.test")
+        with patch.object(storage_utils, "get_content_delivery_type", return_value="s3api"), patch.object(
+            storage_utils, "get_learnhouse_config", return_value=fake_config
+        ), patch.object(storage_utils.boto3, "client", return_value=Mock()) as boto_client:
+            storage_utils.get_storage_client()
+        assert boto_client.call_args.kwargs["region_name"] == expected
+        monkeypatch.setattr(storage_utils, "_s3_client", None)
+
 class TestWriteFileContent:
     def test_writes_under_the_content_root_and_reads_back(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)

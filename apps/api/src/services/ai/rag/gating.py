@@ -38,6 +38,12 @@ async def orgs_using_ai(org_ids: Iterable[int], db: AsyncSession) -> set[int]:
     org_ids = set(org_ids)
     if not org_ids:
         return set()
+    # No embeddings provider configured (e.g. a self-host without an AI key):
+    # indexing could only fail, so nothing is worth indexing.
+    from src.services.ai.llm.embeddings import embeddings_configured
+
+    if not embeddings_configured():
+        return set()
     configs = dict((await db.execute(
         select(OrganizationConfig.org_id, OrganizationConfig.config).where(
             OrganizationConfig.org_id.in_(org_ids)  # type: ignore[union-attr]
