@@ -820,7 +820,11 @@
     "set_new_password": "새 비밀번호 설정",
     "invited_by_email_cta": "이메일로 초대받으셨나요? 그 주소로 가입하세요",
     "use_invite_code_instead": "초대 코드가 있으신가요?",
-    "password_reset_done": "비밀번호가 변경되었습니다."
+    "password_reset_done": "비밀번호가 변경되었습니다.",
+    "login_failed_forgot": "비밀번호를 잊으셨나요?",
+    "login_failed_reset": "재설정하기",
+    "login_failed_magic": "대신 로그인 링크를 이메일로 받기",
+    "login_failed_google_hint": "Google로 가입하셨나요? 아래의 Google로 계속하기를 사용하세요."
   },
   "validation": {
     "required": "필수 항목입니다",
@@ -1320,7 +1324,11 @@
       "maintainer": "유지관리자",
       "contributor": "기여자",
       "reporter": "리포터"
-    }
+    },
+    "co_created_by": "공동 제작:",
+    "created_on": "생성일:",
+    "last_updated": "최근 업데이트:",
+    "and_x_more": "외 {{count}}건"
   },
   "communities": {
     "title": "커뮤니티",
@@ -4274,6 +4282,91 @@
         "completed_note": "완료했어요. 한 번 더 읽어 보고 빠뜨린 내용을 기억해 두세요.",
         "write_again": "답 고치기"
       }
+    },
+    "table": {
+      "total": "합계",
+      "average": "평균",
+      "sort_by": "정렬 기준",
+      "original_order": "원래 순서",
+      "ascending": "오름차순",
+      "descending": "내림차순",
+      "sort_direction": "정렬 방향",
+      "sorted": "{{column}} 기준 정렬, {{direction}}",
+      "column_n": "열 {{n}}"
+    },
+    "tabs": {
+      "tab": "탭",
+      "untitled": "탭 {{n}}",
+      "list_label": "탭"
+    },
+    "accordion": {
+      "expand_all": "모두 펼치기",
+      "collapse_all": "모두 접기"
+    },
+    "table_of_contents": {
+      "title": "목차"
+    },
+    "checklist": {
+      "progress_label": "{{total}}개 중 {{done}}개 완료",
+      "reset": "체크리스트 초기화",
+      "item": "체크리스트 항목",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "타임라인"
+    },
+    "key_takeaways": {
+      "title": "핵심 정리"
+    },
+    "chart": {
+      "category": "범주",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}}: {{categories}}개 범주에 걸친 {{series}}개 계열({{names}}), {{min}}에서 {{max}}까지.",
+      "title": "차트",
+      "types": {
+        "bar": "가로 막대형 차트",
+        "column": "세로 막대형 차트",
+        "line": "꺾은선형 차트",
+        "area": "영역형 차트",
+        "pie": "원형 차트",
+        "donut": "도넛형 차트"
+      }
+    },
+    "file_card": {
+      "download": "다운로드",
+      "download_named": "{{name}} 다운로드",
+      "file": "파일",
+      "types": {
+        "pdf": "PDF",
+        "doc": "문서",
+        "sheet": "스프레드시트",
+        "slides": "슬라이드",
+        "archive": "압축 파일",
+        "image": "이미지",
+        "audio": "오디오",
+        "video": "동영상",
+        "text": "텍스트",
+        "code": "코드",
+        "file": "파일"
+      }
+    },
+    "gallery": {
+      "carousel": "캐러셀",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "이미지 {{n}} 보기",
+      "label": "이미지 갤러리",
+      "next": "다음 이미지",
+      "open_image": "이미지 {{n}}/{{count}} 열기",
+      "previous": "이전 이미지",
+      "slide": "슬라이드",
+      "viewer_title": "이미지 {{n}}/{{count}}"
+    },
+    "image_compare": {
+      "after": "후",
+      "before": "전",
+      "slider": "이미지 비교",
+      "value": "{{before}} {{b}}%, {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13422,7 +13515,11 @@
         "type_warning": "경고",
         "type_tip": "팁",
         "type_success": "성공",
-        "type_error": "오류"
+        "type_error": "오류",
+        "type_note": "노트",
+        "type_question": "질문",
+        "type_example": "예시",
+        "type_quote": "인용"
       }
     },
     "dynamic": {
@@ -13722,7 +13819,8 @@
       "create_first": "첫 시나리오 만들기",
       "modal_preview_title": "시나리오 미리보기",
       "modal_preview_desc": "인터랙티브 시나리오를 테스트해 보세요",
-      "modal_edit_desc": "인터랙티브 시나리오를 만들고 관리하세요"
+      "modal_edit_desc": "인터랙티브 시나리오를 만들고 관리하세요",
+      "max_scenarios": "시나리오는 최대 40개까지 허용됩니다"
     },
     "slash_menu": {
       "items": {
@@ -13881,6 +13979,70 @@
         "table": {
           "title": "표",
           "description": "3x3 표 삽입"
+        },
+        "tabs": {
+          "description": "콘텐츠 패널 간 전환",
+          "title": "탭"
+        },
+        "columns": {
+          "description": "콘텐츠를 나란히 배치",
+          "title": "열"
+        },
+        "accordion": {
+          "description": "접을 수 있는 섹션, 한 번에 하나만 열림",
+          "title": "아코디언"
+        },
+        "timeline": {
+          "description": "순서대로 정리한 단계나 사건",
+          "title": "타임라인"
+        },
+        "table_of_contents": {
+          "description": "이 페이지 제목으로 가는 링크",
+          "title": "목차"
+        },
+        "key_takeaways": {
+          "description": "핵심 내용을 요약한 카드",
+          "title": "핵심 정리"
+        },
+        "checklist": {
+          "description": "학습자가 체크할 수 있는 항목",
+          "title": "체크리스트"
+        },
+        "gallery": {
+          "title": "갤러리",
+          "description": "그리드나 캐러셀로 여러 이미지 표시"
+        },
+        "image_compare": {
+          "title": "이미지 비교",
+          "description": "슬라이더로 전후 비교"
+        },
+        "file_card": {
+          "title": "파일 다운로드",
+          "description": "학습자가 내려받을 수 있는 파일"
+        },
+        "quote_block": {
+          "title": "추천사",
+          "description": "작성자와 함께 보여 주는 강조 인용문이나 추천사"
+        },
+        "quote": {
+          "title": "인용",
+          "description": "간단한 인용 구절"
+        },
+        "chart": {
+          "title": "차트",
+          "description": "작은 표로 막대, 꺾은선, 원형 차트 만들기"
+        },
+        "stat_highlights": {
+          "title": "통계",
+          "description": "숫자가 올라가는 큰 수치"
+        },
+        "button_group": {
+          "title": "버튼 그룹",
+          "description": "여러 버튼을 나란히"
+        },
+        "inline_math": {
+          "title": "인라인 수식",
+          "description": "문장 안의 수식 ($x^2$ 입력으로도 가능)"
         }
       },
       "categories": {
@@ -14237,7 +14399,14 @@
       "button": {
         "emoji": "이모지",
         "link_hint": "학습자가 버튼을 클릭하면 새 탭에서 열립니다.",
-        "no_link": "아직 링크가 없습니다. 링크 버튼으로 설정하세요."
+        "no_link": "아직 링크가 없습니다. 링크 버튼으로 설정하세요.",
+        "style": "스타일",
+        "variant": "모양",
+        "size": "크기",
+        "variant_solid": "채움",
+        "variant_outline": "외곽선",
+        "variant_soft": "부드럽게",
+        "variant_link": "링크"
       },
       "quiz": {
         "settings": "퀴즈 설정",
@@ -14295,7 +14464,39 @@
         "clear": "지우기",
         "check": "정답 확인",
         "try_again": "다시 시도",
-        "start_over": "처음부터"
+        "start_over": "처음부터",
+        "question_type": "질문 유형",
+        "type_multiple_choice": "객관식",
+        "type_true_false": "참 / 거짓",
+        "type_short_answer": "단답형",
+        "type_numeric": "숫자",
+        "true": "참",
+        "false": "거짓",
+        "accepted_answers": "인정되는 답",
+        "accepted_answer_n": "인정되는 답 {{n}}",
+        "accepted_answer_placeholder": "정답으로 인정할 답",
+        "add_accepted": "인정되는 답 추가",
+        "remove_accepted": "인정되는 답 {{n}} 삭제",
+        "ignore_accents": "악센트 무시 (é = e)",
+        "short_answer_hint": "대소문자와 불필요한 공백은 무시됩니다.",
+        "numeric_value": "정답",
+        "numeric_tolerance": "허용 오차",
+        "show_explanations": "해설 표시",
+        "show_explanations_hint": "학습자가 제출하면 각 질문 아래에 해설이 표시됩니다.",
+        "pass_mark": "합격 기준",
+        "pass_mark_off": "끔",
+        "pass_mark_n": "{{n}}% 이상 합격",
+        "pass_mark_off_hint": "학습자는 모든 답이 맞았는지 확인합니다.",
+        "pass_mark_hint": "{{n}}% 이상이면 합격이며 학습자는 점수를 볼 수 있습니다.",
+        "pass_mark_needed": "합격 기준: {{n}}%",
+        "passed": "합격",
+        "not_passed": "아직 불합격",
+        "score_percent": "{{percent}}%",
+        "your_answer": "내 답",
+        "your_number": "내 답 (숫자)",
+        "answer_placeholder": "답을 입력하세요",
+        "number_placeholder": "숫자를 입력하세요",
+        "expected_answer": "정답: {{answer}}"
       },
       "flipcard": {
         "front": "앞면",
@@ -14394,7 +14595,8 @@
         "view": "보기",
         "view_map": "지도",
         "view_steps": "단계",
-        "your_path": "나의 경로"
+        "your_path": "나의 경로",
+        "limits": "최대 {{max}}단계, 단계당 선택지 {{choices}}개까지."
       },
       "conditional": {
         "add_rule": "규칙 추가",
@@ -14541,6 +14743,423 @@
         "reset_text": "초기화",
         "text": "제목 및 설명",
         "title": "제목"
+      },
+      "table": {
+        "rows_cols": "행과 열",
+        "duplicate_row": "행 복제",
+        "distribute": "열 너비 균등하게",
+        "merge_split": "셀 병합 또는 분할",
+        "headers": "머리글",
+        "header_column": "머리글 열",
+        "cell_style": "셀 스타일",
+        "apply_to": "적용 대상",
+        "scope_selection": "선택한 셀",
+        "scope_column": "열 전체",
+        "background": "배경",
+        "align": "정렬",
+        "align_start": "시작",
+        "align_center": "가운데",
+        "align_end": "끝",
+        "valign": "세로 정렬",
+        "valign_top": "위",
+        "valign_middle": "가운데",
+        "valign_bottom": "아래",
+        "cell_type": "셀 유형",
+        "type_hint": "값은 셀 텍스트에 그대로 남습니다(예: 75, 4/5, 예).",
+        "type": {
+          "text": "텍스트",
+          "progress": "진행률",
+          "checkbox": "체크박스",
+          "rating": "평점",
+          "status": "상태",
+          "number": "숫자",
+          "date": "날짜"
+        },
+        "tone": "색상",
+        "tone_auto": "자동",
+        "number_format": "숫자 형식",
+        "format": {
+          "plain": "기본",
+          "percent": "백분율",
+          "currency": "통화",
+          "compact": "축약"
+        },
+        "currency": "통화 코드",
+        "settings": "표 설정",
+        "variant": "스타일",
+        "variants": {
+          "default": "기본",
+          "striped": "줄무늬",
+          "bordered": "테두리",
+          "minimal": "미니멀",
+          "cards": "카드"
+        },
+        "cards_hint": "휴대폰에서는 행이 카드로 바뀝니다.",
+        "caption": "캡션",
+        "caption_placeholder": "표 설명 입력",
+        "sortable": "학습자가 정렬 가능",
+        "sticky_header": "머리글 고정",
+        "compact": "촘촘한 행",
+        "totals": "합계 행",
+        "totals_hint": "숫자 및 진행률 열에 적용됩니다.",
+        "totals_none": "없음",
+        "totals_sum": "합계",
+        "totals_average": "평균",
+        "toggle_checkbox": "체크박스 전환",
+        "templates": {
+          "progress": {
+            "title": "진행 상황 추적",
+            "description": "담당자, 상태, 진행률 막대가 있는 작업"
+          },
+          "comparison": {
+            "title": "비교",
+            "description": "체크 표시로 옵션을 나란히 비교"
+          },
+          "rubric": {
+            "title": "평가 기준표",
+            "description": "수준과 점수가 있는 채점 기준"
+          }
+        },
+        "sample": {
+          "task": "작업",
+          "owner": "담당자",
+          "status": "상태",
+          "progress": "진행률",
+          "task_1": "수업 계획하기",
+          "task_2": "동영상 녹화하기",
+          "task_3": "퀴즈 작성하기",
+          "status_done": "완료",
+          "status_in_progress": "진행 중",
+          "status_todo": "시작 전",
+          "feature": "기능",
+          "option_a": "베이직",
+          "option_b": "프로",
+          "feature_1": "동영상 강의",
+          "feature_2": "퀴즈",
+          "feature_3": "수료증",
+          "criterion": "기준",
+          "look_for": "평가 요소",
+          "level": "수준",
+          "points": "점수",
+          "crit_1": "명확성",
+          "crit_2": "정확성",
+          "crit_3": "구성",
+          "desc_1": "생각을 따라가기 쉽다",
+          "desc_2": "사실과 단계가 정확하다",
+          "desc_3": "논리적인 순서의 명확한 구성"
+        }
+      },
+      "layout": {
+        "settings": "설정",
+        "style": "스타일",
+        "color": "색상",
+        "icon": "아이콘",
+        "icon_default": "기본값",
+        "size_sm": "작게",
+        "size_md": "보통",
+        "size_lg": "크게",
+        "tone_neutral": "중립",
+        "tone_blue": "파랑",
+        "tone_teal": "청록",
+        "tone_green": "초록",
+        "tone_amber": "호박색",
+        "tone_rose": "장미색",
+        "icons": {
+          "lightbulb": "전구",
+          "star": "별",
+          "check": "체크 표시",
+          "target": "과녁",
+          "flag": "깃발",
+          "book": "책",
+          "rocket": "로켓",
+          "key": "열쇠"
+        }
+      },
+      "tabs": {
+        "label": "탭",
+        "add": "탭 추가",
+        "remove": "이 탭 삭제",
+        "move_earlier": "탭을 앞으로 이동",
+        "move_later": "탭을 뒤로 이동",
+        "title_placeholder": "탭 제목",
+        "variant_line": "선",
+        "variant_pills": "알약",
+        "variant_boxed": "상자",
+        "sample": {
+          "tab_1": "개요",
+          "tab_2": "세부 내용",
+          "tab_3": "예시",
+          "text_1": "큰 그림부터 시작하세요.",
+          "text_2": "어떻게 작동하는지 자세히 살펴보세요.",
+          "text_3": "실제로 어떻게 쓰이는지 보여 주세요."
+        }
+      },
+      "columns": {
+        "label": "열",
+        "layout": "레이아웃",
+        "layout_halves": "같은 너비의 두 열",
+        "layout_narrow_wide": "좁은 열, 넓은 열",
+        "layout_wide_narrow": "넓은 열, 좁은 열",
+        "layout_thirds": "세 열",
+        "layout_quarters": "네 열",
+        "gap": "간격",
+        "align": "세로 정렬",
+        "align_top": "위",
+        "align_center": "가운데",
+        "align_bottom": "아래",
+        "stack": "작은 화면에서는 세로로 쌓기",
+        "sample": {
+          "left": "첫 번째 열",
+          "right": "두 번째 열"
+        }
+      },
+      "accordion": {
+        "label": "아코디언",
+        "add": "섹션 추가",
+        "single": "한 번에 한 섹션만 열기",
+        "variant_bordered": "테두리",
+        "variant_filled": "채우기",
+        "sample": {
+          "item_1": "무엇을 배우나요?",
+          "text_1": "이 레슨의 학습 결과를 설명하세요.",
+          "item_2": "얼마나 걸리나요?",
+          "text_2": "학습자가 계획을 세울 수 있도록 예상 시간을 알려 주세요.",
+          "item_3": "무엇이 필요한가요?",
+          "text_3": "시작하기 전에 준비할 것을 나열하세요."
+        },
+        "variant_default": "기본값"
+      },
+      "timeline": {
+        "label": "타임라인",
+        "add": "단계 추가",
+        "remove": "단계 삭제",
+        "step": "단계",
+        "title_placeholder": "단계 제목",
+        "label_placeholder": "날짜 또는 라벨(선택 사항)",
+        "numbered": "단계에 번호 매기기",
+        "orientation": "방향",
+        "vertical": "세로",
+        "horizontal": "가로",
+        "icon_number": "번호",
+        "variant_steps": "단계",
+        "variant_process": "프로세스",
+        "sample": {
+          "step_1": "준비하기",
+          "text_1": "필요한 것을 모으세요.",
+          "step_2": "연습하기",
+          "text_2": "작은 예제로 해 보세요.",
+          "step_3": "적용하기",
+          "text_3": "실제 작업에 사용해 보세요."
+        },
+        "variant_timeline": "타임라인"
+      },
+      "table_of_contents": {
+        "label": "목차",
+        "depth": "포함할 제목",
+        "numbered": "항목에 번호 매기기",
+        "title_label": "제목",
+        "empty": "레슨에 제목을 추가하면 여기에 표시됩니다."
+      },
+      "key_takeaways": {
+        "label": "핵심 정리",
+        "title_label": "카드 제목",
+        "sample": {
+          "point_1": "한 문장으로 정리한 핵심",
+          "point_2": "기억해 둘 만한 내용",
+          "point_3": "다음에 할 일"
+        }
+      },
+      "checklist": {
+        "label": "체크리스트",
+        "learner_can_check": "학습자가 항목을 체크할 수 있음",
+        "hint": "체크 상태는 학습자마다 브라우저에 저장됩니다. 여기서 체크한 항목은 처음부터 체크된 상태로 시작합니다.",
+        "sample": {
+          "item_1": "레슨 읽기",
+          "item_2": "연습 문제 풀기",
+          "item_3": "답 확인하기"
+        }
+      },
+      "chart": {
+        "add_row": "행 추가",
+        "add_series": "계열 추가",
+        "apply_csv": "이 데이터 사용",
+        "csv_error": "표를 읽을 수 없습니다. 첫 번째 열에는 레이블을, 나머지 열에는 숫자를 넣으세요.",
+        "csv_label": "CSV 형식 표",
+        "csv_placeholder": "스프레드시트에서 붙여넣거나 입력하세요: 레이블, 계열 1, 계열 2",
+        "edit_data": "데이터 편집",
+        "empty": "차트를 그리려면 데이터를 추가하세요.",
+        "label": "차트",
+        "label_n": "레이블 {{n}}",
+        "labels": "레이블",
+        "paste_csv": "CSV 붙여넣기",
+        "pie_hint": "원형 및 도넛형 차트는 첫 번째 계열을 표시합니다.",
+        "remove_row": "행 삭제",
+        "remove_series": "계열 삭제",
+        "row_n": "항목 {{n}}",
+        "sample": {
+          "q1": "1분기",
+          "q2": "2분기",
+          "q3": "3분기",
+          "q4": "4분기",
+          "series_1": "A반",
+          "series_2": "B반",
+          "title": "분기별 퀴즈 평균 점수"
+        },
+        "series_color": "{{name}} 색상 변경",
+        "series_n": "계열 {{n}}",
+        "series_name": "계열 이름",
+        "settings": "차트 설정",
+        "show_legend": "범례 표시",
+        "show_values": "값 표시",
+        "stacked": "계열 누적",
+        "title_label": "제목",
+        "title_placeholder": "차트 제목",
+        "type": "차트 종류"
+      },
+      "file_card": {
+        "add_link": "링크 추가",
+        "description": "설명",
+        "description_placeholder": "이 파일에는 무엇이 있나요? (선택)",
+        "empty_hint": "PDF, 이미지, 오디오, 동영상 파일을 업로드하거나 아무 파일의 링크를 추가하세요.",
+        "empty_title": "다운로드할 파일 추가",
+        "label": "파일",
+        "link_hint": "업로드한 파일이 있으면 대체합니다.",
+        "link_label": "파일 링크",
+        "link_settings": "파일 링크",
+        "name": "파일 이름",
+        "type_error": "이 형식의 파일은 업로드할 수 없습니다. PDF, 이미지, 오디오, 동영상을 업로드하거나 파일 링크를 추가하세요.",
+        "upload": "파일 업로드"
+      },
+      "gallery": {
+        "add_images": "이미지 추가",
+        "add_link": "이미지 추가",
+        "alt_hint": "화면 낭독기를 쓰는 학습자를 위해 이미지에 무엇이 있는지 적어 주세요.",
+        "alt_missing": "대체 텍스트 없음: {{n}}",
+        "alt_placeholder": "대체 텍스트(필수)",
+        "columns": "열",
+        "count": "이미지: {{n}}",
+        "empty_hint": "여러 이미지를 한 번에 끌어다 놓거나 기기에서 선택하세요. {{formats}} · 각 {{max}}까지.",
+        "empty_title": "갤러리에 이미지 추가",
+        "full": "갤러리에는 최대 {{max}}개의 이미지를 넣을 수 있습니다.",
+        "label": "갤러리",
+        "layout": "레이아웃",
+        "layout_carousel": "캐러셀",
+        "layout_grid": "그리드",
+        "layout_masonry": "벽돌형",
+        "move_earlier": "앞으로 이동",
+        "move_later": "뒤로 이동",
+        "remove": "이미지 삭제",
+        "settings": "갤러리 설정"
+      },
+      "image_compare": {
+        "after_image": "이후 이미지",
+        "before_image": "이전 이미지",
+        "empty_hint": "같은 크기의 이전 이미지와 이후 이미지를 고르세요. 학습자가 구분선을 끌어 비교합니다.",
+        "empty_title": "이미지 추가",
+        "horizontal": "좌우",
+        "label": "이미지 비교",
+        "orientation": "방향",
+        "replace_after": "이후 이미지 바꾸기",
+        "replace_before": "이전 이미지 바꾸기",
+        "settings": "비교 설정",
+        "side_label": "레이블",
+        "start": "구분선 시작 위치",
+        "vertical": "위아래"
+      },
+      "quote_block": {
+        "author": "작성자",
+        "author_placeholder": "이름",
+        "avatar": "사진 링크",
+        "avatar_hint": "추천사에서 이름 옆에 표시됩니다. 비워 두면 이니셜이 표시됩니다.",
+        "label": "인용",
+        "role": "직함",
+        "role_placeholder": "직함 또는 회사",
+        "sample": {
+          "author": "김서연",
+          "role": "프로덕트 디자이너",
+          "text": "실습 덕분에 확실히 이해했어요. 배운 내용을 바로 다음 날 업무에 활용했습니다."
+        },
+        "settings": "인용 설정",
+        "style": "스타일",
+        "variant_highlight": "강조",
+        "variant_pull": "강조 인용문",
+        "variant_testimonial": "추천사"
+      },
+      "stat_highlights": {
+        "add": "통계 추가",
+        "animate": "표시될 때 숫자 올리기",
+        "color": "색상",
+        "columns": "열",
+        "description": "설명",
+        "description_placeholder": "짧은 설명(선택)",
+        "empty": "통계를 추가해 시작하세요.",
+        "label": "통계",
+        "label_field": "레이블",
+        "prefix": "숫자 앞",
+        "remove": "통계 삭제",
+        "sample": {
+          "desc_1": "의 학습자가 과정을 수료",
+          "desc_2": "리뷰 1,200개 기준",
+          "desc_3": "40개국에서",
+          "label_1": "수료율",
+          "label_2": "평균 평점",
+          "label_3": "학습자"
+        },
+        "settings": "통계 설정",
+        "suffix": "숫자 뒤",
+        "value": "숫자"
+      },
+      "callout_title": "제목",
+      "callout_title_placeholder": "제목 (선택)",
+      "callout_collapsible": "학습자가 접을 수 있음",
+      "callout_default_open": "처음에 펼침",
+      "callout_tone": "색상",
+      "callout_tone_default": "유형 기본 색상",
+      "code_copied": "코드를 클립보드에 복사했습니다",
+      "code_copy_failed": "복사하지 못했습니다. 코드를 선택해 직접 복사하세요.",
+      "code_highlight": "강조할 줄 (예: 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "줄 번호",
+      "code_wrap": "긴 줄 줄바꿈",
+      "align": {
+        "label": "텍스트 정렬",
+        "start": "시작 정렬",
+        "center": "가운데 정렬",
+        "end": "끝 정렬",
+        "justify": "양쪽 정렬"
+      },
+      "button_group": {
+        "label": "버튼 그룹",
+        "add_button": "버튼 추가",
+        "new_button": "버튼",
+        "primary": "시작하기",
+        "secondary": "자세히 보기"
+      },
+      "image_frame": {
+        "label": "프레임",
+        "none": "없음",
+        "rounded": "둥글게",
+        "shadow": "그림자",
+        "border": "테두리",
+        "polaroid": "폴라로이드"
+      },
+      "inline_math": {
+        "title": "인라인 수식",
+        "edit": "수식 {{latex}} 편집",
+        "latex": "LaTeX",
+        "hint": "예: \\frac{a}{b} 또는 x^2. 본문에 $…$를 입력해도 만들 수 있습니다.",
+        "make": "수식",
+        "remove": "삭제"
+      },
+      "toggle": {
+        "style": "토글 스타일",
+        "variant": "모양",
+        "variant_default": "기본",
+        "variant_bordered": "테두리",
+        "variant_filled": "채움",
+        "icon": "아이콘",
+        "icon_chevron": "화살표",
+        "icon_plus": "더하기와 빼기"
       }
     },
     "history": {

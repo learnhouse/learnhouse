@@ -13,7 +13,8 @@ since the editor stores pictures as uploaded files; with media=True, an image
 alone on a top-level line and ```image / ```video / ```audio / ```pdf fences
 are listed in Converted.media so the caller can fetch and store them (see
 content_assets.attach_media), each standing in as a link until then.
-Inline $math$ stays text: the editor has no inline math. Fenced blocks named
+Inline $math$ stays text, as it always has (an inline formula, inlineMath,
+is written as a raw node). Fenced blocks named
 quiz, flipcards, embed, button or badge become those rich blocks (see
 fences.py); a fence that cannot be read fails the call with the line number.
 
@@ -23,9 +24,12 @@ MAX_QUOTE_DEPTH (deeper markers are kept as text).
 
 Markdown out (`doc_to_markdown`): prose blocks render as Markdown, quizzes,
 flipcards, embeds, buttons and badges as their fences; blocks Markdown cannot
-express (media, scenarios, code exercises, ...) render as an HTML comment that
-names the block's path and type, with a readable summary. Writing that
-Markdown back with mode=replace keeps those blocks as they are.
+express (media, scenarios, code exercises, tabs, columns, charts, tables with
+typed cells, callouts with a title, text holding an inline formula, ...)
+render as an HTML comment that names
+the block's path and type, with a readable summary. Writing that Markdown back
+with mode=replace keeps those blocks as they are. Code block options travel in
+the fence's info string: ```python {lines wrap highlight=2,4-6}.
 """
 
 from __future__ import annotations
@@ -82,6 +86,31 @@ _QUOTE = re.compile(r"^ {0,3}>[ \t]?(.*)$")
 _ALERT = re.compile(r"^\[!([A-Za-z]{2,12})\][ \t]*(.*)$")
 _KEEP = re.compile(r"^<!--\s*block\s+\[([\d,\s]{1,200})\]\s+([A-Za-z]{1,40})")
 _TABLE_CELL = re.compile(r"^:?-+:?$")
+
+
+_FENCE_OPTIONS = re.compile(r"\{([^{}]{0,300})\}\s*$")
+
+
+def code_options(info: str) -> dict:
+    """Code block options from a fence's info string: {lines wrap highlight=2,4-6}."""
+    found = _FENCE_OPTIONS.search(info or "")
+    out: dict[str, Any] = {}
+    for word in (found.group(1).split() if found else []):
+        key, _sep, value = word.partition("=")
+        if key == "lines":
+            out["showLineNumbers"] = True
+        elif key == "wrap":
+            out["wrap"] = True
+        elif key == "highlight" and d._highlight_lines(value) is None and value:
+            out["highlightLines"] = value
+    return out
+
+
+def _code_info(attrs: dict) -> str:
+    words = (["lines"] if attrs.get("showLineNumbers") is True else []) + (["wrap"] if attrs.get("wrap") is True else [])
+    if isinstance(attrs.get("highlightLines"), str) and attrs["highlightLines"].strip():
+        words.append("highlight=" + attrs["highlightLines"].replace(" ", ""))
+    return " {" + " ".join(words) + "}" if words else ""
 
 
 def _fence_open(line: str) -> tuple[str, str | None] | None:
@@ -170,6 +199,7 @@ def inline(text: str) -> list[dict]:
 
 
 # ─── inline ──────────────────────────────────────────────────────────────────
+
 
 
 def _is_space(c: str) -> bool:
@@ -780,7 +810,7 @@ class _Parser:
                     detail=f"In the ```{language} block starting at line {start + 1}: {e}.",
                 )
             return i
-        node: dict[str, Any] = {"type": "codeBlock", "attrs": {"language": language}}
+        node: dict[str, Any] = {"type": "codeBlock", "attrs": {"language": language, **code_options(lines[start])}}
         if body:
             node["content"] = [d.text_node(body)]
         out.append(node)
@@ -1021,6 +1051,13 @@ def inline_markdown(nodes: list, *, breaks: str = "\\\n") -> str:
             pending = ""
             i += 1
             continue
+        if t == "inlineMath":
+            while active:
+                out.append(_DELIM[active.pop()])
+            out.append(pending + "$" + str((node.get("attrs") or {}).get("latex") or "") + "$")
+            pending = ""
+            i += 1
+            continue
         if t != "text":
             i += 1
             continue
@@ -1136,6 +1173,8 @@ def block_comment(node: dict, path: list[int]) -> list[str]:
         body.append("Member profile card.")
     elif t == "blockLibrary":
         body.append(f"Library item: {a.get('resourceType') or ''} {a.get('resourceUuid') or ''}".strip())
+    elif t in _PLUS_LABELS or t in d.PLUS_ATOMS:
+        body.extend(plus_comment(node))
     else:
         text = d.block_text(node)
         if text:
@@ -1265,6 +1304,75 @@ def experience_lines(t: str, a: dict) -> list[str]:  # noqa: C901 - one branch p
         points = [x for x in a.get("checklist") or [] if exp.text(x)] if isinstance(a.get("checklist"), list) else []
         lines += [f"[key point] {_clip(x, 300)}" for x in points]
     return lines
+_PLUS_LABELS = {
+    "toggleBlock": "Toggle", "tabs": "Tabs", "columns": "Columns", "accordion": "Accordion",
+    "timeline": "Timeline", "keyTakeaways": "Key takeaways", "taskList": "Checklist", "quoteBlock": "Quote",
+    "buttonGroup": "Buttons", "table": "Table", "callout": "Callout",
+}
+
+
+def _text_lines(node: dict, limit: int = 300) -> list[str]:
+    return [d.clip(line, limit)[0] for line in d.block_text(node).split("\n") if line.strip()]
+
+
+def plus_comment(node: dict) -> list[str]:
+    """Readable summary of a layout or data block (inside its block comment)."""
+    t = d.kind(node)
+    a = node.get("attrs") or {}
+    kids = d.children(node)
+    if t in d.PLUS_ATOMS:
+        label = {"tableOfContents": "Table of contents", "gallery": "Gallery", "imageCompare": "Image comparison",
+                 "chart": f"Chart ({a.get('type') or 'column'})", "statHighlights": "Stats", "fileCard": "File"}[t]
+        lines = d.plus_atom_lines(node)
+        if t == "fileCard" and a.get("url"):
+            lines.append(str(a["url"]))
+        return [f"{label}:"] + [f"- {x}" for x in lines[:40]]
+    head = _PLUS_LABELS[t]
+    if t == "toggleBlock":
+        return [f"{head}: {a.get('summary') or ''}".rstrip()] + _text_lines({"type": "doc", "content": kids})[:40]
+    if t == "callout":
+        look = a.get("kind") or a.get("type") or "info"
+        title = f" \"{a.get('title')}\"" if a.get("title") else ""
+        return [f"{head} ({look}){title}:"] + _text_lines({"type": "doc", "content": kids})[:40]
+    if t == "table":
+        return [f"{head}:"] + _text_lines(node)[:40]
+    if t in ("tabs", "accordion", "timeline", "columns"):
+        out = [f"{head}, {len(kids)} {'sections' if t != 'columns' else 'columns'}:"]
+        for k, item in enumerate(kids[:20], 1):
+            ia = item.get("attrs") or {}
+            title = ia.get("summary") if t == "accordion" else d.container_title(item)
+            out.append(f"{k}. {title or ''}".rstrip())
+            out.extend("   " + line for line in _text_lines({"type": "doc", "content": d.children(item)}, 200)[:10])
+        return out
+    if t == "taskList":
+        return [f"{head}:"] + [f"- [{'x' if (i.get('attrs') or {}).get('checked') else ' '}] {d.clip(d.block_text(i), 200)[0]}" for i in kids[:60]]
+    return [f"{head}:"] + _text_lines(node)[:40]
+
+
+def _has_math(node: dict) -> bool:
+    """Markdown has no inline formula (``$x$`` stays text), so text holding
+    one is kept as a block rather than flattened."""
+    return any(d.kind(c) == "inlineMath" for c in d.children(node))
+
+
+def has_plus_attrs(node: dict) -> bool:
+    """Whether a table or callout uses options Markdown cannot carry (typed
+    cells, a caption, a callout title...), so it renders as a kept block."""
+    t = d.kind(node)
+    a = node.get("attrs") or {}
+    if t == "callout":
+        return any(a.get(k) for k in ("title", "collapsible", "tone", "kind"))
+    if t == "table":
+        if any(a.get(k) not in (None, False, "", "default", "none") for k in d.TABLE_ATTRS):
+            return True
+        for row in d.children(node):
+            for cell in d.children(row):
+                ca = cell.get("attrs") or {}
+                if any(ca.get(k) not in (None, "", "text") for k in d.CELL_ATTRS):
+                    return True
+                if any(_has_math(b) for b in d.children(cell)):
+                    return True
+    return False
 
 
 def _prefix(lines: list[str], first: str, rest: str) -> list[str]:
@@ -1280,6 +1388,8 @@ def render_block(node: Any, path: list[int], depth: int = 0) -> list[str]:
     t = d.kind(node)
     a = node.get("attrs") or {}
     kids = d.children(node)
+    if t in ("paragraph", "heading") and _has_math(node):
+        return block_comment(node, path)
     if t == "paragraph":
         text = inline_markdown(kids)
         return [_line_safe(line) for line in text.split("\n")] if text else [""]
@@ -1301,6 +1411,8 @@ def render_block(node: Any, path: list[int], depth: int = 0) -> list[str]:
         return lines
     if t == "blockquote":
         return _prefix(_join_blocks(kids, path, depth), "> ", "> ")
+    if t in ("table", "callout") and has_plus_attrs(node):
+        return block_comment(node, path)
     if t in ("callout", "calloutInfo", "calloutWarning"):
         kind = a.get("type") if t == "callout" else ("info" if t == "calloutInfo" else "warning")
         if t == "callout":
@@ -1313,7 +1425,7 @@ def render_block(node: Any, path: list[int], depth: int = 0) -> list[str]:
         fence = "```"
         while fence in text:
             fence += "`"
-        return [fence + (a.get("language") or "")] + text.split("\n") + [fence]
+        return [fence + (a.get("language") or "") + _code_info(a)] + text.split("\n") + [fence]
     if t == "horizontalRule":
         return ["---"]
     if t == "blockMathEquation":
@@ -1360,10 +1472,14 @@ def is_prose(node: Any, depth: int = 0) -> bool:
     t = d.kind(node)
     if t in ("text", "hardBreak", "horizontalRule", "blockMathEquation", "codeBlock"):
         return True
-    if t in ("paragraph", "heading", "calloutInfo", "calloutWarning"):
+    if t in ("paragraph", "heading"):
+        return not _has_math(node)
+    if t in ("calloutInfo", "calloutWarning"):
         return True
     if fences.renders(node):
         return True
+    if t in ("table", "callout") and has_plus_attrs(node):
+        return False
     if t in ("bulletList", "orderedList", "listItem", "blockquote", "callout", "table", "tableRow", "tableCell", "tableHeader"):
         return all(is_prose(c, depth + 1) for c in d.children(node))
     return False

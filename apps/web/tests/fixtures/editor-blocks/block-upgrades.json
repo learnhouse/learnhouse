@@ -1,0 +1,591 @@
+[
+  {
+    "name": "every-block-upgrade",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 2,
+            "textAlign": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Forces and motion"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "justify"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Newton's second law is "
+            },
+            {
+              "type": "inlineMath",
+              "attrs": {
+                "latex": "F = ma"
+              }
+            },
+            {
+              "type": "text",
+              "text": ", and kinetic energy is "
+            },
+            {
+              "type": "inlineMath",
+              "attrs": {
+                "latex": "\\tfrac{1}{2}mv^2"
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "attrs": {
+            "textAlign": "end"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Aligned to the end."
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "attrs": {
+            "type": "tip",
+            "dismissible": false,
+            "icon": null,
+            "title": "Worked example",
+            "collapsible": true,
+            "defaultOpen": false,
+            "tone": null,
+            "kind": "example"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "A 2 kg cart pushed with 10 N accelerates at 5 m/s²."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "attrs": {
+            "type": "info",
+            "dismissible": false,
+            "icon": "brain",
+            "title": "Think about it",
+            "collapsible": false,
+            "defaultOpen": true,
+            "tone": "teal",
+            "kind": "question"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "What happens if the mass doubles?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "attrs": {
+            "type": "info",
+            "kind": "note"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Only the type is set: the other new attrs are absent."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "attrs": {
+            "type": "info",
+            "title": "Newton",
+            "kind": "quote"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "If I have seen further it is by standing on the shoulders of giants."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "toggleBlock",
+          "attrs": {
+            "summary": "Show the derivation",
+            "defaultOpen": false,
+            "variant": "filled",
+            "icon": "plus"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Start from p = mv."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "toggleBlock",
+          "attrs": {
+            "summary": "Bordered",
+            "variant": "bordered"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Chevron by default."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "codeBlock",
+          "attrs": {
+            "language": "python",
+            "filename": "physics.py",
+            "showLineNumbers": true,
+            "highlightLines": "2,4-5",
+            "wrap": false
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "def force(m, a):\n    return m * a\n\nprint(force(2, 5))\nprint(force(4, 5))"
+            }
+          ]
+        },
+        {
+          "type": "codeBlock",
+          "attrs": {
+            "language": "bash",
+            "wrap": true
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "pip install numpy scipy matplotlib pandas sympy jupyterlab --upgrade --no-cache-dir"
+            }
+          ]
+        },
+        {
+          "type": "blockImage",
+          "attrs": {
+            "blockObject": null,
+            "size": {
+              "width": 560
+            },
+            "alignment": "center",
+            "unsplash_url": "https://images.unsplash.com/photo-1",
+            "unsplash_photographer_name": "",
+            "unsplash_photographer_url": "",
+            "unsplash_photo_url": "",
+            "alt": "A cart on a ramp",
+            "caption": "Fig. 1",
+            "frame": "polaroid"
+          }
+        },
+        {
+          "type": "blockImage",
+          "attrs": {
+            "blockObject": null,
+            "size": {
+              "width": 320
+            },
+            "alignment": "left",
+            "unsplash_url": "https://images.unsplash.com/photo-2",
+            "frame": "shadow"
+          }
+        },
+        {
+          "type": "buttonGroup",
+          "attrs": {
+            "alignment": "center"
+          },
+          "content": [
+            {
+              "type": "button",
+              "attrs": {
+                "emoji": "🚀",
+                "link": "https://example.com/lab",
+                "color": "teal",
+                "alignment": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Open the lab"
+                }
+              ]
+            },
+            {
+              "type": "button",
+              "attrs": {
+                "emoji": "📘",
+                "link": "https://example.com/notes",
+                "color": "blue",
+                "alignment": "left",
+                "variant": "outline",
+                "size": "sm"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Notes"
+                }
+              ]
+            },
+            {
+              "type": "button",
+              "attrs": {
+                "emoji": "🔗",
+                "link": "https://example.com/more",
+                "color": "purple",
+                "alignment": "left",
+                "variant": "link",
+                "size": "lg"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Read more"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "attrs": {
+            "emoji": "✨",
+            "link": "https://example.com",
+            "color": "amber",
+            "alignment": "right",
+            "variant": "soft",
+            "size": "md"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "A soft button on its own"
+            }
+          ]
+        },
+        {
+          "type": "blockQuiz",
+          "attrs": {
+            "quizId": "quiz_upgrades",
+            "settings": {
+              "passMark": 75,
+              "showExplanations": false
+            },
+            "questions": [
+              {
+                "question_id": "q1",
+                "question": "Which law links force and acceleration?",
+                "type": "multiple_choice",
+                "response_type": "single",
+                "explanation": "F = ma.",
+                "answers": [
+                  {
+                    "answer_id": "a1",
+                    "answer": "First",
+                    "correct": false
+                  },
+                  {
+                    "answer_id": "a2",
+                    "answer": "Second",
+                    "correct": true
+                  },
+                  {
+                    "answer_id": "a3",
+                    "answer": "Third",
+                    "correct": false
+                  }
+                ]
+              },
+              {
+                "question_id": "q2",
+                "question": "Mass and weight are the same thing.",
+                "type": "true_false",
+                "response_type": "single",
+                "explanation": "Weight is a force: mg.",
+                "answers": [
+                  {
+                    "answer_id": "t2",
+                    "answer": "True",
+                    "correct": false
+                  },
+                  {
+                    "answer_id": "f2",
+                    "answer": "False",
+                    "correct": true
+                  }
+                ]
+              },
+              {
+                "question_id": "q3",
+                "question": "The SI unit of force is the…",
+                "type": "short_answer",
+                "answers": [],
+                "accepted_answers": [
+                  "newton",
+                  "N"
+                ],
+                "explanation": "Named after Isaac Newton."
+              },
+              {
+                "question_id": "q4",
+                "question": "Who wrote the Principia?",
+                "type": "short_answer",
+                "answers": [],
+                "accepted_answers": [
+                  "Isaac Newton"
+                ],
+                "accent_insensitive": true
+              },
+              {
+                "question_id": "q5",
+                "question": "g on Earth, in m/s²",
+                "type": "numeric",
+                "answers": [],
+                "correct_value": 9.81,
+                "tolerance": 0.05
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "old-data-untouched",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Old content"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "A paragraph saved before alignment existed."
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "attrs": {
+            "type": "warning",
+            "dismissible": true
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "An old callout."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "attrs": {
+            "type": "tip",
+            "dismissible": false,
+            "icon": "rocket"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "An old callout with an icon."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "toggleBlock",
+          "attrs": {
+            "summary": "Old toggle",
+            "defaultOpen": true
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Inside."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "codeBlock",
+          "attrs": {
+            "language": "javascript"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "const a = 1\nconst b = 2"
+            }
+          ]
+        },
+        {
+          "type": "codeBlock",
+          "attrs": {
+            "language": "python",
+            "filename": "main.py"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "print(1)"
+            }
+          ]
+        },
+        {
+          "type": "blockImage",
+          "attrs": {
+            "blockObject": null,
+            "size": {
+              "width": 300
+            },
+            "alignment": "center",
+            "unsplash_url": "https://images.unsplash.com/photo-3"
+          }
+        },
+        {
+          "type": "button",
+          "attrs": {
+            "emoji": "🔗",
+            "link": "https://example.com",
+            "color": "green",
+            "alignment": "center"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Old button"
+            }
+          ]
+        },
+        {
+          "type": "blockQuiz",
+          "attrs": {
+            "quizId": "quiz_old",
+            "questions": [
+              {
+                "question_id": "o1",
+                "question": "No type, no response_type",
+                "answers": [
+                  {
+                    "answer_id": "x",
+                    "answer": "X",
+                    "correct": true
+                  },
+                  {
+                    "answer_id": "y",
+                    "answer": "Y",
+                    "correct": true
+                  },
+                  {
+                    "answer_id": "z",
+                    "answer": "Z",
+                    "correct": false
+                  }
+                ]
+              },
+              {
+                "question_id": "o2",
+                "question": "Legacy custom answer",
+                "type": "custom_answer",
+                "answers": [
+                  {
+                    "answer_id": "c",
+                    "answer": "C",
+                    "correct": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Prices like $5 and $10 stay text."
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

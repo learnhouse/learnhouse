@@ -21,7 +21,7 @@ import uuid
 from typing import Annotated, Any, Literal, Union
 
 from fastapi import HTTPException
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, WithJsonSchema
 from sqlmodel import or_, select
 
 from src.services.ai.tools import doc_ops as d
@@ -76,9 +76,11 @@ class ListB(_B):
 
 class CalloutB(_B):
     type: Literal["callout"]
-    style: Literal["info", "tip", "warning", "success", "error"] = "info"
+    style: Literal["info", "tip", "warning", "success", "error", "note", "question", "example", "quote"] = "info"
     text: str = Field(..., min_length=1, max_length=20_000, description="Paragraphs and lists in Markdown.")
     dismissible: bool = Field(False, description="Learners may hide it.")
+    title: str | None = Field(None, max_length=200, description="A bold title above the text.")
+    collapsible: bool = Field(False, description="Learners open it by clicking the title (needs a title).")
 
 
 class CodeB(_B):
@@ -86,12 +88,32 @@ class CodeB(_B):
     code: str = Field(..., min_length=1, max_length=100_000)
     language: str | None = Field(None, max_length=40, description="e.g. python, js, sql (highlighting only).")
     filename: str | None = Field(None, max_length=200)
+    line_numbers: bool = Field(False, description="Show line numbers.")
+    highlight_lines: str | None = Field(None, max_length=200, description='Lines to emphasise, e.g. "2,4-6".')
+    wrap: bool = Field(False, description="Wrap long lines instead of scrolling.")
+
+
+CellType = Literal["text", "progress", "checkbox", "rating", "status", "number", "date"]
 
 
 class TableB(_B):
     type: Literal["table"]
     header: list[str] = Field(..., min_length=1, max_length=30, description="Header cells (inline Markdown).")
     rows: list[list[str]] = Field(default_factory=list, max_length=500, description="Body rows, same width as header.")
+    column_types: list[CellType] | None = Field(
+        None, max_length=30,
+        description=(
+            "One per column; the cell text stays the value: progress '75' (a bar), checkbox 'yes'/'no', "
+            "rating '4' or '4/5' (stars), status 'Done' (a coloured pill), number, date '2026-03-01'."
+        ),
+    )
+    variant: Literal["default", "striped", "bordered", "minimal", "cards"] = Field("default", description="cards stacks rows on phones.")
+    caption: str | None = Field(None, max_length=500)
+    sortable: bool = Field(False, description="Learners sort by clicking a header.")
+    sticky_header: bool = False
+    compact: bool = False
+    header_column: bool = Field(False, description="The first column is a header too.")
+    totals: Literal["none", "sum", "average"] = Field("none", description="A footer row for number and progress columns.")
 
 
 class MathB(_B):
@@ -106,13 +128,25 @@ class QuizOptionB(_B):
 
 class QuizQuestionB(_B):
     text: str = Field(..., min_length=1, max_length=2000)
-    options: list[QuizOptionB] = Field(..., min_length=2, max_length=12, description="2 to 12; mark at least one correct (2+ = select all).")
-    explanation: str | None = Field(None, max_length=2000)
+    type: Literal["multiple_choice", "true_false", "short_answer", "numeric"] = Field(
+        "multiple_choice", description="multiple_choice uses options; true_false answer; short_answer accepted_answers; numeric correct_value.",
+    )
+    options: list[QuizOptionB] | None = Field(None, min_length=2, max_length=12, description="multiple_choice: 2 to 12; mark at least one correct (2+ = select all).")
+    answer: bool | None = Field(None, description="true_false: whether the statement is true.")
+    accepted_answers: list[Annotated[str, Field(min_length=1, max_length=500)]] | None = Field(
+        None, min_length=1, max_length=10, description="short_answer: what counts as right (case and spaces ignored).",
+    )
+    accent_insensitive: bool = Field(False, description="short_answer: 'é' matches 'e'.")
+    correct_value: float | None = Field(None, ge=-1e15, le=1e15, description="numeric: the expected number.")
+    tolerance: float = Field(0, ge=0, le=1e15, description="numeric: how far off still counts.")
+    explanation: str | None = Field(None, max_length=2000, description="Shown after answering.")
 
 
 class QuizB(_B):
     type: Literal["quiz"]
     questions: list[QuizQuestionB] = Field(..., min_length=1, max_length=50)
+    pass_mark: int | None = Field(None, ge=0, le=100, description="Score (%) needed to pass.")
+    show_explanations: bool | None = Field(None, description="Show explanations after submitting (default true).")
 
 
 class CardB(_B):
@@ -480,6 +514,165 @@ class ToggleB(_B):
     blocks: list["Block"] = Field(..., min_length=1, max_length=100)
 
 
+# Blocks inside a layout block. Their schema is shown as "any typed block":
+# inlining the whole union under every layout block (as clients need, see
+# mcp.server.compact_schema) would grow exponentially with each one added.
+# Validation still checks every nested block in full.
+_NESTED_SCHEMA = WithJsonSchema({
+    "type": "array",
+    "items": {"type": "object", "description": "A typed block, any type of this list (layout blocks nest up to 3 deep)."},
+})
+Nested = Annotated[list["Block"], _NESTED_SCHEMA]
+
+
+class TabB(_B):
+    title: str = Field(..., min_length=1, max_length=200)
+    blocks: Nested = Field(..., min_length=1, max_length=100)
+
+
+class TabsB(_B):
+    type: Literal["tabs"]
+    tabs: list[TabB] = Field(..., min_length=2, max_length=8, description="2 to 8 tabs, each with its own blocks.")
+    variant: Literal["line", "pills", "boxed"] = "line"
+
+
+class ColumnB(_B):
+    blocks: Nested = Field(..., min_length=1, max_length=100)
+
+
+class ColumnsB(_B):
+    type: Literal["columns"]
+    columns: list[ColumnB] = Field(..., min_length=2, max_length=4, description="2 to 4 columns side by side (stacked on phones).")
+    layout: Literal["1-1", "1-2", "2-1", "1-1-1", "1-1-1-1"] | None = Field(None, description="Width ratios; omit for equal columns.")
+    gap: Literal["sm", "md", "lg"] = "md"
+    vertical_align: Literal["top", "center", "bottom"] = "top"
+
+
+class AccordionItemB(_B):
+    summary: str = Field(..., min_length=1, max_length=300)
+    blocks: Nested = Field(..., min_length=1, max_length=100)
+    open: bool = False
+
+
+class AccordionB(_B):
+    type: Literal["accordion"]
+    items: list[AccordionItemB] = Field(..., min_length=1, max_length=30)
+    single: bool = Field(True, description="Only one section open at a time.")
+    variant: Literal["default", "bordered", "filled"] = "default"
+
+
+LayoutTone = Literal["neutral", "blue", "teal", "green", "amber", "rose"]
+LayoutIcon = Literal["lightbulb", "star", "check", "target", "flag", "book", "rocket", "key"]
+
+
+class StepB(_B):
+    title: str = Field(..., min_length=1, max_length=300)
+    label: str = Field("", max_length=100, description="A date or step label shown above the title.")
+    text: str | None = Field(None, max_length=20_000, description="Markdown under the title (or use blocks).")
+    blocks: Nested = Field(default_factory=list, max_length=100)
+    tone: LayoutTone | None = None
+    icon: LayoutIcon | None = None
+
+
+class TimelineB(_B):
+    type: Literal["timeline"]
+    steps: list[StepB] = Field(..., min_length=1, max_length=50)
+    variant: Literal["steps", "timeline", "process"] = Field("steps", description="steps for how-tos, timeline for dates, process for stages.")
+    numbered: bool = True
+    orientation: Literal["vertical", "horizontal"] = "vertical"
+
+
+class KeyTakeawaysB(_B):
+    type: Literal["key_takeaways"]
+    points: list[Annotated[str, Field(min_length=1, max_length=2000)]] = Field(default_factory=list, max_length=20, description="Bullets (inline Markdown).")
+    blocks: Nested = Field(default_factory=list, max_length=50, description="Or any blocks.")
+    title: str = Field("", max_length=200, description="Empty shows 'Key takeaways'.")
+    tone: LayoutTone = "amber"
+    icon: LayoutIcon | None = None
+
+
+class ChecklistB(_B):
+    type: Literal["checklist"]
+    items: list[Annotated[str, Field(min_length=1, max_length=2000)]] = Field(..., min_length=1, max_length=100)
+    learner_can_check: bool = Field(True, description="Learners tick items (kept in their browser).")
+
+
+class GalleryImageB(_B):
+    url: WebUrl = Field(..., min_length=8, max_length=2048, description="Public image link (shown from there, not stored).")
+    alt: str = Field(..., min_length=1, max_length=500)
+    caption: str | None = Field(None, max_length=300)
+
+
+class GalleryB(_B):
+    type: Literal["gallery"]
+    images: list[GalleryImageB] = Field(..., min_length=1, max_length=40)
+    layout: Literal["grid", "carousel", "masonry"] = "grid"
+    columns: Literal[2, 3, 4] = 3
+
+
+class CompareSideB(_B):
+    url: WebUrl = Field(..., min_length=8, max_length=2048)
+    label: str = Field("", max_length=80, description="e.g. Before, 2010.")
+    alt: str | None = Field(None, max_length=500)
+
+
+class ImageCompareB(_B):
+    type: Literal["image_compare"]
+    before: CompareSideB
+    after: CompareSideB
+    start: int = Field(50, ge=0, le=100, description="Divider position (%).")
+    orientation: Literal["horizontal", "vertical"] = "horizontal"
+
+
+class SeriesB(_B):
+    name: str = Field(..., min_length=1, max_length=60)
+    values: list[float] = Field(..., max_length=50, description="One number per label.")
+    tone: Literal["blue", "orange", "teal", "amber", "pink", "green", "violet", "red"] | None = None
+
+
+class ChartB(_B):
+    type: Literal["chart"]
+    chart: Literal["bar", "column", "line", "area", "pie", "donut"] = Field("column", description="pie and donut show the first series.")
+    title: str = Field("", max_length=300)
+    labels: list[Annotated[str, Field(max_length=60)]] = Field(..., min_length=1, max_length=50)
+    series: list[SeriesB] = Field(..., min_length=1, max_length=8)
+    show_legend: bool = True
+    show_values: bool = False
+    stacked: bool = False
+
+
+class StatB(_B):
+    value: str = Field(..., min_length=1, max_length=24, description="The number as shown: '92', '12,500', '4.8'.")
+    label: str = Field(..., min_length=1, max_length=120)
+    description: str | None = Field(None, max_length=300)
+    prefix: str | None = Field(None, max_length=8, description="e.g. $")
+    suffix: str | None = Field(None, max_length=12, description="e.g. %, +, /5")
+    tone: LayoutTone | None = None
+
+
+class StatHighlightsB(_B):
+    type: Literal["stat_highlights"]
+    stats: list[StatB] = Field(..., min_length=1, max_length=8)
+    columns: Literal[2, 3, 4] | None = Field(None, description="Omit to fit the number of stats.")
+    animate: bool = Field(True, description="Count up when scrolled into view.")
+
+
+class FileCardB(_B):
+    type: Literal["file_card"]
+    url: WebUrl = Field(..., min_length=8, max_length=2048, description="Link to the file (not stored).")
+    name: str = Field("", max_length=200, description="Shown name; omit to use the file name from the link.")
+    description: str | None = Field(None, max_length=1000)
+    size_bytes: int | None = Field(None, ge=0, le=10**13)
+
+
+class QuoteB(_B):
+    type: Literal["quote"]
+    text: str = Field(..., min_length=1, max_length=5000, description="The quote; blank lines split paragraphs.")
+    author: str | None = Field(None, max_length=200)
+    role: str | None = Field(None, max_length=200)
+    variant: Literal["pull", "testimonial", "highlight"] = "pull"
+
+
 class EmbedB(_B):
     type: Literal["embed"]
     url: WebUrl = Field(..., min_length=8, max_length=2048, description="Share link of a known service (" + ", ".join(PROVIDERS) + ") or any embeddable page.")
@@ -548,6 +741,8 @@ class ButtonB(_B):
     color: str = Field("blue", max_length=30)
     alignment: Align = "left"
     emoji: str = Field("🔗", max_length=16)
+    variant: Literal["solid", "outline", "soft", "link"] | None = None
+    size: Literal["sm", "md", "lg"] | None = None
 
 
 class BadgeB(_B):
@@ -568,13 +763,13 @@ Block = Annotated[
         ScenarioB, ExerciseB, WidgetB, ConditionalB, ToggleB, EmbedB, VideoB, ImageB, AudioB, PdfB,
         H5pB, WebPreviewB, UserB, DividerB, ButtonB, BadgeB, SortB, SequenceB, MatchPairsB, HotspotB,
         FillGapsB, MythFactB, SpeedRoundB, EstimateB, SpotMistakeB, CodeLockB, VennB, LabelDiagramB,
-        WordGuessB, ConfidenceCheckB, PropertyGridB, ReflectionB, NodeB,
+        WordGuessB, ConfidenceCheckB, PropertyGridB, ReflectionB, TabsB, ColumnsB, AccordionB, TimelineB,
+        KeyTakeawaysB, ChecklistB, GalleryB, ImageCompareB, ChartB, StatHighlightsB, FileCardB, QuoteB, NodeB,
     ],
     Field(discriminator="type"),
 ]
-ConditionalB.model_rebuild()
-ToggleB.model_rebuild()
-RuleGroup.model_rebuild()
+for _model in (ConditionalB, ToggleB, TabB, ColumnB, AccordionItemB, StepB, KeyTakeawaysB, RuleGroup):
+    _model.model_rebuild()
 
 BLOCKS_ADAPTER = TypeAdapter(list[Block])
 BLOCK_MODELS: dict[str, type[_B]] = {
@@ -626,7 +821,7 @@ class _Builder:
 
     def _media(self, kind: str, url: str, caption: str | None, attrs: dict, depth: int) -> list[dict]:
         if depth:
-            raise BlockError(f"{'an' if kind[0] in 'aeiou' else 'a'} {kind} must be at the top level of the page, not inside a toggle or conditional block")
+            raise BlockError(f"{'an' if kind[0] in 'aeiou' else 'a'} {kind} must be at the top level of the page, not inside another block (toggle, conditional, tabs, columns...)")
         if not d.is_web_url(url):
             raise BlockError(f"'{url[:80]}' is not an http(s) URL")
         node = d.paragraph([d.text_node((caption or url).strip() or url, [{"type": "link", "attrs": {"href": url}}])])
@@ -650,32 +845,41 @@ class _Builder:
         if t == "callout":
             node, notes = md.callout(b.style, b.text)
             node["attrs"]["dismissible"] = b.dismissible
+            if b.title:
+                node["attrs"]["title"] = b.title
+            if b.collapsible:
+                if not b.title:
+                    raise BlockError("a collapsible callout needs a title to click")
+                node["attrs"]["collapsible"] = True
+            node["attrs"] = d.callout_kind_attrs(node["attrs"])
             self.notes.extend(notes)
             return [node]
         if t == "code":
             attrs = {"language": b.language, **({"filename": b.filename} if b.filename else {})}
+            if b.line_numbers:
+                attrs["showLineNumbers"] = True
+            if b.highlight_lines:
+                attrs["highlightLines"] = b.highlight_lines
+            if b.wrap:
+                attrs["wrap"] = True
             return [{"type": "codeBlock", "attrs": attrs, "content": [d.text_node(b.code)]}]
         if t == "table":
-            width = len(b.header)
-            if any(len(r) > width for r in b.rows):
-                raise BlockError(f"every row has at most {width} cells, like the header")
-
-            def row(cells: list[str], cell: str) -> dict:
-                cells = cells + [""] * (width - len(cells))
-                return {"type": "tableRow", "content": [{"type": cell, "content": [_para(c) if c else d.paragraph()]} for c in cells]}
-
-            return [{"type": "table", "content": [row(b.header, "tableHeader"), *(row(r, "tableCell") for r in b.rows)]}]
+            return [self._table(b)]
         if t == "math":
             return [{"type": "blockMathEquation", "attrs": {"math_equation": b.latex}}]
         if t == "quiz":
-            questions = [
-                {"text": q.text, "options": [o.model_dump() for o in q.options], "explanation": q.explanation}
-                for q in b.questions
-            ]
-            for n, q in enumerate(b.questions, 1):
-                if not any(o.correct for o in q.options):
-                    raise BlockError(f"question {n} ('{q.text[:60]}') has no option marked correct")
-            return [d.quiz_node(questions)]
+            questions = [self._question(q, n) for n, q in enumerate(b.questions, 1)]
+            settings = {
+                **({"passMark": b.pass_mark} if b.pass_mark is not None else {}),
+                **({"showExplanations": b.show_explanations} if b.show_explanations is not None else {}),
+            }
+            return [d.quiz_node(questions, settings or None)]
+        if t in _CONTAINERS:
+            if depth >= MAX_NESTING:
+                raise BlockError(f"blocks nest at most {MAX_NESTING} deep")
+            return [self._container(b, where, depth + 1)]
+        if t in ("gallery", "image_compare", "chart", "stat_highlights", "file_card", "quote", "checklist"):
+            return [self._data_block(b)]
         if t == "flashcards":
             cards = [
                 {
@@ -780,6 +984,7 @@ class _Builder:
             return [{"type": "horizontalRule"}]
         if t == "button":
             attrs = {"emoji": b.emoji, "link": b.url, "color": b.color, "alignment": b.alignment}
+            attrs.update({k: v for k, v in (("variant", b.variant), ("size", b.size)) if v})
             return [{"type": "button", "attrs": attrs, "content": [d.text_node(b.label)]}]
         if t == "badge":
             return [{"type": "badge", "attrs": {"color": b.color, "emoji": b.emoji}, "content": [d.text_node(b.text)]}]
@@ -789,6 +994,190 @@ class _Builder:
         if d.kind(node) == "blockQuiz" and isinstance(node.get("attrs"), dict):
             node = {**node, "attrs": {**node["attrs"], "questions": d.fill_quiz_ids(node["attrs"].get("questions"))}}
         return [node]
+
+
+    def _table(self, b: Any) -> dict:
+        width = len(b.header)
+        if any(len(r) > width for r in b.rows):
+            raise BlockError(f"every row has at most {width} cells, like the header")
+        if b.column_types is not None and len(b.column_types) != width:
+            raise BlockError(f"column_types needs one type per column ({width})")
+        types = b.column_types or ["text"] * width
+
+        def row(cells: list[str], cell: str) -> dict:
+            cells = cells + [""] * (width - len(cells))
+            out = []
+            for k, c in enumerate(cells):
+                node: dict[str, Any] = {"type": cell, "content": [_para(c) if c else d.paragraph()]}
+                if cell == "tableCell" and types[k] != "text":
+                    node["attrs"] = {"cellType": types[k]}
+                out.append(node)
+            return {"type": "tableRow", "content": out}
+
+        node: dict[str, Any] = {"type": "table", "content": [row(b.header, "tableHeader"), *(row(r, "tableCell") for r in b.rows)]}
+        attrs = {
+            "variant": b.variant if b.variant != "default" else None, "caption": b.caption or None,
+            "sortable": b.sortable or None, "stickyHeader": b.sticky_header or None, "compact": b.compact or None,
+            "headerColumn": b.header_column or None, "totals": b.totals if b.totals != "none" else None,
+        }
+        attrs = {k: v for k, v in attrs.items() if v is not None}
+        if attrs:
+            node["attrs"] = attrs
+        return node
+
+    @staticmethod
+    def _question(q: Any, n: int) -> dict:
+        label = f"question {n} ('{q.text[:60]}')"
+        extra = {
+            "options": q.options, "answer": q.answer, "accepted_answers": q.accepted_answers,
+            "correct_value": q.correct_value,
+        }
+        wanted = {"multiple_choice": "options", "true_false": "answer", "short_answer": "accepted_answers", "numeric": "correct_value"}[q.type]
+        if extra[wanted] is None:
+            raise BlockError(f"{label} is {q.type}: give {wanted}")
+        stray = [k for k, v in extra.items() if v is not None and k != wanted]
+        if stray:
+            raise BlockError(f"{label} is {q.type}: {stray[0]} is for another question type")
+        if q.type == "multiple_choice":
+            if not any(o.correct for o in q.options):
+                raise BlockError(f"{label} has no option marked correct")
+            return {"text": q.text, "options": [o.model_dump() for o in q.options], "explanation": q.explanation}
+        out: dict[str, Any] = {"text": q.text, "type": q.type, "explanation": q.explanation}
+        if q.type == "true_false":
+            out["answer"] = q.answer
+        elif q.type == "short_answer":
+            out["accepted_answers"] = [a.strip() for a in q.accepted_answers]
+            out["accent_insensitive"] = q.accent_insensitive
+        else:
+            out["correct_value"] = q.correct_value
+            out["tolerance"] = q.tolerance
+        return out
+
+    def _container(self, b: Any, where: str, depth: int) -> dict:  # noqa: C901 - one branch per layout block
+        t = b.type
+        if t == "tabs":
+            items = [
+                {"type": "tabItem", "attrs": {"title": tab.title}, "content": self.many(tab.blocks, f"{where}.tabs[{k}].blocks", depth)}
+                for k, tab in enumerate(b.tabs)
+            ]
+            return {"type": "tabs", "attrs": {"blockId": _block_id(), "variant": b.variant}, "content": items}
+        if t == "columns":
+            count = len(b.columns)
+            layout = b.layout or {2: "1-1", 3: "1-1-1", 4: "1-1-1-1"}[count]
+            if len(layout.split("-")) != count:
+                raise BlockError(f"layout {layout} is for {len(layout.split('-'))} columns, not {count}")
+            cols = [{"type": "column", "content": self.many(c.blocks, f"{where}.columns[{k}].blocks", depth)} for k, c in enumerate(b.columns)]
+            attrs = {"layout": layout, "gap": b.gap, "stackOnMobile": True, "verticalAlign": b.vertical_align}
+            return {"type": "columns", "attrs": attrs, "content": cols}
+        if t == "accordion":
+            items = [
+                {"type": "toggleBlock", "attrs": {"summary": item.summary, "defaultOpen": item.open},
+                 "content": self.many(item.blocks, f"{where}.items[{k}].blocks", depth)}
+                for k, item in enumerate(b.items)
+            ]
+            return {"type": "accordion", "attrs": {"single": b.single, "variant": b.variant}, "content": items}
+        if t == "timeline":
+            steps = []
+            for k, step in enumerate(b.steps):
+                content = _blocks_of(step.text) if step.text else []
+                content += self.many(step.blocks, f"{where}.steps[{k}].blocks", depth)
+                attrs: dict[str, Any] = {"title": step.title, "label": step.label}
+                attrs.update({key: v for key, v in (("tone", step.tone), ("icon", step.icon)) if v})
+                steps.append({"type": "timelineItem", "attrs": attrs, "content": content or [d.paragraph()]})
+            attrs = {"variant": b.variant, "numbered": b.numbered, "orientation": b.orientation}
+            return {"type": "timeline", "attrs": attrs, "content": steps}
+        # key_takeaways
+        if not b.points and not b.blocks:
+            raise BlockError("key_takeaways needs points or blocks")
+        content = [{"type": "bulletList", "content": [{"type": "listItem", "content": [_para(x)]} for x in b.points]}] if b.points else []
+        content += self.many(b.blocks, f"{where}.blocks", depth)
+        attrs = {"title": b.title, "tone": b.tone, **({"icon": b.icon} if b.icon else {})}
+        return {"type": "keyTakeaways", "attrs": attrs, "content": content}
+
+    def _data_block(self, b: Any) -> dict:
+        t = b.type
+        if t == "checklist":
+            items = [{"type": "taskItem", "attrs": {"checked": False}, "content": [_para(x)]} for x in b.items]
+            return {"type": "taskList", "attrs": {"blockId": _block_id(), "learnerCanCheck": b.learner_can_check}, "content": items}
+        if t == "gallery":
+            images = [
+                {"id": f"img_{uuid.uuid4().hex[:10]}", "url": img.url, "alt": img.alt, **({"caption": img.caption} if img.caption else {})}
+                for img in b.images
+            ]
+            return {"type": "gallery", "attrs": {"blockId": _block_id(), "layout": b.layout, "columns": b.columns, "images": images}}
+        if t == "image_compare":
+            def side(x: Any) -> dict:
+                return {"url": x.url, "label": x.label, **({"alt": x.alt} if x.alt else {})}
+
+            attrs = {"before": side(b.before), "after": side(b.after), "start": b.start, "orientation": b.orientation}
+            return {"type": "imageCompare", "attrs": attrs}
+        if t == "chart":
+            for k, series in enumerate(b.series):
+                if len(series.values) != len(b.labels):
+                    raise BlockError(f"series {k} ('{series.name[:40]}') has {len(series.values)} values for {len(b.labels)} labels")
+            data = {
+                "labels": list(b.labels),
+                "series": [{"name": x.name, "values": [_number(v) for v in x.values], "tone": x.tone} for x in b.series],
+            }
+            attrs = {"type": b.chart, "title": b.title, "data": data, "showLegend": b.show_legend,
+                     "showValues": b.show_values, "stacked": b.stacked}
+            return {"type": "chart", "attrs": attrs}
+        if t == "stat_highlights":
+            items = []
+            for x in b.stats:
+                item = {"id": f"stat_{uuid.uuid4().hex[:10]}", "value": x.value, "label": x.label}
+                item.update({k: v for k, v in (("description", x.description), ("prefix", x.prefix), ("suffix", x.suffix), ("tone", x.tone)) if v})
+                items.append(item)
+            columns = b.columns or max(2, min(4, len(items)))
+            return {"type": "statHighlights", "attrs": {"items": items, "columns": columns, "animate": b.animate}}
+        if t == "file_card":
+            name = b.name.strip() or _file_name(b.url)
+            attrs = {"url": b.url, "name": name, "fileType": _file_type(name or b.url)}
+            attrs.update({k: v for k, v in (("description", b.description), ("sizeBytes", b.size_bytes)) if v is not None})
+            return {"type": "fileCard", "attrs": attrs}
+        # quote
+        paragraphs = [_para(p.strip()) for p in re.split(r"\n\s*\n", b.text) if p.strip()]
+        attrs = {"variant": b.variant}
+        attrs.update({k: v for k, v in (("author", b.author), ("role", b.role)) if v})
+        return {"type": "quoteBlock", "attrs": attrs, "content": paragraphs or [d.paragraph()]}
+
+
+_CONTAINERS = ("tabs", "columns", "accordion", "timeline", "key_takeaways")
+_NESTED = ("conditional", "toggle", *_CONTAINERS)
+
+_FILE_EXT = {
+    "pdf": "pdf", "doc": "doc", "docx": "doc", "odt": "doc", "rtf": "doc", "pages": "doc",
+    "xls": "sheet", "xlsx": "sheet", "ods": "sheet", "csv": "sheet", "numbers": "sheet", "tsv": "sheet",
+    "ppt": "slides", "pptx": "slides", "odp": "slides", "key": "slides",
+    "zip": "archive", "rar": "archive", "7z": "archive", "tar": "archive", "gz": "archive", "tgz": "archive",
+    "jpg": "image", "jpeg": "image", "png": "image", "gif": "image", "webp": "image", "svg": "image", "avif": "image",
+    "mp3": "audio", "wav": "audio", "ogg": "audio", "m4a": "audio", "flac": "audio",
+    "mp4": "video", "webm": "video", "mov": "video", "mkv": "video",
+    "txt": "text", "md": "text",
+    "json": "code", "js": "code", "ts": "code", "py": "code", "html": "code", "css": "code", "xml": "code",
+    "ipynb": "code", "sql": "code",
+}
+
+
+def _block_id() -> str:
+    return f"lh_{uuid.uuid4().hex[:12]}"
+
+
+def _number(v: float) -> int | float:
+    return int(v) if float(v).is_integer() else v
+
+
+def _file_name(url: str) -> str:
+    from urllib.parse import unquote, urlsplit
+
+    return unquote(urlsplit(url).path.rstrip("/").rsplit("/", 1)[-1])[:200]
+
+
+def _file_type(name: str) -> str:
+    """The file card icon, from the extension (same table as the editor)."""
+    base = name.split("?", 1)[0].split("#", 1)[0].rsplit("/", 1)[-1]
+    ext = base.rsplit(".", 1)[-1].lower() if "." in base[1:] else ""
+    return _FILE_EXT.get(ext, "file")
 
 
 def _scenario_option(o: ScenarioOptionB) -> dict:
@@ -1103,8 +1492,11 @@ def member_keys(blocks: list[Any]) -> set[str]:
     for b in blocks:
         if b.type == "user":
             keys.add(b.member.strip().lower())
-        elif b.type in ("conditional", "toggle"):
+        elif b.type in ("conditional", "toggle", "key_takeaways"):
             keys |= member_keys(b.blocks)
+        elif b.type in ("tabs", "columns", "accordion", "timeline"):
+            for part in getattr(b, {"tabs": "tabs", "columns": "columns", "accordion": "items", "timeline": "steps"}[b.type]):
+                keys |= member_keys(part.blocks)
     return keys
 
 
@@ -1266,6 +1658,34 @@ EXAMPLES: dict[str, dict] = {
                    "guiding_questions": ["What does the plant need light for?"], "min_words": 30,
                    "model_answer": "Without light it cannot make sugar, so it runs out of energy.",
                    "checklist": ["Light powers photosynthesis", "No sugar means no energy"]},
+    "tabs": {"type": "tabs", "tabs": [
+        {"title": "Light", "blocks": [{"type": "paragraph", "text": "Chlorophyll absorbs red and blue light."}]},
+        {"title": "Dark", "blocks": [{"type": "paragraph", "text": "The Calvin cycle builds sugar."}]}]},
+    "columns": {"type": "columns", "columns": [
+        {"blocks": [{"type": "heading", "text": "Plants", "level": 3}, {"type": "paragraph", "text": "Make their food."}]},
+        {"blocks": [{"type": "heading", "text": "Animals", "level": 3}, {"type": "paragraph", "text": "Eat theirs."}]}]},
+    "accordion": {"type": "accordion", "items": [
+        {"summary": "What is chlorophyll?", "blocks": [{"type": "paragraph", "text": "The green pigment in leaves."}]},
+        {"summary": "Why are leaves green?", "blocks": [{"type": "paragraph", "text": "They reflect green light."}]}]},
+    "timeline": {"type": "timeline", "variant": "steps", "steps": [
+        {"title": "Light hits the leaf", "text": "Chlorophyll absorbs it."},
+        {"title": "Water splits", "text": "Oxygen is released."},
+        {"title": "Sugar is built", "text": "In the Calvin cycle."}]},
+    "key_takeaways": {"type": "key_takeaways", "points": ["Plants make sugar from light.", "Oxygen is a by-product."]},
+    "checklist": {"type": "checklist", "items": ["Read the lesson", "Label the leaf diagram", "Take the quiz"]},
+    "gallery": {"type": "gallery", "columns": 2, "images": [
+        {"url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Leaf_1_web.jpg", "alt": "A green leaf", "caption": "Leaf"},
+        {"url": "https://upload.wikimedia.org/wikipedia/commons/4/49/Chloroplasten.jpg", "alt": "Chloroplasts under a microscope"}]},
+    "image_compare": {"type": "image_compare",
+                      "before": {"url": "https://example.org/leaf-summer.jpg", "label": "Summer"},
+                      "after": {"url": "https://example.org/leaf-autumn.jpg", "label": "Autumn"}},
+    "chart": {"type": "chart", "chart": "column", "title": "Growth by light", "labels": ["Low", "Medium", "High"],
+              "series": [{"name": "Height (cm)", "values": [4, 9, 15]}]},
+    "stat_highlights": {"type": "stat_highlights", "stats": [
+        {"value": "70", "suffix": "%", "label": "of Earth's oxygen", "description": "comes from ocean plants"},
+        {"value": "6", "label": "CO2 molecules", "description": "per glucose"}]},
+    "file_card": {"type": "file_card", "url": "https://example.org/worksheet.pdf", "name": "Leaf worksheet.pdf", "description": "Print and label."},
+    "quote": {"type": "quote", "text": "Nature does nothing uselessly.", "author": "Aristotle", "variant": "pull"},
     "node": {"type": "node", "node": {"type": "paragraph", "content": [{"type": "text", "text": "Raw editor JSON"}]}},
 }
 
@@ -1300,6 +1720,20 @@ NOTES: dict[str, str] = {
     "confidence_check": "Metacognition: learners answer, say how sure they are, then see their calibration; always explain.",
     "property_grid": "Which properties apply to each row (a feature table); single mode means one tick per row.",
     "reflection": "Self-explanation: learners write first, then compare with the model answer and tick the key points they covered.",
+    "table": "column_types makes typed cells (progress bars, checkboxes, stars, status pills...) whose value is the cell text.",
+    "quiz": "Question types: multiple_choice (options), true_false (answer), short_answer (accepted_answers), numeric (correct_value, tolerance).",
+    "tabs": "Parallel views of one topic (e.g. per language or role); learners see one tab at a time.",
+    "columns": "Side-by-side comparison; stacks on phones. Keep each column short.",
+    "accordion": "Several collapsible sections (FAQs, optional depth); single opens one at a time.",
+    "timeline": "Ordered steps, dates or stages.",
+    "key_takeaways": "A summary card, usually at the end of a page.",
+    "checklist": "Things for learners to do; their ticks stay in their browser.",
+    "gallery": "Linked pictures (not stored as course files).",
+    "image_compare": "A before/after slider over two linked pictures.",
+    "chart": "Small data sets as a bar, column, line, area, pie or donut chart.",
+    "stat_highlights": "Two to four headline numbers.",
+    "file_card": "A download card for a linked file.",
+    "quote": "A pull quote or testimonial.",
 }
 
 
@@ -1321,7 +1755,8 @@ def catalog(block_type: str | None = None) -> dict:
     return {
         "about": (
             "Page content as a list of typed blocks. Each item is {type, ...fields}; nest blocks inside "
-            "toggle and conditional. Media files go at the top level. Markdown is always accepted too."
+            "toggle, conditional, tabs, columns, accordion, timeline and key_takeaways. Media files go at "
+            "the top level. Markdown is always accepted too."
         ),
         "types": list(BLOCK_TYPES),
         "blocks": [entry(name) for name in BLOCK_TYPES],

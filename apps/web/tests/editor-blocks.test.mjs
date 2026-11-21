@@ -231,14 +231,21 @@ describe("URL import helpers", () => {
 
 describe("new attribute defaults", () => {
   test("every new attr defaults to the old behaviour", () => {
-    expect(NEW_ATTR_DEFAULTS.blockImage).toEqual({ alt: "", caption: "", href: null, lightbox: true });
+    // frame (Editor Plus): null = no frame, the old image.
+    expect(NEW_ATTR_DEFAULTS.blockImage).toEqual({ alt: "", caption: "", href: null, lightbox: true, frame: null });
     expect(NEW_ATTR_DEFAULTS.blockVideo).toEqual({ caption: "", startTime: null, chapters: null });
     expect(NEW_ATTR_DEFAULTS.blockAudio).toEqual({ caption: "", transcript: "" });
     expect(NEW_ATTR_DEFAULTS.blockPDF).toEqual({ caption: "" });
     expect(NEW_ATTR_DEFAULTS.blockEmbed).toEqual({ embedSourceUrl: null, embedProvider: null, caption: "" });
-    expect(NEW_ATTR_DEFAULTS.callout).toEqual({ icon: null });
-    expect(NEW_ATTR_DEFAULTS.codeBlock).toEqual({ filename: null });
+    // Editor Plus: no title, not foldable (open when it is), the type's own colours.
+    expect(NEW_ATTR_DEFAULTS.callout).toEqual({ icon: null, title: "", collapsible: false, defaultOpen: true, tone: null, kind: null });
+    // Editor Plus: no line numbers, no highlighted lines, no forced wrapping.
+    expect(NEW_ATTR_DEFAULTS.codeBlock).toEqual({ filename: null, showLineNumbers: false, highlightLines: null, wrap: false });
     expect(NEW_ATTR_DEFAULTS.horizontalRule).toEqual({ variant: null });
+    expect(NEW_ATTR_DEFAULTS.toggleBlock).toEqual({ variant: null, icon: null });
+    expect(NEW_ATTR_DEFAULTS.button).toEqual({ variant: null, size: null });
+    expect(NEW_ATTR_DEFAULTS.paragraph).toEqual({ textAlign: null });
+    expect(NEW_ATTR_DEFAULTS.heading).toEqual({ textAlign: null });
   });
 
   test("default attrs render no extra HTML attributes", () => {
@@ -251,7 +258,7 @@ describe("new attribute defaults", () => {
   test("an image saved before the redesign resolves to the old look", () => {
     // Exactly what the old block wrote (see tests/fixtures/editor-blocks).
     const old = { blockObject: { block_uuid: "b" }, size: { width: 900 }, alignment: "center", unsplash_url: null };
-    expect(resolveImageView(old)).toEqual({ width: 900, alignment: "center", alt: "", caption: "", href: null, lightbox: true });
+    expect(resolveImageView(old)).toEqual({ width: 900, alignment: "center", alt: "", caption: "", href: null, lightbox: true, frame: "none" });
     expect(imageWidthOf({ size: null })).toBe(300);
     expect(imageWidthOf({})).toBe(300);
     expect(imageWidthOf({ size: { width: "640" } })).toBe(640);

@@ -245,6 +245,220 @@
    ]
   },
   {
+   "type": "table",
+   "attrs": {
+    "variant": "striped",
+    "caption": "Payout checklist",
+    "sortable": true,
+    "totals": "average"
+   },
+   "content": [
+    {
+     "type": "tableRow",
+     "content": [
+      {
+       "type": "tableHeader",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Step"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableHeader",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Done"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableHeader",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Status"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableHeader",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Progress"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "content": [
+      {
+       "type": "tableCell",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Verify identity"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "attrs": {
+        "cellType": "checkbox"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "yes"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "attrs": {
+        "cellType": "status",
+        "tone": "green"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Done"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "attrs": {
+        "cellType": "progress"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "100"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "content": [
+      {
+       "type": "tableCell",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Add bank account"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "attrs": {
+        "cellType": "checkbox"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "no"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "attrs": {
+        "cellType": "status",
+        "tone": "blue"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "In progress"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "attrs": {
+        "cellType": "progress"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "40"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
    "type": "callout",
    "attrs": {
     "type": "tip"
@@ -382,7 +596,455 @@
    }
   },
   {
+   "type": "tableOfContents",
+   "attrs": {
+    "title": "On this page",
+    "maxLevel": 3,
+    "numbered": false
+   }
+  },
+  {
+   "type": "tabs",
+   "attrs": {
+    "blockId": "tabs_payouts",
+    "variant": "line"
+   },
+   "content": [
+    {
+     "type": "tabItem",
+     "attrs": {
+      "title": "Standard"
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Payouts arrive every Monday."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tabItem",
+     "attrs": {
+      "title": "Instant"
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Instant payouts cost 1%."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "columns",
+   "attrs": {
+    "layout": "1-1",
+    "gap": "md",
+    "stackOnMobile": true,
+    "verticalAlign": "top"
+   },
+   "content": [
+    {
+     "type": "column",
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Bank transfer"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "column",
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Debit card"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "accordion",
+   "attrs": {
+    "single": true,
+    "variant": "default"
+   },
+   "content": [
+    {
+     "type": "toggleBlock",
+     "attrs": {
+      "summary": "When do payouts start?",
+      "defaultOpen": false
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "After your first sale clears."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "toggleBlock",
+     "attrs": {
+      "summary": "Can I change my bank?",
+      "defaultOpen": false
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Yes, from Settings."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "timeline",
+   "attrs": {
+    "variant": "steps",
+    "numbered": true,
+    "orientation": "vertical"
+   },
+   "content": [
+    {
+     "type": "timelineItem",
+     "attrs": {
+      "title": "Verify your identity",
+      "label": "Day 1"
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Upload an ID."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "timelineItem",
+     "attrs": {
+      "title": "Add a bank account",
+      "label": "Day 2"
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Enter your details."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "keyTakeaways",
+   "attrs": {
+    "title": "",
+    "tone": "amber",
+    "icon": null
+   },
+   "content": [
+    {
+     "type": "bulletList",
+     "content": [
+      {
+       "type": "listItem",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Payouts are weekly by default"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "taskList",
+   "attrs": {
+    "blockId": "check_payouts",
+    "learnerCanCheck": true
+   },
+   "content": [
+    {
+     "type": "taskItem",
+     "attrs": {
+      "checked": false
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Verify your identity"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "taskItem",
+     "attrs": {
+      "checked": false
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Add a bank account"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "gallery",
+   "attrs": {
+    "blockId": "gal_1",
+    "layout": "grid",
+    "columns": 3,
+    "images": [
+     {
+      "id": "img_1",
+      "blockObject": {
+       "block_uuid": "block_gal1",
+       "block_type": "BLOCK_IMAGE",
+       "content": {
+        "file_id": "payout-flow",
+        "file_format": "png"
+       }
+      },
+      "caption": "The payout flow",
+      "alt": "Diagram of money moving from customer to bank"
+     },
+     {
+      "id": "img_2",
+      "url": "https://images.example.com/dashboard.png",
+      "alt": "The payouts dashboard"
+     }
+    ]
+   }
+  },
+  {
+   "type": "imageCompare",
+   "attrs": {
+    "before": {
+     "url": "https://images.example.com/old-dashboard.png",
+     "label": "Old dashboard"
+    },
+    "after": {
+     "url": "https://images.example.com/new-dashboard.png",
+     "label": "New dashboard"
+    },
+    "start": 50,
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "chart",
+   "attrs": {
+    "type": "column",
+    "title": "Payouts per week",
+    "data": {
+     "labels": [
+      "W1",
+      "W2",
+      "W3"
+     ],
+     "series": [
+      {
+       "name": "Card",
+       "values": [
+        120,
+        140,
+        160
+       ],
+       "tone": "blue"
+      },
+      {
+       "name": "Bank",
+       "values": [
+        80,
+        95,
+        90
+       ],
+       "tone": "teal"
+      }
+     ]
+    },
+    "showLegend": true,
+    "showValues": false,
+    "stacked": false
+   }
+  },
+  {
+   "type": "statHighlights",
+   "attrs": {
+    "items": [
+     {
+      "id": "s1",
+      "value": "2",
+      "suffix": " days",
+      "label": "Average payout time"
+     },
+     {
+      "id": "s2",
+      "value": "0.25",
+      "suffix": "%",
+      "label": "Payout fee",
+      "tone": "teal"
+     }
+    ],
+    "columns": 2,
+    "animate": true
+   }
+  },
+  {
+   "type": "fileCard",
+   "attrs": {
+    "blockObject": null,
+    "url": "https://files.example.com/payout-schedule.pdf",
+    "name": "Payout schedule.pdf",
+    "description": "Every cut-off date for the year.",
+    "sizeBytes": 184320,
+    "fileType": "pdf"
+   }
+  },
+  {
+   "type": "quoteBlock",
+   "attrs": {
+    "variant": "testimonial",
+    "author": "Ana Lopez",
+    "role": "Shop owner",
+    "avatarUrl": null
+   },
+   "content": [
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Weekly payouts changed how I plan stock."
+      }
+     ]
+    }
+   ]
+  },
+  {
    "type": "horizontalRule"
+  },
+  {
+   "type": "paragraph",
+   "attrs": {
+    "textAlign": "center"
+   },
+   "content": [
+    {
+     "type": "text",
+     "text": "A payout is the amount "
+    },
+    {
+     "type": "inlineMath",
+     "attrs": {
+      "latex": "A - 0.029A"
+     }
+    },
+    {
+     "type": "text",
+     "text": " after fees."
+    }
+   ]
+  },
+  {
+   "type": "buttonGroup",
+   "attrs": {
+    "alignment": "center"
+   },
+   "content": [
+    {
+     "type": "button",
+     "attrs": {
+      "emoji": "🚀",
+      "link": "https://example.com/start",
+      "color": "teal",
+      "alignment": "left"
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Start selling"
+      }
+     ]
+    },
+    {
+     "type": "button",
+     "attrs": {
+      "emoji": "📘",
+      "link": "https://example.com/docs",
+      "color": "blue",
+      "alignment": "left",
+      "variant": "outline",
+      "size": "sm"
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Read the docs"
+      }
+     ]
+    }
+   ]
   },
   {
    "type": "expSort",

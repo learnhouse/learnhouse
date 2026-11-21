@@ -80,6 +80,8 @@ def _a11y(doc: dict, where: dict, issues: list[dict]) -> None:
         a = node.get("attrs") or {}
         if t == "blockImage" and not str(a.get("alt") or "").strip():
             issues.append({"area": "accessibility", "code": "image_no_alt", "message": "Image has no alt text.", "where": where, "path": list(path)})
+        elif t == "gallery" and any(isinstance(i, dict) and not str(i.get("alt") or "").strip() for i in a.get("images") or []):
+            issues.append({"area": "accessibility", "code": "image_no_alt", "message": "Some gallery images have no alt text.", "where": where, "path": list(path)})
         elif t == "heading":
             level = a.get("level") if isinstance(a.get("level"), int) else 2
             if level == 1:
@@ -349,6 +351,9 @@ def _learner_lines(node: dict, depth: int = 0) -> list[str]:
         lines = ["**Quiz**"]
         for n, q in enumerate(a.get("questions") or [], 1):
             lines.append(f"{n}. {q.get('question', '')}")
+            if q.get("type") in ("short_answer", "numeric"):
+                lines.append("   [ type " + ("an answer" if q.get("type") == "short_answer" else "a number") + " ]")
+                continue
             box = "[ ]" if q.get("response_type") == "multiple" else "( )"
             lines += [f"   {box} {x.get('answer', '')}" for x in q.get("answers") or []]
         return lines
@@ -383,7 +388,53 @@ def _learner_lines(node: dict, depth: int = 0) -> list[str]:
         return ["[Member card]"]
     if t == "paragraph":
         return [inline_markdown(d.children(node))]
+    plus = _plus_learner_lines(node, depth)
+    if plus is not None:
+        return plus
     return render_block(node, [0], depth)
+
+
+def _blocks_lines(nodes: list, depth: int) -> list[str]:
+    return [line for c in nodes for line in _learner_lines(c, depth + 1)]
+
+
+def _plus_learner_lines(node: dict, depth: int) -> list[str] | None:  # noqa: C901 - one branch per block
+    """What a learner sees of an Editor Plus block, or None for other blocks."""
+    t = d.kind(node)
+    a = node.get("attrs") or {}
+    kids = d.children(node)
+    if t == "tabs":
+        lines: list[str] = []
+        for k, tab in enumerate(kids):
+            title = (tab.get("attrs") or {}).get("title") or f"Tab {k + 1}"
+            lines.append(f"**[{title}]**" + ("" if k == 0 else " (tab)"))
+            if k == 0:
+                lines += _blocks_lines(d.children(tab), depth)
+        return lines
+    if t in ("columns", "column", "keyTakeaways", "tabItem"):
+        head = [f"**{d.container_title(node) or 'Key takeaways'}**"] if t == "keyTakeaways" else []
+        return head + _blocks_lines(kids, depth)
+    if t == "accordion":
+        return _blocks_lines(kids, depth)
+    if t == "timeline":
+        lines = []
+        for k, step in enumerate(kids, 1):
+            marker = f"{k}." if a.get("numbered", True) is not False else "-"
+            lines.append(f"{marker} **{d.container_title(step)}**")
+            lines += ["   " + line for line in _blocks_lines(d.children(step), depth)]
+        return lines
+    if t == "taskList":
+        return [f"- [ ] {d.block_text(item)}" for item in kids]
+    if t == "quoteBlock":
+        return ["> " + line for line in _blocks_lines(kids, depth)] + ([f"> {d.quote_credit(node)}"] if d.quote_credit(node) else [])
+    if t == "buttonGroup":
+        return ["  ".join(f"[{d.inline_text(b)}]" for b in kids)]
+    if t == "tableOfContents":
+        return [f"[{a.get('title') or 'Contents'}: links to the page's headings]"]
+    if t in ("gallery", "imageCompare", "chart", "statHighlights", "fileCard"):
+        label = {"gallery": "Gallery", "imageCompare": "Before/after", "chart": "Chart", "statHighlights": "Stats", "fileCard": "File"}[t]
+        return [f"[{label}]"] + [f"- {line}" for line in d.plus_atom_lines(node)]
+    return None
 
 
 async def _preview_activity(ctx: ToolContext, p: PreviewActivityParams):

@@ -820,7 +820,11 @@
     "set_new_password": "ตั้งรหัสผ่านใหม่",
     "invited_by_email_cta": "ได้รับคำเชิญทางอีเมล? สมัครด้วยอีเมลนั้น",
     "use_invite_code_instead": "มีรหัสเชิญแทนหรือไม่",
-    "password_reset_done": "เปลี่ยนรหัสผ่านแล้ว"
+    "password_reset_done": "เปลี่ยนรหัสผ่านแล้ว",
+    "login_failed_forgot": "ลืมรหัสผ่าน?",
+    "login_failed_reset": "รีเซ็ต",
+    "login_failed_magic": "ส่งลิงก์เข้าสู่ระบบทางอีเมลแทน",
+    "login_failed_google_hint": "สมัครด้วย Google? ใช้ดำเนินการต่อด้วย Google ด้านล่าง"
   },
   "validation": {
     "required": "จำเป็น",
@@ -1320,7 +1324,11 @@
       "maintainer": "ผู้ดูแล",
       "contributor": "ผู้ร่วมสร้าง",
       "reporter": "ผู้รายงาน"
-    }
+    },
+    "co_created_by": "ร่วมสร้างโดย",
+    "created_on": "สร้างเมื่อ",
+    "last_updated": "อัปเดตล่าสุดเมื่อ",
+    "and_x_more": "และอีก {{count}} อย่าง"
   },
   "communities": {
     "title": "ชุมชน",
@@ -4274,6 +4282,91 @@
         "completed_note": "เสร็จแล้ว อ่านทวนอีกครั้งและจำสิ่งที่ขาดไว้",
         "write_again": "แก้ไขคำตอบ"
       }
+    },
+    "table": {
+      "total": "รวม",
+      "average": "ค่าเฉลี่ย",
+      "sort_by": "เรียงตาม",
+      "original_order": "ลำดับเดิม",
+      "ascending": "น้อยไปมาก",
+      "descending": "มากไปน้อย",
+      "sort_direction": "ทิศทางการเรียง",
+      "sorted": "เรียงตาม {{column}}, {{direction}}",
+      "column_n": "คอลัมน์ {{n}}"
+    },
+    "tabs": {
+      "tab": "แท็บ",
+      "untitled": "แท็บ {{n}}",
+      "list_label": "แท็บ"
+    },
+    "accordion": {
+      "expand_all": "ขยายทั้งหมด",
+      "collapse_all": "ยุบทั้งหมด"
+    },
+    "table_of_contents": {
+      "title": "เนื้อหา"
+    },
+    "checklist": {
+      "progress_label": "เสร็จแล้ว {{done}} จาก {{total}}",
+      "reset": "รีเซ็ตเช็กลิสต์",
+      "item": "รายการในเช็กลิสต์",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "ไทม์ไลน์"
+    },
+    "key_takeaways": {
+      "title": "ประเด็นสำคัญ"
+    },
+    "chart": {
+      "category": "หมวดหมู่",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} มี {{series}} ชุดข้อมูล ({{names}}) ใน {{categories}} หมวดหมู่ ตั้งแต่ {{min}} ถึง {{max}}",
+      "title": "แผนภูมิ",
+      "types": {
+        "bar": "แผนภูมิแท่งแนวนอน",
+        "column": "แผนภูมิแท่ง",
+        "line": "แผนภูมิเส้น",
+        "area": "แผนภูมิพื้นที่",
+        "pie": "แผนภูมิวงกลม",
+        "donut": "แผนภูมิโดนัท"
+      }
+    },
+    "file_card": {
+      "download": "ดาวน์โหลด",
+      "download_named": "ดาวน์โหลด {{name}}",
+      "file": "ไฟล์",
+      "types": {
+        "pdf": "PDF",
+        "doc": "เอกสาร",
+        "sheet": "สเปรดชีต",
+        "slides": "สไลด์",
+        "archive": "ไฟล์บีบอัด",
+        "image": "รูปภาพ",
+        "audio": "เสียง",
+        "video": "วิดีโอ",
+        "text": "ข้อความ",
+        "code": "โค้ด",
+        "file": "ไฟล์"
+      }
+    },
+    "gallery": {
+      "carousel": "ภาพสไลด์",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "แสดงรูปที่ {{n}}",
+      "label": "แกลเลอรีรูปภาพ",
+      "next": "รูปถัดไป",
+      "open_image": "เปิดรูปที่ {{n}} จาก {{count}}",
+      "previous": "รูปก่อนหน้า",
+      "slide": "สไลด์",
+      "viewer_title": "รูปที่ {{n}} จาก {{count}}"
+    },
+    "image_compare": {
+      "after": "หลัง",
+      "before": "ก่อน",
+      "slider": "เปรียบเทียบรูปภาพ",
+      "value": "{{before}} {{b}}%, {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13422,7 +13515,11 @@
         "type_warning": "คำเตือน",
         "type_tip": "เคล็ดลับ",
         "type_success": "สำเร็จ",
-        "type_error": "ข้อผิดพลาด"
+        "type_error": "ข้อผิดพลาด",
+        "type_note": "บันทึก",
+        "type_question": "คำถาม",
+        "type_example": "ตัวอย่าง",
+        "type_quote": "คำพูด"
       }
     },
     "dynamic": {
@@ -13722,7 +13819,8 @@
       "create_first": "สร้างสถานการณ์จำลองแรก",
       "modal_preview_title": "ตัวอย่างสถานการณ์จำลอง",
       "modal_preview_desc": "ทดสอบสถานการณ์จำลองเชิงโต้ตอบของคุณ",
-      "modal_edit_desc": "สร้างและจัดการสถานการณ์จำลองเชิงโต้ตอบของคุณ"
+      "modal_edit_desc": "สร้างและจัดการสถานการณ์จำลองเชิงโต้ตอบของคุณ",
+      "max_scenarios": "อนุญาตสูงสุด 40 สถานการณ์จำลอง"
     },
     "slash_menu": {
       "items": {
@@ -13881,6 +13979,70 @@
         "table": {
           "title": "ตาราง",
           "description": "แทรกตาราง 3x3"
+        },
+        "tabs": {
+          "description": "สลับไปมาระหว่างแผงเนื้อหา",
+          "title": "แท็บ"
+        },
+        "columns": {
+          "description": "วางเนื้อหาเคียงข้างกัน",
+          "title": "คอลัมน์"
+        },
+        "accordion": {
+          "description": "ส่วนที่ยุบได้ เปิดทีละส่วน",
+          "title": "แอคคอร์เดียน"
+        },
+        "timeline": {
+          "description": "ขั้นตอนหรือเหตุการณ์ตามลำดับ",
+          "title": "ไทม์ไลน์"
+        },
+        "table_of_contents": {
+          "description": "ลิงก์ไปยังหัวข้อของหน้านี้",
+          "title": "สารบัญ"
+        },
+        "key_takeaways": {
+          "description": "การ์ดสรุปประเด็นหลัก",
+          "title": "ประเด็นสำคัญ"
+        },
+        "checklist": {
+          "description": "รายการที่ผู้เรียนติ๊กได้",
+          "title": "เช็กลิสต์"
+        },
+        "gallery": {
+          "title": "แกลเลอรี",
+          "description": "รูปหลายรูปแบบตารางหรือสไลด์"
+        },
+        "image_compare": {
+          "title": "เปรียบเทียบรูป",
+          "description": "ก่อนและหลังพร้อมแถบเลื่อน"
+        },
+        "file_card": {
+          "title": "ดาวน์โหลดไฟล์",
+          "description": "ไฟล์ที่ผู้เรียนดาวน์โหลดได้"
+        },
+        "quote_block": {
+          "title": "คำรับรอง",
+          "description": "คำพูดเด่นหรือคำรับรองพร้อมชื่อผู้กล่าว"
+        },
+        "quote": {
+          "title": "คำพูด",
+          "description": "ข้อความอ้างอิงแบบเรียบง่าย"
+        },
+        "chart": {
+          "title": "แผนภูมิ",
+          "description": "แผนภูมิแท่ง เส้น หรือวงกลมจากตารางเล็ก ๆ"
+        },
+        "stat_highlights": {
+          "title": "สถิติ",
+          "description": "ตัวเลขใหญ่ที่นับขึ้น"
+        },
+        "button_group": {
+          "title": "กลุ่มปุ่ม",
+          "description": "ปุ่มหลายปุ่มเรียงกัน"
+        },
+        "inline_math": {
+          "title": "สูตรในบรรทัด",
+          "description": "สูตรภายในประโยค (หรือพิมพ์ $x^2$)"
         }
       },
       "categories": {
@@ -14237,7 +14399,14 @@
       "button": {
         "emoji": "อีโมจิ",
         "link_hint": "เปิดในแท็บใหม่เมื่อผู้เรียนคลิกปุ่ม",
-        "no_link": "ยังไม่มีลิงก์: ตั้งค่าด้วยปุ่มลิงก์"
+        "no_link": "ยังไม่มีลิงก์: ตั้งค่าด้วยปุ่มลิงก์",
+        "style": "รูปแบบ",
+        "variant": "ลักษณะ",
+        "size": "ขนาด",
+        "variant_solid": "ทึบ",
+        "variant_outline": "เส้นขอบ",
+        "variant_soft": "นุ่มนวล",
+        "variant_link": "ลิงก์"
       },
       "quiz": {
         "settings": "การตั้งค่าแบบทดสอบ",
@@ -14295,7 +14464,39 @@
         "clear": "ล้าง",
         "check": "ตรวจคำตอบ",
         "try_again": "ลองอีกครั้ง",
-        "start_over": "เริ่มใหม่"
+        "start_over": "เริ่มใหม่",
+        "question_type": "ประเภทคำถาม",
+        "type_multiple_choice": "ปรนัย",
+        "type_true_false": "ถูก / ผิด",
+        "type_short_answer": "คำตอบสั้น",
+        "type_numeric": "ตัวเลข",
+        "true": "ถูก",
+        "false": "ผิด",
+        "accepted_answers": "คำตอบที่ยอมรับ",
+        "accepted_answer_n": "คำตอบที่ยอมรับ {{n}}",
+        "accepted_answer_placeholder": "คำตอบที่นับว่าถูก",
+        "add_accepted": "เพิ่มคำตอบที่ยอมรับ",
+        "remove_accepted": "ลบคำตอบที่ยอมรับ {{n}}",
+        "ignore_accents": "ไม่สนใจเครื่องหมายเน้นเสียง (é = e)",
+        "short_answer_hint": "ไม่สนใจตัวพิมพ์ใหญ่และช่องว่างเกิน",
+        "numeric_value": "คำตอบที่ถูก",
+        "numeric_tolerance": "ค่าคลาดเคลื่อนที่ยอมรับ",
+        "show_explanations": "แสดงคำอธิบาย",
+        "show_explanations_hint": "คำอธิบายของคุณจะแสดงใต้คำถามแต่ละข้อหลังผู้เรียนส่งคำตอบ",
+        "pass_mark": "เกณฑ์ผ่าน",
+        "pass_mark_off": "ปิด",
+        "pass_mark_n": "ผ่านที่ {{n}}%",
+        "pass_mark_off_hint": "ผู้เรียนจะเห็นว่าตอบถูกทุกข้อหรือไม่",
+        "pass_mark_hint": "ผู้เรียนผ่านเมื่อได้ {{n}}% ขึ้นไปและเห็นคะแนนของตน",
+        "pass_mark_needed": "เกณฑ์ผ่าน: {{n}}%",
+        "passed": "ผ่าน",
+        "not_passed": "ยังไม่ผ่าน",
+        "score_percent": "{{percent}}%",
+        "your_answer": "คำตอบของคุณ",
+        "your_number": "คำตอบของคุณ (ตัวเลข)",
+        "answer_placeholder": "พิมพ์คำตอบของคุณ",
+        "number_placeholder": "พิมพ์ตัวเลข",
+        "expected_answer": "คำตอบที่คาดไว้: {{answer}}"
       },
       "flipcard": {
         "front": "ด้านหน้า",
@@ -14394,7 +14595,8 @@
         "view": "มุมมอง",
         "view_map": "แผนผัง",
         "view_steps": "ขั้นตอน",
-        "your_path": "เส้นทางของคุณ"
+        "your_path": "เส้นทางของคุณ",
+        "limits": "สูงสุด {{max}} ขั้นตอน ขั้นตอนละ {{choices}} ตัวเลือก"
       },
       "conditional": {
         "add_rule": "เพิ่มกฎ",
@@ -14541,6 +14743,423 @@
         "reset_text": "รีเซ็ต",
         "text": "ชื่อและคำอธิบาย",
         "title": "ชื่อ"
+      },
+      "table": {
+        "rows_cols": "แถวและคอลัมน์",
+        "duplicate_row": "ทำซ้ำแถว",
+        "distribute": "กระจายคอลัมน์ให้เท่ากัน",
+        "merge_split": "ผสานหรือแยกเซลล์",
+        "headers": "ส่วนหัว",
+        "header_column": "คอลัมน์ส่วนหัว",
+        "cell_style": "สไตล์เซลล์",
+        "apply_to": "ใช้กับ",
+        "scope_selection": "เซลล์ที่เลือก",
+        "scope_column": "ทั้งคอลัมน์",
+        "background": "พื้นหลัง",
+        "align": "การจัดแนว",
+        "align_start": "ต้น",
+        "align_center": "กลาง",
+        "align_end": "ท้าย",
+        "valign": "การจัดแนวตั้ง",
+        "valign_top": "บน",
+        "valign_middle": "กลาง",
+        "valign_bottom": "ล่าง",
+        "cell_type": "ประเภทเซลล์",
+        "type_hint": "ค่ายังอยู่ในข้อความของเซลล์ เช่น 75, 4/5 หรือ ใช่",
+        "type": {
+          "text": "ข้อความ",
+          "progress": "ความคืบหน้า",
+          "checkbox": "ช่องทำเครื่องหมาย",
+          "rating": "คะแนน",
+          "status": "สถานะ",
+          "number": "ตัวเลข",
+          "date": "วันที่"
+        },
+        "tone": "สี",
+        "tone_auto": "อัตโนมัติ",
+        "number_format": "รูปแบบตัวเลข",
+        "format": {
+          "plain": "ธรรมดา",
+          "percent": "เปอร์เซ็นต์",
+          "currency": "สกุลเงิน",
+          "compact": "แบบย่อ"
+        },
+        "currency": "รหัสสกุลเงิน",
+        "settings": "การตั้งค่าตาราง",
+        "variant": "สไตล์",
+        "variants": {
+          "default": "ค่าเริ่มต้น",
+          "striped": "ลายทาง",
+          "bordered": "มีเส้นขอบ",
+          "minimal": "เรียบง่าย",
+          "cards": "การ์ด"
+        },
+        "cards_hint": "บนโทรศัพท์ แต่ละแถวจะกลายเป็นการ์ด",
+        "caption": "คำอธิบายภาพ",
+        "caption_placeholder": "อธิบายตาราง",
+        "sortable": "ผู้เรียนเรียงลำดับได้",
+        "sticky_header": "ส่วนหัวตรึง",
+        "compact": "แถวกระชับ",
+        "totals": "แถวผลรวม",
+        "totals_hint": "สำหรับคอลัมน์ตัวเลขและความคืบหน้า",
+        "totals_none": "ไม่มี",
+        "totals_sum": "ผลรวม",
+        "totals_average": "ค่าเฉลี่ย",
+        "toggle_checkbox": "สลับช่องทำเครื่องหมาย",
+        "templates": {
+          "progress": {
+            "title": "ตัวติดตามความคืบหน้า",
+            "description": "งานพร้อมผู้รับผิดชอบ สถานะ และแถบความคืบหน้า"
+          },
+          "comparison": {
+            "title": "การเปรียบเทียบ",
+            "description": "เปรียบเทียบตัวเลือกแบบเคียงข้างด้วยเครื่องหมายถูก"
+          },
+          "rubric": {
+            "title": "เกณฑ์การให้คะแนน",
+            "description": "เกณฑ์การประเมินพร้อมระดับและคะแนน"
+          }
+        },
+        "sample": {
+          "task": "งาน",
+          "owner": "ผู้รับผิดชอบ",
+          "status": "สถานะ",
+          "progress": "ความคืบหน้า",
+          "task_1": "วางแผนบทเรียน",
+          "task_2": "บันทึกวิดีโอ",
+          "task_3": "เขียนแบบทดสอบ",
+          "status_done": "เสร็จแล้ว",
+          "status_in_progress": "กำลังทำ",
+          "status_todo": "ยังไม่เริ่ม",
+          "feature": "ฟีเจอร์",
+          "option_a": "พื้นฐาน",
+          "option_b": "โปร",
+          "feature_1": "บทเรียนวิดีโอ",
+          "feature_2": "แบบทดสอบ",
+          "feature_3": "ใบรับรอง",
+          "criterion": "เกณฑ์",
+          "look_for": "สิ่งที่เราพิจารณา",
+          "level": "ระดับ",
+          "points": "คะแนน",
+          "crit_1": "ความชัดเจน",
+          "crit_2": "ความถูกต้อง",
+          "crit_3": "โครงสร้าง",
+          "desc_1": "ความคิดติดตามได้ง่าย",
+          "desc_2": "ข้อเท็จจริงและขั้นตอนถูกต้อง",
+          "desc_3": "แบ่งส่วนชัดเจนตามลำดับที่สมเหตุสมผล"
+        }
+      },
+      "layout": {
+        "settings": "การตั้งค่า",
+        "style": "สไตล์",
+        "color": "สี",
+        "icon": "ไอคอน",
+        "icon_default": "ค่าเริ่มต้น",
+        "size_sm": "เล็ก",
+        "size_md": "กลาง",
+        "size_lg": "ใหญ่",
+        "tone_neutral": "กลาง ๆ",
+        "tone_blue": "น้ำเงิน",
+        "tone_teal": "เขียวอมฟ้า",
+        "tone_green": "เขียว",
+        "tone_amber": "อำพัน",
+        "tone_rose": "ชมพู",
+        "icons": {
+          "lightbulb": "หลอดไฟ",
+          "star": "ดาว",
+          "check": "เครื่องหมายถูก",
+          "target": "เป้าหมาย",
+          "flag": "ธง",
+          "book": "หนังสือ",
+          "rocket": "จรวด",
+          "key": "กุญแจ"
+        }
+      },
+      "tabs": {
+        "label": "แท็บ",
+        "add": "เพิ่มแท็บ",
+        "remove": "ลบแท็บนี้",
+        "move_earlier": "ย้ายแท็บไปก่อนหน้า",
+        "move_later": "ย้ายแท็บไปถัดไป",
+        "title_placeholder": "ชื่อแท็บ",
+        "variant_line": "เส้น",
+        "variant_pills": "แคปซูล",
+        "variant_boxed": "กรอบ",
+        "sample": {
+          "tab_1": "ภาพรวม",
+          "tab_2": "รายละเอียด",
+          "tab_3": "ตัวอย่าง",
+          "text_1": "เริ่มจากภาพรวมก่อน",
+          "text_2": "อธิบายให้ลึกขึ้นว่าทำงานอย่างไร",
+          "text_3": "แสดงให้เห็นในการใช้งานจริง"
+        }
+      },
+      "columns": {
+        "label": "คอลัมน์",
+        "layout": "เลย์เอาต์",
+        "layout_halves": "สองคอลัมน์เท่ากัน",
+        "layout_narrow_wide": "แคบ แล้วกว้าง",
+        "layout_wide_narrow": "กว้าง แล้วแคบ",
+        "layout_thirds": "สามคอลัมน์",
+        "layout_quarters": "สี่คอลัมน์",
+        "gap": "ระยะห่าง",
+        "align": "การจัดแนวตั้ง",
+        "align_top": "บน",
+        "align_center": "กลาง",
+        "align_bottom": "ล่าง",
+        "stack": "เรียงซ้อนกันบนหน้าจอเล็ก",
+        "sample": {
+          "left": "คอลัมน์แรก",
+          "right": "คอลัมน์ที่สอง"
+        }
+      },
+      "accordion": {
+        "label": "แอคคอร์เดียน",
+        "add": "เพิ่มส่วน",
+        "single": "เปิดได้ทีละส่วน",
+        "variant_bordered": "มีขอบ",
+        "variant_filled": "เติมสี",
+        "sample": {
+          "item_1": "ฉันจะได้เรียนรู้อะไร",
+          "text_1": "อธิบายผลลัพธ์ของบทเรียนนี้",
+          "item_2": "ใช้เวลานานเท่าไร",
+          "text_2": "ให้ระยะเวลาโดยประมาณเพื่อให้ผู้เรียนวางแผนได้",
+          "item_3": "ฉันต้องเตรียมอะไรบ้าง",
+          "text_3": "ระบุสิ่งที่ต้องเตรียมไว้ก่อนเริ่ม"
+        },
+        "variant_default": "ค่าเริ่มต้น"
+      },
+      "timeline": {
+        "label": "ไทม์ไลน์",
+        "add": "เพิ่มขั้นตอน",
+        "remove": "ลบขั้นตอน",
+        "step": "ขั้นตอน",
+        "title_placeholder": "ชื่อขั้นตอน",
+        "label_placeholder": "วันที่หรือป้ายกำกับ (ไม่บังคับ)",
+        "numbered": "ขั้นตอนแบบมีหมายเลข",
+        "orientation": "ทิศทาง",
+        "vertical": "แนวตั้ง",
+        "horizontal": "แนวนอน",
+        "icon_number": "หมายเลข",
+        "variant_steps": "ขั้นตอน",
+        "variant_process": "กระบวนการ",
+        "sample": {
+          "step_1": "เตรียมตัว",
+          "text_1": "รวบรวมสิ่งที่ต้องใช้",
+          "step_2": "ฝึกฝน",
+          "text_2": "ลองกับตัวอย่างเล็ก ๆ",
+          "step_3": "นำไปใช้",
+          "text_3": "ใช้กับงานจริง"
+        },
+        "variant_timeline": "ไทม์ไลน์"
+      },
+      "table_of_contents": {
+        "label": "สารบัญ",
+        "depth": "หัวข้อที่จะรวม",
+        "numbered": "ใส่หมายเลขรายการ",
+        "title_label": "ชื่อ",
+        "empty": "เพิ่มหัวข้อในบทเรียน แล้วหัวข้อจะแสดงที่นี่"
+      },
+      "key_takeaways": {
+        "label": "ประเด็นสำคัญ",
+        "title_label": "ชื่อการ์ด",
+        "sample": {
+          "point_1": "ใจความหลักในประโยคเดียว",
+          "point_2": "รายละเอียดที่ควรจำ",
+          "point_3": "สิ่งที่ต้องทำต่อไป"
+        }
+      },
+      "checklist": {
+        "label": "เช็กลิสต์",
+        "learner_can_check": "ผู้เรียนติ๊กรายการได้",
+        "hint": "การติ๊กจะบันทึกไว้ในเบราว์เซอร์ของผู้เรียนแต่ละคน รายการที่คุณติ๊กที่นี่จะถูกติ๊กไว้ตั้งแต่ต้น",
+        "sample": {
+          "item_1": "อ่านบทเรียน",
+          "item_2": "ลองทำแบบฝึกหัด",
+          "item_3": "ตรวจคำตอบ"
+        }
+      },
+      "chart": {
+        "add_row": "เพิ่มแถว",
+        "add_series": "เพิ่มชุดข้อมูล",
+        "apply_csv": "ใช้ข้อมูลนี้",
+        "csv_error": "อ่านตารางนี้ไม่ได้ ใส่ป้ายกำกับในคอลัมน์แรกและตัวเลขในคอลัมน์อื่น",
+        "csv_label": "ตารางในรูปแบบ CSV",
+        "csv_placeholder": "วางจากสเปรดชีต หรือพิมพ์: ป้ายกำกับ, ชุด 1, ชุด 2",
+        "edit_data": "แก้ไขข้อมูล",
+        "empty": "เพิ่มข้อมูลเพื่อวาดแผนภูมิ",
+        "label": "แผนภูมิ",
+        "label_n": "ป้ายกำกับ {{n}}",
+        "labels": "ป้ายกำกับ",
+        "paste_csv": "วาง CSV",
+        "pie_hint": "แผนภูมิวงกลมและโดนัทแสดงชุดข้อมูลแรก",
+        "remove_row": "ลบแถว",
+        "remove_series": "ลบชุดข้อมูล",
+        "row_n": "รายการ {{n}}",
+        "sample": {
+          "q1": "ไตรมาส 1",
+          "q2": "ไตรมาส 2",
+          "q3": "ไตรมาส 3",
+          "q4": "ไตรมาส 4",
+          "series_1": "ห้อง A",
+          "series_2": "ห้อง B",
+          "title": "คะแนนแบบทดสอบเฉลี่ยรายไตรมาส"
+        },
+        "series_color": "เปลี่ยนสีของ {{name}}",
+        "series_n": "ชุดข้อมูล {{n}}",
+        "series_name": "ชื่อชุดข้อมูล",
+        "settings": "การตั้งค่าแผนภูมิ",
+        "show_legend": "แสดงคำอธิบาย",
+        "show_values": "แสดงค่า",
+        "stacked": "ซ้อนชุดข้อมูล",
+        "title_label": "ชื่อ",
+        "title_placeholder": "ชื่อแผนภูมิ",
+        "type": "ประเภทแผนภูมิ"
+      },
+      "file_card": {
+        "add_link": "เพิ่มลิงก์",
+        "description": "คำอธิบาย",
+        "description_placeholder": "ไฟล์นี้มีอะไรบ้าง (ไม่บังคับ)",
+        "empty_hint": "อัปโหลดไฟล์ PDF รูปภาพ เสียง หรือวิดีโอ หรือใส่ลิงก์ไปยังไฟล์ใดก็ได้",
+        "empty_title": "เพิ่มไฟล์ให้ดาวน์โหลด",
+        "label": "ไฟล์",
+        "link_hint": "แทนที่ไฟล์ที่อัปโหลดไว้ ถ้ามี",
+        "link_label": "ลิงก์ไปยังไฟล์",
+        "link_settings": "ลิงก์ไฟล์",
+        "name": "ชื่อไฟล์",
+        "type_error": "ไม่สามารถอัปโหลดไฟล์ประเภทนี้ได้ อัปโหลดไฟล์ PDF รูปภาพ เสียง หรือวิดีโอ หรือใส่ลิงก์ไปยังไฟล์แทน",
+        "upload": "อัปโหลดไฟล์"
+      },
+      "gallery": {
+        "add_images": "เพิ่มรูปภาพ",
+        "add_link": "เพิ่มรูป",
+        "alt_hint": "บอกว่ารูปแสดงอะไร สำหรับผู้เรียนที่ใช้โปรแกรมอ่านหน้าจอ",
+        "alt_missing": "ไม่มีข้อความแทนรูป: {{n}}",
+        "alt_placeholder": "ข้อความแทนรูป (จำเป็น)",
+        "columns": "คอลัมน์",
+        "count": "รูปภาพ: {{n}}",
+        "empty_hint": "วางรูปหลายรูปพร้อมกัน หรือเลือกจากอุปกรณ์ของคุณ {{formats}} · รูปละไม่เกิน {{max}}",
+        "empty_title": "เพิ่มรูปภาพลงในแกลเลอรี",
+        "full": "แกลเลอรีหนึ่งมีรูปได้สูงสุด {{max}} รูป",
+        "label": "แกลเลอรี",
+        "layout": "เลย์เอาต์",
+        "layout_carousel": "สไลด์",
+        "layout_grid": "ตาราง",
+        "layout_masonry": "ก่ออิฐ",
+        "move_earlier": "ย้ายไปก่อนหน้า",
+        "move_later": "ย้ายไปถัดไป",
+        "remove": "ลบรูป",
+        "settings": "การตั้งค่าแกลเลอรี"
+      },
+      "image_compare": {
+        "after_image": "รูปหลัง",
+        "before_image": "รูปก่อน",
+        "empty_hint": "เลือกรูปก่อนและรูปหลังที่มีขนาดเท่ากัน ผู้เรียนลากเส้นแบ่งเพื่อเปรียบเทียบ",
+        "empty_title": "เพิ่มรูปภาพ",
+        "horizontal": "ซ้ายขวา",
+        "label": "เปรียบเทียบรูป",
+        "orientation": "ทิศทาง",
+        "replace_after": "แทนที่รูปหลัง",
+        "replace_before": "แทนที่รูปก่อน",
+        "settings": "การตั้งค่าการเปรียบเทียบ",
+        "side_label": "ป้ายกำกับ",
+        "start": "ตำแหน่งเริ่มต้นของเส้นแบ่ง",
+        "vertical": "บนล่าง"
+      },
+      "quote_block": {
+        "author": "ผู้กล่าว",
+        "author_placeholder": "ชื่อ",
+        "avatar": "ลิงก์รูปภาพ",
+        "avatar_hint": "แสดงข้างชื่อในคำรับรอง เว้นว่างไว้เพื่อแสดงอักษรย่อ",
+        "label": "คำพูด",
+        "role": "ตำแหน่ง",
+        "role_placeholder": "ตำแหน่งหรือบริษัท",
+        "sample": {
+          "author": "สมใจ ศรีสุข",
+          "role": "นักออกแบบผลิตภัณฑ์",
+          "text": "แบบฝึกหัดลงมือทำทำให้เข้าใจทันที วันรุ่งขึ้นฉันก็ใช้สิ่งที่เรียนในที่ทำงานเลย"
+        },
+        "settings": "การตั้งค่าคำพูด",
+        "style": "รูปแบบ",
+        "variant_highlight": "เน้น",
+        "variant_pull": "คำพูดเด่น",
+        "variant_testimonial": "คำรับรอง"
+      },
+      "stat_highlights": {
+        "add": "เพิ่มสถิติ",
+        "animate": "นับขึ้นเมื่อแสดง",
+        "color": "สี",
+        "columns": "คอลัมน์",
+        "description": "คำอธิบาย",
+        "description_placeholder": "คำอธิบายสั้น ๆ (ไม่บังคับ)",
+        "empty": "เพิ่มสถิติเพื่อเริ่มต้น",
+        "label": "สถิติ",
+        "label_field": "ป้ายกำกับ",
+        "prefix": "ก่อนตัวเลข",
+        "remove": "ลบสถิติ",
+        "sample": {
+          "desc_1": "ของผู้เรียนเรียนจบคอร์ส",
+          "desc_2": "จาก 1,200 รีวิว",
+          "desc_3": "ใน 40 ประเทศ",
+          "label_1": "อัตราการเรียนจบ",
+          "label_2": "คะแนนเฉลี่ย",
+          "label_3": "ผู้เรียน"
+        },
+        "settings": "การตั้งค่าสถิติ",
+        "suffix": "หลังตัวเลข",
+        "value": "ตัวเลข"
+      },
+      "callout_title": "หัวข้อ",
+      "callout_title_placeholder": "หัวข้อ (ไม่บังคับ)",
+      "callout_collapsible": "ผู้เรียนพับเก็บได้",
+      "callout_default_open": "เปิดไว้ตอนแรก",
+      "callout_tone": "สี",
+      "callout_tone_default": "สีตามประเภท",
+      "code_copied": "คัดลอกโค้ดไปยังคลิปบอร์ดแล้ว",
+      "code_copy_failed": "คัดลอกไม่สำเร็จ เลือกโค้ดแล้วคัดลอกเอง",
+      "code_highlight": "บรรทัดที่ไฮไลต์ (เช่น 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "เลขบรรทัด",
+      "code_wrap": "ตัดบรรทัดยาว",
+      "align": {
+        "label": "การจัดแนวข้อความ",
+        "start": "ชิดต้นบรรทัด",
+        "center": "กึ่งกลาง",
+        "end": "ชิดท้ายบรรทัด",
+        "justify": "เต็มแนว"
+      },
+      "button_group": {
+        "label": "กลุ่มปุ่ม",
+        "add_button": "เพิ่มปุ่ม",
+        "new_button": "ปุ่ม",
+        "primary": "เริ่มต้น",
+        "secondary": "ดูเพิ่มเติม"
+      },
+      "image_frame": {
+        "label": "กรอบ",
+        "none": "ไม่มี",
+        "rounded": "มุมมน",
+        "shadow": "เงา",
+        "border": "เส้นขอบ",
+        "polaroid": "โพลารอยด์"
+      },
+      "inline_math": {
+        "title": "สูตรในบรรทัด",
+        "edit": "แก้ไขสูตร {{latex}}",
+        "latex": "LaTeX",
+        "hint": "เช่น \\frac{a}{b} หรือ x^2 พิมพ์ $…$ ในข้อความเพื่อสร้างสูตร",
+        "make": "คณิต",
+        "remove": "ลบ"
+      },
+      "toggle": {
+        "style": "รูปแบบส่วนพับ",
+        "variant": "ลักษณะ",
+        "variant_default": "ค่าเริ่มต้น",
+        "variant_bordered": "มีเส้นขอบ",
+        "variant_filled": "เติมสี",
+        "icon": "ไอคอน",
+        "icon_chevron": "ลูกศร",
+        "icon_plus": "บวกและลบ"
       }
     },
     "history": {

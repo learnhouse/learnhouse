@@ -48,6 +48,7 @@ import {
   TextUnderline,
   EyeSlash,
   BookOpenText,
+  Sigma,
 } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
@@ -75,6 +76,7 @@ import {
   textToContent,
   wordDiff,
 } from './selectionTools'
+import { ALIGN_ICON, AlignPanel, canAlignText, canMakeInlineMath, selectionTextAlign, selectionToInlineMath } from './bubbleUpgrades'
 
 const BTN =
   'inline-flex h-8 min-w-8 shrink-0 items-center justify-center gap-1 rounded-lg px-1.5 text-[13px] font-medium text-neutral-600 transition-colors outline-none hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-900/15'
@@ -93,7 +95,7 @@ const SWATCH_BG: Record<TextColor, string> = {
   teal: '#99f6e4', blue: '#bfdbfe', purple: '#ddd6fe', pink: '#fbcfe8',
 }
 
-type Panel = null | 'turn' | 'link' | 'color' | 'effects' | 'ai' | 'more'
+type Panel = null | 'turn' | 'link' | 'color' | 'effects' | 'ai' | 'more' | 'align'
 
 function Btn({ label, active, onClick, children, className, shortcut }: {
   label: string
@@ -157,6 +159,7 @@ export default function SelectionBubble({ editor, activity, course }: { editor: 
         codeBlock: e.isActive('codeBlock'), callout: e.isActive('callout'),
         text: e.state.doc.textBetween(from, to, ' ', ' '),
         hasComments: typeof e.storage?.comment?.onShortcut === 'function',
+        canAlign: canAlignText(e), textAlign: selectionTextAlign(e), canMath: canMakeInlineMath(e),
       }
     },
   })
@@ -350,7 +353,21 @@ export default function SelectionBubble({ editor, activity, course }: { editor: 
           >
             <LinkIcon size={16} className="text-blue-500" />
           </Btn>
+          {state.canMath && (
+            <Btn label={t('editor.blocks_v2.inline_math.make', 'Math')} onClick={() => { setPanel(null); selectionToInlineMath(editor) }}>
+              <Sigma size={16} />
+            </Btn>
+          )}
           <Divider />
+          {state.canAlign && (() => {
+            const AlignIcon = ALIGN_ICON[state.textAlign ?? 'start']
+            return (
+              <Btn label={t('editor.blocks_v2.align.label', 'Text alignment')} active={!!state.textAlign || panel === 'align'} onClick={() => togglePanel('align')}>
+                <AlignIcon size={16} className="rtl:-scale-x-100" />
+                <CaretDown size={10} className="text-neutral-400" />
+              </Btn>
+            )
+          })()}
           <Btn label={t('editor.blocks_v2.color', 'Color')} active={!!state.color || !!state.highlight || panel === 'color'} onClick={() => togglePanel('color')}>
             <span className="flex flex-col items-center leading-none">
               <span className="text-[13px] font-semibold" style={{ color: state.color ? SWATCH[state.color as TextColor] : undefined }}>A</span>
@@ -409,6 +426,10 @@ export default function SelectionBubble({ editor, activity, course }: { editor: 
               </button>
             ))}
           </div>
+        )}
+
+        {panel === 'align' && (
+          <AlignPanel editor={editor} current={state.textAlign} className={cn(PANEL, 'start-0 w-[200px]')} itemClass={ITEM} onDone={() => setPanel(null)} />
         )}
 
         {panel === 'link' && (

@@ -1,0 +1,442 @@
+/* Editor Plus tables (EDITOR_PLUS_SPEC.md, section A).
+
+ Everything here keys off attributes that only exist when an author set a
+ non-default option (data-variant, data-cell-type, …), so a table saved
+ before this change matches none of these rules and looks exactly as before.
+
+ Scopes: the editor (.activity-editor-content-wrapper), the learner canvas
+ (.canva-content-wrapper: DynamicCanva, StaticCanva, @learnhouse/react) and
+ the editor preview (.editor-preview-wrapper). Learners see a typed cell's
+ visual in place of its text; the editor keeps the text and adds the visual.
+ Logical properties only, so RTL mirrors for free. */
+
+/* ── Tone tokens (same names as the text colour palette) ─────────────── */
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='gray'], [data-lh-tone='gray']:not([data-tone])) { --lh-cell-tone: #737373; }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='red'], [data-lh-tone='red']:not([data-tone])) { --lh-cell-tone: #dc2626; }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='orange'], [data-lh-tone='orange']:not([data-tone])) { --lh-cell-tone: #ea580c; }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='amber'], [data-lh-tone='amber']:not([data-tone])) { --lh-cell-tone: #d97706; }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='green'], [data-lh-tone='green']:not([data-tone])) { --lh-cell-tone: #16a34a; }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='teal'], [data-lh-tone='teal']:not([data-tone])) { --lh-cell-tone: #0d9488; }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='blue'], [data-lh-tone='blue']:not([data-tone])) { --lh-cell-tone: #2563eb; }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='purple'], [data-lh-tone='purple']:not([data-tone])) { --lh-cell-tone: #7c3aed; }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='pink'], [data-lh-tone='pink']:not([data-tone])) { --lh-cell-tone: #db2777; }
+
+/* Dark surfaces get lighter tones. */
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='gray'], [data-lh-tone='gray']:not([data-tone])) { --lh-cell-tone: #a3a3a3; }
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='red'], [data-lh-tone='red']:not([data-tone])) { --lh-cell-tone: #f87171; }
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='orange'], [data-lh-tone='orange']:not([data-tone])) { --lh-cell-tone: #fb923c; }
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='amber'], [data-lh-tone='amber']:not([data-tone])) { --lh-cell-tone: #fbbf24; }
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='green'], [data-lh-tone='green']:not([data-tone])) { --lh-cell-tone: #4ade80; }
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='teal'], [data-lh-tone='teal']:not([data-tone])) { --lh-cell-tone: #2dd4bf; }
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='blue'], [data-lh-tone='blue']:not([data-tone])) { --lh-cell-tone: #60a5fa; }
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='purple'], [data-lh-tone='purple']:not([data-tone])) { --lh-cell-tone: #a78bfa; }
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th):is([data-tone='pink'], [data-lh-tone='pink']:not([data-tone])) { --lh-cell-tone: #f472b6; }
+
+/* ── Cell background: an inset shadow, so it layers over the block theme's
+   cell background and the striped rows instead of fighting them. ────── */
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='gray'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #737373 13%, transparent); }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='red'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #dc2626 13%, transparent); }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='orange'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #ea580c 13%, transparent); }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='amber'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #d97706 13%, transparent); }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='green'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #16a34a 13%, transparent); }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='teal'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #0d9488 13%, transparent); }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='blue'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #2563eb 13%, transparent); }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='purple'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #7c3aed 13%, transparent); }
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table :is(td, th)[data-background='pink'] { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, #db2777 13%, transparent); }
+
+/* ── Typed cells: shared ─────────────────────────────────────────────── */
+/* Progress: a bar drawn as two background layers (fill, track) under the
+   content; renderHTML/decorations set the fill's background-size from the
+   value, so the static renderer draws it without any script. */
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='progress'] {
+  --lh-cell-tone: #2563eb;
+  background-image:
+    linear-gradient(var(--lh-cell-tone), var(--lh-cell-tone)),
+    linear-gradient(color-mix(in srgb, currentColor 12%, transparent), color-mix(in srgb, currentColor 12%, transparent));
+  background-repeat: no-repeat;
+  background-size: 0% 6px, 100% 6px;
+  background-origin: content-box;
+  background-clip: padding-box;
+  /* background-position has no logical form; mirrored below for RTL. */
+  background-position: 0 calc(100% + 12px);
+  padding-block-end: 20px;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='progress']:dir(rtl) {
+  background-position: 100% calc(100% + 12px);
+}
+
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='number'],
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='progress'] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status: the text as a coloured pill. */
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='status'][aria-label]:not([aria-label='']) > p {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 0.875em;
+  font-weight: 500;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--lh-cell-tone, #737373) 82%, currentColor);
+  background: color-mix(in srgb, var(--lh-cell-tone, #737373) 14%, transparent);
+}
+
+/* ── Typed cells: learners (and the preview) see the visual ─────────────── */
+:is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-lh-display]:not([data-lh-display='']) > * {
+  display: none;
+}
+:is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-lh-display]:not([data-lh-display=''])::after {
+  content: attr(data-lh-display);
+}
+:is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='progress'][data-lh-display]::after {
+  font-weight: 600;
+  font-size: 0.9em;
+}
+:is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='checkbox'][data-lh-display]::after {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: #fff;
+  background: var(--lh-cell-tone, #16a34a);
+}
+:is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='checkbox'][data-lh-state='off']::after {
+  color: color-mix(in srgb, currentColor 45%, transparent);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 25%, transparent);
+}
+:is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror :is(td, th)[data-cell-type='rating'][data-lh-display]::after {
+  color: var(--lh-cell-tone, #d97706);
+  letter-spacing: 0.08em;
+  font-size: 1.05em;
+}
+
+/* ── Typed cells: the editor keeps the text and adds the visual ─────────── */
+.activity-editor-content-wrapper .ProseMirror :is(td, th)[data-lh-display]:not([data-lh-display='']):not([data-cell-type='checkbox'])::before {
+  content: attr(data-lh-display);
+  display: block;
+  margin-block-end: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--lh-cell-tone, currentColor) 75%, #a3a3a3);
+  pointer-events: none;
+  user-select: none;
+}
+.activity-editor-content-wrapper .ProseMirror :is(td, th).lh-cell-editing {
+  outline: 2px solid rgb(37 99 235 / 0.28);
+  outline-offset: -2px;
+}
+.activity-editor-content-wrapper .ProseMirror .lh-cell-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 6px;
+  vertical-align: -3px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgb(115 115 115 / 0.55);
+  cursor: pointer;
+}
+.activity-editor-content-wrapper .ProseMirror .lh-cell-check[aria-pressed='true'] {
+  background: var(--lh-cell-tone, #16a34a);
+  box-shadow: none;
+}
+.activity-editor-content-wrapper .ProseMirror .lh-cell-check:focus-visible {
+  outline: 2px solid rgb(14 165 233 / 0.5);
+  outline-offset: 1px;
+}
+
+/* ── Variants ─────────────────────────────────────────────────────────── */
+:where(:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror) table[data-variant='striped'] > tbody > tr:nth-child(even) > td:not([data-background]) {
+  box-shadow: inset 0 0 0 100vmax color-mix(in srgb, currentColor 4%, transparent);
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-variant='bordered'] :is(td, th) {
+  border-color: color-mix(in srgb, currentColor 38%, transparent);
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-variant='bordered'] {
+  outline: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  outline-offset: -1px;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-variant='minimal'] :is(td, th) {
+  border-inline: 0;
+  border-block-start: 0;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-variant='minimal'] th {
+  background-color: transparent;
+  font-size: 0.8em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 65%, transparent);
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .tableWrapper.lh-table-cards table,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-variant='cards'] {
+  border-radius: 12px;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-compact] :is(td, th) {
+  padding: 3px 7px;
+  font-size: 0.925em;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-compact] :is(td, th)[data-cell-type='progress'] {
+  padding-block-end: 16px;
+  background-position: 0 calc(100% + 10px);
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-header-column] > tbody > tr > :first-child {
+  font-weight: 600;
+}
+
+/* ── Caption ──────────────────────────────────────────────────────────── */
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-caption,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table > caption {
+  margin-block-end: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: start;
+  caption-side: top;
+  color: color-mix(in srgb, currentColor 62%, transparent);
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-caption {
+  position: sticky;
+  inset-inline-start: 0;
+}
+
+/* ── Sticky header (inside the table's own scroll box) ─────────────────── */
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .tableWrapper.lh-table-sticky {
+  max-height: min(70vh, 640px);
+  overflow: auto;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-sticky table[data-sticky-header] > tbody > tr:first-child > th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background-color: var(--lh-table-head-bg, #f1f1f1);
+  box-shadow: 0 1px 0 color-mix(in srgb, currentColor 22%, transparent);
+}
+:is(html[data-theme='dark']:not(:has([data-adm-theme])), .lh-bt[data-lh-bt-tone='dark']) :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror { --lh-table-head-bg: #262626; }
+
+/* ── Totals footer ────────────────────────────────────────────────────── */
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table > tfoot.lh-table-totals td {
+  border: 1px solid rgba(139, 139, 139, 0.4);
+  border-block-start-width: 2px;
+  padding: 6px 8px;
+  font-weight: 600;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table > tfoot.lh-table-totals .lh-table-totals-value {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-compact] > tfoot.lh-table-totals td {
+  padding: 3px 7px;
+}
+
+/* ── Learner sorting ──────────────────────────────────────────────────── */
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-sortbar {
+  position: sticky;
+  inset-inline-start: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-block-end: 8px;
+  font-size: 0.8125rem;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-sortbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: color-mix(in srgb, currentColor 65%, transparent);
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-sortbar :is(select, button) {
+  height: 28px;
+  border-radius: 8px;
+  padding-inline: 8px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 20%, transparent);
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-sortbar button {
+  min-width: 28px;
+  cursor: pointer;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-sortbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-sortbar :is(select, button):focus-visible {
+  outline: 2px solid rgb(14 165 233 / 0.5);
+  outline-offset: 1px;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sortable-live] > tbody > tr:first-child > th {
+  cursor: pointer;
+  user-select: none;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='1'] > tbody > tr:first-child > :nth-child(1),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='2'] > tbody > tr:first-child > :nth-child(2),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='3'] > tbody > tr:first-child > :nth-child(3),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='4'] > tbody > tr:first-child > :nth-child(4),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='5'] > tbody > tr:first-child > :nth-child(5),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='6'] > tbody > tr:first-child > :nth-child(6),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='7'] > tbody > tr:first-child > :nth-child(7),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='8'] > tbody > tr:first-child > :nth-child(8),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='9'] > tbody > tr:first-child > :nth-child(9),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='10'] > tbody > tr:first-child > :nth-child(10),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='11'] > tbody > tr:first-child > :nth-child(11),
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='12'] > tbody > tr:first-child > :nth-child(12) {
+  color: #2563eb;
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='1'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(1)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='2'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(2)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='3'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(3)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='4'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(4)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='5'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(5)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='6'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(6)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='7'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(7)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='8'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(8)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='9'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(9)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='10'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(10)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='11'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(11)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='12'][data-lh-sort-dir='asc'] > tbody > tr:first-child > :nth-child(12)::after {
+  content: ' \2191';
+}
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='1'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(1)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='2'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(2)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='3'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(3)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='4'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(4)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='5'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(5)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='6'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(6)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='7'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(7)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='8'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(8)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='9'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(9)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='10'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(10)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='11'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(11)::after,
+:is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror table[data-lh-sort-col='12'][data-lh-sort-dir='desc'] > tbody > tr:first-child > :nth-child(12)::after {
+  content: ' \2193';
+}
+
+/* ── Cards (phones): each row becomes a card, cells labelled with their
+   column header by a per-table rule (cardLabelsCss). ──────────────────── */
+@media (max-width: 640px) {
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .tableWrapper.lh-table-cards {
+    overflow: visible;
+    max-height: none;
+    mask-image: none;
+    animation: none;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] {
+    display: block;
+    width: auto !important;
+    min-width: 0 !important;
+    border-radius: 0;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > colgroup,
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr:first-child:not(:has(> td)) {
+    display: none;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) {
+    display: grid;
+    gap: 10px;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tfoot {
+    margin-block-start: 10px;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr {
+    display: grid;
+    padding: 4px 14px;
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 16%, transparent);
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr > :is(td, th) {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, 38%) 1fr;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0 !important;
+    padding: 7px 0;
+    border: 0;
+    border-block-end: 1px solid color-mix(in srgb, currentColor 9%, transparent);
+    background-color: transparent;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr > :is(td, th):last-child {
+    border-block-end: 0;
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th)::before {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: color-mix(in srgb, currentColor 60%, transparent);
+  }
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th) > p,
+  :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th)::after {
+    grid-column: 2;
+  }
+}
+/* Same, for a lesson in a narrow frame (BlockThemeScope measures it). */
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .tableWrapper.lh-table-cards {
+  overflow: visible;
+  max-height: none;
+  mask-image: none;
+  animation: none;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] {
+  display: block;
+  width: auto !important;
+  min-width: 0 !important;
+  border-radius: 0;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > colgroup,
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr:first-child:not(:has(> td)) {
+  display: none;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) {
+  display: grid;
+  gap: 10px;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tfoot {
+  margin-block-start: 10px;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr {
+  display: grid;
+  padding: 4px 14px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 16%, transparent);
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr > :is(td, th) {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 38%) 1fr;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0 !important;
+  padding: 7px 0;
+  border: 0;
+  border-block-end: 1px solid color-mix(in srgb, currentColor 9%, transparent);
+  background-color: transparent;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > :is(tbody, tfoot) > tr > :is(td, th):last-child {
+  border-block-end: 0;
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th)::before {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: color-mix(in srgb, currentColor 60%, transparent);
+}
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th) > p,
+.lh-bt:is([data-lh-bt-size='xs'], [data-lh-bt-size='sm']) :is(.canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-cards table[data-variant='cards'] > tbody > tr > :is(td, th)::after {
+  grid-column: 2;
+}
+
+@media print {
+  :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .tableWrapper.lh-table-sticky { max-height: none; overflow: visible; }
+  :is(.activity-editor-content-wrapper, .canva-content-wrapper, .editor-preview-wrapper) .ProseMirror .lh-table-sortbar { display: none; }
+}

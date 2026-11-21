@@ -56,6 +56,12 @@ describe('LearnHouseActivity with a raw document', () => {
     expect(container.querySelector('ol.ordered-list li')).toBeTruthy()
     expect(container.querySelector('blockquote')?.textContent).toContain('Money in')
     expect(container.querySelector('table th')?.textContent).toBe('Plan')
+    // Typed table cells: the value stays in the text, the visual comes from the schema.
+    const progress = container.querySelector('td[data-cell-type="progress"]')
+    expect(progress?.textContent).toBe('100')
+    expect(progress?.getAttribute('data-lh-display')).toBe('100%')
+    expect(container.querySelector('td[data-cell-type="checkbox"]')?.getAttribute('data-lh-state')).toBe('on')
+    expect(container.querySelector('.lh-table-sortbar select')).toBeTruthy()
     expect(container.querySelector('hr')).toBeTruthy()
     const link = container.querySelector('a[href="https://example.com/fees"]')
     expect(link?.getAttribute('rel')).toContain('noopener')

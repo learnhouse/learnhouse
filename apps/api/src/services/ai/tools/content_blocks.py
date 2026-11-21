@@ -207,12 +207,13 @@ CATALOG: dict[str, dict[str, Any]] = {
             {"type": "text", "text": "buckets", "marks": [{"type": "bold"}]},
             {"type": "text", "text": "."},
         ]},
-        "notes": "Inline content is text (marks: bold, italic, strike, underline, code, link {href}) and hardBreak. Code text takes no other mark.",
+        "attrs": {"textAlign": "start | center | end | justify (omit for the default)"},
+        "notes": "Inline content is text (marks: bold, italic, strike, underline, code, link {href}), hardBreak and inlineMath. Code text takes no other mark.",
     },
     "heading": {
         "use": "Section title.",
         "add": "Markdown: ## Title",
-        "attrs": {"level": "1 to 6"},
+        "attrs": {"level": "1 to 6", "textAlign": "start | center | end | justify"},
         "example": {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Storage classes"}]},
     },
     "bulletList": {
@@ -230,9 +231,12 @@ CATALOG: dict[str, dict[str, Any]] = {
     "codeBlock": {
         "use": "Code listing (not runnable; see blockCode).",
         "add": "Markdown: ```python fences",
-        "attrs": {"language": "e.g. python, js, sql"},
+        "attrs": {
+            "language": "e.g. python, js, sql", "filename": "optional", "showLineNumbers": "true/false",
+            "highlightLines": 'e.g. "2,4-6"', "wrap": "true wraps long lines",
+        },
         "example": {"type": "codeBlock", "attrs": {"language": "python"}, "content": [{"type": "text", "text": "print('hi')"}]},
-        "notes": "Plain text only, no marks.",
+        "notes": "Plain text only, no marks. In Markdown, options follow the language: ```python {lines wrap highlight=2,4-6}.",
     },
     "horizontalRule": {"use": "Divider.", "add": "Markdown: ---", "example": {"type": "horizontalRule"}},
     "table": {
@@ -248,21 +252,39 @@ CATALOG: dict[str, dict[str, Any]] = {
                 {"type": "tableCell", "content": [_p("Hot data")]},
             ]},
         ]},
-        "notes": "Cell paths are [table, row, cell]; a cell holds blocks.",
+        "attrs": {
+            "variant": "default | striped | bordered | minimal | cards (rows stack on phones)", "caption": "text",
+            "headerColumn / stickyHeader / sortable / compact": "true/false", "totals": "none | sum | average",
+            "cell attrs": (
+                "cellType text | progress | checkbox | rating | status | number | date; background and tone "
+                "(gray, red, orange, amber, green, teal, blue, purple, pink); align start | center | end; "
+                "valign top | middle | bottom; numberFormat plain | percent | currency | compact; currency (USD)"
+            ),
+        },
+        "notes": (
+            "Cell paths are [table, row, cell]; a cell holds blocks. A typed cell keeps its value as its text: "
+            "progress '75', checkbox 'yes'/'no', rating '4/5', status 'Done', number '1200', date '2026-03-01'. "
+            "Typed blocks: {type: table, column_types: [...]}."
+        ),
     },
     "callout": {
         "use": "Highlighted note box.",
         "add": "insert {callout: {type, markdown}} or Markdown: > [!TIP] text (NOTE, TIP, WARNING, CAUTION, SUCCESS).",
-        "attrs": {"type": "info | tip | warning | success | error", "dismissible": "true lets learners hide it"},
+        "attrs": {
+            "type": "info | tip | warning | success | error", "dismissible": "true lets learners hide it",
+            "title": "bold title", "collapsible": "true: opens on click (with defaultOpen)",
+            "kind": "note | question | example | quote (newer looks; type keeps the closest of the five)",
+            "tone": "gray, red, orange, amber, green, teal, blue, purple, pink (custom colour)",
+        },
         "example": {"type": "callout", "attrs": {"type": "tip", "dismissible": False}, "content": [_p("Turn on versioning before you need it.")]},
-        "notes": "Holds paragraphs and lists only (never bare text). Change the style with set_attrs {type}.",
+        "notes": "Holds paragraphs and lists only (never bare text). Change the style with set_attrs {type}; set_attrs {type: note} stores kind note with type info.",
     },
     "blockMathEquation": {
         "use": "Display math (LaTeX, rendered with KaTeX).",
         "add": "Markdown: $$ ... $$ on their own lines.",
         "attrs": {"math_equation": "LaTeX source"},
         "example": {"type": "blockMathEquation", "attrs": {"math_equation": "E = mc^2"}},
-        "notes": "There is no inline math; $...$ inside a sentence stays text.",
+        "notes": "For a formula inside a sentence use an inlineMath node in the paragraph; Markdown $...$ stays text.",
     },
     "blockQuiz": {
         "use": "Multiple-choice check for understanding (ungraded).",
@@ -272,7 +294,12 @@ CATALOG: dict[str, dict[str, Any]] = {
         ),
         "attrs": {
             "quizId": "string id or null",
-            "questions": "[{question_id, question, type: multiple_choice, response_type: single|multiple, answers: [{answer_id, answer, correct}]}]",
+            "questions": (
+                "[{question_id, question, type, response_type: single|multiple, answers: [{answer_id, answer, correct}], explanation}]; "
+                "type multiple_choice (default), true_false (answers True then False), short_answer (answers [], "
+                "accepted_answers, accent_insensitive) or numeric (answers [], correct_value, tolerance)"
+            ),
+            "settings": "null or {passMark: 0-100, showExplanations: true/false, ...}",
         },
         "example": {"type": "blockQuiz", "attrs": {"quizId": "quiz_example", "questions": [{
             "question_id": "question_1", "question": "Where does S3 store objects?",
@@ -282,7 +309,11 @@ CATALOG: dict[str, dict[str, Any]] = {
                 {"answer_id": "answer_2", "answer": "On EC2 disks", "correct": False},
             ],
         }]}},
-        "notes": "2 to 12 answers, at least one correct; two or more correct make it select-all. set_attrs {questions} also accepts the simple shape and keeps existing ids.",
+        "notes": (
+            "Options questions: 2 to 12 answers, at least one correct; two or more correct make it select-all. "
+            "set_attrs {questions} also accepts the simple shape ({text, options} or {text, type: true_false, answer} / "
+            "{text, type: short_answer, accepted_answers} / {text, type: numeric, correct_value, tolerance}) and keeps existing ids."
+        ),
     },
     "flipcard": {
         "use": "Click-to-reveal card for recall.",
@@ -310,8 +341,20 @@ CATALOG: dict[str, dict[str, Any]] = {
     "button": {
         "use": "Call-to-action link button.",
         "add": "Markdown fence: ```button with [Label](https://...) on one line (optional color: green, align: center), or insert {node}.",
-        "attrs": {"link": "http(s) URL", "emoji": "one emoji", "color": "blue, ...", "alignment": "left | center | right"},
+        "attrs": {
+            "link": "http(s) URL", "emoji": "one emoji", "color": "blue, ...", "alignment": "left | center | right",
+            "variant": "solid | outline | soft | link", "size": "sm | md | lg",
+        },
         "example": {"type": "button", "attrs": {"emoji": "🔗", "link": "https://docs.aws.amazon.com/s3/", "color": "blue", "alignment": "left"}, "content": [{"type": "text", "text": "Open the docs"}]},
+    },
+    "buttonGroup": {
+        "use": "Several buttons in a row.",
+        "add": "insert {node}.",
+        "attrs": {"alignment": "left | center | right"},
+        "example": {"type": "buttonGroup", "attrs": {"alignment": "left"}, "content": [
+            {"type": "button", "attrs": {"emoji": "📄", "link": "https://example.org/notes.pdf", "color": "blue", "alignment": "left"}, "content": [{"type": "text", "text": "Notes"}]},
+            {"type": "button", "attrs": {"emoji": "🧪", "link": "https://example.org/lab", "color": "blue", "alignment": "left", "variant": "outline"}, "content": [{"type": "text", "text": "Lab"}]},
+        ]},
     },
     "blockEmbed": {
         "use": "Embedded YouTube, Vimeo, Loom, Figma, CodePen, Google Maps, ...",
@@ -368,16 +411,143 @@ CATALOG: dict[str, dict[str, Any]] = {
         "attrs": {"h5pUrl": "http(s) URL of the H5P embed", "title": "name", "height": "pixels"},
         "example": {"type": "blockH5P", "attrs": {"h5pUrl": "https://h5p.org/h5p/embed/712", "title": "Drag the words"}},
     },
+    "toggleBlock": {
+        "use": "Collapsible section (worked answers, optional depth).",
+        "add": "Typed block {type: toggle, summary, blocks}, or insert {node}.",
+        "attrs": {"summary": "the line learners click", "defaultOpen": "true starts open", "variant": "default | bordered | filled", "icon": "chevron | plus"},
+        "example": {"type": "toggleBlock", "attrs": {"summary": "Show the answer", "defaultOpen": False}, "content": [_p("42.")]},
+    },
+    "tabs": {
+        "use": "Parallel views of one topic (per language, role or option); learners see one tab at a time.",
+        "add": "Typed block {type: tabs, tabs: [{title, blocks}]}, or insert {node}.",
+        "attrs": {"blockId": "unique id", "variant": "line | pills | boxed"},
+        "example": {"type": "tabs", "attrs": {"blockId": "tabs_example", "variant": "line"}, "content": [
+            {"type": "tabItem", "attrs": {"title": "Python"}, "content": [_p("Use boto3.")]},
+            {"type": "tabItem", "attrs": {"title": "CLI"}, "content": [_p("Use aws s3 cp.")]},
+        ]},
+        "notes": "Holds 2 to 8 tabItem {attrs: {title}, content: blocks}. Tab paths are [tabs, tab]; a tab's blocks [tabs, tab, i].",
+    },
+    "columns": {
+        "use": "Content side by side (comparisons, text beside an example); stacks on phones.",
+        "add": "Typed block {type: columns, columns: [{blocks}]}, or insert {node}.",
+        "attrs": {"layout": "1-1 | 1-2 | 2-1 | 1-1-1 | 1-1-1-1 (matches the column count)", "gap": "sm | md | lg", "stackOnMobile": "true", "verticalAlign": "top | center | bottom"},
+        "example": {"type": "columns", "attrs": {"layout": "1-1", "gap": "md", "stackOnMobile": True, "verticalAlign": "top"}, "content": [
+            {"type": "column", "content": [_p("Standard: hot data.")]},
+            {"type": "column", "content": [_p("Glacier: archives.")]},
+        ]},
+        "notes": "Holds 2 to 4 column nodes, each holding blocks.",
+    },
+    "accordion": {
+        "use": "A stack of collapsible sections (FAQs).",
+        "add": "Typed block {type: accordion, items: [{summary, blocks}]}, or insert {node}.",
+        "attrs": {"single": "true opens one at a time", "variant": "default | bordered | filled"},
+        "example": {"type": "accordion", "attrs": {"single": True, "variant": "default"}, "content": [
+            {"type": "toggleBlock", "attrs": {"summary": "Is S3 durable?", "defaultOpen": False}, "content": [_p("Eleven nines.")]},
+        ]},
+        "notes": "Holds toggleBlock nodes only.",
+    },
+    "timeline": {
+        "use": "Ordered steps, dates or stages.",
+        "add": "Typed block {type: timeline, steps: [{title, label, text}]}, or insert {node}.",
+        "attrs": {"variant": "steps | timeline | process", "numbered": "true/false", "orientation": "vertical | horizontal"},
+        "example": {"type": "timeline", "attrs": {"variant": "steps", "numbered": True, "orientation": "vertical"}, "content": [
+            {"type": "timelineItem", "attrs": {"title": "Create a bucket", "label": ""}, "content": [_p("Pick a region.")]},
+            {"type": "timelineItem", "attrs": {"title": "Upload", "label": ""}, "content": [_p("Drag files in.")]},
+        ]},
+        "notes": "Holds timelineItem {attrs: {title, label, icon, tone}, content: blocks}; tone neutral, blue, teal, green, amber, rose.",
+    },
+    "tableOfContents": {
+        "use": "A live list of the page's headings.",
+        "add": "insert {node}.",
+        "attrs": {"title": "empty shows 'Contents'", "maxLevel": "2 | 3 | 4", "numbered": "true/false"},
+        "example": {"type": "tableOfContents", "attrs": {"title": "", "maxLevel": 3, "numbered": False}},
+    },
+    "keyTakeaways": {
+        "use": "Summary card, usually at the end of a page.",
+        "add": "Typed block {type: key_takeaways, points: [...]}, or insert {node}.",
+        "attrs": {"title": "empty shows 'Key takeaways'", "tone": "neutral | blue | teal | green | amber | rose", "icon": "lightbulb, star, check, target, flag, book, rocket, key"},
+        "example": {"type": "keyTakeaways", "attrs": {"title": "", "tone": "amber"}, "content": [
+            {"type": "bulletList", "content": [_li("Buckets hold objects."), _li("Pick the class by access pattern.")]},
+        ]},
+    },
+    "taskList": {
+        "use": "Checklist learners can tick (kept in their browser).",
+        "add": "Typed block {type: checklist, items: [...]}, or insert {node}.",
+        "attrs": {"blockId": "unique id", "learnerCanCheck": "true/false"},
+        "example": {"type": "taskList", "attrs": {"blockId": "check_example", "learnerCanCheck": True}, "content": [
+            {"type": "taskItem", "attrs": {"checked": False}, "content": [_p("Create a bucket")]},
+            {"type": "taskItem", "attrs": {"checked": False}, "content": [_p("Upload a file")]},
+        ]},
+        "notes": "Holds taskItem {attrs: {checked}, content: paragraphs}.",
+    },
+    "gallery": {
+        "use": "Several pictures as a grid, carousel or masonry, with a lightbox.",
+        "add": "Typed block {type: gallery, images: [{url, alt, caption}]}, or insert {node}.",
+        "attrs": {"blockId": "unique id", "layout": "grid | carousel | masonry", "columns": "2 | 3 | 4", "images": "[{id, url, alt, caption}] (linked pictures; uploads keep their blockObject)"},
+        "example": {"type": "gallery", "attrs": {"blockId": "gal_example", "layout": "grid", "columns": 2, "images": [
+            {"id": "img_1", "url": "https://example.org/a.jpg", "alt": "A bucket diagram"},
+            {"id": "img_2", "url": "https://example.org/b.jpg", "alt": "The console", "caption": "Console"},
+        ]}},
+    },
+    "imageCompare": {
+        "use": "Before/after slider over two pictures.",
+        "add": "Typed block {type: image_compare, before: {url, label}, after: {url, label}}, or insert {node}.",
+        "attrs": {"before / after": "{url, label, alt}", "start": "divider position 0-100", "orientation": "horizontal | vertical"},
+        "example": {"type": "imageCompare", "attrs": {"before": {"url": "https://example.org/old.png", "label": "Before"}, "after": {"url": "https://example.org/new.png", "label": "After"}, "start": 50, "orientation": "horizontal"}},
+    },
+    "chart": {
+        "use": "A small data set as a chart.",
+        "add": "Typed block {type: chart, chart, labels, series}, or insert {node}.",
+        "attrs": {
+            "type": "bar | column | line | area | pie | donut", "title": "text",
+            "data": "{labels: [text], series: [{name, values: [one number per label], tone}]}",
+            "showLegend / showValues / stacked": "true/false",
+        },
+        "example": {"type": "chart", "attrs": {"type": "column", "title": "Cost per GB", "data": {"labels": ["Standard", "Glacier"], "series": [{"name": "USD", "values": [0.023, 0.004], "tone": None}]}, "showLegend": True, "showValues": False, "stacked": False}},
+    },
+    "statHighlights": {
+        "use": "Two to four headline numbers.",
+        "add": "Typed block {type: stat_highlights, stats: [...]}, or insert {node}.",
+        "attrs": {"items": "[{id, value (text, e.g. '99.9'), label, description, prefix, suffix, tone}]", "columns": "2 | 3 | 4", "animate": "true counts up"},
+        "example": {"type": "statHighlights", "attrs": {"items": [{"id": "s1", "value": "99.99", "suffix": "%", "label": "Availability"}], "columns": 2, "animate": True}},
+    },
+    "fileCard": {
+        "use": "Download card for a file.",
+        "add": "Typed block {type: file_card, url, name}, or insert {node}.",
+        "attrs": {"url": "http(s) link", "name": "shown name", "description": "optional", "sizeBytes": "optional", "fileType": "pdf, doc, sheet, slides, archive, image, audio, video, text, code, file"},
+        "example": {"type": "fileCard", "attrs": {"url": "https://example.org/cheatsheet.pdf", "name": "S3 cheat sheet.pdf", "fileType": "pdf"}},
+        "notes": "An uploaded file (blockObject) is added in the editor.",
+    },
+    "quoteBlock": {
+        "use": "Pull quote or testimonial with an author.",
+        "add": "Typed block {type: quote, text, author, role}, or insert {node}.",
+        "attrs": {"variant": "pull | testimonial | highlight", "author": "name", "role": "e.g. job title", "avatarUrl": "http(s) picture"},
+        "example": {"type": "quoteBlock", "attrs": {"variant": "pull", "author": "Werner Vogels"}, "content": [_p("Everything fails, all the time.")]},
+        "notes": "Holds paragraphs only. A plain > quote is a blockquote.",
+    },
+    "inlineMath": {
+        "use": "A formula inside a sentence (KaTeX).",
+        "add": "insert {node} with a paragraph holding it.",
+        "attrs": {"latex": "LaTeX source"},
+        "example": {"type": "inlineMath", "attrs": {"latex": "x^2"}},
+        "notes": "Inline: it sits in a paragraph or heading next to text.",
+    },
     "media": {
         "use": "Image, video, audio or PDF (blockImage, blockVideo, blockAudio, blockPDF).",
         "add": "Markdown: ![alt](url) line or ```image/pdf/audio/video fence (approval), or add_media_block.",
         "notes": (
             "The file is fetched from its public URL and stored; until then it shows as a link, and a "
             "file that fails stays a link. Raw nodes cannot point at files. set_attrs can change an "
-            "image's alignment or size {width} later."
+            "image's alignment, size {width} or frame (none, rounded, shadow, border, polaroid) later."
         ),
     },
 }
+
+# Layout and data blocks, listed by name only in the short catalog.
+LAYOUT_BLOCKS = (
+    "tabs", "columns", "accordion", "timeline", "toggleBlock", "keyTakeaways", "taskList", "tableOfContents",
+    "gallery", "imageCompare", "chart", "statHighlights", "fileCard", "quoteBlock", "buttonGroup", "inlineMath",
+)
 
 # The fence syntax, shown once in the catalog so a model can write rich
 # blocks straight into a page's Markdown (parsed in fences.py).
@@ -449,6 +619,12 @@ _ALIASES = {
     "label": "expLabel", "diagram": "expLabel", "word_guess": "expWordGuess", "wordle": "expWordGuess",
     "confidence_check": "expConfidence", "confidence": "expConfidence", "property_grid": "expMatrix",
     "matrix": "expMatrix", "reflection": "expReflect", "reflect": "expReflect",
+    "toggle": "toggleBlock", "tab": "tabs", "tabItem": "tabs", "column": "columns", "timelineItem": "timeline",
+    "toc": "tableOfContents", "key_takeaways": "keyTakeaways", "summary": "keyTakeaways", "checklist": "taskList",
+    "taskItem": "taskList", "todo": "taskList", "image_compare": "imageCompare", "before_after": "imageCompare",
+    "stat_highlights": "statHighlights", "stats": "statHighlights", "file_card": "fileCard", "file": "fileCard",
+    "download": "fileCard", "testimonial": "quoteBlock", "pullQuote": "quoteBlock", "graph": "chart",
+    "buttonRow": "buttonGroup", "faq": "accordion",
 }
 
 def _key(name: str) -> str:
@@ -509,11 +685,15 @@ async def _describe_activity_blocks(ctx: ToolContext, p: DescribeBlocksParams):
             "Media, preview, h5p and widget need approval."
         ),
         "fences": FENCES,
-        "blocks": [{"type": name, "use": e["use"], "add": e["add"]} for name, e in CATALOG.items() if name not in EXPERIENCE_CATALOG],
+        "blocks": [
+            {"type": name, "use": e["use"], "add": e["add"]}
+            for name, e in CATALOG.items() if name not in EXPERIENCE_CATALOG and name not in LAYOUT_BLOCKS
+        ],
         "experiences": (
             "Interactive typed blocks (insert {blocks: [...]} or add_blocks; no fence): " + ", ".join(EXPERIENCE_CATALOG_TYPED.values())
             + "; plus scenarios (display: chat) and flashcards (mode: study)."
         ),
+        "layout_blocks": " ".join(LAYOUT_BLOCKS) + " (typed blocks or insert {node})",
         "read_only": _READ_ONLY,
         "detail": "Call again with type=<name> for shape, fence rules and an example.",
     }
@@ -525,10 +705,11 @@ SPECS: list[ToolSpec] = [
         title="Page block types",
         description=(
             "List the block types a page can hold (text, lists, tables, callouts, quizzes, "
-            "flipcards, math, embeds, code exercises, media, and the interactive Experiences: "
-            "sort, sequence, match pairs, hotspot, fill the gaps, myth or fact, speed round, "
-            "estimate, spot the mistake, code lock, venn, label diagram, word guess, confidence "
-            "check, property grid, reflection) and how to add each. Pass type for "
+            "flipcards, math, embeds, code exercises, media, tabs, columns, accordions, timelines, "
+            "checklists, charts, galleries, and the interactive Experiences: sort, sequence, match "
+            "pairs, hotspot, fill the gaps, myth or fact, speed round, estimate, spot the mistake, "
+            "code lock, venn, label diagram, word guess, confidence check, property grid, "
+            "reflection) and how to add each. Pass type for "
             "one block's exact editor shape and a valid example."
         ),
         params_model=DescribeBlocksParams,

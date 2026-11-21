@@ -87,6 +87,74 @@ const EVERY_BLOCK: PMNode = {
         },
       ],
     },
+    {
+      // Editor Plus table options: typed cells keep their value in their text.
+      type: 'table',
+      attrs: { variant: 'striped', caption: 'Progress', headerColumn: false, stickyHeader: true, sortable: true, compact: false, totals: 'average' },
+      content: [
+        {
+          type: 'tableRow',
+          content: [
+            { type: 'tableCell', attrs: { colspan: 1, rowspan: 1, colwidth: null, cellType: 'checkbox', background: 'blue', align: 'center', valign: 'middle', tone: null, numberFormat: null, currency: null }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'yes' }] }] },
+            { type: 'tableCell', attrs: { colspan: 1, rowspan: 1, colwidth: null, cellType: 'progress', tone: 'teal' }, content: [{ type: 'paragraph', content: [{ type: 'text', text: '75' }] }] },
+            { type: 'tableCell', attrs: { colspan: 1, rowspan: 1, colwidth: null, cellType: 'number', numberFormat: 'currency', currency: 'EUR' }, content: [{ type: 'paragraph', content: [{ type: 'text', text: '12.5' }] }] },
+          ],
+        },
+      ],
+    },
+    // Editor Plus layout blocks: containers of ordinary blocks, the toc atom, the checklist.
+    {
+      type: 'tabs',
+      attrs: { blockId: 'tabs_1', variant: 'pills' },
+      content: [
+        { type: 'tabItem', attrs: { title: 'Overview', icon: null }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Big picture' }] }] },
+        {
+          type: 'tabItem',
+          attrs: { title: '', icon: null },
+          content: [
+            {
+              type: 'columns',
+              attrs: { layout: '1-2', gap: 'lg', stackOnMobile: false, verticalAlign: 'center' },
+              content: [{ type: 'column', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a' }] }] }, { type: 'column', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'b' }] }] }],
+            },
+          ],
+        },
+      ],
+    },
+    { type: 'accordion', attrs: { single: true, variant: 'bordered' }, content: [{ type: 'toggleBlock', attrs: { summary: 'Why?', defaultOpen: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Because' }] }] }] },
+    {
+      type: 'timeline',
+      attrs: { variant: 'process', numbered: true, orientation: 'horizontal' },
+      content: [{ type: 'timelineItem', attrs: { title: 'Plan', label: 'Week 1', icon: 'flag', tone: 'blue' }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Plan it' }] }] }],
+    },
+    { type: 'tableOfContents', attrs: { title: 'On this page', maxLevel: 2, numbered: true } },
+    { type: 'keyTakeaways', attrs: { title: '', tone: 'teal', icon: 'star' }, content: [{ type: 'bulletList', content: [{ type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'one' }] }] }] }] },
+    {
+      type: 'taskList',
+      attrs: { blockId: 'check_1', learnerCanCheck: false },
+      content: [{ type: 'taskItem', attrs: { checked: true }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'done' }] }] }, { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'todo' }] }] }],
+    },
+    // Editor Plus media and data blocks: atoms with JSON attrs, and the quote with paragraphs inside.
+    {
+      type: 'gallery',
+      attrs: {
+        blockId: 'gal_1',
+        layout: 'carousel',
+        columns: 2,
+        images: [
+          { id: 'img_1', url: 'https://images.example.com/a.jpg', caption: 'Dawn', alt: 'A coast' },
+          { id: 'img_2', blockObject: { block_uuid: 'block_g2', block_type: 'BLOCK_IMAGE', content: { file_id: 'f2', file_format: 'png' } }, alt: 'Tide pool' },
+        ],
+      },
+    },
+    { type: 'imageCompare', attrs: { before: { url: 'https://images.example.com/b.jpg', label: '1990' }, after: { url: 'https://images.example.com/c.jpg', label: '2020', alt: 'Forest' }, start: 35, orientation: 'vertical' } },
+    {
+      type: 'chart',
+      attrs: { type: 'donut', title: 'Time', data: { labels: ['Read', 'Practice'], series: [{ name: 'Minutes', values: [30, 50], tone: null }] }, showLegend: true, showValues: false, stacked: false },
+    },
+    { type: 'statHighlights', attrs: { items: [{ id: 's1', value: '92', label: 'Completion', suffix: '%', tone: 'teal' }], columns: 3, animate: true } },
+    { type: 'fileCard', attrs: { blockObject: null, url: 'https://files.example.com/list.xlsx', name: 'List', description: null, sizeBytes: null, fileType: 'sheet' } },
+    { type: 'quoteBlock', attrs: { variant: 'pull', author: 'Sam', role: null, avatarUrl: null }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'It clicked.' }] }] },
     { type: 'blockImage', attrs: { blockObject: { block_uuid: 'block_1', content: { file_id: 'f', file_format: 'png' } }, size: { width: 420 }, alignment: 'center' } },
     { type: 'blockVideo', attrs: { blockObject: { block_uuid: 'block_2' }, size: 'medium' } },
     { type: 'blockAudio', attrs: { blockObject: null } },
@@ -105,6 +173,24 @@ const EVERY_BLOCK: PMNode = {
     { type: 'blockEmbed', attrs: { embedUrl: 'https://example.com', embedCode: null, embedType: 'url', embedHeight: 300, embedWidth: '100%', alignment: 'left' } },
     { type: 'badge', attrs: { color: 'sky', emoji: '💡' }, content: [{ type: 'text', text: 'Badge' }] },
     { type: 'button', attrs: { emoji: '🔗', link: 'https://example.com', color: 'blue', alignment: 'left' }, content: [{ type: 'text', text: 'Go' }] },
+    // Editor Plus block upgrades: the button group (buttons with style and size), inline math,
+    // text alignment, and the new attrs of existing blocks.
+    {
+      type: 'buttonGroup',
+      attrs: { alignment: 'center' },
+      content: [
+        { type: 'button', attrs: { emoji: '🚀', link: 'https://example.com', color: 'teal', alignment: 'left', variant: null, size: null }, content: [{ type: 'text', text: 'Start' }] },
+        { type: 'button', attrs: { emoji: '📘', link: '', color: 'blue', alignment: 'left', variant: 'outline', size: 'lg' }, content: [{ type: 'text', text: 'Docs' }] },
+      ],
+    },
+    {
+      type: 'paragraph',
+      attrs: { textAlign: 'center' },
+      content: [{ type: 'text', text: 'Area ' }, { type: 'inlineMath', attrs: { latex: '\\pi r^2' } }, { type: 'text', text: ' units' }],
+    },
+    { type: 'codeBlock', attrs: { language: 'js', filename: null, showLineNumbers: true, highlightLines: '1,3-4', wrap: true }, content: [{ type: 'text', text: 'a\nb\nc\nd' }] },
+    { type: 'callout', attrs: { type: 'info', dismissible: false, icon: null, title: 'Heads up', collapsible: true, defaultOpen: false, tone: 'purple', kind: 'note' }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Note' }] }] },
+    { type: 'toggleBlock', attrs: { summary: 'More', defaultOpen: false, variant: 'bordered', icon: 'plus' }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hidden' }] }] },
     { type: 'blockUser', attrs: { user_id: 'user_1' } },
     { type: 'blockWebPreview', attrs: { url: 'https://example.com', title: 'Example', description: null, og_image: null, favicon: null, og_type: null, og_url: null, alignment: 'left' } },
     { type: 'flipcardGrid', attrs: { columns: 2 }, content: [{ type: 'flipcard', attrs: { question: 'Q', answer: 'A', color: 'blue', alignment: 'center', size: 'medium' } }] },

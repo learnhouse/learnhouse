@@ -821,7 +821,11 @@
     "set_new_password": "Définir un nouveau mot de passe",
     "invited_by_email_cta": "Invité par e-mail ? Inscrivez-vous avec cette adresse",
     "use_invite_code_instead": "Vous avez plutôt un code d'invitation ?",
-    "password_reset_done": "Votre mot de passe a été modifié."
+    "password_reset_done": "Votre mot de passe a été modifié.",
+    "login_failed_forgot": "Mot de passe oublié ?",
+    "login_failed_reset": "Le réinitialiser",
+    "login_failed_magic": "M'envoyer plutôt un lien de connexion",
+    "login_failed_google_hint": "Inscrit avec Google ? Utilisez Continuer avec Google ci-dessous."
   },
   "validation": {
     "required": "Requis",
@@ -1339,7 +1343,11 @@
       "maintainer": "Mainteneur",
       "contributor": "Contributeur",
       "reporter": "Rapporteur"
-    }
+    },
+    "co_created_by": "Co-créé par",
+    "created_on": "Créé le",
+    "last_updated": "Mise à jour le",
+    "and_x_more": "& {{count}} de plus"
   },
   "communities": {
     "title": "Communautés",
@@ -4356,6 +4364,91 @@
         "completed_note": "Terminé. Relisez-vous une fois et retenez ce qui manquait.",
         "write_again": "Modifier ma réponse"
       }
+    },
+    "table": {
+      "total": "Total",
+      "average": "Moyenne",
+      "sort_by": "Trier par",
+      "original_order": "Ordre d'origine",
+      "ascending": "Croissant",
+      "descending": "Décroissant",
+      "sort_direction": "Sens du tri",
+      "sorted": "Trié par {{column}}, {{direction}}",
+      "column_n": "Colonne {{n}}"
+    },
+    "tabs": {
+      "tab": "Onglet",
+      "untitled": "Onglet {{n}}",
+      "list_label": "Onglets"
+    },
+    "accordion": {
+      "expand_all": "Tout déplier",
+      "collapse_all": "Tout replier"
+    },
+    "table_of_contents": {
+      "title": "Sommaire"
+    },
+    "checklist": {
+      "progress_label": "{{done}} sur {{total}} terminés",
+      "reset": "Réinitialiser la liste",
+      "item": "Élément de la liste",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "Chronologie"
+    },
+    "key_takeaways": {
+      "title": "À retenir"
+    },
+    "chart": {
+      "category": "Catégorie",
+      "point": "{{label}}, {{series}} : {{value}}",
+      "slice": "{{label}} : {{value}} ({{percent}})",
+      "summary": "{{type}} avec {{series}} séries ({{names}}) sur {{categories}} catégories, de {{min}} à {{max}}.",
+      "title": "Graphique",
+      "types": {
+        "bar": "Graphique à barres",
+        "column": "Histogramme",
+        "line": "Graphique en courbes",
+        "area": "Graphique en aires",
+        "pie": "Graphique circulaire",
+        "donut": "Graphique en anneau"
+      }
+    },
+    "file_card": {
+      "download": "Télécharger",
+      "download_named": "Télécharger {{name}}",
+      "file": "Fichier",
+      "types": {
+        "pdf": "PDF",
+        "doc": "Document",
+        "sheet": "Feuille de calcul",
+        "slides": "Diapositives",
+        "archive": "Archive",
+        "image": "Image",
+        "audio": "Audio",
+        "video": "Vidéo",
+        "text": "Texte",
+        "code": "Code",
+        "file": "Fichier"
+      }
+    },
+    "gallery": {
+      "carousel": "carrousel",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "Afficher l’image {{n}}",
+      "label": "Galerie d’images",
+      "next": "Image suivante",
+      "open_image": "Ouvrir l’image {{n}} sur {{count}}",
+      "previous": "Image précédente",
+      "slide": "diapositive",
+      "viewer_title": "Image {{n}} sur {{count}}"
+    },
+    "image_compare": {
+      "after": "Après",
+      "before": "Avant",
+      "slider": "Comparer les images",
+      "value": "{{before}} {{b}} %, {{after}} {{a}} %"
     }
   },
   "embed": {
@@ -13680,7 +13773,11 @@
         "type_warning": "Avertissement",
         "type_tip": "Astuce",
         "type_success": "Succès",
-        "type_error": "Erreur"
+        "type_error": "Erreur",
+        "type_note": "Note",
+        "type_question": "Question",
+        "type_example": "Exemple",
+        "type_quote": "Citation"
       }
     },
     "dynamic": {
@@ -13980,7 +14077,8 @@
       "create_first": "Créer le premier scénario",
       "modal_preview_title": "Aperçu du scénario",
       "modal_preview_desc": "Testez votre scénario interactif",
-      "modal_edit_desc": "Créez et gérez vos scénarios interactifs"
+      "modal_edit_desc": "Créez et gérez vos scénarios interactifs",
+      "max_scenarios": "Maximum de 40 scénarios autorisés"
     },
     "slash_menu": {
       "items": {
@@ -14139,6 +14237,70 @@
         "table": {
           "title": "Tableau",
           "description": "Insérer un tableau 3x3"
+        },
+        "tabs": {
+          "description": "Passer d’un panneau de contenu à l’autre",
+          "title": "Onglets"
+        },
+        "columns": {
+          "description": "Placer du contenu côte à côte",
+          "title": "Colonnes"
+        },
+        "accordion": {
+          "description": "Sections repliables, une seule ouverte à la fois",
+          "title": "Accordéon"
+        },
+        "timeline": {
+          "description": "Étapes ou événements dans l’ordre",
+          "title": "Chronologie"
+        },
+        "table_of_contents": {
+          "description": "Liens vers les titres de cette page",
+          "title": "Table des matières"
+        },
+        "key_takeaways": {
+          "description": "Une carte qui résume les points clés",
+          "title": "À retenir"
+        },
+        "checklist": {
+          "description": "Éléments que les apprenants peuvent cocher",
+          "title": "Liste de contrôle"
+        },
+        "gallery": {
+          "title": "Galerie",
+          "description": "Plusieurs images en grille ou en carrousel"
+        },
+        "image_compare": {
+          "title": "Comparaison d’images",
+          "description": "Avant/après avec un curseur"
+        },
+        "file_card": {
+          "title": "Fichier à télécharger",
+          "description": "Un fichier que les apprenants peuvent télécharger"
+        },
+        "quote_block": {
+          "title": "Témoignage",
+          "description": "Un exergue ou un témoignage avec son auteur"
+        },
+        "quote": {
+          "title": "Citation",
+          "description": "Un simple passage cité"
+        },
+        "chart": {
+          "title": "Graphique",
+          "description": "Graphique à barres, en courbes ou circulaire à partir d’un petit tableau"
+        },
+        "stat_highlights": {
+          "title": "Chiffres clés",
+          "description": "De grands chiffres qui s’incrémentent"
+        },
+        "button_group": {
+          "title": "Groupe de boutons",
+          "description": "Plusieurs boutons côte à côte"
+        },
+        "inline_math": {
+          "title": "Formule en ligne",
+          "description": "Une formule dans une phrase (ou tapez $x^2$)"
         }
       },
       "categories": {
@@ -14496,7 +14658,14 @@
       "button": {
         "emoji": "Émoji",
         "link_hint": "S’ouvre dans un nouvel onglet quand les apprenants cliquent sur le bouton.",
-        "no_link": "Pas encore de lien : ajoutez-en un avec le bouton de lien."
+        "no_link": "Pas encore de lien : ajoutez-en un avec le bouton de lien.",
+        "style": "Style",
+        "variant": "Apparence",
+        "size": "Taille",
+        "variant_solid": "Plein",
+        "variant_outline": "Contour",
+        "variant_soft": "Doux",
+        "variant_link": "Lien"
       },
       "quiz": {
         "settings": "Paramètres du quiz",
@@ -14557,7 +14726,39 @@
         "start_over": "Recommencer",
         "attempts_n_many": "{{count}} tentatives",
         "attempts_limited_hint_many": "Les apprenants ont {{count}} essais.",
-        "question_count_many": "{{count}} questions"
+        "question_count_many": "{{count}} questions",
+        "question_type": "Type de question",
+        "type_multiple_choice": "Choix multiple",
+        "type_true_false": "Vrai / faux",
+        "type_short_answer": "Réponse courte",
+        "type_numeric": "Nombre",
+        "true": "Vrai",
+        "false": "Faux",
+        "accepted_answers": "Réponses acceptées",
+        "accepted_answer_n": "Réponse acceptée {{n}}",
+        "accepted_answer_placeholder": "Une réponse considérée comme juste",
+        "add_accepted": "Autre réponse acceptée",
+        "remove_accepted": "Retirer la réponse acceptée {{n}}",
+        "ignore_accents": "Ignorer les accents (é = e)",
+        "short_answer_hint": "Les majuscules et les espaces en trop sont ignorés.",
+        "numeric_value": "Bonne réponse",
+        "numeric_tolerance": "Tolérance",
+        "show_explanations": "Afficher les explications",
+        "show_explanations_hint": "Votre explication s’affiche sous chaque question une fois les réponses envoyées.",
+        "pass_mark": "Seuil de réussite",
+        "pass_mark_off": "Aucun",
+        "pass_mark_n": "{{n}} % pour réussir",
+        "pass_mark_off_hint": "Les apprenants voient si toutes les réponses étaient justes.",
+        "pass_mark_hint": "Les apprenants réussissent à partir de {{n}} % et voient leur score.",
+        "pass_mark_needed": "Seuil de réussite : {{n}} %",
+        "passed": "Réussi",
+        "not_passed": "Pas encore réussi",
+        "score_percent": "{{percent}} %",
+        "your_answer": "Votre réponse",
+        "your_number": "Votre réponse (un nombre)",
+        "answer_placeholder": "Saisissez votre réponse",
+        "number_placeholder": "Saisissez un nombre",
+        "expected_answer": "Attendu : {{answer}}"
       },
       "flipcard": {
         "front": "Recto",
@@ -14663,7 +14864,8 @@
         "complete_hint_many": "Vous avez fait {{count}} choix. Essayez un autre chemin pour voir ce qui change.",
         "endings_count_many": "{{count}} fins",
         "issue_count_many": "{{count}} problèmes",
-        "steps_count_many": "{{count}} étapes"
+        "steps_count_many": "{{count}} étapes",
+        "limits": "Jusqu’à {{max}} étapes, {{choices}} choix chacune."
       },
       "conditional": {
         "add_rule": "Ajouter une règle",
@@ -14817,6 +15019,423 @@
         "reset_text": "Réinitialiser",
         "text": "Titre et description",
         "title": "Titre"
+      },
+      "table": {
+        "rows_cols": "Lignes et colonnes",
+        "duplicate_row": "Dupliquer la ligne",
+        "distribute": "Répartir les colonnes",
+        "merge_split": "Fusionner ou scinder les cellules",
+        "headers": "En-têtes",
+        "header_column": "Colonne d'en-tête",
+        "cell_style": "Style de cellule",
+        "apply_to": "Appliquer à",
+        "scope_selection": "Cellules sélectionnées",
+        "scope_column": "Colonne entière",
+        "background": "Arrière-plan",
+        "align": "Alignement",
+        "align_start": "Début",
+        "align_center": "Centre",
+        "align_end": "Fin",
+        "valign": "Alignement vertical",
+        "valign_top": "Haut",
+        "valign_middle": "Milieu",
+        "valign_bottom": "Bas",
+        "cell_type": "Type de cellule",
+        "type_hint": "La valeur reste dans le texte de la cellule, par ex. 75, 4/5 ou oui.",
+        "type": {
+          "text": "Texte",
+          "progress": "Progression",
+          "checkbox": "Case à cocher",
+          "rating": "Note",
+          "status": "Statut",
+          "number": "Nombre",
+          "date": "Date"
+        },
+        "tone": "Couleur",
+        "tone_auto": "Automatique",
+        "number_format": "Format de nombre",
+        "format": {
+          "plain": "Simple",
+          "percent": "Pourcentage",
+          "currency": "Devise",
+          "compact": "Compact"
+        },
+        "currency": "Code de devise",
+        "settings": "Paramètres du tableau",
+        "variant": "Style",
+        "variants": {
+          "default": "Par défaut",
+          "striped": "Rayé",
+          "bordered": "Bordé",
+          "minimal": "Minimal",
+          "cards": "Cartes"
+        },
+        "cards_hint": "Les lignes deviennent des cartes sur mobile.",
+        "caption": "Légende",
+        "caption_placeholder": "Décrivez le tableau",
+        "sortable": "Les apprenants peuvent trier",
+        "sticky_header": "En-tête fixe",
+        "compact": "Lignes compactes",
+        "totals": "Ligne de totaux",
+        "totals_hint": "Pour les colonnes de nombres et de progression.",
+        "totals_none": "Aucune",
+        "totals_sum": "Somme",
+        "totals_average": "Moyenne",
+        "toggle_checkbox": "Cocher ou décocher",
+        "templates": {
+          "progress": {
+            "title": "Suivi d'avancement",
+            "description": "Tâches avec responsables, statut et barres de progression"
+          },
+          "comparison": {
+            "title": "Comparaison",
+            "description": "Comparez des options côte à côte avec des coches"
+          },
+          "rubric": {
+            "title": "Grille d'évaluation",
+            "description": "Critères de notation avec niveaux et points"
+          }
+        },
+        "sample": {
+          "task": "Tâche",
+          "owner": "Responsable",
+          "status": "Statut",
+          "progress": "Progression",
+          "task_1": "Préparer la leçon",
+          "task_2": "Enregistrer la vidéo",
+          "task_3": "Rédiger le quiz",
+          "status_done": "Terminé",
+          "status_in_progress": "En cours",
+          "status_todo": "Pas commencé",
+          "feature": "Fonctionnalité",
+          "option_a": "Basique",
+          "option_b": "Pro",
+          "feature_1": "Leçons vidéo",
+          "feature_2": "Quiz",
+          "feature_3": "Certificats",
+          "criterion": "Critère",
+          "look_for": "Ce que nous attendons",
+          "level": "Niveau",
+          "points": "Points",
+          "crit_1": "Clarté",
+          "crit_2": "Exactitude",
+          "crit_3": "Structure",
+          "desc_1": "Les idées sont faciles à suivre",
+          "desc_2": "Les faits et les étapes sont corrects",
+          "desc_3": "Des sections claires dans un ordre logique"
+        }
+      },
+      "layout": {
+        "settings": "Paramètres",
+        "style": "Style",
+        "color": "Couleur",
+        "icon": "Icône",
+        "icon_default": "Par défaut",
+        "size_sm": "Petit",
+        "size_md": "Moyen",
+        "size_lg": "Grand",
+        "tone_neutral": "Neutre",
+        "tone_blue": "Bleu",
+        "tone_teal": "Bleu canard",
+        "tone_green": "Vert",
+        "tone_amber": "Ambre",
+        "tone_rose": "Rose",
+        "icons": {
+          "lightbulb": "Ampoule",
+          "star": "Étoile",
+          "check": "Coche",
+          "target": "Cible",
+          "flag": "Drapeau",
+          "book": "Livre",
+          "rocket": "Fusée",
+          "key": "Clé"
+        }
+      },
+      "tabs": {
+        "label": "Onglets",
+        "add": "Ajouter un onglet",
+        "remove": "Supprimer cet onglet",
+        "move_earlier": "Déplacer l’onglet avant",
+        "move_later": "Déplacer l’onglet après",
+        "title_placeholder": "Titre de l’onglet",
+        "variant_line": "Ligne",
+        "variant_pills": "Pastilles",
+        "variant_boxed": "Encadré",
+        "sample": {
+          "tab_1": "Vue d’ensemble",
+          "tab_2": "Détails",
+          "tab_3": "Exemple",
+          "text_1": "Commencez par la vue d’ensemble.",
+          "text_2": "Entrez dans le détail du fonctionnement.",
+          "text_3": "Montrez-le en pratique."
+        }
+      },
+      "columns": {
+        "label": "Colonnes",
+        "layout": "Disposition",
+        "layout_halves": "Deux colonnes égales",
+        "layout_narrow_wide": "Étroite, puis large",
+        "layout_wide_narrow": "Large, puis étroite",
+        "layout_thirds": "Trois colonnes",
+        "layout_quarters": "Quatre colonnes",
+        "gap": "Espacement",
+        "align": "Alignement vertical",
+        "align_top": "Haut",
+        "align_center": "Milieu",
+        "align_bottom": "Bas",
+        "stack": "Empiler sur les petits écrans",
+        "sample": {
+          "left": "Première colonne",
+          "right": "Deuxième colonne"
+        }
+      },
+      "accordion": {
+        "label": "Accordéon",
+        "add": "Ajouter une section",
+        "single": "Une seule section ouverte à la fois",
+        "variant_bordered": "Bordé",
+        "variant_filled": "Rempli",
+        "sample": {
+          "item_1": "Qu’est-ce que je vais apprendre ?",
+          "text_1": "Décrivez le résultat de cette leçon.",
+          "item_2": "Combien de temps cela prend-il ?",
+          "text_2": "Donnez une estimation pour que les apprenants s’organisent.",
+          "item_3": "De quoi ai-je besoin ?",
+          "text_3": "Listez ce qu’il faut préparer avant de commencer."
+        },
+        "variant_default": "Par défaut"
+      },
+      "timeline": {
+        "label": "Chronologie",
+        "add": "Ajouter une étape",
+        "remove": "Supprimer l’étape",
+        "step": "Étape",
+        "title_placeholder": "Titre de l’étape",
+        "label_placeholder": "Date ou libellé (facultatif)",
+        "numbered": "Étapes numérotées",
+        "orientation": "Sens",
+        "vertical": "Vertical",
+        "horizontal": "Horizontal",
+        "icon_number": "Numéro",
+        "variant_steps": "Étapes",
+        "variant_process": "Processus",
+        "sample": {
+          "step_1": "Préparer",
+          "text_1": "Rassemblez ce dont vous avez besoin.",
+          "step_2": "S’exercer",
+          "text_2": "Essayez sur un petit exemple.",
+          "step_3": "Appliquer",
+          "text_3": "Utilisez-le sur une vraie tâche."
+        },
+        "variant_timeline": "Chronologie"
+      },
+      "table_of_contents": {
+        "label": "Table des matières",
+        "depth": "Titres à inclure",
+        "numbered": "Numéroter les entrées",
+        "title_label": "Titre",
+        "empty": "Ajoutez des titres à la leçon et ils s’afficheront ici."
+      },
+      "key_takeaways": {
+        "label": "À retenir",
+        "title_label": "Titre de la carte",
+        "sample": {
+          "point_1": "L’idée principale en une phrase",
+          "point_2": "Un détail à retenir",
+          "point_3": "Ce qu’il faut faire ensuite"
+        }
+      },
+      "checklist": {
+        "label": "Liste de contrôle",
+        "learner_can_check": "Les apprenants peuvent cocher les éléments",
+        "hint": "Les coches sont enregistrées dans le navigateur de chaque apprenant. Les éléments cochés ici le sont au départ.",
+        "sample": {
+          "item_1": "Lire la leçon",
+          "item_2": "Faire l’exercice",
+          "item_3": "Vérifier vos réponses"
+        }
+      },
+      "chart": {
+        "add_row": "Ajouter une ligne",
+        "add_series": "Ajouter une série",
+        "apply_csv": "Utiliser ces données",
+        "csv_error": "Impossible de lire ce tableau. Mettez les libellés dans la première colonne et les nombres dans les autres.",
+        "csv_label": "Tableau au format CSV",
+        "csv_placeholder": "Collez depuis un tableur, ou tapez : libellé, série 1, série 2",
+        "edit_data": "Modifier les données",
+        "empty": "Ajoutez des données pour dessiner le graphique.",
+        "label": "Graphique",
+        "label_n": "Libellé {{n}}",
+        "labels": "Libellés",
+        "paste_csv": "Coller un CSV",
+        "pie_hint": "Les graphiques circulaires et en anneau affichent la première série.",
+        "remove_row": "Supprimer la ligne",
+        "remove_series": "Supprimer la série",
+        "row_n": "Élément {{n}}",
+        "sample": {
+          "q1": "T1",
+          "q2": "T2",
+          "q3": "T3",
+          "q4": "T4",
+          "series_1": "Classe A",
+          "series_2": "Classe B",
+          "title": "Score moyen au quiz par trimestre"
+        },
+        "series_color": "Changer la couleur de {{name}}",
+        "series_n": "Série {{n}}",
+        "series_name": "Nom de la série",
+        "settings": "Paramètres du graphique",
+        "show_legend": "Afficher la légende",
+        "show_values": "Afficher les valeurs",
+        "stacked": "Empiler les séries",
+        "title_label": "Titre",
+        "title_placeholder": "Titre du graphique",
+        "type": "Type de graphique"
+      },
+      "file_card": {
+        "add_link": "Ajouter le lien",
+        "description": "Description",
+        "description_placeholder": "Que contient ce fichier ? (facultatif)",
+        "empty_hint": "Importez un PDF, une image, un fichier audio ou vidéo, ou ajoutez un lien vers n’importe quel fichier.",
+        "empty_title": "Ajoutez un fichier à télécharger",
+        "label": "Fichier",
+        "link_hint": "Remplace le fichier importé, s’il y en a un.",
+        "link_label": "Lien vers le fichier",
+        "link_settings": "Lien du fichier",
+        "name": "Nom du fichier",
+        "type_error": "Ce type de fichier ne peut pas être importé. Importez un PDF, une image, un fichier audio ou vidéo, ou ajoutez plutôt un lien vers le fichier.",
+        "upload": "Importer un fichier"
+      },
+      "gallery": {
+        "add_images": "Ajouter des images",
+        "add_link": "Ajouter l’image",
+        "alt_hint": "Décrivez ce que montre l’image, pour les apprenants qui utilisent un lecteur d’écran.",
+        "alt_missing": "Texte alternatif manquant : {{n}}",
+        "alt_placeholder": "Texte alternatif (obligatoire)",
+        "columns": "Colonnes",
+        "count": "Images : {{n}}",
+        "empty_hint": "Déposez plusieurs images à la fois, ou choisissez-les sur votre appareil. {{formats}} · jusqu’à {{max}} chacune.",
+        "empty_title": "Ajoutez des images à votre galerie",
+        "full": "Une galerie contient jusqu’à {{max}} images.",
+        "label": "Galerie",
+        "layout": "Disposition",
+        "layout_carousel": "Carrousel",
+        "layout_grid": "Grille",
+        "layout_masonry": "Mosaïque",
+        "move_earlier": "Déplacer avant",
+        "move_later": "Déplacer après",
+        "remove": "Retirer l’image",
+        "settings": "Paramètres de la galerie"
+      },
+      "image_compare": {
+        "after_image": "Image après",
+        "before_image": "Image avant",
+        "empty_hint": "Choisissez une image avant et une image après de même taille. Les apprenants font glisser le séparateur pour les comparer.",
+        "empty_title": "Ajouter des images",
+        "horizontal": "Côte à côte",
+        "label": "Comparaison d’images",
+        "orientation": "Direction",
+        "replace_after": "Remplacer l’image après",
+        "replace_before": "Remplacer l’image avant",
+        "settings": "Paramètres de comparaison",
+        "side_label": "Libellé",
+        "start": "Position initiale du séparateur",
+        "vertical": "Haut et bas"
+      },
+      "quote_block": {
+        "author": "Auteur",
+        "author_placeholder": "Nom",
+        "avatar": "Lien de la photo",
+        "avatar_hint": "Affichée à côté du nom dans les témoignages. Laissez vide pour afficher les initiales.",
+        "label": "Citation",
+        "role": "Fonction",
+        "role_placeholder": "Fonction ou entreprise",
+        "sample": {
+          "author": "Sam Rivera",
+          "role": "Designer produit",
+          "text": "Les exercices pratiques ont tout éclairé. J’ai utilisé ce que j’ai appris au travail dès le lendemain."
+        },
+        "settings": "Paramètres de la citation",
+        "style": "Style",
+        "variant_highlight": "Mise en avant",
+        "variant_pull": "Exergue",
+        "variant_testimonial": "Témoignage"
+      },
+      "stat_highlights": {
+        "add": "Ajouter un chiffre",
+        "animate": "Compter à l’affichage",
+        "color": "Couleur",
+        "columns": "Colonnes",
+        "description": "Description",
+        "description_placeholder": "Brève description (facultatif)",
+        "empty": "Ajoutez un chiffre pour commencer.",
+        "label": "Chiffres clés",
+        "label_field": "Libellé",
+        "prefix": "Avant le nombre",
+        "remove": "Supprimer le chiffre",
+        "sample": {
+          "desc_1": "des apprenants terminent le cours",
+          "desc_2": "sur 1 200 avis",
+          "desc_3": "dans 40 pays",
+          "label_1": "Taux de réussite",
+          "label_2": "Note moyenne",
+          "label_3": "Apprenants"
+        },
+        "settings": "Paramètres des chiffres",
+        "suffix": "Après le nombre",
+        "value": "Nombre"
+      },
+      "callout_title": "Titre",
+      "callout_title_placeholder": "Titre facultatif",
+      "callout_collapsible": "Les apprenants peuvent le replier",
+      "callout_default_open": "Ouvert au départ",
+      "callout_tone": "Couleur",
+      "callout_tone_default": "La couleur du type",
+      "code_copied": "Code copié dans le presse-papiers",
+      "code_copy_failed": "Impossible de copier. Sélectionnez le code et copiez-le à la main.",
+      "code_highlight": "Lignes à mettre en évidence (par exemple 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "Numéros de ligne",
+      "code_wrap": "Renvoyer les longues lignes à la ligne",
+      "align": {
+        "label": "Alignement du texte",
+        "start": "Aligner au début",
+        "center": "Centrer",
+        "end": "Aligner à la fin",
+        "justify": "Justifier"
+      },
+      "button_group": {
+        "label": "Groupe de boutons",
+        "add_button": "Ajouter un bouton",
+        "new_button": "Bouton",
+        "primary": "Commencer",
+        "secondary": "En savoir plus"
+      },
+      "image_frame": {
+        "label": "Cadre",
+        "none": "Aucun",
+        "rounded": "Arrondi",
+        "shadow": "Ombre",
+        "border": "Bordure",
+        "polaroid": "Polaroïd"
+      },
+      "inline_math": {
+        "title": "Formule en ligne",
+        "edit": "Modifier la formule {{latex}}",
+        "latex": "LaTeX",
+        "hint": "Par exemple \\frac{a}{b} ou x^2. Tapez $…$ dans le texte pour en créer une.",
+        "make": "Maths",
+        "remove": "Retirer"
+      },
+      "toggle": {
+        "style": "Style de la section repliable",
+        "variant": "Apparence",
+        "variant_default": "Par défaut",
+        "variant_bordered": "Bordé",
+        "variant_filled": "Rempli",
+        "icon": "Icône",
+        "icon_chevron": "Flèche",
+        "icon_plus": "Plus et moins"
       }
     },
     "history": {

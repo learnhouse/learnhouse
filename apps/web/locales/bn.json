@@ -821,7 +821,11 @@
     "set_new_password": "নতুন পাসওয়ার্ড সেট করুন",
     "invited_by_email_cta": "ইমেলে আমন্ত্রণ পেয়েছেন? সেই ঠিকানা দিয়ে সাইন আপ করুন",
     "use_invite_code_instead": "এর বদলে আমন্ত্রণ কোড আছে?",
-    "password_reset_done": "আপনার পাসওয়ার্ড পরিবর্তন করা হয়েছে।"
+    "password_reset_done": "আপনার পাসওয়ার্ড পরিবর্তন করা হয়েছে।",
+    "login_failed_forgot": "পাসওয়ার্ড ভুলে গেছেন?",
+    "login_failed_reset": "রিসেট করুন",
+    "login_failed_magic": "এর বদলে আমাকে লগইন লিংক ইমেইল করুন",
+    "login_failed_google_hint": "Google দিয়ে সাইন আপ করেছিলেন? নিচে Google দিয়ে চালিয়ে যান ব্যবহার করুন।"
   },
   "validation": {
     "required": "প্রয়োজন",
@@ -1321,7 +1325,11 @@
       "maintainer": "মেইনটেইনার",
       "contributor": "কন্ট্রিবিউটর",
       "reporter": "রিপোর্টার"
-    }
+    },
+    "co_created_by": "সহ-নির্মাতা",
+    "created_on": "তৈরি হয়েছে",
+    "last_updated": "সর্বশেষ আপডেট",
+    "and_x_more": "এবং আরও {{count}}টি"
   },
   "communities": {
     "title": "কমিউনিটি",
@@ -4294,6 +4302,91 @@
         "completed_note": "হয়ে গেছে। আরেকবার পড়ুন এবং যা বাদ পড়েছে তা মনে রাখুন।",
         "write_again": "আমার উত্তর সম্পাদনা করুন"
       }
+    },
+    "table": {
+      "total": "মোট",
+      "average": "গড়",
+      "sort_by": "সাজান",
+      "original_order": "মূল ক্রম",
+      "ascending": "ঊর্ধ্বক্রম",
+      "descending": "অধঃক্রম",
+      "sort_direction": "সাজানোর দিক",
+      "sorted": "{{column}} অনুযায়ী সাজানো, {{direction}}",
+      "column_n": "কলাম {{n}}"
+    },
+    "tabs": {
+      "tab": "ট্যাব",
+      "untitled": "ট্যাব {{n}}",
+      "list_label": "ট্যাব"
+    },
+    "accordion": {
+      "expand_all": "সব খুলুন",
+      "collapse_all": "সব বন্ধ করুন"
+    },
+    "table_of_contents": {
+      "title": "বিষয়বস্তু"
+    },
+    "checklist": {
+      "progress_label": "{{total}}টির মধ্যে {{done}}টি সম্পন্ন",
+      "reset": "চেকলিস্ট রিসেট করুন",
+      "item": "চেকলিস্টের আইটেম",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "টাইমলাইন"
+    },
+    "key_takeaways": {
+      "title": "মূল কথা"
+    },
+    "chart": {
+      "category": "বিভাগ",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}}: {{categories}}টি বিভাগে {{series}}টি সিরিজ ({{names}}), {{min}} থেকে {{max}}।",
+      "title": "চার্ট",
+      "types": {
+        "bar": "বার চার্ট",
+        "column": "কলাম চার্ট",
+        "line": "লাইন চার্ট",
+        "area": "এরিয়া চার্ট",
+        "pie": "পাই চার্ট",
+        "donut": "ডোনাট চার্ট"
+      }
+    },
+    "file_card": {
+      "download": "ডাউনলোড",
+      "download_named": "{{name}} ডাউনলোড করুন",
+      "file": "ফাইল",
+      "types": {
+        "pdf": "PDF",
+        "doc": "ডকুমেন্ট",
+        "sheet": "স্প্রেডশিট",
+        "slides": "স্লাইড",
+        "archive": "আর্কাইভ",
+        "image": "ছবি",
+        "audio": "অডিও",
+        "video": "ভিডিও",
+        "text": "টেক্সট",
+        "code": "কোড",
+        "file": "ফাইল"
+      }
+    },
+    "gallery": {
+      "carousel": "ক্যারোসেল",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "ছবি {{n}} দেখান",
+      "label": "ছবির গ্যালারি",
+      "next": "পরের ছবি",
+      "open_image": "{{count}}টির মধ্যে ছবি {{n}} খুলুন",
+      "previous": "আগের ছবি",
+      "slide": "স্লাইড",
+      "viewer_title": "{{count}}টির মধ্যে ছবি {{n}}"
+    },
+    "image_compare": {
+      "after": "পরে",
+      "before": "আগে",
+      "slider": "ছবি তুলনা করুন",
+      "value": "{{before}} {{b}}%, {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13456,7 +13549,11 @@
         "type_warning": "সতর্কতা",
         "type_tip": "পরামর্শ",
         "type_success": "সফল",
-        "type_error": "ত্রুটি"
+        "type_error": "ত্রুটি",
+        "type_note": "নোট",
+        "type_question": "প্রশ্ন",
+        "type_example": "উদাহরণ",
+        "type_quote": "উদ্ধৃতি"
       }
     },
     "dynamic": {
@@ -13756,7 +13853,8 @@
       "create_first": "প্রথম সিনারিও তৈরি করুন",
       "modal_preview_title": "সিনারিও প্রিভিউ",
       "modal_preview_desc": "আপনার ইন্টারঅ্যাকটিভ সিনারিও পরীক্ষা করুন",
-      "modal_edit_desc": "আপনার ইন্টারঅ্যাকটিভ সিনারিও তৈরি ও পরিচালনা করুন"
+      "modal_edit_desc": "আপনার ইন্টারঅ্যাকটিভ সিনারিও তৈরি ও পরিচালনা করুন",
+      "max_scenarios": "সর্বোচ্চ ৪০টি সিনারিও অনুমোদিত"
     },
     "slash_menu": {
       "items": {
@@ -13915,6 +14013,70 @@
         "table": {
           "title": "টেবিল",
           "description": "একটি ৩x৩ টেবিল সন্নিবেশ করুন"
+        },
+        "tabs": {
+          "description": "কনটেন্টের প্যানেলগুলোর মধ্যে বদলান",
+          "title": "ট্যাব"
+        },
+        "columns": {
+          "description": "কনটেন্ট পাশাপাশি রাখুন",
+          "title": "কলাম"
+        },
+        "accordion": {
+          "description": "ভাঁজযোগ্য বিভাগ, একবারে একটি খোলা",
+          "title": "অ্যাকর্ডিয়ন"
+        },
+        "timeline": {
+          "description": "ক্রম অনুযায়ী ধাপ বা ঘটনা",
+          "title": "টাইমলাইন"
+        },
+        "table_of_contents": {
+          "description": "এই পেজের শিরোনামগুলোর লিংক",
+          "title": "সূচিপত্র"
+        },
+        "key_takeaways": {
+          "description": "মূল বিষয়গুলোর সারসংক্ষেপ কার্ড",
+          "title": "মূল কথা"
+        },
+        "checklist": {
+          "description": "যে আইটেমগুলোতে শিক্ষার্থীরা টিক দিতে পারে",
+          "title": "চেকলিস্ট"
+        },
+        "gallery": {
+          "title": "গ্যালারি",
+          "description": "গ্রিড বা ক্যারোসেলে কয়েকটি ছবি"
+        },
+        "image_compare": {
+          "title": "ছবি তুলনা",
+          "description": "স্লাইডারসহ আগে ও পরে"
+        },
+        "file_card": {
+          "title": "ফাইল ডাউনলোড",
+          "description": "শিক্ষার্থীরা ডাউনলোড করতে পারবে এমন ফাইল"
+        },
+        "quote_block": {
+          "title": "প্রশংসাপত্র",
+          "description": "লেখকসহ পুল কোট বা প্রশংসাপত্র"
+        },
+        "quote": {
+          "title": "উক্তি",
+          "description": "একটি সাধারণ উদ্ধৃত অংশ"
+        },
+        "chart": {
+          "title": "চার্ট",
+          "description": "ছোট টেবিল থেকে বার, লাইন বা পাই চার্ট"
+        },
+        "stat_highlights": {
+          "title": "পরিসংখ্যান",
+          "description": "বড় সংখ্যা যা গুনে বাড়ে"
+        },
+        "button_group": {
+          "title": "বোতাম গ্রুপ",
+          "description": "পাশাপাশি কয়েকটি বোতাম"
+        },
+        "inline_math": {
+          "title": "লাইনের মধ্যে সূত্র",
+          "description": "বাক্যের ভেতরে একটি সূত্র (অথবা $x^2$ লিখুন)"
         }
       },
       "categories": {
@@ -14271,7 +14433,14 @@
       "button": {
         "emoji": "ইমোজি",
         "link_hint": "শিক্ষার্থীরা বোতামে ক্লিক করলে নতুন ট্যাবে খোলে।",
-        "no_link": "এখনও কোনো লিংক নেই: লিংক বোতাম দিয়ে সেট করুন।"
+        "no_link": "এখনও কোনো লিংক নেই: লিংক বোতাম দিয়ে সেট করুন।",
+        "style": "স্টাইল",
+        "variant": "চেহারা",
+        "size": "আকার",
+        "variant_solid": "ভরাট",
+        "variant_outline": "রেখাযুক্ত",
+        "variant_soft": "হালকা",
+        "variant_link": "লিংক"
       },
       "quiz": {
         "settings": "কুইজ সেটিংস",
@@ -14329,7 +14498,39 @@
         "clear": "মুছুন",
         "check": "উত্তর যাচাই করুন",
         "try_again": "আবার চেষ্টা করুন",
-        "start_over": "আবার শুরু করুন"
+        "start_over": "আবার শুরু করুন",
+        "question_type": "প্রশ্নের ধরন",
+        "type_multiple_choice": "বহুনির্বাচনী",
+        "type_true_false": "সত্য / মিথ্যা",
+        "type_short_answer": "সংক্ষিপ্ত উত্তর",
+        "type_numeric": "সংখ্যা",
+        "true": "সত্য",
+        "false": "মিথ্যা",
+        "accepted_answers": "গ্রহণযোগ্য উত্তর",
+        "accepted_answer_n": "গ্রহণযোগ্য উত্তর {{n}}",
+        "accepted_answer_placeholder": "যে উত্তরটি সঠিক ধরা হবে",
+        "add_accepted": "আরেকটি গ্রহণযোগ্য উত্তর",
+        "remove_accepted": "গ্রহণযোগ্য উত্তর {{n}} সরান",
+        "ignore_accents": "উচ্চারণ চিহ্ন উপেক্ষা করুন (é = e)",
+        "short_answer_hint": "বড় হাতের অক্ষর ও অতিরিক্ত ফাঁকা জায়গা উপেক্ষা করা হয়।",
+        "numeric_value": "সঠিক উত্তর",
+        "numeric_tolerance": "সহনসীমা",
+        "show_explanations": "ব্যাখ্যা দেখান",
+        "show_explanations_hint": "শিক্ষার্থীরা জমা দেওয়ার পর প্রতিটি প্রশ্নের নিচে আপনার ব্যাখ্যা দেখা যাবে।",
+        "pass_mark": "পাস নম্বর",
+        "pass_mark_off": "বন্ধ",
+        "pass_mark_n": "পাস করতে {{n}}%",
+        "pass_mark_off_hint": "শিক্ষার্থীরা দেখবে সব উত্তর সঠিক ছিল কিনা।",
+        "pass_mark_hint": "শিক্ষার্থীরা {{n}}% বা তার বেশি পেলে পাস করবে এবং তাদের স্কোর দেখবে।",
+        "pass_mark_needed": "পাস নম্বর: {{n}}%",
+        "passed": "পাস",
+        "not_passed": "এখনও পাস হয়নি",
+        "score_percent": "{{percent}}%",
+        "your_answer": "আপনার উত্তর",
+        "your_number": "আপনার উত্তর (একটি সংখ্যা)",
+        "answer_placeholder": "আপনার উত্তর লিখুন",
+        "number_placeholder": "একটি সংখ্যা লিখুন",
+        "expected_answer": "প্রত্যাশিত: {{answer}}"
       },
       "flipcard": {
         "front": "সামনে",
@@ -14428,7 +14629,8 @@
         "view": "দেখুন",
         "view_map": "মানচিত্র",
         "view_steps": "ধাপসমূহ",
-        "your_path": "আপনার পথ"
+        "your_path": "আপনার পথ",
+        "limits": "সর্বোচ্চ {{max}}টি ধাপ, প্রতিটিতে {{choices}}টি বিকল্প।"
       },
       "conditional": {
         "add_rule": "নিয়ম যোগ করুন",
@@ -14576,6 +14778,423 @@
         "reset_text": "রিসেট করুন",
         "text": "শিরোনাম ও বিবরণ",
         "title": "শিরোনাম"
+      },
+      "table": {
+        "rows_cols": "সারি ও কলাম",
+        "duplicate_row": "সারির প্রতিলিপি",
+        "distribute": "কলাম সমানভাবে ভাগ করুন",
+        "merge_split": "সেল একত্র বা বিভক্ত করুন",
+        "headers": "হেডার",
+        "header_column": "হেডার কলাম",
+        "cell_style": "সেলের স্টাইল",
+        "apply_to": "প্রয়োগ করুন",
+        "scope_selection": "নির্বাচিত সেল",
+        "scope_column": "পুরো কলাম",
+        "background": "পটভূমি",
+        "align": "সারিবদ্ধতা",
+        "align_start": "শুরু",
+        "align_center": "মাঝে",
+        "align_end": "শেষ",
+        "valign": "উল্লম্ব সারিবদ্ধতা",
+        "valign_top": "উপরে",
+        "valign_middle": "মাঝে",
+        "valign_bottom": "নিচে",
+        "cell_type": "সেলের ধরন",
+        "type_hint": "মানটি সেলের লেখাতেই থাকে, যেমন 75, 4/5 বা হ্যাঁ।",
+        "type": {
+          "text": "লেখা",
+          "progress": "অগ্রগতি",
+          "checkbox": "চেকবক্স",
+          "rating": "রেটিং",
+          "status": "অবস্থা",
+          "number": "সংখ্যা",
+          "date": "তারিখ"
+        },
+        "tone": "রং",
+        "tone_auto": "স্বয়ংক্রিয়",
+        "number_format": "সংখ্যার ফরম্যাট",
+        "format": {
+          "plain": "সাধারণ",
+          "percent": "শতাংশ",
+          "currency": "মুদ্রা",
+          "compact": "সংক্ষিপ্ত"
+        },
+        "currency": "মুদ্রার কোড",
+        "settings": "টেবিলের সেটিংস",
+        "variant": "স্টাইল",
+        "variants": {
+          "default": "ডিফল্ট",
+          "striped": "ডোরাকাটা",
+          "bordered": "বর্ডারযুক্ত",
+          "minimal": "ন্যূনতম",
+          "cards": "কার্ড"
+        },
+        "cards_hint": "ফোনে সারিগুলো কার্ড হয়ে যায়।",
+        "caption": "ক্যাপশন",
+        "caption_placeholder": "টেবিলটি বর্ণনা করুন",
+        "sortable": "শিক্ষার্থীরা সাজাতে পারবে",
+        "sticky_header": "স্থির হেডার",
+        "compact": "ঘন সারি",
+        "totals": "মোট সারি",
+        "totals_hint": "সংখ্যা ও অগ্রগতি কলামের জন্য।",
+        "totals_none": "কিছু না",
+        "totals_sum": "যোগফল",
+        "totals_average": "গড়",
+        "toggle_checkbox": "চেকবক্স পরিবর্তন করুন",
+        "templates": {
+          "progress": {
+            "title": "অগ্রগতি ট্র্যাকার",
+            "description": "দায়িত্বপ্রাপ্ত, অবস্থা ও অগ্রগতি বারসহ কাজ"
+          },
+          "comparison": {
+            "title": "তুলনা",
+            "description": "টিক চিহ্ন দিয়ে বিকল্পগুলো পাশাপাশি তুলনা করুন"
+          },
+          "rubric": {
+            "title": "মূল্যায়ন রুব্রিক",
+            "description": "স্তর ও পয়েন্টসহ মূল্যায়নের মানদণ্ড"
+          }
+        },
+        "sample": {
+          "task": "কাজ",
+          "owner": "দায়িত্বপ্রাপ্ত",
+          "status": "অবস্থা",
+          "progress": "অগ্রগতি",
+          "task_1": "পাঠের পরিকল্পনা",
+          "task_2": "ভিডিও রেকর্ড করা",
+          "task_3": "কুইজ লেখা",
+          "status_done": "সম্পন্ন",
+          "status_in_progress": "চলছে",
+          "status_todo": "শুরু হয়নি",
+          "feature": "বৈশিষ্ট্য",
+          "option_a": "বেসিক",
+          "option_b": "প্রো",
+          "feature_1": "ভিডিও পাঠ",
+          "feature_2": "কুইজ",
+          "feature_3": "সনদপত্র",
+          "criterion": "মানদণ্ড",
+          "look_for": "আমরা যা দেখি",
+          "level": "স্তর",
+          "points": "পয়েন্ট",
+          "crit_1": "স্পষ্টতা",
+          "crit_2": "নির্ভুলতা",
+          "crit_3": "গঠন",
+          "desc_1": "ভাবনাগুলো সহজে বোঝা যায়",
+          "desc_2": "তথ্য ও ধাপগুলো সঠিক",
+          "desc_3": "যৌক্তিক ক্রমে স্পষ্ট অংশ"
+        }
+      },
+      "layout": {
+        "settings": "সেটিংস",
+        "style": "শৈলী",
+        "color": "রং",
+        "icon": "আইকন",
+        "icon_default": "ডিফল্ট",
+        "size_sm": "ছোট",
+        "size_md": "মাঝারি",
+        "size_lg": "বড়",
+        "tone_neutral": "নিরপেক্ষ",
+        "tone_blue": "নীল",
+        "tone_teal": "নীলচে সবুজ",
+        "tone_green": "সবুজ",
+        "tone_amber": "অ্যাম্বার",
+        "tone_rose": "গোলাপি",
+        "icons": {
+          "lightbulb": "বাল্ব",
+          "star": "তারা",
+          "check": "টিক চিহ্ন",
+          "target": "লক্ষ্য",
+          "flag": "পতাকা",
+          "book": "বই",
+          "rocket": "রকেট",
+          "key": "চাবি"
+        }
+      },
+      "tabs": {
+        "label": "ট্যাব",
+        "add": "ট্যাব যোগ করুন",
+        "remove": "এই ট্যাবটি মুছুন",
+        "move_earlier": "ট্যাব আগে সরান",
+        "move_later": "ট্যাব পরে সরান",
+        "title_placeholder": "ট্যাবের শিরোনাম",
+        "variant_line": "রেখা",
+        "variant_pills": "পিল",
+        "variant_boxed": "বক্স",
+        "sample": {
+          "tab_1": "সংক্ষিপ্ত পরিচিতি",
+          "tab_2": "বিস্তারিত",
+          "tab_3": "উদাহরণ",
+          "text_1": "প্রথমে পুরো ছবিটা দিয়ে শুরু করুন।",
+          "text_2": "এটি কীভাবে কাজ করে তা গভীরভাবে বোঝান।",
+          "text_3": "বাস্তবে এটি দেখান।"
+        }
+      },
+      "columns": {
+        "label": "কলাম",
+        "layout": "লেআউট",
+        "layout_halves": "সমান দুটি কলাম",
+        "layout_narrow_wide": "প্রথমে সরু, পরে চওড়া",
+        "layout_wide_narrow": "প্রথমে চওড়া, পরে সরু",
+        "layout_thirds": "তিনটি কলাম",
+        "layout_quarters": "চারটি কলাম",
+        "gap": "ফাঁক",
+        "align": "উল্লম্ব সারিবদ্ধতা",
+        "align_top": "উপরে",
+        "align_center": "মাঝে",
+        "align_bottom": "নিচে",
+        "stack": "ছোট স্ক্রিনে একটির নিচে আরেকটি",
+        "sample": {
+          "left": "প্রথম কলাম",
+          "right": "দ্বিতীয় কলাম"
+        }
+      },
+      "accordion": {
+        "label": "অ্যাকর্ডিয়ন",
+        "add": "বিভাগ যোগ করুন",
+        "single": "একবারে একটি বিভাগই খোলা",
+        "variant_bordered": "বর্ডারসহ",
+        "variant_filled": "ভরাট",
+        "sample": {
+          "item_1": "আমি কী শিখব?",
+          "text_1": "এই পাঠের ফলাফল বর্ণনা করুন।",
+          "item_2": "কতক্ষণ লাগবে?",
+          "text_2": "শিক্ষার্থীরা পরিকল্পনা করতে পারে এমন একটি আনুমানিক সময় দিন।",
+          "item_3": "আমার কী লাগবে?",
+          "text_3": "শুরুর আগে কী প্রস্তুত রাখতে হবে তার তালিকা দিন।"
+        },
+        "variant_default": "ডিফল্ট"
+      },
+      "timeline": {
+        "label": "টাইমলাইন",
+        "add": "ধাপ যোগ করুন",
+        "remove": "ধাপ মুছুন",
+        "step": "ধাপ",
+        "title_placeholder": "ধাপের শিরোনাম",
+        "label_placeholder": "তারিখ বা লেবেল (ঐচ্ছিক)",
+        "numbered": "সংখ্যাযুক্ত ধাপ",
+        "orientation": "দিক",
+        "vertical": "উল্লম্ব",
+        "horizontal": "অনুভূমিক",
+        "icon_number": "সংখ্যা",
+        "variant_steps": "ধাপসমূহ",
+        "variant_process": "প্রক্রিয়া",
+        "sample": {
+          "step_1": "প্রস্তুতি",
+          "text_1": "যা দরকার তা জোগাড় করুন।",
+          "step_2": "অনুশীলন",
+          "text_2": "একটি ছোট উদাহরণে চেষ্টা করুন।",
+          "step_3": "প্রয়োগ",
+          "text_3": "একটি আসল কাজে ব্যবহার করুন।"
+        },
+        "variant_timeline": "টাইমলাইন"
+      },
+      "table_of_contents": {
+        "label": "সূচিপত্র",
+        "depth": "যে শিরোনামগুলো থাকবে",
+        "numbered": "এন্ট্রিগুলোতে নম্বর দিন",
+        "title_label": "শিরোনাম",
+        "empty": "পাঠে শিরোনাম যোগ করুন, সেগুলো এখানে দেখাবে।"
+      },
+      "key_takeaways": {
+        "label": "মূল কথা",
+        "title_label": "কার্ডের শিরোনাম",
+        "sample": {
+          "point_1": "এক বাক্যে মূল ভাবনা",
+          "point_2": "মনে রাখার মতো একটি বিষয়",
+          "point_3": "এরপর কী করতে হবে"
+        }
+      },
+      "checklist": {
+        "label": "চেকলিস্ট",
+        "learner_can_check": "শিক্ষার্থীরা আইটেমে টিক দিতে পারবে",
+        "hint": "টিকগুলো প্রত্যেক শিক্ষার্থীর ব্রাউজারে সংরক্ষিত হয়। এখানে যে আইটেমে টিক দেবেন, সেগুলো শুরু থেকেই টিক দেওয়া থাকবে।",
+        "sample": {
+          "item_1": "পাঠটি পড়ুন",
+          "item_2": "অনুশীলনীটি করে দেখুন",
+          "item_3": "উত্তরগুলো মিলিয়ে নিন"
+        }
+      },
+      "chart": {
+        "add_row": "সারি যোগ করুন",
+        "add_series": "সিরিজ যোগ করুন",
+        "apply_csv": "এই ডেটা ব্যবহার করুন",
+        "csv_error": "টেবিলটি পড়া যায়নি। প্রথম কলামে লেবেল আর বাকিগুলোতে সংখ্যা দিন।",
+        "csv_label": "CSV হিসেবে টেবিল",
+        "csv_placeholder": "স্প্রেডশিট থেকে পেস্ট করুন, বা লিখুন: লেবেল, সিরিজ ১, সিরিজ ২",
+        "edit_data": "ডেটা সম্পাদনা",
+        "empty": "চার্ট আঁকতে কিছু ডেটা যোগ করুন।",
+        "label": "চার্ট",
+        "label_n": "লেবেল {{n}}",
+        "labels": "লেবেল",
+        "paste_csv": "CSV পেস্ট করুন",
+        "pie_hint": "পাই ও ডোনাট চার্ট প্রথম সিরিজটি দেখায়।",
+        "remove_row": "সারি সরান",
+        "remove_series": "সিরিজ সরান",
+        "row_n": "আইটেম {{n}}",
+        "sample": {
+          "q1": "প্রান্তিক ১",
+          "q2": "প্রান্তিক ২",
+          "q3": "প্রান্তিক ৩",
+          "q4": "প্রান্তিক ৪",
+          "series_1": "ক্লাস ক",
+          "series_2": "ক্লাস খ",
+          "title": "প্রান্তিক অনুযায়ী কুইজের গড় স্কোর"
+        },
+        "series_color": "{{name}}-এর রং বদলান",
+        "series_n": "সিরিজ {{n}}",
+        "series_name": "সিরিজের নাম",
+        "settings": "চার্ট সেটিংস",
+        "show_legend": "লেজেন্ড দেখান",
+        "show_values": "মান দেখান",
+        "stacked": "সিরিজ স্তূপ করুন",
+        "title_label": "শিরোনাম",
+        "title_placeholder": "চার্টের শিরোনাম",
+        "type": "চার্টের ধরন"
+      },
+      "file_card": {
+        "add_link": "লিঙ্ক যোগ করুন",
+        "description": "বিবরণ",
+        "description_placeholder": "এই ফাইলে কী আছে? (ঐচ্ছিক)",
+        "empty_hint": "PDF, ছবি, অডিও বা ভিডিও ফাইল আপলোড করুন, বা যেকোনো ফাইলের লিঙ্ক দিন।",
+        "empty_title": "ডাউনলোডের জন্য একটি ফাইল যোগ করুন",
+        "label": "ফাইল",
+        "link_hint": "আপলোড করা ফাইল থাকলে সেটির জায়গা নেয়।",
+        "link_label": "ফাইলের লিঙ্ক",
+        "link_settings": "ফাইল লিঙ্ক",
+        "name": "ফাইলের নাম",
+        "type_error": "এই ধরনের ফাইল আপলোড করা যায় না। PDF, ছবি, অডিও বা ভিডিও আপলোড করুন, অথবা ফাইলের লিঙ্ক দিন।",
+        "upload": "একটি ফাইল আপলোড করুন"
+      },
+      "gallery": {
+        "add_images": "ছবি যোগ করুন",
+        "add_link": "ছবি যোগ করুন",
+        "alt_hint": "স্ক্রিন রিডার ব্যবহারকারী শিক্ষার্থীদের জন্য ছবিতে কী আছে লিখুন।",
+        "alt_missing": "বিকল্প টেক্সট নেই: {{n}}",
+        "alt_placeholder": "বিকল্প টেক্সট (আবশ্যক)",
+        "columns": "কলাম",
+        "count": "ছবি: {{n}}",
+        "empty_hint": "একসাথে কয়েকটি ছবি ছেড়ে দিন, বা ডিভাইস থেকে বেছে নিন। {{formats}} · প্রতিটি সর্বোচ্চ {{max}}।",
+        "empty_title": "আপনার গ্যালারিতে ছবি যোগ করুন",
+        "full": "একটি গ্যালারিতে সর্বোচ্চ {{max}}টি ছবি রাখা যায়।",
+        "label": "গ্যালারি",
+        "layout": "লেআউট",
+        "layout_carousel": "ক্যারোসেল",
+        "layout_grid": "গ্রিড",
+        "layout_masonry": "ম্যাসনরি",
+        "move_earlier": "আগে সরান",
+        "move_later": "পরে সরান",
+        "remove": "ছবি সরান",
+        "settings": "গ্যালারি সেটিংস"
+      },
+      "image_compare": {
+        "after_image": "পরের ছবি",
+        "before_image": "আগের ছবি",
+        "empty_hint": "একই মাপের একটি আগের ও একটি পরের ছবি বেছে নিন। শিক্ষার্থীরা বিভাজক টেনে তুলনা করবে।",
+        "empty_title": "ছবি যোগ করুন",
+        "horizontal": "পাশাপাশি",
+        "label": "ছবি তুলনা",
+        "orientation": "দিক",
+        "replace_after": "পরের ছবি বদলান",
+        "replace_before": "আগের ছবি বদলান",
+        "settings": "তুলনার সেটিংস",
+        "side_label": "লেবেল",
+        "start": "বিভাজকের শুরুর অবস্থান",
+        "vertical": "উপরে ও নিচে"
+      },
+      "quote_block": {
+        "author": "লেখক",
+        "author_placeholder": "নাম",
+        "avatar": "ছবির লিঙ্ক",
+        "avatar_hint": "প্রশংসাপত্রে নামের পাশে দেখানো হয়। আদ্যক্ষর দেখাতে খালি রাখুন।",
+        "label": "উক্তি",
+        "role": "ভূমিকা",
+        "role_placeholder": "ভূমিকা বা প্রতিষ্ঠান",
+        "sample": {
+          "author": "সামিয়া রহমান",
+          "role": "প্রোডাক্ট ডিজাইনার",
+          "text": "হাতে-কলমে অনুশীলনেই বিষয়টা পরিষ্কার হলো। পরের দিনই শেখা জিনিস কাজে লাগিয়েছি।"
+        },
+        "settings": "উক্তির সেটিংস",
+        "style": "স্টাইল",
+        "variant_highlight": "হাইলাইট",
+        "variant_pull": "পুল কোট",
+        "variant_testimonial": "প্রশংসাপত্র"
+      },
+      "stat_highlights": {
+        "add": "পরিসংখ্যান যোগ করুন",
+        "animate": "দেখানোর সময় গুনে বাড়ুক",
+        "color": "রং",
+        "columns": "কলাম",
+        "description": "বিবরণ",
+        "description_placeholder": "সংক্ষিপ্ত বিবরণ (ঐচ্ছিক)",
+        "empty": "শুরু করতে একটি পরিসংখ্যান যোগ করুন।",
+        "label": "পরিসংখ্যান",
+        "label_field": "লেবেল",
+        "prefix": "সংখ্যার আগে",
+        "remove": "পরিসংখ্যান সরান",
+        "sample": {
+          "desc_1": "শিক্ষার্থী কোর্স শেষ করেন",
+          "desc_2": "১,২০০টি রিভিউ থেকে",
+          "desc_3": "৪০টি দেশে",
+          "label_1": "সম্পন্ন করার হার",
+          "label_2": "গড় রেটিং",
+          "label_3": "শিক্ষার্থী"
+        },
+        "settings": "পরিসংখ্যান সেটিংস",
+        "suffix": "সংখ্যার পরে",
+        "value": "সংখ্যা"
+      },
+      "callout_title": "শিরোনাম",
+      "callout_title_placeholder": "ঐচ্ছিক শিরোনাম",
+      "callout_collapsible": "শিক্ষার্থীরা এটি ভাঁজ করতে পারবে",
+      "callout_default_open": "শুরুতে খোলা",
+      "callout_tone": "রং",
+      "callout_tone_default": "ধরনের নিজস্ব রং",
+      "code_copied": "কোড ক্লিপবোর্ডে কপি হয়েছে",
+      "code_copy_failed": "কপি করা যায়নি। কোড নির্বাচন করে নিজে কপি করুন।",
+      "code_highlight": "যে লাইনগুলো হাইলাইট হবে (যেমন 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "লাইন নম্বর",
+      "code_wrap": "লম্বা লাইন মুড়িয়ে দিন",
+      "align": {
+        "label": "লেখার সারিবদ্ধতা",
+        "start": "শুরুতে সারিবদ্ধ",
+        "center": "মাঝখানে",
+        "end": "শেষে সারিবদ্ধ",
+        "justify": "দুই পাশে সমান"
+      },
+      "button_group": {
+        "label": "বোতাম গ্রুপ",
+        "add_button": "বোতাম যোগ করুন",
+        "new_button": "বোতাম",
+        "primary": "শুরু করুন",
+        "secondary": "আরও জানুন"
+      },
+      "image_frame": {
+        "label": "ফ্রেম",
+        "none": "নেই",
+        "rounded": "গোলাকার",
+        "shadow": "ছায়া",
+        "border": "বর্ডার",
+        "polaroid": "পোলারয়েড"
+      },
+      "inline_math": {
+        "title": "লাইনের মধ্যে সূত্র",
+        "edit": "সূত্র সম্পাদনা করুন {{latex}}",
+        "latex": "LaTeX",
+        "hint": "যেমন \\frac{a}{b} বা x^2। লেখার মধ্যে $…$ লিখলেই সূত্র তৈরি হয়।",
+        "make": "গণিত",
+        "remove": "সরান"
+      },
+      "toggle": {
+        "style": "টগলের স্টাইল",
+        "variant": "চেহারা",
+        "variant_default": "ডিফল্ট",
+        "variant_bordered": "বর্ডারসহ",
+        "variant_filled": "ভরাট",
+        "icon": "আইকন",
+        "icon_chevron": "তীর",
+        "icon_plus": "যোগ ও বিয়োগ"
       }
     },
     "history": {

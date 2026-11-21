@@ -460,6 +460,8 @@ _RICH = (
     "expSort", "expSequence", "expMatch", "expHotspot", "expGaps", "expMythFact",
     "expSpeedRound", "expEstimate", "expSpotMistake", "expCodeLock",
     "expVenn", "expLabel", "expWordGuess", "expConfidence", "expMatrix", "expReflect",
+    "tabs", "columns", "accordion", "timeline",
+    "keyTakeaways", "taskList", "gallery", "imageCompare", "chart", "statHighlights", "fileCard", "quoteBlock",
 )
 
 

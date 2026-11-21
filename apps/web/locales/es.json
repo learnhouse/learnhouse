@@ -821,7 +821,11 @@
     "set_new_password": "Establecer nueva contraseña",
     "invited_by_email_cta": "¿Te invitaron por correo? Regístrate con esa dirección",
     "use_invite_code_instead": "¿Tienes un código de invitación?",
-    "password_reset_done": "Tu contraseña se ha cambiado."
+    "password_reset_done": "Tu contraseña se ha cambiado.",
+    "login_failed_forgot": "¿Olvidaste tu contraseña?",
+    "login_failed_reset": "Restablécela",
+    "login_failed_magic": "Envíame un enlace de acceso",
+    "login_failed_google_hint": "¿Te registraste con Google? Usa Continuar con Google abajo."
   },
   "validation": {
     "required": "Obligatorio",
@@ -1339,7 +1343,11 @@
       "maintainer": "Mantenedor",
       "contributor": "Colaborador",
       "reporter": "Reportero"
-    }
+    },
+    "co_created_by": "Co-creado por",
+    "created_on": "Creado el",
+    "last_updated": "Última actualización",
+    "and_x_more": "y {{count}} más"
   },
   "communities": {
     "title": "Comunidades",
@@ -4356,6 +4364,91 @@
         "completed_note": "Listo. Léelo una vez más y quédate con lo que te faltó.",
         "write_again": "Editar mi respuesta"
       }
+    },
+    "table": {
+      "total": "Total",
+      "average": "Promedio",
+      "sort_by": "Ordenar por",
+      "original_order": "Orden original",
+      "ascending": "Ascendente",
+      "descending": "Descendente",
+      "sort_direction": "Dirección del orden",
+      "sorted": "Ordenado por {{column}}, {{direction}}",
+      "column_n": "Columna {{n}}"
+    },
+    "tabs": {
+      "tab": "Pestaña",
+      "untitled": "Pestaña {{n}}",
+      "list_label": "Pestañas"
+    },
+    "accordion": {
+      "expand_all": "Expandir todo",
+      "collapse_all": "Contraer todo"
+    },
+    "table_of_contents": {
+      "title": "Contenido"
+    },
+    "checklist": {
+      "progress_label": "{{done}} de {{total}} completados",
+      "reset": "Reiniciar la lista",
+      "item": "Elemento de la lista",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "Línea de tiempo"
+    },
+    "key_takeaways": {
+      "title": "Puntos clave"
+    },
+    "chart": {
+      "category": "Categoría",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} con {{series}} series ({{names}}) en {{categories}} categorías, de {{min}} a {{max}}.",
+      "title": "Gráfico",
+      "types": {
+        "bar": "Gráfico de barras",
+        "column": "Gráfico de columnas",
+        "line": "Gráfico de líneas",
+        "area": "Gráfico de áreas",
+        "pie": "Gráfico circular",
+        "donut": "Gráfico de anillo"
+      }
+    },
+    "file_card": {
+      "download": "Descargar",
+      "download_named": "Descargar {{name}}",
+      "file": "Archivo",
+      "types": {
+        "pdf": "PDF",
+        "doc": "Documento",
+        "sheet": "Hoja de cálculo",
+        "slides": "Diapositivas",
+        "archive": "Archivo comprimido",
+        "image": "Imagen",
+        "audio": "Audio",
+        "video": "Vídeo",
+        "text": "Texto",
+        "code": "Código",
+        "file": "Archivo"
+      }
+    },
+    "gallery": {
+      "carousel": "carrusel",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "Mostrar imagen {{n}}",
+      "label": "Galería de imágenes",
+      "next": "Imagen siguiente",
+      "open_image": "Abrir imagen {{n}} de {{count}}",
+      "previous": "Imagen anterior",
+      "slide": "diapositiva",
+      "viewer_title": "Imagen {{n}} de {{count}}"
+    },
+    "image_compare": {
+      "after": "Después",
+      "before": "Antes",
+      "slider": "Comparar imágenes",
+      "value": "{{before}} {{b}} %, {{after}} {{a}} %"
     }
   },
   "embed": {
@@ -13680,7 +13773,11 @@
         "type_warning": "Advertencia",
         "type_tip": "Consejo",
         "type_success": "Éxito",
-        "type_error": "Error"
+        "type_error": "Error",
+        "type_note": "Nota",
+        "type_question": "Pregunta",
+        "type_example": "Ejemplo",
+        "type_quote": "Cita"
       }
     },
     "dynamic": {
@@ -13980,7 +14077,8 @@
       "create_first": "Crear primer escenario",
       "modal_preview_title": "Vista previa del escenario",
       "modal_preview_desc": "Prueba tu escenario interactivo",
-      "modal_edit_desc": "Crea y gestiona tus escenarios interactivos"
+      "modal_edit_desc": "Crea y gestiona tus escenarios interactivos",
+      "max_scenarios": "Se permite un máximo de 40 escenarios"
     },
     "slash_menu": {
       "items": {
@@ -14139,6 +14237,70 @@
         "table": {
           "title": "Tabla",
           "description": "Inserta una tabla de 3x3"
+        },
+        "tabs": {
+          "description": "Cambia entre paneles de contenido",
+          "title": "Pestañas"
+        },
+        "columns": {
+          "description": "Coloca contenido lado a lado",
+          "title": "Columnas"
+        },
+        "accordion": {
+          "description": "Secciones desplegables, una abierta a la vez",
+          "title": "Acordeón"
+        },
+        "timeline": {
+          "description": "Pasos o eventos en orden",
+          "title": "Línea de tiempo"
+        },
+        "table_of_contents": {
+          "description": "Enlaces a los encabezados de esta página",
+          "title": "Índice"
+        },
+        "key_takeaways": {
+          "description": "Una tarjeta que resume los puntos principales",
+          "title": "Puntos clave"
+        },
+        "checklist": {
+          "description": "Elementos que los estudiantes pueden marcar",
+          "title": "Lista de verificación"
+        },
+        "gallery": {
+          "title": "Galería",
+          "description": "Varias imágenes en cuadrícula o carrusel"
+        },
+        "image_compare": {
+          "title": "Comparar imágenes",
+          "description": "Antes y después con un deslizador"
+        },
+        "file_card": {
+          "title": "Descarga de archivo",
+          "description": "Un archivo que los estudiantes pueden descargar"
+        },
+        "quote_block": {
+          "title": "Testimonio",
+          "description": "Una cita destacada o testimonio con su autor"
+        },
+        "quote": {
+          "title": "Cita",
+          "description": "Un pasaje citado sencillo"
+        },
+        "chart": {
+          "title": "Gráfico",
+          "description": "Gráfico de barras, líneas o circular a partir de una tabla"
+        },
+        "stat_highlights": {
+          "title": "Datos",
+          "description": "Números grandes que cuentan hacia arriba"
+        },
+        "button_group": {
+          "title": "Grupo de botones",
+          "description": "Varios botones uno al lado del otro"
+        },
+        "inline_math": {
+          "title": "Fórmula en línea",
+          "description": "Una fórmula dentro de una frase (o escribe $x^2$)"
         }
       },
       "categories": {
@@ -14496,7 +14658,14 @@
       "button": {
         "emoji": "Emoji",
         "link_hint": "Se abre en una pestaña nueva cuando los estudiantes hacen clic en el botón.",
-        "no_link": "Aún no hay enlace: añade uno con el botón de enlace."
+        "no_link": "Aún no hay enlace: añade uno con el botón de enlace.",
+        "style": "Estilo",
+        "variant": "Aspecto",
+        "size": "Tamaño",
+        "variant_solid": "Sólido",
+        "variant_outline": "Contorno",
+        "variant_soft": "Suave",
+        "variant_link": "Enlace"
       },
       "quiz": {
         "settings": "Ajustes del cuestionario",
@@ -14557,7 +14726,39 @@
         "start_over": "Empezar de nuevo",
         "attempts_n_many": "{{count}} intentos",
         "attempts_limited_hint_many": "Los estudiantes tienen {{count}} intentos.",
-        "question_count_many": "{{count}} preguntas"
+        "question_count_many": "{{count}} preguntas",
+        "question_type": "Tipo de pregunta",
+        "type_multiple_choice": "Opción múltiple",
+        "type_true_false": "Verdadero / falso",
+        "type_short_answer": "Respuesta corta",
+        "type_numeric": "Número",
+        "true": "Verdadero",
+        "false": "Falso",
+        "accepted_answers": "Respuestas aceptadas",
+        "accepted_answer_n": "Respuesta aceptada {{n}}",
+        "accepted_answer_placeholder": "Una respuesta que cuenta como correcta",
+        "add_accepted": "Otra respuesta aceptada",
+        "remove_accepted": "Quitar la respuesta aceptada {{n}}",
+        "ignore_accents": "Ignorar acentos (é = e)",
+        "short_answer_hint": "Se ignoran las mayúsculas y los espacios de más.",
+        "numeric_value": "Respuesta correcta",
+        "numeric_tolerance": "Tolerancia",
+        "show_explanations": "Mostrar explicaciones",
+        "show_explanations_hint": "Tu explicación aparece bajo cada pregunta cuando los estudiantes envían.",
+        "pass_mark": "Nota para aprobar",
+        "pass_mark_off": "No",
+        "pass_mark_n": "{{n}} % para aprobar",
+        "pass_mark_off_hint": "Los estudiantes ven si todas las respuestas eran correctas.",
+        "pass_mark_hint": "Los estudiantes aprueban con un {{n}} % o más y ven su puntuación.",
+        "pass_mark_needed": "Nota para aprobar: {{n}} %",
+        "passed": "Aprobado",
+        "not_passed": "Aún no aprobado",
+        "score_percent": "{{percent}} %",
+        "your_answer": "Tu respuesta",
+        "your_number": "Tu respuesta (un número)",
+        "answer_placeholder": "Escribe tu respuesta",
+        "number_placeholder": "Escribe un número",
+        "expected_answer": "Se esperaba: {{answer}}"
       },
       "flipcard": {
         "front": "Anverso",
@@ -14663,7 +14864,8 @@
         "complete_hint_many": "Hiciste {{count}} elecciones. Prueba otro camino para ver qué cambia.",
         "endings_count_many": "{{count}} finales",
         "issue_count_many": "{{count}} problemas",
-        "steps_count_many": "{{count}} pasos"
+        "steps_count_many": "{{count}} pasos",
+        "limits": "Hasta {{max}} pasos, {{choices}} opciones cada uno."
       },
       "conditional": {
         "add_rule": "Añadir una regla",
@@ -14817,6 +15019,423 @@
         "reset_text": "Restablecer",
         "text": "Título y descripción",
         "title": "Título"
+      },
+      "table": {
+        "rows_cols": "Filas y columnas",
+        "duplicate_row": "Duplicar fila",
+        "distribute": "Distribuir columnas",
+        "merge_split": "Combinar o dividir celdas",
+        "headers": "Encabezados",
+        "header_column": "Columna de encabezado",
+        "cell_style": "Estilo de celda",
+        "apply_to": "Aplicar a",
+        "scope_selection": "Celdas seleccionadas",
+        "scope_column": "Toda la columna",
+        "background": "Fondo",
+        "align": "Alineación",
+        "align_start": "Inicio",
+        "align_center": "Centro",
+        "align_end": "Final",
+        "valign": "Alineación vertical",
+        "valign_top": "Arriba",
+        "valign_middle": "Centro",
+        "valign_bottom": "Abajo",
+        "cell_type": "Tipo de celda",
+        "type_hint": "El valor se queda en el texto de la celda, p. ej. 75, 4/5 o sí.",
+        "type": {
+          "text": "Texto",
+          "progress": "Progreso",
+          "checkbox": "Casilla",
+          "rating": "Valoración",
+          "status": "Estado",
+          "number": "Número",
+          "date": "Fecha"
+        },
+        "tone": "Color",
+        "tone_auto": "Automático",
+        "number_format": "Formato de número",
+        "format": {
+          "plain": "Simple",
+          "percent": "Porcentaje",
+          "currency": "Moneda",
+          "compact": "Compacto"
+        },
+        "currency": "Código de moneda",
+        "settings": "Ajustes de la tabla",
+        "variant": "Estilo",
+        "variants": {
+          "default": "Predeterminado",
+          "striped": "Rayado",
+          "bordered": "Con bordes",
+          "minimal": "Mínimo",
+          "cards": "Tarjetas"
+        },
+        "cards_hint": "Las filas se convierten en tarjetas en el móvil.",
+        "caption": "Leyenda",
+        "caption_placeholder": "Describe la tabla",
+        "sortable": "Los estudiantes pueden ordenar",
+        "sticky_header": "Encabezado fijo",
+        "compact": "Filas compactas",
+        "totals": "Fila de totales",
+        "totals_hint": "Para columnas de números y de progreso.",
+        "totals_none": "Ninguno",
+        "totals_sum": "Suma",
+        "totals_average": "Promedio",
+        "toggle_checkbox": "Marcar o desmarcar",
+        "templates": {
+          "progress": {
+            "title": "Seguimiento de progreso",
+            "description": "Tareas con responsables, estado y barras de progreso"
+          },
+          "comparison": {
+            "title": "Comparación",
+            "description": "Compara opciones lado a lado con marcas"
+          },
+          "rubric": {
+            "title": "Rúbrica",
+            "description": "Criterios de evaluación con niveles y puntos"
+          }
+        },
+        "sample": {
+          "task": "Tarea",
+          "owner": "Responsable",
+          "status": "Estado",
+          "progress": "Progreso",
+          "task_1": "Planificar la lección",
+          "task_2": "Grabar el vídeo",
+          "task_3": "Escribir el cuestionario",
+          "status_done": "Hecho",
+          "status_in_progress": "En curso",
+          "status_todo": "Sin empezar",
+          "feature": "Función",
+          "option_a": "Básico",
+          "option_b": "Pro",
+          "feature_1": "Lecciones en vídeo",
+          "feature_2": "Cuestionarios",
+          "feature_3": "Certificados",
+          "criterion": "Criterio",
+          "look_for": "Qué buscamos",
+          "level": "Nivel",
+          "points": "Puntos",
+          "crit_1": "Claridad",
+          "crit_2": "Precisión",
+          "crit_3": "Estructura",
+          "desc_1": "Las ideas son fáciles de seguir",
+          "desc_2": "Los datos y los pasos son correctos",
+          "desc_3": "Secciones claras en un orden lógico"
+        }
+      },
+      "layout": {
+        "settings": "Ajustes",
+        "style": "Estilo",
+        "color": "Color",
+        "icon": "Icono",
+        "icon_default": "Predeterminado",
+        "size_sm": "Pequeño",
+        "size_md": "Mediano",
+        "size_lg": "Grande",
+        "tone_neutral": "Neutro",
+        "tone_blue": "Azul",
+        "tone_teal": "Verde azulado",
+        "tone_green": "Verde",
+        "tone_amber": "Ámbar",
+        "tone_rose": "Rosa",
+        "icons": {
+          "lightbulb": "Bombilla",
+          "star": "Estrella",
+          "check": "Marca de verificación",
+          "target": "Diana",
+          "flag": "Bandera",
+          "book": "Libro",
+          "rocket": "Cohete",
+          "key": "Llave"
+        }
+      },
+      "tabs": {
+        "label": "Pestañas",
+        "add": "Añadir pestaña",
+        "remove": "Eliminar esta pestaña",
+        "move_earlier": "Mover la pestaña antes",
+        "move_later": "Mover la pestaña después",
+        "title_placeholder": "Título de la pestaña",
+        "variant_line": "Línea",
+        "variant_pills": "Píldoras",
+        "variant_boxed": "Recuadro",
+        "sample": {
+          "tab_1": "Resumen",
+          "tab_2": "Detalles",
+          "tab_3": "Ejemplo",
+          "text_1": "Empieza por la visión general.",
+          "text_2": "Profundiza en cómo funciona.",
+          "text_3": "Muéstralo en la práctica."
+        }
+      },
+      "columns": {
+        "label": "Columnas",
+        "layout": "Diseño",
+        "layout_halves": "Dos columnas iguales",
+        "layout_narrow_wide": "Estrecha y luego ancha",
+        "layout_wide_narrow": "Ancha y luego estrecha",
+        "layout_thirds": "Tres columnas",
+        "layout_quarters": "Cuatro columnas",
+        "gap": "Espaciado",
+        "align": "Alineación vertical",
+        "align_top": "Arriba",
+        "align_center": "Centro",
+        "align_bottom": "Abajo",
+        "stack": "Apilar en pantallas pequeñas",
+        "sample": {
+          "left": "Primera columna",
+          "right": "Segunda columna"
+        }
+      },
+      "accordion": {
+        "label": "Acordeón",
+        "add": "Añadir sección",
+        "single": "Solo una sección abierta a la vez",
+        "variant_bordered": "Con borde",
+        "variant_filled": "Relleno",
+        "sample": {
+          "item_1": "¿Qué voy a aprender?",
+          "text_1": "Describe el resultado de esta lección.",
+          "item_2": "¿Cuánto tiempo lleva?",
+          "text_2": "Da una estimación para que los estudiantes se organicen.",
+          "item_3": "¿Qué necesito?",
+          "text_3": "Enumera lo que hay que tener listo antes de empezar."
+        },
+        "variant_default": "Predeterminado"
+      },
+      "timeline": {
+        "label": "Línea de tiempo",
+        "add": "Añadir paso",
+        "remove": "Eliminar paso",
+        "step": "Paso",
+        "title_placeholder": "Título del paso",
+        "label_placeholder": "Fecha o etiqueta (opcional)",
+        "numbered": "Pasos numerados",
+        "orientation": "Dirección",
+        "vertical": "Vertical",
+        "horizontal": "Horizontal",
+        "icon_number": "Número",
+        "variant_steps": "Pasos",
+        "variant_process": "Proceso",
+        "sample": {
+          "step_1": "Preparar",
+          "text_1": "Reúne lo que necesitas.",
+          "step_2": "Practicar",
+          "text_2": "Pruébalo con un ejemplo pequeño.",
+          "step_3": "Aplicar",
+          "text_3": "Úsalo en una tarea real."
+        },
+        "variant_timeline": "Línea de tiempo"
+      },
+      "table_of_contents": {
+        "label": "Índice",
+        "depth": "Encabezados que incluir",
+        "numbered": "Numerar las entradas",
+        "title_label": "Título",
+        "empty": "Añade encabezados a la lección y aparecerán aquí."
+      },
+      "key_takeaways": {
+        "label": "Puntos clave",
+        "title_label": "Título de la tarjeta",
+        "sample": {
+          "point_1": "La idea principal en una frase",
+          "point_2": "Un detalle que conviene recordar",
+          "point_3": "Qué hacer a continuación"
+        }
+      },
+      "checklist": {
+        "label": "Lista de verificación",
+        "learner_can_check": "Los estudiantes pueden marcar elementos",
+        "hint": "Las marcas se guardan en el navegador de cada estudiante. Los elementos que marques aquí empiezan marcados.",
+        "sample": {
+          "item_1": "Leer la lección",
+          "item_2": "Hacer el ejercicio",
+          "item_3": "Revisar tus respuestas"
+        }
+      },
+      "chart": {
+        "add_row": "Añadir fila",
+        "add_series": "Añadir serie",
+        "apply_csv": "Usar estos datos",
+        "csv_error": "No se pudo leer la tabla. Pon las etiquetas en la primera columna y los números en las demás.",
+        "csv_label": "Tabla en CSV",
+        "csv_placeholder": "Pega desde una hoja de cálculo o escribe: etiqueta, serie 1, serie 2",
+        "edit_data": "Editar datos",
+        "empty": "Añade datos para dibujar el gráfico.",
+        "label": "Gráfico",
+        "label_n": "Etiqueta {{n}}",
+        "labels": "Etiquetas",
+        "paste_csv": "Pegar CSV",
+        "pie_hint": "Los gráficos circulares y de anillo muestran la primera serie.",
+        "remove_row": "Quitar fila",
+        "remove_series": "Quitar serie",
+        "row_n": "Elemento {{n}}",
+        "sample": {
+          "q1": "T1",
+          "q2": "T2",
+          "q3": "T3",
+          "q4": "T4",
+          "series_1": "Grupo A",
+          "series_2": "Grupo B",
+          "title": "Puntuación media del cuestionario por trimestre"
+        },
+        "series_color": "Cambiar el color de {{name}}",
+        "series_n": "Serie {{n}}",
+        "series_name": "Nombre de la serie",
+        "settings": "Ajustes del gráfico",
+        "show_legend": "Mostrar leyenda",
+        "show_values": "Mostrar valores",
+        "stacked": "Apilar series",
+        "title_label": "Título",
+        "title_placeholder": "Título del gráfico",
+        "type": "Tipo de gráfico"
+      },
+      "file_card": {
+        "add_link": "Añadir enlace",
+        "description": "Descripción",
+        "description_placeholder": "¿Qué contiene este archivo? (opcional)",
+        "empty_hint": "Sube un PDF, una imagen, un audio o un vídeo, o enlaza cualquier archivo.",
+        "empty_title": "Añade un archivo para descargar",
+        "label": "Archivo",
+        "link_hint": "Sustituye al archivo subido, si lo hay.",
+        "link_label": "Enlace al archivo",
+        "link_settings": "Enlace del archivo",
+        "name": "Nombre del archivo",
+        "type_error": "Este tipo de archivo no se puede subir. Sube un PDF, una imagen, un audio o un vídeo, o enlaza el archivo.",
+        "upload": "Subir un archivo"
+      },
+      "gallery": {
+        "add_images": "Añadir imágenes",
+        "add_link": "Añadir imagen",
+        "alt_hint": "Describe lo que muestra la imagen para quienes usan un lector de pantalla.",
+        "alt_missing": "Falta texto alternativo: {{n}}",
+        "alt_placeholder": "Texto alternativo (obligatorio)",
+        "columns": "Columnas",
+        "count": "Imágenes: {{n}}",
+        "empty_hint": "Suelta varias imágenes a la vez o elígelas en tu dispositivo. {{formats}} · hasta {{max}} cada una.",
+        "empty_title": "Añade imágenes a tu galería",
+        "full": "Una galería admite hasta {{max}} imágenes.",
+        "label": "Galería",
+        "layout": "Diseño",
+        "layout_carousel": "Carrusel",
+        "layout_grid": "Cuadrícula",
+        "layout_masonry": "Mosaico",
+        "move_earlier": "Mover antes",
+        "move_later": "Mover después",
+        "remove": "Quitar imagen",
+        "settings": "Ajustes de la galería"
+      },
+      "image_compare": {
+        "after_image": "Imagen de después",
+        "before_image": "Imagen de antes",
+        "empty_hint": "Elige una imagen de antes y otra de después del mismo tamaño. Los estudiantes arrastran el divisor para compararlas.",
+        "empty_title": "Añadir imágenes",
+        "horizontal": "Lado a lado",
+        "label": "Comparar imágenes",
+        "orientation": "Dirección",
+        "replace_after": "Reemplazar imagen de después",
+        "replace_before": "Reemplazar imagen de antes",
+        "settings": "Ajustes de la comparación",
+        "side_label": "Etiqueta",
+        "start": "El divisor empieza en",
+        "vertical": "Arriba y abajo"
+      },
+      "quote_block": {
+        "author": "Autor",
+        "author_placeholder": "Nombre",
+        "avatar": "Enlace de la foto",
+        "avatar_hint": "Se muestra junto al nombre en los testimonios. Déjalo vacío para usar las iniciales.",
+        "label": "Cita",
+        "role": "Cargo",
+        "role_placeholder": "Cargo o empresa",
+        "sample": {
+          "author": "Sam Rivera",
+          "role": "Diseñadora de producto",
+          "text": "Los ejercicios prácticos me lo aclararon todo. Al día siguiente ya usaba en el trabajo lo que aprendí."
+        },
+        "settings": "Ajustes de la cita",
+        "style": "Estilo",
+        "variant_highlight": "Destacado",
+        "variant_pull": "Cita destacada",
+        "variant_testimonial": "Testimonio"
+      },
+      "stat_highlights": {
+        "add": "Añadir dato",
+        "animate": "Contar al aparecer",
+        "color": "Color",
+        "columns": "Columnas",
+        "description": "Descripción",
+        "description_placeholder": "Descripción breve (opcional)",
+        "empty": "Añade un dato para empezar.",
+        "label": "Datos",
+        "label_field": "Etiqueta",
+        "prefix": "Antes del número",
+        "remove": "Quitar dato",
+        "sample": {
+          "desc_1": "de los estudiantes terminan el curso",
+          "desc_2": "de 1200 reseñas",
+          "desc_3": "en 40 países",
+          "label_1": "Tasa de finalización",
+          "label_2": "Valoración media",
+          "label_3": "Estudiantes"
+        },
+        "settings": "Ajustes de los datos",
+        "suffix": "Después del número",
+        "value": "Número"
+      },
+      "callout_title": "Título",
+      "callout_title_placeholder": "Título opcional",
+      "callout_collapsible": "Los estudiantes pueden plegarlo",
+      "callout_default_open": "Abierto al principio",
+      "callout_tone": "Color",
+      "callout_tone_default": "El color del tipo",
+      "code_copied": "Código copiado al portapapeles",
+      "code_copy_failed": "No se pudo copiar. Selecciona el código y cópialo a mano.",
+      "code_highlight": "Líneas que resaltar (por ejemplo 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "Números de línea",
+      "code_wrap": "Ajustar líneas largas",
+      "align": {
+        "label": "Alineación del texto",
+        "start": "Alinear al inicio",
+        "center": "Centrar",
+        "end": "Alinear al final",
+        "justify": "Justificar"
+      },
+      "button_group": {
+        "label": "Grupo de botones",
+        "add_button": "Añadir un botón",
+        "new_button": "Botón",
+        "primary": "Empezar",
+        "secondary": "Más información"
+      },
+      "image_frame": {
+        "label": "Marco",
+        "none": "Ninguno",
+        "rounded": "Redondeado",
+        "shadow": "Sombra",
+        "border": "Borde",
+        "polaroid": "Polaroid"
+      },
+      "inline_math": {
+        "title": "Fórmula en línea",
+        "edit": "Editar la fórmula {{latex}}",
+        "latex": "LaTeX",
+        "hint": "Por ejemplo \\frac{a}{b} o x^2. Escribe $…$ en el texto para crear una.",
+        "make": "Fórmula",
+        "remove": "Quitar"
+      },
+      "toggle": {
+        "style": "Estilo del desplegable",
+        "variant": "Aspecto",
+        "variant_default": "Predeterminado",
+        "variant_bordered": "Con borde",
+        "variant_filled": "Relleno",
+        "icon": "Icono",
+        "icon_chevron": "Flecha",
+        "icon_plus": "Más y menos"
       }
     },
     "history": {

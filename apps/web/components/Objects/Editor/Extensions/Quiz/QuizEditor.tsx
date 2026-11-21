@@ -28,6 +28,7 @@ import {
   moveItem,
   newAnswer,
   newQuestion,
+  questionKind,
   removeAnswer,
   responseTypeOf,
   setResponseType,
@@ -39,6 +40,7 @@ import {
   type QuizSettings,
 } from './quizModel'
 import { QuizSettingsPopover } from './QuizSettingsPopover'
+import { NumericEditor, QuestionTypePicker, ShortAnswerEditor, TrueFalseEditor } from './QuizTypedEditors'
 
 type Commit = (_fn: (_qs: QuizQuestion[]) => QuizQuestion[]) => void
 
@@ -165,6 +167,7 @@ function QuestionBlock({ question: q, index, total, commit, register, focus, gri
   const qid = q.question_id
   const responseType = responseTypeOf(q)
   const single = responseType === QUIZ_RESPONSE_SINGLE
+  const kind = questionKind(q)
   const optionsRef = React.useRef<HTMLDivElement>(null)
   const [explanationOpen, setExplanationOpen] = React.useState(false)
   const [openFeedback, setOpenFeedback] = React.useState<Record<string, boolean>>({})
@@ -241,8 +244,14 @@ function QuestionBlock({ question: q, index, total, commit, register, focus, gri
         </button>
       </div>
 
+      {/* Question kind (a question without one is multiple choice) */}
+      <div className="mb-1.5 px-1">
+        <QuestionTypePicker question={q} commit={commit} />
+      </div>
+
       {/* Response mode, explanation toggle, missing-key warning */}
       <div className="flex flex-wrap items-center gap-1 mb-1.5 px-1">
+        {kind === 'multiple_choice' && (
         <div role="radiogroup" aria-label={t('editor.blocks_v2.quiz.answer_type', 'Answer type')} className="flex items-center gap-1">
           {([QUIZ_RESPONSE_SINGLE, QUIZ_RESPONSE_MULTIPLE] as QuizResponseType[]).map((mode) => (
             <button
@@ -262,6 +271,7 @@ function QuestionBlock({ question: q, index, total, commit, register, focus, gri
             </button>
           ))}
         </div>
+        )}
         {!explanationShown && (
           <button
             type="button"
@@ -283,7 +293,12 @@ function QuestionBlock({ question: q, index, total, commit, register, focus, gri
         )}
       </div>
 
+      {kind === 'true_false' && <TrueFalseEditor question={q} commit={commit} />}
+      {kind === 'short_answer' && <ShortAnswerEditor question={q} commit={commit} />}
+      {kind === 'numeric' && <NumericEditor question={q} commit={commit} />}
+
       {/* Answers */}
+      {kind === 'multiple_choice' && (
       <div ref={optionsRef} data-reorder-list="" className="space-y-1" role="list" aria-label={t('editor.blocks_v2.quiz.options', 'Options')}>
         {q.answers.map((a, ai) => {
           const letter = answerLetter(ai)
@@ -424,6 +439,7 @@ function QuestionBlock({ question: q, index, total, commit, register, focus, gri
           </button>
         )}
       </div>
+      )}
 
       {explanationShown && (
         <div className="mt-1.5 flex items-start gap-2 rounded-lg bg-white nice-shadow px-2 py-1.5">

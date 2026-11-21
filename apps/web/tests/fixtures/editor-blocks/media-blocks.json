@@ -1,0 +1,308 @@
+[
+  {
+    "name": "every-media-block",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Field trip"
+            }
+          ]
+        },
+        {
+          "type": "gallery",
+          "attrs": {
+            "blockId": "gal_1",
+            "layout": "carousel",
+            "columns": 4,
+            "images": [
+              {
+                "id": "img_1",
+                "url": "https://images.example.com/coast.jpg",
+                "caption": "The coast at dawn",
+                "alt": "Rocky coastline under a pink sky"
+              },
+              {
+                "id": "img_2",
+                "blockObject": {
+                  "block_uuid": "block_g2",
+                  "block_type": "BLOCK_IMAGE",
+                  "content": {
+                    "file_id": "file_g2",
+                    "file_format": "png",
+                    "activity_uuid": "act_1"
+                  }
+                },
+                "alt": "Tide pool with starfish"
+              },
+              {
+                "id": "img_3",
+                "url": "https://images.example.com/lighthouse.jpg",
+                "caption": "Lighthouse"
+              }
+            ]
+          }
+        },
+        {
+          "type": "imageCompare",
+          "attrs": {
+            "before": {
+              "url": "https://images.example.com/before.jpg",
+              "label": "1990"
+            },
+            "after": {
+              "blockObject": {
+                "block_uuid": "block_after",
+                "block_type": "BLOCK_IMAGE",
+                "content": {
+                  "file_id": "file_after",
+                  "file_format": "jpg",
+                  "activity_uuid": "act_1"
+                }
+              },
+              "label": "2020",
+              "alt": "The same valley with a new forest"
+            },
+            "start": 30,
+            "orientation": "vertical"
+          }
+        },
+        {
+          "type": "chart",
+          "attrs": {
+            "type": "column",
+            "title": "Average quiz score by quarter",
+            "data": {
+              "labels": [
+                "Q1",
+                "Q2",
+                "Q3",
+                "Q4"
+              ],
+              "series": [
+                {
+                  "name": "Class A",
+                  "values": [
+                    68,
+                    74,
+                    79,
+                    86
+                  ],
+                  "tone": "blue"
+                },
+                {
+                  "name": "Class B",
+                  "values": [
+                    62,
+                    70,
+                    72,
+                    81
+                  ],
+                  "tone": "teal"
+                }
+              ]
+            },
+            "showLegend": true,
+            "showValues": true,
+            "stacked": false
+          }
+        },
+        {
+          "type": "chart",
+          "attrs": {
+            "type": "donut",
+            "title": "Time spent",
+            "data": {
+              "labels": [
+                "Reading",
+                "Video",
+                "Practice"
+              ],
+              "series": [
+                {
+                  "name": "Minutes",
+                  "values": [
+                    30,
+                    20,
+                    50
+                  ],
+                  "tone": null
+                }
+              ]
+            },
+            "showLegend": false,
+            "showValues": false,
+            "stacked": false
+          }
+        },
+        {
+          "type": "statHighlights",
+          "attrs": {
+            "items": [
+              {
+                "id": "stat_1",
+                "value": "92",
+                "label": "Completion rate",
+                "description": "of learners finish the course",
+                "tone": "teal",
+                "suffix": "%"
+              },
+              {
+                "id": "stat_2",
+                "value": "4.8",
+                "label": "Average rating",
+                "tone": "amber",
+                "suffix": "/5"
+              },
+              {
+                "id": "stat_3",
+                "value": "12,500",
+                "label": "Learners",
+                "prefix": "~"
+              }
+            ],
+            "columns": 3,
+            "animate": true
+          }
+        },
+        {
+          "type": "fileCard",
+          "attrs": {
+            "blockObject": {
+              "block_uuid": "block_pdf",
+              "block_type": "BLOCK_DOCUMENT_PDF",
+              "content": {
+                "file_id": "file_pdf",
+                "file_format": "pdf",
+                "activity_uuid": "act_1"
+              }
+            },
+            "url": null,
+            "name": "Field guide.pdf",
+            "description": "Print it before the trip.",
+            "sizeBytes": 2516582,
+            "fileType": "pdf"
+          }
+        },
+        {
+          "type": "fileCard",
+          "attrs": {
+            "blockObject": null,
+            "url": "https://files.example.com/packing-list.xlsx",
+            "name": "Packing list",
+            "description": null,
+            "sizeBytes": null,
+            "fileType": "sheet"
+          }
+        },
+        {
+          "type": "quoteBlock",
+          "attrs": {
+            "variant": "testimonial",
+            "author": "Sam Rivera",
+            "role": "Product designer",
+            "avatarUrl": "https://images.example.com/sam.jpg"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "The hands-on exercises made it click."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "I used it the very next day."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "quoteBlock",
+          "attrs": {
+            "variant": "pull",
+            "author": null,
+            "role": null,
+            "avatarUrl": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Learning is not a spectator sport."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "blockquote",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "A plain quote still works."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "defaults",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "gallery"
+        },
+        {
+          "type": "imageCompare"
+        },
+        {
+          "type": "chart"
+        },
+        {
+          "type": "statHighlights"
+        },
+        {
+          "type": "fileCard"
+        },
+        {
+          "type": "quoteBlock",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Quoted."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

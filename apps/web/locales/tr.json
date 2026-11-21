@@ -821,7 +821,11 @@
     "set_new_password": "Yeni şifre belirle",
     "invited_by_email_cta": "E-postayla mı davet edildiniz? O adresle kaydolun",
     "use_invite_code_instead": "Bunun yerine davet kodunuz mu var?",
-    "password_reset_done": "Şifreniz değiştirildi."
+    "password_reset_done": "Şifreniz değiştirildi.",
+    "login_failed_forgot": "Şifrenizi mi unuttunuz?",
+    "login_failed_reset": "Sıfırlayın",
+    "login_failed_magic": "Bunun yerine giriş bağlantısı gönder",
+    "login_failed_google_hint": "Google ile mi kaydoldunuz? Aşağıdan Google ile devam edin."
   },
   "validation": {
     "required": "Gerekli",
@@ -1321,7 +1325,11 @@
       "maintainer": "Sorumlu",
       "contributor": "Katkıda Bulunan",
       "reporter": "Raporlayıcı"
-    }
+    },
+    "co_created_by": "Birlikte oluşturuldu:",
+    "created_on": "Oluşturulma tarihi:",
+    "last_updated": "Son güncelleme:",
+    "and_x_more": "ve {{count}} tane daha"
   },
   "communities": {
     "title": "Topluluklar",
@@ -4294,6 +4302,91 @@
         "completed_note": "Bitti. Bir kez daha oku ve eksik kalanları aklında tut.",
         "write_again": "Cevabımı düzenle"
       }
+    },
+    "table": {
+      "total": "Toplam",
+      "average": "Ortalama",
+      "sort_by": "Sırala",
+      "original_order": "Özgün sıra",
+      "ascending": "Artan",
+      "descending": "Azalan",
+      "sort_direction": "Sıralama yönü",
+      "sorted": "{{column}} sütununa göre sıralandı, {{direction}}",
+      "column_n": "Sütun {{n}}"
+    },
+    "tabs": {
+      "tab": "Sekme",
+      "untitled": "Sekme {{n}}",
+      "list_label": "Sekmeler"
+    },
+    "accordion": {
+      "expand_all": "Tümünü genişlet",
+      "collapse_all": "Tümünü daralt"
+    },
+    "table_of_contents": {
+      "title": "İçindekiler"
+    },
+    "checklist": {
+      "progress_label": "{{total}} maddeden {{done}} tamamlandı",
+      "reset": "Listeyi sıfırla",
+      "item": "Liste maddesi",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "Zaman çizelgesi"
+    },
+    "key_takeaways": {
+      "title": "Önemli noktalar"
+    },
+    "chart": {
+      "category": "Kategori",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{categories}} kategoride {{series}} seri ({{names}}) içeren {{type}}, {{min}} ile {{max}} arası.",
+      "title": "Grafik",
+      "types": {
+        "bar": "Yatay çubuk grafik",
+        "column": "Sütun grafik",
+        "line": "Çizgi grafik",
+        "area": "Alan grafik",
+        "pie": "Pasta grafik",
+        "donut": "Halka grafik"
+      }
+    },
+    "file_card": {
+      "download": "İndir",
+      "download_named": "{{name}} dosyasını indir",
+      "file": "Dosya",
+      "types": {
+        "pdf": "PDF",
+        "doc": "Belge",
+        "sheet": "Elektronik tablo",
+        "slides": "Slaytlar",
+        "archive": "Arşiv",
+        "image": "Görsel",
+        "audio": "Ses",
+        "video": "Video",
+        "text": "Metin",
+        "code": "Kod",
+        "file": "Dosya"
+      }
+    },
+    "gallery": {
+      "carousel": "döngü",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "{{n}}. görseli göster",
+      "label": "Görsel galerisi",
+      "next": "Sonraki görsel",
+      "open_image": "{{count}} görselden {{n}}. görseli aç",
+      "previous": "Önceki görsel",
+      "slide": "slayt",
+      "viewer_title": "{{count}} görselden {{n}}."
+    },
+    "image_compare": {
+      "after": "Sonra",
+      "before": "Önce",
+      "slider": "Görselleri karşılaştır",
+      "value": "{{before}} %{{b}}, {{after}} %{{a}}"
     }
   },
   "embed": {
@@ -13456,7 +13549,11 @@
         "type_warning": "Uyarı",
         "type_tip": "İpucu",
         "type_success": "Başarılı",
-        "type_error": "Hata"
+        "type_error": "Hata",
+        "type_note": "Not",
+        "type_question": "Soru",
+        "type_example": "Örnek",
+        "type_quote": "Alıntı"
       }
     },
     "dynamic": {
@@ -13756,7 +13853,8 @@
       "create_first": "İlk Senaryoyu Oluştur",
       "modal_preview_title": "Senaryo Önizlemesi",
       "modal_preview_desc": "Etkileşimli senaryonuzu test edin",
-      "modal_edit_desc": "Etkileşimli senaryolarınızı oluşturun ve yönetin"
+      "modal_edit_desc": "Etkileşimli senaryolarınızı oluşturun ve yönetin",
+      "max_scenarios": "En fazla 40 senaryoya izin verilir"
     },
     "slash_menu": {
       "items": {
@@ -13915,6 +14013,70 @@
         "table": {
           "title": "Tablo",
           "description": "3x3 bir tablo ekleyin"
+        },
+        "tabs": {
+          "description": "İçerik panelleri arasında geçiş yapın",
+          "title": "Sekmeler"
+        },
+        "columns": {
+          "description": "İçerikleri yan yana yerleştirin",
+          "title": "Sütunlar"
+        },
+        "accordion": {
+          "description": "Açılır bölümler, aynı anda biri açık",
+          "title": "Akordeon"
+        },
+        "timeline": {
+          "description": "Sırayla adımlar veya olaylar",
+          "title": "Zaman çizelgesi"
+        },
+        "table_of_contents": {
+          "description": "Bu sayfanın başlıklarına bağlantılar",
+          "title": "İçindekiler"
+        },
+        "key_takeaways": {
+          "description": "Ana noktaları özetleyen bir kart",
+          "title": "Önemli noktalar"
+        },
+        "checklist": {
+          "description": "Öğrencilerin işaretleyebileceği maddeler",
+          "title": "Kontrol listesi"
+        },
+        "gallery": {
+          "title": "Galeri",
+          "description": "Izgara veya döngü hâlinde birden çok görsel"
+        },
+        "image_compare": {
+          "title": "Görsel karşılaştırma",
+          "description": "Kaydırıcıyla önce ve sonra"
+        },
+        "file_card": {
+          "title": "Dosya indirme",
+          "description": "Öğrencilerin indirebileceği bir dosya"
+        },
+        "quote_block": {
+          "title": "Referans",
+          "description": "Yazarıyla birlikte öne çıkan alıntı veya referans"
+        },
+        "quote": {
+          "title": "Alıntı",
+          "description": "Basit bir alıntı"
+        },
+        "chart": {
+          "title": "Grafik",
+          "description": "Küçük bir tablodan çubuk, çizgi veya pasta grafik"
+        },
+        "stat_highlights": {
+          "title": "İstatistikler",
+          "description": "Sayarak artan büyük sayılar"
+        },
+        "button_group": {
+          "title": "Düğme grubu",
+          "description": "Yan yana birkaç düğme"
+        },
+        "inline_math": {
+          "title": "Satır içi formül",
+          "description": "Cümle içinde bir formül (veya $x^2$ yazın)"
         }
       },
       "categories": {
@@ -14271,7 +14433,14 @@
       "button": {
         "emoji": "Emoji",
         "link_hint": "Öğrenciler düğmeye tıkladığında yeni sekmede açılır.",
-        "no_link": "Henüz bağlantı yok: bağlantı düğmesiyle ayarlayın."
+        "no_link": "Henüz bağlantı yok: bağlantı düğmesiyle ayarlayın.",
+        "style": "Stil",
+        "variant": "Görünüm",
+        "size": "Boyut",
+        "variant_solid": "Dolgu",
+        "variant_outline": "Çerçeve",
+        "variant_soft": "Yumuşak",
+        "variant_link": "Bağlantı"
       },
       "quiz": {
         "settings": "Sınav ayarları",
@@ -14329,7 +14498,39 @@
         "clear": "Temizle",
         "check": "Cevapları kontrol et",
         "try_again": "Tekrar dene",
-        "start_over": "Baştan başla"
+        "start_over": "Baştan başla",
+        "question_type": "Soru türü",
+        "type_multiple_choice": "Çoktan seçmeli",
+        "type_true_false": "Doğru / yanlış",
+        "type_short_answer": "Kısa cevap",
+        "type_numeric": "Sayı",
+        "true": "Doğru",
+        "false": "Yanlış",
+        "accepted_answers": "Kabul edilen cevaplar",
+        "accepted_answer_n": "Kabul edilen cevap {{n}}",
+        "accepted_answer_placeholder": "Doğru sayılan bir cevap",
+        "add_accepted": "Başka bir kabul edilen cevap",
+        "remove_accepted": "{{n}}. kabul edilen cevabı kaldır",
+        "ignore_accents": "Aksanları yok say (é = e)",
+        "short_answer_hint": "Büyük harfler ve fazla boşluklar dikkate alınmaz.",
+        "numeric_value": "Doğru cevap",
+        "numeric_tolerance": "Tolerans",
+        "show_explanations": "Açıklamaları göster",
+        "show_explanations_hint": "Açıklamanız, öğrenciler gönderdikten sonra her sorunun altında görünür.",
+        "pass_mark": "Geçme notu",
+        "pass_mark_off": "Kapalı",
+        "pass_mark_n": "Geçmek için %{{n}}",
+        "pass_mark_off_hint": "Öğrenciler tüm cevapların doğru olup olmadığını görür.",
+        "pass_mark_hint": "Öğrenciler %{{n}} veya üstüyle geçer ve puanlarını görür.",
+        "pass_mark_needed": "Geçme notu: %{{n}}",
+        "passed": "Geçti",
+        "not_passed": "Henüz geçmedi",
+        "score_percent": "%{{percent}}",
+        "your_answer": "Cevabınız",
+        "your_number": "Cevabınız (bir sayı)",
+        "answer_placeholder": "Cevabınızı yazın",
+        "number_placeholder": "Bir sayı yazın",
+        "expected_answer": "Beklenen: {{answer}}"
       },
       "flipcard": {
         "front": "Ön yüz",
@@ -14428,7 +14629,8 @@
         "view": "Görünüm",
         "view_map": "Harita",
         "view_steps": "Adımlar",
-        "your_path": "Yolunuz"
+        "your_path": "Yolunuz",
+        "limits": "En fazla {{max}} adım, her birinde {{choices}} seçenek."
       },
       "conditional": {
         "add_rule": "Kural ekle",
@@ -14576,6 +14778,423 @@
         "reset_text": "Sıfırla",
         "text": "Başlık ve açıklama",
         "title": "Başlık"
+      },
+      "table": {
+        "rows_cols": "Satırlar ve sütunlar",
+        "duplicate_row": "Satırı çoğalt",
+        "distribute": "Sütunları eşit dağıt",
+        "merge_split": "Hücreleri birleştir veya böl",
+        "headers": "Başlıklar",
+        "header_column": "Başlık sütunu",
+        "cell_style": "Hücre stili",
+        "apply_to": "Uygula",
+        "scope_selection": "Seçili hücreler",
+        "scope_column": "Tüm sütun",
+        "background": "Arka plan",
+        "align": "Hizalama",
+        "align_start": "Baş",
+        "align_center": "Orta",
+        "align_end": "Son",
+        "valign": "Dikey hizalama",
+        "valign_top": "Üst",
+        "valign_middle": "Orta",
+        "valign_bottom": "Alt",
+        "cell_type": "Hücre türü",
+        "type_hint": "Değer hücre metninde kalır, ör. 75, 4/5 veya evet.",
+        "type": {
+          "text": "Metin",
+          "progress": "İlerleme",
+          "checkbox": "Onay kutusu",
+          "rating": "Puan",
+          "status": "Durum",
+          "number": "Sayı",
+          "date": "Tarih"
+        },
+        "tone": "Renk",
+        "tone_auto": "Otomatik",
+        "number_format": "Sayı biçimi",
+        "format": {
+          "plain": "Düz",
+          "percent": "Yüzde",
+          "currency": "Para birimi",
+          "compact": "Kısa"
+        },
+        "currency": "Para birimi kodu",
+        "settings": "Tablo ayarları",
+        "variant": "Stil",
+        "variants": {
+          "default": "Varsayılan",
+          "striped": "Çizgili",
+          "bordered": "Kenarlıklı",
+          "minimal": "Sade",
+          "cards": "Kartlar"
+        },
+        "cards_hint": "Telefonlarda satırlar karta dönüşür.",
+        "caption": "Başlık yazısı",
+        "caption_placeholder": "Tabloyu açıklayın",
+        "sortable": "Öğrenciler sıralayabilir",
+        "sticky_header": "Sabit başlık",
+        "compact": "Sıkı satırlar",
+        "totals": "Toplam satırı",
+        "totals_hint": "Sayı ve ilerleme sütunları için.",
+        "totals_none": "Yok",
+        "totals_sum": "Toplam",
+        "totals_average": "Ortalama",
+        "toggle_checkbox": "Onay kutusunu değiştir",
+        "templates": {
+          "progress": {
+            "title": "İlerleme takibi",
+            "description": "Sorumlular, durum ve ilerleme çubuklarıyla görevler"
+          },
+          "comparison": {
+            "title": "Karşılaştırma",
+            "description": "Seçenekleri onay işaretleriyle yan yana karşılaştırın"
+          },
+          "rubric": {
+            "title": "Değerlendirme ölçeği",
+            "description": "Seviyeler ve puanlarla değerlendirme ölçütleri"
+          }
+        },
+        "sample": {
+          "task": "Görev",
+          "owner": "Sorumlu",
+          "status": "Durum",
+          "progress": "İlerleme",
+          "task_1": "Dersi planla",
+          "task_2": "Videoyu kaydet",
+          "task_3": "Testi yaz",
+          "status_done": "Tamamlandı",
+          "status_in_progress": "Devam ediyor",
+          "status_todo": "Başlanmadı",
+          "feature": "Özellik",
+          "option_a": "Temel",
+          "option_b": "Pro",
+          "feature_1": "Video dersler",
+          "feature_2": "Testler",
+          "feature_3": "Sertifikalar",
+          "criterion": "Ölçüt",
+          "look_for": "Neye bakıyoruz",
+          "level": "Seviye",
+          "points": "Puan",
+          "crit_1": "Açıklık",
+          "crit_2": "Doğruluk",
+          "crit_3": "Yapı",
+          "desc_1": "Fikirler kolayca takip ediliyor",
+          "desc_2": "Bilgiler ve adımlar doğru",
+          "desc_3": "Mantıklı sırada açık bölümler"
+        }
+      },
+      "layout": {
+        "settings": "Ayarlar",
+        "style": "Stil",
+        "color": "Renk",
+        "icon": "Simge",
+        "icon_default": "Varsayılan",
+        "size_sm": "Küçük",
+        "size_md": "Orta",
+        "size_lg": "Büyük",
+        "tone_neutral": "Nötr",
+        "tone_blue": "Mavi",
+        "tone_teal": "Camgöbeği",
+        "tone_green": "Yeşil",
+        "tone_amber": "Kehribar",
+        "tone_rose": "Pembe",
+        "icons": {
+          "lightbulb": "Ampul",
+          "star": "Yıldız",
+          "check": "Onay işareti",
+          "target": "Hedef",
+          "flag": "Bayrak",
+          "book": "Kitap",
+          "rocket": "Roket",
+          "key": "Anahtar"
+        }
+      },
+      "tabs": {
+        "label": "Sekmeler",
+        "add": "Sekme ekle",
+        "remove": "Bu sekmeyi sil",
+        "move_earlier": "Sekmeyi öne taşı",
+        "move_later": "Sekmeyi arkaya taşı",
+        "title_placeholder": "Sekme başlığı",
+        "variant_line": "Çizgi",
+        "variant_pills": "Hap",
+        "variant_boxed": "Kutu",
+        "sample": {
+          "tab_1": "Genel bakış",
+          "tab_2": "Ayrıntılar",
+          "tab_3": "Örnek",
+          "text_1": "Genel resimle başlayın.",
+          "text_2": "Nasıl çalıştığını ayrıntılı anlatın.",
+          "text_3": "Uygulamada gösterin."
+        }
+      },
+      "columns": {
+        "label": "Sütunlar",
+        "layout": "Düzen",
+        "layout_halves": "İki eşit sütun",
+        "layout_narrow_wide": "Önce dar, sonra geniş",
+        "layout_wide_narrow": "Önce geniş, sonra dar",
+        "layout_thirds": "Üç sütun",
+        "layout_quarters": "Dört sütun",
+        "gap": "Boşluk",
+        "align": "Dikey hizalama",
+        "align_top": "Üst",
+        "align_center": "Orta",
+        "align_bottom": "Alt",
+        "stack": "Küçük ekranlarda alt alta",
+        "sample": {
+          "left": "Birinci sütun",
+          "right": "İkinci sütun"
+        }
+      },
+      "accordion": {
+        "label": "Akordeon",
+        "add": "Bölüm ekle",
+        "single": "Aynı anda tek bölüm açık",
+        "variant_bordered": "Kenarlıklı",
+        "variant_filled": "Dolgulu",
+        "sample": {
+          "item_1": "Ne öğreneceğim?",
+          "text_1": "Bu dersin sonucunu anlatın.",
+          "item_2": "Ne kadar sürer?",
+          "text_2": "Öğrencilerin plan yapabileceği bir tahmin verin.",
+          "item_3": "Neye ihtiyacım var?",
+          "text_3": "Başlamadan önce hazır olması gerekenleri sıralayın."
+        },
+        "variant_default": "Varsayılan"
+      },
+      "timeline": {
+        "label": "Zaman çizelgesi",
+        "add": "Adım ekle",
+        "remove": "Adımı sil",
+        "step": "Adım",
+        "title_placeholder": "Adım başlığı",
+        "label_placeholder": "Tarih veya etiket (isteğe bağlı)",
+        "numbered": "Numaralı adımlar",
+        "orientation": "Yön",
+        "vertical": "Dikey",
+        "horizontal": "Yatay",
+        "icon_number": "Numara",
+        "variant_steps": "Adımlar",
+        "variant_process": "Süreç",
+        "sample": {
+          "step_1": "Hazırlan",
+          "text_1": "İhtiyacın olanları topla.",
+          "step_2": "Alıştırma yap",
+          "text_2": "Küçük bir örnekte dene.",
+          "step_3": "Uygula",
+          "text_3": "Gerçek bir görevde kullan."
+        },
+        "variant_timeline": "Zaman çizelgesi"
+      },
+      "table_of_contents": {
+        "label": "İçindekiler",
+        "depth": "Dahil edilecek başlıklar",
+        "numbered": "Girişleri numaralandır",
+        "title_label": "Başlık",
+        "empty": "Derse başlık ekleyin, burada listelenecekler."
+      },
+      "key_takeaways": {
+        "label": "Önemli noktalar",
+        "title_label": "Kart başlığı",
+        "sample": {
+          "point_1": "Tek cümleyle ana fikir",
+          "point_2": "Akılda tutulmaya değer bir ayrıntı",
+          "point_3": "Sırada ne yapılacak"
+        }
+      },
+      "checklist": {
+        "label": "Kontrol listesi",
+        "learner_can_check": "Öğrenciler maddeleri işaretleyebilir",
+        "hint": "İşaretler her öğrencinin tarayıcısında saklanır. Burada işaretlediğiniz maddeler işaretli başlar.",
+        "sample": {
+          "item_1": "Dersi oku",
+          "item_2": "Alıştırmayı dene",
+          "item_3": "Cevaplarını kontrol et"
+        }
+      },
+      "chart": {
+        "add_row": "Satır ekle",
+        "add_series": "Seri ekle",
+        "apply_csv": "Bu verileri kullan",
+        "csv_error": "Tablo okunamadı. Etiketleri ilk sütuna, sayıları diğer sütunlara yazın.",
+        "csv_label": "CSV olarak tablo",
+        "csv_placeholder": "Elektronik tablodan yapıştırın veya yazın: etiket, seri 1, seri 2",
+        "edit_data": "Verileri düzenle",
+        "empty": "Grafiği çizmek için veri ekleyin.",
+        "label": "Grafik",
+        "label_n": "Etiket {{n}}",
+        "labels": "Etiketler",
+        "paste_csv": "CSV yapıştır",
+        "pie_hint": "Pasta ve halka grafikler ilk seriyi gösterir.",
+        "remove_row": "Satırı kaldır",
+        "remove_series": "Seriyi kaldır",
+        "row_n": "Öğe {{n}}",
+        "sample": {
+          "q1": "1. çeyrek",
+          "q2": "2. çeyrek",
+          "q3": "3. çeyrek",
+          "q4": "4. çeyrek",
+          "series_1": "A Sınıfı",
+          "series_2": "B Sınıfı",
+          "title": "Çeyreklere göre ortalama test puanı"
+        },
+        "series_color": "{{name}} rengini değiştir",
+        "series_n": "Seri {{n}}",
+        "series_name": "Seri adı",
+        "settings": "Grafik ayarları",
+        "show_legend": "Göstergeyi göster",
+        "show_values": "Değerleri göster",
+        "stacked": "Serileri yığ",
+        "title_label": "Başlık",
+        "title_placeholder": "Grafik başlığı",
+        "type": "Grafik türü"
+      },
+      "file_card": {
+        "add_link": "Bağlantı ekle",
+        "description": "Açıklama",
+        "description_placeholder": "Bu dosyada ne var? (isteğe bağlı)",
+        "empty_hint": "PDF, görsel, ses veya video yükleyin ya da herhangi bir dosyaya bağlantı verin.",
+        "empty_title": "İndirilecek bir dosya ekleyin",
+        "label": "Dosya",
+        "link_hint": "Varsa yüklenen dosyanın yerini alır.",
+        "link_label": "Dosya bağlantısı",
+        "link_settings": "Dosya bağlantısı",
+        "name": "Dosya adı",
+        "type_error": "Bu dosya türü yüklenemez. PDF, görsel, ses veya video yükleyin ya da dosyaya bağlantı verin.",
+        "upload": "Dosya yükle"
+      },
+      "gallery": {
+        "add_images": "Görsel ekle",
+        "add_link": "Görseli ekle",
+        "alt_hint": "Ekran okuyucu kullanan öğrenciler için görselde ne olduğunu yazın.",
+        "alt_missing": "Alternatif metin eksik: {{n}}",
+        "alt_placeholder": "Alternatif metin (zorunlu)",
+        "columns": "Sütunlar",
+        "count": "Görseller: {{n}}",
+        "empty_hint": "Birden çok görseli aynı anda bırakın veya cihazınızdan seçin. {{formats}} · her biri en fazla {{max}}.",
+        "empty_title": "Galerinize görsel ekleyin",
+        "full": "Bir galeride en fazla {{max}} görsel olabilir.",
+        "label": "Galeri",
+        "layout": "Düzen",
+        "layout_carousel": "Döngü",
+        "layout_grid": "Izgara",
+        "layout_masonry": "Duvar",
+        "move_earlier": "Öne taşı",
+        "move_later": "Arkaya taşı",
+        "remove": "Görseli kaldır",
+        "settings": "Galeri ayarları"
+      },
+      "image_compare": {
+        "after_image": "Sonraki görsel",
+        "before_image": "Önceki görsel",
+        "empty_hint": "Aynı boyutta bir önce ve bir sonra görseli seçin. Öğrenciler karşılaştırmak için ayırıcıyı sürükler.",
+        "empty_title": "Görsel ekle",
+        "horizontal": "Yan yana",
+        "label": "Görsel karşılaştırma",
+        "orientation": "Yön",
+        "replace_after": "Sonraki görseli değiştir",
+        "replace_before": "Önceki görseli değiştir",
+        "settings": "Karşılaştırma ayarları",
+        "side_label": "Etiket",
+        "start": "Ayırıcının başlangıç konumu",
+        "vertical": "Üst ve alt"
+      },
+      "quote_block": {
+        "author": "Yazar",
+        "author_placeholder": "Ad",
+        "avatar": "Fotoğraf bağlantısı",
+        "avatar_hint": "Referanslarda adın yanında gösterilir. Baş harfler için boş bırakın.",
+        "label": "Alıntı",
+        "role": "Unvan",
+        "role_placeholder": "Unvan veya şirket",
+        "sample": {
+          "author": "Selin Arslan",
+          "role": "Ürün tasarımcısı",
+          "text": "Uygulamalı alıştırmalar sayesinde her şey yerine oturdu. Öğrendiklerimi ertesi gün işte kullandım."
+        },
+        "settings": "Alıntı ayarları",
+        "style": "Stil",
+        "variant_highlight": "Vurgu",
+        "variant_pull": "Öne çıkan alıntı",
+        "variant_testimonial": "Referans"
+      },
+      "stat_highlights": {
+        "add": "İstatistik ekle",
+        "animate": "Görününce say",
+        "color": "Renk",
+        "columns": "Sütunlar",
+        "description": "Açıklama",
+        "description_placeholder": "Kısa açıklama (isteğe bağlı)",
+        "empty": "Başlamak için bir istatistik ekleyin.",
+        "label": "İstatistikler",
+        "label_field": "Etiket",
+        "prefix": "Sayıdan önce",
+        "remove": "İstatistiği kaldır",
+        "sample": {
+          "desc_1": "öğrenci kursu tamamlıyor",
+          "desc_2": "1.200 değerlendirmeye göre",
+          "desc_3": "40 ülkede",
+          "label_1": "Tamamlama oranı",
+          "label_2": "Ortalama puan",
+          "label_3": "Öğrenci"
+        },
+        "settings": "İstatistik ayarları",
+        "suffix": "Sayıdan sonra",
+        "value": "Sayı"
+      },
+      "callout_title": "Başlık",
+      "callout_title_placeholder": "İsteğe bağlı başlık",
+      "callout_collapsible": "Öğrenciler daraltabilir",
+      "callout_default_open": "Başta açık",
+      "callout_tone": "Renk",
+      "callout_tone_default": "Türün rengi",
+      "code_copied": "Kod panoya kopyalandı",
+      "code_copy_failed": "Kopyalanamadı. Kodu seçip elle kopyalayın.",
+      "code_highlight": "Vurgulanacak satırlar (örneğin 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "Satır numaraları",
+      "code_wrap": "Uzun satırları kaydır",
+      "align": {
+        "label": "Metin hizalama",
+        "start": "Başa hizala",
+        "center": "Ortala",
+        "end": "Sona hizala",
+        "justify": "İki yana yasla"
+      },
+      "button_group": {
+        "label": "Düğme grubu",
+        "add_button": "Düğme ekle",
+        "new_button": "Düğme",
+        "primary": "Başla",
+        "secondary": "Daha fazla bilgi"
+      },
+      "image_frame": {
+        "label": "Çerçeve",
+        "none": "Yok",
+        "rounded": "Yuvarlak",
+        "shadow": "Gölge",
+        "border": "Kenarlık",
+        "polaroid": "Polaroid"
+      },
+      "inline_math": {
+        "title": "Satır içi formül",
+        "edit": "{{latex}} formülünü düzenle",
+        "latex": "LaTeX",
+        "hint": "Örneğin \\frac{a}{b} veya x^2. Metinde $…$ yazarak da oluşturabilirsiniz.",
+        "make": "Formül",
+        "remove": "Kaldır"
+      },
+      "toggle": {
+        "style": "Açılır bölüm stili",
+        "variant": "Görünüm",
+        "variant_default": "Varsayılan",
+        "variant_bordered": "Kenarlıklı",
+        "variant_filled": "Dolgulu",
+        "icon": "Simge",
+        "icon_chevron": "Ok",
+        "icon_plus": "Artı ve eksi"
       }
     },
     "history": {

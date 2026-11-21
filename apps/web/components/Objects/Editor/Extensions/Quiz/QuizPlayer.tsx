@@ -12,17 +12,22 @@
 */
 import React from 'react'
 import dynamic from 'next/dynamic'
-import { ArrowCounterClockwise, CheckCircle, Lightbulb, Question as QuestionIcon, X } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, Check, CheckCircle, Lightbulb, Question as QuestionIcon, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { QUIZ_RESPONSE_SINGLE } from '@/lib/quiz/modes'
+import { trueFalseLabels } from './QuizTypedEditors'
 import {
+  acceptedAnswers,
   answerLetter,
   attemptsLeft,
   gradeQuiz,
+  isAnswered,
   learnerOrder,
+  questionKind,
   responseTypeOf,
   selectAnswer,
+  setTypedAnswer,
   type QuizQuestion,
   type QuizSettings,
   type Selection,
@@ -62,8 +67,12 @@ export function QuizPlayer({ questions, settings }: Props) {
   const resultRef = React.useRef<HTMLDivElement>(null)
 
   const ordered = React.useMemo(() => learnerOrder(questions, settings, seed), [questions, settings, seed])
-  const grade = React.useMemo(() => gradeQuiz(questions, selection), [questions, selection])
-  const hasAnyAnswer = Object.values(selection).some((ids) => ids.length > 0)
+  const grade = React.useMemo(() => gradeQuiz(questions, selection, settings.passMark), [questions, selection, settings.passMark])
+  const hasAnyAnswer = questions.some((q) => isAnswered(q, selection[q.question_id]))
+  const usesPassMark = settings.passMark > 0
+  // Without a pass mark: the old all-correct message (and confetti).
+  const success = usesPassMark ? grade.passed : grade.allCorrect || grade.graded === 0
+  const tf = trueFalseLabels(t)
   const left = attemptsLeft(settings, attempts)
   const canRetry = left === null || left > 0
   const reveal = settings.showCorrectAnswers
@@ -91,7 +100,7 @@ export function QuizPlayer({ questions, settings }: Props) {
 
   return (
     <div data-lhb-panel="" className="bg-neutral-50 rounded-xl px-4 py-3 nice-shadow transition-all ease-linear">
-      {submitted && grade.allCorrect && !reducedMotion && (
+      {submitted && (usesPassMark ? grade.passed : grade.allCorrect) && !reducedMotion && (
         <ReactConfetti numberOfPieces={600} recycle={false} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 60 }} />
       )}
 
@@ -142,11 +151,15 @@ export function QuizPlayer({ questions, settings }: Props) {
       {total > 0 && (
         <div className="space-y-3">
           {ordered.map((q, qi) => {
+            const kind = questionKind(q)
+            const isTF = kind === 'true_false'
+            const typed = kind === 'short_answer' || kind === 'numeric'
             const single = responseTypeOf(q) === QUIZ_RESPONSE_SINGLE
             const picked = selection[q.question_id] ?? []
             const result = submitted ? grade.results[q.question_id] : null
             const name = `${groupId}-${q.question_id}`
-            const showExplanation = submitted && !!q.explanation?.trim() && (reveal || result === 'correct')
+            const showExplanation =
+              submitted && settings.showExplanations && !!q.explanation?.trim() && (reveal || result === 'correct')
             return (
               <fieldset key={q.question_id} className="min-w-0">
                 <legend className="contents">
@@ -159,12 +172,33 @@ export function QuizPlayer({ questions, settings }: Props) {
                     )}
                   </span>
                 </legend>
-                {!single && (
+                {!single && !typed && (
                   <p className="mb-1.5 px-1 text-[10px] font-medium text-neutral-500">{t('editor.blocks.quiz_block.select_all_that_apply')}</p>
                 )}
 
-                <div className="space-y-1 max-md:space-y-2">
-                  {q.answers.map((a, ai) => {
+                {typed && (
+                  <TypedAnswer
+                    id={`${name}-input`}
+                    numeric={kind === 'numeric'}
+                    value={picked[0] ?? ''}
+                    disabled={submitted}
+                    result={result}
+                    onChange={(v) => setSelection((s) => setTypedAnswer(s, q, v))}
+                    reveal={
+                      submitted && reveal && result === 'incorrect'
+                        ? kind === 'numeric'
+                          ? q.tolerance
+                            ? `${q.correct_value} (± ${q.tolerance})`
+                            : String(q.correct_value)
+                          : acceptedAnswers(q).join(' · ')
+                        : null
+                    }
+                  />
+                )}
+
+                {!typed && (
+                <div className={cn(isTF ? 'grid grid-cols-2 gap-1.5 max-md:gap-2' : 'space-y-1 max-md:space-y-2')}>
+                  {(isTF ? q.answers.slice(0, 2) : q.answers).map((a, ai) => {
                     const isSelected = picked.includes(a.answer_id)
                     const isCorrectReveal = submitted && a.correct && (reveal || isSelected)
                     const isWrongSelection = submitted && isSelected && !a.correct
@@ -211,7 +245,7 @@ export function QuizPlayer({ questions, settings }: Props) {
                               neutralAfter && 'bg-neutral-100 text-neutral-400',
                             )}
                           >
-                            {answerLetter(ai)}
+                            {isTF ? (ai === 0 ? <Check weight="bold" size={12} /> : <X weight="bold" size={12} />) : answerLetter(ai)}
                           </span>
                           <span
                             className={cn(
@@ -219,7 +253,11 @@ export function QuizPlayer({ questions, settings }: Props) {
                               isCorrectReveal ? 'text-emerald-900 font-medium' : isWrongSelection ? 'text-red-900 font-medium' : 'text-neutral-700',
                             )}
                           >
-                            {a.answer || <span className="text-neutral-300 italic">{t('editor.blocks.quiz_block.answer_placeholder')}</span>}
+                            {isTF
+                              ? ai === 0
+                                ? tf.true
+                                : tf.false
+                              : a.answer || <span className="text-neutral-300 italic">{t('editor.blocks.quiz_block.answer_placeholder')}</span>}
                           </span>
                           {isCorrectReveal && (
                             <>
@@ -241,6 +279,7 @@ export function QuizPlayer({ questions, settings }: Props) {
                     )
                   })}
                 </div>
+                )}
 
                 {showExplanation && (
                   <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-white nice-shadow px-2 py-1.5 text-xs leading-snug text-neutral-600">
@@ -291,20 +330,98 @@ export function QuizPlayer({ questions, settings }: Props) {
             <div
               className={cn(
                 'inline-flex items-center gap-1.5 text-[11px] max-md:text-sm font-medium px-2 py-1 max-md:px-3 max-md:py-2 rounded-md max-md:rounded-lg',
-                grade.allCorrect || grade.graded === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700',
+                success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700',
               )}
             >
-              {grade.allCorrect || grade.graded === 0 ? <CheckCircle weight="duotone" size={12} /> : <X weight="duotone" size={12} />}
-              {grade.allCorrect || grade.graded === 0
-                ? t('editor.blocks.quiz_block.all_correct')
-                : `${t('editor.blocks.quiz_block.some_incorrect')} (${t('editor.blocks_v2.quiz.score', { correct: grade.correct, total: grade.graded, defaultValue: '{{correct}} of {{total}} correct' })})`}
+              {success ? <CheckCircle weight="duotone" size={12} /> : <X weight="duotone" size={12} />}
+              {usesPassMark
+                ? `${success ? t('editor.blocks_v2.quiz.passed', 'Passed') : t('editor.blocks_v2.quiz.not_passed', 'Not passed yet')} · ${t('editor.blocks_v2.quiz.score_percent', { percent: grade.percent, defaultValue: '{{percent}}%' })} (${t('editor.blocks_v2.quiz.score', { correct: grade.correct, total: grade.graded, defaultValue: '{{correct}} of {{total}} correct' })})`
+                : success
+                  ? t('editor.blocks.quiz_block.all_correct')
+                  : `${t('editor.blocks.quiz_block.some_incorrect')} (${t('editor.blocks_v2.quiz.score', { correct: grade.correct, total: grade.graded, defaultValue: '{{correct}} of {{total}} correct' })})`}
             </div>
-            {!grade.allCorrect && !canRetry && (
+            {usesPassMark && (
+              <span className="text-[11px] max-md:text-sm font-medium text-neutral-500">
+                {t('editor.blocks_v2.quiz.pass_mark_needed', { n: settings.passMark, defaultValue: 'Pass mark: {{n}}%' })}
+              </span>
+            )}
+            {!(usesPassMark ? grade.passed : grade.allCorrect) && !canRetry && (
               <span className="text-[11px] max-md:text-sm font-medium text-neutral-500">{t('editor.blocks_v2.quiz.no_attempts_left', 'No attempts left')}</span>
             )}
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+/** The answer field of a short answer or numeric question, with its result. */
+function TypedAnswer({
+  id,
+  numeric,
+  value,
+  disabled,
+  result,
+  reveal,
+  onChange,
+}: {
+  id: string
+  numeric: boolean
+  value: string
+  disabled: boolean
+  result: 'correct' | 'incorrect' | 'ungraded' | null
+  reveal: string | null
+  onChange: (_v: string) => void
+}) {
+  const { t } = useTranslation()
+  const correct = result === 'correct'
+  const wrong = result === 'incorrect'
+  return (
+    <div className="px-0.5">
+      <div
+        className={cn(
+          'flex items-center gap-2 rounded-lg nice-shadow px-2 py-1 transition-colors max-md:min-h-12 max-md:rounded-xl max-md:px-3',
+          correct ? 'bg-emerald-50' : wrong ? 'bg-red-50' : 'bg-white',
+          'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-400',
+        )}
+      >
+        <label htmlFor={id} className="sr-only">
+          {numeric ? t('editor.blocks_v2.quiz.your_number', 'Your answer (a number)') : t('editor.blocks_v2.quiz.your_answer', 'Your answer')}
+        </label>
+        <input
+          id={id}
+          type="text"
+          inputMode={numeric ? 'decimal' : 'text'}
+          autoComplete="off"
+          spellCheck={!numeric}
+          value={value}
+          disabled={disabled}
+          aria-invalid={wrong || undefined}
+          onChange={(e) => onChange(e.target.value.slice(0, 500))}
+          placeholder={numeric ? t('editor.blocks_v2.quiz.number_placeholder', 'Type a number') : t('editor.blocks_v2.quiz.answer_placeholder', 'Type your answer')}
+          className={cn(
+            'h-8 min-w-0 flex-1 bg-transparent text-sm max-md:text-[15px] outline-none placeholder:text-neutral-300 disabled:cursor-default',
+            correct ? 'text-emerald-900 font-medium' : wrong ? 'text-red-900 font-medium' : 'text-neutral-800',
+          )}
+        />
+        {correct && (
+          <>
+            <span className="sr-only">{t('editor.blocks_v2.quiz.correct', 'Correct')}</span>
+            <CheckCircle weight="duotone" className="shrink-0 text-emerald-500" size={14} aria-hidden />
+          </>
+        )}
+        {wrong && (
+          <>
+            <span className="sr-only">{t('editor.blocks_v2.quiz.incorrect', 'Incorrect')}</span>
+            <X weight="duotone" className="shrink-0 text-red-500" size={14} aria-hidden />
+          </>
+        )}
+      </div>
+      {reveal && (
+        <p className="mt-1 px-1 text-[11px] leading-snug text-emerald-700">
+          {t('editor.blocks_v2.quiz.expected_answer', { answer: reveal, defaultValue: 'Expected: {{answer}}' })}
+        </p>
+      )}
     </div>
   )
 }

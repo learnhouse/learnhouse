@@ -821,7 +821,11 @@
     "set_new_password": "Set a new password",
     "invited_by_email_cta": "Invited by email? Sign up with that address",
     "use_invite_code_instead": "Have an invite code instead?",
-    "password_reset_done": "Your password has been changed."
+    "password_reset_done": "Your password has been changed.",
+    "login_failed_forgot": "Forgot your password?",
+    "login_failed_reset": "Reset it",
+    "login_failed_magic": "Email me a login link instead",
+    "login_failed_google_hint": "Signed up with Google? Use Continue with Google below."
   },
   "validation": {
     "required": "Required",
@@ -1319,7 +1323,11 @@
       "maintainer": "Maintainer",
       "contributor": "Contributor",
       "reporter": "Reporter"
-    }
+    },
+    "co_created_by": "Co-created by",
+    "created_on": "Created on",
+    "last_updated": "Last updated",
+    "and_x_more": "& {{count}} more"
   },
   "communities": {
     "title": "Communities",
@@ -4290,6 +4298,91 @@
         "completed_note": "Done. Read it through once more and keep what you missed in mind.",
         "write_again": "Edit my answer"
       }
+    },
+    "table": {
+      "total": "Total",
+      "average": "Average",
+      "sort_by": "Sort by",
+      "original_order": "Original order",
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "sort_direction": "Sort direction",
+      "sorted": "Sorted by {{column}}, {{direction}}",
+      "column_n": "Column {{n}}"
+    },
+    "tabs": {
+      "tab": "Tab",
+      "untitled": "Tab {{n}}",
+      "list_label": "Tabs"
+    },
+    "accordion": {
+      "expand_all": "Expand all",
+      "collapse_all": "Collapse all"
+    },
+    "table_of_contents": {
+      "title": "Contents"
+    },
+    "checklist": {
+      "progress_label": "{{done}} of {{total}} done",
+      "reset": "Reset checklist",
+      "item": "Checklist item",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "Timeline"
+    },
+    "key_takeaways": {
+      "title": "Key takeaways"
+    },
+    "chart": {
+      "category": "Category",
+      "point": "{{label}}, {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} with {{series}} series ({{names}}) over {{categories}} categories, from {{min}} to {{max}}.",
+      "title": "Chart",
+      "types": {
+        "bar": "Bar chart",
+        "column": "Column chart",
+        "line": "Line chart",
+        "area": "Area chart",
+        "pie": "Pie chart",
+        "donut": "Donut chart"
+      }
+    },
+    "file_card": {
+      "download": "Download",
+      "download_named": "Download {{name}}",
+      "file": "File",
+      "types": {
+        "pdf": "PDF",
+        "doc": "Document",
+        "sheet": "Spreadsheet",
+        "slides": "Slides",
+        "archive": "Archive",
+        "image": "Image",
+        "audio": "Audio",
+        "video": "Video",
+        "text": "Text",
+        "code": "Code",
+        "file": "File"
+      }
+    },
+    "gallery": {
+      "carousel": "carousel",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "Show image {{n}}",
+      "label": "Image gallery",
+      "next": "Next image",
+      "open_image": "Open image {{n}} of {{count}}",
+      "previous": "Previous image",
+      "slide": "slide",
+      "viewer_title": "Image {{n}} of {{count}}"
+    },
+    "image_compare": {
+      "after": "After",
+      "before": "Before",
+      "slider": "Compare images",
+      "value": "{{before}} {{b}}%, {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13441,7 +13534,11 @@
         "type_warning": "Warning",
         "type_tip": "Tip",
         "type_success": "Success",
-        "type_error": "Error"
+        "type_error": "Error",
+        "type_note": "Note",
+        "type_question": "Question",
+        "type_example": "Example",
+        "type_quote": "Quote"
       }
     },
     "dynamic": {
@@ -13741,7 +13838,8 @@
       "create_first": "Create First Scenario",
       "modal_preview_title": "Scenario Preview",
       "modal_preview_desc": "Test your interactive scenario",
-      "modal_edit_desc": "Create and manage your interactive scenarios"
+      "modal_edit_desc": "Create and manage your interactive scenarios",
+      "max_scenarios": "Maximum of 40 scenarios allowed"
     },
     "slash_menu": {
       "items": {
@@ -13900,6 +13998,70 @@
         "table": {
           "title": "Table",
           "description": "Insert a 3x3 table"
+        },
+        "tabs": {
+          "description": "Switch between panels of content",
+          "title": "Tabs"
+        },
+        "columns": {
+          "description": "Place content side by side",
+          "title": "Columns"
+        },
+        "accordion": {
+          "description": "Collapsible sections, one open at a time",
+          "title": "Accordion"
+        },
+        "timeline": {
+          "description": "Steps or events in order",
+          "title": "Timeline"
+        },
+        "table_of_contents": {
+          "description": "Links to the headings of this page",
+          "title": "Table of contents"
+        },
+        "key_takeaways": {
+          "description": "A summary card of the main points",
+          "title": "Key takeaways"
+        },
+        "checklist": {
+          "description": "Items learners can tick off",
+          "title": "Checklist"
+        },
+        "gallery": {
+          "title": "Gallery",
+          "description": "Several images in a grid or carousel"
+        },
+        "image_compare": {
+          "title": "Image compare",
+          "description": "Before and after with a slider"
+        },
+        "file_card": {
+          "title": "File download",
+          "description": "A file learners can download"
+        },
+        "quote_block": {
+          "title": "Testimonial",
+          "description": "A pull quote or testimonial with its author"
+        },
+        "quote": {
+          "title": "Quote",
+          "description": "A simple quoted passage"
+        },
+        "chart": {
+          "title": "Chart",
+          "description": "Bar, line or pie chart from a small table"
+        },
+        "stat_highlights": {
+          "title": "Stats",
+          "description": "Big numbers that count up"
+        },
+        "button_group": {
+          "title": "Button group",
+          "description": "Several buttons side by side"
+        },
+        "inline_math": {
+          "title": "Inline formula",
+          "description": "A formula inside a sentence (or type $x^2$)"
         }
       },
       "categories": {
@@ -14256,7 +14418,14 @@
       "button": {
         "emoji": "Emoji",
         "link_hint": "Opens in a new tab when learners click the button.",
-        "no_link": "No link yet: set one with the link button."
+        "no_link": "No link yet: set one with the link button.",
+        "style": "Style",
+        "variant": "Look",
+        "size": "Size",
+        "variant_solid": "Solid",
+        "variant_outline": "Outline",
+        "variant_soft": "Soft",
+        "variant_link": "Link"
       },
       "quiz": {
         "settings": "Quiz settings",
@@ -14314,7 +14483,39 @@
         "clear": "Clear",
         "check": "Check answers",
         "try_again": "Try again",
-        "start_over": "Start over"
+        "start_over": "Start over",
+        "question_type": "Question type",
+        "type_multiple_choice": "Multiple choice",
+        "type_true_false": "True / false",
+        "type_short_answer": "Short answer",
+        "type_numeric": "Number",
+        "true": "True",
+        "false": "False",
+        "accepted_answers": "Accepted answers",
+        "accepted_answer_n": "Accepted answer {{n}}",
+        "accepted_answer_placeholder": "An answer that counts as right",
+        "add_accepted": "Another accepted answer",
+        "remove_accepted": "Remove accepted answer {{n}}",
+        "ignore_accents": "Ignore accents (é = e)",
+        "short_answer_hint": "Capital letters and extra spaces are ignored.",
+        "numeric_value": "Correct answer",
+        "numeric_tolerance": "Tolerance",
+        "show_explanations": "Show explanations",
+        "show_explanations_hint": "Your explanation appears under each question once learners submit.",
+        "pass_mark": "Pass mark",
+        "pass_mark_off": "Off",
+        "pass_mark_n": "{{n}}% to pass",
+        "pass_mark_off_hint": "Learners see whether every answer was right.",
+        "pass_mark_hint": "Learners pass with {{n}}% or more and see their score.",
+        "pass_mark_needed": "Pass mark: {{n}}%",
+        "passed": "Passed",
+        "not_passed": "Not passed yet",
+        "score_percent": "{{percent}}%",
+        "your_answer": "Your answer",
+        "your_number": "Your answer (a number)",
+        "answer_placeholder": "Type your answer",
+        "number_placeholder": "Type a number",
+        "expected_answer": "Expected: {{answer}}"
       },
       "flipcard": {
         "front": "Front",
@@ -14413,7 +14614,8 @@
         "view": "View",
         "view_map": "Map",
         "view_steps": "Steps",
-        "your_path": "Your path"
+        "your_path": "Your path",
+        "limits": "Up to {{max}} steps, {{choices}} choices each."
       },
       "conditional": {
         "add_rule": "Add a rule",
@@ -14560,6 +14762,423 @@
         "reset_text": "Reset",
         "text": "Title & description",
         "title": "Title"
+      },
+      "table": {
+        "rows_cols": "Rows and columns",
+        "duplicate_row": "Duplicate row",
+        "distribute": "Distribute columns evenly",
+        "merge_split": "Merge or split cells",
+        "headers": "Headers",
+        "header_column": "Header column",
+        "cell_style": "Cell style",
+        "apply_to": "Apply to",
+        "scope_selection": "Selected cells",
+        "scope_column": "Whole column",
+        "background": "Background",
+        "align": "Alignment",
+        "align_start": "Start",
+        "align_center": "Center",
+        "align_end": "End",
+        "valign": "Vertical alignment",
+        "valign_top": "Top",
+        "valign_middle": "Middle",
+        "valign_bottom": "Bottom",
+        "cell_type": "Cell type",
+        "type_hint": "The value stays in the cell text, e.g. 75, 4/5 or yes.",
+        "type": {
+          "text": "Text",
+          "progress": "Progress",
+          "checkbox": "Checkbox",
+          "rating": "Rating",
+          "status": "Status",
+          "number": "Number",
+          "date": "Date"
+        },
+        "tone": "Colour",
+        "tone_auto": "Automatic",
+        "number_format": "Number format",
+        "format": {
+          "plain": "Plain",
+          "percent": "Percent",
+          "currency": "Currency",
+          "compact": "Compact"
+        },
+        "currency": "Currency code",
+        "settings": "Table settings",
+        "variant": "Style",
+        "variants": {
+          "default": "Default",
+          "striped": "Striped",
+          "bordered": "Bordered",
+          "minimal": "Minimal",
+          "cards": "Cards"
+        },
+        "cards_hint": "Rows become cards on phones.",
+        "caption": "Caption",
+        "caption_placeholder": "Describe the table",
+        "sortable": "Learners can sort",
+        "sticky_header": "Sticky header",
+        "compact": "Compact rows",
+        "totals": "Totals row",
+        "totals_hint": "For number and progress columns.",
+        "totals_none": "None",
+        "totals_sum": "Sum",
+        "totals_average": "Average",
+        "toggle_checkbox": "Toggle checkbox",
+        "templates": {
+          "progress": {
+            "title": "Progress tracker",
+            "description": "Tasks with owners, status and progress bars"
+          },
+          "comparison": {
+            "title": "Comparison",
+            "description": "Compare options side by side with checkmarks"
+          },
+          "rubric": {
+            "title": "Rubric",
+            "description": "Grading criteria with rating levels and points"
+          }
+        },
+        "sample": {
+          "task": "Task",
+          "owner": "Owner",
+          "status": "Status",
+          "progress": "Progress",
+          "task_1": "Plan the lesson",
+          "task_2": "Record the video",
+          "task_3": "Write the quiz",
+          "status_done": "Done",
+          "status_in_progress": "In progress",
+          "status_todo": "Not started",
+          "feature": "Feature",
+          "option_a": "Basic",
+          "option_b": "Pro",
+          "feature_1": "Video lessons",
+          "feature_2": "Quizzes",
+          "feature_3": "Certificates",
+          "criterion": "Criterion",
+          "look_for": "What we look for",
+          "level": "Level",
+          "points": "Points",
+          "crit_1": "Clarity",
+          "crit_2": "Accuracy",
+          "crit_3": "Structure",
+          "desc_1": "Ideas are easy to follow",
+          "desc_2": "Facts and steps are correct",
+          "desc_3": "Clear sections in a logical order"
+        }
+      },
+      "layout": {
+        "settings": "Settings",
+        "style": "Style",
+        "color": "Color",
+        "icon": "Icon",
+        "icon_default": "Default",
+        "size_sm": "Small",
+        "size_md": "Medium",
+        "size_lg": "Large",
+        "tone_neutral": "Neutral",
+        "tone_blue": "Blue",
+        "tone_teal": "Teal",
+        "tone_green": "Green",
+        "tone_amber": "Amber",
+        "tone_rose": "Rose",
+        "icons": {
+          "lightbulb": "Lightbulb",
+          "star": "Star",
+          "check": "Check mark",
+          "target": "Target",
+          "flag": "Flag",
+          "book": "Book",
+          "rocket": "Rocket",
+          "key": "Key"
+        }
+      },
+      "tabs": {
+        "label": "Tabs",
+        "add": "Add tab",
+        "remove": "Delete this tab",
+        "move_earlier": "Move tab earlier",
+        "move_later": "Move tab later",
+        "title_placeholder": "Tab title",
+        "variant_line": "Line",
+        "variant_pills": "Pills",
+        "variant_boxed": "Boxed",
+        "sample": {
+          "tab_1": "Overview",
+          "tab_2": "Details",
+          "tab_3": "Example",
+          "text_1": "Start with the big picture.",
+          "text_2": "Go deeper into how it works.",
+          "text_3": "Show it in practice."
+        }
+      },
+      "columns": {
+        "label": "Columns",
+        "layout": "Layout",
+        "layout_halves": "Two equal columns",
+        "layout_narrow_wide": "Narrow, then wide",
+        "layout_wide_narrow": "Wide, then narrow",
+        "layout_thirds": "Three columns",
+        "layout_quarters": "Four columns",
+        "gap": "Spacing",
+        "align": "Vertical alignment",
+        "align_top": "Top",
+        "align_center": "Middle",
+        "align_bottom": "Bottom",
+        "stack": "Stack on small screens",
+        "sample": {
+          "left": "First column",
+          "right": "Second column"
+        }
+      },
+      "accordion": {
+        "label": "Accordion",
+        "add": "Add section",
+        "single": "One section open at a time",
+        "variant_bordered": "Bordered",
+        "variant_filled": "Filled",
+        "sample": {
+          "item_1": "What will I learn?",
+          "text_1": "Describe the outcome of this lesson.",
+          "item_2": "How long does it take?",
+          "text_2": "Give an estimate learners can plan around.",
+          "item_3": "What do I need?",
+          "text_3": "List what to have ready before starting."
+        },
+        "variant_default": "Default"
+      },
+      "timeline": {
+        "label": "Timeline",
+        "add": "Add step",
+        "remove": "Delete step",
+        "step": "Step",
+        "title_placeholder": "Step title",
+        "label_placeholder": "Date or label (optional)",
+        "numbered": "Numbered steps",
+        "orientation": "Direction",
+        "vertical": "Vertical",
+        "horizontal": "Horizontal",
+        "icon_number": "Number",
+        "variant_steps": "Steps",
+        "variant_process": "Process",
+        "sample": {
+          "step_1": "Prepare",
+          "text_1": "Gather what you need.",
+          "step_2": "Practice",
+          "text_2": "Try it on a small example.",
+          "step_3": "Apply",
+          "text_3": "Use it on a real task."
+        },
+        "variant_timeline": "Timeline"
+      },
+      "table_of_contents": {
+        "label": "Table of contents",
+        "depth": "Headings to include",
+        "numbered": "Number the entries",
+        "title_label": "Title",
+        "empty": "Add headings to the lesson and they will be listed here."
+      },
+      "key_takeaways": {
+        "label": "Key takeaways",
+        "title_label": "Card title",
+        "sample": {
+          "point_1": "The main idea in one sentence",
+          "point_2": "A detail worth remembering",
+          "point_3": "What to do next"
+        }
+      },
+      "checklist": {
+        "label": "Checklist",
+        "learner_can_check": "Learners can tick items",
+        "hint": "Ticks are saved in each learner’s browser. Items you tick here start ticked.",
+        "sample": {
+          "item_1": "Read the lesson",
+          "item_2": "Try the exercise",
+          "item_3": "Check your answers"
+        }
+      },
+      "chart": {
+        "add_row": "Add row",
+        "add_series": "Add series",
+        "apply_csv": "Use this data",
+        "csv_error": "Couldn’t read that table. Put labels in the first column and numbers in the others.",
+        "csv_label": "Table as CSV",
+        "csv_placeholder": "Paste from a spreadsheet, or type: label, series 1, series 2",
+        "edit_data": "Edit data",
+        "empty": "Add some data to draw the chart.",
+        "label": "Chart",
+        "label_n": "Label {{n}}",
+        "labels": "Labels",
+        "paste_csv": "Paste CSV",
+        "pie_hint": "Pie and donut charts show the first series.",
+        "remove_row": "Remove row",
+        "remove_series": "Remove series",
+        "row_n": "Item {{n}}",
+        "sample": {
+          "q1": "Q1",
+          "q2": "Q2",
+          "q3": "Q3",
+          "q4": "Q4",
+          "series_1": "Class A",
+          "series_2": "Class B",
+          "title": "Average quiz score by quarter"
+        },
+        "series_color": "Change color of {{name}}",
+        "series_n": "Series {{n}}",
+        "series_name": "Series name",
+        "settings": "Chart settings",
+        "show_legend": "Show legend",
+        "show_values": "Show values",
+        "stacked": "Stack series",
+        "title_label": "Title",
+        "title_placeholder": "Chart title",
+        "type": "Chart type"
+      },
+      "file_card": {
+        "add_link": "Add link",
+        "description": "Description",
+        "description_placeholder": "What’s in this file? (optional)",
+        "empty_hint": "Upload a PDF, image, audio or video file, or link to any file.",
+        "empty_title": "Add a file to download",
+        "label": "File",
+        "link_hint": "Replaces the uploaded file, if there is one.",
+        "link_label": "Link to the file",
+        "link_settings": "File link",
+        "name": "File name",
+        "type_error": "This type of file can’t be uploaded. Upload a PDF, image, audio or video file, or link to the file instead.",
+        "upload": "Upload a file"
+      },
+      "gallery": {
+        "add_images": "Add images",
+        "add_link": "Add image",
+        "alt_hint": "Say what the image shows, for learners using a screen reader.",
+        "alt_missing": "Alt text missing: {{n}}",
+        "alt_placeholder": "Alt text (required)",
+        "columns": "Columns",
+        "count": "Images: {{n}}",
+        "empty_hint": "Drop several images at once, or pick them from your device. {{formats}} · up to {{max}} each.",
+        "empty_title": "Add images to your gallery",
+        "full": "A gallery holds up to {{max}} images.",
+        "label": "Gallery",
+        "layout": "Layout",
+        "layout_carousel": "Carousel",
+        "layout_grid": "Grid",
+        "layout_masonry": "Masonry",
+        "move_earlier": "Move earlier",
+        "move_later": "Move later",
+        "remove": "Remove image",
+        "settings": "Gallery settings"
+      },
+      "image_compare": {
+        "after_image": "After image",
+        "before_image": "Before image",
+        "empty_hint": "Pick a before and an after image of the same size. Learners drag the divider to compare them.",
+        "empty_title": "Add images",
+        "horizontal": "Side by side",
+        "label": "Image compare",
+        "orientation": "Direction",
+        "replace_after": "Replace after image",
+        "replace_before": "Replace before image",
+        "settings": "Comparison settings",
+        "side_label": "Label",
+        "start": "Divider starts at",
+        "vertical": "Top and bottom"
+      },
+      "quote_block": {
+        "author": "Author",
+        "author_placeholder": "Name",
+        "avatar": "Photo link",
+        "avatar_hint": "Shown next to the name on testimonials. Leave empty for initials.",
+        "label": "Quote",
+        "role": "Role",
+        "role_placeholder": "Role or company",
+        "sample": {
+          "author": "Sam Rivera",
+          "role": "Product designer",
+          "text": "The hands-on exercises made it click. I used what I learned at work the very next day."
+        },
+        "settings": "Quote settings",
+        "style": "Style",
+        "variant_highlight": "Highlight",
+        "variant_pull": "Pull quote",
+        "variant_testimonial": "Testimonial"
+      },
+      "stat_highlights": {
+        "add": "Add stat",
+        "animate": "Count up when shown",
+        "color": "Color",
+        "columns": "Columns",
+        "description": "Description",
+        "description_placeholder": "Short description (optional)",
+        "empty": "Add a stat to get started.",
+        "label": "Stats",
+        "label_field": "Label",
+        "prefix": "Before the number",
+        "remove": "Remove stat",
+        "sample": {
+          "desc_1": "of learners finish the course",
+          "desc_2": "from 1,200 reviews",
+          "desc_3": "in 40 countries",
+          "label_1": "Completion rate",
+          "label_2": "Average rating",
+          "label_3": "Learners"
+        },
+        "settings": "Stat settings",
+        "suffix": "After the number",
+        "value": "Number"
+      },
+      "callout_title": "Title",
+      "callout_title_placeholder": "Optional title",
+      "callout_collapsible": "Learners can fold it",
+      "callout_default_open": "Open at first",
+      "callout_tone": "Color",
+      "callout_tone_default": "The type’s color",
+      "code_copied": "Code copied to the clipboard",
+      "code_copy_failed": "Could not copy. Select the code and copy it by hand.",
+      "code_highlight": "Lines to highlight (for example 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "Line numbers",
+      "code_wrap": "Wrap long lines",
+      "align": {
+        "label": "Text alignment",
+        "start": "Align to start",
+        "center": "Center",
+        "end": "Align to end",
+        "justify": "Justify"
+      },
+      "button_group": {
+        "label": "Button group",
+        "add_button": "Add a button",
+        "new_button": "Button",
+        "primary": "Get started",
+        "secondary": "Learn more"
+      },
+      "image_frame": {
+        "label": "Frame",
+        "none": "None",
+        "rounded": "Rounded",
+        "shadow": "Shadow",
+        "border": "Border",
+        "polaroid": "Polaroid"
+      },
+      "inline_math": {
+        "title": "Inline formula",
+        "edit": "Edit formula {{latex}}",
+        "latex": "LaTeX",
+        "hint": "For example \\frac{a}{b} or x^2. Type $…$ in text to make one.",
+        "make": "Math",
+        "remove": "Remove"
+      },
+      "toggle": {
+        "style": "Toggle style",
+        "variant": "Look",
+        "variant_default": "Default",
+        "variant_bordered": "Bordered",
+        "variant_filled": "Filled",
+        "icon": "Icon",
+        "icon_chevron": "Arrow",
+        "icon_plus": "Plus and minus"
       }
     },
     "history": {

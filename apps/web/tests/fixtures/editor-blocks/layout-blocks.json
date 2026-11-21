@@ -1,0 +1,532 @@
+[
+ {
+  "name": "every-layout-block",
+  "content": {
+   "type": "doc",
+   "content": [
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Getting started"
+      }
+     ]
+    },
+    {
+     "type": "tableOfContents",
+     "attrs": {
+      "title": "On this page",
+      "maxLevel": 3,
+      "numbered": true
+     }
+    },
+    {
+     "type": "tabs",
+     "attrs": {
+      "blockId": "tabs_1",
+      "variant": "pills"
+     },
+     "content": [
+      {
+       "type": "tabItem",
+       "attrs": {
+        "title": "Overview",
+        "icon": null
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Big picture first."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tabItem",
+       "attrs": {
+        "title": "Details",
+        "icon": null
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "How it works."
+          }
+         ]
+        },
+        {
+         "type": "bulletList",
+         "content": [
+          {
+           "type": "listItem",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "One"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tabItem",
+       "attrs": {
+        "title": "",
+        "icon": null
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Untitled tab body."
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "columns",
+     "attrs": {
+      "layout": "1-2",
+      "gap": "lg",
+      "stackOnMobile": false,
+      "verticalAlign": "center"
+     },
+     "content": [
+      {
+       "type": "column",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Narrow side."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "column",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Wide side."
+          }
+         ]
+        },
+        {
+         "type": "callout",
+         "attrs": {
+          "type": "tip"
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "A tip in a column"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 3
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Questions"
+      }
+     ]
+    },
+    {
+     "type": "accordion",
+     "attrs": {
+      "single": false,
+      "variant": "bordered"
+     },
+     "content": [
+      {
+       "type": "toggleBlock",
+       "attrs": {
+        "summary": "What will I learn?",
+        "defaultOpen": false
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "The outcome."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "toggleBlock",
+       "attrs": {
+        "summary": "How long?",
+        "defaultOpen": true
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "About ten minutes."
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "timeline",
+     "attrs": {
+      "variant": "process",
+      "numbered": true,
+      "orientation": "horizontal"
+     },
+     "content": [
+      {
+       "type": "timelineItem",
+       "attrs": {
+        "title": "Prepare",
+        "label": "Week 1",
+        "icon": null,
+        "tone": "blue"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Gather what you need."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "timelineItem",
+       "attrs": {
+        "title": "Apply",
+        "label": "",
+        "icon": "rocket",
+        "tone": null
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Use it."
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "keyTakeaways",
+     "attrs": {
+      "title": "",
+      "tone": "teal",
+      "icon": "star"
+     },
+     "content": [
+      {
+       "type": "bulletList",
+       "content": [
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "The main idea"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "What to do next"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "taskList",
+     "attrs": {
+      "blockId": "check_1",
+      "learnerCanCheck": true
+     },
+     "content": [
+      {
+       "type": "taskItem",
+       "attrs": {
+        "checked": true
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Read the lesson"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "taskItem",
+       "attrs": {
+        "checked": false
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Try the exercise"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Wrap up"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "The end."
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "defaults-and-nesting",
+  "content": {
+   "type": "doc",
+   "content": [
+    {
+     "type": "tabs",
+     "content": [
+      {
+       "type": "tabItem",
+       "content": [
+        {
+         "type": "columns",
+         "content": [
+          {
+           "type": "column",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "a"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "column",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "b"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "column",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "c"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tabItem",
+       "attrs": {
+        "title": "Nested"
+       },
+       "content": [
+        {
+         "type": "timeline",
+         "content": [
+          {
+           "type": "timelineItem",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "step"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "accordion",
+     "content": [
+      {
+       "type": "toggleBlock",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "only one"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableOfContents"
+    },
+    {
+     "type": "keyTakeaways",
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "plain"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "taskList",
+     "attrs": {
+      "learnerCanCheck": false
+     },
+     "content": [
+      {
+       "type": "taskItem",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "locked"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+]

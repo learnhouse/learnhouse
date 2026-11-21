@@ -820,7 +820,11 @@
     "set_new_password": "设置新密码",
     "invited_by_email_cta": "通过邮件收到邀请？用该邮箱注册",
     "use_invite_code_instead": "有邀请码？",
-    "password_reset_done": "你的密码已更改。"
+    "password_reset_done": "你的密码已更改。",
+    "login_failed_forgot": "忘记密码？",
+    "login_failed_reset": "重置密码",
+    "login_failed_magic": "改为通过邮件发送登录链接",
+    "login_failed_google_hint": "使用 Google 注册的？请使用下方的「使用 Google 继续」。"
   },
   "validation": {
     "required": "必填",
@@ -1320,7 +1324,11 @@
       "maintainer": "维护者",
       "contributor": "贡献者",
       "reporter": "报告者"
-    }
+    },
+    "co_created_by": "共同创建者：",
+    "created_on": "创建于",
+    "last_updated": "最后更新",
+    "and_x_more": "以及另外 {{count}} 个"
   },
   "communities": {
     "title": "社区",
@@ -4276,6 +4284,91 @@
         "completed_note": "完成。再读一遍，记住遗漏的内容。",
         "write_again": "修改我的回答"
       }
+    },
+    "table": {
+      "total": "合计",
+      "average": "平均值",
+      "sort_by": "排序依据",
+      "original_order": "原始顺序",
+      "ascending": "升序",
+      "descending": "降序",
+      "sort_direction": "排序方向",
+      "sorted": "已按 {{column}} 排序，{{direction}}",
+      "column_n": "第 {{n}} 列"
+    },
+    "tabs": {
+      "tab": "标签页",
+      "untitled": "标签页 {{n}}",
+      "list_label": "标签页"
+    },
+    "accordion": {
+      "expand_all": "全部展开",
+      "collapse_all": "全部收起"
+    },
+    "table_of_contents": {
+      "title": "目录"
+    },
+    "checklist": {
+      "progress_label": "已完成 {{done}}/{{total}}",
+      "reset": "重置清单",
+      "item": "清单条目",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "时间线"
+    },
+    "key_takeaways": {
+      "title": "要点总结"
+    },
+    "chart": {
+      "category": "类别",
+      "point": "{{label}}，{{series}}：{{value}}",
+      "slice": "{{label}}：{{value}}（{{percent}}）",
+      "summary": "{{type}}，共 {{series}} 个系列（{{names}}），{{categories}} 个类别，范围 {{min}} 至 {{max}}。",
+      "title": "图表",
+      "types": {
+        "bar": "条形图",
+        "column": "柱状图",
+        "line": "折线图",
+        "area": "面积图",
+        "pie": "饼图",
+        "donut": "环形图"
+      }
+    },
+    "file_card": {
+      "download": "下载",
+      "download_named": "下载 {{name}}",
+      "file": "文件",
+      "types": {
+        "pdf": "PDF",
+        "doc": "文档",
+        "sheet": "电子表格",
+        "slides": "幻灯片",
+        "archive": "压缩包",
+        "image": "图片",
+        "audio": "音频",
+        "video": "视频",
+        "text": "文本",
+        "code": "代码",
+        "file": "文件"
+      }
+    },
+    "gallery": {
+      "carousel": "轮播",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "显示第 {{n}} 张图片",
+      "label": "图片库",
+      "next": "下一张",
+      "open_image": "打开第 {{n}} 张图片（共 {{count}} 张）",
+      "previous": "上一张",
+      "slide": "幻灯片",
+      "viewer_title": "第 {{n}} 张，共 {{count}} 张"
+    },
+    "image_compare": {
+      "after": "之后",
+      "before": "之前",
+      "slider": "对比图片",
+      "value": "{{before}} {{b}}%，{{after}} {{a}}%"
     }
   },
   "embed": {
@@ -13424,7 +13517,11 @@
         "type_warning": "警告",
         "type_tip": "提示",
         "type_success": "成功",
-        "type_error": "错误"
+        "type_error": "错误",
+        "type_note": "备注",
+        "type_question": "问题",
+        "type_example": "示例",
+        "type_quote": "引用"
       }
     },
     "dynamic": {
@@ -13724,7 +13821,8 @@
       "create_first": "创建第一个情景",
       "modal_preview_title": "情景预览",
       "modal_preview_desc": "测试您的互动情景",
-      "modal_edit_desc": "创建并管理您的互动情景"
+      "modal_edit_desc": "创建并管理您的互动情景",
+      "max_scenarios": "最多允许 40 个情景"
     },
     "slash_menu": {
       "items": {
@@ -13883,6 +13981,70 @@
         "table": {
           "title": "表格",
           "description": "插入 3x3 表格"
+        },
+        "tabs": {
+          "description": "在内容面板之间切换",
+          "title": "标签页"
+        },
+        "columns": {
+          "description": "并排放置内容",
+          "title": "分栏"
+        },
+        "accordion": {
+          "description": "可折叠分区，一次展开一个",
+          "title": "手风琴"
+        },
+        "timeline": {
+          "description": "按顺序排列的步骤或事件",
+          "title": "时间线"
+        },
+        "table_of_contents": {
+          "description": "指向本页标题的链接",
+          "title": "目录"
+        },
+        "key_takeaways": {
+          "description": "总结要点的卡片",
+          "title": "要点总结"
+        },
+        "checklist": {
+          "description": "学员可以勾选的条目",
+          "title": "清单"
+        },
+        "gallery": {
+          "title": "图库",
+          "description": "以网格或轮播展示多张图片"
+        },
+        "image_compare": {
+          "title": "图片对比",
+          "description": "带滑块的前后对比"
+        },
+        "file_card": {
+          "title": "文件下载",
+          "description": "学员可下载的文件"
+        },
+        "quote_block": {
+          "title": "推荐语",
+          "description": "带作者信息的醒目引语或推荐语"
+        },
+        "quote": {
+          "title": "引用",
+          "description": "简单的引用段落"
+        },
+        "chart": {
+          "title": "图表",
+          "description": "用小表格生成柱状图、折线图或饼图"
+        },
+        "stat_highlights": {
+          "title": "数据",
+          "description": "会递增的醒目数字"
+        },
+        "button_group": {
+          "title": "按钮组",
+          "description": "多个按钮并排显示"
+        },
+        "inline_math": {
+          "title": "行内公式",
+          "description": "句子中的公式（或输入 $x^2$）"
         }
       },
       "categories": {
@@ -14239,7 +14401,14 @@
       "button": {
         "emoji": "表情符号",
         "link_hint": "学员点击按钮时会在新标签页中打开。",
-        "no_link": "尚未设置链接：请使用链接按钮进行设置。"
+        "no_link": "尚未设置链接：请使用链接按钮进行设置。",
+        "style": "样式",
+        "variant": "外观",
+        "size": "大小",
+        "variant_solid": "实心",
+        "variant_outline": "描边",
+        "variant_soft": "柔和",
+        "variant_link": "链接"
       },
       "quiz": {
         "settings": "测验设置",
@@ -14297,7 +14466,39 @@
         "clear": "清除",
         "check": "检查答案",
         "try_again": "重试",
-        "start_over": "重新开始"
+        "start_over": "重新开始",
+        "question_type": "题型",
+        "type_multiple_choice": "选择题",
+        "type_true_false": "判断题",
+        "type_short_answer": "简答题",
+        "type_numeric": "数值",
+        "true": "正确",
+        "false": "错误",
+        "accepted_answers": "可接受的答案",
+        "accepted_answer_n": "可接受答案 {{n}}",
+        "accepted_answer_placeholder": "算作正确的答案",
+        "add_accepted": "再添加一个可接受答案",
+        "remove_accepted": "移除可接受答案 {{n}}",
+        "ignore_accents": "忽略重音符号 (é = e)",
+        "short_answer_hint": "忽略大小写和多余的空格。",
+        "numeric_value": "正确答案",
+        "numeric_tolerance": "容差",
+        "show_explanations": "显示解析",
+        "show_explanations_hint": "学员提交后，每道题下方会显示你的解析。",
+        "pass_mark": "及格线",
+        "pass_mark_off": "关闭",
+        "pass_mark_n": "{{n}}% 及格",
+        "pass_mark_off_hint": "学员会看到是否全部答对。",
+        "pass_mark_hint": "学员得分达到 {{n}}% 即及格，并可看到分数。",
+        "pass_mark_needed": "及格线：{{n}}%",
+        "passed": "通过",
+        "not_passed": "尚未通过",
+        "score_percent": "{{percent}}%",
+        "your_answer": "你的答案",
+        "your_number": "你的答案（数字）",
+        "answer_placeholder": "输入你的答案",
+        "number_placeholder": "输入一个数字",
+        "expected_answer": "正确答案：{{answer}}"
       },
       "flipcard": {
         "front": "正面",
@@ -14396,7 +14597,8 @@
         "view": "视图",
         "view_map": "地图",
         "view_steps": "步骤",
-        "your_path": "您的路径"
+        "your_path": "您的路径",
+        "limits": "最多 {{max}} 个步骤，每个步骤最多 {{choices}} 个选项。"
       },
       "conditional": {
         "add_rule": "添加规则",
@@ -14543,6 +14745,423 @@
         "reset_text": "重置",
         "text": "标题和描述",
         "title": "标题"
+      },
+      "table": {
+        "rows_cols": "行和列",
+        "duplicate_row": "复制行",
+        "distribute": "平均分配列宽",
+        "merge_split": "合并或拆分单元格",
+        "headers": "标题",
+        "header_column": "标题列",
+        "cell_style": "单元格样式",
+        "apply_to": "应用于",
+        "scope_selection": "所选单元格",
+        "scope_column": "整列",
+        "background": "背景",
+        "align": "对齐",
+        "align_start": "开头",
+        "align_center": "居中",
+        "align_end": "末尾",
+        "valign": "垂直对齐",
+        "valign_top": "顶部",
+        "valign_middle": "中间",
+        "valign_bottom": "底部",
+        "cell_type": "单元格类型",
+        "type_hint": "值保留在单元格文本中，例如 75、4/5 或 是。",
+        "type": {
+          "text": "文本",
+          "progress": "进度",
+          "checkbox": "复选框",
+          "rating": "评分",
+          "status": "状态",
+          "number": "数字",
+          "date": "日期"
+        },
+        "tone": "颜色",
+        "tone_auto": "自动",
+        "number_format": "数字格式",
+        "format": {
+          "plain": "普通",
+          "percent": "百分比",
+          "currency": "货币",
+          "compact": "紧凑"
+        },
+        "currency": "货币代码",
+        "settings": "表格设置",
+        "variant": "样式",
+        "variants": {
+          "default": "默认",
+          "striped": "条纹",
+          "bordered": "带边框",
+          "minimal": "简约",
+          "cards": "卡片"
+        },
+        "cards_hint": "在手机上每一行会变成卡片。",
+        "caption": "标题说明",
+        "caption_placeholder": "描述这个表格",
+        "sortable": "学员可以排序",
+        "sticky_header": "固定表头",
+        "compact": "紧凑行",
+        "totals": "合计行",
+        "totals_hint": "适用于数字列和进度列。",
+        "totals_none": "无",
+        "totals_sum": "求和",
+        "totals_average": "平均值",
+        "toggle_checkbox": "切换复选框",
+        "templates": {
+          "progress": {
+            "title": "进度跟踪",
+            "description": "包含负责人、状态和进度条的任务"
+          },
+          "comparison": {
+            "title": "对比",
+            "description": "用勾选标记并排比较选项"
+          },
+          "rubric": {
+            "title": "评分量表",
+            "description": "带等级和分数的评分标准"
+          }
+        },
+        "sample": {
+          "task": "任务",
+          "owner": "负责人",
+          "status": "状态",
+          "progress": "进度",
+          "task_1": "规划课程",
+          "task_2": "录制视频",
+          "task_3": "编写测验",
+          "status_done": "已完成",
+          "status_in_progress": "进行中",
+          "status_todo": "未开始",
+          "feature": "功能",
+          "option_a": "基础版",
+          "option_b": "专业版",
+          "feature_1": "视频课程",
+          "feature_2": "测验",
+          "feature_3": "证书",
+          "criterion": "标准",
+          "look_for": "考察要点",
+          "level": "等级",
+          "points": "分数",
+          "crit_1": "清晰度",
+          "crit_2": "准确性",
+          "crit_3": "结构",
+          "desc_1": "思路清晰易懂",
+          "desc_2": "事实和步骤正确",
+          "desc_3": "分节清楚、顺序合理"
+        }
+      },
+      "layout": {
+        "settings": "设置",
+        "style": "样式",
+        "color": "颜色",
+        "icon": "图标",
+        "icon_default": "默认",
+        "size_sm": "小",
+        "size_md": "中",
+        "size_lg": "大",
+        "tone_neutral": "中性",
+        "tone_blue": "蓝色",
+        "tone_teal": "青色",
+        "tone_green": "绿色",
+        "tone_amber": "琥珀色",
+        "tone_rose": "玫瑰色",
+        "icons": {
+          "lightbulb": "灯泡",
+          "star": "星星",
+          "check": "对勾",
+          "target": "靶心",
+          "flag": "旗帜",
+          "book": "书本",
+          "rocket": "火箭",
+          "key": "钥匙"
+        }
+      },
+      "tabs": {
+        "label": "标签页",
+        "add": "添加标签页",
+        "remove": "删除此标签页",
+        "move_earlier": "将标签页前移",
+        "move_later": "将标签页后移",
+        "title_placeholder": "标签页标题",
+        "variant_line": "线条",
+        "variant_pills": "胶囊",
+        "variant_boxed": "方框",
+        "sample": {
+          "tab_1": "概览",
+          "tab_2": "详情",
+          "tab_3": "示例",
+          "text_1": "先从整体情况讲起。",
+          "text_2": "深入讲解它的工作原理。",
+          "text_3": "展示它在实践中的用法。"
+        }
+      },
+      "columns": {
+        "label": "分栏",
+        "layout": "布局",
+        "layout_halves": "两栏等宽",
+        "layout_narrow_wide": "先窄后宽",
+        "layout_wide_narrow": "先宽后窄",
+        "layout_thirds": "三栏",
+        "layout_quarters": "四栏",
+        "gap": "间距",
+        "align": "垂直对齐",
+        "align_top": "顶部",
+        "align_center": "居中",
+        "align_bottom": "底部",
+        "stack": "小屏幕上纵向排列",
+        "sample": {
+          "left": "第一栏",
+          "right": "第二栏"
+        }
+      },
+      "accordion": {
+        "label": "手风琴",
+        "add": "添加分区",
+        "single": "一次只展开一个分区",
+        "variant_bordered": "带边框",
+        "variant_filled": "填充",
+        "sample": {
+          "item_1": "我将学到什么？",
+          "text_1": "描述本课的学习成果。",
+          "item_2": "需要多长时间？",
+          "text_2": "给出预计时间，方便学员安排。",
+          "item_3": "我需要准备什么？",
+          "text_3": "列出开始前需要准备的东西。"
+        },
+        "variant_default": "默认"
+      },
+      "timeline": {
+        "label": "时间线",
+        "add": "添加步骤",
+        "remove": "删除步骤",
+        "step": "步骤",
+        "title_placeholder": "步骤标题",
+        "label_placeholder": "日期或标签（可选）",
+        "numbered": "步骤编号",
+        "orientation": "方向",
+        "vertical": "纵向",
+        "horizontal": "横向",
+        "icon_number": "编号",
+        "variant_steps": "步骤",
+        "variant_process": "流程",
+        "sample": {
+          "step_1": "准备",
+          "text_1": "收集所需的东西。",
+          "step_2": "练习",
+          "text_2": "在一个小例子上试一试。",
+          "step_3": "应用",
+          "text_3": "在真实任务中使用。"
+        },
+        "variant_timeline": "时间线"
+      },
+      "table_of_contents": {
+        "label": "目录",
+        "depth": "包含的标题",
+        "numbered": "为条目编号",
+        "title_label": "标题",
+        "empty": "为课程添加标题后，它们会显示在这里。"
+      },
+      "key_takeaways": {
+        "label": "要点总结",
+        "title_label": "卡片标题",
+        "sample": {
+          "point_1": "一句话概括核心观点",
+          "point_2": "值得记住的细节",
+          "point_3": "下一步要做什么"
+        }
+      },
+      "checklist": {
+        "label": "清单",
+        "learner_can_check": "学员可以勾选条目",
+        "hint": "勾选状态保存在每位学员的浏览器中。你在这里勾选的条目初始即为已勾选。",
+        "sample": {
+          "item_1": "阅读课程",
+          "item_2": "完成练习",
+          "item_3": "检查答案"
+        }
+      },
+      "chart": {
+        "add_row": "添加行",
+        "add_series": "添加系列",
+        "apply_csv": "使用此数据",
+        "csv_error": "无法读取该表格。请将标签放在第一列，数字放在其他列。",
+        "csv_label": "CSV 格式的表格",
+        "csv_placeholder": "从电子表格粘贴，或输入：标签, 系列 1, 系列 2",
+        "edit_data": "编辑数据",
+        "empty": "添加数据以绘制图表。",
+        "label": "图表",
+        "label_n": "标签 {{n}}",
+        "labels": "标签",
+        "paste_csv": "粘贴 CSV",
+        "pie_hint": "饼图和环形图显示第一个系列。",
+        "remove_row": "删除行",
+        "remove_series": "删除系列",
+        "row_n": "项 {{n}}",
+        "sample": {
+          "q1": "第一季度",
+          "q2": "第二季度",
+          "q3": "第三季度",
+          "q4": "第四季度",
+          "series_1": "A 班",
+          "series_2": "B 班",
+          "title": "各季度测验平均分"
+        },
+        "series_color": "更改 {{name}} 的颜色",
+        "series_n": "系列 {{n}}",
+        "series_name": "系列名称",
+        "settings": "图表设置",
+        "show_legend": "显示图例",
+        "show_values": "显示数值",
+        "stacked": "堆叠系列",
+        "title_label": "标题",
+        "title_placeholder": "图表标题",
+        "type": "图表类型"
+      },
+      "file_card": {
+        "add_link": "添加链接",
+        "description": "描述",
+        "description_placeholder": "这个文件里有什么？（可选）",
+        "empty_hint": "上传 PDF、图片、音频或视频文件，或链接到任意文件。",
+        "empty_title": "添加供下载的文件",
+        "label": "文件",
+        "link_hint": "如有已上传的文件，将替换它。",
+        "link_label": "文件链接",
+        "link_settings": "文件链接",
+        "name": "文件名",
+        "type_error": "无法上传此类文件。请上传 PDF、图片、音频或视频文件，或改为链接到该文件。",
+        "upload": "上传文件"
+      },
+      "gallery": {
+        "add_images": "添加图片",
+        "add_link": "添加图片",
+        "alt_hint": "为使用屏幕阅读器的学习者说明图片内容。",
+        "alt_missing": "缺少替代文字：{{n}}",
+        "alt_placeholder": "替代文字（必填）",
+        "columns": "列数",
+        "count": "图片：{{n}}",
+        "empty_hint": "一次拖入多张图片，或从设备中选择。{{formats}} · 每张最大 {{max}}。",
+        "empty_title": "向图库添加图片",
+        "full": "一个图库最多可放 {{max}} 张图片。",
+        "label": "图库",
+        "layout": "布局",
+        "layout_carousel": "轮播",
+        "layout_grid": "网格",
+        "layout_masonry": "瀑布流",
+        "move_earlier": "前移",
+        "move_later": "后移",
+        "remove": "移除图片",
+        "settings": "图库设置"
+      },
+      "image_compare": {
+        "after_image": "之后的图片",
+        "before_image": "之前的图片",
+        "empty_hint": "选择尺寸相同的前后两张图片，学习者拖动分隔线进行对比。",
+        "empty_title": "添加图片",
+        "horizontal": "左右",
+        "label": "图片对比",
+        "orientation": "方向",
+        "replace_after": "替换之后的图片",
+        "replace_before": "替换之前的图片",
+        "settings": "对比设置",
+        "side_label": "标签",
+        "start": "分隔线起始位置",
+        "vertical": "上下"
+      },
+      "quote_block": {
+        "author": "作者",
+        "author_placeholder": "姓名",
+        "avatar": "照片链接",
+        "avatar_hint": "在推荐语中显示于姓名旁。留空则显示姓名首字母。",
+        "label": "引语",
+        "role": "身份",
+        "role_placeholder": "身份或公司",
+        "sample": {
+          "author": "林晓雯",
+          "role": "产品设计师",
+          "text": "动手练习让我一下就明白了。第二天我就把学到的用在了工作中。"
+        },
+        "settings": "引语设置",
+        "style": "样式",
+        "variant_highlight": "突出显示",
+        "variant_pull": "醒目引语",
+        "variant_testimonial": "推荐语"
+      },
+      "stat_highlights": {
+        "add": "添加数据",
+        "animate": "显示时数字递增",
+        "color": "颜色",
+        "columns": "列数",
+        "description": "描述",
+        "description_placeholder": "简短说明（可选）",
+        "empty": "添加一项数据开始吧。",
+        "label": "数据",
+        "label_field": "标签",
+        "prefix": "数字前",
+        "remove": "删除数据",
+        "sample": {
+          "desc_1": "的学员完成课程",
+          "desc_2": "来自 1,200 条评价",
+          "desc_3": "遍布 40 个国家",
+          "label_1": "完成率",
+          "label_2": "平均评分",
+          "label_3": "学员"
+        },
+        "settings": "数据设置",
+        "suffix": "数字后",
+        "value": "数字"
+      },
+      "callout_title": "标题",
+      "callout_title_placeholder": "标题（可选）",
+      "callout_collapsible": "学员可以折叠",
+      "callout_default_open": "默认展开",
+      "callout_tone": "颜色",
+      "callout_tone_default": "类型默认颜色",
+      "code_copied": "代码已复制到剪贴板",
+      "code_copy_failed": "复制失败。请选中代码后手动复制。",
+      "code_highlight": "要高亮的行（例如 2,4-6）",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "行号",
+      "code_wrap": "长行自动换行",
+      "align": {
+        "label": "文本对齐",
+        "start": "起始对齐",
+        "center": "居中",
+        "end": "末尾对齐",
+        "justify": "两端对齐"
+      },
+      "button_group": {
+        "label": "按钮组",
+        "add_button": "添加按钮",
+        "new_button": "按钮",
+        "primary": "开始",
+        "secondary": "了解更多"
+      },
+      "image_frame": {
+        "label": "边框",
+        "none": "无",
+        "rounded": "圆角",
+        "shadow": "阴影",
+        "border": "描边",
+        "polaroid": "拍立得"
+      },
+      "inline_math": {
+        "title": "行内公式",
+        "edit": "编辑公式 {{latex}}",
+        "latex": "LaTeX",
+        "hint": "例如 \\frac{a}{b} 或 x^2。在正文中输入 $…$ 也可创建。",
+        "make": "公式",
+        "remove": "移除"
+      },
+      "toggle": {
+        "style": "折叠块样式",
+        "variant": "外观",
+        "variant_default": "默认",
+        "variant_bordered": "带边框",
+        "variant_filled": "填充",
+        "icon": "图标",
+        "icon_chevron": "箭头",
+        "icon_plus": "加号和减号"
       }
     },
     "history": {

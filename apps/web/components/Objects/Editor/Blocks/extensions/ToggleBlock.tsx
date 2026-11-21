@@ -8,16 +8,47 @@
  it is open in the editor is local UI state (not synced), so one author
  folding it never folds it for collaborators. Learners start collapsed unless
  the author ticks "Open by default".
+
+ Editor Plus adds `variant` (default / bordered / filled) and `icon`
+ (chevron / plus); null is the original look. The node name and content stay
+ as they were: the accordion block is a group of these toggles.
 */
 import React from 'react'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { NodeViewContent, NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
-import { CaretRight, Trash } from '@phosphor-icons/react'
+import { CaretRight, Minus, Plus, Sliders, Trash } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { cn } from '@/lib/utils'
 import { deleteBlock } from '../nodeViewUtils'
+import { BlockPopover, Segmented } from '../ui/BlockChrome'
+import {
+  TOGGLE_EXTRA_ATTRS,
+  TOGGLE_ICONS,
+  TOGGLE_VARIANTS,
+  toggleIconOf,
+  toggleVariantOf,
+  type ToggleIcon,
+  type ToggleVariant,
+} from '../schema/blockAttrs'
+
+/** Frame classes per variant; 'default' is exactly the original toggle. */
+export function toggleFrameClass(variant: ToggleVariant, editable: boolean): string {
+  switch (variant) {
+    case 'bordered':
+      return 'bg-transparent ring-1 ring-inset ring-black/[0.14]'
+    case 'filled':
+      return editable ? 'bg-neutral-100/80 ring-1 ring-inset ring-black/[0.03]' : 'bg-neutral-100'
+    default:
+      return editable ? 'bg-neutral-50/70 ring-1 ring-inset ring-black/[0.05]' : 'bg-neutral-50 ring-1 ring-inset ring-black/[0.04]'
+  }
+}
+
+function ToggleIconGlyph({ icon, open }: { icon: ToggleIcon; open: boolean }) {
+  if (icon === 'plus') return open ? <Minus size={14} weight="bold" /> : <Plus size={14} weight="bold" />
+  return <CaretRight size={14} weight="bold" className={cn('transition-transform duration-150 motion-reduce:transition-none', open ? 'rotate-90' : 'rtl:rotate-180')} />
+}
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -33,6 +64,9 @@ function ToggleBlockView(props: NodeViewProps) {
   const isEditable = !!editorState?.isEditable
   const summary: string = props.node.attrs.summary || ''
   const defaultOpen = !!props.node.attrs.defaultOpen
+  const variant = toggleVariantOf(props.node.attrs)
+  const icon = toggleIconOf(props.node.attrs)
+  const [styleOpen, setStyleOpen] = React.useState(false)
   const [open, setOpen] = React.useState(isEditable ? true : defaultOpen)
   const [draft, setDraft] = React.useState(summary)
   // Follow the stored title (collaborators, undo) unless it is being typed in
@@ -49,11 +83,8 @@ function ToggleBlockView(props: NodeViewProps) {
 
   return (
     <NodeViewWrapper
-      className={cn(
-        'lh-toggle my-3 rounded-xl',
-        isEditable ? 'bg-neutral-50/70 ring-1 ring-inset ring-black/[0.05]' : 'bg-neutral-50 ring-1 ring-inset ring-black/[0.04]',
-        props.selected && 'ring-2 ring-sky-500/40',
-      )}
+      className={cn('lh-toggle my-3 rounded-xl', toggleFrameClass(variant, isEditable), props.selected && 'ring-2 ring-sky-500/40')}
+      data-variant={variant === 'default' ? undefined : variant}
     >
       <div contentEditable={false} className="group/toggle flex items-center gap-1.5 px-2 py-1.5">
         <button
@@ -65,7 +96,7 @@ function ToggleBlockView(props: NodeViewProps) {
           onClick={() => setOpen((v) => !v)}
           className="flex h-7 w-7 flex-none items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-black/5 hover:text-neutral-800"
         >
-          <CaretRight size={14} weight="bold" className={cn('transition-transform duration-150', open ? 'rotate-90' : 'rtl:rotate-180')} />
+          <ToggleIconGlyph icon={icon} open={open} />
         </button>
         {isEditable ? (
           <input
@@ -101,7 +132,7 @@ function ToggleBlockView(props: NodeViewProps) {
           </button>
         )}
         {isEditable && (
-          <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover/toggle:opacity-100 focus-within:opacity-100">
+          <div className={cn('flex items-center gap-1 opacity-0 transition-opacity group-hover/toggle:opacity-100 focus-within:opacity-100', styleOpen && 'opacity-100')}>
             <label className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[11px] text-neutral-500 hover:bg-black/5">
               <input
                 type="checkbox"
@@ -111,6 +142,48 @@ function ToggleBlockView(props: NodeViewProps) {
               />
               {t('editor.blocks_v2.toggle_open_default', 'Open by default')}
             </label>
+            <BlockPopover
+              open={styleOpen}
+              onOpenChange={setStyleOpen}
+              title={t('editor.blocks_v2.toggle.style', 'Toggle style')}
+              width={272}
+              trigger={
+                <button
+                  type="button"
+                  aria-label={t('editor.blocks_v2.toggle.style', 'Toggle style')}
+                  title={t('editor.blocks_v2.toggle.style', 'Toggle style')}
+                  className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 hover:bg-black/5 hover:text-neutral-700 data-[state=open]:bg-black/5"
+                >
+                  <Sliders size={13} />
+                </button>
+              }
+            >
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-neutral-600">{t('editor.blocks_v2.toggle.variant', 'Look')}</span>
+                <Segmented<ToggleVariant>
+                  ariaLabel={t('editor.blocks_v2.toggle.variant', 'Look')}
+                  value={variant}
+                  onChange={(v) => props.updateAttributes({ variant: v === 'default' ? null : v })}
+                  options={TOGGLE_VARIANTS.map((v) => ({
+                    value: v,
+                    label: t(`editor.blocks_v2.toggle.variant_${v}`, { default: 'Default', bordered: 'Bordered', filled: 'Filled' }[v]),
+                  }))}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-neutral-600">{t('editor.blocks_v2.toggle.icon', 'Icon')}</span>
+                <Segmented<ToggleIcon>
+                  ariaLabel={t('editor.blocks_v2.toggle.icon', 'Icon')}
+                  value={icon}
+                  onChange={(v) => props.updateAttributes({ icon: v === 'chevron' ? null : v })}
+                  options={TOGGLE_ICONS.map((v) => ({
+                    value: v,
+                    label: v === 'plus' ? <Plus size={13} weight="bold" /> : <CaretRight size={13} weight="bold" className="rtl:rotate-180" />,
+                    title: t(`editor.blocks_v2.toggle.icon_${v}`, { chevron: 'Arrow', plus: 'Plus and minus' }[v]),
+                  }))}
+                />
+              </div>
+            </BlockPopover>
             <button
               type="button"
               aria-label={t('common.delete', 'Delete')}
@@ -149,6 +222,7 @@ export const ToggleBlock = Node.create({
         parseHTML: (el: HTMLElement) => el.getAttribute('data-open') === 'true' || el.hasAttribute('open'),
         renderHTML: (attrs: Record<string, any>) => (attrs.defaultOpen ? { 'data-open': 'true' } : {}),
       },
+      ...TOGGLE_EXTRA_ATTRS,
     }
   },
 

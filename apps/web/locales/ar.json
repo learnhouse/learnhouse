@@ -825,7 +825,11 @@
     "set_new_password": "تعيين كلمة مرور جديدة",
     "invited_by_email_cta": "تلقيت دعوة بالبريد الإلكتروني؟ أنشئ حسابًا بذلك العنوان",
     "use_invite_code_instead": "لديك رمز دعوة بدلًا من ذلك؟",
-    "password_reset_done": "تم تغيير كلمة المرور."
+    "password_reset_done": "تم تغيير كلمة المرور.",
+    "login_failed_forgot": "نسيت كلمة المرور؟",
+    "login_failed_reset": "إعادة تعيينها",
+    "login_failed_magic": "أرسل لي رابط تسجيل الدخول بدلاً من ذلك",
+    "login_failed_google_hint": "هل سجلت باستخدام Google؟ استخدم المتابعة باستخدام Google أدناه."
   },
   "validation": {
     "required": "مطلوب",
@@ -1397,7 +1401,11 @@
       "maintainer": "مسؤول صيانة",
       "contributor": "مساهم",
       "reporter": "مبلغ"
-    }
+    },
+    "co_created_by": "شارك في الإنشاء:",
+    "created_on": "أنشئ في",
+    "last_updated": "آخر تحديث",
+    "and_x_more": "و {{count}} أكثر"
   },
   "communities": {
     "title": "المجتمعات",
@@ -4578,6 +4586,91 @@
         "completed_note": "تم. اقرأه مرة أخرى وتذكّر ما فاتك.",
         "write_again": "تعديل إجابتي"
       }
+    },
+    "table": {
+      "total": "الإجمالي",
+      "average": "المتوسط",
+      "sort_by": "الفرز حسب",
+      "original_order": "الترتيب الأصلي",
+      "ascending": "تصاعدي",
+      "descending": "تنازلي",
+      "sort_direction": "اتجاه الفرز",
+      "sorted": "تم الفرز حسب {{column}}، {{direction}}",
+      "column_n": "العمود {{n}}"
+    },
+    "tabs": {
+      "tab": "علامة تبويب",
+      "untitled": "علامة التبويب {{n}}",
+      "list_label": "علامات التبويب"
+    },
+    "accordion": {
+      "expand_all": "توسيع الكل",
+      "collapse_all": "طي الكل"
+    },
+    "table_of_contents": {
+      "title": "المحتويات"
+    },
+    "checklist": {
+      "progress_label": "تم {{done}} من {{total}}",
+      "reset": "إعادة تعيين القائمة",
+      "item": "عنصر في القائمة",
+      "progress": "{{done}}/{{total}}"
+    },
+    "timeline": {
+      "list_label": "خط زمني"
+    },
+    "key_takeaways": {
+      "title": "أهم النقاط"
+    },
+    "chart": {
+      "category": "الفئة",
+      "point": "{{label}}، {{series}}: {{value}}",
+      "slice": "{{label}}: {{value}} ({{percent}})",
+      "summary": "{{type}} يضم {{series}} سلسلة ({{names}}) عبر {{categories}} فئة، من {{min}} إلى {{max}}.",
+      "title": "مخطط",
+      "types": {
+        "bar": "مخطط شريطي أفقي",
+        "column": "مخطط عمودي",
+        "line": "مخطط خطي",
+        "area": "مخطط مساحي",
+        "pie": "مخطط دائري",
+        "donut": "مخطط حلقي"
+      }
+    },
+    "file_card": {
+      "download": "تنزيل",
+      "download_named": "تنزيل {{name}}",
+      "file": "ملف",
+      "types": {
+        "pdf": "PDF",
+        "doc": "مستند",
+        "sheet": "جدول بيانات",
+        "slides": "شرائح",
+        "archive": "أرشيف",
+        "image": "صورة",
+        "audio": "صوت",
+        "video": "فيديو",
+        "text": "نص",
+        "code": "شيفرة",
+        "file": "ملف"
+      }
+    },
+    "gallery": {
+      "carousel": "عرض دوّار",
+      "counter": "{{n}} / {{count}}",
+      "go_to": "عرض الصورة {{n}}",
+      "label": "معرض الصور",
+      "next": "الصورة التالية",
+      "open_image": "فتح الصورة {{n}} من {{count}}",
+      "previous": "الصورة السابقة",
+      "slide": "شريحة",
+      "viewer_title": "الصورة {{n}} من {{count}}"
+    },
+    "image_compare": {
+      "after": "بعد",
+      "before": "قبل",
+      "slider": "مقارنة الصور",
+      "value": "{{before}} {{b}}%، {{after}} {{a}}%"
     }
   },
   "embed": {
@@ -14351,7 +14444,11 @@
         "type_warning": "تحذير",
         "type_tip": "نصيحة",
         "type_success": "نجاح",
-        "type_error": "خطأ"
+        "type_error": "خطأ",
+        "type_note": "ملاحظة",
+        "type_question": "سؤال",
+        "type_example": "مثال",
+        "type_quote": "اقتباس"
       }
     },
     "dynamic": {
@@ -14651,7 +14748,8 @@
       "create_first": "إنشاء أول سيناريو",
       "modal_preview_title": "معاينة السيناريو",
       "modal_preview_desc": "اختبر السيناريو التفاعلي الخاص بك",
-      "modal_edit_desc": "أنشئ سيناريوهاتك التفاعلية وأدرها"
+      "modal_edit_desc": "أنشئ سيناريوهاتك التفاعلية وأدرها",
+      "max_scenarios": "الحد الأقصى المسموح به هو 40 سيناريو"
     },
     "slash_menu": {
       "items": {
@@ -14810,6 +14908,70 @@
         "table": {
           "title": "جدول",
           "description": "إدراج جدول 3×3"
+        },
+        "tabs": {
+          "description": "التنقل بين لوحات المحتوى",
+          "title": "علامات التبويب"
+        },
+        "columns": {
+          "description": "وضع المحتوى جنبًا إلى جنب",
+          "title": "أعمدة"
+        },
+        "accordion": {
+          "description": "أقسام قابلة للطي، يُفتح واحد في كل مرة",
+          "title": "أكورديون"
+        },
+        "timeline": {
+          "description": "خطوات أو أحداث بالترتيب",
+          "title": "خط زمني"
+        },
+        "table_of_contents": {
+          "description": "روابط إلى عناوين هذه الصفحة",
+          "title": "جدول المحتويات"
+        },
+        "key_takeaways": {
+          "description": "بطاقة تلخّص النقاط الرئيسية",
+          "title": "أهم النقاط"
+        },
+        "checklist": {
+          "description": "عناصر يمكن للمتعلمين تحديدها",
+          "title": "قائمة مراجعة"
+        },
+        "gallery": {
+          "title": "معرض صور",
+          "description": "عدة صور في شبكة أو عرض دوّار"
+        },
+        "image_compare": {
+          "title": "مقارنة الصور",
+          "description": "قبل وبعد مع شريط تمرير"
+        },
+        "file_card": {
+          "title": "تنزيل ملف",
+          "description": "ملف يمكن للمتعلمين تنزيله"
+        },
+        "quote_block": {
+          "title": "شهادة",
+          "description": "اقتباس بارز أو شهادة مع صاحبها"
+        },
+        "quote": {
+          "title": "اقتباس",
+          "description": "مقطع مقتبس بسيط"
+        },
+        "chart": {
+          "title": "مخطط",
+          "description": "مخطط شريطي أو خطي أو دائري من جدول صغير"
+        },
+        "stat_highlights": {
+          "title": "إحصائيات",
+          "description": "أرقام كبيرة تتزايد بالعدّ"
+        },
+        "button_group": {
+          "title": "مجموعة أزرار",
+          "description": "عدة أزرار جنبًا إلى جنب"
+        },
+        "inline_math": {
+          "title": "صيغة ضمن السطر",
+          "description": "صيغة داخل جملة (أو اكتب $x^2$)"
         }
       },
       "categories": {
@@ -15445,7 +15607,14 @@
       "button": {
         "emoji": "إيموجي",
         "link_hint": "يُفتح في علامة تبويب جديدة عندما ينقر المتعلمون على الزر.",
-        "no_link": "لا يوجد رابط بعد: عيّنه بزر الرابط."
+        "no_link": "لا يوجد رابط بعد: عيّنه بزر الرابط.",
+        "style": "النمط",
+        "variant": "المظهر",
+        "size": "الحجم",
+        "variant_solid": "ممتلئ",
+        "variant_outline": "محدد",
+        "variant_soft": "ناعم",
+        "variant_link": "رابط"
       },
       "quiz": {
         "settings": "إعدادات الاختبار",
@@ -15515,7 +15684,39 @@
         "clear": "مسح",
         "check": "التحقق من الإجابات",
         "try_again": "حاول مرة أخرى",
-        "start_over": "البدء من جديد"
+        "start_over": "البدء من جديد",
+        "question_type": "نوع السؤال",
+        "type_multiple_choice": "اختيار من متعدد",
+        "type_true_false": "صح / خطأ",
+        "type_short_answer": "إجابة قصيرة",
+        "type_numeric": "رقم",
+        "true": "صح",
+        "false": "خطأ",
+        "accepted_answers": "الإجابات المقبولة",
+        "accepted_answer_n": "الإجابة المقبولة {{n}}",
+        "accepted_answer_placeholder": "إجابة تُحتسب صحيحة",
+        "add_accepted": "إجابة مقبولة أخرى",
+        "remove_accepted": "إزالة الإجابة المقبولة {{n}}",
+        "ignore_accents": "تجاهل علامات التشكيل (é = e)",
+        "short_answer_hint": "تُتجاهل الأحرف الكبيرة والمسافات الزائدة.",
+        "numeric_value": "الإجابة الصحيحة",
+        "numeric_tolerance": "هامش التسامح",
+        "show_explanations": "إظهار الشروحات",
+        "show_explanations_hint": "يظهر شرحك تحت كل سؤال بعد أن يرسل المتعلمون إجاباتهم.",
+        "pass_mark": "درجة النجاح",
+        "pass_mark_off": "إيقاف",
+        "pass_mark_n": "{{n}}% للنجاح",
+        "pass_mark_off_hint": "يرى المتعلمون ما إذا كانت كل الإجابات صحيحة.",
+        "pass_mark_hint": "ينجح المتعلمون بنسبة {{n}}% أو أكثر ويرون درجتهم.",
+        "pass_mark_needed": "درجة النجاح: {{n}}%",
+        "passed": "ناجح",
+        "not_passed": "لم تنجح بعد",
+        "score_percent": "{{percent}}%",
+        "your_answer": "إجابتك",
+        "your_number": "إجابتك (رقم)",
+        "answer_placeholder": "اكتب إجابتك",
+        "number_placeholder": "اكتب رقمًا",
+        "expected_answer": "المتوقع: {{answer}}"
       },
       "flipcard": {
         "front": "الوجه الأمامي",
@@ -15642,7 +15843,8 @@
         "view": "عرض",
         "view_map": "الخريطة",
         "view_steps": "الخطوات",
-        "your_path": "مسارك"
+        "your_path": "مسارك",
+        "limits": "حتى {{max}} خطوة، و{{choices}} اختيارات لكل خطوة."
       },
       "conditional": {
         "add_rule": "إضافة قاعدة",
@@ -15814,6 +16016,423 @@
         "reset_text": "إعادة تعيين",
         "text": "العنوان والوصف",
         "title": "العنوان"
+      },
+      "table": {
+        "rows_cols": "الصفوف والأعمدة",
+        "duplicate_row": "تكرار الصف",
+        "distribute": "توزيع الأعمدة بالتساوي",
+        "merge_split": "دمج الخلايا أو تقسيمها",
+        "headers": "العناوين",
+        "header_column": "عمود العناوين",
+        "cell_style": "نمط الخلية",
+        "apply_to": "تطبيق على",
+        "scope_selection": "الخلايا المحددة",
+        "scope_column": "العمود بأكمله",
+        "background": "الخلفية",
+        "align": "المحاذاة",
+        "align_start": "البداية",
+        "align_center": "الوسط",
+        "align_end": "النهاية",
+        "valign": "المحاذاة العمودية",
+        "valign_top": "أعلى",
+        "valign_middle": "الوسط",
+        "valign_bottom": "أسفل",
+        "cell_type": "نوع الخلية",
+        "type_hint": "تبقى القيمة في نص الخلية، مثل 75 أو 4/5 أو نعم.",
+        "type": {
+          "text": "نص",
+          "progress": "التقدم",
+          "checkbox": "مربع اختيار",
+          "rating": "تقييم",
+          "status": "الحالة",
+          "number": "رقم",
+          "date": "تاريخ"
+        },
+        "tone": "اللون",
+        "tone_auto": "تلقائي",
+        "number_format": "تنسيق الأرقام",
+        "format": {
+          "plain": "عادي",
+          "percent": "نسبة مئوية",
+          "currency": "عملة",
+          "compact": "مختصر"
+        },
+        "currency": "رمز العملة",
+        "settings": "إعدادات الجدول",
+        "variant": "النمط",
+        "variants": {
+          "default": "افتراضي",
+          "striped": "مخطط",
+          "bordered": "بحدود",
+          "minimal": "بسيط",
+          "cards": "بطاقات"
+        },
+        "cards_hint": "تتحول الصفوف إلى بطاقات على الهاتف.",
+        "caption": "التسمية التوضيحية",
+        "caption_placeholder": "صِف الجدول",
+        "sortable": "يمكن للمتعلمين الفرز",
+        "sticky_header": "رأس ثابت",
+        "compact": "صفوف مضغوطة",
+        "totals": "صف الإجماليات",
+        "totals_hint": "لأعمدة الأرقام والتقدم.",
+        "totals_none": "بلا",
+        "totals_sum": "المجموع",
+        "totals_average": "المتوسط",
+        "toggle_checkbox": "تبديل مربع الاختيار",
+        "templates": {
+          "progress": {
+            "title": "متتبع التقدم",
+            "description": "مهام مع المسؤولين والحالة وأشرطة التقدم"
+          },
+          "comparison": {
+            "title": "مقارنة",
+            "description": "قارن الخيارات جنبًا إلى جنب بعلامات صح"
+          },
+          "rubric": {
+            "title": "سلّم التقييم",
+            "description": "معايير التقييم مع المستويات والنقاط"
+          }
+        },
+        "sample": {
+          "task": "المهمة",
+          "owner": "المسؤول",
+          "status": "الحالة",
+          "progress": "التقدم",
+          "task_1": "تخطيط الدرس",
+          "task_2": "تسجيل الفيديو",
+          "task_3": "كتابة الاختبار",
+          "status_done": "مكتمل",
+          "status_in_progress": "قيد التنفيذ",
+          "status_todo": "لم يبدأ",
+          "feature": "الميزة",
+          "option_a": "أساسي",
+          "option_b": "احترافي",
+          "feature_1": "دروس الفيديو",
+          "feature_2": "الاختبارات",
+          "feature_3": "الشهادات",
+          "criterion": "المعيار",
+          "look_for": "ما نبحث عنه",
+          "level": "المستوى",
+          "points": "النقاط",
+          "crit_1": "الوضوح",
+          "crit_2": "الدقة",
+          "crit_3": "البنية",
+          "desc_1": "الأفكار سهلة المتابعة",
+          "desc_2": "الحقائق والخطوات صحيحة",
+          "desc_3": "أقسام واضحة بترتيب منطقي"
+        }
+      },
+      "layout": {
+        "settings": "الإعدادات",
+        "style": "النمط",
+        "color": "اللون",
+        "icon": "الأيقونة",
+        "icon_default": "الافتراضي",
+        "size_sm": "صغير",
+        "size_md": "متوسط",
+        "size_lg": "كبير",
+        "tone_neutral": "محايد",
+        "tone_blue": "أزرق",
+        "tone_teal": "أزرق مخضر",
+        "tone_green": "أخضر",
+        "tone_amber": "كهرماني",
+        "tone_rose": "وردي",
+        "icons": {
+          "lightbulb": "مصباح",
+          "star": "نجمة",
+          "check": "علامة صح",
+          "target": "هدف",
+          "flag": "علم",
+          "book": "كتاب",
+          "rocket": "صاروخ",
+          "key": "مفتاح"
+        }
+      },
+      "tabs": {
+        "label": "علامات التبويب",
+        "add": "إضافة علامة تبويب",
+        "remove": "حذف علامة التبويب هذه",
+        "move_earlier": "نقل علامة التبويب للأمام",
+        "move_later": "نقل علامة التبويب للخلف",
+        "title_placeholder": "عنوان علامة التبويب",
+        "variant_line": "خط",
+        "variant_pills": "أقراص",
+        "variant_boxed": "إطار",
+        "sample": {
+          "tab_1": "نظرة عامة",
+          "tab_2": "التفاصيل",
+          "tab_3": "مثال",
+          "text_1": "ابدأ بالصورة الكاملة.",
+          "text_2": "تعمّق في طريقة عمله.",
+          "text_3": "اعرضه في التطبيق العملي."
+        }
+      },
+      "columns": {
+        "label": "أعمدة",
+        "layout": "التخطيط",
+        "layout_halves": "عمودان متساويان",
+        "layout_narrow_wide": "ضيق ثم عريض",
+        "layout_wide_narrow": "عريض ثم ضيق",
+        "layout_thirds": "ثلاثة أعمدة",
+        "layout_quarters": "أربعة أعمدة",
+        "gap": "المسافة",
+        "align": "المحاذاة العمودية",
+        "align_top": "أعلى",
+        "align_center": "وسط",
+        "align_bottom": "أسفل",
+        "stack": "ترتيب الأعمدة فوق بعضها على الشاشات الصغيرة",
+        "sample": {
+          "left": "العمود الأول",
+          "right": "العمود الثاني"
+        }
+      },
+      "accordion": {
+        "label": "أكورديون",
+        "add": "إضافة قسم",
+        "single": "قسم واحد مفتوح في كل مرة",
+        "variant_bordered": "بحدود",
+        "variant_filled": "معبأ",
+        "sample": {
+          "item_1": "ماذا سأتعلم؟",
+          "text_1": "صف نتيجة هذا الدرس.",
+          "item_2": "كم يستغرق ذلك؟",
+          "text_2": "قدّم تقديرًا يساعد المتعلمين على التخطيط.",
+          "item_3": "ماذا أحتاج؟",
+          "text_3": "اذكر ما يجب تجهيزه قبل البدء."
+        },
+        "variant_default": "الافتراضي"
+      },
+      "timeline": {
+        "label": "خط زمني",
+        "add": "إضافة خطوة",
+        "remove": "حذف الخطوة",
+        "step": "خطوة",
+        "title_placeholder": "عنوان الخطوة",
+        "label_placeholder": "تاريخ أو تسمية (اختياري)",
+        "numbered": "خطوات مرقمة",
+        "orientation": "الاتجاه",
+        "vertical": "عمودي",
+        "horizontal": "أفقي",
+        "icon_number": "رقم",
+        "variant_steps": "خطوات",
+        "variant_process": "عملية",
+        "sample": {
+          "step_1": "التحضير",
+          "text_1": "اجمع ما تحتاج إليه.",
+          "step_2": "التدرّب",
+          "text_2": "جرّبه على مثال صغير.",
+          "step_3": "التطبيق",
+          "text_3": "استخدمه في مهمة حقيقية."
+        },
+        "variant_timeline": "خط زمني"
+      },
+      "table_of_contents": {
+        "label": "جدول المحتويات",
+        "depth": "العناوين المضمّنة",
+        "numbered": "ترقيم العناصر",
+        "title_label": "العنوان",
+        "empty": "أضف عناوين إلى الدرس وستظهر هنا."
+      },
+      "key_takeaways": {
+        "label": "أهم النقاط",
+        "title_label": "عنوان البطاقة",
+        "sample": {
+          "point_1": "الفكرة الرئيسية في جملة واحدة",
+          "point_2": "تفصيل يستحق التذكر",
+          "point_3": "ما الخطوة التالية"
+        }
+      },
+      "checklist": {
+        "label": "قائمة مراجعة",
+        "learner_can_check": "يمكن للمتعلمين تحديد العناصر",
+        "hint": "تُحفظ العلامات في متصفح كل متعلم. العناصر التي تحددها هنا تبدأ محددة.",
+        "sample": {
+          "item_1": "قراءة الدرس",
+          "item_2": "تجربة التمرين",
+          "item_3": "مراجعة إجاباتك"
+        }
+      },
+      "chart": {
+        "add_row": "إضافة صف",
+        "add_series": "إضافة سلسلة",
+        "apply_csv": "استخدام هذه البيانات",
+        "csv_error": "تعذّرت قراءة هذا الجدول. ضع التسميات في العمود الأول والأرقام في الأعمدة الأخرى.",
+        "csv_label": "الجدول بصيغة CSV",
+        "csv_placeholder": "الصق من جدول بيانات، أو اكتب: تسمية، سلسلة 1، سلسلة 2",
+        "edit_data": "تعديل البيانات",
+        "empty": "أضف بعض البيانات لرسم المخطط.",
+        "label": "مخطط",
+        "label_n": "التسمية {{n}}",
+        "labels": "التسميات",
+        "paste_csv": "لصق CSV",
+        "pie_hint": "تعرض المخططات الدائرية والحلقية السلسلة الأولى.",
+        "remove_row": "إزالة الصف",
+        "remove_series": "إزالة السلسلة",
+        "row_n": "عنصر {{n}}",
+        "sample": {
+          "q1": "الربع 1",
+          "q2": "الربع 2",
+          "q3": "الربع 3",
+          "q4": "الربع 4",
+          "series_1": "الصف أ",
+          "series_2": "الصف ب",
+          "title": "متوسط درجة الاختبار حسب الربع"
+        },
+        "series_color": "تغيير لون {{name}}",
+        "series_n": "سلسلة {{n}}",
+        "series_name": "اسم السلسلة",
+        "settings": "إعدادات المخطط",
+        "show_legend": "إظهار وسيلة الإيضاح",
+        "show_values": "إظهار القيم",
+        "stacked": "تكديس السلاسل",
+        "title_label": "العنوان",
+        "title_placeholder": "عنوان المخطط",
+        "type": "نوع المخطط"
+      },
+      "file_card": {
+        "add_link": "إضافة الرابط",
+        "description": "الوصف",
+        "description_placeholder": "ماذا يحتوي هذا الملف؟ (اختياري)",
+        "empty_hint": "ارفع ملف PDF أو صورة أو صوت أو فيديو، أو أضف رابطًا لأي ملف.",
+        "empty_title": "أضف ملفًا للتنزيل",
+        "label": "ملف",
+        "link_hint": "يحلّ محلّ الملف المرفوع إن وُجد.",
+        "link_label": "رابط الملف",
+        "link_settings": "رابط الملف",
+        "name": "اسم الملف",
+        "type_error": "لا يمكن رفع هذا النوع من الملفات. ارفع ملف PDF أو صورة أو صوت أو فيديو، أو أضف رابطًا للملف بدلًا من ذلك.",
+        "upload": "رفع ملف"
+      },
+      "gallery": {
+        "add_images": "إضافة صور",
+        "add_link": "إضافة الصورة",
+        "alt_hint": "صِف ما تُظهره الصورة للمتعلمين الذين يستخدمون قارئ الشاشة.",
+        "alt_missing": "نص بديل مفقود: {{n}}",
+        "alt_placeholder": "نص بديل (مطلوب)",
+        "columns": "الأعمدة",
+        "count": "الصور: {{n}}",
+        "empty_hint": "أفلت عدة صور مرة واحدة، أو اخترها من جهازك. {{formats}} · حتى {{max}} لكل صورة.",
+        "empty_title": "أضف صورًا إلى معرضك",
+        "full": "يتسع المعرض لما يصل إلى {{max}} صورة.",
+        "label": "معرض الصور",
+        "layout": "التخطيط",
+        "layout_carousel": "عرض دوّار",
+        "layout_grid": "شبكة",
+        "layout_masonry": "بنائي",
+        "move_earlier": "نقل إلى الأمام",
+        "move_later": "نقل إلى الخلف",
+        "remove": "إزالة الصورة",
+        "settings": "إعدادات المعرض"
+      },
+      "image_compare": {
+        "after_image": "صورة ما بعد",
+        "before_image": "صورة ما قبل",
+        "empty_hint": "اختر صورة قبل وصورة بعد بالحجم نفسه. يسحب المتعلمون الفاصل للمقارنة بينهما.",
+        "empty_title": "إضافة صور",
+        "horizontal": "جنبًا إلى جنب",
+        "label": "مقارنة الصور",
+        "orientation": "الاتجاه",
+        "replace_after": "استبدال صورة ما بعد",
+        "replace_before": "استبدال صورة ما قبل",
+        "settings": "إعدادات المقارنة",
+        "side_label": "التسمية",
+        "start": "موضع الفاصل في البداية",
+        "vertical": "أعلى وأسفل"
+      },
+      "quote_block": {
+        "author": "المؤلف",
+        "author_placeholder": "الاسم",
+        "avatar": "رابط الصورة",
+        "avatar_hint": "تظهر بجانب الاسم في الشهادات. اتركه فارغًا لعرض الأحرف الأولى.",
+        "label": "اقتباس",
+        "role": "الدور",
+        "role_placeholder": "الدور أو الشركة",
+        "sample": {
+          "author": "سارة خالد",
+          "role": "مصممة منتجات",
+          "text": "التمارين العملية جعلت الفكرة واضحة. استخدمت ما تعلمته في العمل في اليوم التالي مباشرة."
+        },
+        "settings": "إعدادات الاقتباس",
+        "style": "النمط",
+        "variant_highlight": "إبراز",
+        "variant_pull": "اقتباس بارز",
+        "variant_testimonial": "شهادة"
+      },
+      "stat_highlights": {
+        "add": "إضافة إحصائية",
+        "animate": "العدّ التصاعدي عند الظهور",
+        "color": "اللون",
+        "columns": "الأعمدة",
+        "description": "الوصف",
+        "description_placeholder": "وصف قصير (اختياري)",
+        "empty": "أضف إحصائية للبدء.",
+        "label": "إحصائيات",
+        "label_field": "التسمية",
+        "prefix": "قبل الرقم",
+        "remove": "إزالة الإحصائية",
+        "sample": {
+          "desc_1": "من المتعلمين يُكملون الدورة",
+          "desc_2": "من 1200 تقييم",
+          "desc_3": "في 40 دولة",
+          "label_1": "معدل الإكمال",
+          "label_2": "متوسط التقييم",
+          "label_3": "متعلم"
+        },
+        "settings": "إعدادات الإحصائيات",
+        "suffix": "بعد الرقم",
+        "value": "الرقم"
+      },
+      "callout_title": "العنوان",
+      "callout_title_placeholder": "عنوان اختياري",
+      "callout_collapsible": "يمكن للمتعلمين طيّه",
+      "callout_default_open": "مفتوح في البداية",
+      "callout_tone": "اللون",
+      "callout_tone_default": "لون النوع",
+      "code_copied": "تم نسخ الشيفرة إلى الحافظة",
+      "code_copy_failed": "تعذّر النسخ. حدّد الشيفرة وانسخها يدويًا.",
+      "code_highlight": "الأسطر المراد تمييزها (مثلًا 2,4-6)",
+      "code_highlight_placeholder": "2,4-6",
+      "code_line_numbers": "أرقام الأسطر",
+      "code_wrap": "التفاف الأسطر الطويلة",
+      "align": {
+        "label": "محاذاة النص",
+        "start": "محاذاة إلى البداية",
+        "center": "توسيط",
+        "end": "محاذاة إلى النهاية",
+        "justify": "ضبط"
+      },
+      "button_group": {
+        "label": "مجموعة أزرار",
+        "add_button": "إضافة زر",
+        "new_button": "زر",
+        "primary": "ابدأ الآن",
+        "secondary": "اعرف المزيد"
+      },
+      "image_frame": {
+        "label": "الإطار",
+        "none": "بلا",
+        "rounded": "مستدير",
+        "shadow": "ظل",
+        "border": "حدّ",
+        "polaroid": "بولارويد"
+      },
+      "inline_math": {
+        "title": "صيغة ضمن السطر",
+        "edit": "تعديل الصيغة {{latex}}",
+        "latex": "LaTeX",
+        "hint": "مثلًا \\frac{a}{b} أو x^2. اكتب $…$ داخل النص لإنشاء صيغة.",
+        "make": "رياضيات",
+        "remove": "إزالة"
+      },
+      "toggle": {
+        "style": "نمط القسم القابل للطي",
+        "variant": "المظهر",
+        "variant_default": "افتراضي",
+        "variant_bordered": "بحدود",
+        "variant_filled": "ممتلئ",
+        "icon": "الأيقونة",
+        "icon_chevron": "سهم",
+        "icon_plus": "زائد وناقص"
       }
     },
     "history": {

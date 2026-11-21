@@ -237,7 +237,7 @@ async def test_static_resources_branding_and_markdown(db, org, admin_user, sessi
         return (await handlers.read_resource(who, types.ReadResourceRequestParams(uri=uri))).contents[0]
 
     blocks = json.loads((await read("learnhouse://blocks")).text)
-    assert len(blocks["blocks"]) == 43 and blocks["blocks"][0]["schema"].startswith("learnhouse://block/")
+    assert len(blocks["blocks"]) == 55 and blocks["blocks"][0]["schema"].startswith("learnhouse://block/")
     quiz = json.loads((await read("learnhouse://block/quiz")).text)
     assert quiz["schema"]["properties"]["questions"] and quiz["example"]["type"] == "quiz"
     guide = await read("learnhouse://guide/course-spec")
