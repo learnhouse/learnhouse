@@ -186,6 +186,12 @@ class TestPolicy:
         ("POST", "/api/v1/admin/default/auth/token"),
         ("GET", "/api/v1/orgs/1/users/export"),
         ("GET", "/api/v1/ee/audit_logs/1/export"),
+        ("PUT", "/api/v1/ee/audit_logs/settings"),
+        ("POST", "/api/v1/ai/atlas/scheduled"),
+        ("PATCH", "/api/v1/ai/atlas/scheduled/agent_x"),
+        ("DELETE", "/api/v1/ai/atlas/scheduled/agent_x"),
+        ("POST", "/api/v1/ai/atlas/scheduled/agent_x/enable"),
+        ("POST", "/api/v1/ai/atlas/scheduled/agent_x/run"),
         ("POST", "/api/v1/ee/backoffice/impersonations"),
         ("GET", "/api/v1/ee/backoffice/me"),
         ("POST", "/api/v1/ee/license/activate"),
@@ -208,6 +214,10 @@ class TestPolicy:
         assert imp.request_policy("GET", "/api/v1/users/2", self.full) is None
         assert imp.request_policy("GET", "/api/v1/orgs/1/domains", self.full) is None
         assert imp.request_policy("PUT", "/api/v1/users/update_avatar/2", self.full) is None
+        assert imp.request_policy("GET", "/api/v1/ee/audit_logs/settings", self.full) is None
+        assert imp.request_policy("GET", "/api/v1/ai/atlas/scheduled", self.full) is None
+        assert imp.request_policy("POST", "/api/v1/ai/atlas/scheduled/describe", self.full) is None
+        assert imp.request_policy("POST", "/api/v1/ai/atlas/scheduledx", self.full) is None
 
     @pytest.mark.parametrize("path", [
         "/api/v1/messaging/conversations",
