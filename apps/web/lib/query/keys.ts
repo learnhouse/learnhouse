@@ -146,6 +146,9 @@ export const queryKeys = {
   courseUsergroups: {
     resources: (courseUuid: string, orgId: number) => ['courseUsergroups', courseUuid, orgId] as const,
   },
+  instance: {
+    license: () => ['instance', 'license'] as const,
+  },
   backoffice: {
     status: () => ['backoffice', 'status'] as const,
     orgs: () => ['backoffice', 'orgs'] as const,

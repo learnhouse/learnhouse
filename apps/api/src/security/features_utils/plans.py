@@ -434,10 +434,10 @@ def get_upgrade_candidates(plan: str) -> list[str]:
 
 def is_feature_enabled_for_plan(plan: str, feature: str) -> bool:
     """Check if a feature is enabled for a given plan."""
-    from src.core.deployment_mode import get_deployment_mode
+    from src.core.deployment_mode import EE_ONLY_FEATURES, get_deployment_mode, is_ee_feature_licensed
     mode = get_deployment_mode()
     if mode == 'ee':
-        return True
+        return feature not in EE_ONLY_FEATURES or is_ee_feature_licensed(feature)
     if mode == 'oss':
         # OSS enables all non-EE features
         return feature not in ('analytics', 'api', 'sso', 'audit_logs', 'scorm', 'lti', 'scim', 'required_training', 'company_seats', 'newsletter', 'crm', 'crm_salesforce')

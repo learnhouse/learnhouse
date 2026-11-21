@@ -29743,5 +29743,44 @@
     "copied_link": "App-Link kopiert",
     "copy_failed": "Bild konnte nicht kopiert werden. Versuche Herunterladen.",
     "download_failed": "Bild konnte nicht gespeichert werden."
+  },
+  "license": {
+    "locked": {
+      "title": "Diese Plattform ist nicht verfügbar",
+      "description": "Ihre LearnHouse-Lizenz ist abgelaufen, daher ist die Plattform vorerst pausiert.",
+      "admin_hint": "Administratoren: Wenden Sie sich an LearnHouse, um den Zugang wiederherzustellen.",
+      "retry": "Erneut versuchen"
+    },
+    "banner": {
+      "label": "Lizenzhinweise",
+      "dismiss": "Ausblenden",
+      "poc_ends": "Der POC endet {{when}}.",
+      "poc_ends_soon": "Ihr POC endet bald.",
+      "license_expires": "Die Lizenz läuft {{when}} ab.",
+      "license_expires_soon": "Ihre Lizenz läuft bald ab.",
+      "payment_overdue": "Zahlung überfällig — Enterprise-Funktionen werden am {{date}} deaktiviert.",
+      "payment_overdue_nodate": "Zahlung überfällig. Enterprise-Funktionen werden bald deaktiviert.",
+      "seat_limit_exceeded": "Es werden mehr Plätze genutzt, als Ihre Lizenz umfasst.",
+      "org_limit_exceeded": "Es gibt mehr Organisationen, als Ihre Lizenz umfasst.",
+      "grace": "Der Lizenzserver ist nicht erreichbar. Enterprise-Funktionen bleiben bis {{date}} aktiv.",
+      "grace_nodate": "Der Lizenzserver ist nicht erreichbar. Enterprise-Funktionen bleiben vorerst aktiv.",
+      "inactive": "Enterprise-Funktionen sind deaktiviert: {{reason}}.",
+      "generic": "Ihre Lizenz erfordert Ihre Aufmerksamkeit.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "die Lizenz ist abgelaufen",
+      "payment_overdue": "die Zahlung ist überfällig",
+      "revoked": "die Lizenz wurde widerrufen",
+      "unknown_key": "der Lizenzschlüssel wird nicht erkannt",
+      "org_inactive": "das Lizenzkonto ist inaktiv",
+      "key_not_issued": "der Lizenzschlüssel wurde nicht ausgestellt",
+      "suspended": "die Lizenz ist gesperrt",
+      "not_yet_valid": "die Lizenz ist noch nicht gültig",
+      "activation_limit": "die Lizenz ist auf zu vielen Instanzen aktiv",
+      "seat_limit_exceeded": "es werden mehr Plätze genutzt, als die Lizenz umfasst",
+      "grace_expired": "der Lizenzserver war zu lange nicht erreichbar",
+      "unknown": "die Lizenz konnte nicht überprüft werden"
+    }
   }
 }

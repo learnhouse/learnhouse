@@ -3,6 +3,7 @@ import DashLeftMenu from '@components/Dashboard/Menus/DashLeftMenu';
 import DashMobileMenu from '@components/Dashboard/Menus/DashMobileMenu';
 import OnboardingTracker from '@components/Dashboard/Onboarding/OnboardingTracker';
 import DemoBanner from '@ee/components/Demo/DemoBanner';
+import LicenseBanner from '@components/License/LicenseBanner';
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { SessionGate } from '@components/Contexts/LHSessionContext'
 import { CommandPaletteProvider } from '@components/Dashboard/CommandPalette/CommandPaletteContext'
@@ -61,6 +62,8 @@ function ClientAdminLayout({
                                 <div className="lh-dash-main flex flex-col w-full min-w-0 relative isolate pb-[var(--lh-mobile-nav-h)] lg:pb-0">
                                     {/* Renders nothing outside the demo organization. */}
                                     <DemoBanner />
+                                    {/* Self-hosted Enterprise license notices, admins only; nothing elsewhere. */}
+                                    <LicenseBanner />
                                     {children}
                                     <OnboardingTracker />
                                 </div>

@@ -29723,5 +29723,44 @@
     "copied_link": "App link copied",
     "copy_failed": "Couldn't copy the image. Try Download instead.",
     "download_failed": "Couldn't save the image."
+  },
+  "license": {
+    "locked": {
+      "title": "This platform is unavailable",
+      "description": "Its LearnHouse license has lapsed, so the platform is paused for now.",
+      "admin_hint": "Administrators: contact LearnHouse to restore access.",
+      "retry": "Try again"
+    },
+    "banner": {
+      "label": "License notices",
+      "dismiss": "Dismiss",
+      "poc_ends": "POC ends {{when}}.",
+      "poc_ends_soon": "Your POC ends soon.",
+      "license_expires": "License expires {{when}}.",
+      "license_expires_soon": "Your license expires soon.",
+      "payment_overdue": "Payment overdue — Enterprise features turn off on {{date}}.",
+      "payment_overdue_nodate": "Payment overdue. Enterprise features will turn off soon.",
+      "seat_limit_exceeded": "More seats are in use than your license includes.",
+      "org_limit_exceeded": "There are more organizations than your license includes.",
+      "grace": "Can't reach the license server. Enterprise features stay on until {{date}}.",
+      "grace_nodate": "Can't reach the license server. Enterprise features stay on for now.",
+      "inactive": "Enterprise features are off: {{reason}}.",
+      "generic": "Your license needs attention.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "the license has expired",
+      "payment_overdue": "payment is overdue",
+      "revoked": "the license was revoked",
+      "unknown_key": "the license key isn't recognized",
+      "org_inactive": "the license account is inactive",
+      "key_not_issued": "the license key hasn't been issued",
+      "suspended": "the license is suspended",
+      "not_yet_valid": "the license isn't valid yet",
+      "activation_limit": "the license is active on too many instances",
+      "seat_limit_exceeded": "more seats are in use than the license includes",
+      "grace_expired": "the license server couldn't be reached for too long",
+      "unknown": "the license couldn't be verified"
+    }
   }
 }

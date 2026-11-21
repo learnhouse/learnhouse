@@ -27,7 +27,8 @@ RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ] || { [ -L /app/ee ] && [ ! -e /app/ee ]
 # Commit sha from CI; lets Next tell deploys apart (see generateBuildId)
 ARG BUILD_ID
 ENV BUILD_ID=$BUILD_ID
-RUN bun run build
+# Type checking the whole app needs more than Node's default 4 GB heap.
+RUN NODE_OPTIONS=--max-old-space-size=6144 bun run build
 
 # Production image: the Next.js standalone server runs on Bun
 FROM oven/bun:1.4.4-alpine AS runner

@@ -1,6 +1,7 @@
 import { getUriWithOrg, getAPIUrl } from '@services/config/config'
 import { dispatchAuthExpired } from '@/lib/auth/events'
 import { hasSessionMarker } from '@services/auth/sessionMarker'
+import { LICENSE_LOCKED_STATUS, dispatchLicenseLocked, isLicenseLockedBody } from '@/lib/license/lock'
 
 /**
  * Validates that a URL is a safe API URL by checking it starts with the configured API base URL.
@@ -155,6 +156,8 @@ export function uploadFormWithProgress<T = any>(
       let detail: string | undefined
       try {
         const body = JSON.parse(xhr.responseText)
+        // XHR bypasses the fetch interceptor, so the license lock is caught here.
+        if (xhr.status === LICENSE_LOCKED_STATUS && isLicenseLockedBody(body)) dispatchLicenseLocked()
         detail =
           typeof body?.detail === 'string'
             ? body.detail

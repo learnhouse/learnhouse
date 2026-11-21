@@ -13,6 +13,7 @@ import { BackgroundTasksProvider } from '@components/Contexts/BackgroundTasksCon
 import BackgroundTasksPanel from '@components/BackgroundTasks/BackgroundTasksPanel'
 import ImpersonationBanner from '@components/Impersonation/ImpersonationBanner'
 import ImpersonationAutoEntry from '@ee/components/Backoffice/Impersonation/ImpersonationAutoEntry'
+import LicenseLockGate from '@components/License/LicenseLockGate'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { makeQueryClient } from '@/lib/query/client'
@@ -32,7 +33,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 {/* Inside I18nProvider so it re-renders when the language changes. */}
                 <DirectionProvider>
                   <BackgroundTasksProvider>
-                    {children}
+                    {/* A 423 from the API (license locked) swaps the page for the lock screen. */}
+                    <LicenseLockGate>{children}</LicenseLockGate>
                     <BackgroundTasksPanel />
                     {/* Every page: who an impersonation is acting as. */}
                     <ImpersonationBanner />

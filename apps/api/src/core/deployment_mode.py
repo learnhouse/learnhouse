@@ -29,6 +29,27 @@ EE_ONLY_FEATURES: frozenset[str] = frozenset({
 })
 
 
+def is_ee_feature_licensed(feature: str) -> bool:
+    """Whether the self-hosted EE license includes ``feature``.
+
+    Only meaningful in 'ee' mode, where the license decides. SaaS gates by
+    plan elsewhere and OSS has no EE features, so both answer True here and
+    leave the decision to their own rules. Fails open when the EE hooks
+    module predates feature entitlements (older EE builds licensed everything).
+    """
+    if get_deployment_mode() != 'ee':
+        return True
+    hooks = get_ee_hooks()
+    checker = getattr(hooks, 'is_feature_licensed', None) if hooks is not None else None
+    if checker is None:
+        return True
+    try:
+        return bool(checker(feature))
+    except Exception:
+        logger.exception("EE feature license check failed for %s; allowing", feature)
+        return True
+
+
 def get_deployment_mode() -> DeploymentMode:
     """
     Determine the current deployment mode.

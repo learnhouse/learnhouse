@@ -10504,6 +10504,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/instance/license": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get license status
+         * @description License status of a self-hosted Enterprise install, for the admin banner. Administrators get the full status (notices, term, features); other signed-in users only the mode, status and lock flag.
+         */
+        get: operations["get_instance_license_api_v1_instance_license_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/monitoring/feedback": {
         parameters: {
             query?: never;
@@ -56360,6 +56380,33 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
+            };
+        };
+    };
+    get_instance_license_api_v1_instance_license_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description License status for the current deployment. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

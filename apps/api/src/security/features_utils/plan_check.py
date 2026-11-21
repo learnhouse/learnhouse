@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, Request
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
+from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES, is_ee_feature_licensed
 from src.core.events.database import get_db_session
 from src.db.communities.communities import Community
 from src.security.features_utils.plans import PlanLevel, plan_meets_requirement
@@ -27,6 +27,12 @@ def _check_mode_bypass(feature_name: str) -> bool | None:
     """
     mode = get_deployment_mode()
     if mode == 'ee':
+        feature_key = feature_name.lower().replace(' ', '_')
+        if feature_key in EE_ONLY_FEATURES and not is_ee_feature_licensed(feature_key):
+            raise HTTPException(
+                status_code=403,
+                detail=f"{feature_name} is not included in your LearnHouse license.",
+            )
         return True
     if mode == 'oss':
         feature_key = feature_name.lower().replace(' ', '_')

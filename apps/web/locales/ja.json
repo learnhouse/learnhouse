@@ -29701,5 +29701,44 @@
     "copied_link": "アプリのリンクをコピーしました",
     "copy_failed": "画像をコピーできませんでした。ダウンロードをお試しください。",
     "download_failed": "画像を保存できませんでした。"
+  },
+  "license": {
+    "locked": {
+      "title": "このプラットフォームは利用できません",
+      "description": "LearnHouse ライセンスの期限が切れたため、プラットフォームは現在一時停止しています。",
+      "admin_hint": "管理者の方へ：アクセスを復旧するには LearnHouse にお問い合わせください。",
+      "retry": "再試行"
+    },
+    "banner": {
+      "label": "ライセンスのお知らせ",
+      "dismiss": "閉じる",
+      "poc_ends": "POC は{{when}}に終了します。",
+      "poc_ends_soon": "POC はまもなく終了します。",
+      "license_expires": "ライセンスは{{when}}に期限切れになります。",
+      "license_expires_soon": "ライセンスはまもなく期限切れになります。",
+      "payment_overdue": "支払いが期限を過ぎています — Enterprise 機能は {{date}} に無効になります。",
+      "payment_overdue_nodate": "支払いが期限を過ぎています。Enterprise 機能はまもなく無効になります。",
+      "seat_limit_exceeded": "ライセンスに含まれる席数を超えて使用されています。",
+      "org_limit_exceeded": "ライセンスに含まれる数を超える組織があります。",
+      "grace": "ライセンスサーバーに接続できません。Enterprise 機能は {{date}} まで有効です。",
+      "grace_nodate": "ライセンスサーバーに接続できません。Enterprise 機能は当面有効です。",
+      "inactive": "Enterprise 機能は無効です：{{reason}}。",
+      "generic": "ライセンスの確認が必要です。",
+      "with_when": "{{message}}（{{when}}）"
+    },
+    "reason": {
+      "expired": "ライセンスの期限が切れました",
+      "payment_overdue": "支払いが期限を過ぎています",
+      "revoked": "ライセンスが取り消されました",
+      "unknown_key": "ライセンスキーが認識されません",
+      "org_inactive": "ライセンスアカウントが無効です",
+      "key_not_issued": "ライセンスキーが発行されていません",
+      "suspended": "ライセンスが停止されています",
+      "not_yet_valid": "ライセンスはまだ有効ではありません",
+      "activation_limit": "ライセンスが有効なインスタンスが多すぎます",
+      "seat_limit_exceeded": "ライセンスに含まれる席数を超えて使用されています",
+      "grace_expired": "ライセンスサーバーに長時間接続できませんでした",
+      "unknown": "ライセンスを確認できませんでした"
+    }
   }
 }

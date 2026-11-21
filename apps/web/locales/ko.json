@@ -29699,5 +29699,44 @@
     "copied_link": "앱 링크를 복사했어요",
     "copy_failed": "이미지를 복사하지 못했어요. 다운로드를 시도해 보세요.",
     "download_failed": "이미지를 저장하지 못했어요."
+  },
+  "license": {
+    "locked": {
+      "title": "이 플랫폼을 사용할 수 없습니다",
+      "description": "LearnHouse 라이선스가 만료되어 플랫폼이 일시 중지되었습니다.",
+      "admin_hint": "관리자: 액세스를 복구하려면 LearnHouse에 문의하세요.",
+      "retry": "다시 시도"
+    },
+    "banner": {
+      "label": "라이선스 알림",
+      "dismiss": "닫기",
+      "poc_ends": "POC가 {{when}} 종료됩니다.",
+      "poc_ends_soon": "POC가 곧 종료됩니다.",
+      "license_expires": "라이선스가 {{when}} 만료됩니다.",
+      "license_expires_soon": "라이선스가 곧 만료됩니다.",
+      "payment_overdue": "결제 기한이 지났습니다 — Enterprise 기능이 {{date}}에 꺼집니다.",
+      "payment_overdue_nodate": "결제 기한이 지났습니다. Enterprise 기능이 곧 꺼집니다.",
+      "seat_limit_exceeded": "라이선스에 포함된 것보다 많은 좌석이 사용 중입니다.",
+      "org_limit_exceeded": "라이선스에 포함된 것보다 많은 조직이 있습니다.",
+      "grace": "라이선스 서버에 연결할 수 없습니다. Enterprise 기능은 {{date}}까지 켜져 있습니다.",
+      "grace_nodate": "라이선스 서버에 연결할 수 없습니다. Enterprise 기능은 당분간 켜져 있습니다.",
+      "inactive": "Enterprise 기능이 꺼져 있습니다: {{reason}}.",
+      "generic": "라이선스를 확인해야 합니다.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "라이선스가 만료되었습니다",
+      "payment_overdue": "결제 기한이 지났습니다",
+      "revoked": "라이선스가 취소되었습니다",
+      "unknown_key": "라이선스 키를 인식할 수 없습니다",
+      "org_inactive": "라이선스 계정이 비활성 상태입니다",
+      "key_not_issued": "라이선스 키가 발급되지 않았습니다",
+      "suspended": "라이선스가 정지되었습니다",
+      "not_yet_valid": "라이선스가 아직 유효하지 않습니다",
+      "activation_limit": "너무 많은 인스턴스에서 라이선스가 활성화되어 있습니다",
+      "seat_limit_exceeded": "라이선스에 포함된 것보다 많은 좌석이 사용 중입니다",
+      "grace_expired": "라이선스 서버에 너무 오래 연결하지 못했습니다",
+      "unknown": "라이선스를 확인할 수 없습니다"
+    }
   }
 }

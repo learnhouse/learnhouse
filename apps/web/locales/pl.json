@@ -31127,5 +31127,44 @@
     "copied_link": "Skopiowano link do aplikacji",
     "copy_failed": "Nie udało się skopiować obrazu. Spróbuj Pobierz.",
     "download_failed": "Nie udało się zapisać obrazu."
+  },
+  "license": {
+    "locked": {
+      "title": "Ta platforma jest niedostępna",
+      "description": "Jej licencja LearnHouse wygasła, więc platforma jest na razie wstrzymana.",
+      "admin_hint": "Administratorzy: skontaktujcie się z LearnHouse, aby przywrócić dostęp.",
+      "retry": "Spróbuj ponownie"
+    },
+    "banner": {
+      "label": "Powiadomienia o licencji",
+      "dismiss": "Zamknij",
+      "poc_ends": "POC kończy się {{when}}.",
+      "poc_ends_soon": "Twój POC wkrótce się kończy.",
+      "license_expires": "Licencja wygasa {{when}}.",
+      "license_expires_soon": "Twoja licencja wkrótce wygaśnie.",
+      "payment_overdue": "Zaległa płatność — funkcje Enterprise zostaną wyłączone {{date}}.",
+      "payment_overdue_nodate": "Zaległa płatność. Funkcje Enterprise wkrótce zostaną wyłączone.",
+      "seat_limit_exceeded": "W użyciu jest więcej miejsc, niż obejmuje licencja.",
+      "org_limit_exceeded": "Jest więcej organizacji, niż obejmuje licencja.",
+      "grace": "Brak połączenia z serwerem licencji. Funkcje Enterprise pozostaną włączone do {{date}}.",
+      "grace_nodate": "Brak połączenia z serwerem licencji. Funkcje Enterprise na razie pozostają włączone.",
+      "inactive": "Funkcje Enterprise są wyłączone: {{reason}}.",
+      "generic": "Twoja licencja wymaga uwagi.",
+      "with_when": "{{message}} ({{when}})"
+    },
+    "reason": {
+      "expired": "licencja wygasła",
+      "payment_overdue": "płatność jest zaległa",
+      "revoked": "licencja została unieważniona",
+      "unknown_key": "klucz licencji nie został rozpoznany",
+      "org_inactive": "konto licencji jest nieaktywne",
+      "key_not_issued": "klucz licencji nie został wydany",
+      "suspended": "licencja jest zawieszona",
+      "not_yet_valid": "licencja nie jest jeszcze ważna",
+      "activation_limit": "licencja jest aktywna na zbyt wielu instancjach",
+      "seat_limit_exceeded": "w użyciu jest więcej miejsc, niż obejmuje licencja",
+      "grace_expired": "serwer licencji był zbyt długo nieosiągalny",
+      "unknown": "nie udało się zweryfikować licencji"
+    }
   }
 }

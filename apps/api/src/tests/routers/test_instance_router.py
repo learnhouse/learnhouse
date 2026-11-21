@@ -181,3 +181,61 @@ class TestInstanceRouter:
 
         assert response.status_code == 200
         assert response.json()["default_org_slug"] == "default"
+
+
+# ── Licensing v3: lock flag and /instance/license ────────────────────────────
+
+from src.security.auth import get_authenticated_user  # noqa: E402
+
+_FULL = {"status": "active", "notices": [{"code": "poc_ends"}], "license_id": "lic_1", "lock_reason": None}
+
+
+class TestInstanceLicense:
+    async def test_info_reports_lock_flag(self, client):
+        with patch(
+            "src.routers.instance.get_cached_instance_info",
+            return_value={"default_org_slug": "d", "tenancy": "single"},
+        ), patch("src.routers.instance.get_deployment_mode", return_value="ee"), patch(
+            "src.routers.instance.license_lock_state", return_value=(True, "expired")
+        ):
+            r = await client.get("/api/v1/instance/info")
+        assert r.json()["license_locked"] is True
+
+    async def _license(self, app, client, user, mode="ee", hooks=None, lock=(False, None)):
+        app.dependency_overrides[get_authenticated_user] = lambda: user
+        hooks = hooks if hooks is not None else SimpleNamespace(get_license_status=lambda: dict(_FULL))
+        with patch("src.routers.instance.get_deployment_mode", return_value=mode), patch(
+            "src.routers.instance.get_ee_hooks", return_value=hooks
+        ), patch("src.routers.instance.license_lock_state", return_value=lock):
+            return (await client.get("/api/v1/instance/license")).json()
+
+    async def test_admin_gets_full_status(self, app, client, admin_user):
+        body = await self._license(app, client, admin_user)
+        assert body["license_id"] == "lic_1"
+        assert body["notices"] == [{"code": "poc_ends"}]
+        assert body["mode"] == "ee" and body["locked"] is False
+
+    async def test_member_gets_minimal_status(self, app, client, regular_user):
+        body = await self._license(app, client, regular_user, lock=(True, "expired"))
+        assert body == {"mode": "ee", "status": "active", "locked": True}
+
+    async def test_backoffice_staff_gets_full_status(self, app, client, regular_user):
+        with patch("src.routers.instance.is_user_backoffice_staff", return_value=True):
+            body = await self._license(app, client, regular_user)
+        assert body["license_id"] == "lic_1"
+
+    async def test_token_user_without_id_is_not_admin(self, app, client):
+        body = await self._license(app, client, SimpleNamespace(id=None))
+        assert set(body) == {"mode", "status", "locked"}
+
+    async def test_saas_and_no_ee(self, app, client, admin_user):
+        assert (await self._license(app, client, admin_user, mode="saas"))["status"] == "unlicensed"
+        body = await self._license(app, client, admin_user, hooks=SimpleNamespace())
+        assert body == {"mode": "ee", "status": "unlicensed", "locked": False, "notices": []}
+
+    async def test_status_error_is_reported_not_raised(self, app, client, admin_user):
+        def boom():
+            raise RuntimeError("x")
+
+        body = await self._license(app, client, admin_user, hooks=SimpleNamespace(get_license_status=boom))
+        assert body["status"] == "inactive" and body["reason"] == "status_unavailable"
