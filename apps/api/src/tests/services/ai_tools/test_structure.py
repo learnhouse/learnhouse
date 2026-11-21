@@ -353,6 +353,11 @@ def test_course_field_readers_and_summaries():
     assert course_tools._create_summary(copy) == "Copy course course_test as 'Copy'"
     built = course_tools.CreateCourseParams(name="Plants", chapters=[{"name": "A", "activities": [{"name": "1"}]}])
     assert course_tools._create_summary(built) == "Create course 'Plants' with 1 chapter and 1 page"
+    # create_activities calls them "pages": accepted here too, never dropped.
+    aliased = course_tools.CreateCourseParams(name="Plants", chapters=[{"name": "A", "pages": [{"name": "1"}]}])
+    assert [p.name for p in aliased.chapters[0].activities] == ["1"]
+    schema = course_tools.CreateCourseParams.model_json_schema()
+    assert "activities" in json.dumps(schema) and '"pages"' not in json.dumps(schema)
 
 
 async def test_create_course_caps(registry, db, org, admin_user):
