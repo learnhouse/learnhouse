@@ -3,6 +3,10 @@ import type { SetupConfig } from '../types.js'
 import { quoteEnvValue } from '../utils/env-quote.js'
 import { publicUrl } from '../services/stack.js'
 
+export function isIpAddress(host: string): boolean {
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(host)
+}
+
 function generateSecret(): string {
   return crypto.randomBytes(32).toString('base64')
 }
@@ -19,13 +23,10 @@ export function generateEnvFile(config: SetupConfig, existing: Partial<EnvSecret
   const baseUrl = publicUrl(config)
   const domainWithPort = baseUrl.replace(/^https?:\/\//, '')
 
-  const topDomain = config.domain === 'localhost'
-    ? 'localhost'
+  // An IP address has no parent domain to share cookies with.
+  const topDomain = config.domain === 'localhost' || isIpAddress(config.domain)
+    ? config.domain
     : config.domain.split('.').slice(-2).join('.')
-
-  const cookieDomain = config.domain === 'localhost'
-    ? '.localhost'
-    : `.${topDomain}`
 
   const nextAuthSecret = existing.nextAuthSecret || generateSecret()
   const jwtSecret = existing.jwtSecret || generateSecret()
@@ -52,7 +53,8 @@ export function generateEnvFile(config: SetupConfig, existing: Partial<EnvSecret
     `NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN=${topDomain}`,
     'NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG=False',
     `NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=${config.orgSlug || 'default'}`,
-    `NEXT_PUBLIC_LEARNHOUSE_HTTPS=${config.useHttps ? 'True' : 'False'}`,
+    // The web app compares this to lowercase 'true'.
+    `NEXT_PUBLIC_LEARNHOUSE_HTTPS=${config.useHttps ? 'true' : 'false'}`,
   ]
 
   lines.push(
@@ -84,7 +86,12 @@ export function generateEnvFile(config: SetupConfig, existing: Partial<EnvSecret
     `LEARNHOUSE_REDIS_CONNECTION_STRING=${config.useExternalRedis
       ? quoteEnvValue(config.externalRedisConnectionString!)
       : 'redis://redis:6379/learnhouse'}`,
-    `LEARNHOUSE_COOKIE_DOMAIN=${cookieDomain}`,
+    // Community is single-tenant: cookies stay host-only, so no cookie domain.
+    'LEARNHOUSE_TENANCY=single',
+    `LEARNHOUSE_SSL=${config.useHttps ? 'true' : 'false'}`,
+    `LEARNHOUSE_FRONTEND_DOMAIN=${domainWithPort}`,
+    // Links and logos in emails; uploads are served from the same origin.
+    `LEARNHOUSE_MEDIA_URL=${baseUrl}`,
     'LEARNHOUSE_PORT=9000',
     '',
     '# =============================================================================',
@@ -173,6 +180,19 @@ export function generateEnvFile(config: SetupConfig, existing: Partial<EnvSecret
     )
     if (config.s3EndpointUrl) {
       lines.push(`LEARNHOUSE_S3_API_ENDPOINT_URL=${quoteEnvValue(config.s3EndpointUrl)}`)
+    }
+    // Read by the S3 client (boto3) directly.
+    if (config.s3Region) {
+      lines.push(
+        `AWS_DEFAULT_REGION=${quoteEnvValue(config.s3Region)}`,
+        `LEARNHOUSE_S3_API_REGION=${quoteEnvValue(config.s3Region)}`,
+      )
+    }
+    if (config.s3AccessKeyId && config.s3SecretAccessKey) {
+      lines.push(
+        `AWS_ACCESS_KEY_ID=${quoteEnvValue(config.s3AccessKeyId)}`,
+        `AWS_SECRET_ACCESS_KEY=${quoteEnvValue(config.s3SecretAccessKey)}`,
+      )
     }
   } else {
     lines.push(

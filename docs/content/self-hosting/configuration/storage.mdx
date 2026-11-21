@@ -37,11 +37,14 @@ LEARNHOUSE_S3_API_BUCKET_NAME=learnhouse-content
 LEARNHOUSE_S3_API_ENDPOINT_URL=https://s3.amazonaws.com
 ```
 
-For providers that check the region (AWS S3, MinIO), also set it. The default, `auto`, suits Cloudflare R2:
+For providers that check the region (AWS S3, MinIO), also set it. Without one, uploads use the S3 client's default and course import/export uses `auto`, which suits Cloudflare R2:
 
 ```env
+AWS_DEFAULT_REGION=eu-west-1
 LEARNHOUSE_S3_API_REGION=eu-west-1
 ```
+
+The setup wizard asks for the bucket, endpoint, region and access keys, and writes all of these.
 
 After updating your storage configuration, apply it (this recreates the containers whose configuration changed):
 

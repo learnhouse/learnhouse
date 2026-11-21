@@ -34,11 +34,11 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_DOMAIN` | Public domain used for org routing, cookie decisions, and custom-domain CNAME targets. Include the port for local development. | hostname | `localhost:3000` | API, CLI |
 | `LEARNHOUSE_FRONTEND_DOMAIN` | Frontend host used by the API when it needs the public frontend domain separately from the backend host. | hostname | `localhost:3000` | API, EE CLI |
 | `LEARNHOUSE_SSL` | Backend-side SSL flag: picks `https` vs `http` for generated links (password reset, email verification, invites, magic links, SSO redirect, media URLs). Accepts `true`/`1`/`yes`/`on` (case-insensitive); anything else is off. Previously any non-empty value enabled it, including the string `false`, so check your value before upgrading. | boolean | `false` | API |
-| `LEARNHOUSE_PORT` | Backend port. Local config defaults to `1338`; the production CLI template emits `9000`. | integer | `1338` locally, `9000` in generated Docker installs | API, CLI, API container |
+| `LEARNHOUSE_PORT` | Backend port. Local config defaults to `1338`. In the Docker image it must stay `9000`: the image's internal nginx sends API traffic there. | integer | `1338` locally, `9000` in generated Docker installs | API, CLI, API container |
 | `LEARNHOUSE_ALLOWED_ORIGINS` | Comma-separated CORS allowlist. | CSV of URLs | `http://localhost:3000,http://localhost:3001` | API |
 | `LEARNHOUSE_ALLOWED_REGEXP` | Origin regex used by CORS and CSRF checks, and when validating the base URL of emailed links. The default matches any origin, so set it to your own domain in production, for example `^https://(?:[a-z0-9-]+\.)*example\.com$`. | regex string | `\b((?:https?://)[^\s/$.?#].[^\s]*)\b` (matches everything) | API |
 | `LEARNHOUSE_MAX_REQUEST_BODY_MB` | Largest JSON, form or raw request body the API accepts before returning `413`. Multipart uploads keep their own per-type limits. `0` disables the cap. | integer | `25` | API |
-| `LEARNHOUSE_COOKIE_DOMAIN` | Cookie domain for auth cookies. Use a leading dot only when subdomains must share auth. | hostname | `.localhost` | API, CLI |
+| `LEARNHOUSE_COOKIE_DOMAIN` | Cookie domain for auth cookies in multi-organization mode (`LEARNHOUSE_TENANCY=multi`). Ignored in single mode, where cookies are host-only. | hostname | unset | API, EE CLI |
 | `LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD` | Acknowledges intentionally broad cookie domains such as `.example.com` and silences the safety warning. | boolean | `false` | API, EE CLI |
 | `LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE` | Skips DNS verification for all custom domains and marks them verified immediately. Development/testing only. | boolean | `false` | API |
 | `LEARNHOUSE_PUBLIC` | Docker build argument that produces a community build by excluding non-community code. Also forces the community build of the web app when set to `true`. | boolean | `false` | Dockerfiles (root, API, Web), Web build |
@@ -56,7 +56,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_DB_PING_AFTER_IDLE_SECONDS` | A pooled database connection that sat idle this many seconds is checked before reuse. Lower it if a pooler or firewall drops idle connections sooner. | number | `10` | API |
 | `LEARNHOUSE_PGBOUNCER` | Uses the small client-side pool meant for a PgBouncer/Supavisor pooler even when the URL does not reveal one. | boolean | `false` | API |
 | `LEARNHOUSE_DB_DRIVER` | Async PostgreSQL driver for the API and CLI: `asyncpg` or `psycopg` (psycopg 3). psycopg sends each query in one round trip behind a transaction-mode pooler (PgBouncer, Supavisor) where asyncpg needs two, which roughly halves database time when the pooler is far away. Migrations always use psycopg2. | string | `asyncpg` | API, CLI |
-| `LEARNHOUSE_REDIS_CONNECTION_STRING` | Redis URL for the API cache/session/event clients. | Redis URL | `redis://localhost:6379/learnhouse` | API, CLI |
+| `LEARNHOUSE_REDIS_CONNECTION_STRING` | Redis URL for the API cache/session/event clients. Required: password reset, invitations and email verification fail without Redis. | Redis URL | `redis://localhost:6379/learnhouse` | API, CLI |
 | `LEARNHOUSE_REDIS_URL` | Redis URL for the collaboration server. | Redis URL | `redis://localhost:6379`; CLI setup emits `redis://redis:6379` | Collab, CLI |
 | `LEARNHOUSE_API_URL` | API base URL used by the collaboration server. | URL | `http://localhost:8000`; generated compose sets `http://localhost:9000` | Collab, CLI |
 
@@ -95,7 +95,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 
 | Variable | Description | Type | Default / required | Used by |
 | --- | --- | --- | --- | --- |
-| `LEARNHOUSE_IS_AI_ENABLED` | Master switch for AI features. | boolean | `false` | API, CLI |
+| `LEARNHOUSE_IS_AI_ENABLED` | Kept for older configurations; not read by the API. AI features depend on a configured provider key. | boolean | `false` | CLI |
 | `LEARNHOUSE_GEMINI_API_KEY` | Legacy Google/Gemini key and fallback embeddings key for providers without embeddings. | secret string | unset | API, CLI |
 | `LEARNHOUSE_AI_PROVIDER` | Provider for generation: `google`, `openai`, `anthropic`, `deepseek`, `moonshot`, `mistral`, `openrouter`, `bedrock`, `ollama`, or another supported Pydantic AI provider. | string | `google` | API |
 | `LEARNHOUSE_AI_API_KEY` | API key for the selected AI provider. Not required for `ollama`; optional for `bedrock`. | secret string | unset; required for most providers | API |
@@ -137,7 +137,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_CONTENT_DELIVERY_TYPE` | Storage backend for uploaded content. | enum: `filesystem`, `s3api` | `filesystem` | API, CLI |
 | `LEARNHOUSE_S3_API_BUCKET_NAME` | S3-compatible bucket name when using `s3api`. | string | unset; required for S3 storage | API, CLI |
 | `LEARNHOUSE_S3_API_ENDPOINT_URL` | S3-compatible endpoint URL. Leave unset for provider defaults where supported. | URL | unset | API, CLI |
-| `LEARNHOUSE_S3_API_REGION` | Region for the S3 client. The default suits Cloudflare R2; set the real region for AWS S3 or MinIO, which check it against the endpoint. | string | `auto` | API |
+| `LEARNHOUSE_S3_API_REGION` | Region for the course import/export S3 client (falls back to `AWS_REGION`, then `AWS_DEFAULT_REGION`). The default suits Cloudflare R2; set the real region for AWS S3 or MinIO, which check it against the endpoint. Uploads use `AWS_DEFAULT_REGION`. | string | `auto` | API |
 | `LEARNHOUSE_MEDIA_URL` | Public base URL that serves `/content` files, used for images in emails (such as organization logos). `LEARNHOUSE_BACKEND_URL` is accepted as a fallback name. When unset, the API uses `{scheme}://api.{LEARNHOUSE_DOMAIN}` for a real domain, otherwise the request's own host. | URL | unset | API |
 | `LEARNHOUSE_LMS_IMPORT_MAX_MB` | Largest file accepted by the LMS course import, in MB. | integer | `4096` | API |
 
@@ -163,7 +163,7 @@ These jobs run inside the API process. Most of them need Redis.
 
 | Variable | Description | Type | Default / required | Used by |
 | --- | --- | --- | --- | --- |
-| `LEARNHOUSE_HLS_ENABLED` | Transcode uploaded videos to HLS streams. Needs Redis and `ffmpeg`/`ffprobe` on the API's `PATH`; the community `ghcr.io/learnhouse/app` image does not include `ffmpeg`. Until a video is transcoded, the MP4 is served. Only the exact value `true` enables it. | boolean | `false` | API |
+| `LEARNHOUSE_HLS_ENABLED` | Transcode uploaded videos to HLS streams. Needs Redis and `ffmpeg`/`ffprobe` on the API's `PATH`; the community `ghcr.io/learnhouse/app` image includes them. Until a video is transcoded, the MP4 is served. Only the exact value `true` enables it. | boolean | `false` | API |
 | `LEARNHOUSE_HLS_CONCURRENCY` | Maximum transcodes running at once per API process. | integer | `1` | API |
 | `LEARNHOUSE_HLS_FFMPEG_THREADS` | Threads per `ffmpeg` transcode. `0` lets `ffmpeg` use all cores. | integer | `1` | API |
 | `LEARNHOUSE_HLS_MAX_RETRIES` | Attempts per video before a transcode is marked failed. | integer | `6` | API |
@@ -326,7 +326,6 @@ NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=default
 # Backend
 LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://learnhouse:change-me@db:5432/learnhouse
 LEARNHOUSE_REDIS_CONNECTION_STRING=redis://redis:6379/learnhouse
-LEARNHOUSE_COOKIE_DOMAIN=.example.com
 LEARNHOUSE_PORT=9000
 
 # Security and bootstrap

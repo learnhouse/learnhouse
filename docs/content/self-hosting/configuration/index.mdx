@@ -33,7 +33,7 @@ Alternatively, edit the `.env` file in your installation directory (`~/.learnhou
 npx learnhouse start
 ```
 
-To change the domain, re-run `npx learnhouse setup` on the same installation: the URLs, cookie domain and proxy configuration are all generated from it. Your data and secrets are kept.
+To change the domain, re-run `npx learnhouse setup` on the same installation: the URLs and proxy configuration are all generated from it. Your data, secrets and any variables you added to `.env` yourself are kept. `setup --ci` also keeps the HTTPS mode and the AI, email, S3 and OAuth settings, since it has no prompts for them.
 
 ## Configuration Sections
 

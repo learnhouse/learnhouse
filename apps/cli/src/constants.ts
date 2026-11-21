@@ -1,4 +1,4 @@
-export const VERSION = '1.6.0'
+export const VERSION = '1.7.0'
 export const APP_IMAGE = 'ghcr.io/learnhouse/app:latest'
 export const DEV_IMAGE = 'ghcr.io/learnhouse/app:dev'
 // Third-party images are pinned to a minor line: patch releases (security

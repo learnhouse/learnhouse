@@ -31,7 +31,7 @@ npx learnhouse@latest setup
 ### Install a specific version
 
 ```bash
-npx learnhouse@1.0.0 setup
+npx learnhouse@1.7.0 setup
 ```
 
 ## Requirements
@@ -65,7 +65,7 @@ npx learnhouse@1.0.0 setup
 
 The setup wizard walks through:
 
-1. **Install directory**: where files are generated
+1. **Installation name**: files go in `~/.learnhouse/<name>`
 2. **Domain**: hostname, port, HTTPS/SSL
 3. **Database & Redis**: local (Docker) or external
 4. **Organization**: name for your instance
@@ -119,11 +119,12 @@ Secrets can be passed as environment variables instead of flags, which keeps the
 LEARNHOUSE_ADMIN_PASSWORD=secretpass123 npx learnhouse setup --ci \
   --name production \
   --domain example.com \
-  --port 80 \
-  --admin-email admin@example.com
+  --admin-email admin@example.com \
+  --https auto
 
 # Re-running setup --ci on the same --name reconfigures it in place
-# (same deployment, database password and secrets).
+# (same deployment, secrets, HTTPS mode, feature settings and any
+# variables added to .env by hand).
 
 # Update to a specific version (migrations run by default)
 npx learnhouse update --to 1.2.0

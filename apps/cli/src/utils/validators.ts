@@ -43,6 +43,10 @@ export function validateDomain(value: string): string | undefined {
   if (!value) return 'Domain is required'
   // Allow localhost or valid domain names
   if (value === 'localhost') return undefined
+  // A server's IPv4 address works too (no HTTPS certificate from Let's Encrypt, though).
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(value)) {
+    return value.split('.').every((o) => Number(o) <= 255) ? undefined : 'Please enter a valid IP address'
+  }
   const re = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/
   if (!re.test(value)) return 'Please enter a valid domain (e.g., learnhouse.example.com)'
   if (value.length > 253 || value.split('.').some((l) => l.length > 63)) {

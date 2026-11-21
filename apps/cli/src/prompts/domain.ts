@@ -1,6 +1,7 @@
 import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import { validateDomain, validateEmail, validatePort } from '../utils/validators.js'
+import { isIpAddress } from '../templates/env.js'
 import { checkPort, findAvailablePort } from './../utils/network.js'
 
 export interface DomainConfig {
@@ -25,10 +26,12 @@ export async function promptDomain(): Promise<DomainConfig> {
   let sslEmail: string | undefined
 
   if (domain !== 'localhost') {
+    // Let's Encrypt issues certificates for domain names only.
+    const ip = isIpAddress(domain as string)
     const httpsChoice = await p.select({
       message: 'HTTPS configuration?',
       options: [
-        { value: 'auto', label: 'Automatic SSL (Let\'s Encrypt via Caddy)', hint: 'recommended' },
+        ...(ip ? [] : [{ value: 'auto', label: 'Automatic SSL (Let\'s Encrypt via Caddy)', hint: 'recommended' }]),
         { value: 'manual', label: 'I\'ll handle SSL myself (reverse proxy, Cloudflare, etc.)' },
         { value: 'none', label: 'No HTTPS (HTTP only)', hint: 'not recommended for production' },
       ],

@@ -62,6 +62,10 @@ export interface SetupConfig {
   s3Enabled: boolean
   s3BucketName?: string
   s3EndpointUrl?: string
+  // Left empty when the host provides credentials (e.g. an instance role).
+  s3AccessKeyId?: string
+  s3SecretAccessKey?: string
+  s3Region?: string
   googleOAuthEnabled: boolean
   googleClientId?: string
   googleClientSecret?: string

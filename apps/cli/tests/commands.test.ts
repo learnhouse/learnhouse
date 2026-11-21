@@ -946,11 +946,13 @@ describe('setup input prompts', () => {
       'noreply@test.dev', // system email (after smtp block)
       'mybucket',         // s3 bucket
       '',                 // s3 endpoint (empty → AWS default)
+      'eu-west-1',        // s3 region
+      'AKIAEXAMPLE',      // s3 access key id
       'gid',              // google client id
     )
     // Secrets are collected with password() (not echoed): gemini key, smtp
-    // password, google client secret, in prompt order.
-    H.q.password.push('AIzaKEY', 'smtp-pw', 'gsecret')
+    // password, s3 secret key, google client secret, in prompt order.
+    H.q.password.push('AIzaKEY', 'smtp-pw', 's3-secret', 'gsecret')
     H.q.confirm.push(true) // use TLS
 
     await expect(promptFeatures()).resolves.toMatchObject({
@@ -959,8 +961,18 @@ describe('setup input prompts', () => {
       geminiApiKey: 'AIzaKEY', emailProvider: 'smtp', smtpHost: 'smtp.test',
       smtpPort: 587, smtpUsername: 'user', smtpPassword: 'smtp-pw', smtpUseTls: true,
       systemEmailAddress: 'noreply@test.dev', s3BucketName: 'mybucket',
+      s3Region: 'eu-west-1', s3AccessKeyId: 'AKIAEXAMPLE', s3SecretAccessKey: 's3-secret',
       googleClientId: 'gid', googleClientSecret: 'gsecret',
     })
+  })
+
+  it('promptFeatures S3 without keys leaves credentials to the host', async () => {
+    H.q.multiselect.push(['s3'])
+    H.q.text.push('mybucket', 'http://minio:9000', '', '')
+    const cfg = await promptFeatures()
+    expect(cfg).toMatchObject({ s3Enabled: true, s3BucketName: 'mybucket', s3EndpointUrl: 'http://minio:9000' })
+    expect(cfg.s3AccessKeyId).toBeUndefined()
+    expect(cfg.s3Region).toBeUndefined()
   })
 
   it('promptFeatures with Resend email collects the API key', async () => {

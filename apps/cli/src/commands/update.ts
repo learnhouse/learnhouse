@@ -250,7 +250,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
       }
     } else {
       p.log.info('Skipped migrations (--no-migrate). Run later:')
-      p.log.info('  docker compose exec learnhouse-app sh -c "cd /app/api && uv run alembic upgrade head"')
+      p.log.info('  docker compose exec learnhouse-app sh -c "cd /app/api && uv run alembic upgrade heads"')
     }
 
     if (!healthy) process.exit(1)

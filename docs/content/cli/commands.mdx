@@ -44,8 +44,10 @@ npx learnhouse@latest setup
 |---|---|
 | `--ci` | Non-interactive mode with defaults (for CI and automation) |
 | `--name <name>` | Installation name (default: `default`). The installation goes in `~/.learnhouse/<name>`. |
-| `--domain <domain>` | Domain name (default: `localhost`) |
-| `--port <port>` | HTTP port (default: `80`). Without this flag, `--ci` falls back to another free port when 80 is taken. |
+| `--domain <domain>` | Domain name or the server's IP address (default: `localhost`) |
+| `--port <port>` | HTTP port (default: `80`, or `443` with `--https auto`). Without this flag, `--ci` falls back to another free port when it is taken. |
+| `--https <mode>` | `auto` (Let's Encrypt certificate through Caddy; needs a domain name and ports 80 and 443), `manual` (TLS ends at your own proxy) or `off` (default). A re-run without it keeps the install's current mode. |
+| `--ssl-email <email>` | Let's Encrypt contact for `--https auto` (default: `--admin-email`) |
 | `--admin-email <email>` | Admin email (default: `admin@school.dev`) |
 | `--admin-password <password>` | Admin password, at least 8 characters. Required in `--ci` mode, or set `LEARNHOUSE_ADMIN_PASSWORD`. |
 | `--org-name <name>` | Organization display name (default: `Default Organization`) |
@@ -56,6 +58,8 @@ npx learnhouse@latest setup
 | `--external-redis <uri>` | Community only: use an external Redis instead of the in-container Redis. Or set `LEARNHOUSE_EXTERNAL_REDIS`. |
 | `--docker-ipv6` | Enable IPv6 on the compose network (needed for IPv6-only external databases) |
 | `--install-dir <dir>` | Override the install directory (default: `~/.learnhouse/<name>`) |
+
+Re-running `setup --ci` on an existing installation reconfigures it in place. It keeps the deployment, secrets, HTTPS mode, the AI, email, S3 and OAuth settings, and any variables you added to `.env` yourself.
 
 Enterprise Edition flags:
 

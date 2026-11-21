@@ -20,10 +20,11 @@ import { readConfig, writeConfig } from '../services/config-store.js'
 import { dockerComposeRecreate, dockerComposeStop, dockerComposeUp, isDeploymentRunning } from '../services/docker.js'
 import { migrateContentVolume } from '../services/content-volume-migration.js'
 import { waitForAppHealth, waitForAppOrgSeed } from '../services/health.js'
-import { hasComposeService, publicUrl } from '../services/stack.js'
+import { hasComposeService, publicUrl, usesS3Content } from '../services/stack.js'
+import { isIpAddress } from '../templates/env.js'
 import { checkPort, findAvailablePort } from '../utils/network.js'
 import { resolveAppImage } from '../services/version-check.js'
-import { readEnvVar } from '../utils/env-file.js'
+import { FEATURE_ENV_KEYS, mergeEnvContent, readEnvVar } from '../utils/env-file.js'
 import { writeFileAtomic } from '../utils/fs-atomic.js'
 import {
   validateEmail,
@@ -74,6 +75,16 @@ interface ExistingInstall {
   /** Connection strings of an external database / Redis (no db / redis service in compose). */
   externalDb?: string
   externalRedis?: string
+  useHttps: boolean
+  autoSsl: boolean
+  sslEmail?: string
+  s3Enabled: boolean
+}
+
+function caddyEmail(dir: string): string | undefined {
+  const caddyfile = path.join(dir, 'extra', 'Caddyfile')
+  if (!fs.existsSync(caddyfile)) return undefined
+  return fs.readFileSync(caddyfile, 'utf-8').match(/^\s*email\s+(\S+)/m)?.[1]
 }
 
 function composeImage(dir: string): string | undefined {
@@ -99,6 +110,10 @@ function readExistingInstall(dir: string): ExistingInstall | null {
     image: composeImage(dir),
     externalDb: hasComposeService(dir, 'db') ? undefined : readEnvVar(dir, 'LEARNHOUSE_SQL_CONNECTION_STRING'),
     externalRedis: hasComposeService(dir, 'redis') ? undefined : readEnvVar(dir, 'LEARNHOUSE_REDIS_CONNECTION_STRING'),
+    useHttps: !!config.useHttps,
+    autoSsl: !!config.autoSsl,
+    sslEmail: caddyEmail(dir),
+    s3Enabled: usesS3Content(dir),
   }
 }
 
@@ -194,6 +209,8 @@ export interface SetupOptions {
   orgSlug?: string
   channel?: string
   start?: boolean
+  https?: string
+  sslEmail?: string
   // Enterprise Edition
   edition?: string
   license?: string
@@ -266,12 +283,25 @@ function summaryLines(config: SetupConfig): string {
   ].join('\n')
 }
 
-function writeInstallFiles(config: SetupConfig, appImage: string, secrets: Partial<EnvSecrets>): void {
+/**
+ * Write the install's files. A reconfigure merges the new .env into the old
+ * one, so settings added by hand survive; `keepExisting` names keys whose old
+ * value wins (see mergeEnvContent).
+ */
+function writeInstallFiles(
+  config: SetupConfig,
+  appImage: string,
+  secrets: Partial<EnvSecrets>,
+  keepExisting: Iterable<string> = [],
+): void {
   const dir = config.installDir
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 })
   fs.mkdirSync(path.join(dir, 'extra'), { recursive: true })
   writeFileAtomic(path.join(dir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
-  writeFileAtomic(path.join(dir, '.env'), generateEnvFile(config, secrets), 0o600)
+  const envPath = path.join(dir, '.env')
+  let envContent = generateEnvFile(config, secrets)
+  if (fs.existsSync(envPath)) envContent = mergeEnvContent(envContent, fs.readFileSync(envPath, 'utf-8'), keepExisting)
+  writeFileAtomic(envPath, envContent, 0o600)
   if (config.autoSsl) {
     writeFileAtomic(path.join(dir, 'extra', 'Caddyfile'), generateCaddyfile(config))
   } else {
@@ -318,6 +348,20 @@ export async function setupCommand(rawOptions: SetupOptions) {
     if (domain !== 'localhost') {
       const domainErr = validateDomain(domain)
       if (domainErr) ciFail(`--domain "${options.domain}": ${domainErr}`)
+    }
+
+    if (options.https !== undefined && !['auto', 'manual', 'off'].includes(options.https)) {
+      ciFail(`--https "${options.https}": expected auto, manual or off`)
+    }
+    if (options.https === 'auto' || options.https === 'manual') {
+      if (domain === 'localhost') ciFail('--https needs a real --domain, not localhost')
+    }
+    if (options.https === 'auto') {
+      if (isIpAddress(domain)) ciFail("--https auto needs a domain name: Let's Encrypt does not issue certificates for IP addresses")
+      const sslEmail = options.sslEmail ?? options.adminEmail
+      if (!sslEmail) ciFail("--https auto needs --ssl-email (the Let's Encrypt contact)")
+      const err = validateEmail(sslEmail)
+      if (err) ciFail(`--ssl-email "${sslEmail}": ${err}`)
     }
 
     let requestedPort: number | undefined
@@ -368,11 +412,15 @@ export async function setupCommand(rawOptions: SetupOptions) {
     const channel = (options.channel === 'dev' ? 'dev' : 'stable') as 'stable' | 'dev'
     const dbPassword = existing?.dbPassword || crypto.randomBytes(24).toString('base64url')
 
+    // HTTPS: from the flag, else what the install already uses.
+    const httpsMode = options.https ?? (existing?.autoSsl ? 'auto' : existing?.useHttps ? 'manual' : 'off')
+    const autoSsl = httpsMode === 'auto'
+
     // If the user didn't pin a port, prefer 80 (or the existing install's port)
     // but fall back automatically when it's taken; CI shouldn't fail just
     // because the runner has another service on port 80. A port held by this
     // very install's running stack is not "taken".
-    let httpPort = requestedPort ?? existing?.httpPort ?? 80
+    let httpPort = requestedPort ?? existing?.httpPort ?? (autoSsl ? 443 : 80)
     const ownPort = !!existing?.running && existing.httpPort === httpPort
     if (!ownPort) {
       if (requestedPort === undefined) {
@@ -386,6 +434,10 @@ export async function setupCommand(rawOptions: SetupOptions) {
       } else if (!(await checkPort(httpPort))) {
         ciFail(`Port ${httpPort} is already in use. Free it or pass a different --port.`)
       }
+      // Caddy answers Let's Encrypt's HTTP challenge on port 80.
+      if (autoSsl && options.start !== false && httpPort !== 80 && !(await checkPort(80))) {
+        ciFail("Port 80 is in use; --https auto needs it free for Let's Encrypt.")
+      }
     }
 
     const config: SetupConfig = {
@@ -393,9 +445,10 @@ export async function setupCommand(rawOptions: SetupOptions) {
       installDir: resolvedDir,
       channel,
       domain,
-      useHttps: false,
+      useHttps: httpsMode !== 'off',
       httpPort,
-      autoSsl: false,
+      autoSsl,
+      sslEmail: autoSsl ? (options.sslEmail ?? existing?.sslEmail ?? options.adminEmail) : undefined,
       // External DB/Redis work for the Community stack too: when a connection
       // string is supplied, the in-container service is omitted from the compose.
       useExternalDb: !!(options.externalDb ?? existing?.externalDb),
@@ -410,9 +463,11 @@ export async function setupCommand(rawOptions: SetupOptions) {
       orgSlug,
       adminEmail: options.adminEmail || 'admin@school.dev',
       adminPassword: options.adminPassword!,
+      // --ci has no feature prompts: a reconfigure keeps what the install has
+      // (FEATURE_ENV_KEYS below), a new install starts with them off.
       aiEnabled: false,
       emailEnabled: false,
-      s3Enabled: false,
+      s3Enabled: !!existing?.s3Enabled,
       googleOAuthEnabled: false,
     }
 
@@ -430,7 +485,7 @@ export async function setupCommand(rawOptions: SetupOptions) {
         ciFail(`could not move uploaded content into a persistent volume: ${(err as Error)?.message ?? err}. Nothing was changed.`)
       }
     }
-    writeInstallFiles(config, appImage, existing?.secrets ?? {})
+    writeInstallFiles(config, appImage, existing?.secrets ?? {}, FEATURE_ENV_KEYS)
 
     console.log('Configuration files generated')
 
