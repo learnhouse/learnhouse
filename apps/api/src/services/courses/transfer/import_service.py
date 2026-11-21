@@ -13,6 +13,7 @@ import stat
 import time
 import zipfile
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
@@ -54,6 +55,7 @@ from src.security.auth import resolve_acting_user_id
 from src.services.analytics import events as analytics_events
 from src.services.analytics.analytics import track
 
+from .scorm_packages import scorm_package_dir, scorm_package_uuid
 from .models import (
     ImportAnalysisResponse,
     ImportCourseInfo,
@@ -1168,6 +1170,12 @@ async def _import_activity(
     else:
         os.makedirs(new_activity_path, exist_ok=True)
 
+    package_uuid = scorm_package_uuid(activity_type, new_content)
+    if package_uuid:
+        await _import_scorm_package(
+            activity_path, new_activity, new_activity_path, new_course_path, package_uuid, organization, db_session
+        )
+
     if assignment_plan is not None:
         await _import_assignment(
             assignment_plan,
@@ -1542,6 +1550,39 @@ async def _import_assignment(
 
 # Content keys that may carry a full storage key instead of a bare file name.
 _FILE_REF_KEYS = ("file_id", "uri", "file_path")
+
+
+async def _import_scorm_package(
+    activity_path: str,
+    new_activity: Activity,
+    new_activity_path: str,
+    new_course_path: str,
+    package_uuid: str,
+    organization: Organization,
+    db_session: AsyncSession,
+) -> None:
+    """Put back the shared SCORM package a SCO activity plays.
+
+    Exports keep it once per course, at ``<course>/scorm/<package>/extracted``
+    (``activity_path`` is ``<course>/chapters/<c>/activities/<a>``). The first
+    SCO of a package copies it; the others find it in place. A package that
+    carries the files in the activity's own ``scorm/`` folder instead (the
+    per-activity layout) plays from there, so the shared id is dropped.
+    """
+    source = scorm_package_dir(str(Path(activity_path).parents[3]), package_uuid)
+    target = scorm_package_dir(new_course_path, package_uuid)
+    if os.path.isdir(source):
+        if not await _org_may_host_scorm(organization.id, db_session):
+            return
+        if not os.path.isdir(target):
+            shutil.copytree(source, target)
+            if is_s3_enabled() and not upload_directory_to_s3(target, target):
+                raise HTTPException(status_code=500, detail="Failed to upload SCORM content to storage")
+    elif os.path.isdir(os.path.join(new_activity_path, "scorm", "extracted")):
+        content = dict(new_activity.content or {})
+        content.pop("scorm_package_uuid", None)
+        new_activity.content = content
+        db_session.add(new_activity)
 
 
 def _drop_foreign_file_refs(content: dict, new_course_path: str) -> dict:

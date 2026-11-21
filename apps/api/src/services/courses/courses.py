@@ -1520,6 +1520,16 @@ def _copy_storage_directory(src_dir: str, dst_dir: str) -> None:
             shutil.copytree(src_dir, dst_dir, dirs_exist_ok=True)
 
 
+def _storage_directory_exists(dir_path: str) -> bool:
+    """Whether anything is stored under ``dir_path`` (S3 or local)."""
+    import os
+    from src.services.courses.transfer.storage_utils import is_s3_enabled, list_directory
+
+    if is_s3_enabled():
+        return bool(list_directory(dir_path))
+    return os.path.isdir(dir_path)
+
+
 async def clone_activity(
     db_session: AsyncSession,
     original_activity,
@@ -1601,6 +1611,16 @@ async def clone_activity(
     # Copy entire activity directory structure if it exists
     # This handles all activity types: videos, documents, SCORM, assignments, etc.
     _copy_storage_directory(original_activity_path, new_activity_path)
+
+    # A SCORM activity plays a package kept once per course, outside its own
+    # folder: a copy into another course takes the package along (once).
+    from src.services.courses.transfer.scorm_packages import scorm_package_dir, scorm_package_uuid
+
+    package_uuid = scorm_package_uuid(original_activity.activity_type, original_activity.content)
+    if package_uuid and source_course_path != new_course_path:
+        target = scorm_package_dir(new_course_path, package_uuid)
+        if not _storage_directory_exists(target):
+            _copy_storage_directory(scorm_package_dir(source_course_path, package_uuid), target)
 
     # Identifiers the activity's own content JSON may reference. The
     # editor document embeds each media block's uuid, file id and owning

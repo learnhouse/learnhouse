@@ -129,6 +129,32 @@ def test_read_course_errors(monkeypatch, export_dir):
         read_course(str(export_dir), "c")
 
 
+def test_forced_source_that_finds_nothing_is_refused(monkeypatch, export_dir):
+    """Forcing Canvas on a Moodle backup used to "succeed" with an empty
+    course; it now says what the export looks like instead."""
+    def empty(_root):
+        return Course(title="backup", source="x")
+
+    install(monkeypatch, fake("moodle", "Moodle", score=90), fake("canvas", "Canvas", score=0, read=empty),
+            fake("cc", "Common Cartridge", score=RuntimeError("boom"), read=empty))
+    with pytest.raises(ConversionError, match="^This is not a Canvas export. It looks like a Moodle export.$"):
+        read_course(str(export_dir), "canvas")
+    install(monkeypatch, fake("canvas", "Canvas", score=0, read=empty), fake("cc", "Common Cartridge", score=RuntimeError("boom"), read=empty))
+    with pytest.raises(ConversionError, match="^This is not a Canvas export.$"):
+        read_course(str(export_dir), "canvas")
+    with pytest.raises(ConversionError, match="^This is not a Common Cartridge export.$"):
+        read_course(str(export_dir), "cc")
+
+
+def test_forced_source_keeps_a_course_it_could_read(monkeypatch, export_dir):
+    """Undetected but readable (the escape hatch --source exists for), or
+    detected but empty: both still convert."""
+    install(monkeypatch, fake("canvas", "Canvas", score=0), fake("moodle", "Moodle", score=90,
+                                                                read=lambda _r: Course(title="empty", source="x")))
+    assert read_course(str(export_dir), "canvas").source == "canvas"
+    assert read_course(str(export_dir), "moodle").title == "empty"
+
+
 # ---------------------------------------------------------------------------
 # convert_to_directory / convert
 # ---------------------------------------------------------------------------

@@ -31,6 +31,7 @@ from src.services.courses.activities.comment_marks import strip_comment_marks
 
 from .library_media import library_entry_name, library_refs
 from .models import ExportManifest, ExportCourseInfo
+from .scorm_packages import scorm_package_dir, scorm_package_uuid
 from .storage_utils import read_file_content, list_directory, walk_directory
 
 # File extensions that are already compressed. Use ZIP_STORED to skip
@@ -322,6 +323,9 @@ def _build_export_zip(
                         else:
                             zip_file.writestr(entry_path, file_content)
 
+                # Shared SCORM packages the course's SCO activities play
+                scorm_packages: set[str] = set()
+
                 # Write chapters, activities, blocks from pre-loaded data
                 for chapter_dict, activities in chapters:
                     chapter_path = f"{course_path}/chapters/{chapter_dict['chapter_uuid']}"
@@ -343,6 +347,12 @@ def _build_export_zip(
                             json.dumps(activity_json, indent=2),
                         )
 
+                        package_uuid = scorm_package_uuid(
+                            activity_dict.get("activity_type"), activity_dict.get("content")
+                        )
+                        if package_uuid:
+                            scorm_packages.add(package_uuid)
+
                         # Export activity files (videos, documents, etc.)
                         activity_content_path = f"{course_content_path}/activities/{activity_uuid}"
                         _export_directory_to_zip(
@@ -358,6 +368,15 @@ def _build_export_zip(
                                 f"{block_path}/block.json",
                                 json.dumps(block_data, indent=2),
                             )
+
+                # Each shared SCORM package once, at the course level, where
+                # the import puts it back.
+                for package_uuid in sorted(scorm_packages):
+                    _export_directory_to_zip(
+                        zip_file=zip_file,
+                        source_path=scorm_package_dir(course_content_path, package_uuid),
+                        zip_path=scorm_package_dir(course_path, package_uuid),
+                    )
 
                 # Library files the pages download (Office documents, zips...)
                 for item in library:
