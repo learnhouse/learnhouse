@@ -5,8 +5,9 @@
 </p>
 
 <p align="center">
-  <b>The open-source learning platform.</b><br />
-  Write courses like documents, check what stuck, teach with AI, and run it on your own server.
+  <b>The complete learning platform, built for how people learn now.</b><br />
+  A beautiful editor, real assessments, an AI tutor in every lesson, communities, podcasts and your own academy site.<br />
+  All in one place, open source, and yours to run.
 </p>
 
 <p align="center">
@@ -86,6 +87,24 @@ Podcasts, certificates on completion, learning paths, communities, collections, 
 | 🎨 **Your brand** | Your logo and colors, a landing page builder and SEO |
 | 🌍 **Languages** | Interface in 22 languages |
 | 🔌 **Integrations** | REST API, API tokens, webhooks and an MCP server |
+
+## 🏢 Enterprise
+
+Everything above is open source and free forever. Teams that sell courses, train staff or plug into a school's systems can add the Enterprise features on top:
+
+| Area | What you get |
+| --- | --- |
+| ✨ **Atlas** | An AI agent that builds whole courses, edits lessons, translates content and runs scheduled jobs |
+| 💳 **Payments** | Sell courses, offer team seats to companies and run an affiliate program |
+| 📊 **Analytics** | Learner progress, engagement signals and course health across your academy |
+| 🎥 **Live sessions** | Video classes with a shared calendar, built in |
+| 🔐 **SSO and SCIM** | Sign in with your identity provider and sync users automatically |
+| 🏫 **LTI 1.3 and SCORM** | Plug courses into Canvas, Moodle and other LMSs, and import SCORM packages |
+| 📨 **Newsletter and CRM** | Email your learners and keep track of every contact |
+| 🧠 **Boards and Plays** | Collaborative whiteboards and interactive, AI-generated activities |
+| 🏢 **Multiple organizations** | Run several academies from one install, with audit logs |
+
+See [plans and pricing](https://learnhouse.app/pricing) or [talk to us](https://learnhouse.app/contact).
 
 ## 🧩 Build on it
 
