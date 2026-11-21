@@ -73,7 +73,7 @@ Then run `/mcp` inside Claude Code and choose `learnhouse` to sign in.
 
 ## What the app can do
 
-Tools are grouped by area, and the app only sees the ones your role and plan allow:
+Tools are grouped by area, and the app only sees the ones your role and plan allow. To keep the app's tool list short, it lists the course building tools by default and finds the rest (learning paths, communities, people, settings and so on) with a `search_tools` tool, which can also run them:
 
 | Area | Examples |
 |---|---|
@@ -84,14 +84,14 @@ Tools are grouped by area, and the app only sees the ones your role and plan all
 | Learning paths | chain existing courses into a path (required courses and electives, in order, with a certificate), change its courses, publish it, see who follows it and how far they are, when your plan includes paths |
 | Advanced | audit a whole course for problems (empty or placeholder pages, quizzes with no right answer, missing media, pages with no practice), find and replace across every page of a course, copy chapters and pages between courses, completion certificates, co-authors |
 | Library, communities, playgrounds, boards | browse and manage, when your plan includes them |
-| People and settings | members, invitations, groups, roles and organization settings (admin access only) |
+| People and settings | members, invitations, groups, roles, organization settings, the landing page and webhooks (admin access only) |
 
-The server also offers ready-made prompts that apps show as shortcuts: draft a course, improve a page, add a quiz to a page, review a course, grade submissions, build a learning path, learner report and community digest. You only see the ones your role, connection and plan allow. In apps that support it, the course, page, assignment or community a prompt asks for is suggested as you type.
+The server also offers ready-made prompts that apps show as shortcuts: draft a course, turn a document or a web page into a course, improve a course, add assessments, translate a course, improve a page, add a quiz to a page, review a course, grade submissions, build a learning path, learner report and community digest. You only see the ones your role, connection and plan allow. In apps that support it, the course, page, assignment or community a prompt asks for is suggested as you type.
 
 Apps can also attach LearnHouse items as context: the organization overview, a course outline, a page, an assignment, a learning path or a community (`learnhouse://course/{id}` and so on).
 
 <Callout type="info">
-Some apps limit how many tools they load (Cursor uses about 40). Add `?toolsets=essentials` to the server URL for course building and teaching only, `?toolsets=authoring` for writing and organizing content (courses, pages, course-wide tools, learning paths and the library), or `?toolsets=admin` for members and settings. You can also pick groups yourself with `?toolsets=courses,content` (any of `courses`, `content`, `teaching`, `advanced`, `paths`, `library`, `communities`, `playgrounds`, `boards`, `people`, `org`). Search, context and reading tools are always included.
+Some apps limit how many tools they load (Cursor uses about 40). Add `?toolsets=essentials` to the server URL for course building and teaching only, `?toolsets=authoring` for writing and organizing content (courses, pages, course-wide tools, learning paths and the library), or `?toolsets=admin` for members and settings. You can also pick groups yourself with `?toolsets=courses,content` (any of `courses`, `content`, `build`, `teaching`, `advanced`, `paths`, `library`, `communities`, `playgrounds`, `boards`, `people`, `org`, `landing`, `integrations`). Search, context and reading tools are always included. Without the parameter the app gets `courses`, `content` and `build`; `?toolsets=all` lists every tool, and adding `&meta=off` drops `search_tools` for apps that list everything directly.
 </Callout>
 
 ## Scripts and automations
