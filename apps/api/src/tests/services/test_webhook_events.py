@@ -78,3 +78,27 @@ class TestValidateEventData:
                 del WEBHOOK_EVENTS["test_none_schema"]
             else:
                 WEBHOOK_EVENTS["test_none_schema"] = original
+
+
+class TestEveryDispatchedEventIsSubscribable:
+    """An event fired under a name missing from WEBHOOK_EVENTS can never be
+    delivered: endpoints may only subscribe to catalogued names."""
+
+    def test_literal_event_names_are_catalogued(self):
+        import pathlib
+        import re
+
+        src = pathlib.Path(__file__).resolve().parents[2]
+        from src.services.analytics import events as analytics_events
+
+        literal = re.compile(r'dispatch_webhooks\(\s*event_name="([a-z_]+)"')
+        constant = re.compile(r'dispatch_webhooks\(\s*event_name=analytics_events\.([A-Z_]+)')
+        fired = set()
+        for folder in ("services", "routers"):
+            for path in (src / folder).rglob("*.py"):
+                text = path.read_text()
+                fired |= set(literal.findall(text))
+                fired |= {getattr(analytics_events, name) for name in constant.findall(text)}
+
+        assert {"user_anonymized", "usergroup_users_removed", "usergroup_resources_removed"} <= fired
+        assert fired - set(WEBHOOK_EVENTS) == set()

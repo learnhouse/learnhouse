@@ -184,6 +184,15 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "org_id": "integer",
         },
     },
+    "user_anonymized": {
+        "category": "User & Access",
+        "description": "Triggered when a user's personal data is erased through the Admin API (right to be forgotten)",
+        "data_schema": {
+            "user_id": "integer",
+            "anonymized_email": "string",
+            "api_tokens_revoked": "integer",
+        },
+    },
     # ── Course lifecycle ─────────────────────────────────────────────
     "course_created": {
         "category": "Course Lifecycle",
@@ -391,9 +400,27 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "user_ids": "list[integer]",
         },
     },
+    "usergroup_users_removed": {
+        "category": "Groups",
+        "description": "Triggered when users are removed from a user group through the Admin API",
+        "data_schema": {
+            "usergroup_id": "integer",
+            "usergroup_uuid": "string",
+            "user_ids": "list[integer]",
+        },
+    },
     "usergroup_resources_added": {
         "category": "Groups",
         "description": "Triggered when resources are assigned to a user group",
+        "data_schema": {
+            "usergroup_id": "integer",
+            "usergroup_uuid": "string",
+            "resource_uuids": "list[string]",
+        },
+    },
+    "usergroup_resources_removed": {
+        "category": "Groups",
+        "description": "Triggered when resources are unassigned from a user group through the Admin API",
         "data_schema": {
             "usergroup_id": "integer",
             "usergroup_uuid": "string",
