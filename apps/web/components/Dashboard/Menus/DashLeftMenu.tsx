@@ -248,7 +248,13 @@ function DashLeftMenu() {
   const mode = getDeploymentMode()
   // Only org managers (admins/backoffice staff) see billing surfaces; non-admins
   // shouldn't manage the plan/subscription.
-  const { canManageOrg } = useAdminStatus()
+  const { canManageOrg, rights } = useAdminStatus()
+  // Org-wide areas (members, payments, newsletter, website, settings,
+  // developers) are for admins and maintainers; the API refuses everyone else,
+  // so an instructor only sees the teaching side of the dashboard.
+  const isOrgStaff =
+    canManageOrg || rights?.organizations?.action_read === true || session?.data?.user?.is_backoffice_staff === true
+  const canSeeUsers = isOrgStaff || rights?.users?.action_read === true
   // A running free trial shows as a quiet caption under the org name (admins only).
   const trial = useOrgTrial(org?.id, canManageOrg)
 
@@ -311,12 +317,12 @@ function DashLeftMenu() {
   const showLiveSessions = isOn('live_sessions')
   const showBoards = isOn('boards')
   const showPlaygrounds = isOn('playgrounds')
-  const showPayments = isOn('payments')
-  const showNewsletter = isOn('newsletter')
+  const showPayments = isOrgStaff && isOn('payments')
+  const showNewsletter = isOrgStaff && isOn('newsletter')
   // Companies (organizations the academy trains, with their own spaces): EE, Pro plan.
-  const showCustomers = getDeploymentMode() !== 'oss' && rf?.company_seats?.enabled === true
+  const showCustomers = isOrgStaff && getDeploymentMode() !== 'oss' && rf?.company_seats?.enabled === true
   // Org analytics ship with Enterprise Edition.
-  const showAnalytics = isOrgAnalyticsAvailable()
+  const showAnalytics = isOrgStaff && isOrgAnalyticsAvailable()
   const showEngage = showCommunities || showPodcasts || showLiveSessions || showBoards || showNewsletter
 
   // When the user is on the Atlas page, the left nav drops into a slightly
@@ -513,15 +519,17 @@ function DashLeftMenu() {
               onClick={() => track(AnalyticsEvent.DashboardNavClicked, { section: 'home' })}
             />
             <AtlasNavItem isCollapsed={isCollapsed} isActive={isActivePath('/dash/atlas')} />
-            <NavRow
-              href="/dash/website"
-              icon={Globe}
-              label={t('website.title')}
-              collapsed={isCollapsed}
-              tooltipSide={tooltipSide}
-              active={isActivePath('/dash/website') || isActivePath('/dash/org/landing-builder')}
-              onClick={() => track(AnalyticsEvent.DashboardNavClicked, { section: 'website' })}
-            />
+            {isOrgStaff && (
+              <NavRow
+                href="/dash/website"
+                icon={Globe}
+                label={t('website.title')}
+                collapsed={isCollapsed}
+                tooltipSide={tooltipSide}
+                active={isActivePath('/dash/website') || isActivePath('/dash/org/landing-builder')}
+                onClick={() => track(AnalyticsEvent.DashboardNavClicked, { section: 'website' })}
+              />
+            )}
           </div>
 
           <NavSection label={t('dashboard.nav.section_content', { defaultValue: 'Content' })} collapsed={isCollapsed}>
@@ -705,6 +713,8 @@ function DashLeftMenu() {
           )}
 
           <NavSection label={t('dashboard.nav.section_people', { defaultValue: 'People & business' })} collapsed={isCollapsed}>
+            {canSeeUsers && (
+              <>
             {/* Users with hover menu */}
             <HoverMenu
               anchorRef={navRef}
@@ -749,6 +759,8 @@ function DashLeftMenu() {
                 hasMenu
               />
             </HoverMenu>
+              </>
+            )}
 
             {/* Required training (admins) and My team (managers), EE */}
             <TrainingNavItems NavRow={NavRow} collapsed={isCollapsed} tooltipSide={tooltipSide} isActivePath={isActivePath} />
@@ -811,6 +823,8 @@ function DashLeftMenu() {
           </NavSection>
 
           <NavSection label={t('dashboard.nav.section_settings', { defaultValue: 'Settings' })} collapsed={isCollapsed} quiet={noCourseYet}>
+            {isOrgStaff && (
+              <>
             {/* Organization with hover menu */}
             <HoverMenu
               anchorRef={navRef}
@@ -930,6 +944,8 @@ function DashLeftMenu() {
                 hasMenu
               />
             </HoverMenu>
+              </>
+            )}
 
             {/* Optional features that are not in the nav: turned off, or not in the plan */}
             {(offFeatures.length > 0 || lockedFeatures.length > 0) && (
@@ -1439,7 +1455,9 @@ function NavSection({ label, collapsed, children, quiet = false }: {
       role="group"
       aria-label={label}
       data-quiet={quiet || undefined}
-      className={cn('flex flex-col gap-px', quiet && 'opacity-50 transition-opacity hover:opacity-100 focus-within:opacity-100')}
+      // A section whose items are all hidden for this role (or not loaded yet)
+      // drops its heading too.
+      className={cn('flex flex-col gap-px [&:not(:has(a,button))]:hidden', quiet && 'opacity-50 transition-opacity hover:opacity-100 focus-within:opacity-100')}
     >
       {collapsed ? (
         <div aria-hidden="true" className="mx-auto my-2 h-px w-6 bg-white/[0.08]" />

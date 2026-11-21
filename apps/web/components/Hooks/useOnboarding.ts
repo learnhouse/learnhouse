@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { summarize } from '@/lib/onboarding'
 import {
   getOnboardingState,
@@ -93,10 +94,15 @@ export function useOnboardingQuery() {
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
   const orgId: number | undefined = org?.id
+  // The checklist is for admins and maintainers (the API refuses everyone
+  // else), so don't ask on every page an instructor opens.
+  const { canManageOrg, rights } = useAdminStatus()
+  const isOrgStaff =
+    canManageOrg || rights?.organizations?.action_read === true || session?.data?.user?.is_backoffice_staff === true
   const query = useQuery({
     queryKey: onboardingKeys.state(orgId),
     queryFn: () => getOnboardingState(token, orgId as number),
-    enabled: !!token && !!orgId && !org?.is_demo,
+    enabled: !!token && !!orgId && !org?.is_demo && isOrgStaff,
     // Short: a step finished in another tab ticks off when the admin comes back.
     staleTime: 15_000,
     refetchOnWindowFocus: true,
