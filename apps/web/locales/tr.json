@@ -15028,8 +15028,8 @@
       },
       "locked": {
         "title": "Gelişmiş analitiğin bir parçası",
-        "hint": "Bu görünümü akademiniz için görmek üzere Enterprise'a yükseltin.",
-        "short": "Enterprise"
+        "hint": "Bu görünümü akademiniz için görmek üzere Pro'ya yükseltin.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Henüz gösterilecek bir şey yok",

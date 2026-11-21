@@ -15012,8 +15012,8 @@
       },
       "locked": {
         "title": "Part of advanced analytics",
-        "hint": "Upgrade to Enterprise to see this view for your academy.",
-        "short": "Enterprise"
+        "hint": "Upgrade to Pro to see this view for your academy.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Nothing to show yet",

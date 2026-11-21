@@ -15298,8 +15298,8 @@
       },
       "locked": {
         "title": "Parte das análises avançadas",
-        "hint": "Faça upgrade para o Enterprise para ver esta visualização na sua academia.",
-        "short": "Enterprise"
+        "hint": "Faça upgrade para o Pro para ver esta visualização na sua academia.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Nada para mostrar ainda",

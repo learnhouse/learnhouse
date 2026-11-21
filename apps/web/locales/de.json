@@ -15028,8 +15028,8 @@
       },
       "locked": {
         "title": "Teil der erweiterten Analytics",
-        "hint": "Wechseln Sie zu Enterprise, um diese Ansicht für Ihre Akademie zu sehen.",
-        "short": "Enterprise"
+        "hint": "Wechseln Sie zu Pro, um diese Ansicht für Ihre Akademie zu sehen.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Noch nichts anzuzeigen",

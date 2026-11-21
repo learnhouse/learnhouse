@@ -14993,8 +14993,8 @@
       },
       "locked": {
         "title": "Bagian dari analitik lanjutan",
-        "hint": "Upgrade ke Enterprise untuk melihat tampilan ini bagi akademi Anda.",
-        "short": "Enterprise"
+        "hint": "Upgrade ke Pro untuk melihat tampilan ini bagi akademi Anda.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Belum ada yang ditampilkan",

@@ -14993,8 +14993,8 @@
       },
       "locked": {
         "title": "고급 분석 기능입니다",
-        "hint": "아카데미에서 이 보기를 사용하려면 Enterprise로 업그레이드하세요.",
-        "short": "Enterprise"
+        "hint": "아카데미에서 이 보기를 사용하려면 Pro로 업그레이드하세요.",
+        "short": "Pro"
       },
       "empty": {
         "title": "아직 표시할 내용이 없습니다",

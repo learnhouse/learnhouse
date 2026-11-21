@@ -14993,8 +14993,8 @@
       },
       "locked": {
         "title": "Một phần của phân tích nâng cao",
-        "hint": "Nâng cấp lên Enterprise để xem mục này cho học viện của bạn.",
-        "short": "Enterprise"
+        "hint": "Nâng cấp lên Pro để xem mục này cho học viện của bạn.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Chưa có gì để hiển thị",

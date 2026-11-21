@@ -15298,8 +15298,8 @@
       },
       "locked": {
         "title": "Fait partie des analyses avancées",
-        "hint": "Passez à Enterprise pour voir cette vue pour votre académie.",
-        "short": "Enterprise"
+        "hint": "Passez à Pro pour voir cette vue pour votre académie.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Rien à afficher pour l'instant",

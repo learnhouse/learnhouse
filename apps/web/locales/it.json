@@ -15298,8 +15298,8 @@
       },
       "locked": {
         "title": "Parte delle analisi avanzate",
-        "hint": "Passa a Enterprise per vedere questa vista per la tua accademia.",
-        "short": "Enterprise"
+        "hint": "Passa a Pro per vedere questa vista per la tua accademia.",
+        "short": "Pro"
       },
       "empty": {
         "title": "Ancora niente da mostrare",
