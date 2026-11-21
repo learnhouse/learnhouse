@@ -7232,6 +7232,376 @@ export interface paths {
         patch: operations["api_edit_comment_api_v1_activities__activity_uuid__comments__thread_uuid___comment_uuid__patch"];
         trace?: never;
     };
+    "/api/v1/contributions/courses/{course_uuid}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api Get Settings
+         * @description The course's contribution settings (people who may edit the course).
+         */
+        get: operations["api_get_settings_api_v1_contributions_courses__course_uuid__settings_get"];
+        /**
+         * Api Update Settings
+         * @description Turn contributions on or off and pick who may contribute (course owners and admins).
+         */
+        put: operations["api_update_settings_api_v1_contributions_courses__course_uuid__settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/courses/{course_uuid}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api Summary
+         * @description Counts for the review queue: pending suggestions, open feedback, contributors.
+         */
+        get: operations["api_summary_api_v1_contributions_courses__course_uuid__summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/courses/{course_uuid}/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api Course Suggestions
+         * @description The review queue, newest first, with where each open suggestion lands on the page now.
+         */
+        get: operations["api_course_suggestions_api_v1_contributions_courses__course_uuid__suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/courses/{course_uuid}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api Course Feedback
+         * @description Feedback left on the course's pages.
+         */
+        get: operations["api_course_feedback_api_v1_contributions_courses__course_uuid__feedback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/courses/{course_uuid}/contributors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api Course Contributors
+         * @description People credited on the course. ``manage=true`` (reviewers) includes trusted and blocked flags.
+         */
+        get: operations["api_course_contributors_api_v1_contributions_courses__course_uuid__contributors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/courses/{course_uuid}/contributors/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Api Update Contributor
+         * @description Mark a contributor trusted (publishes without review) or blocked.
+         */
+        put: operations["api_update_contributor_api_v1_contributions_courses__course_uuid__contributors__user_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/activities/{activity_uuid}/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api Activity Context
+         * @description Whether the viewer may suggest or give feedback here, and who helped write each block.
+         */
+        get: operations["api_activity_context_api_v1_contributions_activities__activity_uuid__context_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/activities/{activity_uuid}/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Create Suggestion
+         * @description Suggest replacing, adding or removing blocks of the page.
+         */
+        post: operations["api_create_suggestion_api_v1_contributions_activities__activity_uuid__suggestions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/activities/{activity_uuid}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Create Feedback
+         * @description Leave feedback on a passage or block (typo, unclear, outdated, wrong, suggestion).
+         */
+        post: operations["api_create_feedback_api_v1_contributions_activities__activity_uuid__feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/activities/{activity_uuid}/feedback/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api My Feedback
+         * @description My feedback on this page and the team's replies.
+         */
+        get: operations["api_my_feedback_api_v1_contributions_activities__activity_uuid__feedback_mine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/suggestions/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api My Suggestions
+         * @description My suggestions, optionally on one page.
+         */
+        get: operations["api_my_suggestions_api_v1_contributions_suggestions_mine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/suggestions/{suggestion_uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Api Get Suggestion */
+        get: operations["api_get_suggestion_api_v1_contributions_suggestions__suggestion_uuid__get"];
+        /**
+         * Api Revise Suggestion
+         * @description The author's revised version; goes back to review.
+         */
+        put: operations["api_revise_suggestion_api_v1_contributions_suggestions__suggestion_uuid__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/suggestions/{suggestion_uuid}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Accept Suggestion
+         * @description Apply the suggestion (optionally edited) as a new page version.
+         */
+        post: operations["api_accept_suggestion_api_v1_contributions_suggestions__suggestion_uuid__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/suggestions/{suggestion_uuid}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Api Reject Suggestion */
+        post: operations["api_reject_suggestion_api_v1_contributions_suggestions__suggestion_uuid__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/suggestions/{suggestion_uuid}/request-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Api Request Changes */
+        post: operations["api_request_changes_api_v1_contributions_suggestions__suggestion_uuid__request_changes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/suggestions/{suggestion_uuid}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Api Withdraw Suggestion */
+        post: operations["api_withdraw_suggestion_api_v1_contributions_suggestions__suggestion_uuid__withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/feedback/{thread_uuid}/replies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Api Reply Feedback */
+        post: operations["api_reply_feedback_api_v1_contributions_feedback__thread_uuid__replies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/feedback/{thread_uuid}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Api Feedback Status */
+        put: operations["api_feedback_status_api_v1_contributions_feedback__thread_uuid__status_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contributions/users/{user_uuid}/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api User Contributions
+         * @description Courses a person improved in this org (only those the viewer can open).
+         */
+        get: operations["api_user_contributions_api_v1_contributions_users__user_uuid__contributions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notes": {
         parameters: {
             query?: never;
@@ -12459,6 +12829,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tools/list_course_contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Course contributions
+         * @description Read a course's contribution queue: open suggested edits from learners (a summary, the author's note, the text before and after, and whether it still fits the page) and open feedback on passages (typo, unclear, outdated, wrong, suggestion). Use it to summarize what learners are asking for. Accepting or rejecting is done by a person in the course's Contributions tab. Needs edit rights on the course.
+         *
+         *     Tier: read. Toolset: teaching.
+         *     Token right needed: courses.action_update.
+         */
+        post: operations["tool_list_course_contributions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tools/list_paths": {
         parameters: {
             query?: never;
@@ -15340,6 +15733,19 @@ export interface components {
             /** Expires At */
             expires_at?: string | null;
         };
+        /**
+         * AcceptTarget
+         * @description The exact range of the current page to replace, picked by a reviewer
+         *     when the suggestion no longer fits the page.
+         */
+        AcceptTarget: {
+            /** Start Index */
+            start_index: number;
+            /** Length */
+            length: number;
+            /** Version */
+            version: number;
+        };
         /** AccessBody */
         AccessBody: {
             /** Resource Uuids */
@@ -15382,6 +15788,54 @@ export interface components {
             activity_uuid: string;
             /** Message */
             message: string;
+        };
+        /**
+         * ActivityContributionContext
+         * @description What the learner page needs: may I suggest, and who wrote what.
+         */
+        ActivityContributionContext: {
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled?: boolean;
+            /**
+             * Can Suggest
+             * @default false
+             */
+            can_suggest?: boolean;
+            /**
+             * Can Feedback
+             * @default false
+             */
+            can_feedback?: boolean;
+            /**
+             * Can Review
+             * @default false
+             */
+            can_review?: boolean;
+            /**
+             * Publishes Directly
+             * @default false
+             */
+            publishes_directly?: boolean;
+            /**
+             * Current Version
+             * @default 1
+             */
+            current_version?: number;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Credits
+             * @default []
+             */
+            credits?: components["schemas"]["BlockCredit"][];
+            /**
+             * My Open Suggestions
+             * @default 0
+             */
+            my_open_suggestions?: number;
         };
         /** ActivityCreate */
         ActivityCreate: {
@@ -16672,6 +17126,15 @@ export interface components {
         BatchExportRequest: {
             /** Course Uuids */
             course_uuids: string[];
+        };
+        /** BlockCredit */
+        BlockCredit: {
+            /** Block Index */
+            block_index: number;
+            /** Block Fp */
+            block_fp: string;
+            /** Users */
+            users: components["schemas"]["ContributorUser"][];
         };
         /** BlockRead */
         BlockRead: {
@@ -18033,6 +18496,24 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** ContributionSummary */
+        ContributionSummary: {
+            /**
+             * Pending Suggestions
+             * @default 0
+             */
+            pending_suggestions?: number;
+            /**
+             * Open Feedback
+             * @default 0
+             */
+            open_feedback?: number;
+            /**
+             * Contributors
+             * @default 0
+             */
+            contributors?: number;
+        };
         /** ContributorChange */
         ContributorChange: {
             /**
@@ -18050,6 +18531,64 @@ export interface components {
              * @description New status.
              */
             status?: ("active" | "pending" | "inactive") | null;
+        };
+        /** ContributorList */
+        ContributorList: {
+            /** Items */
+            items: components["schemas"]["ContributorRead"][];
+            /** Total */
+            total: number;
+        };
+        /** ContributorRead */
+        ContributorRead: {
+            user: components["schemas"]["ContributorUser"];
+            /** Accepted Count */
+            accepted_count: number;
+            /**
+             * Trusted
+             * @default false
+             */
+            trusted?: boolean;
+            /**
+             * Blocked
+             * @default false
+             */
+            blocked?: boolean;
+            /** First Contribution At */
+            first_contribution_at?: string | null;
+            /** Last Contribution At */
+            last_contribution_at?: string | null;
+        };
+        /** ContributorUpdate */
+        ContributorUpdate: {
+            /** Trusted */
+            trusted?: boolean | null;
+            /** Blocked */
+            blocked?: boolean | null;
+        };
+        /** ContributorUser */
+        ContributorUser: {
+            /** Id */
+            id: number;
+            /** User Uuid */
+            user_uuid: string;
+            /** Username */
+            username: string;
+            /**
+             * First Name
+             * @default
+             */
+            first_name?: string;
+            /**
+             * Last Name
+             * @default
+             */
+            last_name?: string;
+            /**
+             * Avatar Image
+             * @default
+             */
+            avatar_image?: string;
         };
         /** ConversationCreate */
         ConversationCreate: {
@@ -19955,6 +20494,100 @@ export interface components {
             /** Playgrounds */
             playgrounds?: boolean | null;
         };
+        /** FeedbackComment */
+        FeedbackComment: {
+            /** Comment Uuid */
+            comment_uuid: string;
+            author?: components["schemas"]["ContributorUser"] | null;
+            /** Body */
+            body: string;
+            /** Created At */
+            created_at: string;
+            /**
+             * From Team
+             * @default false
+             */
+            from_team?: boolean;
+        };
+        /** FeedbackCreate */
+        FeedbackCreate: {
+            /**
+             * Feedback Type
+             * @enum {string}
+             */
+            feedback_type: "typo" | "unclear" | "outdated" | "wrong" | "suggestion";
+            /** Body */
+            body: string;
+            /**
+             * Quote
+             * @default
+             */
+            quote?: string;
+            /** Block Index */
+            block_index?: number | null;
+            /** Block Fp */
+            block_fp?: string | null;
+        };
+        /** FeedbackList */
+        FeedbackList: {
+            /** Items */
+            items: components["schemas"]["FeedbackRead"][];
+            /** Total */
+            total: number;
+        };
+        /** FeedbackRead */
+        FeedbackRead: {
+            /** Thread Uuid */
+            thread_uuid: string;
+            /** Feedback Type */
+            feedback_type: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "resolved";
+            /**
+             * Quote
+             * @default
+             */
+            quote?: string;
+            /** Anchor */
+            anchor?: {
+                [key: string]: unknown;
+            } | null;
+            author?: components["schemas"]["ContributorUser"] | null;
+            /** Course Uuid */
+            course_uuid: string;
+            /** Activity Uuid */
+            activity_uuid: string;
+            /**
+             * Activity Name
+             * @default
+             */
+            activity_name?: string;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+            /**
+             * Comments
+             * @default []
+             */
+            comments?: components["schemas"]["FeedbackComment"][];
+        };
+        /** FeedbackReply */
+        FeedbackReply: {
+            /** Body */
+            body: string;
+        };
+        /** FeedbackStatus */
+        FeedbackStatus: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "resolved";
+        };
         /** FetchParams */
         FetchParams: {
             /**
@@ -21503,6 +22136,20 @@ export interface components {
              * @description next_cursor from the previous page; omit for the first page.
              */
             cursor?: string | null;
+        };
+        /** ListContributionsParams */
+        ListContributionsParams: {
+            /**
+             * Course Uuid
+             * @description The course (course_...).
+             */
+            course_uuid: string;
+            /**
+             * Limit
+             * @description At most this many suggestions and this many feedback threads.
+             * @default 20
+             */
+            limit?: number;
         };
         /** ListCourseLanguagesParams */
         ListCourseLanguagesParams: {
@@ -25667,6 +26314,53 @@ export interface components {
              */
             text: string;
         };
+        /** SettingsRead */
+        SettingsRead: {
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled?: boolean;
+            /**
+             * Audience
+             * @default enrolled
+             * @enum {string}
+             */
+            audience?: "enrolled" | "members" | "signed_in";
+            /**
+             * Allow Suggestions
+             * @default true
+             */
+            allow_suggestions?: boolean;
+            /**
+             * Allow Feedback
+             * @default true
+             */
+            allow_feedback?: boolean;
+            /**
+             * Trusted Publish
+             * @default false
+             */
+            trusted_publish?: boolean;
+            /**
+             * Plan Allowed
+             * @default true
+             */
+            plan_allowed?: boolean;
+        };
+        /** SettingsUpdate */
+        SettingsUpdate: {
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Audience */
+            audience?: ("enrolled" | "members" | "signed_in") | null;
+            /** Allow Suggestions */
+            allow_suggestions?: boolean | null;
+            /** Allow Feedback */
+            allow_feedback?: boolean | null;
+            /** Trusted Publish */
+            trusted_publish?: boolean | null;
+        };
         /** ShortAnswerContent */
         ShortAnswerContent: {
             /**
@@ -26060,6 +26754,162 @@ export interface components {
             course_name: string;
             /** Description */
             description?: string | null;
+        };
+        /** SuggestionAccept */
+        SuggestionAccept: {
+            /** After */
+            after?: {
+                [key: string]: unknown;
+            }[] | null;
+            target?: components["schemas"]["AcceptTarget"] | null;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+            /** Expected Updated At */
+            expected_updated_at?: string | null;
+        };
+        /** SuggestionCreate */
+        SuggestionCreate: {
+            /** Base Version */
+            base_version: number;
+            /** Start Index */
+            start_index: number;
+            /** Before */
+            before?: {
+                [key: string]: unknown;
+            }[];
+            /** After */
+            after?: {
+                [key: string]: unknown;
+            }[];
+            /** Prev Fp */
+            prev_fp?: string | null;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** SuggestionDecision */
+        SuggestionDecision: {
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** SuggestionList */
+        SuggestionList: {
+            /** Items */
+            items: components["schemas"]["SuggestionRead"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * SuggestionPlacement
+         * @description Where the suggestion lands on the page as it is now.
+         */
+        SuggestionPlacement: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "clean" | "moved" | "conflict" | "outdated";
+            /** Current Version */
+            current_version: number;
+            /** Start Index */
+            start_index?: number | null;
+            /**
+             * Current
+             * @default []
+             */
+            current?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** SuggestionRead */
+        SuggestionRead: {
+            /** Suggestion Uuid */
+            suggestion_uuid: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "accepted" | "rejected" | "changes_requested" | "withdrawn";
+            author?: components["schemas"]["ContributorUser"] | null;
+            reviewer?: components["schemas"]["ContributorUser"] | null;
+            /** Course Uuid */
+            course_uuid: string;
+            /**
+             * Course Name
+             * @default
+             */
+            course_name?: string;
+            /** Activity Uuid */
+            activity_uuid: string;
+            /**
+             * Activity Name
+             * @default
+             */
+            activity_name?: string;
+            /** Base Version */
+            base_version: number;
+            /** Start Index */
+            start_index: number;
+            /**
+             * Before
+             * @default []
+             */
+            before?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * After
+             * @default []
+             */
+            after?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary?: string;
+            /**
+             * Review Note
+             * @default
+             */
+            review_note?: string;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Applied Version */
+            applied_version?: number | null;
+            /**
+             * Auto Published
+             * @default false
+             */
+            auto_published?: boolean;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+            placement?: components["schemas"]["SuggestionPlacement"] | null;
+        };
+        /** SuggestionRevise */
+        SuggestionRevise: {
+            /** After */
+            after?: {
+                [key: string]: unknown;
+            }[];
+            /** Note */
+            note?: string | null;
         };
         /** SyncParams */
         SyncParams: Record<string, never>;
@@ -27047,6 +27897,29 @@ export interface components {
             size: number;
             /** Extension */
             extension: string;
+        };
+        /** UserContributionCourse */
+        UserContributionCourse: {
+            /** Course Uuid */
+            course_uuid: string;
+            /** Course Name */
+            course_name: string;
+            /**
+             * Thumbnail Image
+             * @default
+             */
+            thumbnail_image?: string;
+            /** Accepted Count */
+            accepted_count: number;
+            /** Last Contribution At */
+            last_contribution_at?: string | null;
+        };
+        /** UserContributions */
+        UserContributions: {
+            /** Items */
+            items: components["schemas"]["UserContributionCourse"][];
+            /** Total Accepted */
+            total_accepted: number;
         };
         /** UserCreate */
         UserCreate: {
@@ -47799,6 +48672,710 @@ export interface operations {
             };
         };
     };
+    api_get_settings_api_v1_contributions_courses__course_uuid__settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_update_settings_api_v1_contributions_courses__course_uuid__settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_summary_api_v1_contributions_courses__course_uuid__summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_course_suggestions_api_v1_contributions_courses__course_uuid__suggestions_get: {
+        parameters: {
+            query?: {
+                status?: ("open" | "pending" | "accepted" | "rejected" | "changes_requested" | "withdrawn") | null;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                course_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_course_feedback_api_v1_contributions_courses__course_uuid__feedback_get: {
+        parameters: {
+            query?: {
+                status?: ("open" | "resolved") | null;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                course_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_course_contributors_api_v1_contributions_courses__course_uuid__contributors_get: {
+        parameters: {
+            query?: {
+                manage?: boolean;
+            };
+            header?: never;
+            path: {
+                course_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributorList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_update_contributor_api_v1_contributions_courses__course_uuid__contributors__user_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_uuid: string;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributorUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributorRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_activity_context_api_v1_contributions_activities__activity_uuid__context_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activity_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityContributionContext"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_create_suggestion_api_v1_contributions_activities__activity_uuid__suggestions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activity_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuggestionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_create_feedback_api_v1_contributions_activities__activity_uuid__feedback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activity_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_my_feedback_api_v1_contributions_activities__activity_uuid__feedback_mine_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activity_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_my_suggestions_api_v1_contributions_suggestions_mine_get: {
+        parameters: {
+            query?: {
+                activity_uuid?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_suggestion_api_v1_contributions_suggestions__suggestion_uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_revise_suggestion_api_v1_contributions_suggestions__suggestion_uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuggestionRevise"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_accept_suggestion_api_v1_contributions_suggestions__suggestion_uuid__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuggestionAccept"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_reject_suggestion_api_v1_contributions_suggestions__suggestion_uuid__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuggestionDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_request_changes_api_v1_contributions_suggestions__suggestion_uuid__request_changes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuggestionDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_withdraw_suggestion_api_v1_contributions_suggestions__suggestion_uuid__withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_reply_feedback_api_v1_contributions_feedback__thread_uuid__replies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackReply"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_feedback_status_api_v1_contributions_feedback__thread_uuid__status_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackStatus"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_user_contributions_api_v1_contributions_users__user_uuid__contributions_get: {
+        parameters: {
+            query: {
+                org_id: number;
+            };
+            header?: never;
+            path: {
+                user_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserContributions"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     api_list_my_notes_api_v1_notes_get: {
         parameters: {
             query: {
@@ -61499,6 +63076,60 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": components["schemas"]["GetCourseStatsParams"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description The token lacks the right, or the plan lacks the feature */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown tool or object, or not available to this token */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Needs the token creator's approval (approval_id, approval_url) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid arguments */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    tool_list_course_contributions: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Approval-Id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ListContributionsParams"] | null;
             };
         };
         responses: {

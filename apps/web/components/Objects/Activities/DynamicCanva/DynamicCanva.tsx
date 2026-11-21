@@ -1,10 +1,17 @@
 import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { useEditor, EditorContent } from '@tiptap/react'
 
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import TableOfContents from './TableOfContents'
 import { getActivityExtensions, normalizeActivityContent } from './activityExtensions'
 import BlockThemeScope, { type BlockThemeRequest } from '@components/Objects/Activities/BlockTheme/BlockThemeScope'
+
+// Suggest an edit / give feedback / credits, on courses that take contributions.
+const ContributionLayer = dynamic(() => import('@components/Objects/Contributions/ContributionLayer'), {
+  ssr: false,
+  loading: () => null,
+})
 
 interface Editor {
   content: string
@@ -17,6 +24,8 @@ interface Editor {
   /** Block theme: 'auto' (default) adapts to the background behind the lesson;
    *  'light' / 'dark' force one (see BlockTheme/blockTheme.ts). */
   theme?: BlockThemeRequest
+  /** The learner page: offer contributions when the course takes them. */
+  contributions?: boolean
 }
 
 function Canva(props: Editor) {
@@ -53,7 +62,18 @@ function Canva(props: Editor) {
       <BlockThemeScope theme={props.theme} className="w-full mx-auto">
         <div className="canva-content-wrapper" data-lesson-content="">
           {!props.hideTableOfContents && <TableOfContents editor={editor} />}
-          <EditorContent editor={editor} />
+          {props.contributions ? (
+            // The lesson body column (the wrapper's last child), with the
+            // contribution overlay positioned over it.
+            <div className="relative">
+              {editor && (
+                <ContributionLayer editor={editor} activity={props.activity} courseUuid={props.courseUuid} orgUuid={props.orgUuid} />
+              )}
+              <EditorContent editor={editor} />
+            </div>
+          ) : (
+            <EditorContent editor={editor} />
+          )}
         </div>
       </BlockThemeScope>
     </EditorOptionsProvider>

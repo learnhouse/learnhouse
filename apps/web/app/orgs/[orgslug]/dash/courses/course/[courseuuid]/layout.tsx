@@ -3,7 +3,7 @@ import React, { use, useEffect } from 'react'
 import { useRouter, useSearchParams, useSelectedLayoutSegment } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
-import { Books, ChartBar, Rows, Globe, Info, UserGear, Medal, Lock, MagnifyingGlass, CalendarCheck, Translate } from '@phosphor-icons/react'
+import { Books, ChartBar, Rows, Globe, Info, UserGear, Medal, Lock, MagnifyingGlass, CalendarCheck, Translate, HandHeart } from '@phosphor-icons/react'
 import { CourseProvider, useCourse } from '@components/Contexts/CourseContext'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { useCourseRights } from '@components/Hooks/useCourseRights'
@@ -68,10 +68,19 @@ export default function CourseEditorLayout(props: {
     },
     { key: 'access', label: t('dashboard.courses.settings.tabs.access'), icon: Globe, requiredPermission: 'manage_access' },
     {
+      // Authors: people added from the org (URL kept as /contributors).
       key: 'contributors',
-      label: t('dashboard.courses.settings.tabs.contributors'),
+      label: t('dashboard.courses.settings.tabs.authors'),
       icon: UserGear,
       requiredPermission: 'manage_contributors',
+    },
+    {
+      // Community contributions: suggested edits, feedback, credit.
+      key: 'contributions',
+      label: t('dashboard.courses.settings.tabs.contributions'),
+      icon: HandHeart,
+      requiredPermission: 'update',
+      requiresPlan: 'standard',
     },
     {
       key: 'seo',

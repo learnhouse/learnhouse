@@ -5614,7 +5614,9 @@
           "seo": "SEO",
           "certification": "Sertifikasyon",
           "analytics": "Analitik",
-          "schedule": "Zamanlama"
+          "schedule": "Zamanlama",
+          "authors": "Yazarlar",
+          "contributions": "Katkılar"
         },
         "access_denied": {
           "title": "Erişim Reddedildi",
@@ -6873,6 +6875,169 @@
           "source": "Kaynak"
         },
         "tab": "Diller"
+      },
+      "authors": {
+        "title": "Yazarlar",
+        "description": "Kuruluşunuzdan bu kursu hazırlayan kişiler. Kursun yazar satırında görünürler ve rollerine göre kursu düzenleyebilirler.",
+        "search_placeholder": "Yazar olarak eklemek için üyeleri ada veya kullanıcı adına göre arayın…",
+        "already_author": "Zaten yazar",
+        "count_one": "{{count}} yazar",
+        "count_other": "{{count}} yazar",
+        "selected_one": "{{count}} yazar seçildi",
+        "selected_other": "{{count}} yazar seçildi",
+        "roles_section": "Yazar rolleri",
+        "remove_title_one": "{{count}} yazar kaldırılsın mı?",
+        "remove_title_other": "{{count}} yazar kaldırılsın mı?",
+        "remove_message": "Bu kursu düzenleme erişimlerini kaybeder ve yazar satırından çıkarlar. Daha sonra tekrar ekleyebilirsiniz.",
+        "roles": {
+          "creator": "Sahip",
+          "maintainer": "Bakımcı",
+          "contributor": "Editör",
+          "reporter": "Bildirimci"
+        },
+        "statuses": {
+          "active": "Aktif",
+          "inactive": "Pasif",
+          "pending": "İstendi"
+        },
+        "requests": {
+          "title": "Yazar istekleri",
+          "description": "Üyelerin bu kursa yazar olarak katılmayı isteyip isteyemeyeceğini seçin.",
+          "active": "Aktif",
+          "open_title": "İstekleri kabul et",
+          "open_description": "Üyeler yazar olmayı isteyebilir. İstekler onaylamanız için yukarıda görünür.",
+          "open_confirm_title": "Yazar istekleri kabul edilsin mi?",
+          "open_confirm_message": "Üyeler bu kursa yazar olarak katılmayı isteyebilecek.",
+          "open_confirm_button": "İstekleri kabul et",
+          "closed_title": "İstek yok",
+          "closed_description": "Yalnızca burada eklediğiniz kişiler yazardır.",
+          "closed_confirm_title": "İstekler kabul edilmesin mi?",
+          "closed_confirm_message": "Üyeler artık bu kursa yazar olarak katılmayı isteyemeyecek.",
+          "closed_confirm_button": "İstekleri durdur"
+        },
+        "community": {
+          "title": "Topluluk katkıcıları",
+          "description": "Kursu öğrenci sayfasından geliştiren kişiler yazar değildir. Kurs sayfasında ve yazmaya yardım ettikleri yerin yanında adları anılır.",
+          "open": "Katkıları aç",
+          "none": "Henüz kimsenin adı anılmadı.",
+          "count_one": "{{count}} adı anılan katkıcı",
+          "count_other": "{{count}} adı anılan katkıcı"
+        }
+      },
+      "contributions": {
+        "settings": {
+          "title": "Topluluk katkıları",
+          "description": "Öğrencilerin bu kursu bir wiki gibi geliştirmesine izin verin: doğrudan sayfada düzenleme önerir veya geri bildirim bırakırlar, siz incelersiniz ve kabul edilen her düzenlemenin sahibi anılır.",
+          "enable": "Topluluk katkılarını aç",
+          "plan_required": "Topluluk katkıları Standard planın ve üstünün parçasıdır.",
+          "see_plans": "Planları gör",
+          "audience": "Kimler katkıda bulunabilir",
+          "suggestions": "Önerilen düzenlemeler",
+          "suggestions_hint": "Katkıcılar öğrenci sayfasında metni ve blokları düzenleyip değişikliği incelemeye gönderebilir.",
+          "feedback": "Geri bildirim",
+          "feedback_hint": "Katkıcılar bir pasajı yazım hatası, belirsiz, güncel değil veya yanlış olarak işaretleyebilir ya da bir fikir önerebilir.",
+          "trusted": "Güvenilir katkıcılar doğrudan yayınlar",
+          "trusted_hint": "Güvenilir olarak işaretlediğiniz kişilerin düzenlemeleri inceleme olmadan yayına girer. Önceki herhangi bir sürümü yine geri yükleyebilirsiniz.",
+          "limits": "Spam'i önlemek için her kişi saatte en fazla 20 öneri ve 20 geri bildirim gönderebilir, kurs başına incelemeyi bekleyen en fazla 25 olabilir. Engellenen kişiler katkıda bulunamaz."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "Kayıtlı öğrenciler",
+            "description": "Bu kursa başlamış kişiler."
+          },
+          "members": {
+            "title": "Kuruluş üyeleri",
+            "description": "Kuruluşunuzdaki herkes."
+          },
+          "signed_in": {
+            "title": "Giriş yapmış herkes",
+            "description": "Kursu açabilen, hesabı olan herkes."
+          }
+        },
+        "stats": {
+          "pending": "İnceleme bekliyor",
+          "feedback": "Açık geri bildirim",
+          "contributors": "Katkıcılar"
+        },
+        "tabs": {
+          "suggestions": "Öneriler",
+          "feedback": "Geri bildirim",
+          "contributors": "Katkıcılar",
+          "settings": "Ayarlar"
+        },
+        "filters": {
+          "open": "Açık",
+          "accepted": "Kabul edildi",
+          "rejected": "Reddedildi",
+          "all": "Tümü",
+          "resolved": "Çözüldü"
+        },
+        "empty": {
+          "suggestions_open": "İncelenecek bir şey yok",
+          "suggestions_other": "Burada öneri yok",
+          "suggestions_hint": "Biri öğrenci sayfasında düzenleme önerdiğinde burada görünür.",
+          "feedback_open": "Açık geri bildirim yok",
+          "feedback_resolved": "Çözülmüş geri bildirim yok",
+          "contributors": "Henüz katkıcı yok",
+          "contributors_hint": "Kişiler, düzenlemelerinden biri kabul edildiğinde burada listelenir."
+        },
+        "placement": {
+          "clean": "Sayfaya uyuyor",
+          "clean_hint": "Değiştirdiği metin hâlâ sayfada, olduğu yerde duruyor.",
+          "moved": "Yeniden hizalandı",
+          "moved_hint": "Sayfa başka bir yerde değişti; bu düzenleme hâlâ sorunsuz uygulanıyor.",
+          "conflict": "Çakışma",
+          "conflict_hint": "Değiştirdiği metin o zamandan beri düzenlendi.",
+          "outdated": "Güncel değil",
+          "outdated_hint": "Sayfa, bu düzenlemeyi yerleştirmek için fazla değişti.",
+          "conflict_explain": "Bu düzenlemenin değiştirdiği sayfa bölümü, önerildiğinden beri yeniden yazıldı. İki sürümü karşılaştırın, ardından birleştirmek için Düzenle ve kabul et'i kullanın ya da reddedin.",
+          "page_now": "Sayfanın şimdiki hali",
+          "suggested": "Önerilen"
+        },
+        "review": {
+          "note": "Not:",
+          "asked": "Şunu istediniz:",
+          "auto_published": "Doğrudan yayınlandı",
+          "accept": "Kabul et",
+          "accepted": "Kabul edildi. Sayfa güncellendi ve bir sürüm kaydedildi.",
+          "edit_accept": "Düzenle ve kabul et",
+          "edit_title": "Düzenle ve kabul et",
+          "edit_hint": "Yayına girmeden önce öneriyi ayarlayın. Katkıcının adı yine de anılır.",
+          "edit_conflict_hint": "Bu öneriden başlar. Sayfanın mevcut metniyle birleştirip kabul edin: solda görünen mevcut metnin yerine geçer.",
+          "conflict_toast": "Sayfa bu öneriden sonra değişti. Çakışmayı inceleyip çözün.",
+          "reject": "Reddet",
+          "request_changes": "Değişiklik iste",
+          "reject_title": "Bu öneri reddedilsin mi?",
+          "reject_description": "Katkıcıya reddedildiği bildirilir, bir gerekçe verirseniz o da eklenir.",
+          "reject_label": "Gerekçe",
+          "reject_confirm": "Reddet",
+          "changes_title": "Değişiklik iste",
+          "changes_description": "Katkıcı düzenlemeyi gözden geçirip yeniden gönderebilir.",
+          "changes_label": "Ne değişmeli?",
+          "changes_confirm": "Gönder",
+          "rejected": "Öneri reddedildi",
+          "changes_sent": "Katkıcıya geri gönderildi",
+          "revised_toast": "Katkıda bulunan kişi bu öneriyi değiştirdi. Yeni sürümü inceleyin."
+        },
+        "feedback": {
+          "reply_placeholder": "Öğrenciye yanıt verin…",
+          "replied": "Yanıt gönderildi",
+          "resolve": "Çözüldü olarak işaretle",
+          "reopen": "Yeniden aç"
+        },
+        "contributors": {
+          "person": "Katkıcı",
+          "accepted": "Düzenlemeler",
+          "last": "Son düzenleme",
+          "trust": "Güven",
+          "trusted": "Güvenilir",
+          "blocked": "Engelli",
+          "block": "Engelle",
+          "unblock": "Engeli kaldır",
+          "edits_one": "{{count}} düzenleme",
+          "edits_other": "{{count}} düzenleme",
+          "trusted_off": "Güvenilir katkıcılar yalnızca bu ayar açıkken incelemesiz yayınlar."
+        }
       }
     },
     "organization": {
@@ -31261,7 +31426,13 @@
       "payments_checkout_failing": "Ödemeler başarısız oluyor",
       "invitation_accepted": "Davet kabul edildi",
       "peer_review_received": "Akran geri bildirimi alındı",
-      "peer_review_flagged": "Akran değerlendirmesi bildirildi"
+      "peer_review_flagged": "Akran değerlendirmesi bildirildi",
+      "suggestion_submitted": "Önerilen düzenleme",
+      "feedback_submitted": "Öğrenci geri bildirimi",
+      "suggestion_accepted": "Düzenleme kabul edildi",
+      "suggestion_rejected": "Düzenleme reddedildi",
+      "suggestion_changes_requested": "Değişiklik istendi",
+      "feedback_reply": "Geri bildiriminize yanıt"
     },
     "copy": {
       "assignment_graded": "Notlandırıldı: {{assignment}}",
@@ -31326,7 +31497,16 @@
       "payments_checkout_failing": "Öğrenciler şu anda satın alamıyor ({{count}} başarısız ödeme)",
       "invitation_accepted": "{{actor}} davetinizi kabul etti",
       "peer_review_received": "{{assignment}} için yeni akran geri bildirimi",
-      "peer_review_flagged": "{{actor}}, {{assignment}} içindeki bir akran değerlendirmesini bildirdi"
+      "peer_review_flagged": "{{actor}}, {{assignment}} içindeki bir akran değerlendirmesini bildirdi",
+      "suggestion_submitted": "{{actor}}, {{activity}} için bir düzenleme önerdi",
+      "suggestion_submitted_many": "{{course}} kursunda {{count}} yeni önerilen düzenleme",
+      "feedback_submitted": "{{actor}}, {{activity}} için geri bildirim bıraktı",
+      "feedback_submitted_many": "{{course}} kursunda {{count}} yeni geri bildirim",
+      "suggestion_accepted": "{{actor}}, {{activity}} için düzenlemenizi kabul etti",
+      "suggestion_rejected": "{{actor}}, {{activity}} için düzenlemenizi reddetti",
+      "suggestion_changes_requested": "{{actor}}, {{activity}} için düzenlemenizde değişiklik istedi",
+      "feedback_reply": "{{actor}}, {{activity}} için geri bildiriminize yanıt verdi",
+      "feedback_reply_many": "{{activity}} için geri bildiriminize {{count}} yeni yanıt"
     },
     "routing": {
       "short": "Kimlere bildirilir",
@@ -32128,6 +32308,151 @@
         "suggested_hint": "Akran değerlendirmelerinin medyanı (sayılan: {{n}}). Bir rehber olarak kullanın.",
         "closed_new_attempt": "Otomatik olarak kapatıldı: öğrenci yeni bir denemeye başladı."
       }
+    }
+  },
+  "contributions": {
+    "hint": "Bu sayfa iyileştirmelere açık. Bir düzenleme önermek ya da geri bildirim bırakmak için bir paragrafın üzerine gelin veya metni seçin.",
+    "someone": "Birisi",
+    "actions": {
+      "suggest": "Düzenleme öner",
+      "feedback": "Geri bildirim ver"
+    },
+    "credits": {
+      "aria": "{{names}} katkısıyla yazıldı",
+      "title": "Geliştirenler"
+    },
+    "blocks": {
+      "block": "blok",
+      "paragraph": "paragraf",
+      "heading": "başlık",
+      "list": "liste",
+      "quote": "alıntı",
+      "code": "kod bloğu",
+      "callout": "vurgu kutusu",
+      "image": "görsel",
+      "video": "video",
+      "audio": "ses",
+      "pdf": "PDF",
+      "math": "denklem",
+      "quiz": "sınav",
+      "embed": "gömülü içerik",
+      "table": "tablo",
+      "link_preview": "bağlantı önizlemesi",
+      "badge": "rozet",
+      "button": "düğme",
+      "flashcard": "bilgi kartı",
+      "flashcards": "bilgi kartları",
+      "scenario": "senaryo",
+      "code_playground": "kod alanı",
+      "toggle": "açılır bölüm",
+      "divider": "ayırıcı",
+      "magic_block": "sihirli blok",
+      "h5p": "H5P etkinliği",
+      "library": "kütüphane öğesi",
+      "user": "kullanıcı kartı",
+      "personalized": "kişiselleştirilmiş blok"
+    },
+    "suggest": {
+      "title": "Düzenleme öner",
+      "text_hint": "Metni doğrudan burada düzenleyin. Biçimlendirmek, bağlantı eklemek ya da başlığa veya listeye dönüştürmek için kelimeleri seçin.",
+      "block_hint": "Bu {{block}} öğesini düzenleyicideki gibi kendi denetimleriyle değiştirin.",
+      "review_note": "Kurs ekibi düzenlemenizi yayına girmeden önce inceler. Kabul edildiğinde adınız anılır.",
+      "trusted_hint": "Güvenilir bir katkıcısınız: düzenlemeniz hemen yayına girer ve adınız anılır.",
+      "remove_block": "Bu {{block}} öğesini kaldır",
+      "remove_blocks": "Bu blokları kaldır",
+      "review_changes": "Değişiklikleri incele",
+      "review_title": "Düzenlemenizi inceleyin",
+      "review_hint": "Değişen şey bu. Ekibin incelemesine yardımcı olmak için kısa bir not ekleyin.",
+      "keep_editing": "Düzenlemeye devam et",
+      "send": "İncelemeye gönder",
+      "publish": "Düzenlemeyi yayınla",
+      "unchanged": "Henüz hiçbir şeyi değiştirmediniz.",
+      "note_label": "Bu değişiklik neden?",
+      "note_optional": "İsteğe bağlı",
+      "note_placeholder": "Örneğin: formülde bir parantez eksikti, kaynak: resmi belgeler."
+    },
+    "diff": {
+      "title": "Değişiklikler",
+      "inline": "Satır içi",
+      "split": "Yan yana",
+      "before": "Önce",
+      "after": "Sonra",
+      "added": "Bir {{block}} ekler",
+      "removed": "Bir {{block}} kaldırır",
+      "changed": "Bir {{block}} değiştirir",
+      "format_only": "Biçimlendirme değişti",
+      "nothing": "Değişiklik yok."
+    },
+    "feedback": {
+      "title": "Geri bildirim ver",
+      "description": "Kurs ekibine burada neyin yanlış olduğunu ya da neyin daha iyi olabileceğini söyleyin. Size yanıt verebilirler.",
+      "type_label": "Konu nedir?",
+      "body_label": "Geri bildiriminiz",
+      "send": "Geri bildirimi gönder",
+      "types": {
+        "typo": "Yazım hatası",
+        "unclear": "Belirsiz",
+        "outdated": "Güncel değil",
+        "wrong": "Yanlış",
+        "suggestion": "Öneri"
+      },
+      "placeholders": {
+        "typo": "Hangi kelime yanlış yazılmış ve nasıl olmalı?",
+        "unclear": "Neyi takip etmek zor? Ne yardımcı olurdu?",
+        "outdated": "Ne değişti ve ekip bunu nereden kontrol edebilir?",
+        "wrong": "Neyin yanlış olduğunu ve doğrusunun ne olduğunu yazın. Bir kaynak yardımcı olur.",
+        "suggestion": "Bu bölümü ne daha iyi yapardı?"
+      },
+      "status": {
+        "open": "Açık",
+        "resolved": "Çözüldü"
+      },
+      "team": "{{name}} (kurs ekibi)",
+      "you": "Siz",
+      "reply": "Yanıtla",
+      "reply_placeholder": "Bir yanıt yazın…"
+    },
+    "mine": {
+      "open_one": "Katkılarınız ({{count}} bekliyor)",
+      "open_other": "Katkılarınız ({{count}} bekliyor)",
+      "title": "Katkılarınız",
+      "description": "Bu sayfadaki önerdiğiniz düzenlemeler ve geri bildirimleriniz, bir de kurs ekibinin söyledikleri.",
+      "suggestions": "Öneriler",
+      "feedback": "Geri bildirim",
+      "no_suggestions": "Bu sayfada henüz öneri yok",
+      "no_feedback": "Bu sayfada henüz geri bildirim yok",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "Geri çek",
+      "revise": "Gözden geçir",
+      "revise_title": "Düzenlemenizi gözden geçirin"
+    },
+    "status": {
+      "pending": "İncelemede",
+      "accepted": "Kabul edildi",
+      "rejected": "Reddedildi",
+      "changes_requested": "Değişiklik istendi",
+      "withdrawn": "Geri çekildi"
+    },
+    "toasts": {
+      "suggested": "Teşekkürler! Düzenlemeniz incelemeye gönderildi.",
+      "published": "Teşekkürler! Düzenlemeniz yayında.",
+      "feedback_sent": "Teşekkürler! Geri bildiriminiz kurs ekibine gönderildi.",
+      "withdrawn": "Öneri geri çekildi"
+    },
+    "errors": {
+      "generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin."
+    },
+    "course": {
+      "title": "Topluluk tarafından geliştirildi",
+      "names_more_one": "{{names}} ve {{count}} kişi daha",
+      "names_more_other": "{{names}} ve {{count}} kişi daha",
+      "edits_one": "{{count}} kabul edilen düzenleme",
+      "edits_other": "{{count}} kabul edilen düzenleme"
+    },
+    "profile": {
+      "title": "Geliştirilen kurslar",
+      "total_one": "{{count}} kabul edilen düzenleme",
+      "total_other": "{{count}} kabul edilen düzenleme"
     }
   }
 }

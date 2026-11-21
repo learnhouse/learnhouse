@@ -5796,7 +5796,9 @@
           "seo": "SEO",
           "certification": "Certifikácia",
           "analytics": "Analytika",
-          "schedule": "Harmonogram"
+          "schedule": "Harmonogram",
+          "authors": "Autori",
+          "contributions": "Príspevky"
         },
         "access_denied": {
           "title": "Prístup zamietnutý",
@@ -7093,6 +7095,179 @@
           "source": "Zdroj"
         },
         "tab": "Jazyky"
+      },
+      "authors": {
+        "title": "Autori",
+        "description": "Ľudia z vašej organizácie, ktorí tvoria tento kurz. Zobrazujú sa v riadku autorov kurzu a podľa svojej roly ho môžu upravovať.",
+        "search_placeholder": "Hľadajte členov podľa mena alebo používateľského mena a pridajte ich ako autorov…",
+        "already_author": "Už je autor",
+        "count_one": "{{count}} autor",
+        "count_few": "{{count}} autori",
+        "count_many": "{{count}} autora",
+        "count_other": "{{count}} autorov",
+        "selected_one": "Vybratý {{count}} autor",
+        "selected_few": "Vybratí {{count}} autori",
+        "selected_many": "Vybratých {{count}} autora",
+        "selected_other": "Vybratých {{count}} autorov",
+        "roles_section": "Roly autorov",
+        "remove_title_one": "Odstrániť {{count}} autora?",
+        "remove_title_few": "Odstrániť {{count}} autorov?",
+        "remove_title_many": "Odstrániť {{count}} autora?",
+        "remove_title_other": "Odstrániť {{count}} autorov?",
+        "remove_message": "Stratia prístup na úpravu tohto kurzu a zmiznú z jeho riadku autorov. Neskôr ich môžete pridať znova.",
+        "roles": {
+          "creator": "Vlastník",
+          "maintainer": "Správca",
+          "contributor": "Editor",
+          "reporter": "Pozorovateľ"
+        },
+        "statuses": {
+          "active": "Aktívny",
+          "inactive": "Neaktívny",
+          "pending": "Vyžiadané"
+        },
+        "requests": {
+          "title": "Žiadosti o rolu autora",
+          "description": "Vyberte, či členovia môžu žiadať o pripojenie k tomuto kurzu ako autori.",
+          "active": "Aktívne",
+          "open_title": "Prijímať žiadosti",
+          "open_description": "Členovia môžu žiadať o rolu autora. Žiadosti sa zobrazia vyššie na schválenie.",
+          "open_confirm_title": "Prijímať žiadosti o rolu autora?",
+          "open_confirm_message": "Členovia budú môcť žiadať o pripojenie k tomuto kurzu ako autori.",
+          "open_confirm_button": "Prijímať žiadosti",
+          "closed_title": "Bez žiadostí",
+          "closed_description": "Autormi sú iba ľudia, ktorých tu pridáte.",
+          "closed_confirm_title": "Prestať prijímať žiadosti?",
+          "closed_confirm_message": "Členovia už nebudú môcť žiadať o pripojenie k tomuto kurzu ako autori.",
+          "closed_confirm_button": "Prestať prijímať"
+        },
+        "community": {
+          "title": "Prispievatelia z komunity",
+          "description": "Ľudia, ktorí kurz vylepšujú zo stránky študenta, nie sú autori. Sú uvedení na stránke kurzu a pri tom, čo pomohli napísať.",
+          "open": "Otvoriť Príspevky",
+          "none": "Zatiaľ nebol nikto uvedený.",
+          "count_one": "{{count}} uvedený prispievateľ",
+          "count_few": "{{count}} uvedení prispievatelia",
+          "count_many": "{{count}} uvedeného prispievateľa",
+          "count_other": "{{count}} uvedených prispievateľov"
+        }
+      },
+      "contributions": {
+        "settings": {
+          "title": "Príspevky komunity",
+          "description": "Nechajte študentov vylepšovať tento kurz ako wiki: navrhujú úpravy alebo zanechávajú spätnú väzbu priamo na stránke, vy kontrolujete a každá schválená úprava je podpísaná jej autorom.",
+          "enable": "Zapnúť príspevky komunity",
+          "plan_required": "Príspevky komunity sú súčasťou plánu Standard a vyšších.",
+          "see_plans": "Zobraziť plány",
+          "audience": "Kto môže prispievať",
+          "suggestions": "Navrhnuté úpravy",
+          "suggestions_hint": "Prispievatelia môžu upravovať text a bloky na stránke študenta a poslať zmenu na kontrolu.",
+          "feedback": "Spätná väzba",
+          "feedback_hint": "Prispievatelia môžu označiť pasáž ako preklep, nejasnú, zastaranú alebo nesprávnu, alebo navrhnúť nápad.",
+          "trusted": "Dôveryhodní prispievatelia zverejňujú priamo",
+          "trusted_hint": "Úpravy od ľudí, ktorých označíte ako dôveryhodných, sa zverejnia bez kontroly. Ktorúkoľvek staršiu verziu môžete stále obnoviť.",
+          "limits": "Aby sa predišlo spamu, každý môže poslať najviac 20 návrhov a 20 spätných väzieb za hodinu a na kontrolu môže čakať najviac 25 na kurz. Zablokovaní ľudia prispievať nemôžu."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "Zapísaní študenti",
+            "description": "Ľudia, ktorí tento kurz začali."
+          },
+          "members": {
+            "title": "Členovia organizácie",
+            "description": "Ktokoľvek vo vašej organizácii."
+          },
+          "signed_in": {
+            "title": "Ktokoľvek prihlásený",
+            "description": "Ktokoľvek s účtom, kto môže kurz otvoriť."
+          }
+        },
+        "stats": {
+          "pending": "Čaká na kontrolu",
+          "feedback": "Otvorená spätná väzba",
+          "contributors": "Prispievatelia"
+        },
+        "tabs": {
+          "suggestions": "Návrhy",
+          "feedback": "Spätná väzba",
+          "contributors": "Prispievatelia",
+          "settings": "Nastavenia"
+        },
+        "filters": {
+          "open": "Otvorené",
+          "accepted": "Schválené",
+          "rejected": "Zamietnuté",
+          "all": "Všetky",
+          "resolved": "Vyriešené"
+        },
+        "empty": {
+          "suggestions_open": "Nič na kontrolu",
+          "suggestions_other": "Žiadne návrhy",
+          "suggestions_hint": "Keď niekto navrhne úpravu na stránke študenta, zobrazí sa tu.",
+          "feedback_open": "Žiadna otvorená spätná väzba",
+          "feedback_resolved": "Žiadna vyriešená spätná väzba",
+          "contributors": "Zatiaľ žiadni prispievatelia",
+          "contributors_hint": "Ľudia sa tu zobrazia, keď bude schválená jedna z ich úprav."
+        },
+        "placement": {
+          "clean": "Sedí na stránku",
+          "clean_hint": "Text, ktorý mení, je stále na stránke, na pôvodnom mieste.",
+          "moved": "Presunuté",
+          "moved_hint": "Stránka sa zmenila inde; táto úprava sa stále dá bez problémov použiť.",
+          "conflict": "Konflikt",
+          "conflict_hint": "Text, ktorý mení, bol odvtedy upravený.",
+          "outdated": "Zastarané",
+          "outdated_hint": "Stránka sa zmenila príliš na to, aby sa táto úprava dala umiestniť.",
+          "conflict_explain": "Časť stránky, ktorú táto úprava mení, bola od návrhu prepísaná. Porovnajte obe verzie a potom ich spojte cez Upraviť a schváliť, alebo úpravu zamietnite.",
+          "page_now": "Stránka teraz",
+          "suggested": "Navrhnuté"
+        },
+        "review": {
+          "note": "Poznámka:",
+          "asked": "Pýtali ste sa:",
+          "auto_published": "Zverejnené priamo",
+          "accept": "Schváliť",
+          "accepted": "Schválené. Stránka bola aktualizovaná a verzia uložená.",
+          "edit_accept": "Upraviť a schváliť",
+          "edit_title": "Upraviť a schváliť",
+          "edit_hint": "Upravte návrh skôr, než sa zverejní. Prispievateľ bude stále uvedený.",
+          "edit_conflict_hint": "Začína sa od návrhu. Spojte ho s aktuálnym textom stránky a potom schváľte: nahradí aktuálny text zobrazený vľavo.",
+          "conflict_toast": "Stránka sa od tohto návrhu zmenila. Skontrolujte konflikt a vyriešte ho.",
+          "reject": "Zamietnuť",
+          "request_changes": "Vyžiadať zmeny",
+          "reject_title": "Zamietnuť tento návrh?",
+          "reject_description": "Prispievateľ sa dozvie, že bol zamietnutý, spolu s vaším dôvodom, ak nejaký uvediete.",
+          "reject_label": "Dôvod",
+          "reject_confirm": "Zamietnuť",
+          "changes_title": "Vyžiadať zmeny",
+          "changes_description": "Prispievateľ môže úpravu prepracovať a poslať znova.",
+          "changes_label": "Čo treba zmeniť?",
+          "changes_confirm": "Odoslať",
+          "rejected": "Návrh zamietnutý",
+          "changes_sent": "Vrátené prispievateľovi",
+          "revised_toast": "Prispievateľ tento návrh zmenil. Skontrolujte novú verziu."
+        },
+        "feedback": {
+          "reply_placeholder": "Odpovedzte študentovi…",
+          "replied": "Odpoveď odoslaná",
+          "resolve": "Označiť ako vyriešené",
+          "reopen": "Znova otvoriť"
+        },
+        "contributors": {
+          "person": "Prispievateľ",
+          "accepted": "Úpravy",
+          "last": "Posledná úprava",
+          "trust": "Dôvera",
+          "trusted": "Dôveryhodný",
+          "blocked": "Zablokovaný",
+          "block": "Zablokovať",
+          "unblock": "Odblokovať",
+          "edits_one": "{{count}} úprava",
+          "edits_few": "{{count}} úpravy",
+          "edits_many": "{{count}} úpravy",
+          "edits_other": "{{count}} úprav",
+          "trusted_off": "Dôveryhodní prispievatelia zverejňujú bez kontroly, iba ak je toto nastavenie zapnuté."
+        }
       }
     },
     "organization": {
@@ -32647,7 +32822,13 @@
       "payments_checkout_failing": "Zlyhávajúce platby",
       "invitation_accepted": "Pozvánka prijatá",
       "peer_review_received": "Prijatá spätná väzba od spolužiaka",
-      "peer_review_flagged": "Nahlásené vzájomné hodnotenie"
+      "peer_review_flagged": "Nahlásené vzájomné hodnotenie",
+      "suggestion_submitted": "Navrhnutá úprava",
+      "feedback_submitted": "Spätná väzba od študenta",
+      "suggestion_accepted": "Úprava schválená",
+      "suggestion_rejected": "Úprava zamietnutá",
+      "suggestion_changes_requested": "Vyžiadané zmeny",
+      "feedback_reply": "Odpoveď na vašu spätnú väzbu"
     },
     "copy": {
       "assignment_graded": "Ohodnotené: {{assignment}}",
@@ -32712,7 +32893,16 @@
       "payments_checkout_failing": "Študenti teraz nemôžu nakupovať (neúspešné platby: {{count}})",
       "invitation_accepted": "Pozvánku prijal(a): {{actor}}",
       "peer_review_received": "Nová spätná väzba od spolužiaka k {{assignment}}",
-      "peer_review_flagged": "{{actor}} nahlásil(a) vzájomné hodnotenie k {{assignment}}"
+      "peer_review_flagged": "{{actor}} nahlásil(a) vzájomné hodnotenie k {{assignment}}",
+      "suggestion_submitted": "{{actor}} navrhol(a) úpravu v aktivite {{activity}}",
+      "suggestion_submitted_many": "{{count}} nových navrhnutých úprav v kurze {{course}}",
+      "feedback_submitted": "{{actor}} zanechal(a) spätnú väzbu k aktivite {{activity}}",
+      "feedback_submitted_many": "{{count}} nových spätných väzieb v kurze {{course}}",
+      "suggestion_accepted": "{{actor}} schválil(a) vašu úpravu v aktivite {{activity}}",
+      "suggestion_rejected": "{{actor}} zamietol(a) vašu úpravu v aktivite {{activity}}",
+      "suggestion_changes_requested": "{{actor}} požiadal(a) o zmeny vo vašej úprave v aktivite {{activity}}",
+      "feedback_reply": "{{actor}} odpovedal(a) na vašu spätnú väzbu k aktivite {{activity}}",
+      "feedback_reply_many": "{{count}} nových odpovedí na vašu spätnú väzbu k aktivite {{activity}}"
     },
     "routing": {
       "short": "Koho upozorniť",
@@ -33538,6 +33728,159 @@
         "suggested_hint": "Medián hodnotení od spolužiakov (započítané: {{n}}). Berte ho ako pomôcku.",
         "closed_new_attempt": "Automaticky uzavreté: študent začal nový pokus."
       }
+    }
+  },
+  "contributions": {
+    "hint": "Táto stránka je otvorená vylepšeniam. Prejdite myšou na odsek alebo označte text, aby ste navrhli úpravu či zanechali spätnú väzbu.",
+    "someone": "Niekto",
+    "actions": {
+      "suggest": "Navrhnúť úpravu",
+      "feedback": "Poslať spätnú väzbu"
+    },
+    "credits": {
+      "aria": "Napísané s pomocou: {{names}}",
+      "title": "Vylepšili"
+    },
+    "blocks": {
+      "block": "blok",
+      "paragraph": "odsek",
+      "heading": "nadpis",
+      "list": "zoznam",
+      "quote": "citát",
+      "code": "blok kódu",
+      "callout": "zvýraznený box",
+      "image": "obrázok",
+      "video": "video",
+      "audio": "audio",
+      "pdf": "PDF",
+      "math": "rovnica",
+      "quiz": "kvíz",
+      "embed": "vložený obsah",
+      "table": "tabuľka",
+      "link_preview": "náhľad odkazu",
+      "badge": "odznak",
+      "button": "tlačidlo",
+      "flashcard": "kartička",
+      "flashcards": "kartičky",
+      "scenario": "scenár",
+      "code_playground": "pieskovisko kódu",
+      "toggle": "rozbaľovacia sekcia",
+      "divider": "oddeľovač",
+      "magic_block": "magický blok",
+      "h5p": "aktivita H5P",
+      "library": "položka knižnice",
+      "user": "karta používateľa",
+      "personalized": "personalizovaný blok"
+    },
+    "suggest": {
+      "title": "Navrhnúť úpravu",
+      "text_hint": "Upravte text priamo tu. Označte slová, aby ste ich naformátovali, pridali odkaz alebo z nich urobili nadpis či zoznam.",
+      "block_hint": "Zmeňte tento prvok ({{block}}) jeho vlastnými ovládacími prvkami, ako v editore.",
+      "review_note": "Tím kurzu vašu úpravu skontroluje, než sa zverejní. Po schválení budete uvedený ako autor úpravy.",
+      "trusted_hint": "Ste dôveryhodný prispievateľ: vaša úprava sa zverejní hneď a budete uvedený ako autor.",
+      "remove_block": "Odstrániť tento prvok ({{block}})",
+      "remove_blocks": "Odstrániť tieto bloky",
+      "review_changes": "Skontrolovať zmeny",
+      "review_title": "Skontrolujte svoju úpravu",
+      "review_hint": "Toto sa mení. Pridajte krátku poznámku, aby to tím ľahšie posúdil.",
+      "keep_editing": "Pokračovať v úpravách",
+      "send": "Odoslať na kontrolu",
+      "publish": "Zverejniť úpravu",
+      "unchanged": "Zatiaľ ste nič nezmenili.",
+      "note_label": "Prečo táto zmena?",
+      "note_optional": "Nepovinné",
+      "note_placeholder": "Napríklad: vo vzorci chýbala zátvorka, zdroj: oficiálna dokumentácia."
+    },
+    "diff": {
+      "title": "Zmeny",
+      "inline": "V texte",
+      "split": "Vedľa seba",
+      "before": "Pred",
+      "after": "Po",
+      "added": "Pridáva prvok: {{block}}",
+      "removed": "Odstraňuje prvok: {{block}}",
+      "changed": "Mení prvok: {{block}}",
+      "format_only": "Zmenilo sa formátovanie",
+      "nothing": "Žiadne zmeny."
+    },
+    "feedback": {
+      "title": "Poslať spätnú väzbu",
+      "description": "Povedzte tímu kurzu, čo tu nie je v poriadku alebo čo by sa dalo zlepšiť. Tím vám môže odpovedať.",
+      "type_label": "O čo ide?",
+      "body_label": "Vaša spätná väzba",
+      "send": "Odoslať spätnú väzbu",
+      "types": {
+        "typo": "Preklep",
+        "unclear": "Nejasné",
+        "outdated": "Zastarané",
+        "wrong": "Chyba",
+        "suggestion": "Návrh"
+      },
+      "placeholders": {
+        "typo": "Ktoré slovo je napísané zle a ako má byť?",
+        "unclear": "Čo je ťažké pochopiť? Čo by pomohlo?",
+        "outdated": "Čo sa zmenilo a kde to môže tím overiť?",
+        "wrong": "Čo je nesprávne a čo je správne? Pomôže zdroj.",
+        "suggestion": "Čo by túto časť zlepšilo?"
+      },
+      "status": {
+        "open": "Otvorené",
+        "resolved": "Vyriešené"
+      },
+      "team": "{{name}} (tím kurzu)",
+      "you": "Vy",
+      "reply": "Odpovedať",
+      "reply_placeholder": "Napíšte odpoveď…"
+    },
+    "mine": {
+      "open_one": "Váš príspevok ({{count}} čaká)",
+      "open_few": "Vaše príspevky ({{count}} čakajú)",
+      "open_many": "Vaše príspevky ({{count}} čaká)",
+      "open_other": "Vaše príspevky ({{count}} čaká)",
+      "title": "Vaše príspevky",
+      "description": "Vaše navrhnuté úpravy a spätná väzba na tejto stránke a to, čo na ne povedal tím kurzu.",
+      "suggestions": "Návrhy",
+      "feedback": "Spätná väzba",
+      "no_suggestions": "Na tejto stránke zatiaľ nie sú žiadne návrhy",
+      "no_feedback": "Na tejto stránke zatiaľ nie je žiadna spätná väzba",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "Stiahnuť",
+      "revise": "Prepracovať",
+      "revise_title": "Prepracujte svoju úpravu"
+    },
+    "status": {
+      "pending": "Na kontrole",
+      "accepted": "Schválené",
+      "rejected": "Zamietnuté",
+      "changes_requested": "Vyžiadané zmeny",
+      "withdrawn": "Stiahnuté"
+    },
+    "toasts": {
+      "suggested": "Ďakujeme! Vaša úprava bola odoslaná na kontrolu.",
+      "published": "Ďakujeme! Vaša úprava je zverejnená.",
+      "feedback_sent": "Ďakujeme! Vaša spätná väzba bola odoslaná tímu kurzu.",
+      "withdrawn": "Návrh bol stiahnutý"
+    },
+    "errors": {
+      "generic": "Niečo sa pokazilo. Skúste to znova."
+    },
+    "course": {
+      "title": "Vylepšené komunitou",
+      "names_more_one": "{{names}} a ďalší {{count}}",
+      "names_more_few": "{{names}} a ďalší {{count}}",
+      "names_more_many": "{{names}} a ďalších {{count}}",
+      "names_more_other": "{{names}} a ďalších {{count}}",
+      "edits_one": "{{count}} schválená úprava",
+      "edits_few": "{{count}} schválené úpravy",
+      "edits_many": "{{count}} schválenej úpravy",
+      "edits_other": "{{count}} schválených úprav"
+    },
+    "profile": {
+      "title": "Vylepšené kurzy",
+      "total_one": "{{count}} schválená úprava",
+      "total_few": "{{count}} schválené úpravy",
+      "total_many": "{{count}} schválenej úpravy",
+      "total_other": "{{count}} schválených úprav"
     }
   }
 }
