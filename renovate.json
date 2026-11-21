@@ -145,6 +145,12 @@
       "description": "rangeStrategy bump raises peer dependency floors to the newest release, which locks out consumers of the published packages on older versions that still work. Widen instead.",
       "matchDepTypes": ["peerDependencies"],
       "rangeStrategy": "widen"
+    },
+    {
+      "description": "@sentry/nextjs 11.13+ adds a \"bun\" export condition ahead of \"node\". The web image runs the Next.js standalone server on Bun, which then resolves build/cjs/index.bun.js and @sentry/bun; standalone tracing copies only the node entry, so the server fails to start. Lift this cap once the image traces the bun entry or runs on Node.",
+      "matchFileNames": ["apps/web/package.json"],
+      "matchPackageNames": ["@sentry/nextjs"],
+      "allowedVersions": "<11.13"
     }
   ]
 }
