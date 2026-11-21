@@ -116,6 +116,8 @@ async def _load_thread(
         select(ActivityCommentThread).where(
             ActivityCommentThread.thread_uuid == thread_uuid,
             ActivityCommentThread.activity_id == activity.id,
+            # Learner feedback has its own endpoints (contributions).
+            ActivityCommentThread.kind == "comment",
         )
     )).scalars().first()
     if not thread:
@@ -394,6 +396,7 @@ async def list_threads(
         select(ActivityCommentThread)
         .where(
             ActivityCommentThread.activity_id == activity.id,
+            ActivityCommentThread.kind == "comment",
             ActivityCommentThread.locale == code if code else ActivityCommentThread.locale.is_(None),  # type: ignore[union-attr]
         )
         .order_by(ActivityCommentThread.id)

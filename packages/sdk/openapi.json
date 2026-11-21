@@ -23584,6 +23584,1128 @@
         }
       }
     },
+    "/api/v1/contributions/courses/{course_uuid}/settings": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Get Settings",
+        "description": "The course's contribution settings (people who may edit the course).",
+        "operationId": "api_get_settings_api_v1_contributions_courses__course_uuid__settings_get",
+        "parameters": [
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Update Settings",
+        "description": "Turn contributions on or off and pick who may contribute (course owners and admins).",
+        "operationId": "api_update_settings_api_v1_contributions_courses__course_uuid__settings_put",
+        "parameters": [
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/courses/{course_uuid}/summary": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Summary",
+        "description": "Counts for the review queue: pending suggestions, open feedback, contributors.",
+        "operationId": "api_summary_api_v1_contributions_courses__course_uuid__summary_get",
+        "parameters": [
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/courses/{course_uuid}/suggestions": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Course Suggestions",
+        "description": "The review queue, newest first, with where each open suggestion lands on the page now.",
+        "operationId": "api_course_suggestions_api_v1_contributions_courses__course_uuid__suggestions_get",
+        "parameters": [
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "open",
+                    "pending",
+                    "accepted",
+                    "rejected",
+                    "changes_requested",
+                    "withdrawn"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/courses/{course_uuid}/feedback": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Course Feedback",
+        "description": "Feedback left on the course's pages.",
+        "operationId": "api_course_feedback_api_v1_contributions_courses__course_uuid__feedback_get",
+        "parameters": [
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "open",
+                    "resolved"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/courses/{course_uuid}/contributors": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Course Contributors",
+        "description": "People credited on the course. ``manage=true`` (reviewers) includes trusted and blocked flags.",
+        "operationId": "api_course_contributors_api_v1_contributions_courses__course_uuid__contributors_get",
+        "parameters": [
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          },
+          {
+            "name": "manage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Manage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributorList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/courses/{course_uuid}/contributors/{user_id}": {
+      "put": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Update Contributor",
+        "description": "Mark a contributor trusted (publishes without review) or blocked.",
+        "operationId": "api_update_contributor_api_v1_contributions_courses__course_uuid__contributors__user_id__put",
+        "parameters": [
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContributorUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributorRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/activities/{activity_uuid}/context": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Activity Context",
+        "description": "Whether the viewer may suggest or give feedback here, and who helped write each block.",
+        "operationId": "api_activity_context_api_v1_contributions_activities__activity_uuid__context_get",
+        "parameters": [
+          {
+            "name": "activity_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Activity Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityContributionContext"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/activities/{activity_uuid}/suggestions": {
+      "post": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Create Suggestion",
+        "description": "Suggest replacing, adding or removing blocks of the page.",
+        "operationId": "api_create_suggestion_api_v1_contributions_activities__activity_uuid__suggestions_post",
+        "parameters": [
+          {
+            "name": "activity_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Activity Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/activities/{activity_uuid}/feedback": {
+      "post": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Create Feedback",
+        "description": "Leave feedback on a passage or block (typo, unclear, outdated, wrong, suggestion).",
+        "operationId": "api_create_feedback_api_v1_contributions_activities__activity_uuid__feedback_post",
+        "parameters": [
+          {
+            "name": "activity_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Activity Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/activities/{activity_uuid}/feedback/mine": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api My Feedback",
+        "description": "My feedback on this page and the team's replies.",
+        "operationId": "api_my_feedback_api_v1_contributions_activities__activity_uuid__feedback_mine_get",
+        "parameters": [
+          {
+            "name": "activity_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Activity Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/suggestions/mine": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api My Suggestions",
+        "description": "My suggestions, optionally on one page.",
+        "operationId": "api_my_suggestions_api_v1_contributions_suggestions_mine_get",
+        "parameters": [
+          {
+            "name": "activity_uuid",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Activity Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/suggestions/{suggestion_uuid}": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Get Suggestion",
+        "operationId": "api_get_suggestion_api_v1_contributions_suggestions__suggestion_uuid__get",
+        "parameters": [
+          {
+            "name": "suggestion_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Suggestion Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Revise Suggestion",
+        "description": "The author's revised version; goes back to review.",
+        "operationId": "api_revise_suggestion_api_v1_contributions_suggestions__suggestion_uuid__put",
+        "parameters": [
+          {
+            "name": "suggestion_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Suggestion Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestionRevise"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/suggestions/{suggestion_uuid}/accept": {
+      "post": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Accept Suggestion",
+        "description": "Apply the suggestion (optionally edited) as a new page version.",
+        "operationId": "api_accept_suggestion_api_v1_contributions_suggestions__suggestion_uuid__accept_post",
+        "parameters": [
+          {
+            "name": "suggestion_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Suggestion Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestionAccept"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/suggestions/{suggestion_uuid}/reject": {
+      "post": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Reject Suggestion",
+        "operationId": "api_reject_suggestion_api_v1_contributions_suggestions__suggestion_uuid__reject_post",
+        "parameters": [
+          {
+            "name": "suggestion_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Suggestion Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestionDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/suggestions/{suggestion_uuid}/request-changes": {
+      "post": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Request Changes",
+        "operationId": "api_request_changes_api_v1_contributions_suggestions__suggestion_uuid__request_changes_post",
+        "parameters": [
+          {
+            "name": "suggestion_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Suggestion Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestionDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/suggestions/{suggestion_uuid}/withdraw": {
+      "post": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Withdraw Suggestion",
+        "operationId": "api_withdraw_suggestion_api_v1_contributions_suggestions__suggestion_uuid__withdraw_post",
+        "parameters": [
+          {
+            "name": "suggestion_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Suggestion Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/feedback/{thread_uuid}/replies": {
+      "post": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Reply Feedback",
+        "operationId": "api_reply_feedback_api_v1_contributions_feedback__thread_uuid__replies_post",
+        "parameters": [
+          {
+            "name": "thread_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Thread Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackReply"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/feedback/{thread_uuid}/status": {
+      "put": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api Feedback Status",
+        "operationId": "api_feedback_status_api_v1_contributions_feedback__thread_uuid__status_put",
+        "parameters": [
+          {
+            "name": "thread_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Thread Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackStatus"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contributions/users/{user_uuid}/contributions": {
+      "get": {
+        "tags": [
+          "contributions"
+        ],
+        "summary": "Api User Contributions",
+        "description": "Courses a person improved in this org (only those the viewer can open).",
+        "operationId": "api_user_contributions_api_v1_contributions_users__user_uuid__contributions_get",
+        "parameters": [
+          {
+            "name": "user_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Uuid"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserContributions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/notes": {
       "get": {
         "tags": [
@@ -40338,6 +41460,74 @@
         }
       }
     },
+    "/api/v1/tools/list_course_contributions": {
+      "post": {
+        "tags": [
+          "tools/teaching"
+        ],
+        "summary": "Course contributions",
+        "description": "Read a course's contribution queue: open suggested edits from learners (a summary, the author's note, the text before and after, and whether it still fits the page) and open feedback on passages (typo, unclear, outdated, wrong, suggestion). Use it to summarize what learners are asking for. Accepting or rejecting is done by a person in the course's Contributions tab. Needs edit rights on the course.\n\nTier: read. Toolset: teaching.\nToken right needed: courses.action_update.",
+        "operationId": "tool_list_course_contributions",
+        "parameters": [
+          {
+            "name": "X-Approval-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Approval-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ListContributionsParams"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "403": {
+            "description": "The token lacks the right, or the plan lacks the feature"
+          },
+          "404": {
+            "description": "Unknown tool or object, or not available to this token"
+          },
+          "409": {
+            "description": "Needs the token creator's approval (approval_id, approval_url)"
+          },
+          "422": {
+            "description": "Invalid arguments"
+          }
+        }
+      }
+    },
     "/api/v1/tools/list_paths": {
       "post": {
         "tags": [
@@ -48924,6 +50114,35 @@
         "title": "APITokenUpdate",
         "description": "Model for updating an API token.\n\nOmitted fields are left as they are. ``description`` and ``expires_at``\ncan be cleared by sending ``null`` (or an empty string)."
       },
+      "AcceptTarget": {
+        "properties": {
+          "start_index": {
+            "type": "integer",
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Start Index"
+          },
+          "length": {
+            "type": "integer",
+            "maximum": 160,
+            "minimum": 0,
+            "title": "Length"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_index",
+          "length",
+          "version"
+        ],
+        "title": "AcceptTarget",
+        "description": "The exact range of the current page to replace, picked by a reviewer\nwhen the suggestion no longer fits the page."
+      },
       "AccessBody": {
         "properties": {
           "resource_uuids": {
@@ -49040,6 +50259,67 @@
           "message"
         ],
         "title": "ActivityAIChatSessionResponse"
+      },
+      "ActivityContributionContext": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "can_suggest": {
+            "type": "boolean",
+            "title": "Can Suggest",
+            "default": false
+          },
+          "can_feedback": {
+            "type": "boolean",
+            "title": "Can Feedback",
+            "default": false
+          },
+          "can_review": {
+            "type": "boolean",
+            "title": "Can Review",
+            "default": false
+          },
+          "publishes_directly": {
+            "type": "boolean",
+            "title": "Publishes Directly",
+            "default": false
+          },
+          "current_version": {
+            "type": "integer",
+            "title": "Current Version",
+            "default": 1
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "credits": {
+            "items": {
+              "$ref": "#/components/schemas/BlockCredit"
+            },
+            "type": "array",
+            "title": "Credits",
+            "default": []
+          },
+          "my_open_suggestions": {
+            "type": "integer",
+            "title": "My Open Suggestions",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ActivityContributionContext",
+        "description": "What the learner page needs: may I suggest, and who wrote what."
       },
       "ActivityCreate": {
         "properties": {
@@ -52457,6 +53737,32 @@
         ],
         "title": "BatchExportRequest",
         "description": "Request model for batch course export.\n\nSECURITY: Limited to 20 courses per request to prevent resource exhaustion."
+      },
+      "BlockCredit": {
+        "properties": {
+          "block_index": {
+            "type": "integer",
+            "title": "Block Index"
+          },
+          "block_fp": {
+            "type": "string",
+            "title": "Block Fp"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/ContributorUser"
+            },
+            "type": "array",
+            "title": "Users"
+          }
+        },
+        "type": "object",
+        "required": [
+          "block_index",
+          "block_fp",
+          "users"
+        ],
+        "title": "BlockCredit"
       },
       "BlockRead": {
         "properties": {
@@ -56033,6 +57339,27 @@
         "type": "object",
         "title": "CommunityUpdate"
       },
+      "ContributionSummary": {
+        "properties": {
+          "pending_suggestions": {
+            "type": "integer",
+            "title": "Pending Suggestions",
+            "default": 0
+          },
+          "open_feedback": {
+            "type": "integer",
+            "title": "Open Feedback",
+            "default": 0
+          },
+          "contributors": {
+            "type": "integer",
+            "title": "Contributors",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ContributionSummary"
+      },
       "ContributorChange": {
         "properties": {
           "member": {
@@ -56081,6 +57408,142 @@
           "member"
         ],
         "title": "ContributorChange"
+      },
+      "ContributorList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ContributorRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ContributorList"
+      },
+      "ContributorRead": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/ContributorUser"
+          },
+          "accepted_count": {
+            "type": "integer",
+            "title": "Accepted Count"
+          },
+          "trusted": {
+            "type": "boolean",
+            "title": "Trusted",
+            "default": false
+          },
+          "blocked": {
+            "type": "boolean",
+            "title": "Blocked",
+            "default": false
+          },
+          "first_contribution_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Contribution At"
+          },
+          "last_contribution_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Contribution At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "accepted_count"
+        ],
+        "title": "ContributorRead"
+      },
+      "ContributorUpdate": {
+        "properties": {
+          "trusted": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trusted"
+          },
+          "blocked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked"
+          }
+        },
+        "type": "object",
+        "title": "ContributorUpdate"
+      },
+      "ContributorUser": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_uuid": {
+            "type": "string",
+            "title": "User Uuid"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "first_name": {
+            "type": "string",
+            "title": "First Name",
+            "default": ""
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name",
+            "default": ""
+          },
+          "avatar_image": {
+            "type": "string",
+            "title": "Avatar Image",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_uuid",
+          "username"
+        ],
+        "title": "ContributorUser"
       },
       "ConversationCreate": {
         "properties": {
@@ -60762,6 +62225,242 @@
         ],
         "title": "FeatureSettings"
       },
+      "FeedbackComment": {
+        "properties": {
+          "comment_uuid": {
+            "type": "string",
+            "title": "Comment Uuid"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContributorUser"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "from_team": {
+            "type": "boolean",
+            "title": "From Team",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "comment_uuid",
+          "body",
+          "created_at"
+        ],
+        "title": "FeedbackComment"
+      },
+      "FeedbackCreate": {
+        "properties": {
+          "feedback_type": {
+            "type": "string",
+            "enum": [
+              "typo",
+              "unclear",
+              "outdated",
+              "wrong",
+              "suggestion"
+            ],
+            "title": "Feedback Type"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "quote": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Quote",
+            "default": ""
+          },
+          "block_index": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000,
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Index"
+          },
+          "block_fp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Fp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feedback_type",
+          "body"
+        ],
+        "title": "FeedbackCreate"
+      },
+      "FeedbackList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "FeedbackList"
+      },
+      "FeedbackRead": {
+        "properties": {
+          "thread_uuid": {
+            "type": "string",
+            "title": "Thread Uuid"
+          },
+          "feedback_type": {
+            "type": "string",
+            "title": "Feedback Type"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "resolved"
+            ],
+            "title": "Status"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote",
+            "default": ""
+          },
+          "anchor": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContributorUser"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "activity_uuid": {
+            "type": "string",
+            "title": "Activity Uuid"
+          },
+          "activity_name": {
+            "type": "string",
+            "title": "Activity Name",
+            "default": ""
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackComment"
+            },
+            "type": "array",
+            "title": "Comments",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "thread_uuid",
+          "feedback_type",
+          "status",
+          "course_uuid",
+          "activity_uuid",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "FeedbackRead"
+      },
+      "FeedbackReply": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "FeedbackReply"
+      },
+      "FeedbackStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "resolved"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "FeedbackStatus"
+      },
       "FetchParams": {
         "properties": {
           "id": {
@@ -64535,6 +66234,30 @@
         },
         "type": "object",
         "title": "ListCommunitiesParams"
+      },
+      "ListContributionsParams": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Course Uuid",
+            "description": "The course (course_...)."
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 50,
+            "minimum": 1,
+            "title": "Limit",
+            "description": "At most this many suggestions and this many feedback threads.",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid"
+        ],
+        "title": "ListContributionsParams"
       },
       "ListCourseLanguagesParams": {
         "properties": {
@@ -73972,6 +75695,113 @@
         ],
         "title": "SetTextOp"
       },
+      "SettingsRead": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "audience": {
+            "type": "string",
+            "enum": [
+              "enrolled",
+              "members",
+              "signed_in"
+            ],
+            "title": "Audience",
+            "default": "enrolled"
+          },
+          "allow_suggestions": {
+            "type": "boolean",
+            "title": "Allow Suggestions",
+            "default": true
+          },
+          "allow_feedback": {
+            "type": "boolean",
+            "title": "Allow Feedback",
+            "default": true
+          },
+          "trusted_publish": {
+            "type": "boolean",
+            "title": "Trusted Publish",
+            "default": false
+          },
+          "plan_allowed": {
+            "type": "boolean",
+            "title": "Plan Allowed",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "SettingsRead"
+      },
+      "SettingsUpdate": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "audience": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "enrolled",
+                  "members",
+                  "signed_in"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience"
+          },
+          "allow_suggestions": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allow Suggestions"
+          },
+          "allow_feedback": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allow Feedback"
+          },
+          "trusted_publish": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trusted Publish"
+          }
+        },
+        "type": "object",
+        "title": "SettingsUpdate"
+      },
       "ShortAnswerContent": {
         "properties": {
           "type": {
@@ -74947,6 +76777,373 @@
         ],
         "title": "SuggestStructureRequest",
         "description": "Request to AI for structure suggestion."
+      },
+      "SuggestionAccept": {
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array",
+                "maxItems": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AcceptTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Note",
+            "default": ""
+          },
+          "expected_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Updated At"
+          }
+        },
+        "type": "object",
+        "title": "SuggestionAccept"
+      },
+      "SuggestionCreate": {
+        "properties": {
+          "base_version": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Base Version"
+          },
+          "start_index": {
+            "type": "integer",
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Start Index"
+          },
+          "before": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Before"
+          },
+          "after": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "After"
+          },
+          "prev_fp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Fp"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_version",
+          "start_index"
+        ],
+        "title": "SuggestionCreate"
+      },
+      "SuggestionDecision": {
+        "properties": {
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SuggestionDecision"
+      },
+      "SuggestionList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SuggestionRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "SuggestionList"
+      },
+      "SuggestionPlacement": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "clean",
+              "moved",
+              "conflict",
+              "outdated"
+            ],
+            "title": "State"
+          },
+          "current_version": {
+            "type": "integer",
+            "title": "Current Version"
+          },
+          "start_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Index"
+          },
+          "current": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Current",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "current_version"
+        ],
+        "title": "SuggestionPlacement",
+        "description": "Where the suggestion lands on the page as it is now."
+      },
+      "SuggestionRead": {
+        "properties": {
+          "suggestion_uuid": {
+            "type": "string",
+            "title": "Suggestion Uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "rejected",
+              "changes_requested",
+              "withdrawn"
+            ],
+            "title": "Status"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContributorUser"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContributorUser"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "course_name": {
+            "type": "string",
+            "title": "Course Name",
+            "default": ""
+          },
+          "activity_uuid": {
+            "type": "string",
+            "title": "Activity Uuid"
+          },
+          "activity_name": {
+            "type": "string",
+            "title": "Activity Name",
+            "default": ""
+          },
+          "base_version": {
+            "type": "integer",
+            "title": "Base Version"
+          },
+          "start_index": {
+            "type": "integer",
+            "title": "Start Index"
+          },
+          "before": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Before",
+            "default": []
+          },
+          "after": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "After",
+            "default": []
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": ""
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "default": ""
+          },
+          "review_note": {
+            "type": "string",
+            "title": "Review Note",
+            "default": ""
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "applied_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Version"
+          },
+          "auto_published": {
+            "type": "boolean",
+            "title": "Auto Published",
+            "default": false
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "placement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuggestionPlacement"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "suggestion_uuid",
+          "status",
+          "course_uuid",
+          "activity_uuid",
+          "base_version",
+          "start_index",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SuggestionRead"
+      },
+      "SuggestionRevise": {
+        "properties": {
+          "after": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "After"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "SuggestionRevise"
       },
       "SyncParams": {
         "properties": {},
@@ -77617,6 +79814,66 @@
         ],
         "title": "UploadedFileInfo",
         "description": "Info about a single uploaded file."
+      },
+      "UserContributionCourse": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "course_name": {
+            "type": "string",
+            "title": "Course Name"
+          },
+          "thumbnail_image": {
+            "type": "string",
+            "title": "Thumbnail Image",
+            "default": ""
+          },
+          "accepted_count": {
+            "type": "integer",
+            "title": "Accepted Count"
+          },
+          "last_contribution_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Contribution At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "course_name",
+          "accepted_count"
+        ],
+        "title": "UserContributionCourse"
+      },
+      "UserContributions": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserContributionCourse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_accepted": {
+            "type": "integer",
+            "title": "Total Accepted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_accepted"
+        ],
+        "title": "UserContributions"
       },
       "UserCreate": {
         "properties": {

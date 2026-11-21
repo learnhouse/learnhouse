@@ -5227,7 +5227,9 @@
           "seo": "SEO",
           "certification": "Certyfikacja",
           "analytics": "Analityka",
-          "schedule": "Harmonogram"
+          "schedule": "Harmonogram",
+          "authors": "Autorzy",
+          "contributions": "Wkład"
         },
         "access_denied": {
           "title": "Odmowa dostępu",
@@ -6524,6 +6526,179 @@
           "source": "Źródło"
         },
         "tab": "Języki"
+      },
+      "authors": {
+        "title": "Autorzy",
+        "description": "Osoby z Twojej organizacji, które tworzą ten kurs. Widać je w linii autorów kursu i mogą go edytować, zależnie od roli.",
+        "search_placeholder": "Szukaj członków po imieniu lub nazwie użytkownika, aby dodać ich jako autorów…",
+        "already_author": "Już jest autorem",
+        "count_one": "{{count}} autor",
+        "count_few": "{{count}} autorów",
+        "count_many": "{{count}} autorów",
+        "count_other": "{{count}} autora",
+        "selected_one": "Wybrano {{count}} autora",
+        "selected_few": "Wybrano {{count}} autorów",
+        "selected_many": "Wybrano {{count}} autorów",
+        "selected_other": "Wybrano {{count}} autora",
+        "roles_section": "Role autorów",
+        "remove_title_one": "Usunąć {{count}} autora?",
+        "remove_title_few": "Usunąć {{count}} autorów?",
+        "remove_title_many": "Usunąć {{count}} autorów?",
+        "remove_title_other": "Usunąć {{count}} autora?",
+        "remove_message": "Tracą dostęp do edycji tego kursu i znikają z jego linii autorów. Możesz je później dodać ponownie.",
+        "roles": {
+          "creator": "Właściciel",
+          "maintainer": "Opiekun",
+          "contributor": "Redaktor",
+          "reporter": "Zgłaszający"
+        },
+        "statuses": {
+          "active": "Aktywny",
+          "inactive": "Nieaktywny",
+          "pending": "Poproszono"
+        },
+        "requests": {
+          "title": "Prośby o dołączenie jako autor",
+          "description": "Wybierz, czy członkowie mogą prosić o dołączenie do tego kursu jako autorzy.",
+          "active": "Aktywne",
+          "open_title": "Przyjmuj prośby",
+          "open_description": "Członkowie mogą prosić o status autora. Prośby pojawiają się powyżej do zatwierdzenia.",
+          "open_confirm_title": "Przyjmować prośby o status autora?",
+          "open_confirm_message": "Członkowie będą mogli prosić o dołączenie do tego kursu jako autorzy.",
+          "open_confirm_button": "Przyjmuj prośby",
+          "closed_title": "Bez próśb",
+          "closed_description": "Autorami są tylko osoby, które tu dodasz.",
+          "closed_confirm_title": "Przestać przyjmować prośby?",
+          "closed_confirm_message": "Członkowie nie będą już mogli prosić o dołączenie do tego kursu jako autorzy.",
+          "closed_confirm_button": "Przestań przyjmować"
+        },
+        "community": {
+          "title": "Współtwórcy ze społeczności",
+          "description": "Osoby, które ulepszają kurs ze strony ucznia, nie są autorami. Są wymieniane na stronie kursu i przy tym, co pomogły napisać.",
+          "open": "Otwórz Wkład",
+          "none": "Nikogo jeszcze nie wymieniono.",
+          "count_one": "{{count}} wymieniony współtwórca",
+          "count_few": "{{count}} wymienionych współtwórców",
+          "count_many": "{{count}} wymienionych współtwórców",
+          "count_other": "{{count}} wymienionego współtwórcy"
+        }
+      },
+      "contributions": {
+        "settings": {
+          "title": "Wkład społeczności",
+          "description": "Pozwól uczniom ulepszać ten kurs jak wiki: proponują zmiany lub zostawiają opinie bezpośrednio na stronie, Ty sprawdzasz, a każda zaakceptowana zmiana jest uznana.",
+          "enable": "Włącz wkład społeczności",
+          "plan_required": "Wkład społeczności jest dostępny w planie Standard i wyższych.",
+          "see_plans": "Zobacz plany",
+          "audience": "Kto może wnosić wkład",
+          "suggestions": "Proponowane zmiany",
+          "suggestions_hint": "Współtwórcy mogą edytować tekst i bloki na stronie ucznia i wysłać zmianę do sprawdzenia.",
+          "feedback": "Opinie",
+          "feedback_hint": "Współtwórcy mogą oznaczyć fragment jako literówkę, niejasny, nieaktualny lub błędny albo zaproponować pomysł.",
+          "trusted": "Zaufani współtwórcy publikują od razu",
+          "trusted_hint": "Zmiany od osób oznaczonych jako zaufane trafiają na stronę bez sprawdzania. Nadal możesz przywrócić dowolną wcześniejszą wersję.",
+          "limits": "Aby ograniczyć spam, każda osoba może wysłać do 20 propozycji i 20 opinii na godzinę, a w jednym kursie może czekać na sprawdzenie najwyżej 25. Zablokowane osoby nie mogą wnosić wkładu."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "Zapisani uczniowie",
+            "description": "Osoby, które zaczęły ten kurs."
+          },
+          "members": {
+            "title": "Członkowie organizacji",
+            "description": "Każdy z Twojej organizacji."
+          },
+          "signed_in": {
+            "title": "Każdy zalogowany",
+            "description": "Każdy z kontem, kto może otworzyć kurs."
+          }
+        },
+        "stats": {
+          "pending": "Czeka na sprawdzenie",
+          "feedback": "Otwarte opinie",
+          "contributors": "Współtwórcy"
+        },
+        "tabs": {
+          "suggestions": "Propozycje",
+          "feedback": "Opinie",
+          "contributors": "Współtwórcy",
+          "settings": "Ustawienia"
+        },
+        "filters": {
+          "open": "Otwarte",
+          "accepted": "Zaakceptowane",
+          "rejected": "Odrzucone",
+          "all": "Wszystkie",
+          "resolved": "Rozwiązane"
+        },
+        "empty": {
+          "suggestions_open": "Nic do sprawdzenia",
+          "suggestions_other": "Brak propozycji",
+          "suggestions_hint": "Gdy ktoś zaproponuje zmianę na stronie ucznia, pojawi się tutaj.",
+          "feedback_open": "Brak otwartych opinii",
+          "feedback_resolved": "Brak rozwiązanych opinii",
+          "contributors": "Brak współtwórców",
+          "contributors_hint": "Osoby pojawiają się tutaj, gdy jedna z ich zmian zostanie zaakceptowana."
+        },
+        "placement": {
+          "clean": "Pasuje do strony",
+          "clean_hint": "Zmieniany tekst nadal jest na stronie, w tym samym miejscu.",
+          "moved": "Dopasowano ponownie",
+          "moved_hint": "Strona zmieniła się gdzie indziej; ta zmiana nadal pasuje bez problemów.",
+          "conflict": "Konflikt",
+          "conflict_hint": "Zmieniany tekst został od tego czasu edytowany.",
+          "outdated": "Nieaktualne",
+          "outdated_hint": "Strona zmieniła się zbyt mocno, by dopasować tę zmianę.",
+          "conflict_explain": "Fragment strony, którego dotyczy ta zmiana, został od tamtej pory przepisany. Porównaj obie wersje, potem użyj Edytuj i zaakceptuj, by je połączyć, albo odrzuć zmianę.",
+          "page_now": "Strona teraz",
+          "suggested": "Propozycja"
+        },
+        "review": {
+          "note": "Notatka:",
+          "asked": "Zapytano:",
+          "auto_published": "Opublikowano od razu",
+          "accept": "Zaakceptuj",
+          "accepted": "Zaakceptowano. Strona została zaktualizowana, a wersja zapisana.",
+          "edit_accept": "Edytuj i zaakceptuj",
+          "edit_title": "Edytuj i zaakceptuj",
+          "edit_hint": "Dostosuj propozycję, zanim trafi na stronę. Współtwórca nadal jest wymieniany.",
+          "edit_conflict_hint": "Zaczynasz od propozycji. Połącz ją z bieżącym tekstem strony, a potem zaakceptuj: zastąpi bieżący tekst pokazany po lewej.",
+          "conflict_toast": "Strona zmieniła się od tej propozycji. Przejrzyj konflikt i rozwiąż go.",
+          "reject": "Odrzuć",
+          "request_changes": "Poproś o zmiany",
+          "reject_title": "Odrzucić tę propozycję?",
+          "reject_description": "Współtwórca dowie się o odrzuceniu, razem z Twoim powodem, jeśli go podasz.",
+          "reject_label": "Powód",
+          "reject_confirm": "Odrzuć",
+          "changes_title": "Poproś o zmiany",
+          "changes_description": "Współtwórca może poprawić zmianę i wysłać ją ponownie.",
+          "changes_label": "Co należy zmienić?",
+          "changes_confirm": "Wyślij",
+          "rejected": "Propozycję odrzucono",
+          "changes_sent": "Odesłano do współtwórcy",
+          "revised_toast": "Autor zmienił tę sugestię. Przejrzyj nową wersję."
+        },
+        "feedback": {
+          "reply_placeholder": "Odpowiedz uczniowi…",
+          "replied": "Odpowiedź wysłana",
+          "resolve": "Oznacz jako rozwiązane",
+          "reopen": "Otwórz ponownie"
+        },
+        "contributors": {
+          "person": "Współtwórca",
+          "accepted": "Zmiany",
+          "last": "Ostatnia zmiana",
+          "trust": "Zaufanie",
+          "trusted": "Zaufany",
+          "blocked": "Zablokowany",
+          "block": "Zablokuj",
+          "unblock": "Odblokuj",
+          "edits_one": "{{count}} zmiana",
+          "edits_few": "{{count}} zmiany",
+          "edits_many": "{{count}} zmian",
+          "edits_other": "{{count}} zmiany",
+          "trusted_off": "Zaufani współtwórcy publikują bez sprawdzania tylko wtedy, gdy to ustawienie jest włączone."
+        }
       }
     },
     "organization": {
@@ -30792,7 +30967,13 @@
       "plan_downgraded": "Przejście na plan Bezpłatny",
       "plan_restored": "Plan przywrócony",
       "payments_checkout_failing": "Nieudane płatności",
-      "invitation_accepted": "Zaproszenie przyjęte"
+      "invitation_accepted": "Zaproszenie przyjęte",
+      "suggestion_submitted": "Proponowana zmiana",
+      "feedback_submitted": "Opinia ucznia",
+      "suggestion_accepted": "Zmiana zaakceptowana",
+      "suggestion_rejected": "Zmiana odrzucona",
+      "suggestion_changes_requested": "Poproszono o zmiany",
+      "feedback_reply": "Odpowiedź na Twoją opinię"
     },
     "copy": {
       "assignment_graded": "Oceniono: {{assignment}}",
@@ -30855,7 +31036,16 @@
       "plan_downgraded": "Korzystasz teraz z planu Bezpłatny. Nic nie zostało usunięte",
       "plan_restored": "Witaj ponownie w planie {{plan}}",
       "payments_checkout_failing": "Uczniowie nie mogą teraz nic kupić (nieudane płatności: {{count}})",
-      "invitation_accepted": "{{actor}} przyjmuje Twoje zaproszenie"
+      "invitation_accepted": "{{actor}} przyjmuje Twoje zaproszenie",
+      "suggestion_submitted": "{{actor}} zaproponował(a) zmianę w: {{activity}}",
+      "suggestion_submitted_many": "{{count}} nowych proponowanych zmian w kursie {{course}}",
+      "feedback_submitted": "{{actor}} zostawił(a) opinię w: {{activity}}",
+      "feedback_submitted_many": "{{count}} nowych opinii w kursie {{course}}",
+      "suggestion_accepted": "{{actor}} zaakceptował(a) Twoją zmianę w: {{activity}}",
+      "suggestion_rejected": "{{actor}} odrzucił(a) Twoją zmianę w: {{activity}}",
+      "suggestion_changes_requested": "{{actor}} poprosił(a) o poprawki do Twojej zmiany w: {{activity}}",
+      "feedback_reply": "{{actor}} odpowiedział(a) na Twoją opinię w: {{activity}}",
+      "feedback_reply_many": "{{count}} nowych odpowiedzi na Twoją opinię w: {{activity}}"
     },
     "routing": {
       "short": "Kto dostaje powiadomienia",
@@ -31165,6 +31355,159 @@
       "seat_limit_exceeded": "w użyciu jest więcej miejsc, niż obejmuje licencja",
       "grace_expired": "serwer licencji był zbyt długo nieosiągalny",
       "unknown": "nie udało się zweryfikować licencji"
+    }
+  },
+  "contributions": {
+    "hint": "Ta strona jest otwarta na ulepszenia. Najedź na akapit lub zaznacz tekst, aby zaproponować zmianę albo zostawić opinię.",
+    "someone": "Ktoś",
+    "actions": {
+      "suggest": "Zaproponuj zmianę",
+      "feedback": "Podziel się opinią"
+    },
+    "credits": {
+      "aria": "Napisane z pomocą: {{names}}",
+      "title": "Ulepszone przez"
+    },
+    "blocks": {
+      "block": "blok",
+      "paragraph": "akapit",
+      "heading": "nagłówek",
+      "list": "lista",
+      "quote": "cytat",
+      "code": "blok kodu",
+      "callout": "wyróżnienie",
+      "image": "obraz",
+      "video": "wideo",
+      "audio": "audio",
+      "pdf": "PDF",
+      "math": "równanie",
+      "quiz": "quiz",
+      "embed": "osadzona treść",
+      "table": "tabela",
+      "link_preview": "podgląd linku",
+      "badge": "odznaka",
+      "button": "przycisk",
+      "flashcard": "fiszka",
+      "flashcards": "fiszki",
+      "scenario": "scenariusz",
+      "code_playground": "piaskownica kodu",
+      "toggle": "sekcja rozwijana",
+      "divider": "separator",
+      "magic_block": "magiczny blok",
+      "h5p": "aktywność H5P",
+      "library": "element biblioteki",
+      "user": "karta użytkownika",
+      "personalized": "spersonalizowany blok"
+    },
+    "suggest": {
+      "title": "Zaproponuj zmianę",
+      "text_hint": "Edytuj tekst bezpośrednio tutaj. Zaznacz słowa, aby je sformatować, dodać link albo zamienić na nagłówek lub listę.",
+      "block_hint": "Zmień ten element ({{block}}) jego własnymi kontrolkami, tak jak w edytorze.",
+      "review_note": "Zespół kursu sprawdza Twoją zmianę, zanim trafi na stronę. Po zaakceptowaniu zostaniesz wymieniony.",
+      "trusted_hint": "Jesteś zaufanym współtwórcą: Twoja zmiana pojawia się od razu i zostaniesz wymieniony.",
+      "remove_block": "Usuń ten element ({{block}})",
+      "remove_blocks": "Usuń te bloki",
+      "review_changes": "Przejrzyj zmiany",
+      "review_title": "Sprawdź swoją zmianę",
+      "review_hint": "Oto, co się zmienia. Dodaj krótką notatkę, żeby zespołowi łatwiej było ją ocenić.",
+      "keep_editing": "Edytuj dalej",
+      "send": "Wyślij do sprawdzenia",
+      "publish": "Opublikuj zmianę",
+      "unchanged": "Nic jeszcze nie zmieniono.",
+      "note_label": "Dlaczego ta zmiana?",
+      "note_optional": "Opcjonalnie",
+      "note_placeholder": "Na przykład: we wzorze brakowało nawiasu, źródło: oficjalna dokumentacja."
+    },
+    "diff": {
+      "title": "Zmiany",
+      "inline": "W tekście",
+      "split": "Obok siebie",
+      "before": "Przed",
+      "after": "Po",
+      "added": "Dodaje element ({{block}})",
+      "removed": "Usuwa element ({{block}})",
+      "changed": "Zmienia element ({{block}})",
+      "format_only": "Zmieniono formatowanie",
+      "nothing": "Brak zmian."
+    },
+    "feedback": {
+      "title": "Podziel się opinią",
+      "description": "Napisz zespołowi kursu, co tu jest nie tak albo co można poprawić. Zespół może Ci odpowiedzieć.",
+      "type_label": "Czego dotyczy?",
+      "body_label": "Twoja opinia",
+      "send": "Wyślij opinię",
+      "types": {
+        "typo": "Literówka",
+        "unclear": "Niejasne",
+        "outdated": "Nieaktualne",
+        "wrong": "Błąd",
+        "suggestion": "Sugestia"
+      },
+      "placeholders": {
+        "typo": "Które słowo jest źle napisane i jak powinno brzmieć?",
+        "unclear": "Co trudno zrozumieć? Co by pomogło?",
+        "outdated": "Co się zmieniło i gdzie zespół może to sprawdzić?",
+        "wrong": "Co jest nieprawidłowe, a co jest poprawne? Przyda się źródło.",
+        "suggestion": "Co ulepszyłoby tę część?"
+      },
+      "status": {
+        "open": "Otwarte",
+        "resolved": "Rozwiązane"
+      },
+      "team": "{{name}} (zespół kursu)",
+      "you": "Ty",
+      "reply": "Odpowiedz",
+      "reply_placeholder": "Napisz odpowiedź…"
+    },
+    "mine": {
+      "open_one": "Twój wkład ({{count}} oczekuje)",
+      "open_few": "Twój wkład ({{count}} oczekują)",
+      "open_many": "Twój wkład ({{count}} oczekuje)",
+      "open_other": "Twój wkład ({{count}} oczekuje)",
+      "title": "Twój wkład",
+      "description": "Twoje propozycje zmian i opinie na tej stronie oraz odpowiedzi zespołu kursu.",
+      "suggestions": "Propozycje",
+      "feedback": "Opinie",
+      "no_suggestions": "Na tej stronie nie ma jeszcze propozycji",
+      "no_feedback": "Na tej stronie nie ma jeszcze opinii",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "Wycofaj",
+      "revise": "Popraw",
+      "revise_title": "Popraw swoją zmianę"
+    },
+    "status": {
+      "pending": "W sprawdzaniu",
+      "accepted": "Zaakceptowano",
+      "rejected": "Odrzucono",
+      "changes_requested": "Poproszono o zmiany",
+      "withdrawn": "Wycofano"
+    },
+    "toasts": {
+      "suggested": "Dzięki! Twoja zmiana trafiła do sprawdzenia.",
+      "published": "Dzięki! Twoja zmiana jest już na stronie.",
+      "feedback_sent": "Dzięki! Twoja opinia trafiła do zespołu kursu.",
+      "withdrawn": "Propozycję wycofano"
+    },
+    "errors": {
+      "generic": "Coś poszło nie tak. Spróbuj ponownie."
+    },
+    "course": {
+      "title": "Ulepszone przez społeczność",
+      "names_more_one": "{{names}} i {{count}} osoba więcej",
+      "names_more_few": "{{names}} i {{count}} osoby więcej",
+      "names_more_many": "{{names}} i {{count}} osób więcej",
+      "names_more_other": "{{names}} i {{count}} osoby więcej",
+      "edits_one": "{{count}} zaakceptowana zmiana",
+      "edits_few": "{{count}} zaakceptowane zmiany",
+      "edits_many": "{{count}} zaakceptowanych zmian",
+      "edits_other": "{{count}} zaakceptowanej zmiany"
+    },
+    "profile": {
+      "title": "Ulepszone kursy",
+      "total_one": "{{count}} zaakceptowana zmiana",
+      "total_few": "{{count}} zaakceptowane zmiany",
+      "total_many": "{{count}} zaakceptowanych zmian",
+      "total_other": "{{count}} zaakceptowanej zmiany"
     }
   }
 }

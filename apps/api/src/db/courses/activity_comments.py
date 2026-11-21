@@ -48,6 +48,13 @@ class ActivityCommentThread(SQLModel, table=True):
     # Language version the thread was started on (None = the course's default
     # language): comments stay per locale.
     locale: Optional[str] = Field(default=None, sa_column=Column(String(20), nullable=True))
+    # "comment": an editor thread anchored by a ``comment`` mark. "feedback":
+    # a learner's note on a passage from the learner page (contributions),
+    # anchored by ``anchor`` (block index + fingerprint) instead of a mark, and
+    # never listed among the editor's comments.
+    kind: str = Field(default="comment", sa_column=Column(String(16), nullable=False, server_default="comment"))
+    feedback_type: Optional[str] = Field(default=None, sa_column=Column(String(16), nullable=True))
+    anchor: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
 
 
 class ActivityComment(SQLModel, table=True):

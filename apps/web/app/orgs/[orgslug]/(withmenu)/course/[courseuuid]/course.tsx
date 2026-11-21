@@ -18,6 +18,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
+import CourseContributorsStrip from '@components/Objects/Contributions/CourseContributorsStrip'
 import CoursePaths from '@components/Objects/Courses/CoursePaths/CoursePaths'
 import LinkifiedText from '@components/Objects/StyledElements/LinkifiedText/LinkifiedText'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
@@ -466,6 +467,7 @@ const CourseClient = (props: any) => {
                     <CourseAuthors authors={course.authors} />
                   </CourseProvider>
                 </div>
+                <CourseContributorsStrip courseUuid={course.course_uuid} />
               </aside>
             </div>
 

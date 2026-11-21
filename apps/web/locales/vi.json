@@ -5027,7 +5027,9 @@
           "seo": "SEO",
           "certification": "Chứng nhận",
           "analytics": "Phân tích",
-          "schedule": "Lịch"
+          "schedule": "Lịch",
+          "authors": "Tác giả",
+          "contributions": "Đóng góp"
         },
         "access_denied": {
           "title": "Truy cập bị từ chối",
@@ -6286,6 +6288,169 @@
           "source": "Bản gốc"
         },
         "tab": "Ngôn ngữ"
+      },
+      "authors": {
+        "title": "Tác giả",
+        "description": "Những người trong tổ chức của bạn xây dựng khóa học này. Họ xuất hiện ở dòng tác giả của khóa học và có thể chỉnh sửa tùy theo vai trò.",
+        "search_placeholder": "Tìm thành viên theo tên hoặc tên người dùng để thêm làm tác giả…",
+        "already_author": "Đã là tác giả",
+        "count_one": "{{count}} tác giả",
+        "count_other": "{{count}} tác giả",
+        "selected_one": "Đã chọn {{count}} tác giả",
+        "selected_other": "Đã chọn {{count}} tác giả",
+        "roles_section": "Vai trò tác giả",
+        "remove_title_one": "Xóa {{count}} tác giả?",
+        "remove_title_other": "Xóa {{count}} tác giả?",
+        "remove_message": "Họ mất quyền chỉnh sửa khóa học này và biến mất khỏi dòng tác giả. Bạn có thể thêm lại sau.",
+        "roles": {
+          "creator": "Chủ sở hữu",
+          "maintainer": "Người duy trì",
+          "contributor": "Biên tập viên",
+          "reporter": "Người báo cáo"
+        },
+        "statuses": {
+          "active": "Đang hoạt động",
+          "inactive": "Không hoạt động",
+          "pending": "Đã yêu cầu"
+        },
+        "requests": {
+          "title": "Yêu cầu làm tác giả",
+          "description": "Chọn xem thành viên có thể xin tham gia khóa học này với tư cách tác giả hay không.",
+          "active": "Đang bật",
+          "open_title": "Nhận yêu cầu",
+          "open_description": "Thành viên có thể xin làm tác giả. Các yêu cầu hiện ở phía trên để bạn duyệt.",
+          "open_confirm_title": "Nhận yêu cầu làm tác giả?",
+          "open_confirm_message": "Thành viên sẽ có thể xin tham gia khóa học này với tư cách tác giả.",
+          "open_confirm_button": "Nhận yêu cầu",
+          "closed_title": "Không nhận yêu cầu",
+          "closed_description": "Chỉ những người bạn thêm vào đây mới là tác giả.",
+          "closed_confirm_title": "Ngừng nhận yêu cầu?",
+          "closed_confirm_message": "Thành viên sẽ không thể xin tham gia khóa học này với tư cách tác giả nữa.",
+          "closed_confirm_button": "Ngừng nhận yêu cầu"
+        },
+        "community": {
+          "title": "Người đóng góp từ cộng đồng",
+          "description": "Những người cải thiện khóa học từ trang của học viên không phải là tác giả. Tên họ được ghi nhận trên trang khóa học và cạnh phần họ giúp viết.",
+          "open": "Mở Đóng góp",
+          "none": "Chưa có ai được ghi nhận.",
+          "count_one": "{{count}} người đóng góp được ghi nhận",
+          "count_other": "{{count}} người đóng góp được ghi nhận"
+        }
+      },
+      "contributions": {
+        "settings": {
+          "title": "Đóng góp từ cộng đồng",
+          "description": "Để học viên cải thiện khóa học này như một wiki: họ đề xuất chỉnh sửa hoặc để lại phản hồi ngay trên trang, bạn xem xét, và mỗi chỉnh sửa được chấp nhận đều được ghi nhận.",
+          "enable": "Bật đóng góp từ cộng đồng",
+          "plan_required": "Đóng góp từ cộng đồng có trong gói Standard trở lên.",
+          "see_plans": "Xem các gói",
+          "audience": "Ai có thể đóng góp",
+          "suggestions": "Chỉnh sửa được đề xuất",
+          "suggestions_hint": "Người đóng góp có thể chỉnh sửa văn bản và các khối trên trang của học viên rồi gửi thay đổi để xem xét.",
+          "feedback": "Phản hồi",
+          "feedback_hint": "Người đóng góp có thể đánh dấu một đoạn là lỗi chính tả, khó hiểu, lỗi thời hoặc sai, hoặc đề xuất một ý tưởng.",
+          "trusted": "Người đóng góp đáng tin cậy được đăng trực tiếp",
+          "trusted_hint": "Chỉnh sửa từ những người bạn đánh dấu là đáng tin cậy được đăng mà không cần xem xét. Bạn vẫn có thể khôi phục bất kỳ phiên bản trước nào.",
+          "limits": "Để chống spam, mỗi người có thể gửi tối đa 20 đề xuất và 20 phản hồi mỗi giờ, với tối đa 25 mục chờ xem xét cho mỗi khóa học. Người bị chặn không thể đóng góp."
+        },
+        "audience": {
+          "enrolled": {
+            "title": "Học viên đã đăng ký",
+            "description": "Những người đã bắt đầu khóa học này."
+          },
+          "members": {
+            "title": "Thành viên tổ chức",
+            "description": "Bất kỳ ai trong tổ chức của bạn."
+          },
+          "signed_in": {
+            "title": "Bất kỳ ai đã đăng nhập",
+            "description": "Bất kỳ ai có tài khoản và có thể mở khóa học."
+          }
+        },
+        "stats": {
+          "pending": "Đang chờ xem xét",
+          "feedback": "Phản hồi đang mở",
+          "contributors": "Người đóng góp"
+        },
+        "tabs": {
+          "suggestions": "Đề xuất",
+          "feedback": "Phản hồi",
+          "contributors": "Người đóng góp",
+          "settings": "Cài đặt"
+        },
+        "filters": {
+          "open": "Đang mở",
+          "accepted": "Đã chấp nhận",
+          "rejected": "Đã từ chối",
+          "all": "Tất cả",
+          "resolved": "Đã giải quyết"
+        },
+        "empty": {
+          "suggestions_open": "Không có gì để xem xét",
+          "suggestions_other": "Không có đề xuất nào ở đây",
+          "suggestions_hint": "Khi ai đó đề xuất chỉnh sửa trên trang của học viên, nó sẽ hiện ở đây.",
+          "feedback_open": "Không có phản hồi đang mở",
+          "feedback_resolved": "Không có phản hồi đã giải quyết",
+          "contributors": "Chưa có người đóng góp",
+          "contributors_hint": "Mọi người được liệt kê ở đây khi một chỉnh sửa của họ được chấp nhận."
+        },
+        "placement": {
+          "clean": "Khớp với trang",
+          "clean_hint": "Đoạn văn bản được thay đổi vẫn còn trên trang, ở đúng chỗ cũ.",
+          "moved": "Đã căn lại",
+          "moved_hint": "Trang đã thay đổi ở chỗ khác; chỉnh sửa này vẫn áp dụng được suôn sẻ.",
+          "conflict": "Xung đột",
+          "conflict_hint": "Đoạn văn bản được thay đổi đã bị chỉnh sửa kể từ đó.",
+          "outdated": "Lỗi thời",
+          "outdated_hint": "Trang đã thay đổi quá nhiều nên không thể đặt chỉnh sửa này vào đúng chỗ.",
+          "conflict_explain": "Phần của trang mà chỉnh sửa này thay đổi đã được viết lại kể từ khi được đề xuất. Hãy so sánh hai phiên bản, rồi dùng Chỉnh sửa rồi chấp nhận để kết hợp chúng, hoặc từ chối.",
+          "page_now": "Trang hiện tại",
+          "suggested": "Được đề xuất"
+        },
+        "review": {
+          "note": "Ghi chú:",
+          "asked": "Bạn đã hỏi:",
+          "auto_published": "Đã đăng trực tiếp",
+          "accept": "Chấp nhận",
+          "accepted": "Đã chấp nhận. Trang đã được cập nhật và một phiên bản đã được lưu.",
+          "edit_accept": "Chỉnh sửa rồi chấp nhận",
+          "edit_title": "Chỉnh sửa rồi chấp nhận",
+          "edit_hint": "Điều chỉnh đề xuất trước khi đăng. Người đóng góp vẫn được ghi nhận.",
+          "edit_conflict_hint": "Bắt đầu từ đề xuất. Kết hợp nó với văn bản hiện tại của trang rồi chấp nhận: nó sẽ thay thế văn bản hiện tại hiển thị bên trái.",
+          "conflict_toast": "Trang đã thay đổi kể từ đề xuất này. Hãy xem xét xung đột và giải quyết.",
+          "reject": "Từ chối",
+          "request_changes": "Yêu cầu thay đổi",
+          "reject_title": "Từ chối đề xuất này?",
+          "reject_description": "Người đóng góp sẽ được báo là đã bị từ chối, kèm lý do của bạn nếu có.",
+          "reject_label": "Lý do",
+          "reject_confirm": "Từ chối",
+          "changes_title": "Yêu cầu thay đổi",
+          "changes_description": "Người đóng góp có thể sửa lại chỉnh sửa và gửi lại.",
+          "changes_label": "Cần thay đổi gì?",
+          "changes_confirm": "Gửi",
+          "rejected": "Đã từ chối đề xuất",
+          "changes_sent": "Đã gửi lại cho người đóng góp",
+          "revised_toast": "Người đóng góp đã thay đổi đề xuất này. Hãy xem lại phiên bản mới."
+        },
+        "feedback": {
+          "reply_placeholder": "Trả lời học viên…",
+          "replied": "Đã gửi câu trả lời",
+          "resolve": "Đánh dấu đã giải quyết",
+          "reopen": "Mở lại"
+        },
+        "contributors": {
+          "person": "Người đóng góp",
+          "accepted": "Chỉnh sửa",
+          "last": "Chỉnh sửa gần nhất",
+          "trust": "Tin cậy",
+          "trusted": "Đáng tin cậy",
+          "blocked": "Đã chặn",
+          "block": "Chặn",
+          "unblock": "Bỏ chặn",
+          "edits_one": "{{count}} chỉnh sửa",
+          "edits_other": "{{count}} chỉnh sửa",
+          "trusted_off": "Người đóng góp đáng tin cậy chỉ đăng không cần xem xét khi cài đặt này được bật."
+        }
       }
     },
     "organization": {
@@ -29367,7 +29532,13 @@
       "plan_downgraded": "Đã chuyển sang Miễn phí",
       "plan_restored": "Đã khôi phục gói",
       "payments_checkout_failing": "Thanh toán thất bại",
-      "invitation_accepted": "Lời mời đã được chấp nhận"
+      "invitation_accepted": "Lời mời đã được chấp nhận",
+      "suggestion_submitted": "Chỉnh sửa được đề xuất",
+      "feedback_submitted": "Phản hồi của học viên",
+      "suggestion_accepted": "Chỉnh sửa đã được chấp nhận",
+      "suggestion_rejected": "Chỉnh sửa đã bị từ chối",
+      "suggestion_changes_requested": "Cần thay đổi",
+      "feedback_reply": "Trả lời phản hồi của bạn"
     },
     "copy": {
       "assignment_graded": "Đã chấm điểm: {{assignment}}",
@@ -29430,7 +29601,16 @@
       "plan_downgraded": "Bạn đang dùng gói Miễn phí. Không có gì bị xóa",
       "plan_restored": "Chào mừng bạn quay lại {{plan}}",
       "payments_checkout_failing": "Học viên hiện không thể mua ({{count}} lượt thanh toán thất bại)",
-      "invitation_accepted": "{{actor}} đã chấp nhận lời mời của bạn"
+      "invitation_accepted": "{{actor}} đã chấp nhận lời mời của bạn",
+      "suggestion_submitted": "{{actor}} đã đề xuất chỉnh sửa cho {{activity}}",
+      "suggestion_submitted_many": "{{count}} chỉnh sửa mới được đề xuất trong {{course}}",
+      "feedback_submitted": "{{actor}} đã để lại phản hồi về {{activity}}",
+      "feedback_submitted_many": "{{count}} phản hồi mới trong {{course}}",
+      "suggestion_accepted": "{{actor}} đã chấp nhận chỉnh sửa của bạn cho {{activity}}",
+      "suggestion_rejected": "{{actor}} đã từ chối chỉnh sửa của bạn cho {{activity}}",
+      "suggestion_changes_requested": "{{actor}} đã yêu cầu thay đổi chỉnh sửa của bạn cho {{activity}}",
+      "feedback_reply": "{{actor}} đã trả lời phản hồi của bạn về {{activity}}",
+      "feedback_reply_many": "{{count}} câu trả lời mới cho phản hồi của bạn về {{activity}}"
     },
     "routing": {
       "short": "Ai nhận thông báo",
@@ -29737,6 +29917,151 @@
       "seat_limit_exceeded": "số chỗ đang dùng vượt quá số chỗ trong giấy phép",
       "grace_expired": "không thể kết nối máy chủ giấy phép trong thời gian quá dài",
       "unknown": "không thể xác minh giấy phép"
+    }
+  },
+  "contributions": {
+    "hint": "Trang này luôn sẵn sàng được cải thiện. Di chuột qua một đoạn hoặc chọn văn bản để đề xuất chỉnh sửa hoặc để lại phản hồi.",
+    "someone": "Ai đó",
+    "actions": {
+      "suggest": "Đề xuất chỉnh sửa",
+      "feedback": "Gửi phản hồi"
+    },
+    "credits": {
+      "aria": "Được viết với sự giúp đỡ của {{names}}",
+      "title": "Được cải thiện bởi"
+    },
+    "blocks": {
+      "block": "khối",
+      "paragraph": "đoạn văn",
+      "heading": "tiêu đề",
+      "list": "danh sách",
+      "quote": "trích dẫn",
+      "code": "khối mã",
+      "callout": "khung nổi bật",
+      "image": "hình ảnh",
+      "video": "video",
+      "audio": "âm thanh",
+      "pdf": "PDF",
+      "math": "công thức",
+      "quiz": "bài kiểm tra",
+      "embed": "nội dung nhúng",
+      "table": "bảng",
+      "link_preview": "xem trước liên kết",
+      "badge": "huy hiệu",
+      "button": "nút",
+      "flashcard": "thẻ ghi nhớ",
+      "flashcards": "thẻ ghi nhớ",
+      "scenario": "tình huống",
+      "code_playground": "sân chơi mã",
+      "toggle": "mục thu gọn",
+      "divider": "đường phân cách",
+      "magic_block": "khối ma thuật",
+      "h5p": "hoạt động H5P",
+      "library": "mục thư viện",
+      "user": "thẻ người dùng",
+      "personalized": "khối cá nhân hóa"
+    },
+    "suggest": {
+      "title": "Đề xuất chỉnh sửa",
+      "text_hint": "Chỉnh sửa văn bản ngay tại đây. Chọn từ để định dạng, thêm liên kết hoặc chuyển thành tiêu đề hay danh sách.",
+      "block_hint": "Thay đổi {{block}} này bằng các công cụ riêng của nó, như trong trình soạn thảo.",
+      "review_note": "Nhóm khóa học sẽ xem xét chỉnh sửa của bạn trước khi đăng. Tên bạn sẽ được ghi nhận khi được chấp nhận.",
+      "trusted_hint": "Bạn là người đóng góp đáng tin cậy: chỉnh sửa của bạn được đăng ngay và tên bạn sẽ được ghi nhận.",
+      "remove_block": "Xóa {{block}} này",
+      "remove_blocks": "Xóa các khối này",
+      "review_changes": "Xem lại thay đổi",
+      "review_title": "Xem lại chỉnh sửa của bạn",
+      "review_hint": "Đây là những gì thay đổi. Thêm một ghi chú ngắn để nhóm xem xét dễ hơn.",
+      "keep_editing": "Tiếp tục chỉnh sửa",
+      "send": "Gửi để xem xét",
+      "publish": "Đăng chỉnh sửa",
+      "unchanged": "Bạn chưa thay đổi gì.",
+      "note_label": "Vì sao thay đổi này?",
+      "note_optional": "Không bắt buộc",
+      "note_placeholder": "Ví dụ: công thức thiếu một dấu ngoặc, nguồn: tài liệu chính thức."
+    },
+    "diff": {
+      "title": "Thay đổi",
+      "inline": "Liền dòng",
+      "split": "Song song",
+      "before": "Trước",
+      "after": "Sau",
+      "added": "Thêm một {{block}}",
+      "removed": "Xóa một {{block}}",
+      "changed": "Thay đổi một {{block}}",
+      "format_only": "Định dạng đã thay đổi",
+      "nothing": "Không có thay đổi."
+    },
+    "feedback": {
+      "title": "Gửi phản hồi",
+      "description": "Cho nhóm khóa học biết điều gì sai hoặc có thể tốt hơn ở đây. Họ có thể trả lời bạn.",
+      "type_label": "Vấn đề là gì?",
+      "body_label": "Phản hồi của bạn",
+      "send": "Gửi phản hồi",
+      "types": {
+        "typo": "Lỗi chính tả",
+        "unclear": "Khó hiểu",
+        "outdated": "Lỗi thời",
+        "wrong": "Sai",
+        "suggestion": "Đề xuất"
+      },
+      "placeholders": {
+        "typo": "Từ nào bị sai chính tả, và nên viết thế nào?",
+        "unclear": "Chỗ nào khó theo dõi? Điều gì sẽ giúp ích?",
+        "outdated": "Điều gì đã thay đổi, và nhóm có thể kiểm tra ở đâu?",
+        "wrong": "Điều gì không đúng, và đúng là gì? Có nguồn sẽ rất hữu ích.",
+        "suggestion": "Điều gì sẽ làm phần này tốt hơn?"
+      },
+      "status": {
+        "open": "Đang mở",
+        "resolved": "Đã giải quyết"
+      },
+      "team": "{{name}} (nhóm khóa học)",
+      "you": "Bạn",
+      "reply": "Trả lời",
+      "reply_placeholder": "Viết câu trả lời…"
+    },
+    "mine": {
+      "open_one": "Đóng góp của bạn ({{count}} đang chờ)",
+      "open_other": "Đóng góp của bạn ({{count}} đang chờ)",
+      "title": "Đóng góp của bạn",
+      "description": "Các chỉnh sửa và phản hồi bạn đã gửi trên trang này, cùng ý kiến của nhóm khóa học.",
+      "suggestions": "Đề xuất",
+      "feedback": "Phản hồi",
+      "no_suggestions": "Trang này chưa có đề xuất nào",
+      "no_feedback": "Trang này chưa có phản hồi nào",
+      "reviewer_said": "{{name}}:",
+      "withdraw": "Rút lại",
+      "revise": "Sửa lại",
+      "revise_title": "Sửa lại chỉnh sửa của bạn"
+    },
+    "status": {
+      "pending": "Đang xem xét",
+      "accepted": "Đã chấp nhận",
+      "rejected": "Đã từ chối",
+      "changes_requested": "Cần thay đổi",
+      "withdrawn": "Đã rút lại"
+    },
+    "toasts": {
+      "suggested": "Cảm ơn bạn! Chỉnh sửa của bạn đã được gửi để xem xét.",
+      "published": "Cảm ơn bạn! Chỉnh sửa của bạn đã được đăng.",
+      "feedback_sent": "Cảm ơn bạn! Phản hồi của bạn đã được gửi tới nhóm khóa học.",
+      "withdrawn": "Đã rút lại đề xuất"
+    },
+    "errors": {
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
+    "course": {
+      "title": "Được cộng đồng cải thiện",
+      "names_more_one": "{{names}} và {{count}} người khác",
+      "names_more_other": "{{names}} và {{count}} người khác",
+      "edits_one": "{{count}} chỉnh sửa được chấp nhận",
+      "edits_other": "{{count}} chỉnh sửa được chấp nhận"
+    },
+    "profile": {
+      "title": "Khóa học đã cải thiện",
+      "total_one": "{{count}} chỉnh sửa được chấp nhận",
+      "total_other": "{{count}} chỉnh sửa được chấp nhận"
     }
   }
 }

@@ -5029,7 +5029,9 @@
           "seo": "SEO",
           "certification": "証明書",
           "analytics": "アナリティクス",
-          "schedule": "スケジュール"
+          "schedule": "スケジュール",
+          "authors": "作成者",
+          "contributions": "コントリビューション"
         },
         "access_denied": {
           "title": "アクセス拒否",
@@ -6288,6 +6290,169 @@
           "source": "原文"
         },
         "tab": "言語"
+      },
+      "authors": {
+        "title": "作成者",
+        "description": "このコースを作る組織内のメンバーです。コースの作成者欄に表示され、役割に応じて編集できます。",
+        "search_placeholder": "名前またはユーザー名でメンバーを検索して作成者に追加…",
+        "already_author": "すでに作成者です",
+        "count_other": "作成者{{count}}人",
+        "selected_other": "作成者{{count}}人を選択中",
+        "roles_section": "作成者の役割",
+        "remove_title_other": "作成者{{count}}人を削除しますか？",
+        "remove_message": "このコースを編集できなくなり、作成者欄からも外れます。あとで追加し直すことができます。",
+        "roles": {
+          "creator": "オーナー",
+          "maintainer": "メンテナー",
+          "contributor": "編集者",
+          "reporter": "報告者"
+        },
+        "statuses": {
+          "active": "有効",
+          "inactive": "無効",
+          "pending": "リクエスト済み"
+        },
+        "requests": {
+          "title": "作成者リクエスト",
+          "description": "メンバーがこのコースに作成者として参加をリクエストできるかどうかを選びます。",
+          "active": "有効",
+          "open_title": "リクエストを受け付ける",
+          "open_description": "メンバーが作成者になるようリクエストできます。リクエストは上に表示されるので、承認してください。",
+          "open_confirm_title": "作成者リクエストを受け付けますか？",
+          "open_confirm_message": "メンバーがこのコースに作成者として参加をリクエストできるようになります。",
+          "open_confirm_button": "リクエストを受け付ける",
+          "closed_title": "リクエストなし",
+          "closed_description": "ここで追加した人だけが作成者になります。",
+          "closed_confirm_title": "リクエストの受け付けを停止しますか？",
+          "closed_confirm_message": "メンバーはこのコースに作成者として参加をリクエストできなくなります。",
+          "closed_confirm_button": "受け付けを停止"
+        },
+        "community": {
+          "title": "コミュニティの投稿者",
+          "description": "学習者ページからコースを改善する人は作成者ではありません。コースページと、手伝った箇所の横にクレジットされます。",
+          "open": "コントリビューションを開く",
+          "none": "まだクレジットされた人はいません。",
+          "count_other": "クレジットされた投稿者{{count}}人",
+          "count_one": "クレジットされた投稿者{{count}}人"
+        },
+        "count_one": "作成者{{count}}人",
+        "remove_title_one": "作成者{{count}}人を削除しますか？",
+        "selected_one": "作成者{{count}}人を選択中"
+      },
+      "contributions": {
+        "settings": {
+          "title": "コミュニティコントリビューション",
+          "description": "学習者がWikiのようにこのコースを改善できます。ページ上で編集を提案したりフィードバックを残したりし、あなたがレビューして、承認された編集にはすべてクレジットが付きます。",
+          "enable": "コミュニティコントリビューションを有効にする",
+          "plan_required": "コミュニティコントリビューションはStandardプラン以上でご利用いただけます。",
+          "see_plans": "プランを見る",
+          "audience": "投稿できる人",
+          "suggestions": "編集の提案",
+          "suggestions_hint": "投稿者は学習者ページでテキストやブロックを編集し、変更をレビューに送れます。",
+          "feedback": "フィードバック",
+          "feedback_hint": "投稿者は、誤字、わかりにくい、古い、誤りとして箇所にフラグを付けたり、アイデアを提案したりできます。",
+          "trusted": "信頼済みの投稿者は直接公開",
+          "trusted_hint": "信頼済みにした人の編集は、レビューなしで公開されます。以前のバージョンはいつでも復元できます。",
+          "limits": "スパム防止のため、1人あたり1時間に最大20件の提案と20件のフィードバックを送れます。レビュー待ちはコースごとに最大25件です。ブロックされた人は投稿できません。"
+        },
+        "audience": {
+          "enrolled": {
+            "title": "受講中の学習者",
+            "description": "このコースを始めた人。"
+          },
+          "members": {
+            "title": "組織のメンバー",
+            "description": "組織内の全員。"
+          },
+          "signed_in": {
+            "title": "ログイン中の全員",
+            "description": "コースを開けるアカウントを持つ全員。"
+          }
+        },
+        "stats": {
+          "pending": "レビュー待ち",
+          "feedback": "未解決のフィードバック",
+          "contributors": "投稿者"
+        },
+        "tabs": {
+          "suggestions": "提案",
+          "feedback": "フィードバック",
+          "contributors": "投稿者",
+          "settings": "設定"
+        },
+        "filters": {
+          "open": "未対応",
+          "accepted": "承認済み",
+          "rejected": "却下",
+          "all": "すべて",
+          "resolved": "解決済み"
+        },
+        "empty": {
+          "suggestions_open": "レビューするものはありません",
+          "suggestions_other": "ここに提案はありません",
+          "suggestions_hint": "学習者ページで編集が提案されると、ここに表示されます。",
+          "feedback_open": "未解決のフィードバックはありません",
+          "feedback_resolved": "解決済みのフィードバックはありません",
+          "contributors": "まだ投稿者はいません",
+          "contributors_hint": "編集が承認されると、その人がここに表示されます。"
+        },
+        "placement": {
+          "clean": "ページに適合",
+          "clean_hint": "変更対象のテキストは、元の場所にそのまま残っています。",
+          "moved": "再配置済み",
+          "moved_hint": "ページの別の箇所が変更されましたが、この編集は問題なく適用できます。",
+          "conflict": "競合",
+          "conflict_hint": "変更対象のテキストが、その後編集されました。",
+          "outdated": "古い",
+          "outdated_hint": "ページが大きく変わったため、この編集を配置できません。",
+          "conflict_explain": "この編集が変更する部分は、提案後に書き換えられました。2つのバージョンを比較し、「編集して承認」で統合するか、却下してください。",
+          "page_now": "現在のページ",
+          "suggested": "提案内容"
+        },
+        "review": {
+          "note": "メモ：",
+          "asked": "あなたの依頼：",
+          "auto_published": "直接公開",
+          "accept": "承認",
+          "accepted": "承認しました。ページを更新し、バージョンを保存しました。",
+          "edit_accept": "編集して承認",
+          "edit_title": "編集して承認",
+          "edit_hint": "公開前に提案を調整できます。投稿者には引き続きクレジットが付きます。",
+          "edit_conflict_hint": "提案を出発点にしています。ページの現在のテキストと統合してから承認してください。左に表示されている現在のテキストが置き換わります。",
+          "conflict_toast": "この提案のあとにページが変更されました。競合を確認して解決してください。",
+          "reject": "却下",
+          "request_changes": "変更を依頼",
+          "reject_title": "この提案を却下しますか？",
+          "reject_description": "投稿者に却下が通知されます。理由を入力すると、それも伝わります。",
+          "reject_label": "理由",
+          "reject_confirm": "却下",
+          "changes_title": "変更を依頼",
+          "changes_description": "投稿者は編集を修正して、もう一度送信できます。",
+          "changes_label": "どこを変更しますか？",
+          "changes_confirm": "送信",
+          "rejected": "提案を却下しました",
+          "changes_sent": "投稿者に差し戻しました",
+          "revised_toast": "投稿者がこの提案を変更しました。新しいバージョンを確認してください。"
+        },
+        "feedback": {
+          "reply_placeholder": "学習者に返信…",
+          "replied": "返信を送信しました",
+          "resolve": "解決済みにする",
+          "reopen": "再開"
+        },
+        "contributors": {
+          "person": "投稿者",
+          "accepted": "編集",
+          "last": "最終編集",
+          "trust": "信頼",
+          "trusted": "信頼済み",
+          "blocked": "ブロック中",
+          "block": "ブロック",
+          "unblock": "ブロック解除",
+          "edits_other": "{{count}}件の編集",
+          "trusted_off": "信頼済みの投稿者は、この設定がオンのときだけレビューなしで公開できます。",
+          "edits_one": "{{count}}件の編集"
+        }
       }
     },
     "organization": {
@@ -29369,7 +29534,13 @@
       "plan_downgraded": "Freeに移行",
       "plan_restored": "プランを復元しました",
       "payments_checkout_failing": "チェックアウトの失敗",
-      "invitation_accepted": "招待が承諾されました"
+      "invitation_accepted": "招待が承諾されました",
+      "suggestion_submitted": "編集の提案",
+      "feedback_submitted": "学習者のフィードバック",
+      "suggestion_accepted": "編集が承認されました",
+      "suggestion_rejected": "編集が却下されました",
+      "suggestion_changes_requested": "変更の依頼",
+      "feedback_reply": "フィードバックへの返信"
     },
     "copy": {
       "assignment_graded": "採点されました：{{assignment}}",
@@ -29432,7 +29603,16 @@
       "plan_downgraded": "現在はFreeです。何も削除されていません",
       "plan_restored": "{{plan}}へおかえりなさい",
       "payments_checkout_failing": "学習者が現在購入できません（失敗したチェックアウト: {{count}}件）",
-      "invitation_accepted": "{{actor}}さんが招待を承諾しました"
+      "invitation_accepted": "{{actor}}さんが招待を承諾しました",
+      "suggestion_submitted": "{{actor}}さんが{{activity}}への編集を提案しました",
+      "suggestion_submitted_many": "{{course}}に新しい編集提案が{{count}}件あります",
+      "feedback_submitted": "{{actor}}さんが{{activity}}にフィードバックを残しました",
+      "feedback_submitted_many": "{{course}}に新しいフィードバックが{{count}}件あります",
+      "suggestion_accepted": "{{actor}}さんが{{activity}}へのあなたの編集を承認しました",
+      "suggestion_rejected": "{{actor}}さんが{{activity}}へのあなたの編集を却下しました",
+      "suggestion_changes_requested": "{{actor}}さんが{{activity}}へのあなたの編集に変更を依頼しました",
+      "feedback_reply": "{{actor}}さんが{{activity}}でのあなたのフィードバックに返信しました",
+      "feedback_reply_many": "{{activity}}でのあなたのフィードバックに新しい返信が{{count}}件あります"
     },
     "routing": {
       "short": "通知先",
@@ -29739,6 +29919,151 @@
       "seat_limit_exceeded": "ライセンスに含まれる席数を超えて使用されています",
       "grace_expired": "ライセンスサーバーに長時間接続できませんでした",
       "unknown": "ライセンスを確認できませんでした"
+    }
+  },
+  "contributions": {
+    "hint": "このページは改善を受け付けています。段落にカーソルを合わせるか、テキストを選択して、編集の提案やフィードバックを送れます。",
+    "someone": "誰か",
+    "actions": {
+      "suggest": "編集を提案",
+      "feedback": "フィードバックを送る"
+    },
+    "credits": {
+      "aria": "{{names}}の協力で作成",
+      "title": "改善した人"
+    },
+    "blocks": {
+      "block": "ブロック",
+      "paragraph": "段落",
+      "heading": "見出し",
+      "list": "リスト",
+      "quote": "引用",
+      "code": "コードブロック",
+      "callout": "コールアウト",
+      "image": "画像",
+      "video": "動画",
+      "audio": "音声",
+      "pdf": "PDF",
+      "math": "数式",
+      "quiz": "クイズ",
+      "embed": "埋め込み",
+      "table": "表",
+      "link_preview": "リンクプレビュー",
+      "badge": "バッジ",
+      "button": "ボタン",
+      "flashcard": "フラッシュカード",
+      "flashcards": "フラッシュカード",
+      "scenario": "シナリオ",
+      "code_playground": "コードプレイグラウンド",
+      "toggle": "トグル",
+      "divider": "区切り線",
+      "magic_block": "マジックブロック",
+      "h5p": "H5Pアクティビティ",
+      "library": "ライブラリ項目",
+      "user": "ユーザーカード",
+      "personalized": "パーソナライズブロック"
+    },
+    "suggest": {
+      "title": "編集を提案",
+      "text_hint": "ここでテキストを直接編集できます。単語を選択すると、書式設定、リンクの追加、見出しやリストへの変換ができます。",
+      "block_hint": "エディターと同じように、この{{block}}を専用のコントロールで変更します。",
+      "review_note": "編集内容は公開前にコーステームが確認します。承認されると、あなたの名前がクレジットされます。",
+      "trusted_hint": "あなたは信頼済みの投稿者です。編集はすぐに公開され、あなたの名前がクレジットされます。",
+      "remove_block": "この{{block}}を削除",
+      "remove_blocks": "これらのブロックを削除",
+      "review_changes": "変更を確認",
+      "review_title": "編集内容を確認",
+      "review_hint": "変更内容は次のとおりです。確認しやすいよう、短いメモを添えてください。",
+      "keep_editing": "編集を続ける",
+      "send": "レビューに送信",
+      "publish": "編集を公開",
+      "unchanged": "まだ何も変更されていません。",
+      "note_label": "変更の理由",
+      "note_optional": "任意",
+      "note_placeholder": "例：数式のかっこが抜けていました。出典：公式ドキュメント。"
+    },
+    "diff": {
+      "title": "変更点",
+      "inline": "インライン",
+      "split": "左右に並べて表示",
+      "before": "変更前",
+      "after": "変更後",
+      "added": "{{block}}を追加",
+      "removed": "{{block}}を削除",
+      "changed": "{{block}}を変更",
+      "format_only": "書式を変更",
+      "nothing": "変更はありません。"
+    },
+    "feedback": {
+      "title": "フィードバックを送る",
+      "description": "ここで間違っている点や改善できる点をコーステームに伝えてください。返信が届くこともあります。",
+      "type_label": "内容の種類",
+      "body_label": "フィードバック",
+      "send": "フィードバックを送信",
+      "types": {
+        "typo": "誤字",
+        "unclear": "わかりにくい",
+        "outdated": "古い",
+        "wrong": "誤り",
+        "suggestion": "提案"
+      },
+      "placeholders": {
+        "typo": "どの語が間違っていて、どう直すべきですか？",
+        "unclear": "どこがわかりにくいですか？ どうすれば助けになりますか？",
+        "outdated": "何が変わりましたか？ チームはどこで確認できますか？",
+        "wrong": "何が間違っていて、正しくはどうですか？ 出典があると助かります。",
+        "suggestion": "この部分をどうすればもっと良くなりますか？"
+      },
+      "status": {
+        "open": "未解決",
+        "resolved": "解決済み"
+      },
+      "team": "{{name}}（コーステーム）",
+      "you": "あなた",
+      "reply": "返信",
+      "reply_placeholder": "返信を入力…"
+    },
+    "mine": {
+      "open_other": "あなたの投稿（{{count}}件が待機中）",
+      "title": "あなたの投稿",
+      "description": "このページへのあなたの編集提案とフィードバック、そしてコーステームからの返答です。",
+      "suggestions": "提案",
+      "feedback": "フィードバック",
+      "no_suggestions": "このページにはまだ提案がありません",
+      "no_feedback": "このページにはまだフィードバックがありません",
+      "reviewer_said": "{{name}}：",
+      "withdraw": "取り下げる",
+      "revise": "修正",
+      "revise_title": "編集内容を修正",
+      "open_one": "あなたの投稿（{{count}}件が待機中）"
+    },
+    "status": {
+      "pending": "レビュー中",
+      "accepted": "承認済み",
+      "rejected": "却下",
+      "changes_requested": "変更を依頼",
+      "withdrawn": "取り下げ済み"
+    },
+    "toasts": {
+      "suggested": "ありがとうございます！ 編集をレビューに送信しました。",
+      "published": "ありがとうございます！ 編集が公開されました。",
+      "feedback_sent": "ありがとうございます！ フィードバックをコーステームに送信しました。",
+      "withdrawn": "提案を取り下げました"
+    },
+    "errors": {
+      "generic": "問題が発生しました。もう一度お試しください。"
+    },
+    "course": {
+      "title": "コミュニティが改善しました",
+      "names_more_other": "{{names}}ほか{{count}}人",
+      "edits_other": "承認された編集{{count}}件",
+      "edits_one": "承認された編集{{count}}件",
+      "names_more_one": "{{names}}ほか{{count}}人"
+    },
+    "profile": {
+      "title": "改善したコース",
+      "total_other": "承認された編集{{count}}件",
+      "total_one": "承認された編集{{count}}件"
     }
   }
 }

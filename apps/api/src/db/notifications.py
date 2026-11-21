@@ -84,6 +84,11 @@ NOTIFICATION_TYPE_META: dict[str, TypeMeta] = {
     "editor_comment": TypeMeta("community"),
     "editor_mention": TypeMeta("community"),
     "note_shared": TypeMeta("community"),
+    # course contributions (suggested edits, feedback on a passage)
+    "suggestion_accepted": TypeMeta("courses"),
+    "suggestion_rejected": TypeMeta("courses"),
+    "suggestion_changes_requested": TypeMeta("courses"),
+    "feedback_reply": TypeMeta("courses"),
     # user groups
     "group_joined": TypeMeta("groups"),
     "group_left": TypeMeta("groups"),
@@ -103,6 +108,8 @@ NOTIFICATION_TYPE_META: dict[str, TypeMeta] = {
     # ---- admin / teacher (dashboard) ----
     "submission_to_grade": TypeMeta("teaching", "admin", default_roles=("course_authors",)),
     "training_overdue_report": TypeMeta("teaching", "admin", default_roles=("admins",)),
+    "suggestion_submitted": TypeMeta("teaching", "admin", default_roles=("course_authors",)),
+    "feedback_submitted": TypeMeta("teaching", "admin", default_roles=("course_authors",)),
     "member_joined": TypeMeta("people", "admin", default_roles=("admins",)),
     # To whoever sent the invitation, not routable.
     "invitation_accepted": TypeMeta("people", "admin"),
@@ -150,6 +157,10 @@ NOTIFICATION_LINKS: dict[str, str] = {
     "editor_comment": "/course/{course}/activity/{activity}/edit?thread={thread}",
     "editor_mention": "/course/{course}/activity/{activity}/edit?thread={thread}",
     "note_shared": "/course/{course}/activity/{activity}",
+    "suggestion_accepted": "/course/{course}/activity/{activity}",
+    "suggestion_rejected": "/course/{course}/activity/{activity}?contribution={suggestion}",
+    "suggestion_changes_requested": "/course/{course}/activity/{activity}?contribution={suggestion}",
+    "feedback_reply": "/course/{course}/activity/{activity}?feedback={thread}",
     "group_joined": "/groups/{group}",
     "group_left": "/groups/{group}",
     "group_announcement": "/groups/{group}",
@@ -165,6 +176,8 @@ NOTIFICATION_LINKS: dict[str, str] = {
     "board_breakout": "/board/{board}",
     "submission_to_grade": "/dash/assignments/{assignment}?subpage=submissions",
     "training_overdue_report": "/dash/training",
+    "suggestion_submitted": "/dash/courses/course/{course}/contributions?suggestion={suggestion}",
+    "feedback_submitted": "/dash/courses/course/{course}/contributions?tab=feedback&feedback={thread}",
     "member_joined": "/dash/users/settings/users",
     "invitation_accepted": "/dash/users/settings/users",
     "signup_pending": "/dash/users/settings/users",

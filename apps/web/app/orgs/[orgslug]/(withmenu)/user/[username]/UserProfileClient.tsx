@@ -5,6 +5,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ProfileView, { type ProfileUser } from '@components/Objects/Profile/ProfileView'
 import { normalizeDetails, normalizeProfile } from '@/lib/profile/profile'
+import ProfileContributions from '@components/Objects/Contributions/ProfileContributions'
 
 interface UserProfileClientProps {
   userData: ProfileUser & { profile?: unknown; details?: unknown }
@@ -21,6 +22,7 @@ function UserProfileClient({ userData, orgslug }: UserProfileClientProps) {
     <GeneralWrapperStyled>
       <div className="max-w-6xl mx-auto pt-1 sm:pt-3 pb-16 min-w-0">
         <ProfileView user={userData} doc={doc} details={details} isSelf={isSelf} orgslug={orgslug} />
+        {userData.user_uuid && <ProfileContributions userUuid={userData.user_uuid} orgslug={orgslug} />}
       </div>
     </GeneralWrapperStyled>
   )

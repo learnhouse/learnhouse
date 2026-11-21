@@ -125,12 +125,14 @@ function Divider() {
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 const MOD = isMac ? '⌘' : 'Ctrl+'
 
-export default function SelectionBubble({ editor, activity, course }: { editor: any; activity: any; course?: any }) {
+// `allowAI={false}`: the learner page's light editor (contributions), where
+// a learner's suggestion must not spend the org's AI credits.
+export default function SelectionBubble({ editor, activity, course, allowAI = true }: { editor: any; activity: any; course?: any; allowAI?: boolean }) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const org = useOrg() as any
   const aiFeature = useGetAIFeatures({ feature: 'editor' })
-  const canUseAI = org?.config?.config?.resolved_features?.ai?.enabled === true && !!aiFeature
+  const canUseAI = allowAI && org?.config?.config?.resolved_features?.ai?.enabled === true && !!aiFeature
   const [panel, setPanel] = React.useState<Panel>(null)
   const [linkDraft, setLinkDraft] = React.useState('')
   const [noteDraft, setNoteDraft] = React.useState('')

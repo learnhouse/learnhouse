@@ -29,6 +29,7 @@ import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { Button, Chip, ConfirmDialog, SearchInput, SectionCard } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { ChoiceTile, EditorPage, EditorSkeleton, ErrorNotice, SelectBox } from '../courseEditorUi'
 import { useSectionDraft } from '../courseEditorSave'
+import CommunityContributorsCard from './CommunityContributorsCard'
 
 const DROPDOWN_TRIGGER =
     'inline-flex h-8 w-[160px] items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed'
@@ -144,7 +145,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
     // sent by the header Save. Adding and removing people are actions.
     type RoleEdit = { authorship: ContributorRole; authorship_status: ContributorStatus };
     const roleDraft = useSectionDraft<Record<string, RoleEdit>>('contributors', {
-        label: t('dashboard.courses.editor.contributors.roles_section'),
+        label: t('dashboard.courses.authors.roles_section'),
         tab: 'contributors',
         save: async (edits: Record<string, RoleEdit>) => {
             const failed: string[] = [];
@@ -269,7 +270,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                     className={`${DROPDOWN_TRIGGER} bg-white text-neutral-700 ring-1 ring-inset ring-neutral-200 hover:ring-neutral-300`}
                     disabled={contributor.authorship === 'CREATOR'}
                 >
-                    {t(`dashboard.courses.contributors.roles.${contributor.authorship.toLowerCase()}`)}
+                    {t(`dashboard.courses.authors.roles.${contributor.authorship.toLowerCase()}`)}
                     <CaretDown className="h-3.5 w-3.5 opacity-60" />
                 </button>
             </DropdownMenuTrigger>
@@ -280,7 +281,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                         onClick={() => updateContributor(contributor.user_id, { authorship: role as ContributorRole })}
                         className="justify-between"
                     >
-                        {t(`dashboard.courses.contributors.roles.${role.toLowerCase()}`)}
+                        {t(`dashboard.courses.authors.roles.${role.toLowerCase()}`)}
                         {contributor.authorship === role && <Check className="ms-2 h-4 w-4" />}
                     </DropdownMenuItem>
                 ))}
@@ -296,7 +297,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                     className={`${DROPDOWN_TRIGGER} ${getStatusStyle(contributor.authorship_status)}`}
                     disabled={contributor.authorship === 'CREATOR'}
                 >
-                    {t(`dashboard.courses.contributors.statuses.${contributor.authorship_status.toLowerCase()}`)}
+                    {t(`dashboard.courses.authors.statuses.${contributor.authorship_status.toLowerCase()}`)}
                     <CaretDown className="h-3.5 w-3.5 opacity-60" />
                 </button>
             </DropdownMenuTrigger>
@@ -307,7 +308,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                         onClick={() => updateContributor(contributor.user_id, { authorship_status: status as ContributorStatus })}
                         className="justify-between"
                     >
-                        {t(`dashboard.courses.contributors.statuses.${status.toLowerCase()}`)}
+                        {t(`dashboard.courses.authors.statuses.${status.toLowerCase()}`)}
                         {contributor.authorship_status === status && <Check className="ms-2 h-4 w-4" />}
                     </DropdownMenuItem>
                 ))}
@@ -392,79 +393,14 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
         <EditorPage width="wide">
             {roleDraft.error && <ErrorNotice>{roleDraft.error}</ErrorNotice>}
             <SectionCard
-                icon={<Handshake size={18} />}
-                title={t('dashboard.courses.contributors.title')}
-                description={t('dashboard.courses.contributors.subtitle')}
-            >
-                <div role="radiogroup" aria-label={t('dashboard.courses.contributors.title')} className="grid sm:grid-cols-2 gap-3">
-                    <ChoiceTile
-                        icon={UserGear}
-                        title={t('dashboard.courses.contributors.open_to_contributors.title')}
-                        description={t('dashboard.courses.contributors.open_to_contributors.description')}
-                        selected={!!isOpenToContributors}
-                        activeLabel={t('dashboard.courses.contributors.open_to_contributors.active')}
-                        tabIndex={0}
-                        onClick={() => !isOpenToContributors && setConfirmOpen(true)}
-                        onKeyDown={(e) => {
-                            if ((e.key === 'Enter' || e.key === ' ') && !isOpenToContributors) {
-                                e.preventDefault()
-                                setConfirmOpen(true)
-                            }
-                        }}
-                    />
-                    <ChoiceTile
-                        icon={Users}
-                        title={t('dashboard.courses.contributors.closed_to_contributors.title')}
-                        description={t('dashboard.courses.contributors.closed_to_contributors.description')}
-                        selected={!isOpenToContributors}
-                        activeLabel={t('dashboard.courses.contributors.closed_to_contributors.active')}
-                        tabIndex={0}
-                        onClick={() => isOpenToContributors && setConfirmOpen(false)}
-                        onKeyDown={(e) => {
-                            if ((e.key === 'Enter' || e.key === ' ') && isOpenToContributors) {
-                                e.preventDefault()
-                                setConfirmOpen(false)
-                            }
-                        }}
-                    />
-                </div>
-                <ConfirmDialog
-                    open={confirmOpen !== null}
-                    onOpenChange={(open) => !open && setConfirmOpen(null)}
-                    tone="info"
-                    title={
-                        confirmOpen
-                            ? t('dashboard.courses.contributors.open_to_contributors.confirmation_title')
-                            : t('dashboard.courses.contributors.closed_to_contributors.confirmation_title')
-                    }
-                    message={
-                        <>
-                            {confirmOpen
-                                ? t('dashboard.courses.contributors.open_to_contributors.confirmation_message')
-                                : t('dashboard.courses.contributors.closed_to_contributors.confirmation_message')}{' '}
-                            {t('dashboard.courses.editor.save.applies_on_save')}
-                        </>
-                    }
-                    confirmLabel={
-                        confirmOpen
-                            ? t('dashboard.courses.contributors.open_to_contributors.confirmation_button')
-                            : t('dashboard.courses.contributors.closed_to_contributors.confirmation_button')
-                    }
-                    onConfirm={() => {
-                        if (confirmOpen !== null) setIsOpenToContributors(confirmOpen)
-                    }}
-                />
-            </SectionCard>
-
-            <SectionCard
                 icon={<UsersThree size={18} />}
-                title={t('dashboard.courses.editor.contributors.people_title')}
-                description={t('dashboard.courses.editor.contributors.people_description')}
+                title={t('dashboard.courses.authors.title')}
+                description={t('dashboard.courses.authors.description')}
                 bodyClassName="p-5 space-y-4"
                 actions={
                     Array.isArray(contributors) && contributors.length > 0 ? (
                         <Chip tone="neutral">
-                            {t('dashboard.courses.editor.contributors.count', { count: contributors.length })}
+                            {t('dashboard.courses.authors.count', { count: contributors.length })}
                         </Chip>
                     ) : undefined
                 }
@@ -473,7 +409,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder={t('dashboard.courses.contributors.search.placeholder')}
+                        placeholder={t('dashboard.courses.authors.search_placeholder')}
                     />
                     {searchQuery && (
                         <div className="mt-2 bg-white rounded-xl ring-1 ring-inset ring-neutral-200 divide-y divide-neutral-100 overflow-hidden">
@@ -548,7 +484,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                                                 </div>
                                                 {isExistingContributor && (
                                                     <Chip tone="neutral">
-                                                        {t('dashboard.courses.contributors.actions.already_contributor')}
+                                                        {t('dashboard.courses.authors.already_author')}
                                                     </Chip>
                                                 )}
                                             </div>
@@ -567,7 +503,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                 {selectedContributors.length > 0 && (
                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-neutral-900 text-white ps-4 pe-1.5 py-1.5">
                         <span className="text-sm font-semibold tabular-nums">
-                            {t('dashboard.courses.contributors.actions.selected_contributors', { count: selectedContributors.length })}
+                            {t('dashboard.courses.authors.selected', { count: selectedContributors.length })}
                         </span>
                         <div className="flex items-center gap-1">
                             <button
@@ -592,8 +528,8 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                 <ConfirmDialog
                     open={confirmRemove}
                     onOpenChange={setConfirmRemove}
-                    title={t('dashboard.courses.editor.contributors.remove_title', { count: selectedContributors.length })}
-                    message={t('dashboard.courses.editor.contributors.remove_message')}
+                    title={t('dashboard.courses.authors.remove_title', { count: selectedContributors.length })}
+                    message={t('dashboard.courses.authors.remove_message')}
                     confirmLabel={t('dashboard.courses.contributors.actions.remove_selected')}
                     onConfirm={handleBulkRemove}
                 />
@@ -697,6 +633,72 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                     </Table>
                 </div>
             </SectionCard>
+            <SectionCard
+                icon={<Handshake size={18} />}
+                title={t('dashboard.courses.authors.requests.title')}
+                description={t('dashboard.courses.authors.requests.description')}
+            >
+                <div role="radiogroup" aria-label={t('dashboard.courses.authors.requests.title')} className="grid sm:grid-cols-2 gap-3">
+                    <ChoiceTile
+                        icon={UserGear}
+                        title={t('dashboard.courses.authors.requests.open_title')}
+                        description={t('dashboard.courses.authors.requests.open_description')}
+                        selected={!!isOpenToContributors}
+                        activeLabel={t('dashboard.courses.authors.requests.active')}
+                        tabIndex={0}
+                        onClick={() => !isOpenToContributors && setConfirmOpen(true)}
+                        onKeyDown={(e) => {
+                            if ((e.key === 'Enter' || e.key === ' ') && !isOpenToContributors) {
+                                e.preventDefault()
+                                setConfirmOpen(true)
+                            }
+                        }}
+                    />
+                    <ChoiceTile
+                        icon={Users}
+                        title={t('dashboard.courses.authors.requests.closed_title')}
+                        description={t('dashboard.courses.authors.requests.closed_description')}
+                        selected={!isOpenToContributors}
+                        activeLabel={t('dashboard.courses.authors.requests.active')}
+                        tabIndex={0}
+                        onClick={() => isOpenToContributors && setConfirmOpen(false)}
+                        onKeyDown={(e) => {
+                            if ((e.key === 'Enter' || e.key === ' ') && isOpenToContributors) {
+                                e.preventDefault()
+                                setConfirmOpen(false)
+                            }
+                        }}
+                    />
+                </div>
+                <ConfirmDialog
+                    open={confirmOpen !== null}
+                    onOpenChange={(open) => !open && setConfirmOpen(null)}
+                    tone="info"
+                    title={
+                        confirmOpen
+                            ? t('dashboard.courses.authors.requests.open_confirm_title')
+                            : t('dashboard.courses.authors.requests.closed_confirm_title')
+                    }
+                    message={
+                        <>
+                            {confirmOpen
+                                ? t('dashboard.courses.authors.requests.open_confirm_message')
+                                : t('dashboard.courses.authors.requests.closed_confirm_message')}{' '}
+                            {t('dashboard.courses.editor.save.applies_on_save')}
+                        </>
+                    }
+                    confirmLabel={
+                        confirmOpen
+                            ? t('dashboard.courses.authors.requests.open_confirm_button')
+                            : t('dashboard.courses.authors.requests.closed_confirm_button')
+                    }
+                    onConfirm={() => {
+                        if (confirmOpen !== null) setIsOpenToContributors(confirmOpen)
+                    }}
+                />
+            </SectionCard>
+
+            <CommunityContributorsCard orgslug={_props.orgslug} courseUuid={courseStructure.course_uuid} />
         </EditorPage>
     );
 }
