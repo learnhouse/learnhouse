@@ -10,13 +10,26 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { Check, Lightbulb, LockKey, Plus, Trash, WarningCircle } from '@phosphor-icons/react'
+import { Check, Key, Lightbulb, LockKey } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { CommitInput, FIELD_CLASS } from '../../../Blocks/ui/BlockChrome'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import { InlineHint } from '../Sort/kit'
 import { cn } from '@/lib/utils'
-import { ExperienceFooter, ExperienceFrame, buzz, newId, useEnsureBlockId, useExperienceEditable, useLiveAttrs, usePrefersReducedMotion } from '../shared'
+import {
+  AddGhost,
+  AnswerKeyHint,
+  EDIT_OBJECT,
+  ExperienceFooter,
+  ExperienceFrame,
+  InlineText,
+  RemoveX,
+  buzz,
+  newId,
+  useEnsureBlockId,
+  useExperienceEditable,
+  useLiveAttrs,
+  usePrefersReducedMotion,
+} from '../shared'
 import {
   MAX_ANSWER_LENGTH,
   MAX_CLUES,
@@ -57,9 +70,7 @@ export default function CodeLockView(props: NodeViewProps) {
   return (
     <NodeViewWrapper className="block-exp-code-lock">
       {editable && !preview ? (
-        <ExperienceFrame {...frame} onTitleChange={(title) => commit({ title })} titlePlaceholder={t('editor.experiences.code_lock.title_placeholder')}>
-          <CodeLockForm data={data} commit={commit} />
-        </ExperienceFrame>
+        <CodeLockAuthor data={data} commit={commit} frame={frame} />
       ) : (
         <CodeLockPlayer key={JSON.stringify(data.clues)} data={data} frame={frame} />
       )}
@@ -68,6 +79,10 @@ export default function CodeLockView(props: NodeViewProps) {
 }
 
 // ---- authoring -----------------------------------------------------------
+// Edit in place: the story, the padlock and the clue cards as learners see
+// them. Each clue's answer is typed in the learner's answer well (masked
+// until focused), its hint sits where learners reveal it, and the reward is
+// edited at the end, where the lock opens.
 
 /** The registry's example (what the slash menu inserts), minus its fresh blockId. */
 function exampleAttrs(t: TFunction): Record<string, unknown> {
@@ -75,110 +90,182 @@ function exampleAttrs(t: TFunction): Record<string, unknown> {
   return attrs
 }
 
-function Hint({ children }: { children: React.ReactNode }) {
+/** The answer, typed in the learner's well; dots until the field is focused. */
+function MaskedAnswer({ value, onCommit, ariaLabel, placeholder }: { value: string; onCommit: (_v: string) => void; ariaLabel: string; placeholder: string }) {
+  const [draft, setDraft] = React.useState(value)
+  const [focused, setFocused] = React.useState(false)
+  // Follow remote changes while the field isn't being edited (adjusted during render).
+  const [seen, setSeen] = React.useState(value)
+  if (!focused && seen !== value) {
+    setSeen(value)
+    setDraft(value)
+  }
+  const save = () => {
+    if (draft !== value) onCommit(draft)
+  }
   return (
-    <p className="m-0 flex items-start gap-1.5 text-xs leading-snug text-amber-700">
-      <WarningCircle size={14} weight="fill" className="mt-px shrink-0" aria-hidden />
-      <span>{children}</span>
-    </p>
+    <input
+      type="text"
+      autoComplete="off"
+      autoCapitalize="off"
+      spellCheck={false}
+      data-1p-ignore=""
+      data-lpignore="true"
+      value={draft}
+      aria-label={ariaLabel}
+      placeholder={placeholder}
+      maxLength={MAX_ANSWER_LENGTH + 20}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false)
+        save()
+      }}
+      onChange={(e) => setDraft(e.target.value)}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          e.currentTarget.blur()
+        }
+        if (e.key === 'Escape') {
+          setDraft(value)
+          requestAnimationFrame(() => (e.target as HTMLInputElement).blur())
+        }
+      }}
+      style={!focused && draft ? ({ WebkitTextSecurity: 'disc' } as React.CSSProperties) : undefined}
+      className="lh-exp-well h-10 w-full min-w-0 rounded-lg px-3 font-mono text-[14px] text-neutral-900 outline-none placeholder:font-sans placeholder:text-neutral-400 focus:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),inset_0_0_0_2px_rgba(14,165,233,0.55)] sm:max-w-[14rem]"
+    />
   )
 }
 
-function CodeLockForm({ data, commit }: { data: CodeLockData; commit: (_p: any) => void }) {
+function CodeLockAuthor({ data, commit, frame }: { data: CodeLockData; commit: (_p: any) => void; frame: FrameBase }) {
   const { t } = useTranslation()
   const k = (s: string, o: Record<string, unknown> = {}) => t(`editor.experiences.code_lock.${s}`, o)
   const issues = validateCodeLock(data)
   const issueText = (i: CodeLockIssue) => k(`issue_${i.kind}`, { max: MAX_ANSWER_LENGTH })
   const edit = (fn: (_c: Clue[]) => Clue[]) => commit((live: any) => ({ clues: fn(normalizeCodeLock(live).clues) }))
   const patch = (id: string, p: Partial<Clue>) => edit((cs) => cs.map((c) => (c.id === id ? { ...c, ...p } : c)))
-  const addClue = () => edit((cs) => [...cs, { id: newId(), question: '', answer: '', hint: '' }])
-
-  if (!data.clues.length && !data.story && !data.reward) {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-xl bg-neutral-50 px-4 py-6 text-center">
-        <p className="m-0 text-sm text-neutral-500">{k('empty')}</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <button type="button" className={buttonClass('primary', 'sm')} onClick={() => commit(exampleAttrs(t))}>
-            {k('fill_example')}
-          </button>
-          <button type="button" className={buttonClass('secondary', 'sm')} onClick={addClue}>
-            <Plus size={14} weight="bold" aria-hidden />
-            {k('add_clue')}
-          </button>
-        </div>
-      </div>
-    )
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const focusLater = (sel: string) => requestAnimationFrame(() => requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>(sel)?.focus()))
+  const addClue = () => {
+    const id = newId()
+    edit((cs) => [...cs, { id, question: '', answer: '', hint: '' }])
+    focusLater(`[data-clue="${id}"] textarea`)
   }
+  const removeClue = (i: number) => {
+    const next = data.clues[i + 1] ?? data.clues[i - 1]
+    edit((cs) => cs.filter((x) => x.id !== data.clues[i].id))
+    focusLater(next ? `[data-clue="${next.id}"] textarea` : '[data-add-clue]')
+  }
+  const empty = !data.clues.length && !data.story && !data.reward
 
   return (
-    <div className="flex flex-col gap-3">
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-neutral-600">{k('story_label')}</span>
-        <CommitInput multiline value={data.story} onCommit={(story) => commit({ story })} placeholder={k('story_placeholder')} aria-label={k('story_label')} />
-      </label>
+    <ExperienceFrame
+      {...frame}
+      wysiwyg
+      onTitleChange={(title) => commit({ title })}
+      titlePlaceholder={k('title_placeholder')}
+      instructions={t('activities.experiences.code_lock.instructions')}
+      footer={<AnswerKeyHint />}
+    >
+      <div ref={rootRef} className="flex flex-col gap-4">
+        <InlineText
+          multiline
+          value={data.story}
+          onCommit={(story) => commit({ story })}
+          ariaLabel={k('story_label')}
+          placeholder={k('story_placeholder')}
+          maxLength={800}
+          className="text-[14px] leading-relaxed text-neutral-700 [overflow-wrap:anywhere]"
+        />
+        {empty && (
+          <p className="m-0 -mt-2 text-[13px] text-neutral-500">
+            {k('empty')}{' '}
+            <button type="button" onClick={() => commit(exampleAttrs(t))} className="font-medium text-neutral-800 underline decoration-dashed underline-offset-2 hover:text-neutral-950">
+              {k('fill_example')}
+            </button>
+          </p>
+        )}
 
-      <ol className="m-0 flex list-none flex-col gap-2 p-0">
-        {data.clues.map((c, i) => {
-          const rowIssues = issues.filter((x) => 'id' in x && x.id === c.id)
-          return (
-            <li key={c.id} className="flex flex-col gap-2 rounded-xl bg-neutral-50 p-3">
-              <div className="flex items-start gap-2">
-                <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-200 text-xs font-bold tabular-nums text-slate-700">{i + 1}</span>
-                <CommitInput
-                  value={c.question}
-                  onCommit={(question) => patch(c.id, { question })}
-                  placeholder={k('question_placeholder')}
-                  aria-label={k('question_label', { n: i + 1 })}
-                  maxLength={300}
-                  className={cn(FIELD_CLASS, 'flex-1')}
-                />
-                <button type="button" className={buttonClass('danger-ghost', 'icon', 'shrink-0')} aria-label={k('remove_clue', { n: i + 1 })} onClick={() => edit((cs) => cs.filter((x) => x.id !== c.id))}>
-                  <Trash size={14} aria-hidden />
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-2 ps-8 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)]">
-                <CommitInput
-                  value={c.answer}
-                  onCommit={(answer) => patch(c.id, { answer })}
-                  placeholder={k('answer_placeholder')}
-                  aria-label={k('answer_label', { n: i + 1 })}
-                  maxLength={MAX_ANSWER_LENGTH + 20}
-                  className={cn(FIELD_CLASS, 'font-mono')}
-                />
-                <CommitInput
-                  value={c.hint}
-                  onCommit={(hint) => patch(c.id, { hint })}
-                  placeholder={k('hint_placeholder')}
-                  aria-label={k('hint_label', { n: i + 1 })}
-                  maxLength={200}
-                />
-              </div>
-              {rowIssues.length > 0 && (
-                <div className="flex flex-col gap-1 ps-8">
-                  {rowIssues.map((x) => (
-                    <Hint key={x.kind}>{issueText(x)}</Hint>
-                  ))}
+        {data.clues.length > 0 && <Padlock clues={data.clues} solved={[]} open={false} reduced label={k('padlock_label', { n: data.clues.length, defaultValue: 'Padlock with {{n}} dials' })} />}
+
+        <ol className="m-0 flex list-none flex-col gap-2 p-0">
+          {data.clues.map((c, i) => {
+            const rowIssues = issues.filter((x) => 'id' in x && x.id === c.id)
+            return (
+              <li
+                key={c.id}
+                data-clue={c.id}
+                className={cn('relative flex flex-col gap-2 rounded-xl bg-white p-3 shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08)),0_1px_2px_var(--exp-drop,rgba(0,0,0,0.05))]', EDIT_OBJECT)}
+              >
+                <div className="flex items-start gap-2">
+                  <span aria-hidden className="lh-exp-well mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[12px] font-bold tabular-nums text-neutral-600">
+                    {i + 1}
+                  </span>
+                  <InlineText
+                    value={c.question}
+                    onCommit={(question) => patch(c.id, { question })}
+                    ariaLabel={k('question_label', { n: i + 1 })}
+                    placeholder={k('question_placeholder')}
+                    maxLength={300}
+                    className="min-w-0 flex-1 text-[14px] font-medium text-neutral-900 [overflow-wrap:anywhere]"
+                  />
                 </div>
-              )}
-            </li>
-          )
-        })}
-      </ol>
-      {issues.some((x) => x.kind === 'noClues') && <Hint>{issueText({ kind: 'noClues' })}</Hint>}
-      {data.clues.length < MAX_CLUES && (
-        <button type="button" className={buttonClass('secondary', 'sm', 'self-start')} onClick={addClue}>
-          <Plus size={14} weight="bold" aria-hidden />
-          {k('add_clue')}
-        </button>
-      )}
-      <p className="m-0 text-[11px] leading-snug text-neutral-400">{k('match_hint')}</p>
+                <div className="flex flex-col gap-2 ps-8 sm:flex-row sm:items-center">
+                  <MaskedAnswer value={c.answer} onCommit={(answer) => patch(c.id, { answer })} ariaLabel={k('answer_label', { n: i + 1 })} placeholder={k('answer_placeholder')} />
+                  <span className="inline-flex items-center gap-1 text-[12px] text-neutral-400">
+                    <Key size={12} weight="duotone" aria-hidden className="text-amber-500" />
+                    {k('answer_masked', { defaultValue: 'The answer (hidden until you click it)' })}
+                  </span>
+                </div>
+                <div className="ms-8 flex items-start gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[13px] text-amber-800">
+                  <Lightbulb size={13} weight="fill" aria-hidden className="mt-[3px] shrink-0" />
+                  <InlineText
+                    value={c.hint}
+                    onCommit={(hint) => patch(c.id, { hint })}
+                    ariaLabel={k('hint_label', { n: i + 1 })}
+                    placeholder={k('hint_placeholder')}
+                    maxLength={200}
+                    className="min-w-0 flex-1 [overflow-wrap:anywhere]"
+                  />
+                </div>
+                {rowIssues.map((x) => (
+                  <div key={x.kind} className="ps-8">
+                    <InlineHint severity="warning">{issueText(x)}</InlineHint>
+                  </div>
+                ))}
+                <RemoveX floating onClick={() => removeClue(i)} label={k('remove_clue', { n: i + 1 })} />
+              </li>
+            )
+          })}
+          {data.clues.length < MAX_CLUES && (
+            <AddGhost data-add-clue="" onClick={addClue} className="min-h-12 w-full rounded-xl px-3 text-[14px]">
+              {k('add_clue')}
+            </AddGhost>
+          )}
+        </ol>
+        {issues.some((x) => x.kind === 'noClues') && <InlineHint severity="warning">{issueText({ kind: 'noClues' })}</InlineHint>}
+        <p className="m-0 -mt-2 text-[12px] leading-snug text-neutral-400">{k('match_hint')}</p>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-neutral-600">{k('reward_label')}</span>
-        <CommitInput multiline value={data.reward} onCommit={(reward) => commit({ reward })} placeholder={k('reward_placeholder')} aria-label={k('reward_label')} />
-      </label>
-      {issues.some((x) => x.kind === 'emptyReward') && <Hint>{issueText({ kind: 'emptyReward' })}</Hint>}
-    </div>
+        {/* What learners get when the lock opens. */}
+        <div className="flex flex-col gap-2 rounded-xl bg-emerald-50 px-4 py-3">
+          <p className="m-0 inline-flex items-center gap-1.5 text-[14px] font-semibold text-emerald-800">
+            <Check size={15} weight="bold" aria-hidden />
+            {t('activities.experiences.code_lock.unlocked')}
+          </p>
+          <InlineText
+            multiline
+            value={data.reward}
+            onCommit={(reward) => commit({ reward })}
+            ariaLabel={k('reward_label')}
+            placeholder={k('reward_placeholder')}
+            maxLength={800}
+            className="text-[14px] leading-relaxed text-neutral-800 [overflow-wrap:anywhere]"
+          />
+        </div>
+        {issues.some((x) => x.kind === 'emptyReward') && <InlineHint severity="warning">{issueText({ kind: 'emptyReward' })}</InlineHint>}
+      </div>
+    </ExperienceFrame>
   )
 }
 

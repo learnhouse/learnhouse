@@ -4210,7 +4210,11 @@
         "solved_mark": "Gelöst",
         "missed_mark": "Nicht gelöst",
         "play_again": "Nochmal spielen",
-        "best": "Bestwert"
+        "best": "Bestwert",
+        "guesses_left": "Verbleibende Versuche: {{n}}",
+        "history_item": "Versuch {{n}}: {{word}} ({{feedback}})",
+        "history_label": "Frühere Versuche",
+        "typing_row": "Dein Versuch"
       },
       "confidence": {
         "instructions": "Antworte und sag dann, wie sicher du bist.",
@@ -13718,7 +13722,6 @@
       "not_found": "Szenario nicht gefunden",
       "not_found_hint": "Bitte prüfen Sie Ihre Szenario-Konfiguration und versuchen Sie es erneut.",
       "illustration_alt": "Szenario-Illustration",
-      "max_scenarios": "Maximal 40 Szenarien erlaubt",
       "new_scenario_text": "Neuer Szenariotext...",
       "default_option_1": "Option 1",
       "default_option_2": "Option 2",
@@ -14403,7 +14406,6 @@
         },
         "jump_to": "Zu diesem Schritt springen",
         "leads_to": "Führt zu",
-        "limits": "Bis zu {{max}} Schritte, je {{choices}} Auswahlmöglichkeiten.",
         "map_hint": "Klicke auf einen Schritt, um ihn hier zu bearbeiten. Pfeile zeigen, wohin jede Auswahl führt.",
         "missing_step": "Fehlender Schritt",
         "move_down": "Nach unten",
@@ -15024,7 +15026,10 @@
         "issue_duplicateOption": "Zwei Optionen sind identisch.",
         "example": {
           "title": "Kopfrechnen"
-        }
+        },
+        "question_of": "Frage {{n}} von {{total}}",
+        "prev_question": "Vorherige Frage",
+        "next_question": "Nächste Frage"
       },
       "estimate": {
         "name": "Schätzen",
@@ -15054,7 +15059,8 @@
           "explanation": "Ein Erwachsener hat 206 Knochen. Babys kommen mit etwa 300 zur Welt; einige verwachsen beim Wachsen miteinander.",
           "unit": "Knochen"
         },
-        "fill_example": "Beispiel verwenden"
+        "fill_example": "Beispiel verwenden",
+        "answer_marker": "Antwort: {{value}}"
       },
       "code_lock": {
         "name": "Zahlenschloss",
@@ -15090,7 +15096,9 @@
           "c3": "Wie viele Kontinente gibt es?",
           "c3_hint": "Afrika ist einer davon.",
           "reward": "Die Tür springt auf. Gut gemacht, Detektiv!"
-        }
+        },
+        "answer_masked": "Die Antwort (verborgen, bis du darauf klickst)",
+        "padlock_label": "Vorhängeschloss mit {{n}} Rädchen"
       },
       "scenarios": {
         "chip_unreachable": "Niemand erreicht diesen Schritt",
@@ -15137,7 +15145,11 @@
           "step3": "Der Kunde wird noch wütender. Was jetzt?",
           "step3_a": "Entschuldigen und nach der Bestellnummer fragen",
           "step3_b": "Das Gespräch beenden"
-        }
+        },
+        "then_short": "Dann",
+        "open_target": "Diesen Schritt öffnen",
+        "steps_label": "Schritte",
+        "editing_hint": "Du bearbeitest die Geschichte. Nutze die Vorschau, um sie als Lernende zu spielen."
       },
       "flashcards": {
         "title_placeholder": "Titel des Stapels (optional)",
@@ -15262,7 +15274,6 @@
           "step4": "Wasser fließt zurück ins Meer"
         },
         "add_step": "Schritt hinzufügen",
-        "detail_label": "Detail",
         "detail_placeholder": "Detail, z. B. 1969",
         "drag_short": "Zum Sortieren ziehen",
         "drag_step": "Schritt {{n}} verschieben (ziehen oder Pfeiltasten)",
@@ -15274,13 +15285,14 @@
           "too_many_items": "Verwende höchstens 10 Schritte; Lernende sehen nur die ersten 10."
         },
         "items_heading": "Schritte in der richtigen Reihenfolge",
-        "items_hint": "Lernende erhalten sie gemischt.",
         "layout_label": "Layout",
-        "remove_step": "Schritt entfernen",
         "step_placeholder": "Schritt {{n}}",
         "timeline_hint": "Das Detail jedes Schritts (z. B. ein Jahr) wird angezeigt, nachdem Lernende geprüft haben.",
         "variant_list": "Liste",
-        "variant_timeline": "Zeitleiste"
+        "variant_timeline": "Zeitleiste",
+        "author_hint": "Das ist die richtige Reihenfolge; Lernende bekommen die Schritte gemischt. Ziehe einen Schritt oder nutze die Pfeile, um umzusortieren.",
+        "detail_label_n": "Detail zu Schritt {{n}}",
+        "remove_named": "„{{item}}“ entfernen"
       },
       "match": {
         "title": "Paare finden",
@@ -15341,22 +15353,22 @@
         "placeholder_prompt": "Beispielbild: füge dein eigenes Bild hinzu",
         "stage_help": "Klicke auf das Bild, um einen Punkt hinzuzufügen. Ziehe einen Punkt, um ihn zu verschieben, oder wähle ihn aus und nutze die Pfeiltasten.",
         "spots_label": "Punkte",
-        "empty_list": "Noch keine Punkte. Klicke auf das Bild, um einen hinzuzufügen.",
         "spot_aria": "Punkt {{n}}: {{label}}",
         "untitled_spot": "ohne Titel",
-        "move_hint": "Auswählen, dann auf dem Bild ziehen oder die Pfeiltasten nutzen",
         "select_spot": "Punkt {{n}} auswählen",
         "label_placeholder": "Was ist hier?",
         "label_label": "Beschriftung für Punkt {{n}}",
         "remove_spot": "Punkt {{n}} entfernen",
-        "hint_label_short": "Füge eine Beschriftung hinzu, damit die Lernenden wissen, was sie gefunden haben.",
         "explanation_placeholder": "Erklärung, die beim Finden angezeigt wird (optional)",
         "explanation_label": "Erklärung für Punkt {{n}}",
         "size_label": "Größe",
         "hint_no_image": "Das Beispielbild wird verwendet. Füge oben dein eigenes Bild hinzu.",
         "hint_no_spots": "Füge mindestens einen Punkt hinzu.",
         "hint_missing_label": "Punkt {{n}} hat keine Beschriftung.",
-        "hint_overlap": "Die Punkte {{a}} und {{b}} überlappen sich, deshalb ist einer evtl. schwer zu treffen."
+        "hint_overlap": "Die Punkte {{a}} und {{b}} überlappen sich, deshalb ist einer evtl. schwer zu treffen.",
+        "mode_find_hint": "Lernende klicken auf das Bild, um jede Stelle zu finden.",
+        "mode_explore_hint": "Lernende öffnen nummerierte Pins, um mehr über jede Stelle zu lesen.",
+        "pin_hint": "Zum Bearbeiten klicken. Zum Verschieben ziehen oder die Pfeiltasten nutzen."
       },
       "gaps": {
         "title": "Lückentext",
@@ -15378,8 +15390,19 @@
         "hint_no_gaps": "Noch keine Lücken. Wähle ein Wort aus und klicke auf Lücke erstellen.",
         "hint_empty_gap": "Eine leere Lücke [[ ]] wird ignoriert. Schreibe die Antwort hinein.",
         "hint_unclosed": "Bei einer Lücke fehlt das schließende ]].",
-        "preview_label": "Vorschau",
-        "gap_count": "Lücken: {{n}}"
+        "answers_hint": "Lernende können jede dieser Antworten eingeben. Die erste kommt in die Wortauswahl.",
+        "answer_label": "Akzeptierte Antwort {{n}}",
+        "remove_answer": "„{{answer}}“ entfernen",
+        "add_answer": "Weitere akzeptierte Antwort hinzufügen",
+        "remove_gap": "Lücke entfernen (Wort behalten)",
+        "gap_title": "Lücke {{n}}",
+        "gap_aria": "Lücke {{n}}: {{answer}}. Akzeptierte Antworten bearbeiten",
+        "passage_hint": "Zum Bearbeiten des Textes klicken. Wörter markieren, dann „Lücke erstellen“.",
+        "passage_placeholder": "Schreibe hier deinen Text…",
+        "edit_text": "Text bearbeiten",
+        "make_gap_ready": "Drücke „Lücke erstellen“, um die markierten Wörter zur Lücke zu machen.",
+        "select_hint": "Markiere Wörter, um eine Lücke zu machen. Klicke auf eine Lücke, um ihre Antworten zu bearbeiten.",
+        "done_editing": "Fertig"
       },
       "spot_mistake": {
         "title": "Finde den Fehler",
@@ -15407,8 +15430,6 @@
         "split_help_code": "Jede Zeile ist eine Auswahl. Leere Zeilen bleiben, können aber nicht gewählt werden.",
         "segments_label": "Teile",
         "segment_n": "Teil {{n}}",
-        "is_mistake": "Fehler",
-        "is_correct": "Richtig",
         "correction_placeholder": "Korrigierte Version",
         "correction_label": "Korrektur für Teil {{n}}",
         "hint_correction_short": "Füge die korrigierte Version hinzu, damit die Lernenden daraus lernen können.",
@@ -15417,7 +15438,14 @@
         "hint_too_few": "Füge mindestens zwei Sätze oder Zeilen hinzu.",
         "hint_no_mistakes": "Markiere mindestens einen Teil als Fehler.",
         "hint_all_mistakes": "Jeder Teil ist als Fehler markiert. Lass einige richtig.",
-        "hint_missing_correction": "Teil {{n}} ist ein Fehler ohne Korrektur."
+        "hint_missing_correction": "Teil {{n}} ist ein Fehler ohne Korrektur.",
+        "unmark_hint": "Ein Fehler. Klicken, um ihn als richtig zu markieren.",
+        "mark_hint": "Klicken, um dies als Fehler zu markieren.",
+        "edit_text": "Text bearbeiten",
+        "author_hint": "Klicke auf einen Teil, um ihn als Fehler zu markieren, und schreibe unten die Korrektur.",
+        "mistakes_label": "Fehler und ihre Korrekturen",
+        "unmark_named": "Teil {{n}} als richtig markieren",
+        "done_editing": "Fertig"
       },
       "venn": {
         "title": "Venn-Vergleich",
@@ -15443,13 +15471,8 @@
         "zone_both": "Beide",
         "zone_neither": "Keins von beiden",
         "zone_only": "Nur {{set}}",
-        "sets_heading": "Die zwei Gruppen",
         "change_color": "Farbe ändern",
-        "items_heading": "Elemente",
-        "items_hint": "Wähle, wohin jedes Element gehört. Lernende sehen sie gemischt.",
         "item_placeholder": "Element {{n}}",
-        "item_zone": "Wohin es gehört",
-        "remove_item": "Element entfernen",
         "explanation_placeholder": "Warum es dorthin gehört (bei Fehlern gezeigt, optional)",
         "explanation_label": "Erklärung",
         "add_item": "Element hinzufügen",
@@ -15465,7 +15488,16 @@
           "duplicate_item": "Ein anderes Element hat denselben Text.",
           "neither_hidden": "Schalte den Bereich „Keins von beiden“ ein, sonst sehen Lernende dieses Element nicht.",
           "no_both": "Noch gehört kein Element zu beiden Gruppen; die Schnittmenge ist der spannende Teil."
-        }
+        },
+        "moved": "„{{item}}“ nach {{zone}} verschoben.",
+        "move_item": "„{{item}}“ verschieben",
+        "move_hint": "An einen anderen Ort ziehen oder 1–4 drücken",
+        "why_label": "Warum „{{item}}“ hierher gehört",
+        "remove_named": "„{{item}}“ entfernen",
+        "add_to": "Ein Element zu {{zone}} hinzufügen",
+        "author_selected": "Tippe jetzt auf den Bereich, in den „{{item}}“ gehört.",
+        "author_hint": "Jedes Element liegt dort, wo es hingehört. Ziehe ein Element oder tippe auf seinen Griff und dann auf einen Bereich, um es zu verschieben.",
+        "why_heading": "Warum „{{item}}“ zu {{zone}} gehört (wird bei falscher Antwort angezeigt)"
       },
       "label": {
         "title": "Diagramm beschriften",
@@ -15497,9 +15529,6 @@
         "untitled_pin": "Ohne Namen",
         "stage_help": "Klicke auf das Bild, um einen Punkt hinzuzufügen. Ziehe ihn oder nutze die Pfeiltasten, um ihn zu verschieben.",
         "pins_label": "Punkte",
-        "empty_list": "Noch keine Punkte. Klicke auf das Bild, um einen hinzuzufügen.",
-        "move_hint": "Auswählen, dann mit den Pfeiltasten verschieben",
-        "select_pin": "Punkt {{n}} auswählen",
         "label_placeholder": "Etikett",
         "label_label": "Etikett für Punkt {{n}}",
         "remove_pin": "Punkt {{n}} entfernen",
@@ -15507,7 +15536,8 @@
         "distractors_hint": "Zusätzliche Etiketten, die nirgends hingehören. Sie regen zum Nachdenken statt Raten an.",
         "distractor_placeholder": "Falsches Etikett {{n}}",
         "remove_distractor": "Falsches Etikett entfernen",
-        "add_distractor": "Falsches Etikett hinzufügen"
+        "add_distractor": "Falsches Etikett hinzufügen",
+        "author_hint": "Jede Beschriftung sitzt an ihrem Punkt. Klicke auf das Bild, um einen Punkt hinzuzufügen; ziehe einen Punkt, um ihn zu verschieben."
       },
       "word_guess": {
         "title": "Wortraten",
@@ -15524,8 +15554,6 @@
           "w3_clue": "Was Dinge bewegt, erwärmt oder leuchten lässt.",
           "w3_why": "Energie wandelt sich, zum Beispiel von Nahrung in Bewegung, geht aber nie verloren."
         },
-        "words_heading": "Wörter",
-        "words_hint": "Lernende erraten jedes Wort aus seinem Hinweis. Leerzeichen und Bindestriche werden vorgegeben.",
         "answer_placeholder": "Antwort {{n}}",
         "letters": "Buchstaben: {{n}}",
         "remove_word": "Wort entfernen",
@@ -15545,14 +15573,15 @@
           "too_short": "Nutze mindestens 2 Buchstaben.",
           "too_long": "Nutze höchstens 12 Buchstaben, damit die Felder auf ein Handy passen.",
           "duplicate_answer": "Ein anderes Wort hat dieselbe Antwort."
-        }
+        },
+        "type_answer": "Klicke auf die Kacheln und tippe die Antwort ein.",
+        "prev_word": "Vorheriges Wort",
+        "next_word": "Nächstes Wort"
       },
       "confidence": {
         "title": "Sicherheitscheck",
         "description": "Antworten und angeben, wie sicher du bist, um zu sehen, was du nur zu wissen glaubst.",
         "title_placeholder": "Diesen Check benennen",
-        "questions_heading": "Fragen",
-        "questions_hint": "Lernende wählen eine Antwort und wie sicher sie sind und sehen dann, ob sie richtig lagen.",
         "prompt_placeholder": "Frage {{n}}",
         "prompt_label": "Frage {{n}}",
         "correct_group": "Richtige Antwort für Frage {{n}}",
@@ -15591,7 +15620,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "Vorherige Frage",
+        "next_question": "Nächste Frage"
       },
       "matrix": {
         "title": "Eigenschaftsraster",
@@ -15608,18 +15639,13 @@
           "flies": "Kann fliegen",
           "swims": "Schwimmt"
         },
-        "rows_heading": "Zeilen",
-        "columns_heading": "Spalten",
         "row_placeholder": "Zeile {{n}}",
         "column_placeholder": "Spalte {{n}}",
         "add_row": "Zeile hinzufügen",
         "add_column": "Spalte hinzufügen",
-        "remove_row": "Zeile entfernen",
-        "remove_column": "Spalte entfernen",
         "mode_label": "Antwortart",
         "mode_multi": "Mehrere pro Zeile",
         "mode_single": "Eine pro Zeile",
-        "answers_heading": "Richtige Antworten",
         "answers_hint_multi": "Kreuze jede Zelle an, die stimmt.",
         "answers_hint_single": "Wähle für jede Zeile die eine richtige Spalte.",
         "cell_label": "{{row}}: {{column}}",
@@ -15635,7 +15661,9 @@
           "unused_column": "Noch keine Zeile hat diese Eigenschaft.",
           "duplicate_row": "Eine andere Zeile hat denselben Namen.",
           "duplicate_column": "Eine andere Spalte hat denselben Namen."
-        }
+        },
+        "remove_column_named": "Spalte „{{column}}“ entfernen",
+        "remove_row_named": "Zeile „{{row}}“ entfernen"
       },
       "reflect": {
         "title": "Reflexion",
@@ -15644,7 +15672,6 @@
         "prompt_heading": "Aufgabe",
         "prompt_placeholder": "Was sollen Lernende in eigenen Worten erklären?",
         "guiding_heading": "Leitfragen",
-        "guiding_hint": "Optionale Hinweise, die Lernende öffnen können, wenn sie feststecken (bis zu 5).",
         "guiding_placeholder": "Frage {{n}}",
         "guiding_label": "Leitfrage {{n}}",
         "remove_guiding": "Frage {{n}} entfernen",
@@ -15652,10 +15679,8 @@
         "min_words_label": "Mindestanzahl Wörter",
         "min_words_hint": "Lernende können vergleichen, sobald sie diese Zahl erreichen. Bei 0 sofort.",
         "model_heading": "Musterantwort",
-        "model_hint": "Optional. Lernende sehen sie, nachdem sie ihre eigene geschrieben haben.",
         "model_placeholder": "Eine gute Antwort in wenigen Sätzen",
         "checklist_heading": "Kernpunkte",
-        "checklist_hint": "Lernende haken die Punkte ab, die sie genannt haben; das wird ihre Punktzahl (bis zu 8).",
         "point_placeholder": "Kernpunkt {{n}}",
         "point_label": "Kernpunkt {{n}}",
         "remove_point": "Kernpunkt {{n}} entfernen",
@@ -15679,7 +15704,9 @@
           "p2": "Die Erde umkreist die Sonne in einem Jahr",
           "p3": "Direkteres Sonnenlicht und längere Tage im Sommer",
           "p4": "Es liegt nicht am Abstand zur Sonne"
-        }
+        },
+        "guiding_optional": "optional",
+        "answer_key": "Lösungsschlüssel"
       }
     }
   },

@@ -4210,7 +4210,11 @@
         "solved_mark": "Geraden",
         "missed_mark": "Niet geraden",
         "play_again": "Opnieuw spelen",
-        "best": "Beste"
+        "best": "Beste",
+        "guesses_left": "Pogingen over: {{n}}",
+        "history_item": "Poging {{n}}: {{word}} ({{feedback}})",
+        "history_label": "Eerdere pogingen",
+        "typing_row": "Jouw poging"
       },
       "confidence": {
         "instructions": "Antwoord en zeg dan hoe zeker je bent.",
@@ -13718,7 +13722,6 @@
       "not_found": "Scenario niet gevonden",
       "not_found_hint": "Controleer je scenarioconfiguratie en probeer het opnieuw.",
       "illustration_alt": "Scenarioillustratie",
-      "max_scenarios": "Maximaal 40 scenario's toegestaan",
       "new_scenario_text": "Nieuwe scenariotekst...",
       "default_option_1": "Optie 1",
       "default_option_2": "Optie 2",
@@ -14403,7 +14406,6 @@
         },
         "jump_to": "Naar die stap springen",
         "leads_to": "Leidt naar",
-        "limits": "Maximaal {{max}} stappen, elk met {{choices}} keuzes.",
         "map_hint": "Klik op een stap om hem hier te bewerken. Pijlen laten zien waarheen elke keuze leidt.",
         "missing_step": "Ontbrekende stap",
         "move_down": "Omlaag",
@@ -15024,7 +15026,10 @@
         "issue_duplicateOption": "Twee opties zijn hetzelfde.",
         "example": {
           "title": "Snel rekenen"
-        }
+        },
+        "question_of": "Vraag {{n}} van {{total}}",
+        "prev_question": "Vorige vraag",
+        "next_question": "Volgende vraag"
       },
       "estimate": {
         "name": "Schatting",
@@ -15054,7 +15059,8 @@
           "explanation": "Een volwassene heeft 206 botten. Baby's worden geboren met zo'n 300; sommige groeien later aan elkaar.",
           "unit": "botten"
         },
-        "fill_example": "Voorbeeld gebruiken"
+        "fill_example": "Voorbeeld gebruiken",
+        "answer_marker": "Antwoord: {{value}}"
       },
       "code_lock": {
         "name": "Codeslot",
@@ -15090,7 +15096,9 @@
           "c3": "Hoeveel continenten zijn er?",
           "c3_hint": "Afrika is er één van.",
           "reward": "De deur zwaait open. Goed gedaan, detective!"
-        }
+        },
+        "answer_masked": "Het antwoord (verborgen tot je erop klikt)",
+        "padlock_label": "Hangslot met {{n}} wieltjes"
       },
       "scenarios": {
         "chip_unreachable": "Niemand bereikt deze stap",
@@ -15137,7 +15145,11 @@
           "step3": "De klant wordt nog bozer. Wat nu?",
           "step3_a": "Excuses aanbieden en om het bestelnummer vragen",
           "step3_b": "Het gesprek beëindigen"
-        }
+        },
+        "then_short": "Daarna",
+        "open_target": "Die stap openen",
+        "steps_label": "Stappen",
+        "editing_hint": "Je bewerkt het verhaal. Gebruik de voorbeeldweergave om het als leerling te spelen."
       },
       "flashcards": {
         "title_placeholder": "Titel van de stapel (optioneel)",
@@ -15262,7 +15274,6 @@
           "step4": "Water stroomt terug naar de zee"
         },
         "add_step": "Stap toevoegen",
-        "detail_label": "Detail",
         "detail_placeholder": "Detail, bijv. 1969",
         "drag_short": "Slepen om te herschikken",
         "drag_step": "Stap {{n}} verplaatsen (slepen of pijltjestoetsen)",
@@ -15274,13 +15285,14 @@
           "too_many_items": "Gebruik maximaal 10 stappen; cursisten zien alleen de eerste 10."
         },
         "items_heading": "Stappen, in de juiste volgorde",
-        "items_hint": "Cursisten krijgen ze door elkaar.",
         "layout_label": "Indeling",
-        "remove_step": "Stap verwijderen",
         "step_placeholder": "Stap {{n}}",
         "timeline_hint": "Het detail van elke stap (zoals een jaartal) verschijnt nadat cursisten hebben gecontroleerd.",
         "variant_list": "Lijst",
-        "variant_timeline": "Tijdlijn"
+        "variant_timeline": "Tijdlijn",
+        "author_hint": "Dit is de juiste volgorde; leerlingen krijgen de stappen door elkaar. Sleep een stap of gebruik de pijlen om te herschikken.",
+        "detail_label_n": "Detail van stap {{n}}",
+        "remove_named": "“{{item}}” verwijderen"
       },
       "match": {
         "title": "Paren",
@@ -15341,22 +15353,22 @@
         "placeholder_prompt": "Voorbeeldafbeelding: voeg je eigen afbeelding toe",
         "stage_help": "Klik op de afbeelding om een punt toe te voegen. Sleep een punt om het te verplaatsen, of selecteer het en gebruik de pijltjestoetsen.",
         "spots_label": "Punten",
-        "empty_list": "Nog geen punten. Klik op de afbeelding om er een toe te voegen.",
         "spot_aria": "Punt {{n}}: {{label}}",
         "untitled_spot": "zonder titel",
-        "move_hint": "Selecteer, sleep dan op de afbeelding of gebruik de pijltjestoetsen",
         "select_spot": "Punt {{n}} selecteren",
         "label_placeholder": "Wat is hier?",
         "label_label": "Label voor punt {{n}}",
         "remove_spot": "Punt {{n}} verwijderen",
-        "hint_label_short": "Voeg een label toe zodat cursisten weten wat ze hebben gevonden.",
         "explanation_placeholder": "Uitleg die wordt getoond als het gevonden is (optioneel)",
         "explanation_label": "Uitleg voor punt {{n}}",
         "size_label": "Grootte",
         "hint_no_image": "Het voorbeeld wordt gebruikt. Voeg hierboven je eigen afbeelding toe.",
         "hint_no_spots": "Voeg minstens één punt toe.",
         "hint_missing_label": "Punt {{n}} heeft geen label.",
-        "hint_overlap": "Punt {{a}} en {{b}} overlappen, dus een van beide is misschien lastig te raken."
+        "hint_overlap": "Punt {{a}} en {{b}} overlappen, dus een van beide is misschien lastig te raken.",
+        "mode_find_hint": "Leerlingen klikken op de afbeelding om elke plek te vinden.",
+        "mode_explore_hint": "Leerlingen openen genummerde punten om over elke plek te lezen.",
+        "pin_hint": "Klik om te bewerken. Sleep, of gebruik de pijltjestoetsen, om te verplaatsen."
       },
       "gaps": {
         "title": "Gatentekst",
@@ -15378,8 +15390,19 @@
         "hint_no_gaps": "Nog geen gaten. Selecteer een woord en klik op Gat maken.",
         "hint_empty_gap": "Een leeg gat [[ ]] wordt genegeerd. Zet het antwoord erin.",
         "hint_unclosed": "Bij een gat ontbreekt de sluiting ]].",
-        "preview_label": "Voorbeeld",
-        "gap_count": "Gaten: {{n}}"
+        "answers_hint": "Leerlingen mogen elk van deze typen. De eerste komt in de woordenbank.",
+        "answer_label": "Geaccepteerd antwoord {{n}}",
+        "remove_answer": "“{{answer}}” verwijderen",
+        "add_answer": "Nog een geaccepteerd antwoord toevoegen",
+        "remove_gap": "Gat verwijderen (woord behouden)",
+        "gap_title": "Gat {{n}}",
+        "gap_aria": "Gat {{n}}: {{answer}}. Geaccepteerde antwoorden bewerken",
+        "passage_hint": "Klik om de tekst te bewerken. Selecteer woorden en kies dan “Gat maken”.",
+        "passage_placeholder": "Schrijf hier je tekst…",
+        "edit_text": "Tekst bewerken",
+        "make_gap_ready": "Druk op “Gat maken” om de geselecteerde woorden een gat te maken.",
+        "select_hint": "Selecteer woorden om een gat te maken. Klik op een gat om de antwoorden te bewerken.",
+        "done_editing": "Klaar"
       },
       "spot_mistake": {
         "title": "Vind de fout",
@@ -15407,8 +15430,6 @@
         "split_help_code": "Elke regel is één keuze. Lege regels blijven staan maar kunnen niet worden gekozen.",
         "segments_label": "Delen",
         "segment_n": "Deel {{n}}",
-        "is_mistake": "Fout",
-        "is_correct": "Juist",
         "correction_placeholder": "Verbeterde versie",
         "correction_label": "Verbetering voor deel {{n}}",
         "hint_correction_short": "Voeg de verbeterde versie toe zodat cursisten ervan kunnen leren.",
@@ -15417,7 +15438,14 @@
         "hint_too_few": "Voeg minstens twee zinnen of regels toe.",
         "hint_no_mistakes": "Markeer minstens één deel als fout.",
         "hint_all_mistakes": "Elk deel is als fout gemarkeerd. Laat er een paar juist.",
-        "hint_missing_correction": "Deel {{n}} is een fout zonder verbetering."
+        "hint_missing_correction": "Deel {{n}} is een fout zonder verbetering.",
+        "unmark_hint": "Een fout. Klik om als juist te markeren.",
+        "mark_hint": "Klik om dit als fout te markeren.",
+        "edit_text": "Tekst bewerken",
+        "author_hint": "Klik op een deel om het als fout te markeren en schrijf hieronder de verbetering.",
+        "mistakes_label": "Fouten en verbeteringen",
+        "unmark_named": "Deel {{n}} als juist markeren",
+        "done_editing": "Klaar"
       },
       "venn": {
         "title": "Venn-vergelijking",
@@ -15443,13 +15471,8 @@
         "zone_both": "Allebei",
         "zone_neither": "Geen van beide",
         "zone_only": "Alleen {{set}}",
-        "sets_heading": "De twee groepen",
         "change_color": "Kleur wijzigen",
-        "items_heading": "Items",
-        "items_hint": "Kies waar elk item hoort. Leerlingen zien ze door elkaar.",
         "item_placeholder": "Item {{n}}",
-        "item_zone": "Waar het hoort",
-        "remove_item": "Item verwijderen",
         "explanation_placeholder": "Waarom het daar hoort (getoond bij een fout, optioneel)",
         "explanation_label": "Uitleg",
         "add_item": "Item toevoegen",
@@ -15465,7 +15488,16 @@
           "duplicate_item": "Een ander item heeft dezelfde tekst.",
           "neither_hidden": "Zet het vak ‘Geen van beide’ aan, anders zien leerlingen dit item niet.",
           "no_both": "Nog geen item hoort bij beide groepen; de overlap is juist het interessante deel."
-        }
+        },
+        "moved": "“{{item}}” verplaatst naar {{zone}}.",
+        "move_item": "“{{item}}” verplaatsen",
+        "move_hint": "Sleep naar een andere plek, of druk op 1–4",
+        "why_label": "Waarom “{{item}}” hier hoort",
+        "remove_named": "“{{item}}” verwijderen",
+        "add_to": "Een item toevoegen aan {{zone}}",
+        "author_selected": "Tik nu waar “{{item}}” hoort.",
+        "author_hint": "Elk item staat waar het hoort. Sleep een item, of tik op de greep en dan op een plek, om het te verplaatsen.",
+        "why_heading": "Waarom “{{item}}” bij {{zone}} hoort (getoond als een leerling het fout heeft)"
       },
       "label": {
         "title": "Benoem het diagram",
@@ -15497,9 +15529,6 @@
         "untitled_pin": "Naamloos",
         "stage_help": "Klik op de afbeelding om een punt toe te voegen. Sleep een punt, of gebruik de pijltjestoetsen, om het te verplaatsen.",
         "pins_label": "Punten",
-        "empty_list": "Nog geen punten. Klik op de afbeelding om er een toe te voegen.",
-        "move_hint": "Selecteer en verplaats met de pijltjestoetsen",
-        "select_pin": "Punt {{n}} selecteren",
         "label_placeholder": "Label",
         "label_label": "Label voor punt {{n}}",
         "remove_pin": "Punt {{n}} verwijderen",
@@ -15507,7 +15536,8 @@
         "distractors_hint": "Extra labels die nergens horen. Ze laten leerlingen nadenken in plaats van gokken.",
         "distractor_placeholder": "Fout label {{n}}",
         "remove_distractor": "Fout label verwijderen",
-        "add_distractor": "Fout label toevoegen"
+        "add_distractor": "Fout label toevoegen",
+        "author_hint": "Elk label staat op zijn punt. Klik op de afbeelding om een punt toe te voegen; sleep een punt om het te verplaatsen."
       },
       "word_guess": {
         "title": "Woord raden",
@@ -15524,8 +15554,6 @@
           "w3_clue": "Wat dingen laat bewegen, opwarmen of oplichten.",
           "w3_why": "Energie verandert van vorm, bijvoorbeeld van voedsel naar beweging, maar gaat nooit verloren."
         },
-        "words_heading": "Woorden",
-        "words_hint": "Leerlingen raden elk woord aan de hand van de hint. Spaties en streepjes staan er al.",
         "answer_placeholder": "Antwoord {{n}}",
         "letters": "Letters: {{n}}",
         "remove_word": "Woord verwijderen",
@@ -15545,14 +15573,15 @@
           "too_short": "Gebruik minstens 2 letters.",
           "too_long": "Gebruik hoogstens 12 letters zodat de vakjes op een telefoon passen.",
           "duplicate_answer": "Een ander woord heeft hetzelfde antwoord."
-        }
+        },
+        "type_answer": "Klik op de vakjes en typ het antwoord.",
+        "prev_word": "Vorig woord",
+        "next_word": "Volgend woord"
       },
       "confidence": {
         "title": "Zekerheidscheck",
         "description": "Antwoord en geef aan hoe zeker je bent, zodat je ziet wat je alleen denkt te weten.",
         "title_placeholder": "Geef deze check een naam",
-        "questions_heading": "Vragen",
-        "questions_hint": "Cursisten kiezen een antwoord en hoe zeker ze zijn, en zien dan of ze gelijk hadden.",
         "prompt_placeholder": "Vraag {{n}}",
         "prompt_label": "Vraag {{n}}",
         "correct_group": "Juiste antwoord op vraag {{n}}",
@@ -15591,7 +15620,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "Vorige vraag",
+        "next_question": "Volgende vraag"
       },
       "matrix": {
         "title": "Eigenschappenraster",
@@ -15608,18 +15639,13 @@
           "flies": "Kan vliegen",
           "swims": "Zwemt"
         },
-        "rows_heading": "Rijen",
-        "columns_heading": "Kolommen",
         "row_placeholder": "Rij {{n}}",
         "column_placeholder": "Kolom {{n}}",
         "add_row": "Rij toevoegen",
         "add_column": "Kolom toevoegen",
-        "remove_row": "Rij verwijderen",
-        "remove_column": "Kolom verwijderen",
         "mode_label": "Soort antwoord",
         "mode_multi": "Meerdere per rij",
         "mode_single": "Eén per rij",
-        "answers_heading": "Juiste antwoorden",
         "answers_hint_multi": "Vink elke cel aan die klopt.",
         "answers_hint_single": "Kies per rij de ene juiste kolom.",
         "cell_label": "{{row}}: {{column}}",
@@ -15635,7 +15661,9 @@
           "unused_column": "Nog geen rij heeft deze eigenschap.",
           "duplicate_row": "Een andere rij heeft dezelfde naam.",
           "duplicate_column": "Een andere kolom heeft dezelfde naam."
-        }
+        },
+        "remove_column_named": "Kolom “{{column}}” verwijderen",
+        "remove_row_named": "Rij “{{row}}” verwijderen"
       },
       "reflect": {
         "title": "Reflectie",
@@ -15644,7 +15672,6 @@
         "prompt_heading": "Opdracht",
         "prompt_placeholder": "Wat moeten cursisten in hun eigen woorden uitleggen?",
         "guiding_heading": "Hulpvragen",
-        "guiding_hint": "Optionele hints die cursisten kunnen openen als ze vastlopen (maximaal 5).",
         "guiding_placeholder": "Vraag {{n}}",
         "guiding_label": "Hulpvraag {{n}}",
         "remove_guiding": "Vraag {{n}} verwijderen",
@@ -15652,10 +15679,8 @@
         "min_words_label": "Minimum aantal woorden",
         "min_words_hint": "Cursisten kunnen vergelijken zodra ze dit halen. Bij 0 meteen.",
         "model_heading": "Modelantwoord",
-        "model_hint": "Optioneel. Cursisten zien het nadat ze hun eigen antwoord hebben geschreven.",
         "model_placeholder": "Een goed antwoord in een paar zinnen",
         "checklist_heading": "Kernpunten",
-        "checklist_hint": "Cursisten vinken de punten aan die ze noemden; dat wordt hun score (maximaal 8).",
         "point_placeholder": "Kernpunt {{n}}",
         "point_label": "Kernpunt {{n}}",
         "remove_point": "Kernpunt {{n}} verwijderen",
@@ -15679,7 +15704,9 @@
           "p2": "De aarde draait in een jaar om de zon",
           "p3": "Directer zonlicht en langere dagen in de zomer",
           "p4": "Het komt niet door de afstand tot de zon"
-        }
+        },
+        "guiding_optional": "optioneel",
+        "answer_key": "Antwoordsleutel"
       }
     }
   },

@@ -2,18 +2,24 @@
 /*
  Spot the mistake: a passage split into sentences (or code lines). Learners
  flag the parts they think are wrong; Check shows hits, missed mistakes and
- false alarms, with the corrections and explanations. Authors paste the
- passage once and toggle "this is a mistake" per segment.
+ false alarms, with the corrections and explanations. Authors edit in place:
+ click a part to mark it as a mistake and write its correction below.
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { Check, Code, Flag, MagnifyingGlass, TextAlignLeft, WarningCircle, X } from '@phosphor-icons/react'
+import { Check, Code, Flag, MagnifyingGlass, PencilSimple, TextAlignLeft, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, Segmented, TEXTAREA_CLASS } from '../../../Blocks/ui/BlockChrome'
+import { Segmented, SettingsField } from '../../../Blocks/ui/BlockChrome'
+import { InlineHint } from '../Sort/kit'
 import {
+  AnswerKeyHint,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   useEnsureBlockId,
   useExperienceEditable,
   useExperienceMemory,
@@ -55,6 +61,11 @@ function useResetOn(key: string, reset: () => void) {
 }
 
 /* ───────────────────────────── Editor ───────────────────────────── */
+// Edit in place: the passage as learners see it, with the mistakes already
+// marked (the answer key). Click a sentence or line to toggle it as a
+// mistake; each mistake's correction and explanation are edited below, the
+// way learners read them after checking. "Edit text" edits the passage
+// itself and re-splits it. Text / code lives behind the gear.
 
 function SpotMistakeEditor({
   segments,
@@ -67,25 +78,12 @@ function SpotMistakeEditor({
 }) {
   const { t } = useTranslation()
   const k = 'editor.experiences.spot_mistake.'
-  const joined = joinSegments(segments, kind)
-  const [draft, setDraft] = React.useState(joined)
-  const editing = React.useRef(false)
-  React.useEffect(() => {
-    if (!editing.current) setDraft(joined)
-  }, [joined])
+  const [editingText, setEditingText] = React.useState(segments.length === 0)
+  const code = kind === 'code'
 
   const commitSegments = (fn: (_live: MistakeSegment[], _liveKind: SpotMistakeKind) => MistakeSegment[]) =>
     commit((live) => ({ segments: fn(normalizeSegments(live.segments), normalizeKind(live.kind)) }))
-
-  const applyText = (value: string) => commitSegments((live, liveKind) => resplit(live, value, liveKind))
-
-  const setKind = (next: SpotMistakeKind) => {
-    commit((live) => {
-      const liveSegments = normalizeSegments(live.segments)
-      const text = joinSegments(liveSegments, normalizeKind(live.kind))
-      return { kind: next, segments: resplit(liveSegments, text, next) }
-    })
-  }
+  const patchSeg = (id: string, p: Partial<MistakeSegment>) => commitSegments((live) => live.map((s) => (s.id === id ? { ...s, ...p } : s)))
 
   const issues = validateSpotMistake(segments)
   const hint = (issue: (typeof issues)[number]) => {
@@ -100,120 +98,188 @@ function SpotMistakeEditor({
         return t(`${k}hint_missing_correction`, { n: issue.segmentIndex + 1 })
     }
   }
-  const mono = kind === 'code'
   // Author-facing numbers skip blank code lines.
   const numbers = new Map<string, number>()
   segments.filter((s) => !isBlankSegment(s)).forEach((s, i) => numbers.set(s.id, i + 1))
+  const mistakes = segments.filter((s) => s.isMistake && !isBlankSegment(s))
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="w-full sm:w-64">
-        <Segmented<SpotMistakeKind>
-          value={kind}
-          ariaLabel={t(`${k}kind_label`)}
-          onChange={setKind}
-          options={[
-            { value: 'text', label: <><TextAlignLeft size={13} aria-hidden />{t(`${k}kind_text`)}</> },
-            { value: 'code', label: <><Code size={13} aria-hidden />{t(`${k}kind_code`)}</> },
-          ]}
-        />
-      </div>
+    <div className="flex flex-col gap-4">
+      {editingText ? (
+        <PassageText segments={segments} kind={kind} onDone={(value) => {
+          if (value !== joinSegments(segments, kind)) commitSegments((live, liveKind) => resplit(live, value, liveKind))
+          setEditingText(false)
+        }} />
+      ) : (
+        <div
+          dir={code ? 'ltr' : 'auto'}
+          className={cn(code ? 'overflow-x-auto rounded-xl bg-white py-2 shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08))]' : 'text-neutral-800 [overflow-wrap:anywhere]')}
+          role="group"
+          aria-label={t(`${k}segments_label`)}
+        >
+          {segments.map((seg, index) => {
+            const line = index + 1
+            if (isBlankSegment(seg)) {
+              return code ? (
+                <div key={seg.id} className="flex gap-3 px-2 font-mono text-[13px] leading-6" aria-hidden>
+                  <span className="w-6 shrink-0 text-end text-[11px] text-neutral-400 tabular-nums">{line}</span>
+                </div>
+              ) : null
+            }
+            const n = numbers.get(seg.id) ?? 0
+            return (
+              <button
+                key={seg.id}
+                type="button"
+                aria-pressed={seg.isMistake}
+                aria-label={`${t(`${k}segment_n`, { n })}: ${seg.text}`}
+                title={seg.isMistake ? t(`${k}unmark_hint`, 'A mistake. Click to mark it correct.') : t(`${k}mark_hint`, 'Click to mark this as a mistake.')}
+                onClick={() => commitSegments((live) => toggleMistake(live, seg.id))}
+                data-marked={seg.isMistake ? 'true' : undefined}
+                style={{ '--exp-mark': 'rgba(251, 146, 60, 0.42)' } as React.CSSProperties}
+                className={cn(
+                  'lh-exp-mark group text-start outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50',
+                  code ? 'flex w-full items-start gap-3 rounded-md px-2 py-0.5 font-mono text-[13px] leading-6 whitespace-pre-wrap' : 'me-1 inline rounded-md px-0.5 py-0.5 text-[15px] leading-8',
+                  seg.isMistake ? 'text-neutral-950' : 'hover:bg-amber-50',
+                )}
+              >
+                {code && <span aria-hidden className="w-6 shrink-0 select-none text-end text-[11px] leading-6 text-neutral-400 tabular-nums">{line}</span>}
+                {seg.isMistake && (
+                  <span aria-hidden className={cn('me-1 inline-flex h-4 w-4 translate-y-[2px] items-center justify-center rounded-full bg-orange-500 align-baseline text-white', code && 'mt-1 translate-y-0')}>
+                    <Flag size={12} weight="fill" />
+                  </span>
+                )}
+                <span className={cn(code && 'min-w-0 flex-1')}>{seg.text}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-neutral-600">{t(`${k}passage_label`)}</span>
+      {!editingText && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setEditingText(true)}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-neutral-500 outline-none hover:bg-neutral-200/60 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40"
+          >
+            <PencilSimple size={14} aria-hidden />
+            {t(`${k}edit_text`, 'Edit text')}
+          </button>
+          <span className="text-[12px] text-neutral-400">{t(`${k}author_hint`, 'Click a part to mark it as a mistake, then write its correction below.')}</span>
+        </div>
+      )}
+
+      {/* The answer key, as learners read it after checking. */}
+      {mistakes.length > 0 && (
+        <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label={t(`${k}mistakes_label`, 'Mistakes and their corrections')}>
+          {mistakes.map((seg) => {
+            const n = numbers.get(seg.id) ?? 0
+            return (
+              <li key={seg.id} className={cn('relative rounded-xl bg-orange-50/70 px-3 py-2.5 text-[13px]', EDIT_OBJECT)}>
+                <div className="flex items-start gap-2">
+                  <Flag size={14} weight="fill" className="mt-0.5 shrink-0 text-orange-500" aria-hidden />
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <div className={cn('text-neutral-500 line-through decoration-neutral-400', code && 'font-mono text-[12.5px]')} dir={code ? 'ltr' : 'auto'}>
+                      {seg.text}
+                    </div>
+                    <InlineText
+                      value={seg.correction ?? ''}
+                      onCommit={(v) => patchSeg(seg.id, { correction: v })}
+                      ariaLabel={t(`${k}correction_label`, { n })}
+                      placeholder={t(`${k}correction_placeholder`)}
+                      maxLength={300}
+                      className={cn('font-medium text-neutral-900', code && 'font-mono text-[12.5px]')}
+                    />
+                    <InlineText
+                      multiline
+                      value={seg.explanation ?? ''}
+                      onCommit={(v) => patchSeg(seg.id, { explanation: v })}
+                      ariaLabel={t(`${k}explanation_label`, { n })}
+                      placeholder={t(`${k}explanation_placeholder`)}
+                      maxLength={400}
+                      className="text-neutral-600"
+                    />
+                    {!(seg.correction ?? '').trim() && <InlineHint severity="warning">{t(`${k}hint_correction_short`)}</InlineHint>}
+                  </div>
+                </div>
+                <RemoveX floating onClick={() => patchSeg(seg.id, { isMistake: false })} label={t(`${k}unmark_named`, { n, defaultValue: 'Mark part {{n}} as correct' })} />
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      {issues.length > 0 && (
+        <div className="flex flex-col gap-1" aria-live="polite">
+          {issues.map((issue, i) => (
+            <InlineHint key={i} severity="warning">
+              {hint(issue)}
+            </InlineHint>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** The whole passage, edited in place with its own typography; re-split on Done / blur. */
+function PassageText({ segments, kind, onDone }: { segments: MistakeSegment[]; kind: SpotMistakeKind; onDone: (_value: string) => void }) {
+  const { t } = useTranslation()
+  const k = 'editor.experiences.spot_mistake.'
+  const joined = joinSegments(segments, kind)
+  const [draft, setDraft] = React.useState(joined)
+  const ref = React.useRef<HTMLTextAreaElement>(null)
+  const mono = kind === 'code'
+  React.useEffect(() => {
+    if (segments.length) ref.current?.focus()
+    // Only on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  React.useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = '0px'
+    el.style.height = `${el.scrollHeight}px`
+  }, [draft])
+  return (
+    <div className="flex flex-col gap-2">
+      <span className={cn('lh-exp-edit block', mono && 'rounded-xl bg-white px-2 py-2 shadow-[0_0_0_1px_var(--exp-edge,rgba(0,0,0,0.08))]')}>
         <textarea
+          ref={ref}
           value={draft}
-          rows={mono ? 7 : 5}
+          rows={mono ? 5 : 3}
           dir={mono ? 'ltr' : 'auto'}
           spellCheck={!mono}
-          className={cn(TEXTAREA_CLASS, mono && 'font-mono text-[12.5px] leading-6')}
+          aria-label={t(`${k}passage_label`)}
           placeholder={mono ? t(`${k}passage_placeholder_code`) : t(`${k}passage_placeholder_text`)}
-          onFocus={() => (editing.current = true)}
+          className={cn(
+            'm-0 block w-full resize-none overflow-hidden bg-transparent p-0 text-neutral-800 outline-none placeholder:text-neutral-400',
+            mono ? 'font-mono text-[13px] leading-6' : 'font-[inherit] text-[15px] leading-8',
+          )}
           onChange={(e) => setDraft(e.target.value)}
-          onBlur={() => {
-            editing.current = false
-            if (draft !== joined) applyText(draft)
-          }}
+          onBlur={() => onDone(draft)}
           onKeyDown={(e) => {
-            e.stopPropagation()
+            if (!e.metaKey && !e.ctrlKey) e.stopPropagation()
             if (e.key === 'Escape') {
-              setDraft(joined)
-              ;(e.target as HTMLTextAreaElement).blur()
+              e.preventDefault()
+              onDone(joined)
             }
           }}
         />
-        <span className="text-[11px] leading-snug text-neutral-400">{mono ? t(`${k}split_help_code`) : t(`${k}split_help_text`)}</span>
-      </label>
-
-      <ol className="m-0 flex list-none flex-col gap-1.5 p-0" aria-label={t(`${k}segments_label`)}>
-        {segments.map((seg) => {
-          if (isBlankSegment(seg)) return null
-          const n = numbers.get(seg.id) ?? 0
-          return (
-            <li
-              key={seg.id}
-              className={cn(
-                'rounded-xl px-2.5 py-2 shadow-[0_0_0_1px_rgba(0,0,0,0.07)]',
-                seg.isMistake && 'bg-orange-50/60 shadow-[0_0_0_1px_rgba(234,88,12,0.35)]',
-              )}
-            >
-              <div className="flex items-start gap-2">
-                <button
-                  type="button"
-                  aria-pressed={seg.isMistake}
-                  onClick={() => commitSegments((live) => toggleMistake(live, seg.id))}
-                  className={cn(
-                    'inline-flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-orange-500/40',
-                    seg.isMistake ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-800',
-                  )}
-                >
-                  {seg.isMistake ? <Flag size={12} weight="fill" aria-hidden /> : <Check size={12} weight="bold" aria-hidden />}
-                  {seg.isMistake ? t(`${k}is_mistake`) : t(`${k}is_correct`)}
-                </button>
-                <span className="sr-only">{t(`${k}segment_n`, { n })}</span>
-                <span
-                  dir={mono ? 'ltr' : 'auto'}
-                  className={cn('min-w-0 flex-1 pt-1 text-[13px] leading-relaxed text-neutral-800 [overflow-wrap:anywhere]', mono && 'font-mono text-[12.5px] whitespace-pre-wrap')}
-                >
-                  {seg.text}
-                </span>
-              </div>
-              {seg.isMistake && (
-                <div className="mt-2 flex flex-col gap-1.5 ps-2 sm:ps-[5.5rem]">
-                  <CommitInput
-                    value={seg.correction ?? ''}
-                    placeholder={t(`${k}correction_placeholder`)}
-                    aria-label={t(`${k}correction_label`, { n })}
-                    className={cn(
-                      'h-8 w-full rounded-lg bg-white px-2.5 text-[13px] text-neutral-800 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] outline-none placeholder:text-neutral-400 focus:shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_0_3px_rgba(0,0,0,0.05)]',
-                      mono && 'font-mono text-[12.5px]',
-                    )}
-                    onCommit={(v) => commitSegments((live) => live.map((s) => (s.id === seg.id ? { ...s, correction: v } : s)))}
-                  />
-                  {!(seg.correction ?? '').trim() && <span className="text-[11px] text-amber-700">{t(`${k}hint_correction_short`)}</span>}
-                  <CommitInput
-                    value={seg.explanation ?? ''}
-                    placeholder={t(`${k}explanation_placeholder`)}
-                    aria-label={t(`${k}explanation_label`, { n })}
-                    onCommit={(v) => commitSegments((live) => live.map((s) => (s.id === seg.id ? { ...s, explanation: v } : s)))}
-                  />
-                </div>
-              )}
-            </li>
-          )
-        })}
-      </ol>
-
-      {issues.length > 0 && (
-        <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-live="polite">
-          {issues.map((issue, i) => (
-            <li key={i} className="flex items-start gap-1.5 text-xs text-amber-700">
-              <WarningCircle size={14} weight="fill" className="mt-px shrink-0" aria-hidden />
-              {hint(issue)}
-            </li>
-          ))}
-        </ul>
-      )}
+      </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => onDone(draft)}
+          className="lh-exp-raised lh-exp-press inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-neutral-700 outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+        >
+          <Check size={14} aria-hidden />
+          {t(`${k}done_editing`, 'Done')}
+        </button>
+        <span className="text-[12px] text-neutral-400">{mono ? t(`${k}split_help_code`) : t(`${k}split_help_text`)}</span>
+      </div>
     </div>
   )
 }
@@ -495,28 +561,56 @@ export default function SpotMistakeView(props: NodeViewProps) {
     </ExperienceFooter>
   ) : undefined
 
+  const frame = {
+    tone: 'dynamic' as const,
+    icon: <MagnifyingGlass weight="duotone" />,
+    title,
+    onTitleChange: (v: string) => commit({ title: v }),
+    titlePlaceholder: t('editor.experiences.spot_mistake.title_placeholder'),
+    instructions,
+    onInstructionsChange: (v: string) => commit({ instructions: v }),
+    editable,
+    preview,
+    onPreviewChange: setPreview,
+    nodeView: props,
+    label: t('editor.experiences.spot_mistake.title'),
+  }
+
+  if (!learner) {
+    const setKind = (next: SpotMistakeKind) =>
+      commit((live) => {
+        const liveSegments = normalizeSegments(live.segments)
+        const text = joinSegments(liveSegments, normalizeKind(live.kind))
+        return { kind: next, segments: resplit(liveSegments, text, next) }
+      })
+    const settings = (
+      <SettingsGear>
+        <SettingsField label={t('editor.experiences.spot_mistake.kind_label')}>
+          <Segmented<SpotMistakeKind>
+            value={kind}
+            ariaLabel={t('editor.experiences.spot_mistake.kind_label')}
+            onChange={setKind}
+            options={[
+              { value: 'text', label: <><TextAlignLeft size={13} aria-hidden />{t('editor.experiences.spot_mistake.kind_text')}</> },
+              { value: 'code', label: <><Code size={13} aria-hidden />{t('editor.experiences.spot_mistake.kind_code')}</> },
+            ]}
+          />
+        </SettingsField>
+      </SettingsGear>
+    )
+    return (
+      <NodeViewWrapper className="block-exp-spot-mistake">
+        <ExperienceFrame {...frame} wysiwyg headerEnd={settings} footer={<AnswerKeyHint />}>
+          <SpotMistakeEditor segments={segments} kind={kind} commit={commit} />
+        </ExperienceFrame>
+      </NodeViewWrapper>
+    )
+  }
+
   return (
     <NodeViewWrapper className="block-exp-spot-mistake">
-      <ExperienceFrame
-        tone="dynamic"
-        icon={<MagnifyingGlass weight="duotone" />}
-        title={title}
-        onTitleChange={(v) => commit({ title: v })}
-        titlePlaceholder={t('editor.experiences.spot_mistake.title_placeholder')}
-        instructions={instructions}
-        onInstructionsChange={(v) => commit({ instructions: v })}
-        editable={editable}
-        preview={preview}
-        onPreviewChange={setPreview}
-        nodeView={props}
-        label={t('editor.experiences.spot_mistake.title')}
-        footer={footer}
-        celebrate={learner && perfect}
-        live={learner ? live : ''}
-      >
-        {!learner ? (
-          <SpotMistakeEditor segments={segments} kind={kind} commit={commit} />
-        ) : segments.length === 0 ? (
+      <ExperienceFrame {...frame} footer={footer} celebrate={perfect} live={live}>
+        {segments.length === 0 ? (
           <p className="m-0 text-sm text-neutral-500">{t(`${k}empty`)}</p>
         ) : (
           <SpotMistakePlayer

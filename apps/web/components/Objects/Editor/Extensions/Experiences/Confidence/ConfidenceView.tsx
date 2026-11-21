@@ -4,9 +4,9 @@
  see the result. At the end a small calibration chart shows how often each
  level of confidence was right, with plain-language takeaways.
 
- Author: a single-column form (questions, 2–4 options with a radio for the
- right one, an explanation) with inline hints, and "Preview as learner" in
- the frame header.
+ Author: edit in place, one question card at a time: prompt and options
+ edited where they sit, a check badge marks the right option, the
+ explanation sits where learners read it. Prev / next / "+ Add question".
 
  Learner: pick an option (tap, or keys 1–4), pick a confidence (Guessing /
  Fairly sure / Certain: tap, Q / W / E, or arrow keys in the group), then
@@ -15,13 +15,19 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowRight, CellSignalFull, CellSignalLow, CellSignalMedium, Check, Target, Trash, WarningCircle, X } from '@phosphor-icons/react'
+import { ArrowRight, CellSignalFull, CellSignalLow, CellSignalMedium, Check, Target, WarningCircle, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS, TEXTAREA_CLASS } from '../../../Blocks/ui/BlockChrome'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  CardNav,
+  CorrectMark,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
   Stars,
   buzz,
   newId,
@@ -53,7 +59,7 @@ import {
   type ConfidenceQuestion,
   type Insight,
 } from './confidenceModel'
-import { AddRowButton, BlockHints, FormSection, ICON_BTN, NotReady, ResultIcon, RowHints, contentKey } from '../Sort/kit'
+import { InlineHint, NotReady, ResultIcon, contentKey } from '../Sort/kit'
 
 const TONE = 'people' as const
 
@@ -102,7 +108,11 @@ export default function ConfidenceView(props: NodeViewProps) {
   )
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// One question card at a time, as learners see it: the prompt and options are
+// edited where they sit, the check badge marks the right option, and the
+// explanation sits where learners read it after locking in. Prev / next and
+// "+ Add question" move through the check.
 
 const ISSUE_FALLBACK: Record<string, string> = {
   too_few_questions: 'Add at least 1 question.',
@@ -117,122 +127,170 @@ const ISSUE_FALLBACK: Record<string, string> = {
 function ConfidenceEditor({ data, commit, frame }: { data: ConfidenceData; commit: (_p: CommitPatch<Record<string, any>>) => void; frame: Frame }) {
   const { t } = useTranslation()
   const k = (key: string, fallback: string, o: Record<string, unknown> = {}) => t(`editor.experiences.confidence.${key}`, { ...o, defaultValue: fallback })
+  const a = (key: string, fallback: string, o: Record<string, unknown> = {}) => t(`activities.experiences.confidence.${key}`, { ...o, defaultValue: fallback })
+  const levelLabel = useLevelLabel()
   const issues = React.useMemo(() => validateConfidence(data), [data])
   const issueText = (code: string) => t(`editor.experiences.confidence.issues.${code}`, ISSUE_FALLBACK[code] ?? code)
   const edit = (fn: (_d: ConfidenceData) => ConfidenceData) => commit((live) => ({ questions: fn(normalizeConfidence(live)).questions }))
   const canRemove = data.questions.length > CONFIDENCE_LIMITS.minQuestions
+  const [index, setIndex] = React.useState(0)
+  const [live, setLive] = React.useState('')
+  const count = data.questions.length
+  const i = Math.min(index, Math.max(0, count - 1))
+  const q = data.questions[i]
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const focusLater = (sel: string) => requestAnimationFrame(() => requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>(sel)?.focus()))
+  const questionOf = (n: number) => a('question_of', 'Question {{n}} of {{total}}', { n, total: count })
+
+  const go = (n: number) => {
+    const next = Math.max(0, Math.min(count - 1, n))
+    setIndex(next)
+    setLive(questionOf(next + 1))
+  }
+  const add = () => {
+    edit((d) => addQuestion(d, newId()))
+    setIndex(count)
+    focusLater('[data-prompt] textarea')
+  }
+  const remove = () => {
+    if (!q) return
+    edit((d) => removeQuestion(d, q.id))
+    setIndex(data.questions[i + 1] ? i : Math.max(0, i - 1))
+  }
+  const setOption = (oi: number, v: string) =>
+    edit((d) => {
+      const liveOptions = d.questions.find((x) => x.id === q.id)?.options ?? q.options
+      return updateQuestion(d, q.id, { options: liveOptions.map((o, j) => (j === oi ? v : o)) })
+    })
+
+  const blockIssues = issues.filter((x) => !x.id)
+  const rowIssues = q ? issues.filter((x) => x.id === q.id) : []
 
   return (
     <ExperienceFrame
       {...frame}
+      wysiwyg
       title={data.title}
       onTitleChange={(title) => commit({ title })}
       titlePlaceholder={k('title_placeholder', 'Name this check')}
+      instructions={a('instructions', 'Answer, then say how sure you are.')}
+      footer={<AnswerKeyHint />}
+      live={live}
     >
-      <div className="flex flex-col gap-5">
-        <BlockHints issues={issues} text={issueText} />
-        <FormSection
-          title={k('questions_heading', 'Questions')}
-          hint={k('questions_hint', 'Learners pick an answer and how sure they are, then see if they were right.')}
-        >
-          <ol className="m-0 flex list-none flex-col gap-2 p-0">
-            {data.questions.map((q, qi) => (
-              <li key={q.id} className="flex flex-col gap-2 rounded-xl bg-neutral-50/80 p-2.5 ring-1 ring-neutral-100">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 shrink-0 text-center text-xs font-semibold tabular-nums text-neutral-400">{qi + 1}</span>
-                  <CommitInput
-                    value={q.prompt}
-                    onCommit={(prompt) => edit((d) => updateQuestion(d, q.id, { prompt }))}
-                    placeholder={k('prompt_placeholder', 'Question {{n}}', { n: qi + 1 })}
-                    aria-label={k('prompt_label', 'Question {{n}}', { n: qi + 1 })}
-                    maxLength={240}
-                    className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1 font-medium')}
-                  />
-                  <button
-                    type="button"
-                    className={ICON_BTN}
-                    disabled={!canRemove}
-                    onClick={() => edit((d) => removeQuestion(d, q.id))}
-                    aria-label={k('remove_question', 'Remove question {{n}}', { n: qi + 1 })}
-                    title={k('remove_question', 'Remove question {{n}}', { n: qi + 1 })}
-                  >
-                    <Trash size={15} aria-hidden />
-                  </button>
-                </div>
-                <div role="radiogroup" aria-label={k('correct_group', 'Right answer for question {{n}}', { n: qi + 1 })} className="flex flex-col gap-1.5 ps-7">
-                  {q.options.map((opt, oi) => {
-                    const isAnswer = q.answer === oi
-                    return (
-                      <div key={oi} className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          role="radio"
-                          aria-checked={isAnswer}
-                          aria-label={k('mark_correct', 'Mark option {{n}} as the right answer', { n: oi + 1 })}
-                          onClick={() => edit((d) => updateQuestion(d, q.id, { answer: oi }))}
-                          className={cn(
-                            'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-500/40',
-                            isAnswer ? 'bg-emerald-500 text-white' : 'bg-white text-transparent shadow-[0_0_0_1px_rgba(0,0,0,0.15)] hover:text-neutral-300',
-                          )}
-                        >
-                          <Check size={12} weight="bold" aria-hidden />
-                        </button>
-                        <CommitInput
-                          value={opt}
-                          onCommit={(v) =>
-                            edit((d) => {
-                              const liveOptions = d.questions.find((x) => x.id === q.id)?.options ?? q.options
-                              return updateQuestion(d, q.id, { options: liveOptions.map((o, j) => (j === oi ? v : o)) })
-                            })
-                          }
-                          placeholder={k('option_placeholder', 'Option {{n}}', { n: oi + 1 })}
-                          aria-label={k('option_label', 'Option {{n}}', { n: oi + 1 })}
-                          maxLength={160}
-                          className={cn(FIELD_CLASS, 'min-w-0 flex-1')}
-                        />
-                        <button
-                          type="button"
-                          className={ICON_BTN}
-                          disabled={q.options.length <= CONFIDENCE_LIMITS.minOptions}
-                          onClick={() => edit((d) => removeOption(d, q.id, oi))}
-                          aria-label={k('remove_option', 'Remove option {{n}}', { n: oi + 1 })}
-                          title={k('remove_option', 'Remove option {{n}}', { n: oi + 1 })}
-                        >
-                          <X size={13} aria-hidden />
-                        </button>
-                      </div>
-                    )
-                  })}
-                  {q.options.length < CONFIDENCE_LIMITS.maxOptions && (
-                    <button
-                      type="button"
-                      onClick={() => edit((d) => addOption(d, q.id))}
-                      className="self-start rounded-lg px-2 py-1 text-[12px] font-medium text-neutral-500 outline-none hover:bg-neutral-100 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40"
-                    >
-                      + {k('add_option', 'Add option')}
-                    </button>
-                  )}
-                </div>
-                <div className="ps-7">
-                  <CommitInput
-                    multiline
-                    value={q.explanation}
-                    onCommit={(explanation) => edit((d) => updateQuestion(d, q.id, { explanation }))}
-                    placeholder={k('explanation_placeholder', 'Why this is the right answer (shown after locking in)')}
-                    aria-label={k('explanation_label', 'Explanation for question {{n}}', { n: qi + 1 })}
-                    className={cn(TEXTAREA_CLASS, 'min-h-[56px] resize-y text-[12.5px]')}
-                  />
-                </div>
-                <div className="ps-6">
-                  <RowHints issues={issues} id={q.id} text={issueText} />
-                </div>
-              </li>
-            ))}
-          </ol>
-          <AddRowButton disabled={data.questions.length >= CONFIDENCE_LIMITS.maxQuestions} onClick={() => edit((d) => addQuestion(d, newId()))}>
-            {k('add_question', 'Add question')}
-          </AddRowButton>
-        </FormSection>
+      <div ref={rootRef} className="flex flex-col gap-4">
+        {blockIssues.map((x) => (
+          <InlineHint key={x.code} severity={x.severity}>
+            {issueText(x.code)}
+          </InlineHint>
+        ))}
+        {q && (
+          <div className={cn('relative flex flex-col gap-4', EDIT_OBJECT)}>
+            <div data-prompt="" className="flex flex-col gap-1">
+              <span className="text-[12px] font-medium tabular-nums text-neutral-500">{questionOf(i + 1)}</span>
+              <InlineText
+                value={q.prompt}
+                onCommit={(prompt) => edit((d) => updateQuestion(d, q.id, { prompt }))}
+                ariaLabel={k('prompt_label', 'Question {{n}}', { n: i + 1 })}
+                placeholder={k('prompt_placeholder', 'Question {{n}}', { n: i + 1 })}
+                maxLength={240}
+                className="text-[16px] leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere]"
+              />
+            </div>
+
+            <div role="group" aria-label={k('correct_group', 'Right answer for question {{n}}', { n: i + 1 })} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {q.options.map((opt, oi) => {
+                const isAnswer = q.answer === oi
+                return (
+                  <div key={oi} data-option={oi} className={cn('lh-exp-raised relative flex min-h-12 items-center gap-2.5 rounded-xl px-3 py-2.5 text-start text-[14px] font-medium text-neutral-800', EDIT_OBJECT)}>
+                    <span aria-hidden className={cn('inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[12px] font-bold', isAnswer ? 'bg-emerald-500 text-white' : 'lh-exp-well text-neutral-500')}>
+                      {isAnswer ? <Check size={12} weight="bold" /> : oi + 1}
+                    </span>
+                    <InlineText
+                      value={opt}
+                      onCommit={(v) => setOption(oi, v)}
+                      ariaLabel={k('option_label', 'Option {{n}}', { n: oi + 1 })}
+                      placeholder={k('option_placeholder', 'Option {{n}}', { n: oi + 1 })}
+                      maxLength={160}
+                      className="min-w-0 flex-1 [overflow-wrap:anywhere]"
+                    />
+                    <CorrectMark checked={isAnswer} onChange={() => edit((d) => updateQuestion(d, q.id, { answer: oi }))} label={k('mark_correct', 'Mark option {{n}} as the right answer', { n: oi + 1 })} />
+                    <RemoveX
+                      floating
+                      disabled={q.options.length <= CONFIDENCE_LIMITS.minOptions}
+                      onClick={() => {
+                        edit((d) => removeOption(d, q.id, oi))
+                        focusLater(`[data-option="${Math.max(0, oi - 1)}"] textarea`)
+                      }}
+                      label={k('remove_option', 'Remove option {{n}}', { n: oi + 1 })}
+                    />
+                  </div>
+                )
+              })}
+              {q.options.length < CONFIDENCE_LIMITS.maxOptions && (
+                <AddGhost
+                  onClick={() => {
+                    edit((d) => addOption(d, q.id))
+                    focusLater(`[data-option="${q.options.length}"] textarea`)
+                  }}
+                  className="min-h-12 rounded-xl px-3 text-[14px]"
+                >
+                  {k('add_option', 'Add option')}
+                </AddGhost>
+              )}
+            </div>
+
+            {/* What learners use next, inert here. */}
+            <div aria-hidden className="pointer-events-none flex flex-col gap-2 opacity-70">
+              <span className="text-[13px] font-medium text-neutral-600">{a('how_sure', 'How sure are you?')}</span>
+              <div className="lh-exp-well grid grid-cols-3 gap-1.5 rounded-2xl p-1.5">
+                {CONFIDENCE_LEVELS.map((lv) => {
+                  const Icon = LEVEL[lv].icon
+                  return (
+                    <span key={lv} className="lh-exp-raised flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[12.5px] font-medium text-neutral-600 sm:flex-row sm:gap-1.5 sm:text-[13px]">
+                      <Icon size={16} weight="bold" className="shrink-0" />
+                      <span className="min-w-0 text-center leading-tight [overflow-wrap:anywhere]">{levelLabel(lv)}</span>
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Shown after locking in. */}
+            <div className="flex items-start gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-[13px] leading-relaxed text-emerald-900">
+              <Check size={16} weight="bold" className="mt-0.5 shrink-0 text-emerald-600" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold [overflow-wrap:anywhere]">{a('right_answer', 'Right answer: {{answer}}', { answer: q.options[q.answer] || '…' })}</div>
+                <InlineText
+                  multiline
+                  value={q.explanation}
+                  onCommit={(explanation) => edit((d) => updateQuestion(d, q.id, { explanation }))}
+                  ariaLabel={k('explanation_label', 'Explanation for question {{n}}', { n: i + 1 })}
+                  placeholder={k('explanation_placeholder', 'Why this is the right answer (shown after locking in)')}
+                  maxLength={500}
+                  className="mt-1 text-neutral-700 [overflow-wrap:anywhere]"
+                />
+              </div>
+            </div>
+            <RemoveX floating disabled={!canRemove} onClick={remove} label={k('remove_question', 'Remove question {{n}}', { n: i + 1 })} className="-top-1 -end-1" />
+          </div>
+        )}
+        {rowIssues.map((x) => (
+          <InlineHint key={x.code} severity={x.severity}>
+            {issueText(x.code)}
+          </InlineHint>
+        ))}
+        <CardNav
+          count={count}
+          index={i}
+          onGo={go}
+          onAdd={add}
+          canAdd={count < CONFIDENCE_LIMITS.maxQuestions}
+          addLabel={k('add_question', 'Add question')}
+          itemLabel={questionOf}
+          flagged={(n) => issues.some((x) => x.id === data.questions[n]?.id)}
+          prevLabel={k('prev_question', 'Previous question')}
+          nextLabel={k('next_question', 'Next question')}
+        />
       </div>
     </ExperienceFrame>
   )

@@ -4272,7 +4272,11 @@
         "solved_mark": "Trouvé",
         "missed_mark": "Pas trouvé",
         "play_again": "Rejouer",
-        "best": "Record"
+        "best": "Record",
+        "guesses_left": "Essais restants : {{n}}",
+        "history_item": "Essai {{n}} : {{word}} ({{feedback}})",
+        "history_label": "Essais précédents",
+        "typing_row": "Votre essai"
       },
       "confidence": {
         "instructions": "Répondez, puis dites à quel point vous êtes sûr.",
@@ -13942,7 +13946,6 @@
       "not_found": "Scénario introuvable",
       "not_found_hint": "Veuillez vérifier la configuration de votre scénario et réessayer.",
       "illustration_alt": "Illustration du scénario",
-      "max_scenarios": "Maximum de 40 scénarios autorisés",
       "new_scenario_text": "Texte du nouveau scénario...",
       "default_option_1": "Option 1",
       "default_option_2": "Option 2",
@@ -14632,7 +14635,6 @@
         },
         "jump_to": "Aller à cette étape",
         "leads_to": "Mène à",
-        "limits": "Jusqu’à {{max}} étapes, {{choices}} choix chacune.",
         "map_hint": "Cliquez sur une étape pour la modifier ici. Les flèches montrent où mène chaque choix.",
         "missing_step": "Étape manquante",
         "move_down": "Descendre",
@@ -15292,7 +15294,10 @@
         "issue_duplicateOption": "Deux options sont identiques.",
         "example": {
           "title": "Calcul express"
-        }
+        },
+        "question_of": "Question {{n}} sur {{total}}",
+        "prev_question": "Question précédente",
+        "next_question": "Question suivante"
       },
       "estimate": {
         "name": "Estimation",
@@ -15322,7 +15327,8 @@
           "explanation": "Un adulte a 206 os. Les bébés naissent avec environ 300 os ; certains se soudent en grandissant.",
           "unit": "os"
         },
-        "fill_example": "Utiliser un exemple"
+        "fill_example": "Utiliser un exemple",
+        "answer_marker": "Réponse : {{value}}"
       },
       "code_lock": {
         "name": "Cadenas à code",
@@ -15358,7 +15364,9 @@
           "c3": "Combien y a-t-il de continents ?",
           "c3_hint": "L’Afrique en fait partie.",
           "reward": "La porte s’ouvre. Bravo, détective !"
-        }
+        },
+        "answer_masked": "La réponse (masquée jusqu’à ce que vous cliquiez)",
+        "padlock_label": "Cadenas à {{n}} molettes"
       },
       "scenarios": {
         "chip_unreachable": "Aucun chemin ne mène ici",
@@ -15405,7 +15413,11 @@
           "step3": "Le client s’énerve davantage. Et maintenant ?",
           "step3_a": "S’excuser et demander le numéro de commande",
           "step3_b": "Raccrocher"
-        }
+        },
+        "then_short": "Ensuite",
+        "open_target": "Ouvrir cette étape",
+        "steps_label": "Étapes",
+        "editing_hint": "Vous modifiez l’histoire. Utilisez l’aperçu pour la jouer comme un apprenant."
       },
       "flashcards": {
         "title_placeholder": "Titre du paquet (facultatif)",
@@ -15530,7 +15542,6 @@
           "step4": "L’eau retourne à la mer"
         },
         "add_step": "Ajouter une étape",
-        "detail_label": "Détail",
         "detail_placeholder": "Détail, p. ex. 1969",
         "drag_short": "Glisser pour réorganiser",
         "drag_step": "Déplacer l’étape {{n}} (glisser ou touches fléchées)",
@@ -15542,13 +15553,14 @@
           "too_many_items": "Utilisez 10 étapes au maximum ; les apprenants ne voient que les 10 premières."
         },
         "items_heading": "Étapes, dans le bon ordre",
-        "items_hint": "Les apprenants les reçoivent mélangées.",
         "layout_label": "Disposition",
-        "remove_step": "Supprimer l’étape",
         "step_placeholder": "Étape {{n}}",
         "timeline_hint": "Le détail de chaque étape (comme une année) est révélé une fois que les apprenants ont vérifié.",
         "variant_list": "Liste",
-        "variant_timeline": "Frise chronologique"
+        "variant_timeline": "Frise chronologique",
+        "author_hint": "Voici le bon ordre ; les apprenants reçoivent les étapes mélangées. Faites glisser une étape ou utilisez les flèches pour réorganiser.",
+        "detail_label_n": "Détail de l’étape {{n}}",
+        "remove_named": "Supprimer « {{item}} »"
       },
       "match": {
         "title": "Paires",
@@ -15609,22 +15621,22 @@
         "placeholder_prompt": "Image d’exemple : ajoutez la vôtre",
         "stage_help": "Cliquez sur l’image pour ajouter une zone. Faites glisser une zone pour la déplacer, ou sélectionnez-la et utilisez les flèches.",
         "spots_label": "Zones",
-        "empty_list": "Aucune zone. Cliquez sur l’image pour en ajouter une.",
         "spot_aria": "Zone {{n}} : {{label}}",
         "untitled_spot": "sans titre",
-        "move_hint": "Sélectionnez, puis faites glisser sur l’image ou utilisez les flèches",
         "select_spot": "Sélectionner la zone {{n}}",
         "label_placeholder": "Qu’y a-t-il ici ?",
         "label_label": "Libellé de la zone {{n}}",
         "remove_spot": "Supprimer la zone {{n}}",
-        "hint_label_short": "Ajoutez un libellé pour que l’apprenant sache ce qu’il a trouvé.",
         "explanation_placeholder": "Explication affichée une fois trouvée (facultatif)",
         "explanation_label": "Explication de la zone {{n}}",
         "size_label": "Taille",
         "hint_no_image": "L’image d’exemple est utilisée. Ajoutez la vôtre ci-dessus.",
         "hint_no_spots": "Ajoutez au moins une zone.",
         "hint_missing_label": "La zone {{n}} n’a pas de libellé.",
-        "hint_overlap": "Les zones {{a}} et {{b}} se chevauchent : l’une risque d’être difficile à toucher."
+        "hint_overlap": "Les zones {{a}} et {{b}} se chevauchent : l’une risque d’être difficile à toucher.",
+        "mode_find_hint": "Les apprenants cliquent sur l’image pour trouver chaque zone.",
+        "mode_explore_hint": "Les apprenants ouvrent des repères numérotés pour lire chaque zone.",
+        "pin_hint": "Cliquez pour modifier. Faites glisser, ou utilisez les flèches, pour déplacer."
       },
       "gaps": {
         "title": "Texte à trous",
@@ -15646,8 +15658,19 @@
         "hint_no_gaps": "Aucun trou pour l’instant. Sélectionnez un mot et cliquez sur Créer un trou.",
         "hint_empty_gap": "Un trou vide [[ ]] est ignoré. Mettez la réponse à l’intérieur.",
         "hint_unclosed": "Il manque le ]] de fermeture d’un trou.",
-        "preview_label": "Aperçu",
-        "gap_count": "Trous : {{n}}"
+        "answers_hint": "Les apprenants peuvent taper n’importe laquelle de ces réponses. La première va dans la banque de mots.",
+        "answer_label": "Réponse acceptée {{n}}",
+        "remove_answer": "Supprimer « {{answer}} »",
+        "add_answer": "Ajouter une autre réponse acceptée",
+        "remove_gap": "Supprimer le trou (garder le mot)",
+        "gap_title": "Trou {{n}}",
+        "gap_aria": "Trou {{n}} : {{answer}}. Modifier les réponses acceptées",
+        "passage_hint": "Cliquez pour modifier le texte. Sélectionnez des mots, puis « Créer un trou ».",
+        "passage_placeholder": "Écrivez votre texte ici…",
+        "edit_text": "Modifier le texte",
+        "make_gap_ready": "Appuyez sur « Créer un trou » pour transformer les mots sélectionnés en trou.",
+        "select_hint": "Sélectionnez des mots pour créer un trou. Cliquez sur un trou pour modifier ses réponses.",
+        "done_editing": "Terminé"
       },
       "spot_mistake": {
         "title": "Trouver l’erreur",
@@ -15675,8 +15698,6 @@
         "split_help_code": "Chaque ligne est un choix. Les lignes vides restent mais ne peuvent pas être choisies.",
         "segments_label": "Parties",
         "segment_n": "Partie {{n}}",
-        "is_mistake": "Erreur",
-        "is_correct": "Correct",
         "correction_placeholder": "Version corrigée",
         "correction_label": "Correction de la partie {{n}}",
         "hint_correction_short": "Ajoutez la version corrigée pour que l’apprenant en tire une leçon.",
@@ -15685,7 +15706,14 @@
         "hint_too_few": "Ajoutez au moins deux phrases ou lignes.",
         "hint_no_mistakes": "Marquez au moins une partie comme erreur.",
         "hint_all_mistakes": "Toutes les parties sont marquées comme erreurs. Laissez-en quelques-unes correctes.",
-        "hint_missing_correction": "La partie {{n}} est une erreur sans correction."
+        "hint_missing_correction": "La partie {{n}} est une erreur sans correction.",
+        "unmark_hint": "Une erreur. Cliquez pour la marquer comme correcte.",
+        "mark_hint": "Cliquez pour marquer ceci comme une erreur.",
+        "edit_text": "Modifier le texte",
+        "author_hint": "Cliquez sur une partie pour la marquer comme erreur, puis écrivez sa correction ci-dessous.",
+        "mistakes_label": "Erreurs et corrections",
+        "unmark_named": "Marquer la partie {{n}} comme correcte",
+        "done_editing": "Terminé"
       },
       "venn": {
         "title": "Comparaison Venn",
@@ -15711,13 +15739,8 @@
         "zone_both": "Les deux",
         "zone_neither": "Aucun",
         "zone_only": "Seulement {{set}}",
-        "sets_heading": "Les deux groupes",
         "change_color": "Changer la couleur",
-        "items_heading": "Éléments",
-        "items_hint": "Choisissez où va chaque élément. Les apprenants les voient mélangés.",
         "item_placeholder": "Élément {{n}}",
-        "item_zone": "Où il va",
-        "remove_item": "Supprimer l’élément",
         "explanation_placeholder": "Pourquoi il va là (affiché en cas d’erreur, facultatif)",
         "explanation_label": "Explication",
         "add_item": "Ajouter un élément",
@@ -15733,7 +15756,16 @@
           "duplicate_item": "Un autre élément a le même texte.",
           "neither_hidden": "Activez la zone « Aucun », sinon les apprenants ne verront pas cet élément.",
           "no_both": "Aucun élément n’appartient encore aux deux groupes ; l’intersection est la partie intéressante."
-        }
+        },
+        "moved": "« {{item}} » déplacé vers {{zone}}.",
+        "move_item": "Déplacer « {{item}} »",
+        "move_hint": "Faites glisser vers une autre zone, ou appuyez sur 1–4",
+        "why_label": "Pourquoi « {{item}} » va ici",
+        "remove_named": "Supprimer « {{item}} »",
+        "add_to": "Ajouter un élément à {{zone}}",
+        "author_selected": "Touchez maintenant l’endroit où va « {{item}} ».",
+        "author_hint": "Chaque élément est à sa place. Faites glisser un élément, ou touchez sa poignée puis une zone, pour le déplacer.",
+        "why_heading": "Pourquoi « {{item}} » va dans {{zone}} (affiché quand un apprenant se trompe)"
       },
       "label": {
         "title": "Légender le schéma",
@@ -15765,9 +15797,6 @@
         "untitled_pin": "Sans nom",
         "stage_help": "Cliquez sur l’image pour ajouter un repère. Glissez-le, ou utilisez les flèches, pour le déplacer.",
         "pins_label": "Repères",
-        "empty_list": "Aucun repère. Cliquez sur l’image pour en ajouter un.",
-        "move_hint": "Sélectionnez, puis déplacez avec les flèches",
-        "select_pin": "Sélectionner le repère {{n}}",
         "label_placeholder": "Étiquette",
         "label_label": "Étiquette du repère {{n}}",
         "remove_pin": "Supprimer le repère {{n}}",
@@ -15775,7 +15804,8 @@
         "distractors_hint": "Des étiquettes en trop qui ne vont nulle part. Elles font réfléchir au lieu de deviner.",
         "distractor_placeholder": "Étiquette piège {{n}}",
         "remove_distractor": "Supprimer l’étiquette piège",
-        "add_distractor": "Ajouter une étiquette piège"
+        "add_distractor": "Ajouter une étiquette piège",
+        "author_hint": "Chaque étiquette est sur son point. Cliquez sur l’image pour ajouter un point ; faites glisser un point pour le déplacer."
       },
       "word_guess": {
         "title": "Mot mystère",
@@ -15792,8 +15822,6 @@
           "w3_clue": "Ce qui fait bouger, chauffer ou briller les choses.",
           "w3_why": "L'énergie change de forme, par exemple de la nourriture au mouvement, mais ne se perd jamais."
         },
-        "words_heading": "Mots",
-        "words_hint": "Les apprenants devinent chaque mot à partir de son indice. Les espaces et les traits d'union sont affichés d'office.",
         "answer_placeholder": "Réponse {{n}}",
         "letters": "Lettres : {{n}}",
         "remove_word": "Supprimer le mot",
@@ -15813,14 +15841,15 @@
           "too_short": "Utilisez au moins 2 lettres.",
           "too_long": "Utilisez 12 lettres au maximum pour que les cases tiennent sur un téléphone.",
           "duplicate_answer": "Un autre mot a la même réponse."
-        }
+        },
+        "type_answer": "Cliquez sur les cases et tapez la réponse.",
+        "prev_word": "Mot précédent",
+        "next_word": "Mot suivant"
       },
       "confidence": {
         "title": "Test de confiance",
         "description": "Répondez, puis dites à quel point vous êtes sûr, pour repérer ce que vous croyez seulement savoir.",
         "title_placeholder": "Nommez ce test",
-        "questions_heading": "Questions",
-        "questions_hint": "Les apprenants choisissent une réponse et leur degré de certitude, puis voient s’ils avaient raison.",
         "prompt_placeholder": "Question {{n}}",
         "prompt_label": "Question {{n}}",
         "correct_group": "Bonne réponse à la question {{n}}",
@@ -15859,7 +15888,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "Question précédente",
+        "next_question": "Question suivante"
       },
       "matrix": {
         "title": "Grille de propriétés",
@@ -15876,18 +15907,13 @@
           "flies": "Peut voler",
           "swims": "Nage"
         },
-        "rows_heading": "Lignes",
-        "columns_heading": "Colonnes",
         "row_placeholder": "Ligne {{n}}",
         "column_placeholder": "Colonne {{n}}",
         "add_row": "Ajouter une ligne",
         "add_column": "Ajouter une colonne",
-        "remove_row": "Supprimer la ligne",
-        "remove_column": "Supprimer la colonne",
         "mode_label": "Type de réponse",
         "mode_multi": "Plusieurs par ligne",
         "mode_single": "Une par ligne",
-        "answers_heading": "Bonnes réponses",
         "answers_hint_multi": "Cochez chaque case vraie.",
         "answers_hint_single": "Choisissez la seule bonne colonne pour chaque ligne.",
         "cell_label": "{{row}} : {{column}}",
@@ -15903,7 +15929,9 @@
           "unused_column": "Aucune ligne n'a encore cette propriété.",
           "duplicate_row": "Une autre ligne porte le même nom.",
           "duplicate_column": "Une autre colonne porte le même nom."
-        }
+        },
+        "remove_column_named": "Supprimer la colonne « {{column}} »",
+        "remove_row_named": "Supprimer la ligne « {{row}} »"
       },
       "reflect": {
         "title": "Réflexion",
@@ -15912,7 +15940,6 @@
         "prompt_heading": "Consigne",
         "prompt_placeholder": "Que doivent expliquer les apprenants avec leurs propres mots ?",
         "guiding_heading": "Questions d’aide",
-        "guiding_hint": "Pistes facultatives que les apprenants peuvent ouvrir s’ils bloquent (5 au maximum).",
         "guiding_placeholder": "Question {{n}}",
         "guiding_label": "Question d’aide {{n}}",
         "remove_guiding": "Supprimer la question {{n}}",
@@ -15920,10 +15947,8 @@
         "min_words_label": "Nombre de mots minimum",
         "min_words_hint": "Les apprenants peuvent comparer une fois ce nombre atteint. 0 leur permet de comparer tout de suite.",
         "model_heading": "Réponse modèle",
-        "model_hint": "Facultatif. Les apprenants la voient après avoir écrit la leur.",
         "model_placeholder": "Une bonne réponse, en quelques phrases",
         "checklist_heading": "Points clés",
-        "checklist_hint": "Les apprenants cochent les points abordés ; cela devient leur score (8 au maximum).",
         "point_placeholder": "Point clé {{n}}",
         "point_label": "Point clé {{n}}",
         "remove_point": "Supprimer le point clé {{n}}",
@@ -15947,7 +15972,9 @@
           "p2": "La Terre fait le tour du Soleil en un an",
           "p3": "Une lumière plus directe et des journées plus longues en été",
           "p4": "Ce n’est pas dû à la distance au Soleil"
-        }
+        },
+        "guiding_optional": "facultatif",
+        "answer_key": "Corrigé"
       }
     }
   },

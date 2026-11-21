@@ -11,9 +11,10 @@
  - CorrectMark: a check badge that marks an option as the right answer.
  - SettingsGear: the header gear for rare settings, in a BlockPopover.
  - AnswerKeyHint: the one line under the canvas saying this is the key.
+ - CardNav: prev / dots / next (+ add) for blocks edited one card at a time.
 */
 import React from 'react'
-import { Check, GearSix, Key, Plus, X } from '@phosphor-icons/react'
+import { CaretLeft, CaretRight, Check, GearSix, Key, Plus, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { BlockPopover } from '../../../Blocks/ui/BlockChrome'
 import { cn } from '@/lib/utils'
@@ -163,5 +164,69 @@ export function AnswerKeyHint({ children, className }: { children?: React.ReactN
       <Key size={13} weight="duotone" aria-hidden className="shrink-0 text-amber-500" />
       <span>{children ?? t('editor.experiences.common.answer_key_hint', 'You’re editing the answer key. Preview to try it as a learner.')}</span>
     </p>
+  )
+}
+
+/** Prev / dots / next for one-card-at-a-time authoring, plus an add ghost. */
+export function CardNav({
+  count,
+  index,
+  onGo,
+  onAdd,
+  canAdd,
+  addLabel,
+  itemLabel,
+  flagged,
+  prevLabel,
+  nextLabel,
+}: {
+  count: number
+  index: number
+  onGo: (_i: number) => void
+  onAdd: () => void
+  canAdd: boolean
+  addLabel: string
+  itemLabel: (_n: number) => string
+  flagged?: (_i: number) => boolean
+  prevLabel: string
+  nextLabel: string
+}) {
+  const btn =
+    'inline-flex h-7 w-7 items-center justify-center rounded-lg text-neutral-500 outline-none hover:bg-neutral-200/60 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40 disabled:pointer-events-none disabled:opacity-30'
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1">
+      <button type="button" onClick={() => onGo(index - 1)} disabled={index === 0} aria-label={prevLabel} className={btn}>
+        <CaretLeft size={14} weight="bold" aria-hidden className="rtl:rotate-180" />
+      </button>
+      <div className="flex flex-wrap items-center justify-center">
+        {Array.from({ length: count }, (_, n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onGo(n)}
+            aria-label={itemLabel(n + 1)}
+            aria-current={n === index ? 'true' : undefined}
+            className="group inline-flex h-7 items-center justify-center px-[3px] outline-none"
+          >
+            <span
+              aria-hidden
+              className={cn(
+                'block h-1.5 rounded-full transition-all group-focus-visible:ring-2 group-focus-visible:ring-sky-500/40',
+                n === index ? 'w-4 bg-neutral-700' : 'w-1.5 bg-neutral-300 group-hover:bg-neutral-400',
+                flagged?.(n) && n !== index && 'bg-amber-300',
+              )}
+            />
+          </button>
+        ))}
+      </div>
+      <button type="button" onClick={() => onGo(index + 1)} disabled={index >= count - 1} aria-label={nextLabel} className={btn}>
+        <CaretRight size={14} weight="bold" aria-hidden className="rtl:rotate-180" />
+      </button>
+      {canAdd && (
+        <AddGhost onClick={onAdd} iconSize={12} className="ms-1 h-7 rounded-lg px-2 text-[12px]">
+          {addLabel}
+        </AddGhost>
+      )}
+    </div>
   )
 }

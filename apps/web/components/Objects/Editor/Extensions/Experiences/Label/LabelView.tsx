@@ -5,9 +5,10 @@
  responsive. The image stage always uses physical left/top: the picture is
  never mirrored in RTL, so neither are its pins.
 
- Author: the same image flow as Hotspot (upload, link or replace), click the
- picture to add a pin, drag pins or nudge them with the arrow keys, name each
- pin, add up to 4 wrong labels.
+ Author: edit in place on the learner's picture, every label already on its
+ pin (the answer key). Click the picture to add a pin, drag pins or nudge
+ them with the arrow keys, type each label on its tag or slot; the bank keeps
+ only the wrong labels (up to 4). Image actions live behind the gear.
 
  Learner: a bank of label chips (the pin labels plus the wrong ones,
  shuffled). Drag a chip onto a pin or onto its numbered slot under the
@@ -17,7 +18,7 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowCounterClockwise, ArrowsClockwise, Check, DotsSixVertical, Image as ImageIcon, Tag, Trash, Tray, X } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, ArrowsClockwise, Check, Image as ImageIcon, Tag, Trash, Tray, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
@@ -26,7 +27,6 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS } from '../../../Blocks/ui/BlockChrome'
 import MediaSourcePicker from '../../../Blocks/ui/MediaSourcePicker'
 import { useBlockUpload } from '../../../Blocks/media/useBlockUpload'
 import { acceptFor } from '../../../Blocks/media/mediaKinds'
@@ -35,8 +35,14 @@ import { normalizeUserUrl } from '../../../Blocks/embeds/embedProviders'
 import { uploadErrorText } from '../../../Blocks/media/uploadMessages'
 import { pickFile } from '../../../Blocks/nodeViewUtils'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   Stars,
   buzz,
   newId,
@@ -73,7 +79,7 @@ import {
   type LabelData,
   type LabelPlacement,
 } from './labelModel'
-import { AddRowButton, BlockHints, DragGhost, FormSection, ICON_BTN, InlineHint, NotReady, ResultIcon, contentKey } from '../Sort/kit'
+import { DragGhost, InlineHint, NotReady, ResultIcon, contentKey } from '../Sort/kit'
 import { focusSibling, useTapDrag } from '../Sort/useTapDrag'
 
 const TONE = 'embed' as const
@@ -200,7 +206,12 @@ export default function LabelView(props: NodeViewProps) {
   )
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// The learner's picture with every label already on its pin (the answer key).
+// Click the picture to add a pin, drag a pin (or arrow keys on it) to move it;
+// each pin's label is typed on its tag and in its numbered slot. The bank
+// keeps only the wrong labels, edited as chips. Image actions sit behind the
+// gear.
 
 const ISSUE_FALLBACK: Record<string, string> = {
   no_image: 'Add an image. Until then learners see the example drawing.',
@@ -230,6 +241,7 @@ function LabelEditor({
   const session = useLHSession() as any
   const activity = (props.extension?.options as any)?.activity
   const stageRef = React.useRef<HTMLDivElement>(null)
+  const rootRef = React.useRef<HTMLDivElement>(null)
   const [selected, setSelected] = React.useState<string | null>(null)
   const [drag, setDrag] = React.useState<{ id: string; x: number; y: number } | null>(null)
   const dragRef = React.useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null)
@@ -241,6 +253,7 @@ function LabelEditor({
       const next = fn(normalizeLabel(live))
       return { pins: next.pins, distractors: next.distractors }
     })
+  const focusLater = (sel: string) => requestAnimationFrame(() => requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>(sel)?.focus()))
 
   const upload = useBlockUpload({
     kind: 'image',
@@ -278,16 +291,26 @@ function LabelEditor({
   }
 
   const onStageClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('textarea,button,[data-no-drag]')) return
     if (data.pins.length >= LABEL_LIMITS.maxPins) return
     const { x, y } = percentAt(e.clientX, e.clientY)
     const id = newId()
     edit((d) => addPin(d, id, x, y))
     setSelected(id)
+    focusLater(`[data-slot="${id}"] textarea`)
+  }
+
+  const removeAt = (i: number) => {
+    const pin = data.pins[i]
+    const next = data.pins[i + 1] ?? data.pins[i - 1]
+    edit((d) => removePin(d, pin.id))
+    setSelected(null)
+    if (next) focusLater(`[data-pin-id="${next.id}"]`)
   }
 
   const onPinPointerDown = (e: React.PointerEvent, id: string) => {
     e.stopPropagation()
-    e.preventDefault()
+    if (e.button !== 0) return
     ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
     dragRef.current = { id, startX: e.clientX, startY: e.clientY, moved: false }
     setSelected(id)
@@ -308,7 +331,8 @@ function LabelEditor({
     }
     setDrag(null)
   }
-  const onPinKeyDown = (e: React.KeyboardEvent, id: string) => {
+  const onPinKeyDown = (e: React.KeyboardEvent, i: number) => {
+    const id = data.pins[i].id
     const step = e.shiftKey ? 5 : 1
     const moves: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }
     if (moves[e.key]) {
@@ -319,34 +343,52 @@ function LabelEditor({
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault()
       e.stopPropagation()
-      edit((d) => removePin(d, id))
-      setSelected(null)
+      removeAt(i)
     }
   }
 
   const pinIssues = (id: string) => issues.filter((i) => i.id === id)
+  const labelOf = (i: number) => t(`${k}label_label`, { n: i + 1, defaultValue: 'Label for pin {{n}}' })
+
+  const settings = src ? (
+    <SettingsGear>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button type="button" className={buttonClass('secondary', 'sm')} onClick={() => pickFile(acceptFor('image'), (f) => upload.start(f))}>
+          <ArrowsClockwise size={13} aria-hidden />
+          {t(`${k}replace_image`, 'Replace image')}
+        </button>
+        <button type="button" className={buttonClass('ghost', 'sm')} onClick={() => commit({ imageObject: null, imageUrl: '' })}>
+          <Trash size={13} aria-hidden />
+          {t(`${k}remove_image`, 'Remove image')}
+        </button>
+      </div>
+    </SettingsGear>
+  ) : undefined
 
   return (
     <ExperienceFrame
       {...frame}
+      wysiwyg
       title={data.title}
       onTitleChange={(title) => commit({ title })}
       instructions={data.instructions}
       onInstructionsChange={(instructions) => commit({ instructions })}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
     >
-      <div className="flex flex-col gap-4">
-        <BlockHints issues={issues.filter((i) => i.index === undefined)} text={issueText} />
-
-        {src && (
-          <div className="flex flex-wrap items-center justify-end gap-1.5">
-            <button type="button" className={buttonClass('secondary', 'sm')} onClick={() => pickFile(acceptFor('image'), (f) => upload.start(f))}>
-              <ArrowsClockwise size={13} aria-hidden />
-              {t(`${k}replace_image`, 'Replace image')}
-            </button>
-            <button type="button" className={buttonClass('ghost', 'sm')} onClick={() => commit({ imageObject: null, imageUrl: '' })}>
-              <Trash size={13} aria-hidden />
-              {t(`${k}remove_image`, 'Remove image')}
-            </button>
+      <div ref={rootRef} className="flex flex-col gap-4">
+        <p className="m-0 text-[13px] leading-snug text-neutral-500">
+          {t(`${k}author_hint`, 'Every label sits on its point. Click the picture to add a point; drag a point to move it.')}
+        </p>
+        {issues.some((i) => !i.id && i.index === undefined) && (
+          <div className="flex flex-col gap-1">
+            {issues
+              .filter((i) => !i.id && i.index === undefined)
+              .map((i) => (
+                <InlineHint key={i.code} severity={i.severity}>
+                  {issueText(i.code)}
+                </InlineHint>
+              ))}
           </div>
         )}
 
@@ -367,135 +409,142 @@ function LabelEditor({
           />
         )}
 
-        <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <div className="min-w-0">
-            <Stage
-              src={src}
-              alt=""
-              stageRef={stageRef}
-              prompt={src ? undefined : t(`${k}placeholder_prompt`, 'Example drawing: add your own image above')}
-              className={cn('cursor-crosshair', data.pins.length >= LABEL_LIMITS.maxPins && 'cursor-default')}
-              onClick={onStageClick}
+        {/* The bank, as learners see it once every label is placed: only the wrong labels are left. */}
+        <div role="group" aria-label={t(`${k}distractors_heading`, 'Wrong labels (optional)')} className="lh-exp-well flex min-h-16 flex-wrap items-center gap-2 rounded-2xl p-3">
+          <span className="basis-full text-[12px] text-neutral-500">{t(`${k}distractors_hint`, 'Extra labels that belong nowhere. They make learners think instead of guessing.')}</span>
+          {data.distractors.map((d, i) => (
+            <span key={i} data-distractor={i} className={cn('lh-exp-raised relative inline-flex min-h-10 max-w-full min-w-0 items-center rounded-xl px-3 py-2 text-[14px] leading-snug font-medium text-neutral-800', EDIT_OBJECT)}>
+              <InlineText
+                fit
+                value={d}
+                onCommit={(text) => edit((live) => updateDistractor(live, i, text))}
+                ariaLabel={t(`${k}distractor_placeholder`, { n: i + 1, defaultValue: 'Wrong label {{n}}' })}
+                placeholder={t(`${k}distractor_placeholder`, { n: i + 1, defaultValue: 'Wrong label {{n}}' })}
+                maxLength={60}
+              />
+              <RemoveX floating onClick={() => edit((live) => removeDistractor(live, i))} label={t(`${k}remove_distractor`, 'Remove wrong label')} />
+            </span>
+          ))}
+          {data.distractors.length < LABEL_LIMITS.maxDistractors && (
+            <AddGhost
+              onClick={() => {
+                edit((live) => addDistractor(live))
+                focusLater(`[data-distractor="${data.distractors.length}"] textarea`)
+              }}
+              className="min-h-10 rounded-xl px-3"
             >
-              {data.pins.map((pin, i) => {
-                const pos = drag?.id === pin.id ? { x: drag.x, y: drag.y } : pin
-                const active = selected === pin.id
-                return (
-                  <button
-                    key={pin.id}
-                    type="button"
-                    style={{ ...at(pos), transform: 'translate(-50%, -50%)' }}
-                    aria-label={t(`${k}pin_aria`, { n: i + 1, label: pin.label || t(`${k}untitled_pin`, 'Unnamed'), defaultValue: 'Pin {{n}}: {{label}}' })}
-                    aria-pressed={active}
-                    onPointerDown={(e) => onPinPointerDown(e, pin.id)}
-                    onPointerMove={onPinPointerMove}
-                    onPointerUp={onPinPointerUp}
-                    onPointerCancel={() => {
-                      dragRef.current = null
-                      setDrag(null)
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSelected(pin.id)
-                    }}
-                    onKeyDown={(e) => onPinKeyDown(e, pin.id)}
+              {t(`${k}add_distractor`, 'Add a wrong label')}
+            </AddGhost>
+          )}
+          {issues
+            .filter((issue) => issue.index !== undefined)
+            .map((issue) => (
+              <span key={`${issue.index}:${issue.code}`} className="basis-full">
+                <InlineHint severity={issue.severity}>{`${data.distractors[issue.index ?? 0] || '…'}: ${issueText(issue.code)}`}</InlineHint>
+              </span>
+            ))}
+        </div>
+
+        {/* The picture with its pins and their labels */}
+        <Stage
+          src={src}
+          alt=""
+          stageRef={stageRef}
+          prompt={src ? undefined : t(`${k}placeholder_prompt`, 'Example drawing: add your own image above')}
+          className={cn('mx-auto max-w-[720px] cursor-crosshair', data.pins.length >= LABEL_LIMITS.maxPins && 'cursor-default')}
+          onClick={onStageClick}
+        >
+          {data.pins.map((pin, i) => {
+            const pos = drag?.id === pin.id ? { x: drag.x, y: drag.y } : pin
+            const active = selected === pin.id
+            const right = pos.x < 62
+            return (
+              <span key={pin.id} className="absolute h-0 w-0" style={at(pos)}>
+                <button
+                  type="button"
+                  data-pin-id={pin.id}
+                  style={{ left: 0, top: 0 }}
+                  aria-pressed={active}
+                  aria-label={t(`${k}pin_aria`, { n: i + 1, label: pin.label || t(`${k}untitled_pin`, 'Unnamed'), defaultValue: 'Pin {{n}}: {{label}}' })}
+                  title={t(`${k}stage_help`, 'Click the picture to add a pin. Drag a pin, or use the arrow keys, to move it.')}
+                  onPointerDown={(e) => onPinPointerDown(e, pin.id)}
+                  onPointerMove={onPinPointerMove}
+                  onPointerUp={onPinPointerUp}
+                  onPointerCancel={() => {
+                    dragRef.current = null
+                    setDrag(null)
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelected(pin.id)
+                  }}
+                  onKeyDown={(e) => onPinKeyDown(e, i)}
+                  className="absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none items-center justify-center rounded-full outline-none focus-visible:ring-4 focus-visible:ring-teal-500/40 active:cursor-grabbing"
+                >
+                  <span
+                    aria-hidden
                     className={cn(
-                      'absolute flex h-7 w-7 cursor-grab touch-none items-center justify-center rounded-full border-2 border-white text-[12px] font-bold text-white shadow-[0_1px_3px_rgba(0,0,0,0.3)] outline-none active:cursor-grabbing focus-visible:ring-4 focus-visible:ring-sky-500/40',
-                      active ? 'bg-sky-600' : 'bg-teal-600',
+                      'relative flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-[12px] font-bold text-white shadow-[0_1px_3px_rgba(0,0,0,0.3)]',
+                      active ? 'bg-sky-600' : pin.label.trim() ? 'bg-neutral-800' : 'bg-amber-500',
                     )}
                   >
                     {i + 1}
-                  </button>
-                )
-              })}
-            </Stage>
-            <p className="mt-1.5 text-[11px] leading-snug text-neutral-400">{t(`${k}stage_help`, 'Click the picture to add a pin. Drag a pin, or use the arrow keys, to move it.')}</p>
-          </div>
-
-          <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label={t(`${k}pins_label`, 'Pins')}>
-            {data.pins.length === 0 && <li className="rounded-lg bg-neutral-50 px-3 py-3 text-xs text-neutral-500">{t(`${k}empty_list`, 'No pins yet. Click the picture to add one.')}</li>}
-            {data.pins.map((pin, i) => (
-              <li
-                key={pin.id}
-                className={cn('rounded-xl p-2 shadow-[0_0_0_1px_rgba(0,0,0,0.07)] transition-shadow', selected === pin.id && 'shadow-[0_0_0_2px_rgba(2,132,199,0.5)]')}
-                onFocusCapture={() => setSelected(pin.id)}
-              >
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    title={t(`${k}move_hint`, 'Select, then use the arrow keys to move')}
-                    aria-label={t(`${k}select_pin`, { n: i + 1, defaultValue: 'Select pin {{n}}' })}
-                    onClick={() => setSelected(pin.id)}
-                    onKeyDown={(e) => onPinKeyDown(e, pin.id)}
-                    className="flex h-6 w-6 shrink-0 cursor-move items-center justify-center rounded-md text-neutral-400 outline-none hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-2 focus-visible:ring-sky-500/40"
-                  >
-                    <DotsSixVertical size={14} weight="bold" aria-hidden />
-                  </button>
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-600 text-[11px] font-semibold text-white">{i + 1}</span>
-                  <CommitInput
-                    value={pin.label}
-                    placeholder={t(`${k}label_placeholder`, 'Label')}
-                    aria-label={t(`${k}label_label`, { n: i + 1, defaultValue: 'Label for pin {{n}}' })}
-                    onCommit={(label) => edit((d) => updatePin(d, pin.id, { label }))}
-                    className={cn(FIELD_CLASS, 'h-8 min-w-0 flex-1')}
-                  />
-                  <button
-                    type="button"
-                    aria-label={t(`${k}remove_pin`, { n: i + 1, defaultValue: 'Remove pin {{n}}' })}
-                    title={t(`${k}remove_pin`, { n: i + 1, defaultValue: 'Remove pin {{n}}' })}
-                    onClick={() => edit((d) => removePin(d, pin.id))}
-                    className={ICON_BTN}
-                  >
-                    <Trash size={14} aria-hidden />
-                  </button>
-                </div>
-                {pinIssues(pin.id).map((issue) => (
-                  <div key={issue.code} className="mt-1 ps-14">
-                    <InlineHint severity={issue.severity}>{issueText(issue.code)}</InlineHint>
-                  </div>
-                ))}
-              </li>
-            ))}
-          </ol>
-        </div>
-
-        <FormSection
-          title={t(`${k}distractors_heading`, 'Wrong labels (optional)')}
-          hint={t(`${k}distractors_hint`, 'Extra labels that belong nowhere. They make learners think instead of guessing.')}
-        >
-          {data.distractors.map((d, i) => (
-            <div key={i} className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <CommitInput
-                  value={d}
-                  onCommit={(text) => edit((live) => updateDistractor(live, i, text))}
-                  placeholder={t(`${k}distractor_placeholder`, { n: i + 1, defaultValue: 'Wrong label {{n}}' })}
-                  aria-label={t(`${k}distractor_placeholder`, { n: i + 1, defaultValue: 'Wrong label {{n}}' })}
-                  className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1')}
-                />
-                <button
-                  type="button"
-                  className={ICON_BTN}
-                  onClick={() => edit((live) => removeDistractor(live, i))}
-                  aria-label={t(`${k}remove_distractor`, 'Remove wrong label')}
-                  title={t(`${k}remove_distractor`, 'Remove wrong label')}
-                >
-                  <Trash size={15} aria-hidden />
+                  </span>
                 </button>
+                <span className="absolute top-0 hidden -translate-y-1/2 sm:block" style={right ? { left: 18 } : { right: 18 }}>
+                  <span
+                    data-no-drag=""
+                    className={cn('lh-exp-raised flex w-max max-w-[9rem] items-center rounded-lg px-2 py-1 text-start text-[12.5px] leading-tight font-semibold', active ? 'text-sky-700' : 'text-neutral-800')}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <InlineText
+                      fit
+                      value={pin.label}
+                      onCommit={(label) => edit((d) => updatePin(d, pin.id, { label }))}
+                      onFocusChange={(f) => f && setSelected(pin.id)}
+                      ariaLabel={labelOf(i)}
+                      placeholder={t(`${k}label_placeholder`, 'Label')}
+                      maxLength={60}
+                    />
+                  </span>
+                </span>
+              </span>
+            )
+          })}
+        </Stage>
+        <p className="m-0 -mt-2 text-center text-[12px] text-neutral-400">{t(`${k}stage_help`, 'Click the picture to add a pin. Drag a pin, or use the arrow keys, to move it.')}</p>
+
+        {/* Numbered slots, each with its correct label */}
+        <ol className="m-0 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2" aria-label={t(`${k}pins_label`, 'Pins')}>
+          {data.pins.map((pin, i) => (
+            <li key={pin.id} data-slot={pin.id} className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <span aria-hidden className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white', selected === pin.id ? 'bg-sky-600' : 'bg-neutral-800')}>
+                  {i + 1}
+                </span>
+                <div className={cn('lh-exp-well relative flex min-h-11 min-w-0 flex-1 items-center gap-1.5 rounded-xl px-1.5 py-1', EDIT_OBJECT)}>
+                  <span className="lh-exp-raised inline-flex min-h-8 max-w-full min-w-0 items-center rounded-xl px-2.5 py-1 text-[13px] leading-snug font-medium text-neutral-800">
+                    <InlineText
+                      fit
+                      value={pin.label}
+                      onCommit={(label) => edit((d) => updatePin(d, pin.id, { label }))}
+                      onFocusChange={(f) => f && setSelected(pin.id)}
+                      ariaLabel={labelOf(i)}
+                      placeholder={t(`${k}label_placeholder`, 'Label')}
+                      maxLength={60}
+                    />
+                  </span>
+                  <RemoveX onClick={() => removeAt(i)} label={t(`${k}remove_pin`, { n: i + 1, defaultValue: 'Remove pin {{n}}' })} className="ms-auto" />
+                </div>
               </div>
-              {issues
-                .filter((issue) => issue.index === i)
-                .map((issue) => (
-                  <div key={issue.code} className="ps-1">
-                    <InlineHint severity={issue.severity}>{issueText(issue.code)}</InlineHint>
-                  </div>
-                ))}
-            </div>
+              {pinIssues(pin.id).map((issue) => (
+                <div key={issue.code} className="ps-8">
+                  <InlineHint severity={issue.severity}>{issueText(issue.code)}</InlineHint>
+                </div>
+              ))}
+            </li>
           ))}
-          <AddRowButton disabled={data.distractors.length >= LABEL_LIMITS.maxDistractors} onClick={() => edit((live) => addDistractor(live))}>
-            {t(`${k}add_distractor`, 'Add a wrong label')}
-          </AddRowButton>
-        </FormSection>
+        </ol>
       </div>
     </ExperienceFrame>
   )

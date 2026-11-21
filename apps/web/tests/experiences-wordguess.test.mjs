@@ -160,6 +160,23 @@ describe("word guess model: a round", () => {
     expect(M.submitGuess(q).round.revealed).toEqual([]);
   });
 
+  test("letters guessed in place stay locked in the next row", () => {
+    let r = play(M.newRound("atom", 6), "atop").round;
+    expect(M.lockedSlots(r)).toEqual([0, 1, 2]);
+    expect(r.current).toEqual(["a", "t", "o", ""]);
+    r = M.typeLetter(r, "x");
+    expect(r.current).toEqual(["a", "t", "o", "x"]);
+    r = M.backspace(M.backspace(r));
+    expect(r.current).toEqual(["a", "t", "o", ""]);
+    // A hint keeps the locked letters and the typed ones.
+    let h = play(M.newRound("planet", 6), "pxxxxx").round;
+    h = M.typeLetter(h, "q");
+    h = M.revealHint(h);
+    expect(M.lockedSlots(h)).toEqual([0, 1]);
+    expect(h.current).toEqual(["p", "l", "q", "", "", ""]);
+    expect(M.submitGuess(M.typeLetter(M.typeLetter(M.typeLetter(r, "m"), "z"), "z")).round.status).toBe("solved");
+  });
+
   test("stars", () => {
     expect(M.wordStars(true, 0)).toBe(3);
     expect(M.wordStars(true, 1)).toBe(2);

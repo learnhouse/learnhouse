@@ -4190,7 +4190,11 @@
         "solved_mark": "Đã đoán đúng",
         "missed_mark": "Chưa đoán đúng",
         "play_again": "Chơi lại",
-        "best": "Tốt nhất"
+        "best": "Tốt nhất",
+        "guesses_left": "Lượt đoán còn lại: {{n}}",
+        "history_item": "Lượt {{n}}: {{word}} ({{feedback}})",
+        "history_label": "Các lượt đoán trước",
+        "typing_row": "Lượt đoán của bạn"
       },
       "confidence": {
         "instructions": "Trả lời, rồi cho biết bạn chắc chắn đến đâu.",
@@ -13684,7 +13688,6 @@
       "not_found": "Không tìm thấy kịch bản",
       "not_found_hint": "Vui lòng kiểm tra cấu hình kịch bản của bạn và thử lại.",
       "illustration_alt": "Hình minh họa kịch bản",
-      "max_scenarios": "Tối đa 40 kịch bản được phép",
       "new_scenario_text": "Nội dung kịch bản mới...",
       "default_option_1": "Tùy chọn 1",
       "default_option_2": "Tùy chọn 2",
@@ -14369,7 +14372,6 @@
         },
         "jump_to": "Chuyển đến bước đó",
         "leads_to": "Dẫn đến",
-        "limits": "Tối đa {{max}} bước, mỗi bước {{choices}} lựa chọn.",
         "map_hint": "Nhấp vào một bước để chỉnh sửa tại đây. Mũi tên cho thấy mỗi lựa chọn dẫn đến đâu.",
         "missing_step": "Bước bị thiếu",
         "move_down": "Di chuyển xuống",
@@ -14989,7 +14991,10 @@
         "issue_duplicateOption": "Có hai lựa chọn giống nhau.",
         "example": {
           "title": "Tính nhanh"
-        }
+        },
+        "question_of": "Câu hỏi {{n}} / {{total}}",
+        "prev_question": "Câu hỏi trước",
+        "next_question": "Câu hỏi tiếp theo"
       },
       "estimate": {
         "name": "Ước lượng",
@@ -15019,7 +15024,8 @@
           "explanation": "Người trưởng thành có 206 xương. Trẻ sơ sinh có khoảng 300; một số xương dính lại khi lớn lên.",
           "unit": "xương"
         },
-        "fill_example": "Dùng ví dụ"
+        "fill_example": "Dùng ví dụ",
+        "answer_marker": "Đáp án: {{value}}"
       },
       "code_lock": {
         "name": "Khóa mật mã",
@@ -15055,7 +15061,9 @@
           "c3": "Có bao nhiêu châu lục?",
           "c3_hint": "Châu Phi là một trong số đó.",
           "reward": "Cửa bật mở. Giỏi lắm, thám tử!"
-        }
+        },
+        "answer_masked": "Đáp án (ẩn cho đến khi bạn nhấp vào)",
+        "padlock_label": "Ổ khóa có {{n}} vòng số"
       },
       "scenarios": {
         "chip_unreachable": "Không ai đến được bước này",
@@ -15102,7 +15110,11 @@
           "step3": "Khách hàng càng bực hơn. Giờ sao?",
           "step3_a": "Xin lỗi và hỏi mã đơn hàng",
           "step3_b": "Kết thúc cuộc gọi"
-        }
+        },
+        "then_short": "Sau đó",
+        "open_target": "Mở bước đó",
+        "steps_label": "Các bước",
+        "editing_hint": "Bạn đang sửa câu chuyện. Dùng bản xem trước để chơi như người học."
       },
       "flashcards": {
         "title_placeholder": "Tiêu đề bộ thẻ (không bắt buộc)",
@@ -15227,7 +15239,6 @@
           "step4": "Nước chảy về biển"
         },
         "add_step": "Thêm bước",
-        "detail_label": "Chi tiết",
         "detail_placeholder": "Chi tiết, ví dụ: 1969",
         "drag_short": "Kéo để sắp xếp lại",
         "drag_step": "Di chuyển bước {{n}} (kéo hoặc dùng phím mũi tên)",
@@ -15239,13 +15250,14 @@
           "too_many_items": "Dùng tối đa 10 bước; người học chỉ thấy 10 bước đầu tiên."
         },
         "items_heading": "Các bước, theo đúng thứ tự",
-        "items_hint": "Người học sẽ thấy chúng bị xáo trộn.",
         "layout_label": "Bố cục",
-        "remove_step": "Xóa bước",
         "step_placeholder": "Bước {{n}}",
         "timeline_hint": "Chi tiết của mỗi bước (như năm) sẽ hiện ra sau khi người học kiểm tra.",
         "variant_list": "Danh sách",
-        "variant_timeline": "Dòng thời gian"
+        "variant_timeline": "Dòng thời gian",
+        "author_hint": "Đây là thứ tự đúng; người học nhận các bước bị xáo trộn. Kéo một bước hoặc dùng mũi tên để sắp xếp lại.",
+        "detail_label_n": "Chi tiết bước {{n}}",
+        "remove_named": "Xóa “{{item}}”"
       },
       "match": {
         "title": "Ghép cặp",
@@ -15306,22 +15318,22 @@
         "placeholder_prompt": "Hình ví dụ: hãy thêm hình của bạn",
         "stage_help": "Nhấp vào hình để thêm một điểm. Kéo điểm để di chuyển, hoặc chọn điểm rồi dùng phím mũi tên.",
         "spots_label": "Điểm",
-        "empty_list": "Chưa có điểm nào. Nhấp vào hình để thêm.",
         "spot_aria": "Điểm {{n}}: {{label}}",
         "untitled_spot": "chưa đặt tên",
-        "move_hint": "Chọn điểm, rồi kéo trên hình hoặc dùng phím mũi tên",
         "select_spot": "Chọn điểm {{n}}",
         "label_placeholder": "Đây là gì?",
         "label_label": "Nhãn của điểm {{n}}",
         "remove_spot": "Xóa điểm {{n}}",
-        "hint_label_short": "Thêm nhãn để người học biết mình đã tìm thấy gì.",
         "explanation_placeholder": "Giải thích hiện ra khi tìm thấy (không bắt buộc)",
         "explanation_label": "Giải thích cho điểm {{n}}",
         "size_label": "Kích thước",
         "hint_no_image": "Đang dùng hình ví dụ. Hãy thêm hình của bạn ở trên.",
         "hint_no_spots": "Thêm ít nhất một điểm.",
         "hint_missing_label": "Điểm {{n}} chưa có nhãn.",
-        "hint_overlap": "Điểm {{a}} và {{b}} chồng lên nhau nên có thể khó nhấp trúng một điểm."
+        "hint_overlap": "Điểm {{a}} và {{b}} chồng lên nhau nên có thể khó nhấp trúng một điểm.",
+        "mode_find_hint": "Người học nhấp vào hình để tìm từng điểm.",
+        "mode_explore_hint": "Người học mở các ghim đánh số để đọc về từng điểm.",
+        "pin_hint": "Nhấp để sửa. Kéo, hoặc dùng phím mũi tên, để di chuyển."
       },
       "gaps": {
         "title": "Điền vào chỗ trống",
@@ -15343,8 +15355,19 @@
         "hint_no_gaps": "Chưa có chỗ trống nào. Hãy chọn một từ và nhấn Tạo chỗ trống.",
         "hint_empty_gap": "Chỗ trống rỗng [[ ]] sẽ bị bỏ qua. Hãy nhập đáp án vào bên trong.",
         "hint_unclosed": "Có chỗ trống thiếu dấu đóng ]].",
-        "preview_label": "Xem trước",
-        "gap_count": "Chỗ trống: {{n}}"
+        "answers_hint": "Người học có thể gõ bất kỳ đáp án nào trong số này. Đáp án đầu tiên vào ngân hàng từ.",
+        "answer_label": "Đáp án được chấp nhận {{n}}",
+        "remove_answer": "Xóa “{{answer}}”",
+        "add_answer": "Thêm một đáp án được chấp nhận khác",
+        "remove_gap": "Xóa chỗ trống (giữ lại từ)",
+        "gap_title": "Chỗ trống {{n}}",
+        "gap_aria": "Chỗ trống {{n}}: {{answer}}. Sửa các đáp án được chấp nhận",
+        "passage_hint": "Nhấp để sửa văn bản. Chọn từ, rồi “Tạo chỗ trống”.",
+        "passage_placeholder": "Viết văn bản của bạn ở đây…",
+        "edit_text": "Sửa văn bản",
+        "make_gap_ready": "Nhấn “Tạo chỗ trống” để biến các từ đã chọn thành chỗ trống.",
+        "select_hint": "Chọn từ để tạo chỗ trống. Nhấp vào chỗ trống để sửa đáp án.",
+        "done_editing": "Xong"
       },
       "spot_mistake": {
         "title": "Tìm lỗi sai",
@@ -15372,8 +15395,6 @@
         "split_help_code": "Mỗi dòng là một lựa chọn. Dòng trống vẫn được giữ nhưng không thể chọn.",
         "segments_label": "Các phần",
         "segment_n": "Phần {{n}}",
-        "is_mistake": "Sai",
-        "is_correct": "Đúng",
         "correction_placeholder": "Phiên bản đã sửa",
         "correction_label": "Bản sửa cho phần {{n}}",
         "hint_correction_short": "Thêm phiên bản đã sửa để người học có thể rút ra bài học.",
@@ -15382,7 +15403,14 @@
         "hint_too_few": "Thêm ít nhất hai câu hoặc hai dòng.",
         "hint_no_mistakes": "Đánh dấu ít nhất một phần là sai.",
         "hint_all_mistakes": "Mọi phần đều bị đánh dấu là sai. Hãy để lại một số phần đúng.",
-        "hint_missing_correction": "Phần {{n}} bị sai nhưng chưa có bản sửa."
+        "hint_missing_correction": "Phần {{n}} bị sai nhưng chưa có bản sửa.",
+        "unmark_hint": "Một lỗi sai. Nhấp để đánh dấu là đúng.",
+        "mark_hint": "Nhấp để đánh dấu đây là lỗi sai.",
+        "edit_text": "Sửa văn bản",
+        "author_hint": "Nhấp vào một phần để đánh dấu là lỗi sai, rồi viết bản sửa bên dưới.",
+        "mistakes_label": "Lỗi sai và bản sửa",
+        "unmark_named": "Đánh dấu phần {{n}} là đúng",
+        "done_editing": "Xong"
       },
       "venn": {
         "title": "So sánh Venn",
@@ -15408,13 +15436,8 @@
         "zone_both": "Cả hai",
         "zone_neither": "Không thuộc nhóm nào",
         "zone_only": "Chỉ {{set}}",
-        "sets_heading": "Hai nhóm",
         "change_color": "Đổi màu",
-        "items_heading": "Mục",
-        "items_hint": "Chọn nơi mỗi mục thuộc về. Người học thấy chúng được xáo trộn.",
         "item_placeholder": "Mục {{n}}",
-        "item_zone": "Thuộc về đâu",
-        "remove_item": "Xóa mục",
         "explanation_placeholder": "Vì sao thuộc về đó (hiện khi sai, không bắt buộc)",
         "explanation_label": "Giải thích",
         "add_item": "Thêm mục",
@@ -15430,7 +15453,16 @@
           "duplicate_item": "Có mục khác cùng nội dung.",
           "neither_hidden": "Hãy bật vùng “Không thuộc nhóm nào”, nếu không người học sẽ không thấy mục này.",
           "no_both": "Chưa có mục nào thuộc cả hai nhóm; phần giao nhau mới là phần thú vị."
-        }
+        },
+        "moved": "Đã chuyển “{{item}}” sang {{zone}}.",
+        "move_item": "Di chuyển “{{item}}”",
+        "move_hint": "Kéo sang chỗ khác, hoặc nhấn 1–4",
+        "why_label": "Vì sao “{{item}}” thuộc về đây",
+        "remove_named": "Xóa “{{item}}”",
+        "add_to": "Thêm mục vào {{zone}}",
+        "author_selected": "Giờ hãy chạm vào nơi “{{item}}” thuộc về.",
+        "author_hint": "Mỗi mục đều ở đúng chỗ. Kéo một mục, hoặc chạm tay cầm rồi chạm một chỗ, để di chuyển.",
+        "why_heading": "Vì sao “{{item}}” thuộc {{zone}} (hiện khi người học làm sai)"
       },
       "label": {
         "title": "Ghi nhãn sơ đồ",
@@ -15462,9 +15494,6 @@
         "untitled_pin": "Chưa đặt tên",
         "stage_help": "Bấm vào hình để thêm điểm. Kéo điểm hoặc dùng phím mũi tên để di chuyển.",
         "pins_label": "Các điểm",
-        "empty_list": "Chưa có điểm nào. Bấm vào hình để thêm.",
-        "move_hint": "Chọn rồi di chuyển bằng phím mũi tên",
-        "select_pin": "Chọn điểm {{n}}",
         "label_placeholder": "Nhãn",
         "label_label": "Nhãn cho điểm {{n}}",
         "remove_pin": "Xóa điểm {{n}}",
@@ -15472,7 +15501,8 @@
         "distractors_hint": "Những nhãn thừa không thuộc chỗ nào. Chúng khiến người học suy nghĩ thay vì đoán.",
         "distractor_placeholder": "Nhãn gây nhiễu {{n}}",
         "remove_distractor": "Xóa nhãn gây nhiễu",
-        "add_distractor": "Thêm nhãn gây nhiễu"
+        "add_distractor": "Thêm nhãn gây nhiễu",
+        "author_hint": "Mỗi nhãn nằm ở điểm của nó. Nhấp vào hình để thêm điểm; kéo một điểm để di chuyển."
       },
       "word_guess": {
         "title": "Đoán từ",
@@ -15489,8 +15519,6 @@
           "w3_clue": "Thứ làm mọi vật chuyển động, nóng lên hoặc sáng lên.",
           "w3_why": "Năng lượng đổi dạng, ví dụ từ thức ăn thành chuyển động, nhưng không bao giờ mất đi."
         },
-        "words_heading": "Từ",
-        "words_hint": "Người học đoán từng từ dựa vào gợi ý. Dấu cách và gạch nối được hiển thị sẵn.",
         "answer_placeholder": "Đáp án {{n}}",
         "letters": "Số chữ cái: {{n}}",
         "remove_word": "Xóa từ",
@@ -15510,14 +15538,15 @@
           "too_short": "Dùng ít nhất 2 chữ cái.",
           "too_long": "Dùng tối đa 12 chữ cái để các ô vừa màn hình điện thoại.",
           "duplicate_answer": "Một từ khác có cùng đáp án."
-        }
+        },
+        "type_answer": "Nhấp vào các ô và gõ đáp án.",
+        "prev_word": "Từ trước",
+        "next_word": "Từ tiếp theo"
       },
       "confidence": {
         "title": "Kiểm tra mức tự tin",
         "description": "Trả lời rồi cho biết bạn chắc chắn đến đâu, để nhận ra điều bạn chỉ tưởng là mình biết.",
         "title_placeholder": "Đặt tên cho bài kiểm tra này",
-        "questions_heading": "Câu hỏi",
-        "questions_hint": "Người học chọn đáp án và mức độ chắc chắn, rồi xem mình có đúng không.",
         "prompt_placeholder": "Câu hỏi {{n}}",
         "prompt_label": "Câu hỏi {{n}}",
         "correct_group": "Đáp án đúng cho câu hỏi {{n}}",
@@ -15556,7 +15585,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "Câu hỏi trước",
+        "next_question": "Câu hỏi tiếp theo"
       },
       "matrix": {
         "title": "Bảng thuộc tính",
@@ -15573,18 +15604,13 @@
           "flies": "Biết bay",
           "swims": "Biết bơi"
         },
-        "rows_heading": "Hàng",
-        "columns_heading": "Cột",
         "row_placeholder": "Hàng {{n}}",
         "column_placeholder": "Cột {{n}}",
         "add_row": "Thêm hàng",
         "add_column": "Thêm cột",
-        "remove_row": "Xóa hàng",
-        "remove_column": "Xóa cột",
         "mode_label": "Kiểu trả lời",
         "mode_multi": "Nhiều ô mỗi hàng",
         "mode_single": "Một ô mỗi hàng",
-        "answers_heading": "Đáp án đúng",
         "answers_hint_multi": "Đánh dấu mọi ô đúng.",
         "answers_hint_single": "Chọn một cột đúng duy nhất cho mỗi hàng.",
         "cell_label": "{{row}}: {{column}}",
@@ -15600,7 +15626,9 @@
           "unused_column": "Chưa có hàng nào có thuộc tính này.",
           "duplicate_row": "Một hàng khác có cùng tên.",
           "duplicate_column": "Một cột khác có cùng tên."
-        }
+        },
+        "remove_column_named": "Xóa cột “{{column}}”",
+        "remove_row_named": "Xóa hàng “{{row}}”"
       },
       "reflect": {
         "title": "Suy ngẫm",
@@ -15609,7 +15637,6 @@
         "prompt_heading": "Đề bài",
         "prompt_placeholder": "Người học cần giải thích điều gì bằng lời của mình?",
         "guiding_heading": "Câu hỏi gợi ý",
-        "guiding_hint": "Gợi ý không bắt buộc người học có thể mở khi bí (tối đa 5).",
         "guiding_placeholder": "Câu hỏi {{n}}",
         "guiding_label": "Câu hỏi gợi ý {{n}}",
         "remove_guiding": "Xóa câu hỏi {{n}}",
@@ -15617,10 +15644,8 @@
         "min_words_label": "Số từ tối thiểu",
         "min_words_hint": "Người học có thể so sánh khi đạt số từ này. Đặt 0 để so sánh ngay.",
         "model_heading": "Câu trả lời mẫu",
-        "model_hint": "Không bắt buộc. Người học thấy sau khi viết câu trả lời của mình.",
         "model_placeholder": "Một câu trả lời tốt, trong vài câu",
         "checklist_heading": "Ý chính",
-        "checklist_hint": "Người học đánh dấu các ý đã nêu; đó là điểm của họ (tối đa 8).",
         "point_placeholder": "Ý chính {{n}}",
         "point_label": "Ý chính {{n}}",
         "remove_point": "Xóa ý chính {{n}}",
@@ -15644,7 +15669,9 @@
           "p2": "Trái Đất quay quanh Mặt Trời trong một năm",
           "p3": "Mùa hè có nắng trực tiếp hơn và ngày dài hơn",
           "p4": "Không phải do khoảng cách tới Mặt Trời"
-        }
+        },
+        "guiding_optional": "không bắt buộc",
+        "answer_key": "Đáp án"
       }
     }
   },

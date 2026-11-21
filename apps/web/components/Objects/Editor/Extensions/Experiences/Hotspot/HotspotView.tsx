@@ -11,12 +11,10 @@ import {
   ArrowsClockwise,
   Check,
   Crosshair,
-  DotsSixVertical,
   Image as ImageIcon,
   Info,
   MagnifyingGlass,
   Trash,
-  WarningCircle,
   X,
 } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
@@ -27,7 +25,8 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { cn } from '@/lib/utils'
-import { CommitInput, Segmented, TEXTAREA_CLASS } from '../../../Blocks/ui/BlockChrome'
+import { Segmented, SettingsField } from '../../../Blocks/ui/BlockChrome'
+import { InlineHint } from '../Sort/kit'
 import MediaSourcePicker from '../../../Blocks/ui/MediaSourcePicker'
 import { useBlockUpload } from '../../../Blocks/media/useBlockUpload'
 import { acceptFor } from '../../../Blocks/media/mediaKinds'
@@ -36,9 +35,13 @@ import { normalizeUserUrl } from '../../../Blocks/embeds/embedProviders'
 import { uploadErrorText } from '../../../Blocks/media/uploadMessages'
 import { pickFile } from '../../../Blocks/nodeViewUtils'
 import {
+  AnswerKeyHint,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  SettingsGear,
   buzz,
+  type InlineTextHandle,
   useEnsureBlockId,
   useExperienceEditable,
   useExperienceMemory,
@@ -171,18 +174,20 @@ function useResetOn(key: string, reset: () => void) {
 }
 
 /* ───────────────────────────── Editor ───────────────────────────── */
+// Edit in place: the picture as learners see it. Click the picture to add a
+// pin, drag a pin (or arrow keys on it) to move it; a pin opens a small card
+// where its label, explanation and (find mode) size are edited. Mode and the
+// image actions live behind the header gear.
 
-function HotspotEditor({
+function useHotspotEditor({
   props,
   attrs,
-  spots,
   mode,
   src,
   commit,
 }: {
   props: NodeViewProps
   attrs: StoredAttrs
-  spots: HotspotSpot[]
   mode: HotspotMode
   src: string
   commit: (_patch: CommitPatch<StoredAttrs>) => void
@@ -191,13 +196,6 @@ function HotspotEditor({
   const k = 'editor.experiences.hotspot.'
   const session = useLHSession() as any
   const activity = (props.extension?.options as any)?.activity
-  const stageRef = React.useRef<HTMLDivElement>(null)
-  const [selected, setSelected] = React.useState<string | null>(null)
-  const [drag, setDrag] = React.useState<{ id: string; x: number; y: number } | null>(null)
-  const dragRef = React.useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null)
-
-  const commitSpots = (fn: (_live: HotspotSpot[]) => HotspotSpot[]) =>
-    commit((live) => ({ spots: fn(normalizeSpots(live.spots)) }))
 
   const upload = useBlockUpload({
     kind: 'image',
@@ -231,52 +229,147 @@ function HotspotEditor({
     }
   }
 
+  const settings = (
+    <SettingsGear>
+      <SettingsField
+        label={t(`${k}mode_label`)}
+        hint={mode === 'find' ? t(`${k}mode_find_hint`, 'Learners click the picture to find each spot.') : t(`${k}mode_explore_hint`, 'Learners open numbered pins to read about each spot.')}
+      >
+        <Segmented<HotspotMode>
+          value={mode}
+          ariaLabel={t(`${k}mode_label`)}
+          onChange={(v) => commit({ mode: v })}
+          options={[
+            { value: 'find', label: <><MagnifyingGlass size={13} aria-hidden />{t(`${k}mode_find`)}</> },
+            { value: 'explore', label: <><Info size={13} aria-hidden />{t(`${k}mode_explore`)}</> },
+          ]}
+        />
+      </SettingsField>
+      {src && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button type="button" className={buttonClass('secondary', 'sm')} onClick={() => pickFile(acceptFor('image'), (f) => upload.start(f))}>
+            <ArrowsClockwise size={13} aria-hidden />
+            {t(`${k}replace_image`)}
+          </button>
+          <button type="button" className={buttonClass('ghost', 'sm')} onClick={() => commit({ imageObject: null, imageUrl: '' })}>
+            <Trash size={13} aria-hidden />
+            {t(`${k}remove_image`)}
+          </button>
+        </div>
+      )}
+    </SettingsGear>
+  )
+
+  const picker =
+    !src || upload.task ? (
+      <MediaSourcePicker
+        kind="image"
+        tone="embed"
+        icon={<ImageIcon size={20} weight="duotone" />}
+        title={t(`${k}add_image`)}
+        onFile={(f) => upload.start(f)}
+        onUrl={importFromUrl}
+        urlPlaceholder={t('editor.blocks_v2.image_link_placeholder', 'Paste an image link…')}
+        task={upload.task}
+        rejection={upload.rejection}
+        onCancel={upload.cancel}
+        onRetry={upload.retry}
+        onDismiss={upload.dismiss}
+      />
+    ) : null
+
+  return { settings, picker }
+}
+
+function HotspotEditor({
+  spots,
+  mode,
+  src,
+  picker,
+  commit,
+}: {
+  spots: HotspotSpot[]
+  mode: HotspotMode
+  src: string
+  picker: React.ReactNode
+  commit: (_patch: CommitPatch<StoredAttrs>) => void
+}) {
+  const { t } = useTranslation()
+  const k = 'editor.experiences.hotspot.'
+  const stageRef = React.useRef<HTMLDivElement>(null)
+  const [opened, setOpened] = React.useState<string | null>(null)
+  const [drag, setDrag] = React.useState<{ id: string; x: number; y: number } | null>(null)
+  const dragRef = React.useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null)
+  const labelRef = React.useRef<InlineTextHandle>(null)
+  const pendingFocus = React.useRef<string | null>(null)
+
+  const commitSpots = (fn: (_live: HotspotSpot[]) => HotspotSpot[]) => commit((live) => ({ spots: fn(normalizeSpots(live.spots)) }))
+  const focusPin = (id: string) => requestAnimationFrame(() => stageRef.current?.querySelector<HTMLElement>(`[data-pin="${id}"]`)?.focus())
+
+  // A new pin's card focuses its label once it has rendered.
+  React.useEffect(() => {
+    if (pendingFocus.current && opened === pendingFocus.current) {
+      pendingFocus.current = null
+      labelRef.current?.focus()
+    }
+  })
+
   const percentAt = (clientX: number, clientY: number) => {
     const rect = stageRef.current?.getBoundingClientRect()
     return rect ? pointToPercent(clientX, clientY, rect) : { x: 50, y: 50 }
   }
 
   const onStageClick = (e: React.MouseEvent) => {
-    // Spot buttons stop their own clicks, so anything reaching here is the picture.
+    // Pins and the card stop their own clicks, so anything reaching here is the picture.
+    if (opened) {
+      setOpened(null)
+      return
+    }
     if (spots.length >= MAX_SPOTS) return
     const { x, y } = percentAt(e.clientX, e.clientY)
     const next = addSpot(spots, x, y)
     const added = next[next.length - 1]
     commitSpots((live) => [...live, added])
-    setSelected(added.id)
+    pendingFocus.current = added.id
+    setOpened(added.id)
   }
 
-  const onSpotPointerDown = (e: React.PointerEvent, id: string) => {
+  const remove = (id: string) => {
+    const i = spots.findIndex((s) => s.id === id)
+    const next = spots[i + 1] ?? spots[i - 1]
+    commitSpots((live) => removeSpot(live, id))
+    setOpened(null)
+    if (next) focusPin(next.id)
+    else stageRef.current?.focus()
+  }
+
+  const onPinPointerDown = (e: React.PointerEvent, id: string) => {
     e.stopPropagation()
-    e.preventDefault()
+    if (e.button !== 0) return
     ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
     dragRef.current = { id, startX: e.clientX, startY: e.clientY, moved: false }
-    setSelected(id)
   }
-  const onSpotPointerMove = (e: React.PointerEvent) => {
+  const onPinPointerMove = (e: React.PointerEvent) => {
     const d = dragRef.current
     if (!d) return
     if (!d.moved && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < 4) return
     d.moved = true
     setDrag({ id: d.id, ...percentAt(e.clientX, e.clientY) })
   }
-  const onSpotPointerUp = (e: React.PointerEvent) => {
+  const onPinPointerUp = (e: React.PointerEvent) => {
     const d = dragRef.current
     dragRef.current = null
     if (d?.moved) {
       const { x, y } = percentAt(e.clientX, e.clientY)
       commitSpots((live) => moveSpot(live, d.id, x, y))
+      // A drag is not a click: keep the card as it was.
+      ;(e.currentTarget as HTMLElement).dataset.dragged = 'true'
     }
     setDrag(null)
   }
-  const onSpotKeyDown = (e: React.KeyboardEvent, id: string) => {
+  const onPinKeyDown = (e: React.KeyboardEvent, id: string) => {
     const step = e.shiftKey ? 5 : 1
-    const moves: Record<string, [number, number]> = {
-      ArrowLeft: [-step, 0],
-      ArrowRight: [step, 0],
-      ArrowUp: [0, -step],
-      ArrowDown: [0, step],
-    }
+    const moves: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }
     if (moves[e.key]) {
       e.preventDefault()
       e.stopPropagation()
@@ -285,8 +378,9 @@ function HotspotEditor({
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault()
       e.stopPropagation()
-      commitSpots((live) => removeSpot(live, id))
-      setSelected(null)
+      remove(id)
+    } else if (e.key === 'Escape') {
+      setOpened(null)
     }
   }
 
@@ -304,179 +398,198 @@ function HotspotEditor({
     }
   }
 
+  const current = spots.find((s) => s.id === opened) ?? null
+  const currentIndex = current ? spots.indexOf(current) : -1
+  const find = mode === 'find'
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="w-full sm:w-64">
-          <Segmented<HotspotMode>
-            value={mode}
-            ariaLabel={t(`${k}mode_label`)}
-            onChange={(v) => commit({ mode: v })}
-            options={[
-              { value: 'find', label: <><MagnifyingGlass size={13} aria-hidden />{t(`${k}mode_find`)}</> },
-              { value: 'explore', label: <><Info size={13} aria-hidden />{t(`${k}mode_explore`)}</> },
-            ]}
-          />
-        </div>
-        {src && (
-          <div className="flex items-center gap-1.5 sm:ms-auto">
-            <button type="button" className={buttonClass('secondary', 'sm')} onClick={() => pickFile(acceptFor('image'), (f) => upload.start(f))}>
-              <ArrowsClockwise size={13} aria-hidden />
-              {t(`${k}replace_image`)}
-            </button>
-            <button type="button" className={buttonClass('ghost', 'sm')} onClick={() => commit({ imageObject: null, imageUrl: '' })}>
-              <Trash size={13} aria-hidden />
-              {t(`${k}remove_image`)}
-            </button>
+      {picker}
+      <Stage
+        src={src}
+        alt=""
+        stageRef={stageRef}
+        tabIndex={-1}
+        prompt={src ? undefined : t(`${k}placeholder_prompt`)}
+        className={cn('cursor-crosshair outline-none', spots.length >= MAX_SPOTS && !opened && 'cursor-default')}
+        onClick={onStageClick}
+        onKeyDown={(e) => e.key === 'Escape' && current && (setOpened(null), focusPin(current.id))}
+      >
+        {spots.map((spot, i) => {
+          const pos = drag?.id === spot.id ? { ...spot, x: drag.x, y: drag.y } : spot
+          const isOpen = opened === spot.id
+          return (
+            <React.Fragment key={spot.id}>
+              {/* Find mode: the area that counts as a hit (the answer key). */}
+              {find && (
+                <span
+                  aria-hidden
+                  style={spotStyle(pos)}
+                  className={cn(
+                    'pointer-events-none absolute rounded-full border-2 border-dashed',
+                    isOpen ? 'border-white bg-neutral-900/15' : 'border-white/90 bg-teal-500/20 shadow-[0_0_0_1px_rgba(0,0,0,0.18)]',
+                  )}
+                />
+              )}
+              <button
+                type="button"
+                data-pin={spot.id}
+                aria-expanded={isOpen}
+                aria-label={t(`${k}spot_aria`, { n: i + 1, label: spot.label || t(`${k}untitled_spot`) })}
+                title={t(`${k}pin_hint`, 'Click to edit. Drag, or use the arrow keys, to move.')}
+                onPointerDown={(e) => onPinPointerDown(e, spot.id)}
+                onPointerMove={onPinPointerMove}
+                onPointerUp={onPinPointerUp}
+                onPointerCancel={() => {
+                  dragRef.current = null
+                  setDrag(null)
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const el = e.currentTarget as HTMLElement
+                  if (el.dataset.dragged) {
+                    delete el.dataset.dragged
+                    return
+                  }
+                  setOpened(isOpen ? null : spot.id)
+                }}
+                onKeyDown={(e) => onPinKeyDown(e, spot.id)}
+                style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }}
+                className={cn(
+                  'absolute flex h-9 w-9 cursor-grab touch-none items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_2px_0_rgba(0,0,0,0.25),0_6px_10px_-2px_rgba(0,0,0,0.35)] outline-none focus-visible:ring-4 focus-visible:ring-teal-500/40 active:cursor-grabbing',
+                  isOpen ? 'bg-neutral-900' : spot.label.trim() ? 'bg-teal-500' : 'bg-amber-500',
+                )}
+              >
+                {i + 1}
+              </button>
+            </React.Fragment>
+          )
+        })}
+        {current && (
+          <div
+            role="dialog"
+            aria-label={t(`${k}select_spot`, { n: currentIndex + 1 })}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.stopPropagation()
+                setOpened(null)
+                focusPin(current.id)
+              }
+            }}
+            style={{
+              left: `${Math.min(Math.max(current.x, 22), 78)}%`,
+              top: current.y > 55 ? undefined : `calc(${current.y}% + 22px)`,
+              bottom: current.y > 55 ? `calc(${100 - current.y}% + 22px)` : undefined,
+              transform: 'translateX(-50%)',
+            }}
+            className="lh-exp-raised lh-exp-slide-in absolute z-10 w-[min(18rem,86%)] cursor-default rounded-xl p-3 text-start shadow-[0_10px_28px_rgba(0,0,0,0.18)]"
+            dir="auto"
+          >
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-600 text-[11px] font-semibold text-white">{currentIndex + 1}</span>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <InlineText
+                  ref={labelRef}
+                  value={current.label}
+                  onCommit={(v) => commitSpots((live) => updateSpot(live, current.id, { label: v }))}
+                  ariaLabel={t(`${k}label_label`, { n: currentIndex + 1 })}
+                  placeholder={t(`${k}label_placeholder`)}
+                  maxLength={80}
+                  className="text-sm font-semibold text-neutral-900"
+                />
+                <InlineText
+                  multiline
+                  value={current.explanation ?? ''}
+                  onCommit={(v) => commitSpots((live) => updateSpot(live, current.id, { explanation: v }))}
+                  ariaLabel={t(`${k}explanation_label`, { n: currentIndex + 1 })}
+                  placeholder={t(`${k}explanation_placeholder`)}
+                  maxLength={300}
+                  className="text-[13px] leading-relaxed text-neutral-600"
+                />
+                {find && (
+                  <label className="mt-1 flex items-center gap-2 text-[11px] text-neutral-500">
+                    <span className="shrink-0">{t(`${k}size_label`)}</span>
+                    <input
+                      type="range"
+                      min={MIN_RADIUS}
+                      max={MAX_RADIUS}
+                      step={1}
+                      value={current.r}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      onChange={(e) => commitSpots((live) => updateSpot(live, current.id, { r: Number(e.target.value) }))}
+                      className="min-w-0 flex-1 accent-teal-600"
+                    />
+                  </label>
+                )}
+              </div>
+              <div className="flex shrink-0 flex-col items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={t('activities.experiences.hotspot.close')}
+                  onClick={() => {
+                    setOpened(null)
+                    focusPin(current.id)
+                  }}
+                  className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 outline-none hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-2 focus-visible:ring-sky-500/40"
+                >
+                  <X size={12} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t(`${k}remove_spot`, { n: currentIndex + 1 })}
+                  title={t(`${k}remove_spot`, { n: currentIndex + 1 })}
+                  onClick={() => remove(current.id)}
+                  className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 outline-none hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-2 focus-visible:ring-sky-500/40"
+                >
+                  <Trash size={13} aria-hidden />
+                </button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
+      </Stage>
+      <p className="m-0 text-[12px] text-neutral-400">{t(`${k}stage_help`)}</p>
 
-      {(!src || upload.task) && (
-        <MediaSourcePicker
-          kind="image"
-          tone="embed"
-          icon={<ImageIcon size={20} weight="duotone" />}
-          title={t(`${k}add_image`)}
-          onFile={(f) => upload.start(f)}
-          onUrl={importFromUrl}
-          urlPlaceholder={t('editor.blocks_v2.image_link_placeholder', 'Paste an image link…')}
-          task={upload.task}
-          rejection={upload.rejection}
-          onCancel={upload.cancel}
-          onRetry={upload.retry}
-          onDismiss={upload.dismiss}
-        />
-      )}
-
-      <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="min-w-0">
-          <Stage
-            src={src}
-            alt=""
-            stageRef={stageRef}
-            prompt={src ? undefined : t(`${k}placeholder_prompt`)}
-            className={cn('cursor-crosshair', spots.length >= MAX_SPOTS && 'cursor-default')}
-            onClick={onStageClick}
-          >
-            {spots.map((spot, i) => {
-              const pos = drag?.id === spot.id ? { ...spot, x: drag.x, y: drag.y } : spot
-              const active = selected === spot.id
-              return (
-                <button
-                  key={spot.id}
-                  type="button"
-                  style={spotStyle(pos)}
-                  aria-label={t(`${k}spot_aria`, { n: i + 1, label: spot.label || t(`${k}untitled_spot`) })}
-                  aria-pressed={active}
-                  onPointerDown={(e) => onSpotPointerDown(e, spot.id)}
-                  onPointerMove={onSpotPointerMove}
-                  onPointerUp={onSpotPointerUp}
-                  onPointerCancel={() => {
-                    dragRef.current = null
-                    setDrag(null)
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSelected(spot.id)
-                  }}
-                  onKeyDown={(e) => onSpotKeyDown(e, spot.id)}
-                  className={cn(
-                    'absolute flex cursor-grab touch-none items-center justify-center rounded-full border-2 outline-none active:cursor-grabbing',
-                    'focus-visible:ring-4 focus-visible:ring-sky-500/40',
-                    active ? 'border-sky-600 bg-sky-500/25' : 'border-white bg-teal-500/25 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]',
-                  )}
-                >
-                  <span className={cn('flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold text-white', active ? 'bg-sky-600' : 'bg-teal-600')}>
-                    {i + 1}
-                  </span>
-                </button>
-              )
-            })}
-          </Stage>
-          <p className="mt-1.5 text-[11px] leading-snug text-neutral-400">{t(`${k}stage_help`)}</p>
-        </div>
-
-        <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label={t(`${k}spots_label`)}>
-          {spots.length === 0 && <li className="rounded-lg bg-neutral-50 px-3 py-3 text-xs text-neutral-500">{t(`${k}empty_list`)}</li>}
-          {spots.map((spot, i) => {
-            const active = selected === spot.id
-            return (
-              <li
-                key={spot.id}
-                className={cn('rounded-xl p-2.5 shadow-[0_0_0_1px_rgba(0,0,0,0.07)] transition-shadow', active && 'shadow-[0_0_0_2px_rgba(2,132,199,0.5)]')}
-                onFocusCapture={() => setSelected(spot.id)}
+      {/* Explore mode: the learner's legend, labels edited in place. */}
+      {!find && spots.length > 0 && (
+        <ol className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2" aria-label={t(`${k}spots_label`)}>
+          {spots.map((spot, i) => (
+            <li key={spot.id} className="lh-exp-raised flex min-h-10 w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-start text-[14px] text-neutral-700">
+              <button
+                type="button"
+                aria-label={t(`${k}select_spot`, { n: i + 1 })}
+                aria-expanded={opened === spot.id}
+                onClick={() => setOpened(opened === spot.id ? null : spot.id)}
+                className={cn(
+                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40',
+                  opened === spot.id ? 'bg-neutral-900' : 'bg-teal-500',
+                )}
               >
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    title={t(`${k}move_hint`)}
-                    aria-label={t(`${k}select_spot`, { n: i + 1 })}
-                    onClick={() => setSelected(spot.id)}
-                    onKeyDown={(e) => onSpotKeyDown(e, spot.id)}
-                    className="flex h-6 w-6 shrink-0 cursor-move items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-2 focus-visible:ring-sky-500/40 outline-none"
-                  >
-                    <DotsSixVertical size={14} weight="bold" aria-hidden />
-                  </button>
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-600 text-[11px] font-semibold text-white">{i + 1}</span>
-                  <CommitInput
-                    value={spot.label}
-                    placeholder={t(`${k}label_placeholder`)}
-                    aria-label={t(`${k}label_label`, { n: i + 1 })}
-                    onCommit={(v) => commitSpots((live) => updateSpot(live, spot.id, { label: v }))}
-                  />
-                  <button
-                    type="button"
-                    aria-label={t(`${k}remove_spot`, { n: i + 1 })}
-                    onClick={() => commitSpots((live) => removeSpot(live, spot.id))}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-400 hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-2 focus-visible:ring-sky-500/40 outline-none"
-                  >
-                    <Trash size={14} aria-hidden />
-                  </button>
-                </div>
-                {!spot.label.trim() && (
-                  <p className="m-0 mt-1 ps-16 text-[11px] text-amber-700">{t(`${k}hint_label_short`)}</p>
-                )}
-                {active && (
-                  <div className="mt-2 flex flex-col gap-2 ps-8">
-                    <CommitInput
-                      multiline
-                      value={spot.explanation ?? ''}
-                      className={cn(TEXTAREA_CLASS, 'min-h-[56px]')}
-                      placeholder={t(`${k}explanation_placeholder`)}
-                      aria-label={t(`${k}explanation_label`, { n: i + 1 })}
-                      onCommit={(v) => commitSpots((live) => updateSpot(live, spot.id, { explanation: v }))}
-                    />
-                    <label className="flex items-center gap-2 text-[11px] text-neutral-500">
-                      <span className="shrink-0">{t(`${k}size_label`)}</span>
-                      <input
-                        type="range"
-                        min={MIN_RADIUS}
-                        max={MAX_RADIUS}
-                        step={1}
-                        value={spot.r}
-                        onKeyDown={(e) => e.stopPropagation()}
-                        onChange={(e) => commitSpots((live) => updateSpot(live, spot.id, { r: Number(e.target.value) }))}
-                        className="min-w-0 flex-1 accent-teal-600"
-                      />
-                    </label>
-                  </div>
-                )}
-              </li>
-            )
-          })}
-        </ol>
-      </div>
-
-      {issues.length > 0 && (
-        <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-live="polite">
-          {issues.map((issue, i) => (
-            <li key={i} className="flex items-start gap-1.5 text-xs text-amber-700">
-              <WarningCircle size={14} weight="fill" className="mt-px shrink-0" aria-hidden />
-              {hint(issue)}
+                {i + 1}
+              </button>
+              <InlineText
+                value={spot.label}
+                onCommit={(v) => commitSpots((live) => updateSpot(live, spot.id, { label: v }))}
+                ariaLabel={t(`${k}label_label`, { n: i + 1 })}
+                placeholder={t(`${k}label_placeholder`)}
+                maxLength={80}
+                className="min-w-0 flex-1"
+              />
             </li>
           ))}
-        </ul>
+        </ol>
+      )}
+
+      {issues.length > 0 && (
+        <div className="flex flex-col gap-1" aria-live="polite">
+          {issues.map((issue, i) => (
+            <InlineHint key={i} severity="warning">
+              {hint(issue)}
+            </InlineHint>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -793,35 +906,66 @@ export default function HotspotView(props: NodeViewProps) {
     <ExperienceFooter progress={{ done: game.viewed.size, total: spots.length }} />
   )
 
+  const frame = {
+    tone: 'embed' as const,
+    icon: <Crosshair weight="duotone" />,
+    title,
+    onTitleChange: (v: string) => commit({ title: v }),
+    titlePlaceholder: t('editor.experiences.hotspot.title_placeholder'),
+    instructions,
+    onInstructionsChange: (v: string) => commit({ instructions: v }),
+    editable,
+    preview,
+    onPreviewChange: setPreview,
+    nodeView: props,
+    label: t('editor.experiences.hotspot.title'),
+  }
+
   return (
     <NodeViewWrapper className="block-exp-hotspot">
-      <ExperienceFrame
-        tone="embed"
-        icon={<Crosshair weight="duotone" />}
-        title={title}
-        onTitleChange={(v) => commit({ title: v })}
-        titlePlaceholder={t('editor.experiences.hotspot.title_placeholder')}
-        instructions={instructions}
-        onInstructionsChange={(v) => commit({ instructions: v })}
-        editable={editable}
-        preview={preview}
-        onPreviewChange={setPreview}
-        nodeView={props}
-        label={t('editor.experiences.hotspot.title')}
-        footer={footer}
-        celebrate={learner && ((mode === 'find' && game.complete && stars === 3) || allViewed)}
-        live={live}
-      >
-        {!learner ? (
-          <HotspotEditor props={props} attrs={attrs} spots={spots} mode={mode} src={src} commit={commit} />
-        ) : spots.length === 0 ? (
-          <p className="m-0 text-[14px] text-neutral-500">{t(`${k}empty`)}</p>
-        ) : mode === 'find' ? (
-          <FindPlayer spots={spots} src={src} game={game} alt={title} onComplete={onComplete} />
-        ) : (
-          <ExplorePlayer spots={spots} src={src} game={game} alt={title} />
-        )}
-      </ExperienceFrame>
+      {!learner ? (
+        <HotspotAuthor frame={frame} props={props} attrs={attrs} spots={spots} mode={mode} src={src} commit={commit} />
+      ) : (
+        <ExperienceFrame
+          {...frame}
+          footer={footer}
+          celebrate={(mode === 'find' && game.complete && stars === 3) || allViewed}
+          live={live}
+        >
+          {spots.length === 0 ? (
+            <p className="m-0 text-[14px] text-neutral-500">{t(`${k}empty`)}</p>
+          ) : mode === 'find' ? (
+            <FindPlayer spots={spots} src={src} game={game} alt={title} onComplete={onComplete} />
+          ) : (
+            <ExplorePlayer spots={spots} src={src} game={game} alt={title} />
+          )}
+        </ExperienceFrame>
+      )}
     </NodeViewWrapper>
+  )
+}
+
+function HotspotAuthor({
+  frame,
+  props,
+  attrs,
+  spots,
+  mode,
+  src,
+  commit,
+}: {
+  frame: Omit<React.ComponentProps<typeof ExperienceFrame>, 'children'>
+  props: NodeViewProps
+  attrs: StoredAttrs
+  spots: HotspotSpot[]
+  mode: HotspotMode
+  src: string
+  commit: (_patch: CommitPatch<StoredAttrs>) => void
+}) {
+  const { settings, picker } = useHotspotEditor({ props, attrs, mode, src, commit })
+  return (
+    <ExperienceFrame {...frame} wysiwyg headerEnd={settings} footer={<AnswerKeyHint />}>
+      <HotspotEditor spots={spots} mode={mode} src={src} picker={picker} commit={commit} />
+    </ExperienceFrame>
   )
 }

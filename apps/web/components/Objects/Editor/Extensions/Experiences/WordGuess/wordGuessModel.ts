@@ -287,8 +287,19 @@ export interface WordRound {
   maxGuesses: number
 }
 
-function rowWithRevealed(answer: string[], revealed: number[]): string[] {
-  return answer.map((a, i) => (revealed.includes(i) ? a : ''))
+/**
+ Letter slots that are known and locked in the typing row: revealed by a hint
+ or already guessed in place. Learners never type over them; each new row
+ starts with them filled in.
+*/
+export function lockedSlots(round: Pick<WordRound, 'revealed' | 'scores'>): number[] {
+  const known = new Set<number>(round.revealed)
+  round.scores.forEach((row) => row.forEach((s, i) => s === 'hit' && known.add(i)))
+  return [...known].sort((a, b) => a - b)
+}
+
+function rowWithLocked(answer: string[], locked: number[]): string[] {
+  return answer.map((a, i) => (locked.includes(i) ? a : ''))
 }
 
 export function newRound(answer: string, maxGuesses: number): WordRound {
@@ -296,23 +307,25 @@ export function newRound(answer: string, maxGuesses: number): WordRound {
   return { answer: letters, guesses: [], scores: [], current: letters.map(() => ''), revealed: [], status: 'playing', maxGuesses: clampGuesses(maxGuesses) }
 }
 
-/** Put a letter in the first empty slot (revealed slots are skipped). */
+/** Put a letter in the first empty slot (locked slots are skipped). */
 export function typeLetter(round: WordRound, letter: string): WordRound {
   if (round.status !== 'playing') return round
   const fold = foldLetter(letter)
   if (!fold) return round
-  const i = round.current.findIndex((c, idx) => !c && !round.revealed.includes(idx))
+  const locked = lockedSlots(round)
+  const i = round.current.findIndex((c, idx) => !c && !locked.includes(idx))
   if (i < 0) return round
   const current = [...round.current]
   current[i] = fold
   return { ...round, current }
 }
 
-/** Clear the last typed slot (never a revealed one). */
+/** Clear the last typed slot (never a locked one). */
 export function backspace(round: WordRound): WordRound {
   if (round.status !== 'playing') return round
+  const locked = lockedSlots(round)
   for (let i = round.current.length - 1; i >= 0; i--) {
-    if (round.current[i] && !round.revealed.includes(i)) {
+    if (round.current[i] && !locked.includes(i)) {
       const current = [...round.current]
       current[i] = ''
       return { ...round, current }
@@ -333,14 +346,13 @@ export function submitGuess(round: WordRound): { round: WordRound; ok: boolean }
   const scores = [...round.scores, score]
   const solved = score.every((s) => s === 'hit')
   const status: WordRound['status'] = solved ? 'solved' : guesses.length >= round.maxGuesses ? 'failed' : 'playing'
-  return { round: { ...round, guesses, scores, status, current: status === 'playing' ? rowWithRevealed(round.answer, round.revealed) : round.current }, ok: true }
+  return { round: { ...round, guesses, scores, status, current: status === 'playing' ? rowWithLocked(round.answer, lockedSlots({ revealed: round.revealed, scores })) : round.current }, ok: true }
 }
 
 /** Letter positions a hint could still reveal: not revealed and never guessed in place. */
 export function hintCandidates(round: WordRound): number[] {
-  const known = new Set<number>(round.revealed)
-  round.scores.forEach((row) => row.forEach((s, i) => s === 'hit' && known.add(i)))
-  return round.answer.map((_, i) => i).filter((i) => !known.has(i))
+  const known = lockedSlots(round)
+  return round.answer.map((_, i) => i).filter((i) => !known.includes(i))
 }
 
 /** A hint is allowed while the word is open and more than one unknown letter is left. */
@@ -355,8 +367,9 @@ export function revealHint(round: WordRound, pick: (_n: number) => number = () =
   const at = cands[Math.min(cands.length - 1, Math.max(0, pick(cands.length)))]
   const revealed = [...round.revealed, at].sort((a, b) => a - b)
   // Typed letters shift out of the revealed slot so nothing typed is lost.
-  const typed = round.current.filter((c, i) => c && !round.revealed.includes(i))
-  const current = rowWithRevealed(round.answer, revealed)
+  const before = lockedSlots(round)
+  const typed = round.current.filter((c, i) => c && !before.includes(i))
+  const current = rowWithLocked(round.answer, lockedSlots({ revealed, scores: round.scores }))
   let ti = 0
   for (let i = 0; i < current.length && ti < typed.length; i++) {
     if (!current[i]) current[i] = typed[ti++]

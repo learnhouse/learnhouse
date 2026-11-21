@@ -7,14 +7,18 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { BracketsSquare, Check, Keyboard, Rows, TextT, WarningCircle, X } from '@phosphor-icons/react'
+import { BracketsSquare, Check, Keyboard, PencilSimple, Rows, Trash, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
 import { cn } from '@/lib/utils'
-import { Segmented, TEXTAREA_CLASS } from '../../../Blocks/ui/BlockChrome'
+import { BlockPopover, CommitInput, Segmented, SettingsField } from '../../../Blocks/ui/BlockChrome'
+import { InlineHint } from '../Sort/kit'
 import {
+  AnswerKeyHint,
   ExperienceFooter,
   ExperienceFrame,
+  SettingsGear,
+  SettingsToggle,
   buzz,
   useEnsureBlockId,
   useExperienceEditable,
@@ -24,6 +28,7 @@ import {
 } from '../shared'
 import {
   buildBank,
+  escapeGapText,
   gradeGaps,
   isCorrect,
   keepCorrect,
@@ -57,46 +62,336 @@ function useResetOn(key: string, reset: () => void) {
 }
 
 /* ───────────────────────────── Editor ───────────────────────────── */
+// Edit in place: the passage as learners see it, each gap showing its answer
+// as a filled slot (the answer key). Select words and press "Make gap"; click
+// a gap to edit its accepted answers; click the text (or "Edit text") to edit
+// the passage itself, where typing [[ ]] makes a gap too. Mode and case
+// sensitivity live behind the header gear.
 
-function GapsEditor({
+/** Source offset of a position inside a text run (escapes take two source characters). */
+function sourceOffset(source: string, runStart: number, displayOffset: number): number {
+  let i = runStart
+  let n = 0
+  while (n < displayOffset && i < source.length) {
+    i += source[i] === '\\' && i + 1 < source.length ? 2 : 1
+    n++
+  }
+  return i
+}
+
+/** The text runs between valid gaps, with where each starts in the source. */
+function textRuns(source: string, tokens: GapsToken[]): (number | null)[] {
+  let pos = 0
+  return tokens.map((tok) => {
+    if (tok.type === 'gap') {
+      pos = tok.end
+      return null
+    }
+    return pos
+  })
+}
+
+/** Rewrite one gap (by index) in the source: new answers, or plain text when `answers` is empty. */
+function rewriteGap(source: string, index: number, answers: string[], plain?: string): string {
+  const gap = parseGaps(source).gaps[index]
+  if (!gap) return source
+  const clean = answers.map((a) => a.replace(/\s+/g, ' ').trim()).filter((a, i, all) => a && all.indexOf(a) === i)
+  const replacement = clean.length ? `[[${clean.map(escapeGapText).join('|')}]]` : (plain ?? gap.answers[0] ?? '').replace(/\[\[/g, '[ [')
+  return source.slice(0, gap.start) + replacement + source.slice(gap.end)
+}
+
+function GapAnswers({ gap, onChange, onRemoveGap }: { gap: GapToken; onChange: (_answers: string[]) => void; onRemoveGap: () => void }) {
+  const { t } = useTranslation()
+  const k = 'editor.experiences.gaps.'
+  return (
+    <>
+      <p className="m-0 -mt-1 text-[11px] leading-snug text-neutral-400">{t(`${k}answers_hint`, 'Learners can type any of these. The first one goes in the word bank.')}</p>
+      <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+        {gap.answers.map((a, i) => (
+          <li key={`${i}:${a}`} className="flex items-center gap-1.5">
+            <CommitInput
+              value={a}
+              onCommit={(v) => onChange(gap.answers.map((x, j) => (j === i ? v : x)))}
+              aria-label={t(`${k}answer_label`, { n: i + 1, defaultValue: 'Accepted answer {{n}}' })}
+              maxLength={80}
+            />
+            {gap.answers.length > 1 && (
+              <button
+                type="button"
+                aria-label={t(`${k}remove_answer`, { answer: a, defaultValue: 'Remove “{{answer}}”' })}
+                onClick={() => onChange(gap.answers.filter((_, j) => j !== i))}
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-400 outline-none hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-2 focus-visible:ring-sky-500/40"
+              >
+                <X size={12} weight="bold" aria-hidden />
+              </button>
+            )}
+          </li>
+        ))}
+        <li>
+          <CommitInput
+            key={gap.answers.join('|')}
+            value=""
+            placeholder={t(`${k}add_answer`, 'Add another accepted answer')}
+            aria-label={t(`${k}add_answer`, 'Add another accepted answer')}
+            maxLength={80}
+            onCommit={(v) => v.trim() && onChange([...gap.answers, v])}
+          />
+        </li>
+      </ul>
+      <button type="button" onClick={onRemoveGap} className={cn(buttonClass('ghost', 'sm'), 'self-start')}>
+        <Trash size={13} aria-hidden />
+        {t(`${k}remove_gap`, 'Remove gap (keep the word)')}
+      </button>
+    </>
+  )
+}
+
+function GapsEditor({ text, mode, commit }: { text: string; mode: GapsMode; commit: (_patch: CommitPatch<StoredAttrs>) => void }) {
+  const { t } = useTranslation()
+  const k = 'editor.experiences.gaps.'
+  const [editing, setEditing] = React.useState<{ caret: number } | null>(null)
+  const [refused, setRefused] = React.useState(false)
+  const [selection, setSelection] = React.useState<{ start: number; end: number } | null>(null)
+  const passageRef = React.useRef<HTMLParagraphElement>(null)
+  const parsed = React.useMemo(() => parseGaps(text), [text])
+  const runs = React.useMemo(() => textRuns(text, parsed.tokens), [text, parsed.tokens])
+  const clickTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  React.useEffect(() => () => {
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+  }, [])
+
+  const edit = (fn: (_text: string) => string) => commit((live) => ({ text: fn(typeof live.text === 'string' ? live.text : '') }))
+
+  /** Source offset of a DOM point inside the passage, or null when it is not in plain text. */
+  const pointToSource = (node: Node | null, offset: number): number | null => {
+    const el = (node?.nodeType === Node.TEXT_NODE ? node.parentElement : (node as HTMLElement | null))?.closest<HTMLElement>('[data-run]')
+    if (!el || !passageRef.current?.contains(el)) return null
+    const start = Number(el.dataset.run)
+    return sourceOffset(text, start, node?.nodeType === Node.TEXT_NODE ? offset : offset ? (el.textContent ?? '').length : 0)
+  }
+
+  // Track a selection of plain words in the passage for "Make gap".
+  React.useEffect(() => {
+    if (editing) return
+    const onChange = () => {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed || !sel.rangeCount) return setSelection(null)
+      const r = sel.getRangeAt(0)
+      if (!passageRef.current?.contains(r.commonAncestorContainer)) return setSelection(null)
+      const a = pointToSource(r.startContainer, r.startOffset)
+      const b = pointToSource(r.endContainer, r.endOffset)
+      setSelection(a !== null && b !== null && b > a ? { start: a, end: b } : null)
+      setRefused(a === null || b === null)
+    }
+    document.addEventListener('selectionchange', onChange)
+    return () => document.removeEventListener('selectionchange', onChange)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing, text])
+
+  const makeGapFromSelection = () => {
+    if (!selection) {
+      setRefused(true)
+      return
+    }
+    const result = makeGap(text, selection.start, selection.end, t(`${k}gap_placeholder`))
+    if (!result) {
+      setRefused(true)
+      return
+    }
+    commit({ text: result.text })
+    window.getSelection()?.removeAllRanges()
+    setSelection(null)
+  }
+
+  // A single click on the words (not a word selection) edits the passage there.
+  const onPassageClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return
+    if (e.detail > 1) {
+      if (clickTimer.current) clearTimeout(clickTimer.current)
+      return
+    }
+    const sel = window.getSelection()
+    if (sel && !sel.isCollapsed) return
+    const caret = sel?.rangeCount ? pointToSource(sel.anchorNode, sel.anchorOffset) : null
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+    clickTimer.current = setTimeout(() => {
+      if (window.getSelection()?.isCollapsed !== false) setEditing({ caret: caret ?? text.length })
+    }, 260)
+  }
+
+  const hints = parsed.issues.map((issue) =>
+    issue.kind === 'noGaps' ? t(`${k}hint_no_gaps`) : issue.kind === 'empty' ? t(`${k}hint_empty_gap`) : t(`${k}hint_unclosed`),
+  )
+
+  const slot = (gap: GapToken) => (
+    <BlockPopover
+      key={`g${gap.index}`}
+      title={t(`${k}gap_title`, { n: gap.index + 1, defaultValue: 'Gap {{n}}' })}
+      width={260}
+      align="start"
+      trigger={
+        <button
+          type="button"
+          aria-label={t(`${k}gap_aria`, { n: gap.index + 1, answer: gap.answers[0], defaultValue: 'Gap {{n}}: {{answer}}. Edit the accepted answers' })}
+          className={cn(
+            'lh-exp-well mx-0.5 inline-flex min-h-9 cursor-pointer items-center justify-center gap-1 rounded-lg p-0.5 align-middle text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 data-[state=open]:ring-2 data-[state=open]:ring-sky-500/40',
+            mode === 'type' && 'px-2',
+          )}
+          style={{ minWidth: inputWidth(gap) }}
+        >
+          {mode === 'bank' ? (
+            <span className="lh-exp-raised inline-flex h-8 w-full items-center justify-center gap-1 rounded-md px-2 font-medium text-neutral-900">{gap.answers[0]}</span>
+          ) : (
+            <span className="font-medium text-sky-700">{gap.answers[0]}</span>
+          )}
+          {gap.answers.length > 1 && <span className="px-1 text-[11px] font-semibold text-sky-600">+{gap.answers.length - 1}</span>}
+        </button>
+      }
+    >
+      <GapAnswers
+        gap={gap}
+        onChange={(answers) => edit((src) => rewriteGap(src, gap.index, answers))}
+        onRemoveGap={() => edit((src) => rewriteGap(src, gap.index, []))}
+      />
+    </BlockPopover>
+  )
+
+  const bankChips = mode === 'bank' ? parsed.gaps.map((g) => g.answers[0]) : []
+
+  return (
+    <div className="flex flex-col gap-4">
+      {editing ? (
+        <PassageSource
+          text={text}
+          caret={editing.caret}
+          onSave={(v) => commit({ text: v })}
+          onDone={() => setEditing(null)}
+          refused={refused}
+          setRefused={setRefused}
+        />
+      ) : (
+        <p
+          ref={passageRef}
+          onClick={onPassageClick}
+          title={t(`${k}passage_hint`, 'Click to edit the text. Select words, then “Make gap”.')}
+          className="m-0 cursor-text text-[15px] leading-9 whitespace-pre-wrap text-neutral-800 [overflow-wrap:anywhere]"
+          dir="auto"
+        >
+          {parsed.tokens.map((tok, i) =>
+            tok.type === 'text' ? (
+              <span key={i} data-run={runs[i] ?? 0}>
+                {tok.value}
+              </span>
+            ) : (
+              slot(tok)
+            ),
+          )}
+          {!text.trim() && <span className="text-neutral-400">{t(`${k}passage_placeholder`, 'Write your text here…')}</span>}
+        </p>
+      )}
+
+      {!editing && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            // Keep the word selection: don't take focus on mousedown.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={makeGapFromSelection}
+            disabled={!selection}
+            className="lh-exp-raised lh-exp-press inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-neutral-700 outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40 disabled:opacity-45"
+          >
+            <BracketsSquare size={14} aria-hidden />
+            {t(`${k}make_gap`)}
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing({ caret: text.length })}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-neutral-500 outline-none hover:bg-neutral-200/60 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40"
+          >
+            <PencilSimple size={14} aria-hidden />
+            {t(`${k}edit_text`, 'Edit text')}
+          </button>
+          <span className="text-[12px] text-neutral-400">
+            {selection ? t(`${k}make_gap_ready`, 'Press “Make gap” to turn the selected words into a gap.') : t(`${k}select_hint`, 'Select words to make a gap. Click a gap to edit its answers.')}
+          </span>
+        </div>
+      )}
+
+      {refused && !editing && <InlineHint severity="warning">{t(`${k}hint_inside_gap`)}</InlineHint>}
+      {hints.length > 0 && (
+        <div className="flex flex-col gap-1" aria-live="polite">
+          {hints.map((h, i) => (
+            <InlineHint key={i} severity="warning">
+              {h}
+            </InlineHint>
+          ))}
+        </div>
+      )}
+
+      {/* What learners pick from in word-bank mode (shuffled for them). */}
+      {mode === 'bank' && bankChips.length > 0 && (
+        <div className="lh-exp-well rounded-2xl p-3" aria-hidden>
+          <div className="mb-2 text-[12px] text-neutral-500">{t('activities.experiences.gaps.bank_help')}</div>
+          <ul className="m-0 flex min-h-9 list-none flex-wrap gap-2 p-0">
+            {bankChips.map((w, i) => (
+              <li key={i} className="lh-exp-raised inline-flex min-h-10 items-center rounded-lg px-3 text-[14px] font-medium text-neutral-800">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** The passage source, edited in place with the passage's own typography. */
+function PassageSource({
   text,
-  mode,
-  caseSensitive,
-  commit,
+  caret,
+  onSave,
+  onDone,
+  refused,
+  setRefused,
 }: {
   text: string
-  mode: GapsMode
-  caseSensitive: boolean
-  commit: (_patch: CommitPatch<StoredAttrs>) => void
+  caret: number
+  onSave: (_v: string) => void
+  onDone: () => void
+  refused: boolean
+  setRefused: (_v: boolean) => void
 }) {
   const { t } = useTranslation()
   const k = 'editor.experiences.gaps.'
   const [draft, setDraft] = React.useState(text)
-  const editing = React.useRef(false)
+  const atFocus = React.useRef(text)
   const pause = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const areaRef = React.useRef<HTMLTextAreaElement>(null)
-  const [refused, setRefused] = React.useState(false)
   const helpId = React.useId()
 
   React.useEffect(() => {
-    if (!editing.current) setDraft(text)
-  }, [text])
+    const el = areaRef.current
+    if (!el) return
+    el.focus()
+    el.setSelectionRange(caret, caret)
+    // Only on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   React.useEffect(() => () => {
     if (pause.current) clearTimeout(pause.current)
   }, [])
+  React.useLayoutEffect(() => {
+    const el = areaRef.current
+    if (!el) return
+    el.style.height = '0px'
+    el.style.height = `${el.scrollHeight}px`
+  }, [draft])
 
   const save = (value: string) => {
     if (pause.current) clearTimeout(pause.current)
     pause.current = null
-    commit({ text: value })
+    if (value !== text) onSave(value)
   }
-  const onChange = (value: string) => {
-    setDraft(value)
-    setRefused(false)
-    if (pause.current) clearTimeout(pause.current)
-    pause.current = setTimeout(() => save(value), 500)
-  }
-
   const onMakeGap = () => {
     const el = areaRef.current
     if (!el) return
@@ -113,112 +408,73 @@ function GapsEditor({
     })
   }
 
-  const parsed = React.useMemo(() => parseGaps(draft), [draft])
-  const hints = parsed.issues.map((issue) =>
-    issue.kind === 'noGaps' ? t(`${k}hint_no_gaps`) : issue.kind === 'empty' ? t(`${k}hint_empty_gap`) : t(`${k}hint_unclosed`),
-  )
-
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="w-full sm:w-64">
-          <Segmented<GapsMode>
-            value={mode}
-            ariaLabel={t(`${k}mode_label`)}
-            onChange={(v) => commit({ mode: v })}
-            options={[
-              { value: 'type', label: <><Keyboard size={13} aria-hidden />{t(`${k}mode_type`)}</> },
-              { value: 'bank', label: <><Rows size={13} aria-hidden />{t(`${k}mode_bank`)}</> },
-            ]}
-          />
-        </div>
-        <label className="inline-flex items-center gap-2 text-xs text-neutral-600 sm:ms-auto">
-          <input
-            type="checkbox"
-            checked={caseSensitive}
-            onChange={(e) => commit({ caseSensitive: e.target.checked })}
-            className="h-3.5 w-3.5 accent-neutral-900"
-          />
-          {t(`${k}case_sensitive`)}
-        </label>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-medium text-neutral-600">{t(`${k}text_label`)}</span>
-          <button
-            type="button"
-            className={buttonClass('secondary', 'sm')}
-            // Keep the textarea selection: don't take focus on mousedown.
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={onMakeGap}
-          >
-            <BracketsSquare size={13} aria-hidden />
-            {t(`${k}make_gap`)}
-          </button>
-        </div>
+    <div className="flex flex-col gap-2">
+      <span className="lh-exp-edit block">
         <textarea
           ref={areaRef}
           value={draft}
-          rows={5}
+          rows={2}
           dir="auto"
           aria-label={t(`${k}text_label`)}
           aria-describedby={helpId}
-          className={cn(TEXTAREA_CLASS, 'font-[inherit]')}
-          onFocus={() => (editing.current = true)}
-          onBlur={() => {
-            editing.current = false
-            if (draft !== text) save(draft)
+          spellCheck
+          className="m-0 block w-full resize-none overflow-hidden bg-transparent p-0 font-[inherit] text-[15px] leading-9 text-neutral-800 outline-none"
+          onChange={(e) => {
+            const v = e.target.value
+            setDraft(v)
+            setRefused(false)
+            if (pause.current) clearTimeout(pause.current)
+            pause.current = setTimeout(() => save(v), 500)
           }}
-          onChange={(e) => onChange(e.target.value)}
+          onBlur={() => {
+            save(draft)
+            onDone()
+          }}
           onKeyDown={(e) => {
-            e.stopPropagation()
+            if (!e.metaKey && !e.ctrlKey) e.stopPropagation()
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g') {
               e.preventDefault()
+              e.stopPropagation()
               onMakeGap()
+            }
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              if (pause.current) clearTimeout(pause.current)
+              setDraft(atFocus.current)
+              onSave(atFocus.current)
+              onDone()
             }
           }}
         />
-        <p id={helpId} className="m-0 text-[11px] leading-snug text-neutral-400">
+      </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onMakeGap}
+          className="lh-exp-raised lh-exp-press inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-neutral-700 outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+        >
+          <BracketsSquare size={14} aria-hidden />
+          {t(`${k}make_gap`)}
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            save(draft)
+            onDone()
+          }}
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-neutral-500 outline-none hover:bg-neutral-200/60 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40"
+        >
+          <Check size={14} aria-hidden />
+          {t(`${k}done_editing`, 'Done')}
+        </button>
+        <span id={helpId} className="text-[12px] text-neutral-400">
           {t(`${k}syntax_help`)}
-        </p>
-        {refused && (
-          <p className="m-0 flex items-center gap-1.5 text-xs text-amber-700" role="status">
-            <WarningCircle size={14} weight="fill" aria-hidden />
-            {t(`${k}hint_inside_gap`)}
-          </p>
-        )}
-        {hints.length > 0 && (
-          <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-live="polite">
-            {hints.map((h, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-xs text-amber-700">
-                <WarningCircle size={14} weight="fill" className="mt-px shrink-0" aria-hidden />
-                {h}
-              </li>
-            ))}
-          </ul>
-        )}
+        </span>
       </div>
-
-      <div className="rounded-xl bg-neutral-50 px-3 py-3">
-        <div className="mb-1.5 flex items-center gap-1.5 text-[12px] font-medium text-neutral-500">
-          <TextT size={12} aria-hidden />
-          {t(`${k}preview_label`)}
-          <span className="ms-auto font-normal text-neutral-400">{t(`${k}gap_count`, { n: parsed.gaps.length })}</span>
-        </div>
-        <p className="m-0 text-sm leading-7 whitespace-pre-wrap text-neutral-800 [overflow-wrap:anywhere]" dir="auto">
-          {parsed.tokens.map((tok, i) =>
-            tok.type === 'text' ? (
-              <React.Fragment key={i}>{tok.value}</React.Fragment>
-            ) : (
-              <span key={i} className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-sky-50 px-1.5 py-0.5 align-baseline text-[13px] font-medium text-sky-700">
-                {tok.answers[0]}
-                {tok.answers.length > 1 && <span className="text-[11px] font-normal text-sky-500">+{tok.answers.length - 1}</span>}
-              </span>
-            ),
-          )}
-        </p>
-      </div>
+      {refused && <InlineHint severity="warning">{t(`${k}hint_inside_gap`)}</InlineHint>}
     </div>
   )
 }
@@ -623,27 +879,51 @@ export default function GapsView(props: NodeViewProps) {
     </ExperienceFooter>
   ) : undefined
 
+  const instructions = mode === 'bank' ? t(`${k}instructions_bank`) : t(`${k}instructions_type`)
+  const frame = {
+    tone: 'link' as const,
+    icon: <BracketsSquare weight="duotone" />,
+    title,
+    onTitleChange: (v: string) => commit({ title: v }),
+    titlePlaceholder: t('editor.experiences.gaps.title_placeholder'),
+    instructions,
+    editable,
+    preview,
+    onPreviewChange: setPreview,
+    nodeView: props,
+    label: t('editor.experiences.gaps.title'),
+  }
+
+  if (!learner) {
+    const settings = (
+      <SettingsGear>
+        <SettingsField label={t('editor.experiences.gaps.mode_label')}>
+          <Segmented<GapsMode>
+            value={mode}
+            ariaLabel={t('editor.experiences.gaps.mode_label')}
+            onChange={(v) => commit({ mode: v })}
+            options={[
+              { value: 'type', label: <><Keyboard size={13} aria-hidden />{t('editor.experiences.gaps.mode_type')}</> },
+              { value: 'bank', label: <><Rows size={13} aria-hidden />{t('editor.experiences.gaps.mode_bank')}</> },
+            ]}
+          />
+        </SettingsField>
+        <SettingsToggle checked={caseSensitive} onChange={(v) => commit({ caseSensitive: v })} label={t('editor.experiences.gaps.case_sensitive')} />
+      </SettingsGear>
+    )
+    return (
+      <NodeViewWrapper className="block-exp-gaps">
+        <ExperienceFrame {...frame} wysiwyg headerEnd={settings} footer={<AnswerKeyHint />}>
+          <GapsEditor text={text} mode={mode} commit={commit} />
+        </ExperienceFrame>
+      </NodeViewWrapper>
+    )
+  }
+
   return (
     <NodeViewWrapper className="block-exp-gaps">
-      <ExperienceFrame
-        tone="link"
-        icon={<BracketsSquare weight="duotone" />}
-        title={title}
-        onTitleChange={(v) => commit({ title: v })}
-        titlePlaceholder={t('editor.experiences.gaps.title_placeholder')}
-        instructions={learner ? (mode === 'bank' ? t(`${k}instructions_bank`) : t(`${k}instructions_type`)) : undefined}
-        editable={editable}
-        preview={preview}
-        onPreviewChange={setPreview}
-        nodeView={props}
-        label={t('editor.experiences.gaps.title')}
-        footer={footer}
-        celebrate={learner && perfect}
-        live={learner ? live : ''}
-      >
-        {!learner ? (
-          <GapsEditor text={text} mode={mode} caseSensitive={caseSensitive} commit={commit} />
-        ) : parsed.gaps.length === 0 ? (
+      <ExperienceFrame {...frame} footer={footer} celebrate={perfect} live={live}>
+        {parsed.gaps.length === 0 ? (
           <p className="m-0 text-sm text-neutral-500">{t(`${k}empty`)}</p>
         ) : (
           <GapsPlayer tokens={parsed.tokens} gaps={parsed.gaps} mode={mode} caseSensitive={caseSensitive} game={game} onChecked={onChecked} />

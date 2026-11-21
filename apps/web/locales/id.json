@@ -4190,7 +4190,11 @@
         "solved_mark": "Berhasil",
         "missed_mark": "Belum berhasil",
         "play_again": "Main lagi",
-        "best": "Terbaik"
+        "best": "Terbaik",
+        "guesses_left": "Sisa tebakan: {{n}}",
+        "history_item": "Tebakan {{n}}: {{word}} ({{feedback}})",
+        "history_label": "Tebakan sebelumnya",
+        "typing_row": "Tebakan Anda"
       },
       "confidence": {
         "instructions": "Jawab, lalu katakan seberapa yakin kamu.",
@@ -13684,7 +13688,6 @@
       "not_found": "Skenario Tidak Ditemukan",
       "not_found_hint": "Periksa konfigurasi skenario Anda dan coba lagi.",
       "illustration_alt": "Ilustrasi skenario",
-      "max_scenarios": "Maksimal 40 skenario diizinkan",
       "new_scenario_text": "Teks skenario baru...",
       "default_option_1": "Opsi 1",
       "default_option_2": "Opsi 2",
@@ -14369,7 +14372,6 @@
         },
         "jump_to": "Lompat ke langkah itu",
         "leads_to": "Mengarah ke",
-        "limits": "Hingga {{max}} langkah, masing-masing {{choices}} pilihan.",
         "map_hint": "Klik langkah untuk mengeditnya di sini. Panah menunjukkan ke mana setiap pilihan mengarah.",
         "missing_step": "Langkah hilang",
         "move_down": "Pindah ke bawah",
@@ -14989,7 +14991,10 @@
         "issue_duplicateOption": "Ada dua opsi yang sama.",
         "example": {
           "title": "Hitung cepat"
-        }
+        },
+        "question_of": "Pertanyaan {{n}} dari {{total}}",
+        "prev_question": "Pertanyaan sebelumnya",
+        "next_question": "Pertanyaan berikutnya"
       },
       "estimate": {
         "name": "Tebak angka",
@@ -15019,7 +15024,8 @@
           "explanation": "Orang dewasa memiliki 206 tulang. Bayi lahir dengan sekitar 300; sebagian menyatu seiring pertumbuhan.",
           "unit": "tulang"
         },
-        "fill_example": "Pakai contoh"
+        "fill_example": "Pakai contoh",
+        "answer_marker": "Jawaban: {{value}}"
       },
       "code_lock": {
         "name": "Kunci kode",
@@ -15055,7 +15061,9 @@
           "c3": "Ada berapa benua?",
           "c3_hint": "Afrika salah satunya.",
           "reward": "Pintu terbuka. Bagus sekali, detektif!"
-        }
+        },
+        "answer_masked": "Jawabannya (tersembunyi sampai Anda mengekliknya)",
+        "padlock_label": "Gembok dengan {{n}} roda"
       },
       "scenarios": {
         "chip_unreachable": "Tidak ada yang sampai ke langkah ini",
@@ -15102,7 +15110,11 @@
           "step3": "Pelanggan makin kesal. Lalu apa?",
           "step3_a": "Minta maaf dan tanyakan nomor pesanan",
           "step3_b": "Mengakhiri panggilan"
-        }
+        },
+        "then_short": "Lalu",
+        "open_target": "Buka langkah itu",
+        "steps_label": "Langkah",
+        "editing_hint": "Anda sedang mengedit cerita. Gunakan pratinjau untuk memainkannya sebagai pelajar."
       },
       "flashcards": {
         "title_placeholder": "Judul dek (opsional)",
@@ -15227,7 +15239,6 @@
           "step4": "Air mengalir kembali ke laut"
         },
         "add_step": "Tambah langkah",
-        "detail_label": "Detail",
         "detail_placeholder": "Detail, mis. 1969",
         "drag_short": "Seret untuk mengubah urutan",
         "drag_step": "Pindahkan langkah {{n}} (seret atau tombol panah)",
@@ -15239,13 +15250,14 @@
           "too_many_items": "Gunakan maksimal 10 langkah; peserta hanya melihat 10 langkah pertama."
         },
         "items_heading": "Langkah, dalam urutan yang benar",
-        "items_hint": "Peserta akan melihatnya dalam urutan acak.",
         "layout_label": "Tata letak",
-        "remove_step": "Hapus langkah",
         "step_placeholder": "Langkah {{n}}",
         "timeline_hint": "Detail setiap langkah (misalnya tahun) ditampilkan setelah peserta memeriksa.",
         "variant_list": "Daftar",
-        "variant_timeline": "Linimasa"
+        "variant_timeline": "Linimasa",
+        "author_hint": "Ini urutan yang benar; pelajar mendapat langkah-langkahnya diacak. Seret langkah atau gunakan panah untuk mengurutkan ulang.",
+        "detail_label_n": "Detail langkah {{n}}",
+        "remove_named": "Hapus “{{item}}”"
       },
       "match": {
         "title": "Pasangkan",
@@ -15306,22 +15318,22 @@
         "placeholder_prompt": "Gambar contoh: tambahkan gambar Anda sendiri",
         "stage_help": "Klik gambar untuk menambah titik. Seret titik untuk memindahkannya, atau fokuskan lalu gunakan tombol panah.",
         "spots_label": "Titik",
-        "empty_list": "Belum ada titik. Klik gambar untuk menambahkan.",
         "spot_aria": "Titik {{n}}: {{label}}",
         "untitled_spot": "tanpa judul",
-        "move_hint": "Pilih, lalu seret pada gambar atau gunakan tombol panah",
         "select_spot": "Pilih titik {{n}}",
         "label_placeholder": "Apa yang ada di sini?",
         "label_label": "Label untuk titik {{n}}",
         "remove_spot": "Hapus titik {{n}}",
-        "hint_label_short": "Tambahkan label agar peserta didik tahu apa yang mereka temukan.",
         "explanation_placeholder": "Penjelasan yang ditampilkan saat ditemukan (opsional)",
         "explanation_label": "Penjelasan untuk titik {{n}}",
         "size_label": "Ukuran",
         "hint_no_image": "Memakai gambar contoh. Tambahkan gambar Anda sendiri di atas.",
         "hint_no_spots": "Tambahkan minimal satu titik.",
         "hint_missing_label": "Titik {{n}} belum diberi label.",
-        "hint_overlap": "Titik {{a}} dan {{b}} saling tumpang tindih, sehingga salah satunya mungkin sulit diklik."
+        "hint_overlap": "Titik {{a}} dan {{b}} saling tumpang tindih, sehingga salah satunya mungkin sulit diklik.",
+        "mode_find_hint": "Pelajar mengeklik gambar untuk menemukan setiap titik.",
+        "mode_explore_hint": "Pelajar membuka penanda bernomor untuk membaca tentang setiap titik.",
+        "pin_hint": "Klik untuk mengedit. Seret, atau gunakan tombol panah, untuk memindahkan."
       },
       "gaps": {
         "title": "Isi titik-titik",
@@ -15343,8 +15355,19 @@
         "hint_no_gaps": "Belum ada bagian kosong. Pilih sebuah kata lalu tekan Buat bagian kosong.",
         "hint_empty_gap": "Bagian kosong [[ ]] diabaikan. Tulis jawabannya di dalamnya.",
         "hint_unclosed": "Ada bagian kosong yang belum ditutup dengan ]].",
-        "preview_label": "Pratinjau",
-        "gap_count": "Bagian kosong: {{n}}"
+        "answers_hint": "Pelajar boleh mengetik salah satu dari ini. Yang pertama masuk ke bank kata.",
+        "answer_label": "Jawaban diterima {{n}}",
+        "remove_answer": "Hapus “{{answer}}”",
+        "add_answer": "Tambahkan jawaban diterima lainnya",
+        "remove_gap": "Hapus rumpang (pertahankan kata)",
+        "gap_title": "Rumpang {{n}}",
+        "gap_aria": "Rumpang {{n}}: {{answer}}. Edit jawaban yang diterima",
+        "passage_hint": "Klik untuk mengedit teks. Pilih kata, lalu “Buat bagian kosong”.",
+        "passage_placeholder": "Tulis teks Anda di sini…",
+        "edit_text": "Edit teks",
+        "make_gap_ready": "Tekan “Buat bagian kosong” untuk mengubah kata yang dipilih menjadi rumpang.",
+        "select_hint": "Pilih kata untuk membuat rumpang. Klik rumpang untuk mengedit jawabannya.",
+        "done_editing": "Selesai"
       },
       "spot_mistake": {
         "title": "Temukan kesalahan",
@@ -15372,8 +15395,6 @@
         "split_help_code": "Setiap baris adalah satu pilihan. Baris kosong tetap ada tetapi tidak bisa dipilih.",
         "segments_label": "Bagian",
         "segment_n": "Bagian {{n}}",
-        "is_mistake": "Salah",
-        "is_correct": "Benar",
         "correction_placeholder": "Versi yang benar",
         "correction_label": "Perbaikan untuk bagian {{n}}",
         "hint_correction_short": "Tambahkan versi yang benar agar peserta didik bisa belajar darinya.",
@@ -15382,7 +15403,14 @@
         "hint_too_few": "Tambahkan minimal dua kalimat atau baris.",
         "hint_no_mistakes": "Tandai minimal satu bagian sebagai kesalahan.",
         "hint_all_mistakes": "Semua bagian ditandai sebagai kesalahan. Sisakan beberapa yang benar.",
-        "hint_missing_correction": "Bagian {{n}} salah tetapi belum ada perbaikannya."
+        "hint_missing_correction": "Bagian {{n}} salah tetapi belum ada perbaikannya.",
+        "unmark_hint": "Sebuah kesalahan. Klik untuk menandainya benar.",
+        "mark_hint": "Klik untuk menandai ini sebagai kesalahan.",
+        "edit_text": "Edit teks",
+        "author_hint": "Klik sebuah bagian untuk menandainya sebagai kesalahan, lalu tulis koreksinya di bawah.",
+        "mistakes_label": "Kesalahan dan koreksinya",
+        "unmark_named": "Tandai bagian {{n}} sebagai benar",
+        "done_editing": "Selesai"
       },
       "venn": {
         "title": "Perbandingan Venn",
@@ -15408,13 +15436,8 @@
         "zone_both": "Keduanya",
         "zone_neither": "Bukan keduanya",
         "zone_only": "Hanya {{set}}",
-        "sets_heading": "Dua kelompok",
         "change_color": "Ganti warna",
-        "items_heading": "Item",
-        "items_hint": "Pilih tempat setiap item. Pelajar melihatnya dalam urutan acak.",
         "item_placeholder": "Item {{n}}",
-        "item_zone": "Tempatnya",
-        "remove_item": "Hapus item",
         "explanation_placeholder": "Mengapa di situ (ditampilkan jika salah, opsional)",
         "explanation_label": "Penjelasan",
         "add_item": "Tambah item",
@@ -15430,7 +15453,16 @@
           "duplicate_item": "Item lain memiliki teks yang sama.",
           "neither_hidden": "Aktifkan area “Bukan keduanya”, atau pelajar tidak akan melihat item ini.",
           "no_both": "Belum ada item yang termasuk kedua kelompok; irisannya justru bagian yang menarik."
-        }
+        },
+        "moved": "“{{item}}” dipindahkan ke {{zone}}.",
+        "move_item": "Pindahkan “{{item}}”",
+        "move_hint": "Seret ke tempat lain, atau tekan 1–4",
+        "why_label": "Mengapa “{{item}}” ada di sini",
+        "remove_named": "Hapus “{{item}}”",
+        "add_to": "Tambahkan item ke {{zone}}",
+        "author_selected": "Sekarang ketuk tempat “{{item}}” seharusnya.",
+        "author_hint": "Setiap item ada di tempatnya. Seret item, atau ketuk pegangannya lalu sebuah tempat, untuk memindahkannya.",
+        "why_heading": "Mengapa “{{item}}” masuk ke {{zone}} (ditampilkan saat pelajar salah)"
       },
       "label": {
         "title": "Beri label diagram",
@@ -15462,9 +15494,6 @@
         "untitled_pin": "Tanpa nama",
         "stage_help": "Klik gambar untuk menambah titik. Seret titik, atau gunakan tombol panah, untuk memindahkannya.",
         "pins_label": "Titik",
-        "empty_list": "Belum ada titik. Klik gambar untuk menambah.",
-        "move_hint": "Pilih, lalu pindahkan dengan tombol panah",
-        "select_pin": "Pilih titik {{n}}",
         "label_placeholder": "Label",
         "label_label": "Label untuk titik {{n}}",
         "remove_pin": "Hapus titik {{n}}",
@@ -15472,7 +15501,8 @@
         "distractors_hint": "Label tambahan yang tidak cocok di mana pun. Membuat pelajar berpikir, bukan menebak.",
         "distractor_placeholder": "Label pengecoh {{n}}",
         "remove_distractor": "Hapus label pengecoh",
-        "add_distractor": "Tambah label pengecoh"
+        "add_distractor": "Tambah label pengecoh",
+        "author_hint": "Setiap label ada di titiknya. Klik gambar untuk menambah titik; seret titik untuk memindahkannya."
       },
       "word_guess": {
         "title": "Tebak kata",
@@ -15489,8 +15519,6 @@
           "w3_clue": "Yang membuat benda bergerak, menjadi hangat, atau menyala.",
           "w3_why": "Energi berubah bentuk, misalnya dari makanan menjadi gerak, tetapi tidak pernah hilang."
         },
-        "words_heading": "Kata",
-        "words_hint": "Pelajar menebak setiap kata dari petunjuknya. Spasi dan tanda hubung sudah ditampilkan.",
         "answer_placeholder": "Jawaban {{n}}",
         "letters": "Huruf: {{n}}",
         "remove_word": "Hapus kata",
@@ -15510,14 +15538,15 @@
           "too_short": "Gunakan minimal 2 huruf.",
           "too_long": "Gunakan paling banyak 12 huruf agar kotaknya muat di ponsel.",
           "duplicate_answer": "Kata lain punya jawaban yang sama."
-        }
+        },
+        "type_answer": "Klik kotak-kotaknya dan ketik jawabannya.",
+        "prev_word": "Kata sebelumnya",
+        "next_word": "Kata berikutnya"
       },
       "confidence": {
         "title": "Cek keyakinan",
         "description": "Jawab, lalu nilai seberapa yakin kamu, untuk menemukan hal yang hanya kamu kira sudah kamu tahu.",
         "title_placeholder": "Beri nama cek ini",
-        "questions_heading": "Pertanyaan",
-        "questions_hint": "Pelajar memilih jawaban dan seberapa yakin mereka, lalu melihat apakah mereka benar.",
         "prompt_placeholder": "Pertanyaan {{n}}",
         "prompt_label": "Pertanyaan {{n}}",
         "correct_group": "Jawaban benar untuk pertanyaan {{n}}",
@@ -15556,7 +15585,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "Pertanyaan sebelumnya",
+        "next_question": "Pertanyaan berikutnya"
       },
       "matrix": {
         "title": "Tabel sifat",
@@ -15573,18 +15604,13 @@
           "flies": "Bisa terbang",
           "swims": "Berenang"
         },
-        "rows_heading": "Baris",
-        "columns_heading": "Kolom",
         "row_placeholder": "Baris {{n}}",
         "column_placeholder": "Kolom {{n}}",
         "add_row": "Tambah baris",
         "add_column": "Tambah kolom",
-        "remove_row": "Hapus baris",
-        "remove_column": "Hapus kolom",
         "mode_label": "Jenis jawaban",
         "mode_multi": "Beberapa per baris",
         "mode_single": "Satu per baris",
-        "answers_heading": "Jawaban benar",
         "answers_hint_multi": "Centang setiap sel yang benar.",
         "answers_hint_single": "Pilih satu kolom yang benar untuk tiap baris.",
         "cell_label": "{{row}}: {{column}}",
@@ -15600,7 +15626,9 @@
           "unused_column": "Belum ada baris yang punya sifat ini.",
           "duplicate_row": "Baris lain punya nama yang sama.",
           "duplicate_column": "Kolom lain punya nama yang sama."
-        }
+        },
+        "remove_column_named": "Hapus kolom “{{column}}”",
+        "remove_row_named": "Hapus baris “{{row}}”"
       },
       "reflect": {
         "title": "Refleksi",
@@ -15609,7 +15637,6 @@
         "prompt_heading": "Perintah",
         "prompt_placeholder": "Apa yang harus dijelaskan pelajar dengan kata-kata mereka sendiri?",
         "guiding_heading": "Pertanyaan panduan",
-        "guiding_hint": "Petunjuk opsional yang bisa dibuka pelajar jika buntu (maksimal 5).",
         "guiding_placeholder": "Pertanyaan {{n}}",
         "guiding_label": "Pertanyaan panduan {{n}}",
         "remove_guiding": "Hapus pertanyaan {{n}}",
@@ -15617,10 +15644,8 @@
         "min_words_label": "Jumlah kata minimal",
         "min_words_hint": "Pelajar bisa membandingkan setelah mencapai jumlah ini. 0 berarti bisa langsung.",
         "model_heading": "Jawaban contoh",
-        "model_hint": "Opsional. Pelajar melihatnya setelah menulis jawaban sendiri.",
         "model_placeholder": "Jawaban yang baik dalam beberapa kalimat",
         "checklist_heading": "Poin penting",
-        "checklist_hint": "Pelajar mencentang poin yang mereka bahas; itu menjadi skor mereka (maksimal 8).",
         "point_placeholder": "Poin penting {{n}}",
         "point_label": "Poin penting {{n}}",
         "remove_point": "Hapus poin penting {{n}}",
@@ -15644,7 +15669,9 @@
           "p2": "Bumi mengelilingi Matahari dalam setahun",
           "p3": "Cahaya lebih langsung dan siang lebih panjang saat musim panas",
           "p4": "Bukan karena jarak ke Matahari"
-        }
+        },
+        "guiding_optional": "opsional",
+        "answer_key": "Kunci jawaban"
       }
     }
   },

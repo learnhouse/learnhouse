@@ -12,15 +12,23 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowRight, Check, Heart, Infinity as InfinityIcon, Lightning, Play, Plus, Timer, Trash, Trophy, WarningCircle, X } from '@phosphor-icons/react'
+import { ArrowRight, Check, Heart, Infinity as InfinityIcon, Lightning, Play, Timer, Trophy, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { CommitInput, FIELD_CLASS } from '../../../Blocks/ui/BlockChrome'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import { CommitInput, FIELD_CLASS, SettingsField } from '../../../Blocks/ui/BlockChrome'
+import { InlineHint } from '../Sort/kit'
 import { cn } from '@/lib/utils'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  CardNav,
+  CorrectMark,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   buzz,
   newId,
   useEnsureBlockId,
@@ -82,9 +90,7 @@ export default function SpeedRoundView(props: NodeViewProps) {
   return (
     <NodeViewWrapper className="block-exp-speed-round">
       {editable && !preview ? (
-        <ExperienceFrame {...frame} onTitleChange={(title) => commit({ title })} titlePlaceholder={t('editor.experiences.speed_round.title_placeholder')}>
-          <SpeedRoundForm data={data} commit={commit} />
-        </ExperienceFrame>
+        <SpeedRoundAuthor data={data} commit={commit} frame={frame} />
       ) : (
         <SpeedRoundPlayer key={JSON.stringify([data.questions, data.lives, data.secondsPerQuestion])} data={data} frame={frame} blockId={attrs.blockId} source={props} />
       )}
@@ -93,6 +99,10 @@ export default function SpeedRoundView(props: NodeViewProps) {
 }
 
 // ---- authoring -----------------------------------------------------------
+// Edit in place: one question card at a time, as learners see it mid-round.
+// The prompt and options are edited where they sit; the check badge marks the
+// right option. Prev / next and "+ Add question" move through the round;
+// timer and lives live behind the gear.
 
 /** The registry's example (what the slash menu inserts), minus its fresh blockId. */
 function exampleAttrs(t: TFunction): Record<string, unknown> {
@@ -100,19 +110,9 @@ function exampleAttrs(t: TFunction): Record<string, unknown> {
   return attrs
 }
 
-function Hint({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="m-0 flex items-start gap-1.5 text-xs leading-snug text-amber-700">
-      <WarningCircle size={14} weight="fill" className="mt-px shrink-0" aria-hidden />
-      <span>{children}</span>
-    </p>
-  )
-}
-
 function NumberField({ label, hint, value, min, max, onCommit }: { label: string; hint?: string; value: number; min: number; max: number; onCommit: (_n: number) => void }) {
   return (
-    <label className="flex min-w-0 flex-col gap-1">
-      <span className="text-xs font-medium text-neutral-600">{label}</span>
+    <SettingsField label={label} hint={hint}>
       <CommitInput
         type="number"
         inputMode="numeric"
@@ -125,148 +125,195 @@ function NumberField({ label, hint, value, min, max, onCommit }: { label: string
         }}
         className={cn(FIELD_CLASS, 'tabular-nums')}
       />
-      {hint && <span className="text-[11px] leading-snug text-neutral-400">{hint}</span>}
-    </label>
+    </SettingsField>
   )
 }
 
-function SpeedRoundForm({ data, commit }: { data: SpeedRoundData; commit: (_p: any) => void }) {
+function SpeedRoundAuthor({ data, commit, frame }: { data: SpeedRoundData; commit: (_p: any) => void; frame: FrameBase }) {
   const { t } = useTranslation()
-  const issues = validateSpeedRound(data)
   const k = (s: string, o: Record<string, unknown> = {}) => t(`editor.experiences.speed_round.${s}`, o)
+  const issues = validateSpeedRound(data)
   const issueText = (i: SpeedIssue) => k(`issue_${i.kind}`, { min: MIN_OPTIONS })
   const edit = (fn: (_qs: SpeedQuestion[]) => SpeedQuestion[]) => commit((live: any) => ({ questions: fn(normalizeSpeedRound(live).questions) }))
   const patch = (id: string, fn: (_q: SpeedQuestion) => SpeedQuestion) => edit((qs) => qs.map((q) => (q.id === id ? fn(q) : q)))
-  const addQuestion = () => edit((qs) => [...qs, { id: newId(), prompt: '', options: ['', ''], answer: 0 }])
+  const [index, setIndex] = React.useState(0)
+  const [live, setLive] = React.useState('')
+  const count = data.questions.length
+  const i = Math.min(index, Math.max(0, count - 1))
+  const q = data.questions[i]
+  const rootRef = React.useRef<HTMLDivElement>(null)
 
-  if (!data.questions.length) {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-xl bg-neutral-50 px-4 py-6 text-center">
-        <p className="m-0 text-sm text-neutral-500">{k('empty')}</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <button type="button" className={buttonClass('primary', 'sm')} onClick={() => commit(exampleAttrs(t))}>
+  // Focus a new or neighbouring field once it has rendered.
+  const pendingFocus = React.useRef<string | null>(null)
+  const tryFocus = () => {
+    const sel = pendingFocus.current
+    const el = sel ? rootRef.current?.querySelector<HTMLElement>(sel) : null
+    if (el) {
+      pendingFocus.current = null
+      el.focus()
+    }
+  }
+  React.useEffect(tryFocus)
+  const focusLater = (sel: string) => {
+    pendingFocus.current = sel
+    requestAnimationFrame(tryFocus)
+  }
+
+  const go = (n: number) => {
+    const next = Math.max(0, Math.min(count - 1, n))
+    setIndex(next)
+    setLive(t('editor.experiences.speed_round.question_of', { n: next + 1, total: count, defaultValue: 'Question {{n}} of {{total}}' }))
+  }
+  const addQuestion = () => {
+    edit((qs) => [...qs, { id: newId(), prompt: '', options: ['', ''], answer: 0 }])
+    setIndex(count)
+    focusLater('[data-prompt] textarea')
+  }
+  const removeQuestion = () => {
+    if (!q) return
+    edit((qs) => qs.filter((x) => x.id !== q.id))
+    setIndex(data.questions[i + 1] ? i : Math.max(0, i - 1))
+    focusLater('[data-prompt] textarea')
+  }
+  const addOption = () => {
+    if (!q) return
+    patch(q.id, (x) => ({ ...x, options: [...x.options, ''] }))
+    focusLater(`[data-option="${q.options.length}"] textarea`)
+  }
+  const removeOption = (oi: number) => {
+    if (!q) return
+    patch(q.id, (x) => {
+      const options = x.options.filter((_, j) => j !== oi)
+      const answer = x.answer === oi ? 0 : x.answer > oi ? x.answer - 1 : x.answer
+      return { ...x, options, answer }
+    })
+    focusLater(`[data-option="${Math.max(0, oi - 1)}"] textarea`)
+  }
+
+  const settings = (
+    <SettingsGear>
+      <NumberField label={k('seconds_label')} value={data.secondsPerQuestion} min={MIN_SECONDS} max={MAX_SECONDS} onCommit={(secondsPerQuestion) => commit({ secondsPerQuestion })} />
+      <NumberField label={k('lives_label')} hint={k('lives_hint')} value={data.lives} min={0} max={MAX_LIVES} onCommit={(lives) => commit({ lives })} />
+    </SettingsGear>
+  )
+
+  const shell = (children: React.ReactNode) => (
+    <ExperienceFrame
+      {...frame}
+      wysiwyg
+      onTitleChange={(title) => commit({ title })}
+      titlePlaceholder={k('title_placeholder')}
+      instructions={t('activities.experiences.speed_round.instructions')}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
+      live={live}
+    >
+      <div ref={rootRef}>{children}</div>
+    </ExperienceFrame>
+  )
+
+  if (!q) {
+    return shell(
+      <div className="mx-auto flex max-w-md flex-col items-stretch gap-3">
+        <AddGhost onClick={addQuestion} className="min-h-[10rem] w-full rounded-2xl text-[14px]">
+          {k('add_question')}
+        </AddGhost>
+        <p className="m-0 text-center text-[13px] text-neutral-500">
+          {k('empty')}{' '}
+          <button type="button" onClick={() => commit(exampleAttrs(t))} className="font-medium text-neutral-800 underline decoration-dashed underline-offset-2 hover:text-neutral-950">
             {k('fill_example')}
           </button>
-          <button type="button" className={buttonClass('secondary', 'sm')} onClick={addQuestion}>
-            <Plus size={14} weight="bold" aria-hidden />
-            {k('add_question')}
-          </button>
-        </div>
-      </div>
+        </p>
+      </div>,
     )
   }
 
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-2">
-        <NumberField
-          label={k('seconds_label')}
-          value={data.secondsPerQuestion}
-          min={MIN_SECONDS}
-          max={MAX_SECONDS}
-          onCommit={(secondsPerQuestion) => commit({ secondsPerQuestion })}
-        />
-        <NumberField label={k('lives_label')} hint={k('lives_hint')} value={data.lives} min={0} max={MAX_LIVES} onCommit={(lives) => commit({ lives })} />
-      </div>
+  const qIssues = issues.filter((x) => 'id' in x && x.id === q.id)
+  const flagged = (n: number) => issues.some((x) => 'id' in x && x.id === data.questions[n]?.id)
 
-      <ol className="m-0 flex list-none flex-col gap-2 p-0">
-        {data.questions.map((q, qi) => {
-          const qIssues = issues.filter((i) => 'id' in i && i.id === q.id)
-          return (
-            <li key={q.id} className="flex flex-col gap-2 rounded-xl bg-neutral-50 p-3">
-              <div className="flex items-start gap-2">
-                <span className="mt-1.5 w-5 shrink-0 text-center text-xs font-semibold tabular-nums text-neutral-400">{qi + 1}</span>
-                <CommitInput
-                  value={q.prompt}
-                  onCommit={(prompt) => patch(q.id, (x) => ({ ...x, prompt }))}
-                  placeholder={k('prompt_placeholder')}
-                  aria-label={k('prompt_label', { n: qi + 1 })}
-                  maxLength={200}
-                  className={cn(FIELD_CLASS, 'flex-1 font-medium')}
-                />
-                <button
-                  type="button"
-                  className={buttonClass('danger-ghost', 'icon', 'shrink-0')}
-                  aria-label={k('remove_question', { n: qi + 1 })}
-                  onClick={() => edit((qs) => qs.filter((x) => x.id !== q.id))}
+  return shell(
+    <div className="flex flex-col gap-4">
+      <div className={cn('relative flex flex-col gap-4', EDIT_OBJECT)}>
+        <div className="flex items-center justify-between gap-3">
+          <Lives total={data.lives} left={data.lives > 0 ? data.lives : null} />
+          <span className="text-[13px] font-medium tabular-nums text-neutral-500">
+            {t('editor.experiences.speed_round.question_of', { n: i + 1, total: count, defaultValue: 'Question {{n}} of {{total}}' })}
+          </span>
+        </div>
+        <div className="flex items-start gap-3">
+          <span className="lh-exp-well relative inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full" aria-hidden>
+            <svg viewBox="0 0 48 48" className="absolute inset-1 -rotate-90">
+              <circle cx="24" cy="24" r={RING_R} fill="none" strokeWidth="4" stroke="currentColor" className="text-orange-500" />
+            </svg>
+            <span className="lh-exp-raised relative inline-flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold tabular-nums text-neutral-800">
+              {data.secondsPerQuestion}
+            </span>
+          </span>
+          <div data-prompt="" className="min-w-0 flex-1 self-center">
+            <InlineText
+              value={q.prompt}
+              onCommit={(prompt) => patch(q.id, (x) => ({ ...x, prompt }))}
+              placeholder={k('prompt_placeholder')}
+              ariaLabel={k('prompt_label', { n: i + 1 })}
+              maxLength={200}
+              className="text-[15px] leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere] sm:text-lg"
+            />
+          </div>
+        </div>
+        <div role="group" aria-label={k('correct_group', { n: i + 1 })} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {q.options.map((opt, oi) => {
+            const isAnswer = q.answer === oi
+            return (
+              <div
+                key={oi}
+                data-option={oi}
+                className={cn('lh-exp-raised relative flex min-h-12 items-center gap-2.5 rounded-xl px-3 py-2.5 text-start text-[14px] font-medium text-neutral-800', EDIT_OBJECT)}
+              >
+                <span
+                  aria-hidden
+                  className={cn('inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[12px] font-bold', isAnswer ? 'bg-emerald-500 text-white' : 'lh-exp-well text-neutral-500')}
                 >
-                  <Trash size={14} aria-hidden />
-                </button>
+                  {isAnswer ? <Check size={12} weight="bold" /> : oi + 1}
+                </span>
+                <InlineText
+                  value={opt}
+                  onCommit={(v) => patch(q.id, (x) => ({ ...x, options: x.options.map((o, j) => (j === oi ? v : o)) }))}
+                  placeholder={k('option_placeholder', { n: oi + 1 })}
+                  ariaLabel={k('option_label', { n: oi + 1 })}
+                  maxLength={120}
+                  className="min-w-0 flex-1 [overflow-wrap:anywhere]"
+                />
+                <CorrectMark checked={isAnswer} onChange={() => patch(q.id, (x) => ({ ...x, answer: oi }))} label={k('mark_correct', { n: oi + 1 })} />
+                <RemoveX floating disabled={q.options.length <= MIN_OPTIONS} onClick={() => removeOption(oi)} label={k('remove_option', { n: oi + 1 })} />
               </div>
-              <div role="radiogroup" aria-label={k('correct_group', { n: qi + 1 })} className="flex flex-col gap-1.5 ps-7">
-                {q.options.map((opt, oi) => {
-                  const isAnswer = q.answer === oi
-                  return (
-                    <div key={oi} className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        role="radio"
-                        aria-checked={isAnswer}
-                        aria-label={k('mark_correct', { n: oi + 1 })}
-                        onClick={() => patch(q.id, (x) => ({ ...x, answer: oi }))}
-                        className={cn(
-                          'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-500/40',
-                          isAnswer ? 'bg-emerald-500 text-white' : 'bg-white text-transparent shadow-[0_0_0_1px_rgba(0,0,0,0.15)] hover:text-neutral-300',
-                        )}
-                      >
-                        <Check size={12} weight="bold" aria-hidden />
-                      </button>
-                      <CommitInput
-                        value={opt}
-                        onCommit={(v) => patch(q.id, (x) => ({ ...x, options: x.options.map((o, j) => (j === oi ? v : o)) }))}
-                        placeholder={k('option_placeholder', { n: oi + 1 })}
-                        aria-label={k('option_label', { n: oi + 1 })}
-                        maxLength={120}
-                        className={cn(FIELD_CLASS, 'min-w-0 flex-1')}
-                      />
-                      {q.options.length > MIN_OPTIONS && (
-                        <button
-                          type="button"
-                          className={buttonClass('ghost', 'icon', 'shrink-0')}
-                          aria-label={k('remove_option', { n: oi + 1 })}
-                          onClick={() =>
-                            patch(q.id, (x) => {
-                              const options = x.options.filter((_, j) => j !== oi)
-                              const answer = x.answer === oi ? 0 : x.answer > oi ? x.answer - 1 : x.answer
-                              return { ...x, options, answer }
-                            })
-                          }
-                        >
-                          <X size={13} aria-hidden />
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-                {q.options.length < MAX_OPTIONS && (
-                  <button
-                    type="button"
-                    className={buttonClass('ghost', 'sm', 'self-start')}
-                    onClick={() => patch(q.id, (x) => ({ ...x, options: [...x.options, ''] }))}
-                  >
-                    <Plus size={12} weight="bold" aria-hidden />
-                    {k('add_option')}
-                  </button>
-                )}
-              </div>
-              {qIssues.length > 0 && (
-                <div className="flex flex-col gap-1 ps-7">
-                  {qIssues.map((i) => (
-                    <Hint key={i.kind}>{issueText(i)}</Hint>
-                  ))}
-                </div>
-              )}
-            </li>
-          )
-        })}
-      </ol>
-      {data.questions.length < MAX_QUESTIONS && (
-        <button type="button" className={buttonClass('secondary', 'sm', 'self-start')} onClick={addQuestion}>
-          <Plus size={14} weight="bold" aria-hidden />
-          {k('add_question')}
-        </button>
-      )}
-    </div>
+            )
+          })}
+          {q.options.length < MAX_OPTIONS && (
+            <AddGhost onClick={addOption} className="min-h-12 rounded-xl px-3 text-[14px]">
+              {k('add_option')}
+            </AddGhost>
+          )}
+        </div>
+        <RemoveX floating onClick={removeQuestion} label={k('remove_question', { n: i + 1 })} className="-top-3 -end-3" />
+      </div>
+      {qIssues.map((x) => (
+        <InlineHint key={x.kind} severity="warning">
+          {issueText(x)}
+        </InlineHint>
+      ))}
+      <CardNav
+        count={count}
+        index={i}
+        onGo={go}
+        onAdd={addQuestion}
+        canAdd={count < MAX_QUESTIONS}
+        addLabel={k('add_question')}
+        itemLabel={(n) => t('editor.experiences.speed_round.question_of', { n, total: count, defaultValue: 'Question {{n}} of {{total}}' })}
+        flagged={flagged}
+        prevLabel={t('editor.experiences.speed_round.prev_question', 'Previous question')}
+        nextLabel={t('editor.experiences.speed_round.next_question', 'Next question')}
+      />
+    </div>,
   )
 }
 

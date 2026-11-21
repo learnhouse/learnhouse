@@ -3,9 +3,9 @@
  "Property grid" (node expMatrix): learners tick which properties (columns)
  apply to each row. In single mode every row takes exactly one pick.
 
- Author: rows and columns lists, the answer grid itself (checkboxes, or
- radios in single mode), the answer type, inline hints, and "Preview as
- learner" in the frame header.
+ Author: edit in place on the learner's table with the answer key ticked:
+ click cells to set the key, edit row and column names where they sit, add
+ with the ghosts, remove with ×. The answer type lives behind the gear.
 
  Learner: a table of raised toggle cells that press in when ticked. Arrow
  keys move between cells (one tab stop for the whole grid, RTL aware), Space
@@ -16,13 +16,19 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowCounterClockwise, Check, Table, Trash, X } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, Check, Table, X } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS, Segmented } from '../../../Blocks/ui/BlockChrome'
+import { Segmented, SettingsField } from '../../../Blocks/ui/BlockChrome'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   Stars,
   buzz,
   newId,
@@ -57,7 +63,7 @@ import {
   type MatrixData,
   type MatrixMode,
 } from './matrixModel'
-import { AddRowButton, BlockHints, FormSection, ICON_BTN, NotReady, ResultIcon, RowHints, contentKey } from '../Sort/kit'
+import { InlineHint, NotReady, ResultIcon, contentKey } from '../Sort/kit'
 
 const TONE = 'math' as const
 
@@ -99,7 +105,10 @@ export default function MatrixView(props: NodeViewProps) {
   )
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// The learner's table with the answer key ticked. Click a cell to tick or
+// untick it; row and column names are edited where they sit, "+ Add row" /
+// "+ Add column" ghosts add, × removes. The answer type lives behind the gear.
 
 const ISSUE_FALLBACK: Record<string, string> = {
   too_few_rows: 'Add at least 2 rows.',
@@ -128,128 +137,212 @@ function MatrixEditor({ data, commit, frame }: { data: MatrixData; commit: (_p: 
   const rowName = (label: string, i: number) => label.trim() || t(`${k}row_placeholder`, { n: i + 1, defaultValue: 'Row {{n}}' })
   const colName = (label: string, i: number) => label.trim() || t(`${k}column_placeholder`, { n: i + 1, defaultValue: 'Column {{n}}' })
   const single = data.mode === 'single'
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const [focus, setFocus] = React.useState({ r: 0, c: 0 })
+  const focusLater = (sel: string) => requestAnimationFrame(() => requestAnimationFrame(() => Array.from(rootRef.current?.querySelectorAll<HTMLElement>(sel) ?? []).find((el) => el.offsetParent !== null)?.focus()))
+  const canAddRow = data.rows.length < MATRIX_LIMITS.maxRows
+  const canAddCol = data.columns.length < MATRIX_LIMITS.maxColumns
+  const canRemoveRow = data.rows.length > MATRIX_LIMITS.minRows
+  const canRemoveCol = data.columns.length > MATRIX_LIMITS.minColumns
 
-  const list = (kind: 'row' | 'column') => {
-    const items = kind === 'row' ? data.rows : data.columns
-    const min = kind === 'row' ? MATRIX_LIMITS.minRows : MATRIX_LIMITS.minColumns
-    const max = kind === 'row' ? MATRIX_LIMITS.maxRows : MATRIX_LIMITS.maxColumns
+  const onCellKey = (e: React.KeyboardEvent<HTMLButtonElement>, ri: number, ci: number) => {
+    const rtl = getComputedStyle(e.currentTarget).direction === 'rtl'
+    const next = moveFocus({ r: ri, c: ci }, e.key, data.rows.length, data.columns.length, rtl)
+    if (!next) return
+    e.preventDefault()
+    e.stopPropagation()
+    setFocus(next)
+    focusLater(`[data-mx-cell][data-r="${next.r}"][data-c="${next.c}"]`)
+  }
+  const toggleFor = (ri: number, ci: number, showLabel?: string) => {
+    const r = data.rows[ri]
+    const c = data.columns[ci]
     return (
-      <FormSection title={kind === 'row' ? t(`${k}rows_heading`, 'Rows') : t(`${k}columns_heading`, 'Columns')}>
-        {items.map((it, i) => (
-          <div key={it.id} className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <CommitInput
-                value={it.label}
-                onCommit={(label) => edit((d) => (kind === 'row' ? updateRow(d, it.id, label) : updateColumn(d, it.id, label)))}
-                placeholder={kind === 'row' ? rowName('', i) : colName('', i)}
-                aria-label={kind === 'row' ? rowName('', i) : colName('', i)}
-                className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1')}
-              />
-              <button
-                type="button"
-                className={ICON_BTN}
-                disabled={items.length <= min}
-                onClick={() => edit((d) => (kind === 'row' ? removeRow(d, it.id) : removeColumn(d, it.id)))}
-                aria-label={kind === 'row' ? t(`${k}remove_row`, 'Remove row') : t(`${k}remove_column`, 'Remove column')}
-                title={kind === 'row' ? t(`${k}remove_row`, 'Remove row') : t(`${k}remove_column`, 'Remove column')}
-              >
-                <Trash size={15} aria-hidden />
-              </button>
-            </div>
-            <RowHints issues={issues.filter((x) => x.code !== 'row_no_tick' && x.code !== 'row_not_one' && x.code !== 'unused_column')} id={it.id} text={issueText} />
-          </div>
-        ))}
-        <AddRowButton disabled={items.length >= max} onClick={() => edit((d) => (kind === 'row' ? addRow(d, newId()) : addColumn(d, newId())))}>
-          {kind === 'row' ? t(`${k}add_row`, 'Add row') : t(`${k}add_column`, 'Add column')}
-        </AddRowButton>
-      </FormSection>
+      <Toggle
+        on={!!data.cells[cellKey(r.id, c.id)]}
+        single={single}
+        label={t(`${k}cell_label`, { row: rowName(r.label, ri), column: colName(c.label, ci), defaultValue: '{{row}}: {{column}}' })}
+        showLabel={showLabel}
+        tabbable={focus.r === ri && focus.c === ci}
+        locked={false}
+        r={ri}
+        c={ci}
+        onToggle={() => {
+          setFocus({ r: ri, c: ci })
+          edit((d) => toggleAnswerCell(d, r.id, c.id))
+        }}
+        onKeyDown={(e) => onCellKey(e, ri, ci)}
+      />
     )
   }
 
-  const answerIssues = issues.filter((x) => x.code === 'row_no_tick' || x.code === 'row_not_one' || x.code === 'unused_column')
+  const addRowNow = () => {
+    const id = newId()
+    edit((d) => addRow(d, id))
+    focusLater(`[data-row-id="${id}"] textarea`)
+  }
+  const addColNow = () => {
+    const id = newId()
+    edit((d) => addColumn(d, id))
+    focusLater(`[data-col-id="${id}"] textarea`)
+  }
+  const rowLabel = (r: MatrixData['rows'][number], ri: number, className?: string) => (
+    <InlineText
+      value={r.label}
+      onCommit={(label) => edit((d) => updateRow(d, r.id, label))}
+      ariaLabel={rowName('', ri)}
+      placeholder={rowName('', ri)}
+      maxLength={80}
+      className={className}
+    />
+  )
+
+  const issueName = (x: (typeof issues)[number]) => {
+    const ri = data.rows.findIndex((r) => r.id === x.id)
+    if (ri >= 0) return rowName(data.rows[ri].label, ri)
+    const ci = data.columns.findIndex((c) => c.id === x.id)
+    return ci >= 0 ? colName(data.columns[ci].label, ci) : ''
+  }
+
+  const settings = (
+    <SettingsGear>
+      <SettingsField label={t(`${k}mode_label`, 'Answer type')}>
+        <Segmented<MatrixMode>
+          value={data.mode}
+          ariaLabel={t(`${k}mode_label`, 'Answer type')}
+          onChange={(mode) => commit({ mode })}
+          options={[
+            { value: 'multi', label: t(`${k}mode_multi`, 'Several per row') },
+            { value: 'single', label: t(`${k}mode_single`, 'One per row') },
+          ]}
+        />
+      </SettingsField>
+    </SettingsGear>
+  )
 
   return (
     <ExperienceFrame
       {...frame}
+      wysiwyg
       title={data.title}
       onTitleChange={(title) => commit({ title })}
       instructions={data.instructions}
       onInstructionsChange={(instructions) => commit({ instructions })}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
     >
-      <div className="flex flex-col gap-5">
-        <BlockHints issues={issues} text={issueText} />
+      <div ref={rootRef} className="flex flex-col gap-4">
+        <p className="m-0 text-[13px] leading-snug text-neutral-500">
+          {single ? t(`${k}answers_hint_single`, 'Pick the one right column for each row.') : t(`${k}answers_hint_multi`, 'Tick every cell that is true.')}
+        </p>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[13px] font-semibold text-neutral-700">{t(`${k}mode_label`, 'Answer type')}</span>
-          <div className="w-full sm:w-72">
-            <Segmented<MatrixMode>
-              value={data.mode}
-              ariaLabel={t(`${k}mode_label`, 'Answer type')}
-              onChange={(mode) => commit({ mode })}
-              options={[
-                { value: 'multi', label: t(`${k}mode_multi`, 'Several per row') },
-                { value: 'single', label: t(`${k}mode_single`, 'One per row') },
-              ]}
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-5 sm:grid-cols-2">
-          {list('row')}
-          {list('column')}
-        </div>
-
-        <FormSection
-          title={t(`${k}answers_heading`, 'Correct answers')}
-          hint={single ? t(`${k}answers_hint_single`, 'Pick the one right column for each row.') : t(`${k}answers_hint_multi`, 'Tick every cell that is true.')}
-        >
-          <div className="overflow-x-auto rounded-xl ring-1 ring-neutral-100">
-            <table className="w-full border-collapse text-[13px]">
-              <thead>
-                <tr>
-                  <th className="p-2" />
-                  {data.columns.map((c, ci) => (
-                    <th key={c.id} scope="col" className="p-2 text-center align-bottom font-medium text-neutral-600 [overflow-wrap:anywhere]">
-                      {colName(c.label, ci)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {data.rows.map((r, ri) => (
-                  <tr key={r.id} className="border-t border-neutral-100">
-                    <th scope="row" className="p-2 text-start font-medium text-neutral-800 [overflow-wrap:anywhere]">
-                      {rowName(r.label, ri)}
-                    </th>
-                    {data.columns.map((c, ci) => (
-                      <td key={c.id} className="p-1 text-center">
-                        <input
-                          type={single ? 'radio' : 'checkbox'}
-                          name={single ? `mx-${data.blockId || 'b'}-${r.id}` : undefined}
-                          checked={!!data.cells[cellKey(r.id, c.id)]}
-                          onChange={() => edit((d) => toggleAnswerCell(d, r.id, c.id))}
-                          onKeyDown={(e) => e.stopPropagation()}
-                          aria-label={t(`${k}cell_label`, { row: rowName(r.label, ri), column: colName(c.label, ci), defaultValue: '{{row}}: {{column}}' })}
-                          className="h-4 w-4 cursor-pointer accent-orange-600"
-                        />
-                      </td>
-                    ))}
-                  </tr>
+        {/* Table (sm and up) */}
+        <div className="hidden overflow-x-auto pt-2 sm:block">
+          <table aria-label={data.title || t('activities.experiences.matrix.grid_label', 'Answer grid')} className="w-full border-separate border-spacing-x-1 border-spacing-y-1.5">
+            <thead>
+              <tr>
+                <td />
+                {data.columns.map((c, ci) => (
+                  <th key={c.id} scope="col" data-col-id={c.id} className="px-1 pb-1 text-center align-bottom text-[13px] font-semibold leading-tight text-neutral-600">
+                    <span className={cn('relative inline-flex max-w-full', EDIT_OBJECT)}>
+                      <InlineText
+                        value={c.label}
+                        onCommit={(label) => edit((d) => updateColumn(d, c.id, label))}
+                        ariaLabel={colName('', ci)}
+                        placeholder={colName('', ci)}
+                        maxLength={40}
+                        className="text-center [overflow-wrap:anywhere]"
+                      />
+                      <RemoveX
+                        floating
+                        disabled={!canRemoveCol}
+                        onClick={() => edit((d) => removeColumn(d, c.id))}
+                        label={t(`${k}remove_column_named`, { column: colName(c.label, ci), defaultValue: 'Remove column “{{column}}”' })}
+                        className="-top-3"
+                      />
+                    </span>
+                  </th>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          {answerIssues.length > 0 && (
-            <div className="flex flex-col gap-0.5">
-              {answerIssues.map((x) => {
-                const name = x.code === 'unused_column' ? colName(data.columns.find((c) => c.id === x.id)?.label ?? '', data.columns.findIndex((c) => c.id === x.id)) : rowName(data.rows.find((r) => r.id === x.id)?.label ?? '', data.rows.findIndex((r) => r.id === x.id))
-                return (
-                  <RowHints key={`${x.code}-${x.id}`} issues={[{ ...x, id: 'x' }]} id="x" text={(code) => `${name}: ${issueText(code)}`} />
-                )
-              })}
-            </div>
+                {canAddCol && (
+                  <th className="px-1 pb-1 align-bottom">
+                    <AddGhost onClick={addColNow} iconSize={12} className="h-8 rounded-lg px-2 text-[12px] whitespace-nowrap">
+                      {t(`${k}add_column`, 'Add column')}
+                    </AddGhost>
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {data.rows.map((r, ri) => (
+                <tr key={r.id} data-row-id={r.id}>
+                  <th scope="row" className="pe-3 text-start text-[14px] font-medium text-neutral-800">
+                    <span className={cn('relative flex items-center gap-1', EDIT_OBJECT)}>
+                      {rowLabel(r, ri, 'min-w-0 flex-1 [overflow-wrap:anywhere]')}
+                      <RemoveX disabled={!canRemoveRow} onClick={() => edit((d) => removeRow(d, r.id))} label={t(`${k}remove_row_named`, { row: rowName(r.label, ri), defaultValue: 'Remove row “{{row}}”' })} />
+                    </span>
+                  </th>
+                  {data.columns.map((c, ci) => (
+                    <td key={c.id} className="text-center">
+                      {toggleFor(ri, ci)}
+                    </td>
+                  ))}
+                  {canAddCol && <td />}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {canAddRow && (
+            <AddGhost onClick={addRowNow} className="mt-1 min-h-11 w-full rounded-xl px-3">
+              {t(`${k}add_row`, 'Add row')}
+            </AddGhost>
           )}
-        </FormSection>
+        </div>
+
+        {/* One card per row (phones) */}
+        <div className="flex flex-col gap-2.5 sm:hidden">
+          {data.rows.map((r, ri) => (
+            <div key={r.id} data-row-id={r.id} className={cn('lh-exp-well relative flex flex-col gap-2 rounded-2xl p-2.5', EDIT_OBJECT)}>
+              <div className="px-1 text-[14px] font-semibold text-neutral-800">{rowLabel(r, ri, '[overflow-wrap:anywhere]')}</div>
+              <div role={single ? 'radiogroup' : 'group'} aria-label={rowName(r.label, ri)} className="grid grid-cols-2 gap-1.5">
+                {data.columns.map((c, ci) => (
+                  <React.Fragment key={c.id}>{toggleFor(ri, ci, colName(c.label, ci))}</React.Fragment>
+                ))}
+              </div>
+              <RemoveX floating disabled={!canRemoveRow} onClick={() => edit((d) => removeRow(d, r.id))} label={t(`${k}remove_row_named`, { row: rowName(r.label, ri), defaultValue: 'Remove row “{{row}}”' })} />
+            </div>
+          ))}
+          <div className="flex flex-wrap gap-2">
+            {canAddRow && (
+              <AddGhost onClick={addRowNow} className="min-h-11 flex-1 rounded-xl px-3">
+                {t(`${k}add_row`, 'Add row')}
+              </AddGhost>
+            )}
+            {canAddCol && (
+              <AddGhost onClick={addColNow} className="min-h-11 flex-1 rounded-xl px-3">
+                {t(`${k}add_column`, 'Add column')}
+              </AddGhost>
+            )}
+          </div>
+          {/* Column names, edited here on a phone. */}
+          <div className="flex flex-wrap gap-1.5">
+            {data.columns.map((c, ci) => (
+              <span key={c.id} data-col-id={c.id} className={cn('lh-exp-raised relative inline-flex min-h-9 items-center rounded-lg px-2.5 text-[13px] font-semibold text-neutral-600', EDIT_OBJECT)}>
+                <InlineText fit value={c.label} onCommit={(label) => edit((d) => updateColumn(d, c.id, label))} ariaLabel={colName('', ci)} placeholder={colName('', ci)} maxLength={40} />
+                <RemoveX floating disabled={!canRemoveCol} onClick={() => edit((d) => removeColumn(d, c.id))} label={t(`${k}remove_column_named`, { column: colName(c.label, ci), defaultValue: 'Remove column “{{column}}”' })} />
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {issues.length > 0 && (
+          <div className="flex flex-col gap-1">
+            {issues.map((x) => (
+              <InlineHint key={`${x.code}-${x.id ?? ''}`} severity={x.severity}>
+                {x.id ? `${issueName(x)}: ${issueText(x.code)}` : issueText(x.code)}
+              </InlineHint>
+            ))}
+          </div>
+        )}
       </div>
     </ExperienceFrame>
   )

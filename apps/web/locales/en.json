@@ -4206,7 +4206,11 @@
         "solved_mark": "Solved",
         "missed_mark": "Not solved",
         "play_again": "Play again",
-        "best": "Best"
+        "best": "Best",
+        "guesses_left": "Guesses left: {{n}}",
+        "history_item": "Guess {{n}}: {{word}} ({{feedback}})",
+        "history_label": "Earlier guesses",
+        "typing_row": "Your guess"
       },
       "confidence": {
         "instructions": "Answer, then say how sure you are.",
@@ -13703,7 +13707,6 @@
       "not_found": "Scenario Not Found",
       "not_found_hint": "Please check your scenario configuration and try again.",
       "illustration_alt": "Scenario illustration",
-      "max_scenarios": "Maximum of 40 scenarios allowed",
       "new_scenario_text": "New scenario text...",
       "default_option_1": "Option 1",
       "default_option_2": "Option 2",
@@ -14388,7 +14391,6 @@
         },
         "jump_to": "Jump to that step",
         "leads_to": "Leads to",
-        "limits": "Up to {{max}} steps, {{choices}} choices each.",
         "map_hint": "Click a step to edit it here. Arrows show where each choice leads.",
         "missing_step": "Missing step",
         "move_down": "Move down",
@@ -15008,7 +15010,10 @@
         "issue_duplicateOption": "Two options are the same.",
         "example": {
           "title": "Quick maths"
-        }
+        },
+        "question_of": "Question {{n}} of {{total}}",
+        "prev_question": "Previous question",
+        "next_question": "Next question"
       },
       "estimate": {
         "name": "Estimate",
@@ -15038,7 +15043,8 @@
           "explanation": "An adult has 206 bones. Babies are born with about 300; some of them fuse together as we grow.",
           "unit": "bones"
         },
-        "fill_example": "Use an example"
+        "fill_example": "Use an example",
+        "answer_marker": "Answer: {{value}}"
       },
       "code_lock": {
         "name": "Code lock",
@@ -15074,7 +15080,9 @@
           "c3": "How many continents are there?",
           "c3_hint": "Africa is one of them.",
           "reward": "The door swings open. Well done, detective!"
-        }
+        },
+        "answer_masked": "The answer (hidden until you click it)",
+        "padlock_label": "Padlock with {{n}} dials"
       },
       "scenarios": {
         "chip_unreachable": "Nobody reaches this step",
@@ -15121,7 +15129,11 @@
           "step3": "The customer gets more upset. What now?",
           "step3_a": "Apologise and ask for the order number",
           "step3_b": "End the call"
-        }
+        },
+        "then_short": "Then",
+        "open_target": "Open that step",
+        "steps_label": "Steps",
+        "editing_hint": "You’re editing the story. Preview to play it as a learner."
       },
       "flashcards": {
         "title_placeholder": "Deck title (optional)",
@@ -15246,7 +15258,6 @@
           "step4": "Water flows back to the sea"
         },
         "add_step": "Add step",
-        "detail_label": "Detail",
         "detail_placeholder": "Detail, e.g. 1969",
         "drag_short": "Drag to reorder",
         "drag_step": "Move step {{n}} (drag or arrow keys)",
@@ -15258,13 +15269,14 @@
           "too_many_items": "Use at most 10 steps; learners only see the first 10."
         },
         "items_heading": "Steps, in the correct order",
-        "items_hint": "Learners get them shuffled.",
         "layout_label": "Layout",
-        "remove_step": "Remove step",
         "step_placeholder": "Step {{n}}",
         "timeline_hint": "Each step’s detail (like a year) is revealed after learners check.",
         "variant_list": "List",
-        "variant_timeline": "Timeline"
+        "variant_timeline": "Timeline",
+        "author_hint": "This is the correct order; learners get the steps shuffled. Drag a step or use the arrows to reorder.",
+        "detail_label_n": "Step {{n}} detail",
+        "remove_named": "Remove “{{item}}”"
       },
       "match": {
         "title": "Match pairs",
@@ -15325,22 +15337,22 @@
         "placeholder_prompt": "Example picture: add your own image",
         "stage_help": "Click the picture to add a spot. Drag a spot to move it, or focus it and use the arrow keys.",
         "spots_label": "Spots",
-        "empty_list": "No spots yet. Click the picture to add one.",
         "spot_aria": "Spot {{n}}: {{label}}",
         "untitled_spot": "untitled",
-        "move_hint": "Select, then drag on the picture or use the arrow keys",
         "select_spot": "Select spot {{n}}",
         "label_placeholder": "What is here?",
         "label_label": "Label for spot {{n}}",
         "remove_spot": "Remove spot {{n}}",
-        "hint_label_short": "Add a label so learners know what they found.",
         "explanation_placeholder": "Explanation shown when it is found (optional)",
         "explanation_label": "Explanation for spot {{n}}",
         "size_label": "Size",
         "hint_no_image": "Using the example picture. Add your own image above.",
         "hint_no_spots": "Add at least one spot.",
         "hint_missing_label": "Spot {{n}} has no label.",
-        "hint_overlap": "Spots {{a}} and {{b}} overlap, so one may be hard to hit."
+        "hint_overlap": "Spots {{a}} and {{b}} overlap, so one may be hard to hit.",
+        "mode_find_hint": "Learners click the picture to find each spot.",
+        "mode_explore_hint": "Learners open numbered pins to read about each spot.",
+        "pin_hint": "Click to edit. Drag, or use the arrow keys, to move."
       },
       "gaps": {
         "title": "Fill the gaps",
@@ -15362,8 +15374,19 @@
         "hint_no_gaps": "No gaps yet. Select a word and press Make gap.",
         "hint_empty_gap": "An empty gap [[ ]] is ignored. Put the answer inside it.",
         "hint_unclosed": "A gap is missing its closing ]].",
-        "preview_label": "Preview",
-        "gap_count": "Gaps: {{n}}"
+        "answers_hint": "Learners can type any of these. The first one goes in the word bank.",
+        "answer_label": "Accepted answer {{n}}",
+        "remove_answer": "Remove “{{answer}}”",
+        "add_answer": "Add another accepted answer",
+        "remove_gap": "Remove gap (keep the word)",
+        "gap_title": "Gap {{n}}",
+        "gap_aria": "Gap {{n}}: {{answer}}. Edit the accepted answers",
+        "passage_hint": "Click to edit the text. Select words, then “Make gap”.",
+        "passage_placeholder": "Write your text here…",
+        "edit_text": "Edit text",
+        "make_gap_ready": "Press “Make gap” to turn the selected words into a gap.",
+        "select_hint": "Select words to make a gap. Click a gap to edit its answers.",
+        "done_editing": "Done"
       },
       "spot_mistake": {
         "title": "Spot the mistake",
@@ -15391,8 +15414,6 @@
         "split_help_code": "Each line is one choice. Blank lines stay but can't be picked.",
         "segments_label": "Parts",
         "segment_n": "Part {{n}}",
-        "is_mistake": "Mistake",
-        "is_correct": "Correct",
         "correction_placeholder": "Corrected version",
         "correction_label": "Correction for part {{n}}",
         "hint_correction_short": "Add the corrected version so learners can learn from it.",
@@ -15401,7 +15422,14 @@
         "hint_too_few": "Add at least two sentences or lines.",
         "hint_no_mistakes": "Mark at least one part as a mistake.",
         "hint_all_mistakes": "Every part is marked as a mistake. Leave some correct ones.",
-        "hint_missing_correction": "Part {{n}} is a mistake without a correction."
+        "hint_missing_correction": "Part {{n}} is a mistake without a correction.",
+        "unmark_hint": "A mistake. Click to mark it correct.",
+        "mark_hint": "Click to mark this as a mistake.",
+        "edit_text": "Edit text",
+        "author_hint": "Click a part to mark it as a mistake, then write its correction below.",
+        "mistakes_label": "Mistakes and their corrections",
+        "unmark_named": "Mark part {{n}} as correct",
+        "done_editing": "Done"
       },
       "venn": {
         "title": "Venn compare",
@@ -15427,13 +15455,8 @@
         "zone_both": "Both",
         "zone_neither": "Neither",
         "zone_only": "Only {{set}}",
-        "sets_heading": "The two groups",
         "change_color": "Change colour",
-        "items_heading": "Items",
-        "items_hint": "Pick where each item belongs. Learners see them shuffled.",
         "item_placeholder": "Item {{n}}",
-        "item_zone": "Where it belongs",
-        "remove_item": "Remove item",
         "explanation_placeholder": "Why it belongs there (shown when wrong, optional)",
         "explanation_label": "Explanation",
         "add_item": "Add item",
@@ -15449,7 +15472,16 @@
           "duplicate_item": "Another item has the same text.",
           "neither_hidden": "Turn on the “Neither” area, or learners will not see this item.",
           "no_both": "No item belongs to both groups yet; the overlap is the interesting part."
-        }
+        },
+        "moved": "Moved “{{item}}” to {{zone}}.",
+        "move_item": "Move “{{item}}”",
+        "move_hint": "Drag to another place, or press 1–4",
+        "why_label": "Why “{{item}}” belongs here",
+        "remove_named": "Remove “{{item}}”",
+        "add_to": "Add an item to {{zone}}",
+        "author_selected": "Now tap where “{{item}}” belongs.",
+        "author_hint": "Each item sits where it belongs. Drag an item, or tap its handle and then a place, to move it.",
+        "why_heading": "Why “{{item}}” belongs in {{zone}} (shown when a learner gets it wrong)"
       },
       "label": {
         "title": "Label the diagram",
@@ -15481,9 +15513,6 @@
         "untitled_pin": "Unnamed",
         "stage_help": "Click the picture to add a pin. Drag a pin, or use the arrow keys, to move it.",
         "pins_label": "Pins",
-        "empty_list": "No pins yet. Click the picture to add one.",
-        "move_hint": "Select, then use the arrow keys to move",
-        "select_pin": "Select pin {{n}}",
         "label_placeholder": "Label",
         "label_label": "Label for pin {{n}}",
         "remove_pin": "Remove pin {{n}}",
@@ -15491,7 +15520,8 @@
         "distractors_hint": "Extra labels that belong nowhere. They make learners think instead of guessing.",
         "distractor_placeholder": "Wrong label {{n}}",
         "remove_distractor": "Remove wrong label",
-        "add_distractor": "Add a wrong label"
+        "add_distractor": "Add a wrong label",
+        "author_hint": "Every label sits on its point. Click the picture to add a point; drag a point to move it."
       },
       "word_guess": {
         "title": "Word guess",
@@ -15508,8 +15538,6 @@
           "w3_clue": "What makes things move, warm up or light up.",
           "w3_why": "Energy changes form, for example from food to movement, but it is never lost."
         },
-        "words_heading": "Words",
-        "words_hint": "Learners guess each word from its clue. Spaces and hyphens are shown for free.",
         "answer_placeholder": "Answer {{n}}",
         "letters": "Letters: {{n}}",
         "remove_word": "Remove word",
@@ -15529,14 +15557,15 @@
           "too_short": "Use at least 2 letters.",
           "too_long": "Use at most 12 letters so the tiles fit on a phone.",
           "duplicate_answer": "Another word has the same answer."
-        }
+        },
+        "type_answer": "Click the tiles and type the answer.",
+        "prev_word": "Previous word",
+        "next_word": "Next word"
       },
       "confidence": {
         "title": "Confidence check",
         "description": "Answer, then rate how sure you are, to spot what you only think you know.",
         "title_placeholder": "Name this check",
-        "questions_heading": "Questions",
-        "questions_hint": "Learners pick an answer and how sure they are, then see if they were right.",
         "prompt_placeholder": "Question {{n}}",
         "prompt_label": "Question {{n}}",
         "correct_group": "Right answer for question {{n}}",
@@ -15575,7 +15604,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "Previous question",
+        "next_question": "Next question"
       },
       "matrix": {
         "title": "Property grid",
@@ -15592,18 +15623,13 @@
           "flies": "Can fly",
           "swims": "Swims"
         },
-        "rows_heading": "Rows",
-        "columns_heading": "Columns",
         "row_placeholder": "Row {{n}}",
         "column_placeholder": "Column {{n}}",
         "add_row": "Add row",
         "add_column": "Add column",
-        "remove_row": "Remove row",
-        "remove_column": "Remove column",
         "mode_label": "Answer type",
         "mode_multi": "Several per row",
         "mode_single": "One per row",
-        "answers_heading": "Correct answers",
         "answers_hint_multi": "Tick every cell that is true.",
         "answers_hint_single": "Pick the one right column for each row.",
         "cell_label": "{{row}}: {{column}}",
@@ -15619,7 +15645,9 @@
           "unused_column": "No row has this property yet.",
           "duplicate_row": "Another row has the same name.",
           "duplicate_column": "Another column has the same name."
-        }
+        },
+        "remove_column_named": "Remove column “{{column}}”",
+        "remove_row_named": "Remove row “{{row}}”"
       },
       "reflect": {
         "title": "Reflection",
@@ -15628,7 +15656,6 @@
         "prompt_heading": "Prompt",
         "prompt_placeholder": "What should learners explain in their own words?",
         "guiding_heading": "Guiding questions",
-        "guiding_hint": "Optional hints learners can open if they are stuck (up to 5).",
         "guiding_placeholder": "Question {{n}}",
         "guiding_label": "Guiding question {{n}}",
         "remove_guiding": "Remove question {{n}}",
@@ -15636,10 +15663,8 @@
         "min_words_label": "Minimum words",
         "min_words_hint": "Learners can compare once they reach this. 0 lets them compare straight away.",
         "model_heading": "Model answer",
-        "model_hint": "Optional. Learners see it after writing their own.",
         "model_placeholder": "A good answer, in a few sentences",
         "checklist_heading": "Key points",
-        "checklist_hint": "Learners tick the points they covered; that becomes their score (up to 8).",
         "point_placeholder": "Key point {{n}}",
         "point_label": "Key point {{n}}",
         "remove_point": "Remove key point {{n}}",
@@ -15663,7 +15688,9 @@
           "p2": "The Earth orbits the Sun over a year",
           "p3": "More direct sunlight and longer days in summer",
           "p4": "It is not caused by distance from the Sun"
-        }
+        },
+        "guiding_optional": "optional",
+        "answer_key": "Answer key"
       }
     }
   },

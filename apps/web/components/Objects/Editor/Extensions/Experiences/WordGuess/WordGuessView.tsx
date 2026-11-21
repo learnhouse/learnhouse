@@ -2,31 +2,40 @@
 /*
  "Word guess" (node expWordGuess): learners guess a key term from its clue.
 
- Author: a single-column form (words with answer, clue and an optional
- explanation, guesses per word) with inline hints, and "Preview as learner"
- in the frame header.
+ Author: edit in place, one word at a time: the clue card, the answer typed
+ straight into a row of solved tiles, and the explanation learners read
+ afterwards. Prev / next / "+ Add word"; guesses per word behind the gear.
 
- Learner: per word, a grid of guess rows. Type with the on-screen keyboard,
- or with a physical keyboard while the letter board (or a key) has focus;
- typing never leaves the block. Enter checks the row: the tiles flip one by
- one to show each letter's state, always with a shape too (solid with a
- check: in place; outlined with a dot: in the word; recessed: not in the
- word), and the result is announced. A hint reveals one letter in place and
- costs a star. Solve or run out of guesses, read the explanation, move on;
- the end screen lists every word.
+ Learner: per word, ONE row of tiles (one per letter; spaces and hyphens
+ are shown for free). Type with the on-screen keyboard, or with a physical
+ keyboard while the letter board (or a key) has focus; typing never leaves
+ the block. Enter checks the row: the tiles flip one by one to show each
+ letter's state, always with a shape too (solid with a check: in place;
+ outlined with a dot: in the word; recessed: not in the word), and the
+ result is announced. Then the row resets for the next guess, with letters
+ found in place (or revealed by a hint, which costs a star) locked in.
+ Earlier guesses sit under the row as small coloured words, newest first;
+ dots next to "Word n of N" count the guesses left. Solve or run out of
+ guesses, read the explanation, move on; the end screen lists every word.
 
  The board is a <button>, so ProseMirror leaves its key presses alone while
  the block is previewed inside the editor.
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowRight, Backspace, Check, CheckCircle, Lightbulb, TextAa, Trash, XCircle } from '@phosphor-icons/react'
+import { ArrowRight, Backspace, Check, CheckCircle, Lightbulb, TextAa, XCircle } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS } from '../../../Blocks/ui/BlockChrome'
+import { CommitInput, FIELD_CLASS, SettingsField } from '../../../Blocks/ui/BlockChrome'
 import {
+  AnswerKeyHint,
+  CardNav,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   Stars,
   buzz,
   newId,
@@ -34,6 +43,7 @@ import {
   useExperienceEditable,
   useExperienceMemory,
   useLiveAttrs,
+  usePrefersReducedMotion,
   type CommitPatch,
 } from '../shared'
 import {
@@ -50,6 +60,7 @@ import {
   keyStates,
   keyboardRows,
   letterCells,
+  lockedSlots,
   newRound,
   normalizeWordGuess,
   playableWordGuess,
@@ -65,7 +76,7 @@ import {
   type WordGuessData,
   type WordRound,
 } from './wordGuessModel'
-import { AddRowButton, BlockHints, FormSection, ICON_BTN, NotReady, RowHints, contentKey } from '../Sort/kit'
+import { InlineHint, NotReady, contentKey } from '../Sort/kit'
 
 const TONE = 'link' as const
 
@@ -107,7 +118,11 @@ export default function WordGuessView(props: NodeViewProps) {
   )
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// One word at a time, as learners see it: the clue card, then the letter
+// board whose first row holds the answer as solved tiles (type straight into
+// it), and the explanation learners read afterwards. Prev / next and "+ Add
+// word" move through the words; guesses per word live behind the gear.
 
 const ISSUE_FALLBACK: Record<string, string> = {
   too_few_words: 'Add at least one word.',
@@ -118,6 +133,74 @@ const ISSUE_FALLBACK: Record<string, string> = {
   too_short: 'Use at least 2 letters.',
   too_long: 'Use at most 12 letters so the tiles fit on a phone.',
   duplicate_answer: 'Another word has the same answer.',
+}
+
+/** The answer as a row of solved tiles; an input over the row takes the typing. */
+function AnswerTiles({ value, onCommit, ariaLabel, placeholder }: { value: string; onCommit: (_v: string) => void; ariaLabel: string; placeholder: string }) {
+  const [draft, setDraft] = React.useState(value)
+  const [focused, setFocused] = React.useState(false)
+  // Follow remote changes while the field isn't being edited (adjusted during render).
+  const [seen, setSeen] = React.useState(value)
+  if (!focused && seen !== value) {
+    setSeen(value)
+    setDraft(value)
+  }
+  const cells = answerCells(draft)
+  const letters = letterCells(cells)
+  const rtl = isRtlText(draft)
+  const font = tileFont(Math.max(letters.length, 5))
+  const shown = cells.length ? cells : null
+  const gridCols = (shown ?? [0, 1, 2, 3, 4].map(() => ({ kind: 'letter' }) as Cell)).map((c) => (c.kind === 'letter' ? 'minmax(0, 3rem)' : 'minmax(0, 0.85rem)')).join(' ')
+  return (
+    <span className={cn('relative grid justify-center gap-1.5 rounded-lg', focused && 'ring-2 ring-sky-500/40 ring-offset-4 ring-offset-[var(--exp-paper,#fff)]')} style={{ gridTemplateColumns: gridCols }} dir={rtl ? 'rtl' : 'ltr'}>
+      {shown
+        ? shown.map((c, ci) =>
+            c.kind === 'fixed' ? (
+              <span key={ci} aria-hidden className="flex items-center justify-center text-neutral-400">
+                {c.char === '-' ? <span className="h-0.5 w-2.5 rounded-full bg-current" /> : null}
+              </span>
+            ) : (
+              <span key={ci} aria-hidden data-score="hit" className={cn('lh-exp-tile relative flex aspect-square items-center justify-center rounded-lg font-bold', font)}>
+                {displayLetter(c.char)}
+              </span>
+            ),
+          )
+        : [0, 1, 2, 3, 4].map((i) => (
+            <span key={i} aria-hidden className={cn('lh-exp-well flex aspect-square items-center justify-center rounded-lg font-bold text-neutral-300', font)}>
+              ·
+            </span>
+          ))}
+      <input
+        type="text"
+        value={draft}
+        aria-label={ariaLabel}
+        placeholder={placeholder}
+        autoCapitalize="off"
+        autoComplete="off"
+        spellCheck={false}
+        maxLength={40}
+        dir="auto"
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false)
+          if (draft !== value) onCommit(draft)
+        }}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            e.currentTarget.blur()
+          }
+          if (e.key === 'Escape') {
+            setDraft(value)
+            requestAnimationFrame(() => (e.target as HTMLInputElement).blur())
+          }
+        }}
+        className="absolute inset-0 h-full w-full cursor-text bg-transparent text-transparent caret-transparent opacity-0 outline-none selection:bg-transparent"
+      />
+    </span>
+  )
 }
 
 function WordGuessEditor({ data, commit, frame }: { data: WordGuessData; commit: (_p: CommitPatch<Record<string, any>>) => void; frame: Frame }) {
@@ -131,82 +214,123 @@ function WordGuessEditor({ data, commit, frame }: { data: WordGuessData; commit:
     })
   const issueText = (code: string) => t(`${k}issues.${code}`, ISSUE_FALLBACK[code] ?? code)
   const canRemove = data.words.length > WORD_GUESS_LIMITS.minWords
+  const [index, setIndex] = React.useState(0)
+  const [live, setLive] = React.useState('')
+  const count = data.words.length
+  const i = Math.min(index, Math.max(0, count - 1))
+  const w = data.words[i]
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const focusLater = (sel: string) => requestAnimationFrame(() => requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>(sel)?.focus()))
+  const wordOf = (n: number) => t('activities.experiences.word_guess.word_of', { n, total: count, defaultValue: 'Word {{n}} of {{total}}' })
+
+  const go = (n: number) => {
+    const next = Math.max(0, Math.min(count - 1, n))
+    setIndex(next)
+    setLive(wordOf(next + 1))
+  }
+  const add = () => {
+    edit((d) => addWord(d, newId()))
+    setIndex(count)
+    focusLater('[data-clue] textarea')
+  }
+  const remove = () => {
+    if (!w) return
+    edit((d) => removeWord(d, w.id))
+    setIndex(data.words[i + 1] ? i : Math.max(0, i - 1))
+  }
+
+  const settings = (
+    <SettingsGear>
+      <SettingsField label={t(`${k}max_guesses_label`, 'Guesses per word')} hint={t(`${k}max_guesses_hint`, 'Between 3 and 8.')}>
+        <CommitInput
+          type="number"
+          inputMode="numeric"
+          min={WORD_GUESS_LIMITS.minGuesses}
+          max={WORD_GUESS_LIMITS.maxGuesses}
+          value={String(data.maxGuesses)}
+          onCommit={(v) => {
+            const n = Math.round(Number(v))
+            if (Number.isFinite(n)) commit({ maxGuesses: Math.max(WORD_GUESS_LIMITS.minGuesses, Math.min(WORD_GUESS_LIMITS.maxGuesses, n)) })
+          }}
+          className={cn(FIELD_CLASS, 'tabular-nums')}
+        />
+      </SettingsField>
+    </SettingsGear>
+  )
+
+  const blockIssues = issues.filter((x) => !x.id)
+  const wordIssues = w ? issues.filter((x) => x.id === w.id) : []
+  const answerText = w ? answerCells(w.answer).map((c) => (c.kind === 'letter' ? displayLetter(c.char) : c.char)).join('') : ''
 
   return (
-    <ExperienceFrame {...frame} title={data.title} onTitleChange={(title) => commit({ title })}>
-      <div className="flex flex-col gap-5">
-        <BlockHints issues={issues} text={issueText} />
+    <ExperienceFrame {...frame} wysiwyg title={data.title} onTitleChange={(title) => commit({ title })} headerEnd={settings} footer={<AnswerKeyHint />} live={live}>
+      <div ref={rootRef} className="flex flex-col gap-4">
+        {blockIssues.map((x) => (
+          <InlineHint key={x.code} severity={x.severity}>
+            {issueText(x.code)}
+          </InlineHint>
+        ))}
+        {w ? (
+          <div className={cn('relative flex flex-col gap-4', EDIT_OBJECT)}>
+            <span className="text-[13px] font-medium text-neutral-500">{wordOf(i + 1)}</span>
+            <div data-clue="" className="lh-exp-raised flex items-start gap-2.5 rounded-xl px-3.5 py-3">
+              <span className="mt-px shrink-0 text-[12px] font-semibold text-sky-700">{t('activities.experiences.word_guess.clue', 'Clue')}</span>
+              <InlineText
+                value={w.clue}
+                onCommit={(clue) => edit((d) => updateWord(d, w.id, { clue }))}
+                ariaLabel={t(`${k}clue_label`, 'Clue')}
+                placeholder={t(`${k}clue_placeholder`, 'Clue shown to learners')}
+                maxLength={200}
+                className="min-w-0 flex-1 text-[15px] leading-snug font-medium text-neutral-900 [overflow-wrap:anywhere]"
+              />
+            </div>
 
-        <FormSection title={t(`${k}words_heading`, 'Words')} hint={t(`${k}words_hint`, 'Learners guess each word from its clue. Spaces and hyphens are shown for free.')}>
-          {data.words.map((w, i) => {
-            const letters = letterCells(answerCells(w.answer)).length
-            return (
-              <div key={w.id} className="flex flex-col gap-1.5 rounded-xl bg-neutral-50/80 p-2 ring-1 ring-neutral-100">
-                <div className="flex items-center gap-1.5">
-                  <CommitInput
-                    value={w.answer}
-                    onCommit={(answer) => edit((d) => updateWord(d, w.id, { answer }))}
-                    placeholder={t(`${k}answer_placeholder`, { n: i + 1, defaultValue: 'Answer {{n}}' })}
-                    aria-label={t(`${k}answer_placeholder`, { n: i + 1, defaultValue: 'Answer {{n}}' })}
-                    className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1 font-semibold')}
-                    autoCapitalize="off"
-                    spellCheck={false}
-                  />
-                  {letters > 0 && (
-                    <span className="shrink-0 rounded-md bg-white px-2 py-1 text-[11px] font-medium tabular-nums text-neutral-500 ring-1 ring-neutral-200">
-                      {t(`${k}letters`, { n: letters, defaultValue: 'Letters: {{n}}' })}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    className={ICON_BTN}
-                    disabled={!canRemove}
-                    onClick={() => edit((d) => removeWord(d, w.id))}
-                    aria-label={t(`${k}remove_word`, 'Remove word')}
-                    title={t(`${k}remove_word`, 'Remove word')}
-                  >
-                    <Trash size={15} aria-hidden />
-                  </button>
-                </div>
-                <CommitInput
-                  value={w.clue}
-                  onCommit={(clue) => edit((d) => updateWord(d, w.id, { clue }))}
-                  placeholder={t(`${k}clue_placeholder`, 'Clue shown to learners')}
-                  aria-label={t(`${k}clue_label`, 'Clue')}
-                  className={cn(FIELD_CLASS, 'h-9')}
-                />
-                <CommitInput
-                  value={w.explanation ?? ''}
-                  onCommit={(explanation) => edit((d) => updateWord(d, w.id, { explanation }))}
-                  placeholder={t(`${k}explanation_placeholder`, 'Explanation shown after the word (optional)')}
-                  aria-label={t(`${k}explanation_label`, 'Explanation')}
-                  className={cn(FIELD_CLASS, 'h-8 text-[12px]')}
-                />
-                <RowHints issues={issues} id={w.id} text={issueText} />
-              </div>
-            )
-          })}
-          <AddRowButton disabled={data.words.length >= WORD_GUESS_LIMITS.maxWords} onClick={() => edit((d) => addWord(d, newId()))}>
-            {t(`${k}add_word`, 'Add word')}
-          </AddRowButton>
-        </FormSection>
+            <div className="mx-auto flex w-full max-w-[26rem] flex-col gap-1.5 p-1">
+              <AnswerTiles
+                key={w.id}
+                value={w.answer}
+                onCommit={(answer) => edit((d) => updateWord(d, w.id, { answer }))}
+                ariaLabel={t(`${k}answer_placeholder`, { n: i + 1, defaultValue: 'Answer {{n}}' })}
+                placeholder={t(`${k}answer_placeholder`, { n: i + 1, defaultValue: 'Answer {{n}}' })}
+              />
+              <span className="pt-1 text-center text-[12px] text-neutral-400">
+                {t(`${k}type_answer`, 'Click the tiles and type the answer.')}{' '}
+                {letterCells(answerCells(w.answer)).length > 0 && t(`${k}letters`, { n: letterCells(answerCells(w.answer)).length, defaultValue: 'Letters: {{n}}' })}
+              </span>
+            </div>
 
-        <label className="flex flex-wrap items-center gap-2 text-[13px] text-neutral-700">
-          <span>{t(`${k}max_guesses_label`, 'Guesses per word')}</span>
-          <input
-            type="number"
-            min={WORD_GUESS_LIMITS.minGuesses}
-            max={WORD_GUESS_LIMITS.maxGuesses}
-            value={data.maxGuesses}
-            onKeyDown={(e) => e.stopPropagation()}
-            onChange={(e) => {
-              const n = Number(e.target.value)
-              if (Number.isFinite(n) && n >= WORD_GUESS_LIMITS.minGuesses && n <= WORD_GUESS_LIMITS.maxGuesses) commit({ maxGuesses: Math.round(n) })
-            }}
-            className={cn(FIELD_CLASS, 'h-9 w-20 tabular-nums')}
-          />
-          <span className="text-[12px] text-neutral-400">{t(`${k}max_guesses_hint`, 'Between 3 and 8.')}</span>
-        </label>
+            <div className="flex flex-col gap-1 rounded-xl bg-emerald-50/80 px-3.5 py-3">
+              <p className="m-0 text-[14px] text-neutral-800">{t('activities.experiences.word_guess.answer_was', { answer: answerText || '…', defaultValue: 'The word: {{answer}}' })}</p>
+              <InlineText
+                multiline
+                value={w.explanation ?? ''}
+                onCommit={(explanation) => edit((d) => updateWord(d, w.id, { explanation }))}
+                ariaLabel={t(`${k}explanation_label`, 'Explanation')}
+                placeholder={t(`${k}explanation_placeholder`, 'Explanation shown after the word (optional)')}
+                maxLength={400}
+                className="text-[13px] leading-relaxed text-neutral-600 [overflow-wrap:anywhere]"
+              />
+            </div>
+            <RemoveX floating disabled={!canRemove} onClick={remove} label={t(`${k}remove_word`, 'Remove word')} className="-top-1 -end-1" />
+          </div>
+        ) : null}
+        {wordIssues.map((x) => (
+          <InlineHint key={x.code} severity={x.severity}>
+            {issueText(x.code)}
+          </InlineHint>
+        ))}
+        <CardNav
+          count={count}
+          index={i}
+          onGo={go}
+          onAdd={add}
+          canAdd={count < WORD_GUESS_LIMITS.maxWords}
+          addLabel={t(`${k}add_word`, 'Add word')}
+          itemLabel={wordOf}
+          flagged={(n) => issues.some((x) => x.id === data.words[n]?.id)}
+          prevLabel={t(`${k}prev_word`, 'Previous word')}
+          nextLabel={t(`${k}next_word`, 'Next word')}
+        />
       </div>
     </ExperienceFrame>
   )
@@ -232,6 +356,11 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
   const [phase, setPhase] = React.useState<'play' | 'end'>('play')
   const [live, setLive] = React.useState('')
   const [shake, setShake] = React.useState<{ row: number; n: number } | null>(null)
+  // The guess whose tiles are flipping in the row (then the row resets for the next guess).
+  const [flash, setFlash] = React.useState<number | null>(null)
+  const reduced = usePrefersReducedMotion()
+  const flashTimer = React.useRef<number | undefined>(undefined)
+  React.useEffect(() => () => window.clearTimeout(flashTimer.current), [])
   const [best, setBest] = React.useState<number>(() => memory.read<number>('best', 0))
   const boardRef = React.useRef<HTMLButtonElement>(null)
   const nextRef = React.useRef<HTMLButtonElement>(null)
@@ -266,6 +395,7 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
 
   const type = (letter: string) => {
     if (done) return
+    if (flash !== null) setFlash(null)
     setRound((r) => (r ? typeLetter(r, letter) : r))
   }
   const erase = () => !done && setRound((r) => (r ? backspace(r) : r))
@@ -293,6 +423,11 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
     setLive(message)
     setShake(null)
     setRound(next)
+    window.clearTimeout(flashTimer.current)
+    if (next.status === 'playing') {
+      setFlash(next.guesses.length - 1)
+      flashTimer.current = window.setTimeout(() => setFlash(null), (reduced ? 700 : 900) + letters.length * 90)
+    } else setFlash(null)
     if (next.status !== 'playing') finishWord(next)
   }
   const hint = () => {
@@ -418,19 +553,25 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
 
   const gridCols = cells.map((c) => (c.kind === 'letter' ? 'minmax(0, 3rem)' : 'minmax(0, 0.85rem)')).join(' ')
   const font = tileFont(letters.length)
+  const locked = lockedSlots(round)
+  // The row shows the guess just scored (its flip), or the last one once the word is over; else the typing row.
+  const shownGuess = done ? round.guesses.length - 1 : flash
+  const shownLetter = (fold: string, i: number) => (fold ? displayLetter(letters[i] && letters[i].fold === fold ? letters[i].char : fold) : '')
+  const guessWord = (g: readonly string[]) => g.map((f, i) => shownLetter(f, i)).join('')
 
-  const renderRow = (r: number) => {
-    const scored = r < round.guesses.length
-    const isCurrent = !done && r === round.guesses.length
-    const guess = scored ? round.guesses[r] : isCurrent ? round.current : null
+  /** The single row of tiles: the guess being typed, or a scored guess flipping. */
+  const renderRow = () => {
+    const scored = shownGuess !== null && shownGuess >= 0
+    const guess = scored ? round.guesses[shownGuess] : round.current
+    const firstEmpty = scored ? -1 : round.current.findIndex((c, i) => !c && !locked.includes(i))
     let li = -1
     return (
       <span
-        // A refused Enter remounts the current row so the shake replays.
-        key={isCurrent && shake?.row === r ? `r${r}s${shake.n}` : `r${r}`}
+        // A refused Enter remounts the row so the shake replays; each scored guess remounts so the flip plays.
+        key={scored ? `g${shownGuess}` : shake ? `t${round.guesses.length}s${shake.n}` : `t${round.guesses.length}`}
         role="group"
-        aria-label={t(`${k}row_label`, { n: r + 1, defaultValue: 'Guess {{n}}' })}
-        className={cn('grid justify-center gap-1.5', isCurrent && shake?.row === r && 'lh-exp-shake')}
+        aria-label={scored ? t(`${k}row_label`, { n: shownGuess + 1, defaultValue: 'Guess {{n}}' }) : t(`${k}typing_row`, 'Your guess')}
+        className={cn('grid justify-center gap-1.5', !scored && shake && 'lh-exp-shake')}
         style={{ gridTemplateColumns: gridCols }}
       >
         {cells.map((c: Cell, ci) => {
@@ -444,9 +585,8 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
           li++
           const i = li
           const fold = guess?.[i] ?? ''
-          const shown = fold ? displayLetter(letters[i].fold === fold ? letters[i].char : fold) : ''
-          const score = scored ? round.scores[r][i] : null
-          const revealed = isCurrent && round.revealed.includes(i)
+          const shown = shownLetter(fold, i)
+          const score = scored ? round.scores[shownGuess][i] : locked.includes(i) && !round.revealed.includes(i) ? 'hit' : null
           if (score) {
             return (
               <span
@@ -455,7 +595,7 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
                 aria-label={t(`${k}tile`, { letter: shown, state: stateWord(score), defaultValue: '{{letter}}: {{state}}' })}
                 role="img"
                 style={{ '--exp-i': i } as React.CSSProperties}
-                className={cn('lh-exp-tile lh-exp-flip relative flex aspect-square items-center justify-center rounded-lg font-bold', font)}
+                className={cn('lh-exp-tile relative flex aspect-square items-center justify-center rounded-lg font-bold', scored && 'lh-exp-flip', font)}
               >
                 <span aria-hidden>{shown}</span>
                 {score === 'hit' && (
@@ -467,6 +607,7 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
               </span>
             )
           }
+          const revealed = round.revealed.includes(i)
           return (
             <span
               key={ci}
@@ -476,7 +617,7 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
                 font,
                 fold ? 'lh-exp-raised lh-exp-snap text-neutral-900' : 'lh-exp-well text-transparent',
                 revealed && 'text-sky-700',
-                !isCurrent && !fold && 'opacity-70',
+                i === firstEmpty && 'shadow-[inset_0_0_0_2px_rgba(14,165,233,0.45)]',
               )}
             >
               {shown || '·'}
@@ -487,6 +628,38 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
       </span>
     )
   }
+
+  /** Earlier guesses, newest first: small words with coloured letters (and the same marks). */
+  const history = round.guesses
+    .map((g, r) => ({ g, r }))
+    .filter(({ r }) => r !== shownGuess)
+    .reverse()
+  const historyChip = ({ g, r }: { g: string[]; r: number }) => (
+    <li
+      key={r}
+      role="img"
+      aria-label={t(`${k}history_item`, {
+        n: r + 1,
+        word: guessWord(g),
+        feedback: g.map((f, i) => `${shownLetter(f, i)}: ${stateWord(round.scores[r][i])}`).join(', '),
+        defaultValue: 'Guess {{n}}: {{word}} ({{feedback}})',
+      })}
+      className="lh-exp-raised inline-flex items-center gap-0.5 rounded-lg p-1"
+      dir={rtl ? 'rtl' : 'ltr'}
+    >
+      {g.map((f, i) => {
+        const s = round.scores[r][i]
+        return (
+          <span key={i} aria-hidden data-score={s} className="lh-exp-tile relative inline-flex h-6 w-6 items-center justify-center rounded-md text-[12px] font-bold">
+            {shownLetter(f, i)}
+            {s === 'near' && <span className="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-amber-500" />}
+            {s === 'hit' && <span className="absolute -end-0.5 -top-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-white text-emerald-600 shadow-[0_0_0_1px_rgba(5,150,105,0.4)]"><Check size={6} weight="bold" /></span>}
+          </span>
+        )
+      })}
+    </li>
+  )
+  const guessesLeft = round.maxGuesses - round.guesses.length
 
   const keyClass = (s?: LetterScore) =>
     cn(
@@ -504,8 +677,13 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
     <ExperienceFrame {...frame} title={data.title} footer={footer} live={live}>
       <div className="flex flex-col gap-4" onKeyDown={onKeyDown}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[13px] font-medium text-neutral-500">
+          <span className="flex items-center gap-2.5 text-[13px] font-medium text-neutral-500">
             {t(`${k}word_of`, { n: index + 1, total: data.words.length, defaultValue: 'Word {{n}} of {{total}}' })}
+            <span role="img" aria-label={t(`${k}guesses_left`, { n: guessesLeft, defaultValue: 'Guesses left: {{n}}' })} className="inline-flex items-center gap-1">
+              {Array.from({ length: round.maxGuesses }, (_, i) => (
+                <span key={i} aria-hidden className={cn('h-2 w-2 rounded-full', i < guessesLeft ? 'bg-sky-500' : 'lh-exp-well')} />
+              ))}
+            </span>
           </span>
           {!done && (
             <button
@@ -537,8 +715,13 @@ function WordGuessPlayer({ data, frame, source }: { data: WordGuessData; frame: 
           onClick={() => boardRef.current?.focus()}
           className="mx-auto flex w-full max-w-[26rem] cursor-text flex-col gap-1.5 rounded-xl p-1 outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
         >
-          {Array.from({ length: round.maxGuesses }, (_, r) => renderRow(r))}
+          {renderRow()}
         </button>
+        {history.length > 0 && (
+          <ol aria-label={t(`${k}history_label`, 'Earlier guesses')} className="m-0 -mt-1 flex list-none flex-wrap justify-center gap-1.5 p-0">
+            {history.map(historyChip)}
+          </ol>
+        )}
 
         {done ? (
           <div className={cn('lh-exp-slide-in flex flex-col gap-2 rounded-xl px-3.5 py-3', solvedNow ? 'bg-emerald-50/80' : 'bg-rose-50/70')}>

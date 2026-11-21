@@ -4,9 +4,9 @@
  compare it with a model answer and tick the key points you covered
  (self-explanation).
 
- Author: a single-column form (prompt, optional guiding questions, a word
- goal, an optional model answer, key points) with inline hints, and
- "Preview as learner" in the frame header.
+ Author: edit in place: the prompt, guiding questions and writing well as
+ learners see them, then the answer key (model answer, key points) under a
+ quiet label. The word goal lives behind the gear.
 
  Learner: the prompt, "Need a start?" hints, a writing well with a live word
  count toward the goal. The draft is saved on this device only
@@ -16,13 +16,19 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { CaretDown, Check, CheckCircle, Lightbulb, LockSimple, Note, NotePencil, Trash } from '@phosphor-icons/react'
+import { CaretDown, Check, CheckCircle, Key, Lightbulb, LockSimple, Note, NotePencil } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS, TEXTAREA_CLASS } from '../../../Blocks/ui/BlockChrome'
+import { CommitInput, FIELD_CLASS, SettingsField } from '../../../Blocks/ui/BlockChrome'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   buzz,
   useEnsureBlockId,
   useExperienceEditable,
@@ -46,7 +52,7 @@ import {
   validateReflect,
   type ReflectData,
 } from './reflectModel'
-import { AddRowButton, BlockHints, FormSection, ICON_BTN, NotReady, RowHints, contentKey, type Issue } from '../Sort/kit'
+import { InlineHint, NotReady, contentKey, type Issue } from '../Sort/kit'
 
 const TONE = 'document' as const
 
@@ -88,7 +94,10 @@ export default function ReflectView(props: NodeViewProps) {
   )
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// The learner's prompt, "Need a start?" questions and writing well, then the
+// answer key below a quiet label: the model answer note and the key points,
+// all edited where they sit. The word goal lives behind the gear.
 
 const ISSUE_FALLBACK: Record<string, string> = {
   empty_prompt: 'Write the prompt learners respond to.',
@@ -99,137 +108,183 @@ const ISSUE_FALLBACK: Record<string, string> = {
   nothing_to_compare: 'Add a model answer or key points so learners have something to compare with.',
 }
 
-function ListEditor({
-  items,
-  max,
-  list,
-  issues,
-  issueText,
-  placeholder,
-  label,
-  removeLabel,
-  addLabel,
-  onChange,
-}: {
-  items: string[]
-  max: number
-  list: 'guiding' | 'checklist'
-  issues: Issue[]
-  issueText: (_code: string) => string
-  placeholder: (_n: number) => string
-  label: (_n: number) => string
-  removeLabel: (_n: number) => string
-  addLabel: string
-  onChange: (_fn: (_live: string[]) => string[]) => void
-}) {
-  return (
-    <>
-      {items.map((value, i) => (
-        <div key={i} className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span aria-hidden className="w-5 shrink-0 text-center text-xs font-semibold tabular-nums text-neutral-400">
-              {list === 'checklist' ? <Check size={12} weight="bold" className="mx-auto" /> : i + 1}
-            </span>
-            <CommitInput
-              value={value}
-              onCommit={(v) => onChange((live) => updateEntry(live, i, v))}
-              placeholder={placeholder(i + 1)}
-              aria-label={label(i + 1)}
-              maxLength={200}
-              className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1')}
-            />
-            <button type="button" className={ICON_BTN} onClick={() => onChange((live) => removeEntry(live, i))} aria-label={removeLabel(i + 1)} title={removeLabel(i + 1)}>
-              <Trash size={15} aria-hidden />
-            </button>
-          </div>
-          <RowHints issues={issues} id={`${list}:${i}`} text={issueText} />
-        </div>
-      ))}
-      <AddRowButton disabled={items.length >= max} onClick={() => onChange((live) => addEntry(live, max))}>
-        {addLabel}
-      </AddRowButton>
-    </>
-  )
-}
-
 function ReflectEditor({ data, commit, frame }: { data: ReflectData; commit: (_p: CommitPatch<Record<string, any>>) => void; frame: Frame }) {
   const { t } = useTranslation()
   const k = (key: string, fallback: string, o: Record<string, unknown> = {}) => t(`editor.experiences.reflect.${key}`, { ...o, defaultValue: fallback })
+  const a = (key: string, fallback: string, o: Record<string, unknown> = {}) => t(`activities.experiences.reflect.${key}`, { ...o, defaultValue: fallback })
   const issues: Issue[] = React.useMemo(
     () => validateReflect(data).map((i) => ({ code: i.code, severity: i.severity, id: i.list ? `${i.list}:${i.index}` : undefined })),
     [data],
   )
   const issueText = (code: string) => t(`editor.experiences.reflect.issues.${code}`, ISSUE_FALLBACK[code] ?? code)
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const focusLater = (sel: string) => requestAnimationFrame(() => requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>(sel)?.focus()))
+  const editList = (key: 'guidingQuestions' | 'checklist', fn: (_live: string[]) => string[]) => commit((live) => ({ [key]: fn(normalizeReflect(live)[key]) }))
+  const hintsFor = (id: string) =>
+    issues
+      .filter((x) => x.id === id)
+      .map((x) => (
+        <InlineHint key={x.code} severity={x.severity}>
+          {issueText(x.code)}
+        </InlineHint>
+      ))
+
+  const settings = (
+    <SettingsGear>
+      <SettingsField label={k('min_words_label', 'Minimum words')} hint={k('min_words_hint', 'Learners can compare once they reach this. 0 lets them compare straight away.')}>
+        <CommitInput
+          type="number"
+          inputMode="numeric"
+          min={REFLECT_LIMITS.minWords}
+          max={REFLECT_LIMITS.maxWords}
+          value={String(data.minWords)}
+          onCommit={(v) => v.trim() !== '' && commit({ minWords: clampMinWords(v) })}
+          className={cn(FIELD_CLASS, 'tabular-nums')}
+        />
+      </SettingsField>
+    </SettingsGear>
+  )
 
   return (
-    <ExperienceFrame {...frame} title={data.title} onTitleChange={(title) => commit({ title })} titlePlaceholder={k('title_placeholder', 'Name this reflection')}>
-      <div className="flex flex-col gap-5">
-        <BlockHints issues={issues} text={issueText} />
+    <ExperienceFrame
+      {...frame}
+      wysiwyg
+      title={data.title}
+      onTitleChange={(title) => commit({ title })}
+      titlePlaceholder={k('title_placeholder', 'Name this reflection')}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
+    >
+      <div ref={rootRef} className="flex flex-col gap-4">
+        {issues
+          .filter((x) => !x.id)
+          .map((x) => (
+            <InlineHint key={x.code} severity={x.severity}>
+              {issueText(x.code)}
+            </InlineHint>
+          ))}
+        <InlineText
+          multiline
+          value={data.prompt}
+          onCommit={(prompt) => commit({ prompt })}
+          ariaLabel={k('prompt_heading', 'Prompt')}
+          placeholder={k('prompt_placeholder', 'What should learners explain in their own words?')}
+          maxLength={600}
+          className="text-[16px] leading-relaxed font-semibold text-neutral-900 [overflow-wrap:anywhere]"
+        />
 
-        <FormSection title={k('prompt_heading', 'Prompt')}>
-          <CommitInput
-            multiline
-            value={data.prompt}
-            onCommit={(prompt) => commit({ prompt })}
-            placeholder={k('prompt_placeholder', 'What should learners explain in their own words?')}
-            aria-label={k('prompt_heading', 'Prompt')}
-            className={cn(TEXTAREA_CLASS, 'min-h-[64px] resize-y text-[14px]')}
-          />
-        </FormSection>
+        {/* "Need a start?": the guiding questions, shown open. */}
+        <div className="flex flex-col gap-2">
+          <span className="lh-exp-raised inline-flex h-8 items-center gap-1.5 self-start rounded-lg px-2.5 text-[13px] font-medium text-amber-800">
+            <Lightbulb size={14} weight="fill" aria-hidden />
+            {a('need_start', 'Need a start?')}
+            <span className="text-[12px] font-normal text-amber-700/70">{k('guiding_optional', 'optional')}</span>
+          </span>
+          <ul aria-label={k('guiding_heading', 'Guiding questions')} className="m-0 flex list-none flex-col gap-1.5 rounded-xl bg-amber-50/70 p-3">
+            {data.guidingQuestions.map((g, i) => (
+              <li key={i} data-guiding={i} className={cn('relative flex flex-col gap-0.5', EDIT_OBJECT)}>
+                <span className="flex items-start gap-2 text-[13.5px] leading-relaxed text-amber-950">
+                  <span aria-hidden className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                  <InlineText
+                    value={g}
+                    onCommit={(v) => editList('guidingQuestions', (live) => updateEntry(live, i, v))}
+                    ariaLabel={k('guiding_label', 'Guiding question {{n}}', { n: i + 1 })}
+                    placeholder={k('guiding_placeholder', 'Question {{n}}', { n: i + 1 })}
+                    maxLength={200}
+                    className="min-w-0 flex-1 [overflow-wrap:anywhere]"
+                  />
+                  <RemoveX onClick={() => editList('guidingQuestions', (live) => removeEntry(live, i))} label={k('remove_guiding', 'Remove question {{n}}', { n: i + 1 })} />
+                </span>
+                {hintsFor(`guiding:${i}`)}
+              </li>
+            ))}
+            {data.guidingQuestions.length < REFLECT_LIMITS.maxGuiding && (
+              <li>
+                <AddGhost
+                  onClick={() => {
+                    editList('guidingQuestions', (live) => addEntry(live, REFLECT_LIMITS.maxGuiding))
+                    focusLater(`[data-guiding="${data.guidingQuestions.length}"] textarea`)
+                  }}
+                  iconSize={12}
+                  className="h-8 rounded-lg px-2.5 text-[12.5px]"
+                >
+                  {k('add_guiding', 'Add question')}
+                </AddGhost>
+              </li>
+            )}
+          </ul>
+        </div>
 
-        <FormSection title={k('guiding_heading', 'Guiding questions')} hint={k('guiding_hint', 'Optional hints learners can open if they are stuck (up to 5).')}>
-          <ListEditor
-            items={data.guidingQuestions}
-            max={REFLECT_LIMITS.maxGuiding}
-            list="guiding"
-            issues={issues}
-            issueText={issueText}
-            placeholder={(n) => k('guiding_placeholder', 'Question {{n}}', { n })}
-            label={(n) => k('guiding_label', 'Guiding question {{n}}', { n })}
-            removeLabel={(n) => k('remove_guiding', 'Remove question {{n}}', { n })}
-            addLabel={k('add_guiding', 'Add question')}
-            onChange={(fn) => commit((live) => ({ guidingQuestions: fn(normalizeReflect(live).guidingQuestions) }))}
-          />
-        </FormSection>
+        {/* The writing well, as learners get it. */}
+        <div aria-hidden className="lh-exp-well flex flex-col rounded-2xl">
+          <div className="lh-exp-paper-lines min-h-24 px-4 pt-3.5 pb-2 text-[15px] leading-7 text-neutral-400">{a('placeholder', 'Start writing in your own words…')}</div>
+          <div className="flex items-center gap-3 px-4 pt-1 pb-3">
+            {data.minWords > 0 ? <div className="h-1.5 flex-1 rounded-full bg-black/[0.06]" /> : <span className="flex-1" />}
+            <span className="shrink-0 text-[12px] font-medium tabular-nums text-neutral-500">
+              {data.minWords > 0 ? a('words_progress', '{{n}} of {{min}} words', { n: 0, min: data.minWords }) : a('words_count', 'Words: {{n}}', { n: 0 })}
+            </span>
+          </div>
+        </div>
 
-        <FormSection title={k('min_words_label', 'Minimum words')} hint={k('min_words_hint', 'Learners can compare once they reach this. 0 lets them compare straight away.')}>
-          <CommitInput
-            type="number"
-            inputMode="numeric"
-            min={REFLECT_LIMITS.minWords}
-            max={REFLECT_LIMITS.maxWords}
-            value={String(data.minWords)}
-            onCommit={(v) => v.trim() !== '' && commit({ minWords: clampMinWords(v) })}
-            aria-label={k('min_words_label', 'Minimum words')}
-            className={cn(FIELD_CLASS, 'h-9 w-28 tabular-nums')}
-          />
-        </FormSection>
-
-        <FormSection title={k('model_heading', 'Model answer')} hint={k('model_hint', 'Optional. Learners see it after writing their own.')}>
-          <CommitInput
-            multiline
-            value={data.modelAnswer}
-            onCommit={(modelAnswer) => commit({ modelAnswer })}
-            placeholder={k('model_placeholder', 'A good answer, in a few sentences')}
-            aria-label={k('model_heading', 'Model answer')}
-            className={cn(TEXTAREA_CLASS, 'min-h-[88px] resize-y')}
-          />
-        </FormSection>
-
-        <FormSection title={k('checklist_heading', 'Key points')} hint={k('checklist_hint', 'Learners tick the points they covered; that becomes their score (up to 8).')}>
-          <ListEditor
-            items={data.checklist}
-            max={REFLECT_LIMITS.maxChecklist}
-            list="checklist"
-            issues={issues}
-            issueText={issueText}
-            placeholder={(n) => k('point_placeholder', 'Key point {{n}}', { n })}
-            label={(n) => k('point_label', 'Key point {{n}}', { n })}
-            removeLabel={(n) => k('remove_point', 'Remove key point {{n}}', { n })}
-            addLabel={k('add_point', 'Add key point')}
-            onChange={(fn) => commit((live) => ({ checklist: fn(normalizeReflect(live).checklist) }))}
-          />
-        </FormSection>
+        {/* The answer key: shown after learners write. */}
+        <div className="flex flex-col gap-3 pt-1">
+          <span className="flex items-center gap-1.5 text-[12px] font-medium text-neutral-400">
+            <Key size={13} weight="duotone" aria-hidden className="text-amber-500" />
+            {k('answer_key', 'Answer key')}
+          </span>
+          <article className="lh-exp-note relative rounded-xl px-4 pt-3.5 pb-4">
+            <h4 className="m-0 mb-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-rose-700">
+              <Note size={15} weight="duotone" aria-hidden />
+              {a('model_title', 'Model answer')}
+            </h4>
+            <InlineText
+              multiline
+              value={data.modelAnswer}
+              onCommit={(modelAnswer) => commit({ modelAnswer })}
+              ariaLabel={k('model_heading', 'Model answer')}
+              placeholder={k('model_placeholder', 'A good answer, in a few sentences')}
+              maxLength={2000}
+              className="text-[14.5px] leading-7 text-neutral-800 [overflow-wrap:anywhere]"
+            />
+          </article>
+          <div className="flex flex-col gap-2">
+            <h4 className="m-0 text-[14px] font-semibold text-neutral-800">{a('checklist_title', 'Which key points did you cover?')}</h4>
+            <ul aria-label={k('checklist_heading', 'Key points')} className="m-0 flex list-none flex-col gap-2 p-0">
+              {data.checklist.map((point, i) => (
+                <li key={i} data-point={i} className="flex flex-col gap-1">
+                  <div className={cn('lh-exp-raised relative flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-start text-[14px] text-neutral-800', EDIT_OBJECT)}>
+                    <span aria-hidden className="lh-exp-well inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-transparent">
+                      <Check size={12} weight="bold" />
+                    </span>
+                    <InlineText
+                      value={point}
+                      onCommit={(v) => editList('checklist', (live) => updateEntry(live, i, v))}
+                      ariaLabel={k('point_label', 'Key point {{n}}', { n: i + 1 })}
+                      placeholder={k('point_placeholder', 'Key point {{n}}', { n: i + 1 })}
+                      maxLength={200}
+                      className="min-w-0 flex-1 [overflow-wrap:anywhere]"
+                    />
+                    <RemoveX floating onClick={() => editList('checklist', (live) => removeEntry(live, i))} label={k('remove_point', 'Remove key point {{n}}', { n: i + 1 })} />
+                  </div>
+                  {hintsFor(`checklist:${i}`)}
+                </li>
+              ))}
+              {data.checklist.length < REFLECT_LIMITS.maxChecklist && (
+                <li>
+                  <AddGhost
+                    onClick={() => {
+                      editList('checklist', (live) => addEntry(live, REFLECT_LIMITS.maxChecklist))
+                      focusLater(`[data-point="${data.checklist.length}"] textarea`)
+                    }}
+                    className="min-h-11 w-full rounded-xl px-3 text-[14px]"
+                  >
+                    {k('add_point', 'Add key point')}
+                  </AddGhost>
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
       </div>
     </ExperienceFrame>
   )

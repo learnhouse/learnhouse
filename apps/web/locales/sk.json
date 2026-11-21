@@ -4352,7 +4352,11 @@
         "solved_mark": "Vyriešené",
         "missed_mark": "Nevyriešené",
         "play_again": "Hrať znova",
-        "best": "Najlepšie"
+        "best": "Najlepšie",
+        "guesses_left": "Zostávajúce pokusy: {{n}}",
+        "history_item": "Pokus {{n}}: {{word}} ({{feedback}})",
+        "history_label": "Predchádzajúce pokusy",
+        "typing_row": "Váš pokus"
       },
       "confidence": {
         "instructions": "Odpovedz a potom povedz, nakoľko si istý.",
@@ -14196,7 +14200,6 @@
       "not_found": "Scenár sa nenašiel",
       "not_found_hint": "Skontrolujte konfiguráciu scenára a skúste to znova.",
       "illustration_alt": "Ilustrácia scenára",
-      "max_scenarios": "Povolených je najviac 40 scenárov",
       "new_scenario_text": "Text nového scenára...",
       "default_option_1": "Možnosť 1",
       "default_option_2": "Možnosť 2",
@@ -14901,7 +14904,6 @@
         },
         "jump_to": "Prejsť na ten krok",
         "leads_to": "Vedie na",
-        "limits": "Najviac {{max}} krokov, {{choices}} volieb v každom.",
         "map_hint": "Kliknutím na krok ho upravíte tu. Šípky ukazujú, kam vedie každá voľba.",
         "missing_step": "Chýbajúci krok",
         "move_down": "Posunúť dole",
@@ -15590,7 +15592,10 @@
         "issue_duplicateOption": "Dve možnosti sú rovnaké.",
         "example": {
           "title": "Rýchle počty"
-        }
+        },
+        "question_of": "Otázka {{n}} z {{total}}",
+        "prev_question": "Predchádzajúca otázka",
+        "next_question": "Ďalšia otázka"
       },
       "estimate": {
         "name": "Odhad",
@@ -15620,7 +15625,8 @@
           "explanation": "Dospelý človek má 206 kostí. Bábätká sa rodia s asi 300; niektoré pri raste zrastú.",
           "unit": "kostí"
         },
-        "fill_example": "Použiť príklad"
+        "fill_example": "Použiť príklad",
+        "answer_marker": "Odpoveď: {{value}}"
       },
       "code_lock": {
         "name": "Kódový zámok",
@@ -15656,7 +15662,9 @@
           "c3": "Koľko je kontinentov?",
           "c3_hint": "Afrika je jedným z nich.",
           "reward": "Dvere sa otvoria. Výborne, detektív!"
-        }
+        },
+        "answer_masked": "Odpoveď (skrytá, kým na ňu nekliknete)",
+        "padlock_label": "Visiaci zámok s {{n}} kolieskami"
       },
       "scenarios": {
         "chip_unreachable": "K tomuto kroku sa nikto nedostane",
@@ -15703,7 +15711,11 @@
           "step3": "Zákazník sa ešte viac nahnevá. Čo teraz?",
           "step3_a": "Ospravedlniť sa a spýtať sa na číslo objednávky",
           "step3_b": "Ukončiť hovor"
-        }
+        },
+        "then_short": "Potom",
+        "open_target": "Otvoriť ten krok",
+        "steps_label": "Kroky",
+        "editing_hint": "Upravujete príbeh. V náhľade si ho zahráte ako študent."
       },
       "flashcards": {
         "title_placeholder": "Názov balíčka (voliteľné)",
@@ -15828,7 +15840,6 @@
           "step4": "Voda steká späť do mora"
         },
         "add_step": "Pridať krok",
-        "detail_label": "Detail",
         "detail_placeholder": "Detail, napr. 1969",
         "drag_short": "Potiahnutím zmeníte poradie",
         "drag_step": "Presunúť krok {{n}} (potiahnutím alebo šípkami)",
@@ -15840,13 +15851,14 @@
           "too_many_items": "Použite najviac 10 krokov; študenti uvidia len prvých 10."
         },
         "items_heading": "Kroky v správnom poradí",
-        "items_hint": "Študenti ich dostanú zamiešané.",
         "layout_label": "Rozloženie",
-        "remove_step": "Odstrániť krok",
         "step_placeholder": "Krok {{n}}",
         "timeline_hint": "Detail každého kroku (napríklad rok) sa odhalí, keď študenti skontrolujú odpovede.",
         "variant_list": "Zoznam",
-        "variant_timeline": "Časová os"
+        "variant_timeline": "Časová os",
+        "author_hint": "Toto je správne poradie; študenti dostanú kroky premiešané. Presuňte krok alebo použite šípky na zmenu poradia.",
+        "detail_label_n": "Detail kroku {{n}}",
+        "remove_named": "Odstrániť „{{item}}“"
       },
       "match": {
         "title": "Dvojice",
@@ -15907,22 +15919,22 @@
         "placeholder_prompt": "Ukážkový obrázok: pridaj vlastný",
         "stage_help": "Kliknutím na obrázok pridáš bod. Bod presunieš potiahnutím alebo ho označ a použi šípky.",
         "spots_label": "Body",
-        "empty_list": "Zatiaľ žiadne body. Kliknutím na obrázok pridáš prvý.",
         "spot_aria": "Bod {{n}}: {{label}}",
         "untitled_spot": "bez názvu",
-        "move_hint": "Označ, potom ťahaj po obrázku alebo použi šípky",
         "select_spot": "Označiť bod {{n}}",
         "label_placeholder": "Čo je tu?",
         "label_label": "Popis bodu {{n}}",
         "remove_spot": "Odstrániť bod {{n}}",
-        "hint_label_short": "Pridaj popis, aby študenti vedeli, čo našli.",
         "explanation_placeholder": "Vysvetlenie zobrazené po nájdení (voliteľné)",
         "explanation_label": "Vysvetlenie bodu {{n}}",
         "size_label": "Veľkosť",
         "hint_no_image": "Používa sa ukážkový obrázok. Pridaj vlastný vyššie.",
         "hint_no_spots": "Pridaj aspoň jeden bod.",
         "hint_missing_label": "Bod {{n}} nemá popis.",
-        "hint_overlap": "Body {{a}} a {{b}} sa prekrývajú, takže jeden môže byť ťažké trafiť."
+        "hint_overlap": "Body {{a}} a {{b}} sa prekrývajú, takže jeden môže byť ťažké trafiť.",
+        "mode_find_hint": "Študenti klikajú na obrázok, aby našli každé miesto.",
+        "mode_explore_hint": "Študenti otvárajú očíslované špendlíky a čítajú o každom mieste.",
+        "pin_hint": "Kliknite na úpravu. Presúvajte ťahaním alebo šípkami."
       },
       "gaps": {
         "title": "Doplň medzery",
@@ -15944,8 +15956,19 @@
         "hint_no_gaps": "Zatiaľ žiadne medzery. Označ slovo a stlač Vytvoriť medzeru.",
         "hint_empty_gap": "Prázdna medzera [[ ]] sa ignoruje. Vlož do nej odpoveď.",
         "hint_unclosed": "Medzere chýba zatvárací ]].",
-        "preview_label": "Náhľad",
-        "gap_count": "Medzery: {{n}}"
+        "answers_hint": "Študenti môžu napísať ktorúkoľvek z týchto odpovedí. Prvá ide do banky slov.",
+        "answer_label": "Prijatá odpoveď {{n}}",
+        "remove_answer": "Odstrániť „{{answer}}“",
+        "add_answer": "Pridať ďalšiu prijatú odpoveď",
+        "remove_gap": "Odstrániť medzeru (ponechať slovo)",
+        "gap_title": "Medzera {{n}}",
+        "gap_aria": "Medzera {{n}}: {{answer}}. Upraviť prijaté odpovede",
+        "passage_hint": "Kliknite na úpravu textu. Označte slová a potom „Vytvoriť medzeru“.",
+        "passage_placeholder": "Sem napíšte svoj text…",
+        "edit_text": "Upraviť text",
+        "make_gap_ready": "Stlačte „Vytvoriť medzeru“ a označené slová sa zmenia na medzeru.",
+        "select_hint": "Označte slová a vytvorte medzeru. Kliknutím na medzeru upravíte jej odpovede.",
+        "done_editing": "Hotovo"
       },
       "spot_mistake": {
         "title": "Nájdi chybu",
@@ -15973,8 +15996,6 @@
         "split_help_code": "Každý riadok je jedna možnosť. Prázdne riadky zostanú, ale nedajú sa vybrať.",
         "segments_label": "Časti",
         "segment_n": "Časť {{n}}",
-        "is_mistake": "Chyba",
-        "is_correct": "Správne",
         "correction_placeholder": "Opravená verzia",
         "correction_label": "Oprava časti {{n}}",
         "hint_correction_short": "Pridaj opravenú verziu, aby sa z nej študenti mohli učiť.",
@@ -15983,7 +16004,14 @@
         "hint_too_few": "Pridaj aspoň dve vety alebo riadky.",
         "hint_no_mistakes": "Označ aspoň jednu časť ako chybu.",
         "hint_all_mistakes": "Každá časť je označená ako chyba. Niektoré nechaj správne.",
-        "hint_missing_correction": "Časť {{n}} je chyba bez opravy."
+        "hint_missing_correction": "Časť {{n}} je chyba bez opravy.",
+        "unmark_hint": "Chyba. Kliknutím ju označíte ako správnu.",
+        "mark_hint": "Kliknutím to označíte ako chybu.",
+        "edit_text": "Upraviť text",
+        "author_hint": "Kliknutím na časť ju označíte ako chybu a nižšie napíšete opravu.",
+        "mistakes_label": "Chyby a ich opravy",
+        "unmark_named": "Označiť časť {{n}} ako správnu",
+        "done_editing": "Hotovo"
       },
       "venn": {
         "title": "Vennovo porovnanie",
@@ -16009,13 +16037,8 @@
         "zone_both": "Obe",
         "zone_neither": "Ani jedna",
         "zone_only": "Iba {{set}}",
-        "sets_heading": "Dve skupiny",
         "change_color": "Zmeniť farbu",
-        "items_heading": "Položky",
-        "items_hint": "Vyberte, kam patrí každá položka. Študenti ich uvidia zamiešané.",
         "item_placeholder": "Položka {{n}}",
-        "item_zone": "Kam patrí",
-        "remove_item": "Odstrániť položku",
         "explanation_placeholder": "Prečo patrí sem (zobrazí sa pri chybe, nepovinné)",
         "explanation_label": "Vysvetlenie",
         "add_item": "Pridať položku",
@@ -16031,7 +16054,16 @@
           "duplicate_item": "Iná položka má rovnaký text.",
           "neither_hidden": "Zapnite oblasť „Ani jedna“, inak študenti túto položku neuvidia.",
           "no_both": "Zatiaľ žiadna položka nepatrí do oboch skupín; prienik je tá zaujímavá časť."
-        }
+        },
+        "moved": "„{{item}}“ presunuté do: {{zone}}.",
+        "move_item": "Presunúť „{{item}}“",
+        "move_hint": "Presuňte na iné miesto alebo stlačte 1–4",
+        "why_label": "Prečo „{{item}}“ patrí sem",
+        "remove_named": "Odstrániť „{{item}}“",
+        "add_to": "Pridať položku do: {{zone}}",
+        "author_selected": "Teraz ťuknite tam, kam patrí „{{item}}“.",
+        "author_hint": "Každá položka je tam, kam patrí. Presuňte položku alebo ťuknite na jej úchyt a potom na miesto.",
+        "why_heading": "Prečo „{{item}}“ patrí do: {{zone}} (zobrazí sa pri chybnej odpovedi)"
       },
       "label": {
         "title": "Popíšte diagram",
@@ -16063,9 +16095,6 @@
         "untitled_pin": "Bez názvu",
         "stage_help": "Kliknutím na obrázok pridáte bod. Bod presuniete potiahnutím alebo šípkami.",
         "pins_label": "Body",
-        "empty_list": "Zatiaľ žiadne body. Kliknutím na obrázok pridajte prvý.",
-        "move_hint": "Vyberte a presuňte šípkami",
-        "select_pin": "Vybrať bod {{n}}",
         "label_placeholder": "Popis",
         "label_label": "Popis bodu {{n}}",
         "remove_pin": "Odstrániť bod {{n}}",
@@ -16073,7 +16102,8 @@
         "distractors_hint": "Navyše popisy, ktoré nikam nepatria. Nútia premýšľať namiesto hádania.",
         "distractor_placeholder": "Falošný popis {{n}}",
         "remove_distractor": "Odstrániť falošný popis",
-        "add_distractor": "Pridať falošný popis"
+        "add_distractor": "Pridať falošný popis",
+        "author_hint": "Každý štítok je pri svojom bode. Kliknutím na obrázok pridáte bod; bod presuniete ťahaním."
       },
       "word_guess": {
         "title": "Uhádni slovo",
@@ -16090,8 +16120,6 @@
           "w3_clue": "To, čo veci rozhýbe, zohreje alebo rozžiari.",
           "w3_why": "Energia mení podobu, napríklad z jedla na pohyb, ale nikdy sa nestratí."
         },
-        "words_heading": "Slová",
-        "words_hint": "Študenti hádajú každé slovo podľa nápovedy. Medzery a spojovníky sú zobrazené vopred.",
         "answer_placeholder": "Odpoveď {{n}}",
         "letters": "Písmená: {{n}}",
         "remove_word": "Odstrániť slovo",
@@ -16111,14 +16139,15 @@
           "too_short": "Použite aspoň 2 písmená.",
           "too_long": "Použite najviac 12 písmen, aby sa políčka zmestili na mobil.",
           "duplicate_answer": "Iné slovo má rovnakú odpoveď."
-        }
+        },
+        "type_answer": "Kliknite na políčka a napíšte odpoveď.",
+        "prev_word": "Predchádzajúce slovo",
+        "next_word": "Ďalšie slovo"
       },
       "confidence": {
         "title": "Test istoty",
         "description": "Odpovedz a povedz, nakoľko si istý, aby si odhalil, čo si len myslíš, že vieš.",
         "title_placeholder": "Pomenuj tento test",
-        "questions_heading": "Otázky",
-        "questions_hint": "Študenti vyberú odpoveď a mieru istoty a potom uvidia, či mali pravdu.",
         "prompt_placeholder": "Otázka {{n}}",
         "prompt_label": "Otázka {{n}}",
         "correct_group": "Správna odpoveď na otázku {{n}}",
@@ -16157,7 +16186,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "Predchádzajúca otázka",
+        "next_question": "Ďalšia otázka"
       },
       "matrix": {
         "title": "Mriežka vlastností",
@@ -16174,18 +16205,13 @@
           "flies": "Vie lietať",
           "swims": "Pláva"
         },
-        "rows_heading": "Riadky",
-        "columns_heading": "Stĺpce",
         "row_placeholder": "Riadok {{n}}",
         "column_placeholder": "Stĺpec {{n}}",
         "add_row": "Pridať riadok",
         "add_column": "Pridať stĺpec",
-        "remove_row": "Odstrániť riadok",
-        "remove_column": "Odstrániť stĺpec",
         "mode_label": "Typ odpovede",
         "mode_multi": "Viac v riadku",
         "mode_single": "Jedna v riadku",
-        "answers_heading": "Správne odpovede",
         "answers_hint_multi": "Zaškrtnite každú pravdivú bunku.",
         "answers_hint_single": "Vyberte pre každý riadok jeden správny stĺpec.",
         "cell_label": "{{row}}: {{column}}",
@@ -16201,7 +16227,9 @@
           "unused_column": "Žiadny riadok ešte nemá túto vlastnosť.",
           "duplicate_row": "Iný riadok má rovnaký názov.",
           "duplicate_column": "Iný stĺpec má rovnaký názov."
-        }
+        },
+        "remove_column_named": "Odstrániť stĺpec „{{column}}“",
+        "remove_row_named": "Odstrániť riadok „{{row}}“"
       },
       "reflect": {
         "title": "Reflexia",
@@ -16210,7 +16238,6 @@
         "prompt_heading": "Zadanie",
         "prompt_placeholder": "Čo majú študenti vysvetliť vlastnými slovami?",
         "guiding_heading": "Pomocné otázky",
-        "guiding_hint": "Voliteľné nápovedy, ktoré si študenti môžu otvoriť, keď sa zaseknú (najviac 5).",
         "guiding_placeholder": "Otázka {{n}}",
         "guiding_label": "Pomocná otázka {{n}}",
         "remove_guiding": "Odstrániť otázku {{n}}",
@@ -16218,10 +16245,8 @@
         "min_words_label": "Minimálny počet slov",
         "min_words_hint": "Študenti môžu porovnať po dosiahnutí tohto počtu. Pri 0 hneď.",
         "model_heading": "Vzorová odpoveď",
-        "model_hint": "Voliteľné. Študenti ju uvidia po napísaní vlastnej.",
         "model_placeholder": "Dobrá odpoveď v niekoľkých vetách",
         "checklist_heading": "Kľúčové body",
-        "checklist_hint": "Študenti zaškrtnú body, ktoré pokryli; to je ich skóre (najviac 8).",
         "point_placeholder": "Kľúčový bod {{n}}",
         "point_label": "Kľúčový bod {{n}}",
         "remove_point": "Odstrániť kľúčový bod {{n}}",
@@ -16245,7 +16270,9 @@
           "p2": "Zem obehne Slnko za rok",
           "p3": "Priamejšie slnečné svetlo a dlhšie dni v lete",
           "p4": "Nespôsobuje to vzdialenosť od Slnka"
-        }
+        },
+        "guiding_optional": "voliteľné",
+        "answer_key": "Kľúč odpovedí"
       }
     }
   },

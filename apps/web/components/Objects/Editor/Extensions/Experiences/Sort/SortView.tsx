@@ -454,13 +454,6 @@ function SortAuthor({ data, commit, frame }: { data: SortData; commit: (_p: Comm
           )}
         </div>
         {orphans.length > 0 && hintsFor(orphans.map((it) => it.id))}
-
-        {/* What learners see under the groups, inert here. */}
-        <div aria-hidden className="flex flex-wrap items-center gap-3">
-          <button type="button" tabIndex={-1} disabled className="lh-exp-key">
-            {t('activities.experiences.sort.check', 'Check')}
-          </button>
-        </div>
       </div>
       {drag && <DragGhost x={drag.x} y={drag.y}>{itemName(data.items.find((x) => x.id === drag.id) ?? { id: '', text: '', categoryId: '' })}</DragGhost>}
     </ExperienceFrame>

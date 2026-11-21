@@ -4192,7 +4192,11 @@
         "solved_mark": "已猜对",
         "missed_mark": "未猜对",
         "play_again": "再玩一次",
-        "best": "最佳"
+        "best": "最佳",
+        "guesses_left": "剩余次数:{{n}}",
+        "history_item": "第 {{n}} 次:{{word}}({{feedback}})",
+        "history_label": "之前的猜测",
+        "typing_row": "你的猜测"
       },
       "confidence": {
         "instructions": "先作答，再说说你有多大把握。",
@@ -13686,7 +13690,6 @@
       "not_found": "未找到情景",
       "not_found_hint": "请检查您的情景配置后重试。",
       "illustration_alt": "情景插图",
-      "max_scenarios": "最多允许 40 个情景",
       "new_scenario_text": "新情景文本...",
       "default_option_1": "选项 1",
       "default_option_2": "选项 2",
@@ -14371,7 +14374,6 @@
         },
         "jump_to": "跳转到该步骤",
         "leads_to": "通向",
-        "limits": "最多 {{max}} 个步骤，每个步骤最多 {{choices}} 个选项。",
         "map_hint": "点击某个步骤即可在此编辑。箭头表示每个选项通向的位置。",
         "missing_step": "缺失的步骤",
         "move_down": "下移",
@@ -14991,7 +14993,10 @@
         "issue_duplicateOption": "有两个选项相同。",
         "example": {
           "title": "速算"
-        }
+        },
+        "question_of": "第 {{n}} 题,共 {{total}} 题",
+        "prev_question": "上一题",
+        "next_question": "下一题"
       },
       "estimate": {
         "name": "估一估",
@@ -15021,7 +15026,8 @@
           "explanation": "成年人有 206 块骨头。婴儿出生时约有 300 块，其中一些会随着成长融合在一起。",
           "unit": "块"
         },
-        "fill_example": "使用示例"
+        "fill_example": "使用示例",
+        "answer_marker": "答案:{{value}}"
       },
       "code_lock": {
         "name": "密码锁",
@@ -15057,7 +15063,9 @@
           "c3": "世界上有几个大洲？",
           "c3_hint": "非洲是其中之一。",
           "reward": "门开了。干得好，侦探！"
-        }
+        },
+        "answer_masked": "答案(点击前隐藏)",
+        "padlock_label": "有 {{n}} 个转轮的挂锁"
       },
       "scenarios": {
         "chip_unreachable": "没有路径到达此步骤",
@@ -15104,7 +15112,11 @@
           "step3": "顾客更生气了。现在怎么办？",
           "step3_a": "道歉并询问订单号",
           "step3_b": "挂断电话"
-        }
+        },
+        "then_short": "然后",
+        "open_target": "打开那一步",
+        "steps_label": "步骤",
+        "editing_hint": "你正在编辑故事。使用预览以学习者身份体验。"
       },
       "flashcards": {
         "title_placeholder": "卡组标题（可选）",
@@ -15229,7 +15241,6 @@
           "step4": "水流回大海"
         },
         "add_step": "添加步骤",
-        "detail_label": "详情",
         "detail_placeholder": "详情，例如 1969",
         "drag_short": "拖动以重新排序",
         "drag_step": "移动步骤 {{n}}（拖动或使用方向键）",
@@ -15241,13 +15252,14 @@
           "too_many_items": "最多使用 10 个步骤；学员只能看到前 10 个。"
         },
         "items_heading": "步骤（按正确顺序）",
-        "items_hint": "学员看到的顺序是打乱的。",
         "layout_label": "布局",
-        "remove_step": "删除步骤",
         "step_placeholder": "步骤 {{n}}",
         "timeline_hint": "学员检查后，会揭晓每个步骤的详情（如年份）。",
         "variant_list": "列表",
-        "variant_timeline": "时间线"
+        "variant_timeline": "时间线",
+        "author_hint": "这是正确的顺序;学习者看到的步骤是打乱的。拖动步骤或使用箭头来调整顺序。",
+        "detail_label_n": "第 {{n}} 步的细节",
+        "remove_named": "删除“{{item}}”"
       },
       "match": {
         "title": "配对",
@@ -15308,22 +15320,22 @@
         "placeholder_prompt": "示例图片：请添加你自己的图片",
         "stage_help": "点击图片添加标记点。拖动标记点可移动它，也可以选中后用方向键移动。",
         "spots_label": "标记点",
-        "empty_list": "还没有标记点。点击图片即可添加。",
         "spot_aria": "标记点 {{n}}：{{label}}",
         "untitled_spot": "未命名",
-        "move_hint": "先选中，再在图片上拖动或使用方向键",
         "select_spot": "选择标记点 {{n}}",
         "label_placeholder": "这里是什么？",
         "label_label": "标记点 {{n}} 的标签",
         "remove_spot": "移除标记点 {{n}}",
-        "hint_label_short": "添加标签，让学习者知道自己找到了什么。",
         "explanation_placeholder": "找到后显示的解释（可选）",
         "explanation_label": "标记点 {{n}} 的解释",
         "size_label": "大小",
         "hint_no_image": "正在使用示例图片。请在上方添加你自己的图片。",
         "hint_no_spots": "请至少添加一个标记点。",
         "hint_missing_label": "标记点 {{n}} 没有标签。",
-        "hint_overlap": "标记点 {{a}} 和 {{b}} 重叠，可能有一个不容易点中。"
+        "hint_overlap": "标记点 {{a}} 和 {{b}} 重叠，可能有一个不容易点中。",
+        "mode_find_hint": "学习者点击图片找出每个位置。",
+        "mode_explore_hint": "学习者打开编号图钉,阅读每个位置的说明。",
+        "pin_hint": "点击可编辑。拖动或使用方向键移动。"
       },
       "gaps": {
         "title": "填空",
@@ -15345,8 +15357,19 @@
         "hint_no_gaps": "还没有空格。选中一个词，然后点击“设为空格”。",
         "hint_empty_gap": "空的空格 [[ ]] 会被忽略。请在里面填入答案。",
         "hint_unclosed": "有一个空格缺少结尾的 ]]。",
-        "preview_label": "预览",
-        "gap_count": "空格：{{n}}"
+        "answers_hint": "学习者输入其中任意一个都算对。第一个会放进词库。",
+        "answer_label": "可接受的答案 {{n}}",
+        "remove_answer": "删除“{{answer}}”",
+        "add_answer": "再添加一个可接受的答案",
+        "remove_gap": "删除填空(保留词语)",
+        "gap_title": "填空 {{n}}",
+        "gap_aria": "填空 {{n}}:{{answer}}。编辑可接受的答案",
+        "passage_hint": "点击编辑文本。选中词语,然后点“设为空格”。",
+        "passage_placeholder": "在这里输入文本…",
+        "edit_text": "编辑文本",
+        "make_gap_ready": "点“设为空格”把选中的词语变成填空。",
+        "select_hint": "选中词语即可创建填空。点击填空可编辑其答案。",
+        "done_editing": "完成"
       },
       "spot_mistake": {
         "title": "找错误",
@@ -15374,8 +15397,6 @@
         "split_help_code": "每一行是一个选项。空行会保留，但无法被选中。",
         "segments_label": "各部分",
         "segment_n": "第 {{n}} 部分",
-        "is_mistake": "有错误",
-        "is_correct": "正确",
         "correction_placeholder": "更正后的内容",
         "correction_label": "第 {{n}} 部分的更正",
         "hint_correction_short": "添加更正后的内容，让学习者从中学习。",
@@ -15384,7 +15405,14 @@
         "hint_too_few": "请至少添加两个句子或两行。",
         "hint_no_mistakes": "请至少将一个部分标记为有错误。",
         "hint_all_mistakes": "所有部分都被标记为有错误。请保留一些正确的部分。",
-        "hint_missing_correction": "第 {{n}} 部分有错误，但没有更正内容。"
+        "hint_missing_correction": "第 {{n}} 部分有错误，但没有更正内容。",
+        "unmark_hint": "这是一个错误。点击标记为正确。",
+        "mark_hint": "点击将其标记为错误。",
+        "edit_text": "编辑文本",
+        "author_hint": "点击某一部分将其标记为错误,然后在下面写出更正。",
+        "mistakes_label": "错误及其更正",
+        "unmark_named": "将第 {{n}} 部分标记为正确",
+        "done_editing": "完成"
       },
       "venn": {
         "title": "韦恩图比较",
@@ -15410,13 +15438,8 @@
         "zone_both": "两者都是",
         "zone_neither": "都不是",
         "zone_only": "仅 {{set}}",
-        "sets_heading": "两个组",
         "change_color": "更换颜色",
-        "items_heading": "条目",
-        "items_hint": "选择每个条目所属的位置。学习者看到的顺序是打乱的。",
         "item_placeholder": "条目 {{n}}",
-        "item_zone": "所属位置",
-        "remove_item": "删除条目",
         "explanation_placeholder": "为什么属于这里（答错时显示，可选）",
         "explanation_label": "解释",
         "add_item": "添加条目",
@@ -15432,7 +15455,16 @@
           "duplicate_item": "另一个条目的文字相同。",
           "neither_hidden": "请开启“都不是”区域，否则学习者看不到此条目。",
           "no_both": "还没有条目同时属于两组；交集才是最有意思的部分。"
-        }
+        },
+        "moved": "已将“{{item}}”移到{{zone}}。",
+        "move_item": "移动“{{item}}”",
+        "move_hint": "拖到其他位置,或按 1–4",
+        "why_label": "为什么“{{item}}”属于这里",
+        "remove_named": "删除“{{item}}”",
+        "add_to": "向{{zone}}添加一项",
+        "author_selected": "现在点击“{{item}}”所属的位置。",
+        "author_hint": "每一项都在正确的位置。拖动某一项,或点击其手柄再点击一个位置,即可移动。",
+        "why_heading": "为什么“{{item}}”属于{{zone}}(学习者答错时显示)"
       },
       "label": {
         "title": "给图示贴标签",
@@ -15464,9 +15496,6 @@
         "untitled_pin": "未命名",
         "stage_help": "点击图片添加标注点。拖动标注点或使用方向键移动它。",
         "pins_label": "标注点",
-        "empty_list": "还没有标注点。点击图片添加一个。",
-        "move_hint": "选中后用方向键移动",
-        "select_pin": "选择标注点 {{n}}",
         "label_placeholder": "标签",
         "label_label": "标注点 {{n}} 的标签",
         "remove_pin": "删除标注点 {{n}}",
@@ -15474,7 +15503,8 @@
         "distractors_hint": "不属于任何位置的多余标签，让学习者思考而不是猜。",
         "distractor_placeholder": "干扰标签 {{n}}",
         "remove_distractor": "删除干扰标签",
-        "add_distractor": "添加干扰标签"
+        "add_distractor": "添加干扰标签",
+        "author_hint": "每个标签都在它的点上。点击图片添加点;拖动点来移动。"
       },
       "word_guess": {
         "title": "猜词",
@@ -15491,8 +15521,6 @@
           "w3_clue": "让物体运动、变热或发光的东西。",
           "w3_why": "能量会改变形式，例如从食物变成运动，但永远不会消失。"
         },
-        "words_heading": "词语",
-        "words_hint": "学习者根据提示猜出每个词。空格和连字符会直接显示。",
         "answer_placeholder": "答案 {{n}}",
         "letters": "字数：{{n}}",
         "remove_word": "删除词语",
@@ -15512,14 +15540,15 @@
           "too_short": "至少使用 2 个字。",
           "too_long": "最多 12 个字，这样格子能在手机上放得下。",
           "duplicate_answer": "另一个词的答案相同。"
-        }
+        },
+        "type_answer": "点击方格并输入答案。",
+        "prev_word": "上一个词",
+        "next_word": "下一个词"
       },
       "confidence": {
         "title": "把握度检测",
         "description": "先作答，再说说有多大把握，找出你只是自以为知道的内容。",
         "title_placeholder": "为这个检测命名",
-        "questions_heading": "题目",
-        "questions_hint": "学习者选择答案和把握程度，然后查看自己是否答对。",
         "prompt_placeholder": "题目 {{n}}",
         "prompt_label": "题目 {{n}}",
         "correct_group": "第 {{n}} 题的正确答案",
@@ -15558,7 +15587,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "上一题",
+        "next_question": "下一题"
       },
       "matrix": {
         "title": "属性表格",
@@ -15575,18 +15606,13 @@
           "flies": "会飞",
           "swims": "会游泳"
         },
-        "rows_heading": "行",
-        "columns_heading": "列",
         "row_placeholder": "第 {{n}} 行",
         "column_placeholder": "第 {{n}} 列",
         "add_row": "添加行",
         "add_column": "添加列",
-        "remove_row": "删除行",
-        "remove_column": "删除列",
         "mode_label": "答案类型",
         "mode_multi": "每行多个",
         "mode_single": "每行一个",
-        "answers_heading": "正确答案",
         "answers_hint_multi": "勾选每个正确的格子。",
         "answers_hint_single": "为每一行选出唯一正确的列。",
         "cell_label": "{{row}}：{{column}}",
@@ -15602,7 +15628,9 @@
           "unused_column": "还没有任何一行具有这个属性。",
           "duplicate_row": "另一行的名称相同。",
           "duplicate_column": "另一列的名称相同。"
-        }
+        },
+        "remove_column_named": "删除列“{{column}}”",
+        "remove_row_named": "删除行“{{row}}”"
       },
       "reflect": {
         "title": "反思",
@@ -15611,7 +15639,6 @@
         "prompt_heading": "题目",
         "prompt_placeholder": "学习者需要用自己的话解释什么？",
         "guiding_heading": "引导问题",
-        "guiding_hint": "学习者卡住时可以展开的可选提示（最多 5 个）。",
         "guiding_placeholder": "问题 {{n}}",
         "guiding_label": "引导问题 {{n}}",
         "remove_guiding": "删除问题 {{n}}",
@@ -15619,10 +15646,8 @@
         "min_words_label": "最少字数",
         "min_words_hint": "达到这个数量后学习者即可对照。设为 0 可立即对照。",
         "model_heading": "参考答案",
-        "model_hint": "可选。学习者写完自己的答案后才会看到。",
         "model_placeholder": "用几句话写出的好答案",
         "checklist_heading": "要点",
-        "checklist_hint": "学习者勾选自己写到的要点，即为得分（最多 8 个）。",
         "point_placeholder": "要点 {{n}}",
         "point_label": "要点 {{n}}",
         "remove_point": "删除要点 {{n}}",
@@ -15646,7 +15671,9 @@
           "p2": "地球一年绕太阳一圈",
           "p3": "夏天阳光更直射、白天更长",
           "p4": "不是由离太阳的远近造成的"
-        }
+        },
+        "guiding_optional": "可选",
+        "answer_key": "答案"
       }
     }
   },

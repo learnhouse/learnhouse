@@ -2,10 +2,12 @@
 /*
  Scenarios block: a branching, choose-your-path story (Experiences family).
 
- Authoring is one "story builder" list: each step is a card, each choice has
- a single "Then…" select. Problems show as inline chips on the step they
- affect; "View map" opens the existing map read-only. The header holds only
- the title, Story/Chat, AI generate and the frame's "Preview as learner".
+ Authoring is edit in place: step tabs (plus "+ Add step" and "View map"),
+ then the current step as the learner's card, with its text and choice
+ buttons editable where they sit and a small "Then…" pill under each choice.
+ Problems show as inline chips on the step they affect (and a dot on its
+ tab). The header holds the title, AI generate, the gear (Story / Chat) and
+ the frame's "Preview as learner".
 
  Every edit reads the node's CURRENT attrs from the editor state and commits
  the result in one transaction, so collaborators' edits made in between are
@@ -17,16 +19,17 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import dynamic from 'next/dynamic'
-import { ChatsCircle, GitBranch, Plus, TreeStructure, X } from '@phosphor-icons/react'
-import { Segmented } from '../../Blocks/ui/BlockChrome'
+import { ChatsCircle, Flag, GitBranch, TreeStructure, X } from '@phosphor-icons/react'
+import { Segmented, SettingsField } from '../../Blocks/ui/BlockChrome'
+import { cn } from '@/lib/utils'
 import { AIButton } from '@components/Objects/AI/AIBrand'
 import { useAISettings } from '@components/Hooks/useAIFeature'
 import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
-import { ExperienceFrame, useExperienceEditable } from '../Experiences/shared'
+import { AddGhost, AnswerKeyHint, ExperienceFrame, SettingsGear, useExperienceEditable } from '../Experiences/shared'
 import ScenarioPlayer from './ScenarioPlayer'
 import ScenarioMap from './ScenarioMap'
 import { IssueChip, ScenarioStepCard, useIssueText, type Commit } from './ScenarioStepCard'
-import { MAX_CHOICES, MAX_STEPS, type ScenarioData, type ScenarioDisplay, addStep, displayOf, normalizeScenario, startIdOf, validateScenario } from './scenarioModel'
+import { MAX_STEPS, type ScenarioData, type ScenarioDisplay, addStep, displayOf, normalizeScenario, startIdOf, stepTitle, validateScenario } from './scenarioModel'
 
 const AIScenarioGeneratorModal = dynamic(() => import('@components/Objects/AI/AIScenarioGeneratorModal'), { ssr: false })
 
@@ -106,17 +109,15 @@ function ScenarioEditor(props: NodeViewProps & { data: ScenarioData }) {
     [editor, getPos, node, updateAttributes],
   )
 
-  // Briefly ring a step after jumping to it (new step, map click).
-  React.useEffect(() => {
-    if (!focusId) return
-    const timer = window.setTimeout(() => setFocusId(null), 1800)
-    return () => window.clearTimeout(timer)
-  }, [focusId])
+  // The step on the card: the one picked (tab, map, a new step), else the start.
+  const [currentId, setCurrentId] = React.useState<string | null>(null)
+  const current = data.scenarios.find((s) => s.id === currentId) ?? data.scenarios.find((s) => s.id === start) ?? data.scenarios[0]
 
   const focusStep = React.useCallback((id: string) => {
+    setCurrentId(id)
     setFocusId(id)
     requestAnimationFrame(() => {
-      rootRef.current?.querySelector(`[data-step-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      rootRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
     })
   }, [])
 
@@ -132,24 +133,27 @@ function ScenarioEditor(props: NodeViewProps & { data: ScenarioData }) {
 
   const globalIssues = report.issues.filter((i) => !i.stepId)
 
+  const displaySetting = (
+    <Segmented<ScenarioDisplay>
+      ariaLabel={t('editor.experiences.scenarios.display_label', 'Layout')}
+      value={display}
+      onChange={(v) => commit((d) => ({ ...d, display: v }))}
+      options={[
+        { value: 'story', label: t('editor.experiences.scenarios.display_story', 'Story') },
+        { value: 'chat', label: t('editor.experiences.scenarios.display_chat', 'Chat') },
+      ]}
+    />
+  )
   const headerEnd = !preview ? (
     <div className="flex flex-none items-center gap-1.5">
-      <div className="w-[8.5rem] max-sm:hidden">
-        <Segmented<ScenarioDisplay>
-          ariaLabel={t('editor.experiences.scenarios.display_label', 'Layout')}
-          value={display}
-          onChange={(v) => commit((d) => ({ ...d, display: v }))}
-          options={[
-            { value: 'story', label: t('editor.experiences.scenarios.display_story', 'Story') },
-            { value: 'chat', label: t('editor.experiences.scenarios.display_chat', 'Chat') },
-          ]}
-        />
-      </div>
       {scenarioAI && (
         <AIButton size="sm" onClick={() => setShowAI(true)}>
           <span className="max-sm:sr-only">{t('editor.scenarios.generate_with_ai')}</span>
         </AIButton>
       )}
+      <SettingsGear>
+        <SettingsField label={t('editor.experiences.scenarios.display_label', 'Layout')}>{displaySetting}</SettingsField>
+      </SettingsGear>
     </div>
   ) : null
 
@@ -170,23 +174,13 @@ function ScenarioEditor(props: NodeViewProps & { data: ScenarioData }) {
         headerEnd={headerEnd}
         live={preview ? status.live : undefined}
         celebrate={preview && status.celebrate}
+        wysiwyg
+        footer={preview ? undefined : <AnswerKeyHint>{t('editor.experiences.scenarios.editing_hint', 'You’re editing the story. Preview to play it as a learner.')}</AnswerKeyHint>}
       >
         {preview ? (
           <ScenarioPlayer data={data} display={display} onStatus={setStatus} />
         ) : (
-          <div ref={rootRef} className="flex flex-col gap-2.5">
-            {/* Phones: Story/Chat lives here (the header is narrow). */}
-            <div className="sm:hidden">
-              <Segmented<ScenarioDisplay>
-                ariaLabel={t('editor.experiences.scenarios.display_label', 'Layout')}
-                value={display}
-                onChange={(v) => commit((d) => ({ ...d, display: v }))}
-                options={[
-                  { value: 'story', label: t('editor.experiences.scenarios.display_story', 'Story') },
-                  { value: 'chat', label: t('editor.experiences.scenarios.display_chat', 'Chat') },
-                ]}
-              />
-            </div>
+          <div ref={rootRef} className="flex flex-col gap-4">
             {globalIssues.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {globalIssues.map((issue) => (
@@ -196,40 +190,75 @@ function ScenarioEditor(props: NodeViewProps & { data: ScenarioData }) {
                 ))}
               </div>
             )}
-            {data.scenarios.map((step) => (
-              <ScenarioStepCard
-                key={step.id}
-                data={data}
-                step={step}
-                issues={report.byStep[step.id] ?? []}
-                isStart={step.id === start}
-                commit={commit}
-                onFocusStep={focusStep}
-                highlighted={focusId === step.id}
-                autoFocusText={focusId === step.id && !step.text}
-              />
-            ))}
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={addNewStep}
-                disabled={data.scenarios.length >= MAX_STEPS}
-                className={buttonClass('secondary', 'sm')}
-                title={data.scenarios.length >= MAX_STEPS ? t('editor.scenarios.max_scenarios') : undefined}
-              >
-                <Plus size={13} />
-                {t('editor.blocks_v2.scenarios.add_step', 'Add step')}
-              </button>
+            {/* Steps: one tab each, then add and the map. */}
+            <div role="tablist" aria-label={t('editor.experiences.scenarios.steps_label', 'Steps')} className="flex flex-wrap items-center gap-1.5">
+              {data.scenarios.map((step, i) => {
+                const on = step.id === current?.id
+                const issues = report.byStep[step.id] ?? []
+                const hasError = issues.some((x) => x.level === 'error')
+                const title = stepTitle(step)
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    aria-label={title ? `${t('editor.blocks_v2.scenarios.step_n', { n: i + 1, defaultValue: 'Step {{n}}' })}: ${title}` : t('editor.blocks_v2.scenarios.step_n', { n: i + 1, defaultValue: 'Step {{n}}' })}
+                    title={title || undefined}
+                    onClick={() => setCurrentId(step.id)}
+                    onKeyDown={(e) => {
+                      const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+                      if (!dir) return
+                      e.preventDefault()
+                      const rtl = getComputedStyle(e.currentTarget).direction === 'rtl'
+                      const next = data.scenarios[i + (rtl ? -dir : dir)]
+                      if (!next) return
+                      setCurrentId(next.id)
+                      const list = e.currentTarget.parentElement
+                      requestAnimationFrame(() => list?.querySelector<HTMLElement>(`[aria-selected="true"]`)?.focus())
+                    }}
+                    tabIndex={on ? 0 : -1}
+                    className={cn(
+                      'relative inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-semibold tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40',
+                      on ? 'lh-exp-raised text-neutral-900' : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-800',
+                    )}
+                  >
+                    {step.id === start && <Flag size={10} weight="fill" aria-hidden className="text-emerald-600" />}
+                    {i + 1}
+                    {issues.length > 0 && <span aria-hidden className={cn('absolute -end-0.5 -top-0.5 h-2 w-2 rounded-full', hasError ? 'bg-rose-500' : 'bg-amber-400')} />}
+                  </button>
+                )
+              })}
+              {data.scenarios.length < MAX_STEPS && (
+                <AddGhost onClick={addNewStep} iconSize={12} className="h-7 rounded-full px-2.5 text-[12px]">
+                  {t('editor.blocks_v2.scenarios.add_step', 'Add step')}
+                </AddGhost>
+              )}
+              <span className="flex-1" />
               {data.scenarios.length > 1 && (
-                <button type="button" onClick={() => setMapOpen(true)} className={buttonClass('ghost', 'sm')}>
-                  <TreeStructure size={13} />
+                <button
+                  type="button"
+                  onClick={() => setMapOpen(true)}
+                  className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2 text-[12.5px] font-medium text-neutral-500 outline-none hover:bg-neutral-200/60 hover:text-neutral-800 focus-visible:ring-2 focus-visible:ring-sky-500/40"
+                >
+                  <TreeStructure size={13} aria-hidden />
                   {t('editor.experiences.scenarios.view_map', 'View map')}
                 </button>
               )}
-              <span className="ms-auto text-[11px] text-neutral-400 max-sm:hidden">
-                {t('editor.blocks_v2.scenarios.limits', { max: MAX_STEPS, choices: MAX_CHOICES, defaultValue: 'Up to {{max}} steps, {{choices}} choices each.' })}
-              </span>
             </div>
+            {current && (
+              <ScenarioStepCard
+                key={current.id}
+                data={data}
+                step={current}
+                issues={report.byStep[current.id] ?? []}
+                isStart={current.id === start}
+                commit={commit}
+                onFocusStep={focusStep}
+                autoFocusText={focusId === current.id && !current.text}
+                chat={display === 'chat'}
+              />
+            )}
           </div>
         )}
       </ExperienceFrame>

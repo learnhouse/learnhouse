@@ -4192,7 +4192,11 @@
         "solved_mark": "正解",
         "missed_mark": "不正解",
         "play_again": "もう一度遊ぶ",
-        "best": "ベスト"
+        "best": "ベスト",
+        "guesses_left": "残りの回数:{{n}}",
+        "history_item": "{{n}} 回目:{{word}}({{feedback}})",
+        "history_label": "これまでの回答",
+        "typing_row": "あなたの回答"
       },
       "confidence": {
         "instructions": "答えてから、どのくらい自信があるかを選びましょう。",
@@ -13686,7 +13690,6 @@
       "not_found": "シナリオが見つかりません",
       "not_found_hint": "シナリオの設定を確認して、もう一度お試しください。",
       "illustration_alt": "シナリオのイラスト",
-      "max_scenarios": "シナリオは最大40件までです",
       "new_scenario_text": "新しいシナリオのテキスト...",
       "default_option_1": "選択肢1",
       "default_option_2": "選択肢2",
@@ -14371,7 +14374,6 @@
         },
         "jump_to": "そのステップへ移動",
         "leads_to": "次の移動先",
-        "limits": "最大{{max}}ステップ、各ステップに選択肢{{choices}}個まで。",
         "map_hint": "ステップをクリックするとここで編集できます。矢印は各選択肢の移動先を示します。",
         "missing_step": "ステップが見つかりません",
         "move_down": "下へ移動",
@@ -14991,7 +14993,10 @@
         "issue_duplicateOption": "同じ選択肢が2つあります。",
         "example": {
           "title": "計算スピード勝負"
-        }
+        },
+        "question_of": "問題 {{n}} / {{total}}",
+        "prev_question": "前の問題",
+        "next_question": "次の問題"
       },
       "estimate": {
         "name": "見積もりクイズ",
@@ -15021,7 +15026,8 @@
           "explanation": "大人の骨は206本です。赤ちゃんは約300本で生まれ、成長とともにいくつかがくっつきます。",
           "unit": "本"
         },
-        "fill_example": "例を使う"
+        "fill_example": "例を使う",
+        "answer_marker": "答え:{{value}}"
       },
       "code_lock": {
         "name": "コードロック",
@@ -15057,7 +15063,9 @@
           "c3": "大陸はいくつある？",
           "c3_hint": "アフリカもその一つです。",
           "reward": "扉が開きました。お見事、探偵さん！"
-        }
+        },
+        "answer_masked": "答え(クリックするまで非表示)",
+        "padlock_label": "ダイヤル {{n}} 個の南京錠"
       },
       "scenarios": {
         "chip_unreachable": "このステップに到達する道がありません",
@@ -15104,7 +15112,11 @@
           "step3": "お客様はさらに怒っています。どうしますか？",
           "step3_a": "謝罪して注文番号を尋ねる",
           "step3_b": "電話を切る"
-        }
+        },
+        "then_short": "次に",
+        "open_target": "そのステップを開く",
+        "steps_label": "ステップ",
+        "editing_hint": "ストーリーを編集中です。プレビューで学習者として遊べます。"
       },
       "flashcards": {
         "title_placeholder": "デッキのタイトル（任意）",
@@ -15229,7 +15241,6 @@
           "step4": "水が海へ戻る"
         },
         "add_step": "ステップを追加",
-        "detail_label": "詳細",
         "detail_placeholder": "詳細（例：1969）",
         "drag_short": "ドラッグして並べ替え",
         "drag_step": "ステップ {{n}} を移動（ドラッグまたは矢印キー）",
@@ -15241,13 +15252,14 @@
           "too_many_items": "ステップは10個までにしてください。学習者には最初の10個だけが表示されます。"
         },
         "items_heading": "ステップ（正しい順番で）",
-        "items_hint": "学習者にはシャッフルして表示されます。",
         "layout_label": "レイアウト",
-        "remove_step": "ステップを削除",
         "step_placeholder": "ステップ {{n}}",
         "timeline_hint": "各ステップの詳細（年など）は、学習者がチェックした後に表示されます。",
         "variant_list": "リスト",
-        "variant_timeline": "タイムライン"
+        "variant_timeline": "タイムライン",
+        "author_hint": "これが正しい順番です。学習者には順番を混ぜて表示します。ステップをドラッグするか矢印で並べ替えます。",
+        "detail_label_n": "ステップ {{n}} の詳細",
+        "remove_named": "「{{item}}」を削除"
       },
       "match": {
         "title": "ペアマッチ",
@@ -15308,22 +15320,22 @@
         "placeholder_prompt": "サンプル画像です。ご自身の画像を追加してください",
         "stage_help": "画像をクリックするとスポットを追加できます。スポットはドラッグで移動できます。選択して矢印キーでも動かせます。",
         "spots_label": "スポット",
-        "empty_list": "スポットはまだありません。画像をクリックして追加してください。",
         "spot_aria": "スポット {{n}}：{{label}}",
         "untitled_spot": "無題",
-        "move_hint": "選択してから、画像上でドラッグするか矢印キーを使ってください",
         "select_spot": "スポット {{n}} を選択",
         "label_placeholder": "ここには何がありますか？",
         "label_label": "スポット {{n}} のラベル",
         "remove_spot": "スポット {{n}} を削除",
-        "hint_label_short": "学習者が何を見つけたか分かるように、ラベルを追加しましょう。",
         "explanation_placeholder": "見つけたときに表示する解説（任意）",
         "explanation_label": "スポット {{n}} の解説",
         "size_label": "サイズ",
         "hint_no_image": "サンプル画像を使用中です。上でご自身の画像を追加してください。",
         "hint_no_spots": "スポットを1つ以上追加してください。",
         "hint_missing_label": "スポット {{n}} にラベルがありません。",
-        "hint_overlap": "スポット {{a}} と {{b}} が重なっているため、どちらかが選びにくい場合があります。"
+        "hint_overlap": "スポット {{a}} と {{b}} が重なっているため、どちらかが選びにくい場合があります。",
+        "mode_find_hint": "学習者は画像をクリックして各スポットを探します。",
+        "mode_explore_hint": "学習者は番号付きのピンを開いて各スポットの説明を読みます。",
+        "pin_hint": "クリックで編集。ドラッグか矢印キーで移動します。"
       },
       "gaps": {
         "title": "穴埋め",
@@ -15345,8 +15357,19 @@
         "hint_no_gaps": "空欄はまだありません。単語を選択して「空欄にする」を押してください。",
         "hint_empty_gap": "空の空欄 [[ ]] は無視されます。中に答えを入力してください。",
         "hint_unclosed": "空欄に閉じ括弧 ]] がありません。",
-        "preview_label": "プレビュー",
-        "gap_count": "空欄：{{n}}"
+        "answers_hint": "学習者はこのどれを入力しても正解です。最初の答えが単語バンクに入ります。",
+        "answer_label": "正解として認める答え {{n}}",
+        "remove_answer": "「{{answer}}」を削除",
+        "add_answer": "正解として認める答えを追加",
+        "remove_gap": "空欄を削除(単語は残す)",
+        "gap_title": "空欄 {{n}}",
+        "gap_aria": "空欄 {{n}}:{{answer}}。正解として認める答えを編集",
+        "passage_hint": "クリックで本文を編集。単語を選んでから「空欄にする」。",
+        "passage_placeholder": "ここに本文を書きます…",
+        "edit_text": "本文を編集",
+        "make_gap_ready": "「空欄にする」を押すと、選んだ単語が空欄になります。",
+        "select_hint": "単語を選ぶと空欄を作れます。空欄をクリックすると答えを編集できます。",
+        "done_editing": "完了"
       },
       "spot_mistake": {
         "title": "間違い探し",
@@ -15374,8 +15397,6 @@
         "split_help_code": "1行が1つの選択肢です。空行は残りますが、選ぶことはできません。",
         "segments_label": "パート",
         "segment_n": "パート {{n}}",
-        "is_mistake": "間違い",
-        "is_correct": "正しい",
         "correction_placeholder": "正しい内容",
         "correction_label": "パート {{n}} の訂正",
         "hint_correction_short": "学習者が学べるように、正しい内容を追加しましょう。",
@@ -15384,7 +15405,14 @@
         "hint_too_few": "文または行を2つ以上追加してください。",
         "hint_no_mistakes": "1つ以上のパートを間違いに設定してください。",
         "hint_all_mistakes": "すべてのパートが間違いになっています。正しいものも残してください。",
-        "hint_missing_correction": "パート {{n}} は間違いですが、訂正がありません。"
+        "hint_missing_correction": "パート {{n}} は間違いですが、訂正がありません。",
+        "unmark_hint": "間違いです。クリックすると正しいとマークします。",
+        "mark_hint": "クリックすると間違いとしてマークします。",
+        "edit_text": "本文を編集",
+        "author_hint": "部分をクリックして間違いとしてマークし、下に訂正を書きます。",
+        "mistakes_label": "間違いとその訂正",
+        "unmark_named": "部分 {{n}} を正しいとマーク",
+        "done_editing": "完了"
       },
       "venn": {
         "title": "ベン図で比較",
@@ -15410,13 +15438,8 @@
         "zone_both": "両方",
         "zone_neither": "どちらでもない",
         "zone_only": "{{set}}のみ",
-        "sets_heading": "2つのグループ",
         "change_color": "色を変更",
-        "items_heading": "項目",
-        "items_hint": "各項目がどこに入るかを選びます。学習者にはシャッフルされて表示されます。",
         "item_placeholder": "項目 {{n}}",
-        "item_zone": "入る場所",
-        "remove_item": "項目を削除",
         "explanation_placeholder": "そこに入る理由（間違えたときに表示、任意）",
         "explanation_label": "解説",
         "add_item": "項目を追加",
@@ -15432,7 +15455,16 @@
           "duplicate_item": "同じテキストの項目がほかにあります。",
           "neither_hidden": "「どちらでもない」エリアをオンにしないと、この項目は表示されません。",
           "no_both": "両方に入る項目がまだありません。重なりの部分がいちばん面白いところです。"
-        }
+        },
+        "moved": "「{{item}}」を{{zone}}に移動しました。",
+        "move_item": "「{{item}}」を移動",
+        "move_hint": "別の場所へドラッグするか、1〜4 を押します",
+        "why_label": "「{{item}}」がここに入る理由",
+        "remove_named": "「{{item}}」を削除",
+        "add_to": "{{zone}}に項目を追加",
+        "author_selected": "「{{item}}」が入る場所をタップしてください。",
+        "author_hint": "各項目は正しい場所にあります。項目をドラッグするか、ハンドルをタップしてから場所をタップして移動します。",
+        "why_heading": "「{{item}}」が{{zone}}に入る理由(学習者が間違えたときに表示)"
       },
       "label": {
         "title": "図にラベルを付ける",
@@ -15464,9 +15496,6 @@
         "untitled_pin": "名前なし",
         "stage_help": "画像をクリックしてピンを追加。ピンはドラッグか矢印キーで動かせます。",
         "pins_label": "ピン",
-        "empty_list": "まだピンがありません。画像をクリックして追加してください。",
-        "move_hint": "選択してから矢印キーで移動",
-        "select_pin": "ピン {{n}} を選択",
         "label_placeholder": "ラベル",
         "label_label": "ピン {{n}} のラベル",
         "remove_pin": "ピン {{n}} を削除",
@@ -15474,7 +15503,8 @@
         "distractors_hint": "どこにも当てはまらない余分なラベル。当て推量ではなく考えるきっかけになります。",
         "distractor_placeholder": "ダミーのラベル {{n}}",
         "remove_distractor": "ダミーのラベルを削除",
-        "add_distractor": "ダミーのラベルを追加"
+        "add_distractor": "ダミーのラベルを追加",
+        "author_hint": "各ラベルは正しい点に付いています。画像をクリックして点を追加し、点をドラッグして移動します。"
       },
       "word_guess": {
         "title": "ことば当て",
@@ -15491,8 +15521,6 @@
           "w3_clue": "ものを動かしたり、温めたり、光らせたりするもの。",
           "w3_why": "エネルギーは形を変えますが（たとえば食べ物から運動へ）、なくなることはありません。"
         },
-        "words_heading": "ことば",
-        "words_hint": "学習者はヒントからそれぞれのことばを当てます。スペースとハイフンは最初から表示されます。",
         "answer_placeholder": "答え {{n}}",
         "letters": "文字数: {{n}}",
         "remove_word": "ことばを削除",
@@ -15512,14 +15540,15 @@
           "too_short": "2文字以上にしてください。",
           "too_long": "スマホに収まるよう、12文字以内にしてください。",
           "duplicate_answer": "同じ答えのことばがほかにあります。"
-        }
+        },
+        "type_answer": "マスをクリックして答えを入力します。",
+        "prev_word": "前の単語",
+        "next_word": "次の単語"
       },
       "confidence": {
         "title": "確信度チェック",
         "description": "答えてから自信の度合いを選び、「わかったつもり」を見つけます。",
         "title_placeholder": "このチェックの名前",
-        "questions_heading": "問題",
-        "questions_hint": "学習者は答えと自信の度合いを選び、正解かどうかを確かめます。",
         "prompt_placeholder": "問題 {{n}}",
         "prompt_label": "問題 {{n}}",
         "correct_group": "問題 {{n}} の正解",
@@ -15558,7 +15587,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "前の問題",
+        "next_question": "次の問題"
       },
       "matrix": {
         "title": "特徴の表",
@@ -15575,18 +15606,13 @@
           "flies": "飛べる",
           "swims": "泳ぐ"
         },
-        "rows_heading": "行",
-        "columns_heading": "列",
         "row_placeholder": "行 {{n}}",
         "column_placeholder": "列 {{n}}",
         "add_row": "行を追加",
         "add_column": "列を追加",
-        "remove_row": "行を削除",
-        "remove_column": "列を削除",
         "mode_label": "答えの種類",
         "mode_multi": "1行に複数",
         "mode_single": "1行に1つ",
-        "answers_heading": "正しい答え",
         "answers_hint_multi": "正しいマスにすべてチェックしてください。",
         "answers_hint_single": "各行で正しい列を1つ選んでください。",
         "cell_label": "{{row}}: {{column}}",
@@ -15602,7 +15628,9 @@
           "unused_column": "この特徴を持つ行はまだありません。",
           "duplicate_row": "同じ名前の行がほかにあります。",
           "duplicate_column": "同じ名前の列がほかにあります。"
-        }
+        },
+        "remove_column_named": "列「{{column}}」を削除",
+        "remove_row_named": "行「{{row}}」を削除"
       },
       "reflect": {
         "title": "振り返り",
@@ -15611,7 +15639,6 @@
         "prompt_heading": "お題",
         "prompt_placeholder": "学習者に自分の言葉で何を説明してもらいますか？",
         "guiding_heading": "ヒントの問い",
-        "guiding_hint": "行き詰まったときに開ける任意のヒント（5つまで）。",
         "guiding_placeholder": "問い {{n}}",
         "guiding_label": "ヒントの問い {{n}}",
         "remove_guiding": "問い {{n}} を削除",
@@ -15619,10 +15646,8 @@
         "min_words_label": "最低語数",
         "min_words_hint": "この語数に達すると比較できます。0ならすぐに比較できます。",
         "model_heading": "模範解答",
-        "model_hint": "任意。学習者は自分で書いたあとに見られます。",
         "model_placeholder": "数文でまとめた良い解答",
         "checklist_heading": "要点",
-        "checklist_hint": "学習者は書けた要点にチェックを入れ、それがスコアになります（8つまで）。",
         "point_placeholder": "要点 {{n}}",
         "point_label": "要点 {{n}}",
         "remove_point": "要点 {{n}} を削除",
@@ -15646,7 +15671,9 @@
           "p2": "地球は1年かけて太陽のまわりを回る",
           "p3": "夏は日光がより真上から当たり、昼が長い",
           "p4": "太陽との距離が原因ではない"
-        }
+        },
+        "guiding_optional": "任意",
+        "answer_key": "解答"
       }
     }
   },

@@ -4190,7 +4190,11 @@
         "solved_mark": "맞힘",
         "missed_mark": "못 맞힘",
         "play_again": "다시 하기",
-        "best": "최고 기록"
+        "best": "최고 기록",
+        "guesses_left": "남은 기회: {{n}}",
+        "history_item": "{{n}}번째: {{word}} ({{feedback}})",
+        "history_label": "이전 추측",
+        "typing_row": "내 추측"
       },
       "confidence": {
         "instructions": "답한 다음 얼마나 확신하는지 고르세요.",
@@ -13684,7 +13688,6 @@
       "not_found": "시나리오를 찾을 수 없습니다",
       "not_found_hint": "시나리오 구성을 확인한 후 다시 시도해 주세요.",
       "illustration_alt": "시나리오 일러스트",
-      "max_scenarios": "시나리오는 최대 40개까지 허용됩니다",
       "new_scenario_text": "새 시나리오 텍스트...",
       "default_option_1": "옵션 1",
       "default_option_2": "옵션 2",
@@ -14369,7 +14372,6 @@
         },
         "jump_to": "해당 단계로 이동",
         "leads_to": "이동 대상",
-        "limits": "최대 {{max}}단계, 단계당 선택지 {{choices}}개까지.",
         "map_hint": "단계를 클릭하면 여기서 편집할 수 있습니다. 화살표는 각 선택지가 이어지는 곳을 보여 줍니다.",
         "missing_step": "없는 단계",
         "move_down": "아래로 이동",
@@ -14989,7 +14991,10 @@
         "issue_duplicateOption": "같은 보기가 두 개 있습니다.",
         "example": {
           "title": "빠른 계산"
-        }
+        },
+        "question_of": "질문 {{n}}/{{total}}",
+        "prev_question": "이전 질문",
+        "next_question": "다음 질문"
       },
       "estimate": {
         "name": "어림짐작",
@@ -15019,7 +15024,8 @@
           "explanation": "성인의 뼈는 206개입니다. 아기는 약 300개로 태어나며, 자라면서 일부가 합쳐집니다.",
           "unit": "개"
         },
-        "fill_example": "예시 사용"
+        "fill_example": "예시 사용",
+        "answer_marker": "정답: {{value}}"
       },
       "code_lock": {
         "name": "코드 자물쇠",
@@ -15055,7 +15061,9 @@
           "c3": "대륙은 몇 개일까요?",
           "c3_hint": "아프리카도 그중 하나예요.",
           "reward": "문이 열렸습니다. 잘했어요, 탐정님!"
-        }
+        },
+        "answer_masked": "정답(클릭하기 전까지 숨김)",
+        "padlock_label": "다이얼 {{n}}개 자물쇠"
       },
       "scenarios": {
         "chip_unreachable": "이 단계에 도달하는 경로가 없음",
@@ -15102,7 +15110,11 @@
           "step3": "고객이 더 화를 냅니다. 이제 어떻게 할까요?",
           "step3_a": "사과하고 주문 번호를 묻는다",
           "step3_b": "통화를 끝낸다"
-        }
+        },
+        "then_short": "다음",
+        "open_target": "그 단계 열기",
+        "steps_label": "단계",
+        "editing_hint": "이야기를 편집하고 있습니다. 미리 보기로 학습자처럼 플레이해 보세요."
       },
       "flashcards": {
         "title_placeholder": "덱 제목(선택 사항)",
@@ -15227,7 +15239,6 @@
           "step4": "물이 바다로 돌아간다"
         },
         "add_step": "단계 추가",
-        "detail_label": "세부 정보",
         "detail_placeholder": "세부 정보(예: 1969)",
         "drag_short": "드래그하여 순서 변경",
         "drag_step": "{{n}}단계 이동(드래그 또는 화살표 키)",
@@ -15239,13 +15250,14 @@
           "too_many_items": "단계는 최대 10개까지 사용하세요. 학습자에게는 처음 10개만 표시됩니다."
         },
         "items_heading": "단계(올바른 순서대로)",
-        "items_hint": "학습자에게는 섞여서 표시됩니다.",
         "layout_label": "레이아웃",
-        "remove_step": "단계 삭제",
         "step_placeholder": "{{n}}단계",
         "timeline_hint": "학습자가 확인하면 각 단계의 세부 정보(예: 연도)가 공개됩니다.",
         "variant_list": "목록",
-        "variant_timeline": "타임라인"
+        "variant_timeline": "타임라인",
+        "author_hint": "이것이 올바른 순서입니다. 학습자에게는 단계가 섞여서 보입니다. 단계를 끌거나 화살표로 순서를 바꾸세요.",
+        "detail_label_n": "{{n}}단계 세부 정보",
+        "remove_named": "‘{{item}}’ 삭제"
       },
       "match": {
         "title": "짝 맞추기",
@@ -15306,22 +15318,22 @@
         "placeholder_prompt": "예시 이미지입니다. 직접 이미지를 추가하세요",
         "stage_help": "이미지를 클릭해 스팟을 추가하세요. 스팟을 드래그해 옮기거나, 선택한 뒤 방향키로 움직일 수 있습니다.",
         "spots_label": "스팟",
-        "empty_list": "아직 스팟이 없습니다. 이미지를 클릭해 추가하세요.",
         "spot_aria": "스팟 {{n}}: {{label}}",
         "untitled_spot": "제목 없음",
-        "move_hint": "선택한 뒤 이미지에서 드래그하거나 방향키를 사용하세요",
         "select_spot": "스팟 {{n}} 선택",
         "label_placeholder": "여기에 무엇이 있나요?",
         "label_label": "스팟 {{n}} 라벨",
         "remove_spot": "스팟 {{n}} 삭제",
-        "hint_label_short": "학습자가 무엇을 찾았는지 알 수 있도록 라벨을 추가하세요.",
         "explanation_placeholder": "찾았을 때 표시되는 설명(선택 사항)",
         "explanation_label": "스팟 {{n}} 설명",
         "size_label": "크기",
         "hint_no_image": "예시 이미지를 사용 중입니다. 위에서 직접 이미지를 추가하세요.",
         "hint_no_spots": "스팟을 하나 이상 추가하세요.",
         "hint_missing_label": "스팟 {{n}}에 라벨이 없습니다.",
-        "hint_overlap": "스팟 {{a}}와 {{b}}가 겹쳐서 하나는 선택하기 어려울 수 있습니다."
+        "hint_overlap": "스팟 {{a}}와 {{b}}가 겹쳐서 하나는 선택하기 어려울 수 있습니다.",
+        "mode_find_hint": "학습자는 그림을 클릭해 각 지점을 찾습니다.",
+        "mode_explore_hint": "학습자는 번호가 매겨진 핀을 열어 각 지점의 설명을 읽습니다.",
+        "pin_hint": "클릭하면 편집합니다. 끌거나 화살표 키로 이동하세요."
       },
       "gaps": {
         "title": "빈칸 채우기",
@@ -15343,8 +15355,19 @@
         "hint_no_gaps": "아직 빈칸이 없습니다. 단어를 선택하고 빈칸 만들기를 누르세요.",
         "hint_empty_gap": "비어 있는 빈칸 [[ ]]은 무시됩니다. 안에 정답을 입력하세요.",
         "hint_unclosed": "빈칸에 닫는 ]]가 없습니다.",
-        "preview_label": "미리 보기",
-        "gap_count": "빈칸: {{n}}"
+        "answers_hint": "학습자는 이 중 아무거나 입력해도 됩니다. 첫 번째 답은 단어 은행에 들어갑니다.",
+        "answer_label": "인정되는 답 {{n}}",
+        "remove_answer": "‘{{answer}}’ 삭제",
+        "add_answer": "인정되는 답 추가",
+        "remove_gap": "빈칸 삭제(단어는 유지)",
+        "gap_title": "빈칸 {{n}}",
+        "gap_aria": "빈칸 {{n}}: {{answer}}. 인정되는 답 편집",
+        "passage_hint": "클릭하면 본문을 편집합니다. 단어를 선택한 다음 ‘빈칸 만들기’.",
+        "passage_placeholder": "여기에 본문을 쓰세요…",
+        "edit_text": "본문 편집",
+        "make_gap_ready": "‘빈칸 만들기’을 누르면 선택한 단어가 빈칸이 됩니다.",
+        "select_hint": "단어를 선택하면 빈칸을 만들 수 있습니다. 빈칸을 클릭하면 답을 편집합니다.",
+        "done_editing": "완료"
       },
       "spot_mistake": {
         "title": "틀린 곳 찾기",
@@ -15372,8 +15395,6 @@
         "split_help_code": "각 줄이 하나의 선택지입니다. 빈 줄은 남지만 선택할 수 없습니다.",
         "segments_label": "부분",
         "segment_n": "부분 {{n}}",
-        "is_mistake": "오류",
-        "is_correct": "정상",
         "correction_placeholder": "올바르게 고친 내용",
         "correction_label": "부분 {{n}} 수정",
         "hint_correction_short": "학습자가 배울 수 있도록 올바르게 고친 내용을 추가하세요.",
@@ -15382,7 +15403,14 @@
         "hint_too_few": "문장 또는 줄을 두 개 이상 추가하세요.",
         "hint_no_mistakes": "하나 이상의 부분을 오류로 표시하세요.",
         "hint_all_mistakes": "모든 부분이 오류로 표시되어 있습니다. 정상인 부분도 남겨 두세요.",
-        "hint_missing_correction": "부분 {{n}}은 오류인데 수정 내용이 없습니다."
+        "hint_missing_correction": "부분 {{n}}은 오류인데 수정 내용이 없습니다.",
+        "unmark_hint": "오류입니다. 클릭하면 올바름으로 표시합니다.",
+        "mark_hint": "클릭하면 오류로 표시합니다.",
+        "edit_text": "본문 편집",
+        "author_hint": "부분을 클릭해 오류로 표시한 다음 아래에 고친 내용을 쓰세요.",
+        "mistakes_label": "오류와 고친 내용",
+        "unmark_named": "{{n}}번 부분을 올바름으로 표시",
+        "done_editing": "완료"
       },
       "venn": {
         "title": "벤 다이어그램 비교",
@@ -15408,13 +15436,8 @@
         "zone_both": "둘 다",
         "zone_neither": "둘 다 아님",
         "zone_only": "{{set}}만",
-        "sets_heading": "두 그룹",
         "change_color": "색 바꾸기",
-        "items_heading": "항목",
-        "items_hint": "각 항목이 어디에 속하는지 고르세요. 학습자에게는 섞여서 보입니다.",
         "item_placeholder": "항목 {{n}}",
-        "item_zone": "속하는 곳",
-        "remove_item": "항목 삭제",
         "explanation_placeholder": "그곳에 속하는 이유(틀렸을 때 표시, 선택)",
         "explanation_label": "설명",
         "add_item": "항목 추가",
@@ -15430,7 +15453,16 @@
           "duplicate_item": "같은 텍스트의 항목이 또 있습니다.",
           "neither_hidden": "‘둘 다 아님’ 영역을 켜지 않으면 이 항목이 보이지 않습니다.",
           "no_both": "아직 두 그룹에 모두 속하는 항목이 없습니다. 겹치는 부분이 가장 흥미로운 부분입니다."
-        }
+        },
+        "moved": "‘{{item}}’을(를) {{zone}}(으)로 옮겼습니다.",
+        "move_item": "‘{{item}}’ 옮기기",
+        "move_hint": "다른 곳으로 끌거나 1–4를 누르세요",
+        "why_label": "‘{{item}}’이(가) 여기에 속하는 이유",
+        "remove_named": "‘{{item}}’ 삭제",
+        "add_to": "{{zone}}에 항목 추가",
+        "author_selected": "이제 ‘{{item}}’이(가) 속하는 곳을 탭하세요.",
+        "author_hint": "각 항목은 제자리에 있습니다. 항목을 끌거나 핸들을 탭한 다음 위치를 탭해 옮기세요.",
+        "why_heading": "‘{{item}}’이(가) {{zone}}에 속하는 이유(학습자가 틀렸을 때 표시)"
       },
       "label": {
         "title": "그림에 이름표 붙이기",
@@ -15462,9 +15494,6 @@
         "untitled_pin": "이름 없음",
         "stage_help": "그림을 클릭해 핀을 추가하세요. 핀을 끌거나 화살표 키로 옮길 수 있습니다.",
         "pins_label": "핀",
-        "empty_list": "아직 핀이 없습니다. 그림을 클릭해 추가하세요.",
-        "move_hint": "선택한 뒤 화살표 키로 이동",
-        "select_pin": "핀 {{n}} 선택",
         "label_placeholder": "이름표",
         "label_label": "핀 {{n}}의 이름표",
         "remove_pin": "핀 {{n}} 삭제",
@@ -15472,7 +15501,8 @@
         "distractors_hint": "어디에도 속하지 않는 여분의 이름표입니다. 찍지 않고 생각하게 만듭니다.",
         "distractor_placeholder": "오답 이름표 {{n}}",
         "remove_distractor": "오답 이름표 삭제",
-        "add_distractor": "오답 이름표 추가"
+        "add_distractor": "오답 이름표 추가",
+        "author_hint": "각 라벨은 자기 점에 있습니다. 그림을 클릭해 점을 추가하고, 점을 끌어 옮기세요."
       },
       "word_guess": {
         "title": "낱말 맞히기",
@@ -15489,8 +15519,6 @@
           "w3_clue": "물체를 움직이고, 데우고, 빛나게 하는 것.",
           "w3_why": "에너지는 음식에서 움직임으로 바뀌는 것처럼 형태가 바뀌지만 사라지지는 않아요."
         },
-        "words_heading": "낱말",
-        "words_hint": "학습자는 단서를 보고 각 낱말을 맞힙니다. 띄어쓰기와 하이픈은 미리 보여 줍니다.",
         "answer_placeholder": "정답 {{n}}",
         "letters": "글자 수: {{n}}",
         "remove_word": "낱말 삭제",
@@ -15510,14 +15538,15 @@
           "too_short": "2글자 이상 쓰세요.",
           "too_long": "휴대폰에 칸이 들어가도록 최대 12글자까지 쓰세요.",
           "duplicate_answer": "정답이 같은 낱말이 또 있습니다."
-        }
+        },
+        "type_answer": "칸을 클릭하고 답을 입력하세요.",
+        "prev_word": "이전 단어",
+        "next_word": "다음 단어"
       },
       "confidence": {
         "title": "확신도 점검",
         "description": "답한 뒤 얼마나 확신하는지 고르면, 안다고 착각한 것을 찾을 수 있어요.",
         "title_placeholder": "이 점검의 이름",
-        "questions_heading": "문제",
-        "questions_hint": "학습자는 답과 확신 정도를 고른 뒤 맞았는지 확인합니다.",
         "prompt_placeholder": "문제 {{n}}",
         "prompt_label": "문제 {{n}}",
         "correct_group": "문제 {{n}}의 정답",
@@ -15556,7 +15585,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "이전 질문",
+        "next_question": "다음 질문"
       },
       "matrix": {
         "title": "속성 표",
@@ -15573,18 +15604,13 @@
           "flies": "날 수 있다",
           "swims": "헤엄친다"
         },
-        "rows_heading": "행",
-        "columns_heading": "열",
         "row_placeholder": "행 {{n}}",
         "column_placeholder": "열 {{n}}",
         "add_row": "행 추가",
         "add_column": "열 추가",
-        "remove_row": "행 삭제",
-        "remove_column": "열 삭제",
         "mode_label": "답 유형",
         "mode_multi": "행마다 여러 개",
         "mode_single": "행마다 하나",
-        "answers_heading": "정답",
         "answers_hint_multi": "맞는 칸을 모두 체크하세요.",
         "answers_hint_single": "각 행에서 맞는 열을 하나만 고르세요.",
         "cell_label": "{{row}}: {{column}}",
@@ -15600,7 +15626,9 @@
           "unused_column": "아직 이 속성을 가진 행이 없습니다.",
           "duplicate_row": "이름이 같은 행이 또 있습니다.",
           "duplicate_column": "이름이 같은 열이 또 있습니다."
-        }
+        },
+        "remove_column_named": "‘{{column}}’ 열 삭제",
+        "remove_row_named": "‘{{row}}’ 행 삭제"
       },
       "reflect": {
         "title": "되돌아보기",
@@ -15609,7 +15637,6 @@
         "prompt_heading": "질문",
         "prompt_placeholder": "학습자가 자기 말로 무엇을 설명해야 하나요?",
         "guiding_heading": "안내 질문",
-        "guiding_hint": "학습자가 막힐 때 열어 볼 수 있는 선택형 힌트(최대 5개).",
         "guiding_placeholder": "질문 {{n}}",
         "guiding_label": "안내 질문 {{n}}",
         "remove_guiding": "질문 {{n}} 삭제",
@@ -15617,10 +15644,8 @@
         "min_words_label": "최소 단어 수",
         "min_words_hint": "학습자는 이 단어 수에 도달하면 비교할 수 있어요. 0이면 바로 비교할 수 있어요.",
         "model_heading": "모범 답안",
-        "model_hint": "선택 사항. 학습자는 자기 답을 쓴 뒤에 볼 수 있어요.",
         "model_placeholder": "몇 문장으로 쓴 좋은 답",
         "checklist_heading": "핵심 내용",
-        "checklist_hint": "학습자는 다룬 핵심 내용에 체크하고, 그것이 점수가 돼요(최대 8개).",
         "point_placeholder": "핵심 내용 {{n}}",
         "point_label": "핵심 내용 {{n}}",
         "remove_point": "핵심 내용 {{n}} 삭제",
@@ -15644,7 +15669,9 @@
           "p2": "지구는 1년 동안 태양 주위를 돈다",
           "p3": "여름에는 햇빛이 더 똑바로 비치고 낮이 길다",
           "p4": "태양과의 거리 때문이 아니다"
-        }
+        },
+        "guiding_optional": "선택 사항",
+        "answer_key": "정답"
       }
     }
   },

@@ -7,13 +7,23 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowDown, ArrowUp, Gauge, LockSimple, Target, WarningCircle } from '@phosphor-icons/react'
+import { ArrowDown, ArrowUp, Gauge, LockSimple, Target } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { CommitInput, FIELD_CLASS } from '../../../Blocks/ui/BlockChrome'
-import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
+import { CommitInput, FIELD_CLASS, SettingsField } from '../../../Blocks/ui/BlockChrome'
+import { InlineHint } from '../Sort/kit'
 import { cn } from '@/lib/utils'
-import { ExperienceFooter, ExperienceFrame, useEnsureBlockId, useExperienceEditable, useLiveAttrs, usePrefersReducedMotion } from '../shared'
+import {
+  AnswerKeyHint,
+  ExperienceFooter,
+  ExperienceFrame,
+  InlineText,
+  SettingsGear,
+  useEnsureBlockId,
+  useExperienceEditable,
+  useLiveAttrs,
+  usePrefersReducedMotion,
+} from '../shared'
 import {
   REVEAL_MS,
   type EstimateData,
@@ -54,9 +64,7 @@ export default function EstimateView(props: NodeViewProps) {
   return (
     <NodeViewWrapper className="block-exp-estimate">
       {editable && !preview ? (
-        <ExperienceFrame {...frame} title={t('editor.experiences.estimate.name')}>
-          <EstimateForm data={data} commit={commit} />
-        </ExperienceFrame>
+        <EstimateAuthor data={data} commit={commit} frame={frame} />
       ) : (
         <EstimatePlayer key={JSON.stringify(data)} data={data} frame={frame} />
       )}
@@ -65,6 +73,10 @@ export default function EstimateView(props: NodeViewProps) {
 }
 
 // ---- authoring -----------------------------------------------------------
+// Edit in place: the learner's slider, with the knob on the true value (an
+// "Answer" marker). Drag it, or type the number, to set the answer; the
+// question, min, max, step and unit are edited where they show. Tolerance
+// lives behind the gear; the explanation sits below as learners get it.
 
 /** The registry's example (what the slash menu inserts), minus its fresh blockId. */
 function exampleAttrs(t: TFunction): Record<string, unknown> {
@@ -72,95 +84,185 @@ function exampleAttrs(t: TFunction): Record<string, unknown> {
   return attrs
 }
 
-function Hint({ children }: { children: React.ReactNode }) {
+/** A number edited in place; text that is not a number snaps back. */
+function NumberInline({ value, onCommit, ariaLabel, className }: { value: number; onCommit: (_n: number) => void; ariaLabel: string; className?: string }) {
+  const [bump, setBump] = React.useState(0)
   return (
-    <p className="m-0 flex items-start gap-1.5 text-xs leading-snug text-amber-700">
-      <WarningCircle size={14} weight="fill" className="mt-px shrink-0" aria-hidden />
-      <span>{children}</span>
-    </p>
-  )
-}
-
-function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
-  return (
-    <label className={cn('flex min-w-0 flex-col gap-1', className)}>
-      <span className="text-xs font-medium text-neutral-600">{label}</span>
-      {children}
-    </label>
-  )
-}
-
-function NumberInput({ value, onCommit, label }: { value: number; onCommit: (_n: number) => void; label?: string }) {
-  return (
-    <CommitInput
-      type="number"
-      inputMode="decimal"
-      step="any"
+    <InlineText
+      key={`${value}:${bump}`}
+      fit
       value={String(value)}
-      aria-label={label}
+      ariaLabel={ariaLabel}
+      maxLength={24}
       onCommit={(v) => {
-        const n = Number(v)
+        const n = Number(v.replace(',', '.'))
         if (v.trim() !== '' && Number.isFinite(n)) onCommit(n)
+        else setBump((b) => b + 1)
       }}
-      className={cn(FIELD_CLASS, 'tabular-nums')}
+      className={cn('tabular-nums', className)}
     />
   )
 }
 
-function EstimateForm({ data, commit }: { data: EstimateData; commit: (_p: any) => void }) {
-  const { t } = useTranslation()
+function EstimateAuthor({ data, commit, frame }: { data: EstimateData; commit: (_p: any) => void; frame: FrameBase }) {
+  const { t, i18n } = useTranslation()
   const k = (s: string, o: Record<string, unknown> = {}) => t(`editor.experiences.estimate.${s}`, o)
   const issues = validateEstimate(data)
   const has = (i: string) => issues.includes(i as any)
   const range = sliderRange(data)
+  const fmt = (v: number) => formatValue(v, range.step, i18n?.language)
+  const withUnit = (v: number) => (data.unit ? t('activities.experiences.estimate.with_unit', { value: fmt(v), unit: data.unit }) : fmt(v))
+
+  // The knob follows the pointer; the answer is written after a short pause.
+  const [drag, setDrag] = React.useState<number | null>(null)
+  const pause = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  React.useEffect(() => () => {
+    if (pause.current) clearTimeout(pause.current)
+  }, [])
+  const setAnswer = (n: number) => {
+    setDrag(n)
+    if (pause.current) clearTimeout(pause.current)
+    pause.current = setTimeout(() => {
+      commit({ answer: n })
+      setDrag(null)
+    }, 250)
+  }
+  const shown = Math.min(range.max, Math.max(range.min, drag ?? data.answer))
+  const frac = (shown - range.min) / Math.max(1e-9, range.max - range.min)
+
+  const settings = (
+    <SettingsGear>
+      <SettingsField label={k('tolerance_label')} hint={k('tolerance_hint', { pct: data.tolerancePct })}>
+        <CommitInput
+          type="number"
+          inputMode="decimal"
+          min={0}
+          max={100}
+          value={String(data.tolerancePct)}
+          onCommit={(v) => {
+            const n = Number(v)
+            if (v.trim() !== '' && Number.isFinite(n)) commit({ tolerancePct: Math.max(0, Math.min(100, n)) })
+          }}
+          className={cn(FIELD_CLASS, 'tabular-nums')}
+        />
+      </SettingsField>
+    </SettingsGear>
+  )
+
   return (
-    <div className="flex flex-col gap-3">
-      <Field label={k('question_label')}>
-        <CommitInput multiline value={data.question} onCommit={(question) => commit({ question })} placeholder={k('question_placeholder')} aria-label={k('question_label')} />
-      </Field>
-      {has('emptyQuestion') && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Hint>{k('issue_emptyQuestion')}</Hint>
-          <button type="button" className={buttonClass('secondary', 'sm')} onClick={() => commit(exampleAttrs(t))}>
-            {k('fill_example')}
-          </button>
+    <ExperienceFrame
+      {...frame}
+      wysiwyg
+      title={t('activities.experiences.estimate.heading')}
+      instructions={t('activities.experiences.estimate.instructions')}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
+    >
+      <div className="flex flex-col gap-4">
+        <InlineText
+          multiline
+          value={data.question}
+          onCommit={(question) => commit({ question })}
+          ariaLabel={k('question_label')}
+          placeholder={k('question_placeholder')}
+          maxLength={300}
+          className="text-[15px] leading-snug font-semibold text-neutral-900 [overflow-wrap:anywhere] sm:text-lg"
+        />
+        {has('emptyQuestion') && (
+          <div className="-mt-2 flex flex-wrap items-center gap-x-2 text-[13px] text-neutral-500">
+            <InlineHint severity="warning">{k('issue_emptyQuestion')}</InlineHint>
+            <button type="button" onClick={() => commit(exampleAttrs(t))} className="font-medium text-neutral-800 underline decoration-dashed underline-offset-2 hover:text-neutral-950">
+              {k('fill_example')}
+            </button>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative min-w-0 flex-1 pt-7">
+              {/* The answer, marked on the knob. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-0 whitespace-nowrap rounded-md bg-gradient-to-b from-indigo-500 to-indigo-600 px-1.5 py-0.5 text-[12px] font-bold tabular-nums text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_2px_4px_-1px_rgba(49,46,129,0.4)] rtl:translate-x-1/2 ltr:-translate-x-1/2"
+                style={{ insetInlineStart: `calc(${frac * 100}% + ${0.875 - frac * 1.75}rem)` }}
+              >
+                {k('answer_marker', { value: withUnit(drag ?? data.answer), defaultValue: 'Answer: {{value}}' })}
+              </span>
+              <div className="relative">
+                <div aria-hidden className="lh-exp-well pointer-events-none absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 overflow-hidden rounded-full">
+                  <div className="absolute inset-y-0 start-0 rounded-full bg-indigo-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" style={{ width: `calc(${frac * 100}% + ${0.875 - frac * 1.75}rem)` }} />
+                </div>
+                <input
+                  type="range"
+                  min={range.min}
+                  max={range.max}
+                  step={range.step}
+                  value={shown}
+                  aria-label={k('answer_label')}
+                  aria-valuetext={withUnit(shown)}
+                  onChange={(e) => setAnswer(snapGuess(Number(e.target.value), range))}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="lh-exp-range relative block w-full min-w-0"
+                />
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5 pt-7">
+              <CommitInput
+                key={data.answer}
+                type="text"
+                inputMode="decimal"
+                value={String(data.answer)}
+                aria-label={k('answer_label')}
+                onCommit={(v) => {
+                  const n = Number(v.replace(',', '.'))
+                  if (v.trim() !== '' && Number.isFinite(n)) commit({ answer: n })
+                }}
+                className={cn(FIELD_CLASS, 'h-10 w-24 text-end text-[14px] tabular-nums')}
+              />
+              <InlineText
+                fit
+                value={data.unit}
+                onCommit={(unit) => commit({ unit })}
+                ariaLabel={k('unit_label')}
+                placeholder={k('unit_placeholder')}
+                maxLength={16}
+                className="text-[13px] text-neutral-500"
+              />
+            </div>
+          </div>
+          <div className="-mt-2 flex items-baseline justify-between gap-3 text-[12px] tabular-nums text-neutral-400">
+            <NumberInline value={data.min} onCommit={(min) => commit({ min })} ariaLabel={k('min_label')} />
+            <span className="inline-flex items-baseline gap-1">
+              {k('step_label')}
+              <NumberInline value={data.step} onCommit={(step) => commit({ step })} ariaLabel={k('step_label')} />
+            </span>
+            <NumberInline value={data.max} onCommit={(max) => commit({ max })} ariaLabel={k('max_label')} />
+          </div>
+          {(['minNotBelowMax', 'stepNotPositive', 'stepTooLarge', 'tooManySteps', 'answerOutside'] as const).filter(has).map((i) => (
+            <InlineHint key={i} severity="warning">
+              {k(`issue_${i}`)}
+            </InlineHint>
+          ))}
+          {has('answerOffStep') && <InlineHint severity="warning">{k('issue_answerOffStep', { value: formatValue(snapGuess(data.answer, range), range.step) })}</InlineHint>}
         </div>
-      )}
 
-      <div className="grid grid-cols-3 gap-2">
-        <Field label={k('min_label')}>
-          <NumberInput value={data.min} onCommit={(min) => commit({ min })} />
-        </Field>
-        <Field label={k('max_label')}>
-          <NumberInput value={data.max} onCommit={(max) => commit({ max })} />
-        </Field>
-        <Field label={k('step_label')}>
-          <NumberInput value={data.step} onCommit={(step) => commit({ step })} />
-        </Field>
+        {/* Shown to learners after the reveal. */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[12px] font-medium text-neutral-400">{k('explanation_label')}</span>
+          <div className="rounded-xl bg-indigo-50/60 px-4 py-3">
+            <InlineText
+              multiline
+              value={data.explanation}
+              onCommit={(explanation) => commit({ explanation })}
+              ariaLabel={k('explanation_label')}
+              placeholder={k('explanation_placeholder')}
+              maxLength={600}
+              className="text-[14px] leading-relaxed text-neutral-700 [overflow-wrap:anywhere]"
+            />
+          </div>
+        </div>
       </div>
-      {(['minNotBelowMax', 'stepNotPositive', 'stepTooLarge', 'tooManySteps'] as const).filter(has).map((i) => (
-        <Hint key={i}>{k(`issue_${i}`)}</Hint>
-      ))}
-
-      <div className="grid grid-cols-3 gap-2">
-        <Field label={k('answer_label')}>
-          <NumberInput value={data.answer} onCommit={(answer) => commit({ answer })} />
-        </Field>
-        <Field label={k('unit_label')}>
-          <CommitInput value={data.unit} onCommit={(unit) => commit({ unit })} placeholder={k('unit_placeholder')} maxLength={16} />
-        </Field>
-        <Field label={k('tolerance_label')}>
-          <NumberInput value={data.tolerancePct} onCommit={(n) => commit({ tolerancePct: Math.max(0, Math.min(100, n)) })} />
-        </Field>
-      </div>
-      {has('answerOutside') && <Hint>{k('issue_answerOutside')}</Hint>}
-      {has('answerOffStep') && <Hint>{k('issue_answerOffStep', { value: formatValue(snapGuess(data.answer, range), range.step) })}</Hint>}
-      <p className="m-0 text-[11px] leading-snug text-neutral-400">{k('tolerance_hint', { pct: data.tolerancePct })}</p>
-
-      <Field label={k('explanation_label')}>
-        <CommitInput multiline value={data.explanation} onCommit={(explanation) => commit({ explanation })} placeholder={k('explanation_placeholder')} aria-label={k('explanation_label')} />
-      </Field>
-    </div>
+    </ExperienceFrame>
   )
 }
 

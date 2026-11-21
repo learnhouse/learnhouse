@@ -15,6 +15,7 @@ export {
   SettingsGear,
   SettingsToggle,
   AnswerKeyHint,
+  CardNav,
   EDIT_OBJECT,
   type AddGhostProps,
   type RemoveXProps,

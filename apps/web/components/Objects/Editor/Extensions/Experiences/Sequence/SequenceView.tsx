@@ -2,9 +2,10 @@
 /*
  "Sequence" (node expSequence): learners put steps or events in order.
 
- Author: steps written in the correct order (drag the grip or use the arrow
- keys on it to reorder), an optional detail per step for the timeline
- variant, inline hints, and "Preview as learner" in the frame header.
+ Author: edit in place on the learner's list, already in the correct order
+ (the answer key). Step text and the timeline detail are edited where they
+ sit; reorder by the grip (drag or arrow keys) or the up / down buttons;
+ "+ Add step" and × add and remove. List / timeline lives behind the gear.
 
  Learner: the steps arrive shuffled. Reorder by dragging the grip (mouse,
  pen, touch), with the up / down buttons, with arrow keys on the grip, or by
@@ -15,14 +16,20 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { CaretDown, CaretUp, DotsSixVertical, ListNumbers, Trash } from '@phosphor-icons/react'
+import { CaretDown, CaretUp, DotsSixVertical, ListNumbers } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS, Segmented } from '../../../Blocks/ui/BlockChrome'
-import { dropEdge, usePointerReorder, type ReorderState } from '../../../Blocks/ui/usePointerReorder'
+import { Segmented, SettingsField } from '../../../Blocks/ui/BlockChrome'
+import { usePointerReorder, type ReorderState } from '../../../Blocks/ui/usePointerReorder'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
   Stars,
   buzz,
   newId,
@@ -52,7 +59,7 @@ import {
   type SequenceData,
   type SequenceVariant,
 } from './sequenceModel'
-import { AddRowButton, BlockHints, FormSection, ICON_BTN, NotReady, ResultIcon, RowHints, contentKey } from '../Sort/kit'
+import { ICON_BTN, InlineHint, NotReady, ResultIcon, contentKey } from '../Sort/kit'
 
 /**
  How far each tile slides while one is dragged, so the others make room and
@@ -103,9 +110,6 @@ function useSlideOffsets(listRef: React.RefObject<HTMLElement | null>, drag: Reo
 
 const TONE = 'info' as const
 
-const GRIP =
-  'flex h-8 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-neutral-300 outline-none transition-colors hover:text-neutral-500 focus-visible:text-neutral-600 focus-visible:ring-2 focus-visible:ring-sky-500/50 active:cursor-grabbing'
-
 /** The learner's grip: a ridged, thumb-sized handle at the start of the tile. */
 const TILE_GRIP =
   'flex h-10 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-neutral-400 outline-none transition-colors hover:bg-neutral-100 hover:text-neutral-600 focus-visible:text-neutral-700 focus-visible:ring-2 focus-visible:ring-sky-500/50 active:cursor-grabbing'
@@ -148,7 +152,10 @@ export default function SequenceView(props: NodeViewProps) {
   )
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// The learner's list, already in the correct order (the answer key). Step text
+// (and the timeline detail) is edited where it sits; reorder by the grip (drag
+// or arrow keys) or the up / down buttons. Layout lives behind the gear.
 
 const ISSUE_FALLBACK: Record<string, string> = {
   too_few_items: 'Add at least 3 steps.',
@@ -163,110 +170,203 @@ function SequenceEditor({ data, commit, frame }: { data: SequenceData; commit: (
   const issues = React.useMemo(() => validateSequence(data), [data])
   const issueText = (code: string) => t(`editor.experiences.sequence.issues.${code}`, ISSUE_FALLBACK[code] ?? code)
   const edit = (fn: (_d: SequenceData) => SequenceData) => commit((live) => ({ items: fn(normalizeSequence(live)).items }))
-  const listRef = React.useRef<HTMLDivElement>(null)
-  const { drag, gripProps } = usePointerReorder({ containerRef: listRef, count: data.items.length, onMove: (from, to) => edit((d) => moveItem(d, from, to)) })
+  const listRef = React.useRef<HTMLOListElement>(null)
+  const [live, setLive] = React.useState('')
+  const stepName = (i: number) => data.items[i]?.text.trim() || t('editor.experiences.sequence.step_placeholder', { n: i + 1, defaultValue: 'Step {{n}}' })
+  const move = (from: number, to: number) => {
+    if (from === to) return
+    edit((d) => moveItem(d, from, to))
+    setLive(t('activities.experiences.sequence.moved', { item: stepName(from), n: to + 1, defaultValue: '“{{item}}” moved to position {{n}}.' }))
+  }
+  const { drag, gripProps } = usePointerReorder({ containerRef: listRef, count: data.items.length, onMove: move })
+  const { offsets: slide, still } = useSlideOffsets(listRef, drag)
   const timeline = data.variant === 'timeline'
   const canRemove = data.items.length > SEQUENCE_LIMITS.minItems
+
+  // Focus a new or neighbouring step once it has rendered.
+  const pendingFocus = React.useRef<string | null>(null)
+  const tryFocus = () => {
+    const sel = pendingFocus.current
+    const el = sel ? listRef.current?.parentElement?.querySelector<HTMLElement>(sel) : null
+    if (el) {
+      pendingFocus.current = null
+      el.focus()
+    }
+  }
+  React.useEffect(tryFocus)
+  const focusLater = (selector: string) => {
+    pendingFocus.current = selector
+    requestAnimationFrame(tryFocus)
+  }
+
+  const moveBy = (id: string, delta: -1 | 1) => {
+    const from = data.items.findIndex((it) => it.id === id)
+    const to = from + delta
+    if (from < 0 || to < 0 || to >= data.items.length) return
+    move(from, to)
+    const other = (to === 0 && delta < 0) || (to === data.items.length - 1 && delta > 0)
+    focusLater(`[data-seq-id="${id}"] [data-dir="${other ? (delta < 0 ? 'down' : 'up') : delta < 0 ? 'up' : 'down'}"]`)
+  }
+  const add = () => {
+    const id = newId()
+    edit((d) => addItem(d, id))
+    focusLater(`[data-seq-id="${id}"] textarea`)
+  }
+  const remove = (i: number) => {
+    const it = data.items[i]
+    const next = data.items[i + 1] ?? data.items[i - 1]
+    edit((d) => removeItem(d, it.id))
+    focusLater(next ? `[data-seq-id="${next.id}"] textarea` : '[data-add-step]')
+  }
+
+  const settings = (
+    <SettingsGear>
+      <SettingsField
+        label={t('editor.experiences.sequence.layout_label', 'Layout')}
+        hint={timeline ? t('editor.experiences.sequence.timeline_hint', 'Each step’s detail (like a year) is revealed after learners check.') : undefined}
+      >
+        <Segmented<SequenceVariant>
+          value={data.variant}
+          onChange={(variant) => commit({ variant })}
+          ariaLabel={t('editor.experiences.sequence.layout_label', 'Layout')}
+          options={[
+            { value: 'list', label: t('editor.experiences.sequence.variant_list', 'List') },
+            { value: 'timeline', label: t('editor.experiences.sequence.variant_timeline', 'Timeline') },
+          ]}
+        />
+      </SettingsField>
+    </SettingsGear>
+  )
 
   return (
     <ExperienceFrame
       {...frame}
+      wysiwyg
       title={data.title}
       onTitleChange={(title) => commit({ title })}
       instructions={data.instructions}
       onInstructionsChange={(instructions) => commit({ instructions })}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
+      live={live}
     >
-      <div className="flex flex-col gap-5">
-        <BlockHints issues={issues} text={issueText} />
-
-        <FormSection title={t('editor.experiences.sequence.layout_label', 'Layout')}>
-          <Segmented<SequenceVariant>
-            value={data.variant}
-            onChange={(variant) => commit({ variant })}
-            ariaLabel={t('editor.experiences.sequence.layout_label', 'Layout')}
-            options={[
-              { value: 'list', label: t('editor.experiences.sequence.variant_list', 'List') },
-              { value: 'timeline', label: t('editor.experiences.sequence.variant_timeline', 'Timeline') },
-            ]}
-          />
-          {timeline && (
-            <p className="m-0 text-[12px] leading-snug text-neutral-400">
-              {t('editor.experiences.sequence.timeline_hint', 'Each step’s detail (like a year) is revealed after learners check.')}
-            </p>
-          )}
-        </FormSection>
-
-        <FormSection
-          title={t('editor.experiences.sequence.items_heading', 'Steps, in the correct order')}
-          hint={t('editor.experiences.sequence.items_hint', 'Learners get them shuffled.')}
-        >
-          <div ref={listRef} data-reorder-list="" className="flex flex-col gap-2">
-            {data.items.map((it, i) => {
-              const edge = dropEdge(drag, i)
-              return (
-                <div
-                  key={it.id}
-                  data-reorder-item=""
-                  className={cn(
-                    'relative flex flex-col gap-1 rounded-xl bg-neutral-50/80 p-2 ring-1 ring-neutral-100',
-                    drag?.from === i && 'opacity-50',
-                    edge === 'before' && 'before:absolute before:inset-x-2 before:-top-1.5 before:h-0.5 before:rounded before:bg-blue-500',
-                    edge === 'after' && 'after:absolute after:inset-x-2 after:-bottom-1.5 after:h-0.5 after:rounded after:bg-blue-500',
-                  )}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      {...gripProps(i, it.id)}
-                      className={GRIP}
-                      aria-label={t('editor.experiences.sequence.drag_step', { n: i + 1, defaultValue: 'Move step {{n}} (drag or arrow keys)' })}
-                      title={t('editor.experiences.sequence.drag_short', 'Drag to reorder')}
-                    >
-                      <DotsSixVertical size={14} weight="bold" aria-hidden className="pointer-events-none" />
-                    </button>
-                    <span aria-hidden className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[11px] font-semibold tabular-nums text-blue-700">
-                      {i + 1}
-                    </span>
-                    <CommitInput
-                      value={it.text}
-                      onCommit={(text) => edit((d) => updateItem(d, it.id, { text }))}
-                      placeholder={t('editor.experiences.sequence.step_placeholder', { n: i + 1, defaultValue: 'Step {{n}}' })}
-                      aria-label={t('editor.experiences.sequence.step_placeholder', { n: i + 1, defaultValue: 'Step {{n}}' })}
-                      className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1')}
-                    />
-                    <button
-                      type="button"
-                      className={ICON_BTN}
-                      disabled={!canRemove}
-                      onClick={() => edit((d) => removeItem(d, it.id))}
-                      aria-label={t('editor.experiences.sequence.remove_step', 'Remove step')}
-                      title={t('editor.experiences.sequence.remove_step', 'Remove step')}
-                    >
-                      <Trash size={15} aria-hidden />
-                    </button>
-                  </div>
-                  {timeline && (
-                    <div className="ps-[3.75rem] pe-10">
-                      <CommitInput
-                        value={it.detail ?? ''}
-                        onCommit={(detail) => edit((d) => updateItem(d, it.id, { detail }))}
-                        placeholder={t('editor.experiences.sequence.detail_placeholder', 'Detail, e.g. 1969')}
-                        aria-label={t('editor.experiences.sequence.detail_label', 'Detail')}
-                        className={cn(FIELD_CLASS, 'h-8 text-[12px]')}
-                      />
-                    </div>
-                  )}
-                  <div className="ps-[3.75rem]">
-                    <RowHints issues={issues} id={it.id} text={issueText} />
-                  </div>
-                </div>
-              )
-            })}
+      <div className="flex flex-col gap-4">
+        <p className="m-0 text-[13px] leading-snug text-neutral-500">
+          {t('editor.experiences.sequence.author_hint', 'This is the correct order; learners get the steps shuffled. Drag a step or use the arrows to reorder.')}
+        </p>
+        {issues.some((i) => !i.id) && (
+          <div className="flex flex-col gap-1">
+            {issues
+              .filter((i) => !i.id)
+              .map((i) => (
+                <InlineHint key={i.code} severity={i.severity}>
+                  {issueText(i.code)}
+                </InlineHint>
+              ))}
           </div>
-          <AddRowButton disabled={data.items.length >= SEQUENCE_LIMITS.maxItems} onClick={() => edit((d) => addItem(d, newId()))}>
+        )}
+
+        <ol
+          ref={listRef}
+          data-reorder-list=""
+          aria-label={t('editor.experiences.sequence.items_heading', 'Steps, in the correct order')}
+          className={cn('m-0 flex list-none flex-col gap-2 p-0', timeline && 'relative ps-7 before:absolute before:inset-y-3 before:start-[11px] before:w-0.5 before:rounded before:bg-blue-100')}
+        >
+          {data.items.map((it, i) => {
+            const dragging = drag?.from === i
+            const offset = slide[i] ?? 0
+            const name = stepName(i)
+            const rowIssues = issues.filter((x) => x.id === it.id)
+            return (
+              <li
+                key={it.id}
+                data-reorder-item=""
+                data-seq-id={it.id}
+                data-picked={dragging ? 'true' : undefined}
+                style={
+                  {
+                    ...(drag ? { transform: `translateY(${offset - (dragging ? 3 : 0)}px)`, zIndex: dragging ? 2 : undefined } : null),
+                    ...(still ? { transition: 'none' } : null),
+                  } as React.CSSProperties
+                }
+                className={cn(
+                  'lh-exp-raised relative flex min-h-12 min-w-0 items-center gap-1.5 rounded-xl py-1 ps-1 pe-1.5',
+                  EDIT_OBJECT,
+                  dragging ? 'text-sky-700' : 'text-neutral-800',
+                  drag && 'lh-exp-slide',
+                )}
+              >
+                {timeline && <span aria-hidden className="absolute -start-[22px] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-blue-400 ring-2 ring-white" />}
+                <button
+                  type="button"
+                  {...gripProps(i, it.id)}
+                  className={TILE_GRIP}
+                  aria-label={t('editor.experiences.sequence.drag_step', { n: i + 1, defaultValue: 'Move step {{n}} (drag or arrow keys)' })}
+                  title={t('editor.experiences.sequence.drag_short', 'Drag to reorder')}
+                >
+                  <DotsSixVertical size={16} weight="bold" aria-hidden className="pointer-events-none" />
+                </button>
+                <span aria-hidden className="lh-exp-well inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums text-neutral-600">
+                  {i + 1}
+                </span>
+                <div className="flex min-h-10 min-w-0 flex-1 flex-col items-start justify-center gap-0.5 px-1.5 py-1">
+                  <InlineText
+                    value={it.text}
+                    onCommit={(text) => edit((d) => updateItem(d, it.id, { text }))}
+                    ariaLabel={t('editor.experiences.sequence.step_placeholder', { n: i + 1, defaultValue: 'Step {{n}}' })}
+                    placeholder={t('editor.experiences.sequence.step_placeholder', { n: i + 1, defaultValue: 'Step {{n}}' })}
+                    maxLength={160}
+                    className="w-full text-[14px] leading-snug font-medium [overflow-wrap:anywhere]"
+                  />
+                  {timeline && (
+                    <InlineText
+                      fit
+                      value={it.detail ?? ''}
+                      onCommit={(detail) => edit((d) => updateItem(d, it.id, { detail }))}
+                      ariaLabel={t('editor.experiences.sequence.detail_label_n', { n: i + 1, defaultValue: 'Step {{n}} detail' })}
+                      placeholder={t('editor.experiences.sequence.detail_placeholder', 'Detail, e.g. 1969')}
+                      maxLength={40}
+                      className="rounded-md bg-blue-50 px-1.5 py-px text-[12px] font-semibold tabular-nums text-blue-700"
+                    />
+                  )}
+                  {rowIssues.map((x) => (
+                    <InlineHint key={x.code} severity={x.severity}>
+                      {issueText(x.code)}
+                    </InlineHint>
+                  ))}
+                </div>
+                <span className="flex shrink-0 items-center">
+                  <button
+                    type="button"
+                    data-dir="up"
+                    disabled={i === 0}
+                    onClick={() => moveBy(it.id, -1)}
+                    className={cn(ICON_BTN, 'h-8 w-8')}
+                    aria-label={t('activities.experiences.sequence.move_up', { item: name, defaultValue: 'Move “{{item}}” up' })}
+                  >
+                    <CaretUp size={15} weight="bold" aria-hidden className="pointer-events-none" />
+                  </button>
+                  <button
+                    type="button"
+                    data-dir="down"
+                    disabled={i === data.items.length - 1}
+                    onClick={() => moveBy(it.id, 1)}
+                    className={cn(ICON_BTN, 'h-8 w-8')}
+                    aria-label={t('activities.experiences.sequence.move_down', { item: name, defaultValue: 'Move “{{item}}” down' })}
+                  >
+                    <CaretDown size={15} weight="bold" aria-hidden className="pointer-events-none" />
+                  </button>
+                </span>
+                <RemoveX floating disabled={!canRemove} onClick={() => remove(i)} label={t('editor.experiences.sequence.remove_named', { item: name, defaultValue: 'Remove “{{item}}”' })} />
+              </li>
+            )
+          })}
+        </ol>
+        {data.items.length < SEQUENCE_LIMITS.maxItems && (
+          <AddGhost data-add-step="" onClick={add} className={cn('min-h-12 w-full rounded-xl px-3 text-[14px]', timeline && 'ms-7 w-[calc(100%-1.75rem)]')}>
             {t('editor.experiences.sequence.add_step', 'Add step')}
-          </AddRowButton>
-        </FormSection>
+          </AddGhost>
+        )}
       </div>
     </ExperienceFrame>
   )

@@ -4,9 +4,10 @@
  circles (only A, both, only B), plus an outside well when the author turns
  "Neither" on.
 
- Author: a single-column form (the two sets with a colour, the items with
- their correct zone and an optional explanation, the "Neither" toggle) with
- inline hints, and "Preview as learner" in the frame header.
+ Author: edit in place on the learner's diagram, every item already in its
+ correct region (the answer key). Group names and items are edited where
+ they sit; items move by drag or tap-then-place; "+ Add item" per region;
+ "Why?" opens an item's explanation. "Neither" lives behind the gear.
 
  Learner: chips in a tray; drag one onto a region (mouse, pen, touch
  press-and-hold) or tap a chip, then tap a region. Keyboard: Tab to a chip,
@@ -17,13 +18,19 @@
 */
 import React from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { ArrowCounterClockwise, Intersect, Trash, Tray } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, DotsSixVertical, Intersect, Tray } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CommitInput, FIELD_CLASS } from '../../../Blocks/ui/BlockChrome'
 import {
+  AddGhost,
+  AnswerKeyHint,
+  EDIT_OBJECT,
   ExperienceFooter,
   ExperienceFrame,
+  InlineText,
+  RemoveX,
+  SettingsGear,
+  SettingsToggle,
   Stars,
   buzz,
   newId,
@@ -35,6 +42,7 @@ import {
 } from '../shared'
 import {
   VENN_LIMITS,
+  VENN_ZONES,
   activeZones,
   addItem,
   allPlaced,
@@ -54,10 +62,11 @@ import {
   type VennCheck,
   type VennColor,
   type VennData,
+  type VennItem,
   type VennPlacement,
   type VennZone,
 } from './vennModel'
-import { AddRowButton, BlockHints, DragGhost, FormSection, ICON_BTN, NotReady, ResultIcon, RowHints, contentKey } from '../Sort/kit'
+import { DragGhost, InlineHint, NotReady, ResultIcon, contentKey } from '../Sort/kit'
 import { focusSibling, useTapDrag } from '../Sort/useTapDrag'
 
 const TONE = 'info' as const
@@ -140,7 +149,12 @@ function VennGlyph({ zone, a, b, size = 26 }: { zone: VennZone; a: VennColor; b:
   )
 }
 
-// ─── Author form ────────────────────────────────────────────────────────────
+// ─── Author: edit in place ──────────────────────────────────────────────────
+// The learner's diagram with every item already in its correct region (the
+// answer key). Group names and items are edited where they sit; "+ Add" in a
+// region adds an item there; an item moves by drag, or by tapping its handle
+// and then a region (keys 1–4 on the handle). "Why?" opens its explanation.
+// The "Neither" area lives behind the gear.
 
 function VennEditor({ data, commit, frame }: { data: VennData; commit: (_p: CommitPatch<Record<string, any>>) => void; frame: Frame }) {
   const { t } = useTranslation()
@@ -152,6 +166,25 @@ function VennEditor({ data, commit, frame }: { data: VennData; commit: (_p: Comm
     })
   const issueText = (code: string) => t(`editor.experiences.venn.issues.${code}`, ISSUE_FALLBACK[code] ?? code)
   const canRemove = data.items.length > VENN_LIMITS.minItems
+  const canAdd = data.items.length < VENN_LIMITS.maxItems
+  const [selected, setSelected] = React.useState<string | null>(null)
+  const [why, setWhy] = React.useState<string | null>(null)
+  const [live, setLive] = React.useState('')
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const width = useWidth(rootRef)
+  const wide = width >= WIDE
+
+  // Focus a new or neighbouring object once it has rendered.
+  const [pendingFocus, setPendingFocus] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    if (!pendingFocus) return
+    const el = rootRef.current?.querySelector<HTMLElement>(pendingFocus)
+    if (el) el.focus()
+    const id = requestAnimationFrame(() => setPendingFocus(null))
+    return () => cancelAnimationFrame(id)
+  })
+  const focusLater = (selector: string) => setPendingFocus(selector)
+
   const setName = (which: 'a' | 'b') =>
     data.sets[which].label.trim() || (which === 'a' ? t('editor.experiences.venn.set_a_placeholder', 'Group A') : t('editor.experiences.venn.set_b_placeholder', 'Group B'))
   const zoneLabel = (zone: VennZone) =>
@@ -160,108 +193,382 @@ function VennEditor({ data, commit, frame }: { data: VennData; commit: (_p: Comm
       : zone === 'neither'
         ? t('editor.experiences.venn.zone_neither', 'Neither')
         : t('editor.experiences.venn.zone_only', { set: setName(zone), defaultValue: 'Only {{set}}' })
+  const itemIndex = new Map(data.items.map((it, i) => [it.id, i]))
+  const itemName = (it: VennItem) => it.text.trim() || t('editor.experiences.venn.item_placeholder', { n: (itemIndex.get(it.id) ?? 0) + 1, defaultValue: 'Item {{n}}' })
+  const zones: VennZone[] = data.showNeither ? ['a', 'both', 'b', 'neither'] : ['a', 'both', 'b']
+
+  const move = (itemId: string, zone: VennZone) => {
+    const it = data.items.find((x) => x.id === itemId)
+    setSelected(null)
+    if (!it) return
+    if (it.zone !== zone) edit((d) => updateItem(d, itemId, { zone }))
+    setLive(t('editor.experiences.venn.moved', { item: itemName(it), zone: zoneLabel(zone), defaultValue: 'Moved “{{item}}” to {{zone}}.' }))
+    focusLater(`[data-chip-id="${itemId}"] [data-grip]`)
+  }
+  const { drag, itemProps } = useTapDrag({ onDrop: (id, target) => (VENN_ZONES as readonly string[]).includes(target) && move(id, target as VennZone) })
+
+  const addTo = (zone: VennZone) => {
+    const id = newId()
+    edit((d) => addItem(d, id, zone))
+    focusLater(`[data-chip-id="${id}"] textarea`)
+  }
+  const removeAt = (it: VennItem) => {
+    const siblings = data.items.filter((x) => x.zone === it.zone)
+    const i = siblings.indexOf(it)
+    const next = siblings[i + 1] ?? siblings[i - 1]
+    edit((d) => removeItem(d, it.id))
+    if (why === it.id) setWhy(null)
+    if (selected === it.id) setSelected(null)
+    focusLater(next ? `[data-chip-id="${next.id}"] [data-grip]` : `[data-add-zone="${it.zone}"]`)
+  }
+
+  const gripKeyDown = (e: React.KeyboardEvent<HTMLElement>, it: VennItem) => {
+    if (e.key === 'Escape') {
+      setSelected(null)
+      return
+    }
+    const n = Number(e.key)
+    if (Number.isInteger(n) && n >= 1 && n <= zones.length) {
+      e.preventDefault()
+      move(it.id, zones[n - 1])
+      return
+    }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && canRemove) {
+      e.preventDefault()
+      removeAt(it)
+      return
+    }
+    focusSibling(e, '[data-grip]', rootRef.current)
+  }
+
+  const sel = selected ? data.items.find((x) => x.id === selected) : undefined
+  const isTarget = (zone: VennZone) => !!sel && sel.zone !== zone
+
+  const chip = (it: VennItem, compact = false) => {
+    const dp = itemProps(it.id)
+    const isSel = selected === it.id
+    const name = itemName(it)
+    const hasWhy = !!it.explanation?.trim()
+    const n = (itemIndex.get(it.id) ?? 0) + 1
+    return (
+      <div
+        key={it.id}
+        {...dp}
+        data-venn-chip=""
+        data-chip-id={it.id}
+        onPointerDown={(e) => {
+          if ((e.target as HTMLElement).closest('textarea,[data-no-drag]')) return
+          dp.onPointerDown(e)
+        }}
+        className={cn(
+          'lh-exp-raised pointer-events-auto relative inline-flex max-w-full min-w-0 cursor-grab touch-manipulation items-center rounded-xl text-start leading-snug font-medium select-none active:cursor-grabbing',
+          compact ? 'min-h-9 px-2.5 py-1.5 text-[13px]' : 'min-h-10 px-3 py-2 text-[14px]',
+          EDIT_OBJECT,
+          isSel ? 'text-sky-700' : 'text-neutral-800',
+          drag?.id === it.id && 'opacity-40',
+        )}
+      >
+        <button
+          type="button"
+          data-grip=""
+          aria-pressed={isSel}
+          aria-label={t('editor.experiences.venn.move_item', { item: name, defaultValue: 'Move “{{item}}”' })}
+          title={t('editor.experiences.venn.move_hint', 'Drag to another place, or press 1–4')}
+          onClick={(e) => {
+            e.stopPropagation()
+            setSelected(isSel ? null : it.id)
+          }}
+          onKeyDown={(e) => gripKeyDown(e, it)}
+          data-on={isSel ? 'true' : undefined}
+          className="lh-exp-tool absolute inset-y-0 start-0 inline-flex w-3 cursor-grab items-center justify-center rounded-s-xl text-neutral-300 outline-none hover:text-neutral-500"
+        >
+          <DotsSixVertical size={12} weight="bold" aria-hidden />
+        </button>
+        <InlineText
+          fit
+          value={it.text}
+          onCommit={(text) => edit((d) => updateItem(d, it.id, { text }))}
+          ariaLabel={t('editor.experiences.venn.item_placeholder', { n, defaultValue: 'Item {{n}}' })}
+          placeholder={t('editor.experiences.venn.item_placeholder', { n, defaultValue: 'Item {{n}}' })}
+          maxLength={120}
+        />
+        <button
+          type="button"
+          data-no-drag=""
+          aria-expanded={why === it.id}
+          aria-label={t('editor.experiences.venn.why_label', { item: name, defaultValue: 'Why “{{item}}” belongs here' })}
+          title={t('editor.experiences.venn.why_label', { item: name, defaultValue: 'Why “{{item}}” belongs here' })}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            setWhy(why === it.id ? null : it.id)
+          }}
+          data-on={hasWhy || why === it.id ? 'true' : undefined}
+          className={cn(
+            'lh-exp-tool lh-exp-raised absolute -end-2 -bottom-2 z-10 inline-flex h-5 items-center rounded-full px-1.5 text-[10px] leading-none font-semibold outline-none',
+            hasWhy ? 'text-amber-700' : 'text-neutral-400 hover:text-neutral-700',
+          )}
+        >
+          {t('editor.experiences.sort.why', 'Why?')}
+        </button>
+        <RemoveX floating disabled={!canRemove} onClick={() => removeAt(it)} label={t('editor.experiences.venn.remove_named', { item: name, defaultValue: 'Remove “{{item}}”' })} />
+      </div>
+    )
+  }
+
+  const addGhost = (zone: VennZone, compact = false) =>
+    canAdd ? (
+      <AddGhost
+        data-add-zone={zone}
+        onClick={() => addTo(zone)}
+        iconSize={12}
+        aria-label={t('editor.experiences.venn.add_to', { zone: zoneLabel(zone), defaultValue: 'Add an item to {{zone}}' })}
+        className={cn('pointer-events-auto rounded-xl', compact ? 'min-h-9 px-2.5 text-[12px]' : 'min-h-10 px-3')}
+      >
+        {t('editor.experiences.venn.add_item', 'Add item')}
+      </AddGhost>
+    ) : null
+
+  const placeButton = (zone: VennZone) =>
+    isTarget(zone) && sel ? (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          move(sel.id, zone)
+        }}
+        className="lh-exp-raised lh-exp-press pointer-events-auto inline-flex min-h-9 items-center justify-center rounded-xl px-3 text-[13px] font-medium text-neutral-700 outline-none"
+      >
+        {t('activities.experiences.venn.place_here', 'Put it here')}
+      </button>
+    ) : null
+
+  const setLabel = (which: 'a' | 'b', className?: string) => {
+    const set = data.sets[which]
+    const other = data.sets[which === 'a' ? 'b' : 'a']
+    return (
+      <span className={cn('flex min-w-0 items-center gap-1.5', className)}>
+        <button
+          type="button"
+          data-no-drag=""
+          onClick={() => edit((d) => updateSet(d, which, { color: cycleColor(set.color, other.color) }))}
+          aria-label={t('editor.experiences.venn.change_color', 'Change colour')}
+          title={t('editor.experiences.venn.change_color', 'Change colour')}
+          className="-m-1 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full outline-none hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-sky-500/40"
+        >
+          <span aria-hidden className={cn('h-2.5 w-2.5 rounded-full', COLOR[set.color].dot)} />
+        </button>
+        <InlineText
+          fit
+          value={set.label}
+          onCommit={(label) => edit((d) => updateSet(d, which, { label }))}
+          ariaLabel={which === 'a' ? t('editor.experiences.venn.set_a_label', 'First group') : t('editor.experiences.venn.set_b_label', 'Second group')}
+          placeholder={which === 'a' ? t('editor.experiences.venn.set_a_placeholder', 'Group A') : t('editor.experiences.venn.set_b_placeholder', 'Group B')}
+          maxLength={40}
+          className={cn('min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere]', COLOR[set.color].text)}
+        />
+      </span>
+    )
+  }
+
+  const idsIn = (zone: VennZone) => data.items.filter((it) => it.zone === zone)
+  const ca = COLOR[data.sets.a.color]
+  const cb = COLOR[data.sets.b.color]
+
+  // ── Wide: the diagram ──
+  const maxCount = Math.max(1, ...(['a', 'both', 'b'] as const).map((z) => idsIn(z).length + (canAdd ? 1 : 0)))
+  const stageW = Math.min(width, 720)
+  const stageH = Math.round(Math.max(270, stageW * 0.532, (maxCount * 46 + 30) / 0.66))
+  const geo = vennGeometry(stageW, stageH)
+  const header = (zone: 'a' | 'both' | 'b', ci: number) => (
+    <div key={zone} className="flex min-w-0 flex-col items-center gap-1 text-center" style={{ width: geo.boxes[zone].width + 16 }}>
+      <span className="inline-flex min-h-8 max-w-full items-center gap-1.5 px-1">
+        {zone === 'both' ? <span className="text-[13px] font-semibold text-neutral-600">{t('activities.experiences.venn.both', 'Both')}</span> : setLabel(zone)}
+        <kbd aria-hidden className="lh-exp-raised rounded-md px-1.5 text-[11px] font-medium text-neutral-500">
+          {ci + 1}
+        </kbd>
+      </span>
+    </div>
+  )
+  const regionProps = (zone: 'a' | 'both' | 'b') => ({
+    'data-drop-target': zone,
+    onClick: () => isTarget(zone) && sel && move(sel.id, zone),
+    style: { pointerEvents: 'all' as const, cursor: isTarget(zone) ? 'pointer' : undefined },
+    fill: drag?.over === zone || isTarget(zone) ? (zone === 'both' ? 'rgba(15,23,42,0.07)' : zone === 'a' ? ca.hex : cb.hex) : 'transparent',
+    fillOpacity: drag?.over === zone ? 0.22 : isTarget(zone) ? 0.1 : 0,
+    className: 'transition-[fill-opacity] duration-150',
+  })
+  const diagram = (
+    <div className="mx-auto flex w-full flex-col items-center gap-1" style={{ maxWidth: 720 }}>
+      <div className="relative flex w-full justify-between" style={{ width: stageW }} dir="ltr">
+        <div className="absolute" style={{ left: geo.boxes.a.left - 8 }}>
+          {header('a', 0)}
+        </div>
+        <div className="absolute" style={{ left: geo.boxes.both.left - 8 }}>
+          {header('both', 1)}
+        </div>
+        <div className="absolute" style={{ left: geo.boxes.b.left - 8 }}>
+          {header('b', 2)}
+        </div>
+        <div className="h-9" />
+      </div>
+      <div className="relative" style={{ width: stageW, height: stageH }} dir="ltr">
+        <svg width={stageW} height={stageH} className="absolute inset-0" aria-hidden>
+          <ellipse cx={geo.cxA} cy={geo.cy} rx={geo.rx} ry={geo.ry} fill={ca.hex} fillOpacity={0.1} stroke={ca.hex} strokeOpacity={0.55} strokeWidth={1.5} />
+          <ellipse cx={geo.cxB} cy={geo.cy} rx={geo.rx} ry={geo.ry} fill={cb.hex} fillOpacity={0.1} stroke={cb.hex} strokeOpacity={0.55} strokeWidth={1.5} />
+          <path d={geo.onlyA} {...regionProps('a')} />
+          <path d={geo.lens} {...regionProps('both')} />
+          <path d={geo.onlyB} {...regionProps('b')} />
+        </svg>
+        {(['a', 'both', 'b'] as const).map((zone) => (
+          <div
+            key={zone}
+            data-drop-target={zone}
+            role="group"
+            aria-label={zoneLabel(zone)}
+            className="pointer-events-none absolute flex flex-col items-center justify-center gap-1.5"
+            style={{ left: geo.boxes[zone].left, width: geo.boxes[zone].width, top: geo.band.top, height: geo.band.height }}
+            dir="auto"
+          >
+            {idsIn(zone).map((it) => chip(it, true))}
+            {isTarget(zone) ? placeButton(zone) : addGhost(zone, true)}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  // ── Narrow: stacked wells ──
+  const well = (zone: VennZone) => {
+    const target = isTarget(zone)
+    const tint = zone === 'a' ? ca.text : zone === 'b' ? cb.text : 'text-neutral-500'
+    return (
+      <div
+        key={zone}
+        data-drop-target={zone}
+        role="group"
+        aria-label={zoneLabel(zone)}
+        onClick={(e) => target && sel && !(e.target as HTMLElement).closest('textarea,button,[data-venn-chip]') && move(sel.id, zone)}
+        data-over={drag?.over === zone || target ? 'true' : undefined}
+        className={cn('lh-exp-well flex min-h-24 min-w-0 flex-col gap-2 rounded-2xl p-3', zone !== 'both' && 'lh-exp-tinted', tint, target && 'cursor-pointer')}
+      >
+        <div className="flex items-center gap-2">
+          <VennGlyph zone={zone} a={data.sets.a.color} b={data.sets.b.color} />
+          {zone === 'a' || zone === 'b' ? setLabel(zone, 'flex-1') : <span className="min-w-0 flex-1 text-[13px] font-semibold text-neutral-700">{zoneLabel(zone)}</span>}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {idsIn(zone).map((it) => chip(it))}
+          {target ? placeButton(zone) : addGhost(zone)}
+        </div>
+      </div>
+    )
+  }
+
+  const neitherItems = idsIn('neither')
+  const neitherWell =
+    data.showNeither || neitherItems.length ? (
+      <div
+        data-drop-target="neither"
+        role="group"
+        aria-label={zoneLabel('neither')}
+        onClick={(e) => isTarget('neither') && sel && !(e.target as HTMLElement).closest('textarea,button,[data-venn-chip]') && move(sel.id, 'neither')}
+        data-over={drag?.over === 'neither' || isTarget('neither') ? 'true' : undefined}
+        className={cn(
+          'lh-exp-well flex min-h-16 flex-wrap items-center gap-2 rounded-2xl border border-dashed border-neutral-300/70 p-3 text-neutral-500',
+          !data.showNeither && 'border-amber-300',
+          isTarget('neither') && 'cursor-pointer',
+        )}
+      >
+        <span className="flex items-center gap-2 text-[13px] font-semibold text-neutral-600">
+          <VennGlyph zone="neither" a={data.sets.a.color} b={data.sets.b.color} />
+          {zoneLabel('neither')}
+          {data.showNeither && (
+            <kbd aria-hidden className="lh-exp-raised hidden rounded-md px-1.5 text-[11px] font-medium text-neutral-500 sm:inline">
+              4
+            </kbd>
+          )}
+        </span>
+        {neitherItems.map((it) => chip(it, true))}
+        {isTarget('neither') ? <span className="ms-auto">{placeButton('neither')}</span> : data.showNeither && addGhost('neither', true)}
+      </div>
+    ) : null
+
+  const whyItem = why ? data.items.find((x) => x.id === why) : undefined
+  const itemHints = issues.filter((i) => i.id)
+  const settings = (
+    <SettingsGear>
+      <SettingsToggle
+        checked={data.showNeither}
+        onChange={(showNeither) => commit({ showNeither })}
+        label={t('editor.experiences.venn.show_neither', 'Add a “Neither” area outside the circles')}
+        hint={t('editor.experiences.venn.show_neither_hint', 'For items that belong to neither group.')}
+      />
+    </SettingsGear>
+  )
 
   return (
     <ExperienceFrame
       {...frame}
+      wysiwyg
       title={data.title}
       onTitleChange={(title) => commit({ title })}
       instructions={data.instructions}
       onInstructionsChange={(instructions) => commit({ instructions })}
+      headerEnd={settings}
+      footer={<AnswerKeyHint />}
+      live={live}
     >
-      <div className="flex flex-col gap-5">
-        <BlockHints issues={issues} text={issueText} />
-
-        <FormSection title={t('editor.experiences.venn.sets_heading', 'The two groups')}>
-          {(['a', 'b'] as const).map((which) => {
-            const set = data.sets[which]
-            const other = data.sets[which === 'a' ? 'b' : 'a']
-            return (
-              <div key={which} className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className={ICON_BTN}
-                  onClick={() => edit((d) => updateSet(d, which, { color: cycleColor(set.color, other.color) }))}
-                  aria-label={t('editor.experiences.venn.change_color', 'Change colour')}
-                  title={t('editor.experiences.venn.change_color', 'Change colour')}
-                >
-                  <span aria-hidden className={cn('h-3.5 w-3.5 rounded-full', COLOR[set.color].dot)} />
-                </button>
-                <CommitInput
-                  value={set.label}
-                  onCommit={(label) => edit((d) => updateSet(d, which, { label }))}
-                  placeholder={which === 'a' ? t('editor.experiences.venn.set_a_placeholder', 'Group A') : t('editor.experiences.venn.set_b_placeholder', 'Group B')}
-                  aria-label={which === 'a' ? t('editor.experiences.venn.set_a_label', 'First group') : t('editor.experiences.venn.set_b_label', 'Second group')}
-                  className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1')}
-                />
-              </div>
-            )
-          })}
-        </FormSection>
-
-        <FormSection
-          title={t('editor.experiences.venn.items_heading', 'Items')}
-          hint={t('editor.experiences.venn.items_hint', 'Pick where each item belongs. Learners see them shuffled.')}
-        >
-          {data.items.map((it, i) => (
-            <div key={it.id} className="flex flex-col gap-1.5 rounded-xl bg-neutral-50/80 p-2 ring-1 ring-neutral-100">
-              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
-                <CommitInput
-                  value={it.text}
-                  onCommit={(text) => edit((d) => updateItem(d, it.id, { text }))}
-                  placeholder={t('editor.experiences.venn.item_placeholder', { n: i + 1, defaultValue: 'Item {{n}}' })}
-                  aria-label={t('editor.experiences.venn.item_placeholder', { n: i + 1, defaultValue: 'Item {{n}}' })}
-                  className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1')}
-                />
-                <div className="flex items-center gap-1.5">
-                  <VennGlyph zone={it.zone} a={data.sets.a.color} b={data.sets.b.color} />
-                  <select
-                    value={it.zone}
-                    onChange={(e) => edit((d) => updateItem(d, it.id, { zone: e.target.value as VennZone }))}
-                    aria-label={t('editor.experiences.venn.item_zone', 'Where it belongs')}
-                    className={cn(FIELD_CLASS, 'h-9 min-w-0 flex-1 sm:w-40 sm:flex-none')}
-                  >
-                    {(['a', 'both', 'b', 'neither'] as const).map((z) => (
-                      <option key={z} value={z}>
-                        {zoneLabel(z)}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className={ICON_BTN}
-                    disabled={!canRemove}
-                    onClick={() => edit((d) => removeItem(d, it.id))}
-                    aria-label={t('editor.experiences.venn.remove_item', 'Remove item')}
-                    title={t('editor.experiences.venn.remove_item', 'Remove item')}
-                  >
-                    <Trash size={15} aria-hidden />
-                  </button>
-                </div>
-              </div>
-              <CommitInput
-                value={it.explanation ?? ''}
-                onCommit={(explanation) => edit((d) => updateItem(d, it.id, { explanation }))}
-                placeholder={t('editor.experiences.venn.explanation_placeholder', 'Why it belongs there (shown when wrong, optional)')}
-                aria-label={t('editor.experiences.venn.explanation_label', 'Explanation')}
-                className={cn(FIELD_CLASS, 'h-8 text-[12px]')}
-              />
-              <RowHints issues={issues} id={it.id} text={issueText} />
-            </div>
-          ))}
-          <AddRowButton disabled={data.items.length >= VENN_LIMITS.maxItems} onClick={() => edit((d) => addItem(d, newId()))}>
-            {t('editor.experiences.venn.add_item', 'Add item')}
-          </AddRowButton>
-        </FormSection>
-
-        <label className="flex cursor-pointer items-start gap-2 text-[13px] text-neutral-700">
-          <input type="checkbox" checked={data.showNeither} onChange={(e) => commit({ showNeither: e.target.checked })} className="mt-0.5 h-4 w-4 accent-neutral-900" />
-          <span>
-            {t('editor.experiences.venn.show_neither', 'Add a “Neither” area outside the circles')}
-            <span className="block text-[12px] text-neutral-400">{t('editor.experiences.venn.show_neither_hint', 'For items that belong to neither group.')}</span>
-          </span>
-        </label>
+      <div ref={rootRef} className="flex flex-col gap-4">
+        <p className="m-0 text-[13px] leading-snug text-neutral-500">
+          {sel
+            ? t('editor.experiences.venn.author_selected', { item: itemName(sel), defaultValue: 'Now tap where “{{item}}” belongs.' })
+            : t('editor.experiences.venn.author_hint', 'Each item sits where it belongs. Drag an item, or tap its handle and then a place, to move it.')}
+        </p>
+        {issues.some((i) => !i.id) && (
+          <div className="flex flex-col gap-1">
+            {issues
+              .filter((i) => !i.id)
+              .map((i) => (
+                <InlineHint key={i.code} severity={i.severity}>
+                  {issueText(i.code)}
+                </InlineHint>
+              ))}
+          </div>
+        )}
+        {width === 0 ? null : wide ? diagram : <div className="flex flex-col gap-3">{(['a', 'both', 'b'] as const).map((z) => well(z))}</div>}
+        {neitherWell}
+        {whyItem && (
+          <div className="rounded-xl bg-[color-mix(in_srgb,var(--exp-paper)_80%,transparent)] px-3 py-2 shadow-[inset_0_0_0_1px_var(--exp-edge)]">
+            <span className="mb-0.5 block text-[11px] font-semibold text-neutral-400">
+              {t('editor.experiences.venn.why_heading', { item: itemName(whyItem), zone: zoneLabel(whyItem.zone), defaultValue: 'Why “{{item}}” belongs in {{zone}} (shown when a learner gets it wrong)' })}
+            </span>
+            <InlineText
+              key={whyItem.id}
+              multiline
+              autoFocus
+              value={whyItem.explanation ?? ''}
+              onCommit={(explanation) => edit((d) => updateItem(d, whyItem.id, { explanation }))}
+              ariaLabel={t('editor.experiences.venn.explanation_label', 'Explanation')}
+              placeholder={t('editor.experiences.venn.explanation_placeholder', 'Why it belongs there (shown when wrong, optional)')}
+              maxLength={300}
+              className="text-[13px] leading-relaxed text-neutral-600"
+            />
+          </div>
+        )}
+        {itemHints.length > 0 && (
+          <div className="flex flex-col gap-1">
+            {itemHints.map((i) => {
+              const it = data.items.find((x) => x.id === i.id)
+              return (
+                <InlineHint key={`${i.id}:${i.code}`} severity={i.severity}>
+                  {it ? `${itemName(it)}: ${issueText(i.code)}` : issueText(i.code)}
+                </InlineHint>
+              )
+            })}
+          </div>
+        )}
       </div>
+      {drag && <DragGhost x={drag.x} y={drag.y}>{itemName(data.items.find((x) => x.id === drag.id) ?? { id: '', text: '', zone: 'a' })}</DragGhost>}
     </ExperienceFrame>
   )
 }

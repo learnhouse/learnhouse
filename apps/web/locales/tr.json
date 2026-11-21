@@ -4210,7 +4210,11 @@
         "solved_mark": "Bilindi",
         "missed_mark": "Bilinemedi",
         "play_again": "Tekrar oyna",
-        "best": "En iyi"
+        "best": "En iyi",
+        "guesses_left": "Kalan tahmin: {{n}}",
+        "history_item": "Tahmin {{n}}: {{word}} ({{feedback}})",
+        "history_label": "Önceki tahminler",
+        "typing_row": "Tahmininiz"
       },
       "confidence": {
         "instructions": "Cevap ver, sonra ne kadar emin olduğunu söyle.",
@@ -13718,7 +13722,6 @@
       "not_found": "Senaryo Bulunamadı",
       "not_found_hint": "Lütfen senaryo yapılandırmanızı kontrol edip tekrar deneyin.",
       "illustration_alt": "Senaryo illüstrasyonu",
-      "max_scenarios": "En fazla 40 senaryoya izin verilir",
       "new_scenario_text": "Yeni senaryo metni...",
       "default_option_1": "Seçenek 1",
       "default_option_2": "Seçenek 2",
@@ -14403,7 +14406,6 @@
         },
         "jump_to": "O adıma atla",
         "leads_to": "Gittiği yer",
-        "limits": "En fazla {{max}} adım, her birinde {{choices}} seçenek.",
         "map_hint": "Burada düzenlemek için bir adıma tıklayın. Oklar her seçeneğin nereye gittiğini gösterir.",
         "missing_step": "Eksik adım",
         "move_down": "Aşağı taşı",
@@ -15024,7 +15026,10 @@
         "issue_duplicateOption": "İki seçenek aynı.",
         "example": {
           "title": "Hızlı matematik"
-        }
+        },
+        "question_of": "Soru {{n}} / {{total}}",
+        "prev_question": "Önceki soru",
+        "next_question": "Sonraki soru"
       },
       "estimate": {
         "name": "Tahmin",
@@ -15054,7 +15059,8 @@
           "explanation": "Bir yetişkinin 206 kemiği vardır. Bebekler yaklaşık 300 kemikle doğar; bazıları büyüdükçe kaynaşır.",
           "unit": "kemik"
         },
-        "fill_example": "Örnek kullan"
+        "fill_example": "Örnek kullan",
+        "answer_marker": "Yanıt: {{value}}"
       },
       "code_lock": {
         "name": "Şifreli kilit",
@@ -15090,7 +15096,9 @@
           "c3": "Kaç kıta vardır?",
           "c3_hint": "Afrika bunlardan biridir.",
           "reward": "Kapı açılıyor. Aferin, dedektif!"
-        }
+        },
+        "answer_masked": "Yanıt (tıklayana kadar gizli)",
+        "padlock_label": "{{n}} çarklı asma kilit"
       },
       "scenarios": {
         "chip_unreachable": "Kimse bu adıma ulaşmıyor",
@@ -15137,7 +15145,11 @@
           "step3": "Müşteri daha da sinirleniyor. Şimdi ne yaparsın?",
           "step3_a": "Özür dileyip sipariş numarasını sormak",
           "step3_b": "Aramayı sonlandırmak"
-        }
+        },
+        "then_short": "Sonra",
+        "open_target": "O adımı aç",
+        "steps_label": "Adımlar",
+        "editing_hint": "Hikâyeyi düzenliyorsunuz. Öğrenci gibi oynamak için önizlemeyi kullanın."
       },
       "flashcards": {
         "title_placeholder": "Deste başlığı (isteğe bağlı)",
@@ -15262,7 +15274,6 @@
           "step4": "Su denize geri akar"
         },
         "add_step": "Adım ekle",
-        "detail_label": "Ayrıntı",
         "detail_placeholder": "Ayrıntı, ör. 1969",
         "drag_short": "Yeniden sıralamak için sürükleyin",
         "drag_step": "{{n}}. adımı taşı (sürükleyin veya ok tuşlarını kullanın)",
@@ -15274,13 +15285,14 @@
           "too_many_items": "En fazla 10 adım kullanın; öğrenciler yalnızca ilk 10 adımı görür."
         },
         "items_heading": "Adımlar, doğru sırayla",
-        "items_hint": "Öğrenciler bunları karışık sırayla görür.",
         "layout_label": "Düzen",
-        "remove_step": "Adımı kaldır",
         "step_placeholder": "Adım {{n}}",
         "timeline_hint": "Her adımın ayrıntısı (ör. bir yıl) öğrenciler kontrol ettikten sonra gösterilir.",
         "variant_list": "Liste",
-        "variant_timeline": "Zaman çizelgesi"
+        "variant_timeline": "Zaman çizelgesi",
+        "author_hint": "Bu doğru sıra; öğrenciler adımları karışık alır. Yeniden sıralamak için bir adımı sürükleyin ya da okları kullanın.",
+        "detail_label_n": "{{n}}. adımın ayrıntısı",
+        "remove_named": "“{{item}}” öğesini kaldır"
       },
       "match": {
         "title": "Eşleştirme",
@@ -15341,22 +15353,22 @@
         "placeholder_prompt": "Örnek görsel: kendi görselini ekle",
         "stage_help": "Nokta eklemek için görsele tıkla. Bir noktayı taşımak için sürükle ya da seçip ok tuşlarını kullan.",
         "spots_label": "Noktalar",
-        "empty_list": "Henüz nokta yok. Eklemek için görsele tıkla.",
         "spot_aria": "Nokta {{n}}: {{label}}",
         "untitled_spot": "adsız",
-        "move_hint": "Seç, sonra görsel üzerinde sürükle ya da ok tuşlarını kullan",
         "select_spot": "{{n}}. noktayı seç",
         "label_placeholder": "Burada ne var?",
         "label_label": "{{n}}. noktanın etiketi",
         "remove_spot": "{{n}}. noktayı kaldır",
-        "hint_label_short": "Öğrenciler ne bulduklarını anlasın diye bir etiket ekle.",
         "explanation_placeholder": "Bulunduğunda gösterilen açıklama (isteğe bağlı)",
         "explanation_label": "{{n}}. noktanın açıklaması",
         "size_label": "Boyut",
         "hint_no_image": "Örnek görsel kullanılıyor. Yukarıdan kendi görselini ekle.",
         "hint_no_spots": "En az bir nokta ekle.",
         "hint_missing_label": "{{n}}. noktanın etiketi yok.",
-        "hint_overlap": "{{a}} ve {{b}} numaralı noktalar üst üste biniyor, biri tıklanması zor olabilir."
+        "hint_overlap": "{{a}} ve {{b}} numaralı noktalar üst üste biniyor, biri tıklanması zor olabilir.",
+        "mode_find_hint": "Öğrenciler her noktayı bulmak için resme tıklar.",
+        "mode_explore_hint": "Öğrenciler her nokta hakkında okumak için numaralı işaretleri açar.",
+        "pin_hint": "Düzenlemek için tıklayın. Taşımak için sürükleyin ya da ok tuşlarını kullanın."
       },
       "gaps": {
         "title": "Boşluk doldurma",
@@ -15378,8 +15390,19 @@
         "hint_no_gaps": "Henüz boşluk yok. Bir sözcük seçip Boşluk oluştur'a bas.",
         "hint_empty_gap": "Boş bir [[ ]] boşluğu yok sayılır. Cevabı içine yaz.",
         "hint_unclosed": "Bir boşluğun kapanış ]] işareti eksik.",
-        "preview_label": "Önizleme",
-        "gap_count": "Boşluklar: {{n}}"
+        "answers_hint": "Öğrenciler bunlardan herhangi birini yazabilir. İlki kelime bankasına gider.",
+        "answer_label": "Kabul edilen yanıt {{n}}",
+        "remove_answer": "“{{answer}}” yanıtını kaldır",
+        "add_answer": "Başka bir kabul edilen yanıt ekle",
+        "remove_gap": "Boşluğu kaldır (kelimeyi koru)",
+        "gap_title": "Boşluk {{n}}",
+        "gap_aria": "Boşluk {{n}}: {{answer}}. Kabul edilen yanıtları düzenle",
+        "passage_hint": "Metni düzenlemek için tıklayın. Kelimeleri seçin, sonra “Boşluk oluştur”.",
+        "passage_placeholder": "Metninizi buraya yazın…",
+        "edit_text": "Metni düzenle",
+        "make_gap_ready": "Seçili kelimeleri boşluğa çevirmek için “Boşluk oluştur” düğmesine basın.",
+        "select_hint": "Boşluk oluşturmak için kelimeleri seçin. Yanıtlarını düzenlemek için bir boşluğa tıklayın.",
+        "done_editing": "Bitti"
       },
       "spot_mistake": {
         "title": "Hatayı bul",
@@ -15407,8 +15430,6 @@
         "split_help_code": "Her satır bir seçenektir. Boş satırlar kalır ama seçilemez.",
         "segments_label": "Bölümler",
         "segment_n": "Bölüm {{n}}",
-        "is_mistake": "Hata",
-        "is_correct": "Doğru",
         "correction_placeholder": "Düzeltilmiş hali",
         "correction_label": "{{n}}. bölümün düzeltmesi",
         "hint_correction_short": "Öğrenciler ondan öğrensin diye düzeltilmiş halini ekle.",
@@ -15417,7 +15438,14 @@
         "hint_too_few": "En az iki cümle ya da satır ekle.",
         "hint_no_mistakes": "En az bir bölümü hata olarak işaretle.",
         "hint_all_mistakes": "Her bölüm hata olarak işaretli. Bazılarını doğru bırak.",
-        "hint_missing_correction": "{{n}}. bölüm düzeltmesi olmayan bir hata."
+        "hint_missing_correction": "{{n}}. bölüm düzeltmesi olmayan bir hata.",
+        "unmark_hint": "Bir hata. Doğru olarak işaretlemek için tıklayın.",
+        "mark_hint": "Bunu hata olarak işaretlemek için tıklayın.",
+        "edit_text": "Metni düzenle",
+        "author_hint": "Bir bölümü hata olarak işaretlemek için tıklayın, sonra düzeltmesini aşağıya yazın.",
+        "mistakes_label": "Hatalar ve düzeltmeleri",
+        "unmark_named": "{{n}}. bölümü doğru olarak işaretle",
+        "done_editing": "Bitti"
       },
       "venn": {
         "title": "Venn karşılaştırması",
@@ -15443,13 +15471,8 @@
         "zone_both": "İkisi de",
         "zone_neither": "Hiçbiri",
         "zone_only": "Yalnızca {{set}}",
-        "sets_heading": "İki grup",
         "change_color": "Rengi değiştir",
-        "items_heading": "Öğeler",
-        "items_hint": "Her öğenin nereye ait olduğunu seçin. Öğrenciler onları karışık görür.",
         "item_placeholder": "Öğe {{n}}",
-        "item_zone": "Nereye ait",
-        "remove_item": "Öğeyi kaldır",
         "explanation_placeholder": "Neden oraya ait (yanlışsa gösterilir, isteğe bağlı)",
         "explanation_label": "Açıklama",
         "add_item": "Öğe ekle",
@@ -15465,7 +15488,16 @@
           "duplicate_item": "Başka bir öğe aynı metne sahip.",
           "neither_hidden": "“Hiçbiri” alanını açın, yoksa öğrenciler bu öğeyi görmez.",
           "no_both": "Henüz hiçbir öğe iki gruba birden ait değil; kesişim işin ilginç kısmı."
-        }
+        },
+        "moved": "“{{item}}” şuraya taşındı: {{zone}}.",
+        "move_item": "“{{item}}” öğesini taşı",
+        "move_hint": "Başka bir yere sürükleyin ya da 1–4 tuşlarına basın",
+        "why_label": "“{{item}}” neden burada",
+        "remove_named": "“{{item}}” öğesini kaldır",
+        "add_to": "Şuraya öğe ekle: {{zone}}",
+        "author_selected": "Şimdi “{{item}}” öğesinin ait olduğu yere dokunun.",
+        "author_hint": "Her öğe ait olduğu yerde. Taşımak için bir öğeyi sürükleyin ya da tutamacına, sonra bir yere dokunun.",
+        "why_heading": "“{{item}}” neden şuraya ait: {{zone}} (öğrenci yanlış yaptığında gösterilir)"
       },
       "label": {
         "title": "Şemayı etiketle",
@@ -15497,9 +15529,6 @@
         "untitled_pin": "Adsız",
         "stage_help": "Nokta eklemek için resme tıklayın. Taşımak için noktayı sürükleyin ya da ok tuşlarını kullanın.",
         "pins_label": "Noktalar",
-        "empty_list": "Henüz nokta yok. Eklemek için resme tıklayın.",
-        "move_hint": "Seçin, sonra ok tuşlarıyla taşıyın",
-        "select_pin": "{{n}}. noktayı seç",
         "label_placeholder": "Etiket",
         "label_label": "{{n}}. noktanın etiketi",
         "remove_pin": "{{n}}. noktayı kaldır",
@@ -15507,7 +15536,8 @@
         "distractors_hint": "Hiçbir yere ait olmayan fazladan etiketler. Tahmin yerine düşünmeyi sağlar.",
         "distractor_placeholder": "Yanlış etiket {{n}}",
         "remove_distractor": "Yanlış etiketi kaldır",
-        "add_distractor": "Yanlış etiket ekle"
+        "add_distractor": "Yanlış etiket ekle",
+        "author_hint": "Her etiket kendi noktasında. Nokta eklemek için resme tıklayın; taşımak için noktayı sürükleyin."
       },
       "word_guess": {
         "title": "Kelime tahmini",
@@ -15524,8 +15554,6 @@
           "w3_clue": "Bir şeyleri hareket ettiren, ısıtan ya da aydınlatan şey.",
           "w3_why": "Enerji biçim değiştirir, örneğin besinden harekete, ama asla yok olmaz."
         },
-        "words_heading": "Kelimeler",
-        "words_hint": "Öğrenciler her kelimeyi ipucundan tahmin eder. Boşluklar ve kısa çizgiler hazır gösterilir.",
         "answer_placeholder": "Cevap {{n}}",
         "letters": "Harf: {{n}}",
         "remove_word": "Kelimeyi kaldır",
@@ -15545,14 +15573,15 @@
           "too_short": "En az 2 harf kullanın.",
           "too_long": "Kutular telefona sığsın diye en fazla 12 harf kullanın.",
           "duplicate_answer": "Başka bir kelimenin cevabı aynı."
-        }
+        },
+        "type_answer": "Kutulara tıklayın ve yanıtı yazın.",
+        "prev_word": "Önceki kelime",
+        "next_word": "Sonraki kelime"
       },
       "confidence": {
         "title": "Güven kontrolü",
         "description": "Cevap verip ne kadar emin olduğunu söyle, sadece bildiğini sandığın şeyleri fark et.",
         "title_placeholder": "Bu kontrole ad ver",
-        "questions_heading": "Sorular",
-        "questions_hint": "Öğrenciler bir cevap ve ne kadar emin olduklarını seçer, sonra haklı olup olmadıklarını görür.",
         "prompt_placeholder": "Soru {{n}}",
         "prompt_label": "Soru {{n}}",
         "correct_group": "{{n}}. sorunun doğru cevabı",
@@ -15591,7 +15620,9 @@
           "q3_a": "90 °C",
           "q3_b": "100 °C",
           "q3_c": "120 °C"
-        }
+        },
+        "prev_question": "Önceki soru",
+        "next_question": "Sonraki soru"
       },
       "matrix": {
         "title": "Özellik tablosu",
@@ -15608,18 +15639,13 @@
           "flies": "Uçabilir",
           "swims": "Yüzer"
         },
-        "rows_heading": "Satırlar",
-        "columns_heading": "Sütunlar",
         "row_placeholder": "Satır {{n}}",
         "column_placeholder": "Sütun {{n}}",
         "add_row": "Satır ekle",
         "add_column": "Sütun ekle",
-        "remove_row": "Satırı kaldır",
-        "remove_column": "Sütunu kaldır",
         "mode_label": "Cevap türü",
         "mode_multi": "Satır başına birden fazla",
         "mode_single": "Satır başına bir",
-        "answers_heading": "Doğru cevaplar",
         "answers_hint_multi": "Doğru olan her hücreyi işaretleyin.",
         "answers_hint_single": "Her satır için tek doğru sütunu seçin.",
         "cell_label": "{{row}}: {{column}}",
@@ -15635,7 +15661,9 @@
           "unused_column": "Henüz hiçbir satırda bu özellik yok.",
           "duplicate_row": "Başka bir satırın adı aynı.",
           "duplicate_column": "Başka bir sütunun adı aynı."
-        }
+        },
+        "remove_column_named": "“{{column}}” sütununu kaldır",
+        "remove_row_named": "“{{row}}” satırını kaldır"
       },
       "reflect": {
         "title": "Düşünme yazısı",
@@ -15644,7 +15672,6 @@
         "prompt_heading": "Yönerge",
         "prompt_placeholder": "Öğrenciler kendi sözleriyle neyi açıklamalı?",
         "guiding_heading": "Yol gösteren sorular",
-        "guiding_hint": "Öğrencilerin takıldıklarında açabilecekleri isteğe bağlı ipuçları (en fazla 5).",
         "guiding_placeholder": "Soru {{n}}",
         "guiding_label": "Yol gösteren soru {{n}}",
         "remove_guiding": "{{n}}. soruyu kaldır",
@@ -15652,10 +15679,8 @@
         "min_words_label": "En az kelime",
         "min_words_hint": "Öğrenciler bu sayıya ulaşınca karşılaştırabilir. 0 ile hemen karşılaştırabilirler.",
         "model_heading": "Örnek cevap",
-        "model_hint": "İsteğe bağlı. Öğrenciler kendi cevaplarını yazdıktan sonra görür.",
         "model_placeholder": "Birkaç cümlelik iyi bir cevap",
         "checklist_heading": "Ana noktalar",
-        "checklist_hint": "Öğrenciler değindikleri noktaları işaretler; bu puanları olur (en fazla 8).",
         "point_placeholder": "Ana nokta {{n}}",
         "point_label": "Ana nokta {{n}}",
         "remove_point": "{{n}}. ana noktayı kaldır",
@@ -15679,7 +15704,9 @@
           "p2": "Dünya Güneş'in etrafını bir yılda dolaşır",
           "p3": "Yazın daha dik güneş ışığı ve daha uzun günler",
           "p4": "Güneş'e olan uzaklıktan kaynaklanmaz"
-        }
+        },
+        "guiding_optional": "isteğe bağlı",
+        "answer_key": "Cevap anahtarı"
       }
     }
   },
