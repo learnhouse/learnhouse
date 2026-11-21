@@ -131,7 +131,8 @@ describe('customization', () => {
       transformContent: (d: any) => ({ ...d, content: d.content.filter((n: any) => n.type !== 'blockquote') }),
     })
     await screen.findByText('Getting paid')
-    expect(container.querySelector('table')).toBeNull()
+    // Hidden table blocks: an Experiences block's own table (property grid) is not one.
+    expect([...container.querySelectorAll('table')].filter((t) => !t.closest('[data-experience]'))).toHaveLength(0)
     expect(container.querySelector('blockquote')).toBeNull()
     expect(screen.queryByText('How long does your first payout take to arrive?')).toBeNull()
   })

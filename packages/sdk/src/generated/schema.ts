@@ -11369,7 +11369,7 @@ export interface paths {
         put?: never;
         /**
          * Edit page content
-         * @description Change parts of a page in one atomic call: replace_text, set_text, set_attrs, insert, replace_block, delete, move (1 to 100 ops, paths from get_activity_content). Insert takes Markdown, a quiz, a callout or a raw node (describe_activity_blocks). Adding or changing custom HTML, embed code, H5P or web preview blocks needs approval. Saves one version; returns per-op results and an undo.
+         * @description Change parts of a page in one atomic call: replace_text, set_text, set_attrs, insert, replace_block, delete, move (1 to 100 ops, paths from get_activity_content). Insert takes Markdown, a quiz, a callout, typed blocks such as the Experiences ({blocks}) or a raw node (describe_activity_blocks). Adding or changing custom HTML, embed code, H5P or web preview blocks needs approval. Saves one version; returns per-op results and an undo.
          *
          *     Tier: edit. Toolset: content.
          *     Token right needed: activities.action_update.
@@ -11439,7 +11439,7 @@ export interface paths {
         put?: never;
         /**
          * Page block types
-         * @description List the block types a page can hold (text, lists, tables, callouts, quizzes, flipcards, math, embeds, code exercises, media) and how to add each. Pass type for one block's exact editor shape and a valid example.
+         * @description List the block types a page can hold (text, lists, tables, callouts, quizzes, flipcards, math, embeds, code exercises, media, and the interactive Experiences: sort, sequence, match pairs, hotspot, fill the gaps, myth or fact, speed round, estimate, spot the mistake, code lock, venn, label diagram, word guess, confidence check, property grid, reflection) and how to add each. Pass type for one block's exact editor shape and a valid example.
          *
          *     Tier: read. Toolset: content.
          */
@@ -18227,7 +18227,7 @@ export interface components {
             name: string;
             /**
              * Markdown
-             * @description Optional page content in Markdown: headings, lists, tables, code, > [!NOTE] callouts, $$ math $$, images (![alt](https://...) on their own line, fetched and stored), and ```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```video / ```pdf fences for rich blocks (describe_activity_blocks shows their syntax).
+             * @description Optional page content in Markdown: headings, lists, tables, code, > [!NOTE] callouts, $$ math $$, images (![alt](https://...) on their own line, fetched and stored), and ```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```video / ```pdf fences for rich blocks (describe_activity_blocks shows their syntax). Interactive blocks (sort, sequence, fill_gaps, myth_fact, speed_round, venn, word_guess, reflection, ...) are added afterwards with add_blocks.
              */
             markdown?: string | null;
             /**
@@ -20931,9 +20931,9 @@ export interface components {
             path?: number[] | null;
             /**
              * Block
-             * @description What to add: {markdown} | {quiz} | {callout} | {node}.
+             * @description What to add: {markdown} | {quiz} | {callout} | {node} | {blocks} (typed blocks).
              */
-            block: components["schemas"]["MarkdownBlock"] | components["schemas"]["QuizBlock"] | components["schemas"]["CalloutBlock"] | components["schemas"]["NodeBlock"];
+            block: components["schemas"]["MarkdownBlock"] | components["schemas"]["QuizBlock"] | components["schemas"]["CalloutBlock"] | components["schemas"]["NodeBlock"] | components["schemas"]["TypedBlocks"];
         };
         /** InvitationBulk */
         InvitationBulk: {
@@ -22350,7 +22350,7 @@ export interface components {
             name: string;
             /**
              * Markdown
-             * @description Optional page content in Markdown: headings, lists, tables, code, > [!NOTE] callouts, $$ math $$, images (![alt](https://...) on their own line, fetched and stored), and ```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```video / ```pdf fences for rich blocks (describe_activity_blocks shows their syntax).
+             * @description Optional page content in Markdown: headings, lists, tables, code, > [!NOTE] callouts, $$ math $$, images (![alt](https://...) on their own line, fetched and stored), and ```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```video / ```pdf fences for rich blocks (describe_activity_blocks shows their syntax). Interactive blocks (sort, sequence, fill_gaps, myth_fact, speed_round, venn, word_guess, reflection, ...) are added afterwards with add_blocks.
              */
             markdown?: string | null;
         };
@@ -24053,9 +24053,9 @@ export interface components {
             path: number[];
             /**
              * Block
-             * @description What to add: {markdown} | {quiz} | {callout} | {node}.
+             * @description What to add: {markdown} | {quiz} | {callout} | {node} | {blocks} (typed blocks).
              */
-            block: components["schemas"]["MarkdownBlock"] | components["schemas"]["QuizBlock"] | components["schemas"]["CalloutBlock"] | components["schemas"]["NodeBlock"];
+            block: components["schemas"]["MarkdownBlock"] | components["schemas"]["QuizBlock"] | components["schemas"]["CalloutBlock"] | components["schemas"]["NodeBlock"] | components["schemas"]["TypedBlocks"];
         };
         /** ReplaceInCourseParams */
         ReplaceInCourseParams: {
@@ -25898,6 +25898,16 @@ export interface components {
             /** Update Date */
             update_date: string;
         };
+        /** TypedBlocks */
+        TypedBlocks: {
+            /**
+             * Blocks
+             * @description Typed blocks exactly as add_blocks takes them ({type: 'venn', ...}, see learnhouse://blocks), e.g. the interactive Experiences; ids are generated. No files or member cards here.
+             */
+            blocks: {
+                [key: string]: unknown;
+            }[];
+        };
         /** TypingUpdate */
         TypingUpdate: {
             /**
@@ -27245,7 +27255,7 @@ export interface components {
             activity_uuid: string;
             /**
              * Markdown
-             * @description Page content in Markdown: # headings, **bold**, *italic*, `code`, [links](https://...), lists, tables, ``` code fences, > quotes, > [!TIP] / > [!WARNING] callouts, $$ math $$, and ```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```button / ```badge / ```preview / ```h5p / ```widget fences for rich blocks. Keep <!-- block [path] type --> comments from a read to keep those blocks.
+             * @description Page content in Markdown: # headings, **bold**, *italic*, `code`, [links](https://...), lists, tables, ``` code fences, > quotes, > [!TIP] / > [!WARNING] callouts, $$ math $$, and ```quiz / ```flipcards / ```exercise / ```scenario / ```embed / ```button / ```badge / ```preview / ```h5p / ```widget fences for rich blocks (interactive sort, sequence, fill_gaps, myth_fact, venn, word_guess, reflection, ... blocks have no fence: use add_blocks). Keep <!-- block [path] type --> comments from a read to keep those blocks.
              */
             markdown: string;
             /**
