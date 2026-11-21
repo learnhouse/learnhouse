@@ -17,7 +17,7 @@
     "fumadocs-mdx": "15.6.3",
     "next": "16.4.6",
     "next-sitemap": "^4.2.3",
-    "posthog-js": "^1.451.0",
+    "posthog-js": "^1.451.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "shiki": "^4.6.0",
@@ -35,7 +35,7 @@
     "@xmldom/xmldom": "^0.9.12",
     "zod": "4.6.7",
     "brace-expansion@5": ">=5.0.12",
-    "source-map-js": ">=1.2.2",
+    "source-map-js": ">=1.2.3",
     "dompurify": ">=3.4.18",
     "katex": "^0.19.1",
     "sharp": ">=0.35.5"

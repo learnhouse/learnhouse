@@ -7,9 +7,9 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.44.5",
+    "boto3==1.44.6",
     "faker==40.54.0",
-    "fastapi==0.164.0",
+    "fastapi==0.165.0",
     "httpx==0.28.1",
     "google-genai==2.34.0",
     "pydantic-ai-slim[openai,anthropic,google,mistral]==2.70.0",
@@ -49,7 +49,7 @@ dependencies = [
     "defusedxml==0.7.1",
     "pgvector==0.5.1",
     "pypdf==7.1.1",
-    "regex==2026.11.18",
+    "regex==2026.11.19",
     "mcp==2.3.0",
     "fakeredis==2.40.0",
     "mailchecker==6.0.21",
