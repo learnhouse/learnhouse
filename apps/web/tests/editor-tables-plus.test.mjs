@@ -258,7 +258,15 @@ describe("table model", () => {
 
   test("card labels are escaped CSS strings", () => {
     const css = M.cardLabelsCss("lh-table-1", { ...model, columnLabels: ['Say "hi"', "", "</style>"] });
-    expect(css).toBe('#lh-table-1 tr > :nth-child(1)::before{content:"Say \\"hi\\""}#lh-table-1 tr > :nth-child(3)::before{content:"\\3C /style>"}');
+    const r1 = '#lh-table-1 tr > :nth-child(1)::before{content:"Say \\"hi\\""}';
+    const r3 = '#lh-table-1 tr > :nth-child(3)::before{content:"\\3C /style>"}';
+    const narrow = ".lh-bt:is([data-lh-bt-size='xs'],[data-lh-bt-size='sm'])";
+    expect(css).toBe(`@media (max-width: 640px){${r1}${r3}}${narrow} ${r1}${narrow} ${r3}`);
+  });
+
+  test("card labels only apply where rows become cards", () => {
+    expect(M.cardLabelsCss("t", { ...model, columnLabels: ["", ""] })).toBe("");
+    expect(M.cardLabelsCss("t", { ...model, columnLabels: ["A"] }).startsWith("@media (max-width: 640px){#t tr")).toBe(true);
   });
 });
 

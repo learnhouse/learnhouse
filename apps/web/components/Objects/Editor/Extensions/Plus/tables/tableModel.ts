@@ -295,8 +295,12 @@ export function cssString(text: string): string {
  */
 export function cardLabelsCss(id: string, model: TableModel): string {
   const safeId = id.replace(/[^\w-]/g, '')
-  return model.columnLabels
+  const rules = model.columnLabels
     .map((label, i) => (label ? `#${safeId} tr > :nth-child(${i + 1})::before{content:${cssString(label)}}` : ''))
     .filter(Boolean)
-    .join('')
+  if (!rules.length) return ''
+  // Only where tables.css lays the rows out as cards; elsewhere the labels
+  // would show next to every cell (and hide the typed-cell labels).
+  const narrow = ".lh-bt:is([data-lh-bt-size='xs'],[data-lh-bt-size='sm'])"
+  return `@media (max-width: 640px){${rules.join('')}}${rules.map((r) => `${narrow} ${r}`).join('')}`
 }
