@@ -187,3 +187,32 @@ describe("getEditorContentSnapshot: H5P height", () => {
     ).toBe(true);
   });
 });
+
+describe("trailing empty paragraph", () => {
+  const quiz = { type: "blockQuiz", attrs: { quizId: "q1" } };
+  const doc = (...content) => ({ type: "doc", content });
+
+  test("the paragraph the editor appends on load is not an edit", () => {
+    const saved = getEditorContentSnapshot(doc(quiz));
+    expect(hasEditorContentChanged(saved, doc(quiz, { type: "paragraph" }))).toBe(false);
+    expect(hasEditorContentChanged(saved, doc(quiz, { type: "paragraph", content: [] }))).toBe(false);
+  });
+
+  test("text typed into it is an edit", () => {
+    const saved = getEditorContentSnapshot(doc(quiz));
+    const typed = doc(quiz, { type: "paragraph", content: [{ type: "text", text: "hi" }] });
+    expect(hasEditorContentChanged(saved, typed)).toBe(true);
+  });
+
+  test("empty paragraphs between blocks still count", () => {
+    const saved = getEditorContentSnapshot(doc(quiz, quiz));
+    expect(hasEditorContentChanged(saved, doc(quiz, { type: "paragraph" }, quiz))).toBe(true);
+  });
+
+  test("only the document's own trailing paragraphs are ignored", () => {
+    const cell = (...content) => ({ type: "tableCell", content });
+    const saved = getEditorContentSnapshot(doc(cell({ type: "paragraph", content: [{ type: "text", text: "a" }] })));
+    const changed = doc(cell({ type: "paragraph", content: [{ type: "text", text: "a" }] }, { type: "paragraph" }));
+    expect(hasEditorContentChanged(saved, changed)).toBe(true);
+  });
+});
