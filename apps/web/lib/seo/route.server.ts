@@ -66,7 +66,7 @@ export function badRequest(message: string) {
 }
 
 export const feedMedia: FeedMedia = {
-  course: getCourseThumbnailMediaDirectory,
+  course: (orgUuid, uuid, file) => getCourseThumbnailMediaDirectory(orgUuid, uuid, file) ?? '',
   path: getPathThumbnailMediaDirectory,
   podcast: getPodcastThumbnailMediaDirectory,
   community: getCommunityThumbnailMediaDirectory,

@@ -6,7 +6,7 @@ import { getPlayForLearner } from '@ee/services/plays/plays'
 import PlaygroundViewClient from '@ee/components/Plays/Pages/PlaygroundViewPage'
 import ResourcePaywall from '@ee/components/Payments/ResourcePaywall'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 
 type PageParams = Promise<{ orgslug: string; playgrounduuid: string }>
 
@@ -36,7 +36,7 @@ export default async function PlaygroundViewPage({ params }: { params: PageParam
   } catch (error: any) {
     // Sold through a product the viewer has not bought: show what unlocks it.
     if (error?.status === 402) {
-      const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
+      const org = await getOrgOr404(orgslug)
       const resourceUuid = playgrounduuid.startsWith('playground_') ? playgrounduuid : `playground_${playgrounduuid}`
       return (
         <GeneralWrapperStyled>

@@ -9,6 +9,8 @@ import '@styles/globals.css'
 import Footer from '@components/Footer/Footer'
 import CompleteSignupFields from '@components/Auth/CompleteSignupFields'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { assertOrgExists, isOrgNotFound } from '@/lib/org.server'
+import { notFound } from 'next/navigation'
 import { getOrgFaviconMediaDirectory, getOrgSquareLogoMediaDirectory } from '@services/media/media'
 import { orgScriptsAllowedOnRequest } from '@/lib/orgScripts'
 import AffiliateRefCapture from '@ee/components/Payments/Affiliates/AffiliateRefCapture'
@@ -37,7 +39,8 @@ export async function generateMetadata({
       ...(org?.name ? { appleWebApp: { capable: true, title: org.name, statusBarStyle: 'default' } } : {}),
       ...(favicon || apple ? { icons: { ...(favicon ? { icon: favicon } : {}), ...(apple ? { apple } : {}) } } : {}),
     }
-  } catch {
+  } catch (error) {
+    if (isOrgNotFound(error)) notFound()
     // A favicon lookup failure must not break the page's metadata.
   }
   return { manifest: '/manifest.webmanifest' }
@@ -50,7 +53,9 @@ export default async function RootLayout(props: {
   params: Promise<{ orgslug: string }>
 }) {
   const params = await props.params
-  const allowOrgScripts = await orgScriptsAllowedOnRequest()
+  // Unknown slug → 404 (deduped with the metadata lookup). API outages are
+  // swallowed so the client can still render and retry.
+  const [allowOrgScripts] = await Promise.all([orgScriptsAllowedOnRequest(), assertOrgExists(params.orgslug)])
 
   return (
     <div>

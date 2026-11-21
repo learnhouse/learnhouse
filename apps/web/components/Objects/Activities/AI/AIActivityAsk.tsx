@@ -1196,6 +1196,24 @@ export function useAIPanelMode() {
   return React.useContext(AIPanelModeContext)
 }
 
+// localStorage throws in Safari private mode / with storage blocked; the panel
+// preference is a convenience, so failures just fall back to defaults.
+function readPanelPref(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function writePanelPref(key: string, value: string): void {
+  try {
+    window.localStorage.setItem(key, value)
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 // Hook to manage side panel localStorage persistence
 export function useAISidePanelPersistence() {
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
@@ -1207,13 +1225,13 @@ export function useAISidePanelPersistence() {
   useEffect(() => {
     if (typeof window !== 'undefined' && isInitialMount.current) {
       // Restore mode preference first
-      const savedMode = localStorage.getItem('aiPanelMode') as AIPanelMode
+      const savedMode = readPanelPref('aiPanelMode') as AIPanelMode
       const restoredMode = (savedMode === 'side' || savedMode === 'hover') ? savedMode : 'side'
       setModeState(restoredMode)
 
       // Only restore panel open state if mode is 'side'
       if (restoredMode === 'side') {
-        const savedState = localStorage.getItem('aiSidePanelOpen')
+        const savedState = readPanelPref('aiSidePanelOpen')
         if (savedState === 'true') {
           dispatchAIChatBot({ type: 'setSidePanelOpen' })
         }
@@ -1225,14 +1243,14 @@ export function useAISidePanelPersistence() {
   // Save side panel state to localStorage when it changes (only in side mode)
   useEffect(() => {
     if (typeof window !== 'undefined' && !isInitialMount.current && mode === 'side') {
-      localStorage.setItem('aiSidePanelOpen', aiChatBotState?.isSidePanelOpen?.toString() || 'false')
+      writePanelPref('aiSidePanelOpen', aiChatBotState?.isSidePanelOpen?.toString() || 'false')
     }
   }, [aiChatBotState?.isSidePanelOpen, mode])
 
   const setMode = (newMode: AIPanelMode) => {
     setModeState(newMode)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('aiPanelMode', newMode)
+      writePanelPref('aiPanelMode', newMode)
     }
   }
 

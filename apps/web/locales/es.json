@@ -19349,6 +19349,10 @@
       "body_other": "Tu proveedor de pagos rechazó {{count}} pagos desde {{date}}. Es posible que tu cuenta de Stripe esté desconectada o necesite atención. Hasta que se solucione, los estudiantes verán que el pago no está disponible temporalmente.",
       "recheck": "Comprobar de nuevo",
       "fix": "Abrir ajustes de pago"
+    },
+    "impersonating": {
+      "title": "Los pagos no están disponibles mientras suplantas a alguien",
+      "body": "La configuración de pagos, los clientes y los datos de Stripe son privados para los administradores de la organización. Termina la suplantación para gestionar los pagos."
     }
   },
   "lti": {

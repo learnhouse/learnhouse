@@ -18995,6 +18995,10 @@
       "body_other": "Nhà cung cấp thanh toán của bạn đã từ chối {{count}} lượt thanh toán kể từ {{date}}. Tài khoản Stripe của bạn có thể đã bị ngắt kết nối hoặc cần được xử lý. Cho đến khi khắc phục xong, học viên sẽ thấy thanh toán tạm thời không khả dụng.",
       "recheck": "Kiểm tra lại",
       "fix": "Mở cài đặt thanh toán"
+    },
+    "impersonating": {
+      "title": "Không thể dùng thanh toán khi đang mạo danh",
+      "body": "Cài đặt thanh toán, khách hàng và dữ liệu Stripe chỉ dành cho quản trị viên của tổ chức. Hãy kết thúc mạo danh để quản lý thanh toán."
     }
   },
   "lti": {

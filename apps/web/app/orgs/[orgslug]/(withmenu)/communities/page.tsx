@@ -1,4 +1,4 @@
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 import { Metadata } from 'next'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { buildListMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
@@ -31,10 +31,7 @@ const CommunitiesPage = async (params: any) => {
   const orgslug = (await params.params).orgslug
   const [session, org] = await Promise.all([
     getServerSession(),
-    getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
+    getOrgOr404(orgslug),
   ])
   const access_token = session?.tokens?.access_token
   const org_id = org.id
@@ -48,8 +45,9 @@ const CommunitiesPage = async (params: any) => {
       { revalidate: 120, tags: ['communities'] },
       access_token ? access_token : undefined
     )
-  } catch (error) {
-    console.error('Failed to fetch communities:', error)
+  } catch (error: any) {
+    // 401/403: members-only for this viewer; render the normal empty state.
+    if (!(error?.status < 500)) console.error('Failed to fetch communities:', error)
     communities = []
   }
 

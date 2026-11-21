@@ -164,7 +164,8 @@ export function normalizeSiteResults(
       subtitle: com.description || undefined,
       updatedAt: com.update_date || undefined,
       href: link(resourcePath('community', com)),
-      imageUrl: com.thumbnail_image
+      // No org uuid yet (org still loading): no URL rather than orgs//...
+      imageUrl: orgUuid && com.thumbnail_image
         ? safeImageSrc(
             getCommunityThumbnailMediaDirectory(orgUuid, com.community_uuid, com.thumbnail_image),
           )
@@ -210,7 +211,7 @@ export function normalizeSiteResults(
       title: p.name,
       subtitle: p.description || undefined,
       href: link(resourcePath('podcast', p)),
-      imageUrl: p.thumbnail_image
+      imageUrl: orgUuid && p.thumbnail_image
         ? safeImageSrc(getPodcastThumbnailMediaDirectory(orgUuid, p.podcast_uuid, p.thumbnail_image))
         : undefined,
     })

@@ -19036,6 +19036,10 @@
       "body_other": "Je betalingsprovider heeft sinds {{date}} {{count}} betalingen geweigerd. Je Stripe-account is mogelijk ontkoppeld of heeft aandacht nodig. Tot dit is opgelost, zien cursisten dat afrekenen tijdelijk niet beschikbaar is.",
       "recheck": "Opnieuw controleren",
       "fix": "Betalingsinstellingen openen"
+    },
+    "impersonating": {
+      "title": "Betalingen zijn niet beschikbaar tijdens imitatie",
+      "body": "Betaalinstellingen, klanten en Stripe-gegevens blijven privé voor de eigen beheerders van de organisatie. Beëindig de imitatie om betalingen te beheren."
     }
   },
   "lti": {

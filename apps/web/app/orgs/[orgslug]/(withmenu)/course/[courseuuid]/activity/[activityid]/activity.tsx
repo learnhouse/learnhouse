@@ -733,7 +733,7 @@ function ActivityClient(props: ActivityClientProps) {
   useEffect(() => {
     if (upcomingType !== 'TYPE_VIDEO') return
     try {
-      const origin = new URL(getActivityHlsThumbnailsUrl('o', 'c', 'a', 's'), window.location.href).origin
+      const origin = new URL(getActivityHlsThumbnailsUrl('o', 'c', 'a', 's') ?? '', window.location.href).origin
       if (origin !== window.location.origin) preconnect(origin, { crossOrigin: 'use-credentials' })
     } catch {
       /* malformed config: nothing to warm */
@@ -940,9 +940,9 @@ function ActivityClient(props: ActivityClientProps) {
                       <BackIcon size={20} className="shrink-0 text-gray-500 rtl:rotate-180" />
                       <img
                         className="w-[44px] h-[25px] shrink-0 rounded object-cover ring-1 ring-black/5"
-                        src={course.thumbnail_image
-                          ? getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)
-                          : '/empty_thumbnail.png'}
+                        src={(course.thumbnail_image &&
+                          getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)) ||
+                          '/empty_thumbnail.png'}
                         onError={(e) => {
                           if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'
                         }}
@@ -986,13 +986,13 @@ function ActivityClient(props: ActivityClientProps) {
                               >
                                 <img
                                   className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] shrink-0 rounded-md drop-shadow-md object-cover"
-                                  src={course.thumbnail_image
-                                    ? getCourseThumbnailMediaDirectory(
-                                        org?.org_uuid,
-                                        course.course_uuid,
-                                        course.thumbnail_image
-                                      )
-                                    : '/empty_thumbnail.png'
+                                  src={(course.thumbnail_image &&
+                                    getCourseThumbnailMediaDirectory(
+                                      org?.org_uuid,
+                                      course.course_uuid,
+                                      course.thumbnail_image
+                                    )) ||
+                                    '/empty_thumbnail.png'
                                   }
                                   onError={(e) => {
                                     if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'

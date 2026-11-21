@@ -8,7 +8,7 @@ import { fetchPublishedLanding } from '@/lib/seo/landingData.server'
 export default async function LandingPageSeo({ params }: { params: Promise<{ orgslug: string; pageslug: string }> }) {
   const { orgslug, pageslug } = await params
   const [ctx, landing] = await Promise.all([getSeoContext(orgslug), fetchPublishedLanding(orgslug, pageslug)])
-  if (!landing || ctx.seo.indexing_disabled || landing.doc?.page?.noindex) return null
+  if (!landing || ctx.degraded || ctx.seo.indexing_disabled || landing.doc?.page?.noindex) return null
   const url = await ctx.url(`/p/${encodeURIComponent(pageslug)}`)
   return (
     <SeoScripts
