@@ -920,9 +920,6 @@
     "unlock_certificate_message": "Dokončite všetky aktivity, aby ste odomkli certifikát",
     "chapter": "Kapitola",
     "chapters": "Kapitoly",
-    "co_created_by": "Spolutvorené",
-    "created_on": "Vytvorené",
-    "last_updated": "Naposledy aktualizované",
     "public": "Verejné",
     "public_desc": "Dostupné na internete",
     "private": "Súkromné",
@@ -935,7 +932,6 @@
     "clipboard_read_error": "Schránku sa nepodarilo načítať",
     "enter_to_add": "Enter, aby ste mohli pridať...",
     "select_visibility": "Vybrať viditeľnosť",
-    "and_x_more": "a {{count}} ďalších",
     "update": "aktualizácia",
     "updates": "aktualizácie",
     "new_update": "Nová aktualizácia",
@@ -1347,6 +1343,24 @@
       "available_in": "Dostupné v jazykoch: {{languages}}",
       "language_filter": "Jazyk",
       "all_languages": "Všetky jazyky"
+    },
+    "by_authors": "Autorstvo: {{names}}",
+    "others_count_few": "ďalší {{count}}",
+    "others_count_many": "ďalšieho {{count}}",
+    "others_count_one": "ďalší {{count}}",
+    "others_count_other": "ďalších {{count}}",
+    "authors_count_few": "{{count}} autori",
+    "authors_count_many": "{{count}} autora",
+    "authors_count_one": "{{count}} autor",
+    "authors_count_other": "{{count}} autorov",
+    "show_all_authors": "Zobraziť všetkých autorov",
+    "created_short": "Vytvorené {{date}}",
+    "updated_short": "Aktualizované {{when}}",
+    "author_role": {
+      "creator": "Tvorca",
+      "maintainer": "Správca",
+      "contributor": "Prispievateľ",
+      "reporter": "Reportér"
     }
   },
   "communities": {

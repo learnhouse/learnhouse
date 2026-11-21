@@ -916,9 +916,6 @@
     "unlock_certificate_message": "শংসাপত্র আনলক করতে সমস্ত ক্রিয়াকলাপ সম্পন্ন করুন।",
     "chapter": "অধ্যায়",
     "chapters": "অধ্যায়সমূহ",
-    "co_created_by": "সহ-নির্মাতা",
-    "created_on": "তৈরি হয়েছে",
-    "last_updated": "সর্বশেষ আপডেট",
     "public": "পাবলিক",
     "public_desc": "ইন্টারনেটে যে কেউ দেখতে পাবে",
     "private": "প্রাইভেট",
@@ -931,7 +928,6 @@
     "clipboard_read_error": "ক্লিপবোর্ড থেকে পড়া যায়নি",
     "enter_to_add": "যোগ করতে এন্টার চাপুন...",
     "select_visibility": "দৃশ্যমানতা নির্বাচন করুন",
-    "and_x_more": "এবং আরও {{count}}টি",
     "update": "আপডেট",
     "updates": "আপডেটসমূহ",
     "new_update": "নতুন আপডেট",
@@ -1313,6 +1309,20 @@
       "available_in": "{{languages}} ভাষায় পাওয়া যাচ্ছে",
       "language_filter": "ভাষা",
       "all_languages": "সব ভাষা"
+    },
+    "by_authors": "লেখক: {{names}}",
+    "others_count_one": "আরও {{count}} জন",
+    "others_count_other": "আরও {{count}} জন",
+    "authors_count_one": "{{count}} জন লেখক",
+    "authors_count_other": "{{count}} জন লেখক",
+    "show_all_authors": "সব লেখক দেখুন",
+    "created_short": "তৈরি {{date}}",
+    "updated_short": "আপডেট হয়েছে {{when}}",
+    "author_role": {
+      "creator": "ক্রিয়েটর",
+      "maintainer": "মেইনটেইনার",
+      "contributor": "কন্ট্রিবিউটর",
+      "reporter": "রিপোর্টার"
     }
   },
   "communities": {

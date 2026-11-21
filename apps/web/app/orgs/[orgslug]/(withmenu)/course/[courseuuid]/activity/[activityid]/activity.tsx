@@ -6,7 +6,7 @@ import DripGate from '@components/Objects/Courses/DripGate'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import { getActivityHlsThumbnailsUrl, getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
+import { getActivityHlsThumbnailsUrl, getCourseThumbnailMediaDirectory } from '@services/media/media'
 import './theater.css'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
@@ -34,7 +34,6 @@ import CourseAccessError from '@components/Objects/Courses/CourseAccessError/Cou
 import { useMediaQuery } from 'usehooks-ts'
 import PaidCourseActivityDisclaimer from '@ee/components/Payments/PaidCourseActivityDisclaimer'
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterDropdown'
 import ActivityShareDropdown from '@components/Pages/Activity/ActivityShareDropdown'
 import FixedActivitySecondaryBar from '@components/Pages/Activity/FixedActivitySecondaryBar'
@@ -51,10 +50,9 @@ import { FocusTopBar, useChromeIdle, useFocusSwipe } from './FocusChrome'
 import { buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
-import UserAvatar from '@components/Objects/UserAvatar'
+import CourseAuthorsLine from '@components/Objects/Courses/CourseAuthorsLine'
 import { useTranslation } from 'react-i18next'
 import { useDirection } from '@hooks/useDirection'
-import { formatDate } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { willCompleteCourse } from '@/lib/courses/completion'
 import NotesButton from '@components/Objects/Activities/Notes/NotesButton'
@@ -385,30 +383,10 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment, sh
 }
 
 function ActivityClient(props: ActivityClientProps) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   // Slide offsets are physical pixels; flip their sign in RTL.
   const { isRTL } = useDirection()
   const activityid = props.activityid
-
-  function getRelativeTime(date: Date): string {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const weeks = Math.floor(days / 7);
-    const months = Math.floor(days / 30);
-    const years = Math.floor(days / 365);
-  
-    if (years > 0) return t('time.years_ago', { count: years });
-    if (months > 0) return t('time.months_ago', { count: months });
-    if (weeks > 0) return t('time.weeks_ago', { count: weeks });
-    if (days > 0) return t('time.days_ago', { count: days });
-    if (hours > 0) return t('time.hours_ago', { count: hours });
-    if (minutes > 0) return t('time.minutes_ago', { count: minutes });
-    return t('common.just_now');
-  }
 
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
@@ -1065,80 +1043,12 @@ function ActivityClient(props: ActivityClientProps) {
                               <h1 className="font-bold text-gray-950 text-base sm:text-2xl max-sm:text-[22px] max-sm:leading-tight max-sm:pt-1 text-start">
                                 <span lang={activity?.locale || courseContentLang} dir="auto">{displayName}</span>
                               </h1>
-                              {/* Authors and Dates Section */}
-                              <div className="flex flex-wrap items-center gap-3 mt-2">
-                                {/* Avatars */}
-                                {course.authors && course.authors.length > 0 && (
-                                  <div className="flex -space-x-3">
-                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').slice(0, 3).map((author: any, idx: number) => (
-                                      <div key={author.user.user_uuid} className="relative" style={{ zIndex: 10 - idx }}>
-                                        <UserAvatar
-                                          border="border-2"
-                                          rounded="rounded-full"
-                                          avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
-                                          predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
-                                          width={26}
-                                          showProfilePopup={true}
-                                          userId={author.user.id}
-                                        />
-                                      </div>
-                                    ))}
-                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length > 3 && (
-                                      <div className="flex items-center justify-center bg-neutral-100 text-neutral-600 font-medium rounded-full border-2 border-white shadow-sm w-9 h-9 text-xs z-0">
-                                        +{course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length - 3}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                {/* Author names */}
-                                {course.authors && course.authors.length > 0 && (
-                                  <div className="text-xs text-gray-700 font-medium flex items-center gap-1">
-                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length > 1 && (
-                                      <span>{t('courses.co_created_by')} </span>
-                                    )}
-                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').slice(0, 2).map((author: any, idx: number, arr: any[]) => (
-                                      <span key={author.user.user_uuid}>
-                                        {author.user.first_name && author.user.last_name
-                                          ? `${author.user.first_name} ${author.user.last_name}`
-                                          : `@${author.user.username}`}
-                                        {idx === 0 && arr.length > 1 ? ' & ' : ''}
-                                      </span>
-                                    ))}
-                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length > 2 && (
-                                      <ToolTip
-                                        content={
-                                          <div className="p-2">
-                                            {course.authors
-                                              .filter((a: any) => a.authorship_status === 'ACTIVE')
-                                              .slice(2)
-                                              .map((author: any) => (
-                                                <div key={author.user.user_uuid} className="text-white text-sm py-1">
-                                                  {author.user.first_name && author.user.last_name
-                                                    ? `${author.user.first_name} ${author.user.last_name}`
-                                                    : `@${author.user.username}`}
-                                                </div>
-                                              ))}
-                                          </div>
-                                        }
-                                      >
-                                        <div className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-0.5 rounded-md cursor-pointer text-xs font-medium transition-colors duration-200">
-                                          +{course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length - 2}
-                                        </div>
-                                      </ToolTip>
-                                    )}
-                                  </div>
-                                )}
-                                {/* Dates */}
-                                <div className="hidden sm:flex flex-wrap items-center text-xs text-gray-500 gap-1 sm:gap-2">
-                                  <span>
-                                    {t('courses.created_on')} {formatDate(course.creation_date, i18n.language, { dateStyle: undefined, year: 'numeric', month: 'long', day: 'numeric' })}
-                                  </span>
-                                  <span className="mx-1">•</span>
-                                  <span>
-                                    {t('courses.last_updated')} {getRelativeTime(new Date(course.update_date || course.creation_date))}
-                                  </span>
-                                </div>
-                              </div>
+                              <CourseAuthorsLine
+                                authors={course.authors}
+                                createdAt={course.creation_date}
+                                updatedAt={course.update_date}
+                                className="mt-2"
+                              />
                             </div>
                           </div>
                           <div className="hidden sm:flex space-x-2 items-center relative shrink-0" style={{ zIndex: 'var(--z-interactive)' }}>

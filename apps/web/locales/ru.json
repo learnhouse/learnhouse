@@ -920,9 +920,6 @@
     "unlock_certificate_message": "Выполните все задания, чтобы получить сертификат",
     "chapter": "Глава",
     "chapters": "Главы",
-    "co_created_by": "Соавтор:",
-    "created_on": "Создано",
-    "last_updated": "Последнее обновление",
     "public": "Публичный",
     "public_desc": "Доступно всем в Интернете",
     "private": "Приватный",
@@ -935,7 +932,6 @@
     "clipboard_read_error": "Не удалось прочитать буфер обмена",
     "enter_to_add": "Нажмите Enter, чтобы добавить...",
     "select_visibility": "Выберите видимость",
-    "and_x_more": "и еще {{count}}",
     "update": "обновление",
     "updates": "обновления",
     "new_update": "Новое обновление",
@@ -1347,6 +1343,24 @@
       "available_in": "Доступно на: {{languages}}",
       "language_filter": "Язык",
       "all_languages": "Все языки"
+    },
+    "by_authors": "Авторство: {{names}}",
+    "others_count_few": "ещё {{count}}",
+    "others_count_many": "ещё {{count}}",
+    "others_count_one": "ещё {{count}}",
+    "others_count_other": "ещё {{count}}",
+    "authors_count_few": "{{count}} автора",
+    "authors_count_many": "{{count}} авторов",
+    "authors_count_one": "{{count}} автор",
+    "authors_count_other": "{{count}} автора",
+    "show_all_authors": "Показать всех авторов",
+    "created_short": "Создано {{date}}",
+    "updated_short": "Обновлено {{when}}",
+    "author_role": {
+      "creator": "Создатель",
+      "maintainer": "Сопровождающий",
+      "contributor": "Участник",
+      "reporter": "Репортёр"
     }
   },
   "communities": {

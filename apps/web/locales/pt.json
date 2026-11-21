@@ -917,9 +917,6 @@
     "unlock_certificate_message": "Conclua todas as atividades para desbloquear seu certificado",
     "chapter": "Capítulo",
     "chapters": "Capítulos",
-    "co_created_by": "Co-criado por",
-    "created_on": "Criado em",
-    "last_updated": "Última atualização",
     "public": "Público",
     "public_desc": "Disponível para todos na internet",
     "private": "Privado",
@@ -932,7 +929,6 @@
     "clipboard_read_error": "Não foi possível ler a área de transferência",
     "enter_to_add": "Pressione Enter para adicionar...",
     "select_visibility": "Selecionar visibilidade",
-    "and_x_more": "e mais {{count}}",
     "update": "atualização",
     "updates": "atualizações",
     "new_update": "Nova Atualização",
@@ -1329,6 +1325,22 @@
       "available_in": "Disponível em {{languages}}",
       "language_filter": "Idioma",
       "all_languages": "Todos os idiomas"
+    },
+    "by_authors": "Por {{names}}",
+    "others_count_many": "{{count}} outros",
+    "others_count_one": "{{count}} outro",
+    "others_count_other": "{{count}} outros",
+    "authors_count_many": "{{count}} de autores",
+    "authors_count_one": "{{count}} autor",
+    "authors_count_other": "{{count}} autores",
+    "show_all_authors": "Ver todos os autores",
+    "created_short": "Criado em {{date}}",
+    "updated_short": "Atualizado {{when}}",
+    "author_role": {
+      "creator": "Criador",
+      "maintainer": "Mantenedor",
+      "contributor": "Colaborador",
+      "reporter": "Relator"
     }
   },
   "communities": {

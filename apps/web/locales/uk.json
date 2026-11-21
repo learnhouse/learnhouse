@@ -920,9 +920,6 @@
     "unlock_certificate_message": "Виконайте всі активності, щоб отримати доступ до свого сертифіката",
     "chapter": "Розділ",
     "chapters": "Розділи",
-    "co_created_by": "Створено спільно",
-    "created_on": "Створено",
-    "last_updated": "Останнє оновлення",
     "public": "Публічний",
     "public_desc": "Доступний для перегляду в інтернеті",
     "private": "Приватний",
@@ -935,7 +932,6 @@
     "clipboard_read_error": "Не вдалося прочитати буфер обміну",
     "enter_to_add": "Введіть, щоб додати...",
     "select_visibility": "Виберіть видимість",
-    "and_x_more": "& {{count}} більше",
     "update": "оновлення",
     "updates": "оновлення",
     "new_update": "Нове оновлення",
@@ -1347,6 +1343,24 @@
       "available_in": "Доступно мовами: {{languages}}",
       "language_filter": "Мова",
       "all_languages": "Усі мови"
+    },
+    "by_authors": "Авторство: {{names}}",
+    "others_count_few": "ще {{count}}",
+    "others_count_many": "ще {{count}}",
+    "others_count_one": "ще {{count}}",
+    "others_count_other": "ще {{count}}",
+    "authors_count_few": "{{count}} автори",
+    "authors_count_many": "{{count}} авторів",
+    "authors_count_one": "{{count}} автор",
+    "authors_count_other": "{{count}} автора",
+    "show_all_authors": "Показати всіх авторів",
+    "created_short": "Створено {{date}}",
+    "updated_short": "Оновлено {{when}}",
+    "author_role": {
+      "creator": "Творець",
+      "maintainer": "Супровідник",
+      "contributor": "Учасник",
+      "reporter": "Репортер"
     }
   },
   "communities": {

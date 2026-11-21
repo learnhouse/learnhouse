@@ -915,9 +915,6 @@
     "unlock_certificate_message": "すべてのアクティビティを完了して修了証を受け取りましょう",
     "chapter": "章",
     "chapters": "章",
-    "co_created_by": "共同作成:",
-    "created_on": "作成日:",
-    "last_updated": "最終更新日:",
     "public": "公開",
     "public_desc": "インターネット上で誰でも閲覧可能",
     "private": "非公開",
@@ -930,7 +927,6 @@
     "clipboard_read_error": "クリップボードを読み取れませんでした",
     "enter_to_add": "Enterキーで追加...",
     "select_visibility": "公開設定を選択",
-    "and_x_more": "他 {{count}} 件",
     "update": "アップデート",
     "updates": "アップデート",
     "new_update": "新しいアップデート",
@@ -1312,6 +1308,20 @@
       "available_in": "{{languages}}で利用可能",
       "language_filter": "言語",
       "all_languages": "すべての言語"
+    },
+    "by_authors": "作成: {{names}}",
+    "others_count_one": "他{{count}}人",
+    "others_count_other": "他{{count}}人",
+    "authors_count_one": "著者 {{count}} 人",
+    "authors_count_other": "著者 {{count}} 人",
+    "show_all_authors": "すべての著者を表示",
+    "created_short": "{{date}}に作成",
+    "updated_short": "{{when}}に更新",
+    "author_role": {
+      "creator": "作成者",
+      "maintainer": "メンテナー",
+      "contributor": "投稿者",
+      "reporter": "レポーター"
     }
   },
   "communities": {

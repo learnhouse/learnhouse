@@ -1,7 +1,5 @@
 import React from 'react'
-import UserAvatar from '../../UserAvatar'
-import { getUserAvatarMediaDirectory } from '@services/media/media'
-import { useMediaQuery } from 'usehooks-ts'
+import CourseAuthorsLine from '../CourseAuthorsLine'
 import { Rss, PencilLine, TentTree } from 'lucide-react'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -45,54 +43,6 @@ interface Author {
 
 interface CourseAuthorsProps {
   authors: Author[]
-}
-
-// Authors as a compact row: small overlapping avatars, then names.
-const MultipleAuthors = ({ authors }: { authors: Author[], isMobile?: boolean }) => {
-  const { t } = useTranslation()
-  const displayedAvatars = authors.slice(0, 4)
-  const remainingCount = Math.max(0, authors.length - displayedAvatars.length)
-  const nameOf = (author: Author) =>
-    author.user.first_name && author.user.last_name
-      ? `${author.user.first_name} ${author.user.last_name}`
-      : `@${author.user.username}`
-
-  if (authors.length === 0) return null
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center -space-x-2 rtl:space-x-reverse shrink-0">
-        {displayedAvatars.map((author, index) => (
-          <div key={author.user.user_uuid} className="relative" style={{ zIndex: displayedAvatars.length - index }}>
-            <UserAvatar
-              border="border-2"
-              rounded="rounded-full"
-              avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
-              predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
-              width={36}
-              showProfilePopup={true}
-              userId={author.user.id}
-            />
-          </div>
-        ))}
-        {remainingCount > 0 && (
-          <span className="relative w-9 h-9 rounded-full border-2 border-white bg-neutral-100 text-neutral-600 text-xs font-semibold flex items-center justify-center">
-            +{remainingCount}
-          </span>
-        )}
-      </div>
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-neutral-900 truncate">
-          {authors.slice(0, 2).map(nameOf).join(' & ')}
-          {authors.length > 2 && (
-            <span className="font-normal text-neutral-500"> {t('courses.and_x_more', { count: authors.length - 2 })}</span>
-          )}
-        </p>
-        <p className="text-xs text-neutral-500 truncate">
-          {authors.slice(0, 2).map((a) => `@${a.user.username}`).join(' · ')}
-        </p>
-      </div>
-    </div>
-  )
 }
 
 const UpdatesSection = () => {
@@ -370,25 +320,12 @@ const DeleteUpdateButton = ({ update }: any) => {
   )
 }
 
+// Authors (same line and popover as the activity header; the course page
+// shows its dates elsewhere), then the course updates feed.
 const CourseAuthors = ({ authors }: CourseAuthorsProps) => {
-  const isMobile = useMediaQuery('(max-width: 768px)')
-
-  // Filter active authors and sort by role priority
-  const sortedAuthors = [...authors]
-    .filter(author => author.authorship_status === 'ACTIVE')
-    .sort((a, b) => {
-      const rolePriority: Record<string, number> = {
-        'CREATOR': 0,
-        'MAINTAINER': 1,
-        'CONTRIBUTOR': 2,
-        'REPORTER': 3
-      };
-      return rolePriority[a.authorship] - rolePriority[b.authorship];
-    });
-
   return (
     <div className="antialiased">
-      <MultipleAuthors authors={sortedAuthors} isMobile={isMobile} />
+      <CourseAuthorsLine authors={authors} layout="stacked" showDates={false} />
       <UpdatesSection />
     </div>
   )

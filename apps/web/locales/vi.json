@@ -915,9 +915,6 @@
     "unlock_certificate_message": "Hoàn thành tất cả các hoạt động để mở khóa chứng chỉ của bạn",
     "chapter": "Chương",
     "chapters": "Chương",
-    "co_created_by": "Được đồng sáng tạo bởi",
-    "created_on": "Được tạo vào",
-    "last_updated": "Cập nhật lần cuối",
     "public": "Công khai",
     "public_desc": "Mọi người trên internet đều có thể xem",
     "private": "Riêng tư",
@@ -930,7 +927,6 @@
     "clipboard_read_error": "Không thể đọc từ bộ nhớ tạm",
     "enter_to_add": "Nhấn Enter để thêm...",
     "select_visibility": "Chọn chế độ hiển thị",
-    "and_x_more": "và {{count}} khác",
     "update": "cập nhật",
     "updates": "cập nhật",
     "new_update": "Cập nhật mới",
@@ -1312,6 +1308,20 @@
       "available_in": "Có bản {{languages}}",
       "language_filter": "Ngôn ngữ",
       "all_languages": "Tất cả ngôn ngữ"
+    },
+    "by_authors": "Bởi {{names}}",
+    "others_count_one": "{{count}} người khác",
+    "others_count_other": "{{count}} người khác",
+    "authors_count_one": "{{count}} tác giả",
+    "authors_count_other": "{{count}} tác giả",
+    "show_all_authors": "Xem tất cả tác giả",
+    "created_short": "Tạo ngày {{date}}",
+    "updated_short": "Cập nhật {{when}}",
+    "author_role": {
+      "creator": "Người tạo",
+      "maintainer": "Người duy trì",
+      "contributor": "Người đóng góp",
+      "reporter": "Người báo cáo"
     }
   },
   "communities": {
