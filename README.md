@@ -28,7 +28,7 @@
   <img src=".github/images/demo/overview.webp" alt="The LearnHouse dashboard: courses, members and activity at a glance" width="880" />
 </p>
 
-## Try it
+## 🚀 Try it
 
 One command sets up a full instance with Docker. The wizard asks for your domain, database and admin account, then starts everything.
 
@@ -38,9 +38,9 @@ npx learnhouse@latest setup
 
 Want to look around first? [university.learnhouse.io](https://university.learnhouse.io) is a real academy running on LearnHouse, and the [docs](https://docs.learnhouse.app) cover every feature.
 
-## A short tour
+## 👀 A short tour
 
-### Write the way you think
+### ✍️ Write the way you think
 
 The editor works like a doc. Type `/` and add text, video, math, flashcards, quizzes, code or embeds, and your co-authors can edit alongside you in real time.
 
@@ -48,7 +48,7 @@ The editor works like a doc. Type `/` and add text, video, math, flashcards, qui
   <img src=".github/images/demo/editor.webp" alt="Building a lesson in the block editor" width="880" />
 </p>
 
-### Check what stuck
+### ✅ Check what stuck
 
 Drop quizzes into any lesson. Build assignments from quizzes, file uploads, forms, short answers and code challenges that run and grade themselves in 30+ languages. Review submissions and grade from one screen.
 
@@ -56,7 +56,7 @@ Drop quizzes into any lesson. Build assignments from quizzes, file uploads, form
   <img src=".github/images/demo/assess.webp" alt="A quiz inside a lesson, then grading assignment submissions" width="880" />
 </p>
 
-### AI that knows the course
+### 🤖 AI that knows the course
 
 Describe a course and get a full outline with chapters and lessons to edit. Learners get a tutor that answers from your content, not from the open web.
 
@@ -64,7 +64,7 @@ Describe a course and get a full outline with chapters and lessons to edit. Lear
   <img src=".github/images/demo/ai.webp" alt="Planning a course with AI, then asking the course tutor a question" width="880" />
 </p>
 
-### Everything around the course
+### 🎓 Everything around the course
 
 Podcasts, certificates on completion, learning paths, communities, collections, custom landing pages, and an interface available in 22 languages.
 
@@ -72,12 +72,12 @@ Podcasts, certificates on completion, learning paths, communities, collections, 
   <img src=".github/images/demo/more.webp" alt="A learning path, its certificate, then the podcasts page" width="880" />
 </p>
 
-## What's inside
+## 📦 What's inside
 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <b>Teach</b><br />
+      <b>📚 Teach</b><br />
       Courses, chapters and collections<br />
       Block editor with live collaboration<br />
       Quizzes, assignments and grading<br />
@@ -86,7 +86,7 @@ Podcasts, certificates on completion, learning paths, communities, collections, 
       Learning paths and certificates
     </td>
     <td width="50%" valign="top">
-      <b>Run</b><br />
+      <b>⚙️ Run</b><br />
       Communities and discussions<br />
       User groups, roles and permissions<br />
       Custom branding and landing pages<br />
@@ -97,24 +97,91 @@ Podcasts, certificates on completion, learning paths, communities, collections, 
   </tr>
 </table>
 
-Some features are part of the **Enterprise Edition** under a separate license: payments, SSO, multiple organizations, analytics, boards, plays, live sessions, SCORM, LTI and audit logs. See [Enterprise](https://docs.learnhouse.app/enterprise) for details.
+## 🧩 Build on it
 
-## Build on it
+Everything in LearnHouse is reachable from code. Keep your courses in LearnHouse and show them anywhere: your marketing site, a customer portal, a mobile app.
 
-LearnHouse is headless-friendly. Use the API from any stack, or drop real LearnHouse activities into your own app:
+| Package | What it does |
+| --- | --- |
+| [`@learnhouse/sdk`](packages/sdk) | Typed API client for browsers, Node, Bun, Deno, edge workers and React Native |
+| [`@learnhouse/react`](packages/react) | Renders real LearnHouse activities in any React app, plus a `<learnhouse-activity>` custom element for everything else |
+| [`@learnhouse/vue`](packages/vue) | The same activities for Vue 3 and Nuxt |
+
+All three are MIT licensed, and each version matches the LearnHouse release it was built from. See them running at [demos.learnhouse.app](https://demos.learnhouse.app).
+
+### ⚛️ Show a lesson in your React app
 
 ```bash
-npm install @learnhouse/react   # or @learnhouse/vue, @learnhouse/sdk
+npm install @learnhouse/react
 ```
 
 ```tsx
 import { LearnHouseActivity } from '@learnhouse/react'
 import '@learnhouse/react/styles.css'
+
+export function Lesson() {
+  return (
+    <LearnHouseActivity
+      baseUrl="https://learn.example.com"
+      courseId="course_9f2a…"
+      activityName="How payouts work"
+      theme={{ mode: 'auto', accent: '#4F46E5' }}
+      onEvent={(e) => console.log(e.type)}
+    />
+  )
+}
 ```
 
-See them running at [demos.learnhouse.app](https://demos.learnhouse.app), or read the package docs in [`packages/`](packages).
+Pages, quizzes, flashcards, code playgrounds, math, video and PDFs look and behave the way they do in LearnHouse. Point to an activity by id or by name, restyle it with `theme`, swap any block with `components`, and listen for `ready`, `complete` and media events.
 
-## Self-hosting
+Not using React? The custom element works in plain HTML, Svelte or Angular:
+
+```html
+<script type="module">
+  import '@learnhouse/react/element'
+  import '@learnhouse/react/styles.css'
+</script>
+
+<learnhouse-activity base-url="https://learn.example.com" course-id="course_9f2a…" activity-id="activity_0b3c…"></learnhouse-activity>
+```
+
+### 💚 Vue and Nuxt
+
+```vue
+<script setup lang="ts">
+import { LearnHouseActivity } from '@learnhouse/vue'
+import '@learnhouse/vue/styles.css'
+</script>
+
+<template>
+  <LearnHouseActivity base-url="https://learn.example.com" course-id="course_9f2a…" activity-id="activity_0b3c…" />
+</template>
+```
+
+### 🔌 Talk to the API
+
+```bash
+npm install @learnhouse/sdk
+```
+
+```ts
+import { createClient } from '@learnhouse/sdk'
+
+// On your server, with an API token from your organization's Developers settings
+const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL!, token: process.env.LEARNHOUSE_TOKEN! })
+
+for await (const course of lh.courses.listAll('your-school')) {
+  console.log(course.name)
+}
+
+const activity = await lh.activities.resolve({ courseId: 'course_9f2a…', activityName: 'How payouts work' })
+```
+
+The SDK also handles cookie sessions in the browser, token refresh in React Native, retries, pagination and webhook signature checks. Keep `lh_` API tokens on your server; in the browser, use the signed-in user's session.
+
+LearnHouse also ships webhooks for course and learner events, and an MCP server so AI assistants can read and build courses in your organization.
+
+## 🏠 Self-hosting
 
 The CLI handles setup, updates and backups.
 
@@ -127,7 +194,7 @@ npx learnhouse doctor    # diagnose common issues
 
 Needs Node.js 22+ and Docker with Compose v2. Every command is in the [CLI docs](apps/cli/README.md).
 
-## Development
+## 🛠️ Development
 
 ```bash
 git clone https://github.com/learnhouse/learnhouse.git
@@ -145,14 +212,14 @@ This starts PostgreSQL and Redis, installs dependencies, and runs the API, web a
 | CLI | `apps/cli` | Node.js, Commander |
 | Packages | `packages/*` | SDK, React and Vue embeds |
 
-## Contributing
+## 🤝 Contributing
 
 Bug reports, fixes and ideas are all welcome. Start with the [contributing guide](CONTRIBUTING.md), pick a [good first issue](https://github.com/learnhouse/learnhouse/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22), or come say hi on [Discord](https://discord.gg/CMyZjjYZ6x).
 
 Found a security issue? Please email **security@learnhouse.app** instead of opening an issue. Our [security policy](https://learnhouse.app/security) explains the process.
 
-## License
+## 📄 License
 
-LearnHouse is licensed under [AGPL-3.0](LICENSE). Enterprise features are available under a separate Enterprise License.
+LearnHouse is licensed under [AGPL-3.0](LICENSE). The packages in [`packages/`](packages) are MIT.
 
-Made with care by [@swve](https://github.com/swve) and contributors.
+Made with care by [@swve](https://github.com/swve) and contributors since 2022 💜
