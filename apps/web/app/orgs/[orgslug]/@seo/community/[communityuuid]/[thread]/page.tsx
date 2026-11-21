@@ -16,7 +16,7 @@ export default async function ThreadSeo({ params }: { params: Promise<{ orgslug:
   const { orgslug, communityuuid, thread } = await params
   if (!THREAD_SEGMENT_RE.test(thread)) return null
   const [ctx, t] = await Promise.all([getSeoContext(orgslug), fetchThreadJsonLd(orgslug, decodeURIComponent(communityuuid), thread)])
-  if (!t?.indexable || ctx.seo.indexing_disabled) return null
+  if (!t?.indexable || ctx.degraded || ctx.seo.indexing_disabled) return null
   const communityUrl = await ctx.url(`/community/${t.community_key}`)
   const url = await ctx.url(`/community/${t.community_key}/${t.segment}`)
   // Thread and reply bodies are editor JSON (or plain text): plain text here.

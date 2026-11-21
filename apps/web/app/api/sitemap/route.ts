@@ -8,6 +8,7 @@ import {
 } from '@services/media/media'
 import { getServerAPIUrl } from '@services/config/config'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { isOrgFeatureEnabled } from '@/lib/features/orgFeature'
 import {
   SITEMAP_TYPES,
   buildSitemapIndex,
@@ -46,11 +47,12 @@ async function fetchSitemapData(orgSlug: string): Promise<SitemapData | null> {
   }
 }
 
-/** Public, not cancelled live sessions (EE; empty without it or on failure). */
+/** Public, not cancelled live sessions (EE; empty without it, when the plan lacks them, or on failure). */
 async function fetchPublicLiveSessions(orgSlug: string): Promise<NonNullable<SitemapData['live']>> {
   try {
     const org = await getOrganizationContextInfo(orgSlug, { revalidate: 300, tags: ['organizations'] })
-    if (!org?.id) return []
+    // The API 404s live sessions for orgs whose plan doesn't include them.
+    if (!org?.id || !isOrgFeatureEnabled(org, 'live_sessions')) return []
     const res = await fetch(`${getServerAPIUrl()}live_sessions/org/${org.id}?scope=all&limit=100`, {
       next: { revalidate: 600 },
       signal: AbortSignal.timeout(5000),
@@ -69,7 +71,7 @@ function imageUrl(orgUuid: string) {
     if (!e.image || e.image.includes('/')) return ''
     switch (type) {
       case 'course':
-        return getCourseThumbnailMediaDirectory(orgUuid, e.uuid, e.image)
+        return getCourseThumbnailMediaDirectory(orgUuid, e.uuid, e.image) ?? ''
       case 'path':
         return getPathThumbnailMediaDirectory(orgUuid, e.uuid, e.image)
       case 'podcast':

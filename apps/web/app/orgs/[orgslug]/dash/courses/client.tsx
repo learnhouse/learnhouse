@@ -119,8 +119,11 @@ function CoursesHome({ orgslug }: { orgslug: string }) {
   const usergroupsAvailable = org?.config?.config?.resolved_features?.usergroups?.enabled ?? false
   const [usergroupId, setUsergroupId] = useStoredState<string>('lh_course_usergroup_filter', '')
   const { data: usergroups = [] } = useQuery({
-    queryKey: ['usergroups', orgId],
-    queryFn: async () => asArray(await getUserGroups(orgId!, accessToken)),
+    // Shares its cache key with the other usergroup lists, which store the
+    // {success, data} envelope, so unwrap in select rather than queryFn.
+    queryKey: queryKeys.usergroups.list(orgId!),
+    queryFn: () => getUserGroups(orgId!, accessToken),
+    select: (res: any) => asArray<any>(res),
     enabled: usergroupsAvailable && !!accessToken && !!orgId,
     staleTime: 5 * 60_000,
   })

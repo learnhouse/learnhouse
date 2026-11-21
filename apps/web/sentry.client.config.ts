@@ -47,7 +47,6 @@ if (SENTRY_DSN) {
         "";
 
       if (msg.includes("Failed to find Server Action")) return null;
-      if (msg.includes("Organization not found")) return null;
       if (msg.includes("Organization has no config")) return null;
 
       const frames = event?.exception?.values?.[0]?.stacktrace?.frames ?? [];

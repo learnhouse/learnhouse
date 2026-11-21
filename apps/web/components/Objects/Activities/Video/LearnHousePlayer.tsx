@@ -627,7 +627,10 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
         <VideoPlayer poster={poster || ''} title={title || ''}>
           <VideoSkin style={SKIN_STYLE}>
             {playingHls ? (
-              <Suspense fallback={null}>
+              // A plain, source-less <video> while the HLS chunk loads, so the
+              // player store always has a media target: a tap before the chunk
+              // arrives otherwise throws StoreError NO_TARGET.
+              <Suspense fallback={<Video {...mediaProps} preload="none" autoPlay={false} onError={undefined} />}>
                 <HlsJsVideo
                   {...mediaProps}
                   source={{

@@ -86,6 +86,8 @@ export function getActivityExtensions(props: ActivityExtensionOptions): Extensio
     ImageBlock.configure({
       editable: isEditable,
       activity: props.activity,
+      orgUuid: props.orgUuid,
+      courseUuid: props.courseUuid,
     }),
     VideoBlock.configure({
       editable: true,

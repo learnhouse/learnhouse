@@ -360,7 +360,7 @@ const CourseClient = (props: any) => {
       <div className="relative w-full aspect-video md:aspect-auto md:h-[400px] overflow-hidden rounded-2xl bg-neutral-100 nice-shadow max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none">
         {showVideo && course.thumbnail_video ? (
           <video
-            src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_video)}
+            src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_video) ?? undefined}
             className="absolute inset-0 w-full h-full bg-black object-cover"
             controls
             autoPlay

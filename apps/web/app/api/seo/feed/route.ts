@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getServerAPIUrl } from '@services/config/config'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { isOrgFeatureEnabled } from '@/lib/features/orgFeature'
 import { FEED_CONTENT_TYPES, buildFeed, buildPodcastRss, podcastGuid, type FeedDoc, type FeedFormat } from '@/lib/seo/feeds'
 import { feedDocFromApi, feedUrls, podcastFeedFromApi } from '@/lib/seo/feedMapping'
 import { fetchFeedData } from '@/lib/seo/publicData.server'
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
 
   let doc: FeedDoc | null
   if (kind === 'live') {
-    doc = featureIndexable(seo, 'live') ? await liveDoc(org, base, lang) : null
+    doc = featureIndexable(seo, 'live') && isOrgFeatureEnabled(org, 'live_sessions') ? await liveDoc(org, base, lang) : null
   } else if (kind === 'newsletter') {
     doc = featureIndexable(seo, 'newsletters') ? await newsletterDoc(orgslug, key, org, base, lang) : null
   } else {

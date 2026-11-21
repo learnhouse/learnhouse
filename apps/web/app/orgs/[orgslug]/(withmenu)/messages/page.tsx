@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 import { getServerSession } from '@/lib/auth/server'
 import MessagesClient from './messages'
 
@@ -13,11 +13,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const params = await props.params
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
-  const org = await getOrganizationContextInfo(
-    params.orgslug,
-    { revalidate: 120, tags: ['organizations'] },
-    access_token
-  )
+  const org = await getOrgOr404(params.orgslug, access_token)
   return {
     title: 'Messages | ' + org.name,
     description: 'Messages, course announcements and AI agents.',

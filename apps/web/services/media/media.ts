@@ -7,6 +7,18 @@ function getMediaUrl() {
   return raw.endsWith('/') ? raw : `${raw}/`;
 }
 
+/**
+ * True when every id a media path needs is present. While the org (or a
+ * course/activity) is still loading its uuid is '' or undefined, and building
+ * a URL anyway yields `content/orgs//courses/...`, which 404s. Callers check
+ * this first and show their placeholder instead.
+ */
+export function hasMediaIds(...ids: unknown[]): boolean {
+  return ids.every((id) =>
+    typeof id === 'string' ? id !== '' && id !== 'undefined' && id !== 'null' : id != null
+  )
+}
+
 function getApiUrl() {
   // On a custom domain the session cookie belongs to that host and is
   // SameSite=Lax, so a stream request sent straight to the backend arrives
@@ -24,9 +36,9 @@ function getApiUrl() {
  * Uses the optimized streaming endpoint with proper Range request support.
  */
 export function getActivityVideoStreamUrl(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string,
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined,
   filename: string
 ) {
   return `${getApiUrl()}api/v1/stream/video/${orgUUID}/${courseUUID}/${activityUUID}/${filename}`
@@ -38,9 +50,9 @@ export function getActivityVideoStreamUrl(
  * presigned to R2, so hls.js streams segments directly from object storage.
  */
 export function getActivityHlsMasterUrl(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined
 ) {
   return `${getApiUrl()}api/v1/stream/hls/${orgUUID}/${courseUUID}/${activityUUID}/master.m3u8`
 }
@@ -50,9 +62,9 @@ export function getActivityHlsMasterUrl(
  * this to a presigned R2 URL; it's loaded as a CSS background image (no CORS).
  */
 export function getActivityHlsThumbnailsUrl(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string,
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined,
   spritePath: string
 ) {
   return `${getApiUrl()}api/v1/stream/hls/${orgUUID}/${courseUUID}/${activityUUID}/${spritePath}`
@@ -63,9 +75,9 @@ export function getActivityHlsThumbnailsUrl(
  * by the API after an RBAC check (same access as the video).
  */
 export function getActivityCaptionUrl(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string,
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined,
   lang: string
 ) {
   return `${getApiUrl()}api/v1/stream/captions/${orgUUID}/${courseUUID}/${activityUUID}/${lang}.vtt`
@@ -76,10 +88,10 @@ export function getActivityCaptionUrl(
  * Uses the optimized streaming endpoint with proper Range request support.
  */
 export function getVideoBlockStreamUrl(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string,
-  blockUUID: string,
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined,
+  blockUUID: string | null | undefined,
   filename: string
 ) {
   return `${getApiUrl()}api/v1/stream/block/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${filename}`
@@ -90,20 +102,20 @@ export function getVideoBlockStreamUrl(
  * presigns segment URLs to R2, the same pipeline as activity videos.
  */
 export function getVideoBlockHlsMasterUrl(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string,
-  blockUUID: string
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined,
+  blockUUID: string | null | undefined
 ) {
   return `${getApiUrl()}api/v1/stream/block-hls/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/master.m3u8`
 }
 
 /** URL of a video block's HLS hover-preview sprite sheet. */
 export function getVideoBlockHlsThumbnailsUrl(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string,
-  blockUUID: string,
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined,
+  blockUUID: string | null | undefined,
   spritePath: string
 ) {
   return `${getApiUrl()}api/v1/stream/block-hls/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${spritePath}`
@@ -114,19 +126,19 @@ export function getVideoBlockHlsThumbnailsUrl(
  * Uses the optimized streaming endpoint with proper Range request support.
  */
 export function getAudioBlockStreamUrl(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string,
-  blockUUID: string,
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined,
+  blockUUID: string | null | undefined,
   filename: string
 ) {
   return `${getApiUrl()}api/v1/stream/block/audio/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${filename}`
 }
 
 export function getCourseThumbnailMediaDirectory(
-  orgUUID: string,
-  courseUUID: string,
-  fileId: string
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  fileId: string | null | undefined
 ) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/thumbnails/${fileId}`
   return uri
@@ -203,9 +215,9 @@ export function getUserAvatarMediaDirectory(userUUID: string, fileId: string) {
 }
 
 export function getActivityBlockMediaDirectory(
-  orgUUID: string,
-  courseId: string,
-  activityId: string,
+  orgUUID: string | null | undefined,
+  courseId: string | null | undefined,
+  activityId: string | null | undefined,
   blockId: any,
   fileId: any,
   type: string
@@ -268,9 +280,9 @@ export function getTaskFileSubmissionDir(
 }
 
 export function getActivityMediaDirectory(
-  orgUUID: string,
-  courseUUID: string,
-  activityUUID: string,
+  orgUUID: string | null | undefined,
+  courseUUID: string | null | undefined,
+  activityUUID: string | null | undefined,
   fileId: string,
   activityType: string
 ) {
@@ -328,7 +340,7 @@ export function getScormContentUrl(
   courseUUID: string,
   activityUUID: string,
   filePath: string
-): string {
+) {
   // Use local proxy route to serve SCORM content from same origin
   // This is required for the SCORM API to work properly in iframes
   return `/api/scorm/${activityUUID}/content/${filePath}`

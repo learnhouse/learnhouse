@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { getSeoContext } from '@/lib/seo/context.server'
 import { buildListMetadata, seoAlternates } from '@/lib/seo/pageMetadata'
 import { featureIndexable } from '@/lib/seo/meta'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgOr404 } from '@/lib/org.server'
 import LiveCatalogPage from '@ee/components/LiveSessions/Pages/LiveCatalogPage'
 
 type PageParams = Promise<{ orgslug: string }>
@@ -24,6 +24,6 @@ export async function generateMetadata({ params }: { params: Promise<{ orgslug: 
 
 export default async function LiveSessionsPage({ params }: { params: PageParams }) {
   const { orgslug } = await params
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
+  const org = await getOrgOr404(orgslug)
   return <LiveCatalogPage orgslug={orgslug} orgId={org?.id || 0} />
 }

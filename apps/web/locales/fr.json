@@ -19349,6 +19349,10 @@
       "body_other": "Votre fournisseur de paiement a refusé {{count}} paiements depuis {{date}}. Votre compte Stripe est peut-être déconnecté ou demande votre attention. Tant que ce n’est pas réglé, les apprenants voient que le paiement est temporairement indisponible.",
       "recheck": "Vérifier à nouveau",
       "fix": "Ouvrir les paramètres de paiement"
+    },
+    "impersonating": {
+      "title": "Les paiements ne sont pas disponibles pendant une usurpation d'identité",
+      "body": "Les paramètres de paiement, les clients et les données Stripe restent réservés aux administrateurs de l'organisation. Mettez fin à l'usurpation pour gérer les paiements."
     }
   },
   "lti": {
