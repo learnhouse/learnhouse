@@ -357,11 +357,11 @@ CATALOG: dict[str, dict[str, Any]] = {
         ]},
     },
     "blockEmbed": {
-        "use": "Embedded YouTube, Vimeo, Loom, Figma, CodePen, Google Maps, ...",
+        "use": "Embedded YouTube, Vimeo, Loom, Kinescope, Figma, CodePen, Google Maps, ...",
         "add": "Markdown fence: ```embed with the video or page URL on one line (optional height: 400), or insert {node}.",
         "attrs": {"embedUrl": "embeddable http(s) URL", "embedType": "url (embedUrl) or code (embedCode)", "embedHeight": "pixels", "embedWidth": "e.g. 100%", "alignment": "left | center | right", "embedCode": "raw iframe code instead of embedUrl"},
         "example": {"type": "blockEmbed", "attrs": {"embedUrl": "https://www.youtube.com/embed/aqz-KE-bpKQ", "embedType": "url", "embedHeight": 400, "embedWidth": "100%", "alignment": "center"}},
-        "notes": "The fence turns shared YouTube, Vimeo and Loom links into embed URLs; raw nodes need the provider's embed URL (YouTube: /embed/<id>).",
+        "notes": "The fence turns shared YouTube, Vimeo, Loom and Kinescope links into embed URLs; raw nodes need the provider's embed URL (YouTube: /embed/<id>, Kinescope: kinescope.io/embed/<id>).",
     },
     "blockWebPreview": {
         "use": "Link card for a web page.",

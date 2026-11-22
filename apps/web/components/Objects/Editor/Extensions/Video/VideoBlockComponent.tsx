@@ -29,6 +29,7 @@ import { libraryMediaNodeAttrs } from '../../Blocks/media/librarySnapshot'
 import { uploadErrorText } from '../../Blocks/media/uploadMessages'
 import { deleteBlock, pickFile, replaceBlock } from '../../Blocks/nodeViewUtils'
 import { formatTimecode, normalizeChapters, parseTimecode, resolveVideoBlockObject, VIDEO_SIZES, type VideoSize } from '../../Blocks/schema/blockAttrs'
+import { videoServiceNames } from '@components/Objects/Activities/Video/providers/registry'
 
 interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
   extension: Node & {
@@ -105,6 +106,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const session = useLHSession() as any
   const isEditable = editorState?.isEditable
   const access_token = session?.data?.tokens?.access_token
+  const videoServices = videoServiceNames()
 
   // Read from the node (the shared document) so undo and collaborators show.
   const blockObject = React.useMemo(() => resolveVideoBlockObject(node.attrs.blockObject), [node.attrs.blockObject])
@@ -230,12 +232,13 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     if (!url) return uploadErrorText(t, { code: 'url' })
     const parsed = parseEmbedUrl(url)
     if (parsed) {
-      // A YouTube/Vimeo/Loom link plays from its own service.
+      // A video service link (YouTube, Vimeo, Loom, registered providers)
+      // plays from its own service.
       replaceBlock(props as any, { type: 'blockEmbed', attrs: { ...embedAttrsFor(parsed), caption } })
       return
     }
     if (!looksLikeFileUrl(url, 'video')) {
-      return t('editor.blocks_v2.video_link_hint', 'Paste a YouTube, Vimeo or Loom link, or a direct link to an MP4 or WebM file.')
+      return t('editor.blocks_v2.video_link_hint_services', 'Paste a link from {{services}}, or a direct link to an MP4 or WebM file.', { services: videoServices })
     }
     try {
       upload.start(await fetchRemoteFile(url, 'video'))
@@ -245,7 +248,9 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     }
   }
 
-  const label = <><VideoCamera size={11} weight="bold" />{t('editor.blocks.video')}</>
+  const label = blockObject
+    ? <><VideoCamera size={11} weight="bold" />{t('editor.blocks.video')}<span aria-hidden="true" className="opacity-50">·</span>{t('media.upload')}</>
+    : <><VideoCamera size={11} weight="bold" />{t('editor.blocks.video')}</>
   const deleteButton = (
     <BlockToolbarButton label={t('common.delete', 'Delete')} tone="danger" onClick={() => deleteBlock(props as any)}>
       <Trash size={14} />

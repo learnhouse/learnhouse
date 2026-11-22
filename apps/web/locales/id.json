@@ -3770,7 +3770,15 @@
       "min": "Men",
       "sec": "Det",
       "autoplay": "Putar otomatis",
-      "start_muted": "Mulai tanpa suara"
+      "start_muted": "Mulai tanpa suara",
+      "link": "Tautan",
+      "video_link": "Tautan video",
+      "video_link_detected": "Diputar di pelajaran dengan pemutarnya sendiri.",
+      "video_link_unsupported": "Tautan itu bukan dari layanan video yang bisa kami putar. Coba {{services}}.",
+      "video_link_hint": "Tempel tautan dari {{services}}.",
+      "trim_length": "Diputar {{length}}",
+      "trim_end_before_start": "Akhir harus setelah awal.",
+      "trim_hint": "Misalnya 1:30. Biarkan akhir kosong untuk memutar sampai selesai."
     },
     "edit_modal": {
       "pdf_document": "Dokumen PDF",
@@ -4369,7 +4377,14 @@
       "before": "Sebelum",
       "slider": "Bandingkan gambar",
       "value": "{{before}} {{b}}%, {{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "Dilanjutkan dari {{time}}",
+    "video_start_over": "Mulai dari awal",
+    "video_unsupported": "Video ini tidak dapat diputar di sini.",
+    "video_open_original": "Buka video",
+    "video_transcript": "Transkrip",
+    "video_transcript_language": "Bahasa transkrip",
+    "video_transcript_failed": "Transkrip tidak dapat dimuat."
   },
   "embed": {
     "not_supported_title": "Aktivitas ini tidak didukung",
@@ -6582,7 +6597,7 @@
           "markdown": "Tampilkan file Markdown dari URL, seperti README GitHub.",
           "resource": "Gunakan kembali file atau halaman dari pustaka Anda.",
           "scorm": "Impor paket SCORM yang dibuat di alat lain.",
-          "video": "Unggah file video atau tautkan video YouTube."
+          "video": "Unggah file video atau tempel tautan video yang di-hosting."
         },
         "certification": {
           "remove_confirm": "Matikan",
@@ -15326,7 +15341,12 @@
         "icon": "Ikon",
         "icon_chevron": "Panah",
         "icon_plus": "Plus dan minus"
-      }
+      },
+      "video_link_hint_services": "Tempel tautan dari {{services}}, atau tautan langsung ke file MP4 atau WebM.",
+      "end_at": "Berhenti di",
+      "end_time": "Waktu akhir",
+      "trim_hint": "Misalnya 1:30. Biarkan kosong untuk memutar sampai selesai.",
+      "trim": "Potong"
     },
     "history": {
       "named": "Versi diberi nama",
@@ -32410,5 +32430,25 @@
       "total_one": "{{count}} suntingan diterima",
       "total_other": "{{count}} suntingan diterima"
     }
+  },
+  "video_providers": {
+    "title": "Pemutar {{provider}}",
+    "description": "Memutar tautan {{provider}} dengan pemutarnya sendiri di pelajaran dan blok video, dengan pemotongan, progres, dan lanjut menonton. Jika dimatikan, tautan tetap jadi sematan biasa.",
+    "enable": "Gunakan pemutar {{provider}}",
+    "watermark_title": "Tanda air penonton",
+    "watermark_description": "Menampilkan email atau nama penonton yang bergerak di atas video, agar rekaman layar bisa dilacak.",
+    "watermark_off": "Mati",
+    "watermark_email": "Email",
+    "watermark_name": "Nama",
+    "drm_title": "Pemeriksaan lisensi untuk video terlindungi",
+    "drm_description": "Setiap pelajar mendapat token berumur pendek. {{provider}} memeriksanya ke LearnHouse sebelum memutar video yang dilindungi DRM, jadi hanya orang yang bisa membuka pelajaran yang mendapat lisensi.",
+    "drm_url_label": "URL backend otorisasi",
+    "drm_url_hint": "Tempel di pengaturan backend otorisasi {{provider}}. Aktifkan mode ketat di sana agar tidak ada yang diputar jika pemeriksaan tidak terjangkau.",
+    "drm_uuid_hint": "Tautkan video terlindungi dengan ID videonya (UUID di {{provider}}), agar setiap token cocok dengan tepat satu video.",
+    "saved": "Pengaturan video disimpan",
+    "save_failed": "Pengaturan video tidak dapat disimpan",
+    "copy": "Salin",
+    "copied": "Disalin",
+    "copy_failed": "Tidak dapat menyalin"
   }
 }

@@ -1445,6 +1445,22 @@
      ]
     }
    ]
+  },
+  {
+   "type": "blockEmbed",
+   "attrs": {
+    "embedType": "url",
+    "embedUrl": "https://kinescope.io/embed/7127f2d7-0e96-40d0-9a03-2e987c096466?t=30",
+    "embedSourceUrl": "https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466",
+    "embedProvider": "kinescope",
+    "embedAspectRatio": 1.7777777777777777,
+    "embedHeight": 300,
+    "embedWidth": "100%",
+    "alignment": "center",
+    "caption": "Recorded lecture",
+    "startTime": 30,
+    "endTime": 120
+   }
   }
  ]
 }

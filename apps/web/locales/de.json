@@ -3790,7 +3790,15 @@
       "min": "Min.",
       "sec": "Sek.",
       "autoplay": "Autoplay",
-      "start_muted": "Stummgeschaltet starten"
+      "start_muted": "Stummgeschaltet starten",
+      "link": "Link",
+      "video_link": "Video-Link",
+      "video_link_detected": "Wird in der Lektion mit dem eigenen Player abgespielt.",
+      "video_link_unsupported": "Dieser Link stammt von keinem Videodienst, den wir abspielen können. Versuche {{services}}.",
+      "video_link_hint": "Füge einen Link von {{services}} ein.",
+      "trim_length": "Spielt {{length}}",
+      "trim_end_before_start": "Das Ende muss nach dem Anfang liegen.",
+      "trim_hint": "Zum Beispiel 1:30. Lass das Ende leer, um bis zum Schluss abzuspielen."
     },
     "edit_modal": {
       "pdf_document": "PDF-Dokument",
@@ -4389,7 +4397,14 @@
       "before": "Vorher",
       "slider": "Bilder vergleichen",
       "value": "{{before}} {{b}} %, {{after}} {{a}} %"
-    }
+    },
+    "video_resumed_at": "Fortgesetzt bei {{time}}",
+    "video_start_over": "Von vorn",
+    "video_unsupported": "Dieses Video kann hier nicht abgespielt werden.",
+    "video_open_original": "Video öffnen",
+    "video_transcript": "Transkript",
+    "video_transcript_language": "Sprache des Transkripts",
+    "video_transcript_failed": "Das Transkript konnte nicht geladen werden."
   },
   "embed": {
     "not_supported_title": "Diese Aktivität wird nicht unterstützt",
@@ -6604,7 +6619,7 @@
           "markdown": "Zeige eine Markdown-Datei von einer URL an, etwa eine GitHub-README.",
           "resource": "Verwende eine Datei oder Seite aus deiner Bibliothek erneut.",
           "scorm": "Importiere ein SCORM-Paket, das in einem anderen Tool erstellt wurde.",
-          "video": "Lade eine Videodatei hoch oder verlinke ein YouTube-Video."
+          "video": "Lade eine Videodatei hoch oder füge den Link zu einem gehosteten Video ein."
         },
         "certification": {
           "remove_confirm": "Deaktivieren",
@@ -15361,7 +15376,12 @@
         "icon": "Symbol",
         "icon_chevron": "Pfeil",
         "icon_plus": "Plus und Minus"
-      }
+      },
+      "video_link_hint_services": "Füge einen Link von {{services}} ein oder einen direkten Link zu einer MP4- oder WebM-Datei.",
+      "end_at": "Stoppen bei",
+      "end_time": "Endzeit",
+      "trim_hint": "Zum Beispiel 1:30. Leer lassen, um bis zum Schluss abzuspielen.",
+      "trim": "Zuschneiden"
     },
     "history": {
       "named": "Version benannt",
@@ -32454,5 +32474,25 @@
       "total_one": "{{count}} angenommene Änderung",
       "total_other": "{{count}} angenommene Änderungen"
     }
+  },
+  "video_providers": {
+    "title": "{{provider}}-Player",
+    "description": "Spielt {{provider}}-Links mit dem eigenen Player in Lektionen und Videoblöcken ab, mit Zuschnitt, Fortschritt und Fortsetzen. Ausgeschaltet bleiben sie einfache Einbettungen.",
+    "enable": "{{provider}}-Player verwenden",
+    "watermark_title": "Wasserzeichen für Zuschauer",
+    "watermark_description": "Zeigt die E-Mail oder den Namen der Person wandernd über dem Video, damit sich Bildschirmaufnahmen zurückverfolgen lassen.",
+    "watermark_off": "Aus",
+    "watermark_email": "E-Mail",
+    "watermark_name": "Name",
+    "drm_title": "Lizenzprüfung für geschützte Videos",
+    "drm_description": "Jede lernende Person erhält ein kurzlebiges Token. {{provider}} prüft es bei LearnHouse, bevor ein DRM-geschütztes Video startet. So erhalten nur Personen mit Zugriff auf die Lektion eine Lizenz.",
+    "drm_url_label": "URL des Autorisierungs-Backends",
+    "drm_url_hint": "Füge sie in den Einstellungen des Autorisierungs-Backends von {{provider}} ein. Aktiviere dort den strikten Modus, damit nichts abgespielt wird, wenn die Prüfung nicht erreichbar ist.",
+    "drm_uuid_hint": "Verlinke geschützte Videos über ihre Video-ID (die UUID in {{provider}}), damit jedes Token genau zu einem Video passt.",
+    "saved": "Videoeinstellungen gespeichert",
+    "save_failed": "Videoeinstellungen konnten nicht gespeichert werden",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "copy_failed": "Kopieren fehlgeschlagen"
   }
 }

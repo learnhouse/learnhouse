@@ -8,9 +8,26 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import LearnHousePlayer, { type PlayerNavItem } from './LearnHousePlayer'
 import YouTubeFacade from './YouTubeFacade'
 import VideoChapters from './VideoChapters'
+
+// Vimeo, Loom and the registered providers (e.g. Enterprise players): their own
+// chunk, fetched only when an activity uses one of them.
+const ExternalVideoPlayer = React.lazy(() => import('./ExternalVideoPlayer'))
+// The transcript reads the caption tracks; only videos that have them load it.
+const VideoTranscript = React.lazy(() => import('./VideoTranscript'))
 import { positiveIntParam } from '@/lib/copilot/sources'
 import { useVideoProgress } from '@services/analytics/useVideoProgress'
 import { registerVideoClock } from '@/lib/notes/videoClock'
+import {
+  clearSavedPosition,
+  readPlaybackRate,
+  readSavedPosition,
+  resumePosition,
+  savePlaybackRate,
+  savePosition,
+  throttle,
+} from '@/lib/video/resume'
+import ResumeChip from './ResumeChip'
+import type { VideoPlayerControls } from './providers/types'
 import {
   isActivityHlsReady,
   resolveActivityVideoSource,
@@ -45,6 +62,8 @@ interface VideoActivityProps {
     content: {
       filename?: string
       uri?: string
+      /** External videos: youtube | vimeo | loom | kinescope… (absent = youtube). */
+      type?: string
     }
     details?: VideoDetails
     extra_metadata?: {
@@ -105,6 +124,24 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
     }
   }, [videoEl, reportProgress, completeProgress])
 
+  // Resume: where this learner stopped last time (in this browser). A `?t=`
+  // link opens at its own moment instead.
+  const resumeKey = linkedStart ? undefined : activity?.activity_uuid
+  // YouTube reports its resume once its player is ready.
+  const [resumedAt, setResumedAt] = React.useState<number | null>(null)
+  const [startedOver, setStartedOver] = React.useState(false)
+  const saveResume = React.useMemo(
+    () => throttle((time: number, duration: number) => savePosition(resumeKey, time, duration, activity.details?.endTime), 4000),
+    [resumeKey, activity.details?.endTime],
+  )
+  const externalControls = React.useRef<VideoPlayerControls | null>(null)
+  const startOver = () => {
+    clearSavedPosition(resumeKey)
+    setResumedAt(null)
+    setStartedOver(true)
+    externalControls.current?.seek(activity.details?.startTime || 0)
+  }
+
   // The YouTube iframe has no timeupdate event: sample its position while it
   // plays.
   const youtubePoll = React.useRef<ReturnType<typeof setInterval> | null>(null)
@@ -119,25 +156,54 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
     stopYoutubePoll()
     if (event.data === 0) {
       completeProgress()
+      clearSavedPosition(resumeKey)
       return
     }
     if (event.data !== 1) return
     const player = event.target
     const sample = () => {
       Promise.all([player?.getCurrentTime?.(), player?.getDuration?.()])
-        .then(([time, duration]) => reportProgress(Number(time), Number(duration)))
+        .then(([time, duration]) => {
+          reportProgress(Number(time), Number(duration))
+          saveResume(Number(time), Number(duration))
+        })
         .catch(() => {})
     }
     sample()
     youtubePoll.current = setInterval(sample, 2000)
   }
 
+  // External videos: which service plays it. Older activities have no type
+  // and were always YouTube.
+  const externalType = activity?.content?.type || 'youtube'
+  const isYouTube = externalType === 'youtube'
+
   React.useEffect(() => {
-    if (activity?.content?.uri) {
+    if (activity?.content?.uri && isYouTube) {
       var getYouTubeID = require('get-youtube-id')
       setVideoId(getYouTubeID(activity.content.uri))
     }
-  }, [activity, org])
+  }, [activity, org, isYouTube])
+
+  // Timestamped notes read and seek non-YouTube external players too.
+  const externalClockOff = React.useRef<(() => void) | null>(null)
+  React.useEffect(() => () => externalClockOff.current?.(), [])
+  const onExternalReady = (controls: VideoPlayerControls) => {
+    externalControls.current = controls
+    externalClockOff.current?.()
+    externalClockOff.current = registerVideoClock({ getTime: controls.getTime, seek: controls.seek })
+  }
+  // Read once per activity: the saved spot to continue from, if any.
+  const externalResume = React.useMemo(
+    () =>
+      resumePosition(readSavedPosition(resumeKey), {
+        startTime: activity.details?.startTime,
+        endTime: activity.details?.endTime,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [resumeKey],
+  )
+  const externalChip = startedOver ? null : externalResume
 
   // Prefer adaptive HLS once transcoding is ready; otherwise fall back to the
   // (optimized) progressive MP4 so playback always works.
@@ -190,6 +256,16 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
       activityUuid: activity.activity_uuid,
       filename: activity.content?.filename,
     })
+
+  // Ready caption tracks of a hosted video (the transcript reads them too).
+  const hostedCaptions =
+    activity.activity_sub_type === 'SUBTYPE_VIDEO_HOSTED'
+      ? resolveActivityCaptions(activity, {
+          orgUuid: resolvedOrgUuid,
+          courseUuid: course?.course_uuid,
+          activityUuid: activity.activity_uuid,
+        })
+      : []
 
   // Course thumbnail: the poster backdrop for an MP4 with no storyboard yet.
   const courseThumb = course?.thumbnail_image
@@ -253,6 +329,7 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                       captions={captions}
                       chapters={chapters}
                       onVideoElement={setVideoEl}
+                      resumeKey={resumeKey}
                     />
                   ) : null
                 })()}
@@ -273,9 +350,47 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                   }
                 />
               )}
+              {hostedCaptions.length > 0 && (
+                <React.Suspense fallback={null}>
+                  <VideoTranscript captions={hostedCaptions} video={videoEl} />
+                </React.Suspense>
+              )}
             </div>
           )}
-          {activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE' && (
+          {activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE' && !isYouTube && (
+            <div className="w-full">
+              <div className="lh-video-frame relative w-full aspect-video overflow-hidden rounded-[20px] bg-neutral-900 ring-1 ring-white/10 max-sm:rounded-none max-sm:ring-0">
+                <React.Suspense fallback={<div className="absolute inset-0 animate-pulse bg-neutral-900 motion-reduce:animate-none" />}>
+                  <ExternalVideoPlayer
+                    provider={externalType}
+                    url={activity.content?.uri || ''}
+                    title={activity.name}
+                    startTime={details?.startTime || 0}
+                    endTime={activity.details?.endTime ?? null}
+                    autoplay={!!activity.details?.autoplay}
+                    muted={!!activity.details?.muted}
+                    resumeAt={externalResume}
+                    playbackRate={readPlaybackRate()}
+                    activityUuid={activity.activity_uuid}
+                    onProgress={(time, duration) => {
+                      reportProgress(time, duration)
+                      saveResume(time, duration)
+                    }}
+                    onEnded={() => {
+                      completeProgress()
+                      clearSavedPosition(resumeKey)
+                    }}
+                    onRateChange={savePlaybackRate}
+                    onReady={onExternalReady}
+                  />
+                  {/* Inside the boundary: the saved position is read in the
+                      browser only, so the server never renders the chip. */}
+                  <ResumeChip seconds={externalChip} onStartOver={startOver} />
+                </React.Suspense>
+              </div>
+            </div>
+          )}
+          {activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE' && isYouTube && (
             <div className="w-full">
               <div className="lh-video-frame relative w-full aspect-video overflow-hidden rounded-[20px] ring-1 ring-white/10 max-sm:rounded-none max-sm:ring-0">
                 <YouTubeFacade
@@ -292,9 +407,19 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                     rel: 0,
                   }}
                   onReady={(event) => {
-                    if (activity.details?.startTime) {
+                    const resume = resumePosition(readSavedPosition(resumeKey), {
+                      startTime: activity.details?.startTime,
+                      endTime: activity.details?.endTime,
+                    })
+                    if (resume != null) {
+                      event.target.seekTo(resume, true)
+                      setResumedAt(resume)
+                    } else if (activity.details?.startTime) {
                       event.target.seekTo(activity.details.startTime, true)
                     }
+                    const rate = readPlaybackRate()
+                    if (rate) event.target.setPlaybackRate?.(rate)
+                    externalControls.current = { getTime: async () => null, seek: (s) => event.target?.seekTo?.(s, true) }
                     // Timestamped notes read and seek this player.
                     youtubeClockOff.current?.()
                     youtubeClockOff.current = registerVideoClock({
@@ -303,7 +428,9 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                     })
                   }}
                   onStateChange={onYoutubeStateChange}
+                  onPlaybackRateChange={(event) => savePlaybackRate(Number(event.data))}
                 />
+                <ResumeChip seconds={resumedAt} onStartOver={startOver} />
               </div>
             </div>
           )}

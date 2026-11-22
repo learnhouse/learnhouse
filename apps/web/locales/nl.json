@@ -3790,7 +3790,15 @@
       "min": "Min",
       "sec": "Sec",
       "autoplay": "Automatisch afspelen",
-      "start_muted": "Gedempt starten"
+      "start_muted": "Gedempt starten",
+      "link": "Link",
+      "video_link": "Videolink",
+      "video_link_detected": "Speelt in de les af met de eigen speler.",
+      "video_link_unsupported": "Die link komt niet van een videodienst die we kunnen afspelen. Probeer {{services}}.",
+      "video_link_hint": "Plak een link van {{services}}.",
+      "trim_length": "Speelt {{length}}",
+      "trim_end_before_start": "Het einde moet na het begin liggen.",
+      "trim_hint": "Bijvoorbeeld 1:30. Laat het einde leeg om tot het eind af te spelen."
     },
     "edit_modal": {
       "pdf_document": "PDF-document",
@@ -4389,7 +4397,14 @@
       "before": "Voor",
       "slider": "Afbeeldingen vergelijken",
       "value": "{{before}} {{b}}%, {{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "Hervat op {{time}}",
+    "video_start_over": "Opnieuw beginnen",
+    "video_unsupported": "Deze video kan hier niet worden afgespeeld.",
+    "video_open_original": "Video openen",
+    "video_transcript": "Transcript",
+    "video_transcript_language": "Taal van het transcript",
+    "video_transcript_failed": "Het transcript kon niet worden geladen."
   },
   "embed": {
     "not_supported_title": "Deze activiteit wordt niet ondersteund",
@@ -6604,7 +6619,7 @@
           "markdown": "Toon een Markdown-bestand vanaf een URL, zoals een GitHub-README.",
           "resource": "Hergebruik een bestand of pagina uit je bibliotheek.",
           "scorm": "Importeer een SCORM-pakket uit een andere tool.",
-          "video": "Upload een videobestand of koppel een YouTube-video."
+          "video": "Upload een videobestand of plak de link naar een gehoste video."
         },
         "certification": {
           "remove_confirm": "Uitschakelen",
@@ -15361,7 +15376,12 @@
         "icon": "Pictogram",
         "icon_chevron": "Pijl",
         "icon_plus": "Plus en min"
-      }
+      },
+      "video_link_hint_services": "Plak een link van {{services}}, of een directe link naar een MP4- of WebM-bestand.",
+      "end_at": "Stoppen op",
+      "end_time": "Eindtijd",
+      "trim_hint": "Bijvoorbeeld 1:30. Laat leeg om tot het eind af te spelen.",
+      "trim": "Inkorten"
     },
     "history": {
       "named": "Versie benoemd",
@@ -32454,5 +32474,25 @@
       "total_one": "{{count}} geaccepteerde wijziging",
       "total_other": "{{count}} geaccepteerde wijzigingen"
     }
+  },
+  "video_providers": {
+    "title": "{{provider}}-speler",
+    "description": "Speelt {{provider}}-links af met hun eigen speler in lessen en videoblokken, met inkorten, voortgang en hervatten. Uit: het blijven gewone insluitingen.",
+    "enable": "De {{provider}}-speler gebruiken",
+    "watermark_title": "Watermerk voor kijkers",
+    "watermark_description": "Toont het e-mailadres of de naam van de kijker bewegend over de video, zodat schermopnames te herleiden zijn.",
+    "watermark_off": "Uit",
+    "watermark_email": "E-mail",
+    "watermark_name": "Naam",
+    "drm_title": "Licentiecontrole voor beveiligde video’s",
+    "drm_description": "Elke cursist krijgt een kortlevend token. {{provider}} controleert het bij LearnHouse voordat een met DRM beveiligde video start, zodat alleen wie de les kan openen een licentie krijgt.",
+    "drm_url_label": "URL van de autorisatie-backend",
+    "drm_url_hint": "Plak deze in de instellingen voor de autorisatie-backend van {{provider}}. Zet daar de strikte modus aan, zodat er niets speelt als de controle onbereikbaar is.",
+    "drm_uuid_hint": "Link beveiligde video’s via hun video-ID (de UUID in {{provider}}), zodat elk token bij precies één video hoort.",
+    "saved": "Video-instellingen opgeslagen",
+    "save_failed": "Video-instellingen konden niet worden opgeslagen",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd",
+    "copy_failed": "Kopiëren mislukt"
   }
 }

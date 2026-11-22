@@ -236,7 +236,8 @@ describe("new attribute defaults", () => {
     expect(NEW_ATTR_DEFAULTS.blockVideo).toEqual({ caption: "", startTime: null, chapters: null });
     expect(NEW_ATTR_DEFAULTS.blockAudio).toEqual({ caption: "", transcript: "" });
     expect(NEW_ATTR_DEFAULTS.blockPDF).toEqual({ caption: "" });
-    expect(NEW_ATTR_DEFAULTS.blockEmbed).toEqual({ embedSourceUrl: null, embedProvider: null, caption: "" });
+    // startTime / endTime: video embeds only; null = no trim, the old embed.
+    expect(NEW_ATTR_DEFAULTS.blockEmbed).toEqual({ embedSourceUrl: null, embedProvider: null, caption: "", startTime: null, endTime: null });
     // Editor Plus: no title, not foldable (open when it is), the type's own colours.
     expect(NEW_ATTR_DEFAULTS.callout).toEqual({ icon: null, title: "", collapsible: false, defaultOpen: true, tone: null, kind: null });
     // Editor Plus: no line numbers, no highlighted lines, no forced wrapping.

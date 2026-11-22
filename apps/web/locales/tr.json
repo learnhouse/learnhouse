@@ -3790,7 +3790,15 @@
       "min": "Dk",
       "sec": "Sn",
       "autoplay": "Otomatik oynat",
-      "start_muted": "Sessiz başlat"
+      "start_muted": "Sessiz başlat",
+      "link": "Bağlantı",
+      "video_link": "Video bağlantısı",
+      "video_link_detected": "Derste kendi oynatıcısıyla oynatılır.",
+      "video_link_unsupported": "Bu bağlantı oynatabildiğimiz bir video hizmetinden değil. {{services}} deneyin.",
+      "video_link_hint": "{{services}} bağlantısı yapıştırın.",
+      "trim_length": "{{length}} oynatılır",
+      "trim_end_before_start": "Bitiş, başlangıçtan sonra olmalı.",
+      "trim_hint": "Örneğin 1:30. Sonuna kadar oynatmak için bitişi boş bırakın."
     },
     "edit_modal": {
       "pdf_document": "PDF Belgesi",
@@ -4389,7 +4397,14 @@
       "before": "Önce",
       "slider": "Görselleri karşılaştır",
       "value": "{{before}} %{{b}}, {{after}} %{{a}}"
-    }
+    },
+    "video_resumed_at": "{{time}} konumundan devam edildi",
+    "video_start_over": "Baştan başla",
+    "video_unsupported": "Bu video burada oynatılamıyor.",
+    "video_open_original": "Videoyu aç",
+    "video_transcript": "Döküm",
+    "video_transcript_language": "Döküm dili",
+    "video_transcript_failed": "Döküm yüklenemedi."
   },
   "embed": {
     "not_supported_title": "Bu etkinlik desteklenmiyor",
@@ -6604,7 +6619,7 @@
           "markdown": "Bir URL'den Markdown dosyası gösterin, örneğin GitHub README.",
           "resource": "Kitaplığınızdan bir dosyayı veya sayfayı yeniden kullanın.",
           "scorm": "Başka bir araçta hazırlanmış bir SCORM paketini içe aktarın.",
-          "video": "Bir video dosyası yükleyin veya bir YouTube videosu bağlayın."
+          "video": "Bir video dosyası yükleyin veya barındırılan bir videonun bağlantısını yapıştırın."
         },
         "certification": {
           "remove_confirm": "Kapat",
@@ -15361,7 +15376,12 @@
         "icon": "Simge",
         "icon_chevron": "Ok",
         "icon_plus": "Artı ve eksi"
-      }
+      },
+      "video_link_hint_services": "{{services}} bağlantısı ya da bir MP4 veya WebM dosyasının doğrudan bağlantısını yapıştırın.",
+      "end_at": "Şurada durdur",
+      "end_time": "Bitiş zamanı",
+      "trim_hint": "Örneğin 1:30. Sonuna kadar oynatmak için boş bırakın.",
+      "trim": "Kırp"
     },
     "history": {
       "named": "Sürüm adlandırıldı",
@@ -32454,5 +32474,25 @@
       "total_one": "{{count}} kabul edilen düzenleme",
       "total_other": "{{count}} kabul edilen düzenleme"
     }
+  },
+  "video_providers": {
+    "title": "{{provider}} oynatıcısı",
+    "description": "{{provider}} bağlantılarını derslerde ve video bloklarında kendi oynatıcısıyla; kırpma, ilerleme ve kaldığı yerden devam etme ile oynatır. Kapalıyken sıradan yerleştirmeler olarak kalırlar.",
+    "enable": "{{provider}} oynatıcısını kullan",
+    "watermark_title": "İzleyici filigranı",
+    "watermark_description": "İzleyicinin e-postasını veya adını videonun üzerinde gezdirerek gösterir; böylece ekran kayıtlarının kaynağı bulunabilir.",
+    "watermark_off": "Kapalı",
+    "watermark_email": "E-posta",
+    "watermark_name": "Ad",
+    "drm_title": "Korumalı videolar için lisans kontrolü",
+    "drm_description": "Her öğrenci kısa ömürlü bir belirteç alır. {{provider}}, DRM korumalı bir videoyu oynatmadan önce bunu LearnHouse ile doğrular; böylece yalnızca dersi açabilenler lisans alır.",
+    "drm_url_label": "Yetkilendirme arka ucu URL’si",
+    "drm_url_hint": "Bunu {{provider}} yetkilendirme arka ucu ayarlarına yapıştırın. Kontrole ulaşılamazsa hiçbir şey oynatılmaması için orada katı modu açın.",
+    "drm_uuid_hint": "Korumalı videoları video kimlikleriyle ({{provider}} içindeki UUID) bağlayın; böylece her belirteç tam olarak bir videoyla eşleşir.",
+    "saved": "Video ayarları kaydedildi",
+    "save_failed": "Video ayarları kaydedilemedi",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı",
+    "copy_failed": "Kopyalanamadı"
   }
 }

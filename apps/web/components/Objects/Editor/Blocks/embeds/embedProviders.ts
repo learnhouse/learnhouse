@@ -9,6 +9,7 @@
  iframes them as-is (the Embed block's "any URL" mode, unchanged behaviour).
 */
 import { toEmbedUrl, vimeoId, youTubeId } from '@/lib/media/embedUrl'
+import { extraVideoProviders } from '@components/Objects/Activities/Video/providers/registry'
 
 export type EmbedProviderId =
   | 'youtube'
@@ -29,6 +30,8 @@ export type EmbedProviderId =
   | 'canva'
   | 'desmos'
   | 'geogebra'
+  // Video services registered on top (see Video/providers/registry).
+  | (string & {})
 
 export interface ParsedEmbed {
   provider: EmbedProviderId
@@ -120,6 +123,17 @@ export function parseEmbedUrl(input: string): ParsedEmbed | null {
   if (host === 'loom.com' && /^\/(share|embed)\//.test(path)) {
     const id = path.split('/')[2]
     if (id) return make('loom', 'Loom', `https://www.loom.com/embed/${id}`, 16 / 9)
+  }
+
+  // Video services from the provider registry (none in the open-source build).
+  for (const provider of extraVideoProviders()) {
+    let hit = null
+    try {
+      hit = provider.match(sourceUrl)
+    } catch {
+      hit = null
+    }
+    if (hit) return make(hit.provider, hit.label, hit.embedUrl, 16 / 9)
   }
 
   if (host === 'figma.com' && /^\/(file|design|proto|board|slides)\//.test(path)) {

@@ -3852,7 +3852,15 @@
       "min": "Min",
       "sec": "Sec",
       "autoplay": "Lecture automatique",
-      "start_muted": "Démarrer en sourdine"
+      "start_muted": "Démarrer en sourdine",
+      "link": "Lien",
+      "video_link": "Lien de la vidéo",
+      "video_link_detected": "Se lit dans la leçon avec son propre lecteur.",
+      "video_link_unsupported": "Ce lien ne vient pas d’un service vidéo que nous savons lire. Essayez {{services}}.",
+      "video_link_hint": "Collez un lien {{services}}.",
+      "trim_length": "Durée lue : {{length}}",
+      "trim_end_before_start": "La fin doit venir après le début.",
+      "trim_hint": "Par exemple 1:30. Laissez la fin vide pour lire jusqu’au bout."
     },
     "edit_modal": {
       "pdf_document": "Document PDF",
@@ -4451,7 +4459,14 @@
       "before": "Avant",
       "slider": "Comparer les images",
       "value": "{{before}} {{b}} %, {{after}} {{a}} %"
-    }
+    },
+    "video_resumed_at": "Reprise à {{time}}",
+    "video_start_over": "Recommencer",
+    "video_unsupported": "Cette vidéo ne peut pas être lue ici.",
+    "video_open_original": "Ouvrir la vidéo",
+    "video_transcript": "Transcription",
+    "video_transcript_language": "Langue de la transcription",
+    "video_transcript_failed": "Impossible de charger la transcription."
   },
   "embed": {
     "not_supported_title": "Cette activité n'est pas prise en charge",
@@ -6701,7 +6716,7 @@
           "markdown": "Affichez un fichier Markdown depuis une URL, comme un README GitHub.",
           "resource": "Réutilisez un fichier ou une page de votre bibliothèque.",
           "scorm": "Importez un paquet SCORM créé dans un autre outil.",
-          "video": "Importez un fichier vidéo ou liez une vidéo YouTube."
+          "video": "Importez un fichier vidéo ou collez le lien d’une vidéo hébergée."
         },
         "certification": {
           "remove_confirm": "Désactiver",
@@ -15607,7 +15622,12 @@
         "icon": "Icône",
         "icon_chevron": "Flèche",
         "icon_plus": "Plus et moins"
-      }
+      },
+      "video_link_hint_services": "Collez un lien {{services}}, ou un lien direct vers un fichier MP4 ou WebM.",
+      "end_at": "Arrêter à",
+      "end_time": "Fin",
+      "trim_hint": "Par exemple 1:30. Laissez vide pour lire jusqu’au bout.",
+      "trim": "Découper"
     },
     "history": {
       "named": "Version nommée",
@@ -33105,5 +33125,25 @@
       "total_other": "{{count}} modifications acceptées",
       "total_many": "{{count}} modifications acceptées"
     }
+  },
+  "video_providers": {
+    "title": "Lecteur {{provider}}",
+    "description": "Lit les liens {{provider}} avec leur propre lecteur dans les leçons et les blocs vidéo, avec découpe, progression et reprise. Désactivé, ils restent de simples intégrations.",
+    "enable": "Utiliser le lecteur {{provider}}",
+    "watermark_title": "Filigrane de l’apprenant",
+    "watermark_description": "Affiche l’e-mail ou le nom de l’apprenant sur la vidéo, en mouvement, pour retrouver l’origine d’un enregistrement d’écran.",
+    "watermark_off": "Désactivé",
+    "watermark_email": "E-mail",
+    "watermark_name": "Nom",
+    "drm_title": "Vérification de licence pour les vidéos protégées",
+    "drm_description": "Chaque apprenant reçoit un jeton de courte durée. {{provider}} le vérifie auprès de LearnHouse avant de lire une vidéo protégée par DRM : seules les personnes qui ont accès à la leçon obtiennent une licence.",
+    "drm_url_label": "URL du backend d’autorisation",
+    "drm_url_hint": "Collez-la dans les réglages du backend d’autorisation de {{provider}}. Activez-y le mode strict pour que rien ne soit lu si la vérification est injoignable.",
+    "drm_uuid_hint": "Liez les vidéos protégées par leur identifiant (l’UUID dans {{provider}}), pour que chaque jeton corresponde à une seule vidéo.",
+    "saved": "Réglages vidéo enregistrés",
+    "save_failed": "Impossible d’enregistrer les réglages vidéo",
+    "copy": "Copier",
+    "copied": "Copié",
+    "copy_failed": "Copie impossible"
   }
 }

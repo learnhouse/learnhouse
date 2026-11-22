@@ -129,6 +129,8 @@ export function getActivityExtensions(props: ActivityExtensionOptions): Extensio
     EmbedObjects.configure({
       editable: isEditable,
       activity: props.activity,
+      // For video embeds that report watch progress.
+      courseUuid: props.courseUuid,
     }),
     Badges.configure({
       editable: isEditable,

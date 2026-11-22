@@ -78,6 +78,7 @@ _EMBED_HOSTS = {
     "youtube.com": "youtube", "youtu.be": "youtube", "youtube-nocookie.com": "youtube",
     "vimeo.com": "vimeo", "loom.com": "loom", "dailymotion.com": "dailymotion",
     "figma.com": "figma", "codepen.io": "codepen", "canva.com": "canva",
+    "kinescope.io": "kinescope",
 }
 
 

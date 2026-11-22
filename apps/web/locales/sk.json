@@ -3932,7 +3932,15 @@
       "min": "Min",
       "sec": "Sek",
       "autoplay": "Automatické prehrávanie",
-      "start_muted": "Spustiť stlmené"
+      "start_muted": "Spustiť stlmené",
+      "link": "Odkaz",
+      "video_link": "Odkaz na video",
+      "video_link_detected": "Prehrá sa v lekcii vo vlastnom prehrávači.",
+      "video_link_unsupported": "Tento odkaz nie je zo služby, ktorú vieme prehrať. Skúste {{services}}.",
+      "video_link_hint": "Vložte odkaz z {{services}}.",
+      "trim_length": "Prehrá {{length}}",
+      "trim_end_before_start": "Koniec musí byť po začiatku.",
+      "trim_hint": "Napríklad 1:30. Koniec nechajte prázdny, ak sa má prehrať do konca."
     },
     "edit_modal": {
       "pdf_document": "Dokument PDF",
@@ -4531,7 +4539,14 @@
       "before": "Pred",
       "slider": "Porovnať obrázky",
       "value": "{{before}} {{b}} %, {{after}} {{a}} %"
-    }
+    },
+    "video_resumed_at": "Pokračuje od {{time}}",
+    "video_start_over": "Začať odznova",
+    "video_unsupported": "Toto video sa tu nedá prehrať.",
+    "video_open_original": "Otvoriť video",
+    "video_transcript": "Prepis",
+    "video_transcript_language": "Jazyk prepisu",
+    "video_transcript_failed": "Prepis sa nepodarilo načítať."
   },
   "embed": {
     "not_supported_title": "Táto aktivita nie je podporovaná",
@@ -6818,7 +6833,7 @@
           "markdown": "Zobrazte súbor Markdown z adresy URL, napríklad README z GitHubu.",
           "resource": "Znovu použite súbor alebo stránku z knižnice.",
           "scorm": "Importujte balík SCORM vytvorený v inom nástroji.",
-          "video": "Nahrajte videosúbor alebo prepojte video z YouTube."
+          "video": "Nahrajte video súbor alebo vložte odkaz na hostované video."
         },
         "certification": {
           "remove_confirm": "Vypnúť",
@@ -15883,7 +15898,12 @@
         "icon": "Ikona",
         "icon_chevron": "Šípka",
         "icon_plus": "Plus a mínus"
-      }
+      },
+      "video_link_hint_services": "Vložte odkaz z {{services}} alebo priamy odkaz na súbor MP4 či WebM.",
+      "end_at": "Zastaviť v",
+      "end_time": "Čas konca",
+      "trim_hint": "Napríklad 1:30. Nechajte prázdne, ak sa má prehrať do konca.",
+      "trim": "Orezať"
     },
     "history": {
       "named": "Verzia pomenovaná",
@@ -33882,5 +33902,25 @@
       "total_many": "{{count}} schválenej úpravy",
       "total_other": "{{count}} schválených úprav"
     }
+  },
+  "video_providers": {
+    "title": "Prehrávač {{provider}}",
+    "description": "Prehráva odkazy z {{provider}} vo vlastnom prehrávači v lekciách a video blokoch, s orezaním, priebehom a pokračovaním. Keď je vypnutý, zostávajú obyčajným vložením.",
+    "enable": "Používať prehrávač {{provider}}",
+    "watermark_title": "Vodoznak diváka",
+    "watermark_description": "Zobrazí e-mail alebo meno diváka pohybujúce sa po videu, aby sa dali dohľadať nahrávky obrazovky.",
+    "watermark_off": "Vypnutý",
+    "watermark_email": "E-mail",
+    "watermark_name": "Meno",
+    "drm_title": "Kontrola licencie pre chránené videá",
+    "drm_description": "Každý študent dostane krátkodobý token. {{provider}} ho overí v LearnHouse pred prehraním videa chráneného DRM, takže licenciu dostanú len tí, ktorí môžu otvoriť lekciu.",
+    "drm_url_label": "URL autorizačného backendu",
+    "drm_url_hint": "Vložte ju do nastavení autorizačného backendu v {{provider}}. Zapnite tam prísny režim, aby sa nič neprehralo, keď kontrola nie je dostupná.",
+    "drm_uuid_hint": "Chránené videá prepájajte cez ich ID (UUID v {{provider}}), aby každý token zodpovedal práve jednému videu.",
+    "saved": "Nastavenia videa uložené",
+    "save_failed": "Nastavenia videa sa nepodarilo uložiť",
+    "copy": "Kopírovať",
+    "copied": "Skopírované",
+    "copy_failed": "Kopírovanie zlyhalo"
   }
 }

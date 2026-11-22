@@ -281,12 +281,31 @@ export const PDF_HEIGHT_PRESETS = [
   { id: 'tall', height: 1000 },
 ] as const
 
+/** Whole seconds stored as data-<name>; null (the default) writes nothing. */
+function secondsAttr(dataName: string): AttrSpec {
+  return {
+    default: null,
+    parseHTML: (el) => {
+      const v = parseInt(el.getAttribute(`data-${dataName}`) || '', 10)
+      return Number.isFinite(v) && v > 0 ? v : null
+    },
+    renderHTML: (attrs) => {
+      const key = dataName === 'start-time' ? 'startTime' : 'endTime'
+      return attrs[key] ? { [`data-${dataName}`]: String(attrs[key]) } : {}
+    },
+  }
+}
+
 export const EMBED_EXTRA_ATTRS: Record<string, AttrSpec> = {
   // The link as pasted (the iframe URL can differ, e.g. youtu.be → /embed/).
   embedSourceUrl: textAttr('source-url', null),
   // Set only by the new smart-paste flow; null keeps the legacy render path.
   embedProvider: textAttr('provider', null),
   caption: textAttr('caption'),
+  // Video embeds: the part learners watch, in seconds. Also written into the
+  // embed URL (see withTrim), so renderers that ignore these attrs still trim.
+  startTime: secondsAttr('start-time'),
+  endTime: secondsAttr('end-time'),
 }
 
 // ─── Callout / code / divider ──────────────────────────────────────────────

@@ -42,6 +42,7 @@ from src.services.courses.activities.video import (
     CaptionsConfigIn,
     ChaptersIn,
     ExternalVideo,
+    ExternalVideoType,
     configure_captions,
     request_chapters_generation,
     save_chapters,
@@ -62,6 +63,8 @@ router = APIRouter()
 class ExternalVideoUpdateBody(BaseModel):
     name: Optional[str] = None
     uri: Optional[str] = None
+    # Set when the new link is from another service than the old one.
+    type: Optional[ExternalVideoType] = None
     startTime: Optional[int] = None
     endTime: Optional[int] = None
     autoplay: Optional[bool] = None
@@ -720,6 +723,7 @@ async def api_update_external_video_activity(
         body.uri,
         body.name,
         details_str,
+        body.type,
     )
 
 

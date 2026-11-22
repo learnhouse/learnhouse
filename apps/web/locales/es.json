@@ -3852,7 +3852,15 @@
       "min": "Min",
       "sec": "Seg",
       "autoplay": "Reproducción automática",
-      "start_muted": "Iniciar sin sonido"
+      "start_muted": "Iniciar sin sonido",
+      "link": "Enlace",
+      "video_link": "Enlace del vídeo",
+      "video_link_detected": "Se reproduce en la lección con su propio reproductor.",
+      "video_link_unsupported": "Ese enlace no es de un servicio de vídeo que podamos reproducir. Prueba con {{services}}.",
+      "video_link_hint": "Pega un enlace de {{services}}.",
+      "trim_length": "Dura {{length}}",
+      "trim_end_before_start": "El final tiene que ir después del inicio.",
+      "trim_hint": "Por ejemplo 1:30. Deja el final vacío para reproducir hasta el final."
     },
     "edit_modal": {
       "pdf_document": "Documento PDF",
@@ -4451,7 +4459,14 @@
       "before": "Antes",
       "slider": "Comparar imágenes",
       "value": "{{before}} {{b}} %, {{after}} {{a}} %"
-    }
+    },
+    "video_resumed_at": "Reanudado en {{time}}",
+    "video_start_over": "Empezar de nuevo",
+    "video_unsupported": "Este vídeo no se puede reproducir aquí.",
+    "video_open_original": "Abrir el vídeo",
+    "video_transcript": "Transcripción",
+    "video_transcript_language": "Idioma de la transcripción",
+    "video_transcript_failed": "No se pudo cargar la transcripción."
   },
   "embed": {
     "not_supported_title": "Esta actividad no es compatible",
@@ -6701,7 +6716,7 @@
           "markdown": "Muestra un archivo Markdown desde una URL, como un README de GitHub.",
           "resource": "Reutiliza un archivo o una página de tu biblioteca.",
           "scorm": "Importa un paquete SCORM creado en otra herramienta.",
-          "video": "Sube un archivo de vídeo o enlaza un vídeo de YouTube."
+          "video": "Sube un archivo de vídeo o pega el enlace de un vídeo alojado."
         },
         "certification": {
           "remove_confirm": "Desactivar",
@@ -15607,7 +15622,12 @@
         "icon": "Icono",
         "icon_chevron": "Flecha",
         "icon_plus": "Más y menos"
-      }
+      },
+      "video_link_hint_services": "Pega un enlace de {{services}}, o un enlace directo a un archivo MP4 o WebM.",
+      "end_at": "Detener en",
+      "end_time": "Tiempo final",
+      "trim_hint": "Por ejemplo 1:30. Déjalo vacío para reproducir hasta el final.",
+      "trim": "Recortar"
     },
     "history": {
       "named": "Versión con nombre",
@@ -33105,5 +33125,25 @@
       "total_other": "{{count}} ediciones aceptadas",
       "total_many": "{{count}} ediciones aceptadas"
     }
+  },
+  "video_providers": {
+    "title": "Reproductor de {{provider}}",
+    "description": "Reproduce los enlaces de {{provider}} con su propio reproductor en lecciones y bloques de vídeo, con recorte, progreso y reanudación. Desactivado, siguen siendo inserciones simples.",
+    "enable": "Usar el reproductor de {{provider}}",
+    "watermark_title": "Marca de agua del espectador",
+    "watermark_description": "Muestra el correo o el nombre del espectador sobre el vídeo, moviéndose, para poder rastrear grabaciones de pantalla.",
+    "watermark_off": "Desactivada",
+    "watermark_email": "Correo",
+    "watermark_name": "Nombre",
+    "drm_title": "Comprobación de licencia para vídeos protegidos",
+    "drm_description": "Cada estudiante recibe un token de corta duración. {{provider}} lo comprueba con LearnHouse antes de reproducir un vídeo protegido con DRM, así que solo quien puede abrir la lección obtiene una licencia.",
+    "drm_url_label": "URL del backend de autorización",
+    "drm_url_hint": "Pégala en los ajustes del backend de autorización de {{provider}}. Activa allí el modo estricto para que no se reproduzca nada si no se puede hacer la comprobación.",
+    "drm_uuid_hint": "Enlaza los vídeos protegidos por su ID de vídeo (el UUID en {{provider}}) para que cada token corresponda a un solo vídeo.",
+    "saved": "Ajustes de vídeo guardados",
+    "save_failed": "No se pudieron guardar los ajustes de vídeo",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copy_failed": "No se pudo copiar"
   }
 }
