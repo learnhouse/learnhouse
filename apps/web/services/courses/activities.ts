@@ -354,6 +354,7 @@ export async function updateExternalVideoActivity(
   videoDetails: { startTime: number; endTime: number | null; autoplay: boolean; muted: boolean },
   access_token: string,
   name?: string,
+  type?: string,
 ) {
   const result = await fetch(
     `${getAPIUrl()}activities/external_video/${activityUuid}`,
@@ -362,6 +363,7 @@ export async function updateExternalVideoActivity(
       {
         name,
         uri: youtubeUrl,
+        ...(type ? { type } : {}),
         startTime: videoDetails.startTime,
         endTime: videoDetails.endTime,
         autoplay: videoDetails.autoplay,

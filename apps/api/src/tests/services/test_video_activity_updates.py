@@ -334,6 +334,42 @@ async def test_update_external_uri_on_empty_content(mock_request, db, org, cours
     assert result.name == "Original"
 
 
+async def test_update_external_switches_service(mock_request, db, org, course, admin_user, rag_dispatch):
+    """A link to another service updates the stored type with the uri."""
+    await _add_video(db, org, course, "yt_switch", sub_type=ActivitySubTypeEnum.SUBTYPE_VIDEO_YOUTUBE,
+                     content={"uri": "https://youtu.be/old", "type": "youtube"})
+    with patch(f"{MOD}.check_resource_access", new=AsyncMock()):
+        result = await update_external_video_activity(
+            mock_request, "yt_switch", admin_user, db,
+            uri="https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466", video_type="kinescope",
+        )
+    assert result.content == {"uri": "https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466", "type": "kinescope"}
+
+
+async def test_update_external_type_only(mock_request, db, org, course, admin_user, rag_dispatch):
+    await _add_video(db, org, course, "yt_type", sub_type=ActivitySubTypeEnum.SUBTYPE_VIDEO_YOUTUBE,
+                     content={"uri": "https://vimeo.com/1"})
+    with patch(f"{MOD}.check_resource_access", new=AsyncMock()):
+        result = await update_external_video_activity(mock_request, "yt_type", admin_user, db, video_type="vimeo")
+    assert result.content == {"uri": "https://vimeo.com/1", "type": "vimeo"}
+
+
+async def test_create_external_kinescope(mock_request, db, org, course, chapter, admin_user, rag_dispatch):
+    with patch(f"{MOD}.check_resource_access", new=AsyncMock()), patch(f"{MOD}.track_activity_created", new=AsyncMock()):
+        created = await create_external_video_activity(
+            mock_request, admin_user,
+            ExternalVideo(name="K", uri="https://kinescope.io/203613411", type="kinescope", chapter_id=chapter.id),
+            db,
+        )
+    assert created.content["type"] == "kinescope"
+    assert created.activity_sub_type == ActivitySubTypeEnum.SUBTYPE_VIDEO_YOUTUBE
+
+
+def test_external_video_rejects_unknown_service():
+    with pytest.raises(ValueError):
+        ExternalVideo(name="X", uri="https://example.com/v", type="dailymotion", chapter_id=1)
+
+
 async def test_update_external_noop_keeps_content(mock_request, db, org, course, admin_user, rag_dispatch):
     """No fields given: only the update timestamp moves."""
     await _add_video(db, org, course, "yt_noop", sub_type=ActivitySubTypeEnum.SUBTYPE_VIDEO_YOUTUBE,

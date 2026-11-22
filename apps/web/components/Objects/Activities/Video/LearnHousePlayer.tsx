@@ -15,6 +15,16 @@ import {
   type VideoChapter,
 } from './videoSource'
 import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
+import {
+  clearSavedPosition,
+  readPlaybackRate,
+  readSavedPosition,
+  resumePosition,
+  savePlaybackRate,
+  savePosition,
+  throttle,
+} from '@/lib/video/resume'
+import ResumeChip from './ResumeChip'
 
 // hls.js is ~half a megabyte; MP4 and embed activities never need it, so the
 // adapter (and hls.js with it) only loads once an HLS source renders.
@@ -96,6 +106,11 @@ interface LearnHousePlayerProps {
   chapters?: VideoChapter[]
   /** Receives the current <video> element (it changes when falling back to MP4). */
   onVideoElement?: (el: HTMLVideoElement | null) => void
+  /**
+   * Remember where the viewer stopped under this key (in this browser) and
+   * pick up from there next time. Off when unset.
+   */
+  resumeKey?: string
 }
 
 interface LoadedCaption {
@@ -316,6 +331,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   nextItem,
   chapters,
   onVideoElement,
+  resumeKey,
 }) => {
   const mediaRef = useRef<HTMLVideoElement | null>(null)
   // The element as state too: the HLS adapter mounts lazily, after the first
@@ -507,18 +523,58 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
     mediaEl?.setAttribute('controlsList', 'nodownload')
   }, [mediaEl])
 
+  // Where this viewer left off last time, shown as "Resumed at · Start over".
+  const [resumedAt, setResumedAt] = useState<number | null>(null)
+
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     metaLoadedRef.current = true
     const el = e.currentTarget
     if (resumeAtRef.current > 0) {
       el.currentTime = resumeAtRef.current
       resumeAtRef.current = 0
-    } else if (details?.startTime && !startAppliedRef.current) {
-      el.currentTime = details.startTime
+    } else if (!startAppliedRef.current) {
+      const resume = resumeKey
+        ? resumePosition(readSavedPosition(resumeKey), {
+            duration: el.duration,
+            startTime: details?.startTime,
+            endTime: details?.endTime,
+          })
+        : null
+      if (resume != null) {
+        el.currentTime = resume
+        setResumedAt(resume)
+      } else if (details?.startTime) {
+        el.currentTime = details.startTime
+      }
     }
     startAppliedRef.current = true
+    // The speed the viewer picked last time, on any LearnHouse video.
+    const rate = readPlaybackRate()
+    if (rate) el.playbackRate = rate
     onReady?.()
   }
+
+  // Keep the position (for resume) and the chosen speed as the video plays.
+  useEffect(() => {
+    const video = mediaEl
+    if (!video) return
+    const endAt = details?.endTime
+    const save = throttle(() => savePosition(resumeKey, video.currentTime, video.duration, endAt), 4000)
+    const onTime = () => resumeKey && save()
+    const onPause = () => resumeKey && savePosition(resumeKey, video.currentTime, video.duration, endAt)
+    const onEnded = () => clearSavedPosition(resumeKey)
+    const onRate = () => savePlaybackRate(video.playbackRate)
+    video.addEventListener('timeupdate', onTime)
+    video.addEventListener('pause', onPause)
+    video.addEventListener('ended', onEnded)
+    video.addEventListener('ratechange', onRate)
+    return () => {
+      video.removeEventListener('timeupdate', onTime)
+      video.removeEventListener('pause', onPause)
+      video.removeEventListener('ended', onEnded)
+      video.removeEventListener('ratechange', onRate)
+    }
+  }, [mediaEl, resumeKey, details?.endTime])
 
   const endTime = details?.endTime
   const handleTimeUpdate = endTime
@@ -652,6 +708,14 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
             )}
             <CenterIndicator />
             <PlayerLogo />
+            <ResumeChip
+              seconds={resumedAt}
+              onStartOver={() => {
+                clearSavedPosition(resumeKey)
+                setResumedAt(null)
+                if (mediaRef.current) mediaRef.current.currentTime = details?.startTime || 0
+              }}
+            />
           </VideoSkin>
         </VideoPlayer>
       </I18nProvider>

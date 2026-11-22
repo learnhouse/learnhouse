@@ -3932,7 +3932,15 @@
       "min": "Min",
       "sec": "Sek",
       "autoplay": "Autoodtwarzanie",
-      "start_muted": "Rozpocznij bez dźwięku"
+      "start_muted": "Rozpocznij bez dźwięku",
+      "link": "Link",
+      "video_link": "Link do filmu",
+      "video_link_detected": "Odtwarza się w lekcji we własnym odtwarzaczu.",
+      "video_link_unsupported": "Ten link nie pochodzi z serwisu wideo, który potrafimy odtworzyć. Spróbuj {{services}}.",
+      "video_link_hint": "Wklej link z {{services}}.",
+      "trim_length": "Odtwarza {{length}}",
+      "trim_end_before_start": "Koniec musi być po początku.",
+      "trim_hint": "Na przykład 1:30. Zostaw koniec pusty, aby odtwarzać do końca."
     },
     "edit_modal": {
       "pdf_document": "Dokument PDF",
@@ -4531,7 +4539,14 @@
       "before": "Przed",
       "slider": "Porównaj obrazy",
       "value": "{{before}} {{b}}%, {{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "Wznowiono od {{time}}",
+    "video_start_over": "Od początku",
+    "video_unsupported": "Tego filmu nie można tu odtworzyć.",
+    "video_open_original": "Otwórz film",
+    "video_transcript": "Transkrypcja",
+    "video_transcript_language": "Język transkrypcji",
+    "video_transcript_failed": "Nie udało się wczytać transkrypcji."
   },
   "embed": {
     "not_supported_title": "Ta aktywność nie jest obsługiwana",
@@ -6818,7 +6833,7 @@
           "markdown": "Pokaż plik Markdown z adresu URL, na przykład README z GitHub.",
           "resource": "Użyj ponownie pliku lub strony z biblioteki.",
           "scorm": "Zaimportuj pakiet SCORM utworzony w innym narzędziu.",
-          "video": "Prześlij plik wideo lub podlinkuj film z YouTube."
+          "video": "Prześlij plik wideo lub wklej link do filmu z serwisu wideo."
         },
         "certification": {
           "remove_confirm": "Wyłącz",
@@ -15883,7 +15898,12 @@
         "icon": "Ikona",
         "icon_chevron": "Strzałka",
         "icon_plus": "Plus i minus"
-      }
+      },
+      "video_link_hint_services": "Wklej link z {{services}} albo bezpośredni link do pliku MP4 lub WebM.",
+      "end_at": "Zatrzymaj na",
+      "end_time": "Czas końca",
+      "trim_hint": "Na przykład 1:30. Zostaw puste, aby odtwarzać do końca.",
+      "trim": "Przytnij"
     },
     "history": {
       "named": "Wersja nazwana",
@@ -33882,5 +33902,25 @@
       "total_many": "{{count}} zaakceptowanych zmian",
       "total_other": "{{count}} zaakceptowanej zmiany"
     }
+  },
+  "video_providers": {
+    "title": "Odtwarzacz {{provider}}",
+    "description": "Odtwarza linki {{provider}} w ich własnym odtwarzaczu w lekcjach i blokach wideo, z przycinaniem, postępem i wznawianiem. Po wyłączeniu pozostają zwykłymi osadzeniami.",
+    "enable": "Używaj odtwarzacza {{provider}}",
+    "watermark_title": "Znak wodny widza",
+    "watermark_description": "Pokazuje e-mail lub imię i nazwisko widza przesuwające się po filmie, by dało się namierzyć nagrania ekranu.",
+    "watermark_off": "Wyłączony",
+    "watermark_email": "E-mail",
+    "watermark_name": "Imię i nazwisko",
+    "drm_title": "Sprawdzanie licencji dla chronionych filmów",
+    "drm_description": "Każdy uczestnik dostaje krótkotrwały token. {{provider}} sprawdza go w LearnHouse przed odtworzeniem filmu chronionego DRM, więc licencję dostają tylko osoby, które mogą otworzyć lekcję.",
+    "drm_url_label": "Adres URL backendu autoryzacji",
+    "drm_url_hint": "Wklej go w ustawieniach backendu autoryzacji w {{provider}}. Włącz tam tryb ścisły, aby nic się nie odtwarzało, gdy sprawdzenie jest niedostępne.",
+    "drm_uuid_hint": "Linkuj chronione filmy po ich ID (UUID w {{provider}}), aby każdy token pasował do dokładnie jednego filmu.",
+    "saved": "Zapisano ustawienia wideo",
+    "save_failed": "Nie udało się zapisać ustawień wideo",
+    "copy": "Kopiuj",
+    "copied": "Skopiowano",
+    "copy_failed": "Nie udało się skopiować"
   }
 }

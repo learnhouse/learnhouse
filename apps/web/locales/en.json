@@ -3786,7 +3786,15 @@
       "min": "Min",
       "sec": "Sec",
       "autoplay": "Autoplay",
-      "start_muted": "Start muted"
+      "start_muted": "Start muted",
+      "link": "Link",
+      "video_link": "Video link",
+      "video_link_detected": "Plays in the lesson with its own player.",
+      "video_link_unsupported": "That link isn’t from a video service we can play. Try {{services}}.",
+      "video_link_hint": "Paste a link from {{services}}.",
+      "trim_length": "Plays {{length}}",
+      "trim_end_before_start": "The end has to come after the start.",
+      "trim_hint": "For example 1:30. Leave the end empty to play to the end."
     },
     "edit_modal": {
       "pdf_document": "PDF Document",
@@ -4385,7 +4393,14 @@
       "before": "Before",
       "slider": "Compare images",
       "value": "{{before}} {{b}}%, {{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "Resumed at {{time}}",
+    "video_start_over": "Start over",
+    "video_unsupported": "This video can’t be played here.",
+    "video_open_original": "Open the video",
+    "video_transcript": "Transcript",
+    "video_transcript_language": "Transcript language",
+    "video_transcript_failed": "The transcript couldn’t be loaded."
   },
   "embed": {
     "not_supported_title": "This activity is not supported",
@@ -6586,7 +6601,7 @@
         },
         "activity_types": {
           "dynamic": "A page you build with text, images, quizzes and more.",
-          "video": "Upload a video file or link a YouTube video.",
+          "video": "Upload a video file or paste a link to a hosted video.",
           "document": "Share a PDF learners can read in the course.",
           "assignment": "Collect work from learners and grade it.",
           "markdown": "Show a Markdown file from a URL, like a GitHub README.",
@@ -15345,7 +15360,12 @@
         "icon": "Icon",
         "icon_chevron": "Arrow",
         "icon_plus": "Plus and minus"
-      }
+      },
+      "video_link_hint_services": "Paste a link from {{services}}, or a direct link to an MP4 or WebM file.",
+      "end_at": "Stop at",
+      "end_time": "End time",
+      "trim_hint": "For example 1:30. Leave empty to play to the end.",
+      "trim": "Trim"
     },
     "history": {
       "named": "Version named",
@@ -32434,5 +32454,25 @@
       "total_one": "{{count}} accepted edit",
       "total_other": "{{count}} accepted edits"
     }
+  },
+  "video_providers": {
+    "title": "{{provider}} player",
+    "description": "Play {{provider}} links with their own player in lessons and video blocks, with trimming, progress and resume. When it’s off, they stay plain embeds.",
+    "enable": "Use the {{provider}} player",
+    "watermark_title": "Viewer watermark",
+    "watermark_description": "Shows the viewer’s email or name over the video, moving around, so screen recordings can be traced.",
+    "watermark_off": "Off",
+    "watermark_email": "Email",
+    "watermark_name": "Name",
+    "drm_title": "Licence check for protected videos",
+    "drm_description": "Each learner gets a short-lived token. {{provider}} checks it with LearnHouse before it plays a DRM-protected video, so only people who can open the lesson get a licence.",
+    "drm_url_label": "Authorization backend URL",
+    "drm_url_hint": "Paste it into {{provider}}’s authorization backend settings. Turn on strict mode there so nothing plays if the check can’t be reached.",
+    "drm_uuid_hint": "Link protected videos by their video ID (the UUID in {{provider}}), so each token matches exactly one video.",
+    "saved": "Video settings saved",
+    "save_failed": "Couldn’t save the video settings",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copy_failed": "Couldn’t copy"
   }
 }

@@ -3770,7 +3770,15 @@
       "min": "분",
       "sec": "초",
       "autoplay": "자동 재생",
-      "start_muted": "음소거로 시작"
+      "start_muted": "음소거로 시작",
+      "link": "링크",
+      "video_link": "동영상 링크",
+      "video_link_detected": "레슨 안에서 서비스 자체 플레이어로 재생됩니다.",
+      "video_link_unsupported": "재생할 수 있는 동영상 서비스의 링크가 아닙니다. {{services}}을(를) 사용해 보세요.",
+      "video_link_hint": "{{services}} 링크를 붙여 넣으세요.",
+      "trim_length": "{{length}} 재생",
+      "trim_end_before_start": "종료 시간은 시작 시간보다 뒤여야 합니다.",
+      "trim_hint": "예: 1:30. 끝까지 재생하려면 종료 시간을 비워 두세요."
     },
     "edit_modal": {
       "pdf_document": "PDF 문서",
@@ -4369,7 +4377,14 @@
       "before": "전",
       "slider": "이미지 비교",
       "value": "{{before}} {{b}}%, {{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "{{time}}부터 이어서 재생",
+    "video_start_over": "처음부터 보기",
+    "video_unsupported": "이 동영상은 여기서 재생할 수 없습니다.",
+    "video_open_original": "동영상 열기",
+    "video_transcript": "스크립트",
+    "video_transcript_language": "스크립트 언어",
+    "video_transcript_failed": "스크립트를 불러오지 못했습니다."
   },
   "embed": {
     "not_supported_title": "이 활동은 지원되지 않습니다",
@@ -6582,7 +6597,7 @@
           "markdown": "GitHub README처럼 URL의 Markdown 파일을 표시합니다.",
           "resource": "라이브러리의 파일이나 페이지를 재사용합니다.",
           "scorm": "다른 도구에서 만든 SCORM 패키지를 가져옵니다.",
-          "video": "동영상 파일을 업로드하거나 YouTube 동영상을 연결합니다."
+          "video": "동영상 파일을 업로드하거나 호스팅된 동영상 링크를 붙여 넣으세요."
         },
         "certification": {
           "remove_confirm": "끄기",
@@ -15326,7 +15341,12 @@
         "icon": "아이콘",
         "icon_chevron": "화살표",
         "icon_plus": "더하기와 빼기"
-      }
+      },
+      "video_link_hint_services": "{{services}} 링크나 MP4 또는 WebM 파일의 직접 링크를 붙여 넣으세요.",
+      "end_at": "정지 시간",
+      "end_time": "종료 시간",
+      "trim_hint": "예: 1:30. 끝까지 재생하려면 비워 두세요.",
+      "trim": "자르기"
     },
     "history": {
       "named": "버전 이름이 지정되었습니다",
@@ -32410,5 +32430,25 @@
       "total_other": "수락된 수정 {{count}}건",
       "total_one": "수락된 수정 {{count}}건"
     }
+  },
+  "video_providers": {
+    "title": "{{provider}} 플레이어",
+    "description": "레슨과 동영상 블록에서 {{provider}} 링크를 자체 플레이어로 재생합니다. 자르기, 진도, 이어보기를 지원합니다. 끄면 일반 임베드로 남습니다.",
+    "enable": "{{provider}} 플레이어 사용",
+    "watermark_title": "시청자 워터마크",
+    "watermark_description": "시청자의 이메일이나 이름을 동영상 위에 움직이며 표시해 화면 녹화의 출처를 추적할 수 있게 합니다.",
+    "watermark_off": "끔",
+    "watermark_email": "이메일",
+    "watermark_name": "이름",
+    "drm_title": "보호된 동영상의 라이선스 확인",
+    "drm_description": "학습자마다 수명이 짧은 토큰을 받습니다. {{provider}}는 DRM으로 보호된 동영상을 재생하기 전에 LearnHouse에 확인하므로, 레슨을 열 수 있는 사람만 라이선스를 받습니다.",
+    "drm_url_label": "인증 백엔드 URL",
+    "drm_url_hint": "{{provider}}의 인증 백엔드 설정에 붙여 넣으세요. 확인에 연결할 수 없을 때 재생되지 않도록 그곳에서 엄격 모드를 켜세요.",
+    "drm_uuid_hint": "보호된 동영상은 동영상 ID({{provider}}의 UUID)로 연결하세요. 그래야 각 토큰이 정확히 한 동영상에만 맞습니다.",
+    "saved": "동영상 설정을 저장했습니다",
+    "save_failed": "동영상 설정을 저장하지 못했습니다",
+    "copy": "복사",
+    "copied": "복사됨",
+    "copy_failed": "복사하지 못했습니다"
   }
 }

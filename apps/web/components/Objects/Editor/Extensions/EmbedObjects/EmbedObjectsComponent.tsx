@@ -1,22 +1,29 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import {
-  Link as LinkIcon, DotsSixVertical, DotsSix, TextAlignCenter, TextAlignLeft, Code, Trash, PencilSimple, Cube, Crop, ArrowSquareOut,
+  Link as LinkIcon, DotsSixVertical, DotsSix, TextAlignCenter, TextAlignLeft, Code, Trash, PencilSimple, Cube, Crop, ArrowSquareOut, Scissors, VideoCamera,
 } from '@phosphor-icons/react'
+import toast from 'react-hot-toast'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { sanitizeEmbedCode, urlEmbedSandboxFor } from '@/lib/media/embedSanitize'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { buttonClass } from '@components/Dashboard/Shared/DashKit/buttons'
 import {
-  BlockChrome, BlockPopover, BlockToolbarButton, BlockToolbarDivider, FIELD_CLASS, Segmented, TEXTAREA_CLASS,
+  BlockChrome, BlockPopover, BlockToolbarButton, BlockToolbarDivider, CommitInput, FIELD_CLASS, Segmented, SettingsField, TEXTAREA_CLASS,
 } from '../../Blocks/ui/BlockChrome'
+import { formatTimecode, parseTimecode } from '../../Blocks/schema/blockAttrs'
+import { findVideoProvider, isVideoProvider, videoProviderLabel, withTrim } from '@components/Objects/Activities/Video/providers/registry'
+import { useVideoProgress } from '@services/analytics/useVideoProgress'
 import BlockCaption from '../../Blocks/ui/BlockCaption'
 import {
   ASPECT_PRESETS, aspectPresetFor, embedAttrsFor, normalizeUserUrl, parseEmbedUrl,
 } from '../../Blocks/embeds/embedProviders'
 import { deleteBlock } from '../../Blocks/nodeViewUtils'
 import { resolveEmbedSrc } from '../../Blocks/embeds/embedRender'
+
+// Registered video players (e.g. Enterprise ones) load only when a block uses one.
+const ExternalVideoPlayer = React.lazy(() => import('@components/Objects/Activities/Video/ExternalVideoPlayer'))
 
 // Matches the embedHeight default in the EmbedObjects node
 const DEFAULT_EMBED_HEIGHT = 300
@@ -80,6 +87,55 @@ const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType, pro
 })
 MemoizedEmbed.displayName = 'MemoizedEmbed'
 
+/** Start / end of a video embed, as clock times. */
+function TrimSettings({ start, end, onCommit }: { start: number | null; end: number | null; onCommit: (_start: number | null, _end: number | null) => void }) {
+  const { t } = useTranslation()
+  const read = (v: string): number | null | false => {
+    if (!v.trim()) return null
+    const s = parseTimecode(v)
+    if (s == null) {
+      toast.error(t('editor.blocks_v2.bad_time', 'Use a time like 1:30 or 1:02:03.'))
+      return false
+    }
+    return s || null
+  }
+  return (
+    <>
+      <SettingsField label={t('editor.blocks_v2.start_at', 'Start playing at')}>
+        <CommitInput
+          value={start ? formatTimecode(start) : ''}
+          placeholder="0:00"
+          aria-label={t('editor.blocks_v2.start_time', 'Start time')}
+          onCommit={(v) => {
+            const s = read(v)
+            if (s === false) return
+            onCommit(s, end && s && end <= s ? null : end)
+          }}
+        />
+      </SettingsField>
+      <SettingsField
+        label={t('editor.blocks_v2.end_at', 'Stop at')}
+        hint={t('editor.blocks_v2.trim_hint', 'For example 1:30. Leave empty to play to the end.')}
+      >
+        <CommitInput
+          value={end ? formatTimecode(end) : ''}
+          placeholder="—"
+          aria-label={t('editor.blocks_v2.end_time', 'End time')}
+          onCommit={(v) => {
+            const e = read(v)
+            if (e === false) return
+            if (e != null && start && e <= start) {
+              toast.error(t('activities.modal.trim_end_before_start', 'The end has to come after the start.'))
+              return
+            }
+            onCommit(start, e)
+          }}
+        />
+      </SettingsField>
+    </>
+  )
+}
+
 function EmbedObjectsComponent(props: NodeViewProps) {
   const { t } = useTranslation()
   const attrs = props.node.attrs
@@ -95,6 +151,18 @@ function EmbedObjectsComponent(props: NodeViewProps) {
   const alignment: string = attrs.alignment || 'left'
   const provider: string | null = attrs.embedProvider || null
   const caption: string = attrs.caption || ''
+  // Video services: a trim, and for registered providers their own player.
+  const isVideo = embedType === 'url' && isVideoProvider(provider)
+  const nativePlayer = isVideo && !!findVideoProvider(provider)
+  const startTime: number | null = parseTimecode(attrs.startTime) || null
+  const endTime: number | null = parseTimecode(attrs.endTime) || null
+  const options = (props.extension as any)?.options || {}
+  const activityUuid: string | undefined = options.activity?.activity_uuid
+  const { report: reportProgress, complete: completeProgress } = useVideoProgress(
+    nativePlayer ? options.courseUuid : undefined,
+    nativePlayer ? activityUuid : undefined,
+    'TYPE_DYNAMIC',
+  )
 
   const [isResizing, setIsResizing] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -194,7 +262,22 @@ function EmbedObjectsComponent(props: NodeViewProps) {
   }
 
   const embedContent = useMemo(() => (
-    !isResizing && hasContent ? (
+    !isResizing && hasContent && nativePlayer ? (
+      <React.Suspense fallback={<div className="absolute inset-0 animate-pulse rounded-lg bg-neutral-900 motion-reduce:animate-none" />}>
+        <div className="absolute inset-0 overflow-hidden rounded-lg bg-neutral-900">
+          <ExternalVideoPlayer
+            provider={provider as string}
+            url={embedUrl}
+            title={caption || undefined}
+            startTime={startTime || 0}
+            endTime={endTime}
+            activityUuid={activityUuid}
+            onProgress={reportProgress}
+            onEnded={completeProgress}
+          />
+        </div>
+      </React.Suspense>
+    ) : !isResizing && hasContent ? (
       <MemoizedEmbed
         embedUrl={embedUrl}
         sanitizedEmbedCode={sanitizedEmbedCode}
@@ -205,7 +288,7 @@ function EmbedObjectsComponent(props: NodeViewProps) {
     ) : (
       <div className="w-full h-full bg-neutral-100 rounded-lg" />
     )
-  ), [embedUrl, sanitizedEmbedCode, embedType, isResizing, hasContent, provider, caption])
+  ), [embedUrl, sanitizedEmbedCode, embedType, isResizing, hasContent, provider, caption, nativePlayer, startTime, endTime, activityUuid, reportProgress, completeProgress])
 
   // ─── Editing state (local until applied) ───
   const [editing, setEditing] = useState<false | 'url' | 'code'>(false)
@@ -213,6 +296,7 @@ function EmbedObjectsComponent(props: NodeViewProps) {
   const [draftCode, setDraftCode] = useState('')
   const [draftError, setDraftError] = useState<string | null>(null)
   const [aspectOpen, setAspectOpen] = useState(false)
+  const [trimOpen, setTrimOpen] = useState(false)
   const draftParsed = useMemo(() => (draftUrl.trim() ? parseEmbedUrl(draftUrl) : null), [draftUrl])
 
   const startEditing = (mode: 'url' | 'code') => {
@@ -235,8 +319,8 @@ function EmbedObjectsComponent(props: NodeViewProps) {
       // URL and frame shape, any other page is framed as-is.
       props.updateAttributes(
         parsed
-          ? { ...embedAttrsFor(parsed), embedCode: null, embedWidth: '100%' }
-          : { embedType: 'url', embedUrl: url, embedSourceUrl: url, embedProvider: null, embedCode: null, embedAspectRatio: 16 / 9 }
+          ? { ...embedAttrsFor(parsed), embedCode: null, embedWidth: '100%', startTime: null, endTime: null }
+          : { embedType: 'url', embedUrl: url, embedSourceUrl: url, embedProvider: null, embedCode: null, embedAspectRatio: 16 / 9, startTime: null, endTime: null }
       )
     } else if (editing === 'code') {
       if (!draftCode.trim()) return
@@ -337,7 +421,9 @@ function EmbedObjectsComponent(props: NodeViewProps) {
     )
   }
 
-  const label = <><Cube size={11} weight="bold" />{provider ? parseEmbedUrl(attrs.embedSourceUrl || '')?.label || t('editor.blocks.embed') : t('editor.blocks.embed')}</>
+  const label = isVideo
+    ? <><VideoCamera size={11} weight="bold" />{t('editor.blocks.video')}<span aria-hidden="true" className="opacity-50">·</span>{videoProviderLabel(provider)}</>
+    : <><Cube size={11} weight="bold" />{provider ? parseEmbedUrl(attrs.embedSourceUrl || '')?.label || t('editor.blocks.embed') : t('editor.blocks.embed')}</>
   const deleteButton = (
     <BlockToolbarButton label={t('common.delete', 'Delete')} tone="danger" onClick={() => deleteBlock(props)}>
       <Trash size={14} />
@@ -386,6 +472,30 @@ function EmbedObjectsComponent(props: NodeViewProps) {
       <BlockToolbarButton label={t('editor.blocks.embed_block.edit_embed', 'Edit embed')} onClick={() => startEditing(embedType)}>
         <PencilSimple size={14} />
       </BlockToolbarButton>
+      {isVideo && (
+        <BlockPopover
+          open={trimOpen}
+          onOpenChange={setTrimOpen}
+          title={t('editor.blocks_v2.trim', 'Trim')}
+          width={240}
+          trigger={
+            <BlockToolbarButton label={t('editor.blocks_v2.trim', 'Trim')} active={!!(startTime || endTime)}>
+              <Scissors size={14} />
+              {startTime || endTime ? (
+                <span className="tabular-nums">{formatTimecode(startTime || 0)}–{endTime ? formatTimecode(endTime) : '…'}</span>
+              ) : null}
+            </BlockToolbarButton>
+          }
+        >
+          <TrimSettings
+            start={startTime}
+            end={endTime}
+            onCommit={(start, end) =>
+              props.updateAttributes({ startTime: start, endTime: end, embedUrl: withTrim(embedUrl, provider, start, end) })
+            }
+          />
+        </BlockPopover>
+      )}
       {embedType === 'url' && (
         <BlockPopover
           open={aspectOpen}
@@ -427,7 +537,7 @@ function EmbedObjectsComponent(props: NodeViewProps) {
 
   return (
     <NodeViewWrapper className="embed-block w-full" ref={containerRef}>
-      <BlockChrome tone="embed" selected={props.selected} forceToolbar={aspectOpen || !!editing} label={label} toolbar={toolbar} className="p-1">
+      <BlockChrome tone="embed" selected={props.selected} forceToolbar={aspectOpen || trimOpen || !!editing} label={label} toolbar={toolbar} className="p-1">
         <div
           ref={resizeRef}
           className={cn('relative bg-white rounded-xl overflow-hidden nice-shadow', alignment === 'center' && 'mx-auto')}

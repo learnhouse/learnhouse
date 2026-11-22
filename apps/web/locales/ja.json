@@ -3772,7 +3772,15 @@
       "min": "分",
       "sec": "秒",
       "autoplay": "自動再生",
-      "start_muted": "ミュートで開始"
+      "start_muted": "ミュートで開始",
+      "link": "リンク",
+      "video_link": "動画のリンク",
+      "video_link_detected": "レッスン内でサービス独自のプレーヤーで再生されます。",
+      "video_link_unsupported": "このリンクは再生に対応した動画サービスのものではありません。{{services}} をお試しください。",
+      "video_link_hint": "{{services}} のリンクを貼り付けてください。",
+      "trim_length": "再生時間 {{length}}",
+      "trim_end_before_start": "終了は開始より後にしてください。",
+      "trim_hint": "例: 1:30。最後まで再生する場合は終了を空欄にします。"
     },
     "edit_modal": {
       "pdf_document": "PDFドキュメント",
@@ -4371,7 +4379,14 @@
       "before": "前",
       "slider": "画像を比較",
       "value": "{{before}} {{b}}%、{{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "{{time}} から再開しました",
+    "video_start_over": "最初から再生",
+    "video_unsupported": "この動画はここでは再生できません。",
+    "video_open_original": "動画を開く",
+    "video_transcript": "文字起こし",
+    "video_transcript_language": "文字起こしの言語",
+    "video_transcript_failed": "文字起こしを読み込めませんでした。"
   },
   "embed": {
     "not_supported_title": "このアクティビティはサポートされていません",
@@ -6584,7 +6599,7 @@
           "markdown": "GitHub の README のように、URL の Markdown ファイルを表示します。",
           "resource": "ライブラリのファイルやページを再利用します。",
           "scorm": "他のツールで作成した SCORM パッケージをインポートします。",
-          "video": "動画ファイルをアップロードするか、YouTube 動画をリンクします。"
+          "video": "動画ファイルをアップロードするか、ホストされた動画のリンクを貼り付けてください。"
         },
         "certification": {
           "remove_confirm": "オフにする",
@@ -15328,7 +15343,12 @@
         "icon": "アイコン",
         "icon_chevron": "矢印",
         "icon_plus": "プラスとマイナス"
-      }
+      },
+      "video_link_hint_services": "{{services}} のリンク、または MP4 / WebM ファイルの直接リンクを貼り付けてください。",
+      "end_at": "停止位置",
+      "end_time": "終了時間",
+      "trim_hint": "例: 1:30。最後まで再生する場合は空欄にします。",
+      "trim": "トリミング"
     },
     "history": {
       "named": "バージョンに名前を付けました",
@@ -32412,5 +32432,25 @@
       "total_other": "承認された編集{{count}}件",
       "total_one": "承認された編集{{count}}件"
     }
+  },
+  "video_providers": {
+    "title": "{{provider}} プレーヤー",
+    "description": "レッスンや動画ブロックで {{provider}} のリンクを独自のプレーヤーで再生します。トリミング、進捗、続きからの再生に対応します。オフのときは通常の埋め込みのままです。",
+    "enable": "{{provider}} プレーヤーを使う",
+    "watermark_title": "視聴者の透かし",
+    "watermark_description": "視聴者のメールアドレスまたは名前を動画上に動かしながら表示し、画面録画の出どころを追えるようにします。",
+    "watermark_off": "オフ",
+    "watermark_email": "メール",
+    "watermark_name": "名前",
+    "drm_title": "保護された動画のライセンス確認",
+    "drm_description": "受講者ごとに有効期限の短いトークンを発行します。DRM で保護された動画を再生する前に {{provider}} が LearnHouse に確認するため、レッスンを開ける人だけがライセンスを受け取れます。",
+    "drm_url_label": "認証バックエンドの URL",
+    "drm_url_hint": "{{provider}} の認証バックエンド設定に貼り付けてください。確認先に届かないときに再生されないよう、そこで厳格モードをオンにしてください。",
+    "drm_uuid_hint": "保護された動画は動画 ID({{provider}} の UUID)でリンクしてください。各トークンが 1 本の動画だけに対応します。",
+    "saved": "動画の設定を保存しました",
+    "save_failed": "動画の設定を保存できませんでした",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "copy_failed": "コピーできませんでした"
   }
 }

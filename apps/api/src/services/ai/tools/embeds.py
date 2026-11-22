@@ -16,7 +16,7 @@ from urllib.parse import parse_qs, quote, urlsplit
 PROVIDERS = (
     "youtube", "vimeo", "loom", "figma", "google-docs", "google-sheets", "google-slides",
     "google-forms", "google-drive", "google-maps", "codepen", "codesandbox", "spotify",
-    "soundcloud", "miro", "canva", "desmos", "geogebra",
+    "soundcloud", "miro", "canva", "desmos", "geogebra", "kinescope",
 )
 
 # One example per provider, for the block catalog and tests.
@@ -39,6 +39,7 @@ EXAMPLES = {
     "canva": "https://www.canva.com/design/DAF123/view",
     "desmos": "https://www.desmos.com/calculator/abc123",
     "geogebra": "https://www.geogebra.org/m/abc123",
+    "kinescope": "https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466",
 }
 
 _YT = re.compile(
@@ -46,6 +47,9 @@ _YT = re.compile(
     r"([A-Za-z0-9_-]{11})"
 )
 _VIMEO = re.compile(r"^https?://(?:www\.|player\.)?vimeo\.com/(?:video/)?(\d{6,12})")
+# Kinescope share (kinescope.io/<id>) and embed (kinescope.io/embed/<id>)
+# links. Ids are short slugs, numbers or UUIDs.
+_KINESCOPE = re.compile(r"^/(?:embed/)?([A-Za-z0-9][A-Za-z0-9-]{4,63})/?$")
 _YT_TIME = re.compile(r"^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$")
 
 
@@ -99,6 +103,18 @@ def youtube_seconds(value: str | None) -> int | None:
     return h * 3600 + mi * 60 + s
 
 
+def kinescope_id(url: str) -> str | None:
+    """The video id of a Kinescope share or embed link, or None."""
+    source = normalize_url(url)
+    if source is None:
+        return None
+    u = urlsplit(source)
+    if (u.hostname or "").lower().removeprefix("www.") != "kinescope.io":
+        return None
+    m = _KINESCOPE.match(u.path or "/")
+    return m.group(1) if m and m.group(1).lower() != "embed" else None
+
+
 def parse_embed(url: str) -> ParsedEmbed | None:
     source = normalize_url(url)
     if source is None:
@@ -130,6 +146,13 @@ def parse_embed(url: str) -> ParsedEmbed | None:
         parts = path.split("/")
         if len(parts) > 2 and parts[2]:
             return make("loom", "Loom", f"https://www.loom.com/embed/{parts[2]}", 16 / 9)
+    kinescope = kinescope_id(source)
+    if kinescope:
+        # Stored like any embed; the Enterprise Edition plays it natively
+        # (DRM, watermark, progress), elsewhere it frames as a plain iframe.
+        start = (query.get("t") or [""])[0]
+        suffix = f"?t={start}" if start.isdigit() else ""
+        return make("kinescope", "Kinescope", f"https://kinescope.io/embed/{kinescope}{suffix}", 16 / 9)
     if host == "figma.com" and re.match(r"^/(file|design|proto|board|slides)/", path):
         target = source.replace("http://", "https://", 1)
         return make("figma", "Figma", f"https://www.figma.com/embed?embed_host=learnhouse&url={quote(target, safe='')}", 16 / 9)

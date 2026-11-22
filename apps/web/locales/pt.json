@@ -3852,7 +3852,15 @@
       "min": "Min",
       "sec": "Seg",
       "autoplay": "Reprodução automática",
-      "start_muted": "Iniciar sem som"
+      "start_muted": "Iniciar sem som",
+      "link": "Link",
+      "video_link": "Link do vídeo",
+      "video_link_detected": "Reproduz na lição com o próprio player.",
+      "video_link_unsupported": "Esse link não é de um serviço de vídeo que conseguimos reproduzir. Tente {{services}}.",
+      "video_link_hint": "Cole um link do {{services}}.",
+      "trim_length": "Reproduz {{length}}",
+      "trim_end_before_start": "O fim tem de vir depois do início.",
+      "trim_hint": "Por exemplo 1:30. Deixe o fim vazio para reproduzir até ao final."
     },
     "edit_modal": {
       "pdf_document": "Documento PDF",
@@ -4451,7 +4459,14 @@
       "before": "Antes",
       "slider": "Comparar imagens",
       "value": "{{before}} {{b}}%, {{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "Retomado em {{time}}",
+    "video_start_over": "Recomeçar",
+    "video_unsupported": "Este vídeo não pode ser reproduzido aqui.",
+    "video_open_original": "Abrir o vídeo",
+    "video_transcript": "Transcrição",
+    "video_transcript_language": "Idioma da transcrição",
+    "video_transcript_failed": "Não foi possível carregar a transcrição."
   },
   "embed": {
     "not_supported_title": "Esta atividade não é suportada",
@@ -6701,7 +6716,7 @@
           "markdown": "Mostre um arquivo Markdown a partir de uma URL, como um README do GitHub.",
           "resource": "Reutilize um arquivo ou página da sua biblioteca.",
           "scorm": "Importe um pacote SCORM criado em outra ferramenta.",
-          "video": "Envie um arquivo de vídeo ou vincule um vídeo do YouTube."
+          "video": "Carregue um ficheiro de vídeo ou cole o link de um vídeo alojado."
         },
         "certification": {
           "remove_confirm": "Desativar",
@@ -15607,7 +15622,12 @@
         "icon": "Ícone",
         "icon_chevron": "Seta",
         "icon_plus": "Mais e menos"
-      }
+      },
+      "video_link_hint_services": "Cole um link do {{services}} ou um link direto para um ficheiro MP4 ou WebM.",
+      "end_at": "Parar em",
+      "end_time": "Tempo final",
+      "trim_hint": "Por exemplo 1:30. Deixe vazio para reproduzir até ao final.",
+      "trim": "Cortar"
     },
     "history": {
       "named": "Versão nomeada",
@@ -33105,5 +33125,25 @@
       "total_other": "{{count}} edições aceitas",
       "total_many": "{{count}} edições aceitas"
     }
+  },
+  "video_providers": {
+    "title": "Player do {{provider}}",
+    "description": "Reproduz links do {{provider}} com o próprio player em lições e blocos de vídeo, com corte, progresso e retoma. Desligado, continuam a ser incorporações simples.",
+    "enable": "Usar o player do {{provider}}",
+    "watermark_title": "Marca d’água do espectador",
+    "watermark_description": "Mostra o e-mail ou o nome do espectador sobre o vídeo, em movimento, para identificar gravações de ecrã.",
+    "watermark_off": "Desligada",
+    "watermark_email": "E-mail",
+    "watermark_name": "Nome",
+    "drm_title": "Verificação de licença para vídeos protegidos",
+    "drm_description": "Cada aluno recebe um token de curta duração. O {{provider}} confirma-o com o LearnHouse antes de reproduzir um vídeo protegido por DRM, por isso só quem pode abrir a lição recebe uma licença.",
+    "drm_url_label": "URL do backend de autorização",
+    "drm_url_hint": "Cole-o nas definições do backend de autorização do {{provider}}. Ative lá o modo estrito para que nada seja reproduzido se a verificação não estiver acessível.",
+    "drm_uuid_hint": "Ligue os vídeos protegidos pelo ID do vídeo (o UUID no {{provider}}), para que cada token corresponda a um único vídeo.",
+    "saved": "Definições de vídeo guardadas",
+    "save_failed": "Não foi possível guardar as definições de vídeo",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copy_failed": "Não foi possível copiar"
   }
 }

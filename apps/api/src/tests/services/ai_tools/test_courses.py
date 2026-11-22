@@ -813,6 +813,19 @@ async def test_create_media_activity_youtube(registry, db, org, admin_user, regu
     assert bad.status == "denied" and "YouTube" in bad.reason
 
 
+async def test_create_media_activity_kinescope(registry, db, org, admin_user, course, chapter, activity):
+    args = {"chapter_uuid": "chapter_test", "name": "DRM lesson", "kind": "kinescope",
+            "url": "https://kinescope.io/embed/7127f2d7-0e96-40d0-9a03-2e987c096466"}
+    out = await call(registry, ctx_for(db, org, admin_user), "create_media_activity", args)
+    assert out.status == "executed", out.reason
+    row = (await db.execute(select(Activity).where(Activity.activity_uuid == out.result["activity"]["uuid"]))).scalars().one()
+    assert row.content["type"] == "kinescope"
+    assert row.content["uri"] == "https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466"
+    bad = await call(registry, ctx_for(db, org, admin_user), "create_media_activity",
+                     {**args, "url": "https://youtu.be/aqz-KE-bpKQ"})
+    assert bad.status == "denied" and "Kinescope" in bad.reason
+
+
 async def test_create_media_activity_pdf(registry, db, org, admin_user, course, chapter, net):  # noqa: F811 (fixture)
     pdf = b"%PDF-1.7\n" + b"0" * 200
     net.routes[("files.test", "/doc.pdf")] = httpx.Response(200, content=pdf, headers={"content-type": "application/pdf"})

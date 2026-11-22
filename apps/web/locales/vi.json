@@ -3770,7 +3770,15 @@
       "min": "Phút",
       "sec": "Giây",
       "autoplay": "Tự động phát",
-      "start_muted": "Bắt đầu ở chế độ tắt tiếng"
+      "start_muted": "Bắt đầu ở chế độ tắt tiếng",
+      "link": "Liên kết",
+      "video_link": "Liên kết video",
+      "video_link_detected": "Phát trong bài học bằng trình phát riêng.",
+      "video_link_unsupported": "Liên kết này không thuộc dịch vụ video mà chúng tôi phát được. Hãy thử {{services}}.",
+      "video_link_hint": "Dán liên kết từ {{services}}.",
+      "trim_length": "Phát {{length}}",
+      "trim_end_before_start": "Thời điểm kết thúc phải sau thời điểm bắt đầu.",
+      "trim_hint": "Ví dụ 1:30. Để trống phần kết thúc để phát đến hết."
     },
     "edit_modal": {
       "pdf_document": "Tài liệu PDF",
@@ -4369,7 +4377,14 @@
       "before": "Trước",
       "slider": "So sánh hình ảnh",
       "value": "{{before}} {{b}}%, {{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "Đã tiếp tục từ {{time}}",
+    "video_start_over": "Xem lại từ đầu",
+    "video_unsupported": "Không thể phát video này ở đây.",
+    "video_open_original": "Mở video",
+    "video_transcript": "Bản ghi lời",
+    "video_transcript_language": "Ngôn ngữ bản ghi lời",
+    "video_transcript_failed": "Không tải được bản ghi lời."
   },
   "embed": {
     "not_supported_title": "Hoạt động này không được hỗ trợ",
@@ -6582,7 +6597,7 @@
           "markdown": "Hiển thị tệp Markdown từ một URL, như README trên GitHub.",
           "resource": "Dùng lại một tệp hoặc trang từ thư viện của bạn.",
           "scorm": "Nhập gói SCORM được tạo từ công cụ khác.",
-          "video": "Tải lên tệp video hoặc liên kết video YouTube."
+          "video": "Tải lên tệp video hoặc dán liên kết tới video được lưu trữ."
         },
         "certification": {
           "remove_confirm": "Tắt",
@@ -15326,7 +15341,12 @@
         "icon": "Biểu tượng",
         "icon_chevron": "Mũi tên",
         "icon_plus": "Cộng và trừ"
-      }
+      },
+      "video_link_hint_services": "Dán liên kết từ {{services}}, hoặc liên kết trực tiếp tới tệp MP4 hay WebM.",
+      "end_at": "Dừng tại",
+      "end_time": "Thời điểm kết thúc",
+      "trim_hint": "Ví dụ 1:30. Để trống để phát đến hết.",
+      "trim": "Cắt"
     },
     "history": {
       "named": "Đã đặt tên phiên bản",
@@ -32410,5 +32430,25 @@
       "total_one": "{{count}} chỉnh sửa được chấp nhận",
       "total_other": "{{count}} chỉnh sửa được chấp nhận"
     }
+  },
+  "video_providers": {
+    "title": "Trình phát {{provider}}",
+    "description": "Phát liên kết {{provider}} bằng trình phát riêng trong bài học và khối video, có cắt đoạn, tiến độ và xem tiếp. Khi tắt, chúng vẫn chỉ là nhúng thông thường.",
+    "enable": "Dùng trình phát {{provider}}",
+    "watermark_title": "Hình mờ người xem",
+    "watermark_description": "Hiển thị email hoặc tên người xem di chuyển trên video, để có thể truy ra bản ghi màn hình.",
+    "watermark_off": "Tắt",
+    "watermark_email": "Email",
+    "watermark_name": "Tên",
+    "drm_title": "Kiểm tra giấy phép cho video được bảo vệ",
+    "drm_description": "Mỗi học viên nhận một mã thông báo ngắn hạn. {{provider}} kiểm tra mã này với LearnHouse trước khi phát video được bảo vệ bằng DRM, nên chỉ ai mở được bài học mới nhận giấy phép.",
+    "drm_url_label": "URL máy chủ ủy quyền",
+    "drm_url_hint": "Dán vào phần cài đặt máy chủ ủy quyền của {{provider}}. Bật chế độ nghiêm ngặt ở đó để không phát gì nếu không kiểm tra được.",
+    "drm_uuid_hint": "Liên kết video được bảo vệ bằng ID video (UUID trong {{provider}}), để mỗi mã chỉ khớp đúng một video.",
+    "saved": "Đã lưu cài đặt video",
+    "save_failed": "Không lưu được cài đặt video",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép",
+    "copy_failed": "Không sao chép được"
   }
 }

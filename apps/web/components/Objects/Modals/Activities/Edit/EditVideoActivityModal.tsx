@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import { CreditsIcon } from '@components/Objects/AI/CreditCost'
 import { useAICreditPrices } from '@components/Hooks/useAICredits'
 import BarLoader from 'react-spinners/BarLoader'
-import { YoutubeLogo } from '@phosphor-icons/react'
 import { AIButton } from '@components/Objects/AI/AIBrand'
 import { constructAcceptValue } from '@/lib/constants'
 import CaptionsSettings, {
@@ -23,6 +22,8 @@ import { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
 import { Button, INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { FilePicker, ModalFormActions, useModalFormId } from '../activityFormKit'
+import { VideoLinkField, VideoTrimFields } from '@components/Objects/Activities/Video/VideoSourceFields'
+import type { VideoLinkMatch } from '@components/Objects/Activities/Video/providers/registry'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
@@ -50,6 +51,8 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
 
   const [name, setName] = useState(activity.name || '')
   const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [linkMatch, setLinkMatch] = useState<VideoLinkMatch | null>(null)
+  const [storedType, setStoredType] = useState<string>('youtube')
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoDetails, setVideoDetails] = useState<VideoDetails>({
     startTime: 0,
@@ -81,6 +84,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
       if (data?.content?.uri) {
         setYoutubeUrl(data.content.uri)
       }
+      setStoredType(data?.content?.type || 'youtube')
       setChaptersMeta(data?.extra_metadata?.chapters || null)
       const caps = data?.extra_metadata?.captions
       setHasReadyCaptions(!!caps?.languages?.some((l: any) => l?.status === 'ready'))
@@ -130,15 +134,6 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
     }
   }
 
-  const convertToSeconds = (minutes: number, seconds: number) => minutes * 60 + seconds
-  const convertFromSeconds = (totalSeconds: number) => ({
-    minutes: Math.floor(totalSeconds / 60),
-    seconds: totalSeconds % 60,
-  })
-
-  const startTimeParts = convertFromSeconds(videoDetails.startTime)
-  const endTimeParts = videoDetails.endTime ? convertFromSeconds(videoDetails.endTime) : { minutes: 0, seconds: 0 }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -149,10 +144,12 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
       if (isYouTube) {
         res = await updateExternalVideoActivity(
           activity.activity_uuid,
-          youtubeUrl,
+          linkMatch?.sourceUrl || youtubeUrl,
           videoDetails,
           access_token,
           name !== activity.name ? name : undefined,
+          // Only sent when the link moved to another service.
+          linkMatch && linkMatch.provider !== storedType ? linkMatch.provider : undefined,
         )
       } else {
         res = await updateHostedVideoActivity(
@@ -204,19 +201,8 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
 
         {isYouTube ? (
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-neutral-800">{t('activities.modal.youtube_url')}</label>
-            <div className="flex items-center gap-2 text-xs text-neutral-400 mb-1">
-              <YoutubeLogo size={14} weight="duotone" />
-              <span>{t('activities.edit_modal.update_youtube_hint')}</span>
-            </div>
-            <input
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              type="text"
-              required
-              placeholder="https://youtube.com/watch?v=..."
-              className={INPUT}
-            />
+            <label className="text-sm font-semibold text-neutral-800">{t('activities.modal.video_link', 'Video link')}</label>
+            <VideoLinkField value={youtubeUrl} onChange={setYoutubeUrl} onMatch={setLinkMatch} />
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -234,83 +220,11 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
 
       <div className="rounded-xl ring-1 ring-inset ring-neutral-200 p-4 space-y-4">
         <h3 className="text-sm font-semibold text-neutral-800">{t('activities.modal.video_settings')}</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-neutral-500">{t('activities.modal.start_time')}</label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="0"
-                  value={startTimeParts.minutes}
-                  onChange={(e) => {
-                    const minutes = Math.max(0, parseInt(e.target.value) || 0)
-                    setVideoDetails({ ...videoDetails, startTime: convertToSeconds(minutes, startTimeParts.seconds) })
-                  }}
-                  placeholder="0"
-                  className={INPUT}
-                />
-                <span className="text-[11px] text-neutral-400 mt-0.5 block">{t('activities.modal.min')}</span>
-              </div>
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={startTimeParts.seconds}
-                  onChange={(e) => {
-                    const seconds = Math.max(0, Math.min(59, parseInt(e.target.value) || 0))
-                    setVideoDetails({ ...videoDetails, startTime: convertToSeconds(startTimeParts.minutes, seconds) })
-                  }}
-                  placeholder="0"
-                  className={INPUT}
-                />
-                <span className="text-[11px] text-neutral-400 mt-0.5 block">{t('activities.modal.sec')}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-neutral-500">{t('activities.modal.end_time_optional')}</label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="0"
-                  value={endTimeParts.minutes}
-                  onChange={(e) => {
-                    const minutes = Math.max(0, parseInt(e.target.value) || 0)
-                    const totalSeconds = convertToSeconds(minutes, endTimeParts.seconds)
-                    if (totalSeconds > videoDetails.startTime) {
-                      setVideoDetails({ ...videoDetails, endTime: totalSeconds })
-                    }
-                  }}
-                  placeholder="0"
-                  className={INPUT}
-                />
-                <span className="text-[11px] text-neutral-400 mt-0.5 block">{t('activities.modal.min')}</span>
-              </div>
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={endTimeParts.seconds}
-                  onChange={(e) => {
-                    const seconds = Math.max(0, Math.min(59, parseInt(e.target.value) || 0))
-                    const totalSeconds = convertToSeconds(endTimeParts.minutes, seconds)
-                    if (totalSeconds > videoDetails.startTime) {
-                      setVideoDetails({ ...videoDetails, endTime: totalSeconds })
-                    }
-                  }}
-                  placeholder="0"
-                  className={INPUT}
-                />
-                <span className="text-[11px] text-neutral-400 mt-0.5 block">{t('activities.modal.sec')}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <VideoTrimFields
+          start={videoDetails.startTime}
+          end={videoDetails.endTime}
+          onChange={(trim) => setVideoDetails({ ...videoDetails, ...trim })}
+        />
 
         <div className="flex items-center gap-5 pt-1">
           <label className="flex items-center gap-2 cursor-pointer">
@@ -366,7 +280,11 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
         </div>
       )}
 
-      <ModalFormActions submitting={isSubmitting} canSubmit={!!name.trim()} label={t('common.save_changes')} />
+      <ModalFormActions
+        submitting={isSubmitting}
+        canSubmit={!!name.trim() && (!isYouTube || !!linkMatch)}
+        label={t('common.save_changes')}
+      />
     </form>
   )
 }

@@ -4074,7 +4074,15 @@
       "min": "د",
       "sec": "ث",
       "autoplay": "تشغيل تلقائي",
-      "start_muted": "البدء بدون صوت"
+      "start_muted": "البدء بدون صوت",
+      "link": "رابط",
+      "video_link": "رابط الفيديو",
+      "video_link_detected": "يُشغَّل داخل الدرس بمشغّله الخاص.",
+      "video_link_unsupported": "هذا الرابط ليس من خدمة فيديو يمكننا تشغيلها. جرّب {{services}}.",
+      "video_link_hint": "الصق رابطًا من {{services}}.",
+      "trim_length": "يُشغَّل لمدة {{length}}",
+      "trim_end_before_start": "يجب أن تأتي النهاية بعد البداية.",
+      "trim_hint": "مثلًا 1:30. اترك النهاية فارغة للتشغيل حتى الآخر."
     },
     "edit_modal": {
       "pdf_document": "مستند PDF",
@@ -4673,7 +4681,14 @@
       "before": "قبل",
       "slider": "مقارنة الصور",
       "value": "{{before}} {{b}}%، {{after}} {{a}}%"
-    }
+    },
+    "video_resumed_at": "تم الاستئناف عند {{time}}",
+    "video_start_over": "البدء من جديد",
+    "video_unsupported": "لا يمكن تشغيل هذا الفيديو هنا.",
+    "video_open_original": "فتح الفيديو",
+    "video_transcript": "النص المكتوب",
+    "video_transcript_language": "لغة النص المكتوب",
+    "video_transcript_failed": "تعذّر تحميل النص المكتوب."
   },
   "embed": {
     "not_supported_title": "هذا النشاط غير مدعوم",
@@ -7032,7 +7047,7 @@
           "markdown": "اعرض ملف Markdown من رابط، مثل README على GitHub.",
           "resource": "أعد استخدام ملف أو صفحة من مكتبتك.",
           "scorm": "استورد حزمة SCORM أُنشئت في أداة أخرى.",
-          "video": "ارفع ملف فيديو أو اربط فيديو من YouTube."
+          "video": "ارفع ملف فيديو أو الصق رابط فيديو مستضاف."
         },
         "certification": {
           "remove_confirm": "إيقاف",
@@ -16619,7 +16634,12 @@
         "icon": "الأيقونة",
         "icon_chevron": "سهم",
         "icon_plus": "زائد وناقص"
-      }
+      },
+      "video_link_hint_services": "الصق رابطًا من {{services}}، أو رابطًا مباشرًا لملف MP4 أو WebM.",
+      "end_at": "التوقف عند",
+      "end_time": "وقت النهاية",
+      "trim_hint": "مثلًا 1:30. اتركه فارغًا للتشغيل حتى الآخر.",
+      "trim": "قص"
     },
     "history": {
       "named": "تمت تسمية النسخة",
@@ -35070,5 +35090,25 @@
       "total_many": "{{count}} تعديلًا مقبولًا",
       "total_other": "{{count}} تعديل مقبول"
     }
+  },
+  "video_providers": {
+    "title": "مشغّل {{provider}}",
+    "description": "يشغّل روابط {{provider}} بمشغّلها الخاص في الدروس وكتل الفيديو، مع القص وتتبّع التقدّم والاستئناف. عند إيقافه تبقى تضمينات عادية.",
+    "enable": "استخدام مشغّل {{provider}}",
+    "watermark_title": "علامة مائية للمشاهد",
+    "watermark_description": "تعرض بريد المشاهد أو اسمه متحركًا فوق الفيديو، لتتبّع تسجيلات الشاشة.",
+    "watermark_off": "متوقفة",
+    "watermark_email": "البريد الإلكتروني",
+    "watermark_name": "الاسم",
+    "drm_title": "التحقق من الترخيص للفيديوهات المحمية",
+    "drm_description": "يحصل كل متعلم على رمز قصير الأجل. يتحقق {{provider}} منه لدى LearnHouse قبل تشغيل فيديو محمي بـ DRM، فلا يحصل على الترخيص إلا من يستطيع فتح الدرس.",
+    "drm_url_label": "رابط خادم التفويض",
+    "drm_url_hint": "الصقه في إعدادات خادم التفويض في {{provider}}. فعّل هناك الوضع الصارم كي لا يُشغَّل شيء إذا تعذّر الوصول إلى التحقق.",
+    "drm_uuid_hint": "اربط الفيديوهات المحمية بمعرّفها (UUID في {{provider}}) كي يطابق كل رمز فيديو واحدًا فقط.",
+    "saved": "تم حفظ إعدادات الفيديو",
+    "save_failed": "تعذّر حفظ إعدادات الفيديو",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "copy_failed": "تعذّر النسخ"
   }
 }

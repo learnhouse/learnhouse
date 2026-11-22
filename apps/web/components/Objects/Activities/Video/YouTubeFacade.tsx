@@ -21,14 +21,18 @@ interface YouTubeFacadeProps {
   eager?: boolean
   onReady?: (_event: { target: any }) => void
   onStateChange?: (_event: YouTubeEvent) => void
+  onPlaybackRateChange?: (_event: YouTubeEvent) => void
 }
+
+// youtube-nocookie: YouTube sets no tracking cookies until the learner plays.
+const PRIVACY_HOST = 'https://www.youtube-nocookie.com'
 
 /**
  * Click-to-load YouTube: the video's own thumbnail and a play button until the
  * learner presses play, then the real embed, already playing. Saves the
  * multi-megabyte iframe on every page view that never plays the video.
  */
-export default function YouTubeFacade({ videoId, playLabel, title, playerVars, eager = false, onReady, onStateChange }: YouTubeFacadeProps) {
+export default function YouTubeFacade({ videoId, playLabel, title, playerVars, eager = false, onReady, onStateChange, onPlaybackRateChange }: YouTubeFacadeProps) {
   const [active, setActive] = useState(eager)
   const [thumb, setThumb] = useState<'maxres' | 'hq'>('maxres')
 
@@ -37,6 +41,7 @@ export default function YouTubeFacade({ videoId, playLabel, title, playerVars, e
   // Hovering warms the connections and the player chunk, so the press is quick.
   const warm = () => {
     preconnect('https://www.youtube.com')
+    preconnect(PRIVACY_HOST)
     preconnect('https://www.google.com')
     void loadYouTube()
   }
@@ -50,7 +55,7 @@ export default function YouTubeFacade({ videoId, playLabel, title, playerVars, e
           className="absolute inset-0 h-full w-full"
           iframeClassName="h-full w-full"
           title={title}
-          opts={{ width: '100%', height: '100%', playerVars: { ...playerVars, autoplay: 1 } }}
+          opts={{ host: PRIVACY_HOST, width: '100%', height: '100%', playerVars: { ...playerVars, autoplay: 1 } } as any}
           videoId={videoId}
           onReady={(event: { target: any }) => {
             onReady?.(event)
@@ -58,6 +63,7 @@ export default function YouTubeFacade({ videoId, playLabel, title, playerVars, e
             if (!eager) event.target.playVideo?.()
           }}
           onStateChange={onStateChange}
+          onPlaybackRateChange={onPlaybackRateChange}
         />
       </Suspense>
     )

@@ -174,10 +174,15 @@ async def create_video_activity(
     return ActivityRead.model_validate(activity)
 
 
+# Where an external video plays from. Kinescope is stored like the others; its
+# native player (DRM, watermark) ships with the Enterprise Edition.
+ExternalVideoType = Literal["youtube", "vimeo", "loom", "kinescope"]
+
+
 class ExternalVideo(BaseModel):
     name: str
     uri: str
-    type: Literal["youtube", "vimeo"]
+    type: ExternalVideoType
     chapter_id: int
     details: str = "{}"
     extra_metadata: Optional[dict] = None
@@ -589,6 +594,7 @@ async def update_external_video_activity(
     uri: Optional[str] = None,
     name: Optional[str] = None,
     details: Optional[str] = None,
+    video_type: Optional[str] = None,
 ) -> ActivityRead:
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = (await db_session.execute(statement)).scalars().first()
@@ -609,9 +615,12 @@ async def update_external_video_activity(
     if name is not None:
         activity.name = name
 
-    if uri:
+    if uri or video_type:
         content = dict(activity.content) if activity.content else {}
-        content["uri"] = uri
+        if uri:
+            content["uri"] = uri
+        if video_type:
+            content["type"] = video_type
         activity.content = content
         from sqlalchemy.orm.attributes import flag_modified
 

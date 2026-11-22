@@ -335,3 +335,72 @@ export function urlOrigin(url: string | null | undefined): string | null {
     return null
   }
 }
+
+export interface TranscriptCue {
+  start: number
+  end: number
+  text: string
+}
+
+function vttSeconds(stamp: string): number {
+  const parts = stamp.trim().split(':')
+  if (parts.length < 2 || parts.length > 3) return NaN
+  const [sec, ms = '0'] = parts[parts.length - 1].split(/[.,]/)
+  const nums = [...parts.slice(0, -1), sec].map((p) => (/^\d+$/.test(p) ? Number(p) : NaN))
+  const whole = nums.reduce((total, n) => total * 60 + n, 0)
+  return whole + Number(`0.${ms.replace(/\D/g, '') || '0'}`)
+}
+
+/**
+ * The cues of a WebVTT file as plain text, for a transcript: markup stripped,
+ * entities decoded, consecutive duplicates (roll-up captions) merged.
+ */
+export function parseVttCues(vtt: string): TranscriptCue[] {
+  if (!vtt) return []
+  const cues: TranscriptCue[] = []
+  const blocks = vtt.replace(/\r\n?/g, '\n').split(/\n{2,}/)
+  for (const block of blocks) {
+    const lines = block.split('\n')
+    const timing = lines.findIndex((l) => l.includes('-->'))
+    if (timing === -1) continue
+    const [from, rest] = lines[timing].split('-->')
+    const start = vttSeconds(from)
+    const end = vttSeconds((rest || '').trim().split(/\s+/)[0] || '')
+    if (!Number.isFinite(start) || !Number.isFinite(end)) continue
+    const text = lines
+      .slice(timing + 1)
+      .join(' ')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (!text) continue
+    const prev = cues[cues.length - 1]
+    if (prev && prev.text === text) {
+      prev.end = Math.max(prev.end, end)
+      continue
+    }
+    cues.push({ start, end, text })
+  }
+  return cues
+}
+
+/** Index of the cue playing at `seconds` (the last one started), or -1. */
+export function cueIndexAt(cues: TranscriptCue[], seconds: number): number {
+  let lo = 0
+  let hi = cues.length - 1
+  let found = -1
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1
+    if (cues[mid].start <= seconds) {
+      found = mid
+      lo = mid + 1
+    } else {
+      hi = mid - 1
+    }
+  }
+  return found
+}

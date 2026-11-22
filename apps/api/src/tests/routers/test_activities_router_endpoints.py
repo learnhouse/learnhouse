@@ -327,7 +327,22 @@ class TestVideoUpdates:
             )
 
         assert resp.status_code == 200
-        assert svc.await_args.args[4:] == (None, "Only name", None)
+        assert svc.await_args.args[4:] == (None, "Only name", None, None)
+
+    async def test_external_video_update_changes_service(self, client, activity_read):
+        with _mock("update_external_video_activity", return_value=activity_read) as svc:
+            resp = await client.put(
+                f"{BASE}/external_video/activity_test",
+                json={"uri": "https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466", "type": "kinescope"},
+            )
+
+        assert resp.status_code == 200
+        assert svc.await_args.args[7] == "kinescope"
+
+    async def test_external_video_update_rejects_unknown_service(self, client, activity_read):
+        with _mock("update_external_video_activity", return_value=activity_read):
+            resp = await client.put(f"{BASE}/external_video/activity_test", json={"type": "dailymotion"})
+        assert resp.status_code == 422
 
     async def test_configure_captions(self, client):
         stored = {"enabled": True, "languages": [{"code": "fr"}]}

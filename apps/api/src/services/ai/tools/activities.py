@@ -37,6 +37,7 @@ from src.services.ai.tools.chapters import (
 )
 from src.services.ai.tools.content_assets import attach_media, check_media, check_url, fetch, media_reason
 from src.services.ai.tools.content_edit import require_risky_approval
+from src.services.ai.tools.embeds import kinescope_id
 from src.services.ai.tools.markdown import MAX_CHARS, Converted, convert
 from src.services.ai.tools.results import changed, clip
 from src.services.courses.activities.activities import (
@@ -117,14 +118,16 @@ class CreateActivitiesParams(BaseModel):
 class CreateMediaActivityParams(BaseModel):
     chapter_uuid: str = Field(..., max_length=100, description="The chapter to add the activity to (chapter_...).")
     name: str = Field(..., min_length=1, max_length=200, description="Activity name.")
-    kind: Literal["youtube", "video", "pdf"] = Field(
+    kind: Literal["youtube", "kinescope", "video", "pdf"] = Field(
         ...,
         description=(
-            "youtube: a YouTube video shown in the video player; video: an mp4/webm file, "
-            "fetched and stored (up to 200 MB); pdf: a PDF document, fetched and stored (up to 50 MB)."
+            "youtube: a YouTube video shown in the video player; kinescope: a video hosted on "
+            "Kinescope (kinescope.io/<id>), played by the Enterprise Edition's Kinescope player; "
+            "video: an mp4/webm file, fetched and stored (up to 200 MB); pdf: a PDF document, "
+            "fetched and stored (up to 50 MB)."
         ),
     )
-    url: str = Field(..., min_length=8, max_length=2048, description="The YouTube link, or the public URL of the file itself.")
+    url: str = Field(..., min_length=8, max_length=2048, description="The YouTube or Kinescope link, or the public URL of the file itself.")
     position: int | None = Field(
         None, ge=0, le=10_000, description="0-based place in the chapter; omit to add at the end."
     )
@@ -309,6 +312,24 @@ async def _create_media_activity(ctx: ToolContext, p: CreateMediaActivityParams)
             ),
             ctx.db_session,
         )
+    elif p.kind == "kinescope":
+        video = kinescope_id(p.url)
+        if video is None:
+            raise HTTPException(
+                status_code=400,
+                detail="That is not a Kinescope video link (kinescope.io/<id> or kinescope.io/embed/<id>).",
+            )
+        activity = await create_external_video_activity(
+            ctx.request,
+            ctx.user,
+            ExternalVideo(
+                name=p.name,
+                uri=f"https://kinescope.io/{video}",
+                type="kinescope",
+                chapter_id=chapter.id,
+            ),
+            ctx.db_session,
+        )
     else:
         check_url(p.url)
         host = urlsplit(p.url).hostname
@@ -333,7 +354,7 @@ async def _create_media_activity(ctx: ToolContext, p: CreateMediaActivityParams)
         )
     if p.position is not None:
         await place_activity(ctx, course, chapter.id, activity.id, p.position)
-    what = {"youtube": "video", "video": "video", "pdf": "document"}[p.kind]
+    what = {"youtube": "video", "kinescope": "video", "video": "video", "pdf": "document"}[p.kind]
     return changed(
         f"Created {what} activity '{activity.name}' in chapter '{chapter.name}' "
         + ("(the course is a draft: it shows once the course is published)." if ready
