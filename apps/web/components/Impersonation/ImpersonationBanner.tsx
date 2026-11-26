@@ -13,6 +13,7 @@ import {
   consoleUrl,
   endedNoticeKey,
   fetchImpersonationTargets,
+  impersonationConfirmedHere,
   isPlatformContext,
   normalizeEndReason,
   setActiveImpersonation,
@@ -143,16 +144,20 @@ export default function ImpersonationBanner() {
 
   // Ended on the server before this tab even had the session (the cap, or
   // revoked while it was closed): back to the console, never signed out.
+  // Only a tab the server confirmed was impersonating goes back: anywhere else
+  // an "ended" signal (a spent cookie, a stale reply) leaves the page alone.
   useEffect(() => {
     if (platform) return
     const early = takeEarlyImpersonationEnd()
-    if (early && !imp) {
+    if (early && !imp && impersonationConfirmedHere()) {
       void finish(normalizeEndReason(early, 'revoked'))
       return
     }
     if (imp) return
-    const onEnded = (e: Event) =>
+    const onEnded = (e: Event) => {
+      if (!impersonationConfirmedHere()) return
       void finish(normalizeEndReason((e as CustomEvent<{ reason?: string }>).detail?.reason, 'revoked'))
+    }
     window.addEventListener(IMPERSONATION_ENDED_EVENT, onEnded)
     return () => window.removeEventListener(IMPERSONATION_ENDED_EVENT, onEnded)
   }, [platform, imp, finish])

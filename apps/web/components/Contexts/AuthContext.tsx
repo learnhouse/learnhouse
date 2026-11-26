@@ -24,10 +24,9 @@ import { clearOAuthContextCookies, setOAuthContextCookies } from '@/lib/auth/oau
 import { isSafeNextPath } from '@/lib/auth/signup'
 import {
   activeImpersonation,
-  authRefreshUrl,
   dispatchImpersonationEnded,
-  endReasonOf,
-  normalizeEndReason,
+  fetchAuthRefresh,
+  impersonationRefreshGone,
   setActiveImpersonation,
   type ImpersonationSession,
 } from '@/lib/auth/impersonation'
@@ -435,16 +434,13 @@ export function SessionProvider({
     refreshPromiseRef.current = (async () => {
       try {
         // Use Next.js API route to ensure cookies are set correctly
-        const response = await fetch(authRefreshUrl(), {
-          method: 'GET',
-          credentials: 'include',
-        })
+        const response = await fetchAuthRefresh((input, init) => fetch(input, init))
 
         if (response.status === 410) {
           // The impersonation this tab ran on is over; the backoffice staff
           // member's own session is untouched. The banner takes the tab back to
-          // the console and says why.
-          dispatchImpersonationEnded(normalizeEndReason(endReasonOf(await response.json().catch(() => null))))
+          // the console and says why (only a tab that ran on it).
+          impersonationRefreshGone(await response.json().catch(() => null))
           return { status: 'transient' } as const
         }
 

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { ACCESS_TOKEN_COOKIE, IMPERSONATION_COOKIE } from '@services/auth/cookies'
 import { checkImpersonation, jwtPurpose } from '@/lib/auth/impersonationToken'
 import { endReasonOf } from '@/lib/auth/impersonation'
+import { noStore } from '@/lib/auth/noStore'
 import { BACKEND_URL, clearCookie, forwardHeaders, isCrossSite, readJson, setCookie } from './_lib'
 
 // Impersonation, browser side.
@@ -60,6 +61,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  return noStore(await impersonationStatus(request))
+}
+
+async function impersonationStatus(request: NextRequest): Promise<NextResponse> {
   const jar = await cookies()
   const token = jar.get(IMPERSONATION_COOKIE)?.value
   if (!token) return NextResponse.json({ active: false })
