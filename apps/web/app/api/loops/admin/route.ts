@@ -10,6 +10,16 @@ import { recordOrgAdminInLoops, updateLoopsContact } from '@services/emails/loop
 // SaaS-only and fire-and-forget. The email is taken from the VERIFIED session
 // (never the request body), so this can't be used to inject arbitrary contacts.
 // The body only carries the org slug as metadata.
+
+/** Contact properties the onboarding flow may set. */
+const ONBOARDING_PROPERTIES = new Set([
+  'use_cases',
+  'use_types',
+  'chosen_plans',
+  'personal_goals',
+  'onboarding_completed',
+])
+
 export async function POST(request: NextRequest) {
   if (!(await isSaaSMode())) {
     return NextResponse.json({ ok: false }, { status: 404 })
@@ -37,12 +47,14 @@ export async function POST(request: NextRequest) {
     lastName: session?.user?.last_name || undefined,
   }).catch(() => {})
 
-  // Onboarding choices → Loops contact properties (use_types, chosen_plans,
-  // personal_goals, onboarding_completed, …) for segmentation. Only string /
-  // number / boolean values are kept.
+  // Onboarding choices → Loops contact properties for segmentation. Only the
+  // onboarding properties below are written (string / number / boolean
+  // values): the caller must not set the contact's other properties, such as
+  // its group, subscription or the ones campaigns are targeted on.
   if (onboarding) {
     const props: Record<string, string | number | boolean> = {}
     for (const [k, v] of Object.entries(onboarding)) {
+      if (!ONBOARDING_PROPERTIES.has(k)) continue
       if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') props[k] = v
     }
     if (Object.keys(props).length) void updateLoopsContact(email, props).catch(() => {})
