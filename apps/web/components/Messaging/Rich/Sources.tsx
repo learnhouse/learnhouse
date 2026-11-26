@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowSquareOut,
   Books,
@@ -36,6 +37,7 @@ export function SourceIcon({ source, size = 13 }: { source: AgentSource; size?: 
 }
 
 function SourcePreview({ source, orgslug, num }: { source: AgentSource; orgslug: string; num: number }) {
+  const { t } = useTranslation()
   const href = sourceHref(source, orgslug)
   const location = sourceLocation(source as CopilotSource)
   const crumbs = [source.course_name, source.chapter_name].filter(Boolean).join(' › ')
@@ -49,7 +51,7 @@ function SourcePreview({ source, orgslug, num }: { source: AgentSource; orgslug:
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">
             <span className="text-gray-400 font-bold me-1">{num}</span>
-            {sourceTitle(source as CopilotSource) || 'Source'}
+            {sourceTitle(source as CopilotSource) || t('messaging.rich.source')}
           </p>
           {crumbs && <p className="text-[11px] text-gray-500 truncate">{crumbs}</p>}
         </div>
@@ -65,7 +67,11 @@ function SourcePreview({ source, orgslug, num }: { source: AgentSource; orgslug:
           target="_blank"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-900 hover:underline"
         >
-          {location?.kind === 'time' ? `Watch at ${location.label}` : location?.kind === 'page' ? `Open page ${location.label}` : 'Open'}
+          {location?.kind === 'time'
+            ? t('messaging.rich.watch_at', { time: location.label })
+            : location?.kind === 'page'
+              ? t('messaging.rich.open_page', { page: location.label })
+              : t('messaging.rich.open')}
           <ArrowSquareOut size={12} weight="bold" />
         </Link>
       )}
@@ -119,6 +125,7 @@ export function SourcesStrip({
   orgslug: string
   compact?: boolean
 }) {
+  const { t } = useTranslation()
   if (!sources.length) return null
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -137,7 +144,7 @@ export function SourcesStrip({
             <span className="min-w-0 flex flex-col leading-tight">
               <span className="text-xs font-semibold text-gray-800 truncate">
                 <span className="text-gray-400 me-1">{i + 1}</span>
-                {sourceTitle(source as CopilotSource) || 'Source'}
+                {sourceTitle(source as CopilotSource) || t('messaging.rich.source')}
               </span>
               {!compact && (
                 <span className="text-[11px] text-gray-400 truncate" dir="auto">

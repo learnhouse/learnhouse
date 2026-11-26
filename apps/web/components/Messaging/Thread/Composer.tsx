@@ -22,6 +22,7 @@ import { stripMd } from '@components/Messaging/Thread/MessageItem'
 import EmojiPickerPopover from '@components/Messaging/ui/EmojiPicker'
 import { CourseThumb, PersonAvatar } from '@components/Messaging/ui/Avatars'
 import AgentAvatar from '@components/Messaging/Agents/AgentAvatar'
+import { agentDescription } from '@components/Messaging/Agents/agentText'
 import { useOrgCourses, OrgCourse } from '@components/Messaging/hooks'
 import { Agent, ChatMessage, CourseCard, UserSummary, displayName } from '@services/messaging/messaging'
 import { senderName } from '@components/Messaging/utils'
@@ -311,7 +312,7 @@ export default function Composer({
                 <span className="block truncate text-sm font-medium text-neutral-900">{o.kind === 'agent' ? o.agent.name : displayName(o.user)}</span>
                 <span className="block truncate text-[11px] text-neutral-500">
                   {o.kind === 'agent'
-                    ? o.agent.description || t('messaging.agent_replies_here', { defaultValue: 'Agent · replies in this chat' })
+                    ? agentDescription(o.agent, t) || t('messaging.agent_replies_here', { defaultValue: 'Agent · replies in this chat' })
                     : `@${o.user.username}`}
                 </span>
               </span>

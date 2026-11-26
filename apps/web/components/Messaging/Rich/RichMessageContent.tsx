@@ -8,6 +8,7 @@
  */
 
 import React, { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowBendDownRight, CheckCircle, CircleNotch, MagnifyingGlass, PencilSimpleLine, WarningCircle } from '@phosphor-icons/react'
 import type { AgentSource, ChatMessage } from '@services/messaging/messaging'
 import type { AgentProgress } from '@components/Messaging/MessagingProvider'
@@ -57,6 +58,7 @@ function PhaseRow({ state, icon, label }: { state: 'active' | 'done'; icon: Reac
 
 /** What an agent is doing before its first words arrive. */
 function AgentProgressView({ progress, orgslug }: { progress?: AgentProgress; orgslug: string }) {
+  const { t } = useTranslation()
   const phase = progress?.phase
   if (!phase) {
     return (
@@ -73,14 +75,14 @@ function AgentProgressView({ progress, orgslug }: { progress?: AgentProgress; or
         <PhaseRow
           state={searched ? 'done' : 'active'}
           icon={<MagnifyingGlass size={13} weight="bold" className="animate-pulse" />}
-          label={`Searching ${progress.courses} course${progress.courses === 1 ? '' : 's'}…`}
+          label={t('messaging.rich.searching_courses', { count: progress.courses })}
         />
       )}
       {searched && progress?.courses !== undefined && (
         <PhaseRow
           state="done"
           icon={null}
-          label={sources.length ? `Found ${sources.length} source${sources.length === 1 ? '' : 's'}` : 'No matching course content'}
+          label={sources.length ? t('messaging.rich.found_sources', { count: sources.length }) : t('messaging.rich.no_matches')}
         />
       )}
       {searched && sources.length > 0 && (
@@ -95,7 +97,7 @@ function AgentProgressView({ progress, orgslug }: { progress?: AgentProgress; or
           label={
             <span className="inline-flex items-center gap-1.5">
               <PencilSimpleLine size={12} weight="bold" />
-              Writing
+              {t('messaging.rich.writing')}
             </span>
           }
         />
@@ -105,6 +107,7 @@ function AgentProgressView({ progress, orgslug }: { progress?: AgentProgress; or
 }
 
 function RichMessageContent({ message, progress, orgslug, onFollowUp, inverted = false }: RichMessageContentProps) {
+  const { t } = useTranslation()
   const streaming = message.status === 'streaming'
   const isAgent = message.sender?.type === 'agent'
   const content = message.content || ''
@@ -113,7 +116,7 @@ function RichMessageContent({ message, progress, orgslug, onFollowUp, inverted =
   const emojiOnly = useMemo(() => !isAgent && isEmojiOnly(content), [isAgent, content])
 
   if (message.deleted) {
-    return <span className={`italic text-sm ${inverted ? 'text-white/60' : 'text-gray-400'}`}>Message deleted</span>
+    return <span className={`italic text-sm ${inverted ? 'text-white/60' : 'text-gray-400'}`}>{t('messaging.rich.message_deleted')}</span>
   }
 
   if (message.kind === 'system') {
@@ -135,7 +138,7 @@ function RichMessageContent({ message, progress, orgslug, onFollowUp, inverted =
       {isAgent && streaming && sources.length > 0 && (
         <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
           <CheckCircle size={12} weight="fill" className="text-green-500" />
-          From {sources.length} source{sources.length === 1 ? '' : 's'}
+          {t('messaging.rich.from_sources', { count: sources.length })}
         </div>
       )}
 
@@ -183,7 +186,7 @@ function RichMessageContent({ message, progress, orgslug, onFollowUp, inverted =
       {message.status === 'error' && (
         <div className="flex items-center gap-1.5 text-xs text-gray-400">
           <WarningCircle size={14} weight="fill" />
-          This reply didn&apos;t finish. Try asking again.
+          {t('messaging.rich.reply_failed')}
         </div>
       )}
 
