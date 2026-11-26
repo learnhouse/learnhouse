@@ -47,6 +47,8 @@ export { bindMedia, media } from './media'
 export type { MediaConfig, MediaHelpers, StandaloneMediaHelpers } from './media'
 
 export { courseProgress, findCourseRun, isActivityCompleted } from './progress'
+export { TrailStore } from './trail-store'
+export type { TrailStoreState } from './trail-store'
 export type { CourseKey } from './progress'
 export type { ReactNativeFile, UploadFile } from './core/upload'
 
