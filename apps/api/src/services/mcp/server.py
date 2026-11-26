@@ -101,7 +101,7 @@ exercises with tests, ```scenario for branching decisions, ```embed with a video
 ```button with a link, and ```preview, ```h5p and ```widget (custom HTML), which need \
 approval. Images go in as ![alt](https://...) on their own line, and files as ```image, \
 ```video, ```audio or ```pdf fences with the URL: they are fetched and stored after one \
-approval. create_media_activity adds a YouTube or Kinescope video, video file or PDF as \
+approval. create_media_activity adds a YouTube video, video file or PDF as \
 its own activity. Make pages rich: mix explanation with images, quizzes, exercises and scenarios. \
 Interactive Experiences have no fence; add them as typed blocks with add_blocks or \
 build_course: sort, sequence, match_pairs, hotspot, fill_gaps, myth_fact, speed_round, \

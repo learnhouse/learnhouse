@@ -333,11 +333,11 @@ class TestVideoUpdates:
         with _mock("update_external_video_activity", return_value=activity_read) as svc:
             resp = await client.put(
                 f"{BASE}/external_video/activity_test",
-                json={"uri": "https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466", "type": "kinescope"},
+                json={"uri": "https://vimeo.com/123456789", "type": "vimeo"},
             )
 
         assert resp.status_code == 200
-        assert svc.await_args.args[7] == "kinescope"
+        assert svc.await_args.args[7] == "vimeo"
 
     async def test_external_video_update_rejects_unknown_service(self, client, activity_read):
         with _mock("update_external_video_activity", return_value=activity_read):

@@ -62,7 +62,7 @@ interface VideoActivityProps {
     content: {
       filename?: string
       uri?: string
-      /** External videos: youtube | vimeo | loom | kinescope… (absent = youtube). */
+      /** External videos: youtube | vimeo | loom (absent = youtube). */
       type?: string
     }
     details?: VideoDetails

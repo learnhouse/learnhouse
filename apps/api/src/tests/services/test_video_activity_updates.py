@@ -341,9 +341,9 @@ async def test_update_external_switches_service(mock_request, db, org, course, a
     with patch(f"{MOD}.check_resource_access", new=AsyncMock()):
         result = await update_external_video_activity(
             mock_request, "yt_switch", admin_user, db,
-            uri="https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466", video_type="kinescope",
+            uri="https://www.loom.com/share/abc123", video_type="loom",
         )
-    assert result.content == {"uri": "https://kinescope.io/7127f2d7-0e96-40d0-9a03-2e987c096466", "type": "kinescope"}
+    assert result.content == {"uri": "https://www.loom.com/share/abc123", "type": "loom"}
 
 
 async def test_update_external_type_only(mock_request, db, org, course, admin_user, rag_dispatch):
@@ -354,14 +354,14 @@ async def test_update_external_type_only(mock_request, db, org, course, admin_us
     assert result.content == {"uri": "https://vimeo.com/1", "type": "vimeo"}
 
 
-async def test_create_external_kinescope(mock_request, db, org, course, chapter, admin_user, rag_dispatch):
+async def test_create_external_loom(mock_request, db, org, course, chapter, admin_user, rag_dispatch):
     with patch(f"{MOD}.check_resource_access", new=AsyncMock()), patch(f"{MOD}.track_activity_created", new=AsyncMock()):
         created = await create_external_video_activity(
             mock_request, admin_user,
-            ExternalVideo(name="K", uri="https://kinescope.io/203613411", type="kinescope", chapter_id=chapter.id),
+            ExternalVideo(name="L", uri="https://www.loom.com/share/abc123", type="loom", chapter_id=chapter.id),
             db,
         )
-    assert created.content["type"] == "kinescope"
+    assert created.content["type"] == "loom"
     assert created.activity_sub_type == ActivitySubTypeEnum.SUBTYPE_VIDEO_YOUTUBE
 
 

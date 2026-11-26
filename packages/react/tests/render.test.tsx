@@ -104,10 +104,10 @@ describe('LearnHouseActivity with a raw document', () => {
   it('frames a video embed from a provider it has no player for, trim kept in the URL', async () => {
     mockFetch({ [`/courses/${COURSE}/meta`]: meta })
     const { container } = renderDoc()
-    const selector = 'iframe[src^="https://kinescope.io/embed/"]'
+    const selector = 'iframe[src^="https://fast.wistia.net/embed/"]'
     await waitFor(() => expect(container.querySelector(selector)).toBeTruthy(), { timeout: 10000 })
     expect(container.querySelector(selector)!.getAttribute('src')).toBe(
-      'https://kinescope.io/embed/7127f2d7-0e96-40d0-9a03-2e987c096466?t=30',
+      'https://fast.wistia.net/embed/iframe/7127f2d70e?t=30',
     )
   })
 

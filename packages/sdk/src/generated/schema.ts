@@ -19361,13 +19361,13 @@ export interface components {
             name: string;
             /**
              * Kind
-             * @description youtube: a YouTube video shown in the video player; kinescope: a video hosted on Kinescope (kinescope.io/<id>), played by the Enterprise Edition's Kinescope player; video: an mp4/webm file, fetched and stored (up to 200 MB); pdf: a PDF document, fetched and stored (up to 50 MB).
+             * @description youtube: a YouTube video shown in the video player; video: an mp4/webm file, fetched and stored (up to 200 MB); pdf: a PDF document, fetched and stored (up to 50 MB).
              * @enum {string}
              */
-            kind: "youtube" | "kinescope" | "video" | "pdf";
+            kind: "youtube" | "video" | "pdf";
             /**
              * Url
-             * @description The YouTube or Kinescope link, or the public URL of the file itself.
+             * @description The YouTube link, or the public URL of the file itself.
              */
             url: string;
             /**
@@ -20443,7 +20443,7 @@ export interface components {
              * Type
              * @enum {string}
              */
-            type: "youtube" | "vimeo" | "loom" | "kinescope";
+            type: "youtube" | "vimeo" | "loom";
             /** Chapter Id */
             chapter_id: number;
             /**
@@ -20463,7 +20463,7 @@ export interface components {
             /** Uri */
             uri?: string | null;
             /** Type */
-            type?: ("youtube" | "vimeo" | "loom" | "kinescope") | null;
+            type?: ("youtube" | "vimeo" | "loom") | null;
             /** Starttime */
             startTime?: number | null;
             /** Endtime */
