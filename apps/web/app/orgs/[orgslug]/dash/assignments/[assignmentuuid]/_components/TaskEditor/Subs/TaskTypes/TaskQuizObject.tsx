@@ -819,11 +819,16 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                             )}
 
                                         </div>
-                                        {view === 'teacher' && oIndex === question.options.length - 1 && questions[qIndex].options.length <= 4 && (
-                                            <div className="flex justify-center mx-auto px-2">
+                                        {view === 'teacher' && questions[qIndex].options.length <= 4 && (
+                                            // Every row keeps the add button's slot so the answers and
+                                            // their True/False chips line up; only the last row shows it.
+                                            <div
+                                                className={`flex justify-center mx-auto px-2 ${oIndex === question.options.length - 1 ? '' : 'invisible'}`}
+                                                aria-hidden={oIndex === question.options.length - 1 ? undefined : true}
+                                            >
                                                 <div
                                                     className="outline text-xs outline-3 outline-white px-2 shadow-sm w-full flex items-center h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white duration-150 cursor-pointer ease-linear nice-shadow"
-                                                    onClick={() => addOption(qIndex)}
+                                                    onClick={oIndex === question.options.length - 1 ? () => addOption(qIndex) : undefined}
                                                 >
                                                     <Plus size={14} className="inline-block" />
                                                     <span></span>
