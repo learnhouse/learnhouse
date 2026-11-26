@@ -107,8 +107,9 @@ export function useCourseProgress(orgId: number | null | undefined, course: Cour
 
   const enroll = useCallback(async () => {
     const org = need()
+    const uuid = courseUuid()
     if (progress?.enrolled) return
-    await store.enroll(org, courseUuid())
+    await store.enroll(org, uuid)
   }, [store, need, courseUuid, progress?.enrolled])
   const leave = useCallback(async () => {
     await store.leave(need(), courseUuid())

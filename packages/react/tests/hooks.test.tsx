@@ -187,6 +187,7 @@ describe('useCourseProgress', () => {
       wrapper: wrapper(),
     })
     await waitFor(() => expect(result.current.byId.progress).toBeTruthy())
+    await expect(result.current.byId.enroll()).rejects.toThrow(/course uuid/)
     await expect(result.current.byId.leave()).rejects.toThrow(/course uuid/)
     await expect(result.current.noOrg.complete('activity_x')).rejects.toThrow(/orgId/)
     expect(result.current.noOrg.progress).toBeNull()
